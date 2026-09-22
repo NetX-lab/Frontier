@@ -501,6 +501,8 @@ The selection and publication rules are source-backed; actual Frontier events ex
 
 ## 11. Step 5 — Separate routing load distribution from implementation identity
 
+> **Closed 2026-09-22 without source changes (user decision; see `review.md` W5 "Final disposition" and `requirements.md`).** The premise check found the collision this step fixes unreachable on main: the routing distribution has one global field and no per-role override, so every cluster resolves one routing path per run. The override that would have made it reachable was judged not worth its configuration surface, and the drafted implementation is archived as `w5_reverted_moe_routing_runtime_path.patch`. The specification below is kept as written for the record.
+
 ### Source scope
 
 ```text

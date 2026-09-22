@@ -1,0 +1,745 @@
+diff --git a/frontier/config/cluster_config.py b/frontier/config/cluster_config.py
+index 52bc253..fb199ab 100644
+--- a/frontier/config/cluster_config.py
++++ b/frontier/config/cluster_config.py
+@@ -197,6 +197,13 @@ class ClusterConfig(ClusterRoleConfigBuilder, ClusterTopologySummary):
+             "mode_dependency": "pd-af-disaggregation",
+         },
+     )
++    prefill_replica_config_moe_routing_runtime_path: Optional[str] = field(
++        default=None,
++        metadata={
++            "help": "MoE gating routing implementation used for timing prediction in the prefill cluster. Valid values: 'standard_fused_topk' or 'uniform_topk'. Leave unset to inherit replica_config.",
++            "mode_dependency": "pd-af-disaggregation",
++        },
++    )
+     decode_attn_replica_config_memory_margin_fraction: Optional[float] = field(
+         default=None,
+         metadata={
+@@ -302,6 +309,13 @@ class ClusterConfig(ClusterRoleConfigBuilder, ClusterTopologySummary):
+             "mode_dependency": "pd-af-disaggregation",
+         },
+     )
++    decode_ffn_replica_config_moe_routing_runtime_path: Optional[str] = field(
++        default=None,
++        metadata={
++            "help": "MoE gating routing implementation used for timing prediction in the decode FFN cluster. Valid values: 'standard_fused_topk' or 'uniform_topk'. Leave unset to inherit replica_config.",
++            "mode_dependency": "pd-af-disaggregation",
++        },
++    )
+ 
+     # === PD-Disaggregation Mode: Unified DECODE Cluster Configuration ===
+     decode_replica_config_memory_margin_fraction: Optional[float] = field(
+@@ -374,6 +388,13 @@ class ClusterConfig(ClusterRoleConfigBuilder, ClusterTopologySummary):
+             "mode_dependency": "pd-disaggregation",
+         },
+     )
++    decode_replica_config_moe_routing_runtime_path: Optional[str] = field(
++        default=None,
++        metadata={
++            "help": "MoE gating routing implementation used for timing prediction in the unified decode cluster. Valid values: 'standard_fused_topk' or 'uniform_topk'. Leave unset to inherit replica_config.",
++            "mode_dependency": "pd-disaggregation",
++        },
++    )
+     decode_replica_config_network_device: Optional[str] = field(
+         default=None,
+         metadata={
+diff --git a/frontier/config/cluster_role_config.py b/frontier/config/cluster_role_config.py
+index 2393949..3dbfece 100644
+--- a/frontier/config/cluster_role_config.py
++++ b/frontier/config/cluster_role_config.py
+@@ -73,6 +73,7 @@ class ClusterRoleConfigBuilder:
+             moe_routing_distribution_type = get_field_value(
+                 "moe_routing_distribution_type"
+             )
++            moe_routing_runtime_path = get_field_value("moe_routing_runtime_path")
+             attn_tensor_parallel_size = get_field_value("attn_tensor_parallel_size")
+             attn_dp = get_field_value("attn_dp")
+         else:
+@@ -87,6 +88,7 @@ class ClusterRoleConfigBuilder:
+             moe_routing_distribution_type = get_field_value(
+                 "moe_routing_distribution_type"
+             )
++            moe_routing_runtime_path = get_field_value("moe_routing_runtime_path")
+             if cluster_prefix == "decode_ffn":
+                 num_pipeline_stages = 1
+             else:
+@@ -116,6 +118,7 @@ class ClusterRoleConfigBuilder:
+                 "decode_attn_steady_state_measurement_report_path"
+             ),
+             moe_routing_distribution_type=moe_routing_distribution_type,
++            moe_routing_runtime_path=moe_routing_runtime_path,
+             device=get_field_value("device"),
+             network_device=get_field_value("network_device"),
+             cluster_prefix=cluster_prefix,
+@@ -587,6 +590,7 @@ class ClusterRoleConfigBuilder:
+             router_topk=original_config.router_topk,
+             moe_routing_seed=original_config.moe_routing_seed,
+             moe_routing_distribution_type=original_config.moe_routing_distribution_type,
++            moe_routing_runtime_path=original_config.moe_routing_runtime_path,
+             moe_routing_trace_path=original_config.moe_routing_trace_path,
+             decode_attn_initial_lane_trace_path=(
+                 original_config.decode_attn_initial_lane_trace_path
+diff --git a/frontier/config/replica_config.py b/frontier/config/replica_config.py
+index 6514f9d..2c5eaf1 100644
+--- a/frontier/config/replica_config.py
++++ b/frontier/config/replica_config.py
+@@ -3,6 +3,7 @@
+ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
++from typing import Optional
+ 
+ from frontier.config.device_sku_config import BaseDeviceSKUConfig
+ from frontier.config.model_config import BaseModelConfig
+@@ -10,6 +11,9 @@ from frontier.config.node_sku_config import BaseNodeSKUConfig
+ from frontier.config.speculative_decoding_config import (
+     SpeculativeDecodingConfig,
+ )
++from frontier.moe_routing_runtime import (
++    validate_moe_gating_routing_runtime_path,
++)
+ 
+ 
+ @dataclass
+@@ -95,6 +99,16 @@ class ReplicaConfig:
+             "token-to-expert load skew without changing router_topk/model semantics."
+         },
+     )
++    moe_routing_runtime_path: Optional[str] = field(
++        default=None,
++        metadata={
++            "help": "MoE gating routing implementation used for timing prediction. "
++            "Valid values: 'standard_fused_topk' or 'uniform_topk'. This is a "
++            "separate dimension from moe_routing_distribution_type, which controls "
++            "expert-load skew. Leave unset to keep deriving the implementation "
++            "from the distribution."
++        },
++    )
+     device: str = field(
+         default="a100",
+         metadata={"help": "Device."},
+@@ -171,6 +185,15 @@ class ReplicaConfig:
+                 f"got {self.moe_routing_distribution_type!r}"
+             )
+ 
++        # `None` keeps deriving the implementation from the distribution, which
++        # is what every configuration did before this override existed. An
++        # explicit value is validated here so an unsupported one fails at
++        # configuration time rather than at dataset admission.
++        if self.moe_routing_runtime_path is not None:
++            self.moe_routing_runtime_path = validate_moe_gating_routing_runtime_path(
++                self.moe_routing_runtime_path
++            )
++
+         # Validate pipeline parallelism configuration early
+         if self.model_config.num_layers % self.num_pipeline_stages != 0:
+             raise ValueError(
+diff --git a/frontier/execution_time_predictor/layer_contract_resolution.py b/frontier/execution_time_predictor/layer_contract_resolution.py
+index 8306f09..78eea94 100644
+--- a/frontier/execution_time_predictor/layer_contract_resolution.py
++++ b/frontier/execution_time_predictor/layer_contract_resolution.py
+@@ -21,7 +21,7 @@ from frontier.execution_time_predictor.prediction_model_identity import (
+ from frontier.model_architectures import LayerKind, ResolvedLayerContract
+ from frontier.moe_routing_runtime import (
+     filter_moe_gating_routing_topk_rows,
+-    resolve_moe_gating_routing_runtime_path,
++    resolve_replica_moe_routing_runtime_path,
+ )
+ from frontier.operators.binding import resolve_operator_query_tp_mode
+ from frontier.operators.families import (
+@@ -448,8 +448,8 @@ class LayerContractResolution:
+                 ].drop_duplicates().itertuples(index=False, name=None)
+             }
+         )
+-        requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
+-            getattr(replica_config, "moe_routing_distribution_type", "balanced")
++        requested_routing_runtime_path = (
++            resolve_replica_moe_routing_runtime_path(replica_config)
+         )
+ 
+         missing_requirements: List[str] = []
+diff --git a/frontier/execution_time_predictor/moe_routing_workload.py b/frontier/execution_time_predictor/moe_routing_workload.py
+index 0f6bc13..09826f4 100644
+--- a/frontier/execution_time_predictor/moe_routing_workload.py
++++ b/frontier/execution_time_predictor/moe_routing_workload.py
+@@ -22,7 +22,6 @@ from frontier.moe_ep_workload import (
+     resolve_ep_lane_workload,
+     resolve_routing_details,
+ )
+-from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
+ from frontier.types import ClusterType
+ from typing import Dict, List, Mapping, Optional
+ 
+@@ -53,9 +52,14 @@ class MoeRoutingWorkload:
+         )
+ 
+     def _get_requested_moe_gating_routing_runtime_path(self) -> str:
+-        return resolve_moe_gating_routing_runtime_path(
+-            getattr(self, "_moe_routing_distribution_type", "balanced")
+-        )
++        """Return the routing implementation this predictor was built for.
++
++        Resolved once in the predictor's constructor, so dataset admission and
++        the training identity cannot disagree with the runtime query about
++        which routing implementation is in force.
++        """
++
++        return self._moe_gating_routing_runtime_path
+ 
+     @staticmethod
+ 
+diff --git a/frontier/execution_time_predictor/prediction_family_trainers.py b/frontier/execution_time_predictor/prediction_family_trainers.py
+index da19f7d..02f9bdc 100644
+--- a/frontier/execution_time_predictor/prediction_family_trainers.py
++++ b/frontier/execution_time_predictor/prediction_family_trainers.py
+@@ -31,6 +31,7 @@ from frontier.execution_time_predictor.prediction_model_identity import (
+     _get_prefill_hot_moe_gating_model_names,
+     _is_moe_gating_family_model_name,
+     _layer_contract_kwargs,
++    _routing_runtime_kwargs,
+     _normalize_layer_contract_context,
+     _resolve_model_architecture_profile,
+     _resolve_model_architecture_profile_id,
+@@ -49,7 +50,9 @@ from frontier.moe_gating_runtime import (
+ )
+ from frontier.moe_routing_runtime import (
+     filter_moe_gating_routing_topk_rows,
+-    resolve_moe_gating_routing_runtime_path,
++    MOE_GATING_ROUTING_TOPK_MODEL_NAME,
++    is_moe_routing_runtime_sensitive_model,
++    resolve_replica_moe_routing_runtime_path,
+ )
+ from frontier.operators.families import (
+     FFN_FAMILY,
+@@ -113,7 +116,38 @@ class PredictionFamilyTrainers:
+             f"_family{self._measurement_family_name(active_measurement_type)}"
+         )
+ 
+-        if ffn_signature in trained_model_signatures:
++        # Only the gating top-k model's measured cost depends on the routing
++        # implementation, so the implementation separates that one model's
++        # signature rather than the whole FFN family's. The family gate below
++        # therefore also has to see this cluster's routing model, or a second
++        # cluster asking for a different implementation would be skipped here
++        # and would silently reuse the first cluster's estimator.
++        requested_routing_runtime_path = (
++            resolve_replica_moe_routing_runtime_path(replica_config)
++            if is_moe_model
++            else None
++        )
++
++        def _routing_runtime_path_for(model_name: str) -> Optional[str]:
++            """Return the routing implementation one model's cost depends on."""
++
++            if is_moe_routing_runtime_sensitive_model(model_name):
++                return requested_routing_runtime_path
++            return None
++
++        def _model_signature(model_name: str) -> str:
++            routing_runtime_path = _routing_runtime_path_for(model_name)
++            if routing_runtime_path is not None:
++                return (
++                    f"{model_name}_routing{routing_runtime_path}_{ffn_signature}"
++                )
++            return f"{model_name}_{ffn_signature}"
++
++        if ffn_signature in trained_model_signatures and (
++            requested_routing_runtime_path is None
++            or _model_signature(MOE_GATING_ROUTING_TOPK_MODEL_NAME)
++            in trained_model_signatures
++        ):
+             logger.info(f"Skipping FFN models training for {cluster_type} - already trained with signature {ffn_signature}")
+             return models
+ 
+@@ -169,9 +203,6 @@ class PredictionFamilyTrainers:
+                 cluster_type,
+                 **_layer_contract_kwargs(primary_contract),
+             )
+-            requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
+-                getattr(replica_config, "moe_routing_distribution_type", "balanced")
+-            )
+ 
+             moe_df_cache: Dict[
+                 Tuple[
+@@ -215,9 +246,7 @@ class PredictionFamilyTrainers:
+                 else:
+                     ep_key = replica_config.moe_expert_parallel_size
+ 
+-                runtime_path_key: Optional[str] = None
+-                if base_model_name == "moe_gating_routing_topk":
+-                    runtime_path_key = requested_routing_runtime_path
++                runtime_path_key = _routing_runtime_path_for(base_model_name)
+ 
+                 gating_context_key: Optional[str] = None
+                 if _is_moe_gating_family_model_name(base_model_name):
+@@ -271,7 +300,7 @@ class PredictionFamilyTrainers:
+                 return moe_df_cache[cache_key], tp_key, ep_key, op_layer_contract
+ 
+             for model_name in moe_model_names:
+-                model_signature = f"{model_name}_{ffn_signature}"
++                model_signature = _model_signature(model_name)
+                 if model_signature not in trained_model_signatures:
+                     try:
+                         (
+@@ -368,6 +397,11 @@ class PredictionFamilyTrainers:
+                         training_context=op_training_context,
+                     )
+                     train_kwargs.update(_layer_contract_kwargs(op_layer_contract))
++                    # The routing implementation is part of this model's
++                    # identity, not only of its training-row selection.
++                    train_kwargs.update(
++                        _routing_runtime_kwargs(_routing_runtime_path_for(model_name))
++                    )
+                     models[model_name] = self._train_single_model(
+                         **train_kwargs,
+                     )
+@@ -1505,8 +1539,15 @@ class PredictionFamilyTrainers:
+         training_context: Optional[Dict[str, Any]] = None,
+         persist_exact_lookup: bool = True,
+         layer_contract: Optional[ResolvedLayerContract] = None,
++        routing_runtime_path: Optional[str] = None,
+     ) -> BaseEstimator:
+-        """Train a single model with given data and configuration."""
++        """Train a single model with given data and configuration.
++
++        `routing_runtime_path` is the MoE routing implementation this model was
++        trained on. It is set only for the models whose measured cost depends on
++        it, and it separates their registry identity from an otherwise identical
++        model trained on the other implementation.
++        """
+         layer_contract, training_context = _normalize_layer_contract_context(
+             training_context,
+             explicit_layer_contract=layer_contract,
+@@ -1591,6 +1632,7 @@ class PredictionFamilyTrainers:
+                 model_name,
+                 profiling_precision,
+                 cached_model,
++                **_routing_runtime_kwargs(routing_runtime_path),
+                 **_layer_contract_kwargs(layer_contract),
+             )
+             return cached_model
+@@ -1695,6 +1737,7 @@ class PredictionFamilyTrainers:
+             model_name,
+             profiling_precision,
+             best_estimator,
++            **_routing_runtime_kwargs(routing_runtime_path),
+             **_layer_contract_kwargs(layer_contract),
+         )
+         return best_estimator
+diff --git a/frontier/execution_time_predictor/prediction_model_identity.py b/frontier/execution_time_predictor/prediction_model_identity.py
+index 7153053..77c1429 100644
+--- a/frontier/execution_time_predictor/prediction_model_identity.py
++++ b/frontier/execution_time_predictor/prediction_model_identity.py
+@@ -303,6 +303,12 @@ def _layer_contract_kwargs(
+     if operator_name is not None:
+         kwargs["operator_name"] = operator_name
+     return kwargs
++def _routing_runtime_kwargs(routing_runtime_path: Optional[str]) -> Dict[str, Any]:
++    """Return the routing axis only for the models whose cost depends on it."""
++
++    if routing_runtime_path is None:
++        return {}
++    return {"routing_runtime_path": routing_runtime_path}
+ def _is_moe_gating_family_model_name(model_name: str) -> bool:
+     base_model_name = get_moe_gating_base_model_name(model_name)
+     return _get_moe_family_operator_by_model_name(
+diff --git a/frontier/execution_time_predictor/prediction_model_registry.py b/frontier/execution_time_predictor/prediction_model_registry.py
+index bc250b8..e971df1 100644
+--- a/frontier/execution_time_predictor/prediction_model_registry.py
++++ b/frontier/execution_time_predictor/prediction_model_registry.py
+@@ -23,6 +23,10 @@ from frontier.execution_time_predictor.prediction_model_identity import (
+ from frontier.logger import init_logger
+ from frontier.model_architectures import LayerKind, ResolvedLayerContract
+ from frontier.moe_gating_runtime import get_moe_gating_base_model_name
++from frontier.moe_routing_runtime import (
++    is_moe_routing_runtime_sensitive_model,
++    resolve_replica_moe_routing_runtime_path,
++)
+ from frontier.types import ClusterType, MeasurementType
+ from sklearn.base import BaseEstimator
+ from typing import Any, Dict, List, Mapping, Optional, Tuple
+@@ -254,9 +258,41 @@ class PredictionModelRegistry:
+             setattr(model, "_frontier_layer_cache_identity", identity)
+         return identity
+ 
++    @staticmethod
++    def _model_routing_runtime_identity(
++        model: BaseEstimator,
++        routing_runtime_path: Optional[str],
++    ) -> Optional[str]:
++        """Attach and return the routing implementation a model was trained on.
++
++        Mirrors `_model_contract_identity`: a conflict between what the caller
++        asks for and what the estimator already carries is an error, never a
++        relabeling.
++        """
++
++        attached = getattr(model, "_frontier_routing_runtime_path", None)
++        if attached is not None and not isinstance(attached, str):
++            raise TypeError(
++                "_frontier_routing_runtime_path must be a string when present"
++            )
++        if (
++            routing_runtime_path is not None
++            and attached is not None
++            and routing_runtime_path != attached
++        ):
++            raise ValueError(
++                "model routing implementation conflicts with the requested "
++                f"routing_runtime_path: attached={attached!r}, "
++                f"requested={routing_runtime_path!r}"
++            )
++        resolved = routing_runtime_path or attached
++        if resolved is not None:
++            setattr(model, "_frontier_routing_runtime_path", resolved)
++        return resolved
++
+     def _contract_model_registry(
+         self, family_name: str
+-    ) -> Dict[Tuple[str, Optional[str]], BaseEstimator]:
++    ) -> Dict[Tuple[str, Optional[str], Optional[str]], BaseEstimator]:
+         registry_attr = {
+             "eager": "_trained_models_eager_by_contract",
+             "device_event": "_trained_models_device_event_by_contract",
+@@ -268,7 +304,7 @@ class PredictionModelRegistry:
+ 
+     def _contract_precision_registry(
+         self, family_name: str
+-    ) -> Dict[str, Dict[Tuple[str, Optional[str]], BaseEstimator]]:
++    ) -> Dict[str, Dict[Tuple[str, Optional[str], Optional[str]], BaseEstimator]]:
+         registry_attr = {
+             "eager": "_models_by_precision_eager_by_contract",
+             "device_event": "_models_by_precision_device_event_by_contract",
+@@ -323,20 +359,46 @@ class PredictionModelRegistry:
+         precision: str,
+         model: BaseEstimator,
+         layer_contract: Optional[ResolvedLayerContract] = None,
++        routing_runtime_path: Optional[str] = None,
+     ) -> None:
++        """Register one trained estimator under its selected semantic domain.
++
++        ``routing_runtime_path`` is a second identity axis, carried only by the
++        models whose measured cost depends on the MoE routing implementation.
++        Two implementations produce the same layer shape, so without it one
++        cluster's estimator would answer another cluster's query.
++        """
++
+         if not isinstance(precision, str) or not precision.strip():
+             raise ValueError(f"precision must be a non-empty string, got {precision!r}")
+         precision_key = precision.upper()
+         family_name = self._measurement_family_name(self._active_measurement_type)
+         identity = self._model_contract_identity(model, layer_contract)
++        routing_key = self._model_routing_runtime_identity(model, routing_runtime_path)
+         if identity is None:
++            # The legacy registry is keyed by name alone, so it cannot hold two
++            # routing implementations of one model. Reject the collision rather
++            # than overwrite the first estimator with the second.
++            stored = self._legacy_model_registry(family_name).get(model_name)
++            if stored is not None:
++                stored_routing = getattr(
++                    stored, "_frontier_routing_runtime_path", None
++                )
++                if stored_routing != routing_key:
++                    raise ValueError(
++                        f"Model {model_name!r} is already registered without a "
++                        "typed layer contract for routing_runtime_path="
++                        f"{stored_routing!r} and cannot also hold "
++                        f"{routing_key!r}. A typed architecture profile is "
++                        "required to separate two routing implementations."
++                    )
+             self._legacy_model_registry(family_name)[model_name] = model
+             self._legacy_precision_registry(family_name).setdefault(
+                 precision_key, {}
+             )[model_name] = model
+             return
+ 
+-        model_key = (model_name, identity)
++        model_key = (model_name, identity, routing_key)
+         self._contract_model_registry(family_name)[model_key] = model
+         self._contract_precision_registry(family_name).setdefault(
+             precision_key, {}
+@@ -349,6 +411,7 @@ class PredictionModelRegistry:
+         *,
+         precision_key: Optional[str] = None,
+         requested_identity: Optional[str] = None,
++        routing_runtime_path: Optional[str] = None,
+     ) -> Optional[BaseEstimator]:
+         if precision_key is not None:
+             precision_key = precision_key.upper()
+@@ -358,10 +421,32 @@ class PredictionModelRegistry:
+         else:
+             source = self._contract_model_registry(family_name)
+ 
+-        typed_candidates = {
+-            identity: candidate
+-            for (candidate_name, identity), candidate in source.items()
++        # A routing request selects among the estimators registered for one
++        # model name. Without one, a single registered routing implementation
++        # is unambiguous and several are not, which mirrors how this method
++        # already treats an absent layer-contract request.
++        matched = {
++            (identity, candidate_routing): candidate
++            for (candidate_name, identity, candidate_routing), candidate in (
++                source.items()
++            )
+             if candidate_name == model_name
++            and (
++                routing_runtime_path is None
++                or candidate_routing == routing_runtime_path
++            )
++        }
++        if routing_runtime_path is None:
++            registered_routing_paths = {routing for _identity, routing in matched}
++            if len(registered_routing_paths) > 1:
++                raise ValueError(
++                    f"Model '{model_name}' is trained for multiple MoE routing "
++                    "implementations; provide routing_runtime_path. Available "
++                    "implementations: "
++                    f"{sorted(str(path) for path in registered_routing_paths)}"
++                )
++        typed_candidates = {
++            identity: candidate for (identity, _routing), candidate in matched.items()
+         }
+         legacy = (
+             self._legacy_precision_bucket(family_name, precision_key).get(model_name)
+@@ -373,6 +458,14 @@ class PredictionModelRegistry:
+             if legacy is not None
+             else None
+         )
++        if (
++            legacy is not None
++            and routing_runtime_path is not None
++            and getattr(legacy, "_frontier_routing_runtime_path", None)
++            != routing_runtime_path
++        ):
++            legacy = None
++            legacy_identity = None
+ 
+         if requested_identity is not None:
+             model = typed_candidates.get(requested_identity)
+@@ -436,6 +529,30 @@ class PredictionModelRegistry:
+             is_moe_model=layer_kind is not LayerKind.DENSE,
+         )
+ 
++    def _resolve_cluster_routing_runtime_path(
++        self,
++        cluster_type: Optional[ClusterType],
++        model_name: str,
++    ) -> Optional[str]:
++        """Resolve the MoE routing implementation one cluster view asks for.
++
++        Only the gating top-k model's measured cost depends on the routing
++        implementation, so every other model keeps a `None` axis and its
++        lookups are unchanged.
++        """
++
++        if cluster_type is None or not is_moe_routing_runtime_sensitive_model(
++            model_name
++        ):
++            return None
++        cluster_configs = getattr(self, "_cluster_configs", None) or {}
++        replica_config = getattr(
++            cluster_configs.get(cluster_type), "replica_config", None
++        )
++        if replica_config is None:
++            return None
++        return resolve_replica_moe_routing_runtime_path(replica_config)
++
+     def _is_ffn_typed_model_for_cluster(
+         self,
+         cluster_type: Optional[ClusterType],
+@@ -464,25 +581,40 @@ class PredictionModelRegistry:
+         """Project one measurement family's canonical registries to model names."""
+ 
+         names = set(self._legacy_model_registry(family_name))
+-        names.update(
+-            model_name
+-            for model_name, _identity in self._contract_model_registry(family_name)
+-        )
++        registered_routing_paths: Dict[str, set] = {}
++        for model_name, _identity, routing in self._contract_model_registry(
++            family_name
++        ):
++            names.add(model_name)
++            registered_routing_paths.setdefault(model_name, set()).add(routing)
+         models: Dict[str, BaseEstimator] = {}
+         for model_name in sorted(names):
+             if self._is_ffn_typed_model_for_cluster(cluster_type, model_name):
+                 continue
+             contract = self._resolve_cluster_model_contract(cluster_type, model_name)
+             identity = _serialize_selected_layer_cache_identity(contract)
++            # Only ask for a routing implementation when the registry actually
++            # holds more than one, so a configuration that trains a single
++            # implementation keeps resolving exactly the model it always did.
++            routing_runtime_path = None
++            if len(registered_routing_paths.get(model_name, ())) > 1:
++                routing_runtime_path = self._resolve_cluster_routing_runtime_path(
++                    cluster_type, model_name
++                )
+             model = self._get_family_model(
+                 family_name,
+                 model_name,
+                 requested_identity=identity,
++                routing_runtime_path=routing_runtime_path,
+             )
+-            if identity is not None and model is None:
++            if model is None and (
++                identity is not None or routing_runtime_path is not None
++            ):
+                 raise ValueError(
+-                    f"No trained model for {model_name!r} matches the typed contract "
+-                    f"requested by cluster {cluster_type!r}: {identity}"
++                    f"No trained model for {model_name!r} matches the domain "
++                    f"requested by cluster {cluster_type!r}: "
++                    f"layer_contract={identity}, "
++                    f"routing_runtime_path={routing_runtime_path!r}"
+                 )
+             if model is not None:
+                 models[model_name] = model
+@@ -493,8 +625,9 @@ class PredictionModelRegistry:
+         model_name: str,
+         precision: Optional[str] = None,
+         layer_contract: Optional[ResolvedLayerContract] = None,
++        routing_runtime_path: Optional[str] = None,
+     ) -> Optional[BaseEstimator]:
+-        """Get a model by name, precision, and optional typed contract."""
++        """Get a model by name, precision, and optional typed domain."""
+ 
+         if self._all_dummy_mode:
+             return None
+@@ -506,6 +639,7 @@ class PredictionModelRegistry:
+                 model_name,
+                 precision_key=precision_key,
+                 requested_identity=requested_identity,
++                routing_runtime_path=routing_runtime_path,
+             )
+             if model is not None:
+                 return model
+diff --git a/frontier/execution_time_predictor/shared_prediction_model_manager.py b/frontier/execution_time_predictor/shared_prediction_model_manager.py
+index c432721..e4cb9ff 100644
+--- a/frontier/execution_time_predictor/shared_prediction_model_manager.py
++++ b/frontier/execution_time_predictor/shared_prediction_model_manager.py
+@@ -74,7 +74,6 @@ from frontier.moe_gating_runtime import (
+ )
+ from frontier.moe_routing_runtime import (
+     filter_moe_gating_routing_topk_rows,
+-    resolve_moe_gating_routing_runtime_path,
+ )
+ from frontier.operators.families import (
+     FFN_FAMILY,
+diff --git a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+index 92c8d21..d78be0d 100644
+--- a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
++++ b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+@@ -40,7 +40,7 @@ from frontier.moe_gating_runtime import (
+ )
+ from frontier.moe_routing_runtime import (
+     filter_moe_gating_routing_topk_rows,
+-    resolve_moe_gating_routing_runtime_path,
++    resolve_replica_moe_routing_runtime_path,
+ )
+ from frontier.moe_ep_workload import (
+     EPLaneWorkload,
+@@ -419,10 +419,11 @@ class SklearnMoEExecutionTimePredictor(
+                 "moe_routing_seed must be an exact non-negative int, "
+                 f"got {self._moe_routing_seed}."
+             )
++        # One owner for the routing implementation identity. `None` on the
++        # configuration keeps deriving it from the distribution; an explicit
++        # value overrides it. Every consumer reads this attribute.
+         self._moe_gating_routing_runtime_path = (
+-            resolve_moe_gating_routing_runtime_path(
+-                self._moe_routing_distribution_type
+-            )
++            resolve_replica_moe_routing_runtime_path(replica_config)
+         )
+ 
+         super().__init__(
+diff --git a/frontier/moe_routing_runtime.py b/frontier/moe_routing_runtime.py
+index 70b1463..00412f8 100644
+--- a/frontier/moe_routing_runtime.py
++++ b/frontier/moe_routing_runtime.py
+@@ -1,7 +1,11 @@
+ from __future__ import annotations
+ 
++from typing import Optional
++
+ import pandas as pd
+ 
++from frontier.moe_gating_runtime import get_moe_gating_base_model_name
++
+ 
+ STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH = "standard_fused_topk"
+ UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH = "uniform_topk"
+@@ -10,6 +14,19 @@ SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
+     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
+ }
+ 
++# The routing implementation changes the measured cost of selecting and
++# normalizing the top-k experts, and of nothing else in the MoE FFN.
++MOE_GATING_ROUTING_TOPK_MODEL_NAME = "moe_gating_routing_topk"
++
++
++def is_moe_routing_runtime_sensitive_model(model_name: str) -> bool:
++    """Report whether one trained model's cost depends on the routing path."""
++
++    return (
++        get_moe_gating_base_model_name(model_name)
++        == MOE_GATING_ROUTING_TOPK_MODEL_NAME
++    )
++
+ 
+ def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str:
+     normalized_path = str(requested_runtime_path).strip()
+@@ -36,6 +53,37 @@ def resolve_moe_gating_routing_runtime_path(
+     )
+ 
+ 
++def select_moe_gating_routing_runtime_path(
++    moe_routing_distribution_type: str,
++    moe_routing_runtime_path: Optional[str] = None,
++) -> str:
++    """Resolve the routing runtime path one configuration asks for.
++
++    ``None`` means "follow the distribution", which is what every configuration
++    did before the override existed. An implicit default and an explicit equal
++    value therefore resolve to the same string, so two configurations that
++    differ only in how they spell the same runtime keep sharing one model.
++    """
++
++    if moe_routing_runtime_path is None:
++        return resolve_moe_gating_routing_runtime_path(moe_routing_distribution_type)
++    return validate_moe_gating_routing_runtime_path(moe_routing_runtime_path)
++
++
++def resolve_replica_moe_routing_runtime_path(replica_config) -> str:
++    """Resolve one Replica configuration's routing runtime path, once.
++
++    Every consumer -- dataset admission, training identity, the trained-model
++    registry and the runtime query -- reads the path from here, so none of them
++    re-derives it from the distribution on its own.
++    """
++
++    return select_moe_gating_routing_runtime_path(
++        replica_config.moe_routing_distribution_type,
++        replica_config.moe_routing_runtime_path,
++    )
++
++
+ def filter_moe_gating_routing_topk_rows(
+     df: pd.DataFrame,
+     *,
+diff --git a/tests/unit/test_profiling_governance_minimal_red.py b/tests/unit/test_profiling_governance_minimal_red.py
+index a6ed0ff..747aa1b 100644
+--- a/tests/unit/test_profiling_governance_minimal_red.py
++++ b/tests/unit/test_profiling_governance_minimal_red.py
+@@ -1392,6 +1392,8 @@ def test_routed_and_shared_training_carry_distinct_contracts(tmp_path) -> None:
+         attn_tensor_parallel_size=8,
+         moe_tensor_parallel_size=1,
+         moe_expert_parallel_size=8,
++        moe_routing_distribution_type="balanced",
++        moe_routing_runtime_path=None,
+         speculative_decoding_config=None,
+     )
+     manager = object.__new__(ExecutionTimePredictionModelManager)

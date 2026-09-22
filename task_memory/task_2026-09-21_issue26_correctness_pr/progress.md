@@ -9,6 +9,7 @@
 | 2026-09-22 | Checkpoint D first half: W3, the shared monolithic forward lifecycle, implemented, tested against four deliberate-defect controls, and committed as `65ed8a7`. |
 | 2026-09-22 | W3 fidelity matrix measured: 71 of 71 identical against the expectation recorded before the run. Step 3 closed. |
 | 2026-09-22 | Checkpoint D second half: W4, the opt-in vLLM-style DP placement policy, implemented and committed as `10dd474`; measured against five deliberate-defect controls and a 71-of-71 identical fidelity matrix. Step 4 closed. |
+| 2026-09-22 | Checkpoint E first half: W5 closed as NOT PORTED by user decision after the premise check showed the collision unreachable on main; the drafted implementation was reverted before commit and archived as a patch. |
 
 ## Status
 
@@ -17,9 +18,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 4 complete: implemented, measured, records written |
-| Publication | PUSHED_VERIFIED (records) |
-| Next action | Checkpoint E: W5, the routing implementation identity, whose public name is still an open naming decision (open item 3), then the D2-scoped W6. |
+| Current step | Step 5 closed without source changes (NOT PORTED, user decision); records written |
+| Publication | LOCAL_ONLY (this record) |
+| Next action | Checkpoint E second half: the D2-scoped W6 legacy fused-MoE profiling arithmetic (`frontier/profiling/moe/moe_vllm_kernel.py`), then Checkpoint F's conditional W7. |
 
 ## Step status
 
@@ -30,7 +31,7 @@
 | 2 | RR DP rotation | PASS | unit PASS (23 tests); matrix PASS against a stated expectation, re-measured 2026-09-22 with one harness revision | PUSHED_VERIFIED | REVIEWED (R35-01 closed) |
 | 3 | Shared monolithic forward | PASS | unit PASS (23 new, 3717 total, failure set identical to the parent); integration PASS (real event loop, 4 mixed-phase cohorts); four deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 4 | Opt-in vLLM DP placement | PASS | unit PASS (61 new, 3778 total, failure set identical to the parent); integration PASS (3 cases in the real event loop, including a placement that diverges from round-robin); five deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
-| 5 | Routing implementation identity | NOT_STARTED | — | — | — |
+| 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | records only | REVIEWED (user chose to keep the single global field) |
 | 6 | Legacy fused-MoE profiling | NOT_STARTED | — | — | — |
 | 7 | Optional zero-payload backend | NOT_STARTED (facts in `plan.md` A7) | — | — | — |
 | 8 | Combined regression, PR hand-off | NOT_STARTED | — | — | — |
@@ -71,6 +72,10 @@
 - 2026-09-22: W4 regression comparison against the branch parent `cdfcdf5`. `tests/unit`: 84 failures on both sides with identical identities, 3778 vs 3717 passing. `tests/integration`: the same five pre-existing errors (the PD-AF Reference checkout is absent on this host), 21 skipped on both, 15 vs 12 passing. A focused 46-file set covering cluster scheduling, the decision log and the two edited events: 51 failed / 1432 passed, every failure already in the known 84-failure baseline.
 - 2026-09-22: W4 fidelity matrix PASS. Baseline `cdfcdf5` against candidate `10dd474`, both clean detached checkouts with `source_dirty=False` and no dirty paths, one harness at `10dd474`, no filter, clean cache, 71 executed and 426 cache files each. 71 of 71 compared and **71 identical**, zero mismatches, zero provenance findings, zero predictor cache differences -- exactly the expectation `design.md` recorded before the run. Note explicitly: no matrix case selects the new policy, so a null result is the pass condition for "nothing else moved", not evidence about the policy. Full record in `validation.md` and `test_report_2026-09-22_w4_vllm_dp_placement.md`.
 - 2026-09-22: Step 4 published. `0fd12c4` pushed to `origin/fix/issue26-correctness-pr`; PR #35 body gained a W4 section that states the mechanism with its citations, the measured report-key table behind the dense restriction, the two seams, the placement divergence from round-robin, the five controls with their distinct failure subsets, and the matrix result together with the fact that no matrix case selects the policy. PR #35 stays draft. The W4 measurement worktrees `.worktrees/w4-baseline` and `.worktrees/w4-candidate` were removed after their manifests, results and `comparison.json` were written; the matrix output root is kept as evidence.
+
+- 2026-09-22: W5 premise check before implementation. The review's Mechanism A rests on the routing distribution being settable per role. It is not: `ClusterConfig` declares no per-role `moe_routing_distribution_type` override, `get_field_value` always misses to the global `ReplicaConfig` field, and the generated CLI has one flag for it. Verified on this branch and on `main@1f694f7` with `git grep` and `python -m frontier.main --help`. Every cluster in a run resolves one routing path, so neither W5 mechanism can fire today; it could fire only after adding a per-role override. Put to the user with three options (global field only, global + per-role, port as specified); the user first chose global + per-role, and the config surface, single-owner resolver, routing-aware training signature and family gate, and a three-part registry key were drafted (uncommitted).
+- 2026-09-22: W5 magnitude, measured on request. On the three checked-in `moe.csv` files carrying both routing paths, the matched `moe_gating_routing_topk` cost differs by 3.1% (median; up to 24% at the smallest token counts), 7.3-7.8% and 4.2-5.4% of the summed per-layer operator medians (a800 qwen3-a3b-30b-moe, h800 Phi-tiny-MoE, h800 step-moe-noquant-small). This is the cost of the *existing* mapping picking the wrong kernel for a scenario, and the reason the mapping stays; the drafted override itself changed nothing while unset.
+- 2026-09-22: W5 closed as NOT PORTED. After the explanation of the collision case, of what `uniform_topk` is (the profiler's round-robin routing path, `moe_impl.py:75-103`), and of the three options, the user decided to keep the current contract: one global `moe_routing_distribution_type`, one derived path per run. The twelve drafted source/test files were restored with `git checkout` after saving the diff to `w5_reverted_moe_routing_runtime_path.patch` (745 lines). `review.md` W5 rows corrected and closed; `requirements.md` records the decision verbatim; `plan.md` section 11 is kept as specified with a closure note. No `frontier/` change, so no fidelity matrix run for this step.
 
 ## Step 3 scoping, as recorded before implementation
 
