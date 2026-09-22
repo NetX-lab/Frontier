@@ -208,3 +208,18 @@ Review document: `.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_
 
 - 2026-09-22: FP8 native rerun authorized by the user. Same launcher as `exp-0922-145047-660565`, worktree clean at `c231322`: `exp-0922-202645-561899`, `codesign` / H800 (`gpu-h800-0095`), `Succeeded`, `8 passed in 14.27s`, `W6:PARITY_EXIT=0`. Log via `logs_replica` only (`logs_rjob` empty); the first fetch two minutes after completion returned a truncated window, the second fetch five minutes later returned the full tail. Records: W6 report §8, corrections report C4, review.md C35-03, validation.md Step 6.
 - 2026-09-22: Second Step 9 plan review at the user's direction (quality gates). Eight findings R9-01..R9-08 recorded in `plan.md` §18.12 with amendments to D9-1 (hook payload = completion hook signature), D9-2 (key both observation kinds by the observing iteration; first candidate `ForwardSyncState._next_step_id_by_replica`, I5 gap to be measured), P1(a) (oracle = engine loop feeding the real balancer), §18.10, §18.11 representation column, §18.2 (32-step all-reduce); `design.md` section "What the code already provides"; `review.md` disposition table. Records only; no Step 9 source change; execution awaits the start signal.
+
+## Step 9 execution — P1 (2026-09-22)
+
+User start signal: "开始执行step9", with the quality gates repeated (readability, maintainability, high-value changes only, no hard-coding, no temporary patches, no over-defense, no redundancy, plain names).
+
+| Package | State | Evidence |
+| --- | --- | --- |
+| P1(a) reference-loop oracle | completed | `tests/comparison/dp_placement_pp/reference_loop.py`; `tests/unit/test_dp_placement_reference_loop.py` (9 passed, 1.21 s, `frontier-py310`). §18.11 state table confirmed as written; PP=1 shown to degenerate to "every iteration schedules and applies"; depth 3 shown to allow two consecutive admission-only publications, which rules out any stride constant. |
+| P1(b) Frontier boundary probe | blocked | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
+| Design checkpoint (D9-1, D9-2) | open | D9-1's payload is settled (the completion hook signature already carries lane, load and a key source). D9-2 is not: the candidate key `ForwardSyncState._next_step_id_by_replica` satisfies I1, I2, I3, I4 and I6 on the runnable shapes but fails I5, and no alternative can be checked against I1 without a running `attn_dp>1, PP>1` shape. |
+| P2–P6, G3–G5 | paused | All depend on the design checkpoint or on that shape. |
+
+W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_schduler.py` and `stage_contexts.py` are byte-identical to `main`. It is unobserved because every Simulator-level test with `attn_dp > 1` uses `num_pipeline_stages = 1` and no shipped example sets `attn_dp > 1`. Scope decision requested from the user; recommendation is to fix it as a separate correctness item rather than inside this feature branch.
+
+W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices against node size 4). Plan C1's PP3 row amended to `attn_dp=1`.

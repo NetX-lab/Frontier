@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | Added the design checkpoint section: D9-1 payload settled from the P1 oracle; D9-2 key left open because the `ForwardSyncState` candidate fails invariant I5 at PP>1 and the I1/I5 trade-off is only observable on the shape blocked by W9-01. |
 | 2026-09-22 | W9 second review (user-directed quality gates): section "What the code already provides" added; planned-edits rows for the hook payload, the call site and the CPU oracle amended; plan §18.12 R9-01..R9-08. |
 | 2026-09-22 | Created. Source-backed design for Checkpoint D's W3 half, with the scope decisions and their evidence. |
 | 2026-09-22 | Restructured into per-work-package sections and added the W4 design, with the report-key identity measured at the emission boundary. |
@@ -507,3 +508,48 @@ hybrid or external load balancing, wave resets, or elastic EP; and it does not
 claim latency equivalence of placements — the comparison is by boundary index,
 with timing controlled only where the discriminating scenario needs it.
 
+
+## Design checkpoint: what P1 settled and what it did not (2026-09-22)
+
+### D9-1 payload — settled
+
+The oracle confirms there is nothing to classify at the boundary. In the
+reference an iteration's branch depends on whether the oldest queued output is
+already done; in the DES a completion is atomic at its end event, so the
+admission hook needs the same four values the completion hook already takes,
+`(time, replica_id, replica_local_id, batch)`, and the policy reads the
+post-admission population through `get_request_load()`. The pipeline-room test
+stays, computed by the policy from `num_running_batches` and
+`num_pipeline_stages` (R9-01); it is what makes PP=1 report nothing extra.
+
+### D9-2 key — not settled, and the reason is structural
+
+The first candidate was the Replica-scoped forward id that `ForwardSyncState`
+hands out, read at the boundary. Measured on the three shapes that run:
+
+| Invariant | `attn_dp=2, PP=1` | `attn_dp=1, PP=2` | `attn_dp=1, PP=3` |
+| --- | --- | --- | --- |
+| I1 peers of one iteration compare equal | holds (both lanes read the same value at both boundaries) | not observable (one lane) | not observable |
+| I2 new iteration orders after the previous | holds (0, 6, 12, 18, 24) | holds after the fill | holds after the fill |
+| I3 one decision per iteration | holds (completion and the admission it triggers share the value) | holds | holds |
+| I5 consecutive admission-only iterations stay distinct | vacuous (none occur) | **fails**: both cold-fill admissions read 0 | **fails**: all three read 0 |
+| I6 bookkeeping released | holds (no new state) | holds | holds |
+
+The failure is not incidental. The forward id advances when a forward room
+opens, which happens once per executed forward, while the reference key advances
+once per engine iteration. At PP>1 a lane admits up to `num_pipeline_stages`
+batches before the first forward completes, so every one of those admissions
+reads the same id. That is precisely the cold fill the discriminating scenario
+in plan §18.6 turns on, so the candidate cannot be accepted.
+
+The obvious repair, a per-lane observation counter, restores I5 by construction
+and breaks I1 by construction: two lanes advance independently, so peer
+observations of one logical iteration no longer compare equal, which is the
+counterexample recorded above. Any rule that satisfies both has to derive a
+shared identity that still advances per observation, and whether a given rule
+does can only be decided by observing a shape with `attn_dp > 1` **and**
+`PP > 1`. That shape deadlocks today (W9-01 in `issues.md`).
+
+The checkpoint therefore closes with D9-1 fixed and D9-2 open. Implementing a
+key rule now would mean choosing between two invariants with no way to test the
+choice, which is the kind of unfalsifiable design the gates exclude.

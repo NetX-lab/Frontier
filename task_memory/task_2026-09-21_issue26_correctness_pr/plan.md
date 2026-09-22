@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | Step 9 execution started. §18.13 added: P1(a) oracle complete with the state-table evidence, P1(b) blocked by the pre-existing stage-admission deadlock W9-01 (`issues.md`), design checkpoint D9-2 left open because the candidate key fails invariant I5 and I1/I5 can only be settled on the deadlocking shape. C1 amended per W9-02: the PP3 row uses `attn_dp=1`. |
 | 2026-09-22 | §18 second review at the user's direction (codebase integration, readability, value, no hard-coding/patches/over-defense/redundancy, plain names): findings R9-01..R9-08 in §18.12; D9-1, D9-2, P1(a), §18.10 and the §18.11 representation column amended in place. Execution still not started. |
 | 2026-09-21 | Landed the execution specification verbatim (Section "Execution Specification" below) and recorded the amendments agreed with the user before Step 0. |
 | 2026-09-22 | Added amendment A12 and the Step 9 draft (§18; numbered §17 until 2026-09-22, when the duplicate number was fixed) for PP>1 support of the opt-in vLLM DP placement; awaiting user approval. |
@@ -856,7 +857,7 @@ Under [R1]: `frontier/profiling/moe/moe_vllm_kernel.py`, `frontier/entities/stag
 
 | # | Criterion | Evidence |
 | --- | --- | --- |
-| C1 | Valid PP2 and PP3 configurations (layer count divisible by PP; `MONOLITHIC`, one Replica, `vllm_v1`, MoE or `attn_dp == 1` — the PP1 clause is the only guard removed) complete every request with request/token/owner conservation, for dense `attn_dp=1` and MoE `attn_dp=2`. PP3 uses a separate CPU fixture with a valid layer count (6 or 12); the native PP2 model stays the approved 8-layer tiny Qwen3-MoE. | P4 real-loop PP2 and PP3 cases; §18.11 behavioral matrix. |
+| C1 | Valid PP2 and PP3 configurations (layer count divisible by PP; `MONOLITHIC`, one Replica, `vllm_v1`, MoE or `attn_dp == 1` — the PP1 clause is the only guard removed) complete every request with request/token/owner conservation, for dense `attn_dp=1` and MoE `attn_dp=2` at PP2. **Amended 2026-09-22 (W9-02):** the PP3 row uses `attn_dp=1`; `attn_dp=2, moe_ep=2, PP=3` is rejected at construction because 6 devices do not divide the node size of 4. PP3 uses a separate CPU fixture with a valid layer count (6 or 12); the native PP2 model stays the approved 8-layer tiny Qwen3-MoE. | P4 real-loop PP2 and PP3 cases; §18.11 behavioral matrix. |
 | C2 | Previously supported behavior is unchanged under the stated comparison contract: every existing PP1 `vllm_load_balancing` scenario has value-identical `request_metrics.csv` and identical `system_metrics.json` (timestamps/run ids removed, the Q11 rule), with no additional admission-only report; every other cluster scheduler, including the supported disaggregated paths, has identical event outcomes (the hook is inert for them). | P5 byte comparison; Step 8 regression set rerun. |
 | C3 | For a controlled or demonstrably matched iteration history, the emitted loads, the equality/order relation of logical-iteration keys, the coordinator snapshots and the frontend-visible counts agree with the reference. Natural-history divergence is classified by first cause (arrival/delivery order, batch composition, output readiness, count calculation, key grouping, snapshot publication, frontend selection), not hidden by re-indexing. Boundary-index comparison alone is not an alignment method. | CPU reference-loop oracle (P1) + causal join of the G4 trace (§18.11 instrumentation chain) + `workflow-gap-analysis`. |
 | C4 | In a trace-qualified native discriminating slice (§18.6, qualified per §18.11: the intended snapshot was applied at the frontend before the probe was routed), the corrected placement matches the reference and the explicit test-only completion-reporting control fails for the expected reason. The actual unmodified PP2 baseline is reported as rejected by its constructor, not as a placement. Otherwise the slice is `SCENARIO_NOT_REACHED` with the failed precondition named. | §18.6 comparison table with the control column. |
@@ -1049,6 +1050,35 @@ Named fields because the reference count accessor and Frontier's `RequestLoad` d
 Exact baseline comparison only for behavior meant to stay unchanged; new PP2/PP3 behavior needs independently written expected counts, placements and transitions.
 
 **P9-06 — work graph and acceptance language.** Applied in §18.5 and §18.1. A native out-of-order warning is evidence to analyze (the reference applies the counts after warning), not proof of a simulator bug nor a reason to rewrite native ordering.
+
+### 18.13 Execution status and the P1(b) blocker (2026-09-22)
+
+Start approval was given ("开始执行step9"). P1(a) is complete and P1(b) stopped on a pre-existing runtime defect that blocks the design checkpoint.
+
+**P1(a) reference-loop oracle — done.** `tests/comparison/dp_placement_pp/reference_loop.py` models the engine iteration only (the `step_with_batch_queue` conjunction, changed-count emission, per-iteration `step_counter`) and feeds emitted reports into the real `VllmDPLoadBalancer`. `tests/unit/test_dp_placement_reference_loop.py` pins the §18.11 state table: 9 tests, all pass. Findings:
+
+| §18.11 row | Oracle result |
+| --- | --- |
+| Depth 1 (PP=1) | Every iteration both schedules and applies; the admission-only row cannot occur. Frontier's completion-only report is already exact at PP=1. |
+| Room remains, oldest not ready | `scheduled=True, applied=False`, counts published. The admission-only observation is real. |
+| Room remains, oldest ready | One combined publication, not two. Confirms invariant I3. |
+| Zero-token schedule | Does not early-return; applies the oldest; publishes only if counts changed. |
+| Drain | `scheduled=False, applied=True`, published. |
+| Depth 3 | Two consecutive admission-only iterations, both published, steps 0 and 1. No stride constant can reproduce this (I5). |
+| Peer keys | Equal only while two engines sit at the same iteration index; one extra iteration on a lane moves its counter ahead. Confirms R9-08: step counters are per engine. |
+
+**P1(b) Frontier boundary probe — blocked.** Three shapes ran; the fourth deadlocks. Recorded as W9-01 in `issues.md`.
+
+| Shape | Boundaries | Candidate key `ForwardSyncState._next_step_id_by_replica` |
+| --- | --- | --- |
+| `attn_dp=2, moe_ep=2, PP=1` | 24, 6/6 completed | Peers of one forward always read the same value; values advance 0, 6, 12, 18, 24 (one per layer); each completion and the admission it triggers share a value. I1, I2, I3, I4, I6 hold. |
+| `attn_dp=1, moe_ep=1, PP=2` | 28, 6/6 completed | The two cold-fill admissions **both read 0**. Afterwards each completion/admission pair reads a common increasing value. |
+| `attn_dp=1, moe_ep=1, PP=3` | 32, 6/6 completed | The three cold-fill admissions **all read 0**, then pairs read 12, 18, 24, ... |
+| `attn_dp=2, moe_ep=2, PP=2` | — | Event queue drains with requests unfinished (W9-01). |
+
+**Design-checkpoint conclusion.** The candidate key satisfies I1–I4 and I6 but **fails I5**: it advances when a forward room opens, not once per engine iteration, so consecutive admissions on one lane while a stage is busy collapse into one key. That is exactly the cold fill the discriminating scenario in §18.6 depends on. A per-lane counter would fix I5 but breaks I1, and whether a candidate satisfies both can only be observed on a shape with `attn_dp > 1` **and** `PP > 1` — the shape W9-01 deadlocks. The key rule therefore cannot be fixed at this checkpoint, and D9-2 stays open.
+
+**Consequence.** Step 9 packages P2, P3, P4, G3, G4 and G5 all depend on the design checkpoint or on a running `attn_dp=2, PP=2` shape. They are paused pending the user's scope decision on W9-01. P1 and its records are complete.
 
 ### 18.12 Second review (2026-09-22, user-directed): codebase integration and quality gates
 
