@@ -7,6 +7,7 @@
 | 2026-09-21 | Created with the pinned source snapshot. |
 | 2026-09-21 | Step 1 complete: candidate and vLLM audits landed, dispositions recorded, two decision checkpoints raised. |
 | 2026-09-21 | Corrected the W3 and W4 rows: the step-id namespace is not partitioned by sync kind, only the open-step binding table is. Verified against `forward_sync_state.py` at `c18eb2c`. |
+| 2026-09-22 | W3 delivered and measured; R35-02 closed; the unreleased multi-lane monolithic MoE shape recorded as an open item. |
 | 2026-09-22 | Recorded the maintainer's PR #34 / PR #35 review: D1 and D2 resolved, ten review comments dispositioned, each verified against source. |
 | 2026-09-22 | Self-review of that record: corrected the lockstep mechanism and counter semantics under D1, the line references under R34-01, the R34-03 remedy (the baseline label is itself an assembled partial run), and added the omissions listed under "Found on re-review". |
 
@@ -60,6 +61,7 @@ Claims in those reports that this PR depends on were re-verified directly agains
 | Blocked hunk | The candidate's decode final-metrics hunk calls `scheduler._create_corrected_execution_time_for_metrics(...)`, which **main deleted**; `_create_prefill_corrected_execution_time_for_metrics` also changed signature and now lives at `base_cluster_scheduler.py:1138`. Porting verbatim raises `AttributeError`. Main additionally added `metrics_store` and `ep_wave_reporting_enabled` plumbing to `ep_wave_schedule.py` and `prefill_collective.py` that the candidate lacks. |
 | Disposition | **ADAPT** for the lifecycle change as one coherent unit; **BLOCKED** for the metrics hunk until it is rewritten against main's current execution-time ownership. |
 | Planned test | The behavior matrix in `plan.md` §9, including at least one test that drives the real event loop with overlapping prefill and decode and injects deterministic times only at the predictor boundary. |
+| Delivered | `65ed8a7`. Lifecycle adapted as one unit; the metrics hunk (I8) stayed **BLOCKED** and is now recorded as a deliberate exclusion in `design.md` rather than an open item. 23 behavior tests plus the real-runtime fixture; four deliberate-defect controls each fail for their own reason. Fidelity matrix 71 of 71 identical, matching the expectation recorded before the run. See `test_report_2026-09-22_w3_shared_monolithic_forward.md`. |
 
 ### W4 — Opt-in vLLM-style DP placement
 
@@ -131,10 +133,11 @@ The candidate deletes `VLLMv1EngineReplicaScheduler._get_num_waiting_reqs_for_de
 ## Open items
 
 1. Whether `_schedule_batch_mode`'s per-replica grouped return order is load-bearing for the consumers of `ClusterScheduleEvent`'s request mapping (W2).
-2. Whether W3's shared forward identity is the correct report-order key for W4, or whether a separate Replica-scoped step identity is required (D1).
+2. Whether W3's shared forward identity is the correct report-order key for W4, or whether a separate Replica-scoped step identity is required (D1). W3 is now delivered (`65ed8a7`): a monolithic cohort resolves to one step id in a single `"forward"` namespace regardless of its lanes' phases. W4 validates that identity at the report boundary.
 3. Which of the three existing spellings becomes the single public name for the routing implementation identity (W5).
 4. Pipeline-parallel behavior of the component ledgers is untested in both trees.
-5. The upstream `fused_moe.py` fork change passes a fifth `renormalize` argument to `torch.ops._moe_C.topk_softmax` while the in-tree schema still declares four; the prebuilt extension could not be inspected on this host. Numerically a no-op, but it would raise rather than degrade. Relevant only if W6 native validation runs against the fork's compiled package.
+5. A multi-lane monolithic MoE Replica has no released wrapper: the public MoE examples enforce `ATTN_TP == MOE_TP * MOE_EP` while the runtime enforces `attn_tp * attn_dp == moe_tp * moe_ep`, and those have no common solution above one lane. Its evidence therefore has to come from a direct-construction fixture, never from the fidelity matrix. Whether the release should offer such a wrapper is a product question, not a correctness one, and is left open.
+6. The upstream `fused_moe.py` fork change passes a fifth `renormalize` argument to `torch.ops._moe_C.topk_softmax` while the in-tree schema still declares four; the prebuilt extension could not be inspected on this host. Numerically a no-op, but it would raise rather than degrade. Relevant only if W6 native validation runs against the fork's compiled package.
 
 ## Final code-review findings
 
@@ -289,7 +292,7 @@ marked closed when the evidence for it is committed, not when the change is.
 | R34-04 retained checks | **CLOSED** | `tests/unit/test_module_split_boundaries.py` (13 tests). Beyond the ask: all 142 baseline-produced pickled estimators load under the split code and 86 predict, which cache-name equality could not show. One pre-existing `NameError` on `ClusterConfig` annotations is pinned, not fixed, and verified to fail identically on `1f694f7`. |
 | R34-05 bounded split | **CLOSED** | Guidance applied while writing the new tests; an unused import removed. |
 | R35-01 W2 tests | **CLOSED** | `tests/unit/test_cluster_scheduler_dp_lanes.py`: three topologies with the full rotation written out by hand past its wraparound, driven through the public `schedule()`, each run for both MONOLITHIC and PREFILL. The source-text guard is kept with a docstring stating it is governance only. Negative control against the pre-fix method: 12 of 22 fail, controls pass. |
-| R35-02 wrapper limit | **PARTIAL** | The `cases.py` remedy wording is corrected: the wrapper limit is not a runtime limit, and the fixture it calls for builds a runtime configuration directly with durations injected at the predictor boundary. The fixture itself is W3 acceptance work and is not written yet. |
+| R35-02 wrapper limit | **CLOSED** | `tests/integration/test_monolithic_mixed_forward_runtime.py` builds `attn_tp=1, attn_dp=2, moe_tp=1, moe_ep=2` directly, runs the real `Simulator` event loop with real admission, ownership and completion, and injects deterministic durations only by wrapping the predictor. It reaches four mixed-phase cohorts, which no wrapper and no matrix case can. On the pre-fix source the same fixture ends with a non-empty scheduler state, so the fixture is shown to detect the defect it exists for. |
 | R35-03 SGLang consumers | OPEN | W4. |
 | R35-04 W5 scope | OPEN | W5. |
 | R35-05 gates | **CLOSED** | This document. |
