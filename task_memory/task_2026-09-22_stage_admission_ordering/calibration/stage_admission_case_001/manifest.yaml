@@ -1,0 +1,148 @@
+# Frontier calibration case: stage admission of attention-DP lanes under PP.
+# Structural comparison (plan §4.7, D-8). No E2E latency gate: the Frontier
+# side runs the dummy predictor, and the fix changes admission, not durations.
+
+case_id: stage_admission_case_001
+run_generation: 1
+created_at_utc: "2026-09-23"
+requesting_user: i-fengyicheng
+reviewer_identity: i-fengyicheng
+auto_recycle: false
+
+purpose: >-
+  Check that the stage-admission rule of plan P1 makes Frontier's attention-DP
+  lanes behave like vLLM V1 data-parallel ranks at pipeline_parallel_size 2:
+  a rank with runnable work is not refused at its stage by another rank's
+  queued work, both ranks start in the same forward slot, and stage-0 forwards
+  pair one to one. Criterion C7 of plan.md.
+
+selected_checkout:
+  frontier_worktree: /data/ycfeng/Frontier/.worktrees/stage-admission-ordering
+  frontier_branch: fix/stage-admission-ordering
+  frontier_before_source: 1f694f7   # P0 set "base"; source identical to origin/main
+  frontier_after_commit: dac4e69    # P1 rule commit; P3 set "after"
+  frontier_harness: tests/e2e/stage_admission_matrix.py (group G7)
+
+groundtruth_checkout_path: /data/ycfeng/Frontier/.real-engine/vLLM-BS
+groundtruth_branch: feature/frontier-comparison-instrumentation
+groundtruth_ref: refs/heads/feature/frontier-comparison-instrumentation
+groundtruth_commit: 494b9f327036d4493034a9b37ebb343354884e01
+groundtruth_tree_dirty: false
+groundtruth_remote_url: https://github.com/fwyc0573/vLLM-BS.git
+groundtruth_remote_tip: ea95f571e20937c7c908c6d59ddd1cd6bf9268f1
+groundtruth_remote_tip_note: >-
+  The local commit is one commit ahead of the remote tip (494b9f327, "Trace the
+  data-parallel placement chain for Frontier calibration"), unpushed; it adds
+  only the DP placement records. Its diff is inputs/groundtruth_local_commit.diff,
+  identical to the parent task's dp_pp_case_001/g1_instrumentation.diff.
+groundtruth_diff_artifact: inputs/groundtruth_local_commit.diff
+groundtruth_diff_sha256: 84fc24db0e2411268a93f8be7ca5f8e4e5072ea09d86063cac2cfb98381feb2c
+groundtruth_upstream_base: 01efc7ef7 (tag upstream-v0.10.2)
+groundtruth_fork_changes: inputs/fork_changed_files.txt   # 61 files under vllm/, 59 .py
+groundtruth_dirty_patch_sha256: null
+groundtruth_overlay_patch_applied: true   # run sa-pp-20260923b; run sa-pp-20260923a had none
+groundtruth_overlay_patch: inputs/groundtruth_overlay.patch
+groundtruth_overlay_patch_sha256: 8d47678911b7b689bc644ea81bd9d2200ea296d773ee9c07a1c5a9bc9b3a9c81
+groundtruth_overlay_patch_reason: >-
+  Fork commit 1109c4f16 passes a fifth renormalize argument to
+  _moe_C::topk_softmax; the fork's own csrc (unchanged from upstream-v0.10.2)
+  and the v0.10.2 image declare four, so run a failed in the MoE profile_run.
+  The patch restores the upstream four-argument wrapper (vllm/_custom_ops.py)
+  and call (fused_moe.py vllm_topk_softmax). Numerics are unchanged: Python
+  renormalizes after the call. The checkout is not modified.
+groundtruth_overlay: >-
+  The worker copies the image's installed vllm package and copies every
+  vllm/**/*.py of the checkout over it. It runs only when the files where image
+  and checkout differ are exactly the .py files of fork_changed_files.txt
+  (overlay_report.json in the run directory).
+groundtruth_weight_mode: dummy
+real_weight_download: false
+
+topology:
+  vllm: "data_parallel_size=2, pipeline_parallel_size=2, tensor_parallel_size=1; MoE adds enable_expert_parallel"
+  frontier: "attn_dp=2, num_pipeline_stages=2, attn_tp=1, one Replica; MoE adds moe_tp=1, moe_ep=2"
+  devices: 4x H800 (vLLM); h800 / h800_dgx (Frontier)
+  cluster_scheduler: round_robin (request i to lane i mod 2)
+  replica_scheduler: vllm_v1
+
+models:
+  moe: data/config/models/Qwen3-30B-A3B-tiny.json
+  dense: data/config/models/Llama-3.2-1B-Instruct.json
+
+settings:
+  dtype: bfloat16
+  prompt_tokens: 256
+  output_tokens: 1
+  max_num_batched_tokens: 256
+  max_num_seqs: 4
+  block_size: 16
+  chunked_prefill: true
+  prefix_caching: false
+  graph_mode: eager
+  frontier_num_blocks: 1024
+  vllm_gpu_memory_utilization: 0.5
+  vllm_num_gpu_blocks: recorded in runs/vllm-instrumented/<run>/runs/<model>/summary.json
+
+workload:
+  request_id_namespace: "<burst>-q<index>; burst = warmup | b<n>-r<round>"
+  request_id_encoding: "AsyncLLM.add_request request_id, unchanged into the engine (n=1)"
+  frontier_request_ids: "0..n-1, mapped to vLLM b<n>-r<round>-q<index> by index"
+  lane_assignment: "index mod 2 (vLLM data_parallel_rank; Frontier round robin)"
+  warmup_request_ids: [warmup-q0, warmup-q1, warmup-q2, warmup-q3]
+  formal_request_ids: "b8-r{0,1,2}-q{0..7}, b16-r{0,1,2}-q{0..15}"
+  rounds_per_burst: 3
+  idle_between_rounds: "engines paused (dp_engines_running false), then 1 s"
+
+modes:
+  groundtruth_instrumented:
+    env: "VLLM_FRONTIER_INSTRUMENTATION=1, VLLM_FRONTIER_PP_BOUNDARY_LOG_PATH, VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR, VLLM_WORKER_MULTIPROC_METHOD=spawn"
+    producer: tests/comparison/stage_admission_pp/run_vllm_worker.sh
+    artifact_path: runs/vllm-instrumented/<RUN_TAG>/ (archive /mnt/codesign-exp/ycfeng/frontier/stage_admission_pp/<RUN_TAG>/)
+    status: COMPLETE
+    runs:
+      - run_tag: sa-pp-20260923a
+        rjob: exp-0923-022226-151935
+        overlay_patch: none
+        result: "dense complete; MoE failed (_moe_C::topk_softmax 5 vs 4 arguments); job Failed"
+      - run_tag: sa-pp-20260923b
+        rjob: exp-0923-024146-345158
+        overlay_patch: inputs/groundtruth_overlay.patch
+        result: "MoE and dense complete; job Succeeded; used by analysis/"
+  groundtruth_clean:
+    status: NOT_APPLICABLE   # no E2E latency gate (D-8)
+  simulator_before:
+    source: /data/ycfeng/tmp/stage_admission_ordering/base/G7-*
+    status: COMPLETE   # MoE n8/n16 admission_deadlock; dense n8/n16 success
+  simulator_after:
+    source: /data/ycfeng/tmp/stage_admission_ordering/after/G7-*
+    status: COMPLETE   # all four G7 cases success at dac4e69
+
+analysis:
+  producer: tests/comparison/stage_admission_pp/compare_lanes.py
+  outputs: [analysis/workflow_gap_table.csv, analysis/lane_metrics.json, analysis/workflow_gap_status.json, analysis/workflow_gap_summary.md]
+  gates_not_applicable:
+    e2e_gate: "structural comparison; Frontier uses the dummy predictor (D-8)"
+    moe_routing_distortion_gate: "no request-level parity claim; admission order does not depend on routing"
+
+decisions:
+  - decision_id: R-6
+    question: Validate the admission fix against vLLM on a GPU worker?
+    answer: "按照已有plan执行上述修复（该修复需要和在gpu worker上运行的vllm进行合理的对比验证，确保修改的有效性）"
+    decided_at_utc: "2026-09-23"
+  - decision_id: D-8
+    question: Comparison scope and mode.
+    answer: Structural M1-M5 in instrumented mode, prefill-only, existing model configs, no E2E gate (plan.md D-8).
+    decided_at_utc: "2026-09-23"
+  - decision_id: gpu-charged-group
+    question: GPU cluster.
+    answer: "codesign only (后续的gpu worker集群只允许使用 codesign（暂停对steptron_ci的使用，直至得到我允许）)"
+  - decision_id: topk-softmax-abi
+    question: How to run the MoE ground truth after the topk_softmax ABI failure of run a?
+    answer: "topk_softmax 统一修复为4 个参数的版本"
+    decided_at_utc: "2026-09-23"
+
+analysis_result: >-
+  50 of 52 rows MATCH. V5 (stage-0 co-execution) MISMATCH on dense n8 and n16;
+  cause and proposal in analysis/workflow_gap_summary.md. Plan §3 P5 stop:
+  nothing adjusted, awaiting the user's decision.
+status: STOPPED_FOR_DECISION

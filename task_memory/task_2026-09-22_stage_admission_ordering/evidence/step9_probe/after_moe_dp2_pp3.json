@@ -1,0 +1,9 @@
+{
+ "shape": {
+  "is_moe": true,
+  "attn_dp": 2,
+  "moe_ep": 2,
+  "stages": 3
+ },
+ "error": "ValueError('collective-sim physical topology requires cluster_total_devices 6 to be divisible by node size 4')"
+}

@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-7: ground-truth `topk_softmax` fixed to the four-argument version for the MoE retry. |
+| 2026-09-23 | R-6: execute P0–P4 and validate the fix against vLLM on a GPU worker (package P5). |
 | 2026-09-23 | R-5: round-1 plan review verified and applied to the records; execution deferred. |
 | 2026-09-23 | R-4: D-1..D-5 adopted; push and draft PR authorized. |
 | 2026-09-22 | Created from the Step 9 finding W9-01 in `task_2026-09-21_issue26_correctness_pr`; recorded the user's scope decision and the request for a reviewable plan. |
@@ -32,6 +34,15 @@ a recommendation to fix it as a separate correctness item):
 
 > 以下是最新review结果，请你核实每个comments，采纳高价值和必要决策，修复完善docs，暂不执行。
 
+`[Original Request]` (2026-09-23, after round 1 was applied and pushed):
+
+> 按照已有plan执行上述修复（该修复需要和在gpu worker上运行的vllm进行合理的对比验证，确保修改的有效性）
+
+`[Original Request]` (2026-09-23, during P5, after the first GPU run failed on the
+MoE `topk_softmax` ABI):
+
+> 我先提前决策，避免中断任务：topk_softmax 统一修复为4 个参数的版本
+
 Quality gates the user repeated for every core-module change in this line of
 work, carried over verbatim:
 
@@ -46,6 +57,8 @@ work, carried over verbatim:
 | R-3 | No source change before the user reviews `plan.md` and `design.md`. | user, 2026-09-22 |
 | R-4 | Plan decisions D-1..D-5 adopted as recommended. Push the branch and open a draft PR so the review happens on the remote; the reviewer resumes from a prepared prompt. | user, 2026-09-23 |
 | R-5 | Verify every review finding against the source, adopt the high-value and necessary corrections into the records (dispositions in `review.md`, new decisions D-6 and D-7 in `plan.md`), and do not execute: no P0 run, no source change. The docs commit is pushed to the draft PR under R-4. | user, 2026-09-23 |
+| R-6 | Execute P0–P4 as planned. The fix must also be validated against vLLM running on a GPU worker, in a comparison designed to show whether the change is effective (package P5 in `plan.md`). The request authorizes the GPU job within the standing GPU rules below. | user, 2026-09-23 |
+| R-7 | The vLLM ground truth uses the four-argument `topk_softmax` (wrapper and call). Applied as the recorded overlay patch `calibration/stage_admission_case_001/inputs/groundtruth_overlay.patch` on the one retry job; the vLLM-BS checkout is unchanged. | user, 2026-09-23 |
 
 ## Constraints carried from the parent task
 
@@ -58,3 +71,10 @@ work, carried over verbatim:
 - Temporary files under `/data/ycfeng/tmp`; the simulator interpreter is
   `/data/ycfeng/envs/frontier-py310/bin/python`.
 - Never `cd` into the original repository root; use `git -C` and absolute paths.
+- GPU work (R-6): StepMind Python `RJobBackend` only, `i-fengyicheng` personal
+  auth, `charged_group="codesign"` only (`steptron_ci` paused until the user
+  allows it again), `positive_tags=["H800"]`, submitted from this machine with
+  local NFS mounts, launcher kept alive, no resubmission while queued. Cloud
+  volume access is confined to `/mnt/codesign-exp/ycfeng`. Credential values
+  stay in restricted files and process environments; never print or record
+  them, and keep shell tracing off.

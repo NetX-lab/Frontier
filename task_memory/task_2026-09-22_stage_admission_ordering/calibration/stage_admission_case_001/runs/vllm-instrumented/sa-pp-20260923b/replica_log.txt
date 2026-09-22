@@ -1,0 +1,14 @@
+# Replica log tail of RJob exp-0923-024146-345158 (codesign, H800 x4, creator i-fengyicheng).
+# Platform init lines (node addresses, NCCL interface settings) are removed; workload output is verbatim.
+{"python": "3.12.11", "torch": "2.8.0+cu128", "cuda_available": true, "device_count": 4, "devices": ["NVIDIA H800", "NVIDIA H800", "NVIDIA H800", "NVIDIA H800"]}
+{"accepted": true, "unexpected": [], "missing": []}
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+VLLM_IMPORT 0.10.2 /tmp/stage_admission_pp/sa-pp-20260923b/overlay/vllm/__init__.py /tmp/stage_admission_pp/sa-pp-20260923b/overlay/vllm/v1/frontier_trace.py
+SCENARIO_PASS moe
+SCENARIO_PASS dense
+moe DRIVER_DONE {"rounds": 7, "num_gpu_blocks": 600666}
+152 /tmp/stage_admission_pp/sa-pp-20260923b/runs/moe/pp_boundary.jsonl
+dense DRIVER_DONE {"rounds": 7, "num_gpu_blocks": 304854}
+152 /tmp/stage_admission_pp/sa-pp-20260923b/runs/dense/pp_boundary.jsonl
+WORKER_STATUS=0 RUN_TAG=sa-pp-20260923b

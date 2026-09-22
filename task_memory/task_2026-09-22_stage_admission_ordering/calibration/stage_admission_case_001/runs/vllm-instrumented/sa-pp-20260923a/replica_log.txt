@@ -1,0 +1,73 @@
+# Replica log tail of RJob exp-0923-022226-151935 (codesign, H800 x4, creator i-fengyicheng).
+# Platform init lines (node addresses, NCCL interface settings) are removed; workload output is verbatim.
+{"python": "3.12.11", "torch": "2.8.0+cu128", "cuda_available": true, "device_count": 4, "devices": ["NVIDIA H800", "NVIDIA H800", "NVIDIA H800", "NVIDIA H800"]}
+{"accepted": true, "unexpected": [], "missing": []}
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+VLLM_IMPORT 0.10.2 /tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/__init__.py /tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/frontier_trace.py
+SCENARIO_FAIL moe exit=1
+(EngineCore_DP0 pid=232)     return self.collective_rpc("determine_available_memory")
+(EngineCore_DP0 pid=232)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP0 pid=232)   File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/executor/multiproc_executor.py", line 257, in collective_rpc
+(EngineCore_DP0 pid=232)     result = result.result()
+(EngineCore_DP0 pid=232)              ^^^^^^^^^^^^^^^
+(EngineCore_DP0 pid=232)   File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+(EngineCore_DP0 pid=232)     return self.__get_result()
+(EngineCore_DP0 pid=232)            ^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP0 pid=232)   File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+(EngineCore_DP0 pid=232)     raise self._exception
+(EngineCore_DP0 pid=232)   File "/usr/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+(EngineCore_DP0 pid=232)     result = self.fn(*self.args, **self.kwargs)
+(EngineCore_DP0 pid=232)              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore_DP0 pid=232)   File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/executor/multiproc_executor.py", line 243, in get_response
+(EngineCore_DP0 pid=232)     raise RuntimeError(
+(EngineCore_DP0 pid=232) RuntimeError: Worker failed with error '_moe_C::topk_softmax() expected at most 4 argument(s) but received 5 argument(s). Declaration: _moe_C::topk_softmax(Tensor($0! -> ) topk_weights, Tensor($1! -> ) topk_indices, Tensor($2! -> ) token_expert_indices, Tensor gating_output) -> ()', please check the stack trace above for the root cause
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/stage-admission-ordering/tests/comparison/stage_admission_pp/vllm_burst_driver.py", line 221, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/data/ycfeng/Frontier/.worktrees/stage-admission-ordering/tests/comparison/stage_admission_pp/vllm_burst_driver.py", line 213, in main
+    summary = asyncio.run(run_bursts(args))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/data/ycfeng/Frontier/.worktrees/stage-admission-ordering/tests/comparison/stage_admission_pp/vllm_burst_driver.py", line 113, in run_bursts
+    engine = AsyncLLM.from_engine_args(engine_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/async_llm.py", line 240, in from_engine_args
+    return cls(
+           ^^^^
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/async_llm.py", line 136, in __init__
+    self.engine_core = EngineCoreClient.make_async_mp_client(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/core_client.py", line 102, in make_async_mp_client
+    return DPLBAsyncMPClient(*client_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/core_client.py", line 1137, in __init__
+    super().__init__(vllm_config, executor_class, log_stats,
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/core_client.py", line 975, in __init__
+    super().__init__(vllm_config, executor_class, log_stats,
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/core_client.py", line 770, in __init__
+    super().__init__(
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/core_client.py", line 449, in __init__
+    with launch_core_engines(vllm_config, executor_class,
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/utils.py", line 729, in launch_core_engines
+    wait_for_engine_startup(
+  File "/tmp/stage_admission_pp/sa-pp-20260923a/overlay/vllm/v1/engine/utils.py", line 782, in wait_for_engine_startup
+    raise RuntimeError("Engine core initialization failed. "
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+SCENARIO_PASS dense
+dense DRIVER_DONE {"rounds": 7, "num_gpu_blocks": 304854}
+152 /tmp/stage_admission_pp/sa-pp-20260923a/runs/dense/pp_boundary.jsonl
+WORKER_STATUS=1 RUN_TAG=sa-pp-20260923a
+ExitCode= 1

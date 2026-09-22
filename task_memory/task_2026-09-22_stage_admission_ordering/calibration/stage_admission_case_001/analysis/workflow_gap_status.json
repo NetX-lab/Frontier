@@ -1,0 +1,10 @@
+{
+ "analysis_state": "COMPLETE",
+ "status": "FAIL",
+ "correction_state": "not_applicable",
+ "rows": 52,
+ "mismatches": 2,
+ "vllm_placement_ok": true,
+ "vllm_placement_unseen_requests": 0,
+ "next_action": "report each MISMATCH row with its cause before P4; adjust nothing"
+}
