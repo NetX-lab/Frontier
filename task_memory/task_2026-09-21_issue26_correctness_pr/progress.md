@@ -18,7 +18,7 @@
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
 | Current step | Step 3 complete: implemented, measured, records written |
 | Publication | PUSHED_VERIFIED (records) |
-| Next action | Push the Step 3 records and add the W3 section to PR #35; then Checkpoint D second half (W4, the opt-in vLLM DP placement). |
+| Next action | Checkpoint D second half: W4, the opt-in vLLM-style DP placement, validating W3's shared forward identity at the report boundary per decision D1. |
 
 ## Step status
 
@@ -27,7 +27,7 @@
 | 0 | Worktree, references, baseline | PASS | PASS (baseline recorded) | PUSHED_VERIFIED | NOT_REVIEWED |
 | 1 | Candidate/vLLM audit | PASS | n/a (source audit) | LOCAL_ONLY | NOT_REVIEWED |
 | 2 | RR DP rotation | PASS | unit PASS (23 tests); matrix PASS against a stated expectation, re-measured 2026-09-22 with one harness revision | PUSHED_VERIFIED | REVIEWED (R35-01 closed) |
-| 3 | Shared monolithic forward | PASS | unit PASS (23 new, 3717 total, failure set identical to the parent); integration PASS (real event loop, 4 mixed-phase cohorts); four deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | LOCAL_ONLY | NOT_REVIEWED |
+| 3 | Shared monolithic forward | PASS | unit PASS (23 new, 3717 total, failure set identical to the parent); integration PASS (real event loop, 4 mixed-phase cohorts); four deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 4 | Opt-in vLLM DP placement | NOT_STARTED | — | — | — |
 | 5 | Routing implementation identity | NOT_STARTED | — | — | — |
 | 6 | Legacy fused-MoE profiling | NOT_STARTED | — | — | — |
@@ -58,6 +58,7 @@
 - 2026-09-22: W3 regression comparison against the branch parent `3d47417` in a dedicated detached worktree. `tests/unit`: 84 failures on both sides with identical identities, 3717 vs 3694 passing. `tests/integration`: the same five pre-existing errors (the PD-AF Reference checkout is absent on this host), 12 vs 11 passing. No regressions and no accidental fixes.
 - 2026-09-22: W3 controls rebuilt against the final test file and re-run, so the recorded counts match what is delivered. Each tree now carries the final `frontier/` and the final `tests/` and differs from the delivered source by exactly one edit, except the baseline tree whose `frontier/` is the pre-fix parent in full. Counts: 22, 12, 2 and 16 of 23 unit tests fail respectively, and each runtime failure is distinct. The pre-fix tree's same-phase pairs pass every assertion about the forward itself and fail only at the final shared-room inspection; the mixed pairs fail earlier at an empty collective list, which is the deadlock isolated.
 - 2026-09-22: W3 fidelity matrix PASS. Baseline `3d47417` against candidate `65ed8a7`, both clean detached checkouts with `source_dirty=False` and no dirty paths, one harness at `65ed8a7`, no filter, clean cache, 71 executed and 426 cache files each. 71 of 71 compared and **71 identical**, zero mismatches, zero provenance findings, zero predictor cache differences. That is exactly the expectation `design.md` recorded before the run; the conditional I7 branch was not taken. Note explicitly: the matrix cannot reach a multi-lane monolithic MoE forward at all, so a null result is the pass condition for "nothing else moved", not evidence that the defect is fixed. Full record in `validation.md` and `test_report_2026-09-22_w3_shared_monolithic_forward.md`.
+- 2026-09-22: Step 3 published. `bdff4aa` pushed to `origin/fix/issue26-correctness-pr`; PR #35 body gained a W3 section that states the defect, the one-lifecycle fix, the event-priority constraint, the four controls with their distinct failures, and the matrix result together with what a null result does and does not mean. PR #35 stays draft. The W3 measurement worktrees `.worktrees/w3-baseline` and `.worktrees/w3-candidate` were removed after their manifests, results and `comparison.json` were written; the matrix output root is kept as evidence.
 
 ## Step 3 scoping, as recorded before implementation
 
