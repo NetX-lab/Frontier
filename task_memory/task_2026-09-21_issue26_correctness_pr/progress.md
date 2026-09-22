@@ -19,7 +19,7 @@
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
 | Current step | Step 5 closed without source changes (NOT PORTED, user decision); records written |
-| Publication | LOCAL_ONLY (this record) |
+| Publication | PUSHED_VERIFIED (records) |
 | Next action | Checkpoint E second half: the D2-scoped W6 legacy fused-MoE profiling arithmetic (`frontier/profiling/moe/moe_vllm_kernel.py`), then Checkpoint F's conditional W7. |
 
 ## Step status
@@ -31,7 +31,7 @@
 | 2 | RR DP rotation | PASS | unit PASS (23 tests); matrix PASS against a stated expectation, re-measured 2026-09-22 with one harness revision | PUSHED_VERIFIED | REVIEWED (R35-01 closed) |
 | 3 | Shared monolithic forward | PASS | unit PASS (23 new, 3717 total, failure set identical to the parent); integration PASS (real event loop, 4 mixed-phase cohorts); four deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 4 | Opt-in vLLM DP placement | PASS | unit PASS (61 new, 3778 total, failure set identical to the parent); integration PASS (3 cases in the real event loop, including a placement that diverges from round-robin); five deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
-| 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | records only | REVIEWED (user chose to keep the single global field) |
+| 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | PUSHED_VERIFIED (records + PR 35 section) | REVIEWED (user chose to keep the single global field) |
 | 6 | Legacy fused-MoE profiling | NOT_STARTED | — | — | — |
 | 7 | Optional zero-payload backend | NOT_STARTED (facts in `plan.md` A7) | — | — | — |
 | 8 | Combined regression, PR hand-off | NOT_STARTED | — | — | — |
@@ -76,6 +76,8 @@
 - 2026-09-22: W5 premise check before implementation. The review's Mechanism A rests on the routing distribution being settable per role. It is not: `ClusterConfig` declares no per-role `moe_routing_distribution_type` override, `get_field_value` always misses to the global `ReplicaConfig` field, and the generated CLI has one flag for it. Verified on this branch and on `main@1f694f7` with `git grep` and `python -m frontier.main --help`. Every cluster in a run resolves one routing path, so neither W5 mechanism can fire today; it could fire only after adding a per-role override. Put to the user with three options (global field only, global + per-role, port as specified); the user first chose global + per-role, and the config surface, single-owner resolver, routing-aware training signature and family gate, and a three-part registry key were drafted (uncommitted).
 - 2026-09-22: W5 magnitude, measured on request. On the three checked-in `moe.csv` files carrying both routing paths, the matched `moe_gating_routing_topk` cost differs by 3.1% (median; up to 24% at the smallest token counts), 7.3-7.8% and 4.2-5.4% of the summed per-layer operator medians (a800 qwen3-a3b-30b-moe, h800 Phi-tiny-MoE, h800 step-moe-noquant-small). This is the cost of the *existing* mapping picking the wrong kernel for a scenario, and the reason the mapping stays; the drafted override itself changed nothing while unset.
 - 2026-09-22: W5 closed as NOT PORTED. After the explanation of the collision case, of what `uniform_topk` is (the profiler's round-robin routing path, `moe_impl.py:75-103`), and of the three options, the user decided to keep the current contract: one global `moe_routing_distribution_type`, one derived path per run. The twelve drafted source/test files were restored with `git checkout` after saving the diff to `w5_reverted_moe_routing_runtime_path.patch` (745 lines). `review.md` W5 rows corrected and closed; `requirements.md` records the decision verbatim; `plan.md` section 11 is kept as specified with a closure note. No `frontier/` change, so no fidelity matrix run for this step.
+
+- 2026-09-22: W5 closure published. `de2bee8` pushed to `origin/fix/issue26-correctness-pr`; PR #35 gained a "W5, which is not in this PR, and why" section carrying the reachability correction with its `cluster_role_config.py:58-63` citation, what the module decides (`moe_impl.py:75-103`, `:195-225`), the three-dataset magnitude table, and the explicit statement that the reverted override's own fidelity effect was zero by construction. The Status line now reads "W6 onward is still to come". PR #35 stays draft. Verified the published body matches what was sent (the one-byte difference is the trailing newline `gh --jq` adds).
 
 ## Step 3 scoping, as recorded before implementation
 
