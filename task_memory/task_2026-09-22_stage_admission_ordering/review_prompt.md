@@ -1,0 +1,23 @@
+# Resume prompt for the reviewing agent
+
+Copy everything below the line into the review agent's first message.
+
+---
+
+You are reviewing draft PR https://github.com/NetX-lab/Frontier/pull/36 on `NetX-lab/Frontier`, branch `fix/stage-admission-ordering`, base `main` at `1f694f7`. Start with the repository's `AGENTS.md`, then read, in this order, under `task_memory/task_2026-09-22_stage_admission_ordering/`: `requirements.md`, `design.md`, `plan.md`, `progress.md`.
+
+Context. Frontier is a discrete-event LLM inference simulator. One `StageExecutionContext` (`frontier/scheduler/replica_stage_scheduler/stage_execution_context.py`) owns each physical `(replica, stage)` and is shared by that stage's attention-DP lanes, each of which has its own `ReplicaStageScheduler` (`replica_stage_schduler.py`) with its own batch heap and `_is_busy` flag. `add_batch` mints a `StageAdmissionTicket` at batch arrival into the shared `_ready_fifo`; `pop_batch_if_not_busy` later asks `try_acquire` for the lane's heap head, which is refused unless the ticket is the strict FIFO head (after the EP-active, capacity and forward-group-seal checks). `full_stage_capacity` equals `attn_dp` for `MONOLITHIC`, `PREFILL` and `DECODE`, so the lanes of one forward co-own the stage; MoE lanes then meet in a sync room (`frontier/scheduler/utils/sync_entry.py`), which stands in an idle batch for a missing lane only when that lane has no queued work or the group is sealed (`_can_supply_idle_lane`).
+
+The defect, reproduced on `main`: with `num_pipeline_stages > 1`, `BaseReplicaScheduler.on_schedule` admits up to `num_pipeline_stages` batches per lane per round, so a lane holds several queued tickets while consuming one. The FIFO head can then be a ticket whose lane is busy inside the sync room; the other lane is refused although capacity is free; the room does not stand it in because it has work and the group is open. MoE `attn_dp∈{2,4}, PP=2` drains with requests unfinished; dense completes but serializes its lanes; every `PP=1` shape and every capacity-1 context completes. `design.md` has the drain-state table (FIFO, active owners, lane heaps, sync room).
+
+The plan is at the review-before-code stage: the PR has records only, no source change yet. The recommended rule (option B, adopted by the owner as D-1) changes one predicate in `try_acquire`: a full-stage ticket is refused only when an EP wave is queued ahead of it; EP waves keep the strict head rule; capacity, seal and EP-active checks are unchanged. Option A (lane-aware skip of tickets whose lane already holds an active ticket) was rejected because the DES wakes sibling lanes only at release (`frontier/scheduler/utils/stage_wakeup.py`, called from `BatchStageEndEvent`), not at a peer's acquisition, so A leaves a stranded-lane state after the first cohort releases; `design.md` traces that sequence. Decisions D-2 (dense `attn_dp>1, PP>1` timelines may change because lanes now overlap), D-4 (byte-comparison baseline is `main` `1f694f7`) and D-5 (records tracked on the branch through a narrow `.gitignore` exception) are also adopted.
+
+What to review, in priority order:
+
+1. The diagnosis in `design.md`: does the source support the circular wait exactly as stated? Check `try_acquire`, `pop_batch_if_not_busy`, `_can_supply_idle_lane`, the admission loop in `base_replica_scheduler.py`, and the wake-up path.
+2. The recommended rule: is there any code path where two full-stage tickets from different lanes must stay in arrival order? Look at `DECODE_FFN` (capacity 1, shared sibling tickets, `DenseFFNBatchGroup` in `round_robin_cluster_scheduler.py`) and at `tests/unit/test_stage_execution_context.py`, `tests/unit/test_shared_forward_group_admission.py`, `tests/unit/test_mixed_layer_decode_ffn_scheduling.py`. The plan asserts all existing tests pass unchanged (C4); say whether you agree from reading them.
+3. The rejection of option A: confirm or refute the stranded-lane trace using the event classes under `frontier/events/`.
+4. The fidelity expectation and the 72-scenario matrix in `plan.md` §4: are the "byte-identical" classes correctly bounded, and is the dense overlap change (C3) measurable with existing outputs?
+5. Fit with the owner's core-module gates: readability, no hard-coding, no temporary patches, no over-defensive branches, no redundant mechanisms, plain domain names.
+
+Report findings as a numbered list with a source anchor (`path:line`) and a verdict per item (agree / disagree / needs evidence), then a one-paragraph recommendation on whether P1 may start as planned. Do not change source or push; the owner decides.

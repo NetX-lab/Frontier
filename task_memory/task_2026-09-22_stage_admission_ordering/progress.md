@@ -33,3 +33,12 @@ python drain_lanes.py  <out>       # lane heaps and sync room
 
 Interpreter `/data/ycfeng/envs/frontier-py310/bin/python`, `PYTHONPATH` = the
 worktree, `WANDB_DISABLED=true`, `VIDUR_DISABLE_WANDB=1`.
+
+## Publication (2026-09-23)
+
+| Item | Value |
+| --- | --- |
+| Branch | `fix/stage-admission-ordering` on `NetX-lab/Frontier`, base `main` `1f694f7` |
+| Records commit | `62d25b9` (plan, design, requirements, progress, `.gitignore` exception) |
+| Draft PR | https://github.com/NetX-lab/Frontier/pull/36 |
+| Reviewer resume prompt | `review_prompt.md` in this directory |
