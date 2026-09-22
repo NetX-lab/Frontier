@@ -145,7 +145,6 @@ def _run(problem):
         num_tokens_post_padded=torch.zeros(1, dtype=torch.int32),
         top_k=TOP_K,
         config={"BLOCK_SIZE_M": 16},
-        expert_hidden_dim_per_partition=EXPERT_HIDDEN_DIM,
         block_dims=None,
     )
     return SimpleNamespace(cache1=cache1, cache2=cache2, cache3=cache3, out=out)
@@ -246,7 +245,6 @@ def test_the_activation_buffer_is_quantized_rather_than_the_raw_projection(
         num_tokens_post_padded=torch.zeros(1, dtype=torch.int32),
         top_k=TOP_K,
         config={"BLOCK_SIZE_M": 16},
-        expert_hidden_dim_per_partition=EXPERT_HIDDEN_DIM,
         block_dims=(128, 64),
         use_fp8=True,
     )
@@ -280,7 +278,6 @@ def test_repeated_iterations_do_not_leak_a_previous_result(
             num_tokens_post_padded=torch.zeros(1, dtype=torch.int32),
             top_k=TOP_K,
             config={"BLOCK_SIZE_M": 16},
-            expert_hidden_dim_per_partition=EXPERT_HIDDEN_DIM,
             block_dims=None,
         )
         return out.clone()
