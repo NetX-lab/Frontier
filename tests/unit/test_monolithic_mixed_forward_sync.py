@@ -565,6 +565,83 @@ def test_a_dense_layer_labels_each_source_by_its_own_phase() -> None:
     }
 
 
+@pytest.mark.parametrize("lane_zero_phase", ["mixed", "prefill"])
+def test_a_dense_layer_credits_only_the_requests_that_are_decoding(
+    lane_zero_phase: str,
+) -> None:
+    """A dense layer completes per source, and each source credits its decoders.
+
+    The decoding member of a mixed prefill-mode source advances by one layer,
+    the request still prefilling does not, and the pure-decode peer lane
+    advances by one through its own handler. A pure-prefill source is the
+    control: it has nothing to credit, and nothing is credited.
+    """
+
+    scheduler, _predictor, _context, stages = _build_scheduler(
+        dense_layers=frozenset({1})
+    )
+    batches = {0: PHASE_BUILDERS[lane_zero_phase](5), 1: _decode_batch(2)}
+    for lane, batch in batches.items():
+        _admit(stages, batch, lane)
+    events: list = []
+    for lane, batch in batches.items():
+        events.extend(_enter(scheduler, batch, lane, 1, None))
+    assert [type(event) for event in events] == [DenseLayerCompleteEvent] * 2
+    # Completion runs through the real event handler, per source.
+    for event in events:
+        event.handle_event(_global(scheduler), None)
+
+    decoding = [r for r in batches[0].requests if r.is_prefill_complete]
+    prefilling = [r for r in batches[0].requests if not r.is_prefill_complete]
+    assert len(decoding) == (1 if lane_zero_phase == "mixed" else 0)
+    assert [r.completed_layer_count for r in decoding] == [1] * len(decoding)
+    assert [r.completed_layer_count for r in prefilling] == [0]
+    assert [r.completed_layer_count for r in batches[1].requests] == [1, 1]
+
+
+def test_a_mixed_source_is_credited_once_per_layer_across_routed_and_dense() -> None:
+    """`MoE -> dense -> MoE`: the decoding member counts 1, 2, 3 -- not 1, 1, 2.
+
+    A routed layer completes once for the whole cohort and a dense layer once
+    per source, so the two paths credit through different handlers. What the
+    request sees must not depend on which one ran.
+    """
+
+    scheduler, _predictor, _context, stages = _build_scheduler(
+        dense_layers=frozenset({1})
+    )
+    batches = {0: _mixed_batch(4, 1), 1: _decode_batch(2)}
+    prefilling, decoding = batches[0].requests
+    peers = list(batches[1].requests)
+    for lane, batch in batches.items():
+        _admit(stages, batch, lane)
+
+    credits = []
+    for layer_id in range(3):
+        events: list = []
+        for lane, batch in batches.items():
+            events.extend(_enter(scheduler, batch, lane, layer_id, None))
+        completions = [
+            event
+            for event in events
+            if isinstance(
+                event,
+                (
+                    PrefillSyncCollectiveEvent,
+                    DecodeSyncCollectiveEvent,
+                    DenseLayerCompleteEvent,
+                ),
+            )
+        ]
+        assert len(completions) == (2 if layer_id == 1 else 1), events
+        for event in completions:
+            event.handle_event(_global(scheduler), None)
+        credits.append(decoding.completed_layer_count)
+        assert prefilling.completed_layer_count == 0
+        assert [peer.completed_layer_count for peer in peers] == [layer_id + 1] * 2
+    assert credits == [1, 2, 3]
+
+
 def test_a_disabled_metrics_store_costs_the_run_nothing() -> None:
     """Reporting is demand-driven at this boundary.
 

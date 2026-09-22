@@ -10,7 +10,7 @@ from frontier.scheduler.utils.collective_timing import (
     attention_delay_seconds,
     prepare_decode_final_timing,
     select_active_batch,
-    validate_decode_layer_advance,
+    advance_decode_layer,
 )
 from frontier.scheduler.utils.request_selection import collect_active_requests
 
@@ -88,12 +88,9 @@ def handle_decode_sync_collective(
     predictor = stage_scheduler._execution_time_predictor
     active_requests = collect_active_requests(dp_batches.values())
     if not layer_advance_done:
-        validate_decode_layer_advance(
-            active_requests,
-            scheduler._config.replica_config.model_config.num_layers,
+        advance_decode_layer(
+            active_requests, scheduler._config.replica_config.model_config.num_layers
         )
-        for request in active_requests:
-            request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
     num_layers = predictor._num_layers_per_pipeline_stage
     bounds_getter = getattr(scheduler, "get_pipeline_stage_layer_bounds", None)

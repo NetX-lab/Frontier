@@ -22,7 +22,11 @@ import sys
 import pytest
 
 
-def test_shared_monolithic_forward_completes_every_request(tmp_path):
+@pytest.fixture(scope="module")
+def evidence(tmp_path_factory):
+    """Run every variant once in a child interpreter and return its evidence."""
+
+    tmp_path = tmp_path_factory.mktemp("shared_forward")
     # The child must import the same checkout this test file came from, not
     # whichever tree an editable install happens to point at.
     repo_root = Path(__file__).resolve().parents[2]
@@ -43,9 +47,29 @@ def test_shared_monolithic_forward_completes_every_request(tmp_path):
     )
     (tmp_path / "run.log").write_text(result.stdout)
     assert result.returncode == 0, result.stdout[-15000:]
-    evidence = json.loads((tmp_path / "shared_forward_evidence.json").read_text())
+    return json.loads((tmp_path / "shared_forward_evidence.json").read_text())
+
+
+def test_shared_monolithic_forward_completes_every_request(evidence):
     # The run has to reach the shape under test, or it proves nothing.
     assert evidence["mixed_phase_cohorts"] > 0, evidence
+
+
+def test_a_mixed_batch_crossing_a_dense_layer_is_credited_every_layer(evidence):
+    """`MoE -> dense -> MoE` in the real loop, with the credits read before reset.
+
+    A dense layer completes per source, outside the shared completion that
+    credits routed layers, so a decoding request carried in a prefill-mode
+    batch used to miss it. Every decode token of every request must reach the
+    full layer count, and the run must actually have driven a mixed batch
+    through the dense layer for that to mean anything.
+    """
+
+    hybrid = evidence["hybrid_layers"]
+    assert hybrid["dense_layers"] == [1], hybrid
+    assert hybrid["mixed_dense_completions"] > 0, hybrid
+    assert hybrid["decode_tokens_credited"] > 0, hybrid
+    assert hybrid["layer_credit_peaks"] == {str(hybrid["num_layers"]): hybrid["decode_tokens_credited"]}, hybrid
 
 
 # Requests chosen so that chunked prefill leaves one lane prefilling while the
@@ -54,7 +78,7 @@ def test_shared_monolithic_forward_completes_every_request(tmp_path):
 REQUEST_SHAPES = ((32, 4), (16, 4), (24, 3), (16, 3))
 
 
-def _build_config(root, patch):
+def _build_config(root, patch, *, moe_layers_enum=None):
     import pandas as pd
 
     from frontier.config import (
@@ -72,6 +96,14 @@ def _build_config(root, patch):
     from tests.integration.test_pr33_nondummy_acceptance import _model, _profiles
 
     model = _model("moe")
+    if moe_layers_enum is not None:
+        # Interleave dense layers into the MoE model: the layers left out of
+        # the map run an ordinary FFN and complete per source.
+        model.moe_layers_enum = moe_layers_enum
+        model._moe_layer_ids_cache = None
+        # A mixed model names its dense FFN width separately; the profile
+        # rows above are keyed by the same width, so the lookup still hits.
+        model.dense_mlp_hidden_dim = model.mlp_hidden_dim
     original = BaseModelConfig.create_from_name
     patch.setattr(
         BaseModelConfig,
@@ -178,7 +210,7 @@ def _drained(room) -> bool:
     return True
 
 
-def run_case(root: Path, *, reporting: bool):
+def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None):
     from frontier.entities import Request
     from frontier.request_generator.synthetic_request_generator import (
         SyntheticRequestGenerator,
@@ -188,7 +220,9 @@ def run_case(root: Path, *, reporting: bool):
     from frontier.types import ClusterType
 
     with pytest.MonkeyPatch.context() as patch:
-        model, predictor_config, replica, classes = _build_config(root, patch)
+        model, predictor_config, replica, classes = _build_config(
+            root, patch, moe_layers_enum=moe_layers_enum
+        )
         (
             VllmV1SchedulerConfig,
             ClusterConfig,
@@ -280,6 +314,34 @@ def run_case(root: Path, *, reporting: bool):
 
         patch.setattr(bcs, "schedule_layer_wave", observe_wave)
 
+        # Layer credits, read as they are given: the counter is reset when a
+        # token rolls out, so the terminal state cannot show whether every
+        # layer was credited. Each credit is keyed by the decode token it
+        # belongs to, and the peak per token is what must reach num_layers.
+        credits: list[tuple[int, int, int]] = []
+        real_increment = Request.mb_on_step_layer_count_increment
+
+        def observe_increment(self, num_layers_completed=1):
+            real_increment(self, num_layers_completed=num_layers_completed)
+            credits.append(
+                (self.id, self.current_decode_token_index, self.completed_layer_count)
+            )
+
+        patch.setattr(Request, "mb_on_step_layer_count_increment", observe_increment)
+
+        # Dense completions whose prefill-mode source also carries a request
+        # that has finished its own prefill: the shape the credit used to miss.
+        mixed_dense_completions = [0]
+        real_dense = bcs.complete_dense_layer
+
+        def observe_dense(scheduler, **kwargs):
+            live = [r for r in kwargs["batch"].requests if not r.completed]
+            if kwargs["phase"] == "prefill" and any(r.is_prefill_complete for r in live):
+                mixed_dense_completions[0] += 1
+            return real_dense(scheduler, **kwargs)
+
+        patch.setattr(bcs, "complete_dense_layer", observe_dense)
+
         simulator = Simulator(config)
 
         # The one injection point: wrap the predictor to record which batch each
@@ -307,13 +369,36 @@ def run_case(root: Path, *, reporting: bool):
             ClusterType.MONOLITHIC
         )
         mixed = [c for c in cohorts if len(set(c["members"].values())) > 1]
+        peaks: dict[tuple[int, int], int] = {}
+        for request_id, token_index, count in credits:
+            key = (request_id, token_index)
+            peaks[key] = max(peaks.get(key, 0), count)
+        peak_histogram: dict[str, int] = {}
+        for peak in peaks.values():
+            peak_histogram[str(peak)] = peak_histogram.get(str(peak), 0) + 1
         evidence = {
             "reporting": reporting,
+            "num_layers": model.num_layers,
+            "dense_layers": [
+                layer for layer in range(model.num_layers)
+                if not model.is_moe_layer(layer)
+            ],
             "total_cohorts": len(cohorts),
             "mixed_phase_cohorts": len(mixed),
+            "mixed_dense_completions": mixed_dense_completions[0],
+            "decode_tokens_credited": len(peaks),
+            # peak layer count -> how many (request, decode token) pairs hit it
+            "layer_credit_peaks": peak_histogram,
             "completed_requests": sum(request.completed for request in requests),
             "makespan": simulator._time,
         }
+
+        # Every decode token of every request was credited exactly num_layers
+        # times, whichever handler completed each layer. A missed dense layer
+        # shows up here as a peak one short.
+        assert credits, evidence
+        assert all(count <= model.num_layers for _, _, count in credits), evidence
+        assert set(peaks.values()) == {model.num_layers}, evidence
 
         # Every request finishes, exactly once, with every token accounted for.
         assert all(request.completed for request in requests), evidence
@@ -371,13 +456,23 @@ def main(root: Path) -> None:
     assert (
         evidence["on"]["mixed_phase_cohorts"] == evidence["off"]["mixed_phase_cohorts"]
     )
+    # The same loop with a dense layer between routed layers: the credit path
+    # differs per layer kind, and a mixed batch must cross both kinds.
+    hybrid_root = root / "hybrid_layers"
+    hybrid_root.mkdir(parents=True, exist_ok=True)
+    hybrid = run_case(hybrid_root, reporting=False, moe_layers_enum="0,2,3")
+    assert hybrid["mixed_dense_completions"] > 0, hybrid
+
     merged = dict(evidence["off"])
     merged["reporting_variants"] = evidence
+    merged["hybrid_layers"] = hybrid
     (root / "shared_forward_evidence.json").write_text(
         json.dumps(merged, indent=2) + "\n"
     )
     print("mixed_phase_cohorts:", merged["mixed_phase_cohorts"])
     print("completed_requests:", merged["completed_requests"])
+    print("hybrid mixed_dense_completions:", hybrid["mixed_dense_completions"])
+    print("hybrid layer_credit_peaks:", hybrid["layer_credit_peaks"])
 
 
 if __name__ == "__main__":

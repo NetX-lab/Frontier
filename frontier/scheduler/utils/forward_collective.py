@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from frontier.scheduler.utils.collective_timing import validate_decode_layer_advance
+from frontier.scheduler.utils.collective_timing import advance_decode_layer
 from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 from frontier.scheduler.utils.request_selection import collect_active_requests
 
@@ -84,10 +84,9 @@ def handle_forward_sync_collective(
         for request in collect_active_requests(source_batches.values())
         if request.is_prefill_complete
     ]
-    num_layers = scheduler._config.replica_config.model_config.num_layers
-    validate_decode_layer_advance(decoding_requests, num_layers)
-    for request in decoding_requests:
-        request.mb_on_step_layer_count_increment(num_layers_completed=1)
+    advance_decode_layer(
+        decoding_requests, scheduler._config.replica_config.model_config.num_layers
+    )
 
     stage_layer_end = _stage_layer_end(scheduler, stage_id)
     next_layer_id = layer_id + 1
