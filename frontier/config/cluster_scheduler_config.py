@@ -46,3 +46,12 @@ class StickyLORClusterSchedulerConfig(BaseClusterSchedulerConfig):
     @staticmethod
     def get_type():
         return ClusterSchedulerType.STICKY_LOR
+
+
+@dataclass
+class VllmLoadBalancingClusterSchedulerConfig(BaseClusterSchedulerConfig):
+    """Select vLLM V1's internal DP placement. Selecting it is the only knob."""
+
+    @staticmethod
+    def get_type():
+        return ClusterSchedulerType.VLLM_LOAD_BALANCING

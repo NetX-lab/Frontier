@@ -50,6 +50,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
+        request_load = self.get_request_load()
         payload: Dict[str, Any] = {
             "event": event,
             "source": "frontier",
@@ -61,8 +62,8 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             "token_budget": int(token_budget),
             "available_blocks": int(available_blocks),
             "num_tokens": int(num_tokens),
-            "num_running_reqs": len(self._running_requests),
-            "num_waiting_reqs": self._get_num_waiting_reqs_for_decision_log(),
+            "num_running_reqs": request_load.running,
+            "num_waiting_reqs": request_load.waiting,
             "max_num_running_reqs": int(self._max_num_running_reqs),
             "max_num_scheduled_tokens": int(self._max_num_scheduled_tokens),
             "batch_request_ids": [str(req_id) for req_id in (batch_request_ids or [])],

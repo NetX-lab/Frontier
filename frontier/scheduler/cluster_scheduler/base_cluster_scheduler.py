@@ -427,6 +427,32 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def add_request(self, request: Request) -> None:
         self._request_queue.append(request)
 
+    def schedule_at(self, time: float) -> List[Tuple[int, int, Request]]:
+        """Route the queue at a known simulation time.
+
+        The default ignores the time and routes exactly as before, so every
+        policy that does not need it is unaffected. A policy whose placement
+        depends on wall-clock progress -- a delayed load snapshot, for instance
+        -- overrides this instead of reaching for a mutable time bridge.
+        """
+
+        return self.schedule()
+
+    def on_replica_batch_end(
+        self,
+        time: float,
+        replica_id: int,
+        replica_local_id: int | None,
+        batch: Batch,
+    ) -> None:
+        """Observe one Replica-local batch completion. Inert by default.
+
+        Called after the batch's request-state transition, so a policy that
+        reads lane populations here sees the post-step state.
+        """
+
+        return None
+
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
 

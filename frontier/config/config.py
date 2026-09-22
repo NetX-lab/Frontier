@@ -120,6 +120,7 @@ from frontier.config.cluster_scheduler_config import (
     RoundRobinClusterSchedulerConfig,
     StickyLORClusterSchedulerConfig,
     StickyRoundRobinClusterSchedulerConfig,
+    VllmLoadBalancingClusterSchedulerConfig,
 )
 from frontier.config.execution_time_predictor_config import (
     BaseExecutionTimePredictorConfig,

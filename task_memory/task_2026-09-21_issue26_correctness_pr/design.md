@@ -1,10 +1,16 @@
-# W3 design — one shared monolithic forward
+# Issue 26 Correctness PR — Design Records
+
+One section per work package. Each records the source-backed reasoning, the
+scope decisions and the pre-measurement expectation for that package.
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
 | 2026-09-22 | Created. Source-backed design for Checkpoint D's W3 half, with the scope decisions and their evidence. |
+| 2026-09-22 | Restructured into per-work-package sections and added the W4 design, with the report-key identity measured at the emission boundary. |
+
+# W3 — one shared monolithic forward
 
 ## The defect, restated from source
 
@@ -135,3 +141,126 @@ The prediction for the 71-case matrix is therefore:
   subset exactly once per completed layer").
 
 Recorded before the measurement so the result can falsify it.
+
+---
+
+# W4 — opt-in vLLM-style DP request placement
+
+## What this adds, and what it is not
+
+A new **opt-in** cluster-scheduler policy, `vllm_load_balancing`, that routes
+requests inside one serving Replica the way vLLM V1's frontend does: pick the
+engine with the lowest `4 * waiting + running` from a **delayed** snapshot of
+engine counts, reserving local waiting load between snapshots. Nothing selects
+it by default; every existing policy and default is untouched.
+
+This models vLLM's *source-level* selection and count-publication behavior. It
+does **not** claim placement or timing equivalence with a real vLLM deployment,
+and it does not model IPC transport latency, multiple frontends, elastic
+scaling, or warm-start publication phase.
+
+## Reference facts, verified in the pinned checkout
+
+All from `.real-engine/vLLM-BS` at `ea95f571`, read rather than assumed:
+
+| Fact | Location |
+| --- | --- |
+| `score = waiting * 4 + running`, scanned from `eng_start_index`, strict `<` so the first minimum wins | `vllm/v1/engine/core_client.py:1139-1150` |
+| Local reservation after selection: `current_counts[eng_index][0] += self.client_count` — with one frontend, `waiting + 1` | `core_client.py:1151-1153` |
+| A published snapshot **replaces** the frontend estimate wholesale; it is not merged into local reservations | `core_client.py:1073-1078` (`self.lb_engines = sliced_counts`) |
+| Publish interval: `stats_update_interval_ms` when changed, else `5000` ms | `coordinator.py:195-198` |
+| `min_stats_update_interval_ms` default `100` | `coordinator.py:116`, `:122`, `:130` |
+| Minimum collection wait `50` ms while a previous-step snapshot is pending | `coordinator.py:201-203` |
+| Poll timeout `max(min_timeout, wait_for - elapsed)` | `coordinator.py:205-206` |
+| On timeout: publish the pending previous-step snapshot if present, else the current counts and clear `stats_changed` | `coordinator.py:207-218` |
+| The order key is the pair `(wave, step)` against one shared `(last_stats_wave, last_stats_step)` | `coordinator.py:156-157`, `:293-300` |
+| A strictly newer key latches the prior counts **only when** `stats_changed`; an **equal** key takes neither branch; an out-of-order key logs a **warning** and the counts are still applied | `coordinator.py:293-310` |
+
+So the constants are confirmed as 4, 50 ms, 100 ms and 5000 ms, and the
+out-of-order case is a warning, never an abort. Per decision D1, W4 must not add
+a runtime assertion on report order that the reference does not have.
+
+## The report key, measured at the emission boundary
+
+Decision D1 asks for exactly this: inspect the identity **at the load-report
+emission boundary**, reuse it only where its equality and ordering hold, and
+reject the rest explicitly rather than adding a second counter.
+
+The boundary is `GlobalBatchEndEvent`, whose `_replica_local_id` and batch reach
+the new `on_replica_batch_end` hook. A probe patched that handler and recorded
+`(replica_local_id, ForwardSyncState.get_step_id(batch))` for every completion
+of a real `Simulator` run, in four monolithic shapes:
+
+| Shape | Observed `(lane, step)` sequence | Verdict |
+| --- | --- | --- |
+| MoE `attn_dp=2`, all arrivals at once | `(1,3) (0,3) (1,7) (0,7) (1,11) (0,11) (1,15) (0,15) (1,19) (0,19)` | **valid** — both lanes of one forward share one key; distinct forwards are strictly increasing |
+| MoE `attn_dp=2`, staggered online arrivals | `(0,3) (0,7) (0,11) (1,15) (1,19) (1,23) (0,27) (0,31) (0,35) (1,39) (1,43) (1,47) (0,51) (0,55) (0,59)` | **valid** — strictly increasing across the whole run whichever lane reports |
+| MoE `attn_dp=1` | `3 7 11 15 19 23 27` | valid, degenerate |
+| Dense `attn_dp=1` | `0 1 2 3 4 5 6` | valid, degenerate |
+| Dense `attn_dp=2`, all arrivals at once | `(1,0) (0,0) (1,1) (0,1) (1,2) (0,2) (1,3) (0,3) (1,4) (0,4)` | **incidentally** paired; nothing enforces it |
+| Dense `attn_dp=2`, staggered online arrivals | `(0,0) (0,1) (0,2) (1,0) (1,1) (1,2) (0,3) (0,4) (0,5) (1,3) (1,4) (1,5) (0,6) (0,7) (0,8)` | **INVALID** — lane 1's step `0` arrives after lane 0's step `2` |
+
+Two things this settles that the audit could only argue:
+
+1. **MoE monolithic is valid because W3 landed.** The ids come from the
+   Replica-scoped `_next_step_id_by_replica` counter that W3's single shared
+   room resolves, so they are monotonic per Replica regardless of which lanes
+   are live. Both lanes of one forward report the same key, which is precisely
+   the reference's "equal key, peer engine" path.
+2. **Dense with more than one lane is invalid, and observably so.** Each dense
+   lane emits its own `0, 1, 2, …` from a per-lane creation counter that no
+   shared forward ever promotes, because a dense monolithic Replica has no
+   per-forward DP collective to keep the lanes in lockstep. Under staggered
+   arrivals the counters interleave out of order against one shared
+   `last_report_step`, so the previous-step snapshot latch would be wrong.
+
+Also observed: `replica_local_id` at this boundary is **always an exact `int`**,
+never the full-stage `None`, in all four shapes; and an idle batch never reaches
+the hook. So the engine index needs a type/range check, not a `None` branch.
+
+Numeric caveat, unchanged from the audit and kept in a code comment: the value
+advances per layer, so consecutive forwards are about `num_layers` apart. Only
+its ordering and equality are used. The reference key is a `(wave, step)` pair;
+Frontier has no wave reset, so a Replica-scoped monotonic counter collapses the
+pair to a single scalar.
+
+## Scope decisions
+
+| Decision | Choice | Why |
+| --- | --- | --- |
+| Topology guard | `MONOLITHIC` + one Replica + `PP1` + `vllm_v1` + (**MoE or `attn_dp == 1`**) | The first four are the candidate's. The fifth is decision D1's "reject unsupported configurations explicitly", and the dense multi-lane row above is the measurement behind it. |
+| Second step counter | **no** | D1 forbids broadening W4 with a new counter. W3's identity is reused where it holds. |
+| Runtime order assertion | **no** | The reference warns and applies the counts. W4 mirrors the warning. Key equality per shared forward is a test invariant, not a runtime abort. |
+| `waiting + 1` reservation | keep | One modeled frontend, so `client_count == 1`. The one-frontend restriction is stated in the class docstring. |
+| Heartbeat events | **none** | Timers advance lazily inside `select`/`report`. The policy creates no events, so it cannot keep a drained simulation alive — asserted in a test rather than assumed. |
+| `get_request_load` placement | next to the existing `_get_num_waiting_reqs_for_decision_log` in `vllm_v1_iteration_policy.py`, delegating to it | The donor deleted that helper and broke `sglang_style_replica_scheduler.py`; this branch's split already moved it into the shared policy mixin and pinned it with a boundary test. Delegating gives one definition of "waiting" for the balancer and both decision-log emitters, without churning that boundary. |
+| Config module extraction | **already done** | The merged module split created `frontier/config/cluster_scheduler_config.py`. W4 only adds one dataclass to it, which is a registry entry through an unchanged mechanism. |
+
+## Planned edits
+
+| File | Change |
+| --- | --- |
+| `frontier/types/cluster_scheduler_type.py` | `VLLM_LOAD_BALANCING = 5`. |
+| `frontier/config/cluster_scheduler_config.py` | `VllmLoadBalancingClusterSchedulerConfig`, no fields. |
+| `frontier/scheduler/cluster_scheduler/cluster_scheduler_registry.py` | One registry entry. |
+| `frontier/scheduler/request_load.py` (new) | `RequestLoad(NamedTuple)` with `waiting`, `running`. |
+| `frontier/scheduler/utils/vllm_dp_load_balancer.py` (new) | The pure state machine: `report`, `select`, lazy timer advance, reference-mirrored warning. |
+| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` (new) | Topology guard, `schedule_at`, `schedule`, `on_replica_batch_end`. |
+| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` | Two inert default seams: `schedule_at(time)` delegating to `schedule()`, `on_replica_batch_end(...)` returning `None`. |
+| `frontier/scheduler/replica_scheduler/base_replica_scheduler.py` | `get_request_load()` raising `NotImplementedError` with the concrete class name. |
+| `frontier/scheduler/replica_scheduler/vllm_v1_iteration_policy.py` | `get_request_load()` delegating to the existing waiting helper; both decision-log payloads consume it. |
+| `frontier/events/cluster_schedule_event.py` | `schedule()` → `schedule_at(self.time)`. |
+| `frontier/events/global_batch_end_event.py` | Call `on_replica_batch_end` after the request-state transition in `on_batch_end`. |
+
+## Fidelity expectation, stated before measuring
+
+The policy is opt-in and no existing configuration selects it. The two seams are
+inert for the five existing policies: `schedule_at` delegates to the same
+`schedule()` the event called before, and `on_replica_batch_end` returns `None`.
+The decision-log payloads keep identical values because `get_request_load`
+delegates to the same helper they already called.
+
+**Prediction: all 71 fidelity cases stay exactly equal.** Anything that moves is
+a defect in the seams, not an approved behavior change — unlike W2 and W3, W4
+has no reachable fidelity fix, so a single mismatch falsifies the change rather
+than confirming it.
