@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Recorded the original request, the specification hand-off, and the decisions from the planning interview. |
 | 2026-09-22 | Recorded the W6 artifact-identity decision and the native GPU validation instruction. |
+| 2026-09-22 | Recorded the PP>1 `vllm_load_balancing` request, the codesign-only GPU instruction, and the open Step 9 decisions. |
 
 ## [Original Request] 2026-09-21
 
@@ -39,3 +40,31 @@ The draft specification is landed verbatim in `plan.md` together with an Amendme
 | 2026-09-22 | W6 native validation: how should the GPU parity check be run? | **"请从 dockerhub 中找到 v0.10.2 的官方镜像（如果没有，fallback 到 >=0.10, <0.11），然后参考 hand-book 中对 docker 的使用在 gpu worker 上使用该镜像。如果你需要使用原来的 benchmark ... 中的测试 suits 和插桩，你需要 mount 该 repo 到 gpu worker。如果需要进行对比验证，则 follow skill：/home/brainpp/.claude/skills/frontier-calibration"** — `vllm/vllm-openai:v0.10.2` exists on Docker Hub, so no fallback was needed. It is pulled through the company docker.io proxy as `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`. The instrumented benchmark repository is not mounted: the parity check compares tensors from vLLM's own `fused_experts` inside one process and needs no serving instrumentation. The `frontier-calibration` skill is not invoked for the same reason — its workflow is E2E simulator-versus-served-vLLM calibration, not a kernel-level tensor comparison. |
 | 2026-09-22 | W7: authorize a companion-repository branch in `fwyc0573/frontier-htsim`, or record W7 as `EXCLUDED`. Asked with the option spelled out as "授权我在那个仓库建分支、提交测试和源码、推送并开 companion draft PR，然后再动 Frontier 的 gitlink。按计划这是 backend 先发布、Frontier 后跟进的顺序。" | **"1.授权"** — companion-repository work authorized. Delivered in that order: branch `fix/zero-payload-input-handling` pushed to `fwyc0573/frontier-htsim` at `eb7bc4f`, companion **draft** PR 1 opened, then Frontier's gitlink moved. PR 35 stays draft; nothing was merged. |
 | 2026-09-22 | `[Original Request]` "对于当前 task 的 gpu worker 集群应该使用 codesign 而不是 step_main" | All GPU submissions for this task use `charged_group="codesign"`. Applied from `exp-0922-142415-796404` onward; the first attempt `exp-0922-140423-075005` had used `steptron_ci`, found no capacity after ~20 minutes Pending, and was stopped. The successful native parity run `exp-0922-145047-660565` is on `codesign`. |
+
+## [Original Request] 2026-09-22 — PP>1 support for `vllm_load_balancing`
+
+"添加需求：我需要在当前pr中补全 vllm_load_balancing_cluster_scheduler.py 的模拟支持，使得其不被限制在pp=1；你需要基于frontier 和vllm的codebase进行充分调研（codebase design skill)和设计，并且运行vllm v0.10.2进行实际调度结果的对比（pp>1情况下的dp 调度策略；调用calibration来确保参数设定一致）。请你先设计落地该子任务的plan，在我批准之前暂不执行"
+
+Reading: (a) remove the PP1 restriction of `VllmLoadBalancingClusterScheduler` inside PR 35; (b) research both codebases and design first; (c) compare against a real vLLM v0.10.2 PP>1 DP-scheduling run, using the `frontier-calibration` skill to keep settings consistent; (d) deliver the plan first and do not execute before approval. Plan: `plan.md` §17 (Step 9) and amendment A12.
+
+## [Original Request] 2026-09-22 — GPU charged group
+
+"ps：后续的gpu worker集群只允许使用 codesign（暂停对steptron_ci的使用，直至得到我允许）"
+
+Rule: every GPU submission uses `charged_group="codesign"`; `steptron_ci` is suspended until the user allows it again. Also saved as a durable memory note.
+
+## [Original Request] 2026-09-22 — Step 9 decisions
+
+"d-a: /home/brainpp/.claude/skills/frontier-calibration 依据该skills   D-b：授权  D-c：tiny Qwen3-MoE + dummy 权重 + 跳过 tokenizer（无需下载）；  D-d：采用hook 名 on_replica_batch_scheduled  D-e：暂时使用 dummy模式验证，如果过程中存在无法解决block转为h800 profiling模式； D-f：选择worker 挂载：code_mount_point=/data/ycfeng/Frontier（父目录，同时覆盖 .real-engine/vLLM-BS；  D-g：/home/brainpp/.claude/plugins/cache/claude-plugins-official/mattpocock-skills/1.2.3/skills/engineering/codebase-design  完成上述问题确认，统一更新docs（确保上述执行plan和思路和已有观察被清晰记录）并提交push"
+
+| Id | Question | Decision | Recorded in |
+| --- | --- | --- | --- |
+| D-a | Calibration helper archive absent. | Follow `frontier-calibration` v2 as written. The case path (`parity-run` → `workflow-gap-analysis`) binds no pinned helper; entries that do (`e2e-metrics-gap`, `op-supplement`, `dispatch-align-trace`) are off-path and would be `FAIL` if needed. | `plan.md` §17.7, §17.9 |
+| D-b | vLLM-BS instrumentation. | Authorized: local commit on `feature/frontier-comparison-instrumentation` (engine identity in schedule rows; per-engine publication log). Push not requested. | `plan.md` G1 |
+| D-c | Model and tokenizer. | Tiny Qwen3-MoE config, dummy weights, tokenizer skipped. | `plan.md` §17.6 |
+| D-d | Hook name and key rule. | `on_replica_batch_scheduled`. Key rule left to the P1 probe (K3 recommended). | `plan.md` D9-1, D9-2 |
+| D-e | Frontier timing for the placement check. | Dummy mode first; switch to H800 profiling mode only on an unresolvable blocker. | `plan.md` §17.6, §17.7 |
+| D-f | Worker mount. | `code_mount_point=/data/ycfeng/Frontier`. | `plan.md` §17.6 |
+| D-g | "codebase design skill". | The `codebase-design` skill at the path above; applied in `plan.md` §17.10 and `design.md` W9. | `plan.md` §17.10 |
+
+Also requested: update the records so the execution plan, reasoning, and observations are clearly recorded, then commit and push. Not yet given: an explicit start signal for P1/G1.

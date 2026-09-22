@@ -180,3 +180,10 @@ files; the 110 tracked files under `outputs/` are all still present.
   `refactor/oversized-module-split`, head `8730509`, and the body read back byte
   for byte as sent. Nothing was merged, force-pushed, marked ready, or closed.
 - `summary.md` written as the completion archive.
+
+## Step 9 — PP>1 support for `vllm_load_balancing` (pending)
+
+| Date | State | Note |
+| --- | --- | --- |
+| 2026-09-22 | pending | Plan drafted in `plan.md` §17 with amendment A12 and `requirements.md` rows; awaiting user approval and the D-a..D-g answers. No source, GPU, or publication action taken. |
+| 2026-09-22 | in-progress (planning closed) | User answered D-a..D-g; `plan.md` §17 finalized (decisions, G1–G5 ground-truth packages, calibration case binding, `codebase-design` vocabulary), `design.md` W9 written, `requirements.md` updated. Records committed and pushed (SHA in the commit log). No source edit, no GPU submission; next action: P1 probe + G1/G2 once the user confirms the start. |
