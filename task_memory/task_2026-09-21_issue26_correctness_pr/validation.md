@@ -13,6 +13,7 @@
 | 2026-09-22 | Step 6 native parity test recorded and submitted as `exp-0922-140423-075005`; artifact identity closed as document-only. |
 | 2026-09-22 | Step 6 native GPU parity recorded: 8 of 8 at `rtol=0, atol=0` on H800 under `codesign`. |
 | 2026-09-22 | Step 7 recorded: the companion backend fix, both negative controls, clean-checkout validation, and the governance-scan repair the gitlink bump exposed. |
+| 2026-09-22 | Step 8 §14.1 recorded: combined unit/integration suites, 16 architecture examples, four PP=2 cases, and the cold-then-warm predictor-cache pair. |
 
 ## Environment
 
@@ -481,3 +482,21 @@ Full record: `test_report_2026-09-22_w7_collective_sim_zero_payload.md`.
 | Regression, default environment | `pytest tests/unit -q --continue-on-collection-errors` under `frontier-py310` with the submodule initialized and built: **84 failed, 3782 passed, 49 skipped, 11 errors**. Diffing the `FAILED` lists against the 84-failure baseline gives an empty set in both directions; the four extra passes are the new module. |
 | Fidelity matrix | Not run. No Frontier source file changed, and the backend fix is unreachable without `--cc_backend_config_type collective_sim`, which no matrix case selects. The unchanged failure set and the pre-fix/post-fix negative controls are the evidence. |
 | Limits | The `7 x 0.5 us` figure is the analytic NVLink model's own arithmetic, not a hardware measurement. Under the default `legacy_fabric` model with `collective_exclude_intra_server=True`, a single-server pod prices both an empty and a 1 MiB all-to-all at `0.0`, because all traffic is intra-server and excluded; that is the configuration's semantics, unrelated to the payload. The companion PR is draft, so the gitlink points at a branch commit and must be re-pointed at `main` once it merges. |
+
+## Step 8 — Combined regression on the integrated branch (§14.1)
+
+Full record: `test_report_2026-09-22_w8_combined_regression.md`.
+
+| Item | Result |
+| --- | --- |
+| Revision under test | `d881357`, 32 commits ahead of the PR base `refactor/oversized-module-split` @ `6ef0a3c`. |
+| Base re-fetch before handoff | `git fetch origin main` gives `1f694f7`, unchanged since Step 0 and an ancestor of `HEAD`. No integration merge was needed and none was made. |
+| Unit suite | `pytest tests/unit -q --continue-on-collection-errors` under `frontier-py310`: **84 failed, 3782 passed, 49 skipped, 11 errors**. Diffing the `FAILED` list against the recorded `origin/main` baseline list gives an empty set in both directions. |
+| Integration suite | `pytest tests/integration -q --continue-on-collection-errors`: **15 passed, 22 skipped, 5 errors** against a baseline of 15 / 21 / 5. The one added skip is this branch's W6 parity module, which needs a GPU. All 5 errors are `test_pdaf_reference_lifecycle_observer.py` reporting the absent pinned Reference checkout at `/data/ycfeng/stepfun-performance-optimization/Frontier/worktrees/ref-afd-readonly`; identical on the base and environmental. |
+| Architecture examples | All 16 release-supported scripts run end to end: 5 co-location offline, 2 co-location online, 2 PDD offline, 2 PDD online, 4 PD-AF offline, 1 PD-AF online. **16 passed, 0 failed**, each writing `request_metrics.csv` and `system_metrics.json`. |
+| Pipeline cases | Four `PP=2` runs, all PASS: co-location offline dense `TP=2`; co-location offline MoE `Attn_TP=4, MoE_TP=2, MoE_EP=2`; sequential PDD offline dense with `PREFILL_PP=2, DECODE_PP=2`; co-location online dense `TP=2`. Each script's echoed topology confirms the intended values in its log. The changed cluster-scheduling, stage-dispatch, and metrics code runs on every stage, so these exercise it on the multi-stage path even though the new DP placement itself stays PP1-only. |
+| Dense-layer coverage | From the dense examples, and from the MoE examples whose shared-expert work uses the separate `dense_mlp_hidden_dim` width through the ordinary linear-op path. Frontier has no "first `k` dense layers then MoE" model field, so there is no third heterogeneous shape to exercise. |
+| Cold predictor cache | The same trained-predictor simulation run twice against an empty scratch cache via `--metrics_config_cache_dir`, so the repository `cache/` was neither moved nor deleted. Cold: 0 entries before, **26.9 s**, 63 artifacts written. Warm: 63 before, **2.1 s**, nothing new written. Their `request_metrics.csv` outputs are byte-identical (`request_e2e_time = 16.77818517187422 ms`, `ttft = 8.430025150867172 ms`), so the persisted-cache path reproduces the freshly trained path exactly. |
+| Working tree | `git status --porcelain` empty afterwards. The one leftover `outputs/examples/` tree was removed after confirming 0 tracked files there; the 110 tracked files under `outputs/` are all still present. |
+| Pre-existing defect, deferred | `AGENTS.md` §Tests names `comm_backend_tests/`, `debug/`, and two `bash tests/debug/e2e-level/monolith_mode/scripts/*.sh` commands. `tests/debug/` exists neither here nor on `origin/main`. The same missing tree causes 10 of the 84 baseline unit failures in `test_colocation_release_review_contracts.py`, and a docstring at `vllm_v1_engine_replica_scheduler.py:16` still points into it. One pre-existing defect class from the release scrub, unrelated to Issue 26; recorded in `future.md` and not repaired here. The PP2 coverage was obtained through the example scripts instead. |
+| Limits | CPU only. No native profiling suite and no vLLM serving or TTFT comparison, both excluded by §14.1. The PD-AF Reference-checkout tests could not run on this host. The example runs use dummy execution time except for the CSV smokes, so they validate structure, lifecycle, and conservation rather than latency accuracy. |

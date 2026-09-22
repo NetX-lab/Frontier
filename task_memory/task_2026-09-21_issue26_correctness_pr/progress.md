@@ -15,6 +15,7 @@
 | 2026-09-22 | W7 investigated while the GPU job queued: candidate gitlink unpublished, three payload defects confirmed by execution, companion-repository decision pending. |
 | 2026-09-22 | W6 native parity PASS on H800: `exp-0922-145047-660565`, 8 of 8 at `rtol=0, atol=0`. Step 6 closed. |
 | 2026-09-22 | W7 authorized and delivered: companion fix published as `eb7bc4f` with draft PR 1, Frontier gitlink moved, Frontier-side test added, and the governance scans narrowed to Frontier-owned sources. Step 7 closed. |
+| 2026-09-22 | Step 8 §14.1 run: unit and integration suites at the baseline failure set, 16 architecture examples, four PP=2 cases, and a cold-then-warm predictor-cache pair. `tests/debug/` pointer defect found, deferred to `future.md`. |
 
 ## Status
 
@@ -23,9 +24,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Steps 6 and 7 closed. Step 8 (combined regression and final PR review) is next. |
+| Current step | Step 8 in progress. §14.1 combined regression complete and recorded; §14.2 diff review complete; §14.3 PR body update is the remaining work. |
 | Publication | PUSHED_VERIFIED. Draft PR 35 body carries the W6 and W7 sections; still draft. |
-| Next action | Step 8: combined regression across the whole branch and a final read of PR 35. One follow-up carried forward: Frontier's gitlink points at a commit on the companion branch, so it must be re-pointed at `main` once `fwyc0573/frontier-htsim` PR 1 merges. |
+| Next action | Step 8 §14.3: add the Step 8 results and the record links to PR 35's body, keep it draft, and report technical acceptance separately from GitHub's draft status. Two follow-ups carried forward, both in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. |
 
 ## Step status
 
@@ -39,7 +40,7 @@
 | 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | PUSHED_VERIFIED (records + PR 35 section) | REVIEWED (user chose to keep the single global field) |
 | 6 | Legacy fused-MoE profiling | PASS | CPU PASS (7 new tests; HEAD comparison shows the same single environment-dependent failure; default-environment suite unchanged at 84/3778). Native PASS: 8 of 8 in `tests/integration/test_moe_fused_expert_numerical_parity.py` at `rtol=0, atol=0` on H800, job `exp-0922-145047-660565` under `codesign` | PUSHED_VERIFIED (source, tests, docs, records, PR 35 section) | — |
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
-| 8 | Combined regression, PR hand-off | NOT_STARTED | — | — | — |
+| 8 | Combined regression, PR hand-off | IN_PROGRESS. §14.1 and §14.2 complete; §14.3 remaining | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | — | — |
 
 ## Chronological updates
 
@@ -115,3 +116,45 @@ One refinement over the audit's framing, from reading the code: `ForwardSyncStat
 Surface: about 3,500 lines across `replica_stage_schedule_event.py`, `sync_entry.py`, `prefill_collective.py`, `decode_collective.py`, `ep_wave_schedule.py`, `ep_wave_inputs.py` and `base_cluster_scheduler.py`, with 11 call sites of the sync-kind and sync-path selection.
 
 Blocked hunk carried from the audit: the candidate's decode final-metrics change calls `_create_corrected_execution_time_for_metrics`, which main deleted, so it needs rewriting against main's current execution-time ownership rather than porting. Resolved by exclusion: that hunk is I8, kept out of scope under Checkpoint D's "current-main metrics ownership" and recorded in the `design.md` scope table.
+
+### 2026-09-22 — Step 8 §14.1, combined regression
+
+Ran the selected suites together on `d881357` rather than package by package.
+Full record: `test_report_2026-09-22_w8_combined_regression.md`; summary rows in
+`validation.md`.
+
+- Re-fetched `origin/main` before the run. Still `1f694f7` and an ancestor of
+  `HEAD`, so no integration merge was needed and none was made.
+- Unit: **84 failed, 3782 passed, 49 skipped, 11 errors**. The `FAILED` set is
+  identical to the recorded baseline in both directions.
+- Integration: **15 passed, 22 skipped, 5 errors**. The added skip is the W6 GPU
+  parity module; the 5 errors are the absent pinned PD-AF Reference checkout and
+  are identical on the base.
+- All 16 release-supported architecture examples pass, covering co-location,
+  sequential PDD, and sequential PD-AF in both offline and online modes.
+- Four `PP=2` runs pass: co-location dense offline and online, co-location MoE
+  with `Attn_TP=4, MoE_TP=2, MoE_EP=2`, and sequential PDD dense with both roles
+  at `PP=2`. These put the changed cluster-scheduling, stage-dispatch, and
+  metrics code on the multi-stage path, which the PP1-only DP placement policy
+  cannot reach by itself.
+- Ran the trained-predictor path cold and then warm against an empty scratch
+  cache directory via `--metrics_config_cache_dir`, leaving the repository
+  `cache/` untouched. Cold took 26.9 s and wrote 63 artifacts; warm took 2.1 s
+  and wrote none; their `request_metrics.csv` outputs are byte-identical. This
+  is the first-load path measured deliberately rather than inherited.
+
+**Finding, deferred.** `AGENTS.md` §Tests names `comm_backend_tests/`, `debug/`,
+and two `bash tests/debug/e2e-level/monolith_mode/scripts/*.sh` commands.
+`tests/debug/` exists neither here nor on `origin/main`. The same missing tree
+causes 10 of the 84 baseline unit failures, in
+`test_colocation_release_review_contracts.py`, and a docstring at
+`vllm_v1_engine_replica_scheduler.py:16` still points into it. That is one
+pre-existing defect class from the release scrub, unrelated to Issue 26, and
+repairing it means deciding what the published test surface should assert
+against. Recorded in `future.md` and left untouched; the PP2 coverage was taken
+through the example scripts instead.
+
+**Hygiene.** `git status --porcelain` is empty afterwards. Example runs were
+pointed at scratch metrics directories, and one leftover `outputs/examples/`
+tree from an earlier iteration was removed after confirming it held 0 tracked
+files; the 110 tracked files under `outputs/` are all still present.

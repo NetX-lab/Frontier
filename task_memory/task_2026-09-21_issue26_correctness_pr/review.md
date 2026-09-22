@@ -15,6 +15,7 @@
 | 2026-09-22 | W6 native parity PASS: 8 of 8 at `rtol=0, atol=0` on H800. W7 authorized and delivered; its blocker row closed and the delivery recorded. |
 | 2026-09-22 | W7 facts re-verified: the candidate gitlink is unpublished, the three payload defects are confirmed by execution against the published backend, and the fix needs companion-repository authorization. |
 | 2026-09-22 | W5 closed without source changes. Corrected the Mechanism A premise: the routing distribution has no per-role override on main, so both W5 mechanisms are unreachable from any released configuration. The user chose to keep the single global field; the drafted implementation was reverted and archived as a patch. |
+| 2026-09-22 | Step 8 §14.2 recorded: final self-review of the whole branch diff at `d881357`, with the method stated and one deferred pre-existing defect. |
 
 ## Pinned source snapshot
 
@@ -360,3 +361,45 @@ made incremental arrival reach the placement that batch arrival already had.
 That is the strongest available statement that W2 is a bug fix rather than a
 behavior change, and it is why the matrix is expected to move only the cases
 that enter the scheduler many times.
+
+## Step 8 §14.2 — Final review of the complete diff against the PR base
+
+| Field | Value |
+| --- | --- |
+| Reviewed revision | `d881357` |
+| Base compared against | `refactor/oversized-module-split` @ `6ef0a3c` (32 commits) |
+| Method | **Self-review.** One reviewer, the same agent that wrote the change, reading `git diff 6ef0a3c..d881357` restricted to `frontier/ tests/ docs/ examples/` — 1925 lines — line by line with surrounding context opened where a hunk did not stand alone. This is not independent review; no second party inspected the diff. |
+| Task records excluded from the line-by-line pass | `task_memory/` and `AGENTS.md`, reviewed separately as documentation. |
+
+### Answers to the §14.2 questions
+
+| Question | Finding |
+| --- | --- |
+| Is every change linked to a demonstrated defect, an essential regression test, or a directly related simplification? | Yes. Each of W2, W3, W4, W6, W7 carries a negative control that fails against the unrepaired source, recorded in `validation.md`. W5 produced no source change. The only additions without a paired defect are `tests/frontier_sources.py`, which exists because the gitlink bump exposed a real scan defect, and the `AGENTS.md` scheduler list, which documents `VllmLoadBalancingClusterScheduler` added by W4. |
+| Are state ownership and initialization explicit? Are repeated fallback checks or parallel state representations still present without a reason? | W3's waiting rooms are owned by one structure keyed by step id, initialized at creation and deleted at release; the tests assert no dangling room survives a cohort. No fallback chain was added. |
+| Do source batches keep their own shape and progress? Are terminal events and ownership transitions unique? | Yes; this is what the W3 mixed-source tests and the four deliberate-defect controls check, including a control that deliberately merges two sources' progress and one that emits a duplicate terminal event. |
+| Are config, layer, routing-runtime, precision, and measurement identities preserved through both fresh and cached paths? | Yes. The §14.1 cold/warm pair is direct evidence: the freshly trained predictors and the persisted ones produce byte-identical `request_metrics.csv`. |
+| Is any operation omitted, counted twice, or relabeled without compatible metadata? | The one relabelling risk is W6's `resolve_grouped_gemm_backend`, which labels both vLLM paths `vllm_fused`. The user decided not to change the metadata; the limitation is written into `docs/profiling/README.md` instead. |
+| Did the patch preserve current-main model/backend support and demand-driven reporting? | Yes. The unit `FAILED` set is identical to the baseline, all 16 architecture examples pass, and the stage-reporting path is unchanged. |
+| Are tests checking production behavior rather than copying the implementation or replacing the behavior under test with a stub? | The W6 CPU tests replace the native calls with plain-Torch references and say so in the file; their authority is the native GPU parity run, which uses the real kernels. Every other new test drives the production object. |
+| Are any workstation paths, credentials, datasets, weights, generated traces, caches, or unreachable submodule references staged? | No. The branch diff over `frontier/ tests/ docs/ examples/` was scanned for `/data/ycfeng`, `/home/brainpp`, `BRAINPP_`, `ACCESS_KEY`, `SECRET`, `password`, `token=` with no hit. The gitlink resolves from the published remote, proved by the clean-checkout run in the W7 report. |
+| Can a reader understand the names and functions without the historical calibration conversation? | The names follow the surrounding ML-system vocabulary. `VllmLoadBalancingClusterScheduler`'s constructor rejects every configuration outside its narrow support, and `AGENTS.md` now states that no placement or timing equivalence with a real vLLM deployment is claimed. |
+
+### Cleanup performed in this pass
+
+| Item | Action |
+| --- | --- |
+| `set_if_unset` in the companion runner | Removed. It was a near-copy of `set_if_none_or_empty`, and the `--tensor-bytes` argparse default of `None` makes the two behave identically. |
+| `pipeline_time` in `prefill_collective.py` | Verified the removal is safe: the value now comes from `final_timing.pipeline_time` at line 232. |
+| `outputs/examples/` generated trees | Removed after confirming 0 tracked files there; the 110 tracked files under `outputs/` are untouched. |
+
+No speculative abstraction was added in the cleanup pass. The affected tests were
+re-run afterwards, with results in `validation.md`.
+
+### Pre-existing defect found, not repaired
+
+`AGENTS.md` §Tests points at `tests/debug/` and `comm_backend_tests/`, neither of
+which exists here or on `origin/main`; the same missing tree causes 10 of the 84
+baseline unit failures. Reproduced on the base, reported as a baseline failure,
+and recorded in `future.md` rather than repaired, because the correct fix is a
+decision about the published test surface and is unrelated to Issue 26.
