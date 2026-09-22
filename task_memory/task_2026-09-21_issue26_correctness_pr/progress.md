@@ -16,6 +16,7 @@
 | 2026-09-22 | W6 native parity PASS on H800: `exp-0922-145047-660565`, 8 of 8 at `rtol=0, atol=0`. Step 6 closed. |
 | 2026-09-22 | W7 authorized and delivered: companion fix published as `eb7bc4f` with draft PR 1, Frontier gitlink moved, Frontier-side test added, and the governance scans narrowed to Frontier-owned sources. Step 7 closed. |
 | 2026-09-22 | Step 8 §14.1 run: unit and integration suites at the baseline failure set, 16 architecture examples, four PP=2 cases, and a cold-then-warm predictor-cache pair. `tests/debug/` pointer defect found, deferred to `future.md`. |
+| 2026-09-22 | Step 8 closed: §14.2 review recorded, PR 35 body updated with the Step 8 results and record links, `summary.md` written. Task technically complete; PR stays draft for user review. |
 
 ## Status
 
@@ -24,9 +25,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 8 in progress. §14.1 combined regression complete and recorded; §14.2 diff review complete; §14.3 PR body update is the remaining work. |
+| Current step | Step 8 closed. All eight steps complete; `summary.md` is the completion archive. |
 | Publication | PUSHED_VERIFIED. Draft PR 35 body carries the W6 and W7 sections; still draft. |
-| Next action | Step 8 §14.3: add the Step 8 results and the record links to PR 35's body, keep it draft, and report technical acceptance separately from GitHub's draft status. Two follow-ups carried forward, both in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. |
+| Next action | **User review.** Technical acceptance is complete; PR 35 remains draft and nothing was merged. Two follow-ups carried forward, both in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. Retargeting PR 35's base to `main` waits on PR 34. |
 
 ## Step status
 
@@ -40,7 +41,7 @@
 | 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | PUSHED_VERIFIED (records + PR 35 section) | REVIEWED (user chose to keep the single global field) |
 | 6 | Legacy fused-MoE profiling | PASS | CPU PASS (7 new tests; HEAD comparison shows the same single environment-dependent failure; default-environment suite unchanged at 84/3778). Native PASS: 8 of 8 in `tests/integration/test_moe_fused_expert_numerical_parity.py` at `rtol=0, atol=0` on H800, job `exp-0922-145047-660565` under `codesign` | PUSHED_VERIFIED (source, tests, docs, records, PR 35 section) | — |
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
-| 8 | Combined regression, PR hand-off | IN_PROGRESS. §14.1 and §14.2 complete; §14.3 remaining | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | — | — |
+| 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | NOT_REVIEWED |
 
 ## Chronological updates
 
@@ -158,3 +159,24 @@ through the example scripts instead.
 pointed at scratch metrics directories, and one leftover `outputs/examples/`
 tree from an earlier iteration was removed after confirming it held 0 tracked
 files; the 110 tracked files under `outputs/` are all still present.
+
+### 2026-09-22 — Step 8 §14.2 and §14.3, hand-off
+
+- §14.2: read `git diff 6ef0a3c..d881357` over `frontier/ tests/ docs/ examples/`,
+  1925 lines, line by line. Answers to all nine review questions, the cleanup
+  done in the pass, and an explicit statement that this was a **self-review and
+  not independent** are in `review.md`.
+- §14.3: updated PR 35's body in place rather than opening a duplicate, using
+  `gh api --method PATCH` because `gh pr edit` fails on this repository with a
+  Projects-classic GraphQL deprecation error. The body now carries the W6 and W7
+  outcomes in its progress table, a combined-regression section with the numbers
+  and what they do not prove, the deferred `tests/debug/` defect, absolute links
+  to `plan.md` / `requirements.md` / `progress.md` / `review.md` /
+  `validation.md` / `future.md`, a table of the implementation commits, and a
+  status paragraph separating technical acceptance from GitHub's draft flag.
+  Relative links were replaced with blob URLs because a PR body does not resolve
+  repository-relative paths; the links were checked and return 200.
+- Verified after the update: `draft: true`, `state: open`, base still
+  `refactor/oversized-module-split`, head `8730509`, and the body read back byte
+  for byte as sent. Nothing was merged, force-pushed, marked ready, or closed.
+- `summary.md` written as the completion archive.
