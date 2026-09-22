@@ -168,7 +168,9 @@ cache
 settings.json
 
 # Task memory and repair receipts are local-only; do not vendor them.
-task_memory/
+# The one exception below is reviewed on its branch, as PR 34/35 do.
+task_memory/*
+!task_memory/task_2026-09-22_stage_admission_ordering/
 repairs/
 
 # Local linked worktrees used for isolated feature implementation.
