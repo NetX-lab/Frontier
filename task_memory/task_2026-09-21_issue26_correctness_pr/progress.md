@@ -27,7 +27,7 @@
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
 | Current step | Step 8 closed; external review corrections A–E applied 2026-09-22 (`test_report_2026-09-22_review_corrections.md`). Step 9 is planned (`plan.md` §18, corrected per the review) and **not started**. |
-| Publication | PUSHED_VERIFIED (SHAs in the commit log; PR34 correction `2310417` merged in as `0d025f8`). Draft PR 35 body synchronized with the corrections; still draft. |
+| Publication | PUSHED_VERIFIED: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
 | Next action | **User decisions.** (1) Go/no-go for re-running the corrected FP8 native check on one H800 under `codesign` (`NOT_RUN`). (2) Start signal for Step 9, at the first node of the `plan.md` §18.5 graph. PR 35 remains draft and nothing was merged. Carried forward in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. Retargeting PR 35's base to `main` waits on PR 34. |
 
 ## Step status
