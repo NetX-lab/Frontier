@@ -293,7 +293,7 @@ def build_state_report(simulator) -> dict:
     for (replica_id, lane_id), replica_scheduler in sorted(
         cluster_scheduler._replica_schedulers.items(), key=lambda item: str(item[0])
     ):
-        stage_views = {}
+        stage_views = []
         for stage_id in range(replica_scheduler._num_stages):
             stage = replica_scheduler.get_replica_stage_scheduler(stage_id)
             heap = []
@@ -302,7 +302,7 @@ def build_state_report(simulator) -> dict:
                 queued_owner[(replica_id, stage_id, ticket.admission_seq)] = lane_id
                 heap.append({"batch_id": batch.id, "global_id": batch.global_id,
                              **_ticket_view(ticket)})
-            stage_views[stage_id] = {"busy": stage.is_busy, "heap": heap}
+            stage_views.append({"busy": stage.is_busy, "heap": heap})
         lanes[f"{replica_id}/{lane_id}"] = {
             "replica_id": replica_id, "lane": lane_id, "stages": stage_views,
         }
