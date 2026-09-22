@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.frontier_sources import iter_frontier_sources
+
 
 def test_target_embedded_mtp_methods_are_registry_source_for_runtime_helpers() -> None:
     import frontier.spec_decode.mtp_registry as registry
@@ -166,7 +168,7 @@ def test_static_mtp_contract_helper_is_not_used_by_production_paths() -> None:
     }
 
     production_hits = []
-    for path in (repo_root / "frontier").rglob("*.py"):
+    for path in iter_frontier_sources(repo_root):
         if path in allowed_paths:
             continue
         source = path.read_text(encoding="utf-8")
