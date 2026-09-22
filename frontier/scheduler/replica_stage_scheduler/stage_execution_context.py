@@ -35,9 +35,12 @@ class StageExecutionContext:
 
     The context is intentionally independent of event timing and child lane
     queues.  A complete operation first enters the ready FIFO, then the owner
-    admits it atomically.  EP child schedulers may start only after their
-    wave's ticket has been acquired, and the ticket remains active through the
-    wave-level combine/cleanup boundary.
+    admits it atomically.  An EP wave is admitted only from the FIFO head, so
+    it waits for every operation queued before it.  A full-stage operation may
+    be admitted ahead of earlier queued full-stage operations, but never ahead
+    of an EP wave queued before it.  EP child schedulers may start only after
+    their wave's ticket has been acquired, and the ticket remains active
+    through the wave-level combine/cleanup boundary.
     """
 
     def __init__(
@@ -320,7 +323,11 @@ class StageExecutionContext:
             )
 
     def try_acquire(self, ticket: StageAdmissionTicket) -> bool:
-        """Acquire the FIFO-head ticket if this stage is currently idle."""
+        """Acquire ``ticket`` if the stage can admit it now.
+
+        An EP wave must be the FIFO head.  A full-stage ticket must have no EP
+        wave queued ahead of it.
+        """
 
         self._validate_ticket(ticket)
         if ticket.scope == EP_WAVE:
@@ -332,9 +339,16 @@ class StageExecutionContext:
             return False
         elif self._forward_group_sealed:
             return False
-        if not self._ready_fifo or self._ready_fifo[0] != ticket:
-            return False
-        self._ready_fifo.popleft()
+        if ticket.scope == EP_WAVE:
+            if not self._ready_fifo or self._ready_fifo[0] != ticket:
+                return False
+        else:
+            for queued in self._ready_fifo:
+                if queued == ticket:
+                    break
+                if queued.scope == EP_WAVE:
+                    return False
+        self._ready_fifo.remove(ticket)
         if ticket.scope == EP_WAVE:
             self._active_ep_ticket = ticket
         else:

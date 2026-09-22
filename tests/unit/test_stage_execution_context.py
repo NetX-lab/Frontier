@@ -91,6 +91,57 @@ def test_admission_fifo_cannot_skip_an_earlier_ready_wave() -> None:
     context.release(second)
 
 
+def _context_with_wave_between_full_stage_tickets():
+    context = StageExecutionContext(
+        replica_id=0,
+        stage_id=0,
+        ep_size=2,
+        full_stage_capacity=2,
+    )
+    full0 = context.enqueue_full_stage(operation_id="full0")
+    full1 = context.enqueue_full_stage(operation_id="full1")
+    wave0 = context.enqueue_ep_wave(operation_id="wave0", participant_ep_ids=(0, 1))
+    full2 = context.enqueue_full_stage(operation_id="full2")
+    return context, full0, full1, wave0, full2
+
+
+def test_full_stage_ticket_passes_queued_full_stage_work_but_not_a_queued_wave() -> None:
+    context, full0, full1, wave0, full2 = _context_with_wave_between_full_stage_tickets()
+
+    assert context.try_acquire(full1) is True
+    assert context.queued_tickets == (full0, wave0, full2)
+    # Capacity remains, but wave0 is queued ahead of full2.
+    assert context.try_acquire(full2) is False
+    assert context.try_acquire(full0) is True
+
+
+def test_queued_ep_wave_orders_full_stage_work_on_both_sides() -> None:
+    context, full0, full1, wave0, full2 = _context_with_wave_between_full_stage_tickets()
+
+    assert context.try_acquire(full0) is True
+    assert context.try_acquire(full1) is True
+    context.release(full1)
+    assert context.try_acquire(full2) is False
+    assert context.try_acquire(wave0) is False
+    context.release(full0)
+    assert context.try_acquire(wave0) is True
+    assert context.try_acquire(full2) is False
+    context.release(wave0)
+    assert context.try_acquire(full2) is True
+    context.release(full2)
+    assert context.is_idle
+    assert context.queued_tickets == ()
+
+
+def test_idle_single_owner_stage_admits_a_later_queued_full_stage_ticket() -> None:
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    full0 = context.enqueue_full_stage(operation_id="full0")
+    full1 = context.enqueue_full_stage(operation_id="full1")
+
+    assert context.try_acquire(full1) is True
+    assert context.queued_tickets == (full0,)
+
+
 def test_release_requires_the_active_operation_ticket() -> None:
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     wave = context.enqueue_ep_wave(operation_id=30, participant_ep_ids=(0,))
