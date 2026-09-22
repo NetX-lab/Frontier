@@ -8,6 +8,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 | Date | Change |
 | --- | --- |
 | 2026-09-22 | Created: reachability check, magnitude estimate, source repair, CPU validation. Native GPU validation NOT_RUN. |
+| 2026-09-22 | Artifact identity decided as document-only. Native parity test added and submitted to an H800 worker as `exp-0922-140423-075005`; result pending. |
 
 ## 1. Is the defect reachable
 
@@ -187,22 +188,89 @@ matrix's inputs are checked-in CSVs, not freshly profiled data.
 Stated plainly: this repair changes what a *future* profiling run measures. It
 changes nothing about a simulation run from existing data.
 
-## 8. Not done
+## 8. Native numerical validation
 
-- **Native numerical validation: NOT_RUN.** The plan requires a GPU local-expert
-  parity test against the pinned vLLM reference, including more than one local
-  expert partition and a boundary case with uneven expert occupancy. It needs a
-  worker with `vllm>=0.10,<0.11`, because that is the only configuration that
-  selects the repaired path. No such environment exists on this host. Pending a
-  decision on the GPU run.
-- **Artifact identity: OPEN, raised for decision.** Existing rows record
-  `moe_grouped_gemm_backend='vllm_fused'` for both the legacy and the functional
-  path (`resolve_grouped_gemm_backend`, `moe_wrapper.py:50-59`), so the column
-  cannot distinguish an incomplete legacy measurement from a complete one.
-  `profiling_patch_tag` exists in one checked-in CSV but appears nowhere in the
-  source, so it is not a live mechanism. No consumer in `frontier/` reads
-  `moe_grouped_gemm_backend`; only `tests/unit/test_moe_native_admission.py:93`
-  asserts the mxfp4 label. Options and a recommendation are in `review.md`.
-- **FP8 path**: the repair changes what the FP8 quantizer receives, so the FP8
-  path is an affected native path. It is not proven by the CPU shape test and is
-  included in the pending GPU matrix.
+### The test
+
+`tests/integration/test_moe_fused_expert_numerical_parity.py`, 8 cases. It
+drives `_run_fused_moe_iteration` with the buffer shapes, kernel config and
+block alignment that `profile_fused_moe_kernel` uses, then compares the output
+tensor against vLLM's own `fused_experts` over the same activations, weights,
+routing weights, routing ids and expert map. Both sides run in one process on
+one GPU.
+
+| Case | What it covers | Plan requirement |
+| --- | --- | --- |
+| `test_production_shaped_expert_output_matches_vllm[0-4096]`, `[0-4097]`, `[1-4096]`, `[1-4097]` | Qwen3-A3B-30B shapes read from `data/config/models/qwen3-a3b-30b-moe.json`, EP 8, ranks 0 and 1. 4097 exercises the padded tail. | Qwen-shaped 4096/4097 with the checked-in config; more than one local expert partition. |
+| `test_uneven_expert_occupancy_matches_vllm[2]`, `[4]` | 257 tokens, hidden 512, width 256, 16 experts on EP 2 rank 1, popularity-weighted routing that leaves the last two global experts empty. The test asserts the shard both receives and misses tokens, and that those two experts stay empty. | A smaller boundary case with a different valid top-k and uneven expert occupancy. |
+| `test_repeated_invocations_do_not_reuse_a_stale_result` | Two different inputs through the same path, each matched against its own reference, and the two results asserted different. | Repeated invocation so workspace reuse cannot leak a stale result. |
+| `test_fp8_path_runs_on_the_gated_activation` | The FP8 path on native kernels: the quantizer receives `(M * top_k, width)`, not the raw `2 * width` projection, and the output is finite. | The affected FP8 path, as a structural check. |
+
+Comparison tolerance is `rtol=0, atol=0`. Both sides call the same Triton
+kernel with the same config, the same `torch.ops._C.silu_and_mul` and the same
+`moe_sum`, so any difference is a real difference. Every case also asserts a
+finite output.
+
+Gating: the module skips unless CUDA is present and
+`VLLM_API_VERSION == "0.10.x"`, which is the only configuration that selects the
+repaired path. It collects and skips cleanly in both local environments.
+
+### Why it runs on a worker
+
+Neither Torch environment on this host selects the repaired path:
+`openmopd-py312` carries vLLM 0.11.0 and `oneshot-opd-py312` carries 0.28.0,
+and both report `functional_fused_experts`. The pinned profiling range is
+`vllm>=0.10,<0.11`.
+
+### Run
+
+| Field | Value |
+| --- | --- |
+| Submission host | `kun-workspace-vgen2` (local), StepMind Python `RJobBackend`, `STEPMIND_BACKEND=rjob` |
+| Job name | `exp-0922-140423-075005` |
+| Creator | `i-fengyicheng` |
+| Charged group / tag | `steptron_ci` / `H800` |
+| Shape | 1 GPU, 8 CPU, 64000Mi |
+| Image | `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`, the official Docker Hub `vllm/vllm-openai:v0.10.2` through the company docker.io proxy |
+| NFS mount | `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr` |
+| Command | `python3 -m pytest -v -rA -p no:cacheprovider --no-header tests/integration/test_moe_fused_expert_numerical_parity.py`, after printing `nvidia-smi`, the Torch/vLLM/`fused_moe` source paths and `VLLM_API_VERSION` |
+| Status | **PENDING** at the time of writing. Result and per-case outcomes are appended below when the job reaches a terminal state. |
+
+The instrumented benchmark repository was not mounted. This test compares
+tensors from vLLM's own `fused_experts` inside one process, so it needs no
+serving instrumentation. For the same reason the `frontier-calibration` skill
+was not invoked: its workflow is E2E simulator-versus-served-vLLM calibration,
+not a kernel-level tensor comparison.
+
+The image is the official upstream build, not the instrumented fork, so the
+`topk_softmax` arity concern recorded as open item 6 in `review.md` does not
+apply to this run.
+
+## 9. Artifact identity
+
+Decided by the user on 2026-09-22: **do not change the profiling metadata,
+record the limitation only.**
+
+`resolve_grouped_gemm_backend` (`moe_wrapper.py:50-59`) returns `vllm_fused`
+for both the low-level and the functional vLLM path, so no column separates an
+incomplete legacy row from a complete one. `profiling_patch_tag` carries three
+historical free-text values in `a800/qwen3-a3b-30b-moe/moe.csv`, but nothing in
+the source writes it. Nothing in `frontier/` reads
+`moe_grouped_gemm_backend`; only `tests/unit/test_moe_native_admission.py:93`
+asserts the mxfp4 label.
+
+`docs/profiling/README.md` now records what `moe_grouped_gemm` measures, the
+size of the pre-repair gap, and that a row cannot be checked for completeness
+from its own metadata, so the remedy is to re-profile. No column was added and
+no admission gate was introduced.
+
+## 10. Still unproven
+
+- **FP8 arithmetic.** The repair changes what the FP8 quantizer receives. The
+  native case above checks that the real kernels accept the gated activation and
+  return finite values; it does not check FP8 numerics against a reference.
+  Frontier quantizes weights and activations with its own helpers, so a bit-exact
+  comparison against `fused_experts` would first require matching those schemes.
+  Recorded as unproven rather than claimed.
+- **MXFP4.** Untouched by this repair; it returns through the functional branch
+  before the legacy allocations.
