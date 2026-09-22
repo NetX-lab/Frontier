@@ -11,6 +11,8 @@
 #   CASE_DIR       calibration case directory on the mounted workspace; reads
 #                  inputs/, writes runs/vllm-instrumented/<RUN_TAG>/
 #   ARCHIVE_DIR    cloud-volume directory for this run
+# Optional:
+#   OVERLAY_PATCH  recorded unified diff applied to the accepted overlay
 set -euo pipefail
 set +x
 : "${RUN_TAG:?}" "${FRONTIER_TREE:?}" "${GROUNDTRUTH:?}" "${CASE_DIR:?}" "${ARCHIVE_DIR:?}"
@@ -60,7 +62,7 @@ SITE_VLLM=$("$PY" -c 'import importlib.util, os; print(os.path.dirname(importlib
 "$PY" "$SCRIPT_DIR/vllm_burst_driver.py" overlay \
   --site-vllm "$SITE_VLLM" --checkout "$GROUNDTRUTH" --destination "$WORK/overlay" \
   --expected-changes "$CASE_DIR/inputs/fork_changed_files.txt" \
-  --report "$WORK/overlay_report.json" || status=3
+  --report "$WORK/overlay_report.json" ${OVERLAY_PATCH:+--patch "$OVERLAY_PATCH"} || status=3
 if [ "$status" -ne 0 ]; then
   publish "$ARCHIVE_DIR"; publish_evidence
   echo "WORKER_STATUS=$status overlay rejected"

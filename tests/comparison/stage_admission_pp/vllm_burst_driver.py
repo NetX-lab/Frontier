@@ -10,7 +10,8 @@ subcommands:
     ``vllm/**/*.py`` of the ground-truth checkout over it.  The overlay is
     accepted only when the files where the image and the checkout differ are
     exactly the checkout's own changes over its upstream base, listed in
-    ``--expected-changes``.
+    ``--expected-changes``.  An accepted overlay may then take one recorded
+    ``--patch`` (a unified diff), whose SHA-256 and files enter the report.
 
 ``run``
     Start one ``AsyncLLM`` with DP=2, PP=2, TP=1 (EP for the MoE model), run
@@ -30,9 +31,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import filecmp
+import hashlib
 import json
 import os
 import random
+import re
 import shutil
 import sys
 import time
@@ -67,6 +70,46 @@ def build_overlay(site_vllm: Path, checkout: Path, destination: Path, expected_c
         "missing": sorted(set(expected) - set(differing)),
         "accepted": differing == expected,
     }
+
+
+def apply_patch(patch: Path, root: Path) -> list[str]:
+    """Apply the unified diff ``patch`` to files under ``root``.
+
+    The worker image need not carry ``patch`` or ``git``, so hunks are applied
+    here as text replacements; each hunk must match its file exactly once.
+    """
+    lines = patch.read_text().splitlines(keepends=True)
+    hunks: dict[str, list[tuple[str, str]]] = {}
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        index += 1
+        if line.startswith("+++ "):
+            target = line[4:].strip().removeprefix("b/")
+            hunks[target] = []
+        elif line.startswith("@@ "):
+            header = re.match(r"@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@", line)
+            old_count, new_count = (int(count or 1) for count in header.groups())
+            old, new = [], []
+            while old_count or new_count:
+                tag, text = lines[index][0], lines[index][1:]
+                index += 1
+                if tag in " -":
+                    old.append(text)
+                    old_count -= 1
+                if tag in " +":
+                    new.append(text)
+                    new_count -= 1
+            hunks[target].append(("".join(old), "".join(new)))
+    for relative, edits in hunks.items():
+        path = root / relative
+        text = path.read_text()
+        for old, new in edits:
+            if text.count(old) != 1:
+                raise ValueError(f"{patch}: a hunk does not match {relative} exactly once")
+            text = text.replace(old, new)
+        path.write_text(text)
+    return sorted(hunks)
 
 
 def write_model_dir(model_config: Path, model_dir: Path) -> dict:
@@ -187,6 +230,7 @@ def main(argv: list[str] | None = None) -> int:
     overlay.add_argument("--destination", type=Path, required=True)
     overlay.add_argument("--expected-changes", type=Path, required=True)
     overlay.add_argument("--report", type=Path, required=True)
+    overlay.add_argument("--patch", type=Path)
     run = commands.add_parser("run")
     run.add_argument("--model-config", required=True)
     run.add_argument("--output-dir", required=True)
@@ -206,6 +250,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "overlay":
         report = build_overlay(args.site_vllm, args.checkout, args.destination, args.expected_changes)
+        if report["accepted"] and args.patch is not None:
+            files = apply_patch(args.patch, args.destination)
+            report["patch"] = {
+                "path": str(args.patch),
+                "sha256": hashlib.sha256(args.patch.read_bytes()).hexdigest(),
+                "files": files,
+                "equal_to_image_after_patch": {
+                    name: filecmp.cmp(args.destination / name, args.site_vllm.parent / name, shallow=False)
+                    for name in files
+                },
+            }
         args.report.write_text(json.dumps(report, indent=1))
         print(json.dumps({key: report[key] for key in ("accepted", "unexpected", "missing")}))
         return 0 if report["accepted"] else 3
