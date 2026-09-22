@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Placeholder created at Step 0. |
 | 2026-09-21 | Completion archive written after the fourth and last module split. |
+| 2026-09-22 | Synchronized with the maintainer review: case table is 71, the final acceptance record is the clean recapture in `test_report_2026-09-22_checkpoint_b_final_evidence.md`, and the fidelity gate itself was corrected first. |
 
 ## Overview
 
@@ -27,18 +28,22 @@ Five modules remain above 2,000 lines. All five were out of scope from the start
 | `frontier/config/` | 12 modules: the simulation config and its cluster topology, the cluster role builders and topology summary, and one module per configuration family |
 | `frontier/scheduler/replica_scheduler/vllm_v1_*.py` | 8 modules: the scheduler plus MTP wait policy, role schedules, KV allocation, iteration policy, prefix cache, decode-attention cohort and the decision log |
 | `frontier/execution_time_predictor/` | 12 modules across the two predictors: family trainers, dataframe loaders, model registry, layer contract resolution, identity helpers, and the MoE operator times, routing workload, dataset training, MTP replay and helpers |
-| `tests/e2e/refactor_fidelity/` | The 67-case fidelity matrix that gates the branch |
-| `task_memory/task_2026-09-21_oversized_module_split/` | `plan.md`, `module_survey.md`, `issues.md`, `progress.md`, the Step 0 baseline report and the Step 1 matrix report |
+| `tests/e2e/refactor_fidelity/` | The 71-case fidelity matrix that gates the branch, and the gate corrections from review comments R34-01 and R34-02 |
+| `tests/unit/test_refactor_fidelity_gate.py` | 22 tests pinning that the gate cannot pass without successful comparisons, and that one label describes one measurement |
+| `tests/unit/test_module_split_boundaries.py` | 13 tests for the annotation, re-export, MRO and cache-loading boundaries the split could break |
+| `task_memory/task_2026-09-21_oversized_module_split/` | `plan.md`, `module_survey.md`, `issues.md`, `progress.md`, the Step 0 baseline report, the Step 1 matrix report, and the two Checkpoint reports of 2026-09-22 |
 
 ## How the no-change claim is supported
 
-**The fidelity matrix.** 67 cases, each run through a checked-in example wrapper on both the branch and a read-only checkout of the base commit. Every artifact a run writes is compared and the file sets must match: `request_metrics.csv`, `system_metrics.json`, `frontier_stage_batch_ledger.jsonl`, `op_precision_metadata.csv` and `config.json`. The gate is exact equality with no tolerance, because a behavior-preserving refactor has no reason to change a simulated number. Only three run-specific absolute paths are normalized, and that list was checked against the real artifacts rather than assumed.
+**The fidelity matrix.** 71 cases, each run through a checked-in example wrapper on both the branch and a read-only checkout of the base commit. Every artifact a run writes is compared and the file sets must match: `request_metrics.csv`, `system_metrics.json`, `frontier_stage_batch_ledger.jsonl`, `op_precision_metadata.csv` and `config.json`. The gate is exact equality with no tolerance, because a behavior-preserving refactor has no reason to change a simulated number. Only three run-specific absolute paths are normalized, and that list was checked against the real artifacts rather than assumed.
 
 Coverage: co-location, sequential PDD and sequential PD-AF; dense and MoE; offline and online; the dummy predictor and the checked-in profiling CSVs; request counts from 4 to 64; prompts from 128 to 3584 tokens; three arrival rates; chunked prefill, all three decode CUDA graph modes, prefix caching, speculative decoding and thinking mode; TP, PP, attention DP and EP variations.
 
 **The predictor cache names.** Retraining from the same CSV reproduces the same numbers, so a changed training identity or cache key would leave no trace in the outputs. The comparison therefore also checks the names of the predictor cache files each side produces, and classifies any difference as rekeyed, baseline-only or candidate-only. This is the specific evidence that moving the model hash, the cache keys, the registry and the FFN contract signature into different modules changed no training identity.
 
-**The unit suites.** A selection that grows with each step, ending at 183 files, run on both sides with failure identities compared rather than counts. Identities matter: a count comparison would have hidden several of the defects below, because the same files also carry pre-existing failures.
+**The unit suites.** A selection that grows with each step, ending with the whole `tests/unit` directory, run on both sides with failure identities compared rather than counts. Identities matter: a count comparison would have hidden several of the defects below, because the same files also carry pre-existing failures.
+
+**The gate itself.** The three claims above are only worth as much as the comparator that produces them. The maintainer review found that the comparator could return success having compared nothing, so it was corrected and given its own regression tests before the acceptance run was taken. The four false successes are reproduced against the pre-fix harness in `test_report_2026-09-22_checkpoint_a_fidelity_gate.md`.
 
 **The CLI surface.** The generated flag set, 753 flags, compared after every step, plus a check that all 36 names other modules import from `frontier.config` still resolve from both import paths.
 
@@ -51,7 +56,10 @@ Coverage: co-location, sequential PDD and sequential PD-AF; dense and MoE; offli
 | 3 | `config.py` | 62 files, 10 failed / 671 passed, identical identities | 67 identical, 0 mismatched, 0 cache differences |
 | 4 | vLLM V1 replica scheduler | 73 files, 13 failed / 1570 passed, identical identities | 67 identical, 0 mismatched, 0 cache differences |
 | 5 | prediction model manager | 2300-odd tests, identical | 67 identical, 0 mismatched, 0 rekeyed models |
-| 6 | MoE execution-time predictor | 183 files, 28 failed / 3016 passed, identical identities | recorded in `progress.md` when the final measurement lands |
+| 6 | MoE execution-time predictor | 183 files, 28 failed / 3016 passed, identical identities | 67 identical, 0 mismatched |
+| **Final** | whole branch at `bb582a4` | whole `tests/unit`: 84 failed / 3679 passed / 49 skipped, failure identities byte-identical to `1f694f7` (84 / 3644 / 49) | **71 compared, 71 identical, 0 mismatched, 0 failures, 0 missing evidence, 0 cache differences** |
+
+The final row is the acceptance record, taken after the gate corrections landed, with both sides run as single clean full captures from detached checkouts. Its provenance, the excluded modules and its limits are in `test_report_2026-09-22_checkpoint_b_final_evidence.md`. The per-step rows above it were taken with the pre-correction gate and are retained as history, not as the acceptance evidence.
 
 The config and manager splits were additionally measured from detached checkouts at their own commits by a second session, so the tree measured was the commit and nothing else.
 
@@ -69,7 +77,7 @@ The test changes divide into three kinds, and only the second is a judgment call
 
 ## Open and deferred work
 
-- The final fidelity measurement of `cb54fb4` is the last outstanding gate; `progress.md` records its result.
+- None outstanding for the matrix: the final measurement is the clean 71-case recapture of `bb582a4` recorded in the Checkpoint B report.
 - The naming of the extracted mixin classes is a review point, not a settled decision. Renaming any of them is mechanical and affects three files at most.
-- Two modules keep a name that is reported by the static check and is correct: `BaseCCBackendConfig` in `frontier/config/cluster_config.py` is a string annotation the flat CLI generator resolves through its own lazy-import special case, exactly as the pre-split `config.py` did.
+- Two modules keep a name that is reported by the static check and is correct: `BaseCCBackendConfig` in `frontier/config/cluster_config.py` is a string annotation the flat CLI generator resolves through its own lazy-import special case, exactly as the pre-split `config.py` did. `typing.get_type_hints(ClusterConfig)` therefore raises on this branch — and equally on `1f694f7`, which was verified. It is pinned in `KNOWN_UNRESOLVED_CONFIG_ANNOTATIONS` so a new occurrence fails.
 - `AGENTS.md` still points readers at `tests/unit/test_open_source_release_arch_guard.py` and two `tests/debug/` scripts that do not exist on `main`. Recorded as deferred; fixing it is not in this branch's scope.
