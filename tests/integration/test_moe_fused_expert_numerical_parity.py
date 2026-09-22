@@ -377,6 +377,10 @@ def test_fp8_path_runs_on_the_gated_activation():
                 w1_scale=w1_scale,
                 w2_scale=w2_scale,
                 use_fp8=True,
+                # The production block-quantized path hands the kernel its
+                # block shape; without it the kernel reads the scales as
+                # per-tensor and this check would exercise a different path.
+                block_shape=block_shape,
             )
         finally:
             kernel.quantize_activations_to_fp8 = original_quantize

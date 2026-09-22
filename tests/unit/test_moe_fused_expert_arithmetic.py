@@ -13,9 +13,10 @@ own kernels needs a GPU and is recorded separately.
 from types import SimpleNamespace
 
 import pytest
-import torch
 
-from frontier.profiling.moe import moe_vllm_kernel as kernel
+torch = pytest.importorskip("torch", reason="the fused-MoE profiler is built on PyTorch")
+
+from frontier.profiling.moe import moe_vllm_kernel as kernel  # noqa: E402
 
 
 NUM_TOKENS = 5
@@ -83,13 +84,16 @@ def native_stubs(monkeypatch, expert_problem):
     calls = []
     topk_ids = expert_problem.topk_ids
 
-    def fake_invoke_kernel(*, A, B, C, topk_weights, mul_routed_weight, top_k, **_):
+    def fake_invoke_kernel(
+        *, A, B, C, topk_weights, mul_routed_weight, top_k, block_shape=None, **_
+    ):
         calls.append(
             SimpleNamespace(
                 name="invoke_kernel",
                 A=A,
                 mul_routed_weight=mul_routed_weight,
                 top_k=top_k,
+                block_shape=block_shape,
             )
         )
         rows = C.view(NUM_TOKENS, TOP_K, C.shape[-1])
@@ -126,12 +130,12 @@ def native_stubs(monkeypatch, expert_problem):
     return calls
 
 
-def _run(problem):
+def _run(problem, **overrides):
     cache1 = torch.empty(NUM_TOKENS, TOP_K, 2 * EXPERT_HIDDEN_DIM)
     cache2 = torch.empty(NUM_TOKENS * TOP_K, EXPERT_HIDDEN_DIM)
     cache3 = torch.empty(NUM_TOKENS, TOP_K, HIDDEN_DIM)
     out = torch.empty(NUM_TOKENS, HIDDEN_DIM)
-    kernel._run_fused_moe_iteration(
+    arguments = dict(
         A=problem.A,
         w1=problem.w1,
         w2=problem.w2,
@@ -147,6 +151,8 @@ def _run(problem):
         config={"BLOCK_SIZE_M": 16},
         block_dims=None,
     )
+    arguments.update(overrides)
+    kernel._run_fused_moe_iteration(**arguments)
     return SimpleNamespace(cache1=cache1, cache2=cache2, cache3=cache3, out=out)
 
 
@@ -251,6 +257,38 @@ def test_the_activation_buffer_is_quantized_rather_than_the_raw_projection(
 
     assert seen["tensor"] is cache2
     assert seen["group_size"] == 64
+
+
+def test_the_block_shape_reaches_both_expert_gemms(
+    monkeypatch, expert_problem, native_stubs
+):
+    """Under block-quantized FP8 both GEMMs must see the same block shape.
+
+    The kernel reads its scales per block only when told the block shape; a
+    call that drops it silently runs the per-tensor path instead. The native
+    FP8 check depends on this boundary, so it is pinned here on CPU.
+    """
+
+    monkeypatch.setattr(
+        kernel,
+        "quantize_activations_to_fp8",
+        lambda tensor, *, group_size: (tensor, torch.ones(1)),
+    )
+
+    _run(expert_problem, block_dims=(128, 64), use_fp8=True, block_shape=[128, 64])
+
+    gemms = [call for call in native_stubs if call.name == "invoke_kernel"]
+    assert len(gemms) == 2
+    assert [call.block_shape for call in gemms] == [[128, 64], [128, 64]]
+
+
+def test_a_missing_block_shape_reaches_the_gemms_as_none(expert_problem, native_stubs):
+    """The default is observable, so the FP8 test cannot omit it unnoticed."""
+
+    _run(expert_problem)
+
+    gemms = [call for call in native_stubs if call.name == "invoke_kernel"]
+    assert [call.block_shape for call in gemms] == [None, None]
 
 
 def test_repeated_iterations_do_not_leak_a_previous_result(

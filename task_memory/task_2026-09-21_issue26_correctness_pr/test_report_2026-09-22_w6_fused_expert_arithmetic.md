@@ -10,6 +10,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 | 2026-09-22 | Created: reachability check, magnitude estimate, source repair, CPU validation. Native GPU validation NOT_RUN. |
 | 2026-09-22 | Artifact identity decided as document-only. Native parity test added and submitted to an H800 worker as `exp-0922-140423-075005`; result pending. |
 | 2026-09-22 | Native parity PASS on H800 under `codesign`: `exp-0922-145047-660565`, 8 of 8 at `rtol=0, atol=0`. Three earlier attempts and their causes recorded in section 8. |
+| 2026-09-22 | External review C35-02/C35-03: section 5 replaces the scope-equivalence claim with a scope table; section 8 restates the native result as seven reference comparisons plus one FP8 structural check, and records that the FP8 test omitted `block_shape` (test corrected; native rerun NOT_RUN). |
 
 ## 1. Is the defect reachable
 
@@ -109,16 +110,38 @@ and the local top-k reduction. Both profile methods time the whole step —
 `_collect_cuda_event_stats` brackets `step_fn`, and
 `_collect_record_function_stats` wraps it in one `vidur_moe_grouped_gemm` scope.
 
-This makes the legacy path measure the same scope the functional path already
-measured: vLLM's `fused_experts` returns reduced hidden states, so `moe_sum` was
-always inside the functional measurement. The repair removes a disagreement
-between the two backends rather than creating one.
+The repair makes the two backends agree on the **expert arithmetic**: vLLM's
+`fused_experts` returns reduced hidden states, so the gated activation and
+`moe_sum` were always inside the functional measurement, and the legacy path
+now computes them too. It does **not** make the two timed scopes equal, and no
+record may claim that it does (corrected 2026-09-22, external review C35-02;
+the earlier text here said "the same scope"):
+
+| Work | Corrected legacy timed iteration (`_step` at `moe_vllm_kernel.py:920`) | Functional timed entry (`_step` at `:837`, calling `fused_experts`) |
+| --- | --- | --- |
+| GEMM1, gated activation, optional activation quantization, GEMM2, local top-k reduction | Included | Included, inside the complete expert operation |
+| Block alignment / sorting (`moe_align_block_size`) | Outside: computed once before `_step` (`:897`) on caller-prepared buffers | Inside: vLLM 0.10.2 `fused_experts_impl` aligns per chunk (`fused_moe.py:1718`); a newer functional backend must be audited, not assumed |
+| Internal allocations and chunk management | Caller-prepared buffers, one call | Entry-specific (`VLLM_FUSED_MOE_CHUNK_SIZE` loop, internal workspace); not assumed identical |
+| DP/TP/EP communication | None added by the local `moe_sum` | None inferred from the local sum; inspect the selected entry |
+
+This matters because Frontier predicts `moe_shuffling` and `moe_grouped_gemm`
+as separately additive terms in both accounting paths
+(`time_components.py:505,508,531,534`; `moe_operator_times.py:129-143`). A
+functional-backend row that already owns alignment inside `moe_grouped_gemm`
+cannot simply be added to an independent shuffling prediction. Whether the
+shuffling predictor is populated for functional-backend datasets was not
+verified in W6: the boundary mismatch is confirmed, a live numerical double
+count is not claimed. Numerical tensor parity (section 8) and timing-scope
+parity are separate statements, reported separately.
 
 Frontier's `MOE_FAMILY` (`frontier/operators/families.py:77`) has exactly four
 operators — `moe_gating_linear`, `moe_gating_routing_topk`, `moe_shuffling`,
 `moe_grouped_gemm` — and none of them represents the reduction. Counting it
-inside `moe_grouped_gemm` counts it exactly once without adding a fifth
-operator, a new profiling column, or a new trained model.
+inside `moe_grouped_gemm` counts the reduction once on each backend without
+adding a fifth operator, a new profiling column, or a new trained model. Old
+legacy rows remain incomplete, new rows cannot be told apart from the CSV
+metadata alone (the user's decision: no metadata change), and re-profiling is
+the remedy.
 
 Noted for the record, because it differs: the Frontier-instrumented reference
 vLLM puts `moe_sum` *outside* its `record_function("moe_grouped_gemm")` scope
@@ -252,11 +275,28 @@ and both report `functional_fused_experts`. The pinned profiling range is
 | `test_repeated_invocations_do_not_reuse_a_stale_result` | PASSED |
 | `test_fp8_path_runs_on_the_gated_activation` | PASSED |
 
-All eight compare at `rtol=0, atol=0`, so the repaired profiling path reproduces
-vLLM 0.10.2's `fused_experts` output bit for bit on the production Qwen-A3B-30B
-shapes at 4096 and 4097 tokens for two EP ranks, on the uneven-occupancy
-boundary case at two top-k values, across repeated invocations, and on the FP8
-path.
+Eight native tests passed: **seven reference-output comparison cases at zero
+tolerance** (`rtol=0, atol=0` against vLLM 0.10.2's `fused_experts`: the
+production Qwen-A3B-30B shapes at 4096 and 4097 tokens for two EP ranks, the
+uneven-occupancy boundary case at two top-k values, and repeated invocations)
+**and one FP8 structural/finite-output check**. The FP8 test asserts that the
+quantizer receives the gated activation of shape `(M * top_k, width)` and that
+the output is finite; it compares against no reference. **FP8 numerical
+equivalence is not established.** (Wording corrected 2026-09-22, external review
+C35-03; the earlier sentence here, "all eight compare at `rtol=0, atol=0`",
+overstated the run.)
+
+As submitted, the FP8 test also omitted `block_shape=block_shape` when calling
+`_run_fused_moe_iteration`, while passing `block_dims`. `block_dims` selects the
+activation-quantization group; `block_shape` is what reaches the two expert
+kernel invocations, and `profile_fused_moe_kernel` forwards it. The kernel
+therefore read the block-quantized scales through its per-tensor path, so the
+run above did not exercise the production block-quantized invocation. Corrected
+2026-09-22: the test now passes `block_shape`, and
+`tests/unit/test_moe_fused_expert_arithmetic.py` pins on CPU that both GEMM
+invocations receive the block shape (and `None` when it is omitted). The
+corrected native check has **not** been re-run: `NOT_RUN`, one H800 under
+`codesign`, awaiting the user's go.
 
 ### Attempts
 

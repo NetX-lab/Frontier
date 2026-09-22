@@ -216,7 +216,16 @@ expert GEMM with the routing weights applied, and the local reduction over one
 token's top-k expert outputs. That reduction is a per-token sum, not a
 collective, so it carries no communication cost. `MOE_FAMILY` has no separate
 operator for it, and the vLLM functional backend has always included it, so
-counting it here counts it exactly once on both backends.
+counting it here counts the reduction once on each backend.
+
+The two backends still time different envelopes. The low-level path runs block
+alignment (`moe_align_block_size`) once before the timed step on caller-prepared
+buffers; vLLM's `fused_experts` aligns inside the call, per chunk, with its own
+workspace. A `moe_grouped_gemm` row from the functional backend therefore
+includes preparation work that a low-level row does not, while Frontier adds
+`moe_shuffling` as a separate term for both. Treat rows from the two backends as
+different measurements under one operator name, and do not mix them in one
+dataset.
 
 Before 2026-09-22 the vLLM 0.10.x low-level profiling path omitted the gated
 activation and the reduction. Rows produced by that path under-measure
