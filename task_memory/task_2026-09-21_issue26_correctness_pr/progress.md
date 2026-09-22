@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | Step 9 execution started: P1(a) oracle completed, P1(b) blocked by W9-01, design checkpoint partially settled, G1 ground-truth instrumentation completed and case binding written. |
 | 2026-09-22 | FP8 native rerun PASS (`exp-0922-202645-561899`, 8 passed, exit 0). Second Step 9 plan review (plan §18.12, R9-01..R9-08) recorded; Step 9 still not started. |
 | 2026-09-21 | Step 0 started: records landed, environment created, baseline pending. |
 | 2026-09-22 | Maintainer review dispositions recorded; Checkpoint C closed: parent merged, W2 tests strengthened, W2 re-measured with one harness revision. |
@@ -223,3 +224,34 @@ User start signal: "开始执行step9", with the quality gates repeated (readabi
 W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_schduler.py` and `stage_contexts.py` are byte-identical to `main`. It is unobserved because every Simulator-level test with `attn_dp > 1` uses `num_pipeline_stages = 1` and no shipped example sets `attn_dp > 1`. Scope decision requested from the user; recommendation is to fix it as a separate correctness item rather than inside this feature branch.
 
 W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices against node size 4). Plan C1's PP3 row amended to `attn_dp=1`.
+
+### G1 ground-truth instrumentation (2026-09-22, completed)
+
+Runs in parallel with P1 in the work graph and does not depend on W9-01.
+
+`/data/ycfeng/Frontier/.real-engine/vLLM-BS` now has the local branch
+`feature/frontier-comparison-instrumentation` created at the remote tip
+`ea95f571e`, with the instrumentation committed as `494b9f327`. Tree clean,
+nothing pushed, per decision D-b.
+
+Five observations, four record kinds, one env gate
+(`VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR`), buffered one file per process. The
+engine iteration and its publication are one record because they happen in the
+same turn of the busy loop under the same `(engine, wave, step)` key. Coordinator
+publications carry a snapshot id that is sent on to the front ends, which is
+what makes an applied snapshot and the placement made from it traceable back to
+the engine reports behind them.
+
+`vllm/v1/core/sched/scheduler.py` turned out not to need a change: the plan
+expected a `dp_rank` column, but `SchedulerOutput` already carries the
+scheduled request ids and the record is written by the engine that owns the
+rank. The changed-file list is four files, 212 insertions, 10 deletions.
+
+Case binding written to `calibration/dp_pp_case_001/` (`manifest.yaml`,
+`case_init.md`, `g1_instrumentation.diff` with SHA-256
+`84fc24db0e2411268a93f8be7ca5f8e4e5072ea09d86063cac2cfb98381feb2c`). Two
+manifest decisions are `BLOCKED`: GPU authorization for the S0/S1 runs, and the
+W9-01 scope decision.
+
+Evidence: `test_report_2026-09-22_w9_pp_dp_placement.md` §3. The instrumented
+engine paths are not executed yet; that is package G3 and needs a GPU host.

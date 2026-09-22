@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | Step 9 partial validation added: reference-loop oracle, Frontier boundary probes on three shapes, the two probe failures (invariant I5, W9-01), and the ground-truth writer checks. |
 | 2026-09-21 | Created. Environment recorded; baseline results recorded in the refactor task's Step 0 report because both branches share the same base commit. |
 | 2026-09-21 | Step 1 recorded: audit spot checks and the vLLM reference identity check. |
 | 2026-09-21 | Step 2 recorded: unit sensitivity and the fidelity measurement against a stated expectation. |
@@ -501,3 +502,22 @@ Full record: `test_report_2026-09-22_w8_combined_regression.md`.
 | Working tree | `git status --porcelain` empty afterwards. The one leftover `outputs/examples/` tree was removed after confirming 0 tracked files there; the 110 tracked files under `outputs/` are all still present. |
 | Pre-existing defect, deferred | `AGENTS.md` §Tests names `comm_backend_tests/`, `debug/`, and two `bash tests/debug/e2e-level/monolith_mode/scripts/*.sh` commands. `tests/debug/` exists neither here nor on `origin/main`. The same missing tree causes 10 of the 84 baseline unit failures in `test_colocation_release_review_contracts.py`, and a docstring at `vllm_v1_engine_replica_scheduler.py:16` still points into it. One pre-existing defect class from the release scrub, unrelated to Issue 26; recorded in `future.md` and not repaired here. The PP2 coverage was obtained through the example scripts instead. |
 | Limits | CPU only. No native profiling suite and no vLLM serving or TTFT comparison, both excluded by §14.1. The PD-AF Reference-checkout tests could not run on this host. The example runs use dummy execution time except for the CSV smokes, so they validate structure, lifecycle, and conservation rather than latency accuracy. |
+
+## Step 9 — PP>1 support for the vLLM DP placement policy (2026-09-22, partial)
+
+| Item | Command | Expected | Actual | Outcome |
+| --- | --- | --- | --- | --- |
+| Reference-loop oracle | `pytest tests/unit/test_dp_placement_reference_loop.py -q` | Every §18.11 state-table row reproduced from a model of the engine iteration alone | `9 passed in 1.21s` | PASS |
+| Oracle with the existing balancer suite | `pytest tests/unit/test_dp_placement_reference_loop.py tests/unit/test_vllm_dp_load_balancer.py -q` | No interference with the shipped balancer tests | `70 passed in 1.44s` | PASS |
+| Frontier boundary probe, `attn_dp=2 PP=1` | scratch `probe_frontier_boundaries.py` | 6/6 requests complete; peer keys equal | 6/6, 24 boundaries, peers equal at every boundary | PASS |
+| Frontier boundary probe, `attn_dp=1 PP=2` | same | Consecutive admissions carry distinct keys | Both cold-fill admissions read key 0 | FAIL, invariant I5 |
+| Frontier boundary probe, `attn_dp=1 PP=3` | same | Same | All three cold-fill admissions read key 0 | FAIL, invariant I5 |
+| Frontier boundary probe, `attn_dp=2 PP=2` | same | 6/6 requests complete | Event queue drained with requests unfinished | FAIL, W9-01 |
+| Ground-truth writer | scratch `check_trace_writer.py` | Gate off writes nothing; buffering, per-process file, dense `seq`, idempotent flush, warmup gate | All checks passed | PASS |
+| Ground-truth syntax | `python -m py_compile` on the four changed vLLM files | Parse | All four parse | PASS |
+
+Limits. The instrumented vLLM paths have not been executed; that needs a GPU
+host and is package G3. The two probe FAIL rows are findings, not regressions:
+the I5 failures are the measurement the design checkpoint asked for, and W9-01
+is a pre-existing defect on `main`. Evidence:
+`test_report_2026-09-22_w9_pp_dp_placement.md`.

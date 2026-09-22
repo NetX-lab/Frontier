@@ -1,0 +1,134 @@
+# Frontier calibration case: vLLM DP placement under pipeline parallelism.
+# Fields marked BLOCKED are unresolved decisions. Per the v2 contract a runner
+# never fills them from an unstated default; they are answered before the case
+# leaves package G2.
+
+case_id: dp_pp_case_001
+run_generation: 1
+created_at_utc: "2026-09-22"
+requesting_user: i-fengyicheng
+reviewer_identity: i-fengyicheng
+auto_recycle: false
+
+purpose: >-
+  Compare the vLLM V1 data-parallel placement chain against Frontier's
+  vllm_load_balancing cluster scheduler at pipeline_parallel_size 2, where an
+  engine iteration can publish changed request counts without completing any
+  batch. Task step 9, plan section 18.6.
+
+selected_checkout:
+  frontier_worktree: /data/ycfeng/Frontier/.worktrees/issue26-correctness-pr
+  frontier_branch: fix/issue26-correctness-pr
+  frontier_commit: BLOCKED  # pinned at simulator-run, after package P2
+
+groundtruth_checkout_path: /data/ycfeng/Frontier/.real-engine/vLLM-BS
+groundtruth_branch: feature/frontier-comparison-instrumentation
+groundtruth_ref: refs/heads/feature/frontier-comparison-instrumentation
+groundtruth_commit: 494b9f327036d4493034a9b37ebb343354884e01
+groundtruth_tree_dirty: false
+groundtruth_remote_url: https://github.com/fwyc0573/vLLM-BS.git
+groundtruth_remote_tip: ea95f571e20937c7c908c6d59ddd1cd6bf9268f1
+groundtruth_diff_artifact: g1_instrumentation.diff
+groundtruth_diff_sha256: 84fc24db0e2411268a93f8be7ca5f8e4e5072ea09d86063cac2cfb98381feb2c
+groundtruth_dirty_patch_sha256: null
+groundtruth_overlay_patch_applied: false
+groundtruth_weight_mode: dummy
+real_weight_download: false
+
+groundtruth_instrumentation:
+  gate_env_var: VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR
+  output: one JSONL file per process, named dp_placement_<pid>.jsonl
+  buffering: 1024 records, plus a flush at normal process exit
+  changed_files:
+    - vllm/v1/frontier_trace.py
+    - vllm/v1/engine/core.py
+    - vllm/v1/engine/coordinator.py
+    - vllm/v1/engine/core_client.py
+  record_kinds:
+    engine_iteration:
+      written_by: DPEngineCoreProc.run_busy_loop
+      join_key: [engine, wave, step]
+      fields: [branch, applied_output, queue_occupancy, scheduled_new_req_ids,
+               num_scheduled_tokens, waiting, running, published]
+    coordinator_receive:
+      written_by: DPCoordinatorProc.process_input_socket
+      join_key: [engine, wave, step]
+      fields: [waiting, running, disposition, latched_counts]
+    coordinator_publish:
+      written_by: DPCoordinatorProc.process_input_socket
+      join_key: [snapshot]
+      fields: [counts, counts_source, wave, engines_running]
+    frontend_snapshot:
+      written_by: DPLBAsyncMPClient stats update task
+      join_key: [snapshot]
+      fields: [counts, wave, engines_running]
+    frontend_route:
+      written_by: DPLBAsyncMPClient.get_core_engine_for_request
+      join_key: [request_id, snapshot]
+      fields: [engine, counts, score, start_index, reservation]
+  wire_change: >-
+    The coordinator's front-end publication carries a fourth element, the
+    snapshot id. Both the only sender and the only receiver are in this
+    checkout. Without it an applied snapshot cannot be tied to the engine
+    reports it came from, which is the join T1 needs.
+  scheduler_py_unchanged: >-
+    The plan listed vllm/v1/core/sched/scheduler.py as a likely change for a
+    dp_rank column. It is not needed: SchedulerOutput already carries
+    scheduled_new_reqs and total_num_scheduled_tokens, and the engine record is
+    written by the engine that owns the rank.
+
+topology:
+  vllm: "--data-parallel-size 2 --pipeline-parallel-size 2 --tensor-parallel-size 1 --enable-expert-parallel"
+  frontier:
+    attn_dp: 2
+    attn_tp: 1
+    moe_tp: 1
+    moe_ep: 2
+    num_pipeline_stages: 2
+    num_replicas: 1
+    cluster_scheduler: vllm_load_balancing
+    replica_scheduler: vllm_v1
+  devices: 4x H800
+  blocked_by: >-
+    W9-01. Frontier cannot run attn_dp=2 with num_pipeline_stages=2 today; the
+    stage admission FIFO deadlocks. The vLLM side of the case is unaffected.
+
+model:
+  name: Qwen3MoeForCausalLM
+  config: data/config/models/Qwen3-30B-A3B-tiny.json
+  layers: 8
+  experts: 16
+  top_k: 8
+  load_format: dummy
+  skip_tokenizer_init: true
+
+workload:
+  source: single Frontier trace CSV (arrived_at, num_prefill_tokens, num_decode_tokens)
+  request_id_namespace: BLOCKED   # set by G2 make_trace.py
+  request_id_encoding: "x-request-id header, propagated to the engine request id"
+  formal_request_ids: BLOCKED
+  warmup_request_ids: BLOCKED
+  warmups: 3
+
+modes:
+  groundtruth_clean:
+    status: NOT_RUN
+    artifact_path: /mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/
+  simulator:
+    status: NOT_RUN
+  simulator_control_completion_reporting:
+    status: NOT_RUN
+
+decisions:
+  - decision_id: D-gpu-authorization
+    question: >-
+      Does the S0 2-GPU smoke and the S1 4-GPU ground-truth run have the user's
+      GPU authorization on charged_group codesign?
+    status: BLOCKED
+  - decision_id: W9-01-scope
+    question: >-
+      Is the pre-existing stage admission deadlock fixed inside this feature
+      branch, fixed as a separate correctness item, or does step 9 pause?
+    status: BLOCKED
+
+status: INITIALIZED
