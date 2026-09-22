@@ -18,8 +18,8 @@
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
 | Current step | Step 4 complete: implemented, measured, records written |
-| Publication | LOCAL_ONLY (W4 commits not yet pushed) |
-| Next action | Push W4 and add its PR #35 section, then Checkpoint E: W5, the routing implementation identity, whose public name is still an open naming decision (open item 3). |
+| Publication | PUSHED_VERIFIED (records) |
+| Next action | Checkpoint E: W5, the routing implementation identity, whose public name is still an open naming decision (open item 3), then the D2-scoped W6. |
 
 ## Step status
 
@@ -29,7 +29,7 @@
 | 1 | Candidate/vLLM audit | PASS | n/a (source audit) | LOCAL_ONLY | NOT_REVIEWED |
 | 2 | RR DP rotation | PASS | unit PASS (23 tests); matrix PASS against a stated expectation, re-measured 2026-09-22 with one harness revision | PUSHED_VERIFIED | REVIEWED (R35-01 closed) |
 | 3 | Shared monolithic forward | PASS | unit PASS (23 new, 3717 total, failure set identical to the parent); integration PASS (real event loop, 4 mixed-phase cohorts); four deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
-| 4 | Opt-in vLLM DP placement | PASS | unit PASS (61 new, 3778 total, failure set identical to the parent); integration PASS (3 cases in the real event loop, including a placement that diverges from round-robin); five deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | LOCAL_ONLY | NOT_REVIEWED |
+| 4 | Opt-in vLLM DP placement | PASS | unit PASS (61 new, 3778 total, failure set identical to the parent); integration PASS (3 cases in the real event loop, including a placement that diverges from round-robin); five deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 5 | Routing implementation identity | NOT_STARTED | — | — | — |
 | 6 | Legacy fused-MoE profiling | NOT_STARTED | — | — | — |
 | 7 | Optional zero-payload backend | NOT_STARTED (facts in `plan.md` A7) | — | — | — |
@@ -70,6 +70,7 @@
 - 2026-09-22: W4 controls, five trees and five distinct failure subsets. Restoring `schedule()` in the event fails all 3 integration cases; moving the hook above `on_batch_end` fails 2 with `reports_after_the_lane_released_the_batch` at `0 == 10`; unweighting the waiting term fails exactly the weight and boundary tests; dropping the local reservation fails 4 unit and 2 integration; deleting the dense-lane guard fails exactly the `dense_multi_lane` construction case. The baseline control tree passes 64 of 64, so the harness itself is sound inside a control tree.
 - 2026-09-22: W4 regression comparison against the branch parent `cdfcdf5`. `tests/unit`: 84 failures on both sides with identical identities, 3778 vs 3717 passing. `tests/integration`: the same five pre-existing errors (the PD-AF Reference checkout is absent on this host), 21 skipped on both, 15 vs 12 passing. A focused 46-file set covering cluster scheduling, the decision log and the two edited events: 51 failed / 1432 passed, every failure already in the known 84-failure baseline.
 - 2026-09-22: W4 fidelity matrix PASS. Baseline `cdfcdf5` against candidate `10dd474`, both clean detached checkouts with `source_dirty=False` and no dirty paths, one harness at `10dd474`, no filter, clean cache, 71 executed and 426 cache files each. 71 of 71 compared and **71 identical**, zero mismatches, zero provenance findings, zero predictor cache differences -- exactly the expectation `design.md` recorded before the run. Note explicitly: no matrix case selects the new policy, so a null result is the pass condition for "nothing else moved", not evidence about the policy. Full record in `validation.md` and `test_report_2026-09-22_w4_vllm_dp_placement.md`.
+- 2026-09-22: Step 4 published. `0fd12c4` pushed to `origin/fix/issue26-correctness-pr`; PR #35 body gained a W4 section that states the mechanism with its citations, the measured report-key table behind the dense restriction, the two seams, the placement divergence from round-robin, the five controls with their distinct failure subsets, and the matrix result together with the fact that no matrix case selects the policy. PR #35 stays draft. The W4 measurement worktrees `.worktrees/w4-baseline` and `.worktrees/w4-candidate` were removed after their manifests, results and `comparison.json` were written; the matrix output root is kept as evidence.
 
 ## Step 3 scoping, as recorded before implementation
 
