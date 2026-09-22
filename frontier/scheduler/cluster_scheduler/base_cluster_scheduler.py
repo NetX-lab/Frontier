@@ -106,7 +106,11 @@ from frontier.scheduler.utils.m2n_arrival import (
     handle_decode_attn_arrival as handle_m2n_decode_attn_arrival,
     handle_decode_ffn_arrival,
 )
-from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
+from frontier.scheduler.utils.sync_entry import (
+    enter_decode_sync,
+    enter_prefill_sync,
+    uses_shared_forward_room,
+)
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -128,6 +132,7 @@ from frontier.scheduler.utils.collective_timing import (
 )
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
 from frontier.scheduler.utils.decode_collective import handle_decode_sync_collective
+from frontier.scheduler.utils.forward_collective import handle_forward_sync_collective
 from frontier.scheduler.utils.afd_metadata import aggregate_afd_metadata
 from frontier.scheduler.utils.request_selection import collect_active_requests
 from frontier.scheduler.utils.replica_schedulers import build_replica_scheduler_maps
@@ -1073,6 +1078,36 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             require_moe_layer=True,
         )
 
+    def _on_forward_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None, metrics_store=None) -> List:
+        """Schedule one shared monolithic forward wave, across mixed lanes."""
+
+        return schedule_layer_wave(
+            self,
+            mode="forward",
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            layer_id=layer_id,
+            replica_local_id=replica_local_id,
+            cohort_batches=cohort_batches,
+            metrics_store=metrics_store,
+        )
+
+    def on_forward_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store):
+        """Complete one shared monolithic forward through the utility handler."""
+
+        return handle_forward_sync_collective(
+            self,
+            time,
+            replica_id,
+            stage_id,
+            batch_global_id,
+            sync_stage,
+            layer_id,
+            metrics_store,
+        )
+
     def _uses_shared_decode_layer_path(self, batch: Batch, layer_id: int) -> bool:
         """Return whether a shared-domain DECODE model needs layer stepping."""
         model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
@@ -1122,6 +1157,11 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
     def on_prefill_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):
         """Delegate PREFILL collective completion to the utility handler."""
+        if direct_batch is None and uses_shared_forward_room(self):
+            return self.on_forward_sync_collective(
+                time, replica_id, stage_id, batch_global_id, sync_stage,
+                layer_id, metrics_store,
+            )
         return handle_prefill_sync_collective(
             self,
             time,
@@ -1208,6 +1248,11 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def on_decode_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):
         """Delegate DECODE collective completion to the utility handler."""
 
+        if direct_batch is None and uses_shared_forward_room(self):
+            return self.on_forward_sync_collective(
+                time, replica_id, stage_id, batch_global_id, sync_stage,
+                layer_id, metrics_store,
+            )
         return handle_decode_sync_collective(
             self,
             time,

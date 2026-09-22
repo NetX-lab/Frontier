@@ -31,13 +31,32 @@ def source_batches_by_lane(cohort_batches, batch):
     return normalized
 
 
+def source_forward_mode(batch) -> str:
+    """Return the local phase one source batch runs in a shared forward.
+
+    This is the same rule the stage-schedule event uses to pick a batch's sync
+    path on a monolithic Replica (`replica_stage_schedule_event.py`): a batch
+    carrying prefill tokens runs the prefill path, anything else decodes. Using
+    one rule in both places is what keeps a cohort's per-source continuation
+    consistent with how its lanes entered.
+    """
+
+    return "prefill" if int(batch.num_prefill_tokens) > 0 else "decode"
+
+
+#: Open-step namespaces. ``prefill`` and ``decode`` belong to the disaggregated
+#: roles, which run one phase each. ``forward`` belongs to a monolithic cluster,
+#: where one Replica runs both phases and a cohort may mix them: its lanes have
+#: to resolve to one step id, so they must share one namespace.
+SYNC_KINDS = ("prefill", "decode", "forward")
+
+
 class ForwardSyncState:
-    """Own forward-step identity bookkeeping shared by PREFILL and DECODE."""
+    """Own forward-step identity bookkeeping for every synchronizing role."""
 
     def __init__(self) -> None:
         self._open_steps_by_kind: dict[str, dict[tuple, int]] = {
-            "prefill": {},
-            "decode": {},
+            kind: {} for kind in SYNC_KINDS
         }
         self._next_step_id_by_replica: dict[int, int] = {}
 
@@ -55,7 +74,7 @@ class ForwardSyncState:
 
     @staticmethod
     def _validate_kind(sync_kind: str) -> None:
-        if sync_kind not in ("prefill", "decode"):
+        if sync_kind not in SYNC_KINDS:
             raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
 
     def open_steps(self, sync_kind: str) -> dict[tuple, int]:

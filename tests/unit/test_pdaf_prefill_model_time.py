@@ -565,7 +565,11 @@ def test_prefill_pp2_stage_one_advances_with_global_layer_ids() -> None:
     assert len(events) == 1
     assert isinstance(events[0], PrefillSyncEvent)
     assert events[0]._layer_id == 3
-    assert predictor.calls == [(1, 2), (1, 3)]
+    # Stage 1 must address layers by their global ids: stage-local numbering
+    # would have asked for layer 1 here, not layer 3. Only the next layer is
+    # predicted on this path; the completed layer's prediction is made in the
+    # final-layer branch, which is the only place its value is used.
+    assert predictor.calls == [(1, 3)]
 
 
 def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> None:

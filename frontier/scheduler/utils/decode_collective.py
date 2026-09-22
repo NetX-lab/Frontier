@@ -26,8 +26,17 @@ def handle_decode_sync_collective(
     metrics_store: Any,
     *,
     direct_batch: Optional[Batch] = None,
+    owners_restored: Optional[bool] = None,
+    layer_advance_done: bool = False,
 ):
-    """Complete one DECODE layer and schedule the next stage transition."""
+    """Complete one DECODE layer and schedule the next stage transition.
+
+    `owners_restored` and `layer_advance_done` name work a wider cohort already
+    did. A shared monolithic forward advances its decode-phase requests once and
+    restores full-stage owners once for all its lanes, then enters this helper
+    per source; repeating either here would credit a layer twice and hand out a
+    second ticket for the same lane.
+    """
 
     from frontier.logger import get_cluster_logger
     from frontier.events.batch_stage_end_event import BatchStageEndEvent
@@ -78,12 +87,13 @@ def handle_decode_sync_collective(
     stage_scheduler = scheduler.get_replica_stage_scheduler(replica_id, stage_identity, stage_id)
     predictor = stage_scheduler._execution_time_predictor
     active_requests = collect_active_requests(dp_batches.values())
-    validate_decode_layer_advance(
-        active_requests,
-        scheduler._config.replica_config.model_config.num_layers,
-    )
-    for request in active_requests:
-        request.mb_on_step_layer_count_increment(num_layers_completed=1)
+    if not layer_advance_done:
+        validate_decode_layer_advance(
+            active_requests,
+            scheduler._config.replica_config.model_config.num_layers,
+        )
+        for request in active_requests:
+            request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
     num_layers = predictor._num_layers_per_pipeline_stage
     bounds_getter = getattr(scheduler, "get_pipeline_stage_layer_bounds", None)
@@ -100,22 +110,21 @@ def handle_decode_sync_collective(
             )
         stage_layer_end = (stage_id + 1) * num_layers
     next_layer_id = layer_id + 1
-    restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
-        source_batches=dp_batches,
-        replica_id=replica_id,
-        stage_id=stage_id,
-        layer_id=next_layer_id,
-        cohort_id=batch_global_id,
-        operation_kind="attention" if next_layer_id < stage_layer_end else "final",
-    )
+    if owners_restored is None:
+        restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
+            source_batches=dp_batches,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            layer_id=next_layer_id,
+            cohort_id=batch_global_id,
+            operation_kind="attention" if next_layer_id < stage_layer_end else "final",
+        )
+    else:
+        restored_full_stage_owners = owners_restored
 
     if next_layer_id < stage_layer_end:
-        next_execution = predictor.predict_stage_execution_time(
-            sample_batch, stage_id, scheduler._cluster_type,
-            num_layers=1, layer_id=next_layer_id, include_ffn=False,
-        )
-        attention_time = attention_delay_seconds(next_execution)
         events = []
+        last_attention_time = None
         for participant_id, batch in dp_batches.items():
             if batch.is_idle:
                 logger.info(
@@ -124,6 +133,14 @@ def handle_decode_sync_collective(
                     batch.id, replica_id, participant_id, layer_id,
                 )
                 continue
+            # Each lane's next attention is predicted from its own batch: its own
+            # context lengths and token count, not a peer's.
+            next_execution = predictor.predict_stage_execution_time(
+                batch, stage_id, scheduler._cluster_type,
+                num_layers=1, layer_id=next_layer_id, include_ffn=False,
+            )
+            attention_time = attention_delay_seconds(next_execution)
+            last_attention_time = attention_time
             transition_identity = getattr(batch, "_stage_owner_replica_local_id", None)
             if not restored_full_stage_owners:
                 scheduler.transition_stage_admission_for_layer(
@@ -140,16 +157,13 @@ def handle_decode_sync_collective(
         logger.info(
             "[DECODE_SYNC][COLLECTIVE] post_moe completed, incremented layer count "
             "for %s unique requests, scheduled next layer pre_moe sync at t=%.6fs",
-            len(active_requests), time + attention_time,
+            len(active_requests),
+            time + last_attention_time if last_attention_time is not None else time,
         )
         return events
 
-    full_execution = predictor.predict_stage_execution_time(
-        sample_batch, stage_id, scheduler._cluster_type,
-        num_layers=num_layers, layer_id=stage_layer_end - num_layers, include_ffn=False,
-    )
-    final_timing = prepare_decode_final_timing(full_execution)
     events = []
+    last_completion_time = time
     for participant_id, batch in dp_batches.items():
         if batch.is_idle:
             logger.info(
@@ -158,6 +172,13 @@ def handle_decode_sync_collective(
                 batch.id, replica_id, participant_id, layer_id,
             )
             continue
+        full_execution = predictor.predict_stage_execution_time(
+            batch, stage_id, scheduler._cluster_type,
+            num_layers=num_layers, layer_id=stage_layer_end - num_layers,
+            include_ffn=False,
+        )
+        final_timing = prepare_decode_final_timing(full_execution)
+        last_completion_time = time + final_timing.total_time
         scheduler._record_mtp_terminal_completion_delay(
             batch, final_timing.mtp_terminal_overshoot_time
         )
@@ -195,6 +216,6 @@ def handle_decode_sync_collective(
         )
     logger.info(
         "[DECODE_SYNC][COLLECTIVE] Last layer completed, scheduled batch stage end at t=%.6fs",
-        time + final_timing.total_time,
+        last_completion_time,
     )
     return events

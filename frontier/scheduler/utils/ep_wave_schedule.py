@@ -11,6 +11,42 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
 )
 
 
+def _source_mode(mode: str, source_batch: Any) -> str:
+    """Resolve the phase whose continuation one source batch must follow.
+
+    For a disaggregated role the group mode is the source mode: those clusters
+    run one phase. Only a shared monolithic forward can hold lanes in different
+    phases, and there each source follows its own.
+    """
+
+    if mode != "forward":
+        return mode
+    from frontier.scheduler.utils.forward_sync_state import source_forward_mode
+
+    return source_forward_mode(source_batch)
+
+
+def _cohort_collective_event_mode(mode: str, non_idle_source_batches) -> str:
+    """Pick one collective event class for the whole cohort, deterministically.
+
+    Events order by `(time, event_type, id)`, so the class carries a priority.
+    It must not depend on which lane happened to complete the room, and a cohort
+    shape that already works must keep the event type it has today. Choosing by
+    cohort contents satisfies both: a pure-prefill cohort stays on the prefill
+    event, a pure-decode cohort on the decode event, and only a mixed cohort —
+    which cannot complete at all before this change — is new.
+    """
+
+    if mode != "forward":
+        return mode
+    from frontier.scheduler.utils.forward_sync_state import source_forward_mode
+
+    for source_batch in non_idle_source_batches:
+        if source_forward_mode(source_batch) == "prefill":
+            return "prefill"
+    return "decode"
+
+
 def schedule_layer_wave(
     scheduler: Any,
     *,
@@ -31,7 +67,7 @@ def schedule_layer_wave(
     control flow used by the two cluster modes.
     """
 
-    if mode not in ("prefill", "decode"):
+    if mode not in ("prefill", "decode", "forward"):
         raise ValueError(f"unsupported EP wave mode: {mode!r}")
     mode_name = mode.capitalize()
     if not isinstance(time, Real) or not math.isfinite(float(time)):
@@ -85,13 +121,10 @@ def schedule_layer_wave(
             participant_ep_ids=tuple(layer_workload.participant_ep_ids),
         )
     else:
-        event_cls = (
-            _load_prefill_dense_event()
-            if mode == "prefill"
-            else _load_decode_dense_event()
-        )
+        event_cls = _load_dense_layer_event()
         dense_events = []
         for source_batch in non_idle_source_batches:
+            source_mode = _source_mode(mode, source_batch)
             execution_time = predictor.predict_stage_execution_time(
                 source_batch,
                 stage_id,
@@ -123,7 +156,7 @@ def schedule_layer_wave(
                 "_prefill_model_execution_components_ms_by_stage",
                 None,
             )
-            if mode == "prefill":
+            if source_mode == "prefill":
                 if (
                     not isinstance(component_ledger, dict)
                     or stage_id not in component_ledger
@@ -142,7 +175,7 @@ def schedule_layer_wave(
                     stage_id,
                     source_batch,
                     layer_id,
-                    mode,
+                    source_mode,
                     scheduler._cluster_type,
                 )
             )
@@ -152,13 +185,13 @@ def schedule_layer_wave(
         raise ValueError(f"{mode_name} layer wave produced no participant timing")
     timing = plan.timing
     barrier_end_time_s = timing.wave_end_time_s
-    if mode == "prefill":
-        wave_time_ms = (
-            timing.dispatch_barrier_time_ms
-            + timing.combine_barrier_time_ms
-            + timing.post_combine_barrier_time_ms
-        )
-        for source_batch in non_idle_source_batches:
+    wave_time_ms = (
+        timing.dispatch_barrier_time_ms
+        + timing.combine_barrier_time_ms
+        + timing.post_combine_barrier_time_ms
+    )
+    for source_batch in non_idle_source_batches:
+        if _source_mode(mode, source_batch) == "prefill":
             component_ledger = getattr(
                 source_batch,
                 "_prefill_model_execution_components_ms_by_stage",
@@ -177,15 +210,15 @@ def schedule_layer_wave(
             component_ledger[stage_id].append(wave_time_ms)
             source_batch._prefill_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
             source_batch._prefill_ep_wave_workload = layer_workload
-    else:
-        for source_batch in non_idle_source_batches:
+        else:
             source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
 
-    waiting_room = (
-        scheduler._prefill_sync_waiting_room
-        if mode == "prefill"
-        else scheduler._decode_sync_waiting_room
-    )
+    if mode == "forward":
+        waiting_room = scheduler._forward_sync_waiting_room
+    elif mode == "prefill":
+        waiting_room = scheduler._prefill_sync_waiting_room
+    else:
+        waiting_room = scheduler._decode_sync_waiting_room
     sync_room = waiting_room[replica_id][stage_id][cohort_id][layer_id]["post_moe"]
     if sync_room["batches"]:
         raise ValueError(
@@ -197,9 +230,10 @@ def schedule_layer_wave(
     sync_room["arrival_times"].update(
         {lane_id: barrier_end_time_s for lane_id in source_batches}
     )
+    collective_mode = _cohort_collective_event_mode(mode, non_idle_source_batches)
     event_cls = (
         _load_prefill_sync_event()
-        if mode == "prefill"
+        if collective_mode == "prefill"
         else _load_decode_sync_event()
     )
     return [
@@ -215,13 +249,7 @@ def schedule_layer_wave(
     ]
 
 
-def _load_prefill_dense_event():
-    from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
-
-    return DenseLayerCompleteEvent
-
-
-def _load_decode_dense_event():
+def _load_dense_layer_event():
     from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
 
     return DenseLayerCompleteEvent

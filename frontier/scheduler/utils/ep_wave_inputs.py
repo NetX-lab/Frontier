@@ -48,6 +48,22 @@ def prepare_ep_wave_inputs(
     non_idle = tuple(source_batch for source_batch in normalized.values() if not source_batch.is_idle)
     if not non_idle:
         raise ValueError("EP wave requires a non-idle source batch")
+    # One request has one source owner per forward. A monolithic cohort draws
+    # its lanes from independent Replica schedulers, so this is the boundary
+    # where two of them claiming the same request first becomes visible; every
+    # later step would otherwise double-count its tokens and advance it twice.
+    owning_lane_by_request: dict[int, int] = {}
+    for lane_id, source_batch in normalized.items():
+        if source_batch.is_idle:
+            continue
+        for request in source_batch.requests:
+            previous_lane = owning_lane_by_request.setdefault(request.id, lane_id)
+            if previous_lane != lane_id:
+                raise ValueError(
+                    "a request cannot belong to two EP source lanes: "
+                    f"request_id={request.id}, lanes={previous_lane} and {lane_id}, "
+                    f"forward_step={step_id}"
+                )
     sample_batch = non_idle[0]
     total_tokens = sum(int(source_batch.total_num_tokens) for source_batch in non_idle)
     total_prefill_tokens = sum(int(source_batch.num_prefill_tokens) for source_batch in non_idle)
