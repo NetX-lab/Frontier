@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Step 0: worktree and branch created, records landed, module surveys collected, baseline pending. |
 | 2026-09-22 | Status header corrected (it still described Step 0 after Steps 1-6 had landed). Checkpoints A and B recorded. |
+| 2026-09-22 | External review finding C34-01 applied: the predictor-cache name comparison now requires each side's manifest `cases_executed_in_last_run` to equal the full case table, so `--start`/`--limit` continuations no longer count as clean full runs; four gate tests added; the Checkpoint B verdict re-derived with the corrected rule and unchanged. |
 
 ## Status
 
@@ -15,8 +16,8 @@
 | Base | `1f694f7c549aa3aeeb7c5bbae04e119c09167a77` (`origin/main`, fetched 2026-09-21) |
 | Worktree | `/data/ycfeng/Frontier/.worktrees/oversized-module-split` |
 | Python | `/data/ycfeng/envs/frontier-py310/bin/python` |
-| Current step | Checkpoints A and B complete. PR #34 ready for re-review. |
-| Publication | PUSHED_VERIFIED through Checkpoint B; PR #34 description synchronized |
+| Current step | Checkpoints A and B complete; C34-01 correction landed 2026-09-22. PR #34 is open for review (GitHub API state: not draft). |
+| Publication | PUSHED_VERIFIED through the C34-01 correction (SHA in the commit log); PR #34 description synchronized |
 | Next action | Checkpoint C, on the correctness branch: rebase PR #35 onto the corrected harness, re-measure W2 with source and harness at one revision, and strengthen the W2 placement tests (R35-01). Coordinate first: that worktree is shared with the W3 owner. |
 
 ## Steps
@@ -32,10 +33,12 @@
 | 6 | Split `sklearn_moe_execution_time_predictor.py` | PASS (6 modules, largest 1557 lines) |
 | 7 | Full matrix, unit suites, draft PR hand-off | PASS (final record in the Checkpoint B report) |
 | A | Review comments R34-01 / R34-02: fidelity gate correctness and provenance | PASS |
+| A+ | External review C34-01: cache-name comparison eligibility decided by the executed case list, not the filter field alone | PASS (`test_report_2026-09-22_cache_eligibility_correction.md`) |
 | B | Review comment R34-03 / R34-04: final evidence record and retained checks | PASS |
 
 ## Chronological updates
 
+- 2026-09-22: External review C34-01. `compare_labels` treated `cache_clean_before_run` plus an empty `case_filter` as proof of one clean full run, but `--start` and `--limit` narrow the executed selection without setting a filter, so a clean partial run merged onto full retained results passed the predicate. The predicate now also requires `set(cases_executed_in_last_run) == full case table` on both manifests, and a manifest without that field is ineligible. Four gate tests cover `--limit`, `--start`, symmetric partial caches and the missing field; the healthy case now asserts `predictor_cache_compared: true`. The Checkpoint B labels (`baseline_v2`, `candidate_bb582a4`) both record 71 executed cases, and rerunning `compare` on the retained outputs with the corrected rule gives the same verdict: 71 of 71 identical, `predictor_cache_populated_cleanly: true`, `predictor_cache_compared: true`, 0 cache differences. Report: `test_report_2026-09-22_cache_eligibility_correction.md`.
 - 2026-09-22: Checkpoint B. The review's cheaper remedy for R34-03 was checked and is not available: `db15e64..5ef96b5` touches only `cases.py`, so the production tree was unchanged at the tip, but `candidate_db15e64` held 67 records with no DP case, and the old `baseline` label was an assembled partial run. Both sides were therefore recaptured as single clean full 71-case runs from detached checkouts, driven by the harness committed at `bb582a4`: baseline_v2 at `1f694f7` and candidate_bb582a4 at `bb582a4`, both clean, unfiltered, cache-cleaned, 71 executed, 426 cache files each. Result: 71 of 71 compared, 71 identical, 0 mismatched, 0 failures of any kind, 0 missing evidence, 0 definition differences, no provenance findings, and the predictor cache names compared and matched. Whole `tests/unit`: 84 failed / 3679 passed / 49 skipped here against 84 / 3644 / 49 on `1f694f7`, with the 84 failure identities byte-identical and the 35 extra passes being exactly the tests added in Checkpoints A and B; ten modules are excluded on both sides for missing `torch` or `matplotlib`. R34-04 landed as 13 tests in `tests/unit/test_module_split_boundaries.py`. Separately, all 142 estimators in the baseline-produced cache unpickle and run under the split code. See `test_report_2026-09-22_checkpoint_b_final_evidence.md`.
 - 2026-09-22: One finding pinned rather than fixed. `typing.get_type_hints(ClusterConfig)` raises `NameError: BaseCCBackendConfig`, because the annotation names a class the module does not import at runtime. Verified to fail identically on `1f694f7`, so it predates the split; the generated CLI is unaffected. Recorded in `KNOWN_UNRESOLVED_CONFIG_ANNOTATIONS` so a new occurrence fails the test.
 

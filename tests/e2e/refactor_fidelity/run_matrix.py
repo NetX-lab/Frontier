@@ -596,9 +596,22 @@ def compare_labels(args: argparse.Namespace) -> int:
     # A cache listing is only a fair comparison when each side's cache was
     # populated by one clean run of the whole table.  A label assembled from a
     # filtered continuation without --clean-cache carries models trained by an
-    # earlier case selection, which is not what the other side has.
+    # earlier case selection, which is not what the other side has.  The
+    # filter alone does not settle it: --start and --limit also narrow the
+    # executed selection and leave no filter in the manifest, so the executed
+    # case ids are checked by name.  A manifest without that list cannot show
+    # a full run and is not compared.
+    def populated_by_one_clean_full_run(manifest: dict) -> bool:
+        executed = manifest.get("cases_executed_in_last_run")
+        return bool(
+            manifest.get("cache_clean_before_run")
+            and not manifest.get("case_filter")
+            and executed is not None
+            and set(executed) == full_case_set
+        )
+
     cache_populated_cleanly = all(
-        manifest.get("cache_clean_before_run") and not manifest.get("case_filter")
+        populated_by_one_clean_full_run(manifest)
         for manifest in (baseline_manifest, candidate_manifest)
     )
     cache_comparable = (
@@ -688,8 +701,9 @@ def compare_labels(args: argparse.Namespace) -> int:
     print(f"cases not compared: {len(not_compared)}")
     if not cache_comparable:
         print(
-            "predictor cache file names: not compared, because the two sides did "
-            "not both run the complete case set"
+            "predictor cache file names: not compared, because at least one "
+            "side's cache was not populated by one clean run of the complete "
+            "case set"
         )
     else:
         print(

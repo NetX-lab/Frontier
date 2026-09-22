@@ -14,6 +14,7 @@ rewriting the label-wide manifest with its own revision.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 import json
 import subprocess
 from pathlib import Path
@@ -45,8 +46,16 @@ def _write_side(
     stamped: bool = True,
     clean_cache: bool = True,
     case_filter: str | None = None,
+    cases_executed: Sequence[str] | None = None,
+    record_cases_executed: bool = True,
 ) -> Path:
-    """Write one synthetic label directory shaped like a real matrix run."""
+    """Write one synthetic label directory shaped like a real matrix run.
+
+    `cases_executed` narrows what the manifest says the last run executed, the
+    way `--start`/`--limit` do without leaving a filter behind; results still
+    hold every case, as a merged continuation's would.  `record_cases_executed`
+    False drops the field, as a manifest from before it existed.
+    """
 
     label_root = output_root / label
     label_root.mkdir(parents=True, exist_ok=True)
@@ -87,20 +96,28 @@ def _write_side(
         "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
         encoding="utf-8",
     )
-    (label_root / "manifest.json").write_text(json.dumps({
+    manifest = {
         "label": label,
         "repo_root": str(output_root / f"{label}-checkout"),
         "git_head": revision,
         "git_dirty_paths": "M frontier/config/config.py" if dirty else "",
         "case_count": len(records),
         "case_filter": case_filter,
-        "cases_executed_in_last_run": [case.case_id for case in ALL_CASES],
+        "cases_executed_in_last_run": (
+            list(cases_executed) if cases_executed is not None
+            else [case.case_id for case in ALL_CASES]
+        ),
         "cache_clean_before_run": clean_cache,
         "cache_files": ["model_abc.pkl"],
         "source_revision": revision,
         "source_dirty": dirty,
         "harness_revision": HARNESS_REVISION,
-    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    }
+    if not record_cases_executed:
+        del manifest["cases_executed_in_last_run"]
+    (label_root / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return label_root
 
 
@@ -128,6 +145,10 @@ def test_healthy_identical_sides_pass(tmp_path: Path) -> None:
     assert report["cases_compared"] == len(ALL_CASES)
     assert report["mismatched_cases"] == []
     assert report["complete_comparison"] is True
+    # An unfiltered full run on both sides is the one shape whose cache
+    # listings are compared by name.
+    assert report["predictor_cache_populated_cleanly"] is True
+    assert report["predictor_cache_compared"] is True
 
 
 def test_healthy_content_mismatch_fails(tmp_path: Path) -> None:
@@ -277,6 +298,67 @@ def _record(case_id: str, **overrides) -> dict:
     }
     record.update(overrides)
     return record
+
+
+FIRST_THREE = [case.case_id for case in ALL_CASES[:3]]
+ALL_BUT_FIRST_FIVE = [case.case_id for case in ALL_CASES[5:]]
+
+
+@pytest.mark.parametrize(
+    "executed",
+    [FIRST_THREE, ALL_BUT_FIRST_FIVE],
+    ids=["limit_narrowed", "start_narrowed"],
+)
+def test_a_continuation_narrowed_without_a_filter_is_not_compared(
+    tmp_path: Path, executed: list[str]
+) -> None:
+    """`--limit` and `--start` leave no filter behind, so the executed list decides.
+
+    The label is clean and unfiltered by every other field, and its results
+    hold the whole table from the merge; only the executed ids say the cache
+    was populated by part of it.
+    """
+
+    _write_side(tmp_path, "baseline", revision=BASELINE_REVISION,
+                cases_executed=executed)
+    _write_side(tmp_path, "candidate", revision=CANDIDATE_REVISION)
+
+    exit_code, report = _compare(tmp_path)
+
+    assert exit_code == 0
+    assert report["cases_compared"] == len(ALL_CASES)
+    assert report["predictor_cache_populated_cleanly"] is False
+    assert report["predictor_cache_compared"] is False
+
+
+def test_two_sides_narrowed_the_same_way_are_still_not_compared(tmp_path: Path) -> None:
+    """Symmetric partial caches would compare equal for the wrong reason."""
+
+    _write_side(tmp_path, "baseline", revision=BASELINE_REVISION,
+                cases_executed=FIRST_THREE)
+    _write_side(tmp_path, "candidate", revision=CANDIDATE_REVISION,
+                cases_executed=FIRST_THREE)
+
+    exit_code, report = _compare(tmp_path)
+
+    assert exit_code == 0
+    assert report["predictor_cache_compared"] is False
+    assert report["predictor_cache_files_only_in_baseline"] == []
+    assert report["predictor_cache_files_only_in_candidate"] == []
+
+
+def test_a_manifest_without_the_executed_list_is_not_compared(tmp_path: Path) -> None:
+    """An older manifest cannot show a full run, so it is not given the benefit."""
+
+    _write_side(tmp_path, "baseline", revision=BASELINE_REVISION,
+                record_cases_executed=False)
+    _write_side(tmp_path, "candidate", revision=CANDIDATE_REVISION)
+
+    exit_code, report = _compare(tmp_path)
+
+    assert exit_code == 0
+    assert report["predictor_cache_populated_cleanly"] is False
+    assert report["predictor_cache_compared"] is False
 
 
 def test_filtered_continuation_on_the_same_source_is_allowed(tmp_path: Path) -> None:

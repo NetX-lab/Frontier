@@ -7,6 +7,7 @@
 | 2026-09-21 | Placeholder created at Step 0. |
 | 2026-09-21 | Completion archive written after the fourth and last module split. |
 | 2026-09-22 | Synchronized with the maintainer review: case table is 71, the final acceptance record is the clean recapture in `test_report_2026-09-22_checkpoint_b_final_evidence.md`, and the fidelity gate itself was corrected first. |
+| 2026-09-22 | External review C34-01: cache-name comparison eligibility now requires the executed case list to equal the full table; Checkpoint B verdict re-derived and unchanged. |
 
 ## Overview
 
@@ -39,7 +40,7 @@ Five modules remain above 2,000 lines. All five were out of scope from the start
 
 Coverage: co-location, sequential PDD and sequential PD-AF; dense and MoE; offline and online; the dummy predictor and the checked-in profiling CSVs; request counts from 4 to 64; prompts from 128 to 3584 tokens; three arrival rates; chunked prefill, all three decode CUDA graph modes, prefix caching, speculative decoding and thinking mode; TP, PP, attention DP and EP variations.
 
-**The predictor cache names.** Retraining from the same CSV reproduces the same numbers, so a changed training identity or cache key would leave no trace in the outputs. The comparison therefore also checks the names of the predictor cache files each side produces, and classifies any difference as rekeyed, baseline-only or candidate-only. This is the specific evidence that moving the model hash, the cache keys, the registry and the FFN contract signature into different modules changed no training identity.
+**The predictor cache names.** Retraining from the same CSV reproduces the same numbers, so a changed training identity or cache key would leave no trace in the outputs. The comparison therefore also checks the names of the predictor cache files each side produces, and classifies any difference as rekeyed, baseline-only or candidate-only. This is the specific evidence that moving the model hash, the cache keys, the registry and the FFN contract signature into different modules changed no training identity. A side's cache listing enters that comparison only when its manifest shows one clean, unfiltered run whose `cases_executed_in_last_run` equals the full case table; `--start`/`--limit` continuations are excluded (corrected 2026-09-22 after external review finding C34-01, verdict unchanged).
 
 **The unit suites.** A selection that grows with each step, ending with the whole `tests/unit` directory, run on both sides with failure identities compared rather than counts. Identities matter: a count comparison would have hidden several of the defects below, because the same files also carry pre-existing failures.
 

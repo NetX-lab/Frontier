@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-22 | Initial report: clean recapture of both matrix sides, unit-suite regression comparison, retained split checks. |
+| 2026-09-22 | C34-01: the cache-comparison row now names the two report keys it rests on, and section 2 records the re-derivation of the verdict with the corrected eligibility rule (executed case list, not filter alone). |
 
 ## What this closes
 
@@ -86,7 +87,7 @@ python tests/e2e/refactor_fidelity/run_matrix.py compare \
 | Cases not compared | 0 | **0** | PASS |
 | Cases not compared without explanation | 0 | **0** | PASS |
 | Provenance findings | none | **none** | PASS |
-| Predictor cache names compared | yes | **yes** (`cache_populated_cleanly: true`) | PASS |
+| Predictor cache names compared | yes | **yes** (`predictor_cache_populated_cleanly: true`, `predictor_cache_compared: true`; both manifests list all 71 cases in `cases_executed_in_last_run`) | PASS |
 | Predictor cache differences | 0 | **0 baseline-only, 0 candidate-only** | PASS |
 
 **Comparison exit code 0.** This is the first run of this matrix in which
@@ -98,6 +99,17 @@ across a table that includes the six trained-predictor cases, which means the
 split changed no training identity and no model cache key. Output equality alone
 could not show that, because retraining from the same CSV reproduces the same
 numbers.
+
+**Re-derived 2026-09-22 (C34-01).** The eligibility rule behind the cache row
+was found too weak: it accepted `cache_clean_before_run` plus an empty
+`case_filter`, which a `--start`/`--limit` continuation also satisfies. The rule
+now requires each manifest's `cases_executed_in_last_run` to equal the full
+case table. Both labels here record 71 executed cases, and rerunning
+`run_matrix.py compare` on the retained output root with the corrected harness
+reproduces this table exactly: 71 of 71 identical, `predictor_cache_compared:
+true`, 0 baseline-only and 0 candidate-only cache files, exit code 0. The
+acceptance verdict therefore stands under the corrected rule; see
+`test_report_2026-09-22_cache_eligibility_correction.md`.
 
 ## 2. Unit suite — regression comparison
 
