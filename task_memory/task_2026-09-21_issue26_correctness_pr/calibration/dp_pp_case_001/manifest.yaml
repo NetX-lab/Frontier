@@ -129,6 +129,12 @@ decisions:
     question: >-
       Is the pre-existing stage admission deadlock fixed inside this feature
       branch, fixed as a separate correctness item, or does step 9 pause?
-    status: BLOCKED
+    answer: "采纳你的推荐，继续"
+    outcome: >-
+      Fixed as a separate correctness item on fix/stage-admission-ordering,
+      draft PR 36 (rule dac4e69). The Frontier side of this case stays blocked
+      until PR 36 merges into main, is merged forward, and passes the G3b
+      composition check (issues.md W9-01, Resolution).
+    decided_at_utc: "2026-09-22"
 
 status: INITIALIZED

@@ -4,11 +4,14 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-01: fixed on `fix/stage-admission-ordering` (draft PR 36) under option 2; resolution recorded, summary and test report copied to `w9_01_stage_admission_ordering/`. |
 | 2026-09-22 | Created; recorded W9-01 (stage-admission deadlock at PP>1 with attn_dp>1) and W9-02 (PP=3 x attn_dp=2 topology rejection) found during Step 9 P1(b). |
 
 ## W9-01 Stage admission deadlocks when `num_pipeline_stages > 1` and `attn_dp > 1`
 
-Status: open, pre-existing on `main`, blocks Step 9 acceptance criteria C1 and C4.
+Status: fixed on `fix/stage-admission-ordering` (draft PR 36), not yet on this
+branch. Step 9's PP>1 packages stay paused until PR 36 merges into `main`, is
+merged forward here, and passes the composition check in Resolution below.
 Found: 2026-09-22, Step 9 package P1(b) boundary probe.
 
 ### Symptom
@@ -114,6 +117,36 @@ of one forward share the report key) can only be observed on a shape with both
 Recommendation: option 2. The defect is independent of the placement policy,
 predates both PRs, and changing shared admission ordering under a feature branch
 would mix an infrastructure fidelity fix into a feature PR.
+
+### Resolution
+
+Option 2 was taken. The fix lives on its own branch and PR:
+
+| Item | Value |
+| --- | --- |
+| Branch / PR | `fix/stage-admission-ordering`, draft https://github.com/NetX-lab/Frontier/pull/36, head `4bcd616` |
+| Rule commit | `dac4e69`: `StageExecutionContext.try_acquire` refuses a full-stage ticket only when an EP wave is queued ahead of it. EP waves keep the strict FIFO-head rule. |
+| Acceptance rules | `aeeca93` (plan D-9) |
+| Records | `fc34341`, `4bcd616`; copies in `w9_01_stage_admission_ordering/` (`summary.md`, `test_report_2026-09-23_stage_admission_ordering.md`) |
+
+Observed on that branch (details in the copied test report):
+
+- The 18 base admission deadlocks complete with requests and tokens
+  conserved.
+- 50/50 unchanged cases are byte-identical.
+- G2 shows no regressions.
+- The Step 9 probe shape, MoE `attn_dp=2, moe_ep=2, PP=2`, completes 6/6.
+- vLLM DP=2/PP=2 on 4×H800 gives 50 MATCH, 0 MISMATCH and 2 INFORMATIONAL
+  (dense V5, per D-9).
+
+Remaining here, in order:
+
+1. After PR 36 merges into `main`, merge `main` forward into this branch.
+2. Rerun the PR 36 matrix group G3b (mixed prefill/decode, `attn_dp > 1`,
+   `PP > 1`) on the merged tree as the composition check with W3.
+3. If G3b passes, resume Step 9 P1(b) and the design checkpoint D9-2.
+
+Step 9 C1's PP3 row stays on `attn_dp=1` (W9-02).
 
 ## W9-02 `attn_dp=2, moe_ep=2, num_pipeline_stages=3` is rejected at config time
 
