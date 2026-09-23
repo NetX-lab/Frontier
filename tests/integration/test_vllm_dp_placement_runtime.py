@@ -3,18 +3,21 @@
 The state machine itself is covered by `tests/unit/test_vllm_dp_load_balancer.py`
 against reference-derived expectations. What can only be shown by running the
 simulator is the wiring: that `ClusterScheduleEvent` is what supplies the
-routing time, that `GlobalBatchEndEvent` reports the lane's **post**-step load,
-that the report key is ordered the way the policy's guard assumes, and that the
-policy introduces no event that keeps a drained run alive.
+routing time, that each report stands for one reference engine iteration --
+an admission while the pipeline has room, or a completion -- with the lane's
+post-step load and the key of the forward it describes, and that the policy
+introduces no event that keeps a drained run alive.
 
-The child process runs two configurations that differ only in the cluster
-scheduler policy, so the comparison isolates the policy. Execution time comes
+The child process runs each configuration twice, once with the policy and once
+with a comparison run that differs only in the cluster scheduler policy or, for
+the discriminating case, only in how the policy reports. Execution time comes
 from the dummy predictor: placement here is decided by the balancer, not by
-latency realism, and both policies see the same durations.
+latency realism, and both runs see the same durations.
 """
 
 from __future__ import annotations
 
+from collections import defaultdict
 import json
 import os
 from pathlib import Path
@@ -46,6 +49,100 @@ def _run_child(tmp_path: Path, case: str) -> dict:
     return json.loads((tmp_path / f"{case}_evidence.json").read_text())
 
 
+def _assert_reports_follow_engine_iterations(run: dict, num_pipeline_stages: int) -> int:
+    """Check every report against the reference engine iteration it stands for.
+
+    Reference `step_with_batch_queue`: an iteration that schedules a batch and
+    still has pipeline room publishes at once; one that fills the pipeline
+    publishes after applying its oldest output; one with nothing new to
+    schedule applies the oldest output by itself. The key is the forward the
+    iteration launches, which peer engines share. Returns the number of
+    admissions published on their own.
+    """
+
+    records = run["records"]
+    forward: dict[int, int] = {}
+    starts_by_lane: dict[int, int] = defaultdict(int)
+    for record in records:
+        if record["kind"] != "stage0":
+            continue
+        if record["group"] is None:
+            # A dense Replica shares no forward; a lane's forwards are its own
+            # stage-0 starts.
+            forward[record["batch"]] = starts_by_lane[record["lane"]]
+            starts_by_lane[record["lane"]] += 1
+        else:
+            forward[record["batch"]] = record["group"]
+
+    held: dict[int, int] = {}
+    last_forward: dict[int, int] = defaultdict(lambda: -1)
+    last_key: dict[int, int] = defaultdict(lambda: -1)
+    admission_only = 0
+    for record in records:
+        if record["kind"] == "stage0":
+            continue
+        lane = record["lane"]
+        if record["kind"] == "scheduled":
+            last_forward[lane] = forward[record["batch"]]
+            if record["running_after"] >= num_pipeline_stages:
+                assert record["report"] is None, record
+                held[lane] = record["batch"]
+                continue
+            assert record["report"] is not None, record
+            admission_only += 1
+            expected = forward[record["batch"]]
+        else:
+            assert record["report"] is not None, record
+            expected = forward[held.pop(lane)] if lane in held else None
+        key = record["report"][0]
+        if expected is None:
+            # An iteration after the lane's last forward, with nothing new.
+            assert key > last_forward[lane], (record, last_forward[lane])
+        else:
+            assert key == expected, (record, expected)
+        assert key >= last_key[lane], (record, last_key[lane])
+        last_key[lane] = key
+    assert not held, held
+    return admission_only
+
+
+def _assert_completions_report_post_step_load(run: dict) -> None:
+    """The lane's own release is bracketed, so pre- and post-step load differ
+    for some batches; every completion report carries the post-step one."""
+
+    completions = [record for record in run["records"] if record["kind"] == "end"]
+    assert completions
+    assert all(record["released"] for record in completions)
+    assert any(record["pre_step"] != record["post_step"] for record in completions)
+    assert all(record["report"][1] == record["post_step"] for record in completions)
+    assert not all(record["report"][1] == record["pre_step"] for record in completions)
+
+
+def _assert_pp1_keys_are_ordered_forwards(run: dict) -> None:
+    """At PP=1 the key is ordered as the capability guard assumes: never
+    decreasing, and equal only for peer lanes of one shared forward."""
+
+    reports = [
+        record
+        for record in run["records"]
+        if record["kind"] != "stage0" and record["report"] is not None
+    ]
+    keys = [record["report"][0] for record in reports]
+    assert keys == sorted(keys)
+    lanes_by_key: dict[int, list[int]] = defaultdict(list)
+    for record in reports:
+        lanes_by_key[record["report"][0]].append(record["lane"])
+    for key, lanes in lanes_by_key.items():
+        assert len(lanes) == len(set(lanes)), (key, lanes)
+
+
+def _assert_run_conserves_work(run: dict) -> None:
+    assert run["completed_requests"] == run["num_requests"] > 0
+    assert run["tokens_conserved"]
+    assert run["lanes_released"]
+    assert run["stage_contexts_released"]
+
+
 def test_dp_placement_runs_and_reports_post_step_load(tmp_path):
     evidence = _run_child(tmp_path, "moe_dp2")
     policy = evidence["vllm_load_balancing"]
@@ -53,7 +150,7 @@ def test_dp_placement_runs_and_reports_post_step_load(tmp_path):
 
     # The run has to reach the shape under test.
     assert policy["num_lanes"] == 2
-    assert policy["completed_requests"] == policy["num_requests"]
+    _assert_run_conserves_work(policy)
 
     # 1. The routing time comes from ClusterScheduleEvent, not retained state.
     #    Every recorded routing time is one of the cluster schedule times, and
@@ -66,35 +163,27 @@ def test_dp_placement_runs_and_reports_post_step_load(tmp_path):
     #    the local reservation moves the choice.
     assert policy["first_four_lanes"] == [0, 1, 0, 1]
 
-    # 3. The report key is ordered as the capability guard assumes: never
-    #    decreasing, and equal only for peer lanes of one shared forward.
-    keys = policy["report_keys"]
-    assert keys == sorted(keys)
-    for key, lanes in policy["lanes_by_key"].items():
-        assert len(lanes) == len(set(lanes)), (key, lanes)
+    # 3. At PP=1 no admission leaves a pipeline slot, so every report is a
+    #    completion keyed by the forward that completed.
+    assert _assert_reports_follow_engine_iterations(policy, 1) == 0
+    _assert_pp1_keys_are_ordered_forwards(policy)
 
-    # 4. The reported load is the post-step state. The lane's own release is
-    #    bracketed, so pre- and post-step load are distinct values for at least
-    #    some batches; every report matches the post-step one and the reports are
-    #    not merely the pre-step values.
-    assert policy["reports_after_the_lane_released_the_batch"] == policy["num_reports"]
-    assert policy["reports_where_the_release_changed_the_load"] > 0
-    assert policy["reports_matching_post_step"] == policy["num_reports"]
-    assert policy["reports_matching_pre_step"] < policy["num_reports"]
+    # 4. The reported load is the post-step state.
+    _assert_completions_report_post_step_load(policy)
 
     # 5. No event type is introduced, and the run drains rather than being kept
     #    alive by a heartbeat.
     assert set(policy["event_types"]) == set(baseline["event_types"])
     assert policy["makespan"] > 0
-    assert baseline["completed_requests"] == baseline["num_requests"]
+    _assert_run_conserves_work(baseline)
 
 
 def test_placement_follows_published_load_where_round_robin_cannot(tmp_path):
     """Spread the arrivals so snapshots land between them, and skew the load.
 
-    This is the discriminating case: the two policies see identical arrivals,
-    identical durations and identical lane capacity, so any difference in
-    placement comes from reading the published load.
+    This is the discriminating case at PP=1: the two policies see identical
+    arrivals, identical durations and identical lane capacity, so any
+    difference in placement comes from reading the published load.
     """
 
     evidence = _run_child(tmp_path, "moe_dp2_online")
@@ -120,17 +209,12 @@ def test_placement_follows_published_load_where_round_robin_cannot(tmp_path):
 
     # 3. The report key stays ordered across a much longer run, and peer lanes of
     #    one shared forward remain the only source of equal keys.
-    keys = policy["report_keys"]
-    assert keys == sorted(keys)
-    assert len(keys) > 10
-    for key, lanes in policy["lanes_by_key"].items():
-        assert len(lanes) == len(set(lanes)), (key, lanes)
+    assert _assert_reports_follow_engine_iterations(policy, 1) == 0
+    _assert_pp1_keys_are_ordered_forwards(policy)
+    assert sum(1 for record in policy["records"] if record["kind"] == "end") > 10
 
     # 4. Still the post-step load, and still no new event type.
-    assert policy["reports_after_the_lane_released_the_batch"] == policy["num_reports"]
-    assert policy["reports_where_the_release_changed_the_load"] > 0
-    assert policy["reports_matching_post_step"] == policy["num_reports"]
-    assert policy["reports_matching_pre_step"] < policy["num_reports"]
+    _assert_completions_report_post_step_load(policy)
     assert set(policy["event_types"]) == set(baseline["event_types"])
 
 
@@ -139,8 +223,99 @@ def test_a_single_lane_shape_routes_everything_to_lane_zero(tmp_path):
     policy = evidence["vllm_load_balancing"]
 
     assert policy["num_lanes"] == 1
-    assert policy["completed_requests"] == policy["num_requests"]
+    _assert_run_conserves_work(policy)
     assert set(policy["first_four_lanes"]) == {0}
+    assert _assert_reports_follow_engine_iterations(policy, 1) == 0
+
+
+@pytest.mark.parametrize(
+    ("case", "num_pipeline_stages"),
+    [
+        ("dense_dp1_pp2", 2),
+        ("moe_dp2_pp2", 2),
+        ("moe_dp2_pp2_online", 2),
+        ("moe_dp1_pp3", 3),
+        ("moe_dp2_pp3", 3),
+    ],
+)
+def test_pipeline_parallel_shapes_report_once_per_engine_iteration(
+    tmp_path, case, num_pipeline_stages
+):
+    evidence = _run_child(tmp_path, case)
+    policy = evidence["vllm_load_balancing"]
+    baseline = evidence["round_robin"]
+
+    # 1. Every request completes, every token is processed once, and no lane
+    #    or stage context still owns work.
+    _assert_run_conserves_work(policy)
+    _assert_run_conserves_work(baseline)
+
+    # 2. The routing time is still the cluster schedule time.
+    assert policy["routing_times"] == policy["cluster_schedule_times"]
+
+    # 3. Each report stands for one engine iteration under its forward's key,
+    #    and every lane's cold fill publishes an admission before anything
+    #    completes.
+    admission_only = _assert_reports_follow_engine_iterations(
+        policy, num_pipeline_stages
+    )
+    assert admission_only >= policy["num_lanes"]
+
+    # 4. Completions still carry the post-step load, and the new seam adds no
+    #    event type.
+    _assert_completions_report_post_step_load(policy)
+    assert set(policy["event_types"]) == set(baseline["event_types"])
+
+
+def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
+    tmp_path,
+):
+    """Plan §18.6 under PP=2, against the completion-reporting control.
+
+    The control differs from the policy only in its two seams, so the probe's
+    placement differs only because of what was published before it arrived.
+    """
+
+    evidence = _run_child(tmp_path, "moe_dp2_pp2_discriminating")
+    fixed = evidence["vllm_load_balancing"]
+    control = evidence["completion_reporting_control"]
+
+    for run in (fixed, control):
+        _assert_run_conserves_work(run)
+        # Premise: the burst is routed from reservations alone, after the
+        # first collection publish of empty counts ...
+        assert run["selections"][0]["snapshot"] == [[0, 0], [0, 0]]
+        assert run["placements"][:5] == [0, 1, 0, 1, 0]
+        # ... and nothing completes before the probe arrives.
+        first_completion = min(
+            record["time"] for record in run["records"] if record["kind"] == "end"
+        )
+        assert first_completion > 1.1
+
+    probe = {name: run["selections"][5] for name, run in evidence.items()}
+    assert probe["vllm_load_balancing"]["time"] == pytest.approx(1.1)
+    assert probe["completion_reporting_control"]["time"] == pytest.approx(1.1)
+
+    # The policy published each lane's first admission: lane 0 runs its three
+    # short requests (score 3); lane 1 runs one chunk of the long prompt while
+    # the short request waits (score 4 + 1). The probe goes to lane 0.
+    first_admissions = {}
+    for record in fixed["records"]:
+        if record["kind"] == "scheduled" and record["report"] is not None:
+            first_admissions.setdefault(record["lane"], record["report"][1])
+    assert first_admissions == {0: [0, 3], 1: [1, 1]}
+    assert probe["vllm_load_balancing"]["snapshot"] == [[0, 3], [1, 1]]
+    assert probe["vllm_load_balancing"]["engine"] == 0
+
+    # The control reported nothing yet, so the frontend still holds its own
+    # reservations (score 12 against 8) and sends the probe to lane 1.
+    assert all(
+        record["report"] is None
+        for record in control["records"]
+        if record["kind"] == "scheduled"
+    )
+    assert probe["completion_reporting_control"]["snapshot"] == [[3, 0], [2, 0]]
+    assert probe["completion_reporting_control"]["engine"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -150,12 +325,12 @@ def test_a_single_lane_shape_routes_everything_to_lane_zero(tmp_path):
 REQUEST_SHAPES = 4
 
 
-def _model(*, is_moe: bool):
+def _model(*, is_moe: bool, num_layers: int):
     from frontier.config import BaseModelConfig
     from frontier.types import ActivationType, NormType
 
     model = BaseModelConfig(
-        num_layers=4,
+        num_layers=num_layers,
         num_q_heads=4,
         num_kv_heads=2,
         embedding_dim=256,
@@ -173,7 +348,7 @@ def _model(*, is_moe: bool):
         num_experts_per_tok=2 if is_moe else 0,
         torch_dtype="bfloat16",
     )
-    model._model_name = f"w4_runtime_{'moe' if is_moe else 'dense'}"
+    model._model_name = f"w4_runtime_{'moe' if is_moe else 'dense'}_{num_layers}l"
     return model
 
 
@@ -186,7 +361,12 @@ def _config(
     moe_ep: int,
     policy,
     trace: str | None = None,
+    num_pipeline_stages: int = 1,
+    num_layers: int = 4,
+    analytical_backend: bool = False,
+    dummy_execution_time_ms: float | None = None,
 ):
+    from frontier.cc_backend.cc_backend_config import AnalyticalCCBackendConfig
     from frontier.config import (
         BaseModelConfig,
         ClusterConfig,
@@ -201,7 +381,7 @@ def _config(
         VllmV1SchedulerConfig,
     )
 
-    model = _model(is_moe=is_moe)
+    model = _model(is_moe=is_moe, num_layers=num_layers)
     original = BaseModelConfig.create_from_name
     patch.setattr(
         BaseModelConfig,
@@ -224,11 +404,27 @@ def _config(
         model_name=model._model_name,
         device="a100",
         network_device="a100_pairwise_nvlink",
-        num_pipeline_stages=1,
+        num_pipeline_stages=num_pipeline_stages,
         attn_tensor_parallel_size=1,
         attn_dp=attn_dp,
         memory_margin_fraction=0.1,
         **moe_fields,
+    )
+    # Placement here is decided by the balancer, not by latency realism, so the
+    # predictor only has to be deterministic and identical across the policies
+    # being compared.
+    predictor = RandomForrestExecutionTimePredictorConfig(
+        enable_dummy_mode=True,
+        **(
+            {}
+            if dummy_execution_time_ms is None
+            else dict(dummy_execution_time_ms=dummy_execution_time_ms)
+        ),
+    )
+    backend = (
+        dict(cc_backend_config=AnalyticalCCBackendConfig())
+        if analytical_backend
+        else {}
     )
     cluster = ClusterConfig(
         replica_config=replica,
@@ -240,12 +436,8 @@ def _config(
             enable_chunked_prefill=True,
         ),
         cluster_scheduler_config=policy(),
-        # Placement here is decided by the balancer, not by latency realism, so
-        # the predictor only has to be deterministic and identical across the
-        # two policies being compared.
-        execution_time_predictor_config=RandomForrestExecutionTimePredictorConfig(
-            enable_dummy_mode=True
-        ),
+        execution_time_predictor_config=predictor,
+        **backend,
     )
     generator = (
         TraceRequestGeneratorConfig(trace_file=trace)
@@ -284,13 +476,17 @@ def _config(
 def run_case(
     root: Path,
     *,
-    is_moe: bool,
-    attn_dp: int,
-    moe_ep: int,
     policy_name: str,
-    trace: str | None = None,
+    completion_reporting_control: bool = False,
+    **shape,
 ):
-    """Run one configuration and return what only the event loop can show."""
+    """Run one configuration and return what only the event loop can show.
+
+    `completion_reporting_control` swaps the policy's two seams for the
+    reporting it had before schedule-time reports: nothing at admission, and
+    each completion keyed by `ForwardSyncState.get_step_id`. It exists only
+    here, as the control the discriminating case is measured against.
+    """
 
     from frontier.config import (
         RoundRobinClusterSchedulerConfig,
@@ -307,8 +503,13 @@ def run_case(
     from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (  # noqa: E501
         VLLMv1EngineReplicaScheduler,
     )
+    from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
+        ReplicaStageScheduler,
+    )
     from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+    from frontier.scheduler.utils.vllm_dp_load_balancer import VllmDPLoadBalancer
     from frontier.simulator import Simulator
+    from frontier.types import ClusterType
 
     policy = {
         "vllm_load_balancing": VllmLoadBalancingClusterSchedulerConfig,
@@ -318,12 +519,18 @@ def run_case(
     cluster_schedule_times: list[float] = []
     routing_times: list[float] = []
     placements: list[int] = []
-    reports: list[dict] = []
     releases: dict[int, dict] = {}
     event_types: set[str] = set()
+    # Seam calls, their reports, and stage-0 forward starts, in event order.
+    records: list[dict] = []
+    reports: list[list] = []
+    selections: list[dict] = []
 
     original_cluster_schedule = ClusterScheduleEvent.handle_event
     original_batch_end = GlobalBatchEndEvent.handle_event
+    original_report = VllmDPLoadBalancer.report
+    original_select = VllmDPLoadBalancer.select
+    original_stage_pop = ReplicaStageScheduler.pop_batch_if_not_busy
 
     def observed_cluster_schedule(self, scheduler, metrics_store):
         cluster_schedule_times.append(float(self.time))
@@ -354,27 +561,69 @@ def run_case(
 
         return observed
 
-    def observing_hook(original):
+    def observed_report(self, time, engine, step, load):
+        reports.append([step, list(load)])
+        return original_report(self, time, engine, step, load)
+
+    def observed_select(self, time):
+        # Applying the passed deadlines first changes nothing: `select` does
+        # the same before choosing. It exposes the snapshot the choice reads.
+        self._advance(time)
+        snapshot = [list(load) for load in self.frontend_counts]
+        engine = original_select(self, time)
+        selections.append({"time": float(time), "snapshot": snapshot, "engine": engine})
+        return engine
+
+    def observed_stage_pop(self):
+        batch = original_stage_pop(self)
+        if batch is not None and self._stage_id == 0:
+            records.append(
+                {
+                    "kind": "stage0",
+                    "lane": self._replica_local_id,
+                    "batch": batch.id,
+                    # A MoE lane batch carries the shared forward group bound
+                    # at this start; a dense stage binds none.
+                    "group": batch._forward_cohort_provisional_id
+                    if self._is_moe
+                    else None,
+                }
+            )
+        return batch
+
+    def observing_seam(kind, original):
         def observed(self, time, replica_id, replica_local_id, batch):
+            before = len(reports)
             result = original(self, time, replica_id, replica_local_id, batch)
-            balancer = getattr(self, "_load_balancer", None)
-            if balancer is not None and type(replica_local_id) is int:
-                # `None` means the lane had not yet released this batch when the
-                # hook ran, which is itself the ordering evidence.
-                release = releases.get(batch.id)
-                reports.append(
-                    {
-                        "lane": replica_local_id,
-                        "key": ForwardSyncState.get_step_id(batch),
-                        "released": release is not None,
-                        "pre_step": release["before"] if release else None,
-                        "post_step": release["after"] if release else None,
-                        "reported": list(balancer.engine_counts[replica_local_id]),
-                    }
-                )
+            made = reports[before:]
+            assert len(made) <= 1, made
+            lane = self.get_replica_scheduler(replica_id, replica_local_id)
+            release = releases.get(batch.id)
+            records.append(
+                {
+                    "kind": kind,
+                    "time": float(time),
+                    "lane": replica_local_id,
+                    "batch": batch.id,
+                    "running_after": lane.num_running_batches,
+                    "report": made[0] if made else None,
+                    "released": release is not None,
+                    "pre_step": release["before"] if release else None,
+                    "post_step": release["after"] if release else None,
+                }
+            )
             return result
 
         return observed
+
+    def completion_reporting(self, time, replica_id, replica_local_id, batch):
+        lane = self.get_replica_scheduler(replica_id, replica_local_id)
+        self._load_balancer.report(
+            time,
+            replica_local_id,
+            ForwardSyncState.get_step_id(batch),
+            lane.get_request_load(),
+        )
 
     def observed_batch_end(self, scheduler, metrics_store):
         events = original_batch_end(self, scheduler, metrics_store)
@@ -382,15 +631,7 @@ def run_case(
         return events
 
     with pytest.MonkeyPatch.context() as patch:
-        config = _config(
-            root,
-            patch,
-            is_moe=is_moe,
-            attn_dp=attn_dp,
-            moe_ep=moe_ep,
-            policy=policy,
-            trace=trace,
-        )
+        config = _config(root, patch, policy=policy, **shape)
         patch.setattr(ClusterScheduleEvent, "handle_event", observed_cluster_schedule)
         patch.setattr(GlobalBatchEndEvent, "handle_event", observed_batch_end)
         patch.setattr(
@@ -398,9 +639,12 @@ def run_case(
             "on_batch_end",
             observing_release(vars(VLLMv1EngineReplicaScheduler)["on_batch_end"]),
         )
+        patch.setattr(VllmDPLoadBalancer, "report", observed_report)
+        patch.setattr(VllmDPLoadBalancer, "select", observed_select)
+        patch.setattr(ReplicaStageScheduler, "pop_batch_if_not_busy", observed_stage_pop)
         # Both the inert base seam and the policy's override have to be
-        # wrapped: patching only the base would silently observe nothing on the
-        # very policy under test.
+        # wrapped for routing: patching only the base would silently observe
+        # nothing on the very policy under test.
         for owner in (BaseClusterScheduler, VllmLoadBalancingClusterScheduler):
             if "schedule_at" in vars(owner):
                 patch.setattr(
@@ -408,44 +652,66 @@ def run_case(
                     "schedule_at",
                     observing_schedule_at(vars(owner)["schedule_at"]),
                 )
-            if "on_replica_batch_end" in vars(owner):
-                patch.setattr(
-                    owner,
-                    "on_replica_batch_end",
-                    observing_hook(vars(owner)["on_replica_batch_end"]),
-                )
+        seams = {
+            "on_replica_batch_scheduled": vars(VllmLoadBalancingClusterScheduler)[
+                "on_replica_batch_scheduled"
+            ],
+            "on_replica_batch_end": vars(VllmLoadBalancingClusterScheduler)[
+                "on_replica_batch_end"
+            ],
+        }
+        if completion_reporting_control:
+            seams = {
+                "on_replica_batch_scheduled": vars(BaseClusterScheduler)[
+                    "on_replica_batch_scheduled"
+                ],
+                "on_replica_batch_end": completion_reporting,
+            }
+        for name, kind in (
+            ("on_replica_batch_scheduled", "scheduled"),
+            ("on_replica_batch_end", "end"),
+        ):
+            patch.setattr(
+                VllmLoadBalancingClusterScheduler,
+                name,
+                observing_seam(kind, seams[name]),
+            )
         simulator = Simulator(config)
         simulator.run()
         requests = list(simulator._all_requests)
-
-    lanes_by_key: dict[str, list[int]] = {}
-    for report in reports:
-        lanes_by_key.setdefault(str(report["key"]), []).append(report["lane"])
+        cluster_scheduler = simulator._global_scheduler.get_cluster_scheduler(
+            ClusterType.MONOLITHIC
+        )
+        lanes = [
+            cluster_scheduler.get_replica_scheduler(replica_id, lane_id)
+            for replica_id in cluster_scheduler._cluster.replicas
+            for lane_id in range(shape["attn_dp"])
+        ]
+        contexts = list(cluster_scheduler._stage_execution_contexts.values())
 
     return {
-        "num_lanes": attn_dp,
+        "num_lanes": shape["attn_dp"],
         "num_requests": len(requests),
         "completed_requests": sum(1 for request in requests if request.completed),
+        "tokens_conserved": all(
+            request.num_processed_tokens
+            == request.num_prefill_tokens + request.num_decode_tokens
+            for request in requests
+        ),
+        "lanes_released": all(
+            lane.num_running_batches == 0 and not lane._running_requests
+            for lane in lanes
+        ),
+        "stage_contexts_released": all(
+            context.is_idle and context.queued_tickets == () for context in contexts
+        ),
         "makespan": max((request.completed_at for request in requests), default=0.0),
         "cluster_schedule_times": cluster_schedule_times,
         "routing_times": routing_times,
         "first_four_lanes": placements[:4],
         "placements": placements,
-        "report_keys": [report["key"] for report in reports],
-        "lanes_by_key": lanes_by_key,
-        "num_reports": len(reports),
-        "reports_after_the_lane_released_the_batch": sum(
-            1 for report in reports if report["released"]
-        ),
-        "reports_matching_post_step": sum(
-            1 for report in reports if report["post_step"] == report["reported"]
-        ),
-        "reports_matching_pre_step": sum(
-            1 for report in reports if report["pre_step"] == report["reported"]
-        ),
-        "reports_where_the_release_changed_the_load": sum(
-            1 for report in reports if report["pre_step"] != report["post_step"]
-        ),
+        "records": records,
+        "selections": selections,
         "event_types": sorted(event_types),
     }
 
@@ -462,30 +728,80 @@ ASYMMETRIC_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
 1.0,16,1
 """
 
+# Plan §18.6. A burst after the first collection publish, so the frontend
+# routes it from local reservations: lanes 0, 1, 0, 1, 0. Lane 0's three short
+# prompts fit one batch; lane 1's long prompt takes the whole token budget, so
+# its short request waits. A probe then arrives after the publication of those
+# admissions and before any batch completes.
+DISCRIMINATING_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
+1.0,4,8
+1.0,32,8
+1.0,4,8
+1.0,4,8
+1.0,4,8
+1.1,4,1
+"""
 
-def _trace_file(root: Path) -> str:
-    path = root / "asymmetric_arrivals.csv"
-    path.write_text(ASYMMETRIC_TRACE)
-    return str(path)
+TRACES = {"asymmetric": ASYMMETRIC_TRACE, "discriminating": DISCRIMINATING_TRACE}
+
+CASES = {
+    "moe_dp2": dict(is_moe=True, attn_dp=2, moe_ep=2),
+    "dense_dp1": dict(is_moe=False, attn_dp=1, moe_ep=1),
+    "moe_dp2_online": dict(is_moe=True, attn_dp=2, moe_ep=2, trace="asymmetric"),
+    "dense_dp1_pp2": dict(
+        is_moe=False, attn_dp=1, moe_ep=1, num_pipeline_stages=2,
+        analytical_backend=True,
+    ),
+    "moe_dp2_pp2": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2,
+        analytical_backend=True,
+    ),
+    "moe_dp2_pp2_online": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2,
+        analytical_backend=True, trace="asymmetric",
+    ),
+    "moe_dp1_pp3": dict(
+        is_moe=True, attn_dp=1, moe_ep=1, num_pipeline_stages=3, num_layers=6,
+        analytical_backend=True,
+    ),
+    "moe_dp2_pp3": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=3, num_layers=6,
+        analytical_backend=True,
+    ),
+    # Stages long enough that no batch completes before the probe (plan D-e).
+    "moe_dp2_pp2_discriminating": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2,
+        analytical_backend=True, trace="discriminating",
+        dummy_execution_time_ms=10.0,
+    ),
+}
+
+# The policy run's comparison run: a load-blind baseline, or for the
+# discriminating case the completion-reporting control.
+COMPARISONS = {"moe_dp2_pp2_discriminating": "completion_reporting_control"}
 
 
 if __name__ == "__main__":
     root = Path(sys.argv[1])
     case = sys.argv[2]
-    shape = {
-        "moe_dp2": dict(is_moe=True, attn_dp=2, moe_ep=2),
-        "dense_dp1": dict(is_moe=False, attn_dp=1, moe_ep=1),
-        "moe_dp2_online": dict(is_moe=True, attn_dp=2, moe_ep=2, trace=True),
-    }[case]
+    shape = CASES[case]
+    comparison = COMPARISONS.get(case, "round_robin")
     evidence = {}
-    for policy_name in ("vllm_load_balancing", "round_robin"):
-        case_root = root / case / policy_name
+    for run_name in ("vllm_load_balancing", comparison):
+        case_root = root / case / run_name
         case_root.mkdir(parents=True, exist_ok=True)
         arguments = dict(shape)
-        if arguments.pop("trace", False):
-            arguments["trace"] = _trace_file(case_root)
-        evidence[policy_name] = run_case(
-            case_root, policy_name=policy_name, **arguments
+        if "trace" in arguments:
+            trace_path = case_root / f"{arguments['trace']}_arrivals.csv"
+            trace_path.write_text(TRACES[arguments["trace"]])
+            arguments["trace"] = str(trace_path)
+        evidence[run_name] = run_case(
+            case_root,
+            policy_name="round_robin"
+            if run_name == "round_robin"
+            else "vllm_load_balancing",
+            completion_reporting_control=run_name == "completion_reporting_control",
+            **arguments,
         )
     (root / f"{case}_evidence.json").write_text(json.dumps(evidence, indent=1))
     print(json.dumps({k: v["completed_requests"] for k, v in evidence.items()}))

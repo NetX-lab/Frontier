@@ -72,13 +72,34 @@ def test_a_mixed_batch_crossing_a_dense_layer_is_credited_every_layer(evidence):
     assert hybrid["layer_credit_peaks"] == {str(hybrid["num_layers"]): hybrid["decode_tokens_credited"]}, hybrid
 
 
+def test_the_dense_layer_credit_holds_with_pipeline_stages_and_dp_placement(evidence):
+    """The same hybrid model split over two stages and routed by the vLLM DP
+    placement policy, whose schedule-time reports run inside admission.
+
+    The dense layer now sits on stage 0 while two routed layers follow on
+    stage 1, so a mixed batch crosses the stage boundary between the credit
+    paths. The run's own assertions cover conservation and released
+    ownership; this checks that the shape was reached.
+    """
+
+    hybrid = evidence["hybrid_layers_pp2_dp_placement"]
+    assert hybrid["num_pipeline_stages"] == 2, hybrid
+    assert hybrid["dense_layers"] == [1], hybrid
+    assert hybrid["mixed_dense_completions"] > 0, hybrid
+    assert hybrid["layer_credit_peaks"] == {str(hybrid["num_layers"]): hybrid["decode_tokens_credited"]}, hybrid
+
+
 # Requests chosen so that chunked prefill leaves one lane prefilling while the
 # other has already started decoding: unequal prefill lengths, unequal decode
 # budgets, all arriving at once.
 REQUEST_SHAPES = ((32, 4), (16, 4), (24, 3), (16, 3))
+# With two stages, each lane keeps two batches in flight and skips requests
+# already in one, so two requests per lane never share a batch. A third lets
+# a decoding request join another request's prefill chunk.
+PIPELINED_REQUEST_SHAPES = ((32, 4), (16, 4), (24, 3), (16, 3), (16, 3), (24, 4))
 
 
-def _build_config(root, patch, *, moe_layers_enum=None):
+def _build_config(root, patch, *, moe_layers_enum=None, num_pipeline_stages=1):
     import pandas as pd
 
     from frontier.config import (
@@ -167,7 +188,7 @@ def _build_config(root, patch, *, moe_layers_enum=None):
         model_name=model._model_name,
         device="a100",
         network_device="a100_pairwise_nvlink",
-        num_pipeline_stages=1,
+        num_pipeline_stages=num_pipeline_stages,
         attn_tensor_parallel_size=1,
         attn_dp=2,
         moe_tensor_parallel_size=1,
@@ -210,7 +231,15 @@ def _drained(room) -> bool:
     return True
 
 
-def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None):
+def run_case(
+    root: Path,
+    *,
+    reporting: bool,
+    moe_layers_enum: str | None = None,
+    num_pipeline_stages: int = 1,
+    cluster_scheduler_config=None,
+    request_shapes=REQUEST_SHAPES,
+):
     from frontier.entities import Request
     from frontier.request_generator.synthetic_request_generator import (
         SyntheticRequestGenerator,
@@ -221,7 +250,10 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
 
     with pytest.MonkeyPatch.context() as patch:
         model, predictor_config, replica, classes = _build_config(
-            root, patch, moe_layers_enum=moe_layers_enum
+            root,
+            patch,
+            moe_layers_enum=moe_layers_enum,
+            num_pipeline_stages=num_pipeline_stages,
         )
         (
             VllmV1SchedulerConfig,
@@ -242,6 +274,11 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
                 enable_chunked_prefill=True,
             ),
             execution_time_predictor_config=predictor_config,
+            **(
+                {}
+                if cluster_scheduler_config is None
+                else dict(cluster_scheduler_config=cluster_scheduler_config)
+            ),
         )
         config = SimulationConfig(
             simulation_mode="offline",
@@ -263,7 +300,7 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
                 write_json_trace=False,
             ),
             request_generator_config=SyntheticRequestGeneratorConfig(
-                num_requests=len(REQUEST_SHAPES),
+                num_requests=len(request_shapes),
                 length_generator_config=FixedRequestLengthGeneratorConfig(
                     prefill_tokens=16, decode_tokens=3
                 ),
@@ -273,7 +310,7 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
             ),
         )
         requests = [
-            Request(0.0, prefill, decode) for prefill, decode in REQUEST_SHAPES
+            Request(0.0, prefill, decode) for prefill, decode in request_shapes
         ]
         patch.setattr(
             SyntheticRequestGenerator, "generate", lambda self: list(requests)
@@ -379,6 +416,7 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
         evidence = {
             "reporting": reporting,
             "num_layers": model.num_layers,
+            "num_pipeline_stages": num_pipeline_stages,
             "dense_layers": [
                 layer for layer in range(model.num_layers)
                 if not model.is_moe_layer(layer)
@@ -402,7 +440,7 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
 
         # Every request finishes, exactly once, with every token accounted for.
         assert all(request.completed for request in requests), evidence
-        for request, (prefill, decode) in zip(requests, REQUEST_SHAPES):
+        for request, (prefill, decode) in zip(requests, request_shapes):
             assert request.num_prefill_tokens == prefill
             assert request.num_decode_tokens == decode
             assert request.num_processed_tokens == prefill + decode
@@ -410,18 +448,27 @@ def run_case(root: Path, *, reporting: bool, moe_layers_enum: str | None = None)
         assert len(rows) == len(requests)
         assert len({row["Request Id"] for row in rows}) == len(requests)
         assert sum(int(float(row["request_num_tokens"])) for row in rows) == sum(
-            prefill + decode for prefill, decode in REQUEST_SHAPES
+            prefill + decode for prefill, decode in request_shapes
         )
 
-        # Each live source in a mixed cohort continued on its own prediction.
-        # A cohort's completion runs after its own wave and before the next
-        # wave is scheduled, so that slice of the prediction log belongs to it.
-        boundaries = [cohort["first_call"] for cohort in cohorts] + [len(predictions)]
+        # Each live source in a mixed cohort continued on its own prediction,
+        # made after the cohort's wave and before that source's next wave.
+        # With pipeline stages another stage's wave can come in between, so
+        # each source's window ends at its own next wave.
         for index, cohort in enumerate(cohorts):
             if len(set(cohort["members"].values())) < 2:
                 continue
-            window = set(predictions[cohort["first_call"] : boundaries[index + 1]])
-            assert set(cohort["members"]) <= window, (cohort, sorted(window))
+            for member in cohort["members"]:
+                end = next(
+                    (
+                        later["first_call"]
+                        for later in cohorts[index + 1 :]
+                        if member in later["members"]
+                    ),
+                    len(predictions),
+                )
+                window = predictions[cohort["first_call"] : end]
+                assert member in window, (cohort, member, window)
 
         # Nothing is stranded: no waiting room holds a batch and no stage
         # execution context still owns or queues a ticket.
@@ -462,10 +509,23 @@ def main(root: Path) -> None:
     hybrid_root.mkdir(parents=True, exist_ok=True)
     hybrid = run_case(hybrid_root, reporting=False, moe_layers_enum="0,2,3")
     assert hybrid["mixed_dense_completions"] > 0, hybrid
+    from frontier.config import VllmLoadBalancingClusterSchedulerConfig
+
+    staged_root = root / "hybrid_layers_pp2_dp_placement"
+    staged_root.mkdir(parents=True, exist_ok=True)
+    staged = run_case(
+        staged_root,
+        reporting=False,
+        moe_layers_enum="0,2,3",
+        num_pipeline_stages=2,
+        cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(),
+        request_shapes=PIPELINED_REQUEST_SHAPES,
+    )
 
     merged = dict(evidence["off"])
     merged["reporting_variants"] = evidence
     merged["hybrid_layers"] = hybrid
+    merged["hybrid_layers_pp2_dp_placement"] = staged
     (root / "shared_forward_evidence.json").write_text(
         json.dumps(merged, indent=2) + "\n"
     )
@@ -473,6 +533,8 @@ def main(root: Path) -> None:
     print("completed_requests:", merged["completed_requests"])
     print("hybrid mixed_dense_completions:", hybrid["mixed_dense_completions"])
     print("hybrid layer_credit_peaks:", hybrid["layer_credit_peaks"])
+    print("pp2 mixed_dense_completions:", staged["mixed_dense_completions"])
+    print("pp2 layer_credit_peaks:", staged["layer_credit_peaks"])
 
 
 if __name__ == "__main__":
