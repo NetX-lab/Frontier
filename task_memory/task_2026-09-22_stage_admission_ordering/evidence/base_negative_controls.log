@@ -1,0 +1,59 @@
+F.F.FFFFF                                                                [100%]
+=================================== FAILURES ===================================
+__ test_full_stage_ticket_passes_queued_full_stage_work_but_not_a_queued_wave __
+tests/unit/test_stage_execution_context.py:111: in test_full_stage_ticket_passes_queued_full_stage_work_but_not_a_queued_wave
+    assert context.try_acquire(full1) is True
+E   AssertionError: assert False is True
+E    +  where False = try_acquire(StageAdmissionTicket(replica_id=0, stage_id=0, admission_seq=1, operation_id='full1', scope='FULL_STAGE_WORLD', participant_ep_ids=()))
+E    +    where try_acquire = <frontier.scheduler.replica_stage_scheduler.stage_execution_context.StageExecutionContext object at 0x7fe60b60e440>.try_acquire
+_____ test_idle_single_owner_stage_admits_a_later_queued_full_stage_ticket _____
+tests/unit/test_stage_execution_context.py:141: in test_idle_single_owner_stage_admits_a_later_queued_full_stage_ticket
+    assert context.try_acquire(full1) is True
+E   AssertionError: assert False is True
+E    +  where False = try_acquire(StageAdmissionTicket(replica_id=0, stage_id=0, admission_seq=1, operation_id='full1', scope='FULL_STAGE_WORLD', participant_ep_ids=()))
+E    +    where try_acquire = <frontier.scheduler.replica_stage_scheduler.stage_execution_context.StageExecutionContext object at 0x7fe60b878940>.try_acquire
+________ test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket[0] ________
+tests/unit/test_shared_forward_group_admission.py:71: in test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket
+    assert stages[other_lane].pop_batch_if_not_busy() is other_now
+E   assert None is batch id = 10\ndecode_attn_original_replica_id=None, decode_attn_original_replica_local_id=None\nnum req = 1, [8]\n------...8\nnum_prefill_tokens=16\nnum_decode_tokens=4\nnum_processed_tokens=0\ncurrent_decode_token_index=1\ncompleted_layer_count=0
+E    +  where None = pop_batch_if_not_busy()
+E    +    where pop_batch_if_not_busy = <frontier.scheduler.replica_stage_scheduler.replica_stage_schduler.ReplicaStageScheduler object at 0x7fe60b5de3b0>.pop_batch_if_not_busy
+________ test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket[1] ________
+tests/unit/test_shared_forward_group_admission.py:71: in test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket
+    assert stages[other_lane].pop_batch_if_not_busy() is other_now
+E   assert None is batch id = 14\ndecode_attn_original_replica_id=None, decode_attn_original_replica_local_id=None\nnum req = 1, [12]\n-----...2\nnum_prefill_tokens=16\nnum_decode_tokens=4\nnum_processed_tokens=0\ncurrent_decode_token_index=1\ncompleted_layer_count=0
+E    +  where None = pop_batch_if_not_busy()
+E    +    where pop_batch_if_not_busy = <frontier.scheduler.replica_stage_scheduler.replica_stage_schduler.ReplicaStageScheduler object at 0x7fe60b865c00>.pop_batch_if_not_busy
+_____ test_moe_lanes_complete_every_request[G3a-moe-dp2-pp2-n4-expected0] ______
+tests/integration/test_stage_admission_pipeline_lanes.py:41: in test_moe_lanes_complete_every_request
+    metrics_dir = run_case(tmp_path, case_id)
+tests/integration/test_stage_admission_pipeline_lanes.py:31: in run_case
+    assert outcome["outcome"] == SUCCESS, outcome
+E   AssertionError: {'exception': 'Sequential simulation ended with non-empty scheduler state', 'outcome': 'admission_deadlock', 'simulation_time': 0.007, 'wall_end': 1790101999.9712346, ...}
+E   assert 'admission_deadlock' == 'success'
+E     
+E     - success
+E     + admission_deadlock
+_____ test_moe_lanes_complete_every_request[G3a-moe-dp4-pp2-n8-expected1] ______
+tests/integration/test_stage_admission_pipeline_lanes.py:41: in test_moe_lanes_complete_every_request
+    metrics_dir = run_case(tmp_path, case_id)
+tests/integration/test_stage_admission_pipeline_lanes.py:31: in run_case
+    assert outcome["outcome"] == SUCCESS, outcome
+E   AssertionError: {'exception': 'Sequential simulation ended with non-empty scheduler state', 'outcome': 'admission_deadlock', 'simulation_time': 0.007, 'wall_end': 1790102001.4043047, ...}
+E   assert 'admission_deadlock' == 'success'
+E     
+E     - success
+E     + admission_deadlock
+_______________ test_dense_lanes_start_in_the_same_first_forward _______________
+tests/integration/test_stage_admission_pipeline_lanes.py:60: in test_dense_lanes_start_in_the_same_first_forward
+    assert first_start[0] == first_start[1]
+E   assert 0.05 == 0.0
+=========================== short test summary info ============================
+FAILED tests/unit/test_stage_execution_context.py::test_full_stage_ticket_passes_queued_full_stage_work_but_not_a_queued_wave
+FAILED tests/unit/test_stage_execution_context.py::test_idle_single_owner_stage_admits_a_later_queued_full_stage_ticket
+FAILED tests/unit/test_shared_forward_group_admission.py::test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket[0]
+FAILED tests/unit/test_shared_forward_group_admission.py::test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket[1]
+FAILED tests/integration/test_stage_admission_pipeline_lanes.py::test_moe_lanes_complete_every_request[G3a-moe-dp2-pp2-n4-expected0]
+FAILED tests/integration/test_stage_admission_pipeline_lanes.py::test_moe_lanes_complete_every_request[G3a-moe-dp4-pp2-n8-expected1]
+FAILED tests/integration/test_stage_admission_pipeline_lanes.py::test_dense_lanes_start_in_the_same_first_forward
+7 failed, 2 passed in 6.74s
