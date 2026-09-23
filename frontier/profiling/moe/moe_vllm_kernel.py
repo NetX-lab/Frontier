@@ -128,10 +128,9 @@ try:
             try_get_optimal_moe_config,
             get_config_dtype_str,
         )
-        # The gated activation and the local top-k reduction belong to the same
-        # low-level API as the two kernel invocations. Importing them here means
-        # a build without them selects the functional path instead of running an
-        # incomplete expert computation.
+        # The local top-k reduction calls `_custom_ops.moe_sum`. `fused_moe`
+        # already imports this module, so this import cannot change which API
+        # branch is selected.
         from vllm import _custom_ops as _vllm_custom_ops
 
         VLLM_API_VERSION = "0.10.x"
@@ -330,19 +329,18 @@ def _invoke_kernel(
         per_channel_quant: Whether to use per-channel quantization
         block_shape: Block dimensions for block-wise quantization
     """
-    # Determine compute_type - for FP8, we accumulate in FP16/BF16
-    if use_fp8:
-        compute_type = tl.float16  # FP8 accumulates in FP16
+    # vLLM's `fused_experts_impl` derives compute_type from the unquantized
+    # hidden-state dtype, which is the output buffer's dtype here. Under FP8 the
+    # input `A` is already quantized, so its dtype does not name it.
+    dtype = C.dtype
+    if dtype == torch.bfloat16:
+        compute_type = tl.bfloat16
+    elif dtype == torch.float16:
+        compute_type = tl.float16
+    elif dtype == torch.float32:
+        compute_type = tl.float32
     else:
-        dtype = A.dtype
-        if dtype == torch.bfloat16:
-            compute_type = tl.bfloat16
-        elif dtype == torch.float16:
-            compute_type = tl.float16
-        elif dtype == torch.float32:
-            compute_type = tl.float32
-        else:
-            raise ValueError(f"Unsupported dtype for fused MoE compute_type: {dtype}")
+        raise ValueError(f"Unsupported dtype for fused MoE compute_type: {dtype}")
 
     invoke_fused_moe_kernel(
         A=A,
@@ -383,8 +381,6 @@ def _run_fused_moe_iteration(
     num_tokens_post_padded: torch.Tensor,
     top_k: int,
     config: Dict,
-    block_dims: Optional[Tuple[int, int]],
-    A_scale: Optional[torch.Tensor] = None,
     w1_scale: Optional[torch.Tensor] = None,
     w2_scale: Optional[torch.Tensor] = None,
     use_fp8: bool = False,
@@ -407,12 +403,23 @@ def _run_fused_moe_iteration(
 
     The reduction is a local sum over the `top_k` expert outputs of one token.
     It is not a collective and adds no communication cost.
+
+    Under FP8, `A` is the unquantized hidden state. Both GEMM inputs are
+    quantized inside the step, because vLLM quantizes them inside
+    `fused_experts_impl` and the profiled cost includes that work.
     """
 
+    group_size = block_shape[1] if block_shape else 128
+    first_input, first_A_scale = A.contiguous(), None
+    if use_fp8:
+        first_input, first_A_scale = quantize_activations_to_fp8(
+            first_input, group_size=group_size
+        )
+
     _invoke_kernel(
-        A=A.contiguous(),
+        A=first_input,
         B=w1.contiguous(),
-        C=intermediate_cache1.contiguous(),
+        C=intermediate_cache1,
         topk_weights=topk_weights.contiguous(),
         sorted_token_ids=sorted_token_ids.contiguous(),
         expert_ids=expert_ids.contiguous(),
@@ -420,7 +427,7 @@ def _run_fused_moe_iteration(
         mul_routed_weight=False,
         top_k=top_k,
         config=config,
-        A_scale=A_scale,
+        A_scale=first_A_scale,
         B_scale=w1_scale,
         use_fp8=use_fp8,
         per_channel_quant=per_channel_quant,
@@ -435,20 +442,16 @@ def _run_fused_moe_iteration(
         intermediate_cache2,
         intermediate_cache1.view(-1, intermediate_cache1.shape[-1]),
     )
-    intermediate_cache2_input = intermediate_cache2
-
-    intermediate_A_scale = None
+    second_input, second_A_scale = intermediate_cache2, None
     if use_fp8:
-        group_size = block_dims[1] if block_dims else 128
-        intermediate_cache2_input, intermediate_A_scale = quantize_activations_to_fp8(
-            intermediate_cache2_input,
-            group_size=group_size,
+        second_input, second_A_scale = quantize_activations_to_fp8(
+            second_input, group_size=group_size
         )
 
     _invoke_kernel(
-        A=intermediate_cache2_input,
+        A=second_input,
         B=w2.contiguous(),
-        C=intermediate_cache3.contiguous(),
+        C=intermediate_cache3,
         topk_weights=topk_weights.contiguous(),
         sorted_token_ids=sorted_token_ids.contiguous(),
         expert_ids=expert_ids.contiguous(),
@@ -456,7 +459,7 @@ def _run_fused_moe_iteration(
         mul_routed_weight=True,
         top_k=1,
         config=config,
-        A_scale=intermediate_A_scale,
+        A_scale=second_A_scale,
         B_scale=w2_scale,
         use_fp8=use_fp8,
         per_channel_quant=per_channel_quant,
@@ -829,7 +832,6 @@ def profile_fused_moe_kernel(
 
     w1_scale = None
     w2_scale = None
-    A_scale = None
 
     if VLLM_API_VERSION == "functional_fused_experts":
         functional_topk_weights = topk_weights.to(
@@ -904,7 +906,7 @@ def profile_fused_moe_kernel(
                 stats["native_backend"] = mxfp4_state["backend"]
             return stats
 
-    block_dims = _validate_block_shape(block_shape)
+    _validate_block_shape(block_shape)
     assert w1 is not None and w2 is not None
     if use_fp8:
         w1, w1_scale = quantize_weights_to_fp8(
@@ -917,10 +919,8 @@ def profile_fused_moe_kernel(
             per_channel=per_channel_quant,
             block_shape=block_shape,
         )
-        group_size = block_dims[1] if block_dims else 128
-        A, A_scale = quantize_activations_to_fp8(A, group_size=group_size)
 
-    config_dtype = get_config_dtype_str(base_dtype)
+    config_dtype = get_config_dtype_str(base_dtype, use_fp8_w8a8=use_fp8)
     config = try_get_optimal_moe_config(
         w1_shape=w1.shape,
         w2_shape=w2.shape,
@@ -980,8 +980,6 @@ def profile_fused_moe_kernel(
             num_tokens_post_padded=num_tokens_post_padded,
             top_k=top_k,
             config=config,
-            block_dims=block_dims,
-            A_scale=A_scale,
             w1_scale=w1_scale,
             w2_scale=w2_scale,
             use_fp8=use_fp8,

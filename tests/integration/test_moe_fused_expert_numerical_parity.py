@@ -138,11 +138,12 @@ def _build_case(
 
 
 def _run_repaired_path(activations, w1, w2, topk_weights, topk_ids, expert_map):
-    """Drive `_run_fused_moe_iteration` exactly as the profiler drives it.
+    """Drive `_run_fused_moe_iteration` as the profiler drives it.
 
-    The buffer shapes and the config/alignment calls are copied from
-    `profile_fused_moe_kernel`, so a change that breaks the profiler's own setup
-    breaks this test too.
+    The buffer shapes and the config/alignment calls are copies of the ones in
+    `profile_fused_moe_kernel`, not calls into it, so a later change to the
+    profiler's setup must be mirrored here. The CPU tests in
+    `tests/unit/test_moe_fused_expert_arithmetic.py` pin that setup.
     """
 
     num_tokens, hidden = activations.shape
@@ -192,7 +193,6 @@ def _run_repaired_path(activations, w1, w2, topk_weights, topk_ids, expert_map):
         num_tokens_post_padded=num_tokens_post_padded,
         top_k=top_k,
         config=config,
-        block_dims=None,
     )
     return out_hidden_states
 
@@ -300,9 +300,10 @@ def test_fp8_path_runs_on_the_gated_activation():
     This is a structural check on native kernels, not FP8 parity. Frontier
     quantizes weights and activations with its own helpers, so a bit-exact
     comparison against `fused_experts` would first require matching those
-    schemes. What it does settle is that the quantizer receives the gated
-    activation buffer rather than a raw slice of the first projection, and that
-    the real kernels accept that operand and return finite values.
+    schemes. What it does settle is that the step quantizes the hidden state
+    and then the gated activation buffer, rather than a raw slice of the first
+    projection, and that the real kernels accept those operands with the FP8
+    kernel config and return finite values.
     """
 
     if not kernel.check_fp8_available():
@@ -323,16 +324,13 @@ def test_fp8_path_runs_on_the_gated_activation():
     block_shape = [128, 128]
     quantized_w1, w1_scale = kernel.quantize_weights_to_fp8(w1, block_shape=block_shape)
     quantized_w2, w2_scale = kernel.quantize_weights_to_fp8(w2, block_shape=block_shape)
-    quantized_a, a_scale = kernel.quantize_activations_to_fp8(
-        activations, group_size=block_shape[1]
-    )
 
     with vllm_config_context():
         config = kernel.try_get_optimal_moe_config(
             w1_shape=quantized_w1.shape,
             w2_shape=quantized_w2.shape,
             top_k=top_k,
-            dtype=kernel.get_config_dtype_str(activations.dtype),
+            dtype=kernel.get_config_dtype_str(activations.dtype, use_fp8_w8a8=True),
             M=num_tokens,
             block_shape=block_shape,
         )
@@ -340,11 +338,11 @@ def test_fp8_path_runs_on_the_gated_activation():
             topk_ids, config["BLOCK_SIZE_M"], num_experts, expert_map=expert_map
         )
 
-        observed = {}
+        observed = []
         original_quantize = kernel.quantize_activations_to_fp8
 
         def observing_quantize(tensor, *, group_size):
-            observed["shape"] = tuple(tensor.shape)
+            observed.append(tuple(tensor.shape))
             return original_quantize(tensor, group_size=group_size)
 
         kernel.quantize_activations_to_fp8 = observing_quantize
@@ -353,7 +351,7 @@ def test_fp8_path_runs_on_the_gated_activation():
                 num_tokens, hidden, device="cuda", dtype=activations.dtype
             )
             kernel._run_fused_moe_iteration(
-                A=quantized_a,
+                A=activations,
                 w1=quantized_w1,
                 w2=quantized_w2,
                 intermediate_cache1=torch.empty(
@@ -372,8 +370,6 @@ def test_fp8_path_runs_on_the_gated_activation():
                 num_tokens_post_padded=padded,
                 top_k=top_k,
                 config=config,
-                block_dims=(block_shape[0], block_shape[1]),
-                A_scale=a_scale,
                 w1_scale=w1_scale,
                 w2_scale=w2_scale,
                 use_fp8=True,
@@ -386,8 +382,9 @@ def test_fp8_path_runs_on_the_gated_activation():
             kernel.quantize_activations_to_fp8 = original_quantize
     torch.cuda.synchronize()
 
-    # The gated activation is `(M * top_k, width)`; the raw first projection
-    # would be twice as wide.
-    assert observed["shape"] == (num_tokens * top_k, width)
+    # The step quantizes the hidden state, then the gated activation. The gated
+    # activation is `(M * top_k, width)`; the raw first projection would be
+    # twice as wide.
+    assert observed == [(num_tokens, hidden), (num_tokens * top_k, width)]
     assert out_hidden_states.shape == (num_tokens, hidden)
     assert torch.isfinite(out_hidden_states).all()
