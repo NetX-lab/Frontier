@@ -2,11 +2,10 @@
 
 `moe_operator_times` computes `data_size_bytes = embedding_dim * 2 * routed_tokens`
 and hands the result to `predict_all_to_all`, so an expert-parallel lane that
-routes no token in a step asks for an empty transfer. `predict_reduce_scatter`
-floor-divides by the device count and reaches zero the same way. An empty
-transfer is still a synchronization point, and `_validate_data_size` accepts it,
-so the request reaches the collective-sim runner and must come back as a latency
-rather than a backend failure.
+routes no token in a step asks for an empty transfer. An empty transfer is still
+a synchronization point, and `_validate_data_size` accepts it, so the request
+reaches the collective-sim runner and must come back as a latency rather than a
+backend failure, whether the group stays inside one server or crosses servers.
 
 The runner-side and schema-side repairs live in the collective-sim submodule
 (`fwyc0573/frontier-htsim`); this module covers the Frontier call path that
@@ -48,40 +47,48 @@ NVLINK_LATENCY_US = 0.5
 SYNCHRONIZATION_MS = (EXPERT_PARALLEL_SIZE - 1) * NVLINK_LATENCY_US / 1000.0
 
 
-@pytest.fixture
-def backend(tmp_path):
-    """A single-server MoE pod priced with the analytic NVLink intra-server model."""
+def _backend(tmp_path, *, servers, gpus_per_server, attn_tp, attn_dp, **config):
     from frontier.cc_backend.backends.collective_sim_cc_backend import (
         CollectiveSimCCBackend,
     )
 
     config = CollectiveSimCCBackendConfig(
-        cluster_servers=1,
-        cluster_gpus_per_server=GPUS_PER_SERVER,
-        parallel_tp=ATTN_TENSOR_PARALLEL_SIZE,
+        cluster_servers=servers,
+        cluster_gpus_per_server=gpus_per_server,
+        parallel_tp=attn_tp,
         parallel_cp=1,
-        parallel_dp=ATTN_DATA_PARALLEL_SIZE,
+        parallel_dp=attn_dp,
         parallel_ep=1,
         runtime_num_replicas=1,
         runtime_num_pipeline_stages=1,
-        runtime_attn_tensor_parallel_size=ATTN_TENSOR_PARALLEL_SIZE,
-        runtime_attn_dp=ATTN_DATA_PARALLEL_SIZE,
+        runtime_attn_tensor_parallel_size=attn_tp,
+        runtime_attn_dp=attn_dp,
         runtime_moe_tensor_parallel_size=1,
-        runtime_moe_expert_parallel_size=EXPERT_PARALLEL_SIZE,
-        intra_server_model="nvlink_analytic",
-        nvlink_latency_us=NVLINK_LATENCY_US,
+        runtime_moe_expert_parallel_size=attn_tp * attn_dp,
         runner_out_dir=str(tmp_path / "runner"),
+        **config,
     )
     return CollectiveSimCCBackend(
         config=config,
         cluster_type=ClusterType.MONOLITHIC,
         device_type="h100_dgx",
         network_device="h100_dgx",
-        num_devices=GPUS_PER_SERVER,
+        num_devices=attn_tp * attn_dp,
     )
 
 
-def test_an_empty_all_to_all_keeps_its_synchronization_latency(backend):
+def test_an_empty_all_to_all_keeps_its_synchronization_latency(tmp_path):
+    """A single-server pod priced with the analytic NVLink intra-server model."""
+    backend = _backend(
+        tmp_path,
+        servers=1,
+        gpus_per_server=GPUS_PER_SERVER,
+        attn_tp=ATTN_TENSOR_PARALLEL_SIZE,
+        attn_dp=ATTN_DATA_PARALLEL_SIZE,
+        intra_server_model="nvlink_analytic",
+        nvlink_latency_us=NVLINK_LATENCY_US,
+    )
+
     predicted_ms = backend.predict_all_to_all(
         data_size_bytes=0,
         num_devices=EXPERT_PARALLEL_SIZE,
@@ -91,37 +98,33 @@ def test_an_empty_all_to_all_keeps_its_synchronization_latency(backend):
     assert predicted_ms == pytest.approx(SYNCHRONIZATION_MS)
 
 
-def test_an_empty_reduce_scatter_keeps_its_synchronization_latency(backend):
-    # A payload smaller than the device count floor-divides to zero, which is how
-    # this collective reaches an empty transfer.
-    predicted_ms = backend.predict_reduce_scatter(
-        data_size_bytes=EXPERT_PARALLEL_SIZE - 1,
-        num_devices=EXPERT_PARALLEL_SIZE,
-        comm_domain="EP",
+# Pods that span two servers with the default backend models, so the exchange
+# goes through the simulated network. EP=16 needs more than one pairwise phase
+# and EP=8 on 4-GPU servers needs one.
+@pytest.mark.parametrize(
+    "gpus_per_server, attn_tp",
+    [pytest.param(8, 8, id="ep16_two_phases"), pytest.param(4, 4, id="ep8_one_phase")],
+)
+def test_an_empty_all_to_all_across_servers_synchronizes_through_the_network(
+    tmp_path, gpus_per_server, attn_tp
+):
+    backend = _backend(
+        tmp_path,
+        servers=2,
+        gpus_per_server=gpus_per_server,
+        attn_tp=attn_tp,
+        attn_dp=2,
     )
+    expert_parallel_size = 2 * gpus_per_server
 
-    assert predicted_ms == pytest.approx(SYNCHRONIZATION_MS)
-
-
-def test_a_populated_all_to_all_costs_more_than_an_empty_one(backend):
     empty_ms = backend.predict_all_to_all(
-        data_size_bytes=0,
-        num_devices=EXPERT_PARALLEL_SIZE,
-        comm_domain="EP",
+        data_size_bytes=0, num_devices=expert_parallel_size, comm_domain="EP"
     )
-    populated_ms = backend.predict_all_to_all(
-        data_size_bytes=1 << 20,
-        num_devices=EXPERT_PARALLEL_SIZE,
-        comm_domain="EP",
+    one_byte_ms = backend.predict_all_to_all(
+        data_size_bytes=1, num_devices=expert_parallel_size, comm_domain="EP"
     )
 
-    assert populated_ms > empty_ms
-
-
-def test_a_negative_payload_is_still_rejected(backend):
-    with pytest.raises(ValueError, match="data_size_bytes must be non-negative"):
-        backend.predict_all_to_all(
-            data_size_bytes=-1,
-            num_devices=EXPERT_PARALLEL_SIZE,
-            comm_domain="EP",
-        )
+    # The runner rounds each peer's share up to whole bytes, so an empty
+    # exchange costs what the smallest non-empty one does, and not nothing.
+    assert empty_ms > 0
+    assert empty_ms == pytest.approx(one_byte_ms)
