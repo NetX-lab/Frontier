@@ -227,13 +227,21 @@ includes preparation work that a low-level row does not, while Frontier adds
 different measurements under one operator name, and do not mix them in one
 dataset.
 
-Before 2026-09-22 the vLLM 0.10.x low-level profiling path omitted the gated
-activation and the reduction. Rows produced by that path under-measure
+Before commit `7269bac` the vLLM 0.10.x low-level profiling path omitted the
+gated activation and the reduction. Rows produced by that path under-measure
 `moe_grouped_gemm`, and the gap grows with token count: on the checked-in
 `a800/qwen3-a3b-30b-moe` dataset the two missing kernels are an estimated 16.5%
 of the corrected value at 4096 tokens, against 6.8% at the median row. Rows
-produced by the functional backend, or by any path after that date, are
-complete.
+produced by the vLLM functional backend, or by the low-level path from
+`7269bac` on, include both kernels. The `frontier_loop` backend
+(`use_vllm_kernel=False`) times a per-expert loop without routing weights or
+the top-k reduction, so its rows are a different measurement again.
+
+Before commit `f236c17` the low-level FP8 path also differed from vLLM's
+`fused_experts_impl`: it used the unquantized kernel config instead of the
+`fp8_w8a8` one, accumulated in FP16 whatever the hidden-state dtype, and
+quantized the hidden state outside the timed step. No checked-in dataset holds
+FP8 MoE rows.
 
 #### Backend identity columns cannot date a row
 
