@@ -692,8 +692,11 @@ def compare_sets(before: str, after: str) -> list[dict]:
                 if not identical:
                     row["differing_files"] = _differing_files(base["sha256sums"], new["sha256sums"])
                 if case.contention_witness:
-                    total = lambda metric: sum(stage["multi_lane_busy_time"] for stage in metric.values())
-                    row["witness_increase"] = total(after_metric) > total(before_metric)
+                    # The fraction, not the absolute overlap: admitting more lanes
+                    # together also shortens the busy period.
+                    fraction = lambda metric: (sum(stage["multi_lane_busy_time"] for stage in metric.values())
+                                               / sum(stage["busy_time"] for stage in metric.values()))
+                    row["witness_increase"] = fraction(after_metric) > fraction(before_metric)
                     checks_ok = checks_ok and row["witness_increase"]
                 row["verdict"] = ("PASS" if identical and checks_ok
                                   else "EXPLAIN" if checks_ok else "STOP")

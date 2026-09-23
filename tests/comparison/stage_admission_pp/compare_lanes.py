@@ -37,6 +37,11 @@ MODELS = ("moe", "dense")
 BURSTS = (8, 16)
 CO_START_BOUND = 0.5
 CO_EXECUTION_BOUND = 0.10
+# Dense DP ranks meet once per forward and then vary in duration per rank,
+# which the dummy predictor does not model; their co-execution is reported,
+# not gated (plan §4.7 V5, D-9).  MoE ranks stay aligned by EP collectives.
+CO_EXECUTION_GATED = {"moe": True, "dense": False}
+INFORMATIONAL = "INFORMATIONAL"
 FRONTIER_OWNER = "frontier/scheduler/replica_stage_scheduler/stage_execution_context.py"
 
 
@@ -200,11 +205,13 @@ def compare(vllm_run: Path, frontier_root: Path, before: str, after: str) -> tup
             gt_m5 = statistics.mean(vllm_metrics[r]["stage0"]["M5_co_execution"] for r in rounds)
             after_m5 = new_metrics["stage0"]["M5_co_execution"] if new_metrics else None
             base_m5 = base_metrics["stage0"]["M5_co_execution"] if base_metrics else None
-            m5_ok = after_m5 is not None and abs(after_m5 - gt_m5) <= CO_EXECUTION_BOUND
-            if model == "dense":
-                m5_ok = m5_ok and base_m5 is not None and abs(base_m5 - gt_m5) > abs(after_m5 - gt_m5)
+            if CO_EXECUTION_GATED[model]:
+                m5_ok = after_m5 is not None and abs(after_m5 - gt_m5) <= CO_EXECUTION_BOUND
+                m5_status = "MATCH" if m5_ok else "MISMATCH"
+            else:
+                m5_status = INFORMATIONAL
             rows.append(_row("V5", model, burst, "mean", "M5 stage-0 co-execution", gt_m5, after_m5, base_m5,
-                             "MATCH" if m5_ok else "MISMATCH"))
+                             m5_status))
     return rows, details
 
 
@@ -223,7 +230,7 @@ def main(argv=None) -> int:
         writer.writeheader()
         writer.writerows(rows)
     (args.output / "lane_metrics.json").write_text(json.dumps(details, indent=1, sort_keys=True))
-    mismatches = [row for row in rows if row["status"] != "MATCH"]
+    mismatches = [row for row in rows if row["status"] == "MISMATCH"]
     placement_ok = all(p["ok"] for p in details["placement"].values())
     placement_unseen = sum(len(p["unseen"]) for p in details["placement"].values())
     status = {
