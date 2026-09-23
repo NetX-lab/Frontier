@@ -106,6 +106,27 @@ def _assert_reports_follow_engine_iterations(run: dict, num_pipeline_stages: int
     return admission_only
 
 
+def _count_admissions_into_peer_forwards(run: dict) -> int:
+    """Count published admissions whose batch joins a forward a peer lane
+    already started at stage 0, the one case where the key is the open forward
+    rather than the next one."""
+
+    forward = {
+        record["batch"]: record["group"]
+        for record in run["records"]
+        if record["kind"] == "stage0"
+    }
+    opened_by: dict[int, int] = {}
+    joins = 0
+    for record in run["records"]:
+        if record["kind"] == "stage0":
+            opened_by.setdefault(record["group"], record["lane"])
+        elif record["kind"] == "scheduled" and record["report"] is not None:
+            opener = opened_by.get(forward[record["batch"]])
+            joins += opener is not None and opener != record["lane"]
+    return joins
+
+
 def _assert_completions_report_post_step_load(run: dict) -> None:
     """The lane's own release is bracketed, so pre- and post-step load differ
     for some batches; every completion report carries the post-step one."""
@@ -265,6 +286,23 @@ def test_pipeline_parallel_shapes_report_once_per_engine_iteration(
     #    event type.
     _assert_completions_report_post_step_load(policy)
     assert set(policy["event_types"]) == set(baseline["event_types"])
+
+
+@pytest.mark.parametrize(
+    ("case", "num_pipeline_stages"),
+    [("moe_dp2_pp2_stagger", 2), ("moe_dp2_pp3_stagger", 3)],
+)
+def test_an_admission_into_a_started_forward_reports_under_that_forward(
+    tmp_path, case, num_pipeline_stages
+):
+    evidence = _run_child(tmp_path, case)
+    policy = evidence["vllm_load_balancing"]
+
+    _assert_run_conserves_work(policy)
+    # Premise: staggered arrivals make a lane publish an admission into a
+    # forward its peer has already started. The burst shapes above never do.
+    assert _count_admissions_into_peer_forwards(policy) >= 1
+    _assert_reports_follow_engine_iterations(policy, num_pipeline_stages)
 
 
 def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
@@ -802,10 +840,24 @@ LATE_JOIN_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
 0.008,48,2
 """
 
+# Short prompts arriving half a millisecond apart, so a lane often schedules
+# while its peer's stage-0 forward is open and joins it.
+STAGGER_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
+0.0,16,6
+0.0005,16,6
+0.001,16,6
+0.0015,16,6
+0.002,16,6
+0.0025,16,6
+0.003,16,6
+0.0035,16,6
+"""
+
 TRACES = {
     "asymmetric": ASYMMETRIC_TRACE,
     "discriminating": DISCRIMINATING_TRACE,
     "late_join": LATE_JOIN_TRACE,
+    "stagger": STAGGER_TRACE,
 }
 
 CASES = {
@@ -831,6 +883,14 @@ CASES = {
     "moe_dp2_pp3": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=3, num_layers=6,
         analytical_backend=True,
+    ),
+    "moe_dp2_pp2_stagger": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2,
+        analytical_backend=True, trace="stagger",
+    ),
+    "moe_dp2_pp3_stagger": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=3, num_layers=6,
+        analytical_backend=True, trace="stagger",
     ),
     "moe_dp4_late_join": dict(is_moe=True, attn_dp=4, moe_ep=4, trace="late_join"),
     # Stages long enough that no batch completes before the probe (plan D-e).
