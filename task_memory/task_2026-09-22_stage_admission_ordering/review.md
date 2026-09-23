@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Round 2: code review of the implementation at `ecff89a` recorded and posted to PR 36; findings verified, fixes deferred by the owner. |
 | 2026-09-23 | Created. First external plan review of PR 36 at `a6ec6a6` recorded; each finding re-checked against `1f694f7` source, with a disposition and the place it was applied. |
 
 ## Round 1: plan review of PR 36 at `a6ec6a6`
@@ -46,3 +47,37 @@
 ### Status after round 1
 
 Docs corrected. P0 has not started, per the owner's "暂不执行". The next step is the owner's decision to start P0.
+
+## Round 2: code review of PR 36 at `ecff89a`
+
+| Item | Value |
+| --- | --- |
+| Component / phase | Implementation after P4: the rule, P2 tests, case matrix, vLLM comparison tools, and task evidence scripts; diff `1f694f7..ecff89a` |
+| Reviewer | `/code-review` skill, run as a forked review agent |
+| Inspected by the reviewer | The full PR diff; three touched unit files run on the branch (180 passed); a short script reproduced R2-01 on both trees |
+| Re-check | Each finding re-read against the cited source on `ecff89a`, 2026-09-23. R2-01 was reproduced again here. R2-02 numbers were read from `analysis/co_execution_decomposition_sa-pp-20260923b.json`. R2-09 ordering was checked in Python. |
+| Owner instruction | "review pr36，将review comments提交到该remote repo的pr36上，暂不执行修复。" (requirements R-9) |
+| Posted | https://github.com/NetX-lab/Frontier/pull/36#pullrequestreview-5286523149 (event `COMMENT`, 15 inline comments on `ecff89a`) |
+
+### Findings (disposition pending; no fix applied)
+
+| Id | Anchor | Verdict | Finding |
+| --- | --- | --- | --- |
+| R2-01 | `stage_execution_context.py:351` | confirmed, reproduced | `try_acquire` on an already-active full-stage ticket runs off the scan and `remove` raises `ValueError` ("not in deque"); base returned `False`. The only production caller checks `owns()` first. |
+| R2-02 | `compare_lanes.py:43` | confirmed | The D-9 rationale ("duration variance, not admission") is not fully supported. Start offsets exceed end offsets in 3 of 6 dense rounds, and `M5_equal_durations` is 0.667–0.911. The union-minus-overlap identity in `decompose_co_execution.py` overcounts disjoint pairs. |
+| R2-03 | `stage_admission_matrix.py:255` | plausible | Before/after cases are offline co-location only. There are no PDD or online cells at `attn_dp>1, PP>1`. |
+| R2-04 | `compare_lanes.py:99` | confirmed | `vllm_placement` `ok` ignores `unseen`, so missing placement logs still pass. |
+| R2-05 | `compare_lanes.py:182` | confirmed | V1 and dense V4 fold the base negative control into the vLLM MATCH status, so a rerun against a fixed base reports MISMATCH. |
+| R2-06 | `.gitignore:173` | confirmed | The task-directory exception publishes records into `main` on merge, reversing `26b490a`. D-5 has no pre-merge removal step. |
+| R2-07 | `stage_admission_matrix.py:581` | confirmed | No `subprocess.run` timeout in `_run_one` / `_run_recipe_case`. |
+| R2-08 | `stage_admission_matrix.py:445` | confirmed | `work/<case_id>` is shared across sets, so concurrent sets delete each other's outputs. |
+| R2-09 | `vllm_burst_driver.py:71` | confirmed | `differing` (sorted as `Path`) is compared with `expected` (sorted as `str`), so some identical sets are rejected. |
+| R2-10 | `vllm_burst_driver.py:95` | confirmed | `apply_patch` skips unknown-tag lines without counting them, and `hunks[target] = []` drops a repeated file's earlier hunks. |
+| R2-11 | `stage_execution_context.py:342` | confirmed | The scope branch is repeated and the FIFO is scanned twice (simplification). |
+| R2-12 | `test_stage_execution_context.py:136` | plausible | Capacity-1 contexts lose the context-level full-stage insertion order. This should be stated as a contract change, not as "unaffected". |
+| R2-13 | `stage_execution_context.py:345` | design note | On shared-lane contexts the FIFO no longer orders admission. `queued_tickets` / `admission_seq` still read as an ordered queue there. |
+| R2-14 | `evidence/step9_probe/probe_main.py:15` | confirmed | A hard-coded worktree `ROOT` is put first on `sys.path`, so a #35 rerun would import this tree. |
+| R2-15 | `calibration/.../analysis/synthetic_check.py:7` | confirmed | A hard-coded scratch `BASE` bypasses `matrix_root()`, and reusable probes live under `task_memory/` rather than `tests/`. |
+
+The owner deferred fixes ("暂不执行修复"). Dispositions will be recorded
+here when the owner decides which findings to adopt.

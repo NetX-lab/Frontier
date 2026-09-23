@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Round-2 code review posted to PR 36 (15 inline comments, `review.md`); fixes deferred by the owner. |
 | 2026-09-23 | P4 completed: branch pushed at `4bcd616`, PR 36 body updated (still draft), W9-01 resolution recorded in the parent task (`4c2d573`). |
 | 2026-09-23 | R-8 / D-9 adopted; both comparisons rerun and pass (`aeeca93`); P4 in progress. |
 | 2026-09-23 | P0–P3 and P5 executed. Rule committed (`dac4e69`). Two plan stop conditions reached (C3 witness metric, C7 V5 dense); P4 push held for the user. |
@@ -29,6 +30,7 @@
 | P3 rerun and comparison | completed; the first comparison stopped on the C3 witness rule, passes under D-9 | `test_report_2026-09-23_stage_admission_ordering.md` §4 |
 | P5 vLLM comparison | completed; the first analysis stopped on dense V5, passes under D-9 | case `calibration/stage_admission_case_001/`, report §5 |
 | P4 records, commit, push | completed 2026-09-23 | "Execution" P4 rows |
+| Round-2 code review (R2-01..R2-15) | posted; fixes pending the owner's decision | `review.md` Round 2; https://github.com/NetX-lab/Frontier/pull/36#pullrequestreview-5286523149 |
 
 ## Commands run (2026-09-22)
 

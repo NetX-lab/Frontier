@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-9: code review of PR 36 posted as inline comments; fixes deferred. |
 | 2026-09-23 | R-8: D-9 adopted for the C3 witness rule and dense V5; P4 authorized to continue. |
 | 2026-09-23 | R-7: ground-truth `topk_softmax` fixed to the four-argument version for the MoE retry. |
 | 2026-09-23 | R-6: execute P0–P4 and validate the fix against vLLM on a GPU worker (package P5). |
@@ -84,3 +85,10 @@ work, carried over verbatim:
   volume access is confined to `/mnt/codesign-exp/ycfeng`. Credential values
   stay in restricted files and process environments; never print or record
   them, and keep shell tracing off.
+
+`[Original Request]` R-9 (2026-09-23, after P4):
+
+> review pr36，将review comments提交到该remote repo的pr36上，暂不执行修复。
+
+Outcome: round-2 review recorded in `review.md` and posted to PR 36 as one
+`COMMENT` review with 15 inline comments. No source or test change.
