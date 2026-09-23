@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-22 | Created. Covers packages P1(a), P1(b) and G1. |
 | 2026-09-23 | §2 addendum: P1(b) rerun after the W9-01 merge-forward on seven shapes, with key scoring. §4 updated. |
+| 2026-09-23 | §4–§6 added: P2/P3 pointer, P4 real-loop integration evidence, P5 fidelity and regression evidence, W9-04/W9-05 found in P5. Summary renumbered to §7. |
 
 Environment for every CPU check below:
 
@@ -198,12 +199,170 @@ established here is that the writer behaves as specified and that the four
 files parse; that the records are emitted at the right points is asserted from
 source reading, not from a run.
 
-## 4. Summary
+## 4. P2 and P3 — implementation and unit tests
+
+Recorded in `progress.md`, "Step 9 P2 and P3". 132 targeted tests pass; the
+19 new or changed cases fail on the pre-P2 tree.
+
+Before P2, the constructor rejected every PP>1 shape. The evidence is the old
+guard case `pipeline_parallel`, message "one co-location Replica", which passed
+on the pre-P2 tree and was inverted into construct cases by P3.
+
+## 5. P4 — real event loop (`tests/integration/test_vllm_dp_placement_runtime.py`)
+
+Commit `bacdbb4`. Command:
+
+```bash
+PYTHONPATH=$PWD python -m pytest tests/integration/test_vllm_dp_placement_runtime.py \
+  tests/integration/test_monolithic_mixed_forward_runtime.py -q -p no:cacheprovider
+```
+
+Each child run wraps the two policy seams, `VllmDPLoadBalancer.report` and
+`.select`, and stage-0 `pop_batch_if_not_busy`. The parent then checks every
+report against the reference engine iteration it stands for:
+
+- An admission reports on its own if and only if `running_after < PP`, and its
+  key is the batch's own forward.
+- A completion that follows a held admission reports under the held batch's
+  forward.
+- A completion with nothing held reports a key greater than the lane's last
+  forward.
+- Keys never decrease per lane.
+
+Report kinds per case, from the child evidence, in
+`/data/ycfeng/tmp/issue26-correctness-pr/step9_p4`:
+
+| Case | PP | Admission-only | Held | Folded into a completion | Completion-only |
+| --- | --- | --- | --- | --- | --- |
+| `moe_dp2` | 1 | 0 | 10 | 10 | 0 |
+| `dense_dp1_pp2` | 2 | 1 | 9 | 9 | 1 |
+| `moe_dp2_pp2` | 2 | 2 | 10 | 10 | 2 |
+| `moe_dp2_pp2_online` | 2 | 45 | 0 | 0 | 45 |
+| `moe_dp1_pp3` | 3 | 3 | 8 | 8 | 3 |
+| `moe_dp2_pp3` | 3 | 12 | 0 | 0 | 12 |
+| `moe_dp2_pp2_discriminating` | 2 | 8 | 18 | 18 | 8 |
+
+Every run conserves requests and tokens and releases every lane and stage
+context. Each policy run adds no event type, and its makespan equals its
+comparison run's.
+
+Discriminating case (plan §18.6). The comparison run differs from the policy
+run in its two seams only: there is no admission report, and each completion
+is keyed by `ForwardSyncState.get_step_id`. A burst at 1.0 s is routed
+0, 1, 0, 1, 0. A probe arrives at 1.1 s, and the first completion follows at
+1.68 s.
+
+| Run | Snapshot at the probe | Probe lane |
+| --- | --- | --- |
+| policy | `[[0, 3], [1, 1]]` (both lanes' first admissions published) | 0 |
+| completion-reporting control | `[[3, 0], [2, 0]]` (reservations only) | 1 |
+
+`tests/integration/test_monolithic_mixed_forward_runtime.py` gains a PP2 run
+under `vllm_load_balancing`, `hybrid_layers_pp2_dp_placement`. It has 3 mixed
+dense completions, and all 15 decode tokens peak at 4 dense layers; 6 of 6
+requests complete. The PP1 values are unchanged: 4 mixed-phase cohorts out of
+24.
+
+Result: `tests/integration/test_vllm_dp_placement_runtime.py` 9 passed,
+`test_monolithic_mixed_forward_runtime.py` 3 passed (JUnit of the §6.3 run). **PASS.**
+
+## 6. P5 — unchanged behavior (C2) and the Step 8 regression set
+
+Before: `d1a2a06`, whose `frontier/` equals the pre-P2 source. After:
+`bacdbb4`. Scripts and evidence are in `step9_p5/`; raw runs are in
+`/data/ycfeng/tmp/issue26-correctness-pr/step9_p5`.
+
+### 6.1 PP=1 `vllm_load_balancing` scenarios
+
+`step9_p5/c2_pp1_policy_matrix.py` runs 24 scenarios on `git archive` exports
+of both commits:
+
+- shapes: MoE `attn_dp=2, moe_ep=2`, MoE `attn_dp=4, moe_ep=4`, dense
+  `attn_dp=1`;
+- workloads: offline bursts of 4, 16 and 24 requests (fixed and uniform
+  lengths); online Poisson at qps 20, 50 and 200; qps 200 with 12 KV blocks;
+  and the asymmetric trace of the integration test.
+
+Each child imports `frontier` from its tree only and writes metrics. It also
+records every report `(time, engine, key, load)` and every selection
+`(time, snapshot, engine)`.
+
+Pass rule (Q11 plus C2):
+
+- Every artifact is equal after path substitution (the refactor-fidelity
+  comparator).
+- The report stream is equal without the key.
+- The keys are order-isomorphic: every pair compares the same way on both
+  sides.
+- The selections are equal.
+
+| Result | Count |
+| --- | --- |
+| identical | **24 of 24** |
+| drained on both sides | 20 |
+| incomplete on both sides (20 of 24 requests; W9-05) | 2 (`*_tight_kv`, MoE `attn_dp=2` and dense) |
+| stopped without draining on both sides, identical diagnostics (W9-04) | 2 (MoE `attn_dp=4`, qps 200, both KV sizes) |
+| additional admission-only reports | 0 (report counts equal in every case) |
+
+The key values differ for MoE: `3, 3, 7, 7, …` before and `0, 0, 1, 1, …`
+after. For dense `attn_dp=1` they are equal. The balancer uses only key
+comparisons, so the order-isomorphism check is the one that matters.
+
+### 6.2 Other cluster schedulers
+
+| Check | Command | Expected | Actual | Result |
+| --- | --- | --- | --- | --- |
+| Refactor fidelity matrix | `step9_p5/run_fidelity.sh` (clean detached worktrees at both commits, harness from `bacdbb4`, `--clean-cache`) | 71 of 71 identical | 71 of 71 identical; 0 provenance findings; `complete_comparison` and `predictor_cache_populated_cleanly` true | PASS |
+| 16 Step 8 architecture examples | `step9_p5/run_examples.sh` on both exports, then `compare_examples.py` | 16 pass on both; artifacts identical | 16 / 16 pass on both; 16 of 16 identical | PASS |
+
+### 6.3 Suites
+
+`w9_01_stage_admission_ordering/composition_run_suites.sh` on the clean
+`bacdbb4` worktree. It is compared by test id with `composition_compare_junit.py`
+against the K4 JUnit of the merged tree `03d5f24`. `frontier/` and `tests/`
+are unchanged between `03d5f24` and `d1a2a06`.
+
+| Suite | Before (`03d5f24`) | After (`bacdbb4`) | Regressions / new failures / skip changes |
+| --- | --- | --- | --- |
+| unit | 84 failed, 3814 passed, 50 skipped, 10 errors | 84 failed, 3829 passed, 51 skipped, 10 errors | 0 / 0 / 0 |
+| integration | 5 errors, 19 passed, 22 skipped | 5 errors, 26 passed, 22 skipped | 0 / 0 / 0 |
+
+Tests found on one side only:
+
+- Unit, before only (12): 8 are the old `test_vllm_dp_load_balancer` ids that
+  P3 renamed or inverted.
+- Unit, before only: the other 4 are `test_collective_sim_zero_payload`. The
+  detached worktree has no initialized collective-sim submodule, so that module
+  skips as a whole; this is the added skip. In the development worktree it
+  gives 4 passed.
+- Unit, after only (28): the P3 cases and that module-level skip.
+- Integration, after only (7): P4's new cases.
+
+The 5 integration errors are the absent PD-AF Reference checkout, as before.
+
+### 6.4 Found during P5
+
+Both defects are pre-existing; neither is caused by Step 9. See `issues.md`.
+
+- **W9-04**: MoE `attn_dp=4` online runs can deadlock when a lane joins a
+  forward after it was given a first-layer placeholder. It is reachable on this
+  branch under `round_robin` in 5 of 24 sweep cells. A scratch prototype
+  (`step9_p5/w9_04_prototype.patch`) drains all 72 sweep cells and leaves
+  every previously drained C2 case identical. It is not applied: it awaits
+  the user's decision.
+- **W9-05**: under KV pressure, `vllm_v1` loses requests mid-decode without
+  an error. It is also present on `origin/main`.
+
+## 7. Summary
 
 | Package | Verdict |
 | --- | --- |
 | P1(a) | PASS |
 | P1(b) | PASS on seven shapes after the W9-01 merge-forward (§2.1) |
 | Design checkpoint D9-1 | Settled |
-| Design checkpoint D9-2 | Proposed (group-anchored key); awaiting the user's decision |
+| Design checkpoint D9-2 | Settled: group-anchored key (user decision 2026-09-23) |
 | G1 | PASS for what is testable without a GPU |
+| P2, P3 | PASS (§4) |
+| P4 | PASS (§5) |
+| P5 / C2 | PASS (§6): 24 of 24 PP=1 policy scenarios, 71 of 71 fidelity cases and 16 of 16 examples identical; 0 suite regressions |
+| G3–G5 | BLOCKED on GPU authorization |

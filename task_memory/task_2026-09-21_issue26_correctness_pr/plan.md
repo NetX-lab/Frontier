@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.16 added: P2–P5 results against their acceptance rows, and the two pre-existing defects found in P5 (W9-04, W9-05). Status line under §18 updated. |
 | 2026-09-23 | D9-2 decided by the user: group-anchored key (§18.15, `requirements.md`); C1 PP3 row amended; P2 started. |
 | 2026-09-23 | §18.15 added: P1(b) completed on seven shapes; D9-2 proposal (group-anchored key) and the C1 PP3 amendment await the user's decision. §18.13 blocker marked resolved. |
 | 2026-09-23 | §18.14 results: K1–K4 pass on `03d5f24`; K2 amended after measuring for online cells (one cell's batches differ after an earlier admission). |
@@ -855,6 +856,8 @@ Under [R1]: `frontier/profiling/moe/moe_vllm_kernel.py`, `frontier/entities/stag
 
 **Status 2026-09-22:** the user answered every §18.7 decision the same day (verbatim in `requirements.md`). Later the same day an external review of PR34/PR35 (`.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_Review_2026-09-22.md`, findings P9-01..P9-06) corrected this plan; the corrections are applied in place below and collected with their evidence in §18.11. A second review at the user's direction (2026-09-22, quality gates for core-module changes) is recorded in §18.12 and amended D9-1, D9-2, P1 and §18.10 in place. No Step 9 source edit has been made; execution starts at the first node of the §18.5 graph once the user confirms the start. Research followed the `codebase-design` skill (§18.10); the ground-truth comparison follows `frontier-calibration` v2 as written (§18.9).
 
+**Status 2026-09-23:** P1–P5 are complete on the CPU at `bacdbb4` and P6 records are being published (§18.16). G3–G5 stay blocked on GPU authorization.
+
 ### 18.1 Goal and acceptance criteria
 
 `VllmLoadBalancingClusterScheduler` accepts valid `num_pipeline_stages > 1` configurations and reproduces vLLM 0.10.2's per-iteration DP request-count publication under the batch-queue stepping path that PP>1 selects — one observable engine scheduling iteration and its frontend-visible load, not a counter made monotonic after the fact — verified on a controlled or demonstrably matched iteration history against a real `vllm serve --data-parallel-size 2 --pipeline-parallel-size 2` deployment.
@@ -1233,3 +1236,23 @@ amendment (`requirements.md`, "[Decision] 2026-09-23 — D9-2 report key").
 P2–P5 proceed on the CPU. G3 and G4 need GPU runs whose authorization is still
 BLOCKED in the case manifest, so G3–G5 wait for a separate go.
 
+### 18.16 P2–P5 results (2026-09-23)
+
+Commits: P2/P3 `2ffe78d`, P4 `bacdbb4`. Evidence rows are in `validation.md`
+Step 9 and the W9 report §4–§6; the self-review is in `review.md`
+("Step 9 implementation self-review 2026-09-23").
+
+| Package | Acceptance (§18.5) | Result |
+| --- | --- | --- |
+| P2 | Existing unit tests pass except the inverted guard case | 1 failed (the `pipeline_parallel` guard case), 112 passed |
+| P3 | New tests fail before P2 and pass after | 132 passed; 19 of 19 new or changed cases fail on the pre-P2 tree |
+| P4 | Pass; each control fails for its stated reason | 9 + 3 passed; the completion-reporting control places the probe on lane 1, the policy on lane 0 |
+| P5 | C2 | 24 of 24 PP=1 policy scenarios identical; fidelity 71 of 71; examples 16 of 16; suites 0 regressions |
+
+Found in P5, both pre-existing (`issues.md`):
+
+- **W9-04**: a MoE `attn_dp=4` online deadlock caused by a stale first-layer
+  placeholder. A scratch prototype drains 72 of 72 sweep cells; it is not
+  applied and awaits the user's decision.
+- **W9-05**: `vllm_v1` loses requests mid-decode under KV pressure, also on
+  `origin/main`. It is not yet diagnosed.

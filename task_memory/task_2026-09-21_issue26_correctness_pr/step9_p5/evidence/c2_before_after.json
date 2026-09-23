@@ -1,0 +1,756 @@
+[
+ {
+  "case": "moe_dp2__burst_fixed_n4",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   4,
+   4,
+   4
+  ],
+  "reports": [
+   10,
+   10
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 4,
+  "distinct_snapshots": 4,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__burst_fixed_n16",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   16,
+   16,
+   16
+  ],
+  "reports": [
+   22,
+   22
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 16,
+  "distinct_snapshots": 16,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__burst_uniform_n24",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   85,
+   85
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 24,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__poisson_fixed_n16_q20",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   16,
+   16,
+   16
+  ],
+  "reports": [
+   26,
+   26
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 16,
+  "distinct_snapshots": 16,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__poisson_uniform_n24_q50",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   82,
+   82
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 22,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__poisson_uniform_n24_q200",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   85,
+   85
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 14,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__poisson_uniform_n24_q200_tight_kv",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   20,
+   20,
+   24
+  ],
+  "reports": [
+   81,
+   81
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 14,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "incomplete",
+  "identical": true
+ },
+ {
+  "case": "moe_dp2__asymmetric_trace",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   6,
+   6,
+   6
+  ],
+  "reports": [
+   44,
+   44
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 6,
+  "distinct_snapshots": 5,
+  "lanes_used": [
+   0,
+   1
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__burst_fixed_n4",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   4,
+   4,
+   4
+  ],
+  "reports": [
+   12,
+   12
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 4,
+  "distinct_snapshots": 4,
+  "lanes_used": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__burst_fixed_n16",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   16,
+   16,
+   16
+  ],
+  "reports": [
+   28,
+   28
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 16,
+  "distinct_snapshots": 16,
+  "lanes_used": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__burst_uniform_n24",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   102,
+   102
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 24,
+  "lanes_used": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__poisson_fixed_n16_q20",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   16,
+   16,
+   16
+  ],
+  "reports": [
+   38,
+   38
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 16,
+  "distinct_snapshots": 16,
+  "lanes_used": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__poisson_uniform_n24_q50",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   101,
+   101
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 22,
+  "lanes_used": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__poisson_uniform_n24_q200",
+  "outcome": "stuck_on_both",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__poisson_uniform_n24_q200_tight_kv",
+  "outcome": "stuck_on_both",
+  "identical": true
+ },
+ {
+  "case": "moe_dp4__asymmetric_trace",
+  "artifacts": [
+   "config.json",
+   "frontier_ep_wave_lane_ledger.jsonl",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   6,
+   6,
+   6
+  ],
+  "reports": [
+   44,
+   44
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": false,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 6,
+  "distinct_snapshots": 6,
+  "lanes_used": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__burst_fixed_n4",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   4,
+   4,
+   4
+  ],
+  "reports": [
+   7,
+   7
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 4,
+  "distinct_snapshots": 4,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__burst_fixed_n16",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   16,
+   16,
+   16
+  ],
+  "reports": [
+   20,
+   20
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 16,
+  "distinct_snapshots": 16,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__burst_uniform_n24",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   75,
+   75
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 24,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__poisson_fixed_n16_q20",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   16,
+   16,
+   16
+  ],
+  "reports": [
+   20,
+   20
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 16,
+  "distinct_snapshots": 16,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__poisson_uniform_n24_q50",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   76,
+   76
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 19,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__poisson_uniform_n24_q200",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   24,
+   24,
+   24
+  ],
+  "reports": [
+   76,
+   76
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 14,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__poisson_uniform_n24_q200_tight_kv",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   20,
+   20,
+   24
+  ],
+  "reports": [
+   74,
+   74
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 24,
+  "distinct_snapshots": 14,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "incomplete",
+  "identical": true
+ },
+ {
+  "case": "dense_dp1__asymmetric_trace",
+  "artifacts": [
+   "config.json",
+   "frontier_stage_batch_ledger.jsonl",
+   "op_precision_metadata.csv",
+   "plots",
+   "request_metrics.csv",
+   "system_metrics.json"
+  ],
+  "metric_differences": [],
+  "completed": [
+   6,
+   6,
+   6
+  ],
+  "reports": [
+   40,
+   40
+  ],
+  "reports_equal_without_key": true,
+  "keys_equal": true,
+  "keys_order_isomorphic": true,
+  "selections_equal": true,
+  "num_selections": 6,
+  "distinct_snapshots": 4,
+  "lanes_used": [
+   0
+  ],
+  "outcome": "drained",
+  "identical": true
+ }
+]

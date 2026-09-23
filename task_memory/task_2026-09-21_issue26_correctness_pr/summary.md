@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Status only: Step 9 P1–P5 complete on the CPU (`2ffe78d`, `bacdbb4`); D9-2 decided as group-anchored. Open items W9-04, W9-05 and G3–G5 added below. The Step 0–8 archive is otherwise unchanged. |
 | 2026-09-23 | Status only: Step 9 in progress. W9-01 fixed via PR 36 and merged forward (composition check PASS); P1 complete; D9-2 proposed, awaiting the user's decision (`progress.md`, plan §18.15). The Step 0–8 archive below is unchanged. |
 | 2026-09-22 | FP8 native rerun with the corrected `block_shape` wiring PASS (`exp-0922-202645-561899`, 8 passed). Step 9 plan reviewed a second time against the user's quality gates (plan §18.12); still not started. |
 | 2026-09-21 | Placeholder created at Step 0. |
@@ -108,6 +109,9 @@ per-work-package reports.
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
+| Step 9 (PP>1 for the vLLM DP placement policy): P1–P5 done on the CPU; G3–G5 blocked on GPU authorization. | `validation.md` Step 9, plan §18.16 |
+| W9-04: MoE `attn_dp=4` online deadlock from a stale first-layer placeholder, pre-existing. Prototype validated in scratch, not applied; awaits a decision. | `issues.md` W9-04 |
+| W9-05: `vllm_v1` loses requests mid-decode under KV pressure, also on `origin/main`; not diagnosed. | `issues.md` W9-05 |
 
 ## Limits of what was validated
 

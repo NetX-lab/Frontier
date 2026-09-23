@@ -1,0 +1,26 @@
+{
+ "counts_before": {
+  "error": 5,
+  "skipped": 22,
+  "passed": 19
+ },
+ "counts_after": {
+  "error": 5,
+  "skipped": 22,
+  "passed": 26
+ },
+ "regressions": [],
+ "now_passing": [],
+ "skip_changes": [],
+ "new_failures": [],
+ "only_before": [],
+ "only_after": [
+  "tests.integration.test_monolithic_mixed_forward_runtime::test_the_dense_layer_credit_holds_with_pipeline_stages_and_dp_placement",
+  "tests.integration.test_vllm_dp_placement_runtime::test_pipeline_parallel_shapes_report_once_per_engine_iteration[dense_dp1_pp2-2]",
+  "tests.integration.test_vllm_dp_placement_runtime::test_pipeline_parallel_shapes_report_once_per_engine_iteration[moe_dp1_pp3-3]",
+  "tests.integration.test_vllm_dp_placement_runtime::test_pipeline_parallel_shapes_report_once_per_engine_iteration[moe_dp2_pp2-2]",
+  "tests.integration.test_vllm_dp_placement_runtime::test_pipeline_parallel_shapes_report_once_per_engine_iteration[moe_dp2_pp2_online-2]",
+  "tests.integration.test_vllm_dp_placement_runtime::test_pipeline_parallel_shapes_report_once_per_engine_iteration[moe_dp2_pp3-3]",
+  "tests.integration.test_vllm_dp_placement_runtime::test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot"
+ ]
+}

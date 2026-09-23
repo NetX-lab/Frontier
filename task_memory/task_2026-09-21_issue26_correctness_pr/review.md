@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Step 9 implementation self-review of `d1a2a06..bacdbb4` against the user's quality gates: findings S9-01..S9-08, no source change required; W9-04 and W9-05 recorded as pre-existing. |
 | 2026-09-22 | Second Step 9 plan review at the user's direction (quality gates for core-module changes): findings R9-01..R9-08 recorded with dispositions; plan §18.12, design.md. |
 | 2026-09-21 | Created with the pinned source snapshot. |
 | 2026-09-21 | Step 1 complete: candidate and vLLM audits landed, dispositions recorded, two decision checkpoints raised. |
@@ -451,3 +452,27 @@ Reviewer: this session, against `c231322`, at the user's direction ("确保当�
 | R9-08 | reference precision | DP engines not iteration-lockstep (all-reduce every 32 steps) | §18.2 row amended; G5 first-cause label |
 
 No source change results from this review; Step 9 execution remains unstarted pending the user's start signal.
+
+## Step 9 implementation self-review 2026-09-23
+
+Reviewer: this session. Reviewed range: `d1a2a06..bacdbb4` (P2 `2ffe78d`, P4 `bacdbb4`). Gates: the user's core-module rule ("任何引入的修改和实现都应该是高价值的 ... 禁止hard-coding，禁止临时补丁，禁止过度防御，禁止冗余性设计和实现，禁止使用ai味命名函数和变量") and the AGENTS.md development gates. Inspected: the four changed `frontier/` files in full diff, the admission loop at `base_replica_scheduler.py:1050-1075`, the completion hook call at `global_batch_end_event.py:180-185`, `base_replica_scheduler.py:51` (stage count), and the test diffs. Evidence of behavior: `validation.md` Step 9 and the W9 report §4–§6.
+
+`frontier/` change: 4 files, +130/−25 lines. `VllmLoadBalancingClusterScheduler` is 158 lines; the largest touched module, `base_cluster_scheduler.py`, is 1,946 lines, under the 2,000-line gate.
+
+| Id | Gate | Finding | Disposition |
+| --- | --- | --- | --- |
+| S9-01 | value | The change gives the opt-in policy the PP>1 support the user asked for, and adds one fidelity gain: a schedule-time report while the pipeline has room, which the reference engine publishes and the pre-P2 policy could not express. At PP=1 every admission is held, so C2 shows no behavior change (24 of 24). | Accepted |
+| S9-02 | redundancy / superseded path | The completion key no longer reads `ForwardSyncState.get_step_id`; the import and the per-layer step-id key are deleted in the same change. No second key path remains. | Accepted |
+| S9-03 | reuse before inventing | The key reads the stage-0 forward group that `StageExecutionContext` already binds. The new property `joinable_forward_group_id` exposes the existing `_forward_group_id` / `_forward_group_sealed` / `_next_forward_group_id` state; it adds no state. | Accepted |
+| S9-04 | correctness of the single held slot | One `_held_key` per lane suffices. An admission is held only when it fills the pipeline (`running == PP`); the loop admits only while `running < PP` (`base_replica_scheduler.py:1052`); and `GlobalBatchEndEvent` calls `on_batch_end` (decrement) and then the completion hook in the same handler, before any later `ReplicaScheduleEvent` can admit again. So a held key is always consumed before the next held admission on that lane. The unit case "a completion plus the admission it makes room for" pins that order. | Accepted, no guard added |
+| S9-05 | over-defense | No new guard, fallback or `hasattr` reach-up. The `_lane_index` type check is the pre-existing one, extracted so both hooks share it. The inert base hook returns `None` and costs one call per MONOLITHIC/PREFILL admission for the other schedulers; the fidelity matrix is 71 of 71 identical. | Accepted |
+| S9-06 | hard-coding | No literal enters the path. The pipeline depth comes from `replica_config.num_pipeline_stages`, the same source as the lane's `_num_stages` (`base_replica_scheduler.py:51`). | Accepted |
+| S9-07 | naming | `on_replica_batch_scheduled`, `joinable_forward_group_id`, `_held_key`, `_last_admitted_key`, `_next_report_key`: each names the scheduling concept it holds and follows the neighboring `on_replica_batch_end` and forward-group vocabulary. | Accepted |
+| S9-08 | test surface | The tests stay out of `frontier/` (R9-07). Each new or changed unit case fails on the pre-P2 tree (19 of 19). The integration test checks each report against the reference iteration kind, not against Frontier's own output, and its discriminating case separates the policy from a completion-reporting control. | Accepted |
+
+Found during validation, both outside this change:
+
+- W9-04, a MoE `attn_dp=4` online deadlock from a stale first-layer placeholder. It is reachable under `round_robin` on this branch and its base, so it is pre-existing. The prototype fix is not applied and awaits the user's decision (`issues.md`).
+- W9-05, requests lost mid-decode under KV pressure in `vllm_v1`. It is also present on `origin/main` and is not diagnosed (`issues.md`).
+
+Result: no source change required by this review. G3–G5 remain blocked on GPU authorization.

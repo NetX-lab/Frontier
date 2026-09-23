@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Step 9 P4 committed (`bacdbb4`) and P5 completed: C2 holds (24 of 24 PP=1 policy scenarios, 71 of 71 fidelity cases, 16 of 16 examples identical; 0 suite regressions). P5 found W9-04 (placeholder/join deadlock at `attn_dp=4`) and W9-05 (requests lost under KV pressure, also on `main`); W9-04 fix decision pending with the user. |
 | 2026-09-23 | D9-2 decided (group-anchored key); P2 implemented and P3 unit tests added (132 targeted tests pass; the 19 new or changed cases fail on the pre-P2 tree). |
 | 2026-09-23 | Step 9 P1(b) completed on seven shapes; D9-2 proposal recorded (design.md, plan §18.15); W9-03 observation; awaits the user's D9-2 decision. |
 | 2026-09-23 | W9-01 merge-forward: `origin/main` merged (`dd9b8d9`); composition check K1–K4 pass on `03d5f24` (drain-reader fix); Step 9 P1(b) resumed. |
@@ -34,9 +35,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 8 closed; external review corrections A–E applied 2026-09-22 (`test_report_2026-09-22_review_corrections.md`). Step 9 is planned (`plan.md` §18, corrected per the review) and **not started**. |
+| Current step | Step 9 in progress: P1–P5 completed (P4 `bacdbb4`; P5 evidence in `test_report_2026-09-22_w9_pp_dp_placement.md` §6); P6 (documents, push, PR body) next. G3–G5 blocked on GPU authorization. |
 | Publication | PUSHED_VERIFIED: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
-| Next action | **User decision.** Start signal for Step 9, at the first node of the `plan.md` §18.5 graph (plan amended by the §18.12 second review). The FP8 native rerun is done and PASS. PR 35 remains draft and nothing was merged. Carried forward in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. Retargeting PR 35's base to `main` waits on PR 34. |
+| Next action | P6 records and publication. User decision on W9-04 (`issues.md`: option 1 stale-placeholder removal in this PR, recommended; option 2 reference placeholder binding; option 3 defer) and on W9-05 (defer recommended). Removal of the two P5 detached worktrees `.worktrees/p5-fidelity-{before,after}` needs approval. |
 
 ## Step status
 
@@ -52,7 +53,7 @@
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
 | 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
 | 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
-| 9 | PP>1 support for `vllm_load_balancing` | PLANNED — plan corrected per the external review (`plan.md` §18.11); **not started** | n/a | PUSHED_VERIFIED (records only) | awaiting the user's start signal |
+| 9 | PP>1 support for `vllm_load_balancing` | IN PROGRESS — P1–P5 completed; P6 next; G3–G5 blocked (GPU) | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | LOCAL_ONLY after `9b5d7be` | D9-2 decided by the user; W9-04 decision pending |
 
 ## Chronological updates
 
@@ -226,7 +227,9 @@ User start signal: "开始执行step9", with the quality gates repeated (readabi
 | P1(b) Frontier boundary probe | completed 2026-09-23 (see "Step 9 P1(b) and D9-2" below) | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
 | Design checkpoint (D9-1, D9-2) | settled 2026-09-23 | D9-1's payload was settled from the P1 oracle. D9-2 is the group-anchored key, exact on all seven P1(b) shapes (`design.md` "Design checkpoint D9-2"); the user chose it on 2026-09-23. The first candidate, `ForwardSyncState._next_step_id_by_replica`, failed I5. |
 | P2 implementation, P3 unit tests | completed 2026-09-23 | See "Step 9 P2 and P3" below. |
-| P4, P5, P6 | pending | CPU only. |
+| P4 integration | completed 2026-09-23 (`bacdbb4`) | See "Step 9 P4 and P5" below. |
+| P5 fidelity and regression | completed 2026-09-23 | See "Step 9 P4 and P5" below. |
+| P6 documents and publication | in progress | CPU only. |
 | G3–G5 | blocked | GPU authorization is `BLOCKED` in the case manifest. |
 
 W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_schduler.py` and `stage_contexts.py` are byte-identical to `main`. It is unobserved because every Simulator-level test with `attn_dp > 1` uses `num_pipeline_stages = 1` and no shipped example sets `attn_dp > 1`. Scope decision requested from the user; recommendation is to fix it as a separate correctness item rather than inside this feature branch.
@@ -270,6 +273,18 @@ W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices agains
 | P2 source | `StageExecutionContext.joinable_forward_group_id`; inert `BaseClusterScheduler.on_replica_batch_scheduled`; its call in the MONOLITHIC/PREFILL admission loop of `BaseReplicaScheduler.on_schedule`, after `_num_running_batches += 1`; `VllmLoadBalancingClusterScheduler`: PP1 guard clause removed, group-anchored key with a held key per lane, `ForwardSyncState` use removed | D9-1..D9-3 as decided. Expect only the intended guard case to fail in the existing suites. | Existing suites: 1 failed (the `pipeline_parallel` rejection case), 112 passed. |
 | P3 tests | `tests/unit/test_vllm_dp_load_balancer.py`: guard case inverted into PP2/PP3 construct cases (8 shapes) plus dense multi-lane PP2 and uneven-partition rejections; `_ScriptedReplica` drives scripted lane readings and real stage-0 forward groups; cases for PP1 (no schedule-time report), PP2 cold fill in both lane orders (no partial latch), PP3 two admission-only iterations, a full pipeline (MoE and dense), a completion plus the admission it makes room for (one key, no intermediate latch), drain to zero and new work, and the real admission loop at PP2; both seams in the inert and unknown-lane tests. `tests/unit/test_shared_forward_group_admission.py`: `joinable_forward_group_id` across bind, seal and release. | Expected reports written from the reference iteration, before running. Each new case must fail on the pre-P2 tree. | `pytest -q -p no:cacheprovider tests/unit/test_vllm_dp_load_balancer.py tests/integration/test_vllm_dp_placement_runtime.py tests/unit/test_dp_placement_reference_loop.py tests/unit/test_stage_execution_context.py tests/unit/test_shared_forward_group_admission.py`: 132 passed, 7.07 s. The same tests on `git archive HEAD` (pre-P2) plus the new test files: 19 failed, 72 passed; the 19 are exactly the new or changed cases. |
 | Arrival-order check | Replay of the group-anchored keys from `key_scores.json` in report order, counting keys smaller than the last applied one | Recorded so the balancer's warning is not mistaken for a key defect later. | 1 report in 7 shapes (dp2 PP3 burst, t=0: lane 0 key 0 after lane 1 key 1); the reference has the same race. Noted in `design.md`. |
+
+### Step 9 P4 and P5 (2026-09-23)
+
+| Step | Change / command | Reason and expectation | Result |
+| --- | --- | --- | --- |
+| P4 tests | `tests/integration/test_vllm_dp_placement_runtime.py` rewritten around seam records: 5 PP shapes plus the plan §18.6 discriminating case against a completion-reporting control; `tests/integration/test_monolithic_mixed_forward_runtime.py` gains a PP2 `vllm_load_balancing` run | Each report must map to one reference iteration kind under its forward's key; the probe must be placed differently only because of what was published | 9 + 3 passed; report kinds per case and the probe snapshots in the W9 report §5. Committed `bacdbb4`. |
+| P5 C2, policy | `step9_p5/c2_pp1_policy_matrix.py`: 24 PP=1 scenarios on `git archive` exports of `d1a2a06` (pre-P2 source) and `bacdbb4` | Artifacts, report stream (without key), key order, and selections identical; no added admission-only report | 24 of 24 identical. Two cases stall on both sides (W9-04) and two lose 4 requests on both sides (W9-05), with identical diagnostics and artifacts. |
+| P5 C2, other schedulers | `step9_p5/run_fidelity.sh` on clean detached worktrees `.worktrees/p5-fidelity-{before,after}`; `step9_p5/run_examples.sh` + `compare_examples.py` | 71 of 71 and 16 of 16 identical | 71 of 71 identical, 0 provenance findings; 16 of 16 examples pass on both trees and are identical. |
+| P5 suites | `composition_run_suites.sh` on the clean `bacdbb4` worktree, compared by test id against the K4 JUnit of `03d5f24` | 0 regressions, 0 new failures | unit 84 failed / 3829 passed / 51 skipped / 10 errors; integration 5 errors / 26 passed / 22 skipped; 0 regressions, 0 new failures, 0 skip changes. The added skip is `test_collective_sim_zero_payload` (submodule not initialized in the detached worktree); 4 passed in this worktree. |
+| W9-04 investigation | `step9_p5/deadlock_trace.py`, `deadlock_sweep.py`; prototype `step9_p5/w9_04_prototype.patch` in a scratch export only | Establish the cause before proposing a change | Root cause and options in `issues.md` W9-04. Prototype: 72 of 72 sweep cells drain (was 66); 22 of 22 previously drained C2 cases identical. Not applied to the branch. |
+
+Evidence copies: `step9_p5/evidence/`. Raw runs: `/data/ycfeng/tmp/issue26-correctness-pr/step9_p5`.
 
 ### G1 ground-truth instrumentation (2026-09-22, completed)
 

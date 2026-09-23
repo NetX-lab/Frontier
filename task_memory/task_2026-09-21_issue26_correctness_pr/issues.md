@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-04 (placeholder/join deadlock at `attn_dp=4`, root cause and prototype) and W9-05 (requests lost under KV pressure, also on `main`) recorded from Step 9 P5. |
 | 2026-09-23 | W9-01 remaining step 3 done (P1(b) complete, D9-2 proposed); W9-02 narrowed to the collective-sim backend; W9-03 recorded (reference DP lockstep under PP, observation). |
 | 2026-09-23 | W9-01: merged forward (`dd9b8d9`); composition check passes on `03d5f24`. |
 | 2026-09-23 | W9-01: PR 36 ran its pre-merge untrack (P6, `4d08c5d`); the copies here are now the only published records of that task. |
@@ -230,3 +231,102 @@ It is not a report-key defect. The proposed D9-2 key follows Frontier's own
 grouping, and its residual 1 in `design.md` is the part of this difference
 that reaches the report stream.
 
+
+## W9-04 A lane with a first-layer placeholder can join the forward and deadlock it
+
+Status: open, root cause established, prototype fix measured in a scratch
+tree. Not caused by Step 9: the pre-P2 tree `d1a2a06` and `bacdbb4` stop at the
+same state. Decision pending with the user.
+Found: 2026-09-23, Step 9 package P5, in the C2 PP=1 policy matrix.
+
+### Symptom
+
+MoE co-location, `attn_dp=4, moe_ep=4, PP=1`, `vllm_v1`, 24 Poisson requests
+of 8–96 tokens: the event queue drains at 0.1201 s with no request complete
+and `RuntimeError: Sequential simulation ended with non-empty scheduler state`.
+Lanes 0–2 hold stage 0; lane 3 has a queued batch and is not busy.
+
+Reachability sweep (`step9_p5/deadlock_sweep.py`; MoE `attn_dp` ∈ {2, 4},
+Poisson qps ∈ {50, 100, 200, 400}, seeds {42, 7, 123}; 24 cells per row):
+
+| Tree | Cluster scheduler | Stuck cells |
+| --- | --- | --- |
+| this branch `bacdbb4` | `round_robin` | 5 (all `attn_dp=4`, qps ≥ 200) |
+| this branch | `lor` | 1 (`attn_dp=4`, qps 400, seed 42) |
+| this branch | `random` | 0 |
+| `origin/main` `4ab1964` | `round_robin` | 0 (every request is placed on lane 0: the W2 defect) |
+| `origin/main` | `random` | 0 |
+| `origin/main` | `lor` | 24 (a different failure: stuck with 2–12 requests done in every cell, `attn_dp=2` included; not diagnosed) |
+| prototype below | `round_robin`, `lor`, `random` | 0 of 72 |
+
+`attn_dp=2` never stalled on this branch. `vllm_load_balancing` stalls the
+same way as `round_robin` on the same cells.
+
+### Mechanism (trace `step9_p5/evidence/w9_04_trace.txt`)
+
+1. t=12.10 ms: lane 0 reaches layer 0 `pre_moe` of forward group 0. Lane 1 is
+   bound to group 0 and still in attention. Lanes 2 and 3 have empty, idle
+   stages, so `_can_supply_idle_lane` (`sync_entry.py:9`) gives each an idle
+   placeholder in that room.
+2. The same instant: request 2 reaches lane 2. The group is not sealed, so
+   `try_acquire` admits lane 2's batch and `bind_forward_group` binds it to
+   group 0.
+3. t=13.71 ms: lane 1 arrives. The room holds four entries (two real, two
+   placeholders) and dispatches the layer-0 EP wave. The group is sealed.
+4. t=20.38 ms: lane 2's real batch reaches layer 0. That room is closed, so
+   `resolve_step` opens a new step for layer 0. Lanes 0 and 1 are busy in
+   group 0 and are not given placeholders.
+5. t=27.71 ms: lanes 0 and 1 reach layer 1 and wait for lane 2, which waits
+   for them at layer 0. Lane 3's new batch cannot join the sealed group.
+
+The join rule and the placeholder rule disagree. A lane may join a forward
+until its first EP wave dispatches, and a real batch replaces the lane's
+placeholder only if it reaches the room first. A join after the placeholder
+but before dispatch, whose attention outlasts the last peer's arrival, loses
+that race.
+
+### Options
+
+1. **Drop a stale placeholder (prototype, `step9_p5/w9_04_prototype.patch`,
+   8 lines in `enter_layer_sync`).** An idle entry whose lane's stage is busy
+   belongs to a lane that has since joined this forward with real work, which
+   will enter the room. It is removed before the room is counted, so the
+   room waits for the real batch. This is the replacement the code already
+   performs when the real batch arrives first, applied to the other order.
+   Measured in `trees/proto`: 72 of 72 sweep cells drain. The 22 C2 cases that
+   drained before are identical: `request_metrics.csv`, `system_metrics.json`,
+   the report stream and every selection. The two stalled cases now finish
+   (24/24, and 23/24 with W9-05). Not yet run: the 71-case fidelity matrix,
+   the stage-admission groups and the suites.
+2. **Keep a lane's placeholder binding (reference behavior).** A lane that has
+   been given a placeholder does not join that forward; its batch waits for
+   the next one. This is what the pinned vLLM does: an idle engine is already
+   inside its dummy forward (W9-03). It changes the timing of every run
+   where a late join currently succeeds, so it is a fidelity change that
+   needs its own measurement and approval.
+3. Record only and defer.
+
+Recommendation: option 1 in this PR, because this PR's W2 is what makes the
+multi-lane Poisson path reachable under `round_robin`. Option 2 belongs with
+W9-03 and the G4 lockstep measurement.
+
+## W9-05 Requests disappear mid-decode under KV pressure
+
+Status: open, not diagnosed. Present on `origin/main` `4ab1964`. Outside
+Step 9.
+Found: 2026-09-23, Step 9 package P5, in the C2 PP=1 policy matrix.
+
+`vllm_v1` with `num_blocks=12, block_size=16`, 24 Poisson requests of 8–96
+tokens at qps 200. MoE `attn_dp=2` and dense `attn_dp=1` both reproduce it,
+under `vllm_load_balancing` and under `round_robin`, on this branch and on
+`origin/main`. The run ends normally with 20 of 24 requests complete and
+exit code 0. Requests 10, 16, 17 and 21 decode a few tokens (for example
+request 10: 3 of 14), then leave every queue. No log line mentions
+preemption, and the drain check passes although `is_empty` also counts the
+preempted queue, so the requests are held by no queue it reads. Their
+`request_metrics.csv` rows have empty latency fields.
+
+Next step when scheduled: follow one request through
+`_try_allocate_with_preemption` and
+`_rollback_current_iteration_preempted_requests`
+(`vllm_v1_engine_replica_scheduler.py:640-660`).

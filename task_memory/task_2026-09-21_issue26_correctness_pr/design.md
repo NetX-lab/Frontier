@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9 as implemented: section "Schedule-time reports under pipeline parallelism" added (P2–P5 outcome, measured against the expectation above); W4 guard row annotated. |
 | 2026-09-23 | D9-2 decided by the user: the group-anchored rule. |
 | 2026-09-23 | Added "Design checkpoint D9-2: the key from the fourth shape": reference lockstep facts, seven-shape P1(b) scores, the proposed group-anchored key rule with its invariant argument and residuals, W9-03 pointer. Proposal only; awaits the user's decision. |
 | 2026-09-22 | Added the design checkpoint section: D9-1 payload settled from the P1 oracle; D9-2 key left open because the `ForwardSyncState` candidate fails invariant I5 at PP>1 and the I1/I5 trade-off is only observable on the shape blocked by W9-01. |
@@ -234,7 +235,7 @@ pair to a single scalar.
 
 | Decision | Choice | Why |
 | --- | --- | --- |
-| Topology guard | `MONOLITHIC` + one Replica + `PP1` + `vllm_v1` + (**MoE or `attn_dp == 1`**) | The first four are the candidate's. The fifth is decision D1's "reject unsupported configurations explicitly", and the dense multi-lane row above is the measurement behind it. |
+| Topology guard | `MONOLITHIC` + one Replica + `PP1` + `vllm_v1` + (**MoE or `attn_dp == 1`**) | The first four are the candidate's. The fifth is decision D1's "reject unsupported configurations explicitly", and the dense multi-lane row above is the measurement behind it. W9 removed the `PP1` clause on 2026-09-23; see "Schedule-time reports under pipeline parallelism". |
 | Second step counter | **no** | D1 forbids broadening W4 with a new counter. W3's identity is reused where it holds. |
 | Runtime order assertion | **no** | The reference warns and applies the counts. W4 mirrors the warning. Key equality per shared forward is a test invariant, not a runtime abort. |
 | `waiting + 1` reservation | keep | One modeled frontend, so `client_count == 1`. The one-frontend restriction is stated in the class docstring. |
@@ -725,3 +726,32 @@ lane's admission counter. The policy admits a dense model only at
 The analytical backend runs MoE `attn_dp=2, PP=3`. W9-02's rejection is the
 collective-sim topology rule. The P3/P4 matrix can therefore restore the
 multi-lane PP3 row that I5 needs (C1 amendment, part of this proposal).
+
+## Schedule-time reports under pipeline parallelism (as implemented, 2026-09-23)
+
+Commits `2ffe78d` (source and unit tests) and `bacdbb4` (integration tests).
+
+| Part | As implemented |
+| --- | --- |
+| Hook | `BaseClusterScheduler.on_replica_batch_scheduled(time, replica_id, replica_local_id, batch)`, inert. `BaseReplicaScheduler` calls it once per admitted batch in the MONOLITHIC/PREFILL admission loop, after `_num_running_batches += 1`. |
+| When a report is made | At admission, if `num_running_batches < num_pipeline_stages`. Otherwise the admission's key is held and reported with the lane's next completion, which is the reference iteration that fills the pipeline and applies its oldest output. A completion with nothing held reports under the lane's next key. |
+| Key | Group-anchored: `max(stage0.joinable_forward_group_id, last_admitted_key + 1)`, the D9-2 rule. `StageExecutionContext.joinable_forward_group_id` is the one new accessor. `ForwardSyncState` is no longer read by the policy. |
+| Guard | The PP1 clause is removed. MONOLITHIC, one Replica, `vllm_v1`, and MoE or `attn_dp=1` remain. |
+| PP=1 | Every admission is held, so reports stay completion-only. Key values change (MoE `3, 3, 7, …` became `0, 0, 1, …`), but every pairwise comparison is unchanged. |
+
+Against "Fidelity expectation, stated before measuring":
+
+- PP=1 `vllm_load_balancing`: 24 of 24 scenarios identical (artifacts, report
+  stream, key order, selections). The expectation held.
+- Other cluster schedulers: 71 of 71 fidelity cases and 16 of 16 examples
+  identical. The expectation held.
+- PP=2 and PP=3: runs conserve work. On the discriminating scenario the policy
+  sends the probe to lane 0 and the completion-reporting control sends it to
+  lane 1. The expectation held.
+- Ground truth: not measured. G3–G5 are blocked on GPU authorization.
+
+The residuals in "What the rule does not reproduce" stand as written. P5 also
+found W9-04, a deadlock in the shared-forward placeholder rule that predates
+this work (`issues.md`). It is independent of the key: `round_robin` stalls on
+the same cells.
+

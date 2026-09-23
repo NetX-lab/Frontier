@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Step 9 completed on CPU: P1(b) on seven shapes after the W9-01 merge-forward, P2/P3 unit tests, P4 real event loop, P5 unchanged behavior (C2 24 of 24, fidelity 71 of 71, examples 16 of 16, 0 suite regressions), and the two pre-existing defects W9-04 and W9-05 found during P5. |
 | 2026-09-22 | Step 9 partial validation added: reference-loop oracle, Frontier boundary probes on three shapes, the two probe failures (invariant I5, W9-01), and the ground-truth writer checks. |
 | 2026-09-21 | Created. Environment recorded; baseline results recorded in the refactor task's Step 0 report because both branches share the same base commit. |
 | 2026-09-21 | Step 1 recorded: audit spot checks and the vLLM reference identity check. |
@@ -503,7 +504,7 @@ Full record: `test_report_2026-09-22_w8_combined_regression.md`.
 | Pre-existing defect, deferred | `AGENTS.md` §Tests names `comm_backend_tests/`, `debug/`, and two `bash tests/debug/e2e-level/monolith_mode/scripts/*.sh` commands. `tests/debug/` exists neither here nor on `origin/main`. The same missing tree causes 10 of the 84 baseline unit failures in `test_colocation_release_review_contracts.py`, and a docstring at `vllm_v1_engine_replica_scheduler.py:16` still points into it. One pre-existing defect class from the release scrub, unrelated to Issue 26; recorded in `future.md` and not repaired here. The PP2 coverage was obtained through the example scripts instead. |
 | Limits | CPU only. No native profiling suite and no vLLM serving or TTFT comparison, both excluded by §14.1. The PD-AF Reference-checkout tests could not run on this host. The example runs use dummy execution time except for the CSV smokes, so they validate structure, lifecycle, and conservation rather than latency accuracy. |
 
-## Step 9 — PP>1 support for the vLLM DP placement policy (2026-09-22, partial)
+## Step 9 — PP>1 support for the vLLM DP placement policy (2026-09-22 to 2026-09-23)
 
 | Item | Command | Expected | Actual | Outcome |
 | --- | --- | --- | --- | --- |
@@ -515,9 +516,22 @@ Full record: `test_report_2026-09-22_w8_combined_regression.md`.
 | Frontier boundary probe, `attn_dp=2 PP=2` | same | 6/6 requests complete | Event queue drained with requests unfinished | FAIL, W9-01 |
 | Ground-truth writer | scratch `check_trace_writer.py` | Gate off writes nothing; buffering, per-process file, dense `seq`, idempotent flush, warmup gate | All checks passed | PASS |
 | Ground-truth syntax | `python -m py_compile` on the four changed vLLM files | Parse | All four parse | PASS |
+| P1(b) after the W9-01 merge-forward | `step9_p1b/probe_boundaries.py` on seven shapes, scored by `step9_p1b/analyze_keys.py` | 6/6 per shape; the accepted key has 0 peer splits, merges and inversions against each report's stage-0 group | 6/6 on all seven; the group-anchored key scores 0/0/0 and 0 ms everywhere and equals the stage-0 predictor on 139 of 139 reports; the lane counter fails on four shapes | PASS; D9-2 decided as group-anchored |
+| P2 implementation, existing suites | `pytest` on the DP-placement, reference-loop, stage-context and forward-group test modules | Only the intended PP rejection case fails | 1 failed (`pipeline_parallel` guard case), 112 passed | PASS |
+| P3 unit tests | same modules after P3 | All pass; each new or changed case fails on the pre-P2 tree | 132 passed; on the pre-P2 tree 19 failed, 72 passed, and the 19 are exactly the new or changed cases | PASS |
+| P4 real event loop | `pytest tests/integration/test_vllm_dp_placement_runtime.py tests/integration/test_monolithic_mixed_forward_runtime.py` | Each report maps to one reference iteration kind under its forward's key; conservation; no added event type; the discriminating probe is placed differently only because of what was published | 9 passed, 3 passed; probe lane 0 under the policy, lane 1 under the completion-reporting control | PASS |
+| P5 C2, PP=1 policy scenarios | `step9_p5/c2_pp1_policy_matrix.py`, 24 scenarios on exports of `d1a2a06` and `bacdbb4` | Artifacts identical after path substitution; report stream identical without the key; keys order-isomorphic; selections identical; no added admission-only report | 24 of 24 identical (20 drained on both sides; 2 incomplete on both sides, W9-05; 2 stalled on both sides with identical diagnostics, W9-04) | PASS |
+| P5 C2, other cluster schedulers | `step9_p5/run_fidelity.sh` on clean detached worktrees, `--clean-cache` | 71 of 71 identical | 71 of 71 identical; 0 provenance findings; `complete_comparison` true | PASS |
+| P5 architecture examples | `step9_p5/run_examples.sh` on both exports, `compare_examples.py` | 16 of 16 pass on both; artifacts identical | 16 of 16 pass and identical | PASS |
+| P5 suites | `composition_run_suites.sh` at `bacdbb4`, compared by test id with `composition_compare_junit.py` against `03d5f24` | 0 regressions, 0 new failures | unit 84 failed / 3829 passed / 51 skipped / 10 errors; integration 5 errors / 26 passed / 22 skipped; 0 regressions, 0 new failures, 0 skip changes | PASS |
+| W9-04 prototype (not applied) | `step9_p5/deadlock_sweep.py` on an export with `step9_p5/w9_04_prototype.patch` | Cause established before any change | Sweep 72 of 72 drain (branch 66 of 72); 22 of 22 previously drained C2 cases identical | Finding; awaits decision |
 
 Limits. The instrumented vLLM paths have not been executed; that needs a GPU
-host and is package G3. The two probe FAIL rows are findings, not regressions:
-the I5 failures are the measurement the design checkpoint asked for, and W9-01
-is a pre-existing defect on `main`. Evidence:
-`test_report_2026-09-22_w9_pp_dp_placement.md`.
+host and is package G3, still blocked with G4 and G5. The three probe FAIL rows
+of 2026-09-22 are findings, not regressions: the I5 failures are the
+measurement the design checkpoint asked for, and W9-01 was a pre-existing
+defect on `main`, fixed by PR 36 and merged forward before P1(b). The P1(b)
+targets are Frontier's own forward grouping, not vLLM measurements. W9-04 and
+W9-05 are pre-existing and recorded in `issues.md`; neither is repaired here.
+Evidence: `test_report_2026-09-22_w9_pp_dp_placement.md`, `step9_p1b/`,
+`step9_p5/evidence/`.
