@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | D9-2 decided by the user: the group-anchored rule. |
 | 2026-09-23 | Added "Design checkpoint D9-2: the key from the fourth shape": reference lockstep facts, seven-shape P1(b) scores, the proposed group-anchored key rule with its invariant argument and residuals, W9-03 pointer. Proposal only; awaits the user's decision. |
 | 2026-09-22 | Added the design checkpoint section: D9-1 payload settled from the P1 oracle; D9-2 key left open because the `ForwardSyncState` candidate fails invariant I5 at PP>1 and the I1/I5 trade-off is only observable on the shape blocked by W9-01. |
 | 2026-09-22 | W9 second review (user-directed quality gates): section "What the code already provides" added; planned-edits rows for the hook payload, the call site and the CPU oracle amended; plan §18.12 R9-01..R9-08. |
@@ -559,7 +560,7 @@ choice, which is the kind of unfalsifiable design the gates exclude.
 
 W9-01 is fixed on `main` (PR 36) and merged forward, so the shape that decides
 D9-2 now runs. This section records what the probe shows and the proposed key
-rule. The rule is a proposal: it needs the user's decision before P2.
+rule. The user chose this rule on 2026-09-23 (`requirements.md`).
 
 ### The reference key is the shared forward index
 
@@ -660,7 +661,7 @@ over.
 - At an admission: `last_admitted_key[l] = key(l)`. The admission is
   reported now while `num_running_batches < num_pipeline_stages`. Otherwise
   the key is held in `held_key[l]`.
-- At a completion: report `held_key.pop(l)` if a key is held. Otherwise report
+- At a completion: report `held_key[l]` and clear it if a key is held. Otherwise report
   `key(l)` and store nothing.
 
 Against the invariants:
@@ -674,6 +675,16 @@ Against the invariants:
 | I5 | Each consecutive cold-fill admission on a lane gets `+ 1`. No spacing constant. | dp1 and dp2 PP3 cold fills. |
 | I6 | Two integers per lane, overwritten in place. | Bounded by `attn_dp`. |
 
+"0 inversions" compares keys with forward order. Arrival order at the balancer
+is a separate matter. In the dp2 PP3 burst, lane 1's `on_schedule` admits two
+batches (keys 0 and 1) before lane 0's `on_schedule` admits its first (key 0),
+so one report in the seven shapes arrives with a smaller key than the last one.
+`VllmDPLoadBalancer.report` then logs the reference's out-of-order warning and
+applies the counts; the replay mismatch stays 0 ms. The reference has the same
+race: a step whose batch queue still has room publishes without waiting for
+its forward, so engine 1's step 1 can reach the coordinator before engine 0's
+step 0.
+
 At PP=1 every admission is folded, and the held key is the group of the
 forward that completes. Peers compare equal and later forwards compare
 greater, so the comparisons match the current `ForwardSyncState.get_step_id`
@@ -682,9 +693,9 @@ key. C2's byte-identical PP=1 check tests exactly that. The policy's
 
 New surface, compared with the planned edits above: one read-only property on
 `StageExecutionContext` over two existing fields, in place of the planned
-`ForwardSyncState` accessor, and two per-lane dicts in the policy scheduler.
+`ForwardSyncState` accessor, and two per-lane lists in the policy scheduler.
 The policy reaches the context through the base class's
-`_stage_execution_contexts[(replica_id, 0)]`. For a dense model the group is
+`get_stage_execution_context(replica_id, 0)`. For a dense model the group is
 never bound (`bind_forward_group` is MoE-only), so the key falls back to the
 lane's admission counter. The policy admits a dense model only at
 `attn_dp=1`, where placement has one choice.

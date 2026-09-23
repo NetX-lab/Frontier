@@ -8,6 +8,7 @@
 | 2026-09-22 | Recorded the W6 artifact-identity decision and the native GPU validation instruction. |
 | 2026-09-22 | Recorded the PP>1 `vllm_load_balancing` request, the codesign-only GPU instruction, and the open Step 9 decisions. |
 | 2026-09-23 | Recorded the W9-01 merge-forward request after PR 36 merged. |
+| 2026-09-23 | Recorded the D9-2 decision (group-anchored report key). |
 
 ## [Original Request] 2026-09-21
 
@@ -103,3 +104,14 @@ Reading: read the external review in full, verify each finding against the sourc
 | Next | On a pass, resume Step 9 P1(b) and the design checkpoint D9-2. |
 | `.gitignore` | The `task_memory` exceptions of PR 34 and PR 35 stay as they are; the owner removes them before those merges. |
 
+## [Decision] 2026-09-23 — D9-2 report key
+
+Question (AskUserQuestion): "D9-2：P2 应实现哪条 report key 规则？"
+
+Answer: "Group-anchored (Recommended)", selected together with its preview.
+
+| Item | Decision |
+| --- | --- |
+| Key rule | `key(l) = max(C.joinable_forward_group_id, last_admitted_key[l] + 1)`. An admission stores its key and reports it while the pipeline has room; otherwise the key is held. A completion reports the held key, or `key(l)` without storing it (`design.md` "Design checkpoint D9-2", plan §18.15). |
+| Included with the option | A read-only `StageExecutionContext` property and two per-lane dicts in the policy scheduler. The policy's use of the `ForwardSyncState` key is removed. C1 regains the MoE `attn_dp=2, PP=3` row on the analytical backend. |
+| Not decided | W9-03 (reference DP lockstep under PP) stays an observation outside Step 9. GPU runs G3/G4 still need their own authorization (manifest BLOCKED). |

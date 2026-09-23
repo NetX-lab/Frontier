@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | D9-2 decided by the user: group-anchored key (§18.15, `requirements.md`); C1 PP3 row amended; P2 started. |
 | 2026-09-23 | §18.15 added: P1(b) completed on seven shapes; D9-2 proposal (group-anchored key) and the C1 PP3 amendment await the user's decision. §18.13 blocker marked resolved. |
 | 2026-09-23 | §18.14 results: K1–K4 pass on `03d5f24`; K2 amended after measuring for online cells (one cell's batches differ after an earlier admission). |
 | 2026-09-23 | §18.14 added: W9-01 merge-forward and the composition check, with pass criteria fixed before measuring. |
@@ -860,7 +861,7 @@ Under [R1]: `frontier/profiling/moe/moe_vllm_kernel.py`, `frontier/entities/stag
 
 | # | Criterion | Evidence |
 | --- | --- | --- |
-| C1 | Valid PP2 and PP3 configurations (layer count divisible by PP; `MONOLITHIC`, one Replica, `vllm_v1`, MoE or `attn_dp == 1` — the PP1 clause is the only guard removed) complete every request with request/token/owner conservation, for dense `attn_dp=1` and MoE `attn_dp=2` at PP2. **Amended 2026-09-22 (W9-02):** the PP3 row uses `attn_dp=1`; `attn_dp=2, moe_ep=2, PP=3` is rejected at construction because 6 devices do not divide the node size of 4. PP3 uses a separate CPU fixture with a valid layer count (6 or 12); the native PP2 model stays the approved 8-layer tiny Qwen3-MoE. | P4 real-loop PP2 and PP3 cases; §18.11 behavioral matrix. |
+| C1 | Valid PP2 and PP3 configurations (layer count divisible by PP; `MONOLITHIC`, one Replica, `vllm_v1`, MoE or `attn_dp == 1` — the PP1 clause is the only guard removed) complete every request with request/token/owner conservation, for dense `attn_dp=1` and MoE `attn_dp=2` at PP2. **Amended 2026-09-22 (W9-02):** the PP3 row uses `attn_dp=1`; `attn_dp=2, moe_ep=2, PP=3` is rejected at construction because 6 devices do not divide the node size of 4. **Amended 2026-09-23 (D9-2 decision):** that rejection is the collective-sim topology rule; a MoE `attn_dp=2, PP=3` row on the analytical backend is restored, because I5 needs a multi-lane PP3 case. PP3 uses a separate CPU fixture with a valid layer count (6 or 12); the native PP2 model stays the approved 8-layer tiny Qwen3-MoE. | P4 real-loop PP2 and PP3 cases; §18.11 behavioral matrix. |
 | C2 | Previously supported behavior is unchanged under the stated comparison contract: every existing PP1 `vllm_load_balancing` scenario has value-identical `request_metrics.csv` and identical `system_metrics.json` (timestamps/run ids removed, the Q11 rule), with no additional admission-only report; every other cluster scheduler, including the supported disaggregated paths, has identical event outcomes (the hook is inert for them). | P5 byte comparison; Step 8 regression set rerun. |
 | C3 | For a controlled or demonstrably matched iteration history, the emitted loads, the equality/order relation of logical-iteration keys, the coordinator snapshots and the frontend-visible counts agree with the reference. Natural-history divergence is classified by first cause (arrival/delivery order, batch composition, output readiness, count calculation, key grouping, snapshot publication, frontend selection), not hidden by re-indexing. Boundary-index comparison alone is not an alignment method. | CPU reference-loop oracle (P1) + causal join of the G4 trace (§18.11 instrumentation chain) + `workflow-gap-analysis`. |
 | C4 | In a trace-qualified native discriminating slice (§18.6, qualified per §18.11: the intended snapshot was applied at the frontend before the probe was routed), the corrected placement matches the reference and the explicit test-only completion-reporting control fails for the expected reason. The actual unmodified PP2 baseline is reported as rejected by its constructor, not as a placement. Otherwise the slice is `SCENARIO_NOT_REACHED` with the failed precondition named. | §18.6 comparison table with the control column. |
@@ -1205,7 +1206,7 @@ New surface:
 
 - one read-only property on `StageExecutionContext`, replacing the planned
   `ForwardSyncState` accessor;
-- two per-lane dicts in the policy scheduler.
+- two per-lane lists in the policy scheduler.
 
 The policy's `ForwardSyncState` key is removed.
 
@@ -1226,4 +1227,9 @@ needs a multi-lane PP3 case.
 chosen, P2 implements it with the D9-1 hook and the guard change. P3/P4 carry
 the §18.11 matrix with the restored PP3 row. P2–P6 and G3–G5 stay paused until
 then.
+
+**Decided 2026-09-23.** The user chose the group-anchored rule, with the C1
+amendment (`requirements.md`, "[Decision] 2026-09-23 — D9-2 report key").
+P2–P5 proceed on the CPU. G3 and G4 need GPU runs whose authorization is still
+BLOCKED in the case manifest, so G3–G5 wait for a separate go.
 
