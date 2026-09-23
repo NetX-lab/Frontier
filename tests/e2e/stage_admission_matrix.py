@@ -11,10 +11,13 @@ run provenance (``run.json``) and one outcome artifact:
   objects after the sequential run ends with work left;
 * ``configuration_rejection`` / ``other_failure``: ``error.txt``.
 
-Each case runs in its own child process because ``IS_MOE`` is process-global.
-Every child writes its simulator output under ``<root>/work/<case_id>``, a path
-shared by all sets, so that files embedding the output path compare byte for
-byte between a set run before a change and one run after it.
+Each case runs in its own child process because ``IS_MOE`` is process-global,
+and each child runs in its own session so a case that exceeds
+``--case-timeout`` is killed with everything it started.  Every child writes
+its simulator output under ``<root>/work/<case_id>``, a path shared by all
+sets, so that files embedding the output path compare byte for byte between a
+set run before a change and one run after it.  Sets therefore run one at a
+time: ``run`` holds an exclusive lock on the matrix root.
 
 Usage::
 
@@ -28,8 +31,10 @@ import argparse
 import csv
 import hashlib
 import json
+import fcntl
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -62,6 +67,9 @@ VLLM_ALIGNED_MODELS = {True: "Qwen3-30B-A3B-tiny", False: "Llama-3.2-1B-Instruct
 PREFILL_ONLY = (16, 1)
 PREFILL_DECODE = (16, 3)
 VLLM_ALIGNED_PREFILL_ONLY = (256, 1)
+ONLINE_QPS = 20.0
+ONLINE_QPS_SWEEP = (5.0, 80.0)
+DEFAULT_CASE_TIMEOUT_S = 600
 
 
 @dataclass(frozen=True)
@@ -76,8 +84,12 @@ class Case:
     prefill_tokens: int = 0
     decode_tokens: int = 0
     arrival: str = "static"
+    qps: float = 1e6
+    sys_arch: str = "co-location"
+    simulation_mode: str = "offline"
     cc_backend: str = "analytical"
     recipe: str | None = None
+    recipe_env: tuple[tuple[str, str], ...] = ()
     contention_witness: bool = False
 
     @property
@@ -94,9 +106,9 @@ def _shape_id(group: str, is_moe: bool, attn_dp: int, stages: int, num_requests:
 
 
 def _synthetic(group: str, is_moe: bool, attn_dp: int, stages: int, num_requests: int,
-               lengths: tuple[int, int], **fields) -> Case:
+               lengths: tuple[int, int], suffix: str = "", **fields) -> Case:
     return Case(
-        case_id=_shape_id(group, is_moe, attn_dp, stages, num_requests),
+        case_id=_shape_id(group, is_moe, attn_dp, stages, num_requests) + suffix,
         group=group,
         is_moe=is_moe,
         attn_dp=attn_dp,
@@ -165,6 +177,47 @@ def build_cases() -> list[Case]:
             cases.append(
                 _synthetic("G7", is_moe, 2, 2, num_requests, VLLM_ALIGNED_PREFILL_ONLY,
                            fixture=VLLM_ALIGNED)
+            )
+    # Plan §7 (R2-03).  PDD admits multi-lane contexts only for MoE: dense PDD
+    # requires attn_dp == 1.  Online cells use Poisson arrivals at ONLINE_QPS.
+    # On main, MONOLITHIC and PREFILL place every request of one scheduling
+    # call from lane 0 on, so incremental online arrivals all land on lane 0;
+    # the "-burst" cells deliver all requests at t=0 to reach several lanes.
+    pdd_shapes = [(True, attn_dp, stages) for attn_dp in (2, 4) for stages in (1, 2, 3)]
+    pdd_shapes.append((False, 1, 2))
+    online = dict(simulation_mode="online", arrival="poisson", qps=ONLINE_QPS)
+    burst = dict(simulation_mode="online", suffix="-burst")
+    for group, timing in (("G8", {}), ("G9", online)):
+        for is_moe, attn_dp, stages in pdd_shapes:
+            cases.append(
+                _synthetic(group, is_moe, attn_dp, stages, 8, PREFILL_DECODE,
+                           sys_arch="pd-disaggregation", **timing)
+            )
+    for attn_dp in (2, 4):
+        for stages in (2, 3):
+            cases.append(
+                _synthetic("G9", True, attn_dp, stages, 8, PREFILL_DECODE,
+                           sys_arch="pd-disaggregation", **burst)
+            )
+    for is_moe, lengths in ((True, PREFILL_ONLY), (False, PREFILL_DECODE)):
+        for attn_dp in (2, 4):
+            for stages in (1, 2, 3):
+                cases.append(_synthetic("G10", is_moe, attn_dp, stages, 8, lengths, **online))
+                cases.append(_synthetic("G10", is_moe, attn_dp, stages, 8, lengths, **burst))
+        for qps in ONLINE_QPS_SWEEP:
+            cases.append(
+                _synthetic("G10", is_moe, 2, 2, 8, lengths, suffix=f"-q{qps:g}",
+                           **dict(online, qps=qps))
+            )
+    # PD-AF contexts have capacity 1 (DECODE_ATTN requires attn_dp == 1), so
+    # these are unchanged controls for PREFILL pipeline stages.
+    for mode in ("offline", "online"):
+        suffix = "_online" if mode == "online" else ""
+        for stem in ("dense_model_basic", "moe_model_basic"):
+            script = f"examples/architecture/pd-af-disagg/{mode}/{stem}{suffix}.sh"
+            cases.append(
+                Case(case_id=f"G11-pd-af-disagg-{mode}-{stem}-pp2", group="G11",
+                     recipe=script, recipe_env=(("PREFILL_PP", "2"),))
             )
     return cases
 
@@ -236,6 +289,9 @@ def build_config(case: Case, output_dir: Path, cache_dir: Path):
         cluster_fields["cc_backend_config"] = AnalyticalCCBackendConfig()
     elif case.cc_backend != "default":
         raise ValueError(f"unknown CC backend selector {case.cc_backend!r}")
+    if case.sys_arch == "pd-disaggregation":
+        # One Replica per role; both roles take the fixture's replica config.
+        cluster_fields.update(prefill_cluster_num_replicas=1, decode_cluster_num_replicas=1)
     cluster = ClusterConfig(
         replica_config=replica,
         replica_scheduler_config=scheduler,
@@ -248,11 +304,11 @@ def build_config(case: Case, output_dir: Path, cache_dir: Path):
     if case.arrival == "static":
         interval = StaticRequestIntervalGeneratorConfig()
     elif case.arrival == "poisson":
-        interval = PoissonRequestIntervalGeneratorConfig(qps=1e6)
+        interval = PoissonRequestIntervalGeneratorConfig(qps=case.qps)
     else:
         raise ValueError(f"unknown arrival process {case.arrival!r}")
     return SimulationConfig(
-        simulation_mode="offline", sys_arch="co-location",
+        simulation_mode=case.simulation_mode, sys_arch=case.sys_arch,
         enable_parallel_clusters=False, decode_cuda_graph_mode="none",
         cluster_config=cluster,
         metrics_config=MetricsConfig(
@@ -284,11 +340,22 @@ def _ticket_view(ticket) -> dict:
 
 
 def build_state_report(simulator) -> dict:
-    """Read stage contexts, lane queues and sync rooms after a drain."""
-    from frontier.types import ClusterType
-
-    cluster_scheduler = simulator.scheduler.get_cluster_scheduler(ClusterType.MONOLITHIC)
+    """Read stage contexts, lane queues and sync rooms of every cluster after a drain."""
     lanes = {}
+    contexts = []
+    rooms = []
+    for cluster_type, cluster_scheduler in simulator.scheduler._cluster_schedulers.items():
+        _read_cluster_state(cluster_type.name, cluster_scheduler, lanes, contexts, rooms)
+    return {
+        "simulation_time": simulator._time,
+        "contexts": contexts,
+        "lanes": lanes,
+        "sync_rooms": rooms,
+    }
+
+
+def _read_cluster_state(cluster: str, cluster_scheduler, lanes: dict,
+                        contexts: list, rooms: list) -> None:
     queued_owner = {}
     for (replica_id, lane_id), replica_scheduler in sorted(
         cluster_scheduler._replica_schedulers.items(), key=lambda item: str(item[0])
@@ -303,13 +370,14 @@ def build_state_report(simulator) -> dict:
                 heap.append({"batch_id": batch.id, "global_id": batch.global_id,
                              **_ticket_view(ticket)})
             stage_views.append({"busy": stage.is_busy, "heap": heap})
-        lanes[f"{replica_id}/{lane_id}"] = {
-            "replica_id": replica_id, "lane": lane_id, "stages": stage_views,
+        lanes[f"{cluster}/{replica_id}/{lane_id}"] = {
+            "cluster": cluster, "replica_id": replica_id, "lane": lane_id,
+            "stages": stage_views,
         }
 
-    contexts = []
     for (replica_id, stage_id), context in sorted(cluster_scheduler._stage_execution_contexts.items()):
         contexts.append({
+            "cluster": cluster,
             "replica_id": replica_id,
             "stage_id": stage_id,
             "capacity": context.full_stage_capacity,
@@ -327,7 +395,6 @@ def build_state_report(simulator) -> dict:
             ],
         })
 
-    rooms = []
     for room_name in ("_prefill_sync_waiting_room", "_decode_sync_waiting_room"):
         by_replica = getattr(cluster_scheduler, room_name) or {}
         for replica_id, by_stage in by_replica.items():
@@ -338,17 +405,11 @@ def build_state_report(simulator) -> dict:
                             if not room["batches"]:
                                 continue
                             rooms.append({
-                                "room": room_name.strip("_"),
+                                "cluster": cluster, "room": room_name.strip("_"),
                                 "replica_id": replica_id, "stage_id": stage_id,
                                 "step": step, "layer": layer, "sync_stage": str(sync_stage),
                                 "lanes_present": sorted(room["batches"]),
                             })
-    return {
-        "simulation_time": simulator._time,
-        "contexts": contexts,
-        "lanes": lanes,
-        "sync_rooms": rooms,
-    }
 
 
 def has_admission_deadlock_signature(report: dict) -> bool:
@@ -362,12 +423,13 @@ def has_admission_deadlock_signature(report: dict) -> bool:
         head = context["fifo"][0]
         if head["scope"] != "FULL_STAGE_WORLD" or head["lane"] is None:
             continue
-        replica_id, stage_id = context["replica_id"], context["stage_id"]
-        head_stage = lanes[f"{replica_id}/{head['lane']}"]["stages"][stage_id]
+        cluster, replica_id, stage_id = context["cluster"], context["replica_id"], context["stage_id"]
+        head_stage = lanes[f"{cluster}/{replica_id}/{head['lane']}"]["stages"][stage_id]
         if not head_stage["busy"]:
             continue
         for lane in lanes.values():
-            if lane["replica_id"] != replica_id or lane["lane"] == head["lane"]:
+            if ((lane["cluster"], lane["replica_id"]) != (cluster, replica_id)
+                    or lane["lane"] == head["lane"]):
                 continue
             stage = lane["stages"][stage_id]
             if stage["busy"] or not stage["heap"]:
@@ -375,7 +437,8 @@ def has_admission_deadlock_signature(report: dict) -> bool:
             if stage["heap"][0]["admission_seq"] <= head["admission_seq"]:
                 continue
             for room in report["sync_rooms"]:
-                if (room["replica_id"] == replica_id and room["stage_id"] == stage_id
+                if ((room["cluster"], room["replica_id"], room["stage_id"])
+                        == (cluster, replica_id, stage_id)
                         and head["lane"] in room["lanes_present"]
                         and lane["lane"] not in room["lanes_present"]):
                     return True
@@ -427,6 +490,7 @@ def _run_recipe_case(case: Case, work_dir: Path, case_dir: Path) -> dict:
         "PYTHON_BIN": sys.executable,
         "METRICS_OUTPUT_DIR": str(work_dir / "metrics"),
         "RUN_ID": case.case_id,
+        **dict(case.recipe_env),
     })
     result = subprocess.run(
         ["bash", str(REPO_ROOT / case.recipe)], cwd=REPO_ROOT, env=env,
@@ -573,18 +637,27 @@ def matrix_root() -> Path:
     return resolve_scratch_root() / MATRIX_DIR_NAME
 
 
-def _run_one(case: Case, root: Path, set_name: str, provenance: dict) -> dict:
+def _run_one(case: Case, root: Path, set_name: str, provenance: dict,
+             case_timeout: float) -> dict:
     command = [sys.executable, "-m", "tests.e2e.stage_admission_matrix", "child",
                "--set", set_name, "--case", case.case_id]
     env = dict(os.environ, PYTHONPATH=str(REPO_ROOT), WANDB_DISABLED="true",
                VIDUR_DISABLE_WANDB="1")
-    result = subprocess.run(command, cwd=REPO_ROOT, env=env, capture_output=True, text=True)
+    child = subprocess.Popen(command, cwd=REPO_ROOT, env=env, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        stdout, stderr = child.communicate(timeout=case_timeout)
+        failure = f"child exit code {child.returncode}"
+    except subprocess.TimeoutExpired:
+        os.killpg(child.pid, signal.SIGKILL)
+        stdout, stderr = child.communicate()
+        failure = f"case timeout after {case_timeout:g} s"
     case_dir = root / set_name / case.case_id
     case_dir.mkdir(parents=True, exist_ok=True)
     outcome_path = case_dir / "outcome.json"
-    if result.returncode != 0 or not outcome_path.exists():
-        (case_dir / "error.txt").write_text(result.stdout[-50_000:] + result.stderr[-50_000:])
-        outcome = {"outcome": OTHER_FAILURE, "exception": f"child exit code {result.returncode}"}
+    if child.returncode != 0 or not outcome_path.exists():
+        (case_dir / "error.txt").write_text(stdout[-50_000:] + stderr[-50_000:])
+        outcome = {"outcome": OTHER_FAILURE, "exception": failure}
     else:
         outcome = json.loads(outcome_path.read_text())
     (case_dir / "case.json").write_text(json.dumps(asdict(case), indent=1, sort_keys=True))
@@ -594,12 +667,26 @@ def _run_one(case: Case, root: Path, set_name: str, provenance: dict) -> dict:
             "exception": outcome.get("exception")}
 
 
-def run_set(set_name: str, cases: Sequence[Case], jobs: int) -> list[dict]:
+def run_set(set_name: str, cases: Sequence[Case], jobs: int, case_timeout: float) -> list[dict]:
     root = matrix_root()
     (root / set_name).mkdir(parents=True, exist_ok=True)
+    with (root / "run.lock").open("w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RuntimeError(
+                f"another set is running under {root}; sets share work/ and run one at a time"
+            ) from None
+        return _run_locked_set(root, set_name, cases, jobs, case_timeout)
+
+
+def _run_locked_set(root: Path, set_name: str, cases: Sequence[Case], jobs: int,
+                    case_timeout: float) -> list[dict]:
     provenance = set_provenance()
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        rows = list(pool.map(lambda case: _run_one(case, root, set_name, provenance), cases))
+        rows = list(pool.map(
+            lambda case: _run_one(case, root, set_name, provenance, case_timeout), cases
+        ))
     if set_provenance()["git_head"] != provenance["git_head"]:
         raise RuntimeError("git HEAD changed while the set was running")
     index = root / set_name / "cases.jsonl"
@@ -714,6 +801,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     run_parser.add_argument("--group", action="append", default=[])
     run_parser.add_argument("--case", action="append", default=[])
     run_parser.add_argument("--jobs", type=int, default=8)
+    run_parser.add_argument("--case-timeout", type=float, default=DEFAULT_CASE_TIMEOUT_S,
+                            help="seconds before a case's child session is killed")
     child_parser = commands.add_parser("child", help=argparse.SUPPRESS)
     child_parser.add_argument("--set", required=True)
     child_parser.add_argument("--case", required=True)
@@ -736,7 +825,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     selected = [case for case in cases_by_id.values()
                 if (not args.group or case.group in args.group)
                 and (not args.case or case.case_id in args.case)]
-    for row in run_set(args.set, selected, args.jobs):
+    for row in run_set(args.set, selected, args.jobs, args.case_timeout):
         print(f"{row['case_id']:<48} {row['outcome']}")
     return 0
 
