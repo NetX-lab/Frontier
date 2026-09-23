@@ -68,7 +68,7 @@ def build_overlay(site_vllm: Path, checkout: Path, destination: Path, expected_c
         "expected_py_changes": expected,
         "unexpected": sorted(set(differing) - set(expected)),
         "missing": sorted(set(expected) - set(differing)),
-        "accepted": differing == expected,
+        "accepted": set(differing) == set(expected),
     }
 
 
@@ -77,6 +77,7 @@ def apply_patch(patch: Path, root: Path) -> list[str]:
 
     The worker image need not carry ``patch`` or ``git``, so hunks are applied
     here as text replacements; each hunk must match its file exactly once.
+    An empty hunk line is a context line whose leading space was trimmed.
     """
     lines = patch.read_text().splitlines(keepends=True)
     hunks: dict[str, list[tuple[str, str]]] = {}
@@ -86,7 +87,7 @@ def apply_patch(patch: Path, root: Path) -> list[str]:
         index += 1
         if line.startswith("+++ "):
             target = line[4:].strip().removeprefix("b/")
-            hunks[target] = []
+            hunks.setdefault(target, [])
         elif line.startswith("@@ "):
             header = re.match(r"@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@", line)
             old_count, new_count = (int(count or 1) for count in header.groups())
@@ -94,6 +95,10 @@ def apply_patch(patch: Path, root: Path) -> list[str]:
             while old_count or new_count:
                 tag, text = lines[index][0], lines[index][1:]
                 index += 1
+                if tag == "\n":
+                    tag, text = " ", "\n"
+                if tag not in " -+":
+                    raise ValueError(f"{patch}: unexpected hunk line {lines[index - 1]!r}")
                 if tag in " -":
                     old.append(text)
                     old_count -= 1

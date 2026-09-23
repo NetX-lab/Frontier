@@ -37,11 +37,15 @@ MODELS = ("moe", "dense")
 BURSTS = (8, 16)
 CO_START_BOUND = 0.5
 CO_EXECUTION_BOUND = 0.10
-# Dense DP ranks meet once per forward and then vary in duration per rank,
-# which the dummy predictor does not model; their co-execution is reported,
-# not gated (plan §4.7 V5, D-9).  MoE ranks stay aligned by EP collectives.
+# Dense DP ranks meet once per forward, in the DP metadata all-reduce that
+# vLLM runs after ``forward_start_ts``.  A rank's recorded interval therefore
+# includes its wait for the other rank (start offsets) as well as its own
+# duration variation (end offsets); the dummy predictor models neither, so
+# dense co-execution is reported, not gated (plan §4.7 V5, D-9).  MoE ranks
+# stay aligned by EP collectives.
 CO_EXECUTION_GATED = {"moe": True, "dense": False}
 INFORMATIONAL = "INFORMATIONAL"
+HOLDS, LOST = "HOLDS", "LOST"
 FRONTIER_OWNER = "frontier/scheduler/replica_stage_scheduler/stage_execution_context.py"
 
 
@@ -98,7 +102,8 @@ def vllm_placement(scenario_dir: Path) -> dict:
                     scheduled_by[request_id].add(record["engine"])
     misplaced = sorted(rid for rid, rank in pinned.items() if scheduled_by.get(rid, {rank}) != {rank})
     unseen = sorted(rid for rid in pinned if rid not in scheduled_by)
-    return {"requests": len(pinned), "misplaced": misplaced, "unseen": unseen, "ok": not misplaced}
+    return {"requests": len(pinned), "misplaced": misplaced, "unseen": unseen,
+            "ok": not misplaced and not unseen}
 
 
 def frontier_run(set_dir: Path, case_id: str) -> dict:
@@ -179,11 +184,22 @@ def compare(vllm_run: Path, frontier_root: Path, before: str, after: str) -> tup
                                         "frontier_after_outcome": new["outcome"],
                                         "frontier_after_placement_ok": new.get("placement_ok"),
                                         "vllm": vllm_metrics}
-            base_control = (base["outcome"] == ADMISSION_DEADLOCK) if model == "moe" else (base["outcome"] == SUCCESS)
+            base_m4 = base_metrics["stage0"]["M4_co_start"] if base_metrics else None
+            # Negative controls: the base rule deadlocks MoE and starts dense
+            # lanes one forward apart.  They describe the base, not vLLM.
+            if model == "moe":
+                rows.append(_row("N1", model, burst, "base", "base outcome", None, new["outcome"],
+                                 base["outcome"], HOLDS if base["outcome"] == ADMISSION_DEADLOCK else LOST,
+                                 note=f"expected {ADMISSION_DEADLOCK}"))
+            else:
+                rows.append(_row("N4", model, burst, "base", "M4 stage-0 co-start", None,
+                                 new_metrics["stage0"]["M4_co_start"] if new_metrics else None, base_m4,
+                                 HOLDS if base_m4 is not None and base_m4 >= CO_START_BOUND else LOST,
+                                 note=f"expected >= {CO_START_BOUND}"))
             for r in rounds:
                 run = vllm_runs[(burst, r)]
                 completed = run["completed"] == run["submitted"] == burst
-                status = "MATCH" if completed and new["outcome"] == SUCCESS and base_control else "MISMATCH"
+                status = "MATCH" if completed and new["outcome"] == SUCCESS else "MISMATCH"
                 rows.append(_row("V1", model, burst, r, "M1 completion",
                                  f"{run['completed']}/{run['submitted']}", new["outcome"], base["outcome"], status))
                 gt = vllm_metrics[r]
@@ -196,10 +212,8 @@ def compare(vllm_run: Path, frontier_root: Path, before: str, after: str) -> tup
                                  base_metrics["stage0"]["M3_pairing"] if base_metrics else None,
                                  "MATCH" if after_m3 == gt["stage0"]["M3_pairing"] else "MISMATCH"))
                 after_m4 = new_metrics["stage0"]["M4_co_start"] if new_metrics else None
-                base_m4 = base_metrics["stage0"]["M4_co_start"] if base_metrics else None
                 m4_ok = (gt["stage0"]["M4_co_start"] < CO_START_BOUND and after_m4 is not None
-                         and after_m4 < CO_START_BOUND
-                         and (model == "moe" or (base_m4 is not None and base_m4 >= CO_START_BOUND)))
+                         and after_m4 < CO_START_BOUND)
                 rows.append(_row("V4", model, burst, r, "M4 stage-0 co-start", gt["stage0"]["M4_co_start"],
                                  after_m4, base_m4, "MATCH" if m4_ok else "MISMATCH"))
             gt_m5 = statistics.mean(vllm_metrics[r]["stage0"]["M5_co_execution"] for r in rounds)
@@ -233,6 +247,7 @@ def main(argv=None) -> int:
     mismatches = [row for row in rows if row["status"] == "MISMATCH"]
     placement_ok = all(p["ok"] for p in details["placement"].values())
     placement_unseen = sum(len(p["unseen"]) for p in details["placement"].values())
+    controls = [row for row in rows if row["status"] in (HOLDS, LOST)]
     status = {
         "analysis_state": "COMPLETE",
         "status": "PASS" if not mismatches and placement_ok else "FAIL",
@@ -241,6 +256,7 @@ def main(argv=None) -> int:
         "mismatches": len(mismatches),
         "vllm_placement_ok": placement_ok,
         "vllm_placement_unseen_requests": placement_unseen,
+        "negative_control_holds": all(row["status"] == HOLDS for row in controls),
         "next_action": ("record C7 in the test report" if not mismatches and placement_ok
                         else "report each MISMATCH row with its cause before P4; adjust nothing"),
     }

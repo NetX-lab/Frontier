@@ -5,14 +5,17 @@ same ordered batches with the same component durations before and after, so
 the difference is start times only; report the §4.5 metric as absolute and as
 a fraction of stage busy time.
 
-Usage: python explain_t_path.py <matrix root> <compare json> <output json>
+Usage: python explain_t_path.py <matrix root> <after set> <compare json> <output json>
+
+The before set is always ``base``.
 """
 import json
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-root, compare_path, output = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+root, after_set = Path(sys.argv[1]), sys.argv[2]
+compare_path, output = Path(sys.argv[3]), Path(sys.argv[4])
 
 
 def lane_rows(set_name, case_id):
@@ -40,7 +43,7 @@ report = []
 for row in json.load(open(compare_path)):
     if row["path"] != "T" or row["verdict"] == "PASS":
         continue
-    before, after = lane_rows("base", row["case_id"]), lane_rows("after", row["case_id"])
+    before, after = lane_rows("base", row["case_id"]), lane_rows(after_set, row["case_id"])
     same_work = before.keys() == after.keys() and all(
         [signature(r) for r in before[key]] == [signature(r) for r in after[key]] for key in before
     )

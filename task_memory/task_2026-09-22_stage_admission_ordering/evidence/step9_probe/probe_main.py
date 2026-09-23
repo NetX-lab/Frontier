@@ -4,15 +4,14 @@ No source change. The probe wraps `_get_next_batch` (one call per admission,
 after `_running_requests` has grown) and the inert `on_replica_batch_end` seam,
 and reads the candidate report key -- the Replica's next forward id held by
 `ForwardSyncState` -- at each boundary.
+
+Run with ``PYTHONPATH`` set to the Frontier tree under test.
 """
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
-
-ROOT = "/data/ycfeng/Frontier/.worktrees/stage-admission-ordering"
-sys.path.insert(0, ROOT)
 
 
 def build_config(root: Path, *, is_moe: bool, attn_dp: int, moe_ep: int, stages: int):
