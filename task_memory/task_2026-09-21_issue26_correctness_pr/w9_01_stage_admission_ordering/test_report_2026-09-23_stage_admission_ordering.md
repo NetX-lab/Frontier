@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-11: P6 executed (`4d08c5d`); R2-06 row closed. |
 | 2026-09-23 | R-10 round-2 remediation: §8 added (rule refactor, PDD/online/PD-AF cells, tool fixes); §5.2 and §5.3 restated for the N rows and the barrier-aligned M5. |
 | 2026-09-23 | D-9 adopted ("采纳你的推荐，继续"): C3 witnesses judged by co-execution fraction, V5 gated on MoE only. Both comparisons rerun (`aeeca93`); all criteria pass. |
 | 2026-09-23 | Created. P0–P3 and P5 executed; two plan stop conditions reached (C3 witness metric at `attn_dp=4`, C7 V5 on the dense shape). P4 push held for the user's decision. |
@@ -353,7 +354,7 @@ Environment as §2; interpreter digest `ecd50ea8…` for every set.
 | R2-14 | `probe_completion.py` with `PYTHONPATH` only | C6 shapes complete | `moe_dp2_pp2` 6/6, `dense_dp1_pp2` 6/6; the probe's resolved config and `R0-moe-dp2-pp2-n6`'s differ only in `metrics_config` | PASS |
 | G2 | `tests/unit`, `tests/integration` vs `base-pytest` | no regression | unit 84 failed / 3660 passed / 49 skipped / 10 errors (base 84 / 3644 / 49 / 10); integration 14 passed / 21 skipped / 5 errors (base 11 / 21 / 5). 0 regressions, 0 new failures, 0 skip changes; new node ids only: 16 unit, 3 integration (`evidence/r2_g2_*_compare.json`) | PASS |
 | R2-12, R2-13 | documentation | contract stated | `design.md` round-2 note; PR body | done |
-| R2-06 | pre-merge step P6 | recorded, not executed | `plan.md` §7 | open |
+| R2-06 | P6 at `4d08c5d`: `git diff origin/main --name-only`, `git diff origin/main -- .gitignore`, `git ls-files task_memory`; affected tests rerun | no `task_memory` path, `.gitignore` equal to `main`, nothing tracked | 0 `task_memory` paths among 10 changed files; empty `.gitignore` diff; 0 tracked files; the tool, context and pipeline-lane tests 41 passed | PASS |
 
 ### 8.3 New groups (R2-03)
 

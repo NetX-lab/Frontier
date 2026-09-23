@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-01: PR 36 ran its pre-merge untrack (P6, `4d08c5d`); the copies here are now the only published records of that task. |
 | 2026-09-23 | W9-01: PR 36 round-2 review remediation recorded; the composition check now also reruns PR 36 groups G9 and G10. |
 | 2026-09-23 | W9-01: fixed on `fix/stage-admission-ordering` (draft PR 36) under option 2; resolution recorded, summary and test report copied to `w9_01_stage_admission_ordering/`. |
 | 2026-09-22 | Created; recorded W9-01 (stage-admission deadlock at PP>1 with attn_dp>1) and W9-02 (PP=3 x attn_dp=2 topology rejection) found during Step 9 P1(b). |
@@ -130,6 +131,7 @@ Option 2 was taken. The fix lives on its own branch and PR:
 | Acceptance rules | `aeeca93` (plan D-9) |
 | Round-2 review fixes | `1661bf1` (rule refactor: an active ticket is refused), `a8e8d8a` (PDD, online and PD-AF matrix groups G8–G11), `e35242f` (comparison tools) |
 | Records | `fc34341`, `4bcd616`, `ecff89a`, `1218ba6`, `7a7c22e`; copies in `w9_01_stage_admission_ordering/` (`summary.md`, `test_report_2026-09-23_stage_admission_ordering.md`) |
+| Pre-merge untrack | `4d08c5d` (PR 36 plan P6): the branch restores `main`'s `.gitignore` and no longer tracks its task directory, so the copies here are the published records |
 
 Observed on that branch (details in the copied test report):
 

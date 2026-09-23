@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-11: P6 executed; the directory is untracked on the branch and archived in the parent task. |
 | 2026-09-23 | R-10: round-2 review remediation (14 findings applied, R2-06 pending as P6); PDD, online and PD-AF cells added. |
 | 2026-09-23 | Created at P4: fix, tests, P0–P3 and the vLLM comparison complete under D-9. |
 
@@ -64,9 +65,8 @@ Decisions taken during execution:
 
 ## Open and deferred work
 
-- R2-06 / P6: before PR 36 merges, drop the `.gitignore` exception and
-  untrack this task directory (the parent task keeps copies). It deletes
-  tracked records, so it waits for the owner's go-ahead.
+- R2-06 / P6 was executed at R-11. This directory is no longer tracked on
+  the branch; the parent task keeps the archive copies.
 - On this branch, online Poisson arrivals reach only lane 0 of MONOLITHIC and
   PREFILL contexts (PR 35 W2). PR 35's composition check after the
   merge-forward reruns G9 and G10 with lane rotation, as well as G3b.
