@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-04 fix self-review of `2ffb062` (F9-01..F9-06). |
 | 2026-09-23 | Step 9 implementation self-review of `d1a2a06..bacdbb4` against the user's quality gates: findings S9-01..S9-08, no source change required; W9-04 and W9-05 recorded as pre-existing. |
 | 2026-09-22 | Second Step 9 plan review at the user's direction (quality gates for core-module changes): findings R9-01..R9-08 recorded with dispositions; plan §18.12, design.md. |
 | 2026-09-21 | Created with the pinned source snapshot. |
@@ -476,3 +477,22 @@ Found during validation, both outside this change:
 - W9-05, requests lost mid-decode under KV pressure in `vllm_v1`. It is also present on `origin/main` and is not diagnosed (`issues.md`).
 
 Result: no source change required by this review. G3–G5 remain blocked on GPU authorization.
+
+## W9-04 fix self-review 2026-09-23
+
+Reviewer: this session. Reviewed commit: `2ffb062`, 2 files, +72/−1. The
+source part is `sync_entry.py` +19; the rest is the regression case. Gates: as
+above. Inspected: `sync_entry.py` in full; the placeholder rule
+`_can_supply_idle_lane`; `stage_execution_context.py` `try_acquire`
+(line 357), `transition_active_scope`, `replace_full_stage_owners_with_ep_wave`
+(sealing) and `release` (line 393, group reset only when idle); and
+`ReplicaStageScheduler.pop_batch_if_not_busy` and `on_stage_end` (`is_busy`).
+
+| Id | Gate | Finding | Disposition |
+| --- | --- | --- | --- |
+| F9-01 | value | Without the fix, supported configurations cannot finish: MoE `attn_dp=4` online under `round_robin`, `lor` and `vllm_load_balancing`. The simulation stops with no request complete. The change serves the simulation directly and has no alternative inside the room logic. | Accepted |
+| F9-02 | reuse / no second path | The room already replaced a placeholder when the lane's real batch arrived first (`sync_room["batches"][lane_id] = batch`). The fix covers the other order with the same rule the placement uses, the lane's `is_busy`. No new state, flag or event. | Accepted |
+| F9-03 | correctness argument | A placeholder is placed only while the lane's stage is not busy. `try_acquire` refuses full-stage work once the group is sealed. `release` resets the group only when the context is idle, and an open room holds member tickets, so the context is not idle. A lane that is busy while the room is open has therefore joined this forward, and its batch reaches this room. The regression evidence confirms it: lane 2 is bound to group 0, and it is the lane withdrawn. | Accepted |
+| F9-04 | over-defense | No guard for an unreachable state. The `list(...)` copy is required because entries are deleted while iterating. The dict lookup needs no fallback: every lane in the room was admitted through the same `_replica_schedulers` table, which the placement loop already requires. | Accepted |
+| F9-05 | naming / readability | `_withdraw_idle_batches_of_joined_lanes` sits beside `_can_supply_idle_lane` and uses the module's own terms (idle batch, lane, room). Its docstring states the invariant that makes it correct, not the history. | Accepted |
+| F9-06 | test surface | One case in the existing runtime test module, using its builder and observers. It is a three-request trace, and it asserts that the race was reached before asserting completion. A deliberate-defect control (call removed) fails for the stated reason. | Accepted |

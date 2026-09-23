@@ -1,0 +1,20 @@
+{
+ "counts_before": {
+  "skipped": 22,
+  "error": 5,
+  "passed": 26
+ },
+ "counts_after": {
+  "skipped": 22,
+  "error": 5,
+  "passed": 27
+ },
+ "regressions": [],
+ "now_passing": [],
+ "skip_changes": [],
+ "new_failures": [],
+ "only_before": [],
+ "only_after": [
+  "tests.integration.test_vllm_dp_placement_runtime::test_a_lane_joining_after_its_placeholder_completes_the_forward"
+ ]
+}

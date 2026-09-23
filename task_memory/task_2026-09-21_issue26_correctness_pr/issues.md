@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-04 fixed in `2ffb062` under option 1 (user decision); Resolution added with checks A1–A7. W9-05 deferred as a separate item (user decision). |
 | 2026-09-23 | W9-04 (placeholder/join deadlock at `attn_dp=4`, root cause and prototype) and W9-05 (requests lost under KV pressure, also on `main`) recorded from Step 9 P5. |
 | 2026-09-23 | W9-01 remaining step 3 done (P1(b) complete, D9-2 proposed); W9-02 narrowed to the collective-sim backend; W9-03 recorded (reference DP lockstep under PP, observation). |
 | 2026-09-23 | W9-01: merged forward (`dd9b8d9`); composition check passes on `03d5f24`. |
@@ -234,9 +235,9 @@ that reaches the report stream.
 
 ## W9-04 A lane with a first-layer placeholder can join the forward and deadlock it
 
-Status: open, root cause established, prototype fix measured in a scratch
-tree. Not caused by Step 9: the pre-P2 tree `d1a2a06` and `bacdbb4` stop at the
-same state. Decision pending with the user.
+Status: fixed in `2ffb062` under option 1, by the user's decision of
+2026-09-23 (see Resolution below). Not caused by Step 9: the pre-P2 tree
+`d1a2a06` and `bacdbb4` stop at the same state.
 Found: 2026-09-23, Step 9 package P5, in the C2 PP=1 policy matrix.
 
 ### Symptom
@@ -310,10 +311,54 @@ Recommendation: option 1 in this PR, because this PR's W2 is what makes the
 multi-lane Poisson path reachable under `round_robin`. Option 2 belongs with
 W9-03 and the G4 lockstep measurement.
 
+### Resolution (2026-09-23)
+
+Decision: "本 PR 修复 (Recommended)", which is option 1 (`requirements.md`).
+
+Change (`2ffb062`). `sync_entry.py` gains
+`_withdraw_idle_batches_of_joined_lanes`, which `enter_layer_sync` calls after
+storing the arriving batch. It removes the room's idle batches whose lane's
+stage is now busy. It is the prototype's rule, extracted into a named function
+next to `_can_supply_idle_lane`, whose `is_busy` test it reuses. Why such a lane
+has joined this forward is argued in `review.md` F9-03 and plan §18.17.
+
+Regression case. `tests/integration/test_vllm_dp_placement_runtime.py` adds
+`moe_dp4_late_join`: MoE `attn_dp=4, moe_ep=4`, three online requests at 0, 2
+and 8 ms, run under `vllm_load_balancing` and under `round_robin`. The trace
+was reduced from the stalled C2 case with `w9_04_fix/extract_trace.py` and
+`trace_probe.py`. Before the fix it stalls under both policies with 0 of 3
+complete. The test asserts four things:
+
+- the placements are lanes 0, 1 and 2;
+- each lane's first stage-0 batch is bound to forward 0;
+- the withdrawn placeholder is lane 2's;
+- the run conserves work.
+
+Checks, against the criteria fixed in plan §18.17 before measuring:
+
+| Id | Result | Evidence |
+| --- | --- | --- |
+| A1 | Test passes; the module gives 10 passed. With only the call removed, it fails with `RuntimeError: Sequential simulation ended with non-empty scheduler state`, imported from the control tree. | `w9_04_fix/evidence/negative_control_pytest.txt` |
+| A2 | 72 of 72 sweep cells drain, 24 under each of `round_robin`, `lor` and `random`. The branch before the fix stalled in 5 and 1 of those cells. | `w9_04_fix/evidence/sweep_fix_*.txt` |
+| A3 | 22 of 22 identical. The two stalled cases now finish, at 24/24 and at 23/24 (`tight_kv`, no error; evidence byte-identical to the prototype's; the loss has the W9-05 signature, not diagnosed). | `w9_04_fix/evidence/c2_bacdbb4_vs_fix.txt` |
+| A4 | 71 of 71 identical; 0 provenance findings; `complete_comparison` and `predictor_cache_populated_cleanly` true | `w9_04_fix/evidence/fidelity_comparison.json` |
+| A5 | G3b, G9 and G10: 51 of 51 PASS; each cell's `sha256sums.txt` is identical | `w9_04_fix/evidence/stage_admission_compare_w904.json` |
+| A6 | unit 84 failed / 3829 passed / 51 skipped / 10 errors; integration 5 errors / 27 passed / 22 skipped. 0 regressions, 0 new failures, 0 skip changes. The only new test id is the regression test. | `w9_04_fix/evidence/{unit,integration}_compare.json` |
+| A7 | 16 of 16 examples pass and are identical to `bacdbb4` | `w9_04_fix/evidence/examples_bacdbb4_vs_fix.txt` |
+
+Limits:
+
+- The fix follows Frontier's join rule, under which a late join into an
+  unsealed forward succeeds. The reference would pair a dummy forward instead
+  (option 2, W9-03). That remains a separate fidelity question, and the fix
+  does not settle it.
+- All checks are CPU runs with dummy or trained predictors on this host.
+
 ## W9-05 Requests disappear mid-decode under KV pressure
 
 Status: open, not diagnosed. Present on `origin/main` `4ab1964`. Outside
-Step 9.
+Step 9. Deferred as a separate correctness item by the user's decision of
+2026-09-23 ("暂缓，单独立项 (Recommended)").
 Found: 2026-09-23, Step 9 package P5, in the C2 PP=1 policy matrix.
 
 `vllm_v1` with `num_blocks=12, block_size=16`, 24 Poisson requests of 8–96

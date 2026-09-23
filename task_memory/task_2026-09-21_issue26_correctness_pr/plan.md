@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.17 results: A1–A7 pass on `2ffb062`. |
+| 2026-09-23 | §18.17 added: the W9-04 fix (user decision: option 1 in this PR), its regression test and acceptance criteria A1–A7, written before measuring. |
 | 2026-09-23 | §18.16 added: P2–P5 results against their acceptance rows, and the two pre-existing defects found in P5 (W9-04, W9-05). Status line under §18 updated. |
 | 2026-09-23 | D9-2 decided by the user: group-anchored key (§18.15, `requirements.md`); C1 PP3 row amended; P2 started. |
 | 2026-09-23 | §18.15 added: P1(b) completed on seven shapes; D9-2 proposal (group-anchored key) and the C1 PP3 amendment await the user's decision. §18.13 blocker marked resolved. |
@@ -1256,3 +1258,38 @@ Found in P5, both pre-existing (`issues.md`):
   applied and awaits the user's decision.
 - **W9-05**: `vllm_v1` loses requests mid-decode under KV pressure, also on
   `origin/main`. It is not yet diagnosed.
+
+### 18.17 W9-04 fix (2026-09-23)
+
+Decision: option 1 of `issues.md` W9-04, in this PR (`requirements.md`,
+"[Decision] 2026-09-23 — W9-04, W9-05 and the P5 worktrees").
+
+Change. In `frontier/scheduler/utils/sync_entry.py`, `enter_layer_sync`
+withdraws a room's idle batches whose lane's stage has become busy since the
+placeholder was placed. A placeholder is placed only for a lane whose stage is
+not busy (`_can_supply_idle_lane`). A stage opens a new forward group only when
+it is idle, and a sealed group admits no full-stage work
+(`stage_execution_context.py` `release`, `try_acquire`). So a lane that becomes
+busy while the room is open has joined this forward, and its real batch will
+reach this room. No other file changes.
+
+Regression test. A new case in `tests/integration/test_vllm_dp_placement_runtime.py`
+covers a MoE `attn_dp=4, moe_ep=4` online trace of three requests, at 0, 2 and
+8 ms. It stalls under both `vllm_load_balancing` and `round_robin` at
+`339e6bd`. The run records each withdrawal, so the test can show that the
+race was reached.
+
+Acceptance, fixed before measuring:
+
+| Id | Check | Pass condition |
+| --- | --- | --- |
+| A1 | Regression test | Passes with the fix. With only the call removed, it fails because the run ends with non-empty scheduler state. |
+| A2 | `step9_p5/deadlock_sweep.py` on the fixed tree, three cluster schedulers | 72 of 72 cells drain |
+| A3 | `step9_p5/c2_pp1_policy_matrix.py`, `bacdbb4` against the fix | The 22 cases that finished before are identical. The 2 stalled cases now finish, except for losses attributable to W9-05. |
+| A4 | Fidelity matrix, `step9_p5/run_fidelity.sh`, `bacdbb4` against the fix | 71 of 71 identical |
+| A5 | Stage-admission matrix groups G3b, G9 and G10, before against after | 0 STOP; every cell identical |
+| A6 | Unit and integration suites, by test id against the P5 JUnit at `bacdbb4` | 0 regressions and 0 new failures; the only additions are the new test's ids |
+| A7 | 16 architecture examples | 16 of 16 pass and are identical to `bacdbb4` |
+
+**Result 2026-09-23:** A1–A7 all pass on `2ffb062`. The numbers are in
+`validation.md` "W9-04 fix" and `issues.md` W9-04 "Resolution".

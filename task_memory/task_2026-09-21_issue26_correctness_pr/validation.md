@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-04 fix `2ffb062` validated: A1–A7 pass (regression test and its control, sweep 72 of 72, C2 22 of 22 plus both stalled cases finishing, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
 | 2026-09-23 | Step 9 completed on CPU: P1(b) on seven shapes after the W9-01 merge-forward, P2/P3 unit tests, P4 real event loop, P5 unchanged behavior (C2 24 of 24, fidelity 71 of 71, examples 16 of 16, 0 suite regressions), and the two pre-existing defects W9-04 and W9-05 found during P5. |
 | 2026-09-22 | Step 9 partial validation added: reference-loop oracle, Frontier boundary probes on three shapes, the two probe failures (invariant I5, W9-01), and the ground-truth writer checks. |
 | 2026-09-21 | Created. Environment recorded; baseline results recorded in the refactor task's Step 0 report because both branches share the same base commit. |
@@ -524,7 +525,7 @@ Full record: `test_report_2026-09-22_w8_combined_regression.md`.
 | P5 C2, other cluster schedulers | `step9_p5/run_fidelity.sh` on clean detached worktrees, `--clean-cache` | 71 of 71 identical | 71 of 71 identical; 0 provenance findings; `complete_comparison` true | PASS |
 | P5 architecture examples | `step9_p5/run_examples.sh` on both exports, `compare_examples.py` | 16 of 16 pass on both; artifacts identical | 16 of 16 pass and identical | PASS |
 | P5 suites | `composition_run_suites.sh` at `bacdbb4`, compared by test id with `composition_compare_junit.py` against `03d5f24` | 0 regressions, 0 new failures | unit 84 failed / 3829 passed / 51 skipped / 10 errors; integration 5 errors / 26 passed / 22 skipped; 0 regressions, 0 new failures, 0 skip changes | PASS |
-| W9-04 prototype (not applied) | `step9_p5/deadlock_sweep.py` on an export with `step9_p5/w9_04_prototype.patch` | Cause established before any change | Sweep 72 of 72 drain (branch 66 of 72); 22 of 22 previously drained C2 cases identical | Finding; awaits decision |
+| W9-04 prototype (not applied) | `step9_p5/deadlock_sweep.py` on an export with `step9_p5/w9_04_prototype.patch` | Cause established before any change | Sweep 72 of 72 drain (branch 66 of 72); 22 of 22 previously drained C2 cases identical | Finding; fixed in `2ffb062` (next section) |
 
 Limits. The instrumented vLLM paths have not been executed; that needs a GPU
 host and is package G3, still blocked with G4 and G5. The three probe FAIL rows
@@ -535,3 +536,29 @@ targets are Frontier's own forward grouping, not vLLM measurements. W9-04 and
 W9-05 are pre-existing and recorded in `issues.md`; neither is repaired here.
 Evidence: `test_report_2026-09-22_w9_pp_dp_placement.md`, `step9_p1b/`,
 `step9_p5/evidence/`.
+
+## W9-04 fix (2026-09-23)
+
+Commit `2ffb062`, compared with `bacdbb4`. The criteria were fixed in plan
+§18.17 before measuring. Clean detached worktrees `.worktrees/w9-04-{before,after}`
+were used for A4–A6, and `git archive` exports for A2, A3 and A7. Environment
+as in Step 9. Scripts are in `w9_04_fix/`, and evidence in
+`w9_04_fix/evidence/`.
+
+| Id | Command | Expected | Actual | Outcome |
+| --- | --- | --- | --- | --- |
+| A1 | `pytest tests/integration/test_vllm_dp_placement_runtime.py`, then the new case on a control tree with only the call removed | Pass; the control fails with non-empty scheduler state | 10 passed; control `1 failed` with `RuntimeError: Sequential simulation ended with non-empty scheduler state` | PASS |
+| A2 | `run_a2_a3.sh` (sweep, three cluster schedulers) | 72 of 72 drain | 72 of 72 drain, 24 of 24 requests each | PASS |
+| A3 | `run_a2_a3.sh` (C2); the 22 cases that finished before compared with the matrix comparator | 22 identical; the 2 stalled cases finish apart from W9-05 losses | 22 of 22 identical; 24/24 and 23/24 without error, the latter byte-identical to the prototype | PASS |
+| A4 | `run_a4_a5_a6.sh` (refactor fidelity, `--clean-cache`) | 71 of 71 identical | 71 of 71; 0 provenance findings; `complete_comparison` true | PASS |
+| A5 | `run_a4_a5_a6.sh` (`stage_admission_matrix` G3b/G9/G10, sets `w904-before`, `w904-after`) | 0 STOP; every cell identical | 51 of 51 PASS; 51 of 51 `sha256sums.txt` identical | PASS |
+| A6 | `run_a4_a5_a6.sh` (`composition_run_suites.sh`), `composition_compare_junit.py` against the P5 JUnit | 0 regressions, 0 new failures | 0 / 0 / 0 skip changes in both suites; only new id is the regression test | PASS |
+| A7 | `run_examples.sh`, `compare_examples.py` against P5's `bacdbb4` outputs | 16 of 16 pass and identical | 16 of 16 | PASS |
+
+Limits:
+
+- CPU only.
+- The fix keeps Frontier's late-join rule. Whether a late join should instead
+  wait for the next forward, as in vLLM, is W9-03 and is not measured here.
+- The one request missing in the `tight_kv` case is attributed to W9-05 from
+  its signature: tight KV, a drained queue, and no error. It is not traced.

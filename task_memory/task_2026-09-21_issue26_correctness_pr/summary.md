@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9 and the W9-04 fix (`2ffb062`) added to Work packages and Deliverables; open items reduced to G3–G5 and W9-05 (deferred as a separate item by the user). |
 | 2026-09-23 | Status only: Step 9 P1–P5 complete on the CPU (`2ffe78d`, `bacdbb4`); D9-2 decided as group-anchored. Open items W9-04, W9-05 and G3–G5 added below. The Step 0–8 archive is otherwise unchanged. |
 | 2026-09-23 | Status only: Step 9 in progress. W9-01 fixed via PR 36 and merged forward (composition check PASS); P1 complete; D9-2 proposed, awaiting the user's decision (`progress.md`, plan §18.15). The Step 0–8 archive below is unchanged. |
 | 2026-09-22 | FP8 native rerun with the corrected `block_shape` wiring PASS (`exp-0922-202645-561899`, 8 passed). Step 9 plan reviewed a second time against the user's quality gates (plan §18.12); still not started. |
@@ -39,6 +40,8 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | W5 | Routing implementation identity separated from expert-load distribution | **Closed, not ported**, by user decision after the premise check showed the collision unreachable from any released configuration. Drafted implementation reverted before commit and archived as `w5_reverted_moe_routing_runtime_path.patch`. |
 | W6 | Legacy fused-MoE profiling performs the real gated expert computation | Landed. `7269bac`, native parity test `697f219`, identity limits documented in `79f599a`. |
 | W7 | The collective-sim backend accepts an empty collective | Landed companion-side. Frontier gitlink moved in `1b95187`; governance scans narrowed in `beded3c`. |
+| W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). The vLLM-side GPU comparison G3–G5 is not run. |
+| W9-04 | A lane that joins a forward after receiving a first-layer placeholder no longer stalls it | Landed. `2ffb062`; checks A1–A7 pass, including fidelity 71 of 71 and stage-admission 51 of 51. |
 
 ## Deliverables
 
@@ -57,6 +60,8 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | `frontier/profiling/moe/moe_vllm_kernel.py` | W6: the legacy path performs the gated expert computation |
 | `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f` |
 | `docs/profiling/README.md` | W6: the operator's scope and its artifact-identity limits |
+| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py`, `base_cluster_scheduler.py`, `frontier/scheduler/replica_scheduler/base_replica_scheduler.py`, `frontier/scheduler/replica_stage_scheduler/stage_execution_context.py` | W9: schedule-time load reports while the pipeline has room, keyed by the stage-0 forward group |
+| `frontier/scheduler/utils/sync_entry.py` | W9-04: withdraw a first-layer placeholder when its lane joins the forward |
 
 ### Tests
 
@@ -64,7 +69,8 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | --- | --- |
 | `tests/unit/test_cluster_scheduler_dp_lanes.py` | W2 placement, extended to state where each request lands |
 | `tests/unit/test_monolithic_mixed_forward_sync.py`, `tests/integration/test_monolithic_mixed_forward_runtime.py` | W3, unit and real event loop |
-| `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | W4, unit and real event loop |
+| `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | W4 and W9, unit and real event loop; the runtime module also carries the W9-04 regression case |
+| `tests/unit/test_dp_placement_reference_loop.py` | W9: the vLLM engine-iteration reference loop |
 | `tests/unit/test_moe_fused_expert_arithmetic.py` | W6 on CPU, against plain-Torch references |
 | `tests/integration/test_moe_fused_expert_numerical_parity.py` | W6 against vLLM's own `fused_experts` on a GPU |
 | `tests/unit/test_collective_sim_zero_payload.py` | W7 through the Frontier backend boundary |
@@ -109,9 +115,8 @@ per-work-package reports.
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
-| Step 9 (PP>1 for the vLLM DP placement policy): P1–P5 done on the CPU; G3–G5 blocked on GPU authorization. | `validation.md` Step 9, plan §18.16 |
-| W9-04: MoE `attn_dp=4` online deadlock from a stale first-layer placeholder, pre-existing. Prototype validated in scratch, not applied; awaits a decision. | `issues.md` W9-04 |
-| W9-05: `vllm_v1` loses requests mid-decode under KV pressure, also on `origin/main`; not diagnosed. | `issues.md` W9-05 |
+| Step 9 vLLM-side comparison G3–G5: blocked on GPU authorization. | plan §18.16 |
+| W9-05: `vllm_v1` loses requests mid-decode under KV pressure, also on `origin/main`; not diagnosed. Deferred as a separate correctness item by the user. | `issues.md` W9-05 |
 
 ## Limits of what was validated
 

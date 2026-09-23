@@ -9,6 +9,7 @@
 | 2026-09-22 | Recorded the PP>1 `vllm_load_balancing` request, the codesign-only GPU instruction, and the open Step 9 decisions. |
 | 2026-09-23 | Recorded the W9-01 merge-forward request after PR 36 merged. |
 | 2026-09-23 | Recorded the D9-2 decision (group-anchored report key). |
+| 2026-09-23 | Recorded the W9-04, W9-05 and P5-worktree decisions. |
 
 ## [Original Request] 2026-09-21
 
@@ -115,3 +116,17 @@ Answer: "Group-anchored (Recommended)", selected together with its preview.
 | Key rule | `key(l) = max(C.joinable_forward_group_id, last_admitted_key[l] + 1)`. An admission stores its key and reports it while the pipeline has room; otherwise the key is held. A completion reports the held key, or `key(l)` without storing it (`design.md` "Design checkpoint D9-2", plan §18.15). |
 | Included with the option | A read-only `StageExecutionContext` property and two per-lane dicts in the policy scheduler. The policy's use of the `ForwardSyncState` key is removed. C1 regains the MoE `attn_dp=2, PP=3` row on the analytical backend. |
 | Not decided | W9-03 (reference DP lockstep under PP) stays an observation outside Step 9. GPU runs G3/G4 still need their own authorization (manifest BLOCKED). |
+
+## [Decision] 2026-09-23 — W9-04, W9-05 and the P5 worktrees
+
+Questions (AskUserQuestion) after Step 9 P6. Answers, verbatim:
+
+- W9-04 (stale first-layer placeholder deadlock): "本 PR 修复 (Recommended)".
+- W9-05 (requests lost mid-decode under KV pressure): "暂缓，单独立项 (Recommended)".
+- `.worktrees/p5-fidelity-{before,after}`: "删除 (Recommended)".
+
+| Item | Decision |
+| --- | --- |
+| W9-04 | Fix in this PR with option 1 of `issues.md` W9-04: in `enter_layer_sync`, drop an idle placeholder whose lane's stage has since become busy. Add a regression test, then rerun the deadlock sweep, the PP=1 policy C2 matrix, the 71-case fidelity matrix, stage-admission groups G3b/G9/G10 and the suites. |
+| W9-05 | Deferred as a separate correctness item; recorded in `issues.md` only. No source change here. |
+| P5 worktrees | Removed 2026-09-23 with `git worktree remove` (the `after` tree held two generated `config.json` run outputs only, so `--force`). |

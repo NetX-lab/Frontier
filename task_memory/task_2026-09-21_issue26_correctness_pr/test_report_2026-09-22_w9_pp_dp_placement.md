@@ -7,6 +7,7 @@
 | 2026-09-22 | Created. Covers packages P1(a), P1(b) and G1. |
 | 2026-09-23 | §2 addendum: P1(b) rerun after the W9-01 merge-forward on seven shapes, with key scoring. §4 updated. |
 | 2026-09-23 | §4–§6 added: P2/P3 pointer, P4 real-loop integration evidence, P5 fidelity and regression evidence, W9-04/W9-05 found in P5. Summary renumbered to §7. |
+| 2026-09-23 | §8 added: the W9-04 fix `2ffb062` and its checks A1–A7; §6.4 and §7 updated. |
 
 Environment for every CPU check below:
 
@@ -348,8 +349,8 @@ Both defects are pre-existing; neither is caused by Step 9. See `issues.md`.
   forward after it was given a first-layer placeholder. It is reachable on this
   branch under `round_robin` in 5 of 24 sweep cells. A scratch prototype
   (`step9_p5/w9_04_prototype.patch`) drains all 72 sweep cells and leaves
-  every previously drained C2 case identical. It is not applied: it awaits
-  the user's decision.
+  every previously drained C2 case identical. The user chose to fix it in
+  this PR; see §8.
 - **W9-05**: under KV pressure, `vllm_v1` loses requests mid-decode without
   an error. It is also present on `origin/main`.
 
@@ -365,4 +366,31 @@ Both defects are pre-existing; neither is caused by Step 9. See `issues.md`.
 | P2, P3 | PASS (§4) |
 | P4 | PASS (§5) |
 | P5 / C2 | PASS (§6): 24 of 24 PP=1 policy scenarios, 71 of 71 fidelity cases and 16 of 16 examples identical; 0 suite regressions |
+| W9-04 fix (§8) | PASS: A1–A7 |
 | G3–G5 | BLOCKED on GPU authorization |
+
+## 8. W9-04 fix (`2ffb062`)
+
+Change, decision and argument: `issues.md` W9-04 "Resolution". Criteria:
+plan §18.17, fixed before measuring. The baseline is `bacdbb4`, whose
+`frontier/` differs from `2ffb062` only in `sync_entry.py`.
+
+| Id | Check | Result |
+| --- | --- | --- |
+| A1 | New case `moe_dp4_late_join`; control tree with the call removed | 10 passed; control fails with non-empty scheduler state |
+| A2 | Sweep, `round_robin` / `lor` / `random` | 72 of 72 drain (before: 5 and 1 stalled) |
+| A3 | C2 PP=1 policy scenarios | 22 of 22 identical; the 2 stalled cases finish at 24/24 and 23/24 (W9-05 signature) |
+| A4 | Refactor fidelity matrix | 71 of 71 identical, 0 provenance findings |
+| A5 | Stage-admission G3b, G9, G10 | 51 of 51 PASS, hashes identical |
+| A6 | Unit and integration suites against P5 | 0 regressions, 0 new failures, 0 skip changes; +1 test id |
+| A7 | 16 architecture examples | 16 of 16 identical |
+
+What the regression case shows, from its evidence:
+
+- Requests go to lanes 0, 1 and 2.
+- Each lane's first stage-0 batch is bound to forward group 0.
+- The one withdrawn placeholder is lane 2's.
+- Both policy runs complete 3 of 3, conserve tokens, and release every lane
+  and stage context.
+
+Limits are in `validation.md` "W9-04 fix".

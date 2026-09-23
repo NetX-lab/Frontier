@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Noted the W9-04 fix (`2ffb062`) under the Step 9 implementation results. |
 | 2026-09-23 | W9 as implemented: section "Schedule-time reports under pipeline parallelism" added (P2–P5 outcome, measured against the expectation above); W4 guard row annotated. |
 | 2026-09-23 | D9-2 decided by the user: the group-anchored rule. |
 | 2026-09-23 | Added "Design checkpoint D9-2: the key from the fourth shape": reference lockstep facts, seven-shape P1(b) scores, the proposed group-anchored key rule with its invariant argument and residuals, W9-03 pointer. Proposal only; awaits the user's decision. |
@@ -753,5 +754,7 @@ Against "Fidelity expectation, stated before measuring":
 The residuals in "What the rule does not reproduce" stand as written. P5 also
 found W9-04, a deadlock in the shared-forward placeholder rule that predates
 this work (`issues.md`). It is independent of the key: `round_robin` stalls on
-the same cells.
+the same cells. By the user's decision it was fixed in this PR (`2ffb062`). A
+placeholder whose lane has since joined the forward is withdrawn before the
+room is counted (`issues.md` W9-04, Resolution).
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | User decisions: W9-04 fixed in this PR, W9-05 deferred, P5 worktrees removed. W9-04 fix `2ffb062` with regression case; A1–A7 pass. |
 | 2026-09-23 | Step 9 P6 done: records and AGENTS.md scope committed (`c1a570d`, review wording `104b6ff`), pushed, PR 35 body updated with the W9 section and read back. Step 9 CPU packages complete; W9-04/W9-05 decisions pending. |
 | 2026-09-23 | Step 9 P4 committed (`bacdbb4`) and P5 completed: C2 holds (24 of 24 PP=1 policy scenarios, 71 of 71 fidelity cases, 16 of 16 examples identical; 0 suite regressions). P5 found W9-04 (placeholder/join deadlock at `attn_dp=4`) and W9-05 (requests lost under KV pressure, also on `main`); W9-04 fix decision pending with the user. |
 | 2026-09-23 | D9-2 decided (group-anchored key); P2 implemented and P3 unit tests added (132 targeted tests pass; the 19 new or changed cases fail on the pre-P2 tree). |
@@ -36,9 +37,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). G3–G5 blocked on GPU authorization. |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. G3–G5 blocked on GPU authorization. |
 | Publication | PUSHED_VERIFIED 2026-09-23: remote head `104b6ff` confirmed equal to local; Step 9 commits `d1a2a06`, `2ffe78d`, `bacdbb4`, `c1a570d`, `104b6ff`. Draft PR 35 body PATCHed 2026-09-23T12:10Z through `gh api` (Scope, Base, Progress, new W9 section, pipeline-coverage note, review material, commits, Status), read back identical apart from a trailing newline; still draft, base `refactor/oversized-module-split`; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_c1a570d.md`. Earlier: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
-| Next action | User decision on W9-04 (`issues.md`: option 1 stale-placeholder removal in this PR, recommended; option 2 reference placeholder binding; option 3 defer) and on W9-05 (defer recommended). Removal of the two P5 detached worktrees `.worktrees/p5-fidelity-{before,after}` needs approval. |
+| Next action | Push the W9-04 fix and records; update the PR 35 body. Removal of the validation worktrees `.worktrees/w9-04-{before,after}` needs approval. G3–G5 wait for GPU authorization; W9-05 waits to be scheduled as its own item. |
 
 ## Step status
 
@@ -54,7 +55,7 @@
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
 | 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
 | 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
-| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 blocked (GPU) | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `104b6ff`; PR 35 body updated | D9-2 decided by the user; W9-04 decision pending |
+| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 blocked (GPU) | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `104b6ff`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 deferred |
 
 ## Chronological updates
 
@@ -284,6 +285,17 @@ W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices agains
 | P5 C2, other schedulers | `step9_p5/run_fidelity.sh` on clean detached worktrees `.worktrees/p5-fidelity-{before,after}`; `step9_p5/run_examples.sh` + `compare_examples.py` | 71 of 71 and 16 of 16 identical | 71 of 71 identical, 0 provenance findings; 16 of 16 examples pass on both trees and are identical. |
 | P5 suites | `composition_run_suites.sh` on the clean `bacdbb4` worktree, compared by test id against the K4 JUnit of `03d5f24` | 0 regressions, 0 new failures | unit 84 failed / 3829 passed / 51 skipped / 10 errors; integration 5 errors / 26 passed / 22 skipped; 0 regressions, 0 new failures, 0 skip changes. The added skip is `test_collective_sim_zero_payload` (submodule not initialized in the detached worktree); 4 passed in this worktree. |
 | W9-04 investigation | `step9_p5/deadlock_trace.py`, `deadlock_sweep.py`; prototype `step9_p5/w9_04_prototype.patch` in a scratch export only | Establish the cause before proposing a change | Root cause and options in `issues.md` W9-04. Prototype: 72 of 72 sweep cells drain (was 66); 22 of 22 previously drained C2 cases identical. Not applied to the branch. |
+
+### W9-04 fix (2026-09-23)
+
+| Step | Change / command | Reason and expectation | Result |
+| --- | --- | --- | --- |
+| Decisions | AskUserQuestion: W9-04 "本 PR 修复 (Recommended)", W9-05 "暂缓，单独立项 (Recommended)", worktrees "删除 (Recommended)" | Recorded in `requirements.md` | P5 worktrees removed (`git worktree remove`; `--force` for two generated `config.json` files) |
+| Precondition | Read `stage_execution_context.py` `try_acquire`/`release`/sealing and `ReplicaStageScheduler.is_busy` | The rule needs "busy while the room is open ⇒ joined this forward" | Holds (`review.md` F9-03) |
+| Reproducer | `w9_04_fix/extract_trace.py`, `trace_probe.py` | A short deterministic trace for the regression case | 3 requests at 0 / 2 / 8 ms stall under both policies at `339e6bd` |
+| Criteria | plan §18.17 A1–A7 | Fixed before measuring | — |
+| Fix and test | `sync_entry.py` `_withdraw_idle_batches_of_joined_lanes`; case `moe_dp4_late_join` in `test_vllm_dp_placement_runtime.py` | Remove the stale placeholder; assert the race is reached and the run conserves work | `2ffb062`; 10 passed; neighbors 171 passed |
+| A1–A7 | `w9_04_fix/run_a2_a3.sh`, `run_a4_a5_a6.sh`, the control tree, `run_examples.sh` | As in plan §18.17 | All PASS (`validation.md` "W9-04 fix") |
 
 Evidence copies: `step9_p5/evidence/`. Raw runs: `/data/ycfeng/tmp/issue26-correctness-pr/step9_p5`.
 

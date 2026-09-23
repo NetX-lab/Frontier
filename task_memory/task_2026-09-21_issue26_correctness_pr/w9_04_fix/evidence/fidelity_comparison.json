@@ -1,0 +1,19 @@
+{
+ "baseline": {
+  "git_head": "bacdbb423a0c8cffa0ee60397203f2364246a809",
+  "label": "before",
+  "repo_root": "/data/ycfeng/Frontier/.worktrees/w9-04-before"
+ },
+ "candidate": {
+  "git_head": "2ffb062fcc426de834043da8c31aae9eabf71223",
+  "label": "after",
+  "repo_root": "/data/ycfeng/Frontier/.worktrees/w9-04-after"
+ },
+ "case_table_size": 71,
+ "cases_compared": 71,
+ "complete_comparison": true,
+ "predictor_cache_compared": true,
+ "predictor_cache_findings": [],
+ "predictor_cache_populated_cleanly": true,
+ "provenance_findings": []
+}
