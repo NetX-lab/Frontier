@@ -31,7 +31,22 @@ groundtruth_remote_tip: ea95f571e20937c7c908c6d59ddd1cd6bf9268f1
 groundtruth_diff_artifact: g1_instrumentation.diff
 groundtruth_diff_sha256: b6400d29710c6f0fac4d0e26c9078177a741d3984f9a07a72f838838eafcf8c7
 groundtruth_dirty_patch_sha256: null
-groundtruth_overlay_patch_applied: false
+groundtruth_overlay_patch_applied: true   # applied by the worker at run time, never to the checkout
+groundtruth_overlay_patch: inputs/groundtruth_overlay.patch
+groundtruth_overlay_patch_sha256: 8d47678911b7b689bc644ea81bd9d2200ea296d773ee9c07a1c5a9bc9b3a9c81
+groundtruth_overlay_patch_reason: >-
+  The fork passes a fifth renormalize argument to _moe_C::topk_softmax, while
+  the compiled ops of the v0.10.2 image declare four; at 63ac6c6b9
+  vllm/_custom_ops.py and fused_moe.py still carry the five-argument call. The
+  patch is the one the stage-admission case used for its MoE run
+  sa-pp-20260923b (same SHA-256), restoring the upstream four-argument wrapper.
+groundtruth_overlay: >-
+  The worker copies the image's installed vllm package and copies every
+  vllm/**/*.py of the checkout over it, only when the files where image and
+  checkout differ are exactly the .py files of inputs/fork_changed_files.txt
+  (SHA-256 f7abf513b1a3f794fc5645da3d9a49558ed0e5be0ed2dbff700d6da9e8c3b870,
+  git diff --name-only 01efc7ef7..63ac6c6b9 -- vllm/, 61 files). Result in
+  overlay_report.json of each run.
 groundtruth_commit_amendment:
   amended_at_utc: "2026-09-23"
   superseded_commit: 494b9f327036d4493034a9b37ebb343354884e01
@@ -118,20 +133,71 @@ model:
 
 workload:
   source: single Frontier trace CSV (arrived_at, num_prefill_tokens, num_decode_tokens)
-  request_id_namespace: BLOCKED   # set by G2 make_trace.py
-  request_id_encoding: "x-request-id header, propagated to the engine request id"
-  formal_request_ids: BLOCKED
-  warmup_request_ids: BLOCKED
+  producer: tests/comparison/dp_placement_pp/make_trace.py
+  trace: inputs/trace/   # built from inputs/workload.json; used by G4 and G5
+  trace_sha256: 84dac546f6594d339da23313a40c53e21cecd821cf84227e28dc0b51e478d6a7
+  request_id_namespace: dpp1
+  request_id_encoding: >-
+    X-Request-Id header <request_id>; vLLM completions name the engine request
+    cmpl-<request_id>-0 (serving_engine.py:971-978, serving_completion.py:115-116,194);
+    Frontier numbers trace rows from 0, mapped in inputs/trace/request_ids.json
+  formal_request_ids: [dpp1-b1, dpp1-b2, dpp1-b3, dpp1-b4, dpp1-b5, dpp1-b6,
+    dpp1-s00, dpp1-s01, dpp1-s02, dpp1-s03, dpp1-s04, dpp1-s05, dpp1-s06,
+    dpp1-s07, dpp1-s08, dpp1-s09, dpp1-s10, dpp1-s11, dpp1-s12, dpp1-s13,
+    dpp1-s14, dpp1-s15, dpp1-s16, dpp1-s17, dpp1-s18, dpp1-s19, dpp1-s20,
+    dpp1-s21, dpp1-s22, dpp1-s23]
+  warmup_request_ids: [dpp1-w0, dpp1-w1, dpp1-w2]
   warmups: 3
+  probe_request_id: dpp1-b6
+  retune_rule: >-
+    The G4 chunk budget, long-prompt length, burst stagger and probe offset are
+    set from the G3 measurements as a new workload/engine input with a new
+    namespace; the balancer's constants are never changed (plan section 18.6).
+  smoke_trace:   # G3 only (plan section 18.5 S0)
+    trace: inputs/trace_g3/   # built from inputs/workload_g3.json
+    trace_sha256: d695330f8923939e5cbfecb65dd9dcd95a71fc53ac54048193e76720a8bb6d63
+    request_id_namespace: dpp1g3
+    formal_request_ids: [dpp1g3-b1, dpp1g3-b2, dpp1g3-b3, dpp1g3-b4, dpp1g3-b5,
+      dpp1g3-b6, dpp1g3-s00, dpp1g3-s01, dpp1g3-s02, dpp1g3-s03, dpp1g3-s04,
+      dpp1g3-s05, dpp1g3-s06, dpp1g3-s07, dpp1g3-s08, dpp1g3-s09, dpp1g3-s10,
+      dpp1g3-s11, dpp1g3-s12, dpp1g3-s13, dpp1g3-s14, dpp1g3-s15, dpp1g3-s16,
+      dpp1g3-s17, dpp1g3-s18, dpp1g3-s19, dpp1g3-s20, dpp1g3-s21, dpp1g3-s22,
+      dpp1g3-s23]
+    warmup_request_ids: [dpp1g3-w0, dpp1g3-w1, dpp1g3-w2]
+    sizing_request_ids: [dpp1g3-z0, dpp1g3-z1, dpp1g3-z2, dpp1g3-z3, dpp1g3-z4]
+    sizing_rule: >-
+      Isolated prompts of 1024-32768 tokens 4 s apart measure the PP1 forward
+      time used to size G4; excluded from placement comparison like warmups.
 
 modes:
   groundtruth_clean:
     status: NOT_RUN
-    artifact_path: /mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/
+    producer: tests/comparison/dp_placement_pp/run_vllm_worker.sh (serve and replay by vllm_replay.py)
+    predicate: >-
+      At least three warmups; E2E request metrics on
+      (VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH); operator and CPU probes off
+      (VLLM_FRONTIER_INSTRUMENTATION, PP boundary and schedule logs removed
+      from the server environment); DP placement records on
+      (VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR), declared scheduler-level workflow
+      evidence.
+    artifact_path: >-
+      runs/groundtruth_clean/<RUN_TAG>/ in this case directory (the worker
+      mounts /data/ycfeng/Frontier only), archived to
+      /mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/<RUN_TAG>/
+    fresh_file: the worker exits 2 when either output directory already exists
+    run_manifest: runs/groundtruth_clean/<RUN_TAG>/run_manifest.json, written before launch
+    runs: []
   simulator:
     status: NOT_RUN
+    producer: tests/comparison/dp_placement_pp/run_frontier_case.py (one process per run: vllm_load_balancing, completion_reporting_control, round_robin)
+    predicate: clean-style E2E metrics (store_request_metrics on); dummy timing per D-e
+    artifact_path: /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/<RUN_TAG>/, summary retained under runs/ here
   simulator_control_completion_reporting:
     status: NOT_RUN
+    producer: >-
+      run_frontier_case.py run completion_reporting_control, through the
+      test-only completion_reporting_control switch of
+      tests/integration/test_vllm_dp_placement_runtime.py run_case
 
 decisions:
   - decision_id: D-gpu-authorization
@@ -160,4 +226,4 @@ decisions:
       2026-09-23. PR 36 merged into main as 4ab1964, merged forward as dd9b8d9,
       composition check passed on 03d5f24.
 
-status: INITIALIZED
+status: READY_FOR_GROUNDTRUTH   # G2 complete 2026-09-23; analysis/semantic_alignment_status.json PASS

@@ -1,0 +1,16 @@
+{
+  "entry": "simulator-run (diagnostic pre-check, plan section 18.5 G2 acceptance)",
+  "command": "/data/ycfeng/envs/frontier-py310/bin/python tests/comparison/dp_placement_pp/run_frontier_case.py --engine-config task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/engine_g4.json --frontier-config task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/frontier_g4.json --trace-dir task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/trace --output-dir /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_precheck_2ms",
+  "working_directory": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr",
+  "environment": {"PYTHONPATH": "<worktree>", "WANDB_DISABLED": "true", "VIDUR_DISABLE_WANDB": "1", "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp"},
+  "frontier_source": "fix/issue26-correctness-pr @ 8dc3766 plus the uncommitted G2 harness (run_case build_config seam)",
+  "start_utc": "2026-09-23T13:49:20Z",
+  "end_utc": "2026-09-23T13:49:51Z",
+  "time_source": "artifact mtimes; the receipt was written after the run",
+  "exit_code": 0,
+  "artifacts": {
+    "full": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_precheck_2ms/",
+    "retained": ["summary.json", "*/effective_settings.json"]
+  },
+  "result": "fixed policy routes the probe dpp1-b6 to lane 0 from snapshot [[0,3],[1,1]]; the completion-reporting control routes it to lane 1 from [[3,0],[2,0]]; round_robin routes it to lane 0 without a selection; 33/33 requests complete with tokens conserved in all three runs"
+}

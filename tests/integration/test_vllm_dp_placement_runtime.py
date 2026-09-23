@@ -504,6 +504,7 @@ def run_case(
     *,
     policy_name: str,
     completion_reporting_control: bool = False,
+    build_config=None,
     **shape,
 ):
     """Run one configuration and return what only the event loop can show.
@@ -512,6 +513,11 @@ def run_case(
     reporting it had before schedule-time reports: nothing at admission, and
     each completion keyed by `ForwardSyncState.get_step_id`. It exists only
     here, as the control the discriminating case is measured against.
+
+    `build_config(policy)` replaces this module's small test model and
+    scheduler with a caller's configuration; the calibration case under
+    `tests/comparison/dp_placement_pp/` uses it to observe the same seams.
+    `shape` then only has to name `attn_dp`.
     """
 
     from frontier.config import (
@@ -546,6 +552,7 @@ def run_case(
     cluster_schedule_times: list[float] = []
     routing_times: list[float] = []
     placements: list[int] = []
+    placement_request_ids: list[int] = []
     releases: dict[int, dict] = {}
     event_types: set[str] = set()
     # Seam calls, their reports, and stage-0 forward starts, in event order.
@@ -572,6 +579,7 @@ def run_case(
             routing_times.append(float(time))
             mapping = original(self, time)
             placements.extend(lane for _, lane, _ in mapping)
+            placement_request_ids.extend(request.id for _, _, request in mapping)
             return mapping
 
         return observed
@@ -665,7 +673,11 @@ def run_case(
         return events
 
     with pytest.MonkeyPatch.context() as patch:
-        config = _config(root, patch, policy=policy, **shape)
+        config = (
+            _config(root, patch, policy=policy, **shape)
+            if build_config is None
+            else build_config(policy)
+        )
         patch.setattr(ClusterScheduleEvent, "handle_event", observed_cluster_schedule)
         patch.setattr(GlobalBatchEndEvent, "handle_event", observed_batch_end)
         patch.setattr(
@@ -747,6 +759,7 @@ def run_case(
         "routing_times": routing_times,
         "first_four_lanes": placements[:4],
         "placements": placements,
+        "placement_request_ids": placement_request_ids,
         "records": records,
         "selections": selections,
         "withdrawn_placeholder_lanes": withdrawn_placeholder_lanes,

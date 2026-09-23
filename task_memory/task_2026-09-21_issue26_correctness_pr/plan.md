@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.19 added: G2 as built (amends the §18.5 G2 row), the G3 sizing segment and the G4 retune rule, written before G3. |
 | 2026-09-23 | §18.18 results: B1–B8 pass. |
 | 2026-09-23 | §18.18 added: the W9-05 fix (user direction "推进W9-05"), its root cause, regression test and acceptance criteria B1–B8, written before measuring. |
 | 2026-09-23 | §18.17 results: A1–A7 pass on `2ffb062`. |
@@ -1347,3 +1348,43 @@ Acceptance, fixed before measuring (baseline `2ffb062`):
 
 **Result 2026-09-23:** B1–B8 all pass; committed as `75c1140`. The numbers are in `validation.md`
 "W9-05 fix" and `issues.md` W9-05 "Resolution".
+
+### 18.19 G2 as built, and the G3/G4 sizing rule (2026-09-23, before G3)
+
+This section amends the §18.5 G2 row. It was written before any GPU run.
+
+| §18.5 G2 said | As built | Reason |
+| --- | --- | --- |
+| `replay_client.py` | `vllm_replay.py` starts `vllm serve`, replays the trace over HTTP and stops the server. `run_vllm_worker.sh` builds the overlay and publishes the evidence. | The server is part of the measured deployment. Start, replay and stop in one process share one clock origin. |
+| `extract_vllm_placement.py` reads the schedule log and the DP-stats log | It reads the G1 placement records and joins them by correlation ids only. Each engine's published iterations pair in order with the coordinator's receipts from that engine. Publications and routes join by snapshot id, routes and admissions by request id. | G1 records every link of the chain; neither log is needed. |
+| `runs/*` under `/data/ycfeng/tmp/...` | Ground truth: `calibration/dp_pp_case_001/runs/groundtruth_clean/<RUN_TAG>/`, archived to `/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/<RUN_TAG>/`. Frontier runs stay under `/data/ycfeng/tmp`; the summaries are kept in the case. | The worker mounts `/data/ycfeng/Frontier` only (D-f). |
+| — | `run_frontier_case.py` builds the Frontier configuration from the same engine file and reuses `run_case` of the P4 test through a `build_config` seam. | One mapping, read back by the semantic table (`effective_settings.json`). |
+
+G3 (S0) runs `inputs/engine_g3.json` (DP=2, PP=1, `max_num_batched_tokens=32768`)
+with `inputs/trace_g3/`. That is the case workload plus a sizing segment of
+isolated prompts of 1024 to 32768 tokens, 4 s apart. G3 acceptance is
+unchanged. It measures three things for G4:
+
+- the forward time `f(n)` of an isolated prompt: route to admitting-iteration
+  record, and TTFT;
+- the route latency of the 32768-token body against the short ones;
+- the route order of the simultaneous burst (semantic row S33).
+
+Rule for the G4 inputs, fixed now. They are written as new input files with a
+new request-id namespace, and the balancer constants never change.
+
+1. Chunk budget `B`. Take the smallest multiple of 1024 whose estimated PP2
+   first-completion time, about `f(B)` plus the PP1 to PP2 overhead G3 shows,
+   is at least 250 ms. Also require `2B + 64 <= 40960`, so the long prompt
+   `2B` still fills the second chunk and `r4` keeps waiting. If no `B` fits,
+   use `B = 20448` and record that T2 may end `SCENARIO_NOT_REACHED`.
+2. Burst order. If G3 shows the long body routed out of its trace position,
+   stagger the burst in trace order. The stagger must exceed the measured
+   route latency of the long body, and the whole burst must stay inside the
+   50 ms collection wait. Frontier reads the same offsets from the trace.
+3. Probe offset. Place it midway between the first frontend-applied snapshot
+   after the burst and the estimated first completion, each measured from the
+   burst start.
+4. Frontier `dummy_execution_time_ms`. After G4, set it so Frontier's PP2
+   first-completion time matches the measured one (D-e). `num_blocks` becomes
+   the per-engine value from the G4 startup log (semantic row S17).

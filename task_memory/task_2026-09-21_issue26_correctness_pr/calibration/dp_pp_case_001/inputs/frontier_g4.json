@@ -1,0 +1,12 @@
+{
+ "model_name": "Qwen3-30B-A3B-tiny",
+ "device": "h800",
+ "network_device": "h100_dgx",
+ "cc_backend": "analytical",
+ "total_expert_num": 16,
+ "router_topk": 8,
+ "moe_routing_distribution_type": "balanced",
+ "moe_routing_seed": 0,
+ "num_blocks": 300333,
+ "dummy_execution_time_ms": 2.0
+}
