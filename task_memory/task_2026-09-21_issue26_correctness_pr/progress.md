@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | G4 complete (`exp-0923-230103-591735`, extraction PASS). G5 complete: T1 48/48 formal routes MATCH at PP2 (C3 PASS). C4 `SCENARIO_NOT_REACHED` in all four bursts. The third GPU job is not used. `workflow_gap_status` PASS with corrections S43/S42 pending review. Plan §18.21. |
 | 2026-09-23 | G3 complete (`exp-0923-221233-009652`, extraction PASS, T1 replay 38/38 MATCH); G4 inputs amended per plan §18.20; launcher wrapper and poller fixed. |
 | 2026-09-23 | G2 complete: harness under `tests/comparison/dp_placement_pp/`, case inputs, semantic table `PASS`, manifest ids filled, Frontier pre-check discriminates; plan §18.19. |
 | 2026-09-23 | User direction "授权上述1-2，推进W9-05": W9-04 worktrees removed; W9-05 diagnosed and fixed (`75c1140`), B1–B8 pass; G1 write-through amendment `63ac6c6b9`; G2 started. |
@@ -40,9 +41,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 authorized (≤3 jobs × ≤1 h, codesign); G2 and G3 complete (T1 replay 38/38); G4 run-check and submission next. |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21). |
 | Publication | PUSHED_VERIFIED 2026-09-23: remote head `8dc3766` confirmed equal to local (W9-05 fix `75c1140`, records `8dc3766`); PR 35 body PATCHed 2026-09-23T13:25Z with the W9-05 row, section, Limits, commit and Status, read back identical apart from a trailing newline; still draft; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_75c1140.md`. Earlier: remote head `a9ff5d5` confirmed equal to local (W9-04 fix `2ffb062`, records `a9ff5d5`); PR 35 body PATCHed 2026-09-23T12:33Z with the W9-04 row, section and commit, read back identical; still draft. Earlier the same day: Step 9 commits `d1a2a06`, `2ffe78d`, `bacdbb4`, `c1a570d`, `104b6ff`. Draft PR 35 body PATCHed 2026-09-23T12:10Z through `gh api` (Scope, Base, Progress, new W9 section, pipeline-coverage note, review material, commits, Status), read back identical apart from a trailing newline; still draft, base `refactor/oversized-module-split`; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_c1a570d.md`. Earlier: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
-| Next action | G4 run-check, run manifest and submission (4×H800, codesign; 2 of 3 jobs remain). Removal of `.worktrees/w9-05-{before,after}` needs approval. |
+| Next action | User review: (1) accept C4 as `SCENARIO_NOT_REACHED`, approve a post-hoc qualification, or spend the last job on an exploratory redesign; (2) whether S43/S42 become separate `workflow-repair` items; (3) approval to remove `.worktrees/w9-05-{before,after}`. |
 
 ## Step status
 
@@ -58,7 +59,7 @@
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
 | 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
 | 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
-| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 authorized, G2 and G3 complete, G4 next | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `8dc3766`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
+| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 complete (C3 PASS, C4 SCENARIO_NOT_REACHED); awaiting the user's review | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions); C3 PASS (T1 48/48 formal at PP2) | PUSHED_VERIFIED `8dc3766`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
 
 ## Chronological updates
 
@@ -433,3 +434,35 @@ burst. The extractor now keeps the coordinator receipts in `chain.json`.
 | Frontier pre-check, dummy 2 ms | `run_frontier_case.py` on `engine_g4.json`, `frontier_g4.json`, `trace_g4` (receipt `runs/frontier_precheck_g4_2ms/command_receipt.json`) | 51/51 complete with tokens conserved in all three runs. In every burst a–d, the fixed policy sends the probe to lane 0 from `[[0,1],[0,1]]`, and the control sends it to lane 1 from `[[3,0],[2,0]]`. |
 | Semantic table | `analysis/semantic_alignment_table.csv` | 43 rows: 36 MATCH, 4 MISMATCH (S30, S31, S42, S43), 3 UNSET (S17, S33, S39); status `PASS` |
 | Manifest | `manifest.yaml` | Parses; the workload points at `trace_g4`, and the G3 run is recorded. A pre-existing unquoted `producer` value that broke YAML parsing is now quoted. |
+
+### G4 native PP2 ground truth (2026-09-23, completed)
+
+| Check | Command / evidence | Result |
+| --- | --- | --- |
+| Run-check | `analysis/run_check_status.groundtruth_clean.json`, run `dpp-g4-20260923a` | `PASS` before launch (committed in `47d9190`). The command receipt was added after the run from the wrapper's `launcher_receipt.json`. |
+| Submission | `run_dp_pp_job.sh` (scratchpad `dp_pp/`) with `RUN_TAG=dpp-g4-20260923a ENGINE_INPUT=engine_g4.json TRACE_INPUT=trace_g4 NUM_GPUS=4 NUM_CPUS=16 MEM_GB=128`, through StepMind `RJobBackend` on codesign, H800 | Job `exp-0923-230103-591735`, created 15:01:03Z, succeeded 15:07:04Z. Creator `i-fengyicheng`; NFS source is the current host. Launcher exit 0 (15:00:59Z to 15:14:32Z). |
+| Worker | `runs/groundtruth_clean/dpp-g4-20260923a/` | 4 H800 visible to torch 2.8.0; the overlay `vllm` 0.10.2 is imported; `WORKER_STATUS=0`; 51/51 HTTP 200; KV tokens per PP worker `[4566896, 4556400]`, so 284775 blocks per engine |
+| Extraction | `extract_vllm_placement.py` → `extraction/` (receipt there) | `PASS`: 1620 iterations, 92 reports paired with receipts, 83 publications, 81 applications, 51 placements, 0 out-of-order |
+| Rule-4 sizing | `extraction/chain.json` | The 20448-token first chunk takes 108.73, 116.13, 110.76 and 108.39 ms (mean 111.00 ms) |
+| Launcher logs | `launcher/{submit,worker}.log` (kept locally; `*.log` is gitignored) | `WORKER_COMMAND` line removed; a credential-pattern scan found 0 matches |
+
+The case inputs were set from G4 before G5: `frontier_g4.json` gets
+`num_blocks` 284775 and `dummy_execution_time_ms` 0.8943, which is
+2.0 × 111.00 / 248.25. A check run gave a Frontier first completion of
+111.14 ms. Semantic rows S17 (MATCH), S31 and S33 were updated. The table
+is now 37 MATCH, 5 MISMATCH and 1 UNSET, and its status is `PASS`.
+
+### G5 simulator runs and workflow-gap analysis (2026-09-23, completed)
+
+| Check | Command / evidence | Result |
+| --- | --- | --- |
+| Pre-change baseline | `git archive d1a2a06 frontier data/config`, then `runs/frontier_pre_change_d1a2a06/pre_change_rejection.py` with that tree as the working directory | `ValueError`: the constructor rejects `num_pipeline_stages=2`. C4 reports this rejection in place of a placement. |
+| Simulator run | `run_frontier_case.py` at `47d9190` on `engine_g4.json`, `frontier_g4.json`, `trace_g4` (`runs/frontier_g4/`, manifest written before launch, receipt there) | 51/51 complete with tokens conserved for `vllm_load_balancing`, `completion_reporting_control` and `round_robin`. `summary.json` is byte-identical to the check run. |
+| Comparison | `compare_placement.py` → `analysis/g5_comparison/` (receipt there) | T1: 51/51 routes MATCH (48/48 formal). T2: every burst `SCENARIO_NOT_REACHED`. a–c fail trace order and output-before-probe; d fails one-snapshot, provenance and output-before-probe. |
+| Workflow gap | `analysis/workflow_gap_table.csv`, `workflow_gap_summary.md`, `workflow_gap_status.json` | 4 MATCH and 7 MISMATCH, each mismatch with a first cause. `COMPLETE`/`PASS`, `correction_state=pending` (S43, S42) |
+
+Decision under the §18.20 rule: the third GPU job is not used. A retune
+of spacing or offsets cannot deliver a trace-ordered burst whose first two
+routes include the long body and land within 0.5 ms. The frontend spends
+about 7 ms processing the 40896-token body. Plan §18.21 records the reasoning
+and the two candidate findings.

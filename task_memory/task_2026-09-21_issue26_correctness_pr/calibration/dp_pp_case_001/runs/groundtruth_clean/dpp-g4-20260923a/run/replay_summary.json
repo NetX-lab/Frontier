@@ -1,0 +1,85 @@
+{
+ "engine_config": {
+  "load_format": "dummy",
+  "skip_tokenizer_init": true,
+  "dtype": "bfloat16",
+  "tensor_parallel_size": 1,
+  "pipeline_parallel_size": 2,
+  "data_parallel_size": 2,
+  "enable_expert_parallel": true,
+  "enforce_eager": true,
+  "enable_chunked_prefill": true,
+  "enable_prefix_caching": false,
+  "max_num_batched_tokens": 20448,
+  "max_num_seqs": 16,
+  "block_size": 16,
+  "max_model_len": 40960,
+  "gpu_memory_utilization": 0.5,
+  "seed": 0
+ },
+ "server_command": [
+  "/usr/bin/python3",
+  "-m",
+  "vllm.entrypoints.cli.main",
+  "serve",
+  "/tmp/dp_placement_pp/dpp-g4-20260923a/run/model",
+  "--served-model-name",
+  "dp_pp_case",
+  "--host",
+  "127.0.0.1",
+  "--port",
+  "8000",
+  "--load-format",
+  "dummy",
+  "--dtype",
+  "bfloat16",
+  "--tensor-parallel-size",
+  "1",
+  "--pipeline-parallel-size",
+  "2",
+  "--data-parallel-size",
+  "2",
+  "--max-num-batched-tokens",
+  "20448",
+  "--max-num-seqs",
+  "16",
+  "--block-size",
+  "16",
+  "--max-model-len",
+  "40960",
+  "--gpu-memory-utilization",
+  "0.5",
+  "--seed",
+  "0",
+  "--skip-tokenizer-init",
+  "--enable-expert-parallel",
+  "--enforce-eager",
+  "--enable-chunked-prefill",
+  "--no-enable-prefix-caching"
+ ],
+ "server_env_set": [
+  "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR",
+  "VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH"
+ ],
+ "server_env_removed": [],
+ "trace_dir": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr/task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/trace_g4",
+ "startup_s": 45.017510456964374,
+ "origin_monotonic": 560607.155220397,
+ "origin_wall": 1790175904.4153273,
+ "server_stop": {
+  "signal": "SIGINT",
+  "returncode": 0
+ },
+ "num_requests": 51,
+ "failed_request_ids": [],
+ "kv_cache_tokens_by_engine": {
+  "EngineCore_DP0": [
+   4566896,
+   4556400
+  ],
+  "EngineCore_DP1": [
+   4566896,
+   4556400
+  ]
+ }
+}

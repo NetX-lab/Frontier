@@ -1,0 +1,25 @@
+{
+ "entry": "simulator-run (G5)",
+ "command": "/data/ycfeng/envs/frontier-py310/bin/python tests/comparison/dp_placement_pp/run_frontier_case.py --engine-config task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/engine_g4.json --frontier-config task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/frontier_g4.json --trace-dir task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/trace_g4 --output-dir /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g4",
+ "working_directory": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr",
+ "environment": {
+  "PYTHONPATH": "<worktree>",
+  "WANDB_DISABLED": "true",
+  "VIDUR_DISABLE_WANDB": "1",
+  "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp"
+ },
+ "start_utc": "2026-09-23T15:14:26Z",
+ "end_utc": "2026-09-23T15:15:34Z",
+ "exit_code": 0,
+ "artifacts": {
+  "full": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g4",
+  "retained": [
+   "run_manifest.json",
+   "summary.json",
+   "*/effective_settings.json"
+  ]
+ },
+ "prior_check": "frontier_g4_calibration_check ran the same command at 15:12:39Z-15:13:48Z before this manifest was written, to confirm the S31 dummy value (first completion 111.14 ms against 111.00 ms); it is diagnostic only and its summary is byte-identical",
+ "time_source": "run_manifest.json start/end and the summary.json mtime",
+ "frontier_source": "fix/issue26-correctness-pr @ 47d9190; the only dirty input is inputs/frontier_g4.json (num_blocks and dummy time set from G4)"
+}

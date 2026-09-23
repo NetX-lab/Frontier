@@ -1,14 +1,15 @@
 # Semantic alignment summary: dp_pp_case_001
 
-Table: `semantic_alignment_table.csv` (43 rows). Status: `analysis_state=COMPLETE`,
-`status=PASS`, `correction_state=not_applicable` (`semantic_alignment_status.json`).
+Table: `semantic_alignment_table.csv` (43 rows: 37 MATCH, 5 MISMATCH, 1 UNSET).
+Status: `analysis_state=COMPLETE`, `status=PASS`,
+`correction_state=not_applicable` (`semantic_alignment_status.json`).
 
-The Frontier values come from the configuration Frontier actually built
-(`runs/frontier_precheck_2ms/*/effective_settings.json`, and
-`runs/frontier_precheck_g4_2ms/*/effective_settings.json` for the G4 chunk
-budget). Both sides read the same `inputs/engine_g4.json`, so a setting cannot
-drift between them. The `vllm_anchor` column cites the vLLM default that
-applies when a setting is not passed.
+The Frontier values come from the configuration Frontier actually built:
+`runs/frontier_g4/*/effective_settings.json` for the G5 runs, and the earlier
+pre-check directories for the rows fixed before G4. Both sides read the same
+`inputs/engine_g4.json`, so a setting cannot drift between them. The
+`vllm_anchor` column cites the vLLM default that applies when a setting is
+not passed.
 
 - Parallel domains (S01-S07). DP=2 is the request-owner lane count. Attention
   TP is 1. With expert parallelism on, vLLM sets the MoE TP to 1 and the EP size
@@ -16,22 +17,29 @@ applies when a setting is not passed.
 - Scheduler (S14-S24) and coordinator/frontend constants (S25-S29) match.
   `max_num_batched_tokens` is 20448, set from the G3 forward times by plan
   §18.19 rule 1 (S14).
-- Declared MISMATCH:
+- S17 is now MATCH. There are 284775 KV blocks per engine, the smaller of the
+  two PP workers' counts in the G4 startup log. Frontier uses the same value.
+- MISMATCH:
   - S30: IPC latency is not modeled.
-  - S31: Frontier uses dummy timing, per D-e.
-  - S42: the DP wave start and the idle engine's dummy forwards are not
-    modeled. A dummy pass advances vLLM's step counter, so peer report keys
-    can differ in the natural history.
-  - S43: under the batch queue, vLLM blocks after an iteration that scheduled
-    nothing, even with room in the queue, and requests that arrive meanwhile
-    wait. Frontier admits into any free pipeline slot.
+  - S31: Frontier uses dummy timing, per D-e. The value is 0.8943 ms. It
+    matches the mean G4 first-chunk duration, 111.00 ms, with 111.14 ms in
+    Frontier. The dummy time does not depend on token count, so a 32-token
+    forward also takes 111 ms in Frontier. Natively it takes 19.7 to 33.8 ms.
+  - S33: routing followed arrival and delivery order. In G4 bursts a-c, the
+    40896-token body routed last, about 1 ms after the first short request.
+    Burst d, spaced 6 ms apart, routed in trace order. Frontier routes in
+    trace order.
+  - S42: the DP wave start and dummy forwards are not modeled. G4 is
+    consistent with both:
+    - in burst d, engine 1 has no step-0 record;
+    - engine 0 has a record gap after its empty-schedule iteration.
+  - S43: after an iteration that scheduled nothing, vLLM blocks on its oldest
+    batch, and requests that arrive meanwhile wait. G4 shows these delays, for
+    example burst a's b4 and b2, which were admitted 47 ms after routing.
+    Frontier admits into any free pipeline slot.
 
   S42 and S43 do not enter the T1 replay, which feeds native receipts and keys
-  to Frontier's coordinator and frontend. G5 labels any natural-history
-  difference by its first cause.
-- UNSET, each resolved by a run:
-  - S17: the KV block count comes from the G4 startup log.
-  - S33: G3 showed that the client's dispatch order decides the route order.
-    G4 dispatches every burst in trace order, and G5 qualifies each burst.
-  - S39: there are no vLLM MoE routing records. That blocks only an E2E
-    numeric gate, and this case has none.
+  to Frontier's coordinator and frontend. `analysis/workflow_gap_table.csv`
+  labels every natural-history difference by its first cause.
+- UNSET: S39. There are no vLLM MoE routing records. That blocks only an E2E
+  numeric gate, and this case has none.

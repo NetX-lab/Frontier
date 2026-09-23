@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Step 9 ground truth G3–G5 recorded: G3 T1 38/38, G4 extraction PASS, G5 T1 48/48 formal (C3 PASS), C4 `SCENARIO_NOT_REACHED` in all four bursts, pre-change PP2 rejection. |
 | 2026-09-23 | W9-05 fix `75c1140` validated: B1–B8 pass (regression test and its control, `tight_kv` 24 of 24 in three shapes, KV sweep 72 of 72, C2 21 of 24 identical with the 3 preempting cases explained, deadlock sweep 72 of 72, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
 | 2026-09-23 | W9-04 fix `2ffb062` validated: A1–A7 pass (regression test and its control, sweep 72 of 72, C2 22 of 22 plus both stalled cases finishing, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
 | 2026-09-23 | Step 9 completed on CPU: P1(b) on seven shapes after the W9-01 merge-forward, P2/P3 unit tests, P4 real event loop, P5 unchanged behavior (C2 24 of 24, fidelity 71 of 71, examples 16 of 16, 0 suite regressions), and the two pre-existing defects W9-04 and W9-05 found during P5. |
@@ -610,3 +611,26 @@ Limits:
   preemption. The changed behavior is covered by B1, B2 and B3.
 - The resumed request's replay (recomputing prompt and output) is not modeled
   (`issues.md` W9-05, Limits).
+
+## Step 9 ground truth, G3–G5 (2026-09-23)
+
+The criteria were fixed before each run, in plan §18.5, §18.19 and §18.20.
+Commands, environment and per-check values are in
+`test_report_2026-09-23_step9_dp_pp_groundtruth.md`. The case records are in
+`calibration/dp_pp_case_001/`.
+
+| Id | Command | Expected | Actual | Outcome |
+| --- | --- | --- | --- | --- |
+| G3 | `run_dp_pp_job.sh` `dpp-g3-20260923a` (2 H800, DP2 PP1); `extract_vllm_placement.py`; `compare_placement.py` | worker 0; extraction PASS; T1 all routes MATCH | `exp-0923-221233-009652` succeeded; 38/38 HTTP 200; extraction PASS; T1 38/38 (30/30 formal) | PASS |
+| G4 | `run_dp_pp_job.sh` `dpp-g4-20260923a` (4 H800, DP2 PP2 EP); `extract_vllm_placement.py` | fresh artifacts; exit 0; tuple verified; first-chunk duration recorded; extraction PASS over 51 routes | `exp-0923-230103-591735` succeeded; 51/51 HTTP 200; 284775 blocks; first chunk 111.00 ms mean; extraction PASS, 51 placements, 0 out-of-order | PASS |
+| G5-pre | `pre_change_rejection.py` on `git archive d1a2a06` | constructor rejects PP2 | `ValueError ... num_pipeline_stages=2` | PASS |
+| G5-sim | `run_frontier_case.py` at `47d9190`, three runs | 51/51 complete, tokens conserved | 51/51 in each; first completion 111.14 ms | PASS |
+| C3 | `compare_placement.py` T1; `workflow_gap_table.csv` | every route matches with matched inputs; differences labeled by first cause | 51/51 (48/48 formal); 4 MATCH and 7 MISMATCH rows, each with a cause | PASS |
+| C4 | `compare_placement.py` T2 `qualify_burst` | on a qualified burst, fixed = native and control ≠ native; else `SCENARIO_NOT_REACHED` with the checks named | a–c fail trace order and output-before-probe; d fails one-snapshot, provenance and output-before-probe | SCENARIO_NOT_REACHED |
+
+Limits:
+
+- Frontier timing is dummy (D-e), so there is no E2E numeric gate.
+- The unqualified T2 lane agreement (fixed 0 = native 0 in every burst, control
+  1) is not counted as C4 evidence.
+- One authorized GPU job is unused. No retune can meet the premise (plan §18.21).

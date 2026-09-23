@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.21 added: G4 and G5 results. C3 PASS (T1 48/48 formal routes at PP2). C4 `SCENARIO_NOT_REACHED` in all four bursts, and why the last GPU job is not used. Candidate findings S43 and S42 await the user's review. §18 status line updated. |
 | 2026-09-23 | §18.20 added: G3 results (T1 replay 38/38) and the G4 inputs as amended (four bursts, 20 s gaps, per-burst T2 qualification), written before G4. |
 | 2026-09-23 | §18.19 added: G2 as built (amends the §18.5 G2 row), the G3 sizing segment and the G4 retune rule, written before G3. |
 | 2026-09-23 | §18.18 results: B1–B8 pass. |
@@ -864,6 +865,8 @@ Under [R1]: `frontier/profiling/moe/moe_vllm_kernel.py`, `frontier/entities/stag
 
 **Status 2026-09-23:** P1–P5 are complete on the CPU at `bacdbb4` and P6 records are being published (§18.16). G3–G5 stay blocked on GPU authorization.
 
+**Status 2026-09-23 (after G5):** G3, G4 and G5 are complete (§18.20, §18.21), using 2 of the 3 authorized GPU jobs. C3 passes. C4 is `SCENARIO_NOT_REACHED` in every burst, with the failed preconditions named. The case waits for the user's review of C4 and of the candidate findings S43 and S42.
+
 ### 18.1 Goal and acceptance criteria
 
 `VllmLoadBalancingClusterScheduler` accepts valid `num_pipeline_stages > 1` configurations and reproduces vLLM 0.10.2's per-iteration DP request-count publication under the batch-queue stepping path that PP>1 selects — one observable engine scheduling iteration and its frontend-visible load, not a counter made monotonic after the fact — verified on a controlled or demonstrably matched iteration history against a real `vllm serve --data-parallel-size 2 --pipeline-parallel-size 2` deployment.
@@ -1483,3 +1486,54 @@ matched to the measured PP2 first completion, rule 4) and S33 (route order
 per burst). One GPU job remains in the budget after G4. It is used only if
 all four bursts end `SCENARIO_NOT_REACHED` for a reason a retune can
 address, and that retune is written here before it runs.
+
+### 18.21 G4 and G5 results (2026-09-23)
+
+**G4** `dpp-g4-20260923a`, rjob `exp-0923-230103-591735`:
+
+- Platform: creator `i-fengyicheng`, `codesign`, 4xH800, current-host NFS source. The job was created at 15:01:03Z and succeeded at 15:07:04Z.
+- Run: worker status 0, 51/51 HTTP 200.
+- KV cache: 4,556,400 tokens (284,775 blocks) per engine, the minimum over the PP workers.
+- Extraction `PASS`: 1620 iterations, 92 reports paired with receipts, 83 publications, 81 frontend snapshots, 51 placements, 0 out-of-order receipts.
+- Rule-4 measurement: the mean first-chunk duration of the 20448-token chunk is 111.00 ms over bursts a–d (108.73, 116.13, 110.76 and 108.39 ms).
+
+The G4 row of §18.5 is met. Before G5, the case inputs were set from these records:
+
+- S17: `num_blocks=284775`.
+- S31: `dummy_execution_time_ms = 2.0 × 111.00 / 248.25 = 0.8943`. A check run gave a Frontier first completion of 111.14 ms.
+- S33: route order per burst.
+
+**G5.** The simulator was run at `47d9190` (`runs/frontier_g4/`): `vllm_load_balancing`, the completion-reporting control and `round_robin`. Each run completed 51/51 requests with tokens conserved. The pre-change revision `d1a2a06` rejects PP2 in its constructor (`runs/frontier_pre_change_d1a2a06/rejection.txt`), and C4 reports that rejection in place of a placement. `workflow-gap-analysis` is `COMPLETE`/`PASS` with `correction_state=pending` (`analysis/workflow_gap_status.json`, rows WG01–WG11).
+
+**C3: PASS.**
+
+- T1 fed the native receipts and routes through `VllmDPLoadBalancer`. The engine and the counts match on 51/51 routes (48/48 formal); G3 gave 38/38 at PP1.
+- W9 reports at the first admission, and so does vLLM in 7 of 8 engine-bursts (WG04). The eighth is burst d on engine 1, which starts with a dummy forward.
+- The first snapshot after bursts a–c carries the native counts `[[0,1],[0,1]]` (WG06).
+- Every other difference is labeled by first cause in `workflow_gap_table.csv`:
+  - arrival/delivery order: WG02, WG10;
+  - batch composition: WG03, WG05;
+  - key grouping: WG07;
+  - count calculation: WG09, the control's expected failure;
+  - output readiness: WG11, the declared dummy timing.
+
+**C4: `SCENARIO_NOT_REACHED` in all four bursts.** In every burst the native probe went to engine 0, the fixed policy chose lane 0 and the control chose lane 1. The per-burst checks failed as follows:
+
+| Burst | Failed checks | Observation |
+| --- | --- | --- |
+| a, b, c | trace order; output before probe | Route order was b1, b3, b4, b5, b2. The 40896-token body routed last, about 7 ms after dispatch. The first forward held only 32-token requests and applied an output 33.8, 25.1 and 21.3 ms after the first route. The probes routed at 73.3, 97.9 and 118.8 ms. |
+| d | one snapshot; schedule-time provenance; output before probe | Route order matched the trace. Engine 1 has no step-0 record, which by source is the wave-start dummy forward. Snapshot 41 carries engine 1's previous-wave count (step 128); the first output came at 19.7 ms. |
+
+**Why the last GPU job is not used.** The §18.20 rule allows it only for a reason a retune can address. The G4 records rule that out:
+
+- The frontend spends about 7 ms processing the long body, and shorter requests dispatched in that window route first.
+- R1 requires the first two routes within about 0.5 ms. Otherwise the idle engine runs a wave-start dummy first.
+
+A trace-ordered burst whose first two routes include the long body and land within 0.5 ms therefore cannot be produced by changing spacing or offsets. Any other redesign (for example, a long body per engine, or a different probe premise) is a new pre-registration and needs the user's decision. It is not a retune.
+
+**Candidate fidelity findings.** Both are outside the Step 9 placement scope, and neither is a repair authorization:
+
+- S43 / WG05: at PP>1, vLLM appends an empty schedule and blocks on the oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a stage slot is free (`base_replica_scheduler.py:906`). In the G4 records the later burst requests are admitted 21.3–47.4 ms after the burst's first route in bursts a–c and 129.5–311.8 ms in burst d. Frontier admits them on arrival, 0.5–18 ms after the first arrival.
+- S42 / WG03: DP wave-start and idle dummy forwards (`core.py:1170-1216`) are not modeled. The d record gap agrees with that source reading, but because the dummy pass writes no record this is an inference.
+
+The calibration contract requires `human review decision=PASS` before a `workflow-repair` scoped to either finding. They are recorded in `future.md`.

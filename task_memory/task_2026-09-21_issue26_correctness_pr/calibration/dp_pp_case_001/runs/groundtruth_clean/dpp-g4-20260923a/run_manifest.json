@@ -157,7 +157,7 @@
  ],
  "artifact_path": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a",
  "archive_path": "/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/dpp-g4-20260923a",
- "artifact_created_at": null,
+ "artifact_created_at": "2026-09-23T15:06:57Z",
  "fresh_file": "asserted by run_vllm_worker.sh: exits 2 if <artifact_path>/run or <archive_path> exists",
  "rjob": {
   "charged_group": "codesign",
@@ -172,7 +172,19 @@
    "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
   ],
   "code_mount_point": "/data/ycfeng/Frontier",
-  "job_name": null
+  "job_name": "exp-0923-230103-591735"
  },
- "status": "WRITTEN_BEFORE_LAUNCH"
+ "status": "COMPLETE",
+ "result": {
+  "worker_status": 0,
+  "final_status": "succeeded (Job Create 15:01:03Z, Job succeeded 15:07:04Z)",
+  "creator": "i-fengyicheng",
+  "nfs_source": "100.96.128.195:/data/ycfeng/Frontier:/data/ycfeng/Frontier (current host)",
+  "devices": "4 x NVIDIA H800 visible to torch 2.8.0+cu128 (worker_env.json)",
+  "vllm_import": "overlay vllm 0.10.2 and frontier_trace (vllm_import.txt)",
+  "http_200": "51/51",
+  "kv_cache_tokens_per_engine": "[4566896, 4556400] per PP worker, both engines",
+  "num_gpu_blocks_per_engine": 284775,
+  "extraction": "extraction/extraction_status.json PASS (1620 iterations, 92 reports and receipts paired, 83 publications, 51 placements, 0 out-of-order)"
+ }
 }

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §3 added: candidate fidelity findings S43 and S42 from the Step 9 G4 ground truth. |
 | 2026-09-22 | Created. Records the `tests/debug/` pointer defect found during Step 8 and the companion-PR gitlink follow-up. |
 
 ## 1. `tests/debug/` is referenced but absent from the published repository
@@ -62,3 +63,31 @@ the companion branch `fix/zero-payload-input-handling` of
 merges, bump the gitlink to the resulting commit on `main` and re-run
 `tests/unit/test_collective_sim_zero_payload.py` plus the clean-checkout
 validation described in `test_report_2026-09-22_w7_collective_sim_zero_payload.md`.
+
+## 3. PP>1 engine-loop findings from the Step 9 ground truth (S43, S42)
+
+**Found:** the G4 native PP2 run `dpp-g4-20260923a` and the G5 workflow-gap
+analysis (`calibration/dp_pp_case_001/analysis/workflow_gap_table.csv` rows WG05
+and WG03, plan §18.21). Both findings are outside the Step 9 placement scope.
+Neither is authorized as a repair. Under the calibration contract each needs the
+user's review decision before a scoped `workflow-repair`.
+
+- **S43, admission after an empty schedule.** At PP>1, vLLM 0.10.2's
+  `step_with_batch_queue` appends an empty schedule and then blocks on the
+  oldest in-flight batch (`vllm/v1/engine/core.py:385-424`). Requests that
+  arrive meanwhile wait in the input queue. Frontier admits whenever a stage
+  slot is free (`frontier/scheduler/replica_scheduler/base_replica_scheduler.py:906`).
+  In G4 the later burst requests were admitted 21.3–47.4 ms after the burst's
+  first route in bursts a–c, and 129.5–311.8 ms after it in burst d. Frontier
+  admits them on arrival. The effect is on PP>1 batch composition and TTFT for
+  any cluster scheduler, not only `vllm_load_balancing`.
+- **S42, DP wave-start and idle dummy forwards.** An idle DP engine runs
+  `execute_dummy_batch()` in EP lockstep, and the dummy pass advances the step
+  counter (`core.py:1170-1216`). This is not modeled. In G4 burst d, engine 1
+  has no step-0 record, which is consistent with this reading. The reading is
+  inferred, because the dummy pass writes no record.
+
+**Next step if approved:** a new calibration case scoped to one finding. It
+would record a reference-loop expectation first, change one Frontier component,
+rerun in isolation, and run a fresh analysis (contract "Analysis Before Code
+Change").

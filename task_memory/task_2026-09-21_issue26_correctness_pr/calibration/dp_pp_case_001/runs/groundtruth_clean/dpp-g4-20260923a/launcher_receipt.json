@@ -1,0 +1,26 @@
+{
+ "command": "RUN_TAG=dpp-g4-20260923a ENGINE_INPUT=engine_g4.json TRACE_INPUT=trace_g4 NUM_GPUS=4 NUM_CPUS=16 MEM_GB=128 bash /data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/run_dp_pp_job.sh",
+ "working_directory": "/data/ycfeng/Frontier (spawn_tasks source and code_mount_point)",
+ "environment_declarations": [
+  "STEPMIND_BACKEND=rjob",
+  "BRAINPP_ACCESS_KEY/BRAINPP_SECRET_KEY from the personal credential files (values not recorded)",
+  "company http proxy from deploy.i.shaipower.com/httpproxy",
+  "PYTHONPATH=/data/ycfeng/steptron",
+  "STEPMIND_PYTHON=/data/ycfeng/tmp/stepmind-env/bin/python"
+ ],
+ "launcher_scripts": [
+  "/data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/run_dp_pp_job.sh",
+  "/data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/submit_dp_pp_run.py",
+  "/data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/poll_replica_logs.py"
+ ],
+ "rjob_name": "exp-0923-230103-591735",
+ "start_utc": "2026-09-23T15:00:59Z",
+ "end_utc": "2026-09-23T15:14:32Z",
+ "launcher_exit_code": 0,
+ "artifacts": {
+  "evidence": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr/task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a/",
+  "archive": "/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/dpp-g4-20260923a/",
+  "submit_log": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/rjob/dpp-g4-20260923a/submit.log",
+  "worker_log": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/rjob/dpp-g4-20260923a/worker.log"
+ }
+}

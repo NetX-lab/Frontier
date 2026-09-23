@@ -1,0 +1,34 @@
+{
+  "entry": "workflow-gap-analysis",
+  "case_id": "dp_pp_case_001",
+  "run_generation": 1,
+  "manifest_path": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/manifest.yaml",
+  "table": "analysis/workflow_gap_table.csv",
+  "summary": "analysis/workflow_gap_summary.md",
+  "inputs": {
+    "groundtruth": "runs/groundtruth_clean/dpp-g4-20260923a/extraction/chain.json (extraction PASS)",
+    "simulator": "runs/frontier_g4/ (commit 47d9190; full evidence under /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g4/)",
+    "comparison": "analysis/g5_comparison/comparison_status.json",
+    "pre_change_rejection": "runs/frontier_pre_change_d1a2a06/rejection.txt"
+  },
+  "written_at_utc": "2026-09-23T15:27:54Z",
+  "row_counts": {
+    "MATCH": 4,
+    "MISMATCH": 7,
+    "UNSET": 0,
+    "UNSUPPORTED": 0
+  },
+  "acceptance": {
+    "C3": "PASS: T1 replay 51/51 routes (48/48 formal) MATCH; natural-history differences labeled by first cause (WG02-WG11)",
+    "C4": "SCENARIO_NOT_REACHED in all four bursts; failed checks in analysis/g5_comparison/comparison_status.json; the pre-change baseline is rejected by its constructor"
+  },
+  "analysis_state": "COMPLETE",
+  "status": "PASS",
+  "status_basis": "Every declared phase has a row with values and anchors on both sides, the native chain is complete, and T1 settles the placement semantics with matched inputs. The seven MISMATCH rows carry a first cause and none is unexplained.",
+  "correction_state": "pending",
+  "pending_corrections": {
+    "S43_WG05": "PP>1 admission after an empty schedule: vLLM blocks on the oldest batch, Frontier admits into any free stage slot (base_replica_scheduler.py:906)",
+    "S42_WG03": "DP wave-start and idle dummy forwards not modeled (vllm/v1/engine/core.py:1170-1216)"
+  },
+  "next_action": "User review: accept C4 as SCENARIO_NOT_REACHED, and decide whether S43/S42 become separate workflow-repair items (both are outside the Step 9 placement scope). No Frontier code change until that review passes."
+}

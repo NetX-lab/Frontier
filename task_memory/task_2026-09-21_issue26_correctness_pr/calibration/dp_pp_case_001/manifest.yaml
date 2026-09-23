@@ -19,7 +19,7 @@ purpose: >-
 selected_checkout:
   frontier_worktree: /data/ycfeng/Frontier/.worktrees/issue26-correctness-pr
   frontier_branch: fix/issue26-correctness-pr
-  frontier_commit: BLOCKED  # pinned at simulator-run, after package P2
+  frontier_commit: 47d919077b6f904ec343db8a48bb8f43c985a46b  # pinned at simulator-run G5; the only dirty input is inputs/frontier_g4.json
 
 groundtruth_checkout_path: /data/ycfeng/Frontier/.real-engine/vLLM-BS
 groundtruth_branch: feature/frontier-comparison-instrumentation
@@ -189,7 +189,7 @@ workload:
 
 modes:
   groundtruth_clean:
-    status: G3_COMPLETE   # G4 pending
+    status: G4_COMPLETE
     producer: tests/comparison/dp_placement_pp/run_vllm_worker.sh (serve and replay by vllm_replay.py)
     predicate: >-
       At least three warmups; E2E request metrics on
@@ -217,13 +217,41 @@ modes:
           per engine; extraction PASS (565 iterations, 69 reports, 50
           publications, 38 routes, 0 out-of-order receipts)
         status: COMPLETE
+      - run_tag: dpp-g4-20260923a
+        package: G4 (S1 ground truth, DP=2 PP=2 TP=1 EP=2, 4xH800)
+        rjob_name: exp-0923-230103-591735
+        engine_config: inputs/engine_g4.json
+        trace: inputs/trace_g4/
+        run_check: analysis/run_check_status.groundtruth_clean.json PASS
+        receipt: runs/groundtruth_clean/dpp-g4-20260923a/launcher_receipt.json (written by the launcher wrapper; launcher/*.log kept local, gitignored)
+        result: >-
+          worker status 0, 51/51 HTTP 200, 4,556,400 KV tokens (284,775
+          blocks) per engine; extraction PASS (1620 iterations, 92 reports and
+          receipts, 83 publications, 81 frontend snapshots, 51 routes, 0
+          out-of-order receipts); mean first-chunk duration of the 20448-token
+          chunk 111.00 ms over bursts a-d
+        status: COMPLETE
   simulator:
-    status: NOT_RUN
+    status: COMPLETE
+    runs:
+      - run_tag: frontier_g4
+        package: G5 simulator-run (vllm_load_balancing, completion_reporting_control, round_robin)
+        frontier_commit: 47d919077b6f904ec343db8a48bb8f43c985a46b
+        frontier_config: inputs/frontier_g4.json (num_blocks 284775, dummy_execution_time_ms 0.8943)
+        run_manifest: runs/frontier_g4/run_manifest.json, written before launch
+        receipt: runs/frontier_g4/command_receipt.json
+        result: 51/51 requests complete with tokens conserved in all three runs
+        status: COMPLETE
+      - run_tag: frontier_pre_change_d1a2a06
+        package: G5 pre-change baseline (git archive d1a2a06)
+        receipt: runs/frontier_pre_change_d1a2a06/command_receipt.json
+        result: constructor rejects PP2 (runs/frontier_pre_change_d1a2a06/rejection.txt)
+        status: COMPLETE
     producer: "tests/comparison/dp_placement_pp/run_frontier_case.py (one process per run: vllm_load_balancing, completion_reporting_control, round_robin)"
     predicate: clean-style E2E metrics (store_request_metrics on); dummy timing per D-e
     artifact_path: /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/<RUN_TAG>/, summary retained under runs/ here
   simulator_control_completion_reporting:
-    status: NOT_RUN
+    status: COMPLETE   # run completion_reporting_control of simulator run frontier_g4
     producer: >-
       run_frontier_case.py run completion_reporting_control, through the
       test-only completion_reporting_control switch of
@@ -256,4 +284,4 @@ decisions:
       2026-09-23. PR 36 merged into main as 4ab1964, merged forward as dd9b8d9,
       composition check passed on 03d5f24.
 
-status: READY_FOR_GROUNDTRUTH   # G2 complete 2026-09-23; analysis/semantic_alignment_status.json PASS
+status: PENDING_HUMAN_REVIEW   # G5 complete 2026-09-23; analysis/workflow_gap_status.json PASS, correction_state pending (C4 SCENARIO_NOT_REACHED; S43, S42)

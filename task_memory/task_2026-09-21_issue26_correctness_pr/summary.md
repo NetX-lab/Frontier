@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Step 9 G3–G5 results added to W9, the validation table and the open items. C3 PASS, C4 `SCENARIO_NOT_REACHED`, and findings S43/S42 await review. |
 | 2026-09-23 | The W9-05 fix (`75c1140`) added to Work packages and Deliverables; its follow-ups replace the W9-05 open item. G3–G5 authorized by the user and in preparation. |
 | 2026-09-23 | W9 and the W9-04 fix (`2ffb062`) added to Work packages and Deliverables; open items reduced to G3–G5 and W9-05 (deferred as a separate item by the user). |
 | 2026-09-23 | Status only: Step 9 P1–P5 complete on the CPU (`2ffe78d`, `bacdbb4`); D9-2 decided as group-anchored. Open items W9-04, W9-05 and G3–G5 added below. The Step 0–8 archive is otherwise unchanged. |
@@ -41,7 +42,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | W5 | Routing implementation identity separated from expert-load distribution | **Closed, not ported**, by user decision after the premise check showed the collision unreachable from any released configuration. Drafted implementation reverted before commit and archived as `w5_reverted_moe_routing_runtime_path.patch`. |
 | W6 | Legacy fused-MoE profiling performs the real gated expert computation | Landed. `7269bac`, native parity test `697f219`, identity limits documented in `79f599a`. |
 | W7 | The collective-sim backend accepts an empty collective | Landed companion-side. Frontier gitlink moved in `1b95187`; governance scans narrowed in `beded3c`. |
-| W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). The vLLM-side GPU comparison G3–G5 is not run. |
+| W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). Against a real vLLM 0.10.2 DP2 PP2 deployment (G4), Frontier's balancer reproduces all 48 formal routes from the native history (C3). The discriminating slice was not reached (C4 `SCENARIO_NOT_REACHED`, plan §18.21). |
 | W9-04 | A lane that joins a forward after receiving a first-layer placeholder no longer stalls it | Landed. `2ffb062`; checks A1–A7 pass, including fidelity 71 of 71 and stage-admission 51 of 51. |
 | W9-05 | A `vllm_v1` MONOLITHIC request preempted during decode resumes instead of disappearing | Landed. `75c1140`; checks B1–B8 pass. A 72-cell KV-pressure sweep lost 176 requests before and none after; fidelity 71 of 71 identical. |
 
@@ -106,6 +107,7 @@ recorded in `validation.md`), and `w5_reverted_moe_routing_runtime_path.patch`.
 | W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03), native rerun NOT_RUN. |
 | W7 companion | 9 passed on the fix; 6 of 9 fail against pristine sources. |
 | W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. |
+| Step 9 ground truth | G3 (`exp-0923-221233-009652`, PP1) T1 38/38; G4 (`exp-0923-230103-591735`, DP2 PP2 EP, 4 H800) extraction PASS; G5 T1 48/48 formal routes MATCH; C4 `SCENARIO_NOT_REACHED` in all four bursts; the pre-change revision rejects PP2 at construction (`test_report_2026-09-23_step9_dp_pp_groundtruth.md`). |
 | Negative controls | W2 12 of 23, W3 four trees, W4 five trees, W6 one discriminating test, W7 both sides — each fails for its own stated reason on the unrepaired source. |
 
 Detailed commands, expectations, and limits are in `validation.md` and the
@@ -119,7 +121,7 @@ per-work-package reports.
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
-| Step 9 vLLM-side comparison G3–G5: authorized by the user on 2026-09-23 (≤3 jobs × ≤1 h, `codesign`); G2 harness in preparation. | plan §18.5, §18.6 |
+| Step 9 C4 disposition: accept `SCENARIO_NOT_REACHED`, or decide on a new pre-registration (1 of 3 authorized GPU jobs unused). Candidate fidelity findings S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards), outside Step 9 scope, await review. | plan §18.21, `future.md` §3 |
 | W9-05 follow-ups, not started: the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated

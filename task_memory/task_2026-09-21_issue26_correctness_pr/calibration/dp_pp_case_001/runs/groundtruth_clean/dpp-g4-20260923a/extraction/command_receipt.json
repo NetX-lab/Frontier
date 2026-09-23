@@ -1,0 +1,10 @@
+{
+ "entry": "groundtruth-run (extraction step)",
+ "command": "/data/ycfeng/envs/frontier-py310/bin/python tests/comparison/dp_placement_pp/extract_vllm_placement.py --run-dir task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a/run --request-ids task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/trace_g4/request_ids.json --output-dir task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a/extraction",
+ "working_directory": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr",
+ "start_utc": "2026-09-23T15:07:37Z",
+ "end_utc": "2026-09-23T15:07:37Z",
+ "exit_code": 0,
+ "result": "extraction_status.json PASS",
+ "time_source": "artifact mtimes; the receipt was written after the run"
+}
