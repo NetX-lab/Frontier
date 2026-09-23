@@ -283,5 +283,20 @@ decisions:
     resolved: >-
       2026-09-23. PR 36 merged into main as 4ab1964, merged forward as dd9b8d9,
       composition check passed on 03d5f24.
+  - decision_id: G5-review
+    question: >-
+      After G5: accept C4 as SCENARIO_NOT_REACHED, approve a post-hoc
+      qualification, or spend the last GPU job on a new pre-registration; and
+      do S43 and S42 become separate workflow-repair items?
+    answer: "C4 选择a; S43 和 S42 各开一个单独的校准和修复任务"
+    outcome: >-
+      C4 is SCENARIO_NOT_REACHED with the failed preconditions named in
+      analysis/g5_comparison/comparison_status.json; the qualification is not
+      changed after the fact and the third GPU job is not used. S43 and S42
+      leave this case and each become a separate calibration-and-repair task.
+    requesting_user: i-fengyicheng
+    reviewer_identity: i-fengyicheng
+    decided_at_utc: "2026-09-24"
+    reviewed_artifact: analysis/workflow_gap_status.json (written_at_utc 2026-09-23T15:27:54Z)
 
-status: PENDING_HUMAN_REVIEW   # G5 complete 2026-09-23; analysis/workflow_gap_status.json PASS, correction_state pending (C4 SCENARIO_NOT_REACHED; S43, S42)
+status: PASS   # human review G5-review 2026-09-24: C4 SCENARIO_NOT_REACHED accepted (option a); S43 and S42 transferred to task_2026-09-24_s43_pp_empty_schedule_admission and task_2026-09-24_s42_dp_wave_idle_forward; no code change in this case

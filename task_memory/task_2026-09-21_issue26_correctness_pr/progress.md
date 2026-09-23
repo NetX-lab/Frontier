@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | User decisions after G5 recorded (C4 option a; S43 and S42 become separate tasks; W9-05 worktrees removed). Review of the branch's fixes: ten commits `c647e95`..`6aee289`, proposals listed, dummy-mode question answered, candidate row S44 recorded, records corrected, S43/S42 task directories created. |
 | 2026-09-23 | G4 complete (`exp-0923-230103-591735`, extraction PASS). G5 complete: T1 48/48 formal routes MATCH at PP2 (C3 PASS). C4 `SCENARIO_NOT_REACHED` in all four bursts. The third GPU job is not used. `workflow_gap_status` PASS with corrections S43/S42 pending review. Plan §18.21. |
 | 2026-09-23 | G3 complete (`exp-0923-221233-009652`, extraction PASS, T1 replay 38/38 MATCH); G4 inputs amended per plan §18.20; launcher wrapper and poller fixed. |
 | 2026-09-23 | G2 complete: harness under `tests/comparison/dp_placement_pp/`, case inputs, semantic table `PASS`, manifest ids filled, Frontier pre-check discriminates; plan §18.19. |
@@ -41,9 +42,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21). |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21), accepted by the user (option a). Fix review done 2026-09-24: `c647e95`..`6aee289` (plan §18.22, `test_report_2026-09-24_fix_review.md`). |
 | Publication | PUSHED_VERIFIED 2026-09-23: remote head `3526156` confirmed equal to local (G4/G5 records). PR 35 body PATCHed 2026-09-23T15:35Z with the W9 progress row, a new "Ground truth against vLLM 0.10.2 (G3–G5)" section, the Limits, the review-material rows and the Status. Read back identical apart from a trailing newline; still draft. The previous body is kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_3526156.md`. Earlier: remote head `8dc3766` confirmed equal to local (W9-05 fix `75c1140`, records `8dc3766`); PR 35 body PATCHed 2026-09-23T13:25Z with the W9-05 row, section, Limits, commit and Status, read back identical apart from a trailing newline; still draft; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_75c1140.md`. Earlier: remote head `a9ff5d5` confirmed equal to local (W9-04 fix `2ffb062`, records `a9ff5d5`); PR 35 body PATCHed 2026-09-23T12:33Z with the W9-04 row, section and commit, read back identical; still draft. Earlier the same day: Step 9 commits `d1a2a06`, `2ffe78d`, `bacdbb4`, `c1a570d`, `104b6ff`. Draft PR 35 body PATCHed 2026-09-23T12:10Z through `gh api` (Scope, Base, Progress, new W9 section, pipeline-coverage note, review material, commits, Status), read back identical apart from a trailing newline; still draft, base `refactor/oversized-module-split`; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_c1a570d.md`. Earlier: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
-| Next action | User review: (1) accept C4 as `SCENARIO_NOT_REACHED`, approve a post-hoc qualification, or spend the last job on an exploratory redesign; (2) whether S43/S42 become separate `workflow-repair` items; (3) approval to remove `.worktrees/w9-05-{before,after}`. |
+| Next action | User decisions on the review proposals (plan §18.22): F-R5/F-R6, the strict `sync_entry` predicate, the sync-room alias refactor, S44 as a second S43 row, a native W6 FP8 rerun, the pinned calibration tools, and removal of `.worktrees/review-final-{base,head}`. S43 and S42 continue in their own task directories. |
 
 ## Step status
 
@@ -59,7 +60,7 @@
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
 | 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
 | 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
-| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 complete (C3 PASS, C4 SCENARIO_NOT_REACHED); awaiting the user's review | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions); C3 PASS (T1 48/48 formal at PP2) | PUSHED_VERIFIED `3526156`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
+| 9 | PP>1 support for `vllm_load_balancing` | DONE — P1–P6 completed; G3–G5 complete (C3 PASS, C4 SCENARIO_NOT_REACHED, accepted by the user 2026-09-24, option a); fix review `c647e95`..`6aee289` with final validation PASS; S43/S42 moved to their own tasks | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions); C3 PASS (T1 48/48 formal at PP2) | PUSHED_VERIFIED `3526156`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
 
 ## Chronological updates
 
@@ -466,3 +467,32 @@ of spacing or offsets cannot deliver a trace-ordered burst whose first two
 routes include the long body and land within 0.5 ms. The frontend spends
 about 7 ms processing the 40896-token body. Plan §18.21 records the reasoning
 and the two candidate findings.
+
+### Decisions after G5 and the fix review (2026-09-24)
+
+User message, verbatim in `requirements.md`: C4 option (a); S43 and S42 as separate tasks; remove `.worktrees/w9-05-{before,after}`; is dummy-only logic repair sound; review the existing fixes and correct what the review finds.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| C4 | completed | Recorded in `requirements.md`, the case manifest decision `G5-review` and `analysis/workflow_gap_status.json` (`correction_state=not_applicable`, the contract's no-change value for this case, with S43/S42 under `transferred_corrections`); manifest `status: PASS`. |
+| W9-05 worktrees | completed | `git worktree remove` (`--force` for `after`; its uncommitted files were byte-identical to `75c1140` or already committed), then `git worktree prune`. |
+| Fix review | completed | Ten commits `c647e95`..`6aee289`; each finding confirmed before it was fixed, and each tested fix checked against a tree without it (`test_report_2026-09-24_fix_review.md` sections 3–4). |
+| Dummy-mode question | completed | Plan §18.22 and test report section 5: adequate for timing-independent control-flow repairs, not for per-lane timing, load imbalance, timing-selected branches or calibration closure. |
+| Candidate row S44 | recorded, proposal | Test report section 6: vLLM publishes counts before draining requests that arrived during the step; 1/92 native receipts with `waiting > 0` against 24/106 Frontier reports. |
+| S43, S42 tasks | completed (created) | `/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/` and `.../task_2026-09-24_s42_dp_wave_idle_forward/` (main checkout, local records): requirements with the verbatim decision, plan with scope, evidence, steps, draft criteria and blockers (timing, pinned tools, native dummy-pass records), progress. S44 is a proposed second S43 row. |
+| Record corrections | completed | Reachability claims (design, validation, review), W6 `block_shape` (`[128, 128]` natively) and rerun status (summary, validation, W6 report, review-corrections report), W7 claims (review, validation, summary, W7 report), the audit PORT row, admission anchors (plan, calibration tables, future), the W9-05 addendum in `issues.md`, and my own W3-R3 wording (no group-formation check exists; the state is unreachable). |
+| Final validation | completed | `final_20260924/run_final.sh`: `ba0a804` against `6aee289` on clean detached worktrees, all five expectations in `final_20260924/expectations.md` met (test report §7): suites 0 regressions; fidelity 74/74 identical; examples 16/16 identical; stage-admission 51/51 PASS; probe 72/72 drained. |
+| Push and PR bodies | pending | After the final validation. |
+
+Reason for each change, expectation, method and result are in the test report. Commands for the per-fix verification:
+
+- `pytest tests/integration/test_vllm_v1_decode_preemption_runtime.py`: HEAD 4 passed. The control trees fail the case each fix names (`review_20260924/w9_05_regress/negctl/matrix.txt`).
+- `pytest tests/unit/test_monolithic_mixed_forward_sync.py` on a borrowed-timing tree: 2 failed, 23 passed (`review_20260924/w3_borrowed/result.txt`).
+- `pytest tests/unit/test_moe_fused_expert_arithmetic.py tests/unit/test_moe_fused_event_contract.py` (openmopd):
+  - HEAD 31 passed;
+  - `f236c17~1` with the new tests: 10 failed, 21 passed; 3 fail on behavior, 7 on the removed `block_dims` argument (`final_20260924/w6_negctl.txt`).
+- collective-sim at `ff11ee6`: companion 12 passed, Frontier 3 passed. At `eb7bc4f` the new cases fail (`review_20260924/w7_fix/`).
+- `pytest tests/integration/test_vllm_dp_placement_runtime.py`:
+  - HEAD 12 passed;
+  - mutation M2: both stagger cases fail (`review_20260924/w9_stagger/`).
+

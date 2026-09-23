@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | W9-05 review addendum: F-R1..F-R4 at PP>1 fixed in `c647e95`; F-R5 and F-R6 recorded as fidelity proposals. W9-03 transferred to the S42 task. |
 | 2026-09-23 | W9-05 diagnosed and fixed in `75c1140` (user direction "授权上述1-2，推进W9-05"): mechanism and Resolution with checks B1–B8 added. |
 | 2026-09-23 | W9-04 fixed in `2ffb062` under option 1 (user decision); Resolution added with checks A1–A7. W9-05 deferred as a separate item (user decision). |
 | 2026-09-23 | W9-04 (placeholder/join deadlock at `attn_dp=4`, root cause and prototype) and W9-05 (requests lost under KV pressure, also on `main`) recorded from Step 9 P5. |
@@ -193,7 +194,10 @@ size. C1 was amended accordingly.
 ## W9-03 Frontier does not model the reference's DP engine lockstep under PP
 
 Status: open, observation from source reading, not measured. Outside Step 9's
-scope; decision pending with the user.
+scope. **Transferred 2026-09-24** to
+`task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` by the user's decision
+that S42 becomes its own calibration-and-repair task; this section is its
+source record.
 Found: 2026-09-23, Step 9 package P1(b), while deriving the D9-2 key.
 
 ### Reference (pinned `.real-engine/vLLM-BS`)
@@ -450,3 +454,33 @@ Limits and follow-ups:
   columns cover only the PDD DECODE role. A MONOLITHIC preemption appears only
   in `request_total_preemption_count`.
 - CPU runs with dummy or trained predictors on this host.
+
+### Review addendum (2026-09-24)
+
+The fix review (`test_report_2026-09-24_fix_review.md`) found that the
+`75c1140` rule held at PP=1 but not at PP>1, where an earlier batch can still
+carry the victim through a later stage when the preemption happens.
+
+| Id | Defect at PP>1 | Fixed in `c647e95` by |
+| --- | --- | --- |
+| F-R1 | The victim kept its active-batch mark; the running phase skipped it for good and the run stalled. | Preemption drops the mark. |
+| F-R2 | The stale step still credited its layers; the resumed step overran the layer counter. | Preemption resets the layers of a decode step the victim no longer runs. |
+| F-R3 | The old batch's end released the victim again after its new batch admitted it. | Batch release iterates the batch's live requests only. |
+| F-R4 | At PP>=4 a finished victim waiting for its terminal release re-entered the waiting queue. | Preemption retires it, as vLLM does when that output arrives. |
+
+`tests/integration/test_vllm_v1_decode_preemption_runtime.py` now runs dense
+PP4, MoE DP2 EP2 PP2 and a PP4 finished-victim case besides the original; each
+fails on a tree without the fix its comment names
+(`/data/ycfeng/tmp/issue26-correctness-pr/review_20260924/w9_05_regress/negctl/matrix.txt`).
+
+Two fidelity differences remain, recorded as proposals because they change
+results for any preempting run:
+
+- F-R5. vLLM chooses the victim from `running[-1]` or the lowest priority,
+  which can be the requesting request itself, and then stops scheduling it
+  (`scheduler.py:470-548`). Frontier excludes the requester
+  (`vllm_v1_kv_allocation.py:412-465`, `:661`).
+- F-R6. vLLM's `update_from_output` applies the token that a preempted
+  request's in-flight step sampled, and retires the request from waiting if
+  that token stops it (`scheduler.py:1278-1324`). Frontier discards the token.
+

@@ -38,6 +38,7 @@ The draft specification is landed verbatim in `plan.md` together with an Amendme
 | Date | Question | Decision |
 | --- | --- | --- |
 | 2026-09-22 | W5 open item 3: the single public name for the routing implementation identity, asked under the AGENTS.md naming gate with three materially plausible spellings. | **`moe_routing_runtime_path`**, a `ReplicaConfig` field, CLI `--replica_config_moe_routing_runtime_path`. It shares the prefix of the neighbouring `moe_routing_seed`, `moe_routing_trace_path` and `moe_routing_distribution_type`. The profiling CSV column stays `routing_runtime_path` and the standalone trainer flag stays `--routing_runtime_path`; neither is renamed. |
+| 2026-09-24 | Recorded the C4 disposition, the S43/S42 task split, the W9-05 worktree removal, the dummy-mode question and the fix-review request. |
 | 2026-09-22 | W5 scope, asked after the naming decision: global field only, or global plus per-role overrides. | Global + per-role overrides (`prefill`, `decode`, `decode_ffn`). Superseded the same day by the row below. |
 | 2026-09-22 | `[Original Request]` "我在rethink添加 frontier.moe_routing_runtime的必要性。我的concern是，该部分的align是否对模拟准确度意义重大？如果对fidelity的影响不到0.5%,我认为完全无需引入如此复杂的变量和setting,这会使得可用性和可读性变得很困难" -> after the explanation of what the module decides and the measured 3-8% per-layer cost of a wrong path versus the 0% change of the unset override: "我认为采用 当前默认的 两个 cluster 都只能读同一个全局 moe_routing_distribution_type，永远解析出同一个 path ；进行回退" | **W5 not ported.** Keep the existing contract: one global `moe_routing_distribution_type`, one derived routing path per run, no override field, no registry routing axis. The drafted implementation was reverted before any commit and archived as `w5_reverted_moe_routing_runtime_path.patch`. Both earlier W5 decisions above are void. |
 | 2026-09-22 | W6 artifact identity: should the profiling metadata gain a column that separates an incomplete legacy `moe_grouped_gemm` measurement from a complete one? | **"不改 metadata，只记录限制"** — do not change the profiling metadata; record the limitation only. Written into `docs/profiling/README.md` under the MoE producer. No code change, no new column, no admission gate. |
@@ -144,3 +145,17 @@ G3–G5.
 | Validation worktrees | Removed 2026-09-23 with `git worktree remove` (`w9-04-after` held two generated `config.json` run outputs only, so `--force`), then `git worktree prune`. |
 | G3–G5 | Authorized. Manifest decision `D-gpu-authorization` is answered. Scope is plan §18.5/§18.6/§18.9: S0 smoke on 2×H800 and S1 on 4×H800, `codesign` only, within the §18.9 budget of at most three jobs of at most one hour each. G2 must complete before the first submission. |
 | W9-05 | Superseded the earlier deferral: diagnose and fix in this branch under the approval rules. A change to a shared interface or beyond the step's size limits still needs approval. |
+
+## [Decision] 2026-09-24 — C4, S43/S42, worktrees, dummy mode and a fix review
+
+Message, verbatim: "C4 选择a; S43 和 S42 各开一个单独的校准和修复任务； 允许删除 .worktrees/w9-05-{before,after}；当前仅用dummy模式来进行逻辑侧的矫正和修复是否合理？是否存在遗漏情况？ 对已有修复进行一次review并修正review中发现的问题；"
+
+It answers the numbered decisions after G5 (plan §18.21).
+
+| Item | Decision |
+| --- | --- |
+| C4 | Option (a): accept `SCENARIO_NOT_REACHED` as the C4 outcome. The per-burst qualification is not changed after the fact, and the last authorized GPU job is not used. |
+| S43, S42 | Each becomes its own calibration and repair task, outside this PR. Any Frontier change there follows the calibration contract ("Analysis Before Code Change"). |
+| Validation worktrees | `.worktrees/w9-05-{before,after}` removed 2026-09-24 with `git worktree remove` (`--force` for `after`, whose uncommitted files are byte-identical to `75c1140` or already committed), then `git worktree prune`. |
+| Dummy mode | Question: is correcting and repairing the logic in dummy mode alone sound, and is anything missed? Answered with evidence in `progress.md` and plan §18.22. |
+| Fix review | Review the existing fixes of this branch and correct the confirmed findings, under the quality gates and approval rules. |

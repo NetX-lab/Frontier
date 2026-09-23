@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Corrected the reachability claim for a multi-lane MoE forward (fix review W2-R5). |
 | 2026-09-23 | Noted the W9-04 fix (`2ffb062`) under the Step 9 implementation results. |
 | 2026-09-23 | W9 as implemented: section "Schedule-time reports under pipeline parallelism" added (P2–P5 outcome, measured against the expectation above); W4 guard row annotated. |
 | 2026-09-23 | D9-2 decided by the user: the group-anchored rule. |
@@ -55,6 +56,14 @@ above one lane. **No case in the 71-case fidelity matrix can reach a multi-lane
 monolithic MoE forward at all.** That is why R35-02 requires a
 direct-construction integration fixture rather than another wrapper case, and it
 is also why most of this change is expected to be fidelity-neutral.
+
+**Corrected 2026-09-24 (fix review W2-R5).** The wrapper check runs on the
+wrapper's own variables; flags passed through after it override the attention
+sizes and reach the runtime. A multi-lane monolithic MoE forward is therefore
+reachable from a public wrapper. `748e757` added
+`dp_moe_coloc_online_lanes2`, which ends with a non-empty scheduler state on
+`3d47417` and completes on this branch. The fidelity-neutral expectation for
+the 71 original cases is unaffected.
 
 The expectation is therefore stated in two parts, before measuring:
 

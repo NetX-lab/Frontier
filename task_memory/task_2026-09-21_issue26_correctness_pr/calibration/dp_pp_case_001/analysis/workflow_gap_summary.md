@@ -1,5 +1,11 @@
 # Workflow gap analysis: dp_pp_case_001 (G4 native PP2 against G5 Frontier)
 
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-09-24 | Human review G5-review recorded (C4 option a; S43 and S42 transferred to their own tasks). Frontier admission anchor corrected from `base_replica_scheduler.py:906` (the unified DECODE loop) to `:1052-1063`, the MONOLITHIC and PREFILL loop this case runs, here and in `semantic_alignment_table.csv` S23/S43 and `workflow_gap_table.csv` WG05. |
+
 Entry `workflow-gap-analysis`, read-only. Table: `analysis/workflow_gap_table.csv`
 (WG01-WG11). Status: `analysis/workflow_gap_status.json`.
 
@@ -70,9 +76,13 @@ therefore not used (plan section 18.20, retune rule).
 
 ## Candidate fidelity findings (outside Step 9 scope; not a repair authorization)
 
+Reviewed 2026-09-24 (decision `G5-review`): each finding continues as its own
+calibration-and-repair task, `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`
+and `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`.
+
 - S43 / WG05: with PP>1, vLLM 0.10.2 appends an empty schedule and blocks on the
   oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a
-  stage slot is free (`frontier/scheduler/replica_scheduler/base_replica_scheduler.py:906`).
+  stage slot is free (`frontier/scheduler/replica_scheduler/base_replica_scheduler.py:1052-1063`, report hook `:1061`).
   Confirmed by the G4 admission records. The later burst requests are admitted
   21.3-47.4 ms after the burst's first route in a-c and 129.5-311.8 ms in d.
 - S42 / WG03: DP wave-start and idle dummy forwards (`core.py:1170-1216`) are not

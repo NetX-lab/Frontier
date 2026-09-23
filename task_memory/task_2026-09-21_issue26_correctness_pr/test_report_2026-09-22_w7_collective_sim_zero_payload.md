@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Fix review: `eb7bc4f` superseded by companion `ff11ee6` (cross-server empty all-to-all, W7-R1) and the Frontier test rewritten in `6d621c8` (W7-R2). Section "Superseded 2026-09-24" added; the measurements below are those taken at `eb7bc4f`. |
 | 2026-09-22 | First issue: companion-repository fix, Frontier gitlink bump, both negative controls, clean-checkout validation, and the governance-scan repair the bump exposed. |
 
 ## 1. Scope
@@ -54,6 +55,26 @@ commit `eb7bc4f`, companion draft PR
 | `.gitignore` | `tests/` narrowed to `tests/*` plus an explicit entry for the published test, so git descends into the directory. Private working material under `tests/` stays ignored. |
 
 No change to flow generation, topology modelling, or any latency arithmetic.
+
+### Superseded 2026-09-24
+
+- `eb7bc4f` let a zero payload reach flow generation, where the all-to-all
+  generators were undefined once a pair crossed servers: multi-phase
+  `pairwise_steps` raised `ZeroDivisionError`, `nccl_pairwise` emitted 0-byte
+  flows that htsim reads as unbounded and never finished, and single-phase
+  `pairwise_steps` and `full_mesh` emitted no flow and cost nothing. The tests
+  in this report used one server with intra-server traffic excluded, so no
+  flow reached the simulator.
+- Companion `ff11ee6` (same branch, same draft PR 1) sends one byte per peer
+  for an empty all-to-all, which is what the existing `ceil(tensor_bytes / n)`
+  share already gives every payload of at most `n` bytes. Non-zero payloads are
+  unchanged. The statement above that flow generation is untouched no longer
+  holds for the zero payload.
+- Frontier `6d621c8` moved the gitlink to `ff11ee6` and replaced the four
+  Frontier tests with three `predict_all_to_all` cases (one single-server, two
+  across servers). Companion 12 passed, Frontier 3 passed; against `eb7bc4f`
+  the new cases fail (`/data/ycfeng/tmp/issue26-correctness-pr/review_20260924/w7_fix/`,
+  `final_20260924/collective_sim_*.txt`).
 
 ## 4. Companion-side validation
 

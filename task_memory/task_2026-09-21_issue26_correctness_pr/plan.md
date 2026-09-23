@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | §18.22 added: user decisions after G5 (C4 option a; S43 and S42 become separate tasks), the review of the branch's fixes with its dispositions, the dummy-mode answer and candidate row S44. §18.20/§18.21 admission anchors corrected from `base_replica_scheduler.py:906` (unified DECODE loop) to `:1050-1063` (MONOLITHIC/PREFILL loop, hook at `:1061`). §18 status line updated. |
 | 2026-09-23 | §18.21 added: G4 and G5 results. C3 PASS (T1 48/48 formal routes at PP2). C4 `SCENARIO_NOT_REACHED` in all four bursts, and why the last GPU job is not used. Candidate findings S43 and S42 await the user's review. §18 status line updated. |
 | 2026-09-23 | §18.20 added: G3 results (T1 replay 38/38) and the G4 inputs as amended (four bursts, 20 s gaps, per-burst T2 qualification), written before G4. |
 | 2026-09-23 | §18.19 added: G2 as built (amends the §18.5 G2 row), the G3 sizing segment and the G4 retune rule, written before G3. |
@@ -867,6 +868,8 @@ Under [R1]: `frontier/profiling/moe/moe_vllm_kernel.py`, `frontier/entities/stag
 
 **Status 2026-09-23 (after G5):** G3, G4 and G5 are complete (§18.20, §18.21), using 2 of the 3 authorized GPU jobs. C3 passes. C4 is `SCENARIO_NOT_REACHED` in every burst, with the failed preconditions named. The case waits for the user's review of C4 and of the candidate findings S43 and S42.
 
+**Status 2026-09-24:** the user chose C4 option (a) and moved S43 and S42 into separate calibration tasks. The case is closed for this PR. The review of the branch's fixes is recorded in §18.22.
+
 ### 18.1 Goal and acceptance criteria
 
 `VllmLoadBalancingClusterScheduler` accepts valid `num_pipeline_stages > 1` configurations and reproduces vLLM 0.10.2's per-iteration DP request-count publication under the batch-queue stepping path that PP>1 selects — one observable engine scheduling iteration and its frontend-visible load, not a counter made monotonic after the fact — verified on a controlled or demonstrably matched iteration history against a real `vllm serve --data-parallel-size 2 --pipeline-parallel-size 2` deployment.
@@ -1081,7 +1084,7 @@ Start approval was given ("开始执行step9"). P1(a) is complete and P1(b) stop
 | Zero-token schedule | Does not early-return; applies the oldest; publishes only if counts changed. |
 | Drain | `scheduled=False, applied=True`, published. |
 | Depth 3 | Two consecutive admission-only iterations, both published, steps 0 and 1. No stride constant can reproduce this (I5). |
-| Peer keys | Equal only while two engines sit at the same iteration index; one extra iteration on a lane moves its counter ahead. Confirms R9-08: step counters are per engine. |
+| Peer keys | Equal only while two engines sit at the same iteration index. Superseded (2026-09-24, §18.15): while the wave runs an idle engine executes a dummy iteration and advances its counter, so peers stay on one index; the oracle now models that step. |
 
 **P1(b) Frontier boundary probe — blocked.** Three shapes ran; the fourth deadlocks. Recorded as W9-01 in `issues.md`.
 
@@ -1433,7 +1436,8 @@ facts the rule did not account for:
 - At PP>1, after an iteration that schedules nothing, the engine blocks on
   its oldest in-flight batch even when the batch queue has room. Arrivals
   wait in the input queue meanwhile. Frontier admits whenever a stage slot is
-  free (`base_replica_scheduler.py:906`). This is recorded as semantic row
+  free (`base_replica_scheduler.py:1050-1063`, the MONOLITHIC/PREFILL loop;
+  corrected 2026-09-24 from `:906`, the unified DECODE loop). This is recorded as semantic row
   S43, a candidate difference to confirm from the G4 records.
 - The coordinator publishes the collection snapshot about 50 ms after the
   last event, and any receipt or `FIRST_REQ` resets that wait.
@@ -1533,7 +1537,51 @@ A trace-ordered burst whose first two routes include the long body and land with
 
 **Candidate fidelity findings.** Both are outside the Step 9 placement scope, and neither is a repair authorization:
 
-- S43 / WG05: at PP>1, vLLM appends an empty schedule and blocks on the oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a stage slot is free (`base_replica_scheduler.py:906`). In the G4 records the later burst requests are admitted 21.3–47.4 ms after the burst's first route in bursts a–c and 129.5–311.8 ms in burst d. Frontier admits them on arrival, 0.5–18 ms after the first arrival.
+- S43 / WG05: at PP>1, vLLM appends an empty schedule and blocks on the oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a stage slot is free (`base_replica_scheduler.py:1050-1063`, hook at `:1061`; the unified DECODE loop at `:896-924` does the same). In the G4 records the later burst requests are admitted 21.3–47.4 ms after the burst's first route in bursts a–c and 129.5–311.8 ms in burst d. Frontier admits them on arrival, 0.5–18 ms after the first arrival.
 - S42 / WG03: DP wave-start and idle dummy forwards (`core.py:1170-1216`) are not modeled. The d record gap agrees with that source reading, but because the dummy pass writes no record this is an inference.
 
 The calibration contract requires `human review decision=PASS` before a `workflow-repair` scoped to either finding. They are recorded in `future.md`.
+
+### 18.22 After G5: decisions, the fix review and the dummy-mode question (2026-09-24)
+
+**Decisions** (verbatim in `requirements.md`):
+
+| Item | Decision |
+| --- | --- |
+| C4 | Option (a): `SCENARIO_NOT_REACHED` stands, the qualification is not changed after the fact, and the third GPU job is not used. |
+| S43, S42 | Each becomes its own calibration-and-repair task outside this PR: `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/` and `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`, under the main checkout `/data/ycfeng/Frontier/` (local records, not part of PR 35). |
+| W9-05 validation worktrees | Removed. |
+
+**Fix review.** The review covered W2, W3, W4, W6, W7, W9, W9-04, W9-05 and their cross effects. Each finding was confirmed by source reading or execution before it was fixed, and each fix with a test was checked against a tree that lacks it. Findings, commands and results are in `test_report_2026-09-24_fix_review.md`.
+
+| Commit | Fix |
+| --- | --- |
+| `c647e95` | W9-05 at PP>1: a request preempted while an earlier batch still carries it leaves that batch (F-R1 to F-R4). |
+| `3ec7bbf` | Random-policy DP lanes rotate across calls; round-robin batch mode uses the one lane rotation; two guard tests that could not fail removed; AGENTS.md scoped. |
+| `3a8767c` | Two unreachable shared-forward guards removed; the phase rule has one source; per-lane PDD continuation pinned by a test. |
+| `f236c17` | Legacy FP8 fused-MoE step timed as `fused_experts_impl` runs it (FP8 config, compute type, quantization inside the step). |
+| `6d621c8` | collective-sim gitlink to `ff11ee6`: an empty all-to-all across servers sends one byte per peer. |
+| `7309f5d` | The config-name scan parses every owned source. |
+| `748e757` | Three fidelity rows reach MoE attention-DP lanes in co-location and PDD; the matrix has 74 cases. |
+| `b7a7ac5` | Profiling README dates the fused-MoE fixes by commit. |
+| `8ca0387` | The reference oracle runs an idle engine's dummy iteration; the §18.13 "Peer keys" row is superseded. |
+| `6aee289` | Two PP>1 stagger cases cover a lane joining a peer's started forward. |
+
+Proposals that need a decision: F-R5 victim selection and F-R6 in-flight token (fidelity), the strict `sync_entry` predicate, the sync-room alias refactor, candidate row S44, a native W6 FP8 rerun, and the pinned calibration tools.
+
+**Candidate row S44.** vLLM drains the engine input queue at the top of each busy-loop iteration and publishes after the step (`core.py:1170-1216`). A request routed during the step is therefore absent from that iteration's published counts. Frontier's completion report includes it. In G4, 1 of 92 native receipts has `waiting > 0`, against 24 of 106 Frontier reports. Hiding the undrained requests does not improve G4 placement agreement under dummy timing. The row shares S43's mechanism and is proposed as a second row of the S43 task.
+
+**Dummy-mode answer.**
+- Dummy mode is adequate for timing-independent control-flow repairs, which is what this branch's fixes are. W9-05 F-R1 to F-R4 and the random-lane collapse were found and verified that way, against the vLLM source.
+- It cannot see:
+  - per-lane durations: the dummy PDD two-lane row is identical with borrowed timing, while the trained row moves TPOT by +0.26 %;
+  - load imbalance: the lane-0 collapse moved dummy TTFT by 1.1 %;
+  - branches that timing selects: burst-a peer keys are 12/12 in dummy mode and 12/13 in non-dummy mode.
+- It cannot close a calibration repair:
+  - diagnostic dummy E2E relative error is TTFT 0.60, TPOT 3.34 and E2E 3.17, against a gate of 0.10;
+  - the pinned E2E normalizer and op-supplement tool are absent;
+  - S39 routing is `UNSET`.
+- The non-dummy fallback extrapolates. Its profiles stop at 128 tokens (64 for MoE), and `balanced` routing has no rows.
+- S43 and S42 therefore need shape-dependent timing and the pinned tools before they can close. Both new task plans state this as a blocker.
+
+**Final validation** (`ba0a804` against `6aee289`, clean worktrees; `test_report_2026-09-24_fix_review.md` §7): unit and integration suites 0 regressions and 0 new failures, fidelity 74 of 74 identical, examples 16 of 16 identical, stage-admission 51 of 51 PASS, KV-pressure probe 72 of 72 drained. Every expectation recorded beforehand was met.

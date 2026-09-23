@@ -7,6 +7,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Fix review: the native rerun ran with `block_shape=[128, 128]` (the unit test pins `[128, 64]`), corrected in section 8; `f236c17` changed the FP8 step after that rerun (W6-R1..R3), so no native run covers the current FP8 code. |
 | 2026-09-22 | Corrected FP8 case re-run natively: `exp-0922-202645-561899` (`codesign` / H800, `gpu-h800-0095`), 8 passed in 14.27 s, exit 0. Section 8 records the run. |
 | 2026-09-22 | Created: reachability check, magnitude estimate, source repair, CPU validation. Native GPU validation NOT_RUN. |
 | 2026-09-22 | Artifact identity decided as document-only. Native parity test added and submitted to an H800 worker as `exp-0922-140423-075005`; result pending. |
@@ -304,7 +305,7 @@ corrected native check was re-run on 2026-09-22 with the user's authorization:
 | Node | `gpu-h800-0095.host.platform.shaipower.com`, `NVIDIA H800`, torch 2.8.0+cu128, vLLM 0.10.2 (`VLLM_API_VERSION=0.10.x`, `FP8_AVAILABLE=True`), Python 3.12.11 |
 | Image / mount | `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`; `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr` at the same path, worktree clean at `c231322` (test source `ca1b9b6`) |
 | Command | `python3 -m pytest -q -rA -p no:cacheprovider --no-header tests/integration/test_moe_fused_expert_numerical_parity.py` (same launcher as the run above; unchanged since it) |
-| Result | **8 passed in 14.27 s**, `W6:PARITY_EXIT=0`, worker exit 0. The same eight test ids as the table above, including `test_fp8_path_runs_on_the_gated_activation`, now executed with `block_shape=[128, 64]` reaching both expert GEMM invocations. |
+| Result | **8 passed in 14.27 s**, `W6:PARITY_EXIT=0`, worker exit 0. The same eight test ids as the table above, including `test_fp8_path_runs_on_the_gated_activation`, now executed with `block_shape=[128, 128]` reaching both expert GEMM invocations (corrected 2026-09-24; the integration test at `c231322` sets `[128, 128]`, and `[128, 64]` is the CPU unit test's value). The run predates `f236c17`, which changed the FP8 kernel config lookup, compute type and in-step quantization, so it does not cover the current FP8 code. |
 | Log | `/data/ycfeng/tmp/issue26-correctness-pr/w6_native_fp8_rerun_exp-0922-202645-561899.log` (retrieved through `logs_replica`; `logs_rjob` returned nothing, as before) |
 
 What this establishes: the block-quantized FP8 invocation that `profile_fused_moe_kernel`

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Fix review after G5 (`c647e95`..`6aee289`) added to Work packages, the validation table and the open items; C4 decided (option a); S43 and S42 moved to their own tasks; W6 and W7 rows corrected. |
 | 2026-09-23 | Step 9 G3–G5 results added to W9, the validation table and the open items. C3 PASS, C4 `SCENARIO_NOT_REACHED`, and findings S43/S42 await review. |
 | 2026-09-23 | The W9-05 fix (`75c1140`) added to Work packages and Deliverables; its follow-ups replace the W9-05 open item. G3–G5 authorized by the user and in preparation. |
 | 2026-09-23 | W9 and the W9-04 fix (`2ffb062`) added to Work packages and Deliverables; open items reduced to G3–G5 and W9-05 (deferred as a separate item by the user). |
@@ -27,7 +28,7 @@ Delivered as a stacked pair of draft PRs:
 | --- | --- | --- | --- |
 | [#34](https://github.com/NetX-lab/Frontier/pull/34) | `refactor/oversized-module-split` | `main` @ `1f694f7` | Brings the four modules this work edits under the 2,000-line gate, behavior unchanged |
 | [#35](https://github.com/NetX-lab/Frontier/pull/35) | `fix/issue26-correctness-pr` | `refactor/oversized-module-split` @ `6ef0a3c` | The behavior changes; 33 commits, final head `8730509` |
-| [fwyc0573/frontier-htsim#1](https://github.com/fwyc0573/frontier-htsim/pull/1) | `fix/zero-payload-input-handling` | `main` @ `b8518af` | Companion backend fix, commit `eb7bc4f` |
+| [fwyc0573/frontier-htsim#1](https://github.com/fwyc0573/frontier-htsim/pull/1) | `fix/zero-payload-input-handling` | `main` @ `b8518af` | Companion backend fix, commits `eb7bc4f` and `ff11ee6` (2026-09-24) |
 
 Latency calibration and any Frontier-versus-vLLM end-to-end comparison were out
 of scope throughout. Issue 26 stays open. All three PRs are draft.
@@ -44,6 +45,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | W7 | The collective-sim backend accepts an empty collective | Landed companion-side. Frontier gitlink moved in `1b95187`; governance scans narrowed in `beded3c`. |
 | W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). Against a real vLLM 0.10.2 DP2 PP2 deployment (G4), Frontier's balancer reproduces all 48 formal routes from the native history (C3). The discriminating slice was not reached (C4 `SCENARIO_NOT_REACHED`, plan §18.21). |
 | W9-04 | A lane that joins a forward after receiving a first-layer placeholder no longer stalls it | Landed. `2ffb062`; checks A1–A7 pass, including fidelity 71 of 71 and stage-admission 51 of 51. |
+| Fix review (2026-09-24) | Review of W2, W3, W4, W6, W7, W9 and W9-05 as landed | Ten commits `c647e95`..`6aee289`: PP>1 decode preemption (F-R1..F-R4), random-policy lane collapse (W2-R1), unreachable guards and a single phase rule (W3), FP8 wiring (W6-R1..R4), cross-server empty all-to-all (W7-R1, companion `ff11ee6`), the reference loop's idle iteration and two stagger cases (W9). Proposals F-R5, F-R6, W3-R5, W3-R6, S44 await decisions. `test_report_2026-09-24_fix_review.md`. |
 | W9-05 | A `vllm_v1` MONOLITHIC request preempted during decode resumes instead of disappearing | Landed. `75c1140`; checks B1–B8 pass. A 72-cell KV-pressure sweep lost 176 requests before and none after; fidelity 71 of 71 identical. |
 
 ## Deliverables
@@ -104,9 +106,9 @@ recorded in `validation.md`), and `w5_reverted_moe_routing_runtime_path.patch`.
 | W3 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 placement | Measured to place differently from round-robin under the same load, so the policy is not a renamed default. |
-| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03), native rerun NOT_RUN. |
+| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3), so no native run covers the current FP8 code; CPU tests 31 passed. |
 | W7 companion | 9 passed on the fix; 6 of 9 fail against pristine sources. |
-| W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. |
+| W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. Superseded 2026-09-24: companion `ff11ee6` defines the cross-server empty all-to-all (W7-R1); Frontier's three rewritten cases pass and fail at `eb7bc4f`; companion 12 passed. |
 | Step 9 ground truth | G3 (`exp-0923-221233-009652`, PP1) T1 38/38; G4 (`exp-0923-230103-591735`, DP2 PP2 EP, 4 H800) extraction PASS; G5 T1 48/48 formal routes MATCH; C4 `SCENARIO_NOT_REACHED` in all four bursts; the pre-change revision rejects PP2 at construction (`test_report_2026-09-23_step9_dp_pp_groundtruth.md`). |
 | Negative controls | W2 12 of 23, W3 four trees, W4 five trees, W6 one discriminating test, W7 both sides — each fails for its own stated reason on the unrepaired source. |
 
@@ -121,8 +123,9 @@ per-work-package reports.
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
-| Step 9 C4 disposition: accept `SCENARIO_NOT_REACHED`, or decide on a new pre-registration (1 of 3 authorized GPU jobs unused). Candidate fidelity findings S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards), outside Step 9 scope, await review. | plan §18.21, `future.md` §3 |
-| W9-05 follow-ups, not started: the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
+| Step 9 C4: decided 2026-09-24, option (a), `SCENARIO_NOT_REACHED` accepted. S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards) continue as separate calibration-and-repair tasks. | `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` |
+| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), a native W6 FP8 rerun, the pinned calibration tools. | `test_report_2026-09-24_fix_review.md` §8 |
+| W9-05 follow-ups, not started: at PP>1 the fix review's F-R1..F-R4 are fixed (`c647e95`); the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated
 

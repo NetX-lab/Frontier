@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Fix review: reachability claims for a multi-lane MoE role corrected (W2-R5); W6 native rerun scope and W7 companion commit annotated as superseded; section "Fix review and final validation (2026-09-24)" added. |
 | 2026-09-23 | Step 9 ground truth G3–G5 recorded: G3 T1 38/38, G4 extraction PASS, G5 T1 48/48 formal (C3 PASS), C4 `SCENARIO_NOT_REACHED` in all four bursts, pre-change PP2 rejection. |
 | 2026-09-23 | W9-05 fix `75c1140` validated: B1–B8 pass (regression test and its control, `tight_kv` 24 of 24 in three shapes, KV sweep 72 of 72, C2 21 of 24 identical with the 3 preempting cases explained, deadlock sweep 72 of 72, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
 | 2026-09-23 | W9-04 fix `2ffb062` validated: A1–A7 pass (regression test and its control, sweep 72 of 72, C2 22 of 22 plus both stalled cases finishing, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
@@ -105,7 +106,7 @@ Sensitivity was verified by stashing the fix and rerunning, not by reasoning. Th
 
 ### Limits
 
-The prefill role reaches the same placement path, but **no shipped recipe can give it more than one lane**, so the matrix cannot cover that half. A dense model in a disaggregated architecture is rejected outright, and the MoE wrappers enforce `ATTN_TP == MOE_TP * MOE_EP` while the runtime enforces `attn_tp * attn_dp == moe_tp * moe_ep`, which have no common solution above one lane. Both routes were attempted and both were rejected, so this is measured rather than inferred. The unit test is the only evidence for the prefill half of this fix, and the PR says so.
+The prefill role reaches the same placement path, but **no shipped recipe can give it more than one lane**, so the matrix cannot cover that half. A dense model in a disaggregated architecture is rejected outright, and the MoE wrappers enforce `ATTN_TP == MOE_TP * MOE_EP` while the runtime enforces `attn_tp * attn_dp == moe_tp * moe_ep`, which have no common solution above one lane. Both routes were attempted and both were rejected, so this is measured rather than inferred. The unit test is the only evidence for the prefill half of this fix, and the PR says so. **Corrected 2026-09-24 (W2-R5):** the wrappers' pass-through flags are appended after that check and reach the runtime, so a multi-lane MoE role is reachable; `748e757` added `dp_moe_coloc_online_lanes2`, `dp_moe_pdd_online_lanes2` and `dp_moe_pdd_online_lanes2_trained` to the matrix. The PDD rows exercise the prefill half through the event loop.
 
 ## Step 2 re-measured — harness and source at one revision (2026-09-22)
 
@@ -217,6 +218,7 @@ the inherited-failure inventory recorded for the refactor branch.
   roles that reach batch-mode placement; that is a scheduler test, not a run of
   the event loop. Full runtime coverage needs the direct-construction fixture
   described under R35-02, which is W3 acceptance work.
+  **Corrected 2026-09-24 (W2-R5):** the wrappers' pass-through flags are appended after that check and reach the runtime, so a multi-lane MoE role is reachable; `748e757` added `dp_moe_coloc_online_lanes2`, `dp_moe_pdd_online_lanes2` and `dp_moe_pdd_online_lanes2_trained` to the matrix.
 - Lane occupancy is read from the stage ledger, which records scheduled stage
   executions. It shows where work was placed, not that placement is optimal.
 
@@ -230,6 +232,7 @@ enforces `attn_tp * attn_dp == moe_tp * moe_ep`; those have no common solution
 above one lane. **No case in the 71-case table can reach the defect**, so the
 matrix here answers only one question — did anything *else* move — and a null
 result is the pass condition, not the proof of the fix.
+**Corrected 2026-09-24 (W2-R5):** the wrappers' pass-through flags are appended after that check and reach the runtime, so a multi-lane MoE role is reachable; `748e757` added `dp_moe_coloc_online_lanes2`, `dp_moe_pdd_online_lanes2` and `dp_moe_pdd_online_lanes2_trained` to the matrix. `dp_moe_coloc_online_lanes2` ends with a non-empty scheduler state on `3d47417`, the parent of the shared forward, and completes after it.
 
 The proof of the fix is the direct-construction runtime test plus its controls.
 
@@ -470,7 +473,7 @@ Full record: `test_report_2026-09-22_w6_fused_expert_arithmetic.md`.
 | Native GPU parity | **PASS. 8 passed in 13.70 s** on `NVIDIA H800` (`gpu-h800-0110`), job `exp-0922-145047-660565`, creator `i-fengyicheng`, charged group `codesign` per the user's 2026-09-22 instruction, 1 GPU, image `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`, NFS source `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`. Worker: Python 3.12.11, torch 2.8.0+cu128, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`, `FP8_AVAILABLE=True`. All 8 cases of `tests/integration/test_moe_fused_expert_numerical_parity.py` compare at `rtol=0, atol=0` against `fused_experts`: Qwen3-A3B-30B shapes from the checked-in model config at 4096 and 4097 tokens on EP ranks 0 and 1; a 257-token, 16-expert case at top-k 2 and 4 whose routing leaves two local experts empty; repeated invocation with different inputs; and the FP8 path as a structural check. Three earlier attempts and their causes are in `test_report_2026-09-22_w6_fused_expert_arithmetic.md` section 8. |
 | Artifact identity | **CLOSED as document-only** by user decision. The finding stands: `resolve_grouped_gemm_backend` labels both vLLM paths `vllm_fused`, and `profiling_patch_tag` holds three historical free-text values in `a800/qwen3-a3b-30b-moe/moe.csv` while nothing in the source writes it. No column was added. `docs/profiling/README.md` records the operator's scope, the size of the pre-repair gap, and that a row cannot be checked for completeness from its own metadata. |
 | Suite re-run after the documentation and record commits | `pytest tests/unit -q --continue-on-collection-errors` under `frontier-py310` at `cad3afd`: 84 failed, 3778 passed, 49 skipped, 11 errors. Identical to the W4 baseline and to the earlier W6 measurement. |
-| Native rerun with the corrected FP8 wiring (external review C35-03) | `exp-0922-202645-561899`, `codesign` / H800 (`gpu-h800-0095`), vLLM 0.10.2 image, worktree `c231322`: **8 passed in 14.27 s**, exit 0. Seven zero-tolerance comparisons plus the FP8 structural check, now with `block_shape` reaching both GEMMs. FP8 numerics still not compared against a reference. |
+| Native rerun with the corrected FP8 wiring (external review C35-03) | `exp-0922-202645-561899`, `codesign` / H800 (`gpu-h800-0095`), vLLM 0.10.2 image, worktree `c231322`: **8 passed in 14.27 s**, exit 0. Seven zero-tolerance comparisons plus the FP8 structural check, now with `block_shape` reaching both GEMMs. FP8 numerics still not compared against a reference. **Superseded 2026-09-24:** `f236c17` (W6-R1..R3) changed the FP8 step after `c231322` (kernel config lookup, compute type, in-step quantization), so no native run covers the current FP8 code; a rerun is a pending proposal. |
 
 ## Step 7 — Zero-payload collective through the collective-sim backend
 
@@ -480,9 +483,9 @@ Full record: `test_report_2026-09-22_w7_collective_sim_zero_payload.md`.
 | --- | --- |
 | Reachability | Confirmed by source. `moe_operator_times.py:512` computes `data_size_bytes = embedding_dim * 2 * routed_tokens` and hands it to `predict_all_to_all`, so an EP lane routing no token in a step asks for an empty transfer; `predict_reduce_scatter` floor-divides by the device count and reaches zero for any payload below it. `base_cc_backend._validate_data_size` rejects only negative sizes, so zero reaches the runner. |
 | Defects, confirmed by execution against published `main` (`b8518af`) | (1) an explicit zero and a deleted field produce the identical `exit=2, Error: missing required fields: ['tensor_bytes']`; (2) `-1` passes validation and reaches flow generation; (3) `--tensor-bytes 0` against a spec of 32768 yields 32768. |
-| Companion fix | `fwyc0573/frontier-htsim` branch `fix/zero-payload-input-handling`, commit `eb7bc4f`, draft PR 1. `tensor_bytes` merges through `set_if_none_or_empty`; the required-field check became a table carrying per field whether zero is legal; a negative payload is rejected in the runner and in `Scenario.validate()`. No change to flow generation or latency arithmetic. |
+| Companion fix | `fwyc0573/frontier-htsim` branch `fix/zero-payload-input-handling`, commit `eb7bc4f`, draft PR 1 (superseded 2026-09-24 by `ff11ee6`, which also defines the cross-server empty all-to-all, W7-R1). `tensor_bytes` merges through `set_if_none_or_empty`; the required-field check became a table carrying per field whether zero is legal; a negative payload is rejected in the runner and in `Scenario.validate()`. No change to flow generation or latency arithmetic. |
 | Companion tests | `tests/test_zero_payload_input.py`, 9 tests: **9 passed** against `eb7bc4f`. Negative control with `htsim_runner.py` and `schema.py` restored to `HEAD`: **6 failed, 3 passed**, the failures reporting the missing-field error. |
-| Frontier tests | `tests/unit/test_collective_sim_zero_payload.py`, 4 tests on the canonical `TP=4 x DP=2, EP=8` pod with `intra_server_model=nvlink_analytic`: **4 passed**. An empty all-to-all and an empty reduce-scatter each price at `7 x 0.5 us = 0.0035 ms`; a 1 MiB all-to-all prices at `0.0060486222 ms`; a negative payload raises from Frontier's own guard. Negative control at gitlink `b8518af`: **3 failed, 1 passed**. |
+| Frontier tests | `tests/unit/test_collective_sim_zero_payload.py`, 4 tests on the canonical `TP=4 x DP=2, EP=8` pod with `intra_server_model=nvlink_analytic`: **4 passed**. An empty all-to-all and an empty reduce-scatter each price at `7 x 0.5 us = 0.0035 ms`; a 1 MiB all-to-all prices at `0.0060486222 ms`; a negative payload raises from Frontier's own guard. Negative control at gitlink `b8518af`: **3 failed, 1 passed**. **Superseded 2026-09-24 (W7-R2):** `6d621c8` replaced these with three `predict_all_to_all` cases, one single-server and two across servers; companion 12 passed and Frontier 3 passed at `ff11ee6`, and the new cases fail at `eb7bc4f`. |
 | Clean-checkout validation | Fresh clone of the branch: the module skips with the submodule absent (**1 skipped**); `git submodule update --init` checks out `eb7bc4f` from `https://github.com/fwyc0573/frontier-htsim.git`; `make -j` returns `build_exit=0`; the four tests then pass. The gitlink therefore resolves from the published remote, not from anything local to this host. |
 | Governance scan exposed by the bump | The first post-bump suite gave 85 failures. Diffing the `FAILED` lists named one new failure, `test_model_architecture_registry.py::test_raw_model_profile_resolution_callsites_are_allowlisted`: it `ast.parse`s every file under `frontier/`, and the initialized submodule adds 38 vendored files, one of which raises `IndentationError`. Two other scans walked the same tree and tolerated it while silently measuring vendored files. Repair: `tests/frontier_sources.iter_frontier_sources()` yields the 413 Frontier-owned files and skips the vendored subtree; all three scans use it. The three modules then give **88 passed**. |
 | Regression, default environment | `pytest tests/unit -q --continue-on-collection-errors` under `frontier-py310` with the submodule initialized and built: **84 failed, 3782 passed, 49 skipped, 11 errors**. Diffing the `FAILED` lists against the 84-failure baseline gives an empty set in both directions; the four extra passes are the new module. |
@@ -634,3 +637,22 @@ Limits:
 - The unqualified T2 lane agreement (fixed 0 = native 0 in every burst, control
   1) is not counted as C4 evidence.
 - One authorized GPU job is unused. No retune can meet the premise (plan §18.21).
+
+## Fix review and final validation (2026-09-24)
+
+Full record: `test_report_2026-09-24_fix_review.md` (findings in section 3,
+per-fix negative controls in section 4, final validation in section 7).
+
+| Check | Result |
+| --- | --- |
+| Unit suite, `ba0a804` against `6aee289` | 84F/3829P/51S/10E → 84F/3828P/51S/10E; 0 regressions, 0 new failures; the id changes are the review's own test additions and removals. |
+| Integration suite | 28P → 33P, 22 skipped, 5 errors (absent PD-AF Reference checkout) on both sides; 0 regressions. |
+| W6 CPU tests (`openmopd-py312`) | 31 passed; `f236c17~1` with the new tests 10 failed, 21 passed. |
+| W7 (`ff11ee6`) | Companion 12 passed, Frontier 3 passed; the new cases fail at `eb7bc4f`. |
+| Fidelity matrix | 74 of 74 identical. The comparator's provenance flag comes from an untracked output directory the unit suite wrote first; no tracked file differs from either commit. |
+| Examples | 16 of 16 pass and are identical. |
+| Stage-admission G3b, G9, G10 | 51 of 51 PASS, identical `sha256sums.txt`. |
+| W9-05 KV-pressure probe (PP 2 and 4) | 72 of 72 drained, 0 short outputs, 0 double-scheduled, 358 decode-phase preemptions (239 while an earlier batch was in flight). |
+
+Limits: CPU only. No native run covers the current FP8 code (`f236c17`). The
+review had one reviewer per package, not an independent panel.

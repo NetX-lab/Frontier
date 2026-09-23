@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | §2: gitlink now `ff11ee6`. §3: S43 and S42 transferred to their own tasks by the user's decision; S44 added as a proposal for the S43 task; the S43 admission anchor corrected. |
 | 2026-09-23 | §3 added: candidate fidelity findings S43 and S42 from the Step 9 G4 ground truth. |
 | 2026-09-22 | Created. Records the `tests/debug/` pointer defect found during Step 8 and the companion-PR gitlink follow-up. |
 
@@ -57,7 +58,7 @@ see `test_report_2026-09-22_w8_combined_regression.md` §5.
 
 ## 2. Re-point the collective-sim gitlink at `main`
 
-`frontier/cc_backend/backends/collective-sim` currently points at `eb7bc4f` on
+`frontier/cc_backend/backends/collective-sim` currently points at `ff11ee6` on
 the companion branch `fix/zero-payload-input-handling` of
 `fwyc0573/frontier-htsim`, because companion PR 1 is still draft. Once that PR
 merges, bump the gitlink to the resulting commit on `main` and re-run
@@ -76,7 +77,9 @@ user's review decision before a scoped `workflow-repair`.
   `step_with_batch_queue` appends an empty schedule and then blocks on the
   oldest in-flight batch (`vllm/v1/engine/core.py:385-424`). Requests that
   arrive meanwhile wait in the input queue. Frontier admits whenever a stage
-  slot is free (`frontier/scheduler/replica_scheduler/base_replica_scheduler.py:906`).
+  slot is free (`frontier/scheduler/replica_scheduler/base_replica_scheduler.py:1052-1063`
+  for MONOLITHIC and PREFILL, report hook `:1061`; the unified DECODE loop is
+  `:896-924`. Corrected 2026-09-24 from `:906`, which is the DECODE loop only).
   In G4 the later burst requests were admitted 21.3–47.4 ms after the burst's
   first route in bursts a–c, and 129.5–311.8 ms after it in burst d. Frontier
   admits them on arrival. The effect is on PP>1 batch composition and TTFT for
@@ -91,3 +94,18 @@ user's review decision before a scoped `workflow-repair`.
 would record a reference-loop expectation first, change one Frontier component,
 rerun in isolation, and run a fresh analysis (contract "Analysis Before Code
 Change").
+
+**Decided 2026-09-24:** "S43 和 S42 各开一个单独的校准和修复任务". They continue in
+`task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/` and
+`task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`; this section is their
+source record.
+
+- **S44, published counts include undrained input-queue requests (proposal).**
+  vLLM publishes a DP engine's counts after the step, and a request that
+  arrived during the step is still in `input_queue`, so it is absent from them
+  (`core.py:1130-1144`, `:1170-1216`). Frontier's report includes every request
+  routed to the lane since it last scheduled. Native G4: 1 of 92 receipts with
+  `waiting > 0`; Frontier G5: 24 of 106. No measured placement benefit yet
+  (`test_report_2026-09-24_fix_review.md` §6). Proposed as a second row of the
+  S43 task, because both concern the same input queue; awaiting the user's
+  decision.
