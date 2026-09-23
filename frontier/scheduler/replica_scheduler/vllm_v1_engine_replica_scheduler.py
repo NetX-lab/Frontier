@@ -297,8 +297,9 @@ class VLLMv1EngineReplicaScheduler(
             active_counts[request.id] = active_counts.get(request.id, 0) + 1
 
     def _release_batch_requests_active(self, batch: Batch) -> None:
+        # A request preempted while this batch was in flight already left it.
         active_counts = self._get_active_batch_request_counts()
-        for request in batch.requests:
+        for request in batch.current_execution_requests:
             current_count = active_counts.get(request.id, 0)
             if current_count <= 1:
                 active_counts.pop(request.id, None)

@@ -515,10 +515,25 @@ class KvBlockAllocation:
         # Remove from running requests
         if victim in self._running_requests:
             self._running_requests.remove(victim)
+        # A batch still in flight no longer executes for the victim: its later
+        # stages drop it as stale. Its membership ends here, so the release at
+        # that batch's end, or a batch dropped whole, cannot leave it marked.
+        self._get_active_batch_request_counts().pop(victim.id, None)
 
         # Free allocated blocks
         if victim.id in self._allocation_map:
             self._free_request_resources(victim)
+        self._scheduled_num_computed_tokens_by_request.pop(victim.id, None)
+        preempted_requests.append(victim)
+
+        # A finished victim is held in running only until its sampled token
+        # reaches the scheduler (MONOLITHIC with deep PP). vLLM retires it when
+        # that output arrives, even after preempting it, so it never waits.
+        pending_release_iters = self._get_monolithic_pp_pending_terminal_release_iters()
+        if victim.id in pending_release_iters:
+            del pending_release_iters[victim.id]
+            self._monolithic_pp_waiting_sensitive_release_extensions.discard(victim.id)
+            return
 
         # Mark as preempted and reset the scheduler-visible computed frontier.
         # As in vLLM v1, preemption discards computed KV but keeps generated
@@ -526,10 +541,13 @@ class KvBlockAllocation:
         # its prompt. A victim past prefill keeps its Request-level token
         # progress; only scheduler-local computed state and KV allocation
         # restart, and the replay of its prompt and output is not modeled.
+        # Its decode step in flight, if any, is discarded with the KV, so the
+        # layers that step completed no longer count.
         victim._preempted = True
-        if not victim.is_prefill_complete:
+        if victim.is_prefill_complete:
+            victim._completed_layer_count = 0
+        else:
             victim._num_processed_tokens = 0
-        self._scheduled_num_computed_tokens_by_request.pop(victim.id, None)
 
         # Record re-entry to waiting queue for waiting time tracking after the
         # lifecycle decision above and before adding the request to the queue.
@@ -541,9 +559,6 @@ class KvBlockAllocation:
             self._waiting_requests.insert(0, victim)
         else:
             self._request_queue.insert(0, victim)
-
-        # Track for this iteration
-        preempted_requests.append(victim)
 
         logger.info(
             f"[VLLMv1Engine] Preempted request {victim.id} "
