@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-10: round-2 fixes confirmed; R2-02 per the recommendation; R2-03 extended to PDD, online and PD-AF. |
 | 2026-09-23 | R-9: code review of PR 36 posted as inline comments; fixes deferred. |
 | 2026-09-23 | R-8: D-9 adopted for the C3 witness rule and dense V5; P4 authorized to continue. |
 | 2026-09-23 | R-7: ground-truth `topk_softmax` fixed to the four-argument version for the MoE retry. |
@@ -66,6 +67,7 @@ work, carried over verbatim:
 | R-6 | Execute P0–P4 as planned. The fix must also be validated against vLLM running on a GPU worker, in a comparison designed to show whether the change is effective (package P5 in `plan.md`). The request authorizes the GPU job within the standing GPU rules below. | user, 2026-09-23 |
 | R-7 | The vLLM ground truth uses the four-argument `topk_softmax` (wrapper and call). Applied as the recorded overlay patch `calibration/stage_admission_case_001/inputs/groundtruth_overlay.patch` on the one retry job; the vLLM-BS checkout is unchanged. | user, 2026-09-23 |
 | R-8 | Adopt both recommendations (plan D-9): contention witnesses pass on a strictly larger co-execution fraction; V5 gates MoE only and reports dense. Continue to P4. | user, 2026-09-23 |
+| R-10 | Fix the recommended round-2 findings (R2-01, R2-04, R2-05, R2-07 to R2-11, R2-14, R2-15), with R2-12 and R2-13 as documentation. R2-02: restate the D-9 rationale with both sources and quantify the start-offset part without a new GPU job. R2-03: add PDD and online cells, plus PD-AF online if needed. R2-06 had no answer: record the pre-merge step only (plan §7). | user, 2026-09-23 |
 
 ## Constraints carried from the parent task
 
@@ -92,3 +94,10 @@ work, carried over verbatim:
 
 Outcome: round-2 review recorded in `review.md` and posted to PR 36 as one
 `COMMENT` review with 15 inline comments. No source or test change.
+
+`[Original Request]` R-10 (2026-09-23, after the round-2 review). The question
+listed the recommended fixes, two options for R2-02 (recommended: restate D-9
+with both sources and measure the post-synchronization start without a new
+GPU job), and asked for the scope of R2-03 and R2-06:
+
+> 确认，执行上上述修复； R2-02 采纳你的推荐；R2-03需要补充  PDD+online（如果你认为pd-af+online有必要，请一并补充）

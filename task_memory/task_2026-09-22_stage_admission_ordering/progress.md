@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-10 executed: commits `1661bf1`, `a8e8d8a`, `e35242f` and records; all checks pass; R2-06 recorded as P6. |
+| 2026-09-23 | R-10: round-2 remediation started (plan §7). |
 | 2026-09-23 | Round-2 code review posted to PR 36 (15 inline comments, `review.md`); fixes deferred by the owner. |
 | 2026-09-23 | P4 completed: branch pushed at `4bcd616`, PR 36 body updated (still draft), W9-01 resolution recorded in the parent task (`4c2d573`). |
 | 2026-09-23 | R-8 / D-9 adopted; both comparisons rerun and pass (`aeeca93`); P4 in progress. |
@@ -84,3 +86,22 @@ worktree, `WANDB_DISABLED=true`, `VIDUR_DISABLE_WANDB=1`.
 | P4 push | `git push origin fix/stage-admission-ordering` | remote head `4bcd616` | records `df7868e`, `fc34341`; `4bcd616` force-adds `evidence/base_negative_controls.log`, which the repository-wide `*.log` rule had kept out of the tree |
 | P4 PR body | REST `PATCH repos/NetX-lab/Frontier/pulls/36` (`gh pr edit` fails on the retired Projects classic query) | PR 36 | body carries the rule, commits, C1–C4/C7 and C3 tables, R-7/D-9 and open items; body read back identical; still draft |
 | P4 parent note | parent `issues.md` W9-01 Resolution, `progress.md`, case manifest decision `W9-01-scope`; `summary.md` and the test report copied to `w9_01_stage_admission_ordering/` (D-5) | `fix/issue26-correctness-pr` `4c2d573`, pushed | PR 35 still draft |
+
+## Round-2 remediation (R-10, plan §7)
+
+| Step | Command / action | Evidence | Result |
+| --- | --- | --- | --- |
+| Records | `requirements.md` R-10, `plan.md` §7 | — | recorded |
+| R2-01/R2-11/R2-13 | `try_acquire` one branch per scope; active ticket refused; docstring | `1661bf1` | 181 passed on the three context unit files; the new test's scenario: base `False`, `dac4e69` `ValueError`, now `False` |
+| R2-03/R2-07/R2-08 | matrix: `sys_arch`, `simulation_mode`, Poisson rate, recipe env; groups G8–G11; cluster-keyed drain report; `--case-timeout`; set lock | `a8e8d8a` | probe set `r2-probe`: PDD first rejected for missing role replica counts, fixed by one Replica per role; online Poisson cells found on lane 0 only (PR 35 W2), burst cells added; lock and 2 s timeout checked |
+| Base for G8–G11 | rule file swapped to `1f694f7` at `a8e8d8a`, `run --set base --group G8 … G11 --jobs 16`, then `git checkout` of the file | scratch `base/` | 12 `admission_deadlock` (G8 4, G9 burst 4, G10 MoE burst 4), 38 success |
+| After set | `run --set after-r2 --jobs 16` at `a8e8d8a`, clean | scratch `after-r2/` | 147 success, 1 configuration rejection (R0 dp2-pp3, W9-02) |
+| Identity | `after` vs `after-r2` | scratch `identity_after_after-r2.json` | 98/98 identical |
+| Compare | `compare --before base --after after-r2` | scratch `compare_base_after-r2.json` | 120 PASS, 12 EXPLAIN, 16 informational, 0 STOP |
+| Explain | `explain_t_path.py <root> after-r2 …` | `evidence/r2_t_path_explanation.json` | 12 EXPLAIN: same batches and durations, start times only |
+| Tools | compare_lanes N1/N4 rows, placement; driver overlay and patch; tool unit tests; `synthetic_check.py` removed; decomposition and probe scripts | `e35242f` | 9 passed; 7 fail on the `ecff89a` tools |
+| Decomposition | `decompose_co_execution.py` on runs a and b | `analysis/co_execution_decomposition_*.json` | no disjoint pair; aligned M5 dense 0.66–0.98, MoE 0.988–0.994 |
+| C7 rerun | `compare_lanes --after after-r2` on run b | `analysis/` | PASS, 56 rows, controls hold |
+| C6 probe | `probe_completion.py` with `PYTHONPATH` only | scratch `r2/c6_probe/` | 6/6 for both shapes |
+| G2 | unit and integration, `--junitxml` | `evidence/r2_g2_*_compare.json` | 0 regressions, 0 new failures, 0 skip changes |
+| Records | test report §8, `summary.md`, `design.md`, `review.md`, manifest, workflow-gap summary, plan §7 amendment and D-9 (b) | this commit | — |

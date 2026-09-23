@@ -2,9 +2,10 @@
  "analysis_state": "COMPLETE",
  "status": "PASS",
  "correction_state": "not_applicable",
- "rows": 52,
+ "rows": 56,
  "mismatches": 0,
  "vllm_placement_ok": true,
  "vllm_placement_unseen_requests": 0,
+ "negative_control_holds": true,
  "next_action": "record C7 in the test report"
 }

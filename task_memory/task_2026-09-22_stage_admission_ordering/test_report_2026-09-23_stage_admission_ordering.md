@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-10 round-2 remediation: §8 added (rule refactor, PDD/online/PD-AF cells, tool fixes); §5.2 and §5.3 restated for the N rows and the barrier-aligned M5. |
 | 2026-09-23 | D-9 adopted ("采纳你的推荐，继续"): C3 witnesses judged by co-execution fraction, V5 gated on MoE only. Both comparisons rerun (`aeeca93`); all criteria pass. |
 | 2026-09-23 | Created. P0–P3 and P5 executed; two plan stop conditions reached (C3 witness metric at `attn_dp=4`, C7 V5 on the dense shape). P4 push held for the user's decision. |
 
@@ -18,6 +19,11 @@
 | C5 rule shape | PASS by review: one predicate, docstrings state the contract, no flag, field, fallback, wake-up, PP branch, second queue or capacity-1 case. | §3 |
 | C6 Step 9 probe | Informational: MoE `attn_dp=2, moe_ep=2, PP=2` completes 6/6 (base drains). `PP=3` stops on the known W9-02 node-size rejection. | §4.5 |
 | C7 vLLM comparison | PASS (D-9): 50 rows MATCH, 0 MISMATCH, 2 INFORMATIONAL (dense V5). MoE matches on all 26 rows, V5 included; dense matches V1–V4 in every round. The negative controls fail on the base as planned. The first comparison stopped on dense V5; see §5.3. | §5 |
+
+Round 2 (R-10, §8): the rule refactor keeps all 98 cases byte-identical;
+50 new PDD, online and PD-AF cells pass (12 more base deadlocks repaired,
+0 STOP); G2 shows no regression; the vLLM comparison rerun passes with the
+negative controls as separate rows that hold.
 
 Observed facts are separated from inferences. Inferences are marked
 "Inference".
@@ -193,7 +199,8 @@ misplaced; `num_gpu_blocks` 600666 (MoE) and 304854 (dense).
 
 | Check | MoE n8 | MoE n16 | Dense n8 | Dense n16 |
 | --- | --- | --- | --- | --- |
-| V1 completion | 3/3 MATCH; base `admission_deadlock` | 3/3 MATCH; base `admission_deadlock` | 3/3 MATCH | 3/3 MATCH |
+| V1 completion | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH |
+| N1 / N4 base control (R-10) | N1 HOLDS: base `admission_deadlock` | N1 HOLDS: base `admission_deadlock` | N4 HOLDS: base co-start 1.0 | N4 HOLDS: base co-start 1.0 |
 | V2 lane sequences | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH |
 | V3 stage-0 pairing | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH; base pairs 0↔3, 2↔5, …, 6↔none | 3/3 MATCH; base shifted by one forward |
 | V4 co-start (vLLM / after / base) | 0.009–0.063 / 0.0 / — | 0.005–0.024 / 0.0 / — | 0.008–0.248 / 0.0 / 1.0 | 0.046–0.171 / 0.0 / 1.0 |
@@ -202,18 +209,36 @@ misplaced; `num_gpu_blocks` 600666 (MoE) and 304854 (dense).
 Run a (dense only, same scripts): V1–V4 all MATCH; V5 vLLM mean 0.714 (n8)
 and 0.685 (n16): MISMATCH under the first rule, INFORMATIONAL under D-9.
 
+Until R-10 the base controls were folded into V1 and dense V4, so a base
+without the defect would have turned those vLLM rows into MISMATCH (R2-05).
+The rerun at R-10 (`--after after-r2`) writes them as rows N1 and N4: 56 rows,
+50 MATCH, 2 INFORMATIONAL, 4 HOLDS, 0 MISMATCH; status PASS,
+`negative_control_holds = true`, placement ok with 0 unseen requests.
+
 ### 5.3 V5 on the dense shape
 
 `evidence/decompose_co_execution.py` splits the stage-0 non-overlap of each
-M3 pair into `|Δstart| + |Δend|`
-(`analysis/co_execution_decomposition_sa-pp-20260923{a,b}.json`).
+pair of overlapping forwards into `|Δstart| + |Δend|`
+(`analysis/co_execution_decomposition_sa-pp-20260923{a,b}.json`). The identity
+holds only for overlapping pairs; at R-10 the script counts disjoint pairs and
+checks its pairing against M3. In every round of runs a and b there is no
+disjoint pair and no unpaired forward, and the pairing equals M3. The last
+column sets both starts of each pair to the later one (R-10, R2-02): vLLM
+0.10.2 without CUDA graphs runs the per-forward DP metadata all-reduce inside
+`set_forward_context`, after `forward_start_ts`, so neither rank computes
+before the later one arrives. The traces carry no timestamp after that
+exchange, so this column is derived, not measured.
 
-| Shape (run b) | vLLM M5 per round | Σ start offsets (ms) | Σ end offsets (ms) | stage-0 duration median (ms), CV |
-| --- | --- | --- | --- | --- |
-| MoE n8 | 0.977, 0.974, 0.977 | 0.32–0.54 | 0.19–0.20 | 5.3–8.5, 0.07–0.09 |
-| MoE n16 | 0.978, 0.937, 0.928 | 0.70–3.83 | 0.26–0.69 | 5.3–7.5, 0.05–0.07 |
-| Dense n8 | 0.657, 0.851, 0.609 | 1.49–2.63 | 0.26–4.40 | 3.0–3.8, 0.13–0.29 |
-| Dense n16 | 0.926, 0.833, 0.837 | 1.02–3.60 | 0.60–2.81 | 2.6–2.7, 0.10–0.19 |
+| Shape (run b) | vLLM M5 per round | Σ start offsets (ms) | Σ end offsets (ms) | stage-0 duration median (ms), CV | M5, starts aligned to the later one (derived) |
+| --- | --- | --- | --- | --- | --- |
+| MoE n8 | 0.977, 0.974, 0.977 | 0.32–0.54 | 0.19–0.20 | 5.3–8.5, 0.07–0.09 | 0.991, 0.991, 0.994 |
+| MoE n16 | 0.978, 0.937, 0.928 | 0.70–3.83 | 0.26–0.69 | 5.3–7.5, 0.05–0.07 | 0.994, 0.988, 0.989 |
+| Dense n8 | 0.657, 0.851, 0.609 | 1.49–2.63 | 0.26–4.40 | 3.0–3.8, 0.13–0.29 | 0.722, 0.977, 0.713 |
+| Dense n16 | 0.926, 0.833, 0.837 | 1.02–3.60 | 0.60–2.81 | 2.6–2.7, 0.10–0.19 | 0.970, 0.972, 0.883 |
+
+Run a, dense, same columns: observed 0.642, 0.739, 0.760 (n8) and 0.537,
+0.752, 0.767 (n16); starts aligned 0.739, 0.843, 0.782 and 0.656, 0.945,
+0.950.
 
 Observed:
 
@@ -222,19 +247,24 @@ Observed:
   differ by 0.18.
 - In every vLLM round the pairing (V3) and the one-to-one lane sequences (V2)
   match the after revision, and the first forwards co-start (V4).
-- The non-overlap consists of per-pair start offsets of up to about 1.5 ms
-  (`forward_start_ts` is taken before the per-forward DP metadata exchange)
-  and end offsets from per-rank duration variation.
+- The non-overlap consists of per-pair start offsets and end offsets. Start
+  offsets exceed end offsets in 3 of the 6 dense rounds of run b.
+- With both starts aligned to the later one, M5 rises in every round (dense
+  0.66–0.98, MoE 0.988–0.994). What remains in dense is the end offsets.
 - MoE ends align within 0.2–0.7 ms in total.
 
-Inference: in MoE the EP collectives inside each forward hold the two ranks
-together, so vLLM's co-execution is close to Frontier's 1.0. The dense ranks
-meet once per forward and then run host-bound forwards of about 3 ms whose
-durations vary per rank. The dummy predictor gives both lanes the same
-duration, so Frontier's co-execution is exactly 1.0 whenever the lanes
-co-start. The residual is a duration-variance property of the ground truth
-that the dummy predictor does not model. It is not an admission difference:
-admission is what V1–V4 measure, and they match. The dense base (0.600,
+Inference (restated at R-10, R2-02): in MoE the EP collectives inside each
+forward hold the two ranks together, so vLLM's co-execution is close to
+Frontier's 1.0. The dense ranks meet once per forward, in the DP all-reduce.
+The dense non-overlap has two sources. First, the rank that reaches the
+all-reduce first records its wait as busy time, because `forward_start_ts`
+precedes the exchange. Second, the host-bound forwards of about 3 ms vary in
+duration per rank. Neither is an admission difference: both ranks enter the
+same forward, which is what V1–V4 measure, and they match. The dummy
+predictor models neither the wait nor the variation, so Frontier's
+co-execution is exactly 1.0 whenever the lanes co-start. The first version of
+this paragraph named only the duration variation; the start part was there
+too. The dense base (0.600,
 0.778) is numerically closer to vLLM only because base serialization removes
 overlap; its pairing (V3) and co-start (V4) are wrong in every round.
 
@@ -243,8 +273,8 @@ overlap; its pairing (V3) and co-start (V4) are wrong in every round.
 the execution-time model instead. The first comparison stopped here with
 nothing adjusted. Under D-9 dense V5 is reported, not gated; the rerun gives
 `workflow_gap_status.json` status PASS with 0 mismatches. The P5a synthetic
-check (`analysis/synthetic_check.py`) still flags its planted dummy-shifted
-dense round through V3 and V4.
+check, now `tests/unit/test_stage_admission_pp_tools.py` (R-10), still flags
+a planted late-lane dense round through V3 and V4.
 
 ## 6. Decisions
 
@@ -270,3 +300,87 @@ Both stops were resolved by D-9 (`plan.md`), adopted by the user on
   `tests/model_executor/test_enabled_custom_ops.py::test_topk_softmax_wrapper_forwards_renormalize`.
 - C6 was measured with a completion-only probe because the boundary seam is
   on PR 35; the PR 35 composition check is pending in the parent task.
+- Round 2 (§8): on this branch, online Poisson arrivals reach only lane 0 of
+  MONOLITHIC and PREFILL contexts (PR 35's W2 defect on `main`); online
+  multi-lane coverage here comes from the `-burst` cells. The derived
+  barrier-aligned M5 of §5.3 is not a measurement.
+
+## 8. Round-2 remediation (R-10)
+
+Scope: `plan.md` §7; findings in `review.md` Round 2. Owner instruction:
+"确认，执行上上述修复； R2-02 采纳你的推荐；R2-03需要补充  PDD+online（如果你认为pd-af+online有必要，请一并补充）".
+
+### 8.1 Commits and commands
+
+| Commit | Content |
+| --- | --- |
+| `1661bf1` | R2-01, R2-11, R2-13: `try_acquire` refactor, class docstring, unit test |
+| `a8e8d8a` | R2-03, R2-07, R2-08: matrix groups G8–G11, cluster-keyed drain report, case timeout, set lock |
+| `e35242f` | R2-02, R2-04, R2-05, R2-09, R2-10, R2-14, R2-15: comparison tools, tool unit tests, evidence scripts |
+
+```bash
+# base for the new groups at a8e8d8a, with stage_execution_context.py replaced by
+# its 1f694f7 version for the run (run.json: status "M frontier/.../stage_execution_context.py"), then restored
+python -m tests.e2e.stage_admission_matrix run --set base --group G8 --group G9 --group G10 --group G11 --jobs 16
+python -m tests.e2e.stage_admission_matrix run --set after-r2 --jobs 16     # a8e8d8a, clean outside task_memory
+python -m tests.e2e.stage_admission_matrix compare --before base --after after-r2 \
+  --output /data/ycfeng/tmp/stage_admission_ordering/compare_base_after-r2.json
+python task_memory/.../evidence/explain_t_path.py <root> after-r2 <root>/compare_base_after-r2.json \
+  task_memory/.../evidence/r2_t_path_explanation.json
+python -m pytest tests/<suite> -q -p no:cacheprovider --continue-on-collection-errors \
+  --junitxml=<root>/after-r2-pytest/<suite>.xml
+python -m tests.comparison.stage_admission_pp.compare_lanes \
+  --vllm-run calibration/stage_admission_case_001/runs/vllm-instrumented/sa-pp-20260923b \
+  --before base --after after-r2 --output calibration/stage_admission_case_001/analysis
+python task_memory/.../evidence/decompose_co_execution.py <run a> dense    # and <run b> moe dense
+```
+
+Environment as §2; interpreter digest `ecd50ea8…` for every set.
+
+### 8.2 Results per finding
+
+| Finding | Check | Expected | Observed | Result |
+| --- | --- | --- | --- | --- |
+| R2-01, R2-11 | `try_acquire` on an active full-stage ticket, capacity 2 | `False`, context unchanged | base rule `False`; `dac4e69` raises `ValueError` ("not in deque"); `1661bf1` `False`, ticket still active, FIFO unchanged | PASS |
+| R2-01, R2-11 | the three context unit files | pass, no assertion change | 181 passed | PASS |
+| R2-01, R2-11 | set `after` vs `after-r2`, 98 cases | byte-identical | 97 success hash files identical; the configuration rejection has the same error (`identity_after_after-r2.json`) | PASS |
+| R2-03 | groups G8–G11, 50 cases (§8.3) | §4.4 paths | U 18 PASS, L 12 PASS, T 16: 12 PASS, 4 EXPLAIN; 0 STOP | PASS |
+| R2-07 | `run --case-timeout 2` on a recipe case | `other_failure`, set completes | `"case timeout after 2 s"` after 2 s; no child or simulator process left | PASS |
+| R2-08 | a second `run` while one is running | fails at once | `RuntimeError: another set is running under …; sets share work/ and run one at a time`, exit 1 | PASS |
+| R2-04, R2-05, R2-09, R2-10, R2-15 | `tests/unit/test_stage_admission_pp_tools.py` | pass; the ecff89a tools fail the new checks | 9 passed; on the ecff89a tools 7 failed, 2 passed (the late-lane round and the unexpected-file rejection, which the old tools already handled) (`evidence/r2_tool_tests_on_ecff89a.txt`) | PASS |
+| R2-05 | `compare_lanes` rerun on run b vs `after-r2` | PASS with controls holding | 56 rows: 50 MATCH, 2 INFORMATIONAL, 4 HOLDS, 0 MISMATCH; `negative_control_holds = true` (§5.2) | PASS |
+| R2-02 | decomposition rerun on runs a and b | identity stated for overlapping pairs; derived aligned M5 | no disjoint or unpaired forward in any round; pairing equals M3; existing fields unchanged; aligned M5 in §5.3 | done |
+| R2-14 | `probe_completion.py` with `PYTHONPATH` only | C6 shapes complete | `moe_dp2_pp2` 6/6, `dense_dp1_pp2` 6/6; the probe's resolved config and `R0-moe-dp2-pp2-n6`'s differ only in `metrics_config` | PASS |
+| G2 | `tests/unit`, `tests/integration` vs `base-pytest` | no regression | unit 84 failed / 3660 passed / 49 skipped / 10 errors (base 84 / 3644 / 49 / 10); integration 14 passed / 21 skipped / 5 errors (base 11 / 21 / 5). 0 regressions, 0 new failures, 0 skip changes; new node ids only: 16 unit, 3 integration (`evidence/r2_g2_*_compare.json`) | PASS |
+| R2-12, R2-13 | documentation | contract stated | `design.md` round-2 note; PR body | done |
+| R2-06 | pre-merge step P6 | recorded, not executed | `plan.md` §7 | open |
+
+### 8.3 New groups (R2-03)
+
+| Group | Cases | Base | `after-r2` | Paths |
+| --- | --- | --- | --- | --- |
+| G8 PDD offline | MoE `attn_dp ∈ {2,4}` × `PP ∈ {1,2,3}`, dense `dp1-pp2`, `n=8`, prefill 16 / decode 3 | 4 `admission_deadlock` (MoE `PP > 1`), 3 success | 7 success | U 3 PASS; L 4 PASS |
+| G9 PDD online | the G8 shapes at Poisson 20/s; MoE `dp{2,4}-pp{2,3}` burst | 4 `admission_deadlock` (the burst cells), 7 success | 11 success | U 3 PASS; T 4 PASS, identical; L 4 PASS |
+| G10 co-location online | MoE (prefill-only) and dense, `dp{2,4}-pp{1,2,3}`, Poisson 20/s and burst; `dp2-pp2` at 5/s and 80/s | 4 `admission_deadlock` (MoE burst `PP > 1`), 24 success | 28 success | U 8 PASS; T 12 PASS, identical, 4 EXPLAIN (dense burst `PP > 1`); L 4 PASS |
+| G11 PD-AF | dense and MoE recipes, offline and online, `PREFILL_PP=2` | 4 success | 4 success | U 4 PASS |
+
+Every L case conserves requests and tokens (8 requests, 128 prefill tokens;
+24 decode tokens for PD cells, 8 for prefill-only cells). The 4 EXPLAIN cases
+(`evidence/r2_t_path_explanation.json`) run the same batches with the same
+component durations as the base; only start times differ. Their co-execution
+fraction goes from 0.818, 0.375, 0.846 and 0.846 to 1.0, `peak_lanes ≤
+attn_dp`, and no lane overlaps itself. These are the same values as the
+offline G4 cells of the same shapes.
+
+Observed while running: in the Poisson online cells, every MONOLITHIC and
+PREFILL forward runs on lane 0. PDD DECODE lanes all run. `_schedule_batch_mode`
+numbers lanes from 0 within each scheduling call, and online arrivals come one
+per call. That is PR 35's W2 defect on `main` (fixed on PR 35, not here). The
+burst cells deliver all requests at `t=0` in online mode and reach every lane.
+They carry the online L and T coverage on this branch. The Poisson cells show
+that a multi-lane context with one live lane is unchanged.
+
+PD-AF: `DECODE_ATTN` requires `attn_dp = 1`, and PD-AF has one `attn_dp` for
+every role, so no PD-AF context has more than one lane. The G11 cells are
+capacity-1 `PREFILL` contexts at `PP = 2`, where R2-12's contract change
+applies. They are byte-identical, offline and online.

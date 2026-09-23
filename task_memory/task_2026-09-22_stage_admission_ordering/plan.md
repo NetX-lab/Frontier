@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-10 executed: §7 group table amended with the online burst cells (lane-0 placement on main), D-9 (b) rationale restated (R2-02). |
+| 2026-09-23 | R-10: §7 added, the round-2 remediation (R2 findings), new groups G8–G11 and the pre-merge step P6. |
 | 2026-09-23 | R-8 / D-9: the C3 witness condition uses the co-execution fraction, and V5 gates MoE only (dense is reported). Adopted after the P3/P5 stops, before P4. |
 | 2026-09-23 | R-7: the MoE retry job runs the ground truth with one recorded overlay patch (four-argument `topk_softmax`); §4.7 notes it. |
 | 2026-09-23 | R-6: execution started. Added package P5 (vLLM comparison on a GPU worker), criterion C7, the vLLM-aligned group G7, §4.7 and D-8. |
@@ -325,7 +327,7 @@ Adopted after the P3 and P5 stops on 2026-09-23 ("采纳你的推荐，继续"; 
 
 | Id | Decision | Reason |
 | --- | --- | --- |
-| D-9 | (a) A contention witness passes when its co-execution fraction strictly increases; the self-overlap and `peak_lanes` checks are unchanged. (b) V5 gates the MoE shape only; for the dense shape M5 is reported with its start/end decomposition. | (a) At `attn_dp=4` the fix makes all four lanes co-execute and shortens the busy period, so absolute `multi_lane_busy_time` falls (0.55 → 0.30) while overlap becomes complete; the fraction measures overlap independently of that compression. (b) vLLM's dense ranks meet once per forward and vary in duration per rank (M5 0.54–0.93 across rounds, wider than 0.10), a property the dummy predictor does not model; admission is covered by V1–V4. MoE ranks stay aligned by in-forward EP collectives (M5 0.93–0.98). |
+| D-9 | (a) A contention witness passes when its co-execution fraction strictly increases; the self-overlap and `peak_lanes` checks are unchanged. (b) V5 gates the MoE shape only; for the dense shape M5 is reported with its start/end decomposition. | (a) At `attn_dp=4` the fix makes all four lanes co-execute and shortens the busy period, so absolute `multi_lane_busy_time` falls (0.55 → 0.30) while overlap becomes complete; the fraction measures overlap independently of that compression. (b) Restated under R-10 (R2-02). vLLM's dense ranks meet once per forward, in the DP metadata all-reduce that runs after `forward_start_ts`. Their stage-0 non-overlap has two sources, neither of them admission: the rank that arrives first records its wait for the other as busy time (start offsets), and per-rank durations vary (end offsets, CV 0.10–0.29). Observed dense M5 is 0.54–0.93 across rounds, wider than 0.10. With both starts of each pair set to the later one (derived from the all-reduce position, not measured), dense M5 is 0.66–0.98 and MoE 0.988–0.994; the dense residual is the end offsets. The dummy predictor models neither source; admission is covered by V1–V4. MoE ranks stay aligned by in-forward EP collectives (M5 0.93–0.98). |
 
 ## 6. Dependencies and risks
 
@@ -354,3 +356,66 @@ Adopted after the P3 and P5 stops on 2026-09-23 ("采纳你的推荐，继续"; 
   and merged forward into `fix/issue26-correctness-pr`. The parent task then
   reruns G3b on that branch, where W3 is present, as the composition check
   (C6).
+
+## 7. Round-2 remediation (R-10)
+
+Findings are in `review.md` Round 2. R2-06 got no answer on timing, so only
+its pre-merge step is recorded (P6 below).
+
+| Finding | Change | Acceptance |
+| --- | --- | --- |
+| R2-01, R2-11 | `try_acquire` has one branch per scope. The EP wave leaves the FIFO by `popleft`. A full-stage ticket is found in one pass and deleted by index. A ticket that is not in the FIFO, because it is already active, is refused, as on the base. | A new unit test: re-acquiring an active full-stage ticket returns `False` and leaves the context unchanged. Existing contract tests pass without assertion changes. Every case of set `after` is byte-identical in set `after-r2`. |
+| R2-12, R2-13 | Documentation. The class docstring names where full-stage order comes from. The PR body states the capacity-1 contract change. `design.md` records the EP-only-queue variant as considered and deferred. | Review. |
+| R2-02 | The D-9 (b) rationale now names both sources. (1) Start offsets: `forward_start_ts` is taken before the per-forward DP all-reduce, so the rank that reaches it first records its wait as busy time. (2) End offsets: per-rank duration variance. `evidence/decompose_co_execution.py` states its identity for overlapping pairs only and counts disjoint pairs. It also reports M5 with both starts of each pair set to the later one, which is when the all-reduce releases both ranks. This is derived from the barrier; the traces carry no post-exchange timestamp. Dense V5 stays reported. | Rerun on runs a and b; values in the test report. No GPU job. |
+| R2-04 | `vllm_placement` is `ok` only with no misplaced and no unseen request. | Unit test. |
+| R2-05 | The negative controls become their own rows, `N1` (MoE base `admission_deadlock`) and `N4` (dense base M4 ≥ 0.5), each `HOLDS` or `LOST`. `workflow_gap_status.json` gains `negative_control_holds`. V1 and V4 compare vLLM with the after revision only. | Unit test: a base equal to the after revision leaves every V row `MATCH` and every N row `LOST`. The rerun on run b gives PASS with the controls holding. |
+| R2-07 | Each matrix child runs in its own session under `--case-timeout` (seconds, default 600). On timeout the whole session is killed and the case is recorded as `other_failure`. | A case made to exceed a small timeout is recorded, and the set completes. |
+| R2-08 | The shared `work/` path stays: files that embed the output path must compare byte for byte. `run` instead takes an exclusive lock on the matrix root, and the module docstring says sets run one at a time. | A second concurrent `run` fails at once with the lock message. |
+| R2-09, R2-10 | Overlay acceptance compares file sets. `apply_patch` reads an empty hunk line as a trimmed context line, fails on any other unknown line, and accumulates hunks when one file appears in several sections. | Unit tests. |
+| R2-14, R2-15 | `probe_main.py` drops its hard-coded path and imports from `PYTHONPATH`. `synthetic_check.py` is replaced by `tests/unit/test_stage_admission_pp_tools.py`. For #35, the C6 shapes are rerun as matrix group R0: `R0-moe-dp2-pp{1,2,3}-n6` and `R0-dense-dp1-pp2-n6` are the probe's configuration, apart from metrics flags and the model name. | Unit tests pass; no absolute path left in the evidence scripts. |
+| R2-03 | New groups G8–G11 (below). `build_config` gains `sys_arch`, `simulation_mode` and a Poisson rate. The state report and deadlock signature are read per cluster type. Recipe cases take environment overrides. | Paths U/L/T of §4.4 on the new cells. |
+
+New groups (R2-03). PDD rejects dense `attn_dp > 1` at configuration
+(`config.py` `_validate_replica_config`). PD-AF takes one `attn_dp` for every
+role, and `DECODE_ATTN` requires 1, so neither can reach a multi-lane context.
+PD-AF is therefore covered by `PP > 1` controls on its capacity-1 `PREFILL`
+contexts, which exercise the R2-12 contract change.
+
+| Group | Cases | Profile, arrivals | Count | Path |
+| --- | --- | --- | --- | --- |
+| G8 PDD offline | MoE `attn_dp ∈ {2,4}` × `PP ∈ {1,2,3}`, `n=8`; dense `attn_dp=1, PP=2`, `n=8` | PD, static | 7 | U / L / T |
+| G9 PDD online | the G8 shapes at Poisson 20/s; MoE `attn_dp ∈ {2,4}` × `PP ∈ {2,3}` as `-burst` cells | PD, Poisson or burst | 11 | U / L / T |
+| G10 co-location online | MoE (PF) and dense (PD), `attn_dp ∈ {2,4}` × `PP ∈ {1,2,3}`, `n=8`, each at Poisson 20/s and as a `-burst` cell; plus MoE and dense `dp2-pp2` at 5/s and 80/s | PF / PD, Poisson or burst | 28 | U / L / T |
+| G11 PD-AF `PP > 1` | the dense and MoE PD-AF recipes, offline and online, with `PREFILL_PP=2` | recipe | 4 | U |
+
+Amendment found while running (R-10). On `main`, `_schedule_batch_mode`
+(MONOLITHIC and PREFILL) numbers DP lanes from 0 within each scheduling call,
+so online Poisson arrivals, one per call, all land on lane 0; unified DECODE
+rotates across calls. This is PR 35's W2 defect, fixed on that branch. The
+Poisson cells therefore exercise one lane of a multi-lane context here. The
+`-burst` cells (online mode, all requests at `t=0`, one call) reach every
+lane and carry the online L/T coverage. After PR 35 merges `main` forward,
+its composition check reruns G9 and G10 with lane rotation in place.
+
+Base runs for G8–G11 use the base rule: the one `frontier/` file differing
+from `1f694f7` is swapped in the worktree for the run, and `run.json` records
+the modified tree. Set `after-r2` then runs every case on the R2 revision.
+
+A T difference with the same batches is explained as in §4.4. Where online
+arrivals let earlier admission change later batch composition, the
+explanation must name the first ledger row that differs and show the base
+refusal before it. Otherwise stop and report.
+
+Verification order:
+
+```text
+R2-01/R2-11 rule refactor and unit test
+  -> {matrix harness (R2-03, R2-07, R2-08), tools and unit tests (R2-04, R2-05, R2-09, R2-10, R2-15), evidence scripts (R2-02, R2-14)}
+  -> base runs of G8–G11 -> after-r2 set -> compare (base, after-r2) and identity (after, after-r2)
+  -> compare_lanes and decomposition reruns -> G2 suites -> records, commits, push, PR body
+```
+
+**P6 pre-merge step (R2-06, not executed).** Before PR 36 merges, a last
+commit drops the `!task_memory/task_2026-09-22_stage_admission_ordering/`
+exception and untracks the directory. The archive copy stays in the parent
+task. This deletes tracked records, so it runs only on the owner's go-ahead.

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Round 2 dispositions recorded (R-10): 14 findings applied and verified, R2-06 recorded as pre-merge step P6. |
 | 2026-09-23 | Round 2: code review of the implementation at `ecff89a` recorded and posted to PR 36; findings verified, fixes deferred by the owner. |
 | 2026-09-23 | Created. First external plan review of PR 36 at `a6ec6a6` recorded; each finding re-checked against `1f694f7` source, with a disposition and the place it was applied. |
 
@@ -59,7 +60,7 @@ Docs corrected. P0 has not started, per the owner's "暂不执行". The next ste
 | Owner instruction | "review pr36，将review comments提交到该remote repo的pr36上，暂不执行修复。" (requirements R-9) |
 | Posted | https://github.com/NetX-lab/Frontier/pull/36#pullrequestreview-5286523149 (event `COMMENT`, 15 inline comments on `ecff89a`) |
 
-### Findings (disposition pending; no fix applied)
+### Findings
 
 | Id | Anchor | Verdict | Finding |
 | --- | --- | --- | --- |
@@ -79,5 +80,27 @@ Docs corrected. P0 has not started, per the owner's "暂不执行". The next ste
 | R2-14 | `evidence/step9_probe/probe_main.py:15` | confirmed | A hard-coded worktree `ROOT` is put first on `sys.path`, so a #35 rerun would import this tree. |
 | R2-15 | `calibration/.../analysis/synthetic_check.py:7` | confirmed | A hard-coded scratch `BASE` bypasses `matrix_root()`, and reusable probes live under `task_memory/` rather than `tests/`. |
 
-The owner deferred fixes ("暂不执行修复"). Dispositions will be recorded
-here when the owner decides which findings to adopt.
+The owner first deferred fixes ("暂不执行修复"), then decided (R-10):
+"确认，执行上上述修复； R2-02 采纳你的推荐；R2-03需要补充  PDD+online（如果你认为pd-af+online有必要，请一并补充）".
+
+### Dispositions (R-10)
+
+Evidence for each row is in the test report §8.
+
+| Id | Disposition | Where | Verification |
+| --- | --- | --- | --- |
+| R2-01 | Fixed: an active ticket is refused, as on the base | `1661bf1` | unit test; `after` vs `after-r2` 98/98 byte-identical |
+| R2-02 | Rationale restated with both sources; the script's identity is limited to overlapping pairs; a derived barrier-aligned M5 added. No GPU job. | `e35242f`, `plan.md` D-9 (b), test report §5.3 | reran on runs a and b: no disjoint pair; aligned M5 dense 0.66–0.98, MoE 0.988–0.994 |
+| R2-03 | Fixed: G8 PDD offline, G9 PDD online, G10 co-location online, G11 PD-AF `PREFILL_PP=2` (50 cases). Online burst cells added because MONOLITHIC/PREFILL place incremental arrivals on lane 0 on `main` (PR 35 W2). | `a8e8d8a` | 12 more base deadlocks repaired; 0 STOP |
+| R2-04 | Fixed | `e35242f` | unit test |
+| R2-05 | Fixed: rows N1 and N4, `negative_control_holds` | `e35242f` | unit tests; run b rerun PASS, controls hold |
+| R2-06 | Recorded as pre-merge step P6; not executed | `plan.md` §7 | waits for the owner |
+| R2-07 | Fixed | `a8e8d8a` | a 2 s timeout recorded as `other_failure` |
+| R2-08 | Fixed by a set lock; the shared `work/` path stays for byte identity | `a8e8d8a` | a concurrent run fails at once |
+| R2-09 | Fixed | `e35242f` | unit test |
+| R2-10 | Fixed | `e35242f` | unit tests |
+| R2-11 | Fixed with R2-01 | `1661bf1` | as R2-01 |
+| R2-12 | Stated as a contract change | `design.md` round-2 notes, PR body | G1 PD-AF and G11 byte-identical |
+| R2-13 | Docstring states the FIFO meaning; the EP-only queue variant deferred | `1661bf1`, `design.md` | review |
+| R2-14 | Fixed | `e35242f` | C6 probe 6/6 with `PYTHONPATH` only |
+| R2-15 | Replaced by `tests/unit/test_stage_admission_pp_tools.py`; `synthetic_check.py` removed | `e35242f` | 9 passed; 7 fail on the `ecff89a` tools |

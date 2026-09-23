@@ -1,0 +1,25 @@
+{
+ "regressions": [],
+ "new_failures": [],
+ "now_passing": [],
+ "skip_changes": [],
+ "only_before": [],
+ "only_after": [
+  "tests.unit.test_mixed_layer_decode_ffn_scheduling::test_decode_ffn_dense_groups_keep_counter_order_around_a_queued_ep_wave",
+  "tests.unit.test_shared_forward_group_admission::test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket[0]",
+  "tests.unit.test_shared_forward_group_admission::test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket[1]",
+  "tests.unit.test_stage_admission_pp_tools::test_apply_patch_keeps_every_section_of_a_repeated_file",
+  "tests.unit.test_stage_admission_pp_tools::test_apply_patch_reads_a_trimmed_context_line",
+  "tests.unit.test_stage_admission_pp_tools::test_apply_patch_rejects_an_unknown_hunk_line",
+  "tests.unit.test_stage_admission_pp_tools::test_fixed_base_loses_the_controls_without_a_mismatch",
+  "tests.unit.test_stage_admission_pp_tools::test_ideal_after_revision_matches_and_base_controls_hold",
+  "tests.unit.test_stage_admission_pp_tools::test_missing_placement_log_fails_the_comparison",
+  "tests.unit.test_stage_admission_pp_tools::test_overlay_acceptance_compares_file_sets[False-True]",
+  "tests.unit.test_stage_admission_pp_tools::test_overlay_acceptance_compares_file_sets[True-False]",
+  "tests.unit.test_stage_admission_pp_tools::test_vllm_round_with_a_late_lane_is_reported",
+  "tests.unit.test_stage_execution_context::test_active_full_stage_ticket_is_refused_without_changing_the_stage",
+  "tests.unit.test_stage_execution_context::test_full_stage_ticket_passes_queued_full_stage_work_but_not_a_queued_wave",
+  "tests.unit.test_stage_execution_context::test_idle_single_owner_stage_admits_a_later_queued_full_stage_ticket",
+  "tests.unit.test_stage_execution_context::test_queued_ep_wave_orders_full_stage_work_on_both_sides"
+ ]
+}

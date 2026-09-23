@@ -21,6 +21,7 @@ selected_checkout:
   frontier_branch: fix/stage-admission-ordering
   frontier_before_source: 1f694f7   # P0 set "base"; source identical to origin/main
   frontier_after_commit: dac4e69    # P1 rule commit; P3 set "after"
+  frontier_after_r2_commit: a8e8d8a # R-10 rule refactor 1661bf1 plus harness; set "after-r2", G7 byte-identical to "after"
   frontier_harness: tests/e2e/stage_admission_matrix.py (group G7)
 
 groundtruth_checkout_path: /data/ycfeng/Frontier/.real-engine/vLLM-BS
@@ -114,8 +115,8 @@ modes:
     source: /data/ycfeng/tmp/stage_admission_ordering/base/G7-*
     status: COMPLETE   # MoE n8/n16 admission_deadlock; dense n8/n16 success
   simulator_after:
-    source: /data/ycfeng/tmp/stage_admission_ordering/after/G7-*
-    status: COMPLETE   # all four G7 cases success at dac4e69
+    source: /data/ycfeng/tmp/stage_admission_ordering/after-r2/G7-*
+    status: COMPLETE   # all four G7 cases success; set "after" (dac4e69) was used before R-10 and is byte-identical
 
 analysis:
   producer: tests/comparison/stage_admission_pp/compare_lanes.py
@@ -147,7 +148,8 @@ decisions:
     decided_at_utc: "2026-09-23"
 
 analysis_result: >-
-  52 rows: 50 MATCH, 0 MISMATCH, 2 INFORMATIONAL (dense V5, D-9). The first
-  analysis, before D-9, had these two rows as MISMATCH; cause in
-  analysis/workflow_gap_summary.md.
+  56 rows: 50 MATCH, 0 MISMATCH, 2 INFORMATIONAL (dense V5, D-9), 4 HOLDS
+  (negative controls N1 and N4, separate rows since R-10); rerun against the
+  Frontier set after-r2. The first analysis, before D-9, had the two dense V5
+  rows as MISMATCH; cause in analysis/workflow_gap_summary.md.
 status: COMPLETE

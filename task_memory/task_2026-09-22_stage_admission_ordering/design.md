@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-10: added the round-2 notes on the capacity-1 contract (R2-12), FIFO meaning on shared-lane contexts (R2-13) and the deferred EP-only queue variant. |
 | 2026-09-23 | Applied the round-1 plan review (`review.md`). Changes: the admission-loop anchor now points to the `MONOLITHIC`/`PREFILL` path; the drain condition is stated as a queued-ticket arrangement, not a shape; the shape table is marked author-reported until P0; added where queued EP waves exist; `remove(ticket)` made explicit; option A's stall trace labelled an unverified hypothesis; the capacity-1 section rewritten as a caller-level condition; the queue bound narrowed; added the mixed-phase scope boundary; the dense "lanes serialized" label withdrawn as unmeasured and replaced by the admission sequence read from source. |
 | 2026-09-22 | Created: defect restated from source on `origin/main` `1f694f7`, what the FIFO guarantees today, four options, recommended rule with its invariants, fidelity expectation. For review before implementation. |
 
@@ -263,6 +264,29 @@ about the callers, under this condition:
 No capacity-1 or `PP=1` special case is added: no supported caller has been
 shown to need arbitrary cross-lane full-stage FIFO order. An unexpected
 difference in any of these classes stops the work and is reported.
+
+### Round-2 notes (R-10)
+
+- Capacity-1 contract (R2-12). At the context API this is a contract change,
+  not an unaffected path: an idle capacity-1 context used to admit full-stage
+  tickets in enqueue order and now admits whichever one its lane stage
+  scheduler presents, unless an EP wave is queued ahead. Order among
+  full-stage tickets now comes from the callers. Measured on the callers:
+  every capacity-1 context in the matrix is byte-identical. That covers the
+  10 PD-AF release recipes (`DECODE_ATTN`, `DECODE_FFN`, `PREFILL`) and the 4
+  PD-AF recipes with `PREFILL_PP=2` (G11), offline and online.
+- FIFO meaning on shared-lane contexts (R2-13). `enqueue_ep_wave` has one
+  caller, the `DECODE_FFN` M2N path (`round_robin_cluster_scheduler.py:1052`).
+  So the FIFO of a `MONOLITHIC`, `PREFILL` or unified `DECODE` context only
+  ever holds full-stage tickets, and under B it no longer orders admission
+  there. `queued_tickets` and `admission_seq` record enqueue order only, and
+  the class docstring says so.
+- Variant considered and deferred: queue only EP waves, and keep queued
+  full-stage tickets as an unordered set. The data structure would then
+  match the rule. But it changes `queued_tickets`, `is_queued` and `cancel`,
+  and the drain diagnostics that read FIFO order, with no change in
+  behaviour. It is not pursued unless a caller needs the queue to express
+  admission order.
 
 ## Scope boundary: mixed-phase forwards
 
