@@ -304,8 +304,9 @@ def test_repeated_iterations_do_not_leak_a_previous_result(
 def _profile_on_cpu(monkeypatch, **arguments):
     """Run `profile_fused_moe_kernel` on CPU with every native call replaced.
 
-    Returns the keyword arguments of each expert iteration and the dtype flags
-    of each kernel-config lookup.
+    Returns the keyword arguments of each expert iteration, and the arguments
+    of each kernel-config dtype lookup, tile-config lookup and routing
+    alignment.
     """
 
     from contextlib import nullcontext
@@ -334,23 +335,24 @@ def _profile_on_cpu(monkeypatch, **arguments):
     monkeypatch.setattr(kernel, "torch", proxy)
     monkeypatch.setattr(kernel, "VLLM_AVAILABLE", True)
     monkeypatch.setattr(kernel, "VLLM_API_VERSION", "0.10.x")
-    config_lookups = []
+    native_calls = SimpleNamespace(config_dtype=[], config=[], alignment=[])
     monkeypatch.setattr(
         kernel,
         "get_config_dtype_str",
-        lambda dtype, **flags: config_lookups.append((dtype, flags)) or "float16",
+        lambda dtype, **flags: native_calls.config_dtype.append((dtype, flags)) or "float16",
         raising=False,
     )
     monkeypatch.setattr(
         kernel,
         "try_get_optimal_moe_config",
-        lambda **kwargs: {"BLOCK_SIZE_M": 16},
+        lambda **kwargs: native_calls.config.append(kwargs) or {"BLOCK_SIZE_M": 16},
         raising=False,
     )
     monkeypatch.setattr(
         kernel,
         "moe_align_block_size",
-        lambda *args, **kwargs: (None, None, None),
+        lambda *args, **kwargs: native_calls.alignment.append((args, kwargs))
+        or (None, None, None),
         raising=False,
     )
     monkeypatch.setattr(
@@ -374,7 +376,7 @@ def _profile_on_cpu(monkeypatch, **arguments):
         profile_method="cuda_event",
         **arguments,
     )
-    return iterations, config_lookups
+    return iterations, native_calls
 
 
 def test_the_profiler_allocates_the_four_buffers_the_computation_needs(monkeypatch):
@@ -443,7 +445,7 @@ def test_the_kernel_config_is_looked_up_for_the_profiled_quantization(
             lambda tensor, *, group_size: (tensor, torch.ones(1)),
         )
 
-    _, lookups = _profile_on_cpu(
+    _, native_calls = _profile_on_cpu(
         monkeypatch,
         num_tokens=4,
         num_experts=2,
@@ -454,7 +456,53 @@ def test_the_kernel_config_is_looked_up_for_the_profiled_quantization(
         block_shape=[128, 128] if use_fp8 else None,
     )
 
-    assert lookups == [(torch.bfloat16 if use_fp8 else torch.float16, {"use_fp8_w8a8": use_fp8})]
+    assert native_calls.config_dtype == [
+        (torch.bfloat16 if use_fp8 else torch.float16, {"use_fp8_w8a8": use_fp8})
+    ]
+
+
+def test_the_tile_config_and_the_alignment_follow_fused_experts(monkeypatch):
+    """The setup `fused_experts_impl` gives the two expert GEMMs.
+
+    vLLM passes the quantization block shape and the token count to the
+    tile-config lookup, and aligns the routed ids over the global expert count
+    with the EP expert map. The native parity test copies this setup rather
+    than calling it, so these arguments are pinned here.
+    """
+
+    from unittest.mock import Mock
+
+    monkeypatch.setattr(
+        kernel,
+        "quantize_weights_to_fp8",
+        lambda weights, **_: (weights, torch.ones(1)),
+    )
+    expert_map = Mock()
+    expert_map.numel.return_value = 4
+    expert_map.to.return_value = expert_map
+
+    _, native_calls = _profile_on_cpu(
+        monkeypatch,
+        num_tokens=4,
+        num_experts=2,
+        hidden_dim=8,
+        expert_hidden_dim=8,
+        top_k=2,
+        use_fp8=True,
+        block_shape=[128, 128],
+        global_num_experts=4,
+        expert_map=expert_map,
+    )
+
+    (config_lookup,) = native_calls.config
+    assert config_lookup["block_shape"] == [128, 128]
+    assert config_lookup["M"] == 4
+    assert config_lookup["top_k"] == 2
+    assert config_lookup["dtype"] == "float16"
+    (alignment,) = native_calls.alignment
+    alignment_args, alignment_kwargs = alignment
+    assert alignment_args[1:] == (16, 4)
+    assert alignment_kwargs["expert_map"] is expert_map
 
 
 @pytest.mark.parametrize(
