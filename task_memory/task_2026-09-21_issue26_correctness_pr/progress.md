@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Step 9 P1(b) completed on seven shapes; D9-2 proposal recorded (design.md, plan §18.15); W9-03 observation; awaits the user's D9-2 decision. |
 | 2026-09-23 | W9-01 merge-forward: `origin/main` merged (`dd9b8d9`); composition check K1–K4 pass on `03d5f24` (drain-reader fix); Step 9 P1(b) resumed. |
 | 2026-09-23 | PR 36 pre-merge untrack (P6, `4d08c5d`) done; W9-01 copies refreshed. Merge-forward waits for the PR 36 merge. |
 | 2026-09-23 | PR 36 round-2 review remediation recorded; the W9-01 composition check extended to PR 36 groups G9 and G10. |
@@ -221,8 +222,8 @@ User start signal: "开始执行step9", with the quality gates repeated (readabi
 | Package | State | Evidence |
 | --- | --- | --- |
 | P1(a) reference-loop oracle | completed | `tests/comparison/dp_placement_pp/reference_loop.py`; `tests/unit/test_dp_placement_reference_loop.py` (9 passed, 1.21 s, `frontier-py310`). §18.11 state table confirmed as written; PP=1 shown to degenerate to "every iteration schedules and applies"; depth 3 shown to allow two consecutive admission-only publications, which rules out any stride constant. |
-| P1(b) Frontier boundary probe | blocked until 2026-09-23, resumed (see below) | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
-| Design checkpoint (D9-1, D9-2) | open | D9-1's payload is settled (the completion hook signature already carries lane, load and a key source). D9-2 is not: the candidate key `ForwardSyncState._next_step_id_by_replica` satisfies I1, I2, I3, I4 and I6 on the runnable shapes but fails I5, and no alternative can be checked against I1 without a running `attn_dp>1, PP>1` shape. |
+| P1(b) Frontier boundary probe | completed 2026-09-23 (see "Step 9 P1(b) and D9-2" below) | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
+| Design checkpoint (D9-1, D9-2) | D9-1 settled; D9-2 proposed 2026-09-23, awaiting decision | D9-1's payload is settled (the completion hook signature already carries lane, load and a key source). D9-2 is not: the candidate key `ForwardSyncState._next_step_id_by_replica` satisfies I1, I2, I3, I4 and I6 on the runnable shapes but fails I5, and no alternative can be checked against I1 without a running `attn_dp>1, PP>1` shape. |
 | P2–P6, G3–G5 | paused | All depend on the design checkpoint or on that shape. |
 
 W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_schduler.py` and `stage_contexts.py` are byte-identical to `main`. It is unobserved because every Simulator-level test with `attn_dp > 1` uses `num_pipeline_stages = 1` and no shipped example sets `attn_dp > 1`. Scope decision requested from the user; recommendation is to fix it as a separate correctness item rather than inside this feature branch.
@@ -246,6 +247,18 @@ W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices agains
 | K3 | `composition_check.py` | same | 22/22 all lanes; `after-r2` lane 0 only |
 | K4 | `composition_run_suites.sh` on both trees; `composition_compare_junit.py` | same | 0 regressions; export-only failures are git-metadata failures; 487 targeted tests pass |
 | Report | — | `test_report_2026-09-23_w9_01_composition_check.md` | PASS |
+
+### Step 9 P1(b) and D9-2 (2026-09-23)
+
+| Step | Command / action | Evidence | Result |
+| --- | --- | --- | --- |
+| Reference check | Read the busy loop, `step_with_batch_queue`, `execute_dummy_batch` and `get_dp_padding` in `.real-engine/vLLM-BS` | `design.md` "Design checkpoint D9-2", reference table | Each iteration launches one forward, real or the blocking dummy. Forwards pair per stage through the DP all-reduce, so the step key is the shared forward index. Amends R9-08. |
+| Probe | `probe_boundaries.py <shape> <out>` for 7 shapes, one process each; `PYTHONPATH=<worktree>`, `WANDB_DISABLED=true`, `VIDUR_DISABLE_WANDB=1`, `FRONTIER_TMP_ROOT=/data/ycfeng/tmp`, `frontier-py310` | `/data/ycfeng/tmp/issue26-correctness-pr/step9_p1b/<shape>/` | All 7 complete 6/6 (108–210 records). The extended fields are stage-0 sealed, lane busy, lane queue and room group. |
+| Scoring | `analyze_keys.py /data/ycfeng/tmp/issue26-correctness-pr/step9_p1b <out>` | `step9_p1b/evidence/key_scores.json` | The group-anchored key has 0 splits, merges or inversions and 0 ms replay mismatch in all 7 shapes. A and the lane counter fail as tabulated in plan §18.15. |
+| Variant | Every-report-advance variant, candidate `every_report_advances` in `analyze_keys.py` | `key_scores.json` | Drifts on dp2 PP3 staggered: 6/5/5 on real-forward reports. Rejected. |
+| Residual count | Completion-only report followed by an equal-key report on the same lane | `key_scores.json` rows | 17 pairs, 3 with changed counts. |
+| Records | `design.md`; plan §18.15 and the §18.13 resolution; `issues.md` (W9-01 step 3, W9-02 narrowed, W9-03); test report §2 addendum | — | Done |
+| Decision | D9-2 rule and the C1 PP3 amendment | — | Awaiting the user |
 
 ### G1 ground-truth instrumentation (2026-09-22, completed)
 

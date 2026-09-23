@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-22 | Created. Covers packages P1(a), P1(b) and G1. |
+| 2026-09-23 | §2 addendum: P1(b) rerun after the W9-01 merge-forward on seven shapes, with key scoring. §4 updated. |
 
 Environment for every CPU check below:
 
@@ -96,6 +97,59 @@ Both are recorded in `issues.md`. The three source files involved in W9-01 are
 byte-identical to `origin/main`, verified with `git rev-parse HEAD:<path>`
 against `origin/main:<path>`.
 
+### 2.1 Addendum (2026-09-23): the multi-lane PP shapes after W9-01
+
+Revision: `d3e6e78` plus the untracked probe files. The rule file equals
+`origin/main`, PR 36 `4ab1964`.
+
+Driver: `step9_p1b/probe_boundaries.py`. It builds each shape with the
+`tests.e2e.stage_admission_matrix` fixture: a 6-layer synthetic model,
+analytical CC backend, round-robin placement, dummy predictor, prefill 16 and
+decode 3 tokens, 6 requests. The driver records admissions, completions,
+stage-0 starts with their forward group, and layer rooms, together with the
+stage-0 state at each boundary. The scorer is `step9_p1b/analyze_keys.py`,
+with method and targets in its docstring.
+
+Commands, with `PYTHONPATH=<worktree>`, `WANDB_DISABLED=true`,
+`VIDUR_DISABLE_WANDB=1`, `FRONTIER_TMP_ROOT=/data/ycfeng/tmp` and
+`/data/ycfeng/envs/frontier-py310/bin/python`:
+
+```bash
+python task_memory/.../step9_p1b/probe_boundaries.py <shape> /data/ycfeng/tmp/issue26-correctness-pr/step9_p1b/<shape>
+python task_memory/.../step9_p1b/analyze_keys.py /data/ycfeng/tmp/issue26-correctness-pr/step9_p1b <key_scores.json>
+```
+
+Expected results:
+
+1. Every shape completes 6/6.
+2. For the key to be accepted, it has 0 peer splits, 0 merges and 0
+   inversions against each report's actual stage-0 group, and 0 ms of replay
+   mismatch.
+
+| Shape | Completed | Records | A (split/merge/inv, ms) | Lane counter | Group-anchored | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| MoE dp2 PP1 burst | 6/6 | 108 | 0/0/0, 0 | 0/0/0, 0 | 0/0/0, 0 | PASS |
+| MoE dp1 PP2 burst | 6/6 | 140 | 0/0/0, 0 | 0/0/0, 0 | 0/0/0, 0 | PASS |
+| MoE dp1 PP3 burst | 6/6 | 176 | 0/1/0, 400 | 5/0/0, 0 | 0/0/0, 0 | PASS for group-anchored |
+| MoE dp2 PP2 burst (the W9-01 shape) | 6/6 | 160 | 0/0/0, 0 | 4/0/0, 0 | 0/0/0, 0 | PASS for group-anchored; was FAIL (W9-01) |
+| MoE dp2 PP2 staggered | 6/6 | 176 | 0/0/0, 0 | 6/0/0, 0 | 0/0/0, 0 | PASS for group-anchored |
+| MoE dp2 PP3 burst | 6/6 | 198 | 0/4/0, 148 | 0/0/0, 0 | 0/0/0, 0 | PASS for group-anchored; was FAIL (W9-02, collective-sim only) |
+| MoE dp2 PP3 staggered | 6/6 | 210 | 4/1/0, 200 | 15/7/5, 0 | 0/0/0, 0 | PASS for group-anchored |
+
+Split/merge counts for the lane counter on burst shapes fall on
+completion-only rows. There the Frontier target is the lane's next forward,
+while the reference would count a separate dummy iteration. The
+real-forward-only counts are in `key_scores.json` (`forward_reports`). The
+group-anchored key equals the stage-0 predictor on every report: 139 of 139.
+
+Limits:
+
+- Targets are Frontier's own forward grouping, not vLLM measurements.
+- 12 final drain completions have no later forward and are unscored.
+- The replay metric depends on this small workload's timing. The pairwise
+  counts are the primary evidence.
+- W9-03 (reference lockstep) is a source-reading observation.
+
 ## 3. G1 — ground-truth instrumentation
 
 Checkout `/data/ycfeng/Frontier/.real-engine/vLLM-BS`, local branch
@@ -149,7 +203,7 @@ source reading, not from a run.
 | Package | Verdict |
 | --- | --- |
 | P1(a) | PASS |
-| P1(b) | Evidence collected on three shapes; BLOCKED on the fourth by W9-01 |
+| P1(b) | PASS on seven shapes after the W9-01 merge-forward (§2.1) |
 | Design checkpoint D9-1 | Settled |
-| Design checkpoint D9-2 | Open; the candidate key fails invariant I5 and the alternatives cannot be tested until W9-01 is resolved |
+| Design checkpoint D9-2 | Proposed (group-anchored key); awaiting the user's decision |
 | G1 | PASS for what is testable without a GPU |

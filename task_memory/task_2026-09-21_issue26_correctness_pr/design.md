@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | Added "Design checkpoint D9-2: the key from the fourth shape": reference lockstep facts, seven-shape P1(b) scores, the proposed group-anchored key rule with its invariant argument and residuals, W9-03 pointer. Proposal only; awaits the user's decision. |
 | 2026-09-22 | Added the design checkpoint section: D9-1 payload settled from the P1 oracle; D9-2 key left open because the `ForwardSyncState` candidate fails invariant I5 at PP>1 and the I1/I5 trade-off is only observable on the shape blocked by W9-01. |
 | 2026-09-22 | W9 second review (user-directed quality gates): section "What the code already provides" added; planned-edits rows for the hook payload, the call site and the CPU oracle amended; plan §18.12 R9-01..R9-08. |
 | 2026-09-22 | Created. Source-backed design for Checkpoint D's W3 half, with the scope decisions and their evidence. |
@@ -553,3 +554,163 @@ does can only be decided by observing a shape with `attn_dp > 1` **and**
 The checkpoint therefore closes with D9-1 fixed and D9-2 open. Implementing a
 key rule now would mean choosing between two invariants with no way to test the
 choice, which is the kind of unfalsifiable design the gates exclude.
+
+## Design checkpoint D9-2: the key from the fourth shape (2026-09-23)
+
+W9-01 is fixed on `main` (PR 36) and merged forward, so the shape that decides
+D9-2 now runs. This section records what the probe shows and the proposed key
+rule. The rule is a proposal: it needs the user's decision before P2.
+
+### The reference key is the shared forward index
+
+R9-08 said DP engines are not iteration-lockstep, because the unfinished-work
+all-reduce runs only every 32 steps. The pinned source shows lockstep by
+another route:
+
+| Fact | Source |
+| --- | --- |
+| An iteration that schedules no tokens enqueues the empty output, then blocks on the oldest queued output. | `core.py:364-420` (`step_with_batch_queue`) |
+| After such an iteration the busy loop runs `execute_dummy_batch`, a blocking collective RPC to every worker, each of which runs `_dummy_run(1)`. | `core.py:1170-1195`; `multiproc_executor.py:197-199`; `gpu_worker.py:556-557` |
+| An empty scheduler output runs no forward. | `gpu_model_runner.py:2250-2254` |
+| Every real or dummy forward on every stage joins its peers' DP all-reduce in `get_dp_padding` (CUDA graphs enabled). MoE layers add EP collectives. | `gpu_model_runner.py:1904-1925`; `forward_context.py:72-85` |
+
+So each iteration of a running engine launches exactly one forward, real or
+dummy, and on every stage the k-th forward of one engine pairs with the k-th
+forward of each peer. The `step_counter` a report carries is therefore the
+index of that shared forward. Peers reporting the same forward compare equal.
+The next iteration is strictly greater. The 32-step all-reduce only decides
+when a wave ends.
+
+Frontier's shared stage-0 forward group is the analog of that index.
+`StageExecutionContext.bind_forward_group` gives every MoE lane batch that
+starts one stage-0 forward the same id, and it hands out ids in forward order.
+Idle lanes take part in the same forward's layer rooms.
+
+### What each report describes
+
+The D9-1 rule sorts every report into one of three kinds:
+
+| Kind | When | Forward it describes |
+| --- | --- | --- |
+| admission | admitted with `running_after < stages`, published on its own | the admitted batch's stage-0 group |
+| completion_folded | completion whose lane holds an admission made with a full pipeline | the folded batch's group |
+| completion_only | completion with no folded admission | the lane's next Frontier forward (the reference runs a dummy forward here) |
+
+The probe (`step9_p1b/probe_boundaries.py`) records these boundaries with the
+stage-0 state at each one, and records every batch's stage-0 group and each
+room's group. `step9_p1b/analyze_keys.py` derives each report's group after
+the fact and scores the candidate keys against it in two ways:
+
+- pairwise order: peer splits (the same group gets different keys, I1); merges
+  (different groups get one key; on one lane this is I5); inversions (the
+  order is reversed);
+- replay: the reports drive a fresh `VllmDPLoadBalancer`, and the score is the
+  milliseconds in which the frontend-visible counts differ from the replay
+  keyed by the groups.
+
+Shapes: 6-layer synthetic MoE model, analytical CC backend, round-robin
+placement, dummy predictor, prefill 16 and decode 3 tokens, 6 requests. The
+burst shapes are offline at 1e6 QPS; the staggered shapes are online Poisson at
+20 QPS. Every shape completes 6/6.
+
+| Shape | Reports (adm / fold / only) | A: `ForwardSyncState` next id | Lane report counter | Group-anchored (proposed) |
+| --- | --- | --- | --- | --- |
+| MoE dp2 PP1 burst | 0 / 12 / 0 | 0 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms |
+| MoE dp1 PP2 burst | 1 / 13 / 1 | 0 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms |
+| MoE dp1 PP3 burst | 7 / 9 / 7 | 0 / 1 / 0, 400 ms | 5 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms |
+| MoE dp2 PP2 burst | 4 / 12 / 4 | 0 / 0 / 0, 0 ms | 4 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms |
+| MoE dp2 PP2 staggered | 5 / 12 / 5 | 0 / 0 / 0, 0 ms | 6 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms |
+| MoE dp2 PP3 burst | 4 / 14 / 4 | 0 / 4 / 0, 148 ms | 0 / 0 / 0, 0 ms | 0 / 0 / 0, 0 ms |
+| MoE dp2 PP3 staggered | 7 / 11 / 7 | 4 / 1 / 0, 200 ms | 15 / 7 / 5, 0 ms | 0 / 0 / 0, 0 ms |
+
+Cells are splits / merges / inversions, then the replay mismatch. The scored
+reports are those whose forward exists in the run; 12 final drain completions
+have no later forward and are left out.
+
+- **A** merges the PP3 cold fill. Several admissions on one lane read one
+  value, because the id advances when a room opens, not per iteration. The
+  same happens in the dp2 PP3 burst, where the two lanes' first and second
+  admissions all read 0. The replay differs for 148–400 ms.
+- **The lane report counter** is exact whenever every lane runs the same
+  sequence of report kinds. With staggered arrivals the lanes run different
+  numbers of completion-only iterations and the counters drift apart. In dp2
+  PP3 staggered, 6 splits, 5 merges and 5 inversions fall on reports that do
+  carry a real forward. Nothing brings the counters back together: in the
+  reference the dummy forwards keep lanes aligned, and Frontier has no such
+  forwards. A variant of the proposed rule that also advances on every
+  completion-only report drifts in the same way, with the same 6/5/5.
+- **Group-anchored** matches every scored report in all seven shapes, and on
+  every report it equals `predicted_group`. That reference predictor needs
+  the count of the lane's admitted batches that have not started stage 0,
+  which a policy cannot read.
+
+### Proposed rule (D9-2)
+
+For lane `l` of the Replica, with `C` the Replica's stage-0 context:
+
+```
+key(l) = max(C.joinable_forward_group_id, last_admitted_key[l] + 1)
+```
+
+`joinable_forward_group_id` is the bound group's id while it is not sealed.
+Otherwise it is the next id. A batch admitted now joins exactly that group,
+unless its lane already has a batch in it, in which case the `+ 1` term takes
+over.
+
+- At an admission: `last_admitted_key[l] = key(l)`. The admission is
+  reported now while `num_running_batches < num_pipeline_stages`. Otherwise
+  the key is held in `held_key[l]`.
+- At a completion: report `held_key.pop(l)` if a key is held. Otherwise report
+  `key(l)` and store nothing.
+
+Against the invariants:
+
+| Invariant | How the rule meets it | Evidence |
+| --- | --- | --- |
+| I1 | Peers of one forward read one Replica-scoped group id. | 0 splits in 7 shapes. |
+| I2 | Group ids only grow, and `+ 1` orders a lane's later forwards. | 0 inversions. |
+| I3 | A folded admission reports once, with the completion it joins. | D9-1 folding. |
+| I4 | Unchanged counts are still dropped inside `VllmDPLoadBalancer.report`. | Unchanged code. |
+| I5 | Each consecutive cold-fill admission on a lane gets `+ 1`. No spacing constant. | dp1 and dp2 PP3 cold fills. |
+| I6 | Two integers per lane, overwritten in place. | Bounded by `attn_dp`. |
+
+At PP=1 every admission is folded, and the held key is the group of the
+forward that completes. Peers compare equal and later forwards compare
+greater, so the comparisons match the current `ForwardSyncState.get_step_id`
+key. C2's byte-identical PP=1 check tests exactly that. The policy's
+`ForwardSyncState` import and use are then superseded and removed.
+
+New surface, compared with the planned edits above: one read-only property on
+`StageExecutionContext` over two existing fields, in place of the planned
+`ForwardSyncState` accessor, and two per-lane dicts in the policy scheduler.
+The policy reaches the context through the base class's
+`_stage_execution_contexts[(replica_id, 0)]`. For a dense model the group is
+never bound (`bind_forward_group` is MoE-only), so the key falls back to the
+lane's admission counter. The policy admits a dense model only at
+`attn_dp=1`, where placement has one choice.
+
+### What the rule does not reproduce
+
+1. **The reference's dummy iterations.** A completion-only report shares its
+   key with the lane's next report whenever Frontier runs no forward between
+   them. The reference gives them keys `k` and `k+1`. There are 17 such pairs
+   in the seven shapes, 3 of them with changed counts (two in the dp2 PP3
+   burst drain, one in dp1 PP3). The effect: the coordinator does not latch
+   between the two reports, so the frontend can see the later counts one
+   publication interval (100 ms) early. No Frontier forward exists to anchor
+   a separate key. Inventing one would bring back the drift measured above.
+2. **The reference's forward pairing when lanes diverge.** In the reference,
+   an engine with nothing new to schedule blocks and then runs a dummy
+   forward, and its peers' next forward waits for it. Frontier lanes do not
+   block. In the dp2 PP3 staggered probe, lane 1's first batch joins the group
+   that lane 0 opened 1.3 ms earlier. At 154.3 ms lane 1's batch `b26` joins
+   lane 0's open group 2; there, the reference would pair engine 1's dummy
+   forward with that forward and `b26` with the next one. This is a
+   forward-model difference, not a key defect: the key follows Frontier's own
+   grouping. It is recorded as W9-03 in `issues.md` for a separate decision.
+   Only source reading supports it; G4's `engine_iteration` records would
+   measure it.
+
+The analytical backend runs MoE `attn_dp=2, PP=3`. W9-02's rejection is the
+collective-sim topology rule. The P3/P4 matrix can therefore restore the
+multi-lane PP3 row that I5 needs (C1 amendment, part of this proposal).

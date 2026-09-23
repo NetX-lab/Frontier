@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-01 remaining step 3 done (P1(b) complete, D9-2 proposed); W9-02 narrowed to the collective-sim backend; W9-03 recorded (reference DP lockstep under PP, observation). |
 | 2026-09-23 | W9-01: merged forward (`dd9b8d9`); composition check passes on `03d5f24`. |
 | 2026-09-23 | W9-01: PR 36 ran its pre-merge untrack (P6, `4d08c5d`); the copies here are now the only published records of that task. |
 | 2026-09-23 | W9-01: PR 36 round-2 review remediation recorded; the composition check now also reruns PR 36 groups G9 and G10. |
@@ -160,7 +161,9 @@ Remaining here, in order:
    after a harness drain-reader fix. With W2 two Poisson PDD PP3 cells drain
    under the pre-merge rule; both complete on the merged tree.
 3. If they pass, resume Step 9 P1(b) and the design checkpoint D9-2.
-   In progress.
+   Done: the fourth shape and three more multi-lane PP shapes complete 6/6;
+   the D9-2 proposal is in `design.md` ("Design checkpoint D9-2") and waits
+   for the user's decision.
 
 Step 9 C1's PP3 row stays on `attn_dp=1` (W9-02).
 
@@ -168,6 +171,9 @@ Step 9 C1's PP3 row stays on `attn_dp=1` (W9-02).
 
 Status: open, expected behavior, affects plan wording only.
 Found: 2026-09-22, Step 9 package P1(b).
+Narrowed 2026-09-23: the rejection is the collective-sim topology rule. With
+the analytical CC backend, MoE `attn_dp=2, PP=3` constructs and completes 6/6
+(P1(b) probe, `moe_dp2_pp3_burst` and `moe_dp2_pp3_staggered`).
 
 Construction fails with:
 
@@ -180,3 +186,47 @@ The rejection is correct: 2 lanes x 3 stages is 6 devices against a node size of
 4. Plan acceptance criterion C1 lists MoE `attn_dp=2` at both PP2 and PP3; the
 PP3 row must be `attn_dp=1`, or must choose a device count that divides the node
 size. C1 was amended accordingly.
+
+## W9-03 Frontier does not model the reference's DP engine lockstep under PP
+
+Status: open, observation from source reading, not measured. Outside Step 9's
+scope; decision pending with the user.
+Found: 2026-09-23, Step 9 package P1(b), while deriving the D9-2 key.
+
+### Reference (pinned `.real-engine/vLLM-BS`)
+
+- An iteration that schedules no tokens enqueues the empty output. It then
+  blocks on the oldest queued output (`core.py:364-420`).
+- The busy loop then runs `execute_dummy_batch` (`core.py:1170-1195`). This
+  is a blocking collective RPC: every worker runs `_dummy_run(1)`
+  (`multiproc_executor.py:197-199`, `gpu_worker.py:556-557`).
+- Every real or dummy forward on every stage joins its peers' DP all-reduce
+  in `get_dp_padding` when CUDA graphs are enabled
+  (`gpu_model_runner.py:1904-1925`, `forward_context.py:72-85`). MoE layers
+  add EP collectives.
+
+The k-th forward of one engine therefore pairs with the k-th forward of every
+peer, per stage. An engine that is only waiting for an output delays its
+peers' next forward until its own wait and dummy forward finish.
+
+### Frontier (probe `moe_dp2_pp3_staggered`)
+
+- Lanes never block on their oldest output.
+- A lane's batch can join a group that a peer's batch has already opened.
+  Lane 1's first batch arrives at 52.3 ms and joins group 0, which lane 0
+  opened 1.3 ms earlier.
+- At 154.3 ms, lane 1's `b26` joins lane 0's open group 2. The reference
+  would pair engine 1's dummy forward with that forward, and `b26` with the
+  next one.
+
+### Effect
+
+The difference affects the timing of MoE `attn_dp > 1, PP > 1` runs
+(co-location and PDD) when lanes have unequal work. Its size is unknown. The
+G4 trace would measure it: `engine_iteration` records carry
+`(engine, wave, step)`.
+
+It is not a report-key defect. The proposed D9-2 key follows Frontier's own
+grouping, and its residual 1 in `design.md` is the part of this difference
+that reaches the report stream.
+

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.15 added: P1(b) completed on seven shapes; D9-2 proposal (group-anchored key) and the C1 PP3 amendment await the user's decision. §18.13 blocker marked resolved. |
 | 2026-09-23 | §18.14 results: K1–K4 pass on `03d5f24`; K2 amended after measuring for online cells (one cell's batches differ after an earlier admission). |
 | 2026-09-23 | §18.14 added: W9-01 merge-forward and the composition check, with pass criteria fixed before measuring. |
 | 2026-09-22 | Step 9 execution started. §18.13 added: P1(a) oracle complete with the state-table evidence, P1(b) blocked by the pre-existing stage-admission deadlock W9-01 (`issues.md`), design checkpoint D9-2 left open because the candidate key fails invariant I5 and I1/I5 can only be settled on the deadlocking shape. C1 amended per W9-02: the PP3 row uses `attn_dp=1`. |
@@ -1082,6 +1083,8 @@ Start approval was given ("开始执行step9"). P1(a) is complete and P1(b) stop
 
 **Consequence.** Step 9 packages P2, P3, P4, G3, G4 and G5 all depend on the design checkpoint or on a running `attn_dp=2, PP=2` shape. They are paused pending the user's scope decision on W9-01. P1 and its records are complete.
 
+**Resolved 2026-09-23.** W9-01 is fixed on `main` (PR 36) and merged forward (§18.14). P1(b) is complete and D9-2 is proposed in §18.15.
+
 ### 18.12 Second review (2026-09-22, user-directed): codebase integration and quality gates
 
 Review question, as set by the user: is every planned change to Frontier's core modules grounded in the whole codebase, readable and maintainable, high-value (fidelity or simulation function, not replaceable), and free of hard-coding, temporary patches, over-defensive code, redundant design and vague names. Findings are against the code on `c231322`; each states the source it rests on and what it changes in this plan. None of them changes source now.
@@ -1151,4 +1154,76 @@ Poisson arrivals at other points of its schedule. "Only start times differ"
 holds where batch contents are fixed at t=0 (offline and burst). For online
 cells K2 now accepts a batch difference when the first divergence is an
 identical batch admitted earlier on the same stage and lane.
+
+### 18.15 P1(b) completed and the D9-2 proposal (2026-09-23)
+
+The fourth shape runs after the merge-forward. P1(b) now covers seven shapes:
+
+- MoE `attn_dp` 1 and 2;
+- PP 1, 2 and 3;
+- offline bursts, plus online Poisson for `attn_dp=2` at PP 2 and 3.
+
+All seven complete 6/6. The probe and the scorer are
+`step9_p1b/probe_boundaries.py` and `step9_p1b/analyze_keys.py`. The scores
+are in `step9_p1b/evidence/key_scores.json`, and the full argument is in
+`design.md` ("Design checkpoint D9-2: the key from the fourth shape").
+
+**Reference correction (amends R9-08).** Peer step counters are aligned
+through forward pairing. Each iteration launches exactly one forward, real or
+the blocking dummy. On every stage, each forward joins the peers' DP
+all-reduce and the MoE collectives. The report key is therefore the index of
+the shared forward. Frontier's analog is the stage-0 forward-group id.
+
+**Scores.** Each candidate is compared with the report's actual stage-0
+group.
+
+| Candidate | Result |
+| --- | --- |
+| `ForwardSyncState` next id (A) | Merges the PP3 cold fill; 148–400 ms of frontend-visible mismatch in replay. |
+| Lane report counter | Drifts under staggered arrivals: 6 splits, 5 merges and 5 inversions on real-forward reports. |
+| Every-report variant of the proposal | Drifts in the same way. |
+| Group-anchored (proposed) | 0 splits, merges or inversions and 0 ms mismatch in all seven shapes. |
+
+**Proposed D9-2 rule.**
+
+```
+key(l) = max(C.joinable_forward_group_id, last_admitted_key[l] + 1)
+```
+
+Here `C` is the Replica's stage-0 context and `joinable_forward_group_id` is
+the bound group while it is unsealed, otherwise the next id. The rule updates
+state as follows:
+
+- An admission stores `key(l)` as `last_admitted_key[l]`.
+- It reports that key while the pipeline has room. Otherwise it holds the key
+  for the next completion.
+- A completion reports the held key, or `key(l)` without storing it.
+
+This meets I1–I6, and at PP=1 it keeps today's comparisons (C2).
+
+New surface:
+
+- one read-only property on `StageExecutionContext`, replacing the planned
+  `ForwardSyncState` accessor;
+- two per-lane dicts in the policy scheduler.
+
+The policy's `ForwardSyncState` key is removed.
+
+**Residuals (documented, not fixed).**
+
+1. A completion-only report shares its key with the lane's next report when
+   no Frontier forward runs between them. The reference gives them `k` and
+   `k+1`. This happens 17 times in the seven shapes, 3 with changed counts. At
+   worst the frontend sees the later counts one 100 ms publication early.
+2. The reference's forward pairing when lanes diverge (W9-03) is a
+   forward-model difference and is outside Step 9.
+
+**C1 amendment (part of the proposal).** Restore a MoE `attn_dp=2, PP=3` row
+that uses the analytical backend. W9-02 is specific to collective-sim, and I5
+needs a multi-lane PP3 case.
+
+**Decision needed before P2.** The user chooses the D9-2 rule. Once it is
+chosen, P2 implements it with the D9-1 hook and the guard change. P3/P4 carry
+the §18.11 matrix with the restored PP3 row. P2–P6 and G3–G5 stay paused until
+then.
 
