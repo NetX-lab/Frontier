@@ -457,7 +457,7 @@ No source change results from this review; Step 9 execution remains unstarted pe
 
 Reviewer: this session. Reviewed range: `d1a2a06..bacdbb4` (P2 `2ffe78d`, P4 `bacdbb4`). Gates: the user's core-module rule ("任何引入的修改和实现都应该是高价值的 ... 禁止hard-coding，禁止临时补丁，禁止过度防御，禁止冗余性设计和实现，禁止使用ai味命名函数和变量") and the AGENTS.md development gates. Inspected: the four changed `frontier/` files in full diff, the admission loop at `base_replica_scheduler.py:1050-1075`, the completion hook call at `global_batch_end_event.py:180-185`, `base_replica_scheduler.py:51` (stage count), and the test diffs. Evidence of behavior: `validation.md` Step 9 and the W9 report §4–§6.
 
-`frontier/` change: 4 files, +130/−25 lines. `VllmLoadBalancingClusterScheduler` is 158 lines; the largest touched module, `base_cluster_scheduler.py`, is 1,946 lines, under the 2,000-line gate.
+`frontier/` change: 4 files, +102/−28 lines (`git diff --numstat d1a2a06 bacdbb4 -- frontier/`). `VllmLoadBalancingClusterScheduler` is 158 lines; the largest touched module, `base_cluster_scheduler.py`, is 1,946 lines, under the 2,000-line gate.
 
 | Id | Gate | Finding | Disposition |
 | --- | --- | --- | --- |
@@ -472,7 +472,7 @@ Reviewer: this session. Reviewed range: `d1a2a06..bacdbb4` (P2 `2ffe78d`, P4 `ba
 
 Found during validation, both outside this change:
 
-- W9-04, a MoE `attn_dp=4` online deadlock from a stale first-layer placeholder. It is reachable under `round_robin` on this branch and its base, so it is pre-existing. The prototype fix is not applied and awaits the user's decision (`issues.md`).
+- W9-04, a MoE `attn_dp=4` online deadlock from a stale first-layer placeholder. It is reachable under `round_robin` on this branch, and the pre-Step-9 tree `d1a2a06` stops in the same state, so Step 9 does not cause it. The prototype fix is not applied and awaits the user's decision (`issues.md`).
 - W9-05, requests lost mid-decode under KV pressure in `vllm_v1`. It is also present on `origin/main` and is not diagnosed (`issues.md`).
 
 Result: no source change required by this review. G3–G5 remain blocked on GPU authorization.
