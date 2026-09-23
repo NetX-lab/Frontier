@@ -1,0 +1,25 @@
+{
+  "entry": "simulator-run (diagnostic pre-check of the G4 trace, plan section 18.20)",
+  "command": "/data/ycfeng/envs/frontier-py310/bin/python tests/comparison/dp_placement_pp/run_frontier_case.py --engine-config task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/engine_g4.json --frontier-config task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/frontier_g4.json --trace-dir task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/trace_g4 --output-dir /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_precheck_g4_2ms",
+  "working_directory": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr",
+  "environment": {
+    "PYTHONPATH": "<worktree>",
+    "WANDB_DISABLED": "true",
+    "VIDUR_DISABLE_WANDB": "1",
+    "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp"
+  },
+  "frontier_source": "fix/issue26-correctness-pr @ e425ec9 plus the uncommitted multi-burst harness (make_trace.py, run_frontier_case.py summarize)",
+  "start_utc": "2026-09-23T14:44:40Z",
+  "end_utc": "2026-09-23T14:45:23Z",
+  "time_source": "artifact mtimes; the receipt was written after the run",
+  "exit_code": 0,
+  "artifacts": {
+    "full": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_precheck_g4_2ms/",
+    "retained": [
+      "summary.json",
+      "*/effective_settings.json"
+    ]
+  },
+  "result": "51/51 requests complete with tokens conserved in all three runs; in every burst a-d the fixed policy routes the probe to lane 0 from snapshot [[0,1],[0,1]] and the completion-reporting control routes it to lane 1 from [[3,0],[2,0]]; round_robin routes it to lane 0 without a selection",
+  "note": "frontier_g4.json still holds the provisional 2.0 ms dummy time and 300333 blocks; both are set from G4 before G5 (plan section 18.19 rule 4)."
+}

@@ -9,7 +9,7 @@
  "enforce_eager": true,
  "enable_chunked_prefill": true,
  "enable_prefix_caching": false,
- "max_num_batched_tokens": 16384,
+ "max_num_batched_tokens": 20448,
  "max_num_seqs": 16,
  "block_size": 16,
  "max_model_len": 40960,

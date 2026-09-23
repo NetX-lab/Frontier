@@ -1,0 +1,309 @@
+{
+ "runs": {
+  "vllm_load_balancing": {
+   "completed_requests": 51,
+   "num_requests": 51,
+   "tokens_conserved": true
+  },
+  "completion_reporting_control": {
+   "completed_requests": 51,
+   "num_requests": 51,
+   "tokens_conserved": true
+  },
+  "round_robin": {
+   "completed_requests": 51,
+   "num_requests": 51,
+   "tokens_conserved": true
+  }
+ },
+ "bursts": {
+  "a": {
+   "probe_request_id": "dpp2-a-b6",
+   "runs": {
+    "vllm_load_balancing": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": {
+      "time": 22.085,
+      "snapshot": [
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "engine": 0,
+      "request_id": "dpp2-a-b6"
+     },
+     "first_completion_after_burst_s": 0.24825000000002007
+    },
+    "completion_reporting_control": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+     ],
+     "probe_placement": 1,
+     "probe_selection": {
+      "time": 22.085,
+      "snapshot": [
+       [
+        3,
+        0
+       ],
+       [
+        2,
+        0
+       ]
+      ],
+      "engine": 1,
+      "request_id": "dpp2-a-b6"
+     },
+     "first_completion_after_burst_s": 0.24825000000002007
+    },
+    "round_robin": {
+     "burst_placements": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": null,
+     "first_completion_after_burst_s": null
+    }
+   }
+  },
+  "b": {
+   "probe_request_id": "dpp2-b-b6",
+   "runs": {
+    "vllm_load_balancing": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": {
+      "time": 42.19,
+      "snapshot": [
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "engine": 0,
+      "request_id": "dpp2-b-b6"
+     },
+     "first_completion_after_burst_s": 0.24824999999999164
+    },
+    "completion_reporting_control": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+     ],
+     "probe_placement": 1,
+     "probe_selection": {
+      "time": 42.19,
+      "snapshot": [
+       [
+        3,
+        0
+       ],
+       [
+        2,
+        0
+       ]
+      ],
+      "engine": 1,
+      "request_id": "dpp2-b-b6"
+     },
+     "first_completion_after_burst_s": 0.24824999999999164
+    },
+    "round_robin": {
+     "burst_placements": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": null,
+     "first_completion_after_burst_s": null
+    }
+   }
+  },
+  "c": {
+   "probe_request_id": "dpp2-c-b6",
+   "runs": {
+    "vllm_load_balancing": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": {
+      "time": 62.316,
+      "snapshot": [
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "engine": 0,
+      "request_id": "dpp2-c-b6"
+     },
+     "first_completion_after_burst_s": 0.24824999999999164
+    },
+    "completion_reporting_control": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+     ],
+     "probe_placement": 1,
+     "probe_selection": {
+      "time": 62.316,
+      "snapshot": [
+       [
+        3,
+        0
+       ],
+       [
+        2,
+        0
+       ]
+      ],
+      "engine": 1,
+      "request_id": "dpp2-c-b6"
+     },
+     "first_completion_after_burst_s": 0.24824999999999164
+    },
+    "round_robin": {
+     "burst_placements": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": null,
+     "first_completion_after_burst_s": null
+    }
+   }
+  },
+  "d": {
+   "probe_request_id": "dpp2-d-b6",
+   "runs": {
+    "vllm_load_balancing": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": {
+      "time": 82.421,
+      "snapshot": [
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "engine": 0,
+      "request_id": "dpp2-d-b6"
+     },
+     "first_completion_after_burst_s": 0.2540000000000475
+    },
+    "completion_reporting_control": {
+     "burst_placements": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+     ],
+     "probe_placement": 1,
+     "probe_selection": {
+      "time": 82.421,
+      "snapshot": [
+       [
+        3,
+        0
+       ],
+       [
+        2,
+        0
+       ]
+      ],
+      "engine": 1,
+      "request_id": "dpp2-d-b6"
+     },
+     "first_completion_after_burst_s": 0.2540000000000475
+    },
+    "round_robin": {
+     "burst_placements": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+     ],
+     "probe_placement": 0,
+     "probe_selection": null,
+     "first_completion_after_burst_s": null
+    }
+   }
+  }
+ }
+}

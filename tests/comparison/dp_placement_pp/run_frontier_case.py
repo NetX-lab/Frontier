@@ -198,29 +198,34 @@ def run_one(args: argparse.Namespace) -> None:
 
 
 def summarize(output_dir: Path, request_ids: dict) -> dict:
-    burst = [row for row in request_ids["rows"] if row["segment"] == "burst"]
-    probe_id = burst[-1]["request_id"]
-    burst_start = burst[0]["arrived_at"]
-    summary = {"probe_request_id": probe_id, "runs": {}}
-    for run in RUNS:
-        evidence = json.loads((output_dir / run / "evidence.json").read_text())
-        placement = evidence["placement_by_request_id"]
-        selections = {selection["request_id"]: selection for selection in evidence["selections"]}
-        burst_ends = [
-            record["time"] for record in evidence["records"]
-            if record["kind"] == "end" and record["time"] >= burst_start
-        ]
-        summary["runs"][run] = {
-            "completed_requests": evidence["completed_requests"],
-            "num_requests": evidence["num_requests"],
-            "tokens_conserved": evidence["tokens_conserved"],
-            "burst_placements": [placement[row["request_id"]] for row in burst],
-            "probe_placement": placement[probe_id],
-            "probe_selection": selections.get(probe_id),
-            "first_completion_after_burst_s": (
-                min(burst_ends) - burst_start if burst_ends else None
-            ),
-        }
+    bursts: dict[str, list[dict]] = {}
+    for row in request_ids["rows"]:
+        if row["segment"] == "burst":
+            bursts.setdefault(row["burst"], []).append(row)
+    evidence = {run: json.loads((output_dir / run / "evidence.json").read_text()) for run in RUNS}
+    summary = {"runs": {
+        run: {key: evidence[run][key] for key in ("completed_requests", "num_requests", "tokens_conserved")}
+        for run in RUNS
+    }, "bursts": {}}
+    for name, burst in bursts.items():
+        probe_id = burst[-1]["request_id"]
+        burst_start = burst[0]["arrived_at"]
+        summary["bursts"][name] = {"probe_request_id": probe_id, "runs": {}}
+        for run in RUNS:
+            placement = evidence[run]["placement_by_request_id"]
+            selections = {selection["request_id"]: selection for selection in evidence[run]["selections"]}
+            burst_ends = [
+                record["time"] for record in evidence[run]["records"]
+                if record["kind"] == "end" and record["time"] >= burst_start
+            ]
+            summary["bursts"][name]["runs"][run] = {
+                "burst_placements": [placement[row["request_id"]] for row in burst],
+                "probe_placement": placement[probe_id],
+                "probe_selection": selections.get(probe_id),
+                "first_completion_after_burst_s": (
+                    min(burst_ends) - burst_start if burst_ends else None
+                ),
+            }
     return summary
 
 

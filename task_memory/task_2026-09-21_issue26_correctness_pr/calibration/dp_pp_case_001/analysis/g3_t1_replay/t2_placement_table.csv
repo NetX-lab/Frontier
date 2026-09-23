@@ -1,0 +1,7 @@
+burst,request_id,trace_position,num_prefill_tokens,native_route_seq,native_engine,native_snapshot,native_counts,frontier_vllm_load_balancing,frontier_completion_reporting_control,frontier_round_robin,status
+,dpp1g3-b1,1,32,13,1,8,"[[2, 0], [1, 0]]",0,0,1,SCENARIO_NOT_REACHED
+,dpp1g3-b2,2,32768,14,0,8,"[[2, 0], [2, 0]]",1,1,0,SCENARIO_NOT_REACHED
+,dpp1g3-b3,3,32,12,0,8,"[[1, 0], [1, 0]]",0,0,1,SCENARIO_NOT_REACHED
+,dpp1g3-b4,4,32,11,1,8,"[[1, 0], [0, 0]]",1,1,0,SCENARIO_NOT_REACHED
+,dpp1g3-b5,5,32,10,0,8,"[[0, 0], [0, 0]]",0,0,1,SCENARIO_NOT_REACHED
+,dpp1g3-b6,6,32,16,0,9,"[[0, 1], [0, 1]]",1,1,0,SCENARIO_NOT_REACHED

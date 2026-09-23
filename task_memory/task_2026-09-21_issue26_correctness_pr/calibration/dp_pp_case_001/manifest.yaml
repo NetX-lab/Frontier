@@ -134,25 +134,43 @@ model:
 workload:
   source: single Frontier trace CSV (arrived_at, num_prefill_tokens, num_decode_tokens)
   producer: tests/comparison/dp_placement_pp/make_trace.py
-  trace: inputs/trace/   # built from inputs/workload.json; used by G4 and G5
-  trace_sha256: 84dac546f6594d339da23313a40c53e21cecd821cf84227e28dc0b51e478d6a7
-  request_id_namespace: dpp1
+  trace: inputs/trace_g4/   # built from inputs/workload_g4.json; used by G4 and G5
+  trace_sha256: 77f366ee8ef9c55cff790e77bf0979806fe231df8eb37934c3ee8f196695d6fa
+  workload_sha256: 668f36bd4e03516bc97ad5e4841e962766634afd66dbbda0b771b862519a1ba8
+  engine_config: inputs/engine_g4.json
+  engine_config_sha256: 20fd965c1b7e4f09a3bc48f55069d216804e57a6d2043f1885ef9d2900d61d42
+  request_id_namespace: dpp2
   request_id_encoding: >-
     X-Request-Id header <request_id>; vLLM completions name the engine request
     cmpl-<request_id>-0 (serving_engine.py:971-978, serving_completion.py:115-116,194);
-    Frontier numbers trace rows from 0, mapped in inputs/trace/request_ids.json
-  formal_request_ids: [dpp1-b1, dpp1-b2, dpp1-b3, dpp1-b4, dpp1-b5, dpp1-b6,
-    dpp1-s00, dpp1-s01, dpp1-s02, dpp1-s03, dpp1-s04, dpp1-s05, dpp1-s06,
-    dpp1-s07, dpp1-s08, dpp1-s09, dpp1-s10, dpp1-s11, dpp1-s12, dpp1-s13,
-    dpp1-s14, dpp1-s15, dpp1-s16, dpp1-s17, dpp1-s18, dpp1-s19, dpp1-s20,
-    dpp1-s21, dpp1-s22, dpp1-s23]
-  warmup_request_ids: [dpp1-w0, dpp1-w1, dpp1-w2]
+    Frontier numbers trace rows from 0, mapped in inputs/trace_g4/request_ids.json
+  formal_request_ids: [dpp2-a-b1, dpp2-a-b2, dpp2-a-b3, dpp2-a-b4, dpp2-a-b5,
+    dpp2-a-b6, dpp2-b-b1, dpp2-b-b2, dpp2-b-b3, dpp2-b-b4, dpp2-b-b5, dpp2-b-b6,
+    dpp2-c-b1, dpp2-c-b2, dpp2-c-b3, dpp2-c-b4, dpp2-c-b5, dpp2-c-b6, dpp2-d-b1,
+    dpp2-d-b2, dpp2-d-b3, dpp2-d-b4, dpp2-d-b5, dpp2-d-b6, dpp2-s00, dpp2-s01,
+    dpp2-s02, dpp2-s03, dpp2-s04, dpp2-s05, dpp2-s06, dpp2-s07, dpp2-s08,
+    dpp2-s09, dpp2-s10, dpp2-s11, dpp2-s12, dpp2-s13, dpp2-s14, dpp2-s15,
+    dpp2-s16, dpp2-s17, dpp2-s18, dpp2-s19, dpp2-s20, dpp2-s21, dpp2-s22,
+    dpp2-s23]
+  warmup_request_ids: [dpp2-w0, dpp2-w1, dpp2-w2]
   warmups: 3
-  probe_request_id: dpp1-b6
+  probe_request_ids: [dpp2-a-b6, dpp2-b-b6, dpp2-c-b6, dpp2-d-b6]
+  bursts: >-
+    Four bursts, each 20 s after the previous segment: short, long (40896
+    tokens), short, short, short, then a probe. Bursts a, b and c dispatch
+    0.25 ms apart with probe offsets of 85, 105 and 126 ms; burst d dispatches
+    6 ms apart (plan section 18.19 rule 2) with a 105 ms probe offset. The
+    offsets bracket the two readings of G3's common 42.7 ms dispatch-to-route
+    delay (plan section 18.20). Each burst is qualified on its own in G5.
   retune_rule: >-
     The G4 chunk budget, long-prompt length, burst stagger and probe offset are
     set from the G3 measurements as a new workload/engine input with a new
     namespace; the balancer's constants are never changed (plan section 18.6).
+  g2_precheck_trace:   # G2 Frontier-only pre-check (plan section 18.5 G2)
+    trace: inputs/trace/   # built from inputs/workload.json
+    trace_sha256: 84dac546f6594d339da23313a40c53e21cecd821cf84227e28dc0b51e478d6a7
+    request_id_namespace: dpp1
+    probe_request_id: dpp1-b6
   smoke_trace:   # G3 only (plan section 18.5 S0)
     trace: inputs/trace_g3/   # built from inputs/workload_g3.json
     trace_sha256: d695330f8923939e5cbfecb65dd9dcd95a71fc53ac54048193e76720a8bb6d63
@@ -171,7 +189,7 @@ workload:
 
 modes:
   groundtruth_clean:
-    status: NOT_RUN
+    status: G3_COMPLETE   # G4 pending
     producer: tests/comparison/dp_placement_pp/run_vllm_worker.sh (serve and replay by vllm_replay.py)
     predicate: >-
       At least three warmups; E2E request metrics on
@@ -186,10 +204,22 @@ modes:
       /mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/<RUN_TAG>/
     fresh_file: the worker exits 2 when either output directory already exists
     run_manifest: runs/groundtruth_clean/<RUN_TAG>/run_manifest.json, written before launch
-    runs: []
+    runs:
+      - run_tag: dpp-g3-20260923a
+        package: G3 (S0 smoke, DP=2 PP=1, 2xH800)
+        rjob_name: exp-0923-221233-009652
+        engine_config: inputs/engine_g3.json
+        trace: inputs/trace_g3/
+        run_check: analysis/run_check_status.groundtruth_clean.json PASS
+        receipt: runs/groundtruth_clean/dpp-g3-20260923a/launcher_receipt.json (written by hand from submit.log; see receipt_origin)
+        result: >-
+          worker status 0, 38/38 HTTP 200, 2,255,760 KV tokens (140,985 blocks)
+          per engine; extraction PASS (565 iterations, 69 reports, 50
+          publications, 38 routes, 0 out-of-order receipts)
+        status: COMPLETE
   simulator:
     status: NOT_RUN
-    producer: tests/comparison/dp_placement_pp/run_frontier_case.py (one process per run: vllm_load_balancing, completion_reporting_control, round_robin)
+    producer: "tests/comparison/dp_placement_pp/run_frontier_case.py (one process per run: vllm_load_balancing, completion_reporting_control, round_robin)"
     predicate: clean-style E2E metrics (store_request_metrics on); dummy timing per D-e
     artifact_path: /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/<RUN_TAG>/, summary retained under runs/ here
   simulator_control_completion_reporting:

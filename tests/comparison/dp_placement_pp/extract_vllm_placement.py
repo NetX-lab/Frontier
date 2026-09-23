@@ -23,7 +23,8 @@ it routed the probe.
 
 Outputs in ``--output-dir``: ``placement.csv`` (one row per request),
 ``engine_iterations.csv``, ``snapshots.csv``, ``chain.json`` (the same rows
-with list-valued fields intact, for the comparison), and
+plus the coordinator receipts, with list-valued fields intact, for
+`compare_placement.py`), and
 ``extraction_status.json`` with every completeness check.
 """
 
@@ -235,7 +236,12 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
         "problems": problems,
         "status": "PASS" if not problems and len(placement) == len(request_ids["rows"]) else "FAIL",
     }
-    chain = {"placement": placement, "engine_iterations": iterations, "snapshots": snapshots}
+    chain = {
+        "placement": placement,
+        "engine_iterations": iterations,
+        "coordinator_receipts": receipts,
+        "snapshots": snapshots,
+    }
     return chain, status
 
 

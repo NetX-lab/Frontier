@@ -4,21 +4,28 @@
   "run_generation": 1,
   "manifest_path": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/manifest.yaml",
   "table": "analysis/semantic_alignment_table.csv",
-  "scope": "DP placement comparison (T1, T2) before the ground-truth runs G3 and G4; no E2E numeric gate in this case (plan section 18.5 G5, decision D-e)",
-  "written_at_utc": "2026-09-23T14:40:00Z",
-  "row_counts": {"MATCH": 36, "MISMATCH": 2, "UNSET": 3, "UNSUPPORTED": 0},
+  "scope": "DP placement comparison (T1, T2) for the ground-truth runs G3 (done) and G4; no E2E numeric gate in this case (plan section 18.5 G5, decision D-e)",
+  "written_at_utc": "2026-09-23T14:49:54Z",
+  "row_counts": {
+    "MATCH": 36,
+    "MISMATCH": 4,
+    "UNSET": 3,
+    "UNSUPPORTED": 0
+  },
   "mismatch_rows": {
     "S30": "IPC latency not modeled; declared simulator abstraction, handled by T2 window margins and G5 first-cause labels",
-    "S31": "dummy execution time; approved treatment D-e, value re-derived from the G4 first-chunk duration"
+    "S31": "dummy execution time; approved treatment D-e, value re-derived from the G4 first-completion time",
+    "S42": "DP wave start and idle-engine dummy forwards not modeled; affects report keys only in the natural history, the T1 replay feeds native keys",
+    "S43": "vLLM blocks after an empty-schedule iteration under the batch queue, Frontier admits into any free pipeline slot; affects natural-history admission time at PP>1, not the T1 replay"
   },
   "unset_rows": {
     "S17": "per-engine KV block count, taken from the G4 startup log before G5",
-    "S33": "route order of the simultaneous burst, measured in G3 and qualified in G4",
+    "S33": "route order of each G4 burst; G3 showed dispatch order decides it, G4 dispatches in trace order and G5 qualifies every burst",
     "S39": "MoE routing records absent on the vLLM side; affects only the E2E numeric gate, which this case does not run"
   },
   "analysis_state": "COMPLETE",
   "status": "PASS",
-  "status_basis": "Every row that decides placement semantics is MATCH. The two MISMATCH rows are declared abstractions with an approved treatment. The three UNSET rows are resolved by the ground-truth runs themselves and are re-checked in the G5 simulator-run manifest; none of them is a missing setting that would need a user decision before running.",
+  "status_basis": "Every row that decides the T1 replay (coordinator and frontend semantics, parallel domains, scheduler budgets) is MATCH. The four MISMATCH rows are declared simulator abstractions: S30 and S31 have the approved treatment, S42 and S43 affect only natural-history rows, which G5 labels by first cause instead of counting as agreement. The three UNSET rows are resolved by the ground-truth runs themselves and are re-checked in the G5 simulator-run manifest; none of them is a missing setting that would need a user decision before running.",
   "correction_state": "not_applicable",
-  "next_action": "groundtruth-run-check for G3 (clean mode), then G3 submission; after G3 fix S14/S33 values for G4; after G4 fill S17 and S31 before G5"
+  "next_action": "groundtruth-run-check for G4 (clean mode), then G4 submission; after G4 fill S17, S31 and S33 before G5"
 }

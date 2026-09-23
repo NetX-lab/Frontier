@@ -11,9 +11,12 @@ Segments, in time order:
 ``warmup``
     Evenly spaced short requests. Excluded from every comparison.
 ``burst``
-    Requests that arrive together after an idle gap, in the order the
-    workload lists their prompt kinds, followed by one probe at a fixed offset.
-    The probe's placement is the T2 witness.
+    Requests that arrive after an idle gap, in the order the workload lists
+    their prompt kinds and `spacing_s` apart (together when it is absent),
+    followed by one probe at a fixed offset from the first of them. The
+    probe's placement is the T2 witness. A workload lists either one `burst`
+    or several named `bursts`, each after its own idle gap; a named burst's
+    request ids carry its name.
 ``steady``
     Staggered arrivals whose prompt and decode lengths cycle through the listed
     values. They supply the causal-join rows of T1.
@@ -57,14 +60,21 @@ def build_rows(workload: dict) -> list[dict]:
             warmups["num_prefill_tokens"], warmups["num_decode_tokens"])
     last_arrival = rows[-1]["arrived_at"] if rows else 0.0
 
-    burst = workload["burst"]
-    burst_start = last_arrival + workload["idle_gap_s"]
-    for index, kind in enumerate(burst["order"], start=1):
-        add("burst", "formal", f"b{index}", burst_start,
-            burst[f"{kind}_prefill_tokens"], burst["num_decode_tokens"])
-    add("burst", "formal", f"b{len(burst['order']) + 1}",
-        burst_start + burst["probe_offset_s"],
-        burst["probe_prefill_tokens"], burst["probe_decode_tokens"])
+    bursts = workload["bursts"] if "bursts" in workload else [{"name": "", **workload["burst"]}]
+    for burst in bursts:
+        burst_start = last_arrival + workload["idle_gap_s"]
+        prefix = f"{burst['name']}-" if burst["name"] else ""
+        first_row = len(rows)
+        for index, kind in enumerate(burst["order"], start=1):
+            add("burst", "formal", f"{prefix}b{index}",
+                burst_start + burst.get("spacing_s", 0.0) * (index - 1),
+                burst[f"{kind}_prefill_tokens"], burst["num_decode_tokens"])
+        add("burst", "formal", f"{prefix}b{len(burst['order']) + 1}",
+            burst_start + burst["probe_offset_s"],
+            burst["probe_prefill_tokens"], burst["probe_decode_tokens"])
+        for row in rows[first_row:]:
+            row["burst"] = burst["name"]
+        last_arrival = rows[-1]["arrived_at"]
 
     steady = workload["steady"]
     steady_start = burst_start + steady["gap_after_burst_s"]

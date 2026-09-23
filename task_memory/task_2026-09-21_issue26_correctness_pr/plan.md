@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.20 added: G3 results (T1 replay 38/38) and the G4 inputs as amended (four bursts, 20 s gaps, per-burst T2 qualification), written before G4. |
 | 2026-09-23 | §18.19 added: G2 as built (amends the §18.5 G2 row), the G3 sizing segment and the G4 retune rule, written before G3. |
 | 2026-09-23 | §18.18 results: B1–B8 pass. |
 | 2026-09-23 | §18.18 added: the W9-05 fix (user direction "推进W9-05"), its root cause, regression test and acceptance criteria B1–B8, written before measuring. |
@@ -1388,3 +1389,97 @@ new request-id namespace, and the balancer constants never change.
 4. Frontier `dummy_execution_time_ms`. After G4, set it so Frontier's PP2
    first-completion time matches the measured one (D-e). `num_blocks` becomes
    the per-engine value from the G4 startup log (semantic row S17).
+
+### 18.20 G3 results, and the G4 inputs as amended (2026-09-23, before G4)
+
+G3 ran as `exp-0923-221233-009652` (2×H800, codesign, 14:12:33Z to
+14:16:29Z). `WORKER_STATUS=0`, 38/38 HTTP 200, and extraction `PASS`: 565
+engine iterations, 69 published reports paired one to one with 69 receipts,
+50 publications, 49 frontend applications, no out-of-order receipt. vLLM
+reported 140985 blocks per engine at PP1. G3 acceptance holds. The T1 replay
+of the native history through `VllmDPLoadBalancer`
+(`compare_placement.py`) matches 38 of 38 routes, 30 of them formal, in both
+engine and counts. This is the first native evidence that the modeled
+coordinator latch, publication timing and frontend selection reproduce vLLM
+at PP1.
+
+Measurements used by the §18.19 rules
+(`runs/groundtruth_clean/dpp-g3-20260923a/extraction/chain.json`):
+
+| Quantity | Value |
+| --- | --- |
+| Route to admitting-iteration record, isolated prompts | 1024: 22.1 ms, 4096: 20.5, 8192: 38.6, 16384: 81.0, 32768: 558.1 |
+| Burst iteration with the 32768-token chunk | 207 ms, from the previous iteration record on engine 0 |
+| Fit used for `f(n)` | `1.248e-7 n^2 + 2.227e-3 n` ms through z2, z3 and the burst's 32768-token iteration. z4 is left out: it is 2.7 times the same-size burst iteration and its cause was not established. |
+| Dispatch to route | Burst: 42.6 to 42.9 ms for all five, common mode, cause not established. Isolated: 0.9 to 3.7 ms, the 32768-token body the slowest. |
+| Burst route order | b5, b4, b3, b1, b2: the client's dispatch order. All five had one arrival time and the client dispatched them in that order. |
+
+Rule 1: `f(20448)` is about 98 ms, so no `B` with `2B + 64 <= 40960` reaches
+250 ms. `B = 20448`, and T2 may end `SCENARIO_NOT_REACHED` (semantic row S14).
+Rule 2 applies, because the long body did not route in its trace position.
+
+Why rule 2 alone is not enough at PP2. Source reading of 0.10.2 after G3
+(`vllm/v1/engine/core.py:364-424, 1170-1216`, `coordinator.py`) adds three
+facts the rule did not account for:
+
+- An idle engine woken by `START_DP_WAVE` runs a dummy forward before it
+  sees its first request, in EP lockstep with the peer. A stagger long enough
+  for the peer's wave notice to arrive first puts that dummy ahead of the
+  long chunk, and the peer's short first request then applies an output
+  early.
+- At PP>1, after an iteration that schedules nothing, the engine blocks on
+  its oldest in-flight batch even when the batch queue has room. Arrivals
+  wait in the input queue meanwhile. Frontier admits whenever a stage slot is
+  free (`base_replica_scheduler.py:906`). This is recorded as semantic row
+  S43, a candidate difference to confirm from the G4 records.
+- The coordinator publishes the collection snapshot about 50 ms after the
+  last event, and any receipt or `FIRST_REQ` resets that wait.
+
+The T2 premise at PP2 therefore needs four things. R1: each engine's first
+burst request is delivered before engine 1 handles the wave notice; in
+practice the first two routes land within about 0.5 ms. R2: the long chunk is
+in the first lockstepped forward, so no output is applied until about
+`f(B)`. R3: the probe routes after the collection publication, about 52 ms
+after the burst routes, and before the first completion, about 110 to 120 ms.
+R4: the reference score of engine 0 is at most engine 1's, so a tie goes to
+engine 0.
+
+G4 inputs as amended (`inputs/workload_g4.json`, namespace `dpp2`,
+`inputs/trace_g4/`). Rule 2 as written is kept as burst d, and three tight
+bursts are added instead of one:
+
+| Burst | Spacing | Probe offset | Why |
+| --- | --- | --- | --- |
+| a | 0.25 ms | 85 ms | R1 by timing; distinct arrivals fix the dispatch order |
+| b | 0.25 ms | 105 ms | as a |
+| c | 0.25 ms | 126 ms | as a |
+| d | 6 ms | 105 ms | Rule 2: 6 ms exceeds the 3.7 ms isolated long-body route latency; the burst spans 24 ms, inside the 50 ms wait |
+
+Every burst is `[short, long, short, short, short]` plus the probe, with
+short 32 tokens, long `2B = 40896`, 64 decode tokens and a 32/64 probe. The
+three probe offsets bracket both readings of the 42.7 ms common delay. If it
+recurs for the burst but not for the isolated probe, the probe routes about
+44, 64 and 85 ms after the burst. If it does not recur, it routes at 85, 105
+and 126 ms. Either way at least one tight burst falls inside the R3 window.
+Idle gaps are 20 s, because Frontier's dummy-timed decodes (64 at about
+248 ms) outlast the 8 s and 15 s gaps of the G2 trace. Engine file
+`inputs/engine_g4.json`: PP2, DP2, EP, `max_num_batched_tokens=20448`. The
+balancer constants are unchanged.
+
+T2 is qualified per burst (`compare_placement.py qualify_burst`). The burst
+must route in trace order, from one snapshot. Every engine's count in the
+probe's snapshot must come from a burst iteration that scheduled without
+applying an output. No output may be applied between the burst's first
+route and the probe's route. A burst failing any check is
+`SCENARIO_NOT_REACHED`, with the checks named. The Frontier pre-check of this
+trace, at the provisional 2 ms dummy time, discriminates in all four bursts:
+the fixed policy routes each probe to lane 0 from `[[0,1],[0,1]]`, and the
+completion-reporting control routes it to lane 1 from `[[3,0],[2,0]]`
+(`runs/frontier_precheck_g4_2ms/`).
+
+G4 acceptance is the §18.5 row plus extraction `PASS` over 51 routes. After
+G4, and before G5: S17 (`num_blocks` from the startup log), S31 (dummy time
+matched to the measured PP2 first completion, rule 4) and S33 (route order
+per burst). One GPU job remains in the budget after G4. It is used only if
+all four bursts end `SCENARIO_NOT_REACHED` for a reason a retune can
+address, and that retune is written here before it runs.

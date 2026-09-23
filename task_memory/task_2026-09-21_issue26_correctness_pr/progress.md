@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | G3 complete (`exp-0923-221233-009652`, extraction PASS, T1 replay 38/38 MATCH); G4 inputs amended per plan §18.20; launcher wrapper and poller fixed. |
 | 2026-09-23 | G2 complete: harness under `tests/comparison/dp_placement_pp/`, case inputs, semantic table `PASS`, manifest ids filled, Frontier pre-check discriminates; plan §18.19. |
 | 2026-09-23 | User direction "授权上述1-2，推进W9-05": W9-04 worktrees removed; W9-05 diagnosed and fixed (`75c1140`), B1–B8 pass; G1 write-through amendment `63ac6c6b9`; G2 started. |
 | 2026-09-23 | User decisions: W9-04 fixed in this PR, W9-05 deferred, P5 worktrees removed. W9-04 fix `2ffb062` with regression case; A1–A7 pass. |
@@ -39,9 +40,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 authorized (≤3 jobs × ≤1 h, codesign); G2 complete; G3 run-check next. |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 authorized (≤3 jobs × ≤1 h, codesign); G2 and G3 complete (T1 replay 38/38); G4 run-check and submission next. |
 | Publication | PUSHED_VERIFIED 2026-09-23: remote head `8dc3766` confirmed equal to local (W9-05 fix `75c1140`, records `8dc3766`); PR 35 body PATCHed 2026-09-23T13:25Z with the W9-05 row, section, Limits, commit and Status, read back identical apart from a trailing newline; still draft; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_75c1140.md`. Earlier: remote head `a9ff5d5` confirmed equal to local (W9-04 fix `2ffb062`, records `a9ff5d5`); PR 35 body PATCHed 2026-09-23T12:33Z with the W9-04 row, section and commit, read back identical; still draft. Earlier the same day: Step 9 commits `d1a2a06`, `2ffe78d`, `bacdbb4`, `c1a570d`, `104b6ff`. Draft PR 35 body PATCHed 2026-09-23T12:10Z through `gh api` (Scope, Base, Progress, new W9 section, pipeline-coverage note, review material, commits, Status), read back identical apart from a trailing newline; still draft, base `refactor/oversized-module-split`; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_c1a570d.md`. Earlier: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
-| Next action | G3 run-check, run manifest and submission (2×H800, codesign). Removal of `.worktrees/w9-05-{before,after}` needs approval. |
+| Next action | G4 run-check, run manifest and submission (4×H800, codesign; 2 of 3 jobs remain). Removal of `.worktrees/w9-05-{before,after}` needs approval. |
 
 ## Step status
 
@@ -57,7 +58,7 @@
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
 | 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
 | 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
-| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 authorized, G2 in progress | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `8dc3766`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
+| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 authorized, G2 and G3 complete, G4 next | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `8dc3766`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
 
 ## Chronological updates
 
@@ -394,3 +395,41 @@ Found while writing the extractor: in the idle path of the busy loop no step
 record is written, and `(engine, wave, step)` stays unique in the PR 36 records.
 The extractor still pairs receipts by order within each engine, so a repeated
 key could not mis-join.
+
+### G3 native PP1 smoke (2026-09-23, completed)
+
+| Check | Command / evidence | Result |
+| --- | --- | --- |
+| Run-check | `calibration/dp_pp_case_001/analysis/run_check_status.groundtruth_clean.json`, run `dpp-g3-20260923a` | `PASS` before launch; command receipt added after the run (below) |
+| Submission | `run_dp_pp_job.sh` (scratchpad `dp_pp/`) with `RUN_TAG=dpp-g3-20260923a ENGINE_INPUT=inputs/engine_g3.json TRACE_INPUT=inputs/trace_g3 NUM_GPUS=2 NUM_CPUS=16 MEM_GB=96`; StepMind `RJobBackend`, codesign, H800 | Job `exp-0923-221233-009652`, 14:12:33Z to 14:16:29Z, `FINAL_STATUS succeeded` |
+| Worker | `runs/groundtruth_clean/dpp-g3-20260923a/` (`worker_env.json`, `vllm_import.txt`, `overlay_report.json`, `COMPLETE`) | 2 H800 visible to torch; `vllm` and `frontier_trace` import from the overlay; `WORKER_STATUS=0`; 38/38 HTTP 200; 140985 blocks per engine |
+| Extraction | `extract_vllm_placement.py` → `runs/groundtruth_clean/dpp-g3-20260923a/extraction/` | `PASS`: 565 iterations, 69 reports and 69 receipts paired, 50 publications, 49 applications, 38 placements, 0 out-of-order |
+| T1 replay | `compare_placement.py` → `analysis/g3_t1_replay/` (receipt there) | 38/38 routes `MATCH` in engine and counts, 30/30 formal |
+| Sizing and route order | `extraction/chain.json` | Plan §18.20: `f(20448)` about 98 ms, so `B = 20448`; the burst routed in the client's dispatch order b5, b4, b3, b1, b2, all 42.6–42.9 ms after dispatch |
+
+Two launcher problems, both fixed in the scratchpad scripts before G4:
+
+- The wrapper exited early. `w6_env.sh` turns on errexit and pipefail, and the
+  first grep for the job name found nothing yet. The launcher kept running and
+  the job was unaffected, but no receipt was written. The G3 receipt was written
+  by hand from `submit.log` and marks this in `receipt_origin`. The wrapper now
+  resets both options after sourcing.
+- The replica-log poller never exited, because one log query hung. Each query
+  is now bounded by a 60 s alarm.
+
+### G4 inputs (2026-09-23, before submission)
+
+Plan §18.20 records the amended design. The G4 files are `inputs/workload_g4.json`,
+`inputs/trace_g4/` (51 rows, namespace `dpp2`, 48 formal ids) and
+`inputs/engine_g4.json` (`max_num_batched_tokens` 20448). `make_trace.py`
+accepts named `bursts` with `spacing_s`. The G2 and G3 traces regenerate
+byte-identical from their workloads; their request-id rows gain only
+`burst: ""`. `compare_placement.py` is new. It runs the T1 replay, qualifies
+T2 per burst, and writes the gap table. `run_frontier_case.py` summarizes each
+burst. The extractor now keeps the coordinator receipts in `chain.json`.
+
+| Check | Command / evidence | Result |
+| --- | --- | --- |
+| Frontier pre-check, dummy 2 ms | `run_frontier_case.py` on `engine_g4.json`, `frontier_g4.json`, `trace_g4` (receipt `runs/frontier_precheck_g4_2ms/command_receipt.json`) | 51/51 complete with tokens conserved in all three runs. In every burst a–d, the fixed policy sends the probe to lane 0 from `[[0,1],[0,1]]`, and the control sends it to lane 1 from `[[3,0],[2,0]]`. |
+| Semantic table | `analysis/semantic_alignment_table.csv` | 43 rows: 36 MATCH, 4 MISMATCH (S30, S31, S42, S43), 3 UNSET (S17, S33, S39); status `PASS` |
+| Manifest | `manifest.yaml` | Parses; the workload points at `trace_g4`, and the G3 run is recorded. A pre-existing unquoted `producer` value that broke YAML parsing is now quoted. |

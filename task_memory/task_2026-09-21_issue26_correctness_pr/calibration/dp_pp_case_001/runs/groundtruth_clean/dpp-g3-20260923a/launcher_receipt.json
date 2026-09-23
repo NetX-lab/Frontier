@@ -1,0 +1,35 @@
+{
+ "receipt_origin": "Written by hand on 2026-09-23 from submit.log and the file times below. The wrapper run_dp_pp_job.sh exited early (errexit and pipefail inherited from w6_env.sh made its job-name grep fatal) while the launcher process kept running, so the wrapper never wrote this receipt. The wrapper now resets those options after sourcing the environment.",
+ "command": "RUN_TAG=dpp-g3-20260923a ENGINE_INPUT=inputs/engine_g3.json TRACE_INPUT=inputs/trace_g3 NUM_GPUS=2 NUM_CPUS=16 MEM_GB=96 bash /data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/run_dp_pp_job.sh",
+ "working_directory": "/data/ycfeng/Frontier (spawn_tasks source and code_mount_point)",
+ "environment_declarations": [
+  "STEPMIND_BACKEND=rjob",
+  "BRAINPP_ACCESS_KEY/BRAINPP_SECRET_KEY from the personal credential files (values not recorded)",
+  "company http proxy from deploy.i.shaipower.com/httpproxy",
+  "PYTHONPATH=/data/ycfeng/steptron",
+  "STEPMIND_PYTHON=/data/ycfeng/tmp/stepmind-env/bin/python"
+ ],
+ "launcher_scripts": [
+  "/data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/run_dp_pp_job.sh",
+  "/data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/submit_dp_pp_run.py",
+  "/data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/dp_pp/poll_replica_logs.py"
+ ],
+ "rjob_name": "exp-0923-221233-009652",
+ "start_utc": "2026-09-23T14:12:33Z",
+ "end_utc": "2026-09-23T14:16:29Z",
+ "time_sources": {
+  "start_utc": "submit.log 'Job Create' 2026-09-23 22:12:33.221 +0800",
+  "end_utc": "submit.log 'Job Stop' 2026-09-23 22:16:29.514 +0800, after 'Job succeeded' 22:16:28.797",
+  "worker_complete": "runs/groundtruth_clean/dpp-g3-20260923a/COMPLETE mtime 2026-09-23 22:16:25 +0800"
+ },
+ "launcher_exit_code": null,
+ "launcher_final_status": "FINAL_STATUS succeeded (submit.log)",
+ "worker_status": "WORKER_STATUS=0 (launcher/worker.log, COMPLETE status=0)",
+ "exec_capture": "UNKNOWN",
+ "artifacts": {
+  "evidence": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g3-20260923a/",
+  "archive": "/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/dpp-g3-20260923a/",
+  "submit_log": "launcher/submit.log (worker command line removed)",
+  "worker_log": "launcher/worker.log (platform replica-log tail)"
+ }
+}
