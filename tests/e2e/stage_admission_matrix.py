@@ -401,7 +401,9 @@ def _read_cluster_state(cluster: str, cluster_scheduler, lanes: dict,
                 for step, by_layer in by_step.items():
                     for layer, by_sync in by_layer.items():
                         for sync_stage, room in by_sync.items():
-                            if not room["batches"]:
+                            # A dispatched room keeps its key with its fields
+                            # popped (enter_layer_sync).
+                            if not room.get("batches"):
                                 continue
                             rooms.append({
                                 "cluster": cluster, "room": room_name.strip("_"),
