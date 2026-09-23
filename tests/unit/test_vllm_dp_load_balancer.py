@@ -922,9 +922,11 @@ def _bare_policy(scheduler_type, requests):
     from types import SimpleNamespace
 
     scheduler = scheduler_type.__new__(scheduler_type)
-    # The rotation ordinal W2 made persistent, and the sticky policies' session
-    # table and counter, are normally set up by __init__.
+    # The rotation ordinal W2 made persistent, the random policy's lane cursor
+    # per Replica, and the sticky policies' session table and counter, are
+    # normally set up by __init__.
     scheduler._request_counter = 0
+    scheduler._next_dp_lane = [0, 0]
     scheduler._session_counter = 0
     scheduler._session_to_target_map = {}
     scheduler._cluster_type = ClusterType.MONOLITHIC

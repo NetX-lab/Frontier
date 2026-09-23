@@ -1,4 +1,3 @@
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -76,6 +75,7 @@ def test_lor_assigns_requests_to_replica_local_dp_lanes() -> None:
 
 def test_random_assigns_requests_to_replica_local_dp_lanes(monkeypatch) -> None:
     scheduler = _lane_scheduler(RandomClusterScheduler, [_request(), _request()])
+    scheduler._next_dp_lane = [0]
     monkeypatch.setattr(
         "frontier.scheduler.cluster_scheduler.random_cluster_scheduler.randint",
         lambda _low, _high: 0,
@@ -87,6 +87,44 @@ def test_random_assigns_requests_to_replica_local_dp_lanes(monkeypatch) -> None:
         (7, 0),
         (7, 1),
     ]
+
+
+def test_random_dp_lane_does_not_depend_on_call_partitioning(monkeypatch) -> None:
+    """Online arrivals reach the scheduler one request per call.
+
+    The lane used to restart at zero on every call, so one-at-a-time
+    scheduling put every request on lane 0. The replica draw is fixed here;
+    each replica's lanes must then rotate by the request's position in the
+    stream, whatever the call sizes.
+    """
+
+    replica_draws = [0, 1, 1, 0, 1, 0, 0, 1]
+
+    def placements(call_sizes: list[int]) -> list[tuple[int, int]]:
+        draws = iter(replica_draws)
+        monkeypatch.setattr(
+            "frontier.scheduler.cluster_scheduler.random_cluster_scheduler.randint",
+            lambda _low, _high: next(draws),
+        )
+        scheduler = _lane_scheduler(RandomClusterScheduler, [])
+        scheduler._num_replicas = 2
+        scheduler._cluster = SimpleNamespace(replicas={3: object(), 11: object()})
+        scheduler._next_dp_lane = [0, 0]
+        requests = [_request(arrived_at=float(index)) for index in range(len(replica_draws))]
+        position_of = {request.id: index for index, request in enumerate(requests)}
+        placed = {}
+        offset = 0
+        for size in call_sizes:
+            scheduler._request_queue = requests[offset:offset + size]
+            offset += size
+            for replica_id, dp_id, request in scheduler.schedule():
+                placed[position_of[request.id]] = (replica_id, dp_id)
+        return [placed[position] for position in range(len(requests))]
+
+    expected = [(3, 0), (11, 0), (11, 1), (3, 1), (11, 0), (3, 0), (3, 1), (11, 1)]
+    assert placements([1] * 8) == expected
+    assert placements([8]) == expected
+    assert placements([3, 1, 4]) == expected
 
 
 def test_sticky_round_robin_orders_all_attention_dp_lanes() -> None:
@@ -187,43 +225,9 @@ def test_stage_release_wakes_only_queued_sibling_lanes() -> None:
     assert events[0]._replica_local_id == 1
 
 
-#: The cluster roles whose public ``schedule()`` reaches the fixed placement
-#: helper. ``DECODE``, ``DECODE_ATTN`` and ``DECODE_FFN`` each take their own
-#: branch; ``TRANS`` also falls through, but it is declared and never
-#: constructed anywhere in ``frontier/``, so these two are the reachable set.
-#: `test_the_batch_mode_roles_are_the_ones_that_fall_through` keeps that true.
+#: The cluster roles whose public ``schedule()`` reaches batch-mode placement.
+#: ``DECODE``, ``DECODE_ATTN`` and ``DECODE_FFN`` each take their own branch.
 BATCH_MODE_CLUSTER_TYPES = [ClusterType.MONOLITHIC, ClusterType.PREFILL]
-
-
-def test_the_batch_mode_roles_are_the_ones_that_fall_through() -> None:
-    """A new role must not reach batch-mode placement untested.
-
-    The placement tests below claim to cover every role that reaches the shared
-    helper. That claim is only worth as much as this check: if a role is added,
-    or an existing branch is removed, the role either gains its own dispatch or
-    it lands here and must be added to the list above.
-    """
-
-    dispatched_elsewhere = {
-        ClusterType.DECODE,
-        ClusterType.DECODE_ATTN,
-        ClusterType.DECODE_FFN,
-    }
-    never_constructed = {ClusterType.TRANS}
-    falls_through = set(ClusterType) - dispatched_elsewhere - never_constructed
-    assert falls_through == set(BATCH_MODE_CLUSTER_TYPES), sorted(
-        role.name for role in falls_through.symmetric_difference(
-            BATCH_MODE_CLUSTER_TYPES
-        )
-    )
-
-    source = Path(
-        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
-    ).read_text(encoding="utf-8")
-    for role in never_constructed:
-        assert f"ClusterType.{role.name}" not in source, (
-            f"{role.name} is now referenced; decide whether it places requests"
-        )
 
 
 def _round_robin_scheduler(

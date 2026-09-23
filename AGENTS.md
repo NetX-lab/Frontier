@@ -13,6 +13,7 @@
 | 2026-09-06 | Added cleanup-first and split-analysis requirements for critical modules above 2,000 lines. |
 | 2026-09-22 | Completed the cluster-scheduler implementation list and recorded the opt-in vLLM DP placement policy and its supported scope. |
 | 2026-09-23 | Extended the vLLM DP placement policy's supported scope to pipeline parallelism. |
+| 2026-09-24 | Scoped the round-robin placement description to its roles and described the random scheduler's lane rotation. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -613,9 +614,9 @@ The scheduling logic is split across four distinct layers to mirror real-world s
 2.  **Cluster Scheduler** (`ClusterSchedulerRegistry`):
     - **Role**: Manages workload distribution within a specific `ClusterType` (e.g., selecting which Replica gets a request).
     - **Implementations**:
-      - `RoundRobinClusterScheduler`: Distributes requests cyclically over replicas and, inside each replica, over attention-DP lanes. The ordinal persists across scheduling calls, so an identical ordered request stream lands identically however it is divided between calls.
+      - `RoundRobinClusterScheduler`: For the `MONOLITHIC`, `PREFILL` and unified `DECODE` roles, distributes requests cyclically over replicas and, inside each replica, over attention-DP lanes. The ordinal persists across scheduling calls, so an identical ordered request stream lands identically however it is divided between calls. For PD-AF `DECODE_ATTN`, an optional threshold wave is dealt from the first replica, and later requests go to the replica with the fewest pending requests, with ties broken in rotation.
       - `LORClusterScheduler`: Least Outstanding Requests (load balancing).
-      - `RandomClusterScheduler`: Random assignment.
+      - `RandomClusterScheduler`: Random replica assignment; inside each replica, requests rotate over attention-DP lanes across scheduling calls.
       - `StickyRoundRobinClusterScheduler`: Round-robin over targets, pinned per session so a session's later requests return to the same target.
       - `StickyLORClusterScheduler`: Least Outstanding Requests with the same per-session pinning.
       - `VllmLoadBalancingClusterScheduler`: Models vLLM V1's internal DP selection, choosing the lane with the lowest `waiting * 4 + running` score from a load snapshot the frontend observes with a delay. Opt-in and deliberately narrow: one `co-location` replica, the `vllm_v1` replica scheduler, and either a MoE model or `attn_dp=1`, at any pipeline depth. As in vLLM, a lane publishes its load when it admits a batch while its pipeline still has room, and otherwise with its next completion. The constructor rejects everything else. No placement or timing equivalence with a real vLLM deployment is claimed.

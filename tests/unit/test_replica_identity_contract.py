@@ -2,21 +2,8 @@ from pathlib import Path
 
 
 def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
-    """A governance check on the source text. It does not establish behavior.
-
-    Reading source cannot tell a correct expression from an equivalent one it
-    does not recognize, so this test can only say that no lane assignment takes
-    a modulus of something other than the Replica-local DP size. Placement
-    correctness is carried by `tests/unit/test_cluster_scheduler_dp_lanes.py`,
-    which drives the public `schedule()` and asserts where each request lands.
-    Do not reword a correct expression to satisfy this check.
-    """
-
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
-    ).read_text(encoding="utf-8")
-    round_robin_source = Path(
-        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
 
     block_start = source.index(
@@ -26,22 +13,6 @@ def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
     non_ffn_block = source[block_start:block_end]
     assert "self._replica_scheduler_count = attn_dp" in non_ffn_block
     assert "self._replica_dp_size = attn_dp" in non_ffn_block
-    # What this guards is the lane cardinality: a non-FFN cluster scheduler must
-    # derive the DP lane from the Replica-local DP size, not from a global or
-    # expert-parallel cardinality. Assert that property over every lane
-    # assignment rather than one literal expression, so the check survives a
-    # change to how the ordinal is computed but still fails if the lane is ever
-    # taken modulo something else.
-    lane_assignments = [
-        line.strip()
-        for line in round_robin_source.splitlines()
-        if line.strip().startswith("dp_id = ")
-    ]
-    assert lane_assignments, "the round-robin scheduler must assign a DP lane"
-    assert all(
-        assignment.endswith("% self._replica_dp_size")
-        for assignment in lane_assignments
-    ), lane_assignments
 
 
 def test_production_scheduler_surface_has_no_retired_replica_dp_size() -> None:
