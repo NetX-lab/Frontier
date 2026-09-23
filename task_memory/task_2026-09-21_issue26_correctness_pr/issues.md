@@ -124,10 +124,10 @@ Option 2 was taken. The fix lives on its own branch and PR:
 
 | Item | Value |
 | --- | --- |
-| Branch / PR | `fix/stage-admission-ordering`, draft https://github.com/NetX-lab/Frontier/pull/36, head `4bcd616` |
+| Branch / PR | `fix/stage-admission-ordering`, draft https://github.com/NetX-lab/Frontier/pull/36 |
 | Rule commit | `dac4e69`: `StageExecutionContext.try_acquire` refuses a full-stage ticket only when an EP wave is queued ahead of it. EP waves keep the strict FIFO-head rule. |
 | Acceptance rules | `aeeca93` (plan D-9) |
-| Records | `fc34341`, `4bcd616`; copies in `w9_01_stage_admission_ordering/` (`summary.md`, `test_report_2026-09-23_stage_admission_ordering.md`) |
+| Records | `fc34341`, `4bcd616`, `ecff89a`; copies in `w9_01_stage_admission_ordering/` (`summary.md`, `test_report_2026-09-23_stage_admission_ordering.md`) |
 
 Observed on that branch (details in the copied test report):
 
