@@ -105,10 +105,7 @@ def _names_imported_from_frontier_config(repo_root: Path) -> dict[str, set[str]]
 
     wanted: dict[str, set[str]] = {"frontier.config": set(), "frontier.config.config": set()}
     for path in sorted(iter_frontier_sources(repo_root)):
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
-            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module in wanted:
                 wanted[node.module].update(
