@@ -9,8 +9,6 @@ an iteration can publish a changed population without completing anything.
 
 from __future__ import annotations
 
-import pytest
-
 from frontier.scheduler.request_load import RequestLoad
 from tests.comparison.dp_placement_pp.reference_loop import (
     Iteration,
@@ -85,9 +83,9 @@ def test_depth_three_allows_two_admissions_before_the_first_completion():
     assert all(row[4] for row in rows)
 
 
-def test_an_engine_is_stepped_only_while_it_holds_work():
-    with pytest.raises(ValueError, match="holds requests or"):
-        ReferenceEngine(2).step(Iteration())
+def test_an_idle_engine_in_a_running_wave_runs_a_dummy_iteration():
+    rows = run(2, [Iteration(), Iteration()])
+    assert rows == [(0, False, False, (0, 0), False), (1, False, False, (0, 0), False)]
 
 
 def test_peers_at_the_same_iteration_index_publish_under_one_key():
@@ -101,13 +99,15 @@ def test_peers_at_the_same_iteration_index_publish_under_one_key():
     assert deployment.balancer.frontend_counts[1] == RequestLoad(0, 3)
 
 
-def test_an_engine_that_runs_an_extra_iteration_moves_its_key_ahead():
-    """Step counters are per engine, so peer equality is not guaranteed."""
+def test_an_idle_peer_keeps_pace_through_dummy_iterations():
+    """While the wave runs, an idle engine steps with its peers."""
 
     deployment = ReferenceDeployment(num_engines=2, queue_depth=2)
     deployment.step(0.005, 0, Iteration(arrivals=2, batch=ScheduledBatch(admitted=2)))
+    deployment.step(0.005, 1, Iteration())
     deployment.step(0.006, 0, Iteration(batch=ScheduledBatch()))
+    deployment.step(0.006, 1, Iteration())
     peer = deployment.step(0.020, 1, Iteration(arrivals=3, batch=ScheduledBatch(admitted=3)))
 
     assert deployment.engines[0].step_counter == 2
-    assert peer.step == 0
+    assert peer.step == 2

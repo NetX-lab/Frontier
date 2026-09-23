@@ -19,6 +19,9 @@ copy of them. Wave resets are outside Step 9's scope, so the step counter here
 only increases; the coordinator compares keys and never reads their magnitude.
 The counter also advances on an iteration the reference would skip while every
 engine is idle, which shifts later key values but not their order or equality.
+
+Only its own unit tests exercise it; no test compares it with the reports a
+Frontier run emits.
 """
 
 from __future__ import annotations
@@ -51,7 +54,8 @@ class Iteration:
     """The scripted inputs of one engine iteration.
 
     `batch` is what `schedule()` returned, or `None` when the engine had
-    nothing to schedule and only drains a queued output. `oldest_ready` is
+    nothing to schedule: it then drains a queued output or, with an empty
+    queue, runs the wave's dummy iteration. `oldest_ready` is
     whether the oldest queued batch's future had already completed, the
     reference's third condition for returning without applying an output.
     """
@@ -70,16 +74,6 @@ class IterationRecord:
     applied_output: bool
     load: RequestLoad
     published: bool
-
-
-@dataclass(frozen=True)
-class Publication:
-    """One engine's changed counts, as the coordinator receives them."""
-
-    time: float
-    engine: int
-    step: int
-    load: RequestLoad
 
 
 class ReferenceEngine:
@@ -113,10 +107,10 @@ class ReferenceEngine:
         self.waiting += iteration.arrivals
         batch = iteration.batch
         if batch is None and not self._queue:
-            raise ValueError(
-                "the reference steps an engine only while it holds requests or "
-                "a queued batch"
-            )
+            # While the wave runs, an engine with no work executes a dummy
+            # batch, so its step counter keeps pace with its peers
+            # (`run_busy_loop`).
+            return self._record(scheduled=False, applied_output=False)
         if batch is not None:
             if batch.admitted > self.waiting:
                 raise ValueError(
@@ -171,15 +165,11 @@ class ReferenceDeployment:
     def __init__(self, *, num_engines: int, queue_depth: int) -> None:
         self.engines = [ReferenceEngine(queue_depth) for _ in range(num_engines)]
         self.balancer = VllmDPLoadBalancer(num_engines)
-        self.publications: list[Publication] = []
 
     def step(self, time: float, engine: int, iteration: Iteration) -> IterationRecord:
         record = self.engines[engine].step(iteration)
         if record.published:
             self.balancer.report(time, engine, record.step, record.load)
-            self.publications.append(
-                Publication(time, engine, record.step, record.load)
-            )
         return record
 
     def route(self, time: float) -> int:
