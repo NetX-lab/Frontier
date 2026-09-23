@@ -18,14 +18,6 @@ from frontier.scheduler.replica_scheduler.vllm_v1_prefix_cache import (
 from frontier.types import ClusterType
 
 
-_REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES = frozenset(
-    {
-        ClusterType.DECODE,
-        ClusterType.DECODE_ATTN,
-    }
-)
-
-
 class KvBlockAllocation:
     """Token accounting, KV block allocation and preemption."""
 
@@ -529,16 +521,14 @@ class KvBlockAllocation:
             self._free_request_resources(victim)
 
         # Mark as preempted and reset the scheduler-visible computed frontier.
-        # Disaggregated decode requests arrive after PREFILL has completed and
-        # the prompt KV frontier has transferred to the decode-side cluster.
-        # Their Request-level token lifecycle must survive memory preemption;
-        # only scheduler-local computed state and KV allocation are restarted.
+        # As in vLLM v1, preemption discards computed KV but keeps generated
+        # output tokens. A victim still in prefill has no output and restarts
+        # its prompt. A victim past prefill keeps its Request-level token
+        # progress; only scheduler-local computed state and KV allocation
+        # restart, and the replay of its prompt and output is not modeled.
         victim._preempted = True
-        if (
-            self._cluster_type
-            not in _REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES
-        ):
-            victim._num_processed_tokens = 0  # Reset computed tokens as in vLLM v1
+        if not victim.is_prefill_complete:
+            victim._num_processed_tokens = 0
         self._scheduled_num_computed_tokens_by_request.pop(victim.id, None)
 
         # Record re-entry to waiting queue for waiting time tracking after the
