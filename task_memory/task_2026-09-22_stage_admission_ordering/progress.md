@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | P4 completed: branch pushed at `4bcd616`, PR 36 body updated (still draft), W9-01 resolution recorded in the parent task (`4c2d573`). |
 | 2026-09-23 | R-8 / D-9 adopted; both comparisons rerun and pass (`aeeca93`); P4 in progress. |
 | 2026-09-23 | P0–P3 and P5 executed. Rule committed (`dac4e69`). Two plan stop conditions reached (C3 witness metric, C7 V5 dense); P4 push held for the user. |
 | 2026-09-23 | R-6 received: execution started; P5 (vLLM comparison) added to the plan. |
@@ -27,7 +28,7 @@
 | P2 tests and base negative controls | completed | `evidence/base_negative_controls.log`; all base outcomes as planned |
 | P3 rerun and comparison | completed; the first comparison stopped on the C3 witness rule, passes under D-9 | `test_report_2026-09-23_stage_admission_ordering.md` §4 |
 | P5 vLLM comparison | completed; the first analysis stopped on dense V5, passes under D-9 | case `calibration/stage_admission_case_001/`, report §5 |
-| P4 records, commit, push | in-progress | see below |
+| P4 records, commit, push | completed 2026-09-23 | "Execution" P4 rows |
 
 ## Commands run (2026-09-22)
 
@@ -74,8 +75,10 @@ worktree, `WANDB_DISABLED=true`, `VIDUR_DISABLE_WANDB=1`.
 | Overlay patch support | `vllm_burst_driver.py overlay --patch`, worker `OVERLAY_PATCH` | `a1b9819`; CPU dry run against an `upstream-v0.10.2` export | accepted; `_custom_ops.py` equals upstream after patch; second application fails loudly |
 | P5b run b | RJob `exp-0923-024146-345158` | `runs/vllm-instrumented/sa-pp-20260923b/` | MoE and dense complete, status 0 |
 | P5c | `compare_lanes --vllm-run …/sa-pp-20260923b` | `calibration/stage_admission_case_001/analysis/` | 50/52 MATCH; V5 dense n8/n16 MISMATCH (vLLM 0.706/0.865 vs 1.0) |
-
 | D-9 rules | witness by co-execution fraction; V5 gated on MoE only | `aeeca93` | — |
 | P3 compare rerun | `compare --before base --after after --output …/compare_base_after_d9.json` | scratch root | U 50 PASS; L 18 PASS; T 6 PASS, 8 EXPLAIN; no STOP |
 | P5c rerun | `compare_lanes --vllm-run …/sa-pp-20260923b` | `analysis/` | status PASS: 50 MATCH, 0 MISMATCH, 2 INFORMATIONAL |
 | Checks after D-9 | P5a synthetic check; P2(c) integration test | — | synthetic planted round still caught by V3/V4; 3 passed |
+| P4 push | `git push origin fix/stage-admission-ordering` | remote head `4bcd616` | records `df7868e`, `fc34341`; `4bcd616` force-adds `evidence/base_negative_controls.log`, which the repository-wide `*.log` rule had kept out of the tree |
+| P4 PR body | REST `PATCH repos/NetX-lab/Frontier/pulls/36` (`gh pr edit` fails on the retired Projects classic query) | PR 36 | body carries the rule, commits, C1–C4/C7 and C3 tables, R-7/D-9 and open items; body read back identical; still draft |
+| P4 parent note | parent `issues.md` W9-01 Resolution, `progress.md`, case manifest decision `W9-01-scope`; `summary.md` and the test report copied to `w9_01_stage_admission_ordering/` (D-5) | `fix/issue26-correctness-pr` `4c2d573`, pushed | PR 35 still draft |
