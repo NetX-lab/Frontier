@@ -269,9 +269,9 @@ def _colocation_moe_offline() -> list[FidelityCase]:
             (),
         ),
         (
-            # The MoE wrapper enforces ATTN_TP == MOE_TP * MOE_EP, so it cannot
-            # express an attn_dp > 1 shared domain; the dense matrix covers DP
-            # lanes and this case widens expert parallelism instead.
+            # The wrapper's own knobs cannot express attn_dp > 1 (see
+            # `_dp_placement`, whose MoE rows pass the lanes through), so this
+            # case widens expert parallelism instead.
             "coloc_moe_offline_ep4",
             "four expert-parallel domains over eight experts",
             {"ATTN_TP": "4", "MOE_TP": "1", "MOE_EP": "4",
@@ -500,6 +500,21 @@ def _trained_predictor() -> list[FidelityCase]:
     ]
 
 
+#: Two attention-DP lanes over the MoE wrappers' default EP domain, passed
+#: after the wrapper's own ``ATTN_TP == MOE_TP * MOE_EP`` check.
+_MOE_TWO_LANES_ARGS = (
+    "--replica_config_attn_dp", "2",
+    "--replica_config_attn_tensor_parallel_size", "4",
+    "--replica_config_moe_tensor_parallel_size", "1",
+    "--replica_config_moe_expert_parallel_size", "8",
+)
+_PDD_MOE_TWO_LANES_ARGS = (
+    "--replica_config_attn_dp", "2",
+    "--cluster_config_prefill_replica_config_attn_tensor_parallel_size", "1",
+    "--cluster_config_decode_replica_config_attn_tensor_parallel_size", "1",
+)
+
+
 def _dp_placement() -> list[FidelityCase]:
     """Cases whose outcome depends on how requests are placed on DP lanes.
 
@@ -513,24 +528,14 @@ def _dp_placement() -> list[FidelityCase]:
     are online. And placement across replicas and across lanes interact, which
     needs more than one replica as well as more than one lane.
 
-    Only dense co-location cases appear here, and that is a coverage limit
-    worth stating rather than a choice. The prefill role reaches the same
-    placement path as the monolithic role, but no shipped recipe can give it
-    more than one lane: a dense model in a disaggregated architecture is
-    rejected with "Dense models do not support attn data parallelism in
-    disaggregated mode", and the MoE wrappers require
-    ``ATTN_TP == MOE_TP * MOE_EP`` while the runtime requires
-    ``attn_tp * attn_dp == moe_tp * moe_ep``, which have no common solution
-    above one lane.
-
-    That is a limit of the shipped wrappers, not of the runtime. The prefill
-    role's placement is covered at the scheduler level by
-    ``tests/unit/test_cluster_scheduler_dp_lanes.py``, which drives the public
-    ``schedule()`` for both the monolithic and prefill roles. Covering it
-    through the real event loop needs a fixture that builds a valid runtime
-    configuration directly instead of going through a wrapper, with
-    deterministic durations injected at the predictor boundary; that fixture
-    belongs with the mixed-lane MoE work, not here.
+    The MoE wrappers check ``ATTN_TP == MOE_TP * MOE_EP`` on their own
+    knobs, while the runtime needs ``attn_tp * attn_dp == moe_tp * moe_ep``, so
+    the knobs alone cannot express more than one lane. The MoE rows keep that
+    check satisfied and override the attention sizes through pass-through
+    flags, which reaches the monolithic and the prefill role with two lanes
+    each. The trained row gives lanes of different composition different
+    durations, which dummy timing cannot, so it also measures whether each lane
+    keeps its own layer duration inside a shared forward.
     """
 
     rows: list[tuple[str, str, str, dict[str, str], tuple[str, ...]]] = [
@@ -567,11 +572,44 @@ def _dp_placement() -> list[FidelityCase]:
              "DECODE_CUDA_GRAPH_MODE": "none"},
             ("--replica_config_attn_dp", "2"),
         ),
+        (
+            "dp_moe_coloc_online_lanes2",
+            COLOCATION_ONLINE_MOE,
+            "two lanes sharing one EP=8 forward with arrivals spread across calls",
+            {"NUM_REQUESTS": "16", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "32",
+             "QPS": "2.0", "DECODE_CUDA_GRAPH_MODE": "none"},
+            _MOE_TWO_LANES_ARGS,
+        ),
+        (
+            "dp_moe_pdd_online_lanes2",
+            PDD_ONLINE_MOE,
+            "two lanes in the prefill and the decode role",
+            {"NUM_REQUESTS": "16", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "32",
+             "QPS": "2.0"},
+            _PDD_MOE_TWO_LANES_ARGS,
+        ),
     ]
-    return [
+    cases = [
         FidelityCase(case_id, "dp_placement", script, purpose, env, extra)
         for case_id, script, purpose, env, extra in rows
     ]
+    cases.append(FidelityCase(
+        "dp_moe_pdd_online_lanes2_trained",
+        "dp_placement",
+        PDD_ONLINE_MOE,
+        "two lanes per role on the tiny Qwen3 h800 profiles without dummy mode",
+        {"ENABLE_DUMMY_MODE": "false", "MODEL_NAME": "Qwen3-30B-A3B-tiny",
+         "PREFILL_DEVICE": "h800", "DECODE_DEVICE": "h800",
+         "TOTAL_EXPERTS": "16", "ROUTER_TOPK": "8",
+         "MOE_ROUTING_DISTRIBUTION_TYPE": "random",
+         "NUM_REQUESTS": "16", "PREFILL_TOKENS": "96", "DECODE_TOKENS": "8",
+         "QPS": "50.0", "MAX_TOKENS_IN_BATCH": "256",
+         "LONG_PREFILL_TOKEN_THRESHOLD": "64"},
+        _PDD_MOE_TWO_LANES_ARGS
+        + ("--random_forrest_execution_time_predictor_config_skip_cpu_overhead_modeling",),
+        uses_trained_predictor=True,
+    ))
+    return cases
 
 
 def build_cases() -> list[FidelityCase]:
