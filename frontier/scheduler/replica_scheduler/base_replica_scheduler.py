@@ -1055,6 +1055,12 @@ class BaseReplicaScheduler(ABC):
                     break
                 scheduled_batches.append(batch)
                 self._num_running_batches += 1
+                # Reported per admission here, not after the call returns: the
+                # lane state after each of several admissions is visible only
+                # inside this loop.
+                self._cluster_scheduler.on_replica_batch_scheduled(
+                    time, self._replica_id, self._replica_local_id, batch
+                )
                 if (
                     hasattr(self, "_has_monolithic_pp_mtp_output_wait")
                     and self._has_monolithic_pp_mtp_output_wait()

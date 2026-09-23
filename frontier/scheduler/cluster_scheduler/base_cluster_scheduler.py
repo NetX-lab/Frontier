@@ -438,6 +438,21 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
         return self.schedule()
 
+    def on_replica_batch_scheduled(
+        self,
+        time: float,
+        replica_id: int,
+        replica_local_id: int | None,
+        batch: Batch,
+    ) -> None:
+        """Observe one batch admitted by a MONOLITHIC or PREFILL lane. Inert by default.
+
+        Called after the lane counts the batch as running, so a policy that
+        reads lane populations here sees the post-admission state.
+        """
+
+        return None
+
     def on_replica_batch_end(
         self,
         time: float,

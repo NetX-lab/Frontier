@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | D9-2 decided (group-anchored key); P2 implemented and P3 unit tests added (132 targeted tests pass; the 19 new or changed cases fail on the pre-P2 tree). |
 | 2026-09-23 | Step 9 P1(b) completed on seven shapes; D9-2 proposal recorded (design.md, plan §18.15); W9-03 observation; awaits the user's D9-2 decision. |
 | 2026-09-23 | W9-01 merge-forward: `origin/main` merged (`dd9b8d9`); composition check K1–K4 pass on `03d5f24` (drain-reader fix); Step 9 P1(b) resumed. |
 | 2026-09-23 | PR 36 pre-merge untrack (P6, `4d08c5d`) done; W9-01 copies refreshed. Merge-forward waits for the PR 36 merge. |
@@ -223,8 +224,10 @@ User start signal: "开始执行step9", with the quality gates repeated (readabi
 | --- | --- | --- |
 | P1(a) reference-loop oracle | completed | `tests/comparison/dp_placement_pp/reference_loop.py`; `tests/unit/test_dp_placement_reference_loop.py` (9 passed, 1.21 s, `frontier-py310`). §18.11 state table confirmed as written; PP=1 shown to degenerate to "every iteration schedules and applies"; depth 3 shown to allow two consecutive admission-only publications, which rules out any stride constant. |
 | P1(b) Frontier boundary probe | completed 2026-09-23 (see "Step 9 P1(b) and D9-2" below) | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
-| Design checkpoint (D9-1, D9-2) | D9-1 settled; D9-2 proposed 2026-09-23, awaiting decision | D9-1's payload is settled (the completion hook signature already carries lane, load and a key source). D9-2 is not: the candidate key `ForwardSyncState._next_step_id_by_replica` satisfies I1, I2, I3, I4 and I6 on the runnable shapes but fails I5, and no alternative can be checked against I1 without a running `attn_dp>1, PP>1` shape. |
-| P2–P6, G3–G5 | paused | All depend on the design checkpoint or on that shape. |
+| Design checkpoint (D9-1, D9-2) | settled 2026-09-23 | D9-1's payload was settled from the P1 oracle. D9-2 is the group-anchored key, exact on all seven P1(b) shapes (`design.md` "Design checkpoint D9-2"); the user chose it on 2026-09-23. The first candidate, `ForwardSyncState._next_step_id_by_replica`, failed I5. |
+| P2 implementation, P3 unit tests | completed 2026-09-23 | See "Step 9 P2 and P3" below. |
+| P4, P5, P6 | pending | CPU only. |
+| G3–G5 | blocked | GPU authorization is `BLOCKED` in the case manifest. |
 
 W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_schduler.py` and `stage_contexts.py` are byte-identical to `main`. It is unobserved because every Simulator-level test with `attn_dp > 1` uses `num_pipeline_stages = 1` and no shipped example sets `attn_dp > 1`. Scope decision requested from the user; recommendation is to fix it as a separate correctness item rather than inside this feature branch.
 
@@ -258,7 +261,15 @@ W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices agains
 | Variant | Every-report-advance variant, candidate `every_report_advances` in `analyze_keys.py` | `key_scores.json` | Drifts on dp2 PP3 staggered: 6/5/5 on real-forward reports. Rejected. |
 | Residual count | Completion-only report followed by an equal-key report on the same lane | `key_scores.json` rows | 17 pairs, 3 with changed counts. |
 | Records | `design.md`; plan §18.15 and the §18.13 resolution; `issues.md` (W9-01 step 3, W9-02 narrowed, W9-03); test report §2 addendum | — | Done |
-| Decision | D9-2 rule and the C1 PP3 amendment | — | Awaiting the user |
+| Decision | D9-2 rule and the C1 PP3 amendment | `requirements.md` | User chose the group-anchored rule; C1 amended |
+
+### Step 9 P2 and P3 (2026-09-23)
+
+| Step | Change / command | Reason and expectation | Result |
+| --- | --- | --- | --- |
+| P2 source | `StageExecutionContext.joinable_forward_group_id`; inert `BaseClusterScheduler.on_replica_batch_scheduled`; its call in the MONOLITHIC/PREFILL admission loop of `BaseReplicaScheduler.on_schedule`, after `_num_running_batches += 1`; `VllmLoadBalancingClusterScheduler`: PP1 guard clause removed, group-anchored key with a held key per lane, `ForwardSyncState` use removed | D9-1..D9-3 as decided. Expect only the intended guard case to fail in the existing suites. | Existing suites: 1 failed (the `pipeline_parallel` rejection case), 112 passed. |
+| P3 tests | `tests/unit/test_vllm_dp_load_balancer.py`: guard case inverted into PP2/PP3 construct cases (8 shapes) plus dense multi-lane PP2 and uneven-partition rejections; `_ScriptedReplica` drives scripted lane readings and real stage-0 forward groups; cases for PP1 (no schedule-time report), PP2 cold fill in both lane orders (no partial latch), PP3 two admission-only iterations, a full pipeline (MoE and dense), a completion plus the admission it makes room for (one key, no intermediate latch), drain to zero and new work, and the real admission loop at PP2; both seams in the inert and unknown-lane tests. `tests/unit/test_shared_forward_group_admission.py`: `joinable_forward_group_id` across bind, seal and release. | Expected reports written from the reference iteration, before running. Each new case must fail on the pre-P2 tree. | `pytest -q -p no:cacheprovider tests/unit/test_vllm_dp_load_balancer.py tests/integration/test_vllm_dp_placement_runtime.py tests/unit/test_dp_placement_reference_loop.py tests/unit/test_stage_execution_context.py tests/unit/test_shared_forward_group_admission.py`: 132 passed, 7.07 s. The same tests on `git archive HEAD` (pre-P2) plus the new test files: 19 failed, 72 passed; the 19 are exactly the new or changed cases. |
+| Arrival-order check | Replay of the group-anchored keys from `key_scores.json` in report order, counting keys smaller than the last applied one | Recorded so the balancer's warning is not mistaken for a key defect later. | 1 report in 7 shapes (dp2 PP3 burst, t=0: lane 0 key 0 after lane 1 key 1); the reference has the same race. Noted in `design.md`. |
 
 ### G1 ground-truth instrumentation (2026-09-22, completed)
 

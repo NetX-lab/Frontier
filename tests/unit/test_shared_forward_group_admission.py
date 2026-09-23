@@ -114,6 +114,26 @@ def test_started_group_blocks_new_lane_through_ep_restore_and_partial_release():
     assert context.queued_tickets == ()
 
 
+def test_a_new_lane_joins_the_bound_group_only_until_it_is_sealed():
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=2)
+    assert context.joinable_forward_group_id == 0
+    first = context.enqueue_full_stage(operation_id="first")
+    assert context.try_acquire(first)
+    group = context.bind_forward_group(first)
+    assert context.joinable_forward_group_id == group
+    wave = context.replace_full_stage_owners_with_ep_wave(
+        (first,), operation_id="wave", participant_ep_ids=(0, 1),
+    )
+    assert context.joinable_forward_group_id == group + 1
+    (owner,) = context.replace_ep_wave_with_full_stage_owners(wave, operation_ids=("next",))
+    context.release(owner)
+    assert context.is_idle
+    assert context.joinable_forward_group_id == group + 1
+    later = context.enqueue_full_stage(operation_id="later")
+    assert context.try_acquire(later)
+    assert context.bind_forward_group(later) == group + 1
+
+
 @pytest.mark.parametrize("sync_kind", ["prefill", "decode"])
 def test_next_group_queue_does_not_block_current_group_idle_participation(sync_kind):
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=2)

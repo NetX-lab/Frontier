@@ -361,9 +361,9 @@ def test_the_engine_count_must_be_a_positive_int(num_engines) -> None:
 # --------------------------------------------------------------------------
 
 
-def _model(*, is_moe: bool) -> BaseModelConfig:
+def _model(*, is_moe: bool, num_layers: int = 4) -> BaseModelConfig:
     model = BaseModelConfig(
-        num_layers=4,
+        num_layers=num_layers,
         num_q_heads=4,
         num_kv_heads=2,
         embedding_dim=256,
@@ -381,7 +381,7 @@ def _model(*, is_moe: bool) -> BaseModelConfig:
         num_experts_per_tok=2 if is_moe else 0,
         torch_dtype="bfloat16",
     )
-    model._model_name = f"w4_dp_{'moe' if is_moe else 'dense'}"
+    model._model_name = f"w4_dp_{'moe' if is_moe else 'dense'}_{num_layers}l"
     return model
 
 
@@ -393,13 +393,14 @@ def _policy_scheduler(
     moe_ep: int = 2,
     num_replicas: int = 1,
     num_pipeline_stages: int = 1,
+    num_layers: int = 4,
     cluster_type: ClusterType = ClusterType.MONOLITHIC,
     replica_scheduler_config=None,
     cluster_scheduler_config=None,
 ):
     """Build a real cluster scheduler through the real constructor path."""
 
-    model = _model(is_moe=is_moe)
+    model = _model(is_moe=is_moe, num_layers=num_layers)
     original = BaseModelConfig.create_from_name
     patch.setattr(
         BaseModelConfig,
@@ -535,7 +536,6 @@ def test_a_scheduler_without_a_serving_load_definition_says_which_one() -> None:
     ("label", "kwargs", "message"),
     [
         ("two_replicas", dict(num_replicas=2), "one co-location Replica"),
-        ("pipeline_parallel", dict(num_pipeline_stages=2), "one co-location Replica"),
         (
             "wrong_replica_scheduler",
             dict(replica_scheduler_config=SarathiSchedulerConfig(
@@ -549,6 +549,16 @@ def test_a_scheduler_without_a_serving_load_definition_says_which_one() -> None:
             dict(is_moe=False, attn_dp=2),
             "monotonic per Replica",
         ),
+        (
+            "dense_multi_lane_pipeline_parallel",
+            dict(is_moe=False, attn_dp=2, num_pipeline_stages=2),
+            "monotonic per Replica",
+        ),
+        (
+            "uneven_layer_partition",
+            dict(num_pipeline_stages=3),
+            "evenly divisible",
+        ),
     ],
 )
 def test_each_unsupported_topology_is_rejected_at_construction(
@@ -560,13 +570,29 @@ def test_each_unsupported_topology_is_rejected_at_construction(
 
 
 @pytest.mark.parametrize(
-    ("is_moe", "attn_dp", "moe_ep"),
-    [(True, 2, 2), (True, 1, 1), (False, 1, 1)],
+    ("is_moe", "attn_dp", "moe_ep", "num_pipeline_stages", "num_layers"),
+    [
+        (True, 2, 2, 1, 4),
+        (True, 1, 1, 1, 4),
+        (False, 1, 1, 1, 4),
+        (True, 2, 2, 2, 4),
+        (True, 1, 1, 2, 4),
+        (False, 1, 1, 2, 4),
+        (True, 2, 2, 3, 6),
+        (True, 1, 1, 3, 6),
+    ],
 )
-def test_the_supported_shapes_construct(is_moe, attn_dp, moe_ep) -> None:
+def test_the_supported_shapes_construct(
+    is_moe, attn_dp, moe_ep, num_pipeline_stages, num_layers
+) -> None:
     with pytest.MonkeyPatch.context() as patch:
         scheduler = _policy_scheduler(
-            patch, is_moe=is_moe, attn_dp=attn_dp, moe_ep=moe_ep
+            patch,
+            is_moe=is_moe,
+            attn_dp=attn_dp,
+            moe_ep=moe_ep,
+            num_pipeline_stages=num_pipeline_stages,
+            num_layers=num_layers,
         )
 
     assert scheduler._load_balancer is not None
@@ -605,12 +631,286 @@ def test_routing_places_every_queued_request_on_the_serving_replica() -> None:
     assert scheduler._request_queue == []
 
 
-def test_an_unknown_lane_identity_is_rejected_at_the_report_boundary() -> None:
+@pytest.mark.parametrize(
+    "seam", ["on_replica_batch_scheduled", "on_replica_batch_end"]
+)
+def test_an_unknown_lane_identity_is_rejected_at_the_report_boundary(seam) -> None:
     with pytest.MonkeyPatch.context() as patch:
         scheduler = _policy_scheduler(patch)
 
         with pytest.raises(ValueError, match="exact lane index"):
-            scheduler.on_replica_batch_end(0.0, scheduler._serving_replica_id, None, None)
+            getattr(scheduler, seam)(0.0, scheduler._serving_replica_id, None, None)
+
+
+# --------------------------------------------------------------------------
+# Report timing and keys under pipeline parallelism
+#
+# Expected reports are derived from the reference engine iteration
+# (`core.py`, `step_with_batch_queue`): an iteration that schedules while its
+# batch queue still has room publishes at once, one that fills the queue
+# publishes after applying its oldest output, and the key is the index of the
+# forward the iteration launches, shared by peer engines. The lane readings
+# are scripted; the stage-0 forward groups go through the real context.
+# --------------------------------------------------------------------------
+
+
+class _ScriptedLane:
+    """The two lane readings the policy takes, set by the test."""
+
+    def __init__(self, waiting: int):
+        self.num_running_batches = 0
+        self.waiting = waiting
+        self.running = 0
+
+    def get_request_load(self) -> RequestLoad:
+        return RequestLoad(self.waiting, self.running)
+
+
+class _ScriptedReplica:
+    """Drive one policy scheduler as its lanes and stage 0 would."""
+
+    def __init__(self, patch, *, waiting: list[int], **shape):
+        self.scheduler = _policy_scheduler(patch, attn_dp=len(waiting), **shape)
+        self.replica_id = self.scheduler._serving_replica_id
+        self.lanes = [_ScriptedLane(count) for count in waiting]
+        for lane_id, lane in enumerate(self.lanes):
+            self.scheduler._replica_schedulers[(self.replica_id, lane_id)] = lane
+        self.stage0 = self.scheduler.get_stage_execution_context(self.replica_id, 0)
+        self._stage0_owners = []
+        self._operations = 0
+        self.reports: list[tuple[int, int, RequestLoad]] = []
+        balancer_report = self.scheduler._load_balancer.report
+
+        def record(time, engine, step, load):
+            self.reports.append((engine, step, load))
+            balancer_report(time, engine, step, load)
+
+        patch.setattr(self.scheduler._load_balancer, "report", record)
+
+    def admit(self, lane_id: int, time: float = 0.0) -> None:
+        """Admit one single-request batch, as the lane's admission loop does."""
+
+        lane = self.lanes[lane_id]
+        lane.num_running_batches += 1
+        lane.waiting -= 1
+        lane.running += 1
+        self.scheduler.on_replica_batch_scheduled(time, self.replica_id, lane_id, None)
+
+    def complete(self, lane_id: int, time: float, *, finished: int = 0) -> None:
+        """Finish one batch on the last stage, as `GlobalBatchEndEvent` does."""
+
+        lane = self.lanes[lane_id]
+        lane.num_running_batches -= 1
+        lane.running -= finished
+        self.scheduler.on_replica_batch_end(time, self.replica_id, lane_id, None)
+
+    def run_stage0_forward(self, num_lanes: int) -> int:
+        """Start one shared stage-0 forward, run it to its end, return its group."""
+
+        for _ in range(num_lanes):
+            ticket = self.stage0.enqueue_full_stage(operation_id=self._operations)
+            self._operations += 1
+            assert self.stage0.try_acquire(ticket)
+            group = self.stage0.bind_forward_group(ticket)
+            self._stage0_owners.append(ticket)
+        for ticket in self._stage0_owners:
+            self.stage0.release(ticket)
+        self._stage0_owners.clear()
+        return group
+
+
+def test_pp1_admissions_are_reported_only_with_the_completion_they_join() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(patch, waiting=[3, 3])
+        for iteration in range(3):
+            for lane_id in (0, 1):
+                replica.admit(lane_id, time=0.1 * iteration)
+            # The single pipeline slot is full after every admission.
+            assert len(replica.reports) == 2 * iteration
+            assert replica.run_stage0_forward(2) == iteration
+            for lane_id in (0, 1):
+                replica.complete(
+                    lane_id, 0.1 * iteration + 0.05, finished=min(iteration, 1)
+                )
+
+    # One report per lane per iteration, each keyed by the forward that
+    # completed, as the reference's atomic PP=1 step publishes.
+    assert replica.reports == [
+        (0, 0, RequestLoad(2, 1)),
+        (1, 0, RequestLoad(2, 1)),
+        (0, 1, RequestLoad(1, 1)),
+        (1, 1, RequestLoad(1, 1)),
+        (0, 2, RequestLoad(0, 1)),
+        (1, 2, RequestLoad(0, 1)),
+    ]
+
+
+@pytest.mark.parametrize("lane_order", [(0, 1), (1, 0)])
+def test_a_pp2_cold_fill_keys_peer_lanes_by_the_forward_they_share(
+    lane_order,
+) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(patch, waiting=[3, 3], num_pipeline_stages=2)
+        for lane_id in lane_order:
+            replica.admit(lane_id)
+            replica.admit(lane_id)
+        # The first admission leaves a slot and is published; the second
+        # fills the pipeline and waits for the first completion.
+        assert replica.reports == [
+            (lane_id, 0, RequestLoad(2, 1)) for lane_id in lane_order
+        ]
+        assert replica.run_stage0_forward(2) == 0
+        assert replica.run_stage0_forward(2) == 1
+        # Inside the first collection wait, so both lanes' new counts are
+        # still unpublished when forward 1 is reported.
+        for lane_id in lane_order:
+            replica.complete(lane_id, 0.02)
+
+    assert replica.reports[2:] == [
+        (lane_id, 1, RequestLoad(1, 2)) for lane_id in lane_order
+    ]
+    # The first report of forward 1 latched forward 0 for both lanes; the
+    # peer's report of the same forward latched nothing partial.
+    assert replica.scheduler._load_balancer.last_step_counts == [
+        RequestLoad(2, 1),
+        RequestLoad(2, 1),
+    ]
+
+
+@pytest.mark.parametrize("lane_order", [(0, 1), (1, 0)])
+def test_pp3_publishes_two_admission_only_iterations_before_any_completion(
+    lane_order,
+) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(
+            patch, waiting=[4, 4], num_pipeline_stages=3, num_layers=6
+        )
+        for lane_id in lane_order:
+            for _ in range(3):
+                replica.admit(lane_id)
+        assert replica.reports == [
+            report
+            for lane_id in lane_order
+            for report in (
+                (lane_id, 0, RequestLoad(3, 1)),
+                (lane_id, 1, RequestLoad(2, 2)),
+            )
+        ]
+        assert [replica.run_stage0_forward(2) for _ in range(3)] == [0, 1, 2]
+        for lane_id in lane_order:
+            replica.complete(lane_id, 0.3)
+
+    # The third admission filled the pipeline in forward 2.
+    assert replica.reports[4:] == [
+        (lane_id, 2, RequestLoad(1, 3)) for lane_id in lane_order
+    ]
+
+
+@pytest.mark.parametrize("is_moe", [True, False])
+def test_a_full_pipeline_makes_one_report_per_iteration(is_moe) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(
+            patch, waiting=[3], is_moe=is_moe, moe_ep=1, num_pipeline_stages=2
+        )
+
+        def forward(group: int) -> None:
+            # A dense Replica binds no forward group; its key is the lane's
+            # admission count.
+            if is_moe:
+                assert replica.run_stage0_forward(1) == group
+
+        replica.admit(0)
+        replica.admit(0)
+        forward(0)
+        forward(1)
+        replica.complete(0, 0.2, finished=1)
+        replica.admit(0, 0.2)
+        forward(2)
+        replica.complete(0, 0.3, finished=1)
+        # Nothing left to admit: the next completion is the lane's next
+        # iteration on its own.
+        replica.complete(0, 0.4, finished=1)
+
+    assert replica.reports == [
+        (0, 0, RequestLoad(2, 1)),
+        (0, 1, RequestLoad(1, 1)),
+        (0, 2, RequestLoad(0, 1)),
+        (0, 3, RequestLoad(0, 0)),
+    ]
+    assert replica.scheduler._held_key == [None]
+
+
+def test_a_completion_and_the_admission_it_makes_room_for_share_one_key() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(
+            patch, waiting=[1], moe_ep=1, num_pipeline_stages=2
+        )
+        replica.admit(0)
+        assert replica.run_stage0_forward(1) == 0
+        replica.lanes[0].waiting += 1
+        replica.complete(0, 0.2)
+        replica.admit(0, 0.2)
+        balancer = replica.scheduler._load_balancer
+
+    # The reference publishes this iteration once, after scheduling the new
+    # request and applying the ready output. Two reports under one key leave
+    # the coordinator the same state: nothing latched in between.
+    assert replica.reports == [
+        (0, 0, RequestLoad(0, 1)),
+        (0, 1, RequestLoad(1, 1)),
+        (0, 1, RequestLoad(0, 2)),
+    ]
+    assert balancer.last_step_counts is None
+    assert balancer.engine_counts == [RequestLoad(0, 2)]
+
+
+def test_a_lane_that_drains_to_zero_reports_it_and_new_work_keys_coherently() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        replica = _ScriptedReplica(patch, waiting=[1, 0], num_pipeline_stages=2)
+        replica.admit(0)
+        assert replica.run_stage0_forward(1) == 0
+        replica.complete(0, 0.2, finished=1)
+        balancer = replica.scheduler._load_balancer
+        assert balancer.engine_counts == [RequestLoad(0, 0), RequestLoad(0, 0)]
+
+        # New work on both lanes after a quiet interval joins one forward.
+        for lane_id in (1, 0):
+            replica.lanes[lane_id].waiting += 1
+            replica.admit(lane_id, 10.0)
+        assert replica.run_stage0_forward(2) == 1
+
+    assert replica.reports == [
+        (0, 0, RequestLoad(0, 1)),
+        (0, 1, RequestLoad(0, 0)),
+        (1, 1, RequestLoad(0, 1)),
+        (0, 1, RequestLoad(0, 1)),
+    ]
+
+
+def test_the_admission_loop_reports_the_state_after_each_admission() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(patch, num_pipeline_stages=2)
+        reports = []
+        balancer_report = scheduler._load_balancer.report
+        patch.setattr(
+            scheduler._load_balancer,
+            "report",
+            lambda time, engine, step, load: (
+                reports.append((engine, step, load)),
+                balancer_report(time, engine, step, load),
+            ),
+        )
+        lane = scheduler.get_replica_scheduler(scheduler._serving_replica_id, 0)
+        # Each request fills the 16-token budget, so each batch holds one.
+        for _ in range(3):
+            lane.add_request(_request(tokens=16))
+
+        batches = lane.on_schedule(0.0)
+
+    assert len(batches) == 2
+    # One call admitted two batches; only the first left a slot, and it is
+    # reported with the state after it alone.
+    assert reports == [(0, 0, RequestLoad(2, 1))]
 
 
 # --------------------------------------------------------------------------
@@ -676,7 +976,10 @@ def test_every_existing_policy_routes_identically_through_schedule_at(
     ]
 
 
-def test_the_default_batch_end_seam_is_inert() -> None:
+@pytest.mark.parametrize(
+    "seam", ["on_replica_batch_scheduled", "on_replica_batch_end"]
+)
+def test_the_default_batch_seams_are_inert(seam) -> None:
     class _Bare(BaseClusterScheduler):
         def schedule(self):
             return []
@@ -684,7 +987,7 @@ def test_the_default_batch_end_seam_is_inert() -> None:
     bare = _Bare.__new__(_Bare)
     before = dict(vars(bare))
 
-    assert bare.on_replica_batch_end(1.0, 0, 0, None) is None
+    assert getattr(bare, seam)(1.0, 0, 0, None) is None
     assert dict(vars(bare)) == before
 
 
