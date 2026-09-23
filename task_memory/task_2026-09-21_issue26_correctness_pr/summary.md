@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: the W6 negative-control and CPU-test rows corrected (`6828581` pins the profiler's config and alignment arguments); W7-R4 added to the proposals; the GPU scope in Limits corrected. |
 | 2026-09-24 | Fix review after G5 (`c647e95`..`6aee289`) added to Work packages, the validation table and the open items; C4 decided (option a); S43 and S42 moved to their own tasks; W6 and W7 rows corrected. |
 | 2026-09-23 | Step 9 G3–G5 results added to W9, the validation table and the open items. C3 PASS, C4 `SCENARIO_NOT_REACHED`, and findings S43/S42 await review. |
 | 2026-09-23 | The W9-05 fix (`75c1140`) added to Work packages and Deliverables; its follow-ups replace the W9-05 open item. G3–G5 authorized by the user and in preparation. |
@@ -106,11 +107,11 @@ recorded in `validation.md`), and `w5_reverted_moe_routing_runtime_path.patch`.
 | W3 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 placement | Measured to place differently from round-robin under the same load, so the policy is not a renamed default. |
-| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3), so no native run covers the current FP8 code; CPU tests 31 passed. |
+| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3), so no native run covers the current FP8 code; CPU tests 32 passed after `6828581` pins the profiler's tile-config and alignment arguments (W6-R6). |
 | W7 companion | 9 passed on the fix; 6 of 9 fail against pristine sources. |
 | W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. Superseded 2026-09-24: companion `ff11ee6` defines the cross-server empty all-to-all (W7-R1); Frontier's three rewritten cases pass and fail at `eb7bc4f`; companion 12 passed. |
 | Step 9 ground truth | G3 (`exp-0923-221233-009652`, PP1) T1 38/38; G4 (`exp-0923-230103-591735`, DP2 PP2 EP, 4 H800) extraction PASS; G5 T1 48/48 formal routes MATCH; C4 `SCENARIO_NOT_REACHED` in all four bursts; the pre-change revision rejects PP2 at construction (`test_report_2026-09-23_step9_dp_pp_groundtruth.md`). |
-| Negative controls | W2 12 of 23, W3 four trees, W4 five trees, W6 one discriminating test, W7 both sides — each fails for its own stated reason on the unrepaired source. |
+| Negative controls | W2 12 of 23, W3 four trees, W4 five trees, W6 one discriminating test, W7 both sides — each fails for its own stated reason on the unrepaired source, except W6: there its tests error at fixture setup, and a mutant restoring only the slice arithmetic fails the discriminating test on its assertion (corrected 2026-09-24). |
 
 Detailed commands, expectations, and limits are in `validation.md` and the
 per-work-package reports.
@@ -124,12 +125,12 @@ per-work-package reports.
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
 | Step 9 C4: decided 2026-09-24, option (a), `SCENARIO_NOT_REACHED` accepted. S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards) continue as separate calibration-and-repair tasks. | `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` |
-| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), a native W6 FP8 rerun, the pinned calibration tools. | `test_report_2026-09-24_fix_review.md` §8 |
+| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), a native W6 FP8 rerun, the pinned calibration tools, W7-R4 (a zero cross-server all-reduce hangs in the companion runner; unreachable from Frontier). | `test_report_2026-09-24_fix_review.md` §8 |
 | W9-05 follow-ups, not started: at PP>1 the fix review's F-R1..F-R4 are fixed (`c647e95`); the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated
 
-CPU only, apart from the one W6 GPU parity job. No native profiling suite was
+CPU only, apart from the two W6 native parity jobs (`exp-0922-145047-660565`, `exp-0922-202645-561899`) and the Step 9 ground-truth jobs G3 and G4. No native profiling suite was
 run as a gate, and no vLLM serving or TTFT comparison was performed — both are
 outside this task and neither is needed to accept the PR. The PD-AF
 Reference-checkout integration tests could not run on this host. Apart from the

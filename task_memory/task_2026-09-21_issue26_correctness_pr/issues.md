@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | W9-04 reach addendum (workflow `wf_7606e14e-f10`, finding S5): the defect also stalls MoE co-location at PP 2-3 and PDD at PP 1-2; the fix covers them (288 of 288 and 36 of 36), rechecked on `5e7221d`. |
 | 2026-09-24 | W9-05 review addendum: F-R1..F-R4 at PP>1 fixed in `c647e95`; F-R5 and F-R6 recorded as fidelity proposals. W9-03 transferred to the S42 task. |
 | 2026-09-23 | W9-05 diagnosed and fixed in `75c1140` (user direction "授权上述1-2，推进W9-05"): mechanism and Resolution with checks B1–B8 added. |
 | 2026-09-23 | W9-04 fixed in `2ffb062` under option 1 (user decision); Resolution added with checks A1–A7. W9-05 deferred as a separate item (user decision). |
@@ -268,6 +269,27 @@ Poisson qps ∈ {50, 100, 200, 400}, seeds {42, 7, 123}; 24 cells per row):
 `attn_dp=2` never stalled on this branch. `vllm_load_balancing` stalls the
 same way as `round_robin` on the same cells.
 
+Reach beyond PP=1 (review addendum, 2026-09-24). The sweep above ran
+co-location at PP=1 only, so this record understated the defect's reach
+(workflow `wf_7606e14e-f10`, finding S5). The wider sweeps ran on exports of
+`ba0a804`. The control is the same tree with the withdrawal call disabled.
+Evidence: `wf_7606e14e_f10/w9_04_reach.txt`.
+
+| Scope | Control | With the fix |
+| --- | --- | --- |
+| Co-location MoE, 288 cells: `round_robin`, `lor`, `random`, `vllm_load_balancing` x PP 1-3 x `attn_dp` {2, 4} x qps {100, 200, 400, 800} x 3 seeds | 17 cells stall at 0 of 24, all at `attn_dp=4`: `lor` 4/3/4 at PP 1/2/3; `round_robin` and `vllm_load_balancing` 1/1/1 each; `random` 0 | 288 of 288 drain 24 of 24. The withdrawal fires in exactly the 17 cells the control stalls in |
+| PDD MoE (`pd-disaggregation`), 36 cells: `round_robin` x PP {1, 2} x `attn_dp` {2, 4} x qps {100, 400, 1600} x 3 seeds | 4 cells stall: `attn_dp=4`, qps 400, seeds 42 and 123, at PP 1 and PP 2 | 36 of 36 finish with metrics |
+| Recheck on `5e7221d`: co-location `round_robin` `attn_dp=4` PP2 qps 200 seed 42; PDD `round_robin` `attn_dp=4` PP2 qps 400 seed 42 | both stall, 0 of 24 | both finish 24 of 24 |
+
+- 12 control cells (`round_robin`, PP3, `attn_dp=2`) crashed on a harness
+  setting that the sweep later changed. The collective-sim topology rejects
+  6 devices (W9-02). These cells are not W9-04 evidence.
+- PDD covers `round_robin` only. `lor` under `pd-disaggregation` exits at the
+  release guard in `frontier/config/release_guards.py`.
+- A stalled run raises `RuntimeError` and writes no metrics, so no published
+  number came from a stalled run. What the PP=1-only record hid was the reach:
+  before `2ffb062`, MoE PP>1 and PDD runs at `attn_dp=4` also stalled.
+
 ### Mechanism (trace `step9_p5/evidence/w9_04_trace.txt`)
 
 1. t=12.10 ms: lane 0 reaches layer 0 `pre_moe` of forward group 0. Lane 1 is
@@ -358,6 +380,11 @@ Limits:
   (option 2, W9-03). That remains a separate fidelity question, and the fix
   does not settle it.
 - All checks are CPU runs with dummy or trained predictors on this host.
+- Covered after the fact (2026-09-24): the PP 2-3 co-location cells and the
+  PP 1-2 PDD cells in "Reach beyond PP=1" above. The withdrawal sits in
+  `enter_layer_sync`. Both the prefill-mode and the decode-mode entries call
+  it (`on_prefill_sync` and `on_decode_sync` in `base_cluster_scheduler.py`),
+  for every role and at every PP.
 
 ## W9-05 Requests disappear mid-decode under KV pressure
 

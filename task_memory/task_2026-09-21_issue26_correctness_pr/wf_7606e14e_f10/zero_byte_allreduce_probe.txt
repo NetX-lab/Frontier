@@ -1,0 +1,19 @@
+# Zero-byte cross-server allreduce in the companion runner at gitlink ff11ee6 (2026-09-24)
+# Command: zero_byte_collective_probe.py <collective-sim> <out> allreduce <payload>, 2 servers x 8 GPUs, DP=16 ring, runner defaults
+# Both runs were stopped after about 9 minutes of wall time; neither returned a prediction.
+## payload=0
+Nodes 16
+Connections 3840
+Triggers 232
+connections_with_size_0: 480
+run.out bytes: 25023
+last finished flow: Flow ndp_15_8 flow_id 2890 finished at 10.8787 total bytes 9216
+last trigger line: Trigger 175 activated, activations remaining: 2
+## payload=1
+Nodes 16
+Connections 3840
+Triggers 232
+connections_with_size_0: 0
+run.out bytes: 606342
+last finished flow: Flow ndp_1_2 flow_id 2869 finished at 271.532 total bytes 9216
+last trigger line: Trigger 174 activated, activations remaining: 1

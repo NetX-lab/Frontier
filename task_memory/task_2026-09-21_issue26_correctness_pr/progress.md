@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: six surviving findings mapped to existing fixes; the 32 unverified leads triaged; W6-R6 fixed in `6828581`; W6 and S9-08 records corrected; W7-R4 proposal; W9-04 reach beyond PP=1 recorded; case errata and S43/S42 plans updated. |
 | 2026-09-24 | User decisions after G5 recorded (C4 option a; S43 and S42 become separate tasks; W9-05 worktrees removed). Review of the branch's fixes: ten commits `c647e95`..`6aee289`, proposals listed, dummy-mode question answered, candidate row S44 recorded, records corrected, S43/S42 task directories created. |
 | 2026-09-23 | G4 complete (`exp-0923-230103-591735`, extraction PASS). G5 complete: T1 48/48 formal routes MATCH at PP2 (C3 PASS). C4 `SCENARIO_NOT_REACHED` in all four bursts. The third GPU job is not used. `workflow_gap_status` PASS with corrections S43/S42 pending review. Plan §18.21. |
 | 2026-09-23 | G3 complete (`exp-0923-221233-009652`, extraction PASS, T1 replay 38/38 MATCH); G4 inputs amended per plan §18.20; launcher wrapper and poller fixed. |
@@ -42,9 +43,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21), accepted by the user (option a). Fix review done 2026-09-24: `c647e95`..`6aee289` (plan §18.22, `test_report_2026-09-24_fix_review.md`). |
-| Publication | PUSHED_VERIFIED 2026-09-24: remote head `b110eca` equal to local (review commits `c647e95`..`6aee289` plus the record commit). PR 35 body PATCHed 2026-09-23T18:41:47Z (UTC): Progress rows (W6, W7, W9-05, a Review row), the W2/W3 reachability corrections, the native FP8 `block_shape=[128, 128]` correction, W7's second commit and rewritten Frontier tests, the G5 decision, a section "Review of the landed fixes (2026-09-24)", the review material and commit tables, and Status. Read back identical apart from a trailing newline; still draft. Companion PR 1 body PATCHed for `ff11ee6` (second-commit section, 12 tests, scope of the flow-generation change); read back the same way; still draft. Backups: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924/{pr35,companion_pr1}_body_before.md`. |
-| Next action | User decisions on the review proposals (plan §18.22): F-R5/F-R6, the strict `sync_entry` predicate, the sync-room alias refactor, S44 as a second S43 row, a native W6 FP8 rerun, the pinned calibration tools, and removal of `.worktrees/review-final-{base,head}`. S43 and S42 continue in their own task directories. |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21), accepted by the user (option a). Fix review done 2026-09-24: `c647e95`..`6aee289` (plan §18.22, `test_report_2026-09-24_fix_review.md`). Workflow `wf_7606e14e-f10` reconciled 2026-09-24: W6-R6 test `6828581`, record corrections W6-R7 and W9-R4, W7-R4 proposal (test report §10). |
+| Publication | PUSHED 2026-09-24: `6828581` (test) and the record commit carrying this row, on top of `5e7221d`; the remote head is verified by fetch after the push. Earlier: PUSHED_VERIFIED 2026-09-24: remote head `b110eca` equal to local (review commits `c647e95`..`6aee289` plus the record commit). PR 35 body PATCHed 2026-09-23T18:41:47Z (UTC): Progress rows (W6, W7, W9-05, a Review row), the W2/W3 reachability corrections, the native FP8 `block_shape=[128, 128]` correction, W7's second commit and rewritten Frontier tests, the G5 decision, a section "Review of the landed fixes (2026-09-24)", the review material and commit tables, and Status. Read back identical apart from a trailing newline; still draft. Companion PR 1 body PATCHed for `ff11ee6` (second-commit section, 12 tests, scope of the flow-generation change); read back the same way; still draft. Backups: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924/{pr35,companion_pr1}_body_before.md`. |
+| Next action | User decisions on the review proposals (plan §18.22, test report §8): F-R5/F-R6, the strict `sync_entry` predicate, the sync-room alias refactor, S44 as a second S43 row, a native W6 FP8 rerun, the pinned calibration tools, W7-R4 (companion zero all-reduce; option a recommended), and removal of `.worktrees/review-final-{base,head}`. S43 and S42 continue in their own task directories. |
 
 ## Step status
 
@@ -496,3 +497,20 @@ Reason for each change, expectation, method and result are in the test report. C
   - HEAD 12 passed;
   - mutation M2: both stagger cases fail (`review_20260924/w9_stagger/`).
 
+### Workflow `wf_7606e14e-f10` results (2026-09-24)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Workflow status | completed | 152 agents started, 29 returned, 123 failed on the platform's weekly rate limit (test report §10). |
+| Six surviving findings | completed, no new change | S0–S4 are W7-R1..R3 (`ff11ee6`, `6d621c8`, `7309f5d`); S5 is recorded as the W9-04 reach addendum (`issues.md`, `validation.md` A2b; `wf_7606e14e_f10/w9_04_reach.txt`). |
+| 32 unverified leads | completed | Zero verdicts each, so not refuted. Main-session triage in test report §10: 29 map to existing fixes, records or proposals; three add work: #22 (W6-R6), #26 (W6-R7) and #31 (W9-R4, beyond the existing W9-R3). |
+| W6-R6 | completed | `6828581`: `test_the_tile_config_and_the_alignment_follow_fused_experts`. HEAD 32 passed; mutants m5, m6, m7 each 1 failed, 31 passed (`wf_7606e14e_f10/w6_negative_controls.txt`). |
+| W6-R7, W9-R4 records | completed | `validation.md` Step 6, `review.md` W6/§14.2/S9-08, `summary.md`, the W6 report §6 and §8. |
+| W7-R4 | recorded, proposal | `review.md` W7, test report §3 and §8; probe `wf_7606e14e_f10/zero_byte_allreduce_probe.txt`. |
+| Dummy-mode study | completed (merged) | Case errata in `workflow_gap_summary.md` and `semantic_alignment_summary.md`/table (S10, S39); test report §5 row; S43/S42 plans. |
+| S43/S42 scope | completed by the main session | The workflow's scope agents returned nothing. S43 s2 now also compares the oracle with the policy's reports (W9-R4). |
+
+Commands (worktree root, `PYTHONPATH=$PWD WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 FRONTIER_TMP_ROOT=/data/ycfeng/tmp`):
+
+- `/data/ycfeng/envs/openmopd-py312/bin/python -m pytest -q -p no:cacheprovider tests/unit/test_moe_fused_expert_arithmetic.py tests/unit/test_moe_fused_event_contract.py`: 32 passed (Python 3.12.13, Torch 2.8.0+cu128, vLLM 0.11.0).
+- The same command on each mutant tree under `/data/ycfeng/tmp/issue26-correctness-pr/wf_followup_20260924/w6_setup_negctl/`: 1 failed, 31 passed.

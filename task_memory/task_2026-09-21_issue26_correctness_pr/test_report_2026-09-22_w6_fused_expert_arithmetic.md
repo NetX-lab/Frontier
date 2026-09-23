@@ -7,6 +7,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Workflow `wf_7606e14e-f10`: section 6 records the negative control on the unrepaired source and the CPU setup-argument check `6828581` (W6-R6); section 8 states that the native test copies the profiler's setup. |
 | 2026-09-24 | Fix review: the native rerun ran with `block_shape=[128, 128]` (the unit test pins `[128, 64]`), corrected in section 8; `f236c17` changed the FP8 step after that rerun (W6-R1..R3), so no native run covers the current FP8 code. |
 | 2026-09-22 | Corrected FP8 case re-run natively: `exp-0922-202645-561899` (`codesign` / H800, `gpu-h800-0095`), 8 passed in 14.27 s, exit 0. Section 8 records the run. |
 | 2026-09-22 | Created: reachability check, magnitude estimate, source repair, CPU validation. Native GPU validation NOT_RUN. |
@@ -176,6 +177,11 @@ composition, not native numerics. The file's docstring says so.
 | `test_repeated_iterations_do_not_leak_a_previous_result` | Workspace reuse across profiling steps does not carry a stale output; the second result is finite and matches its own reference. |
 | `test_the_profiler_allocates_the_four_buffers_the_computation_needs` | Allocation-site dimensions for all four buffers under TP=2, and one workspace shared by every profiled step. |
 
+Added 2026-09-24 (workflow `wf_7606e14e-f10`, evidence `wf_7606e14e_f10/w6_negative_controls.txt`):
+
+- Against the unrepaired kernel (`7269bac^`) these tests give 1 failed and 6 errors. The errors are fixture setup, because `_vllm_custom_ops` does not exist there, so the discriminating test never reaches its assertion. A mutant that restores only the slice arithmetic gives 5 failed, 2 passed, and the discriminating test fails on its assertion. That mutant is the negative control.
+- The stubs of `try_get_optimal_moe_config` and `moe_align_block_size` ignored their arguments. `6828581` adds `test_the_tile_config_and_the_alignment_follow_fused_experts`, which asserts the block shape, token count and top-k of the config lookup and the block size, global expert count and EP expert map of the alignment (W6-R6). Three single-argument mutants of the profiler each fail only this test (1 failed, 31 passed).
+
 ### Regression comparison
 
 Same command, same environment, against a detached worktree at `HEAD`
@@ -219,8 +225,10 @@ changes nothing about a simulation run from existing data.
 ### The test
 
 `tests/integration/test_moe_fused_expert_numerical_parity.py`, 8 cases. It
-drives `_run_fused_moe_iteration` with the buffer shapes, kernel config and
-block alignment that `profile_fused_moe_kernel` uses, then compares the output
+drives `_run_fused_moe_iteration` with a copy of the buffer shapes, kernel
+config and block alignment that `profile_fused_moe_kernel` sets up (it does not
+call that function; the CPU test in section 6 pins the profiler's own
+arguments since 2026-09-24), then compares the output
 tensor against vLLM's own `fused_experts` over the same activations, weights,
 routing weights, routing ids and expert map. Both sides run in one process on
 one GPU.

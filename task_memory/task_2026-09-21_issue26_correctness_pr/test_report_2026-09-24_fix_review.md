@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-24 | Created: review findings and dispositions, verification of each fix, the dummy-mode answer, candidate row S44, final validation. |
+| 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled (section 10): W6-R6 fixed (`6828581`); W6-R7, W7-R4 and W9-R4 added; W7-R4 proposal in section 8; a blind-spot row in section 5; section 9 corrected. |
 | 2026-09-24 | Section 7 filled: all five pre-recorded expectations met. W3-R3 wording corrected (the removed scan guarded an unreachable state; no group-formation check exists) and the matching `3a8767c` erratum added. |
 
 ## 1. Scope and method
@@ -61,12 +62,16 @@ Baseline: `ba0a804`, the pushed PR 35 head before the review. Review commits: `c
 | W6-R3 | W6 | The hidden state was quantized before the timed step, and a `.contiguous()` copy could receive the kernel's writes. | Code reading against `fused_experts_impl` | Fixed, `f236c17` |
 | W6-R4 | W6 | The import comment promised a fallback to the functional path that cannot happen. | Code reading | Fixed, `f236c17` |
 | W6-R5 | W6 | `docs/profiling/README.md` dated the completeness fix by calendar and claimed every later path includes the reduction; `frontier_loop` does not. | Code reading | Fixed, `b7a7ac5` |
+| W6-R6 | W6 | The native parity test copies the profiler's tile-config and alignment calls instead of calling them, and the CPU stubs ignored their arguments, so nothing checked the block shape, token count, global expert count or expert map `profile_fused_moe_kernel` passes. | Mutants m5 (`block_shape=None`), m6 (local expert count), m7 (`expert_map=None`): 31 earlier tests pass on each | Test added, `6828581` |
+| W6-R7 | W6 | Records: `validation.md` said all 8 native cases compare at zero tolerance (seven do; FP8 is structural); `review.md` said the native test uses the profiler's setup (it copies it); `summary.md` and `review.md` said the W6 negative control fails for its stated reason on the unrepaired source (there the tests error at fixture setup). | `7269bac^` run: 1 failed, 6 errors; slice-restoring mutant: the discriminating test fails on its assertion | Records corrected |
 | W7-R1 | W7 | `eb7bc4f` let a zero payload through validation, but the runner's all-to-all generator was undefined at zero once a pair crossed servers: `ZeroDivisionError` (`pairwise_steps`), a hang (`nccl_pairwise`, htsim reads a 0-byte flow as unbounded, `ndp.cpp:934`), or 0 ms (`full_mesh`, one phase). | Probes in `w7_fix/before` and `negctl` | Fixed in the companion (`ff11ee6`) and the gitlink (`6d621c8`) |
 | W7-R2 | W7 | The Frontier test covered only one server. A reduce-scatter test covered a method no Frontier path calls, and a negative-payload test covered a guard shared by every backend. | Code reading | Test rewritten, `6d621c8` |
 | W7-R3 | W7 | After `beded3c` the config-name scan still skipped sources that fail to parse, which would now hide an owned module. | Code reading | Fixed, `7309f5d` |
+| W7-R4 | W7 | A zero-payload cross-server all-reduce hangs in the companion runner: the ring's per-edge sizes reach 0 bytes, which htsim treats as unbounded. `eb7bc4f` made zero legal for every collective kind; `ff11ee6` defines zero only for all-to-all. No Frontier path sends it (payloads come from batches with at least one token, idle placeholders are not priced, a zero MoE-TP all-reduce is `EXACT_NOOP`). | Probe, 2 x 8 GPUs, DP=16 ring: 480 zero-size connections on edges `7->8` and `15->0`; stopped advancing at simulated time 10.88, payload 1 passed 271 | Proposal (section 8) |
 | W9-R1 | W9 | The reference oracle raised when an engine had no work, and a test pinned per-engine step drift. vLLM runs `execute_dummy_batch()` for an idle engine in a running wave, and `_has_global_unfinished_reqs` advances its counter (`core.py:1170-1216`). | Source reading | Fixed, `8ca0387`; plan row superseded |
 | W9-R2 | W9 | Every PP>1 case arrived as a burst, so no lane published an admission into a forward its peer had already started. A key that always named the next forward passed them all. | Mutation M2 (section 4) | Two stagger cases, `6aee289` |
 | W9-R3 | W9 | `Publication` and `ReferenceDeployment.publications` were unused. | Code reading | Removed, `8ca0387` |
+| W9-R4 | W9 | S9-08 overstated the integration test's independence: its classifier `running_after >= num_pipeline_stages` restates the policy's room rule, and the reference oracle is not compared with Frontier's reports. A change applied to both the policy and the classifier passes every W9 test. | Code reading | Record qualified (`review.md` S9-08); the oracle comparison becomes a step of the S43 task |
 
 Commit-message errata (history is not rewritten):
 - `f236c17` says the local-reduction unit test "now derives its expected value from the inputs". It was deleted, because it asserted the CPU stub's own definition.
@@ -86,6 +91,7 @@ Commit-message errata (history is not rewritten):
 | `6d621c8` | Companion `tests/test_zero_payload_input.py`; Frontier `tests/unit/test_collective_sim_zero_payload.py`; controls at `eb7bc4f` | Cross-server empty all-to-all priced like one byte and above zero | Companion 12 passed; Frontier 3 passed (`final_20260924/collective_sim_*.txt`). At `eb7bc4f`: companion `pairwise_steps` RuntimeError, `full_mesh` AssertionError, `nccl_pairwise` timeout; Frontier 2 failed (`ZeroDivisionError`), 1 passed | PASS |
 | `7309f5d` | `pytest tests/unit/test_module_split_boundaries.py` | Passes; no parse error is skipped | Passes in the HEAD unit suite; no regression by id (section 7) | PASS |
 | `8ca0387` | `pytest tests/unit/test_dp_placement_reference_loop.py tests/unit/test_vllm_dp_load_balancer.py` | Idle iteration recorded; peers aligned | 88 passed | PASS |
+| `6828581` | `pytest tests/unit/test_moe_fused_expert_arithmetic.py tests/unit/test_moe_fused_event_contract.py` (openmopd) on HEAD and on three single-argument mutants of the profiler (`wf_7606e14e_f10/``w6_negative_controls.txt`) | Each mutant fails only the new test | HEAD 32 passed; m5, m6, m7 each 1 failed, 31 passed, the failure being `test_the_tile_config_and_the_alignment_follow_fused_experts` | PASS |
 | `6aee289` | `pytest tests/integration/test_vllm_dp_placement_runtime.py` on HEAD, and on an export with `joinable_forward_group_id` forced to `_next_forward_group_id` (M2, `review_20260924/w9_stagger/`) | HEAD passes. Under M2 both stagger cases fail and the PP>1 burst cases pass | HEAD 12 passed. M2: 3 failed (both stagger cases and the PP=1 asymmetric case), 88 passed with the balancer suite. The premise helper counts one reported join in each stagger case and zero in every burst case | PASS |
 
 ## 5. Is logic correction and repair in dummy mode alone sound?
@@ -105,6 +111,7 @@ What it cannot see (measured here):
 | Per-lane durations | The dummy PDD two-lane row is identical between a tree that borrows the first lane's duration and HEAD. The trained row differs (TPOT +0.26 %) (`newcases/`). |
 | Load imbalance | Before `3ec7bbf` the online random policy put every request on lane 0, yet dummy mean TTFT was only 1.1 % higher than after the fix (1995.73 vs 1973.56 ms, `w2_random/`). |
 | Timing-selected branches | G4 case, burst a. In dummy mode both lanes' first admissions report under key 12 in one stage-0 group, because the first MoE sync is at 6.51 ms. In non-dummy mode lane 0's layer-0 EP wave starts alone at 0.242 ms, before lane 1 arrives at 0.25 ms, so the keys are 12 and 13 (`calib_nondummy/analysis/`). |
+| The steady segment | The case records classify differences in the bursts only. In the steady segment lane agreement is 13 of 24 under dummy timing and 19 of 24 non-dummy; snapshot-count agreement is 6 and 7 of 24 (workflow `wf_7606e14e-f10`, `workflow_gap_summary.md` errata). |
 | Fidelity of a rule | F-R5 and F-R6 are differences in what is computed, not control-flow defects; only a timed comparison can size them. |
 
 Why dummy mode cannot close a calibration repair:
@@ -191,10 +198,88 @@ Commands for 1c (branch worktree, HEAD `6aee289`, submodule `ff11ee6` built,
 | W3-R6 sync-room alias refactor | More than five files in core scheduling code. |
 | S44 | Engine-loop semantics shared with S43; proposed as a second row of the S43 task. |
 | Native W6 FP8 rerun | `f236c17` changed the FP8 step after the last native rerun (`exp-0922-202645-561899` at `c231322`), so no native run covers the current FP8 code. It needs one H800 job on `codesign`. |
+| W7-R4 zero cross-server all-reduce in the companion | Unreachable from Frontier, so no simulation changes. Options: (a) reject zero again for every kind except all-to-all, restoring the pre-`eb7bc4f` error for them (recommended: it keeps one defined zero case and fails loudly elsewhere); (b) clamp to one byte, as `ff11ee6` does for all-to-all; (c) return 0 ms, as an NCCL call with count 0 does. (b) and (c) define a result no caller needs. The change belongs to companion PR 1 and a gitlink bump. |
 | Pinned calibration tools | The E2E normalizer and op-supplement tool must be restored, or a replacement approved, before S43 or S42 can close. |
 
 ## 9. Limits
 
-- The workflow's partial agents did not complete. Each package was reviewed again in the main session, but by one reviewer per package, not by an independent panel.
+- The first workflow's partial agents did not complete. Each package was reviewed again in the main session, but by one reviewer per package, not by an independent panel.
+- Workflow `wf_7606e14e-f10` completed, but 123 of its 152 agents failed on the platform rate limit (section 10). Only its six surviving findings had independent verifiers; the other 32 were checked by the main session alone.
 - No GPU run was made. W6 remains verified on CPU only for the current FP8 code.
 - The S44 evidence rests on one native case (G4) under dummy Frontier timing.
+
+## 10. Workflow `wf_7606e14e-f10` results (reconciled 2026-09-24)
+
+Workflow `issue26-fix-review-and-scoping`, status `completed`. Result file: the
+session's `workflows/wf_7606e14e-f10.json`; per-agent returns in its
+`journal.jsonl`. Agents that failed stopped on the platform's weekly limit
+(error `rate_limit`, confirmed in an agent transcript).
+
+| Stage | Started | Returned | Failed |
+| --- | --- | --- | --- |
+| Review, find | 20 | 8 | 12 |
+| Review, merge | 6 | 2 | 4 |
+| Review, verify | 114 | 18 | 96 |
+| Dummy-mode study | 4 | 1 | 3 |
+| Scope of S43 and S42 | 8 | 0 | 8 |
+
+### Surviving findings (6)
+
+Each was upheld by three of three verifiers. All six had already been found in
+this review:
+
+| Workflow id | Finding | Handled by |
+| --- | --- | --- |
+| S0 | Zero-payload all-to-all aborts, hangs or costs nothing across servers | W7-R1, companion `ff11ee6`, gitlink `6d621c8` |
+| S1 | W7 tests never put a flow into the network simulator | W7-R2, `6d621c8` |
+| S2 | Reduce-scatter reachability claim and test | W7-R2, `6d621c8`; reachability corrected in `validation.md` Step 7 and `review.md` W7 |
+| S3 | Negative-payload test checks a shared guard | W7-R2, removed in `6d621c8` |
+| S4 | Superseded `SyntaxError` guard in the governance scan | W7-R3, `7309f5d` |
+| S5 | W9-04 reach recorded for PP=1 co-location only | Records: `issues.md` W9-04 addendum, `validation.md` check A2b. Fix 288 of 288 co-location cells and 36 of 36 PDD cells drain; evidence `wf_7606e14e_f10/w9_04_reach.txt` |
+
+### The 32 findings labelled `refuted`
+
+They were not refuted. The script marks a finding refuted unless at least two
+verifiers uphold it, and every verifier for these 32 failed, so each has zero
+verdicts. The main session checked each against the code at `5e7221d`:
+
+| Workflow index | Lead | Status |
+| --- | --- | --- |
+| 0 | Random policy resets the lane per call | W2-R1, `3ec7bbf` |
+| 1, 4, 10 | Multi-lane MoE roles reachable through pass-through flags | W2-R5, matrix rows `748e757` |
+| 2, 6, 7 | W2 guard tests cannot fail for the defects they name | W2-R3, removed in `3ec7bbf` |
+| 3, 5 | The placement rule is written twice | W2-R2, `3ec7bbf` |
+| 8 | AGENTS.md calls every role cyclic | W2-R4, `3ec7bbf` |
+| 9 | Per-source continuation changes PDD timing | W3-R1, `3a8767c`, `748e757` |
+| 11 | `sync_entry` predicate relies on fixture defaults | W3-R5, proposal |
+| 12 | Legacy-marker loop | W3-R2, `3a8767c` |
+| 13 | Duplicate-owner scan | W3-R3, `3a8767c` |
+| 14 | Alias rooms and per-kind partition | W3-R6, proposal |
+| 15 | Phase and decoding-request rules duplicated | Phase rule: W3-R4, `3a8767c`. `advance_decode_layer` now says the caller selects the decoding requests; the shared forward filters them and passes `layer_advance_done` to the decode handler. No further change |
+| 16, 21 | FP8 config dtype and compute type | W6-R1, W6-R2, `f236c17` |
+| 17, 28 | FP8 quantization outside the timed step; `.contiguous()` output copy | W6-R3, `f236c17` |
+| 18, 25 | README completeness claims | W6-R5, `b7a7ac5` |
+| 19 | Native rerun block shape misquoted | Corrected in the W6 report, section 8, during this review |
+| 20 | Parity-test docstring claims it covers the profiler's setup | Docstring corrected in `f236c17`; argument check W6-R6, `6828581` |
+| 22 | Nothing checks the profiler's config and alignment arguments | **New:** W6-R6, `6828581` |
+| 23 | `block_dims` and `block_shape` encode one quantity | `block_dims` removed in `f236c17` |
+| 24 | Import comment promises an impossible fallback | W6-R4, `f236c17` |
+| 26 | W6 records contradict each other | **New:** W6-R7, records corrected |
+| 27 | Local-reduction test asserts the stub's own definition | Deleted in `f236c17` (commit-message erratum, section 3) |
+| 29 | Oracle encodes the superseded idle-engine view | W9-R1, `8ca0387` |
+| 30 | No PP>1 case admits into a peer's open group | W9-R2, `6aee289` |
+| 31 | Oracle not compared with Frontier; dead publication log | Log removed as W9-R3 (`8ca0387`); **new:** W9-R4, S9-08 qualified |
+
+### Dummy-mode study
+
+One of four parts returned. Its results changed the case records, not the
+answer in section 5:
+- The case's semantic labels cover the bursts only; the steady segment is unclassified (section 5 row).
+- WG04 and WG06 hold under dummy timing only.
+- The G4 ground truth ran in eager mode.
+
+These are recorded as errata in `calibration/dp_pp_case_001/analysis/workflow_gap_summary.md` and `semantic_alignment_summary.md` (rows S10 and S39), and as scope rules and blockers in the S43 and S42 plans.
+
+### Scope of S43 and S42
+
+No agent returned. The task records under `/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/` and `task_2026-09-24_s42_dp_wave_idle_forward/` were written by the main session. Their plans now also require classifying the steady segment and a vLLM routing record (S39 is `UNSET`) before either task can close.

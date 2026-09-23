@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Post-review errata from workflow `wf_7606e14e-f10` (section "Post-review errata"): steady-segment natural history is not classified by any row; WG04 and WG06 hold under dummy timing only. No status changes. |
 | 2026-09-24 | Human review G5-review recorded (C4 option a; S43 and S42 transferred to their own tasks). Frontier admission anchor corrected from `base_replica_scheduler.py:906` (the unified DECODE loop) to `:1052-1063`, the MONOLITHIC and PREFILL loop this case runs, here and in `semantic_alignment_table.csv` S23/S43 and `workflow_gap_table.csv` WG05. |
 
 Entry `workflow-gap-analysis`, read-only. Table: `analysis/workflow_gap_table.csv`
@@ -91,3 +92,28 @@ and `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`.
 
 Either change needs the user's review before `workflow-repair` (contract
 "Analysis Before Code Change").
+
+## Post-review errata (2026-09-24)
+
+Found by workflow `wf_7606e14e-f10` after the human review. Rechecked here. No
+row status changes, and the review decision `G5-review` is unaffected: C4 stays
+`SCENARIO_NOT_REACHED`, and S43 and S42 have their own tasks.
+
+- The steady segment's natural history is not classified by any row. The C3
+  table above covers the bursts only. Per-request lane agreement with native
+  is 13 of 24 steady requests, and snapshot-count agreement is 6 of 24. Under
+  the non-dummy fallback timing the figures are 19 of 24 and 7 of 24.
+  Recomputed with
+  `/data/ycfeng/tmp/issue26-correctness-pr/review_20260924/calib_nondummy/analysis/placement_diag.py`
+  on `runs/frontier_g4/vllm_load_balancing` and on the fallback run. The first
+  cause is not established. Timing is the likely cause (S31), because the
+  agreement moves with the time source. That is an inference. The S43 and S42
+  analyses have to classify this segment before either repair can close.
+- WG04 and WG06 are MATCH under dummy timing only. In burst a, dummy timing
+  puts the first MoE sync at 6.51 ms, so lane 1's admission at 0.25 ms reports
+  under the same key (12) as lane 0's. Under the non-dummy fallback, lane 0's
+  layer-0 EP wave starts alone at 0.242 ms, and lane 1 reports under key 13.
+  Which key-grouping branch runs therefore depends on the time source (origin
+  `test_report_2026-09-24_fix_review.md` section 5).
+- Ground truth G4 ran in eager mode, with no CUDA graphs and no DP padding. The
+  case says nothing about CUDA-graph mode.

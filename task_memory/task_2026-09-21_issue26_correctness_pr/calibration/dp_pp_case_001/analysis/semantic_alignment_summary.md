@@ -1,5 +1,11 @@
 # Semantic alignment summary: dp_pp_case_001
 
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-09-24 | Post-review corrections from workflow `wf_7606e14e-f10`: S10 scope, S39 impact, steady segment unclassified. No status change. |
+
 Table: `semantic_alignment_table.csv` (43 rows: 37 MATCH, 5 MISMATCH, 1 UNSET).
 Status: `analysis_state=COMPLETE`, `status=PASS`,
 `correction_state=not_applicable` (`semantic_alignment_status.json`).
@@ -40,6 +46,19 @@ not passed.
 
   S42 and S43 do not enter the T1 replay, which feeds native receipts and keys
   to Frontier's coordinator and frontend. `analysis/workflow_gap_table.csv`
-  labels every natural-history difference by its first cause.
+  labels every natural-history difference in the bursts by its first cause.
+  The steady segment is not classified (post-review erratum 2026-09-24,
+  `workflow_gap_summary.md` "Post-review errata").
 - UNSET: S39. There are no vLLM MoE routing records. That blocks only an E2E
   numeric gate, and this case has none.
+
+Post-review corrections (2026-09-24, workflow `wf_7606e14e-f10`), with no
+status change:
+
+- S10 compares weight loading only. vLLM's `load_format=dummy` replaces the
+  weight values and still measures GPU time. Frontier loads no weights. The
+  Frontier dummy predictor replaces timing instead, and that is row S31
+  (MISMATCH), not S10.
+- S39's impact "none on placement" holds only under dummy timing. With trained
+  predictors, `balanced` routing fails predictor construction on the checked-in
+  `h800/Qwen3-30B-A3B-tiny` profiles, which hold only `uniform_topk` rows.

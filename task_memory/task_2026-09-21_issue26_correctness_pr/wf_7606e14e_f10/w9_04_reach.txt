@@ -1,0 +1,52 @@
+# W9-04 reach beyond PP=1 (workflow wf_7606e14e-f10 finding S5), tallied 2026-09-24
+## Co-location sweep: review_20260924/w904/scripts/pp_sweep.py on an export of ba0a804
+## control = withdrawal call replaced by a no-op; fix = unchanged; 24 requests per cell
+nofix: cells=288
+   ('LOR', 1, 'drained') 20
+   ('LOR', 1, 'stuck') 4
+   ('LOR', 2, 'drained') 21
+   ('LOR', 2, 'stuck') 3
+   ('LOR', 3, 'drained') 20
+   ('LOR', 3, 'stuck') 4
+   ('Random', 1, 'drained') 24
+   ('Random', 2, 'drained') 24
+   ('Random', 3, 'drained') 24
+   ('RoundRobin', 1, 'drained') 23
+   ('RoundRobin', 1, 'stuck') 1
+   ('RoundRobin', 2, 'drained') 23
+   ('RoundRobin', 2, 'stuck') 1
+   ('RoundRobin', 3, 'crash') 12
+   ('RoundRobin', 3, 'drained') 11
+   ('RoundRobin', 3, 'stuck') 1
+   ('VllmLoadBalancing', 1, 'drained') 23
+   ('VllmLoadBalancing', 1, 'stuck') 1
+   ('VllmLoadBalancing', 2, 'drained') 23
+   ('VllmLoadBalancing', 2, 'stuck') 1
+   ('VllmLoadBalancing', 3, 'drained') 23
+   ('VllmLoadBalancing', 3, 'stuck') 1
+fix: cells=288
+   ('LOR', 1, 'drained') 24
+   ('LOR', 2, 'drained') 24
+   ('LOR', 3, 'drained') 24
+   ('Random', 1, 'drained') 24
+   ('Random', 2, 'drained') 24
+   ('Random', 3, 'drained') 24
+   ('RoundRobin', 1, 'drained') 24
+   ('RoundRobin', 2, 'drained') 24
+   ('RoundRobin', 3, 'drained') 24
+   ('VllmLoadBalancing', 1, 'drained') 24
+   ('VllmLoadBalancing', 2, 'drained') 24
+   ('VllmLoadBalancing', 3, 'drained') 24
+control stuck cells: 17 all 0/24: True
+fix cells drained 24/24: 288
+fix cells with a withdrawal: 17 equal to control stuck set: True
+control crashes (harness backend setting, W9-02 topology): [('RoundRobin', 3, 2)]
+## PDD sweep: review_20260924/reproduce/scripts/pdd_cell.sh, round_robin, trees exported from ba0a804
+tree: cells=36 stuck=0 [] with_request_metrics=36
+tree_ctl: cells=36 stuck=4 ['dp4_pp1_q400_s123', 'dp4_pp1_q400_s42', 'dp4_pp2_q400_s123', 'dp4_pp2_q400_s42'] with_request_metrics=32
+## Recheck on 5e7221d (wf_followup_20260924/tree) and its control (tree_ctl)
+colo_ctl colo tree_ctl pp2 rc=0 CELL {"policy": "RoundRobinClusterSchedulerConfig", "dp": 4, "pp": 2, "qps": 200.0, "seed": 42, "status": "stuck", "done": 0, "n": 24}
+colo_tree colo tree pp2 rc=0 CELL {"policy": "RoundRobinClusterSchedulerConfig", "dp": 4, "pp": 2, "qps": 200.0, "seed": 42, "status": "drained", "done": 24, "n": 24}
+pdd_ctl RESULT round_robin dp=4 pp=2 qps=400 seed=42 rc=1 stuck
+pdd_tree RESULT round_robin dp=4 pp=2 qps=400 seed=42 rc=0 ok
+pdd_tree request_metrics rows: 24
