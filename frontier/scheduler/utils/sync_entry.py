@@ -15,6 +15,24 @@ def _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
     return scheduler.get_stage_execution_context(replica_id, stage_id).forward_group_sealed
 
 
+def _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, stage_id):
+    """Remove placeholders whose lanes have since joined this forward.
+
+    A placeholder is placed only for a lane whose stage is not busy. A stage
+    admits new work into a forward only before the forward is sealed, and opens
+    a new forward only once it is idle. A lane that is busy while this room is
+    open has therefore joined this forward, and its own batch will arrive here.
+    Counting its placeholder would dispatch the room without that batch.
+    """
+
+    for lane_id, placed in list(sync_room["batches"].items()):
+        if placed.is_idle and scheduler._replica_schedulers[
+            (replica_id, lane_id)
+        ].get_replica_stage_scheduler(stage_id).is_busy:
+            del sync_room["batches"][lane_id]
+            del sync_room["arrival_times"][lane_id]
+
+
 def uses_shared_forward_room(scheduler: Any) -> bool:
     """Return whether this cluster keeps one room for both local phases.
 
@@ -130,6 +148,7 @@ def enter_layer_sync(
         return []
     sync_room["batches"][lane_id] = batch
     sync_room["arrival_times"][lane_id] = float(time)
+    _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, stage_id)
 
     expected_lanes = scheduler._replica_dp_size
     if type(expected_lanes) is not int or expected_lanes <= 0:

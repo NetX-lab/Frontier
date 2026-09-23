@@ -318,6 +318,32 @@ def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
     assert probe["completion_reporting_control"]["engine"] == 1
 
 
+def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
+    """Issue W9-04 on the policy's four-lane MoE shape, under both policies.
+
+    Lane 0 waits in the first MoE room of forward 0 while lane 1 is still in
+    attention, so the room places placeholders for the idle lanes 2 and 3.
+    Request 2 then reaches lane 2, which joins forward 0 because it is not yet
+    sealed. The room used to count lane 2's stale placeholder and dispatch when
+    lane 1 arrived. Lane 2's own batch then opened a room that its busy peers
+    never enter, and both runs stalled with no request complete.
+    """
+
+    evidence = _run_child(tmp_path, "moe_dp4_late_join")
+
+    for run in evidence.values():
+        assert run["placements"] == [0, 1, 2]
+        first_groups = {}
+        for record in run["records"]:
+            if record["kind"] == "stage0":
+                first_groups.setdefault(record["lane"], record["group"])
+        # The race is reached: lane 2 joined forward 0, and the placeholder it
+        # had been given there was withdrawn.
+        assert first_groups == {0: 0, 1: 0, 2: 0}
+        assert run["withdrawn_placeholder_lanes"] == [2]
+        _assert_run_conserves_work(run)
+
+
 # ---------------------------------------------------------------------------
 # Child process
 # ---------------------------------------------------------------------------
@@ -506,6 +532,7 @@ def run_case(
     from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
         ReplicaStageScheduler,
     )
+    from frontier.scheduler.utils import sync_entry
     from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
     from frontier.scheduler.utils.vllm_dp_load_balancer import VllmDPLoadBalancer
     from frontier.simulator import Simulator
@@ -525,12 +552,14 @@ def run_case(
     records: list[dict] = []
     reports: list[list] = []
     selections: list[dict] = []
+    withdrawn_placeholder_lanes: list[int] = []
 
     original_cluster_schedule = ClusterScheduleEvent.handle_event
     original_batch_end = GlobalBatchEndEvent.handle_event
     original_report = VllmDPLoadBalancer.report
     original_select = VllmDPLoadBalancer.select
     original_stage_pop = ReplicaStageScheduler.pop_batch_if_not_busy
+    original_withdraw = sync_entry._withdraw_idle_batches_of_joined_lanes
 
     def observed_cluster_schedule(self, scheduler, metrics_store):
         cluster_schedule_times.append(float(self.time))
@@ -591,6 +620,11 @@ def run_case(
             )
         return batch
 
+    def observed_withdraw(scheduler, sync_room, replica_id, stage_id):
+        placed = {lane for lane, batch in sync_room["batches"].items() if batch.is_idle}
+        original_withdraw(scheduler, sync_room, replica_id, stage_id)
+        withdrawn_placeholder_lanes.extend(sorted(placed - set(sync_room["batches"])))
+
     def observing_seam(kind, original):
         def observed(self, time, replica_id, replica_local_id, batch):
             before = len(reports)
@@ -642,6 +676,9 @@ def run_case(
         patch.setattr(VllmDPLoadBalancer, "report", observed_report)
         patch.setattr(VllmDPLoadBalancer, "select", observed_select)
         patch.setattr(ReplicaStageScheduler, "pop_batch_if_not_busy", observed_stage_pop)
+        patch.setattr(
+            sync_entry, "_withdraw_idle_batches_of_joined_lanes", observed_withdraw
+        )
         # Both the inert base seam and the policy's override have to be
         # wrapped for routing: patching only the base would silently observe
         # nothing on the very policy under test.
@@ -712,6 +749,7 @@ def run_case(
         "placements": placements,
         "records": records,
         "selections": selections,
+        "withdrawn_placeholder_lanes": withdrawn_placeholder_lanes,
         "event_types": sorted(event_types),
     }
 
@@ -742,7 +780,20 @@ DISCRIMINATING_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
 1.1,4,1
 """
 
-TRACES = {"asymmetric": ASYMMETRIC_TRACE, "discriminating": DISCRIMINATING_TRACE}
+# Issue W9-04. Four MoE lanes; requests 0 and 1 start lanes 0 and 1 two
+# milliseconds apart, and request 2 arrives while lane 0 already waits in the
+# first MoE room of that forward and lane 1 has not reached it yet.
+LATE_JOIN_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
+0.0,8,2
+0.002,24,2
+0.008,48,2
+"""
+
+TRACES = {
+    "asymmetric": ASYMMETRIC_TRACE,
+    "discriminating": DISCRIMINATING_TRACE,
+    "late_join": LATE_JOIN_TRACE,
+}
 
 CASES = {
     "moe_dp2": dict(is_moe=True, attn_dp=2, moe_ep=2),
@@ -768,6 +819,7 @@ CASES = {
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=3, num_layers=6,
         analytical_backend=True,
     ),
+    "moe_dp4_late_join": dict(is_moe=True, attn_dp=4, moe_ep=4, trace="late_join"),
     # Stages long enough that no batch completes before the probe (plan D-e).
     "moe_dp2_pp2_discriminating": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2,
