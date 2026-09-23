@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | D-9 adopted ("采纳你的推荐，继续"): C3 witnesses judged by co-execution fraction, V5 gated on MoE only. Both comparisons rerun (`aeeca93`); all criteria pass. |
 | 2026-09-23 | Created. P0–P3 and P5 executed; two plan stop conditions reached (C3 witness metric at `attn_dp=4`, C7 V5 on the dense shape). P4 push held for the user's decision. |
 
 ## 1. Result
@@ -12,11 +13,11 @@
 | --- | --- | --- |
 | C1 repaired liveness | PASS: all 10 G3a `admission_deadlock` cases complete with conservation; so do the 6 G3b and 2 G7 MoE deadlocks. | §4.1 |
 | C2 unchanged controls | PASS: 50 of 50 U cases byte-identical. | §4.2 |
-| C3 timing change | **STOP (plan §3 P3)**: 6 T cases identical, 8 differ. All 8 differences are start times only (same batches, same component durations), with no self-overlap and `peak_lanes ≤ attn_dp`. The two `attn_dp=4` contention witnesses fail the stated rule "strictly larger `multi_lane_busy_time`". | §4.3 |
+| C3 timing change | PASS (D-9): 6 T cases identical, 8 differ. All 8 differences are start times only (same batches, same component durations), with no self-overlap and `peak_lanes ≤ attn_dp`. All 4 contention witnesses have a strictly larger co-execution fraction. The first comparison stopped on the original absolute-overlap rule; see §4.3. | §4.3 |
 | C4 existing tests | PASS: no base-passed node regresses, no new failure or error, skips and collection errors unchanged. | §4.4 |
 | C5 rule shape | PASS by review: one predicate, docstrings state the contract, no flag, field, fallback, wake-up, PP branch, second queue or capacity-1 case. | §3 |
 | C6 Step 9 probe | Informational: MoE `attn_dp=2, moe_ep=2, PP=2` completes 6/6 (base drains). `PP=3` stops on the known W9-02 node-size rejection. | §4.5 |
-| C7 vLLM comparison | **STOP (plan §3 P5)**: 50 of 52 rows MATCH. The two `MISMATCH` rows are V5 (stage-0 co-execution) on the dense shape. MoE matches on all 26 rows, V5 included. The negative controls fail on the base as planned. | §5 |
+| C7 vLLM comparison | PASS (D-9): 50 rows MATCH, 0 MISMATCH, 2 INFORMATIONAL (dense V5). MoE matches on all 26 rows, V5 included; dense matches V1–V4 in every round. The negative controls fail on the base as planned. The first comparison stopped on dense V5; see §5.3. | §5 |
 
 Observed facts are separated from inferences. Inferences are marked
 "Inference".
@@ -31,7 +32,7 @@ Observed facts are separated from inferences. Inferences are marked
 | Base set `base` | run at `a054d87` (harness only; `frontier/` identical to `1f694f7`) |
 | After set `after` | run at `dac4e69`, tree clean outside `task_memory/`; 98 cases in 90 s with `--jobs 8` |
 | Rule commit | `dac4e69` fix(scheduler): order full-stage admission only behind queued EP waves |
-| Harness commits | `a054d87`, `5ade853` (matrix), `799ccb4` (vLLM comparison), `a1b9819` (recorded overlay patch) |
+| Harness commits | `a054d87`, `5ade853` (matrix), `799ccb4` (vLLM comparison), `a1b9819` (recorded overlay patch), `aeeca93` (D-9 witness and V5 rules) |
 | Scratch root | `/data/ycfeng/tmp/stage_admission_ordering/{base,after,base-rerun,base-pytest,after-pytest,step9_probe}` |
 
 Commands:
@@ -39,7 +40,7 @@ Commands:
 ```bash
 python -m tests.e2e.stage_admission_matrix run --set after --jobs 8
 python -m tests.e2e.stage_admission_matrix compare --before base --after after \
-  --output /data/ycfeng/tmp/stage_admission_ordering/compare_base_after.json
+  --output /data/ycfeng/tmp/stage_admission_ordering/compare_base_after_d9.json   # first run: compare_base_after.json
 python -m pytest tests/<suite> -q -p no:cacheprovider --continue-on-collection-errors \
   --junitxml=<out>/<suite>.xml        # suite in {unit, integration}, base and after
 python task_memory/.../evidence/explain_t_path.py <root> <compare json> <out json>
@@ -113,8 +114,8 @@ no self-overlap, `peak_lanes ≤ attn_dp`. Differing files are the ledger,
 | G4-dense-dp2-pp2-n8 | W | 0.45 → 0.50 | 0.818 → 1.0 | 2 → 2 | {1: 0, 0: 0.05} → all 0 | EXPLAIN |
 | G4-dense-dp2-pp3-n4 | | 0.108 → 0.216 | 0.333 → 1.0 | 2 → 2 | {1: 0, 0: 0.036} → all 0 | EXPLAIN |
 | G4-dense-dp2-pp3-n8 | W | 0.216 → 0.396 | 0.375 → 1.0 | 2 → 2 | {1: 0, 0: 0.072} → all 0 | EXPLAIN |
-| G4-dense-dp4-pp2-n8 | W | **0.55 → 0.30** | 0.846 → 1.0 | 2 → 4 | {1: 0, 2: 0.05, 3: 0.10, 0: 0.15} → all 0 | **STOP** |
-| G4-dense-dp4-pp3-n8 | W | **0.396 → 0.216** | 0.846 → 1.0 | 2 → 4 | {1: 0, 2: 0.036, 3: 0.072, 0: 0.108} → all 0 | **STOP** |
+| G4-dense-dp4-pp2-n8 | W | 0.55 → 0.30 | 0.846 → 1.0 | 2 → 4 | {1: 0, 2: 0.05, 3: 0.10, 0: 0.15} → all 0 | EXPLAIN (first run: STOP) |
+| G4-dense-dp4-pp3-n8 | W | 0.396 → 0.216 | 0.846 → 1.0 | 2 → 4 | {1: 0, 2: 0.036, 3: 0.072, 0: 0.108} → all 0 | EXPLAIN (first run: STOP) |
 | G7-dense-dp2-pp2-n8 | | 0.36 → 0.48 | 0.60 → 1.0 | 2 → 2 | {1: 0, 0: 0.12} → all 0 | EXPLAIN |
 | G7-dense-dp2-pp2-n16 | | 0.84 → 0.96 | 0.778 → 1.0 | 2 → 2 | {1: 0, 0: 0.12} → all 0 | EXPLAIN |
 
@@ -127,7 +128,11 @@ shrinks with it, although it is now the whole busy period. Request E2E for
 Inference: absolute `multi_lane_busy_time` measures overlap only while the
 busy period stays the same length; it cannot express "more overlap" when the
 fix compresses the timeline, which happens whenever the base serialized more
-than two lanes. The plan requires a stop here, with nothing adjusted.
+than two lanes. The first comparison stopped here with nothing adjusted.
+Under D-9 the witness condition is the co-execution fraction, which strictly
+increases in all four witnesses (0.818, 0.375, 0.846, 0.846 → 1.0); the rerun
+(`compare_base_after_d9.json`) gives U 50 PASS, L 18 PASS, T 6 PASS and
+8 EXPLAIN, and no STOP.
 
 ### 4.4 C4 — G2 test identities
 
@@ -192,12 +197,12 @@ misplaced; `num_gpu_blocks` 600666 (MoE) and 304854 (dense).
 | V2 lane sequences | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH |
 | V3 stage-0 pairing | 3/3 MATCH | 3/3 MATCH | 3/3 MATCH; base pairs 0↔3, 2↔5, …, 6↔none | 3/3 MATCH; base shifted by one forward |
 | V4 co-start (vLLM / after / base) | 0.009–0.063 / 0.0 / — | 0.005–0.024 / 0.0 / — | 0.008–0.248 / 0.0 / 1.0 | 0.046–0.171 / 0.0 / 1.0 |
-| V5 co-execution (vLLM mean / after / base) | 0.976 / 1.0 / — MATCH | 0.948 / 1.0 / — MATCH | **0.706 / 1.0 / 0.600 MISMATCH** | **0.865 / 1.0 / 0.778 MISMATCH** |
+| V5 co-execution (vLLM mean / after / base) | 0.976 / 1.0 / — MATCH | 0.948 / 1.0 / — MATCH | 0.706 / 1.0 / 0.600 INFORMATIONAL (first run: MISMATCH) | 0.865 / 1.0 / 0.778 INFORMATIONAL (first run: MISMATCH) |
 
 Run a (dense only, same scripts): V1–V4 all MATCH; V5 vLLM mean 0.714 (n8)
-and 0.685 (n16), also MISMATCH.
+and 0.685 (n16): MISMATCH under the first rule, INFORMATIONAL under D-9.
 
-### 5.3 The V5 dense mismatch
+### 5.3 V5 on the dense shape
 
 `evidence/decompose_co_execution.py` splits the stage-0 non-overlap of each
 M3 pair into `|Δstart| + |Δend|`
@@ -235,22 +240,29 @@ overlap; its pairing (V3) and co-start (V4) are wrong in every round.
 
 `compare_lanes.py` labels every `MISMATCH` with the admission owner
 `stage_execution_context.py`; on the evidence above, these two rows belong to
-the execution-time model instead. The plan (§3 P5) requires a stop with
-nothing adjusted.
+the execution-time model instead. The first comparison stopped here with
+nothing adjusted. Under D-9 dense V5 is reported, not gated; the rerun gives
+`workflow_gap_status.json` status PASS with 0 mismatches. The P5a synthetic
+check (`analysis/synthetic_check.py`) still flags its planted dummy-shifted
+dense round through V3 and V4.
 
-## 6. Decisions needed before P4
+## 6. Decisions
 
-1. **C3 witness metric.**
-   - Observed: at `attn_dp=4` the rule "strictly larger `multi_lane_busy_time`" fails, although overlap becomes complete.
-   - Proposal: define the witness condition on the co-execution fraction `multi_lane_busy_time / busy_time`, the same quantity as M5. It strictly increases in all four witnesses (0.818, 0.375, 0.846, 0.846 → 1.0). Keep the self-overlap and `peak_lanes` checks unchanged.
-2. **C7 V5 on the dense shape.**
-   - Observed: vLLM's own round-to-round spread exceeds the 0.10 bound, and the gap comes from per-rank duration variance.
-   - Proposal: report V5 for dense as informational, with the decomposition above, and keep V5 as a gate for MoE, where it passes. C7 then rests on V1–V4 for both models, V5 for MoE, and the base negative controls.
+Both stops were resolved by D-9 (`plan.md`), adopted by the user on
+2026-09-23 ("采纳你的推荐，继续"):
+
+1. C3: a contention witness passes on a strictly larger co-execution fraction
+   `multi_lane_busy_time / busy_time`; the self-overlap and `peak_lanes` checks
+   are unchanged.
+2. C7: V5 gates the MoE shape only; the dense value is reported with the
+   decomposition of §5.3. C7 rests on V1–V4 for both models, V5 for MoE, and the
+   base negative controls.
 
 ## 7. Verification limits
 
 - The Frontier side runs the dummy predictor; no latency or duration
-  parity is claimed (D-8).
+  parity is claimed (D-8). Dense co-execution against vLLM is therefore not a
+  gate (D-9).
 - vLLM instrumented mode synchronizes after each forward; stage-1 intervals
   use a wall/monotonic offset and are informational.
 - The vLLM ground truth runs with one recorded overlay patch (§5.1); the fork

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | D-9 adopted: dense V5 reported, not gated; rerun status PASS, 0 mismatches. |
 | 2026-09-23 | Created from run `sa-pp-20260923b` against Frontier sets `base` (`1f694f7` rule) and `after` (`dac4e69`). |
 
 ## Inputs
@@ -17,8 +18,8 @@
 
 ## Result
 
-52 rows: 50 `MATCH`, 2 `MISMATCH`. `vllm_placement_ok = true`, no unseen
-request.
+52 rows: 50 `MATCH`, 0 `MISMATCH`, 2 `INFORMATIONAL` (dense V5 under D-9);
+status PASS. `vllm_placement_ok = true`, no unseen request.
 
 | Metric | MoE (n8, n16) | Dense (n8, n16) |
 | --- | --- | --- |
@@ -26,9 +27,9 @@ request.
 | V2 lane sequences | MATCH 6/6 | MATCH 6/6 |
 | V3 stage-0 pairing | MATCH 6/6 | MATCH 6/6; base pairs are shifted by one forward |
 | V4 first-forward co-start | MATCH 6/6 (vLLM ≤ 0.063, after 0.0) | MATCH 6/6 (vLLM ≤ 0.248, after 0.0, base 1.0: negative control holds) |
-| V5 stage-0 co-execution | MATCH: vLLM 0.976 / 0.948, after 1.0 | **MISMATCH**: vLLM 0.706 / 0.865, after 1.0, base 0.600 / 0.778 |
+| V5 stage-0 co-execution | MATCH: vLLM 0.976 / 0.948, after 1.0 | INFORMATIONAL (D-9): vLLM 0.706 / 0.865, after 1.0, base 0.600 / 0.778 |
 
-## The two MISMATCH rows
+## Dense V5 (MISMATCH before D-9)
 
 - Observed: vLLM's dense co-execution varies from round to round by more than
   the 0.10 bound: 0.537–0.926 over the 12 dense rounds of runs a and b. The
@@ -46,6 +47,7 @@ request.
   owner is the execution-time model: the dummy predictor gives equal
   durations. It is not `stage_execution_context.py`, the default owner label
   written into the table.
-- Plan §3 P5 requires a stop before P4 with nothing adjusted. Proposed
-  resolution, pending the user: V5 becomes informational for the dense shape
-  and stays a gate for MoE.
+- The first analysis stopped here with nothing adjusted. The user adopted
+  D-9: V5 is informational for the dense shape and stays a gate for MoE.
+  C7 rests on V1–V4 for both models, V5 for MoE, and the base negative
+  controls.

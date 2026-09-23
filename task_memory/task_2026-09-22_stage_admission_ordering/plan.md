@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-8 / D-9: the C3 witness condition uses the co-execution fraction, and V5 gates MoE only (dense is reported). Adopted after the P3/P5 stops, before P4. |
 | 2026-09-23 | R-7: the MoE retry job runs the ground truth with one recorded overlay patch (four-argument `topk_softmax`); §4.7 notes it. |
 | 2026-09-23 | R-6: execution started. Added package P5 (vLLM comparison on a GPU worker), criterion C7, the vLLM-aligned group G7, §4.7 and D-8. |
 | 2026-09-23 | Applied the round-1 plan review (`review.md`). Changes: C1 now targets confirmed admission-deadlock witnesses from a phase-controlled group; C3 uses the stage ledger and overlap duration; C4 takes the reviewer's wording; P0 lists its artifacts and outcome classes; P2 covers both sides of the EP boundary, the `DECODE_FFN` dense-group control, a second admission round and per-fixture base expectations, and the dense fixture asserts a same-start condition that discriminates on the base; P3 has three acceptance paths. The matrix now publishes a concrete case list on the analytical backend and keeps `attn_dp=2, PP=3`. Added D-6 and D-7. Not executed. |
@@ -38,7 +39,7 @@ own branch:
 | --- | --- | --- |
 | C1 | Repaired liveness (path L). Every G3a case that P0 classifies as `admission_deadlock` completes after P1, with request count, prefill tokens and decode tokens conserved. G3a is the phase-controlled, prefill-only group. P0 must find at least one such case for each of `(attn_dp, PP)` ∈ {2, 4} × {2, 3}; if a pair has none, stop and report before P1, because the case list does not exercise the defect there. | P0 classification; P2(c); P3 path L. |
 | C2 | Unchanged controls (path U). Every run-to-run-stable metrics file is byte-identical before and after for G1 (all 30 release recipes, including the 10 PD-AF recipes), every `PP = 1` cell of G3a, G3b and G4, and every G5 cell. | P0 vs P3 `sha256sums.txt`. |
-| C3 | Timing change (path T). Base-successful cases with `attn_dp > 1` and `PP > 1` (all G4 `PP > 1` cells, and G3a/G3b cells P0 classifies as `success`) are either byte-identical, or their difference is explained with the stage-ledger metric of §4.5 plus batch membership and component durations. The designated contention witnesses (§4.2, marked W) show a strictly larger `multi_lane_busy_time` after P1. In every case: no lane overlaps itself, and `peak_lanes ≤ attn_dp`. | P3, §4.5 metric from `frontier_stage_batch_ledger.jsonl`. |
+| C3 | Timing change (path T). Base-successful cases with `attn_dp > 1` and `PP > 1` (all G4 `PP > 1` cells, and G3a/G3b cells P0 classifies as `success`) are either byte-identical, or their difference is explained with the stage-ledger metric of §4.5 plus batch membership and component durations. The designated contention witnesses (§4.2, marked W) show a strictly larger co-execution fraction `multi_lane_busy_time / busy_time` (§4.5, summed over the witness's stages) after P1 (D-9). In every case: no lane overlaps itself, and `peak_lanes ≤ attn_dp`. | P3, §4.5 metric from `frontier_stage_batch_ledger.jsonl`. |
 | C4 | Existing passing tests must remain passing without assertion changes. Existing failures, collection errors, and skips must be compared against a fresh run of the exact base revision in the same environment. Any new failure or required change to an ordering assertion stops implementation for review. | G2, §4.6. |
 | C5 | The predicate is one readable condition, and the module and method docstrings state the ordering contract as implemented. The change adds no flag, config field, `getattr` fallback, lane field on tickets, acquisition wake-up, PP-specific branch, second queue or capacity-1 special case. | Review of the diff against the quality gates. |
 | C7 | vLLM comparison (path V, R-6). On the vLLM-aligned shapes of §4.7, the P1 revision matches vLLM on completion, per-lane batch sequences, stage-0 lane pairing, first-forward co-start and stage-0 co-execution, and the base revision fails the negative controls stated there. | P5, §4.7. |
@@ -154,7 +155,7 @@ scratch root; the test report keeps the classification table and the metrics.
 | --- | --- | --- |
 | U unchanged | G1, G5, every `PP=1` cell, G6 recipes | Identical `sha256sums.txt` (run-to-run-unstable files excluded by P0 with a reason). |
 | L repaired liveness | Cases P0 classifies as `admission_deadlock` | `success` after P1; completed requests = generated requests; the sums of prefill and decode tokens over `request_metrics.csv` equal the generated lengths. |
-| T timing | Cases P0 classifies as `success` with `attn_dp>1, PP>1` | Identical hashes, or a ledger-explained difference (§4.5). W cases: strictly larger `multi_lane_busy_time`. |
+| T timing | Cases P0 classifies as `success` with `attn_dp>1, PP>1` | Identical hashes, or a ledger-explained difference (§4.5). W cases: strictly larger co-execution fraction (D-9). |
 
 ### 4.5 Lane-overlap metric (C3)
 
@@ -170,6 +171,8 @@ with `execution_scope == "ATTN_DP_LANE"` as half-open intervals
 | Output | Definition |
 | --- | --- |
 | `multi_lane_busy_time` | Total simulated time during which at least two distinct lanes have an open interval. Touching endpoints overlap for zero time; zero-length rows contribute nothing. |
+| `busy_time` | Total simulated time during which at least one lane has an open interval. |
+| Co-execution fraction | `multi_lane_busy_time / busy_time`; over several stages, the sums of both. |
 | `peak_lanes` | The largest number of distinct lanes open at one instant. |
 | `makespan` | The largest `stage_end_ts` in the ledger. |
 | Checks | No lane's intervals overlap one another. `peak_lanes ≤ attn_dp`. |
@@ -266,7 +269,7 @@ row in Frontier; both sides compare real forwards only.
 | V2 | After-revision M2 equals vLLM M2 in every round. vLLM rounds that disagree with one another are reported, with the cause. |
 | V3 | After-revision M3 equals vLLM M3 in every round. A vLLM round in which a dummy forward shifts the pairing is named and reported, not dropped. |
 | V4 | vLLM M4 < 0.5 in every round and after-revision M4 < 0.5: both lanes start in the same forward slot. Dense negative control: base M4 ≥ 0.5. |
-| V5 | `|M5(after) − mean M5(vLLM)| ≤ 0.10`; for dense also `|M5(base) − mean M5(vLLM)| > |M5(after) − mean M5(vLLM)|`. The 0.10 bound reuses the calibration contract's tolerance; it is applied to a fraction, not to latency. |
+| V5 | MoE: `|M5(after) − mean M5(vLLM)| ≤ 0.10`. The 0.10 bound reuses the calibration contract's tolerance; it is applied to a fraction, not to latency. Dense: M5 is reported with its start/end decomposition, not gated (D-9). |
 
 The comparison writes `analysis/workflow_gap_table.csv` (one row per metric,
 burst and round, with `MATCH`/`MISMATCH`, values, source and Frontier owner),
@@ -317,6 +320,13 @@ evidence and recorded here for review):
 | --- | --- | --- |
 | D-8 | The vLLM comparison is structural (M1–M5), in vLLM's instrumented mode, with a prefill-only workload on one MoE and one dense model already in `data/config/models/`. No E2E latency gate. | The fix changes admission, not durations; the Frontier side runs the dummy predictor. Prefill-only keeps the comparison inside the D-7 scope boundary. Both models exist on both sides without new assets. |
 
+Adopted after the P3 and P5 stops on 2026-09-23 ("采纳你的推荐，继续"; evidence in
+`test_report_2026-09-23_stage_admission_ordering.md` §4.3, §5.3):
+
+| Id | Decision | Reason |
+| --- | --- | --- |
+| D-9 | (a) A contention witness passes when its co-execution fraction strictly increases; the self-overlap and `peak_lanes` checks are unchanged. (b) V5 gates the MoE shape only; for the dense shape M5 is reported with its start/end decomposition. | (a) At `attn_dp=4` the fix makes all four lanes co-execute and shortens the busy period, so absolute `multi_lane_busy_time` falls (0.55 → 0.30) while overlap becomes complete; the fraction measures overlap independently of that compression. (b) vLLM's dense ranks meet once per forward and vary in duration per rank (M5 0.54–0.93 across rounds, wider than 0.10), a property the dummy predictor does not model; admission is covered by V1–V4. MoE ranks stay aligned by in-forward EP collectives (M5 0.93–0.98). |
+
 ## 6. Dependencies and risks
 
 - The reproduction scripts still live in the session scratchpad
@@ -337,7 +347,9 @@ evidence and recorded here for review):
   yielding to the event loop to make it unlikely.
 - Risk (P5): vLLM stage-0 intervals start before the per-forward DP
   all-reduce, so a rank that arrives early records its wait as busy time. M4
-  uses start times only, and V5 has the stated 0.10 bound.
+  uses start times only, and V5 has the stated 0.10 bound. Observed in P5:
+  on the dense shape the vLLM ranks' own M5 varies by more than 0.10 between
+  rounds, so dense V5 is reported, not gated (D-9).
 - The parent task's Step 9 resumes only after this branch is merged into `main`
   and merged forward into `fix/issue26-correctness-pr`. The parent task then
   reruns G3b on that branch, where W3 is present, as the composition check

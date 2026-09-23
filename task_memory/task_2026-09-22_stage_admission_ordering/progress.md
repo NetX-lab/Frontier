@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-8 / D-9 adopted; both comparisons rerun and pass (`aeeca93`); P4 in progress. |
 | 2026-09-23 | P0–P3 and P5 executed. Rule committed (`dac4e69`). Two plan stop conditions reached (C3 witness metric, C7 V5 dense); P4 push held for the user. |
 | 2026-09-23 | R-6 received: execution started; P5 (vLLM comparison) added to the plan. |
 | 2026-09-23 | Round-1 plan review verified against source and applied to `design.md`, `plan.md` and `requirements.md`; `review.md` created; resume prompt updated for round 2. Not executed. |
@@ -24,9 +25,9 @@
 | P0 evidence and baseline | completed 2026-09-23 | 98 cases classified as designed; rerun hashes stable; see "Execution" |
 | P1 rule | completed | `dac4e69` (with P2 tests) |
 | P2 tests and base negative controls | completed | `evidence/base_negative_controls.log`; all base outcomes as planned |
-| P3 rerun and comparison | completed; **stopped** on C3 witness rule at `attn_dp=4` | `test_report_2026-09-23_stage_admission_ordering.md` §4 |
-| P5 vLLM comparison | completed; **stopped** on V5 dense | case `calibration/stage_admission_case_001/`, report §5 |
-| P4 records, commit, push | in-progress: records written and committed locally; push and PR body held for the user's decision | report §6 |
+| P3 rerun and comparison | completed; the first comparison stopped on the C3 witness rule, passes under D-9 | `test_report_2026-09-23_stage_admission_ordering.md` §4 |
+| P5 vLLM comparison | completed; the first analysis stopped on dense V5, passes under D-9 | case `calibration/stage_admission_case_001/`, report §5 |
+| P4 records, commit, push | in-progress | see below |
 
 ## Commands run (2026-09-22)
 
@@ -74,6 +75,7 @@ worktree, `WANDB_DISABLED=true`, `VIDUR_DISABLE_WANDB=1`.
 | P5b run b | RJob `exp-0923-024146-345158` | `runs/vllm-instrumented/sa-pp-20260923b/` | MoE and dense complete, status 0 |
 | P5c | `compare_lanes --vllm-run …/sa-pp-20260923b` | `calibration/stage_admission_case_001/analysis/` | 50/52 MATCH; V5 dense n8/n16 MISMATCH (vLLM 0.706/0.865 vs 1.0) |
 
-Open decisions (report §6): the C3 witness metric at `attn_dp=4`, and V5 for
-the dense shape. P4 push, the PR 36 body update and the parent-task note wait
-for them.
+| D-9 rules | witness by co-execution fraction; V5 gated on MoE only | `aeeca93` | — |
+| P3 compare rerun | `compare --before base --after after --output …/compare_base_after_d9.json` | scratch root | U 50 PASS; L 18 PASS; T 6 PASS, 8 EXPLAIN; no STOP |
+| P5c rerun | `compare_lanes --vllm-run …/sa-pp-20260923b` | `analysis/` | status PASS: 50 MATCH, 0 MISMATCH, 2 INFORMATIONAL |
+| Checks after D-9 | P5a synthetic check; P2(c) integration test | — | synthetic planted round still caught by V3/V4; 3 passed |

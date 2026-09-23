@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-8: D-9 adopted for the C3 witness rule and dense V5; P4 authorized to continue. |
 | 2026-09-23 | R-7: ground-truth `topk_softmax` fixed to the four-argument version for the MoE retry. |
 | 2026-09-23 | R-6: execute P0–P4 and validate the fix against vLLM on a GPU worker (package P5). |
 | 2026-09-23 | R-5: round-1 plan review verified and applied to the records; execution deferred. |
@@ -43,6 +44,10 @@ MoE `topk_softmax` ABI):
 
 > 我先提前决策，避免中断任务：topk_softmax 统一修复为4 个参数的版本
 
+`[Original Request]` (2026-09-23, answering the two stops of the test report §6):
+
+> 采纳你的推荐，继续
+
 Quality gates the user repeated for every core-module change in this line of
 work, carried over verbatim:
 
@@ -59,6 +64,7 @@ work, carried over verbatim:
 | R-5 | Verify every review finding against the source, adopt the high-value and necessary corrections into the records (dispositions in `review.md`, new decisions D-6 and D-7 in `plan.md`), and do not execute: no P0 run, no source change. The docs commit is pushed to the draft PR under R-4. | user, 2026-09-23 |
 | R-6 | Execute P0–P4 as planned. The fix must also be validated against vLLM running on a GPU worker, in a comparison designed to show whether the change is effective (package P5 in `plan.md`). The request authorizes the GPU job within the standing GPU rules below. | user, 2026-09-23 |
 | R-7 | The vLLM ground truth uses the four-argument `topk_softmax` (wrapper and call). Applied as the recorded overlay patch `calibration/stage_admission_case_001/inputs/groundtruth_overlay.patch` on the one retry job; the vLLM-BS checkout is unchanged. | user, 2026-09-23 |
+| R-8 | Adopt both recommendations (plan D-9): contention witnesses pass on a strictly larger co-execution fraction; V5 gates MoE only and reports dense. Continue to P4. | user, 2026-09-23 |
 
 ## Constraints carried from the parent task
 
