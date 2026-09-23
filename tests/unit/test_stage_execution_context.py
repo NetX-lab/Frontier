@@ -142,6 +142,23 @@ def test_idle_single_owner_stage_admits_a_later_queued_full_stage_ticket() -> No
     assert context.queued_tickets == (full0,)
 
 
+def test_active_full_stage_ticket_is_refused_without_changing_the_stage() -> None:
+    context = StageExecutionContext(
+        replica_id=0,
+        stage_id=0,
+        ep_size=1,
+        full_stage_capacity=2,
+    )
+    first = context.enqueue_full_stage(operation_id=("lane", 0))
+    second = context.enqueue_full_stage(operation_id=("lane", 1))
+    assert context.try_acquire(first) is True
+
+    assert context.try_acquire(first) is False
+    assert context.is_active(first)
+    assert context.queued_tickets == (second,)
+    assert context.try_acquire(second) is True
+
+
 def test_release_requires_the_active_operation_ticket() -> None:
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     wave = context.enqueue_ep_wave(operation_id=30, participant_ep_ids=(0,))
