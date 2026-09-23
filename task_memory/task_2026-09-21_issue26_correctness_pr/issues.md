@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-01: merged forward (`dd9b8d9`); composition check passes on `03d5f24`. |
 | 2026-09-23 | W9-01: PR 36 ran its pre-merge untrack (P6, `4d08c5d`); the copies here are now the only published records of that task. |
 | 2026-09-23 | W9-01: PR 36 round-2 review remediation recorded; the composition check now also reruns PR 36 groups G9 and G10. |
 | 2026-09-23 | W9-01: fixed on `fix/stage-admission-ordering` (draft PR 36) under option 2; resolution recorded, summary and test report copied to `w9_01_stage_admission_ordering/`. |
@@ -151,10 +152,15 @@ Observed on that branch (details in the copied test report):
 Remaining here, in order:
 
 1. After PR 36 merges into `main`, merge `main` forward into this branch.
+   Done: PR 36 squash `4ab1964`, merge `dd9b8d9`.
 2. Rerun the PR 36 matrix groups on the merged tree as the composition check:
    G3b (mixed prefill/decode, `attn_dp > 1`, `PP > 1`) with W3, and G9 and
    G10 (online), whose Poisson cells reach every lane only with W2.
+   Done: K1–K4 pass on `03d5f24` (`test_report_2026-09-23_w9_01_composition_check.md`),
+   after a harness drain-reader fix. With W2 two Poisson PDD PP3 cells drain
+   under the pre-merge rule; both complete on the merged tree.
 3. If they pass, resume Step 9 P1(b) and the design checkpoint D9-2.
+   In progress.
 
 Step 9 C1's PP3 row stays on `attn_dp=1` (W9-02).
 

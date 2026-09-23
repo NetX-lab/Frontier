@@ -7,6 +7,7 @@
 | 2026-09-21 | Recorded the original request, the specification hand-off, and the decisions from the planning interview. |
 | 2026-09-22 | Recorded the W6 artifact-identity decision and the native GPU validation instruction. |
 | 2026-09-22 | Recorded the PP>1 `vllm_load_balancing` request, the codesign-only GPU instruction, and the open Step 9 decisions. |
+| 2026-09-23 | Recorded the W9-01 merge-forward request after PR 36 merged. |
 
 ## [Original Request] 2026-09-21
 
@@ -90,3 +91,15 @@ Reading: read the external review in full, verify each finding against the sourc
 | --- | --- |
 | FP8 native rerun | Authorized and executed: `exp-0922-202645-561899`, `codesign` / 1×H800, 8 passed in 14.27 s, exit 0 (W6 report §8). |
 | Plan §18 second review | Performed against `c231322` with the stated gates; findings R9-01..R9-08 in `plan.md` §18.12, amendments to D9-1, D9-2, P1, §18.10, §18.11 and `design.md`. Records only; no Step 9 source change; execution still awaits the user's start signal. |
+
+## [Original Request] 2026-09-23 — W9-01 merge-forward after PR 36
+
+> 我已经完成 PR 36 merge，把 origin/main merge 进 fix/issue26-correctness-pr（用 merge，不 rebase），重跑 G3b、G9、G10 作为 composition check。通过后恢复 Step 9 的 P1(b) 和 D9-2；暂不处理 pr34和35的 gitingore（由我在merge前人工处理）
+
+| Item | Decision |
+| --- | --- |
+| Merge | PR 36 was squash-merged into `main` as `4ab1964` by the owner. `origin/main` is merged into this branch with a merge commit; no rebase. |
+| Composition check | PR 36 matrix groups G3b, G9 and G10 rerun on the merged tree. |
+| Next | On a pass, resume Step 9 P1(b) and the design checkpoint D9-2. |
+| `.gitignore` | The `task_memory` exceptions of PR 34 and PR 35 stay as they are; the owner removes them before those merges. |
+

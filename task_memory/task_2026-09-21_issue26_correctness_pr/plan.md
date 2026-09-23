@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.14 results: K1–K4 pass on `03d5f24`; K2 amended after measuring for online cells (one cell's batches differ after an earlier admission). |
+| 2026-09-23 | §18.14 added: W9-01 merge-forward and the composition check, with pass criteria fixed before measuring. |
 | 2026-09-22 | Step 9 execution started. §18.13 added: P1(a) oracle complete with the state-table evidence, P1(b) blocked by the pre-existing stage-admission deadlock W9-01 (`issues.md`), design checkpoint D9-2 left open because the candidate key fails invariant I5 and I1/I5 can only be settled on the deadlocking shape. C1 amended per W9-02: the PP3 row uses `attn_dp=1`. |
 | 2026-09-22 | §18 second review at the user's direction (codebase integration, readability, value, no hard-coding/patches/over-defense/redundancy, plain names): findings R9-01..R9-08 in §18.12; D9-1, D9-2, P1(a), §18.10 and the §18.11 representation column amended in place. Execution still not started. |
 | 2026-09-21 | Landed the execution specification verbatim (Section "Execution Specification" below) and recorded the amendments agreed with the user before Step 0. |
@@ -1096,4 +1098,57 @@ Review question, as set by the user: is every planned change to Frontier's core 
 | R9-08 | **Reference precision.** `_has_global_unfinished_reqs` increments `step_counter` every iteration but all-reduces only every 32 steps (`core.py:1131-1135`), so DP engines are not iteration-lockstep in the reference; peer-key equality is an idealization inherited from W4 and, under PP with independent admission-only iterations, peer steps can drift until the next forward aligns them. | §18.2 row amended; "key grouping" stays a first-cause label in G5, and the I5 question of R9-03 is answered from the G4 trace, not assumed either way. |
 
 Gate check of the plan after these amendments: no hard-coded constants beyond the cited reference values already in `vllm_dp_load_balancer.py`; no temporary patch (the guard is removed, not bypassed); no new defensive branches (the hook is unconditional on a constructor-required reference); no redundant state (no readiness classifier, no second coordinator model); names are the user's hook name and plain accessors.
+
+### 18.14 W9-01 merge-forward and composition check (2026-09-23)
+
+PR 36 was squash-merged into `main` as `4ab1964`. Merging `origin/main` into
+this branch (merge commit `dd9b8d9`) brings one source file,
+`frontier/scheduler/replica_stage_scheduler/stage_execution_context.py`, plus
+PR 36's tests and harnesses. No file overlaps this branch's changes. The
+composition check asks whether the admission rule and this branch's W2 (lane
+rotation across scheduling calls) and W3 (one shared monolithic forward)
+still behave as each did alone. It covers the PR 36 matrix groups G3b (MoE,
+mixed prefill/decode, offline), G9 (PDD online) and G10 (co-location online),
+51 cases.
+
+Sets, under the matrix root `/data/ycfeng/tmp/stage_admission_ordering`:
+
+| Set | Tree |
+| --- | --- |
+| `c-merged` | merged tree `dd9b8d9` |
+| `c-pr35` | merged tree with the rule file taken from `1f694f7`: this branch's source before the merge |
+| `base`, `after-r2` (existing) | `main` without and with the rule (PR 36 runs) |
+
+Pass criteria, fixed before measuring:
+
+| Id | Check | Pass |
+| --- | --- | --- |
+| K1 | Liveness on `c-merged` | all 51 cases succeed; requests and prefill/decode tokens equal the generated workload |
+| K2 | The rule behaves on this branch as on `main`: `compare --before c-pr35 --after c-merged` | 0 STOP; path U byte-identical; path L complete and conserved; every EXPLAIN runs the same ordered batches with the same component durations on each (cluster, replica, stage, lane), so only start times differ |
+| K3 | W2 still reaches every lane | every `c-merged` Poisson cell with `attn_dp > 1` places batches on all `attn_dp` lanes of each MONOLITHIC and PREFILL stage; `after-r2` is reported beside it |
+| K4 | Tests on the merged tree | PR 36's tests, W2 and W3 tests and the forward-sync regression set pass; `tests/unit` and `tests/integration` show no regression against `8315d9b` |
+
+Not a criterion, reported: which Poisson cells deadlock on `c-pr35`. With W2
+the online arrivals reach several lanes, so the W9-01 defect becomes
+reachable in cells that ran on lane 0 only on `main`.
+
+On a pass, Step 9 resumes at P1(b) with the fourth shape, MoE `attn_dp=2,
+moe_ep=2, PP=2`, and then the design checkpoint D9-2.
+
+**Results (2026-09-23, `03d5f24`; `test_report_2026-09-23_w9_01_composition_check.md`).**
+K1 51/51. K2 0 STOP (U 15, L 16, T 12 identical, 8 EXPLAIN). K3 22/22 cells
+use every lane; `after-r2` uses lane 0 only. K4 0 regressions. The run found
+and fixed a drain-reader defect in the harness (`03d5f24`: dispatched rooms
+keep an empty entry). Two Poisson PDD cells, `G9-moe-dp{2,4}-pp3-n8`, drain
+under the pre-merge rule but not on `main`, because W2 spreads their
+arrivals. Both complete on the merged tree.
+
+**K2 amended after measuring.** One EXPLAIN cell, `G10-dense-dp2-pp3-n8`
+(online), changes lane 1's batches (36 → 33 ledger rows) while lane 0 is
+identical. The first divergence is the same batch on stage 0, lane 1,
+admitted 23.4 ms earlier: the removed W9-01 coupling. Lane 1 then meets later
+Poisson arrivals at other points of its schedule. "Only start times differ"
+holds where batch contents are fixed at t=0 (offline and burst). For online
+cells K2 now accepts a batch difference when the first divergence is an
+identical batch admitted earlier on the same stage and lane.
 

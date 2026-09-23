@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-01 merge-forward: `origin/main` merged (`dd9b8d9`); composition check K1–K4 pass on `03d5f24` (drain-reader fix); Step 9 P1(b) resumed. |
 | 2026-09-23 | PR 36 pre-merge untrack (P6, `4d08c5d`) done; W9-01 copies refreshed. Merge-forward waits for the PR 36 merge. |
 | 2026-09-23 | PR 36 round-2 review remediation recorded; the W9-01 composition check extended to PR 36 groups G9 and G10. |
 | 2026-09-23 | W9-01 fixed on `fix/stage-admission-ordering` (draft PR 36); Step 9 PP>1 packages stay paused until it merges forward and passes G3b. |
@@ -220,7 +221,7 @@ User start signal: "开始执行step9", with the quality gates repeated (readabi
 | Package | State | Evidence |
 | --- | --- | --- |
 | P1(a) reference-loop oracle | completed | `tests/comparison/dp_placement_pp/reference_loop.py`; `tests/unit/test_dp_placement_reference_loop.py` (9 passed, 1.21 s, `frontier-py310`). §18.11 state table confirmed as written; PP=1 shown to degenerate to "every iteration schedules and applies"; depth 3 shown to allow two consecutive admission-only publications, which rules out any stride constant. |
-| P1(b) Frontier boundary probe | blocked | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
+| P1(b) Frontier boundary probe | blocked until 2026-09-23, resumed (see below) | Three shapes probed (`attn_dp=2 PP=1`, `attn_dp=1 PP=2`, `attn_dp=1 PP=3`), tables in `plan.md` §18.13. The fourth shape, MoE `attn_dp=2, moe_ep=2, PP=2`, drains the event queue with requests unfinished — pre-existing defect W9-01 in `issues.md`. |
 | Design checkpoint (D9-1, D9-2) | open | D9-1's payload is settled (the completion hook signature already carries lane, load and a key source). D9-2 is not: the candidate key `ForwardSyncState._next_step_id_by_replica` satisfies I1, I2, I3, I4 and I6 on the runnable shapes but fails I5, and no alternative can be checked against I1 without a running `attn_dp>1, PP>1` shape. |
 | P2–P6, G3–G5 | paused | All depend on the design checkpoint or on that shape. |
 
@@ -229,6 +230,22 @@ W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_sch
 Scope decision (2026-09-22): "采纳你的推荐，继续" — option 2, a separate correctness item. Fixed on `fix/stage-admission-ordering`, draft PR 36, rule commit `dac4e69`, validated against vLLM DP=2/PP=2 on 4×H800. Branch records are copied to `w9_01_stage_admission_ordering/`. Resume order: PR 36 merges, `main` is merged forward here, G3b (with W3) and the online groups G9 and G10 (with W2) rerun as the composition check, then P1(b) and D9-2 (`issues.md` W9-01, Resolution). PR 36 round-2 review fixes: `1661bf1`, `a8e8d8a`, `e35242f`, records `7a7c22e`. PR 36 untracked its task directory before merge at `4d08c5d` (R-11); the copies here are its published records.
 
 W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices against node size 4). Plan C1's PP3 row amended to `attn_dp=1`.
+
+### W9-01 merge-forward and composition check (2026-09-23)
+
+| Step | Command / action | Evidence | Result |
+| --- | --- | --- | --- |
+| Request | "我已经完成 PR 36 merge，把 origin/main merge 进 fix/issue26-correctness-pr（用 merge，不 rebase），重跑 G3b、G9、G10 作为 composition check。通过后恢复 Step 9 的 P1(b) 和 D9-2；暂不处理 pr34和35的 gitingore" | `requirements.md` | recorded |
+| Merge | `git merge --no-ff origin/main` (PR 36 squash `4ab1964`) | `dd9b8d9` | no conflict; the only source file is the rule file |
+| Criteria | K1–K4 written before measuring | `plan.md` §18.14 | — |
+| First sets | `c-merged` at `dd9b8d9`; `c-pr35` with the `1f694f7` rule file | scratch `composition/` | `c-merged` 51/51 success; `c-pr35` two cells `other_failure` from `KeyError: 'batches'` in the drain reader |
+| Diagnosis | exported tree, room dump | `debug_rooms.py` in scratch | dispatched rooms keep an empty entry (`sync_entry.py`, same on `main`); the reader indexed it |
+| Harness fix | `if not room.get("batches")` | `03d5f24` | both cells classify as `admission_deadlock` |
+| Sets rerun | both sets at `03d5f24`; rule file restored and equal to `origin/main` | scratch | `c-merged` 51/51; `c-pr35` 16 `admission_deadlock`, 35 success |
+| K2 compare | harness `compare` + `composition_check.py` | `w9_01_stage_admission_ordering/composition_evidence/` | 0 STOP; 7/8 EXPLAIN start-times-only; `G10-dense-dp2-pp3-n8` first divergence = same batch admitted earlier; K2 amended (plan §18.14) |
+| K3 | `composition_check.py` | same | 22/22 all lanes; `after-r2` lane 0 only |
+| K4 | `composition_run_suites.sh` on both trees; `composition_compare_junit.py` | same | 0 regressions; export-only failures are git-metadata failures; 487 targeted tests pass |
+| Report | — | `test_report_2026-09-23_w9_01_composition_check.md` | PASS |
 
 ### G1 ground-truth instrumentation (2026-09-22, completed)
 
