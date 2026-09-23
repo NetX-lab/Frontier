@@ -34,11 +34,10 @@ def source_batches_by_lane(cohort_batches, batch):
 def source_forward_mode(batch) -> str:
     """Return the local phase one source batch runs in a shared forward.
 
-    This is the same rule the stage-schedule event uses to pick a batch's sync
-    path on a monolithic Replica (`replica_stage_schedule_event.py`): a batch
-    carrying prefill tokens runs the prefill path, anything else decodes. Using
-    one rule in both places is what keeps a cohort's per-source continuation
-    consistent with how its lanes entered.
+    A batch carrying prefill tokens runs the prefill path, anything else
+    decodes. The stage-schedule event picks a monolithic batch's sync path with
+    this rule too, which keeps a cohort's per-source continuation consistent
+    with how its lanes entered.
     """
 
     return "prefill" if int(batch.num_prefill_tokens) > 0 else "decode"

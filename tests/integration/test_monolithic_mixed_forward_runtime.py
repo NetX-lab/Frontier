@@ -1,14 +1,14 @@
 """Real-runtime acceptance for one shared monolithic forward across phases.
 
-The 71-case fidelity matrix cannot reach this shape: the public MoE wrappers
-enforce `ATTN_TP == MOE_TP * MOE_EP` while the runtime enforces
-`attn_tp * attn_dp == moe_tp * moe_ep`, and those have no common solution above
-one attention-DP lane. This test therefore builds a valid runtime configuration
-directly -- `attn_tp=1, attn_dp=2, moe_tp=1, moe_ep=2` on a monolithic MoE
-Replica -- and runs the real `Simulator` event loop over it, with real
-admission, ownership, synchronization and completion code. Deterministic
-durations enter only through the predictor: constant profiling targets, plus an
-observer that wraps `predict_stage_execution_time` without replacing it.
+The fidelity matrix reaches this shape through the co-location MoE wrapper
+with pass-through lane flags (`dp_moe_coloc_online_lanes2`), which checks that
+results stay the same. This test checks the forward itself. It builds a valid
+runtime configuration directly -- `attn_tp=1, attn_dp=2, moe_tp=1, moe_ep=2` on
+a monolithic MoE Replica -- and runs the real `Simulator` event loop over it,
+with real admission, ownership, synchronization and completion code.
+Deterministic durations enter only through the predictor: constant profiling
+targets, plus an observer that wraps `predict_stage_execution_time` without
+replacing it.
 """
 
 from __future__ import annotations

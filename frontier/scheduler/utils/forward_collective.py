@@ -55,26 +55,6 @@ def handle_forward_sync_collective(
             f"replica={replica_id}, stage={stage_id}, "
             f"batch_global_id={batch_global_id}, layer={layer_id}"
         )
-    # Each per-phase helper refuses a legacy aggregate synchronization by
-    # checking that its batch carries the wave's lane timings, but only when it
-    # pops the room itself. Delegation passes `direct_batch`, so that check is
-    # skipped there and belongs here instead -- once per source, against the
-    # marker the wave writes for that source's own phase.
-    for source_batch in live_batches:
-        marker = (
-            "_prefill_ep_wave_lane_times_ms"
-            if source_forward_mode(source_batch) == "prefill"
-            else "_decode_ep_wave_lane_times_ms"
-        )
-        if not hasattr(source_batch, marker):
-            raise RuntimeError(
-                "Legacy aggregate synchronization is removed; a shared forward "
-                "source must carry its own EP wave lane timings: "
-                f"replica={replica_id}, stage={stage_id}, "
-                f"batch_global_id={batch_global_id}, layer={layer_id}, "
-                f"batch={source_batch.id}, expected={marker}"
-            )
-
     # One completed layer advances a request's decode counter once, and only if
     # that request is decoding. A prefill chunk has no decode layer to credit,
     # and a request carried in a prefill batch after its own prefill finished

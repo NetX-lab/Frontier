@@ -9,6 +9,7 @@ from frontier.logger import init_logger
 from frontier.metrics import MetricsStore
 from frontier.scheduler import BaseClusterScheduler
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
+from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 from frontier.types import EventType, ClusterType
 
 if TYPE_CHECKING:
@@ -157,12 +158,12 @@ class ReplicaStageScheduleEvent(BaseEvent):
         is_monolithic_prefill_moe = (
             self._cluster_type == ClusterType.MONOLITHIC
             and is_moe
-            and batch.num_prefill_tokens > 0
+            and source_forward_mode(batch) == "prefill"
         )
         is_monolithic_decode_moe = (
             self._cluster_type == ClusterType.MONOLITHIC
             and is_moe
-            and batch.num_prefill_tokens <= 0
+            and source_forward_mode(batch) == "decode"
             and batch.num_decode_tokens > 0
         )
         # Every MoE layer uses the canonical per-layer protocol, including

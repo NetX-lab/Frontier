@@ -61,7 +61,7 @@ def advance_decode_layer(requests: Iterable[Any], total_layers: int) -> None:
     """Credit one completed layer to each request, validating the whole set first.
 
     Every layer-completion path owes each decoding request exactly one credit
-    per executed layer, so the rule lives here rather than at each caller.
+    per executed layer; the caller selects which requests are decoding.
     Validation runs over the full selection before any counter moves, so a
     request that cannot advance leaves its peers untouched.
     """

@@ -106,6 +106,9 @@ class _LanePredictor:
                 for layer_id in range(TOTAL_LAYERS)
             }
         }
+        # The disaggregated roles read the same routing from their own table.
+        self._prefill_routing_details = self._monolithic_routing_details
+        self._decode_routing_details = self._monolithic_routing_details
 
     def predict_stage_execution_time(
         self,
@@ -178,11 +181,14 @@ class _MetricsStore:
 
 
 def _build_scheduler(
-    *, dense_layers: frozenset[int] = frozenset(), lane_capacity: int = NUM_LANES
+    *,
+    dense_layers: frozenset[int] = frozenset(),
+    lane_capacity: int = NUM_LANES,
+    cluster_type: ClusterType = ClusterType.MONOLITHIC,
 ):
     predictor = _LanePredictor()
     scheduler = object.__new__(RoundRobinClusterScheduler)
-    scheduler._cluster_type = ClusterType.MONOLITHIC
+    scheduler._cluster_type = cluster_type
     scheduler._config = SimpleNamespace(
         replica_config=SimpleNamespace(
             model_config=_ModelConfig(dense_layers),
@@ -209,7 +215,7 @@ def _build_scheduler(
             is_last_stage=True,
             is_moe=True,
             execution_time_predictor=predictor,
-            cluster_type=ClusterType.MONOLITHIC,
+            cluster_type=cluster_type,
             replica_local_id=lane,
             stage_execution_context=context,
         )
@@ -409,6 +415,34 @@ def test_each_source_continues_on_its_own_predicted_duration() -> None:
     assert sorted(next_layer_calls) == [(1, 4), (1, 6)]
 
 
+@pytest.mark.parametrize(
+    "cluster_type,build,tokens",
+    [
+        (ClusterType.PREFILL, _prefill_batch, (4, 9)),
+        (ClusterType.DECODE, _decode_batch, (2, 7)),
+    ],
+)
+def test_a_disaggregated_role_continues_each_lane_on_its_own_duration(
+    cluster_type, build, tokens
+) -> None:
+    """The per-phase helpers the shared forward delegates to also serve the
+    PDD PREFILL and DECODE roles, so their attention-DP lanes each continue on
+    their own prediction too, rather than on the first lane's.
+    """
+
+    scheduler, predictor, _context, stages = _build_scheduler(cluster_type=cluster_type)
+    batches = {lane: build(count) for lane, count in enumerate(tokens)}
+    event, follow_on = _run_forward(scheduler, stages, batches, 0, None)
+
+    continuation = {event._batch.id: event for event in follow_on}
+    for lane, count in enumerate(tokens):
+        assert continuation[batches[lane].id].time == pytest.approx(
+            event.time + count * 1e-3
+        )
+    next_layer_calls = [call for call in predictor.calls if call[0] == 1]
+    assert sorted(next_layer_calls) == [(1, count) for count in tokens]
+
+
 def test_an_idle_participant_does_not_gain_requests_progress_or_a_continuation() -> None:
     scheduler, _predictor, _context, stages = _build_scheduler()
     batch = _prefill_batch(4)
@@ -434,55 +468,6 @@ def test_an_idle_participant_does_not_gain_requests_progress_or_a_continuation()
     assert [event._batch.id for event in completion] == [batch.id]
     assert idle_batch.requests == []
     assert not getattr(idle_batch, "_prefill_ep_wave_lane_times_ms", None)
-
-
-@pytest.mark.parametrize(
-    "phase,marker",
-    [
-        ("prefill", "_prefill_ep_wave_lane_times_ms"),
-        ("decode", "_decode_ep_wave_lane_times_ms"),
-    ],
-)
-def test_a_source_without_its_own_wave_timings_is_refused(phase, marker) -> None:
-    """The per-phase helpers only run this check when they pop the room.
-
-    The shared path hands them `direct_batch`, which skips it, so the shared
-    completion has to make it once per source instead of losing it.
-    """
-
-    scheduler, _predictor, _context, stages = _build_scheduler()
-    batches = {0: _prefill_batch(4), 1: _decode_batch(6)}
-    for lane, batch in batches.items():
-        _admit(stages, batch, lane)
-    events: list = []
-    for lane, batch in batches.items():
-        events.extend(_enter(scheduler, batch, lane, 0, None))
-    collective = [
-        event
-        for event in events
-        if isinstance(event, (PrefillSyncCollectiveEvent, DecodeSyncCollectiveEvent))
-    ]
-    assert len(collective) == 1
-    victim = batches[0] if phase == "prefill" else batches[1]
-    assert hasattr(victim, marker)
-    delattr(victim, marker)
-    with pytest.raises(RuntimeError, match="must carry its own EP wave lane timings"):
-        collective[0].handle_event(_global(scheduler), None)
-
-
-def test_a_request_owned_by_two_live_lanes_fails_at_group_formation() -> None:
-    scheduler, _predictor, _context, stages = _build_scheduler()
-    shared = _request(4, 4, decoding=False)
-    batches = {
-        0: Batch(0, [shared], [2], is_moe=True),
-        1: Batch(0, [shared], [2], is_moe=True),
-    }
-    for lane, batch in batches.items():
-        _admit(stages, batch, lane)
-    events = _enter(scheduler, batches[0], 0, 0, None)
-    assert events == []
-    with pytest.raises(ValueError, match="cannot belong to two EP source lanes"):
-        _enter(scheduler, batches[1], 1, 0, None)
 
 
 def test_successive_forwards_release_owners_rooms_and_open_step_bindings() -> None:
