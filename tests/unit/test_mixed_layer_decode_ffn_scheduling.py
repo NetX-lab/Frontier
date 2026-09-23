@@ -799,6 +799,75 @@ def test_decode_ffn_wave_materialization_attaches_one_parent_ticket(
     assert context.queued_tickets == (tickets[0],)
 
 
+def test_decode_ffn_dense_groups_keep_counter_order_around_a_queued_ep_wave(
+    mixed_model_config,
+) -> None:
+    """Dense groups enter in group-counter order and never pass an EP wave queued ahead."""
+
+    scheduler, _, _, lane_sinks = _atomicity_scheduler(
+        mixed_model_config,
+        layer_id=4,
+        ep_size=2,
+    )
+    full_stage_sink = _QueuedBatchSink()
+    scheduler._full_stage_replica_schedulers = {0: full_stage_sink}
+    scheduler.get_full_stage_replica_scheduler = Mock(return_value=full_stage_sink)
+    scheduler._m2n_ready_groups = deque(
+        [
+            [(_source_batch(layer_id=layer_id), _transfer_info(layer_id=layer_id))]
+            for layer_id in (3, 4, 3)
+        ]
+    )
+    context = scheduler.get_stage_execution_context(0, 2)
+    for _ in range(3):
+        scheduler.schedule_ffn_with_m2n_immediate()
+
+    first_dense, second_dense = full_stage_sink._m2n_immediate_batch_queue
+    lane_batches = [lane_sinks[ep_id]._m2n_immediate_batch_queue[0] for ep_id in (0, 1)]
+    wave = lane_batches[0]._stage_admission_ticket
+    assert [first_dense.global_id, lane_batches[0].global_id, second_dense.global_id] == [0, 1, 2]
+    assert context.queued_tickets == (
+        first_dense._stage_admission_ticket,
+        wave,
+        second_dense._stage_admission_ticket,
+    )
+
+    def stage_scheduler(replica_local_id):
+        return ReplicaStageScheduler(
+            replica_id=0,
+            stage_id=2,
+            is_last_stage=True,
+            is_moe=True,
+            execution_time_predictor=object(),
+            cluster_type=ClusterType.DECODE_FFN,
+            replica_local_id=replica_local_id,
+            stage_execution_context=context,
+        )
+
+    full_stage = stage_scheduler(None)
+    ep_lanes = [stage_scheduler(ep_id) for ep_id in (0, 1)]
+    full_stage.add_batch(first_dense)
+    full_stage.add_batch(second_dense)
+    for lane, batch in zip(ep_lanes, lane_batches):
+        lane.add_batch(batch)
+    assert full_stage.get_queue_batches() == [first_dense, second_dense]
+
+    assert full_stage.pop_batch_if_not_busy() is first_dense
+    full_stage.on_stage_end()
+    context.release(first_dense._stage_admission_ticket)
+    assert full_stage.pop_batch_if_not_busy() is None
+
+    assert ep_lanes[0].pop_batch_if_not_busy() is lane_batches[0]
+    assert ep_lanes[1].pop_batch_if_not_busy() is lane_batches[1]
+    assert full_stage.pop_batch_if_not_busy() is None
+    for lane in ep_lanes:
+        lane.on_stage_end()
+    context.release(wave)
+
+    assert full_stage.pop_batch_if_not_busy() is second_dense
+    assert context.queued_tickets == ()
+
+
 def _atomicity_snapshot(
     scheduler, source_batch, queue_sinks, *, include_entity_ids: bool = True
 ):
