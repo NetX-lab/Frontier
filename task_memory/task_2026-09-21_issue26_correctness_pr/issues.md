@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-01: PR 36 round-2 review remediation recorded; the composition check now also reruns PR 36 groups G9 and G10. |
 | 2026-09-23 | W9-01: fixed on `fix/stage-admission-ordering` (draft PR 36) under option 2; resolution recorded, summary and test report copied to `w9_01_stage_admission_ordering/`. |
 | 2026-09-22 | Created; recorded W9-01 (stage-admission deadlock at PP>1 with attn_dp>1) and W9-02 (PP=3 x attn_dp=2 topology rejection) found during Step 9 P1(b). |
 
@@ -127,7 +128,8 @@ Option 2 was taken. The fix lives on its own branch and PR:
 | Branch / PR | `fix/stage-admission-ordering`, draft https://github.com/NetX-lab/Frontier/pull/36 |
 | Rule commit | `dac4e69`: `StageExecutionContext.try_acquire` refuses a full-stage ticket only when an EP wave is queued ahead of it. EP waves keep the strict FIFO-head rule. |
 | Acceptance rules | `aeeca93` (plan D-9) |
-| Records | `fc34341`, `4bcd616`, `ecff89a`; copies in `w9_01_stage_admission_ordering/` (`summary.md`, `test_report_2026-09-23_stage_admission_ordering.md`) |
+| Round-2 review fixes | `1661bf1` (rule refactor: an active ticket is refused), `a8e8d8a` (PDD, online and PD-AF matrix groups G8–G11), `e35242f` (comparison tools) |
+| Records | `fc34341`, `4bcd616`, `ecff89a`, `1218ba6`, `7a7c22e`; copies in `w9_01_stage_admission_ordering/` (`summary.md`, `test_report_2026-09-23_stage_admission_ordering.md`) |
 
 Observed on that branch (details in the copied test report):
 
@@ -137,14 +139,20 @@ Observed on that branch (details in the copied test report):
 - G2 shows no regressions.
 - The Step 9 probe shape, MoE `attn_dp=2, moe_ep=2, PP=2`, completes 6/6.
 - vLLM DP=2/PP=2 on 4×H800 gives 50 MATCH, 0 MISMATCH and 2 INFORMATIONAL
-  (dense V5, per D-9).
+  (dense V5, per D-9); the 4 base negative-control rows hold.
+- Round 2 added PDD offline and online, co-location online and PD-AF
+  `PREFILL_PP=2` cells: 12 more base deadlocks complete, 0 STOP. On `main`
+  the online Poisson cells of MONOLITHIC and PREFILL run on lane 0 only,
+  because `main` lacks this branch's W2 lane rotation; the online multi-lane
+  coverage there comes from burst cells.
 
 Remaining here, in order:
 
 1. After PR 36 merges into `main`, merge `main` forward into this branch.
-2. Rerun the PR 36 matrix group G3b (mixed prefill/decode, `attn_dp > 1`,
-   `PP > 1`) on the merged tree as the composition check with W3.
-3. If G3b passes, resume Step 9 P1(b) and the design checkpoint D9-2.
+2. Rerun the PR 36 matrix groups on the merged tree as the composition check:
+   G3b (mixed prefill/decode, `attn_dp > 1`, `PP > 1`) with W3, and G9 and
+   G10 (online), whose Poisson cells reach every lane only with W2.
+3. If they pass, resume Step 9 P1(b) and the design checkpoint D9-2.
 
 Step 9 C1's PP3 row stays on `attn_dp=1` (W9-02).
 

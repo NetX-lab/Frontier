@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | PR 36 round-2 review remediation recorded; the W9-01 composition check extended to PR 36 groups G9 and G10. |
 | 2026-09-23 | W9-01 fixed on `fix/stage-admission-ordering` (draft PR 36); Step 9 PP>1 packages stay paused until it merges forward and passes G3b. |
 | 2026-09-22 | Step 9 execution started: P1(a) oracle completed, P1(b) blocked by W9-01, design checkpoint partially settled, G1 ground-truth instrumentation completed and case binding written. |
 | 2026-09-22 | FP8 native rerun PASS (`exp-0922-202645-561899`, 8 passed, exit 0). Second Step 9 plan review (plan §18.12, R9-01..R9-08) recorded; Step 9 still not started. |
@@ -224,7 +225,7 @@ User start signal: "开始执行step9", with the quality gates repeated (readabi
 
 W9-01 is not caused by this PR: `stage_execution_context.py`, `replica_stage_schduler.py` and `stage_contexts.py` are byte-identical to `main`. It is unobserved because every Simulator-level test with `attn_dp > 1` uses `num_pipeline_stages = 1` and no shipped example sets `attn_dp > 1`. Scope decision requested from the user; recommendation is to fix it as a separate correctness item rather than inside this feature branch.
 
-Scope decision (2026-09-22): "采纳你的推荐，继续" — option 2, a separate correctness item. Fixed on `fix/stage-admission-ordering`, draft PR 36, rule commit `dac4e69`, validated against vLLM DP=2/PP=2 on 4×H800. Branch records are copied to `w9_01_stage_admission_ordering/`. Resume order: PR 36 merges, `main` is merged forward here, G3b reruns as the composition check with W3, then P1(b) and D9-2 (`issues.md` W9-01, Resolution).
+Scope decision (2026-09-22): "采纳你的推荐，继续" — option 2, a separate correctness item. Fixed on `fix/stage-admission-ordering`, draft PR 36, rule commit `dac4e69`, validated against vLLM DP=2/PP=2 on 4×H800. Branch records are copied to `w9_01_stage_admission_ordering/`. Resume order: PR 36 merges, `main` is merged forward here, G3b (with W3) and the online groups G9 and G10 (with W2) rerun as the composition check, then P1(b) and D9-2 (`issues.md` W9-01, Resolution). PR 36 round-2 review fixes: `1661bf1`, `a8e8d8a`, `e35242f`, records `7a7c22e`.
 
 W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices against node size 4). Plan C1's PP3 row amended to `attn_dp=1`.
 
