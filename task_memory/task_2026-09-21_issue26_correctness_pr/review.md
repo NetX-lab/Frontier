@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-05 fix self-review of `75c1140` (F9-07..F9-13). |
 | 2026-09-23 | W9-04 fix self-review of `2ffb062` (F9-01..F9-06). |
 | 2026-09-23 | Step 9 implementation self-review of `d1a2a06..bacdbb4` against the user's quality gates: findings S9-01..S9-08, no source change required; W9-04 and W9-05 recorded as pre-existing. |
 | 2026-09-22 | Second Step 9 plan review at the user's direction (quality gates for core-module changes): findings R9-01..R9-08 recorded with dispositions; plan §18.12, design.md. |
@@ -496,3 +497,24 @@ above. Inspected: `sync_entry.py` in full; the placeholder rule
 | F9-04 | over-defense | No guard for an unreachable state. The `list(...)` copy is required because entries are deleted while iterating. The dict lookup needs no fallback: every lane in the room was admitted through the same `_replica_schedulers` table, which the placement loop already requires. | Accepted |
 | F9-05 | naming / readability | `_withdraw_idle_batches_of_joined_lanes` sits beside `_can_supply_idle_lane` and uses the module's own terms (idle batch, lane, room). Its docstring states the invariant that makes it correct, not the history. | Accepted |
 | F9-06 | test surface | One case in the existing runtime test module, using its builder and observers. It is a three-request trace, and it asserts that the race was reached before asserting completion. A deliberate-defect control (call removed) fails for the stated reason. | Accepted |
+
+## W9-05 fix self-review 2026-09-23
+
+Reviewer: this session. Reviewed commit: `75c1140`, 3 files, +116/−22. The
+source part is `vllm_v1_kv_allocation.py` +6/−14; the rest is the two tests.
+Gates: as above. Inspected: `KvBlockAllocation._preempt_request`,
+`_select_preemption_victim`, `_get_scheduler_num_computed_tokens`,
+`_get_kv_accounted_processed_tokens` and `_get_request_next_num_tokens`
+(`vllm_v1_kv_allocation.py`); `VLLMv1EngineReplicaScheduler.on_batch_end` and
+`_schedule_waiting_requests`; `Request.record_preemption` and the request
+metrics writer; vLLM v1 `Scheduler._preempt_request` and its waiting loop.
+
+| Id | Gate | Finding | Disposition |
+| --- | --- | --- | --- |
+| F9-07 | value | Without the fix, a supported co-location `vllm_v1` run under KV pressure silently finishes with requests missing: 176 of 176 decode-phase preemptions lost their request in the 72-cell sweep, and the run exits 0. The change is the minimum that restores request completion. | Accepted |
+| F9-08 | no second path | The DECODE and DECODE_ATTN exemption expressed the same rule as a cluster-type set. The rule is now stated by the request's own phase, and the set is deleted in the same change, so one rule covers every role. | Accepted |
+| F9-09 | correctness argument | After the pop of the explicit frontier, a MONOLITHIC victim past prefill has frontier `max(prefill, processed − 1)` and asks for one token; KV is reserved for its whole context. A PREFILL-role request leaves `_running_requests` in the same `on_batch_end` in which its prefill completes, so every PREFILL victim is still in prefill and is reset as before; the fidelity matrix's PDD prefill preemptions are identical. | Accepted |
+| F9-10 | fidelity scope | The fix does not add the replay cost that vLLM pays on resumption; the comment says so, and `issues.md` W9-05 records it as a follow-up that changes Request/Batch accounting. No constant or approximation was introduced to stand in for it. | Accepted (limit recorded) |
+| F9-11 | over-defense | No new guard, flag or fallback. The one branch is the phase test that replaces the set membership test. | Accepted |
+| F9-12 | test surface | One integration test through the real `Simulator`, three requests, which asserts that the preemption past prefill was reached before asserting completion; the unit test for the prefill victim uses a real `Request` instead of a namespace. The control at `2ffb062` fails on the progress assertion, and the same configuration there loses request 1. | Accepted |
+| F9-13 | coverage limit | A MONOLITHIC spec-decode request preempted past prefill is covered by the same rule but not measured: no co-location case in the fidelity matrix or C2 preempts one. The one preempted spec-decode request in the matrix (`pdd_spec_dec_offline`) is on the PDD DECODE role, whose rule did not change, and is identical. | Recorded |

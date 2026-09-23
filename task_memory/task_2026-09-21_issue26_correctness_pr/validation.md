@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-05 fix `75c1140` validated: B1–B8 pass (regression test and its control, `tight_kv` 24 of 24 in three shapes, KV sweep 72 of 72, C2 21 of 24 identical with the 3 preempting cases explained, deadlock sweep 72 of 72, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
 | 2026-09-23 | W9-04 fix `2ffb062` validated: A1–A7 pass (regression test and its control, sweep 72 of 72, C2 22 of 22 plus both stalled cases finishing, fidelity 71 of 71, stage-admission 51 of 51, suites 0 regressions, examples 16 of 16). |
 | 2026-09-23 | Step 9 completed on CPU: P1(b) on seven shapes after the W9-01 merge-forward, P2/P3 unit tests, P4 real event loop, P5 unchanged behavior (C2 24 of 24, fidelity 71 of 71, examples 16 of 16, 0 suite regressions), and the two pre-existing defects W9-04 and W9-05 found during P5. |
 | 2026-09-22 | Step 9 partial validation added: reference-loop oracle, Frontier boundary probes on three shapes, the two probe failures (invariant I5, W9-01), and the ground-truth writer checks. |
@@ -562,3 +563,50 @@ Limits:
   wait for the next forward, as in vLLM, is W9-03 and is not measured here.
 - The one request missing in the `tight_kv` case is attributed to W9-05 from
   its signature: tight KV, a drained queue, and no error. It is not traced.
+  The W9-05 fix below confirms it: that case completes 24 of 24 with the fix.
+
+## W9-05 fix (2026-09-23)
+
+Commit `75c1140` compared with `2ffb062`; the commits between them change only
+records. Criteria fixed in plan §18.18 before measuring. The tested trees were
+`33a1c8e` plus the uncommitted fix, whose three files are byte-identical to
+`75c1140`. `git archive` exports under
+`/data/ycfeng/tmp/issue26-correctness-pr/w9_05/trees/{before,after}` were used
+for B2–B5 and B8. Detached worktrees `.worktrees/w9-05-{before,after}` were used
+for B6 and B7, because the stage-admission matrix and the git-provenance unit
+tests need a git checkout. Environment as in Step 9. Scripts are in `w9_05/`,
+and evidence in `w9_05/evidence/`.
+
+| Id | Command | Expected | Actual | Outcome |
+| --- | --- | --- | --- | --- |
+| B1 | `pytest tests/integration/test_vllm_v1_decode_preemption_runtime.py`; the same file from the `2ffb062` tree root; `w9_05/symptom_probe.py` on both trees | Pass; fails at `2ffb062` on the progress assertion | 1 passed in 1.44 s; at `2ffb062` `assert 0 == 34`; probe: request 1 incomplete (0 of 30 decode tokens, exit 0) at `2ffb062`, 3 of 3 complete with the fix | PASS |
+| B2 | `run_validation.sh` (C2 and `kv_pressure_sweep.py` on both trees) | `tight_kv` 24 of 24 in all three shapes | 24/24 each (before 20, 20, 23). Sweep: 72 of 72 complete, 0 lost, 0 short outputs (before 31 of 72 complete, 176 lost); lossy cells = cells with a decode-phase preemption, 41 = 41 | PASS |
+| B3 | `c2_pp1_policy_matrix.py compare` | Cases without a decode-phase MONOLITHIC preemption identical; each differing case has one and completes at least as many | 21 of 24 identical, all with 0 preemptions; 3 differing `tight_kv` cases with 5, 6, 2 preemptions and more completions | PASS |
+| B4 | `deadlock_sweep.py`, `round_robin` / `lor` / `random` | 72 of 72 drain; completion does not fall | 72 of 72 drain with 24 of 24; every cell equal to W9-04's | PASS |
+| B5 | `tests/e2e/refactor_fidelity/run_matrix.py run/compare --clean-cache` | Identical except decode-phase MONOLITHIC preemption cases | 71 of 71 identical; no such case in the matrix (see Limits) | PASS |
+| B6 | `tests.e2e.stage_admission_matrix` G3b/G9/G10, sets `w905-before`, `w905-after` | 0 STOP; cells identical | 51 of 51 PASS; hashes identical | PASS |
+| B7 | `composition_run_suites.sh` on `.worktrees/w9-05-after`, `composition_compare_junit.py` against the W9-04 JUnit | 0 regressions, 0 new failures | unit 84/3829/51/10 and integration 5 errors/28/22, as before plus the new test; 0 / 0 / 0 skip changes | PASS |
+| B8 | `run_examples.sh`, `compare_examples_symlink.py` | 16 of 16 pass and identical | 16 of 16 | PASS |
+
+Notes on the runs:
+
+- B7 was first run on the exported tree. 88 unit tests failed there, all on
+  git provenance (`git rev-parse HEAD`, `unable to capture git provenance`), a
+  property of the export. On the git worktree the counts equal W9-04's. Running
+  `tests/unit/test_moe_ep_non_dummy_matrix.py` alone fails collection on both
+  `2ffb062` and the fix (`step3_text` references an unknown operator family);
+  it passes inside the full suite. This is an existing import-order dependence,
+  recorded here and not changed.
+- B8's first comparison reported one path difference in `config.json`
+  (`trace_file`), because `trees/before` is a symlink to the W9-04 export and
+  the comparator substituted only the resolved path.
+  `compare_examples_symlink.py` also substitutes the literal path; the
+  artifacts are then identical.
+
+Limits:
+
+- CPU only, with dummy or trained predictors.
+- B5 does not exercise the changed branch: no fidelity case has a MONOLITHIC
+  preemption. The changed behavior is covered by B1, B2 and B3.
+- The resumed request's replay (recomputing prompt and output) is not modeled
+  (`issues.md` W9-05, Limits).

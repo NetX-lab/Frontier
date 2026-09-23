@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | The W9-05 fix (`75c1140`) added to Work packages and Deliverables; its follow-ups replace the W9-05 open item. G3–G5 authorized by the user and in preparation. |
 | 2026-09-23 | W9 and the W9-04 fix (`2ffb062`) added to Work packages and Deliverables; open items reduced to G3–G5 and W9-05 (deferred as a separate item by the user). |
 | 2026-09-23 | Status only: Step 9 P1–P5 complete on the CPU (`2ffe78d`, `bacdbb4`); D9-2 decided as group-anchored. Open items W9-04, W9-05 and G3–G5 added below. The Step 0–8 archive is otherwise unchanged. |
 | 2026-09-23 | Status only: Step 9 in progress. W9-01 fixed via PR 36 and merged forward (composition check PASS); P1 complete; D9-2 proposed, awaiting the user's decision (`progress.md`, plan §18.15). The Step 0–8 archive below is unchanged. |
@@ -42,6 +43,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | W7 | The collective-sim backend accepts an empty collective | Landed companion-side. Frontier gitlink moved in `1b95187`; governance scans narrowed in `beded3c`. |
 | W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). The vLLM-side GPU comparison G3–G5 is not run. |
 | W9-04 | A lane that joins a forward after receiving a first-layer placeholder no longer stalls it | Landed. `2ffb062`; checks A1–A7 pass, including fidelity 71 of 71 and stage-admission 51 of 51. |
+| W9-05 | A `vllm_v1` MONOLITHIC request preempted during decode resumes instead of disappearing | Landed. `75c1140`; checks B1–B8 pass. A 72-cell KV-pressure sweep lost 176 requests before and none after; fidelity 71 of 71 identical. |
 
 ## Deliverables
 
@@ -62,6 +64,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | `docs/profiling/README.md` | W6: the operator's scope and its artifact-identity limits |
 | `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py`, `base_cluster_scheduler.py`, `frontier/scheduler/replica_scheduler/base_replica_scheduler.py`, `frontier/scheduler/replica_stage_scheduler/stage_execution_context.py` | W9: schedule-time load reports while the pipeline has room, keyed by the stage-0 forward group |
 | `frontier/scheduler/utils/sync_entry.py` | W9-04: withdraw a first-layer placeholder when its lane joins the forward |
+| `frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py` | W9-05: preemption resets token progress only for a victim still in prefill |
 
 ### Tests
 
@@ -71,6 +74,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | `tests/unit/test_monolithic_mixed_forward_sync.py`, `tests/integration/test_monolithic_mixed_forward_runtime.py` | W3, unit and real event loop |
 | `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | W4 and W9, unit and real event loop; the runtime module also carries the W9-04 regression case |
 | `tests/unit/test_dp_placement_reference_loop.py` | W9: the vLLM engine-iteration reference loop |
+| `tests/integration/test_vllm_v1_decode_preemption_runtime.py`, `tests/unit/test_pdaf_decode_attn_preemption.py` | W9-05: a request preempted during decode resumes and completes; a victim still in prefill restarts |
 | `tests/unit/test_moe_fused_expert_arithmetic.py` | W6 on CPU, against plain-Torch references |
 | `tests/integration/test_moe_fused_expert_numerical_parity.py` | W6 against vLLM's own `fused_experts` on a GPU |
 | `tests/unit/test_collective_sim_zero_payload.py` | W7 through the Frontier backend boundary |
@@ -115,8 +119,8 @@ per-work-package reports.
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
-| Step 9 vLLM-side comparison G3–G5: blocked on GPU authorization. | plan §18.16 |
-| W9-05: `vllm_v1` loses requests mid-decode under KV pressure, also on `origin/main`; not diagnosed. Deferred as a separate correctness item by the user. | `issues.md` W9-05 |
+| Step 9 vLLM-side comparison G3–G5: authorized by the user on 2026-09-23 (≤3 jobs × ≤1 h, `codesign`); G2 harness in preparation. | plan §18.5, §18.6 |
+| W9-05 follow-ups, not started: the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated
 

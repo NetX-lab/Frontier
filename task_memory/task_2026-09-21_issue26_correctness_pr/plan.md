@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | §18.18 results: B1–B8 pass. |
+| 2026-09-23 | §18.18 added: the W9-05 fix (user direction "推进W9-05"), its root cause, regression test and acceptance criteria B1–B8, written before measuring. |
 | 2026-09-23 | §18.17 results: A1–A7 pass on `2ffb062`. |
 | 2026-09-23 | §18.17 added: the W9-04 fix (user decision: option 1 in this PR), its regression test and acceptance criteria A1–A7, written before measuring. |
 | 2026-09-23 | §18.16 added: P2–P5 results against their acceptance rows, and the two pre-existing defects found in P5 (W9-04, W9-05). Status line under §18 updated. |
@@ -1293,3 +1295,55 @@ Acceptance, fixed before measuring:
 
 **Result 2026-09-23:** A1–A7 all pass on `2ffb062`. The numbers are in
 `validation.md` "W9-04 fix" and `issues.md` W9-04 "Resolution".
+
+### 18.18 W9-05 fix (2026-09-23)
+
+Direction: "授权上述1-2，推进W9-05" (`requirements.md`, "[Decision] 2026-09-23 —
+G3–G5 GPU authorization and W9-05").
+
+Root cause. `KvBlockAllocation._preempt_request`
+(`vllm_v1_kv_allocation.py`) reset `_num_processed_tokens` to 0 for every
+cluster type except DECODE and DECODE_ATTN. A MONOLITHIC victim past its
+prefill kept `is_prefill_complete=True`, so `_get_request_next_num_tokens`
+returned `max(processed - computed, 0) = 0`. Phase 2
+(`_schedule_waiting_requests`) takes the `num_new_tokens <= 0` branch, pops the
+request and rebuilds the waiting queues without it. The request is then held by
+no queue, the drain check passes, and the run ends with it incomplete. Traced on
+the C2 dense `tight_kv` case: request 7 is preempted at t=1.093 with 45 of 55
+tokens processed and removed by `_set_waiting_queues_from_ordered_requests` at
+t=1.157 (`w9_05/membership_trace.py`).
+
+Change. vLLM v1 preemption discards computed KV and keeps generated output. The
+reset now applies only to a victim still in prefill, which has no output yet. A
+victim past prefill keeps its Request-level progress, and only its scheduler
+frontier and KV allocation restart. This rule covers DECODE and DECODE_ATTN,
+whose requests always arrive past prefill, so the cluster-type set
+`_REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES` is deleted. The replay
+of prompt and output tokens that vLLM runs on resumption stays unmodeled, as it
+already is for DECODE and DECODE_ATTN since `35eb631`.
+
+Tests.
+- New `tests/integration/test_vllm_v1_decode_preemption_runtime.py`: three
+  requests of 30+30 tokens with eight 16-token blocks, real `Simulator`. It
+  asserts that a victim past prefill keeps its progress and that every request
+  completes all decode tokens. At `2ffb062` it fails: request 1 is preempted
+  with 34 tokens processed and reset to 0.
+- `tests/unit/test_pdaf_decode_attn_preemption.py`: the MONOLITHIC reset test
+  now uses a real `Request` still in prefill, and the disaggregated-decode
+  fixture request states `is_prefill_complete=True`.
+
+Acceptance, fixed before measuring (baseline `2ffb062`):
+
+| Id | Check | Pass condition |
+| --- | --- | --- |
+| B1 | Regression test | Passes with the fix; fails at `2ffb062` on the progress assertion. |
+| B2 | C2 `tight_kv` cases, three shapes | 24 of 24 complete, each with all decode tokens; before: dense 20, dp2 20, dp4 23. |
+| B3 | C2 PP=1 policy matrix, `2ffb062` against the fix | Every case without a decode-phase MONOLITHIC preemption is identical; each differing case has one, and completes at least as many requests. |
+| B4 | Deadlock sweep, three cluster schedulers | 72 of 72 drain; per-cell completion does not fall. |
+| B5 | Fidelity matrix, 71 cases | Identical, except cases with a decode-phase MONOLITHIC preemption, each listed with its preemption count. |
+| B6 | Stage-admission matrix G3b, G9, G10 | 0 STOP; cells identical or explained as in B5. |
+| B7 | Unit and integration suites by test id against the W9-04 JUnit at `2ffb062` | 0 regressions and 0 new failures; additions are the new test id and the renamed MONOLITHIC test. |
+| B8 | 16 architecture examples | 16 of 16 pass; identical, or explained as in B5. |
+
+**Result 2026-09-23:** B1–B8 all pass; committed as `75c1140`. The numbers are in `validation.md`
+"W9-05 fix" and `issues.md` W9-05 "Resolution".

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | User direction "授权上述1-2，推进W9-05": W9-04 worktrees removed; W9-05 diagnosed and fixed (`75c1140`), B1–B8 pass; G1 write-through amendment `63ac6c6b9`; G2 started. |
 | 2026-09-23 | User decisions: W9-04 fixed in this PR, W9-05 deferred, P5 worktrees removed. W9-04 fix `2ffb062` with regression case; A1–A7 pass. |
 | 2026-09-23 | Step 9 P6 done: records and AGENTS.md scope committed (`c1a570d`, review wording `104b6ff`), pushed, PR 35 body updated with the W9 section and read back. Step 9 CPU packages complete; W9-04/W9-05 decisions pending. |
 | 2026-09-23 | Step 9 P4 committed (`bacdbb4`) and P5 completed: C2 holds (24 of 24 PP=1 policy scenarios, 71 of 71 fidelity cases, 16 of 16 examples identical; 0 suite regressions). P5 found W9-04 (placeholder/join deadlock at `attn_dp=4`) and W9-05 (requests lost under KV pressure, also on `main`); W9-04 fix decision pending with the user. |
@@ -37,9 +38,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. G3–G5 blocked on GPU authorization. |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 authorized (≤3 jobs × ≤1 h, codesign); G2 in progress. |
 | Publication | PUSHED_VERIFIED 2026-09-23: remote head `a9ff5d5` confirmed equal to local (W9-04 fix `2ffb062`, records `a9ff5d5`); PR 35 body PATCHed 2026-09-23T12:33Z with the W9-04 row, section and commit, read back identical; still draft. Earlier the same day: Step 9 commits `d1a2a06`, `2ffe78d`, `bacdbb4`, `c1a570d`, `104b6ff`. Draft PR 35 body PATCHed 2026-09-23T12:10Z through `gh api` (Scope, Base, Progress, new W9 section, pipeline-coverage note, review material, commits, Status), read back identical apart from a trailing newline; still draft, base `refactor/oversized-module-split`; previous body kept at `/data/ycfeng/tmp/issue26-correctness-pr/pr35/body_before_c1a570d.md`. Earlier: `f7c31e4` (C35-01 source + tests), `ca1b9b6` (FP8 `block_shape`, optional-torch skip, W6 report, profiling guide), `57ffa5b` (records, Step 9 plan corrections); remote head `57ffa5b` confirmed; PR34 correction `2310417` merged in as `0d025f8`. Draft PR 35 body PATCHed 2026-09-22T12:12Z through `gh api` and read back; still draft, MERGEABLE, base `refactor/oversized-module-split`. |
-| Next action | Removal of the validation worktrees `.worktrees/w9-04-{before,after}` needs approval. G3–G5 wait for GPU authorization; W9-05 waits to be scheduled as its own item. |
+| Next action | G2 harness and semantic-alignment table, then the G3 run-check and submission. Removal of `.worktrees/w9-05-{before,after}` needs approval. |
 
 ## Step status
 
@@ -55,7 +56,7 @@
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
 | 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
 | 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
-| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 blocked (GPU) | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `a9ff5d5`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 deferred |
+| 9 | PP>1 support for `vllm_load_balancing` | CPU PACKAGES DONE — P1–P6 completed; G3–G5 authorized, G2 in progress | unit and integration PASS; C2 PASS (24/24 policy scenarios, 71/71 fidelity, 16/16 examples identical; 0 suite regressions) | PUSHED_VERIFIED `a9ff5d5`; PR 35 body updated | D9-2 decided by the user; W9-04 fixed by the user's decision (`2ffb062`); W9-05 fixed at the user's direction |
 
 ## Chronological updates
 
@@ -299,6 +300,21 @@ W9-02: `attn_dp=2, moe_ep=2, PP=3` is rejected at construction (6 devices agains
 
 Evidence copies: `step9_p5/evidence/`. Raw runs: `/data/ycfeng/tmp/issue26-correctness-pr/step9_p5`.
 
+### W9-05 fix (2026-09-23)
+
+| Step | Change / command | Reason and expectation | Result |
+| --- | --- | --- | --- |
+| Direction | "授权上述1-2，推进W9-05" | Recorded in `requirements.md`; supersedes the deferral | W9-04 worktrees removed; W9-05 scheduled; G3–G5 authorized |
+| Diagnosis | `w9_05/lost_request_probe.py`, `w9_05/membership_trace.py` on the C2 dense `tight_kv` case | Find where a lost request leaves every queue | Request 7 preempted at t=1.093 with 45 of 55 tokens, reset to 0, and dropped from the waiting queue at t=1.157 by the `num_new_tokens <= 0` branch (`issues.md` W9-05) |
+| Reference check | vLLM v1 `_preempt_request` and the waiting loop | Preemption keeps output tokens; the waiting loop asserts `num_new_tokens > 0` | Rule: reset only a victim still in prefill |
+| Criteria | plan §18.18 B1–B8 | Fixed before measuring | — |
+| Fix and tests | `vllm_v1_kv_allocation.py` (reset guarded by `not victim.is_prefill_complete`; the cluster-type set deleted); new `tests/integration/test_vllm_v1_decode_preemption_runtime.py`; `tests/unit/test_pdaf_decode_attn_preemption.py` updated | A past-prefill victim resumes; a prefill victim still restarts | `75c1140`; 1 passed (1.44 s); unit module 8 passed; control at `2ffb062` fails `assert 0 == 34` |
+| B2–B8 | `w9_05/run_validation.sh` (exports), `w9_05/run_matrix.sh` (worktrees), `composition_run_suites.sh` on `.worktrees/w9-05-after` | As in plan §18.18 | All PASS (`validation.md` "W9-05 fix"). The first B7 run on the export gave 88 git-provenance failures; rerun on the git worktree equals the W9-04 counts |
+| Metrics caveat | `request_metrics.csv` preemption columns | Which column counts a MONOLITHIC preemption | Only `request_total_preemption_count`; recorded in `issues.md` W9-05 Limits |
+
+Evidence copies: `w9_05/evidence/`. Raw runs: `/data/ycfeng/tmp/issue26-correctness-pr/w9_05`.
+Validation worktrees `.worktrees/w9-05-{before,after}` remain; removing them needs approval.
+
 ### G1 ground-truth instrumentation (2026-09-22, completed)
 
 Runs in parallel with P1 in the work graph and does not depend on W9-01.
@@ -329,3 +345,19 @@ W9-01 scope decision.
 
 Evidence: `test_report_2026-09-22_w9_pp_dp_placement.md` §3. The instrumented
 engine paths are not executed yet; that is package G3 and needs a GPU host.
+
+G1 amendment (2026-09-23, before any GPU run). vLLM 0.10.2 starts its engine
+cores and the DP coordinator as forked processes by default
+(`VLLM_WORKER_MULTIPROC_METHOD=fork`), and stops them with SIGTERM followed by
+a kill. A forked child leaves through `os._exit`, so the `atexit` flush never
+ran there, and a SIGTERM with the default action skips it as well. The buffered
+records of every engine core and of the coordinator would have been lost. The
+probes in `calibration/g1_writer_probes/` show both: `atexit_probe.py` and
+`out.txt` (under fork no `atexit` ran, whether the child returned or was
+terminated; under spawn only on return or a handled SIGTERM). New local commit `63ac6c6b9` ("Write Frontier placement records through as
+they are made") writes each record to a line-buffered per-process file as it is
+made, and restarts the sequence number in a forked child. A SIGTERM-killed forked
+child then kept all 3 of its records (`trace_fork_probe.py`,
+`trace_fork_probe_output.txt`). The diff artifact was regenerated as
+`ea95f571e..63ac6c6b9`, SHA-256
+`b6400d29710c6f0fac4d0e26c9078177a741d3984f9a07a72f838838eafcf8c7`.

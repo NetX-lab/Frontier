@@ -24,21 +24,34 @@ selected_checkout:
 groundtruth_checkout_path: /data/ycfeng/Frontier/.real-engine/vLLM-BS
 groundtruth_branch: feature/frontier-comparison-instrumentation
 groundtruth_ref: refs/heads/feature/frontier-comparison-instrumentation
-groundtruth_commit: 494b9f327036d4493034a9b37ebb343354884e01
+groundtruth_commit: 63ac6c6b9a6bdf5098fce12e349ff8ffad1af3bf
 groundtruth_tree_dirty: false
 groundtruth_remote_url: https://github.com/fwyc0573/vLLM-BS.git
 groundtruth_remote_tip: ea95f571e20937c7c908c6d59ddd1cd6bf9268f1
 groundtruth_diff_artifact: g1_instrumentation.diff
-groundtruth_diff_sha256: 84fc24db0e2411268a93f8be7ca5f8e4e5072ea09d86063cac2cfb98381feb2c
+groundtruth_diff_sha256: b6400d29710c6f0fac4d0e26c9078177a741d3984f9a07a72f838838eafcf8c7
 groundtruth_dirty_patch_sha256: null
 groundtruth_overlay_patch_applied: false
+groundtruth_commit_amendment:
+  amended_at_utc: "2026-09-23"
+  superseded_commit: 494b9f327036d4493034a9b37ebb343354884e01
+  superseded_diff_sha256: 84fc24db0e2411268a93f8be7ca5f8e4e5072ea09d86063cac2cfb98381feb2c
+  runs_with_superseded_commit: 0
+  reason: >-
+    case_init.md records 494b9f327, whose writer buffered records and flushed
+    them at interpreter exit. vLLM 0.10.2 forks its engine cores and DP
+    coordinator by default and stops them with SIGTERM, so neither path runs
+    the exit flush and those records would be lost. 63ac6c6b9 writes every
+    record through as it is made. case_init.md is immutable and is not edited;
+    this block is the amendment.
+  evidence: ../g1_writer_probes/
 groundtruth_weight_mode: dummy
 real_weight_download: false
 
 groundtruth_instrumentation:
   gate_env_var: VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR
   output: one JSONL file per process, named dp_placement_<pid>.jsonl
-  buffering: 1024 records, plus a flush at normal process exit
+  buffering: write-through; one line-buffered file per process, one JSON line per record, seq restarted in a forked child
   changed_files:
     - vllm/v1/frontier_trace.py
     - vllm/v1/engine/core.py
@@ -89,9 +102,10 @@ topology:
     cluster_scheduler: vllm_load_balancing
     replica_scheduler: vllm_v1
   devices: 4x H800
-  blocked_by: >-
-    W9-01. Frontier cannot run attn_dp=2 with num_pipeline_stages=2 today; the
-    stage admission FIFO deadlocks. The vLLM side of the case is unaffected.
+  blocked_by: null
+  unblocked: >-
+    W9-01 is resolved: PR 36 merged into main, merged forward here as dd9b8d9,
+    composition check passed on 03d5f24 (issues.md W9-01, Resolution).
 
 model:
   name: Qwen3MoeForCausalLM
@@ -124,7 +138,13 @@ decisions:
     question: >-
       Does the S0 2-GPU smoke and the S1 4-GPU ground-truth run have the user's
       GPU authorization on charged_group codesign?
-    status: BLOCKED
+    answer: "授权上述1-2，推进W9-05"
+    outcome: >-
+      Item 2 of the numbered next actions it answers was the Step 9 vLLM-side
+      GPU comparison G3-G5. Authorized within the plan's budget: at most 3 jobs
+      of at most 1 h each, H800, charged_group codesign only (steptron_ci is
+      paused by the user), submitted through StepMind RJobBackend.
+    decided_at_utc: "2026-09-23"
   - decision_id: W9-01-scope
     question: >-
       Is the pre-existing stage admission deadlock fixed inside this feature
@@ -136,5 +156,8 @@ decisions:
       until PR 36 merges into main, is merged forward, and passes the G3b
       composition check (issues.md W9-01, Resolution).
     decided_at_utc: "2026-09-22"
+    resolved: >-
+      2026-09-23. PR 36 merged into main as 4ab1964, merged forward as dd9b8d9,
+      composition check passed on 03d5f24.
 
 status: INITIALIZED

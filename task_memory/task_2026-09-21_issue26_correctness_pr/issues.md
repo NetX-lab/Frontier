@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | W9-05 diagnosed and fixed in `75c1140` (user direction "授权上述1-2，推进W9-05"): mechanism and Resolution with checks B1–B8 added. |
 | 2026-09-23 | W9-04 fixed in `2ffb062` under option 1 (user decision); Resolution added with checks A1–A7. W9-05 deferred as a separate item (user decision). |
 | 2026-09-23 | W9-04 (placeholder/join deadlock at `attn_dp=4`, root cause and prototype) and W9-05 (requests lost under KV pressure, also on `main`) recorded from Step 9 P5. |
 | 2026-09-23 | W9-01 remaining step 3 done (P1(b) complete, D9-2 proposed); W9-02 narrowed to the collective-sim backend; W9-03 recorded (reference DP lockstep under PP, observation). |
@@ -356,9 +357,9 @@ Limits:
 
 ## W9-05 Requests disappear mid-decode under KV pressure
 
-Status: open, not diagnosed. Present on `origin/main` `4ab1964`. Outside
-Step 9. Deferred as a separate correctness item by the user's decision of
-2026-09-23 ("暂缓，单独立项 (Recommended)").
+Status: fixed in `75c1140` (see Resolution below). Present on `origin/main`
+`4ab1964`. Outside Step 9. First deferred by the user's decision of 2026-09-23
+("暂缓，单独立项 (Recommended)"), then scheduled the same day ("授权上述1-2，推进W9-05").
 Found: 2026-09-23, Step 9 package P5, in the C2 PP=1 policy matrix.
 
 `vllm_v1` with `num_blocks=12, block_size=16`, 24 Poisson requests of 8–96
@@ -371,7 +372,81 @@ preemption, and the drain check passes although `is_empty` also counts the
 preempted queue, so the requests are held by no queue it reads. Their
 `request_metrics.csv` rows have empty latency fields.
 
-Next step when scheduled: follow one request through
-`_try_allocate_with_preemption` and
-`_rollback_current_iteration_preempted_requests`
-(`vllm_v1_engine_replica_scheduler.py:640-660`).
+### Mechanism (`w9_05/membership_trace.py`, `w9_05/lost_request_probe.py`)
+
+Preemption was not the missing step; it was the start of the loss.
+
+1. `KvBlockAllocation._preempt_request` (`vllm_v1_kv_allocation.py`) reset
+   `_num_processed_tokens` to 0 for every cluster type except DECODE and
+   DECODE_ATTN, including a MONOLITHIC victim that had finished its prefill.
+2. `is_prefill_complete` stays `True`, so the request keeps its decode phase.
+   `_get_request_next_num_tokens` (MONOLITHIC branch) then returns
+   `max(processed - computed, 0) = 0`.
+3. Phase 2, `_schedule_waiting_requests`, takes the `num_new_tokens <= 0`
+   branch: it pops the request, and `_set_waiting_queues_from_ordered_requests`
+   rebuilds the queues without it.
+4. No queue holds the request, so the drain check passes and the run exits 0
+   with it incomplete.
+
+Traced on the C2 dense `tight_kv` case: request 7 is preempted at t=1.093 with
+45 of 55 tokens processed and leaves the waiting queue at t=1.157. The
+KV-pressure sweep below shows the loss is exactly the decode-phase preemption:
+before the fix every one of the 176 decode-phase preemptions lost its request.
+
+The disaggregated DECODE and DECODE_ATTN roles were exempt from the reset since
+`35eb631`, which is why only MONOLITHIC lost requests.
+
+### Resolution (2026-09-23)
+
+Rule. vLLM v1 preemption discards a request's computed KV but keeps its output
+tokens (`num_computed_tokens = 0`; the prompt and output are recomputed). A
+victim still in prefill has no output, so it restarts its prompt as before. A
+victim past prefill keeps its Request-level progress; only the scheduler's
+computed frontier and the KV allocation restart. On the next step it asks for
+one token and allocates KV for its whole context. The one rule covers DECODE and
+DECODE_ATTN too, whose requests always arrive past prefill, so the cluster-type
+set `_REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES` is deleted.
+
+Change (`75c1140`, `vllm_v1_kv_allocation.py`): the reset of `_num_processed_tokens` is
+guarded by `not victim.is_prefill_complete` instead of the cluster-type set.
+
+Tests.
+- New `tests/integration/test_vllm_v1_decode_preemption_runtime.py`: three
+  requests of 30+30 tokens with eight 16-token blocks through the real
+  `Simulator`. It asserts that the run reaches a preemption past prefill, that
+  the victim keeps its progress, and that every request completes all of its
+  decode tokens.
+- `tests/unit/test_pdaf_decode_attn_preemption.py`: the MONOLITHIC reset test is
+  replaced by `test_monolithic_preemption_restarts_a_victim_still_in_prefill`,
+  on a real `Request` in prefill; the disaggregated-decode fixture request
+  states `is_prefill_complete=True`.
+
+Checks, against the criteria fixed in plan §18.18 before measuring (baseline
+`2ffb062`):
+
+| Id | Result | Evidence |
+| --- | --- | --- |
+| B1 | Test passes with the fix. At `2ffb062` it fails on the progress assertion (`assert 0 == 34`); the same configuration there leaves request 1 incomplete with 0 of 30 decode tokens and exit 0. | `w9_05/evidence/negative_control_pytest.txt`, `symptom_probe.txt` |
+| B2 | The three C2 `tight_kv` cases complete 24 of 24 with all decode tokens (before: dense 20, MoE `attn_dp=2` 20, MoE `attn_dp=4` 23). KV-pressure sweep, 72 cells: before, 41 cells lose 176 requests; after, 72 of 72 complete, 0 short outputs. The 41 lossy cells are exactly the cells with a decode-phase preemption after the fix. | `w9_05/evidence/c2_preemption_counts.txt`, `kv_pressure_sweep_summary.txt` |
+| B3 | 21 of 24 identical. The 3 differing cases are the `tight_kv` cases, the only ones with any preemption (total 5, 6 and 2 after the fix); the other 21 have none on either side. | `w9_05/evidence/c2_2ffb062_vs_fix.txt`, `c2_preemption_counts.txt` |
+| B4 | 72 of 72 deadlock-sweep cells drain with 24 of 24 requests, identical cell by cell to W9-04's result. | `w9_05/evidence/sweep_fix_*.txt` |
+| B5 | 71 of 71 identical. No MONOLITHIC or PD-AF case preempts (`request_total_preemption_count` 0); the preemptions in the matrix are PDD PREFILL victims, still in prefill, and PDD DECODE victims, whose rule did not change. | `w9_05/evidence/fidelity_comparison.json` |
+| B6 | G3b, G9 and G10: 51 of 51 PASS, `sha256sums.txt` identical. | `w9_05/evidence/stage_admission_compare_w905.json` |
+| B7 | unit 84 failed / 3829 passed / 51 skipped / 10 errors; integration 5 errors / 28 passed / 22 skipped. 0 regressions, 0 new failures, 0 skip changes; the id changes are the renamed unit test and the new integration test. | `w9_05/evidence/{unit,integration}_compare.json` |
+| B8 | 16 of 16 examples pass and are identical to `2ffb062`. | `w9_05/evidence/examples_2ffb062_vs_fix.txt` |
+
+Limits and follow-ups:
+
+- The replay cost is not modeled. vLLM recomputes the prompt and the generated
+  output of a resumed request; Frontier resumes it with a one-token step. The
+  DECODE and DECODE_ATTN roles have had the same simplification since `35eb631`.
+  Modeling it would change how a resumed request's work is counted in
+  Request/Batch and is a fidelity change that needs its own approval.
+- Phase 2 still drops a waiting request silently when `num_new_tokens <= 0`,
+  where vLLM asserts `num_new_tokens > 0`. With this fix no measured case reaches
+  that branch with an incomplete request; turning it into an error is a
+  separate change.
+- `request_decode_preemption_count` and the `request_decode_tokens_at_preemption_*`
+  columns cover only the PDD DECODE role. A MONOLITHIC preemption appears only
+  in `request_total_preemption_count`.
+- CPU runs with dummy or trained predictors on this host.

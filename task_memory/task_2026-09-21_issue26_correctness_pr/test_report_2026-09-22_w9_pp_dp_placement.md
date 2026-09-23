@@ -8,6 +8,7 @@
 | 2026-09-23 | §2 addendum: P1(b) rerun after the W9-01 merge-forward on seven shapes, with key scoring. §4 updated. |
 | 2026-09-23 | §4–§6 added: P2/P3 pointer, P4 real-loop integration evidence, P5 fidelity and regression evidence, W9-04/W9-05 found in P5. Summary renumbered to §7. |
 | 2026-09-23 | §8 added: the W9-04 fix `2ffb062` and its checks A1–A7; §6.4 and §7 updated. |
+| 2026-09-23 | §9 added: the W9-05 fix `75c1140` and its checks B1–B8; §6.4 and §7 updated. |
 
 Environment for every CPU check below:
 
@@ -352,7 +353,8 @@ Both defects are pre-existing; neither is caused by Step 9. See `issues.md`.
   every previously drained C2 case identical. The user chose to fix it in
   this PR; see §8.
 - **W9-05**: under KV pressure, `vllm_v1` loses requests mid-decode without
-  an error. It is also present on `origin/main`.
+  an error. It is also present on `origin/main`. The user scheduled it the same day;
+  see §9.
 
 ## 7. Summary
 
@@ -367,6 +369,7 @@ Both defects are pre-existing; neither is caused by Step 9. See `issues.md`.
 | P4 | PASS (§5) |
 | P5 / C2 | PASS (§6): 24 of 24 PP=1 policy scenarios, 71 of 71 fidelity cases and 16 of 16 examples identical; 0 suite regressions |
 | W9-04 fix (§8) | PASS: A1–A7 |
+| W9-05 fix (§9, `75c1140`) | PASS: B1–B8 |
 | G3–G5 | BLOCKED on GPU authorization |
 
 ## 8. W9-04 fix (`2ffb062`)
@@ -394,3 +397,33 @@ What the regression case shows, from its evidence:
   and stage context.
 
 Limits are in `validation.md` "W9-04 fix".
+
+## 9. W9-05 fix (`75c1140`)
+
+Mechanism, change, decision and limits: `issues.md` W9-05. Criteria: plan
+§18.18, fixed before measuring. The baseline is `2ffb062`; `frontier/` differs
+only in `vllm_v1_kv_allocation.py`.
+
+| Id | Check | Result |
+| --- | --- | --- |
+| B1 | New `test_vllm_v1_decode_preemption_runtime.py`; the same test and a probe on `2ffb062` | 1 passed; at `2ffb062` `assert 0 == 34`, and request 1 ends incomplete with exit 0 |
+| B2 | C2 `tight_kv`, three shapes; KV-pressure sweep, 72 cells | 24/24 in each (before 20, 20, 23); sweep 72 of 72 complete (before 31 of 72, 176 requests lost) |
+| B3 | C2 PP=1 policy scenarios | 21 of 24 identical, all without preemption; the 3 `tight_kv` cases differ and complete more |
+| B4 | Deadlock sweep, three cluster schedulers | 72 of 72 drain, equal to W9-04's cells |
+| B5 | Refactor fidelity matrix | 71 of 71 identical |
+| B6 | Stage-admission G3b, G9, G10 | 51 of 51 PASS, hashes identical |
+| B7 | Unit and integration suites against the W9-04 JUnit | 0 regressions, 0 new failures, 0 skip changes; one test renamed, one added |
+| B8 | 16 architecture examples | 16 of 16 identical |
+
+What the sweep shows, from `w9_05/evidence/kv_pressure_sweep_summary.txt`:
+
+- Before the fix, each of the 176 decode-phase preemptions lost its request.
+- The 41 lossy cells are exactly the 41 cells in which the fixed tree records a
+  decode-phase preemption.
+- Losses fall as KV grows: at `num_blocks=24` no shape has a decode-phase
+  preemption, and no cell lost a request.
+
+The fidelity matrix has no MONOLITHIC preemption, so B5 shows that the other
+paths are unchanged; B1–B3 cover the changed branch. Run notes (exported tree
+versus git worktree for B7, the symlink path in B8) are in `validation.md`
+"W9-05 fix".

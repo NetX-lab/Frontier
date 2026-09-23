@@ -10,6 +10,7 @@
 | 2026-09-23 | Recorded the W9-01 merge-forward request after PR 36 merged. |
 | 2026-09-23 | Recorded the D9-2 decision (group-anchored report key). |
 | 2026-09-23 | Recorded the W9-04, W9-05 and P5-worktree decisions. |
+| 2026-09-23 | Recorded the G3–G5 GPU authorization and the decision to advance W9-05. |
 
 ## [Original Request] 2026-09-21
 
@@ -130,3 +131,16 @@ Questions (AskUserQuestion) after Step 9 P6. Answers, verbatim:
 | W9-04 | Fix in this PR with option 1 of `issues.md` W9-04: in `enter_layer_sync`, drop an idle placeholder whose lane's stage has since become busy. Add a regression test, then rerun the deadlock sweep, the PP=1 policy C2 matrix, the 71-case fidelity matrix, stage-admission groups G3b/G9/G10 and the suites. |
 | W9-05 | Deferred as a separate correctness item; recorded in `issues.md` only. No source change here. |
 | P5 worktrees | Removed 2026-09-23 with `git worktree remove` (the `after` tree held two generated `config.json` run outputs only, so `--force`). |
+
+## [Decision] 2026-09-23 — G3–G5 GPU authorization and W9-05
+
+Message, verbatim: "授权上述1-2，推进W9-05". It answers the numbered next steps
+after the W9-04 publication: (1) remove the validation worktrees
+`.worktrees/w9-04-{before,after}`, (2) run the Step 9 vLLM-side GPU comparison
+G3–G5.
+
+| Item | Decision |
+| --- | --- |
+| Validation worktrees | Removed 2026-09-23 with `git worktree remove` (`w9-04-after` held two generated `config.json` run outputs only, so `--force`), then `git worktree prune`. |
+| G3–G5 | Authorized. Manifest decision `D-gpu-authorization` is answered. Scope is plan §18.5/§18.6/§18.9: S0 smoke on 2×H800 and S1 on 4×H800, `codesign` only, within the §18.9 budget of at most three jobs of at most one hour each. G2 must complete before the first submission. |
+| W9-05 | Superseded the earlier deferral: diagnose and fix in this branch under the approval rules. A change to a shared interface or beyond the step's size limits still needs approval. |
