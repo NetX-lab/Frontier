@@ -515,7 +515,7 @@ def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
         ("frontier/config/model_config.py", "BaseModelConfig.__post_init__", "helper"): 1,
         # Config-like prediction adapters may not own a BaseModelConfig snapshot.
         (
-            "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+            "frontier/execution_time_predictor/prediction_model_identity.py",
             "_resolve_model_architecture_profile",
             "helper",
         ): 1,

@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from frontier.attention.ops import AttentionOperatorRole
-from frontier.execution_time_predictor import shared_prediction_model_manager
+from frontier.execution_time_predictor import profiling_dataframe_loaders
 from frontier.execution_time_predictor import sklearn_execution_time_predictor
 from frontier.execution_time_predictor.attention_tp_policy import (
     get_attention_non_linear_tp_policy_ops,
@@ -207,7 +207,7 @@ def test_shared_model_manager_load_attention_df_uses_role_derived_dense_loader_k
     manager._attention_tp_warning_cache = set()
 
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        profiling_dataframe_loaders,
         "get_enabled_predictor_median_column_by_role",
         lambda _family, role: {
             AttentionOperatorRole.CACHE_WRITE: "time_stats.role_cache.median",
@@ -215,7 +215,7 @@ def test_shared_model_manager_load_attention_df_uses_role_derived_dense_loader_k
         raising=False,
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        profiling_dataframe_loaders,
         "get_enabled_predictor_metric_name_by_role",
         lambda _family, role: {
             AttentionOperatorRole.PREFILL_KERNEL: "role_prefill",
@@ -228,7 +228,7 @@ def test_shared_model_manager_load_attention_df_uses_role_derived_dense_loader_k
         return 8 if kwargs["op_name"] == "role_prefill" else 1
 
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        profiling_dataframe_loaders,
         "resolve_effective_attention_tp_size",
         _resolve_effective_tp,
     )

@@ -1378,7 +1378,7 @@ def test_dense_training_carries_selected_contract_to_loader_and_context(tmp_path
 def test_routed_and_shared_training_carry_distinct_contracts(tmp_path) -> None:
     """Routed and shared-expert training use their own typed domains."""
 
-    import frontier.execution_time_predictor.shared_prediction_model_manager as module
+    import frontier.execution_time_predictor.prediction_family_trainers as module
 
     linear_file = tmp_path / "linear.csv"
     moe_file = tmp_path / "moe.csv"

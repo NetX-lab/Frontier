@@ -10,7 +10,7 @@ from frontier.entities.request import Request
 from frontier.kv_cache.base_kv_cache_manager import KVCacheManager
 from frontier.kv_cache.kv_cache_block_pool import BlockPool
 from frontier.scheduler.replica_scheduler import (
-    vllm_v1_engine_replica_scheduler as scheduler_module,
+    vllm_v1_prefix_cache as prefix_cache_module,
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
@@ -104,7 +104,7 @@ def test_committed_full_hit_admission_records_reuse_eviction_and_rebinding(
 
     events: list[dict[str, object]] = []
     monkeypatch.setattr(
-        scheduler_module,
+        prefix_cache_module,
         "_log_frontier_vllm_v1_schedule_decision",
         lambda event: events.append(dict(event)),
     )

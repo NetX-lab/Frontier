@@ -1,0 +1,116 @@
+# Oversized Module Split — Issues and Resolutions
+
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-09-21 | Created with the issues found during the `config.py` split. |
+| 2026-09-21 | Added I5 to I8, the four regressions the scheduler split introduced. |
+| 2026-09-21 | Added I9 and I10, the test-binding changes the predictor splits required. |
+
+## I1 — `ClusterConfig` is constructed at runtime by a method that moved out
+
+| Field | Record |
+| --- | --- |
+| Found by | `tests/unit/test_pdaf_config_contract.py` and `tests/unit/test_simulator_transfer_predictor_lifecycle.py`, 6 failures |
+| Symptom | `NameError: name 'ClusterConfig' is not defined` at `frontier/config/cluster_role_config.py:135` |
+| Cause | `get_cluster_configs_for_disaggregation` builds one `ClusterConfig` per role. When that method moved into the `ClusterRoleConfigBuilder` mixin, the name was imported only under `TYPE_CHECKING`, because the survey had recorded it as an annotation. It is a real constructor call, and a module-level import would close a cycle: `cluster_config` imports the mixin. |
+| Fix | A lazy import of `ClusterConfig` inside the method, matching the existing `_get_cc_backend_configs` pattern in the same package. |
+| Prevention | Any name a moved method *constructs* or *calls* must be imported at runtime, not under `TYPE_CHECKING`. The static free-name analysis cannot distinguish the two; only executing the code does. |
+
+This is the reason the split is gated by the unit suites in addition to the fidelity matrix: no fidelity case had reached this path before the unit run, because the disaggregated example wrappers exercise it but the failure surfaced first in the faster unit selection.
+
+## I2 — Long-prefill co-location case exceeded the model context
+
+| Field | Record |
+| --- | --- |
+| Found by | The first fidelity baseline capture |
+| Symptom | `Sequential simulation ended with non-empty scheduler state`, exit code 1, at simulated time 7.296 ms |
+| Cause | The case asked for 4096 prefill tokens plus 16 decode tokens on Llama-2-7b, whose context is 4096. No request can ever be admitted, so the queue never drains. |
+| Resolution | Case parameters corrected to 3584 prefill tokens. This is a property of the configuration, not a simulator defect, so nothing in `frontier/` changed. |
+
+## I3 — MoE fidelity cases violated the shared-domain invariant
+
+| Field | Record |
+| --- | --- |
+| Found by | The first fidelity baseline capture |
+| Symptom | `ValueError: Frontier shared attention/MoE parallel domain requires attn_tp*attn_dp == moe_tp*moe_ep`, and the wrapper's own stricter guard `ATTN_TP == MOE_TP * MOE_EP` |
+| Cause | Two invalid case topologies. |
+| Resolution | The EP1 case now uses `ATTN_TP=1`. The MoE attention-DP case was replaced by an EP4 topology: the MoE wrapper's guard ignores `attn_dp`, so it cannot express `attn_dp > 1`, and the dense matrix already covers DP lanes. |
+
+## I4 — Predictor cache names differed for reasons unrelated to the refactor
+
+| Field | Record |
+| --- | --- |
+| Found by | The cache-file-name check in the fidelity comparator |
+| Symptom | 138 of 426 cache entries had different hashes between the two checkouts while every simulated output was identical |
+| Cause | `ExecutionTimePredictionModelManager._get_hash_relevant_config` includes the profiling input file paths in the model hash, and the two `examples/profiling/smoke_simulator_*_csv.sh` wrappers default their data base to an absolute path under their own repository root. |
+| Resolution | Both cases now pass `DATA_DIR_BASE=data/profiling`, which resolves identically from either checkout. After recapture the difference is zero, so the check can now detect a real training-identity change. |
+
+## I5 — A moved method referenced a module-level logger object
+
+| Field | Record |
+| --- | --- |
+| Found by | The fidelity matrix, 66 of 67 cases |
+| Symptom | `NameError: name '_frontier_vllm_v1_sched_decision_logger' is not defined`, raised from `vllm_v1_iteration_policy.py` inside `_emit_schedule_decision_event` |
+| Cause | The decision-log guard tests the module-level logger object directly, not only the logging function. The extraction imported the function into the new module but not the object, which stayed behind in `vllm_v1_decision_log.py`. |
+| Fix | `schedule_decision_logging_enabled()` added to `vllm_v1_decision_log.py`; the guard calls it. No module outside `vllm_v1_decision_log.py` now names the logger object. |
+
+## I6 — `deque` missing from the main scheduler module
+
+| Field | Record |
+| --- | --- |
+| Found by | `tests/unit/test_simulator_transfer_predictor_lifecycle.py` |
+| Symptom | `NameError: name 'deque' is not defined` in `__init__` |
+| Cause | The rebuilt import header dropped a name the retained code still uses. |
+| Fix | Import restored. |
+
+## I7 — `validate_gdn_runtime_support` missing from the main scheduler module
+
+| Field | Record |
+| --- | --- |
+| Found by | `tests/unit/test_gdn_scheduler_slots.py` and five other GDN suites, 16 failures |
+| Symptom | `NameError` in `__init__` |
+| Cause | The guard is used both by the retained constructor and by the extracted allocation methods. The extraction moved the import instead of duplicating it. |
+| Fix | Import restored in both modules. |
+| Prevention | A static check now parses each split module and reports every name that is loaded but neither imported, defined locally, nor a builtin. It found this one. Its only remaining hit is `BaseCCBackendConfig` in `frontier/config/cluster_config.py`, which is a string annotation the flat CLI generator resolves through its own lazy-import special case, exactly as the pre-split `config.py` did. |
+
+## I8 — A test patched the decision logger on the module that no longer calls it
+
+| Field | Record |
+| --- | --- |
+| Found by | `tests/unit/test_prefix_cache_identity_ledger.py` |
+| Symptom | The test captured zero events where it expected two |
+| Cause | The test monkeypatches `_log_frontier_vllm_v1_schedule_decision` on the main scheduler module. The prefix-cache methods now live in `vllm_v1_prefix_cache.py` and resolve the name in that module's namespace, so the patch no longer intercepts. |
+| Resolution | The patch target moved with the methods. This is the one test change in the scheduler step; the test's subject, the ledger's emitted events, is unchanged. |
+
+## I9 — Tests that patch a module-level name must follow the code that reads it
+
+| Field | Record |
+| --- | --- |
+| Found by | The unit selection, 8 failures across 6 files |
+| Symptom | A patched helper had no effect, so a test observed an empty list or the unpatched value |
+| Cause | These tests monkeypatch a module-level name on `shared_prediction_model_manager` and then drive a method that reads it. After the split the method resolves that name in the module it moved to, so the patch no longer intercepts. This is the same class as I8. |
+| Resolution | Each patch target moved to the module that now owns the method under test: five files to `prediction_family_trainers`, one to `profiling_dataframe_loaders`, and one test to `prediction_model_identity` because `MOE_FAMILY` is read by `_get_moe_family_model_names`, which resolves it in its own module. |
+
+One of the eight is different in kind and deserves separate attention in review. `test_raw_model_profile_resolution_callsites_are_allowlisted` is a governance gate: it pins the exact set of functions permitted to resolve a raw model architecture profile, and how many times each may do so. Exactly one line of that allowlist changed. The entry keeps the same function name, the same kind, and the same expected call count of 1; only the owning file goes from `shared_prediction_model_manager.py` to `prediction_model_identity.py`, and the allowlist still holds 11 entries. No entry was added, removed, or given a higher count, so the property the gate exists to protect is unchanged.
+
+## I10 — A patched name that is now read in two modules
+
+| Field | Record |
+| --- | --- |
+| Found by | `tests/unit/test_moe_share_expert_operator_families.py`, 3 failures |
+| Symptom | After repointing the patch to the module that owns the function being called, training still raised `Unsupported MoE op for TP mapping`, because part of the path still saw the real operator family |
+| Cause | `MOE_FAMILY` was one binding in one module before the split. It is now imported by both `moe_predictor_helpers` and `moe_operator_times`, and the code path under test reads it in both. |
+| Resolution | The three tests now install the fake family in both modules, one added line each. This is the only place in this branch where a test gained a line instead of having one changed, and it is a direct consequence of one name becoming two bindings. |
+| Follow-up | The first attempt at this edit inserted the added line twice in two of the three tests. The script applied a literal replacement and then a regular expression that inspected only the `setattr` block, not the line following it, so the two blocks the literal pass had already handled were extended again. The duplicates were inert, since the second call set the same attribute to the same value, but they are a copy-paste artifact in a diff whose claim is a reviewed pure move. Removed in a follow-up commit rather than by amending the pushed one. |
+| Note for review | A reviewer checking that the split preserved behavior should read this as evidence that it did: the test still asserts the same thing, and it needed the second patch precisely because the production code reads the name in both places. |
+
+## I11 — A pytest selection that aborts at collection proves nothing
+
+| Field | Record |
+| --- | --- |
+| Found by | The first unit parity run for the MoE predictor split |
+| Symptom | Both sides reported the same 7 collection errors and no test results, and the comparison said IDENTICAL |
+| Cause | Widening the selection pulled in seven modules that import `torch`, which the minimal CPU environment deliberately excludes. Pytest stops at collection errors by default, so nothing ran, and comparing two empty result sets trivially agreed. |
+| Resolution | `--continue-on-collection-errors`, after which both sides run 3016 tests. The lesson is that a parity comparison has to assert that tests actually ran, not only that the two sides agree. |
