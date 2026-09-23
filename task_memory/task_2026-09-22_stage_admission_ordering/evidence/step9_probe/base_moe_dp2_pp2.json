@@ -1,9 +1,0 @@
-{
- "shape": {
-  "is_moe": true,
-  "attn_dp": 2,
-  "moe_ep": 2,
-  "stages": 2
- },
- "error": "RuntimeError('Sequential simulation ended with non-empty scheduler state: ...')"
-}

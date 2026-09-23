@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Case matrix for stage admission of attention-DP lanes under pipeline parallelism.
 
-Runs the case list of the stage-admission-ordering plan
-(``task_memory/task_2026-09-22_stage_admission_ordering/plan.md`` §4) on the
-current source tree and writes, for each case, its inputs (``case.json``), its
-run provenance (``run.json``) and one outcome artifact:
+Runs the case list of ``build_cases`` on the current source tree and writes,
+for each case, its inputs (``case.json``), its run provenance (``run.json``)
+and one outcome artifact:
 
 * ``success``: ``sha256sums.txt`` over the copied metrics tree;
 * ``admission_deadlock``: ``state_report.json`` read from the live scheduler

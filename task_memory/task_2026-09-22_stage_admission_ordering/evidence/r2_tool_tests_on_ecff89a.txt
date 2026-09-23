@@ -1,8 +1,0 @@
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_ideal_after_revision_matches_and_base_controls_hold
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_fixed_base_loses_the_controls_without_a_mismatch
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_missing_placement_log_fails_the_comparison
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_overlay_acceptance_compares_file_sets[False-True]
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_apply_patch_keeps_every_section_of_a_repeated_file
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_apply_patch_reads_a_trimmed_context_line
-FAILED tests/unit/test_stage_admission_pp_tools.py::test_apply_patch_rejects_an_unknown_hunk_line
-7 failed, 2 passed in 0.32s
