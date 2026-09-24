@@ -546,14 +546,14 @@ items 1-7" and "[Decision] 2026-09-24 — interview answers for items 1-7".
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| 1 F-R5 | in-progress: approved; magnitude measured before the interview on 96 KV-pressure cells (per-cell mean E2E -12.1 % to +5.4 %, dense trained timing); implementation on a new branch stacked on this one | `/data/ycfeng/tmp/issue26-correctness-pr/followups_20260924/fr5/compare.json` |
-| 1 F-R6 and replay | in-progress: CPU prototype measurement before any design (decision Q2 b). 94 % of the grid's preemptions hit decode-phase requests, whose vLLM replay Frontier does not model | same directory |
-| 2-3 W3-R5/W3-R6 | in-progress: one change on this branch, option (a) of Q5 | — |
-| 4 S44 | pending: record as the S43 task's second row | — |
+| 1 F-R5 | in-progress: approved; magnitude measured before the interview on 96 KV-pressure cells (per-cell mean E2E -12.1 % to +5.4 %, dense trained timing); implementation on branch `fix/vllm-v1-preemption-victim` (workflow run `wf_656a1c63-0e5`), records in `/data/ycfeng/Frontier/task_memory/task_2026-09-24_vllm_v1_preemption_fidelity/` | `/data/ycfeng/tmp/issue26-correctness-pr/followups_20260924/fr5/compare.json` |
+| 1 F-R6 and replay | in-progress: CPU prototype measurement before any design (decision Q2 b), workflow run `wf_04d031c0-4a5`. 94 % of the grid's preemptions hit decode-phase requests, whose vLLM replay Frontier does not model | same directory |
+| 2-3 W3-R5/W3-R6 | in-progress: one change, option (a) of Q5, implemented on `refactor/sync-waiting-room` (workflow run `wf_8792cb4b-388`) and merged here after the gates | Gates: `/data/ycfeng/tmp/issue26-correctness-pr/followups_20260924/gates/` (base `.worktrees/followup-base` at `6d59946`) |
+| 4 S44 | completed: recorded as the S43 task's second row (decision D1); the S43 and S42 plans restate blocker B2 after Q8 | `/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/plan.md` section 6 |
 | 5 W6 native rerun | completed: `exp-0924-114241-429126`, 8 passed in 14.53 s | `w6_native_20260924/receipt.md` |
 | 6 Calibration tools | in-progress: the user replaced the archived helper path with the current skill; how the helper-bound entries run without it is the next interview question | — |
 | 7 Gitlink re-point | blocked: marking companion PR 1 ready and merging it was refused by the Claude Code permission classifier ("Merge Without Review"); the user merges it, then the gitlink moves | — |
-| Rate-limited subagents | in-progress: a message cannot resume a workflow agent ("No transcript found for agent ID"); their work is re-run by new agents on the current branch | — |
+| Rate-limited subagents | in-progress: a message cannot resume a workflow agent ("No transcript found for agent ID"); their work is re-run by new agents against `6d59946` (read-only pin `.worktrees/rerun-review`), workflow run `wf_7492f1c4-d2c`: the 12 failed finder lenses, three verifiers for each of the 32 unverified leads and every new finding, the dummy-mode code and evidence parts with a new synthesis, and the S43/S42 scope critique | Inputs: `/data/ycfeng/tmp/issue26-correctness-pr/rerun_20260924/` |
 
 Commands, W6 rerun (2026-09-24T03:42:37Z, worktree `363a1dd`, no modified tracked file):
 
