@@ -43,20 +43,17 @@ def source_forward_mode(batch) -> str:
     return "prefill" if int(batch.num_prefill_tokens) > 0 else "decode"
 
 
-#: Open-step namespaces. ``prefill`` and ``decode`` belong to the disaggregated
-#: roles, which run one phase each. ``forward`` belongs to a monolithic cluster,
-#: where one Replica runs both phases and a cohort may mix them: its lanes have
-#: to resolve to one step id, so they must share one namespace.
-SYNC_KINDS = ("prefill", "decode", "forward")
-
-
 class ForwardSyncState:
-    """Own forward-step identity bookkeeping for every synchronizing role."""
+    """Own the forward-step identities of one cluster scheduler.
+
+    A cluster scheduler synchronizes its lanes in one waiting room, so one
+    open-step mapping binds all of them. On a monolithic cluster this is what
+    resolves the lanes of one forward to one step id even when their local
+    phases differ.
+    """
 
     def __init__(self) -> None:
-        self._open_steps_by_kind: dict[str, dict[tuple, int]] = {
-            kind: {} for kind in SYNC_KINDS
-        }
+        self._open_steps: dict[tuple, int] = {}
         self._next_step_id_by_replica: dict[int, int] = {}
 
     @staticmethod
@@ -71,19 +68,9 @@ class ForwardSyncState:
             )
         return step_id
 
-    @staticmethod
-    def _validate_kind(sync_kind: str) -> None:
-        if sync_kind not in SYNC_KINDS:
-            raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
-
-    def open_steps(self, sync_kind: str) -> dict[tuple, int]:
-        self._validate_kind(sync_kind)
-        return self._open_steps_by_kind[sync_kind]
-
     def resolve_step(
         self,
         *,
-        sync_kind: str,
         replica_id: int,
         stage_id: int,
         batch,
@@ -92,7 +79,6 @@ class ForwardSyncState:
         sync_stage: str,
         room_lookup: Callable[[int], Mapping | None],
     ) -> int | None:
-        self._validate_kind(sync_kind)
         for value, field_name in (
             (replica_id, "replica_id"),
             (stage_id, "stage_id"),
@@ -122,15 +108,14 @@ class ForwardSyncState:
             sync_stage,
             provisional_id,
         )
-        open_steps = self.open_steps(sync_kind)
-        open_step_id = open_steps.get(binding_key)
+        open_step_id = self._open_steps.get(binding_key)
         if open_step_id is not None:
             room = room_lookup(open_step_id)
             if room is None:
                 raise RuntimeError(
                     "Forward-step state references a missing waiting room: "
-                    f"kind={sync_kind}, replica={replica_id}, stage={stage_id}, "
-                    f"layer={layer_id}, sync_stage={sync_stage}, step={open_step_id}"
+                    f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
+                    f"sync_stage={sync_stage}, step={open_step_id}"
                 )
             existing_batch = room.get("batches", {}).get(lane_id)
             if (
@@ -152,7 +137,7 @@ class ForwardSyncState:
         if getattr(batch, "is_idle", False) and current_id < next_id:
             return None
         resolved_id = max(current_id, next_id)
-        open_steps[binding_key] = resolved_id
+        self._open_steps[binding_key] = resolved_id
         batch._forward_cohort_id = resolved_id
         self._next_step_id_by_replica[replica_id] = resolved_id + 1
         return resolved_id
@@ -160,21 +145,18 @@ class ForwardSyncState:
     def close_step(
         self,
         *,
-        sync_kind: str,
         replica_id: int,
         stage_id: int,
         layer_id: int,
         sync_stage: str,
         provisional_id: int,
     ) -> None:
-        self._validate_kind(sync_kind)
         if type(provisional_id) is not int or provisional_id < 0:
             raise ValueError(
                 "forward cohort provisional ID must be an exact non-negative int, "
                 f"got {provisional_id!r}"
             )
-        open_steps = self.open_steps(sync_kind)
-        open_steps.pop(
+        self._open_steps.pop(
             (replica_id, stage_id, layer_id, sync_stage, provisional_id),
             None,
         )

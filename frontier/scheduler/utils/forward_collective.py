@@ -35,7 +35,7 @@ def handle_forward_sync_collective(
             "EP_WAVE enters this method at post_moe"
         )
 
-    replica_rooms = scheduler._forward_sync_waiting_room.get(replica_id)
+    replica_rooms = scheduler._sync_waiting_room.get(replica_id)
     stage_rooms = replica_rooms.get(stage_id) if replica_rooms is not None else None
     step_rooms = stage_rooms.get(batch_global_id) if stage_rooms is not None else None
     layer_rooms = step_rooms.get(layer_id) if step_rooms is not None else None

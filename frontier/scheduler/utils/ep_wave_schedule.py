@@ -213,13 +213,7 @@ def schedule_layer_wave(
         else:
             source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
 
-    if mode == "forward":
-        waiting_room = scheduler._forward_sync_waiting_room
-    elif mode == "prefill":
-        waiting_room = scheduler._prefill_sync_waiting_room
-    else:
-        waiting_room = scheduler._decode_sync_waiting_room
-    sync_room = waiting_room[replica_id][stage_id][cohort_id][layer_id]["post_moe"]
+    sync_room = scheduler._sync_waiting_room[replica_id][stage_id][cohort_id][layer_id]["post_moe"]
     if sync_room["batches"]:
         raise ValueError(
             f"{mode_name} EP wave post_moe room already contains a batch: "

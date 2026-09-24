@@ -394,23 +394,22 @@ def _read_cluster_state(cluster: str, cluster_scheduler, lanes: dict,
             ],
         })
 
-    for room_name in ("_prefill_sync_waiting_room", "_decode_sync_waiting_room"):
-        by_replica = getattr(cluster_scheduler, room_name) or {}
-        for replica_id, by_stage in by_replica.items():
-            for stage_id, by_step in by_stage.items():
-                for step, by_layer in by_step.items():
-                    for layer, by_sync in by_layer.items():
-                        for sync_stage, room in by_sync.items():
-                            # A dispatched room keeps its key with its fields
-                            # popped (enter_layer_sync).
-                            if not room.get("batches"):
-                                continue
-                            rooms.append({
-                                "cluster": cluster, "room": room_name.strip("_"),
-                                "replica_id": replica_id, "stage_id": stage_id,
-                                "step": step, "layer": layer, "sync_stage": str(sync_stage),
-                                "lanes_present": sorted(room["batches"]),
-                            })
+    sync_waiting_room = getattr(cluster_scheduler, "_sync_waiting_room", None) or {}
+    for replica_id, by_stage in sync_waiting_room.items():
+        for stage_id, by_step in by_stage.items():
+            for step, by_layer in by_step.items():
+                for layer, by_sync in by_layer.items():
+                    for sync_stage, room in by_sync.items():
+                        # A dispatched room keeps its key with its fields
+                        # popped (enter_layer_sync).
+                        if not room.get("batches"):
+                            continue
+                        rooms.append({
+                            "cluster": cluster,
+                            "replica_id": replica_id, "stage_id": stage_id,
+                            "step": step, "layer": layer, "sync_stage": str(sync_stage),
+                            "lanes_present": sorted(room["batches"]),
+                        })
 
 
 def has_admission_deadlock_signature(report: dict) -> bool:
