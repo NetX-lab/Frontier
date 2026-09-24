@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`); the open item removed. |
 | 2026-09-24 | Native W6 FP8 rerun of the current FP8 code PASS (`exp-0924-114241-429126`); follow-up decisions for items 1-7 recorded. |
 | 2026-09-24 | W7-R4 fixed by the user's choice of option (a) (companion `e922c77`, gitlink `9adf759`); removed from the proposals; the final-validation worktrees removed. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: the W6 negative-control and CPU-test rows corrected (`6828581` pins the profiler's config and alignment arguments); W7-R4 added to the proposals; the GPU scope in Limits corrected. |
@@ -66,7 +67,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | `frontier/scheduler/utils/sync_entry.py`, `sync_state.py`, `forward_sync_state.py`, `prefill_collective.py`, `decode_collective.py`, `ep_wave_schedule.py`, `ep_wave_inputs.py` | W3: one lifecycle for mixed-source cohorts |
 | `frontier/events/cluster_schedule_event.py`, `frontier/events/global_batch_end_event.py`, `frontier/scheduler/request_load.py`, `frontier/scheduler/replica_scheduler/*` | W3/W4: event and load-snapshot wiring |
 | `frontier/profiling/moe/moe_vllm_kernel.py` | W6: the legacy path performs the gated expert computation |
-| `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f`, then to `ff11ee6` (`6d621c8`, empty cross-server all-to-all) and `e922c77` (`9adf759`, zero refused for every other kind) |
+| `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f`, then to `ff11ee6` (`6d621c8`, empty cross-server all-to-all) and `e922c77` (`9adf759`, zero refused for every other kind); after companion PR 1 merged, `d28fe917` on companion `main` (`1b11eff`, same tree) |
 | `docs/profiling/README.md` | W6: the operator's scope and its artifact-identity limits |
 | `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py`, `base_cluster_scheduler.py`, `frontier/scheduler/replica_scheduler/base_replica_scheduler.py`, `frontier/scheduler/replica_stage_scheduler/stage_execution_context.py` | W9: schedule-time load reports while the pipeline has room, keyed by the stage-0 forward group |
 | `frontier/scheduler/utils/sync_entry.py` | W9-04: withdraw a first-layer placeholder when its lane joins the forward |
@@ -122,7 +123,6 @@ per-work-package reports.
 
 | Item | Where |
 | --- | --- |
-| Re-point the collective-sim gitlink at `main` once companion PR 1 merges. `.gitmodules` already records `branch = main`; `git submodule update --remote` would currently drop the fix. | `future.md` §2 |
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |

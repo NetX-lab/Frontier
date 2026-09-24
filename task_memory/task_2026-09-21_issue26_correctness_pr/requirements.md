@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the calibration-tool follow-up decision (Q8 round 2) and the user's merge of companion PR 1. |
 | 2026-09-24 | Recorded the follow-up request for items 1-7 and its interview decisions (Q1-Q9). |
 | 2026-09-24 | Recorded the W7-R4 decision (option a) and the removal of the final-validation worktrees. |
 | 2026-09-21 | Recorded the original request, the specification hand-off, and the decisions from the planning interview. |
@@ -198,4 +199,16 @@ Message, verbatim: "1。当前周限额已经刷新，请对处于limit中的sub
 | Q7 W6 native rerun | Resubmit. The retry was accepted; its job is `exp-0924-114241-429126`. |
 | Q8 Calibration tools | Stop using `/data/ycfeng/frontier-calibration-old-20260831/`; use the current Claude Code skill `/home/brainpp/.claude/skills/frontier-calibration` instead. |
 | Q9 Companion PR 1 | Option (a): mark it ready, merge it with a merge commit, re-point this branch's gitlink at the merge commit and rerun the collective-sim tests. |
+
+## [Decision] 2026-09-24 — calibration tools, round 2; companion PR 1 merged
+
+The user merged companion PR 1 themselves (`gh pr ready 1 --repo fwyc0573/frontier-htsim && gh pr merge 1 --repo fwyc0573/frontier-htsim --merge`). It merged into `main` as `d28fe917` at 2026-09-24T04:25:59Z.
+
+Question (Q8 follow-up): how do the four helper-bound calibration entries run without the retired archive? Recommended option (a): write the needed tools in the Frontier repository under `tests/comparison/calibration/`, with unit tests. `tool-boundaries.md` then pins them by repository path and commit/blob hash, and the skill stays prompt-first. The first tool is the request-metrics normalizer that the S43/S42 E2E gate needs; op-supplement and dispatch tools follow only when a case needs them. `tool-boundaries.md`, `pressure_scenarios.py` and the four entries' wording change with it.
+
+Message, verbatim: "continue；Q1采纳你的推荐"
+
+| Item | Decision |
+| --- | --- |
+| Q8 round 2 | Option (a) as recommended. |
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Item 7 done: the user merged companion PR 1 (`d28fe917`); gitlink re-pointed in `1b11eff`, companion 16 passed, Frontier 3 passed, clean checkout PASS. Q8 round 2 decided (option a). |
 | 2026-09-24 | Follow-up items 1-7: decisions recorded; W6 native rerun PASS (`exp-0924-114241-429126`); companion PR 1 merge refused by the permission classifier. |
 | 2026-09-24 | Publication recorded for the W7-R4 fix: `9adf759` and `279f547` pushed; PR 35 and companion PR 1 bodies updated. |
 | 2026-09-24 | User decision "W7-R4 选择a；允许删除 .worktrees/review-final-{base,head}": W7-R4 fixed (companion `e922c77`, gitlink `9adf759`); final-validation worktrees removed. |
@@ -551,8 +552,8 @@ items 1-7" and "[Decision] 2026-09-24 — interview answers for items 1-7".
 | 2-3 W3-R5/W3-R6 | in-progress: one change, option (a) of Q5, implemented on `refactor/sync-waiting-room` (workflow run `wf_8792cb4b-388`) and merged here after the gates | Gates: `/data/ycfeng/tmp/issue26-correctness-pr/followups_20260924/gates/` (base `.worktrees/followup-base` at `6d59946`) |
 | 4 S44 | completed: recorded as the S43 task's second row (decision D1); the S43 and S42 plans restate blocker B2 after Q8 | `/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/plan.md` section 6 |
 | 5 W6 native rerun | completed: `exp-0924-114241-429126`, 8 passed in 14.53 s | `w6_native_20260924/receipt.md` |
-| 6 Calibration tools | in-progress: the user replaced the archived helper path with the current skill; how the helper-bound entries run without it is the next interview question | — |
-| 7 Gitlink re-point | blocked: marking companion PR 1 ready and merging it was refused by the Claude Code permission classifier ("Merge Without Review"); the user merges it, then the gitlink moves | — |
+| 6 Calibration tools | in-progress: option (a) decided in round 2. The request-metrics normalizer is designed first (workflow run `wf_147bad0f-83a`, no code) under `tests/comparison/calibration/`; the skill's pins follow | `requirements.md`, "[Decision] 2026-09-24 — calibration tools, round 2" |
+| 7 Gitlink re-point | completed: the classifier refused the merge, so the user ran it (merge commit `d28fe917`, 2026-09-24T04:25:59Z, tree equal to `e922c77`); gitlink `1b11eff`, pushed. Companion `tests/test_zero_payload_input.py` 16 passed; Frontier `tests/unit/test_collective_sim_zero_payload.py` 3 passed; a fresh clone skips the module without the submodule, checks out `d28fe917` from GitHub, builds, and passes 3 and 16 | `/data/ycfeng/tmp/issue26-correctness-pr/q9_gitlink_20260924/` (`companion.txt`, `frontier.txt`, `clean_checkout.sh`, `clean_checkout.txt`) |
 | Rate-limited subagents | in-progress: a message cannot resume a workflow agent ("No transcript found for agent ID"); their work is re-run by new agents against `6d59946` (read-only pin `.worktrees/rerun-review`), workflow run `wf_7492f1c4-d2c`: the 12 failed finder lenses, three verifiers for each of the 32 unverified leads and every new finding, the dummy-mode code and evidence parts with a new synthesis, and the S43/S42 scope critique | Inputs: `/data/ycfeng/tmp/issue26-correctness-pr/rerun_20260924/` |
 
 Commands, W6 rerun (2026-09-24T03:42:37Z, worktree `363a1dd`, no modified tracked file):
