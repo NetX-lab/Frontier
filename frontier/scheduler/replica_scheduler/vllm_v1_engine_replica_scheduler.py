@@ -309,6 +309,27 @@ class VLLMv1EngineReplicaScheduler(
     def _is_request_active_in_batch(self, request: Request) -> bool:
         return self._get_active_batch_request_counts().get(request.id, 0) > 0
 
+    def _roll_back_rejected_drafts(self, batch: Batch) -> None:
+        """Take a speculative step's rejected drafts off the scheduler frontier.
+
+        vLLM advances num_computed_tokens by the whole verify width when it
+        schedules the step and subtracts the rejected drafts when the step's
+        output arrives (scheduler.py update_from_output).
+        """
+        metadata = batch.spec_decode_metadata
+        if metadata is None:
+            return
+        rejected_by_request_id = {
+            request.id: rejected
+            for request, rejected in zip(
+                batch.requests, metadata.rejected_draft_tokens_per_request
+            )
+        }
+        for request in batch.current_execution_requests:
+            rejected = rejected_by_request_id[request.id]
+            if rejected:
+                self._scheduled_num_computed_tokens_by_request[request.id] -= rejected
+
     def complete_kv_transfer_for_requests(
         self, requests: Sequence[Request]
     ) -> None:
@@ -346,6 +367,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
         self._release_batch_requests_active(batch)
+        self._roll_back_rejected_drafts(batch)
 
         for request in batch.requests:
             self._refresh_target_embedded_mtp_prefill_boundary_state(batch, request)
