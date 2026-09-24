@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Rerun review G3a lead 10: the one-lane expectation limited to the 71 original matrix cases. |
 | 2026-09-24 | Corrected the reachability claim for a multi-lane MoE forward (fix review W2-R5). |
 | 2026-09-23 | Noted the W9-04 fix (`2ffb062`) under the Step 9 implementation results. |
 | 2026-09-23 | W9 as implemented: section "Schedule-time reports under pipeline parallelism" added (P2–P5 outcome, measured against the expectation above); W4 guard row annotated. |
@@ -68,7 +69,7 @@ the 71 original cases is unaffected.
 The expectation is therefore stated in two parts, before measuring:
 
 - The shared-room, shared-identity, one-restoration and per-source-continuation
-  changes cannot move any matrix case, because every matrix case runs one lane,
+  changes cannot move any of the 71 original matrix cases, because each of them runs one lane,
   where the cohort is a single batch and `sample_batch` *is* that batch.
 - The decode-layer advance for decode requests carried inside a prefill batch
   (I7) is reachable under chunked prefill at one lane, so it may move MoE cases.

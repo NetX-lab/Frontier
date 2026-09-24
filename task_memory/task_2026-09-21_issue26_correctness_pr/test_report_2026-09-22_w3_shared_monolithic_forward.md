@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-22 | Created. Acceptance evidence for the shared monolithic forward lifecycle, including four deliberate-defect controls. |
 | 2026-09-22 | Fidelity matrix recorded (71 of 71 identical). Controls rebuilt against the final test file and re-run; counts and failure messages updated. |
+| 2026-09-24 | Reachability sentence corrected (fix review W2-R5, rerun review G3a lead 10). |
 
 ## Environment
 
@@ -97,7 +98,7 @@ Two observations worth keeping:
 The public MoE wrappers enforce `ATTN_TP == MOE_TP * MOE_EP` while the runtime
 enforces `attn_tp * attn_dp == moe_tp * moe_ep`; those have no common solution
 above one attention-DP lane, so no wrapper and no fidelity-matrix case can
-reach a multi-lane monolithic MoE forward. `tests/integration/
+reach a multi-lane monolithic MoE forward. **Corrected 2026-09-24 (W2-R5):** the wrappers' pass-through flags are appended after that check and reach the runtime, so the shape is reachable from a wrapper; `748e757` added `dp_moe_coloc_online_lanes2`, `dp_moe_pdd_online_lanes2` and `dp_moe_pdd_online_lanes2_trained` to the matrix. `tests/integration/
 test_monolithic_mixed_forward_runtime.py` therefore assembles the
 configuration directly and runs the real `Simulator`:
 

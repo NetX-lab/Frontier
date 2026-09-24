@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-24 | Step 7: gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`). |
+| 2026-09-24 | Rerun review G3a lead 26: the fix-review limits cite the later native rerun. |
 | 2026-09-24 | Step 6: native rerun of the current FP8 code, `exp-0924-114241-429126`, 8 passed. |
 | 2026-09-24 | Step 7: W7-R4 fix recorded (companion `e922c77`, gitlink `9adf759`; zero refused for every kind except all-to-all). |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` follow-up: W9-04 check A2b added (PP>1 and PDD reach, fix 288 of 288 and 36 of 36); Step 7 reachability corrected (no Frontier path calls `predict_reduce_scatter`; other collectives never receive zero). Step 6: native-parity count corrected (seven zero-tolerance comparisons and one FP8 structural check), the negative control on the unrepaired source recorded, and the CPU setup-argument check `6828581` added. |
@@ -667,5 +668,5 @@ per-fix negative controls in section 4, final validation in section 7).
 | Stage-admission G3b, G9, G10 | 51 of 51 PASS, identical `sha256sums.txt`. |
 | W9-05 KV-pressure probe (PP 2 and 4) | 72 of 72 drained, 0 short outputs, 0 double-scheduled, 358 decode-phase preemptions (239 while an earlier batch was in flight). |
 
-Limits: CPU only. No native run covers the current FP8 code (`f236c17`). The
+Limits: CPU only at the time of the review; the current FP8 code (`f236c17`) was run natively afterwards (`exp-0924-114241-429126`, 8 passed, FP8 structural only; Step 6). The
 review had one reviewer per package, not an independent panel.

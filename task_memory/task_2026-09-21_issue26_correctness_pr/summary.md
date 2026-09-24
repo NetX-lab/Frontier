@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-24 | Gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`); the open item removed. |
+| 2026-09-24 | Rerun review G3a lead 26: the W6 row and Limits now cite the native rerun of the current FP8 step. |
 | 2026-09-24 | Native W6 FP8 rerun of the current FP8 code PASS (`exp-0924-114241-429126`); follow-up decisions for items 1-7 recorded. |
 | 2026-09-24 | W7-R4 fixed by the user's choice of option (a) (companion `e922c77`, gitlink `9adf759`); removed from the proposals; the final-validation worktrees removed. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: the W6 negative-control and CPU-test rows corrected (`6828581` pins the profiler's config and alignment arguments); W7-R4 added to the proposals; the GPU scope in Limits corrected. |
@@ -110,7 +111,7 @@ recorded in `validation.md`), and `w5_reverted_moe_routing_runtime_path.patch`.
 | W3 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 placement | Measured to place differently from round-robin under the same load, so the policy is not a renamed default. |
-| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3), so no native run covers the current FP8 code; CPU tests 32 passed after `6828581` pins the profiler's tile-config and alignment arguments (W6-R6). |
+| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3); the native rerun `exp-0924-114241-429126` at `363a1dd` covers it (8 passed, FP8 structural only). CPU tests 32 passed after `6828581` pins the profiler's tile-config and alignment arguments (W6-R6). |
 | W7 companion | 9 passed on the fix; 6 of 9 fail against pristine sources. |
 | W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. Superseded 2026-09-24: companion `ff11ee6` defines the cross-server empty all-to-all (W7-R1); Frontier's three rewritten cases pass and fail at `eb7bc4f`; companion 12 passed. |
 | Step 9 ground truth | G3 (`exp-0923-221233-009652`, PP1) T1 38/38; G4 (`exp-0923-230103-591735`, DP2 PP2 EP, 4 H800) extraction PASS; G5 T1 48/48 formal routes MATCH; C4 `SCENARIO_NOT_REACHED` in all four bursts; the pre-change revision rejects PP2 at construction (`test_report_2026-09-23_step9_dp_pp_groundtruth.md`). |
@@ -132,7 +133,7 @@ per-work-package reports.
 
 ## Limits of what was validated
 
-CPU only, apart from the two W6 native parity jobs (`exp-0922-145047-660565`, `exp-0922-202645-561899`) and the Step 9 ground-truth jobs G3 and G4. No native profiling suite was
+CPU only, apart from the three W6 native parity jobs (`exp-0922-145047-660565`, `exp-0922-202645-561899`, `exp-0924-114241-429126`) and the Step 9 ground-truth jobs G3 and G4. No native profiling suite was
 run as a gate, and no vLLM serving or TTFT comparison was performed — both are
 outside this task and neither is needed to accept the PR. The PD-AF
 Reference-checkout integration tests could not run on this host. Apart from the
