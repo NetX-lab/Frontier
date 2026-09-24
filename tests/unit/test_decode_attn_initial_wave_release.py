@@ -178,6 +178,7 @@ def test_global_batch_end_emits_cluster_schedule_for_next_buffered_wave() -> Non
         current_thinking_round_index=0,
         num_restarts=0,
         execution_epoch=0,
+        execution_signature=(0, 0, 0),
         current_decode_token_index=1,
         first_decode_token_completed_at=1.0,
         num_processed_decode_tokens=1,
@@ -193,6 +194,7 @@ def test_global_batch_end_emits_cluster_schedule_for_next_buffered_wave() -> Non
         request_mutation_signatures=[(0, 0, 0, 1)],
         thinking_round_start_times=[None],
         scheduled=False,
+        apply_preempted_step_samples=lambda *_args, **_kwargs: [],
         on_batch_end=lambda *_args, **_kwargs: None,
     )
 

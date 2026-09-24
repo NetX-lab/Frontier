@@ -1944,7 +1944,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         decode_sequence_count = 0
         for request in getattr(batch, "requests", []):
-            if bool(getattr(request, "is_prefill_complete", False)):
+            if request.is_decoding:
                 decode_sequence_count += 1
         if decode_sequence_count <= 0:
             decode_sequence_count = int(getattr(batch, "size", 0))
@@ -4186,7 +4186,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         decode_kv_cache_sizes = []
 
         for request in batch.requests:
-            if request._is_prefill_complete:
+            if request.is_decoding:
                 decode_kv_cache_sizes.append(
                     self._get_decode_attention_context_tokens(request)
                 )
@@ -4246,13 +4246,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         prefill_params = []
 
         for request, num_tokens_to_process in zip(batch.requests, batch.num_tokens):
-            if request._is_prefill_complete:
+            if request.is_decoding:
                 continue
 
             prefill_chunk_size = num_tokens_to_process
             kv_cache_size = (
                 (
-                    request.num_processed_tokens
+                    request.num_context_tokens
                     + self._config.kv_cache_prediction_granularity
                     - 1
                 )
@@ -4291,9 +4291,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         seq_lens = []
         kv_cache_sizes = []
         for request, num_tokens in zip(batch.requests, batch.num_tokens):
-            if not request._is_prefill_complete:
+            if not request.is_decoding:
                 seq_lens.append(num_tokens)
-                kv_cache_sizes.append(request.num_processed_tokens)
+                kv_cache_sizes.append(request.num_context_tokens)
 
         if not seq_lens:
             # No prefill requests - return zeros (should not happen in normal flow)
@@ -4365,7 +4365,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         prefill_tokens = []
         decode_kv_cache_sizes = []
         for request, num_tokens in zip(batch.requests, batch.num_tokens):
-            if request._is_prefill_complete:
+            if request.is_decoding:
                 decode_kv_cache_sizes.append(request.num_processed_tokens)
             else:
                 prefill_tokens.append(num_tokens)
@@ -6430,7 +6430,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for request, verify_tokens in zip(
             batch.requests, metadata.verify_tokens_per_request
         ):
-            if not request.is_prefill_complete:
+            if not request.is_decoding:
                 continue
             verify_tokens_int = int(verify_tokens)
             if verify_tokens_int <= 1:
@@ -6551,7 +6551,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for request, verify_tokens in zip(
             batch.requests, metadata.verify_tokens_per_request
         ):
-            if not request.is_prefill_complete:
+            if not request.is_decoding:
                 continue
             verify_tokens_int = int(verify_tokens)
             if verify_tokens_int > 1:
@@ -6691,7 +6691,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for request, verify_tokens in zip(
             batch.requests, metadata.verify_tokens_per_request
         ):
-            if not getattr(request, "is_prefill_complete", False):
+            if not request.is_decoding:
                 continue
             if int(verify_tokens) <= 1:
                 continue
@@ -6989,28 +6989,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "MLA exact-row prediction requires positive per-request "
                     f"token counts, got num_tokens={num_tokens}."
                 )
-            processed_tokens = getattr(request, "num_processed_tokens", None)
-            if processed_tokens is None:
+            context_tokens = getattr(request, "num_context_tokens", None)
+            if context_tokens is None:
                 raise ValueError(
-                    "MLA exact-row prediction requires request.num_processed_tokens "
+                    "MLA exact-row prediction requires request.num_context_tokens "
                     "to derive vLLM max_seqlen_k."
                 )
-            current_seq_len = int(processed_tokens) + current_tokens
+            current_seq_len = int(context_tokens) + current_tokens
             if current_seq_len <= 0:
                 raise ValueError(
                     "MLA exact-row prediction requires positive runtime sequence "
-                    f"lengths, got processed={processed_tokens}, "
+                    f"lengths, got context={context_tokens}, "
                     f"num_tokens={num_tokens}."
                 )
             max_seqlen_k = max(max_seqlen_k, current_seq_len)
             batch_num_tokens += current_tokens
             current_tokens_by_request.append((request, current_tokens))
-            if not hasattr(request, "is_prefill_complete"):
+            if not hasattr(request, "is_decoding"):
                 raise ValueError(
-                    "MLA exact-row prediction requires request.is_prefill_complete "
+                    "MLA exact-row prediction requires request.is_decoding "
                     "to derive the current vLLM prefill/decode phase partition."
                 )
-            if bool(getattr(request, "is_prefill_complete")):
+            if bool(getattr(request, "is_decoding")):
                 decode_active_token_counts.append(current_tokens)
             else:
                 prefill_active_token_counts.append(current_tokens)
@@ -7036,14 +7036,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         decode_active_token_sum = sum(decode_active_token_counts)
         if prefill_active_token_sum != batch_num_prefill_tokens:
             raise ValueError(
-                "MLA exact-row prediction requires request.is_prefill_complete "
+                "MLA exact-row prediction requires request.is_decoding "
                 "partition to match batch.num_prefill_tokens: "
                 f"partition_prefill={prefill_active_token_sum}, "
                 f"batch_num_prefill_tokens={batch_num_prefill_tokens}."
             )
         if decode_active_token_sum != batch_num_decode_tokens:
             raise ValueError(
-                "MLA exact-row prediction requires request.is_prefill_complete "
+                "MLA exact-row prediction requires request.is_decoding "
                 "partition to match batch.num_decode_tokens: "
                 f"partition_decode={decode_active_token_sum}, "
                 f"batch_num_decode_tokens={batch_num_decode_tokens}."

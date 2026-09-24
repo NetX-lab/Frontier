@@ -399,6 +399,13 @@ class VLLMv1EngineReplicaScheduler(
                                 self._decode_attn_open_cohort_id = None
 
             if request.completed:
+                if any(request in queue for queue in self._waiting_queues()):
+                    # It stopped on the sample of the step it was preempted
+                    # from, and preemption already freed its KV.
+                    self.remove_stopped_waiting_request(
+                        request, batch.completed_at
+                    )
+                    continue
                 extra_release_iters = (
                     self._get_monolithic_pp_extra_terminal_release_iters()
                 )
@@ -502,6 +509,23 @@ class VLLMv1EngineReplicaScheduler(
                     f"[VLLMv1Engine] Request {request.id} continues, "
                     f"processed_tokens={request.num_processed_tokens}"
                 )
+
+    def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
+        # Preemption inserts a victim into `_request_queue`, or into
+        # `_waiting_requests` on DECODE and DECODE_ATTN. A later waiting-queue
+        # rebuild may move it into `_preempted_requests`.
+        return (self._request_queue, self._preempted_requests, self._waiting_requests)
+
+    def remove_stopped_waiting_request(self, request: Request, time: float) -> None:
+        """Remove a preempted request that stopped on its in-flight sample.
+
+        vLLM removes such a request from waiting, so it never resumes.
+        """
+        for waiting_queue in self._waiting_queues():
+            if request in waiting_queue:
+                waiting_queue.remove(request)
+                break
+        request.on_leave_waiting_queue(time, self._cluster_type)
 
     def _schedule_running_requests(
         self, token_budget: int, preempted_requests: List[Request]
@@ -840,7 +864,7 @@ class VLLMv1EngineReplicaScheduler(
             )
 
             # Calculate number of new tokens to process
-            if self._is_prefix_caching_enabled() and not request.is_prefill_complete:
+            if self._is_prefix_caching_enabled() and not request.is_decoding:
                 prefix_cache_admission = self._prepare_prefix_cache_admission(
                     request
                 )
@@ -898,7 +922,7 @@ class VLLMv1EngineReplicaScheduler(
             # budget are skipped for this iteration.
             if (
                 not self._enable_chunked_prefill
-                and not request.is_prefill_complete
+                and not request.is_decoding
                 and num_new_tokens > effective_token_budget
             ):
                 waiting_queue.popleft()

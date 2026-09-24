@@ -97,6 +97,10 @@ class KvBlockAllocation:
         if scheduled_frontier is not None:
             return scheduled_frontier
 
+        if request.is_recomputing:
+            # vLLM resets num_computed_tokens to 0; prefix hits and chunks move it.
+            return request.num_context_tokens
+
         processed_tokens = int(request.num_processed_tokens)
         if (
             getattr(self, "_cluster_type", None) == ClusterType.MONOLITHIC
@@ -129,6 +133,9 @@ class KvBlockAllocation:
         first decode scheduling step is executed. To align block semantics, KV
         accounting excludes that boundary token.
         """
+        if request.is_recomputing:
+            # Blocks follow the recompute frontier, not the logical length.
+            return self._get_scheduler_num_computed_tokens(request)
         explicit_scheduler_frontier = self._get_explicit_scheduler_num_computed_tokens(
             request
         )
@@ -161,6 +168,10 @@ class KvBlockAllocation:
 
         computed_tokens = self._get_scheduler_num_computed_tokens(request)
         cluster_type = getattr(self, "_cluster_type", None)
+
+        if request.is_recomputing:
+            # vLLM schedules num_tokens - num_computed_tokens and excludes drafts.
+            return int(request.num_processed_tokens) - computed_tokens
 
         if request.is_prefill_complete:
             if getattr(request, "spec_decode_enabled", False):
@@ -196,7 +207,7 @@ class KvBlockAllocation:
             raise ValueError(
                 f"scheduled_tokens must be > 0, got={scheduled_tokens}"
             )
-        if not getattr(request, "is_prefill_complete", False):
+        if not request.is_decoding:
             return reserved_tokens
         if not getattr(request, "spec_decode_enabled", False):
             return reserved_tokens
@@ -494,6 +505,12 @@ class KvBlockAllocation:
         # Remove from running requests
         if victim in self._running_requests:
             self._running_requests.remove(victim)
+        # Read before the pop below clears the active mark. MONOLITHIC and
+        # unified DECODE apply the sample of the step still in flight.
+        step_in_flight = (
+            self._cluster_type in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+            and self._is_request_active_in_batch(victim)
+        )
         # A batch still in flight no longer executes for the victim: its later
         # stages drop it as stale. Its membership ends here, so the release at
         # that batch's end, or a batch dropped whole, cannot leave it marked.
@@ -514,19 +531,15 @@ class KvBlockAllocation:
             self._monolithic_pp_waiting_sensitive_release_extensions.discard(victim.id)
             return
 
-        # Mark as preempted and reset the scheduler-visible computed frontier.
-        # As in vLLM v1, preemption discards computed KV but keeps generated
-        # output tokens. A victim still in prefill has no output and restarts
-        # its prompt. A victim past prefill keeps its Request-level token
-        # progress; only scheduler-local computed state and KV allocation
-        # restart, and the replay of its prompt and output is not modeled.
-        # Its decode step in flight, if any, is discarded with the KV, so the
-        # layers that step completed no longer count.
-        victim._preempted = True
-        if victim.is_prefill_complete:
-            victim._completed_layer_count = 0
-        else:
-            victim._num_processed_tokens = 0
+        # A MONOLITHIC victim past prefill recomputes its prompt and kept
+        # output as in vLLM. DECODE and DECODE_ATTN victims still resume with
+        # one token because the predictor cannot price a recompute on those roles.
+        # The signature is captured here, before the waiting-queue entry
+        # advances the execution epoch.
+        victim.on_preempted(
+            recompute=self._cluster_type == ClusterType.MONOLITHIC,
+            step_in_flight=step_in_flight,
+        )
 
         # Record re-entry to waiting queue for waiting time tracking after the
         # lifecycle decision above and before adding the request to the queue.

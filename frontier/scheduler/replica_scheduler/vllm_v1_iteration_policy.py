@@ -55,7 +55,7 @@ class IterationSchedulingPolicy:
         decode_query_lens = [
             int(num_tokens)
             for request, num_tokens in zip(batch.requests, batch.num_tokens)
-            if request.is_prefill_complete
+            if request.is_decoding
         ]
         original_decode_batch_size = len(decode_query_lens)
 
@@ -152,7 +152,7 @@ class IterationSchedulingPolicy:
         per_request_outcomes: Dict[int, Tuple[int, Any, List[Tuple[int, int, int, int, int]]]] = {}
 
         for request, scheduled_tokens in zip(batch.requests, batch.num_tokens):
-            if not getattr(request, "is_prefill_complete", False) or not getattr(
+            if not request.is_decoding or not getattr(
                 request, "spec_decode_enabled", False
             ):
                 planned_drafts_list.append(0)
@@ -547,8 +547,8 @@ class IterationSchedulingPolicy:
     def _apply_long_prefill_token_threshold(
         self, request: Request, num_new_tokens: int
     ) -> int:
-        """Apply long prefill threshold only for prefill-phase requests."""
-        if request.is_prefill_complete or self._long_prefill_token_threshold <= 0:
+        """Apply the long-prefill token cap to prefill and recompute chunks."""
+        if request.is_decoding or self._long_prefill_token_threshold <= 0:
             return num_new_tokens
         return min(num_new_tokens, self._long_prefill_token_threshold)
 

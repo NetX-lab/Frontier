@@ -47,6 +47,7 @@ class ReplicaStageScheduler:
         self._insertion_counter = 0  # Monotonically increasing counter for FIFO tie-breaking
         self._is_busy = False
         self._last_stale_drops: list[Batch] = []
+        self._last_stale_row_batches: list[Batch] = []
 
     # gurantee only one batch is in current stage at a time;
     # other batches are in the self._batch_queue
@@ -194,6 +195,11 @@ class ReplicaStageScheduler:
         self._last_stale_drops = []
         return dropped
 
+    def consume_last_stale_row_batches(self) -> list[Batch]:
+        batches = self._last_stale_row_batches
+        self._last_stale_row_batches = []
+        return batches
+
     def _materialize_runtime_live_batch(self, batch: Batch) -> Optional[Batch]:
         live_indices = [
             index
@@ -298,6 +304,7 @@ class ReplicaStageScheduler:
             The batch with smallest global_id, or None if cannot pop
         """
         self._last_stale_drops = []
+        self._last_stale_row_batches = []
         if self._is_busy or not self._batch_queue:
             return None
         while self._batch_queue:
@@ -335,6 +342,8 @@ class ReplicaStageScheduler:
             # Remove the same candidate whose ticket was just acquired.
             heapq.heappop(self._batch_queue)
             live_batch = self._materialize_runtime_live_batch(batch)
+            if live_batch is not batch:
+                self._last_stale_row_batches.append(batch)
             if live_batch is None:
                 context = self._stage_execution_context
                 if parent_acquired and context.is_active(admission_ticket):

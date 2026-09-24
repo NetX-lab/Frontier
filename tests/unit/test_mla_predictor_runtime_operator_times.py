@@ -72,6 +72,9 @@ class _DummyBatch:
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
             is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
+            num_context_tokens=64,
         )
     ]
 
@@ -300,6 +303,9 @@ class _PrefillDummyBatch:
             num_decode_tokens=128,
             num_processed_decode_tokens=0,
             is_prefill_complete=False,
+            is_decoding=False,
+            is_recomputing=False,
+            num_context_tokens=63,
         )
     ]
 
@@ -405,6 +411,9 @@ def test_mla_runtime_fails_fast_when_imported_feature_row_is_missing() -> None:
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
             is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
+            num_context_tokens=65,
         )
     ]
 
@@ -427,6 +436,9 @@ def test_mla_runtime_exact_miss_rejects_model_without_frontier_model_hash() -> N
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
             is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
+            num_context_tokens=65,
         )
     ]
     for model_info in predictor._predictions.values():
@@ -461,6 +473,9 @@ def test_mla_runtime_exact_miss_uses_trained_model_when_schema_matches(
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
             is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
+            num_context_tokens=65,
         )
     ]
 
@@ -507,6 +522,9 @@ def test_mla_runtime_fails_fast_when_query_shape_differs_but_kv_extent_matches()
             num_decode_tokens=128,
             num_processed_decode_tokens=0,
             is_prefill_complete=False,
+            is_decoding=False,
+            is_recomputing=False,
+            num_context_tokens=63,
         )
     ]
 
@@ -531,7 +549,7 @@ def test_mla_runtime_rejects_non_sequence_request_token_counts() -> None:
         )
 
 
-def test_mla_runtime_rejects_missing_request_processed_tokens() -> None:
+def test_mla_runtime_rejects_missing_request_context_tokens() -> None:
     predictor = _build_mla_predictor()
     malformed_batch = _DummyBatch()
     malformed_batch.requests = [
@@ -544,7 +562,7 @@ def test_mla_runtime_rejects_missing_request_processed_tokens() -> None:
         )
     ]
 
-    with pytest.raises(ValueError, match="request.num_processed_tokens"):
+    with pytest.raises(ValueError, match="request.num_context_tokens"):
         predictor.predict_attention_layer_time(
             batch=malformed_batch,
             layer_id=0,
@@ -600,6 +618,9 @@ class _MixedDummyBatch:
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
             is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
+            num_context_tokens=64,
         ),
         SimpleNamespace(
             id=302,
@@ -608,6 +629,9 @@ class _MixedDummyBatch:
             num_decode_tokens=128,
             num_processed_decode_tokens=0,
             is_prefill_complete=False,
+            is_decoding=False,
+            is_recomputing=False,
+            num_context_tokens=0,
         ),
     ]
 
@@ -688,13 +712,14 @@ def test_mla_runtime_requires_request_phase_metadata_for_exact_keys() -> None:
         SimpleNamespace(
             id=101,
             num_processed_tokens=64,
+            num_context_tokens=64,
             num_prefill_tokens=64,
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
         )
     ]
 
-    with pytest.raises(ValueError, match="request.is_prefill_complete"):
+    with pytest.raises(ValueError, match="request.is_decoding"):
         predictor.predict_attention_layer_time(
             batch=missing_phase_batch,
             layer_id=0,
@@ -715,10 +740,13 @@ def test_mla_runtime_rejects_phase_partition_token_mismatch() -> None:
             num_decode_tokens=128,
             num_processed_decode_tokens=1,
             is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
+            num_context_tokens=64,
         )
     ]
 
-    with pytest.raises(ValueError, match="is_prefill_complete partition"):
+    with pytest.raises(ValueError, match="request.is_decoding partition"):
         predictor.predict_attention_layer_time(
             batch=inconsistent_phase_batch,
             layer_id=0,

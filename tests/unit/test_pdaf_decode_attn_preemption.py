@@ -26,6 +26,7 @@ def _request(request_id: int) -> SimpleNamespace:
         record_preemption=lambda *args: None,
         advance_runtime_epoch=lambda: None,
         on_enter_waiting_queue=lambda *args: None,
+        on_preempted=lambda **kwargs: None,
         _preempted=False,
     )
 
