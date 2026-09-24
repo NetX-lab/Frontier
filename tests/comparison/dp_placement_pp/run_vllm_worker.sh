@@ -84,7 +84,6 @@ export PYTHONPATH="$WORK/overlay"
 
 if timeout 2400 "$PY" "$SCRIPT_DIR/vllm_replay.py" \
      --engine-config "$ENGINE_CONFIG" --trace-dir "$TRACE_DIR" \
-     --model-config "$FRONTIER_TREE/data/config/models/Qwen3-30B-A3B-tiny.json" \
      --output-dir "$WORK/run" > "$WORK/run/replay.log" 2>&1; then
   echo "REPLAY_PASS"
 else

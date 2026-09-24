@@ -4,6 +4,10 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the N1 decision (rejected drafts in the vllm_v1 scheduler frontier). |
+| 2026-09-24 | Recorded the spec-decode branch base decision (Q6 follow-up). |
+| 2026-09-24 | Recorded the G3b dispositions and the spec-decode live-batch decisions (Q6-Q8). |
+| 2026-09-24 | Recorded the calibration-tool follow-up decision (Q8 round 2) and the user's merge of companion PR 1. |
 | 2026-09-24 | Recorded the follow-up request for items 1-7 and its interview decisions (Q1-Q9). |
 | 2026-09-24 | Recorded the W7-R4 decision (option a) and the removal of the final-validation worktrees. |
 | 2026-09-21 | Recorded the original request, the specification hand-off, and the decisions from the planning interview. |
@@ -199,3 +203,50 @@ Message, verbatim: "1。当前周限额已经刷新，请对处于limit中的sub
 | Q8 Calibration tools | Stop using `/data/ycfeng/frontier-calibration-old-20260831/`; use the current Claude Code skill `/home/brainpp/.claude/skills/frontier-calibration` instead. |
 | Q9 Companion PR 1 | Option (a): mark it ready, merge it with a merge commit, re-point this branch's gitlink at the merge commit and rerun the collective-sim tests. |
 
+## [Decision] 2026-09-24 — calibration tools, round 2; companion PR 1 merged
+
+The user merged companion PR 1 themselves (`gh pr ready 1 --repo fwyc0573/frontier-htsim && gh pr merge 1 --repo fwyc0573/frontier-htsim --merge`). It merged into `main` as `d28fe917` at 2026-09-24T04:25:59Z.
+
+Question (Q8 follow-up): how do the four helper-bound calibration entries run without the retired archive? Recommended option (a): write the needed tools in the Frontier repository under `tests/comparison/calibration/`, with unit tests. `tool-boundaries.md` then pins them by repository path and commit/blob hash, and the skill stays prompt-first. The first tool is the request-metrics normalizer that the S43/S42 E2E gate needs; op-supplement and dispatch tools follow only when a case needs them. `tool-boundaries.md`, `pressure_scenarios.py` and the four entries' wording change with it.
+
+Message, verbatim: "continue；Q1采纳你的推荐"
+
+| Item | Decision |
+| --- | --- |
+| Q8 round 2 | Option (a) as recommended. |
+
+## [Decision] 2026-09-24 — G3b dispositions and the spec-decode live batch (Q6-Q8)
+
+The questions were asked together with the replay round-2 questions Q3-Q5 of the preemption-fidelity task (`/data/ycfeng/Frontier/task_memory/task_2026-09-24_vllm_v1_preemption_fidelity/requirements.md`).
+
+- Q6 Where to fix the spec-decode PP=4 crash (CROSS-correctness-0): (a) in PR 38, with the replay change to the same function; (b) a separate branch and draft PR from `main`, later merged into PR 35 and PR 38; (c) record only. Recommended (b): the defect is on `main`, and like PR 36 it is an independent correctness fix (slice each spec-metadata list to the kept requests, plus a PP=4 regression case).
+- Q7 The two W9 problems (lost held key; PP>=4 release not published) are in PR 35's own code. Recommended: fix them in PR 35 by calling the existing cluster completion hook once at each of the two places, use the G3b reproductions as regression tests, and rerun the W9 gates. PP2 routes stay the same; PP4 routes with preemption may change.
+- Q8 The G3b batch: (a) fix A-E in PR 35; (b) fix A and C only, record B, D and E; (c) record all. Recommended (a): all are PR 35's own code and records, and each fix and its check are settled, so the batch goes to Grok under `/grok-exec`, and it exceeds five files.
+
+Message, verbatim (with `/grok-exec`): "Q3-Q8采纳你的推荐方案"
+
+| Item | Decision |
+| --- | --- |
+| Q6 spec-decode live batch | Option (b): own branch and draft PR from `main`, then merged into PR 35 and PR 38. |
+| Q7 W9 held key and deferred release | Fix in PR 35 with the existing cluster completion hook, regression tests from the G3b reproductions, and the W9 gates. |
+| Q8 G3b dispositions | Option (a): A-E in PR 35 through Grok; more than five files approved. |
+
+## [Decision] 2026-09-24 — spec-decode live-batch branch base (Q6 follow-up)
+
+Question (Q1 of the round after Q6-Q8): the fix passes its unit test on `main`, but a PP4 end-to-end regression cannot pass on `main`, which still has the W9-05 loss and the missing layer reset fixed here by `75c1140` and `c647e95`. (a) Stack the branch on this branch as its own draft PR, with the unit test and a PP4 spec end-to-end case, then merge it into PR 38; (b) commit it on this branch; (c) keep the `main` base with the unit test only and add the end-to-end case at merge. Recommended (a).
+
+Message, verbatim: "Q2：请你评估该部分逻辑修改的代价，涉及多少问题，预计多少行代码量；Q4: 我没有理解当前你说的 准入钩子、"decode 实例在 PP>1 时跑的是同一个 step_with_batch_queue 循环，Frontier 的 DECODE 循环也用同一个空槽判断"的含义。当前frontier vs vllm的区别是什么？给出一个简洁case帮助我理解。其他q采纳你的推荐答案"
+
+| Item | Decision |
+| --- | --- |
+| Spec-decode branch base | Option (a): stacked on `fix/issue26-correctness-pr`, own draft PR, unit test plus a PP4 spec end-to-end case; merged into PR 38 afterwards. This refines Q6 (b). |
+
+## [Decision] 2026-09-24 — N1: rejected drafts in the vllm_v1 scheduler frontier
+
+Question: the vllm_v1 scheduler frontier grows by the verify width of each speculative step and is never reduced by the rejected drafts, as vLLM does in `update_from_output` (`scheduler.py:1296-1308`); runs with a committed count below `1 + num_speculative_tokens` over-account KV and can end with a non-empty scheduler state (pre-existing on `main`). (a) fix it as a second commit on draft PR 39; (b) its own branch and PR; (c) record only. Recommended (a).
+
+Message, verbatim: "Q2、Q4、N1采纳你的推荐方案"
+
+| Item | Decision |
+| --- | --- |
+| N1 | Option (a): second commit on `fix/spec-decode-live-batch-metadata` (draft PR 39), with tests. |

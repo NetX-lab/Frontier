@@ -35,6 +35,7 @@ import sys
 import time
 import urllib.request
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "stage_admission_pp"))
 from vllm_burst_driver import prompt_token_ids, write_model_dir  # noqa: E402
 
@@ -173,7 +174,6 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--engine-config", type=Path, required=True)
     parser.add_argument("--trace-dir", type=Path, required=True)
-    parser.add_argument("--model-config", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--startup-timeout-s", type=float, default=900.0)
@@ -186,7 +186,10 @@ def main(argv: list[str] | None = None) -> int:
     request_ids = json.loads((args.trace_dir / "request_ids.json").read_text())
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    model_config = write_model_dir(args.model_config, output_dir / "model")
+    model_config = write_model_dir(
+        REPO_ROOT / "data/config/models" / f"{engine['model_name']}.json",
+        output_dir / "model",
+    )
 
     env = {key: value for key, value in os.environ.items() if key not in REMOVED_ENV_VARS}
     env["VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR"] = str(output_dir / "dp_placement")

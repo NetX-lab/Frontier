@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Open items: W3-R5/W3-R6 fixed and merged; F-R5 on stacked draft PR 38. |
+| 2026-09-24 | Gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`); the open item removed. |
+| 2026-09-24 | Rerun review G3a lead 26: the W6 row and Limits now cite the native rerun of the current FP8 step. |
 | 2026-09-24 | Native W6 FP8 rerun of the current FP8 code PASS (`exp-0924-114241-429126`); follow-up decisions for items 1-7 recorded. |
 | 2026-09-24 | W7-R4 fixed by the user's choice of option (a) (companion `e922c77`, gitlink `9adf759`); removed from the proposals; the final-validation worktrees removed. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: the W6 negative-control and CPU-test rows corrected (`6828581` pins the profiler's config and alignment arguments); W7-R4 added to the proposals; the GPU scope in Limits corrected. |
@@ -66,7 +69,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | `frontier/scheduler/utils/sync_entry.py`, `sync_state.py`, `forward_sync_state.py`, `prefill_collective.py`, `decode_collective.py`, `ep_wave_schedule.py`, `ep_wave_inputs.py` | W3: one lifecycle for mixed-source cohorts |
 | `frontier/events/cluster_schedule_event.py`, `frontier/events/global_batch_end_event.py`, `frontier/scheduler/request_load.py`, `frontier/scheduler/replica_scheduler/*` | W3/W4: event and load-snapshot wiring |
 | `frontier/profiling/moe/moe_vllm_kernel.py` | W6: the legacy path performs the gated expert computation |
-| `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f`, then to `ff11ee6` (`6d621c8`, empty cross-server all-to-all) and `e922c77` (`9adf759`, zero refused for every other kind) |
+| `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f`, then to `ff11ee6` (`6d621c8`, empty cross-server all-to-all) and `e922c77` (`9adf759`, zero refused for every other kind); after companion PR 1 merged, `d28fe917` on companion `main` (`1b11eff`, same tree) |
 | `docs/profiling/README.md` | W6: the operator's scope and its artifact-identity limits |
 | `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py`, `base_cluster_scheduler.py`, `frontier/scheduler/replica_scheduler/base_replica_scheduler.py`, `frontier/scheduler/replica_stage_scheduler/stage_execution_context.py` | W9: schedule-time load reports while the pipeline has room, keyed by the stage-0 forward group |
 | `frontier/scheduler/utils/sync_entry.py` | W9-04: withdraw a first-layer placeholder when its lane joins the forward |
@@ -109,7 +112,7 @@ recorded in `validation.md`), and `w5_reverted_moe_routing_runtime_path.patch`.
 | W3 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 placement | Measured to place differently from round-robin under the same load, so the policy is not a renamed default. |
-| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3), so no native run covers the current FP8 code; CPU tests 32 passed after `6828581` pins the profiler's tile-config and alignment arguments (W6-R6). |
+| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03) and rerun natively (`exp-0922-202645-561899` at `c231322`, 8 passed, `block_shape=[128, 128]`). `f236c17` later changed the FP8 step (fix review W6-R1..R3); the native rerun `exp-0924-114241-429126` at `363a1dd` covers it (8 passed, FP8 structural only). CPU tests 32 passed after `6828581` pins the profiler's tile-config and alignment arguments (W6-R6). |
 | W7 companion | 9 passed on the fix; 6 of 9 fail against pristine sources. |
 | W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. Superseded 2026-09-24: companion `ff11ee6` defines the cross-server empty all-to-all (W7-R1); Frontier's three rewritten cases pass and fail at `eb7bc4f`; companion 12 passed. |
 | Step 9 ground truth | G3 (`exp-0923-221233-009652`, PP1) T1 38/38; G4 (`exp-0923-230103-591735`, DP2 PP2 EP, 4 H800) extraction PASS; G5 T1 48/48 formal routes MATCH; C4 `SCENARIO_NOT_REACHED` in all four bursts; the pre-change revision rejects PP2 at construction (`test_report_2026-09-23_step9_dp_pp_groundtruth.md`). |
@@ -122,17 +125,16 @@ per-work-package reports.
 
 | Item | Where |
 | --- | --- |
-| Re-point the collective-sim gitlink at `main` once companion PR 1 merges. `.gitmodules` already records `branch = main`; `git submodule update --remote` would currently drop the fix. | `future.md` §2 |
 | The pre-existing `tests/debug/` pointer defect: `AGENTS.md` §Tests, a docstring at `vllm_v1_engine_replica_scheduler.py:16`, and 10 of the 84 baseline unit failures all reference a tree that exists neither here nor on `main`. Reported, not repaired; its fix is a decision about the published test surface. | `future.md` §1 |
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
 | Step 9 C4: decided 2026-09-24, option (a), `SCENARIO_NOT_REACHED` accepted. S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards) continue as separate calibration-and-repair tasks. | `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` |
-| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), the pinned calibration tools. The native W6 FP8 rerun ran on 2026-09-24 (`exp-0924-114241-429126`, 8 passed). W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
+| Fix-review proposals: F-R5 victim selection (stacked draft PR 38, `fix/vllm-v1-preemption-victim`), F-R6 in-flight token and resumed-victim replay (CPU measurement), S44 (row of the S43 task), the pinned calibration tools. W3-R5 and W3-R6 are fixed in `341970d` (merge `1978b72`). The native W6 FP8 rerun ran on 2026-09-24 (`exp-0924-114241-429126`, 8 passed). W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
 | W9-05 follow-ups, not started: at PP>1 the fix review's F-R1..F-R4 are fixed (`c647e95`); the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated
 
-CPU only, apart from the two W6 native parity jobs (`exp-0922-145047-660565`, `exp-0922-202645-561899`) and the Step 9 ground-truth jobs G3 and G4. No native profiling suite was
+CPU only, apart from the three W6 native parity jobs (`exp-0922-145047-660565`, `exp-0922-202645-561899`, `exp-0924-114241-429126`) and the Step 9 ground-truth jobs G3 and G4. No native profiling suite was
 run as a gate, and no vLLM serving or TTFT comparison was performed — both are
 outside this task and neither is needed to accept the PR. The PD-AF
 Reference-checkout integration tests could not run on this host. Apart from the

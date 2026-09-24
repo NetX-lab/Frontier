@@ -7,6 +7,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Marked the local-reduction test as removed in `f236c17` (rerun review G3a lead 27). |
 | 2026-09-24 | Native rerun of the current FP8 code: `exp-0924-114241-429126` (`codesign` / H800, `gpu-h800-0203`) at `363a1dd`, 8 passed in 14.53 s. Section 8 records it. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10`: section 6 records the negative control on the unrepaired source and the CPU setup-argument check `6828581` (W6-R6); section 8 states that the native test copies the profiler's setup. |
 | 2026-09-24 | Fix review: the native rerun ran with `block_shape=[128, 128]` (the unit test pins `[128, 64]`), corrected in section 8; `f236c17` changed the FP8 step after that rerun (W6-R1..R3), so no native run covers the current FP8 code. |
@@ -173,7 +174,7 @@ composition, not native numerics. The file's docstring says so.
 | `test_the_iteration_computes_the_gated_expert_output` | The full path equals a directly written gated-SwiGLU MoE reference. |
 | `test_a_gated_activation_is_not_the_first_half_of_the_projection` | The repair is observable: the old slice-only arithmetic gives a different answer, so the test above cannot pass against the unrepaired path. |
 | `test_the_second_gemm_consumes_the_activation_buffer` | Call order `GEMM1 -> silu_and_mul -> GEMM2 -> moe_sum`; GEMM1 has `mul_routed_weight=False, top_k=top_k`; the activation reads `(M*top_k, 2E)` and writes the buffer GEMM2 reads; GEMM2 has `mul_routed_weight=True, top_k=1`; the reduction reads `cache3` and writes `out`. |
-| `test_the_local_reduction_sums_the_top_k_expert_outputs` | The reduction is local and per token; output shapes `(M, top_k, H) -> (M, H)`. |
+| `test_the_local_reduction_sums_the_top_k_expert_outputs` | The reduction is local and per token; output shapes `(M, top_k, H) -> (M, H)`. Removed in `f236c17`: it asserted the stub's own sum. |
 | `test_the_activation_buffer_is_quantized_rather_than_the_raw_projection` | Under FP8 the quantizer receives the gated activation, with the block-derived group size. |
 | `test_repeated_iterations_do_not_leak_a_previous_result` | Workspace reuse across profiling steps does not carry a stale output; the second result is finite and matches its own reference. |
 | `test_the_profiler_allocates_the_four_buffers_the_computation_needs` | Allocation-site dimensions for all four buffers under TP=2, and one workspace shared by every profiled step. |

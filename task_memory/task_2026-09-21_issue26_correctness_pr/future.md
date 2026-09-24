@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | §2 resolved: companion PR 1 merged (`d28fe917`), gitlink re-pointed in `1b11eff`. |
 | 2026-09-24 | §2: gitlink now `ff11ee6`. §3: S43 and S42 transferred to their own tasks by the user's decision; S44 added as a proposal for the S43 task; the S43 admission anchor corrected. |
 | 2026-09-23 | §3 added: candidate fidelity findings S43 and S42 from the Step 9 G4 ground truth. |
 | 2026-09-22 | Created. Records the `tests/debug/` pointer defect found during Step 8 and the companion-PR gitlink follow-up. |
@@ -56,7 +57,12 @@ contract test still fails on the same paths would hide the real gap.
 Equivalent PP2 coverage for this PR was obtained through the example scripts;
 see `test_report_2026-09-22_w8_combined_regression.md` §5.
 
-## 2. Re-point the collective-sim gitlink at `main`
+## 2. Re-point the collective-sim gitlink at `main` (resolved 2026-09-24)
+
+Resolved: companion PR 1 merged into `main` as `d28fe917`, whose tree equals
+`e922c77`. The gitlink moved in `1b11eff`. Companion tests 16 passed, the Frontier
+module 3 passed, and the clean-checkout validation passed (`/data/ycfeng/tmp/issue26-correctness-pr/q9_gitlink_20260924/` (`companion.txt`, `frontier.txt`, `clean_checkout.sh`, `clean_checkout.txt`)).
+The history below is kept.
 
 `frontier/cc_backend/backends/collective-sim` currently points at `ff11ee6` on
 the companion branch `fix/zero-payload-input-handling` of

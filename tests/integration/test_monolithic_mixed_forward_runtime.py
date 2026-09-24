@@ -472,7 +472,7 @@ def run_case(
 
         # Nothing is stranded: no waiting room holds a batch and no stage
         # execution context still owns or queues a ticket.
-        assert _drained(cluster_scheduler._forward_sync_waiting_room)
+        assert _drained(cluster_scheduler._sync_waiting_room)
         for key, context in cluster_scheduler._stage_execution_contexts.items():
             assert context.is_idle, (key, context)
             assert context.queued_tickets == (), (key, context.queued_tickets)

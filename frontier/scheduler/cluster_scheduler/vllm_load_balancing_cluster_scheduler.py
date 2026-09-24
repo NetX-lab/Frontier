@@ -45,9 +45,9 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         if not self._config.replica_config.model_config.is_moe:
             if self._replica_dp_size != 1:
                 raise ValueError(
-                    "vllm_load_balancing requires a forward step identity that "
-                    "is monotonic per Replica; a dense model provides one only "
-                    "at attn_dp=1, got "
+                    "vllm_load_balancing orders reports by the stage-0 forward "
+                    "that attention-DP lanes share; dense attention-DP lanes "
+                    "share no stage-0 forward, so use attn_dp=1, got "
                     f"attn_dp={self._replica_dp_size}"
                 )
         self._serving_replica_id = next(iter(self._cluster.replicas))
@@ -110,7 +110,7 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         time: float,
         replica_id: int,
         replica_local_id: int | None,
-        batch: Batch,
+        batch: Batch | None,
     ) -> None:
         """Report the lane's post-step load under the iteration that applied it.
 

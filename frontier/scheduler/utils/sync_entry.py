@@ -3,7 +3,6 @@
 from typing import Any
 
 from frontier.entities import Batch
-from frontier.types import ClusterType
 
 
 def _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
@@ -33,22 +32,6 @@ def _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, sta
             del sync_room["arrival_times"][lane_id]
 
 
-def uses_shared_forward_room(scheduler: Any) -> bool:
-    """Return whether this cluster keeps one room for both local phases.
-
-    A monolithic Replica runs prefill and decode on the same lanes, so one
-    forward can hold a prefill batch on one lane and a decode batch on another.
-    Those lanes must wait in one room and resolve to one step id.
-    """
-
-    # Checked room-first so a lightweight scheduler fixture that never sets up
-    # a shared room is answered without requiring a cluster type.
-    return (
-        getattr(scheduler, "_forward_sync_waiting_room", None) is not None
-        and getattr(scheduler, "_cluster_type", None) is ClusterType.MONOLITHIC
-    )
-
-
 def _load_sync_event(mode: str):
     if mode == "prefill":
         from frontier.events.prefill_sync_event import PrefillSyncEvent
@@ -76,28 +59,16 @@ def enter_layer_sync(
     """Admit one lane into its forward's pre_moe room, and dispatch when full.
 
     `mode` is the entering batch's own local phase. It selects the layer-path
-    check, the event class used to fill an idle lane, and, for a disaggregated
-    role, which room is used. On a monolithic cluster the room and the step-id
-    namespace are shared, so a cohort whose lanes disagree about their phase
-    still resolves to one forward.
+    check and the event class used to fill an idle lane. Every lane of the
+    cluster waits in its one room, and the cluster's sync kind selects the wave
+    handler, so on a monolithic cluster a cohort whose lanes disagree about
+    their phase still resolves to one forward.
     """
 
     del stage_execution_time
-    if mode not in ("prefill", "decode"):
-        raise ValueError(f"unsupported layer synchronization mode: {mode!r}")
     mode_name = mode.upper()
 
-    shared_room = uses_shared_forward_room(scheduler)
-    if shared_room:
-        waiting_room = scheduler._forward_sync_waiting_room
-        sync_kind = "forward"
-    elif mode == "prefill":
-        waiting_room = scheduler._prefill_sync_waiting_room
-        sync_kind = "prefill"
-    else:
-        waiting_room = scheduler._decode_sync_waiting_room
-        sync_kind = "decode"
-
+    waiting_room = scheduler._sync_waiting_room
     if waiting_room is None:
         raise ValueError(
             f"{mode_name} synchronization is unavailable for a dense model; "
@@ -128,8 +99,6 @@ def enter_layer_sync(
         lane_id = replica_local_id
 
     step_id = scheduler._resolve_forward_step(
-        sync_kind=sync_kind,
-        waiting_room=waiting_room,
         replica_id=replica_id,
         stage_id=stage_id,
         batch=batch,
@@ -211,7 +180,6 @@ def enter_layer_sync(
             f"{provisional_id!r}"
         )
     scheduler._close_forward_step(
-        sync_kind=sync_kind,
         replica_id=replica_id,
         stage_id=stage_id,
         layer_id=layer_id,
@@ -222,22 +190,12 @@ def enter_layer_sync(
     sync_room.pop("arrival_times", None)
     sync_room.pop("provisional_cohort_id", None)
 
-    if shared_room:
-        return scheduler._on_forward_ep_wave_ready(
-            time=sync_time,
-            replica_id=replica_id,
-            stage_id=stage_id,
-            batch=batch,
-            layer_id=layer_id,
-            replica_local_id=replica_local_id,
-            cohort_batches=step_batches,
-            metrics_store=metrics_store,
-        )
-    ready = (
-        scheduler._on_prefill_ep_wave_ready
-        if mode == "prefill"
-        else scheduler._on_decode_ep_wave_ready
-    )
+    if scheduler._sync_kind == "forward":
+        ready = scheduler._on_forward_ep_wave_ready
+    elif scheduler._sync_kind == "prefill":
+        ready = scheduler._on_prefill_ep_wave_ready
+    else:
+        ready = scheduler._on_decode_ep_wave_ready
     return ready(
         time=sync_time,
         replica_id=replica_id,

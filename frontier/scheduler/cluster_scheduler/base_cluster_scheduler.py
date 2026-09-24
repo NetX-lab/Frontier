@@ -106,10 +106,10 @@ from frontier.scheduler.utils.m2n_arrival import (
     handle_decode_attn_arrival as handle_m2n_decode_attn_arrival,
     handle_decode_ffn_arrival,
 )
-from frontier.scheduler.utils.sync_entry import (
-    enter_decode_sync,
-    enter_prefill_sync,
-    uses_shared_forward_room,
+from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
+from frontier.scheduler.utils.sync_state import (
+    SYNC_KIND_BY_CLUSTER_TYPE,
+    initialize_sync_waiting_rooms,
 )
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
@@ -373,9 +373,10 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
         initialize_replica_schedulers(self, request_generator_config, logger)
         self._request_queue = []
-        # Forward-step identity is shared by PREFILL and DECODE. Resolved IDs
-        # advance monotonically per replica; an idle event with an older hint
-        # is treated as a stale placeholder after its step closes.
+        # One forward-step identity state serves every synchronizing lane of
+        # this cluster. Resolved IDs advance monotonically per replica; an idle
+        # event with an older hint is treated as a stale placeholder after its
+        # step closes.
         self._forward_sync_state = ForwardSyncState()
 
         # Initialize specialized queues for PD+AF disaggregation
@@ -385,13 +386,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             from frontier.scheduler.utils.ffn_state import initialize_decode_ffn_state
 
             initialize_decode_ffn_state(self, logger)
-        elif self._cluster_type in (
-            ClusterType.PREFILL,
-            ClusterType.MONOLITHIC,
-            ClusterType.DECODE,
-        ):
-            from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
-
+        elif self._cluster_type in SYNC_KIND_BY_CLUSTER_TYPE:
             initialize_sync_waiting_rooms(self)
 
         # Phase 2.5: Removed deprecated _moe_waiting_room (old MoE synchronization)
@@ -458,12 +453,14 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         time: float,
         replica_id: int,
         replica_local_id: int | None,
-        batch: Batch,
+        batch: Batch | None,
     ) -> None:
         """Observe one Replica-local batch completion. Inert by default.
 
         Called after the batch's request-state transition, so a policy that
-        reads lane populations here sees the post-step state.
+        reads lane populations here sees the post-step state. `batch` is the
+        batch that completed, the batch dropped as stale, or None when a
+        deferred terminal release frees requests and nothing new is scheduled.
         """
 
         return None
@@ -912,8 +909,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def _resolve_forward_step(
         self,
         *,
-        sync_kind: str,
-        waiting_room,
         replica_id: int,
         stage_id: int,
         batch: Batch,
@@ -926,14 +921,13 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         state = self._get_forward_sync_state()
 
         def lookup(step_id: int):
-            replica_rooms = waiting_room.get(replica_id)
+            replica_rooms = self._sync_waiting_room.get(replica_id)
             stage_rooms = replica_rooms.get(stage_id) if replica_rooms else None
             step_rooms = stage_rooms.get(step_id) if stage_rooms else None
             layer_rooms = step_rooms.get(layer_id) if step_rooms else None
             return layer_rooms.get(sync_stage) if layer_rooms else None
 
         return state.resolve_step(
-            sync_kind=sync_kind,
             replica_id=replica_id,
             stage_id=stage_id,
             batch=batch,
@@ -946,7 +940,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def _close_forward_step(
         self,
         *,
-        sync_kind: str,
         replica_id: int,
         stage_id: int,
         layer_id: int,
@@ -956,7 +949,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         """Close one room through the forward-sync state owner."""
 
         self._get_forward_sync_state().close_step(
-            sync_kind=sync_kind,
             replica_id=replica_id,
             stage_id=stage_id,
             layer_id=layer_id,
@@ -1198,7 +1190,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
     def on_prefill_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):
         """Delegate PREFILL collective completion to the utility handler."""
-        if direct_batch is None and uses_shared_forward_room(self):
+        if direct_batch is None and self._sync_kind == "forward":
             return self.on_forward_sync_collective(
                 time, replica_id, stage_id, batch_global_id, sync_stage,
                 layer_id, metrics_store,
@@ -1289,7 +1281,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def on_decode_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):
         """Delegate DECODE collective completion to the utility handler."""
 
-        if direct_batch is None and uses_shared_forward_room(self):
+        if direct_batch is None and self._sync_kind == "forward":
             return self.on_forward_sync_collective(
                 time, replica_id, stage_id, batch_global_id, sync_stage,
                 layer_id, metrics_store,

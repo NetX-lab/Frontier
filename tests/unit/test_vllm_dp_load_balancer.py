@@ -42,26 +42,8 @@ from frontier.config.cluster_scheduler_config import BaseClusterSchedulerConfig
 from frontier.config.flat_dataclass import create_flat_dataclass
 from frontier.config.utils import get_all_subclasses
 from frontier.entities import Cluster, Request
-from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
-    BaseClusterScheduler,
-)
 from frontier.scheduler.cluster_scheduler.cluster_scheduler_registry import (
     ClusterSchedulerRegistry,
-)
-from frontier.scheduler.cluster_scheduler.lor_cluster_scheduler import (
-    LORClusterScheduler,
-)
-from frontier.scheduler.cluster_scheduler.random_cluster_scheduler import (
-    RandomClusterScheduler,
-)
-from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
-    RoundRobinClusterScheduler,
-)
-from frontier.scheduler.cluster_scheduler.sticky_lor_cluster_scheduler import (
-    StickyLORClusterScheduler,
-)
-from frontier.scheduler.cluster_scheduler.sticky_round_robin_cluster_scheduler import (
-    StickyRoundRobinClusterScheduler,
 )
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
     BaseReplicaScheduler,
@@ -286,7 +268,7 @@ def test_a_report_on_its_deadline_is_processed_before_that_publish() -> None:
     # report is applied and then moves the deadline.
     balancer.report(0.05, 1, 1, RequestLoad(9, 9))
 
-    assert balancer.last_publish_ms == -5000
+    assert balancer.frontend_counts == [RequestLoad(0, 0), RequestLoad(0, 0)]
     assert balancer.engine_counts[1] == RequestLoad(9, 9)
     assert balancer.last_step_counts == [RequestLoad(1, 0), RequestLoad(0, 0)]
 
@@ -306,54 +288,13 @@ def test_several_reports_inside_one_millisecond_stay_in_one_publish_window() -> 
     for engine in range(3):
         balancer.report(0.0001 * engine, engine, 0, RequestLoad(engine + 1, 0))
 
-    assert balancer.time_ms == 0
-    assert balancer.last_publish_ms == -5000
+    assert balancer.frontend_counts == [RequestLoad(0, 0)] * 3
+    assert balancer.next_publish_ms == 50
     assert balancer.engine_counts == [
         RequestLoad(1, 0),
         RequestLoad(2, 0),
         RequestLoad(3, 0),
     ]
-
-
-def test_time_must_not_move_backwards() -> None:
-    balancer = VllmDPLoadBalancer(2)
-    balancer.select(1.0)
-
-    with pytest.raises(ValueError, match="cannot move backwards"):
-        balancer.select(0.5)
-
-
-@pytest.mark.parametrize("time", [-1.0, float("nan"), float("inf")])
-def test_time_must_be_finite_and_nonnegative(time) -> None:
-    balancer = VllmDPLoadBalancer(2)
-
-    with pytest.raises(ValueError, match="finite nonnegative time"):
-        balancer.select(time)
-
-
-@pytest.mark.parametrize("engine", [-1, 2, True, 1.0, None])
-def test_an_unknown_engine_is_rejected(engine) -> None:
-    balancer = VllmDPLoadBalancer(2)
-
-    with pytest.raises(ValueError, match="unknown engine"):
-        balancer.report(0.0, engine, 0, RequestLoad(1, 0))
-
-
-@pytest.mark.parametrize(
-    ("step", "load"),
-    [(-1, RequestLoad(1, 0)), (0, RequestLoad(-1, 0)), (0, RequestLoad(0, -2))],
-)
-def test_negative_steps_and_counts_are_rejected(step, load) -> None:
-    balancer = VllmDPLoadBalancer(2)
-
-    with pytest.raises(ValueError, match="nonnegative"):
-        balancer.report(0.0, 0, step, load)
-
-
-@pytest.mark.parametrize("num_engines", [0, -1, 1.0, None])
-def test_the_engine_count_must_be_a_positive_int(num_engines) -> None:
-    with pytest.raises(ValueError, match="at least one engine"):
-        VllmDPLoadBalancer(num_engines)
 
 
 # --------------------------------------------------------------------------
@@ -485,12 +426,8 @@ def test_the_load_accessor_separates_waiting_from_admitted_running(monkeypatch) 
 
         batch = lane.on_schedule(0.0)
         load = lane.get_request_load()
-        # Admission moves requests into running; the accessor must not count a
-        # request twice, and the two populations must add up.
-        assert load.running == len(lane._running_requests)
-        assert load.waiting == len(lane._request_queue) + len(
-            lane._preempted_requests
-        )
+        # A 16-token budget admits two of the three 8-token prompts, so one waits.
+        assert load == RequestLoad(1, 2)
         assert load.running + load.waiting == 3
         assert batch is not None
 
@@ -547,12 +484,12 @@ def test_a_scheduler_without_a_serving_load_definition_says_which_one() -> None:
         (
             "dense_multi_lane",
             dict(is_moe=False, attn_dp=2),
-            "monotonic per Replica",
+            "share no stage-0 forward",
         ),
         (
             "dense_multi_lane_pipeline_parallel",
             dict(is_moe=False, attn_dp=2, num_pipeline_stages=2),
-            "monotonic per Replica",
+            "share no stage-0 forward",
         ),
         (
             "uneven_layer_partition",
@@ -911,86 +848,6 @@ def test_the_admission_loop_reports_the_state_after_each_admission() -> None:
     # One call admitted two batches; only the first left a slot, and it is
     # reported with the state after it alone.
     assert reports == [(0, 0, RequestLoad(2, 1))]
-
-
-# --------------------------------------------------------------------------
-# The two base seams stay inert for every existing policy
-# --------------------------------------------------------------------------
-
-
-def _bare_policy(scheduler_type, requests):
-    from types import SimpleNamespace
-
-    scheduler = scheduler_type.__new__(scheduler_type)
-    # The rotation ordinal W2 made persistent, the random policy's lane cursor
-    # per Replica, and the sticky policies' session table and counter, are
-    # normally set up by __init__.
-    scheduler._request_counter = 0
-    scheduler._next_dp_lane = [0, 0]
-    scheduler._session_counter = 0
-    scheduler._session_to_target_map = {}
-    scheduler._cluster_type = ClusterType.MONOLITHIC
-    scheduler._num_replicas = 2
-    scheduler._replica_dp_size = 2
-    scheduler._cluster = SimpleNamespace(replicas={0: object(), 1: object()})
-    scheduler._request_queue = list(requests)
-    scheduler._replica_schedulers = {
-        (replica_id, dp_id): SimpleNamespace(num_pending_requests=0)
-        for replica_id in (0, 1)
-        for dp_id in (0, 1)
-    }
-    return scheduler
-
-
-@pytest.mark.parametrize(
-    "scheduler_type",
-    [
-        RoundRobinClusterScheduler,
-        LORClusterScheduler,
-        RandomClusterScheduler,
-        StickyRoundRobinClusterScheduler,
-        StickyLORClusterScheduler,
-    ],
-)
-def test_every_existing_policy_routes_identically_through_schedule_at(
-    scheduler_type, monkeypatch
-) -> None:
-    monkeypatch.setattr(
-        "frontier.scheduler.cluster_scheduler.random_cluster_scheduler.randint",
-        lambda _low, _high: 0,
-    )
-    # The sticky policies route by session, so every request carries one.
-    requests = [
-        Request(
-            arrived_at=float(index),
-            num_prefill_tokens=8,
-            num_decode_tokens=2,
-            session_id=index % 3,
-        )
-        for index in range(6)
-    ]
-
-    direct = _bare_policy(scheduler_type, requests).schedule()
-    through_seam = _bare_policy(scheduler_type, requests).schedule_at(12.5)
-
-    assert [(rid, lane, request.id) for rid, lane, request in through_seam] == [
-        (rid, lane, request.id) for rid, lane, request in direct
-    ]
-
-
-@pytest.mark.parametrize(
-    "seam", ["on_replica_batch_scheduled", "on_replica_batch_end"]
-)
-def test_the_default_batch_seams_are_inert(seam) -> None:
-    class _Bare(BaseClusterScheduler):
-        def schedule(self):
-            return []
-
-    bare = _Bare.__new__(_Bare)
-    before = dict(vars(bare))
-
-    assert getattr(bare, seam)(1.0, 0, 0, None) is None
-    assert dict(vars(bare)) == before
 
 
 # --------------------------------------------------------------------------

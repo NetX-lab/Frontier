@@ -4,17 +4,14 @@
 Inputs are the extractor's ``chain.json`` for one vLLM run and the
 ``run_frontier_case.py`` output directory for the same trace.
 
-T1 replays the native history through Frontier's coordinator and frontend
-model. Every coordinator receipt is fed to `VllmDPLoadBalancer.report` at its
-recorded time, and every frontend route to `select`. Engine keys
-`(wave, step)` become their rank, which keeps their order and equality. Each
-native route is then compared with the replayed choice and with the counts the
-replay saw. With the inputs matched, a difference can only come from count
-calculation, key grouping, snapshot publication or frontend selection. When
-the counts differ the row is labeled `snapshot publication` and carries both
-publish times, because the native coordinator's clock also advances on
-messages Frontier does not model and the publish-to-apply delay is not
-modeled (semantic row S30).
+T1 checks Frontier's coordinator publication and frontend selection, fed with
+the native receipts. Every coordinator receipt goes to `VllmDPLoadBalancer.report`
+at its recorded time, and every frontend route to `select`; the replay then
+continues from the engine the trace used. It cannot see how Frontier computes
+the reported counts or keys, which T2 and
+`tests/integration/test_vllm_dp_placement_runtime.py` cover. A counts
+difference is labelled `snapshot publication` and a same-counts engine
+difference `frontend selection`.
 
 T2 is the placement of each burst and its probe. A burst's row is accepted
 only when the native trace shows the premise of plan §18.1 C4, that the
@@ -37,7 +34,6 @@ Outputs in ``--output-dir``: ``t1_replay_table.csv``, ``t2_placement_table.csv``
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 from pathlib import Path
 import sys
@@ -47,8 +43,8 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from frontier.scheduler.request_load import RequestLoad  # noqa: E402
 from frontier.scheduler.utils.vllm_dp_load_balancer import VllmDPLoadBalancer  # noqa: E402
-
-FRONTIER_RUNS = ("vllm_load_balancing", "completion_reporting_control", "round_robin")
+from tests.comparison.dp_placement_pp.extract_vllm_placement import write_csv  # noqa: E402
+from tests.comparison.dp_placement_pp.run_frontier_case import RUNS  # noqa: E402
 
 
 def replay_native_history(chain: dict, num_engines: int) -> list[dict]:
@@ -74,9 +70,16 @@ def replay_native_history(chain: dict, num_engines: int) -> list[dict]:
             continue
         engine = balancer.select(time - origin)
         # `select` reserved against the chosen engine; undo it to show the
-        # counts the choice read.
+        # counts the choice read, then keep that reservation on the engine the
+        # trace actually used so the next choice starts from the native history.
         seen = [[load.waiting, load.running] for load in balancer.frontend_counts]
         seen[engine][0] -= 1
+        chosen = balancer.frontend_counts[engine]
+        balancer.frontend_counts[engine] = RequestLoad(chosen.waiting - 1, chosen.running)
+        native_load = balancer.frontend_counts[record["engine"]]
+        balancer.frontend_counts[record["engine"]] = RequestLoad(
+            native_load.waiting + 1, native_load.running
+        )
         if engine == record["engine"] and seen == record["counts_used"]:
             status, cause = "MATCH", ""
         elif seen == record["counts_used"]:
@@ -167,7 +170,7 @@ def burst_rows(chain: dict, burst: list[dict], frontier: dict, qualification: di
             "native_engine": native["engine"],
             "native_snapshot": native["snapshot"],
             "native_counts": native["counts_used"],
-            **{f"frontier_{run}": frontier[run]["placement_by_request_id"][row["request_id"]] for run in FRONTIER_RUNS},
+            **{f"frontier_{run}": frontier[run]["placement_by_request_id"][row["request_id"]] for run in RUNS},
             "status": status,
         })
     return rows
@@ -189,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
     request_ids = json.loads(args.request_ids.read_text())
     frontier = {
         run: json.loads((args.frontier_dir / run / "evidence.json").read_text())
-        for run in FRONTIER_RUNS
+        for run in RUNS
     }
     bursts: dict[str, list[dict]] = {}
     for row in request_ids["rows"]:
@@ -209,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
             "qualification": qualification,
             "probe_status": probe["status"],
             "probe_native_engine": probe["native_engine"],
-            "probe_frontier": {run: probe[f"frontier_{run}"] for run in FRONTIER_RUNS},
+            "probe_frontier": {run: probe[f"frontier_{run}"] for run in RUNS},
             "control_differs_from_native": probe["frontier_completion_reporting_control"] != probe["native_engine"],
             "probe_frontier_selection": {
                 run: probe_selection(frontier[run], probe["request_id"])
@@ -255,15 +258,6 @@ def main(argv: list[str] | None = None) -> int:
             for name, burst in t2_status.items()},
     }, indent=1))
     return 0
-
-
-def write_csv(path: Path, rows: list[dict]) -> None:
-    with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]) if rows else [])
-        writer.writeheader()
-        for row in rows:
-            writer.writerow({key: json.dumps(value) if isinstance(value, (list, dict)) else value
-                             for key, value in row.items()})
 
 
 if __name__ == "__main__":

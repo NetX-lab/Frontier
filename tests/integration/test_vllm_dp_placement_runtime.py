@@ -86,6 +86,7 @@ def _assert_reports_follow_engine_iterations(run: dict, num_pipeline_stages: int
             last_forward[lane] = forward[record["batch"]]
             if record["running_after"] >= num_pipeline_stages:
                 assert record["report"] is None, record
+                assert lane not in held, record
                 held[lane] = record["batch"]
                 continue
             assert record["report"] is not None, record
@@ -128,15 +129,68 @@ def _count_admissions_into_peer_forwards(run: dict) -> int:
 
 
 def _assert_completions_report_post_step_load(run: dict) -> None:
-    """The lane's own release is bracketed, so pre- and post-step load differ
-    for some batches; every completion report carries the post-step one."""
+    """Every completion report carries that completion's post-step load. When a
+    deep pipeline defers every release, the terminal-release report carries the
+    load after the deferred free."""
 
-    completions = [record for record in run["records"] if record["kind"] == "end"]
+    completions = [
+        record
+        for record in run["records"]
+        if record["kind"] == "end" and record["source"] == "completion"
+    ]
     assert completions
-    assert all(record["released"] for record in completions)
-    assert any(record["pre_step"] != record["post_step"] for record in completions)
     assert all(record["report"][1] == record["post_step"] for record in completions)
-    assert not all(record["report"][1] == record["pre_step"] for record in completions)
+    if any(record["pre_step"] != record["post_step"] for record in completions):
+        return
+    # Deep pipelines defer every release past the completion, and the
+    # terminal-release report then publishes the change.
+    terminal_releases = [
+        record
+        for record in run["records"]
+        if record["kind"] == "end" and record["source"] == "terminal_release"
+    ]
+    assert terminal_releases
+    assert all(
+        record["report"][1] == record["lane_load"] for record in terminal_releases
+    )
+
+
+def _assert_every_held_key_is_reported(run: dict) -> list[str]:
+    """A held admission key is published by the next end record, and by no later one.
+
+    Walks every record except stage-0 starts. Returns the source of each end
+    record that published a key its lane was holding.
+    """
+
+    pending: dict[int, int] = {}
+    last_key: dict[int, int] = defaultdict(lambda: -1)
+    consumed: list[str] = []
+    for record in run["records"]:
+        if record["kind"] == "stage0":
+            continue
+        lane = record["lane"]
+        if record["kind"] == "scheduled":
+            if record["report"] is None:
+                assert lane not in pending, record
+                pending[lane] = record["held_key"]
+            else:
+                key = record["report"][0]
+                assert key >= last_key[lane], (record, last_key[lane])
+                last_key[lane] = key
+            continue
+        assert record["report"] is not None, record
+        key = record["report"][0]
+        if lane in pending:
+            assert key == pending.pop(lane), record
+            consumed.append(record["source"])
+        assert key >= last_key[lane], (record, last_key[lane])
+        last_key[lane] = key
+    assert not pending, pending
+    return consumed
+
+
+def _assert_final_counts_match_lanes(run: dict) -> None:
+    assert run["final_engine_counts"] == run["final_lane_loads"]
 
 
 def _assert_pp1_keys_are_ordered_forwards(run: dict) -> None:
@@ -192,9 +246,7 @@ def test_dp_placement_runs_and_reports_post_step_load(tmp_path):
     # 4. The reported load is the post-step state.
     _assert_completions_report_post_step_load(policy)
 
-    # 5. No event type is introduced, and the run drains rather than being kept
-    #    alive by a heartbeat.
-    assert set(policy["event_types"]) == set(baseline["event_types"])
+    # 5. The run drains rather than being kept alive by a heartbeat.
     assert policy["makespan"] > 0
     _assert_run_conserves_work(baseline)
 
@@ -234,9 +286,8 @@ def test_placement_follows_published_load_where_round_robin_cannot(tmp_path):
     _assert_pp1_keys_are_ordered_forwards(policy)
     assert sum(1 for record in policy["records"] if record["kind"] == "end") > 10
 
-    # 4. Still the post-step load, and still no new event type.
+    # 4. Still the post-step load.
     _assert_completions_report_post_step_load(policy)
-    assert set(policy["event_types"]) == set(baseline["event_types"])
 
 
 def test_a_single_lane_shape_routes_everything_to_lane_zero(tmp_path):
@@ -257,6 +308,7 @@ def test_a_single_lane_shape_routes_everything_to_lane_zero(tmp_path):
         ("moe_dp2_pp2_online", 2),
         ("moe_dp1_pp3", 3),
         ("moe_dp2_pp3", 3),
+        ("moe_dp2_pp4", 4),
     ],
 )
 def test_pipeline_parallel_shapes_report_once_per_engine_iteration(
@@ -282,10 +334,10 @@ def test_pipeline_parallel_shapes_report_once_per_engine_iteration(
     )
     assert admission_only >= policy["num_lanes"]
 
-    # 4. Completions still carry the post-step load, and the new seam adds no
-    #    event type.
+    # 4. Completions still carry the post-step load.
     _assert_completions_report_post_step_load(policy)
-    assert set(policy["event_types"]) == set(baseline["event_types"])
+    _assert_every_held_key_is_reported(policy)
+    _assert_final_counts_match_lanes(policy)
 
 
 @pytest.mark.parametrize(
@@ -382,6 +434,45 @@ def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
         _assert_run_conserves_work(run)
 
 
+@pytest.mark.parametrize(
+    "case",
+    ["dense_dp1_pp4_kv_pressure", "moe_dp2_pp4_kv_pressure"],
+)
+def test_a_stale_dropped_batch_reports_the_key_its_admission_held(tmp_path, case):
+    evidence = _run_child(tmp_path, case)
+    policy = evidence["vllm_load_balancing"]
+    baseline = evidence["round_robin"]
+
+    sources = _assert_every_held_key_is_reported(policy)
+    assert policy["num_preemptions"] >= 1
+    assert policy["stale_drops"]
+    assert "stale_drop" in sources
+    _assert_run_conserves_work(policy)
+    _assert_run_conserves_work(baseline)
+    _assert_final_counts_match_lanes(policy)
+    assert policy["routing_times"] == policy["cluster_schedule_times"]
+
+
+def test_a_deferred_terminal_release_is_reported(tmp_path):
+    pp4 = _run_child(tmp_path, "moe_dp2_pp4_release")["vllm_load_balancing"]
+    pp2 = _run_child(tmp_path, "moe_dp2_pp2_release")["vllm_load_balancing"]
+
+    assert any(
+        record["kind"] == "end" and record["source"] == "terminal_release"
+        for record in pp4["records"]
+    )
+    assert not any(
+        record["kind"] == "end" and record["source"] == "terminal_release"
+        for record in pp2["records"]
+    )
+    assert pp4["placements"] == [0, 0]
+    assert pp2["placements"] == [0, 0]
+    for run in (pp4, pp2):
+        _assert_final_counts_match_lanes(run)
+        _assert_every_held_key_is_reported(run)
+        _assert_run_conserves_work(run)
+
+
 # ---------------------------------------------------------------------------
 # Child process
 # ---------------------------------------------------------------------------
@@ -429,6 +520,7 @@ def _config(
     num_layers: int = 4,
     analytical_backend: bool = False,
     dummy_execution_time_ms: float | None = None,
+    num_blocks: int = 128,
 ):
     from frontier.cc_backend.cc_backend_config import AnalyticalCCBackendConfig
     from frontier.config import (
@@ -493,7 +585,7 @@ def _config(
     cluster = ClusterConfig(
         replica_config=replica,
         replica_scheduler_config=VllmV1SchedulerConfig(
-            num_blocks=128,
+            num_blocks=num_blocks,
             block_size=16,
             batch_size_cap=4,
             max_tokens_in_batch=16,
@@ -543,6 +635,7 @@ def run_case(
     policy_name: str,
     completion_reporting_control: bool = False,
     build_config=None,
+    observe_placeholder_withdrawal: bool = False,
     **shape,
 ):
     """Run one configuration and return what only the event loop can show.
@@ -563,7 +656,6 @@ def run_case(
         VllmLoadBalancingClusterSchedulerConfig,
     )
     from frontier.events.cluster_schedule_event import ClusterScheduleEvent
-    from frontier.events.global_batch_end_event import GlobalBatchEndEvent
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
     )
@@ -592,25 +684,22 @@ def run_case(
     placements: list[int] = []
     placement_request_ids: list[int] = []
     releases: dict[int, dict] = {}
-    event_types: set[str] = set()
     # Seam calls, their reports, and stage-0 forward starts, in event order.
     records: list[dict] = []
     reports: list[list] = []
     selections: list[dict] = []
     withdrawn_placeholder_lanes: list[int] = []
+    stale_drops: list[dict] = []
 
     original_cluster_schedule = ClusterScheduleEvent.handle_event
-    original_batch_end = GlobalBatchEndEvent.handle_event
     original_report = VllmDPLoadBalancer.report
     original_select = VllmDPLoadBalancer.select
     original_stage_pop = ReplicaStageScheduler.pop_batch_if_not_busy
-    original_withdraw = sync_entry._withdraw_idle_batches_of_joined_lanes
+    original_consume = ReplicaStageScheduler.consume_last_stale_drops
 
     def observed_cluster_schedule(self, scheduler, metrics_store):
         cluster_schedule_times.append(float(self.time))
-        events = original_cluster_schedule(self, scheduler, metrics_store)
-        event_types.update(type(event).__name__ for event in events or [])
-        return events
+        return original_cluster_schedule(self, scheduler, metrics_store)
 
     def observing_schedule_at(original):
         def observed(self, time):
@@ -666,10 +755,17 @@ def run_case(
             )
         return batch
 
-    def observed_withdraw(scheduler, sync_room, replica_id, stage_id):
-        placed = {lane for lane, batch in sync_room["batches"].items() if batch.is_idle}
-        original_withdraw(scheduler, sync_room, replica_id, stage_id)
-        withdrawn_placeholder_lanes.extend(sorted(placed - set(sync_room["batches"])))
+    def observed_consume(self):
+        dropped = original_consume(self)
+        if dropped:
+            stale_drops.append(
+                {
+                    "lane": self._replica_local_id,
+                    "stage": self._stage_id,
+                    "batches": [batch.id for batch in dropped],
+                }
+            )
+        return dropped
 
     def observing_seam(kind, original):
         def observed(self, time, replica_id, replica_local_id, batch):
@@ -678,18 +774,29 @@ def run_case(
             made = reports[before:]
             assert len(made) <= 1, made
             lane = self.get_replica_scheduler(replica_id, replica_local_id)
-            release = releases.get(batch.id)
+            release = None if batch is None else releases.get(batch.id)
+            if kind == "scheduled":
+                source = None
+            elif batch is None:
+                source = "terminal_release"
+            elif release is not None:
+                source = "completion"
+            else:
+                source = "stale_drop"
             records.append(
                 {
                     "kind": kind,
                     "time": float(time),
                     "lane": replica_local_id,
-                    "batch": batch.id,
+                    "batch": None if batch is None else batch.id,
                     "running_after": lane.num_running_batches,
                     "report": made[0] if made else None,
                     "released": release is not None,
                     "pre_step": release["before"] if release else None,
                     "post_step": release["after"] if release else None,
+                    "source": source,
+                    "held_key": self._held_key[replica_local_id],
+                    "lane_load": list(lane.get_request_load()),
                 }
             )
             return result
@@ -697,6 +804,8 @@ def run_case(
         return observed
 
     def completion_reporting(self, time, replica_id, replica_local_id, batch):
+        if batch is None:
+            return
         lane = self.get_replica_scheduler(replica_id, replica_local_id)
         self._load_balancer.report(
             time,
@@ -705,11 +814,6 @@ def run_case(
             lane.get_request_load(),
         )
 
-    def observed_batch_end(self, scheduler, metrics_store):
-        events = original_batch_end(self, scheduler, metrics_store)
-        event_types.update(type(event).__name__ for event in events or [])
-        return events
-
     with pytest.MonkeyPatch.context() as patch:
         config = (
             _config(root, patch, policy=policy, **shape)
@@ -717,7 +821,6 @@ def run_case(
             else build_config(policy)
         )
         patch.setattr(ClusterScheduleEvent, "handle_event", observed_cluster_schedule)
-        patch.setattr(GlobalBatchEndEvent, "handle_event", observed_batch_end)
         patch.setattr(
             VLLMv1EngineReplicaScheduler,
             "on_batch_end",
@@ -726,9 +829,24 @@ def run_case(
         patch.setattr(VllmDPLoadBalancer, "report", observed_report)
         patch.setattr(VllmDPLoadBalancer, "select", observed_select)
         patch.setattr(ReplicaStageScheduler, "pop_batch_if_not_busy", observed_stage_pop)
-        patch.setattr(
-            sync_entry, "_withdraw_idle_batches_of_joined_lanes", observed_withdraw
-        )
+        patch.setattr(ReplicaStageScheduler, "consume_last_stale_drops", observed_consume)
+        if observe_placeholder_withdrawal:
+            original_withdraw = sync_entry._withdraw_idle_batches_of_joined_lanes
+
+            def observed_withdraw(scheduler, sync_room, replica_id, stage_id):
+                placed = {
+                    lane
+                    for lane, batch in sync_room["batches"].items()
+                    if batch.is_idle
+                }
+                original_withdraw(scheduler, sync_room, replica_id, stage_id)
+                withdrawn_placeholder_lanes.extend(
+                    sorted(placed - set(sync_room["batches"]))
+                )
+
+            patch.setattr(
+                sync_entry, "_withdraw_idle_batches_of_joined_lanes", observed_withdraw
+            )
         # Both the inert base seam and the policy's override have to be
         # wrapped for routing: patching only the base would silently observe
         # nothing on the very policy under test.
@@ -801,7 +919,16 @@ def run_case(
         "records": records,
         "selections": selections,
         "withdrawn_placeholder_lanes": withdrawn_placeholder_lanes,
-        "event_types": sorted(event_types),
+        "stale_drops": stale_drops,
+        "num_preemptions": sum(
+            request.get_total_preemption_count() for request in requests
+        ),
+        "final_engine_counts": (
+            None
+            if policy_name == "round_robin"
+            else [list(load) for load in cluster_scheduler._load_balancer.engine_counts]
+        ),
+        "final_lane_loads": [list(lane.get_request_load()) for lane in lanes],
     }
 
 
@@ -853,11 +980,39 @@ STAGGER_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
 0.0035,16,6
 """
 
+# SyntheticRequestGeneratorConfig(num_requests=16, seed=5): uniform lengths
+# 8 to 96, prefill:decode 4.0, Poisson qps 200, all generators seeded with 5.
+KV_PRESSURE_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
+0.004876,58,15
+0.012805,71,19
+0.019538,71,18
+0.019685,38,10
+0.034040,51,14
+0.045598,13,4
+0.048764,23,6
+0.052688,46,12
+0.052754,21,6
+0.054393,70,18
+0.061649,17,5
+0.069625,15,5
+0.074430,15,4
+0.074439,67,17
+0.075614,20,6
+0.090614,67,17
+"""
+
+RELEASE_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
+0.0,16,2
+2.0,16,2
+"""
+
 TRACES = {
     "asymmetric": ASYMMETRIC_TRACE,
     "discriminating": DISCRIMINATING_TRACE,
     "late_join": LATE_JOIN_TRACE,
     "stagger": STAGGER_TRACE,
+    "kv_pressure": KV_PRESSURE_TRACE,
+    "release": RELEASE_TRACE,
 }
 
 CASES = {
@@ -892,7 +1047,30 @@ CASES = {
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=3, num_layers=6,
         analytical_backend=True, trace="stagger",
     ),
-    "moe_dp4_late_join": dict(is_moe=True, attn_dp=4, moe_ep=4, trace="late_join"),
+    "moe_dp4_late_join": dict(
+        is_moe=True, attn_dp=4, moe_ep=4, trace="late_join",
+        dummy_execution_time_ms=1.0, observe_placeholder_withdrawal=True,
+    ),
+    "moe_dp2_pp4": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
+        analytical_backend=True,
+    ),
+    "dense_dp1_pp4_kv_pressure": dict(
+        is_moe=False, attn_dp=1, moe_ep=1, num_pipeline_stages=4, num_layers=4,
+        analytical_backend=True, num_blocks=8, trace="kv_pressure",
+    ),
+    "moe_dp2_pp4_kv_pressure": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
+        analytical_backend=True, num_blocks=8, trace="kv_pressure",
+    ),
+    "moe_dp2_pp2_release": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2, num_layers=4,
+        analytical_backend=True, trace="release",
+    ),
+    "moe_dp2_pp4_release": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
+        analytical_backend=True, trace="release",
+    ),
     # Stages long enough that no batch completes before the probe (plan D-e).
     "moe_dp2_pp2_discriminating": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2,

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | W3-R5 and W3-R6 dispositions: fixed in `341970d`, merged as `1978b72`. |
 | 2026-09-24 | Section 8 and 9: the native W6 FP8 rerun ran (`exp-0924-114241-429126`, 8 passed). |
 | 2026-09-24 | W7-R4 fixed by the user's choice of option (a): companion `e922c77`, gitlink `9adf759`; sections 3, 4 and 8 updated. |
 | 2026-09-24 | Created: review findings and dispositions, verification of each fix, the dummy-mode answer, candidate row S44, final validation. |
@@ -56,8 +57,8 @@ Baseline: `ba0a804`, the pushed PR 35 head before the review. Review commits: `c
 | W3-R2 | W3 | The legacy-marker loop in `handle_forward_sync_collective` guarded a state every source now excludes. Its comment named a prefill-helper check that does not exist. | Code reading | Removed, `3a8767c` |
 | W3-R3 | W3 | The per-layer duplicate-owner scan in `prepare_ep_wave_inputs` ran at every operator for a state no path produces: `ClusterScheduleEvent` adds each request to exactly one lane's replica scheduler (`cluster_schedule_event.py:56-64`), and each lane builds batches only from its own requests. Only a hand-built test with one request in two lanes' batches reached it. | Code reading | Removed, `3a8767c`; reverses the `audit_scheduler.md` PORT row |
 | W3-R4 | W3 | `source_forward_mode` claimed to be the stage-schedule event's rule while the event classified phases inline. | Code reading | Single source, `3a8767c` |
-| W3-R5 | W3 | `sync_entry` admits by a looser predicate than the one group formation uses. | A strict predicate caused 32 regressions in 9 test files (`strict_pred_compare.json`) | Proposal |
-| W3-R6 | W3 | The alias rooms and per-kind partition in `sync_state.py:39` duplicate state. | Code reading | Refactor across more than five files; proposal |
+| W3-R5 | W3 | `sync_entry` admits by a looser predicate than the one group formation uses. | A strict predicate caused 32 regressions in 9 test files (`strict_pred_compare.json`) | Fixed with W3-R6 in `341970d` (fixtures set up the one room; merge `1978b72`) |
+| W3-R6 | W3 | The alias rooms and per-kind partition in `sync_state.py:39` duplicate state. | Code reading | Fixed in `341970d` (decision Q5 a; merge `1978b72`; `test_report_2026-09-24_w3_sync_waiting_room.md`) |
 | W4-R1 | W4 | A lane publishes requests routed to it during its forward as waiting. vLLM drains its input queue only at the top of each busy-loop iteration, so those requests are absent from the counts published at the end of that iteration (section 6). | Source reading plus native G4 receipts | New candidate row S44; proposal |
 | W6-R1 | W6 | The FP8 kernel config was looked up for the unquantized dtype. | Negative control: `[(bf16, {})] != [(bf16, {'use_fp8_w8a8': True})]` | Fixed, `f236c17` |
 | W6-R2 | W6 | FP8 accumulated in FP16 whatever the hidden-state dtype. | Negative control: `tl.float16 == tl.bfloat16` fails | Fixed, `f236c17` |
@@ -254,10 +255,10 @@ verdicts. The main session checked each against the code at `5e7221d`:
 | 3, 5 | The placement rule is written twice | W2-R2, `3ec7bbf` |
 | 8 | AGENTS.md calls every role cyclic | W2-R4, `3ec7bbf` |
 | 9 | Per-source continuation changes PDD timing | W3-R1, `3a8767c`, `748e757` |
-| 11 | `sync_entry` predicate relies on fixture defaults | W3-R5, proposal |
+| 11 | `sync_entry` predicate relies on fixture defaults | W3-R5, fixed in `341970d` |
 | 12 | Legacy-marker loop | W3-R2, `3a8767c` |
 | 13 | Duplicate-owner scan | W3-R3, `3a8767c` |
-| 14 | Alias rooms and per-kind partition | W3-R6, proposal |
+| 14 | Alias rooms and per-kind partition | W3-R6, fixed in `341970d` |
 | 15 | Phase and decoding-request rules duplicated | Phase rule: W3-R4, `3a8767c`. `advance_decode_layer` now says the caller selects the decoding requests; the shared forward filters them and passes `layer_advance_done` to the decode handler. No further change |
 | 16, 21 | FP8 config dtype and compute type | W6-R1, W6-R2, `f236c17` |
 | 17, 28 | FP8 quantization outside the timed step; `.contiguous()` output copy | W6-R3, `f236c17` |

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from collections import defaultdict
 from unittest.mock import Mock
 
 import pytest
@@ -18,6 +17,7 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 from frontier.types import ClusterType
 
 
@@ -95,6 +95,7 @@ def _scheduler(cluster_type: ClusterType):
     )
     scheduler._replica_dp_size = 1
     scheduler._forward_sync_state = ForwardSyncState()
+    initialize_sync_waiting_rooms(scheduler)
     return scheduler
 
 
@@ -125,7 +126,7 @@ def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
         is_busy=False,
         get_queue_batches=Mock(return_value=[batch]),
         pop_batch_if_not_busy=Mock(return_value=batch),
-        consume_last_stale_drop_count=Mock(return_value=0),
+        consume_last_stale_drops=Mock(return_value=[]),
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(
@@ -150,20 +151,6 @@ def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
     assert predictor.calls == [(1, cluster_type, 1, 16)]
 
 
-def _room():
-    return defaultdict(
-        lambda: defaultdict(
-            lambda: defaultdict(
-                lambda: defaultdict(
-                    lambda: defaultdict(
-                        lambda: {"batches": {}, "arrival_times": {}}
-                    )
-                )
-            )
-        )
-    )
-
-
 def test_monolithic_prefill_guard_only_admits_moe_layers() -> None:
     scheduler = _scheduler(ClusterType.MONOLITHIC)
 
@@ -186,7 +173,6 @@ def test_monolithic_prefill_dense_layer_uses_full_stage_protocol_without_ep_mate
     scheduler = _scheduler(ClusterType.MONOLITHIC)
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
-    scheduler._prefill_sync_waiting_room = _room()
     scheduler._config.replica_config.total_expert_num = 2
     scheduler._config.replica_config.moe_expert_parallel_size = 1
     scheduler._config.replica_config.router_topk = 1
@@ -225,7 +211,6 @@ def test_monolithic_decode_dense_layer_uses_full_stage_protocol_without_ep_mater
     scheduler = _scheduler(ClusterType.MONOLITHIC)
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
-    scheduler._decode_sync_waiting_room = _room()
     scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
         _execution_time_predictor=predictor,
         is_last_stage=False,
@@ -268,7 +253,6 @@ def test_dense_prefill_completion_advances_to_next_layer_without_collective() ->
     scheduler = _scheduler(ClusterType.MONOLITHIC)
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
-    scheduler._prefill_sync_waiting_room = _room()
     request = Request(0.0, 4, 0)
     batch = Batch(0, [request], [4], is_moe=True)
     batch.set_global_id(3)
@@ -289,14 +273,13 @@ def test_dense_prefill_completion_advances_to_next_layer_without_collective() ->
     assert isinstance(events[0], PrefillSyncEvent)
     assert events[0]._layer_id == 2
     assert events[0].time == pytest.approx(0.014)
-    assert 1 not in scheduler._prefill_sync_waiting_room[0][0][3]
+    assert 1 not in scheduler._sync_waiting_room[0][0][3]
 
 
 def test_dense_decode_completion_advances_to_next_layer_without_collective() -> None:
     scheduler = _scheduler(ClusterType.MONOLITHIC)
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
-    scheduler._decode_sync_waiting_room = _room()
     scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
         _execution_time_predictor=predictor,
         is_last_stage=False,
@@ -323,4 +306,4 @@ def test_dense_decode_completion_advances_to_next_layer_without_collective() -> 
     assert isinstance(events[0], DecodeSyncEvent)
     assert events[0]._layer_id == 2
     assert events[0].time == pytest.approx(0.015)
-    assert 1 not in scheduler._decode_sync_waiting_room[0][0][5]
+    assert 1 not in scheduler._sync_waiting_room[0][0][5]

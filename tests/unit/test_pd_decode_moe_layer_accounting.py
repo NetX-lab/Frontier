@@ -1,4 +1,3 @@
-from collections import defaultdict
 from types import SimpleNamespace
 
 import pytest
@@ -9,6 +8,7 @@ from frontier.events.decode_sync_event import DecodeSyncEvent
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
+from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 from frontier.types import ClusterType
 
 
@@ -81,6 +81,10 @@ class _DecodeSyncScheduler:
     _restore_forward_step_full_stage_owners = (
         BaseClusterScheduler._restore_forward_step_full_stage_owners
     )
+    on_forward_sync_collective = BaseClusterScheduler.on_forward_sync_collective
+    get_pipeline_stage_layer_bounds = staticmethod(
+        BaseClusterScheduler.get_pipeline_stage_layer_bounds
+    )
 
     def __init__(
         self,
@@ -93,6 +97,7 @@ class _DecodeSyncScheduler:
         shared_domain_sync: bool = False,
     ) -> None:
         predictor = _Predictor(num_layers_per_pipeline_stage)
+        self._predictor = predictor
         self._cluster_type = cluster_type
         self._shared_domain_sync = shared_domain_sync
         self._config = SimpleNamespace(
@@ -112,13 +117,7 @@ class _DecodeSyncScheduler:
             )
             for stage_id in range(pipeline_parallel_size)
         }
-        self._decode_sync_waiting_room = defaultdict(
-            lambda: defaultdict(
-                lambda: defaultdict(
-                    lambda: defaultdict(lambda: defaultdict(dict))
-                )
-            )
-        )
+        initialize_sync_waiting_rooms(self)
 
     def add_post_moe_collective(
         self,
@@ -128,7 +127,7 @@ class _DecodeSyncScheduler:
         layer_id: int,
         batches: dict[int, Batch],
     ) -> None:
-        self._decode_sync_waiting_room[1][stage_id][batch_global_id][layer_id][
+        self._sync_waiting_room[1][stage_id][batch_global_id][layer_id][
             "post_moe"
         ] = {
             "batches": batches,

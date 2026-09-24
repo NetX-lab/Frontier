@@ -1068,7 +1068,7 @@ class VLLMv1EngineReplicaScheduler(
         preempted_requests: List[Request] = []
         waiting_scheduled: List[Request] = []
         waiting_tokens: List[int] = []
-        self._materialize_monolithic_pp_terminal_release_before_iteration_start()
+        released = self._materialize_monolithic_pp_terminal_release_before_iteration_start()
         token_budget = self._max_num_scheduled_tokens
         available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
         waiting_count = len(self._request_queue) + len(self._preempted_requests)
@@ -1208,7 +1208,7 @@ class VLLMv1EngineReplicaScheduler(
             if self._has_monolithic_pp_mtp_output_wait():
                 self._clear_monolithic_pp_mtp_output_wait()
                 self._monolithic_pp_mtp_output_wait_followup_poll_pending = True
-            self._advance_monolithic_pp_terminal_release_boundary()
+            released += self._advance_monolithic_pp_terminal_release_boundary()
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,
@@ -1221,6 +1221,14 @@ class VLLMv1EngineReplicaScheduler(
                 batch_size=0,
                 batch_num_tokens=0,
             )
+            if released > 0:
+                # The iteration applied an output and scheduled nothing, and vLLM publishes after such a step.
+                self._cluster_scheduler.on_replica_batch_end(
+                    self._current_schedule_time,
+                    self._replica_id,
+                    self._replica_local_id,
+                    None,
+                )
             return None
 
         # Match vLLM v1 output order: new/resumed admissions first, then running.

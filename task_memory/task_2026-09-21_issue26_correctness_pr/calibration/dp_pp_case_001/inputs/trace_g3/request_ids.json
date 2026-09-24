@@ -81,7 +81,8 @@
    "role": "formal",
    "arrived_at": 10.0,
    "num_prefill_tokens": 32,
-   "num_decode_tokens": 64
+   "num_decode_tokens": 64,
+   "burst": ""
   },
   {
    "frontier_request_id": 4,
@@ -90,7 +91,8 @@
    "role": "formal",
    "arrived_at": 10.0,
    "num_prefill_tokens": 32768,
-   "num_decode_tokens": 64
+   "num_decode_tokens": 64,
+   "burst": ""
   },
   {
    "frontier_request_id": 5,
@@ -99,7 +101,8 @@
    "role": "formal",
    "arrived_at": 10.0,
    "num_prefill_tokens": 32,
-   "num_decode_tokens": 64
+   "num_decode_tokens": 64,
+   "burst": ""
   },
   {
    "frontier_request_id": 6,
@@ -108,7 +111,8 @@
    "role": "formal",
    "arrived_at": 10.0,
    "num_prefill_tokens": 32,
-   "num_decode_tokens": 64
+   "num_decode_tokens": 64,
+   "burst": ""
   },
   {
    "frontier_request_id": 7,
@@ -117,7 +121,8 @@
    "role": "formal",
    "arrived_at": 10.0,
    "num_prefill_tokens": 32,
-   "num_decode_tokens": 64
+   "num_decode_tokens": 64,
+   "burst": ""
   },
   {
    "frontier_request_id": 8,
@@ -126,7 +131,8 @@
    "role": "formal",
    "arrived_at": 10.15,
    "num_prefill_tokens": 32,
-   "num_decode_tokens": 64
+   "num_decode_tokens": 64,
+   "burst": ""
   },
   {
    "frontier_request_id": 9,
