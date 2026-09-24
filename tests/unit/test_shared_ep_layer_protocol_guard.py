@@ -126,7 +126,7 @@ def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
         is_busy=False,
         get_queue_batches=Mock(return_value=[batch]),
         pop_batch_if_not_busy=Mock(return_value=batch),
-        consume_last_stale_drop_count=Mock(return_value=0),
+        consume_last_stale_drops=Mock(return_value=[]),
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(

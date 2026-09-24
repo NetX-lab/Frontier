@@ -78,14 +78,8 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
 
         batch = stage_scheduler.pop_batch_if_not_busy()
-        stale_drop_consumer = getattr(
-            stage_scheduler,
-            "consume_last_stale_drop_count",
-            None,
-        )
-        stale_drop_count = (
-            stale_drop_consumer() if callable(stale_drop_consumer) else 0
-        )
+        stale_drops = stage_scheduler.consume_last_stale_drops()
+        stale_drop_count = len(stale_drops)
         replica_scheduler = None
         if stale_drop_count > 0:
             replica_scheduler = cluster_scheduler.get_replica_scheduler(
@@ -99,8 +93,14 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     f"stage={self._stage_id}, stale_drop_count={stale_drop_count}, "
                     f"num_running_batches={replica_scheduler.num_running_batches}"
                 )
-            for _ in range(stale_drop_count):
+            for dropped_batch in stale_drops:
                 replica_scheduler.decrement_num_running_batches()
+                cluster_scheduler.on_replica_batch_end(
+                    self.time,
+                    self._replica_id,
+                    self._replica_local_id,
+                    dropped_batch,
+                )
             debug_logger.info(
                 "[STAGE][STALE-DROP-ACCOUNTING] replica=%s replica_local_id=%s stage=%s "
                 "dropped_batches=%s num_running_batches=%s",

@@ -453,12 +453,14 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         time: float,
         replica_id: int,
         replica_local_id: int | None,
-        batch: Batch,
+        batch: Batch | None,
     ) -> None:
         """Observe one Replica-local batch completion. Inert by default.
 
         Called after the batch's request-state transition, so a policy that
-        reads lane populations here sees the post-step state.
+        reads lane populations here sees the post-step state. `batch` is the
+        batch that completed, the batch dropped as stale, or None when a
+        deferred terminal release frees requests and nothing new is scheduled.
         """
 
         return None

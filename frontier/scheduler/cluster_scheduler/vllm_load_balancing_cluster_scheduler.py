@@ -110,7 +110,7 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         time: float,
         replica_id: int,
         replica_local_id: int | None,
-        batch: Batch,
+        batch: Batch | None,
     ) -> None:
         """Report the lane's post-step load under the iteration that applied it.
 
