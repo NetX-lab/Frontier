@@ -26,6 +26,8 @@ Outputs in ``--output-dir``: ``placement.csv`` (one row per request),
 plus the coordinator receipts, with list-valued fields intact, for
 `compare_placement.py`), and
 ``extraction_status.json`` with every completeness check.
+
+The request's `schedule()` ran in the interval `(previous_iteration_monotonic, admitted_monotonic]`.
 """
 
 from __future__ import annotations
@@ -115,6 +117,11 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
         key=lambda record: (record["engine"], record["seq"]),
     )
     iteration_by_seq = {(record["engine"], record["seq"]): record for record in iterations}
+    previous_monotonic: dict[tuple[int, int], float | None] = {}
+    last_monotonic: dict[int, float] = {}
+    for record in iterations:
+        previous_monotonic[(record["engine"], record["seq"])] = last_monotonic.get(record["engine"])
+        last_monotonic[record["engine"]] = record["monotonic"]
     admission = {}
     for record in iterations:
         for engine_request_id in record["scheduled_new_req_ids"]:
@@ -212,6 +219,9 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
             "admitted_step": admitted["step"],
             "admitted_branch": admitted["branch"],
             "admitted_monotonic": admitted["monotonic"],
+            "previous_iteration_monotonic": previous_monotonic[
+                (admitted["engine"], admitted["seq"])
+            ],
             "http_status": sent["http_status"],
             "ttft_ms": metrics.get(request_id, {}).get("ttft"),
             "model_execution_time_ms": metrics.get(request_id, {}).get("request_model_execution_time"),

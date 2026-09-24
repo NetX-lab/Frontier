@@ -1,4 +1,5 @@
 {
+ "model_name": "Qwen3-30B-A3B-tiny",
  "load_format": "dummy",
  "skip_tokenizer_init": true,
  "dtype": "bfloat16",

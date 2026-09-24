@@ -4,9 +4,11 @@
 The case's vLLM engine settings are the source of every setting that has a
 Frontier counterpart, so a semantic difference can only come from the mapping
 in `case_config`, which the semantic-alignment table reads back from the
-constructed configuration (`effective_settings.json`). Frontier-only settings
-(dummy execution time, device labels, KV block count taken from the vLLM
-startup log) come from the case's Frontier settings file.
+constructed configuration (`effective_settings.json`). The model name is an
+engine setting. Expert count and router top-k come from that model's config.
+Frontier-only settings (dummy execution time, device labels, the KV block
+count, the MoE routing distribution and its seed, and the analytical backend)
+come from the case's Frontier settings file.
 
 Three runs share the trace and differ in one thing each:
 
@@ -47,6 +49,7 @@ RUNS = {
 
 def case_config(engine: dict, frontier: dict, trace_path: Path, root: Path, policy):
     from frontier.cc_backend.cc_backend_config import AnalyticalCCBackendConfig
+    from frontier.config.parallel_semantics import resolve_frontier_parallelism_mapping
     from frontier.config import (
         ClusterConfig,
         MetricsConfig,
@@ -59,24 +62,27 @@ def case_config(engine: dict, frontier: dict, trace_path: Path, root: Path, poli
 
     if frontier["cc_backend"] != "analytical":
         raise ValueError(f"unsupported cc_backend {frontier['cc_backend']!r}")
-    # vLLM's expert-parallel group spans the TP x DP ranks (AGENTS.md, "vLLM
-    # Parallel Semantics and Frontier Mapping").
-    moe_ep = (
-        engine["data_parallel_size"] * engine["tensor_parallel_size"]
-        if engine["enable_expert_parallel"]
-        else 1
+    if not engine["enforce_eager"]:
+        raise ValueError(
+            "unmapped setting enforce_eager=false: vLLM 0.10.2's non-eager V1 "
+            "default is PIECEWISE, which this harness does not map"
+        )
+    mapping = resolve_frontier_parallelism_mapping(
+        model_profile="moe",
+        tensor_parallel_size=engine["tensor_parallel_size"],
+        num_replicas=1,
+        enable_expert_parallel=engine["enable_expert_parallel"],
+        attn_dp=engine["data_parallel_size"],
     )
     replica = ReplicaConfig(
-        model_name=frontier["model_name"],
+        model_name=engine["model_name"],
         device=frontier["device"],
         network_device=frontier["network_device"],
         num_pipeline_stages=engine["pipeline_parallel_size"],
-        attn_tensor_parallel_size=engine["tensor_parallel_size"],
-        attn_dp=engine["data_parallel_size"],
-        moe_tensor_parallel_size=1 if engine["enable_expert_parallel"] else engine["tensor_parallel_size"],
-        moe_expert_parallel_size=moe_ep,
-        total_expert_num=frontier["total_expert_num"],
-        router_topk=frontier["router_topk"],
+        attn_tensor_parallel_size=mapping.attn_tensor_parallel_size,
+        attn_dp=mapping.attn_dp,
+        moe_tensor_parallel_size=mapping.moe_tensor_parallel_size,
+        moe_expert_parallel_size=mapping.moe_expert_parallel_size,
         moe_routing_distribution_type=frontier["moe_routing_distribution_type"],
         moe_routing_seed=frontier["moe_routing_seed"],
     )
@@ -104,7 +110,7 @@ def case_config(engine: dict, frontier: dict, trace_path: Path, root: Path, poli
         simulation_mode="online",
         sys_arch="co-location",
         enable_parallel_clusters=False,
-        decode_cuda_graph_mode="none" if engine["enforce_eager"] else "full_decode_only",
+        decode_cuda_graph_mode="none",
         cluster_config=cluster,
         metrics_config=MetricsConfig(
             output_dir=str(root / "metrics"),
@@ -243,7 +249,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     for run in RUNS:
-        command = [sys.executable, str(Path(__file__).resolve()), *sys.argv[1:], "--run", run]
+        child_args = list(argv) if argv is not None else sys.argv[1:]
+        command = [sys.executable, str(Path(__file__).resolve()), *child_args, "--run", run]
         result = subprocess.run(
             command,
             env={**os.environ, "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"},
