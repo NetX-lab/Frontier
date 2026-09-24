@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Open items: W3-R5/W3-R6 fixed and merged; F-R5 on stacked draft PR 38. |
 | 2026-09-24 | Gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`); the open item removed. |
 | 2026-09-24 | Rerun review G3a lead 26: the W6 row and Limits now cite the native rerun of the current FP8 step. |
 | 2026-09-24 | Native W6 FP8 rerun of the current FP8 code PASS (`exp-0924-114241-429126`); follow-up decisions for items 1-7 recorded. |
@@ -128,7 +129,7 @@ per-work-package reports.
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
 | Step 9 C4: decided 2026-09-24, option (a), `SCENARIO_NOT_REACHED` accepted. S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards) continue as separate calibration-and-repair tasks. | `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` |
-| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), the pinned calibration tools. The native W6 FP8 rerun ran on 2026-09-24 (`exp-0924-114241-429126`, 8 passed). W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
+| Fix-review proposals: F-R5 victim selection (stacked draft PR 38, `fix/vllm-v1-preemption-victim`), F-R6 in-flight token and resumed-victim replay (CPU measurement), S44 (row of the S43 task), the pinned calibration tools. W3-R5 and W3-R6 are fixed in `341970d` (merge `1978b72`). The native W6 FP8 rerun ran on 2026-09-24 (`exp-0924-114241-429126`, 8 passed). W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
 | W9-05 follow-ups, not started: at PP>1 the fix review's F-R1..F-R4 are fixed (`c647e95`); the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated

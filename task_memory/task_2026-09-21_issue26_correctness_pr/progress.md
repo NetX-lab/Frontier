@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | W3 merged (`1978b72`, gates PASS, `test_report_2026-09-24_w3_sync_waiting_room.md`). |
 | 2026-09-24 | G3a lead verification reviewed: 18 closed, 3 record fixes applied. G1 (W3) reviewed; its gates are running. |
 | 2026-09-24 | F-R5 gates passed; stacked draft PR 38 opened. A stray one-line edit by a rerun-workflow agent in this worktree was found and reverted. |
 | 2026-09-24 | Five Opus workflows stopped on the user's quota direction; partial results salvaged. Heavy work moved to Grok Build tasks G1 (W3), G2 (replay/F-R6), G3a (leads 9-31); F-R5 Q2 break `4ef6569` on the stacked branch. |
@@ -552,7 +553,7 @@ items 1-7" and "[Decision] 2026-09-24 — interview answers for items 1-7".
 | --- | --- | --- |
 | 1 F-R5 | completed on the stacked branch: `2912593` (victim over every running request) and `4ef6569` (DECODE_ATTN loop breaks after self-preemption); gates passed (suites 0 regressions, examples 16/16, stage matrix 51/51, probe 72/72, fidelity 72/74 with both differences traced to a self-preempting tail requester); draft PR https://github.com/NetX-lab/Frontier/pull/38 with base `fix/issue26-correctness-pr` | `/data/ycfeng/Frontier/task_memory/task_2026-09-24_vllm_v1_preemption_fidelity/test_report_2026-09-24_fr5_preemption_victim.md` |
 | 1 F-R6 and replay | in-progress: workflow `wf_04d031c0-4a5` stopped with only `research:vllm` returned (`followups_20260924/replay_fr6/research_vllm.md`); Grok task G2 redoes the prototype on an export of `4ef6569` and proposes a design (`replay_fr6/g2/report.md`) | `/data/ycfeng/tmp/grok_runs/g2_replay_fr6/` |
-| 2-3 W3-R5/W3-R6 | in-progress: workflow `wf_8792cb4b-388` stopped before any result, leaving 19 uncommitted files on `refactor/sync-waiting-room` (backup `followups_20260924/w3/partial_opus_implement.diff`, 1332 lines); Grok task G1 finishes it under the approved design and commits once, no push; then review, gates (label `w3`) and merge here | `/data/ycfeng/tmp/grok_runs/g1_w3/`, report `followups_20260924/w3/g1/report.md` |
+| 2-3 W3-R5/W3-R6 | completed: Grok G1 committed `341970d` on `refactor/sync-waiting-room` under decision Q5 (a); reviewed by the lead; gates against `6d59946` PASS (suites 0 regressions, fidelity 74/74, examples 16/16, stage matrix 51/51, probe 72/72); merged as `1978b72` and pushed. The branch itself was also pushed to `origin` (same commits as the merge) | `test_report_2026-09-24_w3_sync_waiting_room.md` |
 | 4 S44 | completed: recorded as the S43 task's second row (decision D1); the S43 and S42 plans restate blocker B2 after Q8 | `/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/plan.md` section 6 |
 | 5 W6 native rerun | completed: `exp-0924-114241-429126`, 8 passed in 14.53 s | `w6_native_20260924/receipt.md` |
 | 6 Calibration tools | in-progress: option (a) decided in round 2. Workflow `wf_147bad0f-83a` stopped after `research:spec` (saved as `salvage_20260924/research_spec.md`); the normalizer design goes to a Grok task when a slot frees | `requirements.md`, "[Decision] 2026-09-24 — calibration tools, round 2" |
