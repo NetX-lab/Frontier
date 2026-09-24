@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | User decision "W7-R4 选择a；允许删除 .worktrees/review-final-{base,head}": W7-R4 fixed (companion `e922c77`, gitlink `9adf759`); final-validation worktrees removed. |
 | 2026-09-24 | Publication recorded: `6828581` and `311e076` pushed; PR 35 body updated for the workflow results. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: six surviving findings mapped to existing fixes; the 32 unverified leads triaged; W6-R6 fixed in `6828581`; W6 and S9-08 records corrected; W7-R4 proposal; W9-04 reach beyond PP=1 recorded; case errata and S43/S42 plans updated. |
 | 2026-09-24 | User decisions after G5 recorded (C4 option a; S43 and S42 become separate tasks; W9-05 worktrees removed). Review of the branch's fixes: ten commits `c647e95`..`6aee289`, proposals listed, dummy-mode question answered, candidate row S44 recorded, records corrected, S43/S42 task directories created. |
@@ -44,9 +45,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21), accepted by the user (option a). Fix review done 2026-09-24: `c647e95`..`6aee289` (plan §18.22, `test_report_2026-09-24_fix_review.md`). Workflow `wf_7606e14e-f10` reconciled 2026-09-24: W6-R6 test `6828581`, record corrections W6-R7 and W9-R4, W7-R4 proposal (test report §10). |
+| Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21), accepted by the user (option a). Fix review done 2026-09-24: `c647e95`..`6aee289` (plan §18.22, `test_report_2026-09-24_fix_review.md`). Workflow `wf_7606e14e-f10` reconciled 2026-09-24: W6-R6 test `6828581`, record corrections W6-R7 and W9-R4, W7-R4 proposal (test report §10). W7-R4 fixed 2026-09-24 by the user's choice of option (a): companion `e922c77`, gitlink `9adf759`. `.worktrees/review-final-{base,head}` removed. |
 | Publication | PUSHED_VERIFIED 2026-09-24: `6828581` (test) and `311e076` (records) on top of `5e7221d`; remote head `311e076` equal to local after fetch. PR 35 body PATCHed 2026-09-23T19:47:38Z (UTC): the W6 native-parity and negative-control wording, the W9-04 reach beyond PP=1, the `6828581` row and workflow note in "Review of the landed fixes", W7-R4 in the proposals, the commit table and Status. Read back identical to the sent body; still draft. Backup: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924b/pr35_body_before.md`. Companion PR 1 body unchanged. Earlier: PUSHED_VERIFIED 2026-09-24: remote head `b110eca` equal to local (review commits `c647e95`..`6aee289` plus the record commit). PR 35 body PATCHed 2026-09-23T18:41:47Z (UTC): Progress rows (W6, W7, W9-05, a Review row), the W2/W3 reachability corrections, the native FP8 `block_shape=[128, 128]` correction, W7's second commit and rewritten Frontier tests, the G5 decision, a section "Review of the landed fixes (2026-09-24)", the review material and commit tables, and Status. Read back identical apart from a trailing newline; still draft. Companion PR 1 body PATCHed for `ff11ee6` (second-commit section, 12 tests, scope of the flow-generation change); read back the same way; still draft. Backups: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924/{pr35,companion_pr1}_body_before.md`. |
-| Next action | User decisions on the review proposals (plan §18.22, test report §8): F-R5/F-R6, the strict `sync_entry` predicate, the sync-room alias refactor, S44 as a second S43 row, a native W6 FP8 rerun, the pinned calibration tools, W7-R4 (companion zero all-reduce; option a recommended), and removal of `.worktrees/review-final-{base,head}`. S43 and S42 continue in their own task directories. |
+| Next action | User decisions on the remaining review proposals (plan §18.22, test report §8): F-R5/F-R6, the strict `sync_entry` predicate, the sync-room alias refactor, S44 as a second S43 row, a native W6 FP8 rerun, and the pinned calibration tools. S43 and S42 continue in their own task directories. |
 
 ## Step status
 
@@ -507,7 +508,7 @@ Reason for each change, expectation, method and result are in the test report. C
 | 32 unverified leads | completed | Zero verdicts each, so not refuted. Main-session triage in test report §10: 29 map to existing fixes, records or proposals; three add work: #22 (W6-R6), #26 (W6-R7) and #31 (W9-R4, beyond the existing W9-R3). |
 | W6-R6 | completed | `6828581`: `test_the_tile_config_and_the_alignment_follow_fused_experts`. HEAD 32 passed; mutants m5, m6, m7 each 1 failed, 31 passed (`wf_7606e14e_f10/w6_negative_controls.txt`). |
 | W6-R7, W9-R4 records | completed | `validation.md` Step 6, `review.md` W6/§14.2/S9-08, `summary.md`, the W6 report §6 and §8. |
-| W7-R4 | recorded, proposal | `review.md` W7, test report §3 and §8; probe `wf_7606e14e_f10/zero_byte_allreduce_probe.txt`. |
+| W7-R4 | completed (fixed after the user's decision, below) | `review.md` W7, test report §3, §4 and §8; probe `wf_7606e14e_f10/zero_byte_allreduce_probe.txt`. |
 | Dummy-mode study | completed (merged) | Case errata in `workflow_gap_summary.md` and `semantic_alignment_summary.md`/table (S10, S39); test report §5 row; S43/S42 plans. |
 | S43/S42 scope | completed by the main session | The workflow's scope agents returned nothing. S43 s2 now also compares the oracle with the policy's reports (W9-R4). |
 
@@ -515,3 +516,23 @@ Commands (worktree root, `PYTHONPATH=$PWD WANDB_DISABLED=true VIDUR_DISABLE_WAND
 
 - `/data/ycfeng/envs/openmopd-py312/bin/python -m pytest -q -p no:cacheprovider tests/unit/test_moe_fused_expert_arithmetic.py tests/unit/test_moe_fused_event_contract.py`: 32 passed (Python 3.12.13, Torch 2.8.0+cu128, vLLM 0.11.0).
 - The same command on each mutant tree under `/data/ycfeng/tmp/issue26-correctness-pr/wf_followup_20260924/w6_setup_negctl/`: 1 failed, 31 passed.
+
+### W7-R4 fix and worktree removal (2026-09-24)
+
+Decision, verbatim in `requirements.md`: "W7-R4 选择a；允许删除 .worktrees/review-final-{base,head}".
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Worktrees | completed | `.worktrees/review-final-{base,head}` (detached at `ba0a804` and `6aee289`) held only the unit suite's untracked `outputs/metrics/meta_llama_llama_2_7b_hf/`; removed with `git worktree remove --force`, then `git worktree prune`. The final-validation evidence stays under `/data/ycfeng/tmp/issue26-correctness-pr/final_20260924/`. |
+| Companion fix | completed | `e922c77` on `fwyc0573/frontier-htsim` `fix/zero-payload-input-handling`: `htsim_runner.py` exits 2 for `tensor_bytes=0` unless the kind is `alltoall`; `tests/test_zero_payload_input.py` gains four cases (allreduce, allgather, reducescatter, p2p). Pushed; remote head verified by fetch. |
+| Negative control | completed | The final test file on an `ff11ee6` export: 4 failed, 12 passed; on `e922c77`: 16 passed. |
+| Old one-server behavior | recorded | On `ff11ee6` the one-server scenario at payload 0 exited 0 for every kind, because intra-server edges are one-byte placeholders; only cross-server edges take the payload size. The rule is by kind, so those cases are refused as well. |
+| Frontier gitlink | completed | `9adf759`. `tests/unit/test_collective_sim_zero_payload.py` 3 passed; six more backend-related unit files: 59 passed, 10 failed, the known `test_colocation_release_review_contracts.py` failures (missing `tests/debug` scripts). No Frontier source changed; no fidelity case selects `collective_sim`. |
+| Removed from the draft | recorded | A t2g case: its one-server scenario is not a valid t2g configuration (`collective=t2g requires dp>=2`), so it could not show the rule. |
+
+Evidence: `wf_7606e14e_f10/w7_r4_zero_payload_by_kind.txt`. Commands (worktree root, `PYTHONPATH=$PWD WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 FRONTIER_TMP_ROOT=/data/ycfeng/tmp`, Python 3.10.6 at `/data/ycfeng/envs/frontier-py310/bin/python`):
+
+- `(cd frontier/cc_backend/backends/collective-sim && python -m pytest -q -p no:cacheprovider tests/test_zero_payload_input.py)`: 16 passed.
+- The same file in `/data/ycfeng/tmp/issue26-correctness-pr/w7_r4/negctl_ff11ee6` (`git archive ff11ee6` plus the new test file and the built simulator): 4 failed, 12 passed.
+- `python -u wf_7606e14e_f10/zero_byte_collective_probe.py <collective-sim> <out> allreduce,allgather,reducescatter 0`: RuntimeError, runner exit 2, for each kind.
+- `python -m pytest -q -p no:cacheprovider tests/unit/test_collective_sim_zero_payload.py`: 3 passed.

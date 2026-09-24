@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | §18.22: W7-R4 decided (option a) and fixed (`e922c77`, gitlink `9adf759`); final-validation worktrees removed. |
 | 2026-09-24 | §18.22 added: user decisions after G5 (C4 option a; S43 and S42 become separate tasks), the review of the branch's fixes with its dispositions, the dummy-mode answer and candidate row S44. §18.20/§18.21 admission anchors corrected from `base_replica_scheduler.py:906` (unified DECODE loop) to `:1050-1063` (MONOLITHIC/PREFILL loop, hook at `:1061`). §18 status line updated. |
 | 2026-09-23 | §18.21 added: G4 and G5 results. C3 PASS (T1 48/48 formal routes at PP2). C4 `SCENARIO_NOT_REACHED` in all four bursts, and why the last GPU job is not used. Candidate findings S43 and S42 await the user's review. §18 status line updated. |
 | 2026-09-23 | §18.20 added: G3 results (T1 replay 38/38) and the G4 inputs as amended (four bursts, 20 s gaps, per-burst T2 qualification), written before G4. |
@@ -1568,6 +1569,8 @@ The calibration contract requires `human review decision=PASS` before a `workflo
 | `6aee289` | Two PP>1 stagger cases cover a lane joining a peer's started forward. |
 
 Proposals that need a decision: F-R5 victim selection and F-R6 in-flight token (fidelity), the strict `sync_entry` predicate, the sync-room alias refactor, candidate row S44, a native W6 FP8 rerun, and the pinned calibration tools.
+
+Later the same day (verbatim in `requirements.md`): W7-R4, found while reconciling workflow `wf_7606e14e-f10`, was decided as option (a) and fixed. Companion `e922c77` refuses a zero payload for every kind except all-to-all; gitlink `9adf759`. `.worktrees/review-final-{base,head}` were removed.
 
 **Candidate row S44.** vLLM drains the engine input queue at the top of each busy-loop iteration and publishes after the step (`core.py:1170-1216`). A request routed during the step is therefore absent from that iteration's published counts. Frontier's completion report includes it. In G4, 1 of 92 native receipts has `waiting > 0`, against 24 of 106 Frontier reports. Hiding the undrained requests does not improve G4 placement agreement under dummy timing. The row shares S43's mechanism and is proposed as a second row of the S43 task.
 

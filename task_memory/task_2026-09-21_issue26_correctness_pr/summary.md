@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | W7-R4 fixed by the user's choice of option (a) (companion `e922c77`, gitlink `9adf759`); removed from the proposals; the final-validation worktrees removed. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: the W6 negative-control and CPU-test rows corrected (`6828581` pins the profiler's config and alignment arguments); W7-R4 added to the proposals; the GPU scope in Limits corrected. |
 | 2026-09-24 | Fix review after G5 (`c647e95`..`6aee289`) added to Work packages, the validation table and the open items; C4 decided (option a); S43 and S42 moved to their own tasks; W6 and W7 rows corrected. |
 | 2026-09-23 | Step 9 G3–G5 results added to W9, the validation table and the open items. C3 PASS, C4 `SCENARIO_NOT_REACHED`, and findings S43/S42 await review. |
@@ -64,7 +65,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | `frontier/scheduler/utils/sync_entry.py`, `sync_state.py`, `forward_sync_state.py`, `prefill_collective.py`, `decode_collective.py`, `ep_wave_schedule.py`, `ep_wave_inputs.py` | W3: one lifecycle for mixed-source cohorts |
 | `frontier/events/cluster_schedule_event.py`, `frontier/events/global_batch_end_event.py`, `frontier/scheduler/request_load.py`, `frontier/scheduler/replica_scheduler/*` | W3/W4: event and load-snapshot wiring |
 | `frontier/profiling/moe/moe_vllm_kernel.py` | W6: the legacy path performs the gated expert computation |
-| `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f` |
+| `frontier/cc_backend/backends/collective-sim` | W7: gitlink moved from `b8518af` to `eb7bc4f`, then to `ff11ee6` (`6d621c8`, empty cross-server all-to-all) and `e922c77` (`9adf759`, zero refused for every other kind) |
 | `docs/profiling/README.md` | W6: the operator's scope and its artifact-identity limits |
 | `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py`, `base_cluster_scheduler.py`, `frontier/scheduler/replica_scheduler/base_replica_scheduler.py`, `frontier/scheduler/replica_stage_scheduler/stage_execution_context.py` | W9: schedule-time load reports while the pipeline has room, keyed by the stage-0 forward group |
 | `frontier/scheduler/utils/sync_entry.py` | W9-04: withdraw a first-layer placeholder when its lane joins the forward |
@@ -125,7 +126,7 @@ per-work-package reports.
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
 | Step 9 C4: decided 2026-09-24, option (a), `SCENARIO_NOT_REACHED` accepted. S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards) continue as separate calibration-and-repair tasks. | `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` |
-| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), a native W6 FP8 rerun, the pinned calibration tools, W7-R4 (a zero cross-server all-reduce hangs in the companion runner; unreachable from Frontier). | `test_report_2026-09-24_fix_review.md` §8 |
+| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), a native W6 FP8 rerun, the pinned calibration tools. W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
 | W9-05 follow-ups, not started: at PP>1 the fix review's F-R1..F-R4 are fixed (`c647e95`); the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated

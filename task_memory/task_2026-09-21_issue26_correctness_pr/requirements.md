@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the W7-R4 decision (option a) and the removal of the final-validation worktrees. |
 | 2026-09-21 | Recorded the original request, the specification hand-off, and the decisions from the planning interview. |
 | 2026-09-22 | Recorded the W6 artifact-identity decision and the native GPU validation instruction. |
 | 2026-09-22 | Recorded the PP>1 `vllm_load_balancing` request, the codesign-only GPU instruction, and the open Step 9 decisions. |
@@ -159,3 +160,12 @@ It answers the numbered decisions after G5 (plan §18.21).
 | Validation worktrees | `.worktrees/w9-05-{before,after}` removed 2026-09-24 with `git worktree remove` (`--force` for `after`, whose uncommitted files are byte-identical to `75c1140` or already committed), then `git worktree prune`. |
 | Dummy mode | Question: is correcting and repairing the logic in dummy mode alone sound, and is anything missed? Answered with evidence in `progress.md` and plan §18.22. |
 | Fix review | Review the existing fixes of this branch and correct the confirmed findings, under the quality gates and approval rules. |
+
+## [Decision] 2026-09-24 — W7-R4 and the final-validation worktrees
+
+Message, verbatim: "W7-R4 选择a；允许删除 .worktrees/review-final-{base,head}"
+
+| Item | Decision |
+| --- | --- |
+| W7-R4 | Option (a): the companion runner rejects `tensor_bytes=0` for every collective kind except all-to-all, instead of clamping it to one byte (b) or pricing it at 0 ms (c). |
+| Final-validation worktrees | `.worktrees/review-final-{base,head}` removed 2026-09-24 with `git worktree remove --force` (each held only the unit suite's untracked `outputs/metrics/meta_llama_llama_2_7b_hf/`; the evidence is under `/data/ycfeng/tmp/issue26-correctness-pr/final_20260924/`), then `git worktree prune`. |
