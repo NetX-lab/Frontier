@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the spec-decode branch base decision (Q6 follow-up). |
 | 2026-09-24 | Recorded the G3b dispositions and the spec-decode live-batch decisions (Q6-Q8). |
 | 2026-09-24 | Recorded the calibration-tool follow-up decision (Q8 round 2) and the user's merge of companion PR 1. |
 | 2026-09-24 | Recorded the follow-up request for items 1-7 and its interview decisions (Q1-Q9). |
@@ -228,3 +229,13 @@ Message, verbatim (with `/grok-exec`): "Q3-Q8采纳你的推荐方案"
 | Q6 spec-decode live batch | Option (b): own branch and draft PR from `main`, then merged into PR 35 and PR 38. |
 | Q7 W9 held key and deferred release | Fix in PR 35 with the existing cluster completion hook, regression tests from the G3b reproductions, and the W9 gates. |
 | Q8 G3b dispositions | Option (a): A-E in PR 35 through Grok; more than five files approved. |
+
+## [Decision] 2026-09-24 — spec-decode live-batch branch base (Q6 follow-up)
+
+Question (Q1 of the round after Q6-Q8): the fix passes its unit test on `main`, but a PP4 end-to-end regression cannot pass on `main`, which still has the W9-05 loss and the missing layer reset fixed here by `75c1140` and `c647e95`. (a) Stack the branch on this branch as its own draft PR, with the unit test and a PP4 spec end-to-end case, then merge it into PR 38; (b) commit it on this branch; (c) keep the `main` base with the unit test only and add the end-to-end case at merge. Recommended (a).
+
+Message, verbatim: "Q2：请你评估该部分逻辑修改的代价，涉及多少问题，预计多少行代码量；Q4: 我没有理解当前你说的 准入钩子、"decode 实例在 PP>1 时跑的是同一个 step_with_batch_queue 循环，Frontier 的 DECODE 循环也用同一个空槽判断"的含义。当前frontier vs vllm的区别是什么？给出一个简洁case帮助我理解。其他q采纳你的推荐答案"
+
+| Item | Decision |
+| --- | --- |
+| Spec-decode branch base | Option (a): stacked on `fix/issue26-correctness-pr`, own draft PR, unit test plus a PP4 spec end-to-end case; merged into PR 38 afterwards. This refines Q6 (b). |
