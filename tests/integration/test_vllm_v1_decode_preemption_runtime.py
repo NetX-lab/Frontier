@@ -59,7 +59,7 @@ PIPELINED_CASES = {
     # running phase skipped the victim for good and the run stalled.
     "dense_pp4": dict(
         replica=DENSE_REPLICA, num_pipeline_stages=4, num_blocks=8,
-        num_requests=6, seed=42,
+        num_requests=6, seed=2,
     ),
     # The victim is preempted part-way through a decode step. The rest of the
     # stale step used to credit its layers, and the resumed step then overran
@@ -72,7 +72,7 @@ PIPELINED_CASES = {
     # as the victim there, it used to re-enter the waiting queue.
     "dense_pp4_finished_victim": dict(
         replica=DENSE_REPLICA, num_pipeline_stages=4, num_blocks=10,
-        num_requests=24, seed=7,
+        num_requests=24, seed=33,
     ),
 }
 

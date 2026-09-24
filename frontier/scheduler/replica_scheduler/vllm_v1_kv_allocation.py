@@ -409,43 +409,30 @@ class KvBlockAllocation:
         self.allocate(request.id, num_additional_blocks)
         return None
 
-    def _select_preemption_victim(
-        self, exclude: Optional[Request] = None
-    ) -> Optional[Request]:
+    def _select_preemption_victim(self) -> Request:
         """
-        Select a victim request for preemption based on scheduling policy.
+        Select the running request to preempt based on scheduling policy.
 
         FCFS policy: Preempt the most recently added request (queue tail).
         Priority policy: Preempt the request with lowest priority
                         (highest priority value, then latest arrival).
 
-        Args:
-            exclude: Optional request to exclude from victim selection (typically the requesting request)
+        As in vLLM v1 (0.10.2 ``Scheduler.schedule``), every running request
+        is a candidate, including the one whose allocation failed.
 
         Returns:
-            Optional[Request]: The victim request, or None if no victims available
+            Request: The victim request
         """
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
 
-        if not self._running_requests:
-            return None
-
-        # Filter out excluded request
-        candidates = (
-            [r for r in self._running_requests if r != exclude]
-            if exclude
-            else self._running_requests
-        )
-
-        if not candidates:
-            return None
-
         if self._scheduling_policy == "priority":
             # Priority policy: preempt request with highest priority value (lowest priority)
             # Tie-breaker: latest arrival time
-            victim = max(candidates, key=lambda r: (r.priority, r.arrived_at))
+            victim = max(
+                self._running_requests, key=lambda r: (r.priority, r.arrived_at)
+            )
 
             # Flow validation: log victim selection
             logger.info(
@@ -455,26 +442,18 @@ class KvBlockAllocation:
                 f"reason=highest_priority_value"
             )
             return victim
-        else:
-            # FCFS policy: preempt most recently added (queue tail)
-            # If exclude is specified and is the tail, select the second-to-last
-            if exclude and candidates and candidates[-1] != self._running_requests[-1]:
-                # exclude was the tail, use candidates[-1] which is second-to-last
-                victim = candidates[-1]
-            else:
-                victim = candidates[-1] if candidates else None
 
-            if victim is None:
-                return None
+        # FCFS policy: preempt most recently added (queue tail)
+        victim = self._running_requests[-1]
 
-            # Flow validation: log victim selection
-            logger.info(
-                f"[VICTIM_SELECTION] policy=FCFS, "
-                f"victim={victim.id}, "
-                f"position=tail, "
-                f"reason=last_in_running_queue"
-            )
-            return victim
+        # Flow validation: log victim selection
+        logger.info(
+            f"[VICTIM_SELECTION] policy=FCFS, "
+            f"victim={victim.id}, "
+            f"position=tail, "
+            f"reason=last_in_running_queue"
+        )
+        return victim
 
     def _preempt_request(
         self, victim: Request, preempted_requests: List[Request]
@@ -608,17 +587,21 @@ class KvBlockAllocation:
         scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         """
-        Try to allocate memory for a request, preempting other requests if necessary.
+        Try to allocate memory for a running request, preempting running
+        requests if necessary.
 
-        This implements the core preemption loop from vLLM v1 scheduler.
+        This implements the core preemption loop from vLLM v1 scheduler: each
+        failed allocation preempts one victim and retries. When the victim is
+        the request itself, it stops being scheduled.
 
         Args:
-            request: The request to allocate for
+            request: The running request to allocate for
             num_new_tokens: Number of new tokens to process
             preempted_requests: List to track preempted requests
 
         Returns:
-            bool: True if allocation succeeded (possibly after preemption)
+            bool: True if allocation succeeded (possibly after preemption),
+                False if preemption is disabled or the request preempted itself
         """
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
@@ -657,17 +640,11 @@ class KvBlockAllocation:
                 f"running_queue_size={len(self._running_requests)}"
             )
 
-            # Select victim for preemption (exclude current request)
-            victim = self._select_preemption_victim(exclude=request)
-
-            if victim is None:
-                # No victims available (all other requests have higher priority or no other requests)
-                # Preempt self and move to waiting queue
-                self._preempt_request(request, preempted_requests)
-                return False
-
-            # Preempt victim and try again
+            # The request is still running, so a victim always exists.
+            victim = self._select_preemption_victim()
             self._preempt_request(victim, preempted_requests)
+            if victim is request:
+                return False
 
     def _rollback_current_iteration_preempted_requests(
         self,

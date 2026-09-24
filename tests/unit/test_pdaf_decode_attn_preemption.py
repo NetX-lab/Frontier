@@ -90,7 +90,11 @@ def test_decode_attn_preemption_rolls_victim_out_of_current_batch() -> None:
     """A same-iteration victim cannot remain in both Batch and waiting queue."""
 
     scheduler = _decode_attn_scheduler()
+    # FCFS preempts the running tail, which is not yet scheduled. Only the
+    # priority policy can pick a request scheduled earlier in the iteration.
+    scheduler._scheduling_policy = "priority"
     victim = _request(0)
+    victim.priority = 1
     successor = _request(1)
     scheduler._running_requests[:] = [victim, successor]
     scheduler._allocation_map[victim.id] = 1
@@ -122,6 +126,60 @@ def test_decode_attn_without_preemption_keeps_scheduled_request() -> None:
     assert [scheduled.id for scheduled in batch.requests] == [0]
     assert scheduler._waiting_requests == []
     assert [running.id for running in scheduler._running_requests] == [0]
+
+
+def _decode_scheduler_with_full_kv_pool(scheduling_policy: str):
+    """Two running decode requests hold every KV block; each needs one more."""
+
+    scheduler = _decode_attn_scheduler()
+    scheduler._cluster_type = ClusterType.DECODE
+    scheduler._scheduling_policy = scheduling_policy
+    scheduler._config = SimpleNamespace(num_blocks=34, block_size=1)
+    del scheduler._get_scheduler_num_computed_tokens
+    del scheduler._can_allocate_request
+    del scheduler._allocate_request
+    del scheduler._free_request_resources
+
+    running = []
+    for _ in range(2):
+        request = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+        request._is_prefill_complete = True
+        request._num_processed_tokens = 17
+        request._scheduled = True
+        running.append(request)
+    scheduler._running_requests[:] = running
+    scheduler._allocation_map = {request.id: 17 for request in running}
+    scheduler._num_allocated_blocks = 34
+    return scheduler, running
+
+
+def test_fcfs_requester_at_running_tail_preempts_itself() -> None:
+    """vLLM v1 preempts running[-1] under FCFS, even when it is the requester."""
+
+    scheduler, (earlier, requester) = _decode_scheduler_with_full_kv_pool("fcfs")
+    preempted = []
+
+    assert scheduler._try_allocate_with_preemption(requester, 1, preempted) is False
+    assert preempted == [requester]
+    assert scheduler._running_requests == [earlier]
+    assert scheduler._waiting_requests == [requester]
+    assert scheduler._allocation_map == {earlier.id: 17}
+    assert scheduler._num_allocated_blocks == 17
+
+
+def test_priority_lowest_priority_requester_preempts_itself() -> None:
+    """vLLM v1 preempts the lowest-priority running request, even the requester."""
+
+    scheduler, (requester, tail) = _decode_scheduler_with_full_kv_pool("priority")
+    requester.set_priority(1)
+    preempted = []
+
+    assert scheduler._try_allocate_with_preemption(requester, 1, preempted) is False
+    assert preempted == [requester]
+    assert scheduler._running_requests == [tail]
+    assert scheduler._waiting_requests == [requester]
+    assert scheduler._allocation_map == {tail.id: 17}
+    assert scheduler._num_allocated_blocks == 17
 
 
 def test_decode_attn_preemption_preserves_handoff_token_progress() -> None:
@@ -296,14 +354,14 @@ def test_decode_attn_preempted_handoff_resumes_without_token_loss() -> None:
     victim._num_handoff_emitted_decode_tokens = 1
     victim._current_decode_token_index = 2
     victim.on_batch_schedule(4.0, ClusterType.DECODE_ATTN)
-    successor = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=3)
-    successor._is_prefill_complete = True
-    successor._num_processed_tokens = 17
-    successor._num_handoff_emitted_decode_tokens = 1
-    successor._current_decode_token_index = 2
-    successor.on_batch_schedule(4.0, ClusterType.DECODE_ATTN)
-    scheduler._running_requests[:] = [victim, successor]
-    scheduler._allocation_map = {victim.id: 17, successor.id: 17}
+    survivor = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=3)
+    survivor._is_prefill_complete = True
+    survivor._num_processed_tokens = 17
+    survivor._num_handoff_emitted_decode_tokens = 1
+    survivor._current_decode_token_index = 2
+    survivor.on_batch_schedule(4.0, ClusterType.DECODE_ATTN)
+    scheduler._running_requests[:] = [survivor, victim]
+    scheduler._allocation_map = {victim.id: 17, survivor.id: 17}
     scheduler._num_allocated_blocks = 34
     scheduler._get_scheduler_num_computed_tokens = (
         lambda request: request.num_processed_tokens
@@ -312,18 +370,18 @@ def test_decode_attn_preempted_handoff_resumes_without_token_loss() -> None:
     pressure_batch = scheduler._schedule_decode_attn_only()
 
     assert pressure_batch is not None
-    assert [request.id for request in pressure_batch.requests] == [successor.id]
+    assert [request.id for request in pressure_batch.requests] == [survivor.id]
     assert scheduler._waiting_requests == [victim]
-    assert scheduler._running_requests == [successor]
-    assert scheduler._allocation_map == {successor.id: 18}
+    assert scheduler._running_requests == [survivor]
+    assert scheduler._allocation_map == {survivor.id: 18}
     assert scheduler._num_allocated_blocks == 18
     assert victim.get_preemption_count(ClusterType.DECODE_ATTN) == 1
     assert victim.num_processed_tokens == 17
     assert victim.num_emitted_decode_tokens == 2
     assert victim.remaining_decode_tokens == 1
 
-    scheduler._free_request_resources(successor)
-    scheduler._running_requests.remove(successor)
+    scheduler._free_request_resources(survivor)
+    scheduler._running_requests.remove(survivor)
     scheduler._current_schedule_time = 7.0
 
     resumed_batch = scheduler._schedule_decode_attn_only()
