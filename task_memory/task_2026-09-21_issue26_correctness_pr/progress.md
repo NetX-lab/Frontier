@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | G3b dispositions A-E implemented by Grok `w9-g3b-fixes-0924a`, reviewed, committed (`dfb0b25`, `20f0f94`, `df8ebc6`) and gated (0 regressions; fidelity 74/74, examples 16/16, C2 24/24, KV sweep 72/72 identical). G3d and G3e turn 2 checked. CROSS-correctness-0 matrix corrected. |
 | 2026-09-24 | Grok task G4 (normalizer facts) returned and was checked by the lead; G3e turn 2 launched with the admission-interval correction. |
 | 2026-09-24 | G3d, G3e and G4 launched read-only under `/grok-exec`. |
 | 2026-09-24 | G3b and G3c returned and were checked by the lead; `refactor/sync-waiting-room` deleted on origin; G3d, G3e and G4 held under the new `/grok-exec` rule. |
@@ -609,3 +610,48 @@ bash /data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48
 # log:    STEPMIND_JOB=exp-0924-114241-429126 W6_TAIL=600 "$STEPMIND_PYTHON" fetch_w6_logs.py
 ```
 
+### G3b dispositions A-E: Grok `w9-g3b-fixes-0924a` (2026-09-24)
+
+Decisions Q6-Q8: `requirements.md`, "[Decision] 2026-09-24 — G3b dispositions and the spec-decode live batch (Q6-Q8)".
+
+- Run: label `w9-g3b-fixes-0924a`, two turns in this worktree from `c577222`. Specs `/data/ycfeng/tmp/grok_runs/prompts/w9-g3b-fixes-0924a.md` (tasks 1-8) and `w9-g3b-fixes-0924a.2.md` (the lead's answer to the turn-1 question, then tasks 6-8). Output `/data/ycfeng/tmp/grok_runs/w9-g3b-fixes-0924a/output.md`.
+- Commits, each hunk read by the lead:
+  - `dfb0b25` fix(dp-placement): publish lane load after stale drops and deferred releases. (A) CROSS-quality-0 = W9-correctness-1: `pop_batch_if_not_busy` hands its dropped batches to `consume_last_stale_drops()`, and `ReplicaStageScheduleEvent` calls `on_replica_batch_end` once per dropped batch after the running-batch decrement. W9-correctness-0: a MONOLITHIC deferred terminal release in an iteration that schedules nothing reports once with `batch=None`. CROSS-quality-1 oracle assertions (`_assert_every_held_key_is_reported`, `_assert_final_counts_match_lanes`) and PP4 KV-pressure and release cases. (E) W9-04-quality-0/1.
+  - `20f0f94` refactor(dp-placement): remove guards for states the callers cannot produce. (B) W4-quality-0..3 and CROSS-quality-3.
+  - `df8ebc6` test(dp-placement): take harness settings from the engine and the model config. (C) HARNESS-correctness-1 (`previous_iteration_monotonic` bound), HARNESS-correctness-3 with HARNESS-quality-3, HARNESS-quality-0/1/2/4, and the HARNESS-correctness-0 docstring.
+- Review findings and their resolution:
+  - Turn 1 stopped at `_assert_completions_report_post_step_load` for `moe_dp2_pp4`: at PP4 every completion defers its release, so completion records bracket no load change. The lead kept the case and specified the fallback for turn 2: compare each terminal-release report with the lane load read after the call (new record field `lane_load`).
+  - The lead rewrote the first docstring line of `VllmDPLoadBalancer.report` to "Record one engine's counts after one engine iteration."
+  - Grok asked whether `--model-config` in `tests/comparison/stage_admission_pp/` and the profiling-skill tests should change too. Answer: outside the batch; no change.
+  - Grok's turn-2 acceptance (seven unit files 276 passed; integration file 16 passed; harness outputs equal to the committed ones apart from the new fields) was re-run by the lead in the gates below. Harness re-runs: `followups_20260924/g3b_review/`.
+- Gates, candidate `g3bfix` at `df8ebc6` against `pr35base` at `99db5a1` (only docs and these three commits differ in between): `followups_20260924/gates/compare_g3bfix_vs_pr35base/` and `followups_20260924/g3bfix_c2kv/`.
+
+| Gate | Result |
+| --- | --- |
+| Unit suite | 0 regressions, 0 new failures. 3808 passed, 84 failed, 10 errors, 50 skipped (base 3828, 84, 10, 51; the 84 failures and 10 errors are the same ids). Before-only ids are the 23 guard and seam tests removed by (B), two construction tests renamed by their new match string, and the base run's module-level skip of `test_collective_sim_zero_payload` (collective-sim not built in `.worktrees/rerun-review`), which runs as 3 tests here. |
+| Integration suite | 0 regressions. 37 passed (base 33); the 4 after-only ids are the new stale-drop, terminal-release and `moe_dp2_pp4` tests. |
+| Fidelity matrix | 74 of 74 identical. Compare exits 1 only on the provenance note: the example runs leave the untracked `outputs/metrics/meta_llama_llama_2_7b_hf/` in the worktree. |
+| Examples | 16 of 16 identical. |
+| Stage-admission matrix (G3b, G9, G10) | every cell PASS. |
+| W9-05 probe | 72 of 72 cells identical. |
+| C2 PP=1 policy matrix | 24 of 24 identical (`g3bfix_c2kv/c2_compare.log`). |
+| KV-pressure sweep | 72 of 72 cells identical; every cell drains with every request complete; 206 decode and 38 prefill preemptions. |
+
+### G3d and G3e, turn 2 (2026-09-24, checked by the lead)
+
+- G3d `dummy-mode-evidence-0924a` (`/data/ycfeng/tmp/grok_runs/dummy-mode-evidence-0924a/scratch/{evidence.md,synthesis.md,omissions.json}`, 9 omissions, pinned worktree status empty). Spot-checked: equal-time event order is event type, then id (`frontier/events/base_event.py:66-72` at `99db5a1`); the held-key reproduction sets `enable_dummy_mode=True` (`rerun_20260924/g3b/repro/held_key.py:71`). Conclusion adopted as the verification rule: dummy mode can check control flow that does not read durations; it cannot decide same-time order, lane speed or publish-window counts, and cannot close an E2E gate.
+- G3e `s43-s42-scope-0924a` (`/data/ycfeng/tmp/grok_runs/s43-s42-scope-0924a/scratch/`, 16 plan amendments, 7 high). vLLM admission times are intervals `(t_prev, t_k]`, because the iteration record is written after `_process_engine_step()` returns. Spot-checked at `99db5a1`: the MONOLITHIC/PREFILL slot loop (`base_replica_scheduler.py:1050-1063`), the DECODE slot loop (`:906`), the zero-time idle placeholder (`sync_entry.py:167`) and `bind_forward_group` (`stage_execution_context.py:79-87`). Two questions for the user: the idle-lane dummy and the S43 hook scope.
+
+### CROSS-correctness-0: spec-decode live batch (2026-09-24)
+
+- Cause: `_materialize_runtime_live_batch` copies the whole `spec_decode_metadata` onto a live subset of the batch, so per-request lists keep the stale rows (`planned_draft_tokens_per_request length mismatch`). Fix, uncommitted in `.worktrees/spec-decode-live-batch` (branch `fix/spec-decode-live-batch-metadata` from `origin/main` `4ab1964`): `SpecDecodeBatchMetadata.select_requests(request_indices)` and one call in `_materialize_runtime_live_batch`. The unit test `test_runtime_live_batch_keeps_the_spec_decode_metadata_of_its_live_requests` fails on `4ab1964` and passes with the fix.
+- Matrix, `moe_model_basic.sh` and `moe_spec_dec.sh` with `NUM_REQUESTS=32 QPS=50 DECODE_TOKENS=64 PREFILL_TOKENS=256`, 40 explicit blocks (`/data/ycfeng/tmp/spec-decode-live-batch/matrix/`):
+
+| Tree | no spec PP1/PP2/PP4 | spec PP1/PP2/PP4 |
+| --- | --- | --- |
+| `main` `4ab1964` | 32/32, 32/32, stops with non-empty scheduler state | 32/32, `Decode post_moe layer counter cannot advance`, length mismatch |
+| PR 35 `c577222` | PP4 32/32 | PP2 32/32, PP4 length mismatch |
+| PR 35 `c577222` + fix | 32/32 each | 32/32 each |
+
+- Correction: an earlier reading of a PR 35 no-spec PP4 stall and of a layer-counter error with the fix came from runs that imported the wrong tree (`python -m` puts the working directory first on `sys.path`, and every run started in the fix worktree). `run_one.sh` now changes into the tree under test; the table is the rerun.
+- On `main` the PP4 spec case cannot pass with this fix alone: it also needs the W9-05 fix (`75c1140`) and the layer reset (`c647e95`) of this branch. The branch base is a question for the user.

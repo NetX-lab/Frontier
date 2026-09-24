@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the G3b dispositions and the spec-decode live-batch decisions (Q6-Q8). |
 | 2026-09-24 | Recorded the calibration-tool follow-up decision (Q8 round 2) and the user's merge of companion PR 1. |
 | 2026-09-24 | Recorded the follow-up request for items 1-7 and its interview decisions (Q1-Q9). |
 | 2026-09-24 | Recorded the W7-R4 decision (option a) and the removal of the final-validation worktrees. |
@@ -212,3 +213,18 @@ Message, verbatim: "continue；Q1采纳你的推荐"
 | --- | --- |
 | Q8 round 2 | Option (a) as recommended. |
 
+## [Decision] 2026-09-24 — G3b dispositions and the spec-decode live batch (Q6-Q8)
+
+The questions were asked together with the replay round-2 questions Q3-Q5 of the preemption-fidelity task (`/data/ycfeng/Frontier/task_memory/task_2026-09-24_vllm_v1_preemption_fidelity/requirements.md`).
+
+- Q6 Where to fix the spec-decode PP=4 crash (CROSS-correctness-0): (a) in PR 38, with the replay change to the same function; (b) a separate branch and draft PR from `main`, later merged into PR 35 and PR 38; (c) record only. Recommended (b): the defect is on `main`, and like PR 36 it is an independent correctness fix (slice each spec-metadata list to the kept requests, plus a PP=4 regression case).
+- Q7 The two W9 problems (lost held key; PP>=4 release not published) are in PR 35's own code. Recommended: fix them in PR 35 by calling the existing cluster completion hook once at each of the two places, use the G3b reproductions as regression tests, and rerun the W9 gates. PP2 routes stay the same; PP4 routes with preemption may change.
+- Q8 The G3b batch: (a) fix A-E in PR 35; (b) fix A and C only, record B, D and E; (c) record all. Recommended (a): all are PR 35's own code and records, and each fix and its check are settled, so the batch goes to Grok under `/grok-exec`, and it exceeds five files.
+
+Message, verbatim (with `/grok-exec`): "Q3-Q8采纳你的推荐方案"
+
+| Item | Decision |
+| --- | --- |
+| Q6 spec-decode live batch | Option (b): own branch and draft PR from `main`, then merged into PR 35 and PR 38. |
+| Q7 W9 held key and deferred release | Fix in PR 35 with the existing cluster completion hook, regression tests from the G3b reproductions, and the W9 gates. |
+| Q8 G3b dispositions | Option (a): A-E in PR 35 through Grok; more than five files approved. |
