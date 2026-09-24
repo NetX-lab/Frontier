@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | Heartbeat-events row: the claim rests on the drained-run checks (event-type assertions removed in `dfb0b25`). Step 9 results: ground-truth line points to `validation.md` G3–G5. |
 | 2026-09-24 | Rerun review G3a lead 10: the one-lane expectation limited to the 71 original matrix cases. |
 | 2026-09-24 | Corrected the reachability claim for a multi-lane MoE forward (fix review W2-R5). |
 | 2026-09-23 | Noted the W9-04 fix (`2ffb062`) under the Step 9 implementation results. |
@@ -250,7 +251,7 @@ pair to a single scalar.
 | Second step counter | **no** | D1 forbids broadening W4 with a new counter. W3's identity is reused where it holds. |
 | Runtime order assertion | **no** | The reference warns and applies the counts. W4 mirrors the warning. Key equality per shared forward is a test invariant, not a runtime abort. |
 | `waiting + 1` reservation | keep | One modeled frontend, so `client_count == 1`. The one-frontend restriction is stated in the class docstring. |
-| Heartbeat events | **none** | Timers advance lazily inside `select`/`report`. The policy creates no events, so it cannot keep a drained simulation alive — asserted in a test rather than assumed. |
+| Heartbeat events | **none** | Timers advance lazily inside `select`/`report`. The policy creates no events, so it cannot keep a drained simulation alive. **Corrected 2026-09-25:** the drained-run checks carry this claim (`_assert_run_conserves_work` in `tests/integration/test_vllm_dp_placement_runtime.py`: every request completed, tokens conserved, lanes and stage contexts released). The event-type equality assertions pinned no behavior and were removed in `dfb0b25`. |
 | `get_request_load` placement | next to the existing `_get_num_waiting_reqs_for_decision_log` in `vllm_v1_iteration_policy.py`, delegating to it | The donor deleted that helper and broke `sglang_style_replica_scheduler.py`; this branch's split already moved it into the shared policy mixin and pinned it with a boundary test. Delegating gives one definition of "waiting" for the balancer and both decision-log emitters, without churning that boundary. |
 | Config module extraction | **already done** | The merged module split created `frontier/config/cluster_scheduler_config.py`. W4 only adds one dataclass to it, which is a registry entry through an unchanged mechanism. |
 
@@ -759,7 +760,9 @@ Against "Fidelity expectation, stated before measuring":
 - PP=2 and PP=3: runs conserve work. On the discriminating scenario the policy
   sends the probe to lane 0 and the completion-reporting control sends it to
   lane 1. The expectation held.
-- Ground truth: not measured. G3–G5 are blocked on GPU authorization.
+- Ground truth: not measured at the time of this section. **Updated 2026-09-25:** G3–G5 ran
+  later; see `validation.md` "Step 9 ground truth, G3–G5" (G3 T1 38/38, G4
+  extraction PASS, C3 PASS, C4 `SCENARIO_NOT_REACHED`).
 
 The residuals in "What the rule does not reproduce" stand as written. P5 also
 found W9-04, a deadlock in the shared-forward placeholder rule that predates

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | §3 S43: admission times marked as upper bounds; intervals in WG05/WG12. |
 | 2026-09-24 | §2 resolved: companion PR 1 merged (`d28fe917`), gitlink re-pointed in `1b11eff`. |
 | 2026-09-24 | §2: gitlink now `ff11ee6`. §3: S43 and S42 transferred to their own tasks by the user's decision; S44 added as a proposal for the S43 task; the S43 admission anchor corrected. |
 | 2026-09-23 | §3 added: candidate fidelity findings S43 and S42 from the Step 9 G4 ground truth. |
@@ -87,7 +88,7 @@ user's review decision before a scoped `workflow-repair`.
   for MONOLITHIC and PREFILL, report hook `:1061`; the unified DECODE loop is
   `:896-924`. Corrected 2026-09-24 from `:906`, which is the DECODE loop only).
   In G4 the later burst requests were admitted 21.3–47.4 ms after the burst's
-  first route in bursts a–c, and 129.5–311.8 ms after it in burst d. Frontier
+  first route in bursts a–c, and 129.5–311.8 ms after it in burst d. **Corrected 2026-09-25:** these are iteration-record times, which bound an admission only from above; the admission intervals and the narrowed S43 evidence are in `calibration/dp_pp_case_001/analysis/workflow_gap_summary.md` (WG05, and WG12 for burst d engine 1). Frontier
   admits them on arrival. The effect is on PP>1 batch composition and TTFT for
   any cluster scheduler, not only `vllm_load_balancing`.
 - **S42, DP wave-start and idle dummy forwards.** An idle DP engine runs

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | Admission times in the observations marked as upper bounds; intervals in WG05/WG12. |
 | 2026-09-23 | Created. Covers G3 (native PP1 smoke), G4 (native PP2 ground truth) and G5 (Frontier runs, pre-change rejection, T1/T2 comparison and workflow-gap analysis). |
 
 The case directory is `calibration/dp_pp_case_001/`, written `$C` below. The
@@ -107,7 +108,7 @@ Observed:
   burst, before every probe.
 - Engine 1 has no step-0 record in burst d.
 - Later burst requests were admitted 21.3–47.4 ms (a–c) and 129.5–311.8 ms (d)
-  after the first route.
+  after the first route. **Corrected 2026-09-25:** these are iteration-record times, which bound an admission only from above; the admission intervals and the narrowed S43 evidence are in `calibration/dp_pp_case_001/analysis/workflow_gap_summary.md` (WG05, and WG12 for burst d engine 1).
 
 Inferred from source:
 

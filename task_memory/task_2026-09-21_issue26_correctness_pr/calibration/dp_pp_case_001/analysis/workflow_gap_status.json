@@ -14,19 +14,19 @@
   "written_at_utc": "2026-09-23T15:27:54Z",
   "row_counts": {
     "MATCH": 4,
-    "MISMATCH": 7,
+    "MISMATCH": 8,
     "UNSET": 0,
     "UNSUPPORTED": 0
   },
   "acceptance": {
-    "C3": "PASS: T1 replay 51/51 routes (48/48 formal) MATCH; natural-history differences labeled by first cause (WG02-WG11)",
+    "C3": "PASS: T1 replay 51/51 routes (48/48 formal) MATCH; natural-history differences labeled by first cause (WG02-WG12)",
     "C4": "SCENARIO_NOT_REACHED in all four bursts; failed checks in analysis/g5_comparison/comparison_status.json; the pre-change baseline is rejected by its constructor"
   },
   "analysis_state": "COMPLETE",
   "status": "PASS",
-  "status_basis": "Every declared phase has a row with values and anchors on both sides, the native chain is complete, and T1 settles the placement semantics with matched inputs. The seven MISMATCH rows carry a first cause and none is unexplained.",
+  "status_basis": "Every declared phase has a row with values and anchors on both sides, the native chain is complete, and T1 settles the placement semantics with matched inputs. The eight MISMATCH rows carry a first cause and none is unexplained.",
   "correction_state": "not_applicable",
-  "next_action": "None in this case. S43 and S42 continue as separate calibration-and-repair tasks; each starts from its own analysis and needs its own human review before any Frontier code change.",
+  "next_action": "None in this case. S43 and S42 continue as separate calibration-and-repair tasks; each starts from its own analysis and needs its own human review before any Frontier code change. S45 (WG12, added 2026-09-25) awaits the user's review.",
   "transferred_corrections": {
     "S43_WG05": {
       "finding": "PP>1 admission after an empty schedule: vLLM blocks on the oldest batch, Frontier admits into any free stage slot (frontier/scheduler/replica_scheduler/base_replica_scheduler.py:1052-1063, report hook :1061)",

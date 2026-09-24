@@ -4,11 +4,12 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | WG05 rewritten from admission intervals (G3b HARNESS-correctness-1): S43 evidence narrowed to a e0, b e0 and e1, and d e0; a e1 and c dropped; d e1 moved to the new row WG12 (semantic row S45, not yet reviewed). C3 scope stated: it checks the balancer, not Frontier's report emission. |
 | 2026-09-24 | Post-review errata from workflow `wf_7606e14e-f10` (section "Post-review errata"): steady-segment natural history is not classified by any row; WG04 and WG06 hold under dummy timing only. No status changes. |
 | 2026-09-24 | Human review G5-review recorded (C4 option a; S43 and S42 transferred to their own tasks). Frontier admission anchor corrected from `base_replica_scheduler.py:906` (the unified DECODE loop) to `:1052-1063`, the MONOLITHIC and PREFILL loop this case runs, here and in `semantic_alignment_table.csv` S23/S43 and `workflow_gap_table.csv` WG05. |
 
 Entry `workflow-gap-analysis`, read-only. Table: `analysis/workflow_gap_table.csv`
-(WG01-WG11). Status: `analysis/workflow_gap_status.json`.
+(WG01-WG12). Status: `analysis/workflow_gap_status.json`.
 
 ## Inputs
 
@@ -29,7 +30,10 @@ Entry `workflow-gap-analysis`, read-only. Table: `analysis/workflow_gap_table.cs
 T1 replays the native receipts and routes through `VllmDPLoadBalancer`. All 51
 routes (48/48 formal) get the native engine from the native counts (WG01). G3 gave
 38/38 at PP1. With the inputs matched, count calculation, key grouping, snapshot
-publication and frontend selection agree with the reference.
+publication and frontend selection agree with the reference. Because T1 feeds
+the native reports, C3 checks the balancer. It does not observe Frontier's own
+report emission, the Step 9 change (G3b HARNESS-correctness-0); comparing that
+emission with the native receipts is a step of the S43 task.
 
 On the natural history each difference is labeled by its first cause:
 
@@ -38,10 +42,11 @@ On the natural history each difference is labeled by its first cause:
 | WG02, WG10 | a-c: the long body routed after b3-b5, so the first forward had only 32-token requests | arrival/delivery order (client and frontend processing of the 40896-token body) |
 | WG03, WG07 | d: engine 1 has no step-0 record, and the probe snapshot carries engine 1's previous-wave count | batch composition, key grouping (wave-start dummy forward, S42) |
 | WG04 | 7/8 engine-bursts publish at the first admission, as the fixed policy does | MATCH |
-| WG05 | the second admission waits until the engine blocks on its oldest batch; Frontier admits on arrival into the free slot | batch composition (S43) |
+| WG05 | a e0, b e0 and e1, d e0: the second admission is scheduled only after the engine blocks on its oldest batch, no earlier than 19.7-33.8 ms after the burst's first route; Frontier admits on arrival into the free slot | batch composition (S43) |
 | WG06 | first snapshot counts `[[0,1],[0,1]]` in a-c | MATCH (published by the latch at 21-35 ms natively, by the collection wait at 50-56 ms in Frontier) |
 | WG09 | the control keeps its reservations `[[3,0],[2,0]]` | count calculation (the control's expected failure) |
 | WG11 | first applied output at 19.7-33.8 ms natively against 111-117 ms in Frontier | output readiness (declared dummy timing, S31) |
+| WG12 | d e1: step 2 schedules b2's second 20448-token chunk, the whole token budget, while the first is in flight, so b4 and b5 wait for step 3; Frontier gives the second slot to b4 at 18 ms | batch composition (S45) |
 
 Operator comparison is not meaningful here. Timing is dummy (D-e), and the first
 formal batches differ in composition (WG02, WG03). This case has no E2E gate, so
@@ -84,8 +89,19 @@ and `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`.
 - S43 / WG05: with PP>1, vLLM 0.10.2 appends an empty schedule and blocks on the
   oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a
   stage slot is free (`frontier/scheduler/replica_scheduler/base_replica_scheduler.py:1052-1063`, report hook `:1061`).
-  Confirmed by the G4 admission records. The later burst requests are admitted
-  21.3-47.4 ms after the burst's first route in a-c and 129.5-311.8 ms in d.
+  Confirmed by the G4 admission records on four engine-bursts (WG05). Measured
+  from the burst's first route, the second admission was scheduled in
+  (33.83, 47.35] ms (a e0), (25.31, 31.84] and (25.10, 30.81] ms (b e0 and e1),
+  and [104.84, 129.48] ms (d e0). Corrected 2026-09-25: the earlier figures,
+  21.3-47.4 ms and 129.5-311.8 ms, were iteration-record times, which bound the
+  admission only from above, and a e1, c and d e1 show no S43 wait.
+- S45 / WG12 (added 2026-09-25, not reviewed): at PP>1, vLLM schedules a
+  request's next prefill chunk while the previous chunk is in flight, because
+  `num_computed_tokens` advances at schedule time
+  (`vllm/v1/core/sched/scheduler.py:1029-1045`). Frontier's `vllm_v1` skips a
+  request that is in an in-flight batch
+  (`frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:560-564`).
+  In G4 burst d engine 1, b2's second chunk took the whole token budget at step 2.
 - S42 / WG03: DP wave-start and idle dummy forwards (`core.py:1170-1216`) are not
   modeled. The d record gap agrees with that source reading, which is an inference
   because the dummy pass writes no record.

@@ -14,6 +14,7 @@
 | 2026-09-22 | Completed the cluster-scheduler implementation list and recorded the opt-in vLLM DP placement policy and its supported scope. |
 | 2026-09-23 | Extended the vLLM DP placement policy's supported scope to pipeline parallelism. |
 | 2026-09-24 | Scoped the round-robin placement description to its roles, including the PD-AF threshold waves, and described the random scheduler's lane rotation. |
+| 2026-09-25 | Listed the stale-drop and deferred-release load reports of the vLLM DP placement policy. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -619,7 +620,7 @@ The scheduling logic is split across four distinct layers to mirror real-world s
       - `RandomClusterScheduler`: Random replica assignment; inside each replica, requests rotate over attention-DP lanes across scheduling calls.
       - `StickyRoundRobinClusterScheduler`: Round-robin over targets, pinned per session so a session's later requests return to the same target.
       - `StickyLORClusterScheduler`: Least Outstanding Requests with the same per-session pinning.
-      - `VllmLoadBalancingClusterScheduler`: Models vLLM V1's internal DP selection, choosing the lane with the lowest `waiting * 4 + running` score from a load snapshot the frontend observes with a delay. Opt-in and deliberately narrow: one `co-location` replica, the `vllm_v1` replica scheduler, and either a MoE model or `attn_dp=1`, at any pipeline depth. As in vLLM, a lane publishes its load when it admits a batch while its pipeline still has room, and otherwise with its next completion. The constructor rejects everything else. No placement or timing equivalence with a real vLLM deployment is claimed.
+      - `VllmLoadBalancingClusterScheduler`: Models vLLM V1's internal DP selection, choosing the lane with the lowest `waiting * 4 + running` score from a load snapshot the frontend observes with a delay. Opt-in and deliberately narrow: one `co-location` replica, the `vllm_v1` replica scheduler, and either a MoE model or `attn_dp=1`, at any pipeline depth. As in vLLM, a lane publishes its load when it admits a batch while its pipeline still has room, and otherwise with its next completion, the stale drop of one of its batches, or the release of finished requests in an iteration that schedules nothing. The constructor rejects everything else. No placement or timing equivalence with a real vLLM deployment is claimed.
 
 3.  **Replica Scheduler** (`ReplicaSchedulerRegistry`):
     - **Role**: Operates at the level of a single `Replica` (GPU node/instance).

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | §18.21 S43: admission times marked as upper bounds; intervals in WG05/WG12. |
 | 2026-09-24 | §18.22: W7-R4 decided (option a) and fixed (`e922c77`, gitlink `9adf759`); final-validation worktrees removed. |
 | 2026-09-24 | §18.22 added: user decisions after G5 (C4 option a; S43 and S42 become separate tasks), the review of the branch's fixes with its dispositions, the dummy-mode answer and candidate row S44. §18.20/§18.21 admission anchors corrected from `base_replica_scheduler.py:906` (unified DECODE loop) to `:1050-1063` (MONOLITHIC/PREFILL loop, hook at `:1061`). §18 status line updated. |
 | 2026-09-23 | §18.21 added: G4 and G5 results. C3 PASS (T1 48/48 formal routes at PP2). C4 `SCENARIO_NOT_REACHED` in all four bursts, and why the last GPU job is not used. Candidate findings S43 and S42 await the user's review. §18 status line updated. |
@@ -1539,7 +1540,7 @@ A trace-ordered burst whose first two routes include the long body and land with
 
 **Candidate fidelity findings.** Both are outside the Step 9 placement scope, and neither is a repair authorization:
 
-- S43 / WG05: at PP>1, vLLM appends an empty schedule and blocks on the oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a stage slot is free (`base_replica_scheduler.py:1050-1063`, hook at `:1061`; the unified DECODE loop at `:896-924` does the same). In the G4 records the later burst requests are admitted 21.3–47.4 ms after the burst's first route in bursts a–c and 129.5–311.8 ms in burst d. Frontier admits them on arrival, 0.5–18 ms after the first arrival.
+- S43 / WG05: at PP>1, vLLM appends an empty schedule and blocks on the oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a stage slot is free (`base_replica_scheduler.py:1050-1063`, hook at `:1061`; the unified DECODE loop at `:896-924` does the same). In the G4 records the later burst requests are admitted 21.3–47.4 ms after the burst's first route in bursts a–c and 129.5–311.8 ms in burst d. **Corrected 2026-09-25:** these are iteration-record times, which bound an admission only from above; the admission intervals and the narrowed S43 evidence are in `calibration/dp_pp_case_001/analysis/workflow_gap_summary.md` (WG05, and WG12 for burst d engine 1). Frontier admits them on arrival, 0.5–18 ms after the first arrival.
 - S42 / WG03: DP wave-start and idle dummy forwards (`core.py:1170-1216`) are not modeled. The d record gap agrees with that source reading, but because the dummy pass writes no record this is an inference.
 
 The calibration contract requires `human review decision=PASS` before a `workflow-repair` scoped to either finding. They are recorded in `future.md`.
