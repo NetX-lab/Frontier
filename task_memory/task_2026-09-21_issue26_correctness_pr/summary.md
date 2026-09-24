@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Native W6 FP8 rerun of the current FP8 code PASS (`exp-0924-114241-429126`); follow-up decisions for items 1-7 recorded. |
 | 2026-09-24 | W7-R4 fixed by the user's choice of option (a) (companion `e922c77`, gitlink `9adf759`); removed from the proposals; the final-validation worktrees removed. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled: the W6 negative-control and CPU-test rows corrected (`6828581` pins the profiler's config and alignment arguments); W7-R4 added to the proposals; the GPU scope in Limits corrected. |
 | 2026-09-24 | Fix review after G5 (`c647e95`..`6aee289`) added to Work packages, the validation table and the open items; C4 decided (option a); S43 and S42 moved to their own tasks; W6 and W7 rows corrected. |
@@ -126,7 +127,7 @@ per-work-package reports.
 | Retarget PR 35's base to `main` once PR 34 merges. | PR 35 description |
 | Issue 26 itself stays open; this PR is a subset of it. | PR 35 description |
 | Step 9 C4: decided 2026-09-24, option (a), `SCENARIO_NOT_REACHED` accepted. S43 (PP>1 admission after an empty schedule) and S42 (DP dummy forwards) continue as separate calibration-and-repair tasks. | `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/` |
-| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), a native W6 FP8 rerun, the pinned calibration tools. W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
+| Fix-review proposals: F-R5 victim selection, F-R6 in-flight token, W3-R5 strict `sync_entry` predicate, W3-R6 sync-room aliases, S44 (proposed for the S43 task), the pinned calibration tools. The native W6 FP8 rerun ran on 2026-09-24 (`exp-0924-114241-429126`, 8 passed). W7-R4 was decided (option a) and fixed in `9adf759`. | `test_report_2026-09-24_fix_review.md` §8 |
 | W9-05 follow-ups, not started: at PP>1 the fix review's F-R1..F-R4 are fixed (`c647e95`); the recompute cost of a resumed request is not modeled; the waiting loop still drops a request with `num_new_tokens <= 0` silently where vLLM asserts; MONOLITHIC preemptions appear only in `request_total_preemption_count`. | `issues.md` W9-05, Limits |
 
 ## Limits of what was validated

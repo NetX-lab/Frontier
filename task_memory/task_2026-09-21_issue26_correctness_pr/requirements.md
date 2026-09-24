@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the follow-up request for items 1-7 and its interview decisions (Q1-Q9). |
 | 2026-09-24 | Recorded the W7-R4 decision (option a) and the removal of the final-validation worktrees. |
 | 2026-09-21 | Recorded the original request, the specification hand-off, and the decisions from the planning interview. |
 | 2026-09-22 | Recorded the W6 artifact-identity decision and the native GPU validation instruction. |
@@ -169,3 +170,32 @@ Message, verbatim: "W7-R4 选择a；允许删除 .worktrees/review-final-{base,h
 | --- | --- |
 | W7-R4 | Option (a): the companion runner rejects `tensor_bytes=0` for every collective kind except all-to-all, instead of clamping it to one byte (b) or pricing it at 0 ms (c). |
 | Final-validation worktrees | `.worktrees/review-final-{base,head}` removed 2026-09-24 with `git worktree remove --force` (each held only the unit suite's untracked `outputs/metrics/meta_llama_llama_2_7b_hf/`; the evidence is under `/data/ycfeng/tmp/issue26-correctness-pr/final_20260924/`), then `git worktree prune`. |
+
+## [Request] 2026-09-24 — follow-up items 1-7
+
+Message, verbatim: "规划上述1-7，要求在符合依赖条件的情况下并行处理，对于重要决策和修改（你难以抉择），先grill-me，对frontier/关键模块的代码修改方式必须符合~/.claude下的CLAUDE.md"
+
+The items are the open proposals after the W7-R4 fix: (1) F-R5/F-R6
+preemption fidelity, (2) W3-R5 strict `sync_entry` predicate, (3) W3-R6
+sync-room alias refactor, (4) S44, (5) the native W6 FP8 rerun, (6) the pinned
+calibration tools, (7) the collective-sim gitlink re-point after companion PR 1
+merges. Before the interview, the F-R5 magnitude was measured on a 96-cell
+KV-pressure grid (`/data/ycfeng/tmp/issue26-correctness-pr/followups_20260924/fr5/`).
+
+## [Decision] 2026-09-24 — interview answers for items 1-7
+
+Message, verbatim: "1。当前周限额已经刷新，请对处于limit中的subagent额外提交一条消息来刷新（如果依旧失败则重开一个subagent尝试）2。Q1/Q2/Q3/Q4/Q5/Q6采纳你的推荐, A7:尝试重新提交，如果依旧失败，反馈给我原因（是否之前有提交成功，但最近几次失败？） Q8:不再使用path /data/ycfeng/frontier-calibration-old-20260831/，替换为当前claude code的skill：/home/brainpp/.claude/skills/frontier-calibration，Q9：a"
+
+| Item | Decision |
+| --- | --- |
+| Rate-limited subagents | Send each a message to resume it; where that fails, start a new agent for the same work. The 123 agents of workflow `wf_7606e14e-f10` that stopped on the weekly limit cannot be resumed by message (no transcript is found for a workflow agent id), so their work is re-run by new agents against the current branch. |
+| Q1 F-R5 | Approved as a fidelity fix: the preemption victim may be the requester, as in vLLM `scheduler.py:470-548`. |
+| Q2 F-R6 | Option (b): measure replay of a resumed decode victim together with F-R6 on a CPU prototype, then return with a design. No F-R6 code enters a branch before that. |
+| Q3 Branches | Option (b): the W3 change goes to this branch (PR 35); preemption fidelity (F-R5, later F-R6 and replay) goes to a new branch stacked on this one, with its own draft PR. |
+| Q4 W3-R5 | Folded into W3-R6: one change. |
+| Q5 W3-R6 | Option (a): `initialize_sync_waiting_rooms` sets `_sync_waiting_room` and `_sync_kind` only; the alias attributes, `uses_shared_forward_room`, the three-way switches and the per-kind open-step partition are removed. Approved beyond five files. No numeric change is allowed. |
+| Q6 S44 | Option (a): recorded as the second row of the S43 task; no code before the S43 analysis. |
+| Q7 W6 native rerun | Resubmit. The retry was accepted; its job is `exp-0924-114241-429126`. |
+| Q8 Calibration tools | Stop using `/data/ycfeng/frontier-calibration-old-20260831/`; use the current Claude Code skill `/home/brainpp/.claude/skills/frontier-calibration` instead. |
+| Q9 Companion PR 1 | Option (a): mark it ready, merge it with a merge commit, re-point this branch's gitlink at the merge commit and rerun the collective-sim tests. |
+

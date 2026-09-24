@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Section 8 and 9: the native W6 FP8 rerun ran (`exp-0924-114241-429126`, 8 passed). |
 | 2026-09-24 | W7-R4 fixed by the user's choice of option (a): companion `e922c77`, gitlink `9adf759`; sections 3, 4 and 8 updated. |
 | 2026-09-24 | Created: review findings and dispositions, verification of each fix, the dummy-mode answer, candidate row S44, final validation. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10` results reconciled (section 10): W6-R6 fixed (`6828581`); W6-R7, W7-R4 and W9-R4 added; W7-R4 proposal in section 8; a blind-spot row in section 5; section 9 corrected. |
@@ -199,7 +200,7 @@ Commands for 1c (branch worktree, HEAD `6aee289`, submodule `ff11ee6` built,
 | W3-R5 strict `sync_entry` predicate | 32 regressions in 9 test files; it needs a design choice about which predicate is authoritative. |
 | W3-R6 sync-room alias refactor | More than five files in core scheduling code. |
 | S44 | Engine-loop semantics shared with S43; proposed as a second row of the S43 task. |
-| Native W6 FP8 rerun | `f236c17` changed the FP8 step after the last native rerun (`exp-0922-202645-561899` at `c231322`), so no native run covers the current FP8 code. It needs one H800 job on `codesign`. |
+| Native W6 FP8 rerun | **Run 2026-09-24 (user decision A7):** `exp-0924-114241-429126` at `363a1dd`, 8 passed in 14.53 s (`w6_native_20260924/`). It was needed because `f236c17` changed the FP8 step after the last native rerun (`exp-0922-202645-561899` at `c231322`). |
 | W7-R4 zero cross-server all-reduce in the companion | **Decided 2026-09-24: option (a), fixed in `e922c77` and gitlink `9adf759`.** Unreachable from Frontier, so no simulation changes. Options were: (a) reject zero again for every kind except all-to-all, restoring the pre-`eb7bc4f` error for them (recommended: it keeps one defined zero case and fails loudly elsewhere); (b) clamp to one byte, as `ff11ee6` does for all-to-all; (c) return 0 ms, as an NCCL call with count 0 does. (b) and (c) define a result no caller needs. The change belongs to companion PR 1 and a gitlink bump. |
 | Pinned calibration tools | The E2E normalizer and op-supplement tool must be restored, or a replacement approved, before S43 or S42 can close. |
 
@@ -207,7 +208,7 @@ Commands for 1c (branch worktree, HEAD `6aee289`, submodule `ff11ee6` built,
 
 - The first workflow's partial agents did not complete. Each package was reviewed again in the main session, but by one reviewer per package, not by an independent panel.
 - Workflow `wf_7606e14e-f10` completed, but 123 of its 152 agents failed on the platform rate limit (section 10). Only its six surviving findings had independent verifiers; the other 32 were checked by the main session alone.
-- No GPU run was made. W6 remains verified on CPU only for the current FP8 code.
+- No GPU run was made during the review itself. The current FP8 code was run natively afterwards (`exp-0924-114241-429126`, 8 passed); FP8 numerics remain compared against no reference.
 - The S44 evidence rests on one native case (G4) under dummy Frontier timing.
 
 ## 10. Workflow `wf_7606e14e-f10` results (reconciled 2026-09-24)

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Follow-up items 1-7: decisions recorded; W6 native rerun PASS (`exp-0924-114241-429126`); companion PR 1 merge refused by the permission classifier. |
 | 2026-09-24 | Publication recorded for the W7-R4 fix: `9adf759` and `279f547` pushed; PR 35 and companion PR 1 bodies updated. |
 | 2026-09-24 | User decision "W7-R4 选择a；允许删除 .worktrees/review-final-{base,head}": W7-R4 fixed (companion `e922c77`, gitlink `9adf759`); final-validation worktrees removed. |
 | 2026-09-24 | Publication recorded: `6828581` and `311e076` pushed; PR 35 body updated for the workflow results. |
@@ -48,7 +49,7 @@
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
 | Current step | Step 9 CPU packages P1–P6 complete (P2/P3 `2ffe78d`, P4 `bacdbb4`, records `c1a570d` and `104b6ff`). W9-04 fixed (`2ffb062`), A1–A7 pass. W9-05 fixed (`75c1140`), B1–B8 pass. G3–G5 complete, 2 of 3 authorized jobs used. C3 PASS. C4 `SCENARIO_NOT_REACHED` in all four bursts (plan §18.21), accepted by the user (option a). Fix review done 2026-09-24: `c647e95`..`6aee289` (plan §18.22, `test_report_2026-09-24_fix_review.md`). Workflow `wf_7606e14e-f10` reconciled 2026-09-24: W6-R6 test `6828581`, record corrections W6-R7 and W9-R4, W7-R4 proposal (test report §10). W7-R4 fixed 2026-09-24 by the user's choice of option (a): companion `e922c77`, gitlink `9adf759`. `.worktrees/review-final-{base,head}` removed. |
 | Publication | PUSHED_VERIFIED 2026-09-24 (W7-R4): companion `e922c77` pushed to `fix/zero-payload-input-handling`; Frontier `9adf759` (gitlink) and `279f547` (records) pushed, remote head `279f547` equal to local. PR 35 body PATCHed 2026-09-24T03:01:58Z (UTC): W7 progress row, `predict_reduce_scatter` reachability sentence, W7 commit list and gitlink, a "Decided 2026-09-24 (W7-R4)" paragraph, the `9adf759` review row, the proposals list, the commit table and Status. Companion PR 1 body PATCHed 2026-09-24T03:02:00Z (UTC): opening paragraph scoped to all-to-all, a third-commit section for `e922c77`, the downstream section, 16 tests with the four new kind cases and the `ff11ee6` negative control, and the flow-generation scope. Both read back identical apart from a trailing newline; both still draft. Backups: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924c/{pr35,companion_pr1}_body_before.md`. Earlier: PUSHED_VERIFIED 2026-09-24: `6828581` (test) and `311e076` (records) on top of `5e7221d`; remote head `311e076` equal to local after fetch. PR 35 body PATCHed 2026-09-23T19:47:38Z (UTC): the W6 native-parity and negative-control wording, the W9-04 reach beyond PP=1, the `6828581` row and workflow note in "Review of the landed fixes", W7-R4 in the proposals, the commit table and Status. Read back identical to the sent body; still draft. Backup: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924b/pr35_body_before.md`. Companion PR 1 body unchanged. Earlier: PUSHED_VERIFIED 2026-09-24: remote head `b110eca` equal to local (review commits `c647e95`..`6aee289` plus the record commit). PR 35 body PATCHed 2026-09-23T18:41:47Z (UTC): Progress rows (W6, W7, W9-05, a Review row), the W2/W3 reachability corrections, the native FP8 `block_shape=[128, 128]` correction, W7's second commit and rewritten Frontier tests, the G5 decision, a section "Review of the landed fixes (2026-09-24)", the review material and commit tables, and Status. Read back identical apart from a trailing newline; still draft. Companion PR 1 body PATCHed for `ff11ee6` (second-commit section, 12 tests, scope of the flow-generation change); read back the same way; still draft. Backups: `/data/ycfeng/tmp/issue26-correctness-pr/pr_body_20260924/{pr35,companion_pr1}_body_before.md`. |
-| Next action | User decisions on the remaining review proposals (plan §18.22, test report §8): F-R5/F-R6, the strict `sync_entry` predicate, the sync-room alias refactor, S44 as a second S43 row, a native W6 FP8 rerun, and the pinned calibration tools. S43 and S42 continue in their own task directories. |
+| Next action | Follow-up items 1-7 per the 2026-09-24 decisions (section "Follow-up items 1-7" below): W3-R5/W3-R6 on this branch, F-R5 on a stacked branch, the replay/F-R6 measurement, S44 into S43, the calibration-tool question, and the gitlink re-point after the user merges companion PR 1. |
 
 ## Step status
 
@@ -537,3 +538,28 @@ Evidence: `wf_7606e14e_f10/w7_r4_zero_payload_by_kind.txt`. Commands (worktree r
 - The same file in `/data/ycfeng/tmp/issue26-correctness-pr/w7_r4/negctl_ff11ee6` (`git archive ff11ee6` plus the new test file and the built simulator): 4 failed, 12 passed.
 - `python -u wf_7606e14e_f10/zero_byte_collective_probe.py <collective-sim> <out> allreduce,allgather,reducescatter 0`: RuntimeError, runner exit 2, for each kind.
 - `python -m pytest -q -p no:cacheprovider tests/unit/test_collective_sim_zero_payload.py`: 3 passed.
+
+## Follow-up items 1-7 (2026-09-24)
+
+Request and interview answers: `requirements.md`, "[Request] 2026-09-24 — follow-up
+items 1-7" and "[Decision] 2026-09-24 — interview answers for items 1-7".
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| 1 F-R5 | in-progress: approved; magnitude measured before the interview on 96 KV-pressure cells (per-cell mean E2E -12.1 % to +5.4 %, dense trained timing); implementation on a new branch stacked on this one | `/data/ycfeng/tmp/issue26-correctness-pr/followups_20260924/fr5/compare.json` |
+| 1 F-R6 and replay | in-progress: CPU prototype measurement before any design (decision Q2 b). 94 % of the grid's preemptions hit decode-phase requests, whose vLLM replay Frontier does not model | same directory |
+| 2-3 W3-R5/W3-R6 | in-progress: one change on this branch, option (a) of Q5 | — |
+| 4 S44 | pending: record as the S43 task's second row | — |
+| 5 W6 native rerun | completed: `exp-0924-114241-429126`, 8 passed in 14.53 s | `w6_native_20260924/receipt.md` |
+| 6 Calibration tools | in-progress: the user replaced the archived helper path with the current skill; how the helper-bound entries run without it is the next interview question | — |
+| 7 Gitlink re-point | blocked: marking companion PR 1 ready and merging it was refused by the Claude Code permission classifier ("Merge Without Review"); the user merges it, then the gitlink moves | — |
+| Rate-limited subagents | in-progress: a message cannot resume a workflow agent ("No transcript found for agent ID"); their work is re-run by new agents on the current branch | — |
+
+Commands, W6 rerun (2026-09-24T03:42:37Z, worktree `363a1dd`, no modified tracked file):
+
+```bash
+bash /data/ycfeng/tmp/claude-10250/-data-ycfeng-Frontier/6cff5455-9d15-4514-9a48-faef4b6c7e5d/scratchpad/run_w6_with_logs.sh run_20260924
+# status: STEPMIND_JOB=exp-0924-114241-429126 "$STEPMIND_PYTHON" status_w6.py
+# log:    STEPMIND_JOB=exp-0924-114241-429126 W6_TAIL=600 "$STEPMIND_PYTHON" fetch_w6_logs.py
+```
+

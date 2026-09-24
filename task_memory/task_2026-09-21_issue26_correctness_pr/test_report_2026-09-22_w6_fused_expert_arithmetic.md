@@ -7,6 +7,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Native rerun of the current FP8 code: `exp-0924-114241-429126` (`codesign` / H800, `gpu-h800-0203`) at `363a1dd`, 8 passed in 14.53 s. Section 8 records it. |
 | 2026-09-24 | Workflow `wf_7606e14e-f10`: section 6 records the negative control on the unrepaired source and the CPU setup-argument check `6828581` (W6-R6); section 8 states that the native test copies the profiler's setup. |
 | 2026-09-24 | Fix review: the native rerun ran with `block_shape=[128, 128]` (the unit test pins `[128, 64]`), corrected in section 8; `f236c17` changed the FP8 step after that rerun (W6-R1..R3), so no native run covers the current FP8 code. |
 | 2026-09-22 | Corrected FP8 case re-run natively: `exp-0922-202645-561899` (`codesign` / H800, `gpu-h800-0095`), 8 passed in 14.27 s, exit 0. Section 8 records the run. |
@@ -321,6 +322,23 @@ uses runs on the gated activation and returns finite output of the expected shap
 the real kernels. What it still does not establish: FP8 numerical equivalence, because
 the FP8 case compares against no reference. The seven zero-tolerance comparisons
 passed again unchanged.
+
+The current FP8 code (`f236c17`: the fp8_w8a8 kernel config, `compute_type` from the
+unquantized dtype, both quantizations inside the timed step) was run natively on
+2026-09-24 at the user's instruction:
+
+| Field | Value |
+| --- | --- |
+| Job | `exp-0924-114241-429126`, creator `i-fengyicheng`, `codesign` / `H800`, 1 GPU / 8 CPU / 64000Mi, RJob `Succeeded` |
+| Node | `gpu-h800-0203.host.platform.shaipower.com`, `NVIDIA H800`, torch 2.8.0+cu128, vLLM 0.10.2 (`VLLM_API_VERSION=0.10.x`, `FP8_AVAILABLE=True`), Python 3.12.11 |
+| Image / mount | same image; `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`, worktree clean at `363a1dd` (profiler and test source `f236c17`) |
+| Command | the same pytest command and launcher |
+| Result | **8 passed in 14.53 s**, `W6:PARITY_EXIT=0`. The same eight test ids; the FP8 case now drives the unquantized hidden state, the FP8 kernel config and both in-step quantizations |
+| Evidence | `w6_native_20260924/receipt.md` and `worker_log.txt` |
+
+The current FP8 step therefore runs on the real kernels and produces finite output of
+the expected shape. FP8 numerical equivalence is still not established, for the same
+reason as above.
 
 ### Attempts
 
