@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | S45 reviewed by the user: it joins the S43 task as its third row. |
 | 2026-09-25 | WG05 rewritten from admission intervals (G3b HARNESS-correctness-1): S43 evidence narrowed to a e0, b e0 and e1, and d e0; a e1 and c dropped; d e1 moved to the new row WG12 (semantic row S45, not yet reviewed). C3 scope stated: it checks the balancer, not Frontier's report emission. |
 | 2026-09-24 | Post-review errata from workflow `wf_7606e14e-f10` (section "Post-review errata"): steady-segment natural history is not classified by any row; WG04 and WG06 hold under dummy timing only. No status changes. |
 | 2026-09-24 | Human review G5-review recorded (C4 option a; S43 and S42 transferred to their own tasks). Frontier admission anchor corrected from `base_replica_scheduler.py:906` (the unified DECODE loop) to `:1052-1063`, the MONOLITHIC and PREFILL loop this case runs, here and in `semantic_alignment_table.csv` S23/S43 and `workflow_gap_table.csv` WG05. |
@@ -95,7 +96,7 @@ and `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`.
   and [104.84, 129.48] ms (d e0). Corrected 2026-09-25: the earlier figures,
   21.3-47.4 ms and 129.5-311.8 ms, were iteration-record times, which bound the
   admission only from above, and a e1, c and d e1 show no S43 wait.
-- S45 / WG12 (added 2026-09-25, not reviewed): at PP>1, vLLM schedules a
+- S45 / WG12 (added 2026-09-25; reviewed the same day: the third row of the S43 task, analysed after S43): at PP>1, vLLM schedules a
   request's next prefill chunk while the previous chunk is in flight, because
   `num_computed_tokens` advances at schedule time
   (`vllm/v1/core/sched/scheduler.py:1029-1045`). Frontier's `vllm_v1` skips a

@@ -26,7 +26,7 @@
   "status": "PASS",
   "status_basis": "Every declared phase has a row with values and anchors on both sides, the native chain is complete, and T1 settles the placement semantics with matched inputs. The eight MISMATCH rows carry a first cause and none is unexplained.",
   "correction_state": "not_applicable",
-  "next_action": "None in this case. S43 and S42 continue as separate calibration-and-repair tasks; each starts from its own analysis and needs its own human review before any Frontier code change. S45 (WG12, added 2026-09-25) awaits the user's review.",
+  "next_action": "None in this case. S43 and S42 continue as separate calibration-and-repair tasks; each starts from its own analysis and needs its own human review before any Frontier code change. S45 (WG12) joins the S43 task as its third row (user, 2026-09-25).",
   "transferred_corrections": {
     "S43_WG05": {
       "finding": "PP>1 admission after an empty schedule: vLLM blocks on the oldest batch, Frontier admits into any free stage slot (frontier/scheduler/replica_scheduler/base_replica_scheduler.py:1052-1063, report hook :1061)",
@@ -35,6 +35,10 @@
     "S42_WG03": {
       "finding": "DP wave-start and idle dummy forwards not modeled (vllm/v1/engine/core.py:1170-1216)",
       "task": "/data/ycfeng/Frontier/task_memory/task_2026-09-24_s42_dp_wave_idle_forward/"
+    },
+    "S45_WG12": {
+      "finding": "PP>1 prefill chunk pipelining: vLLM schedules a request's next prefill chunk while the previous chunk is in flight (vllm/v1/core/sched/scheduler.py:1029-1045); Frontier's vllm_v1 skips a request in an in-flight batch (frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:560-564)",
+      "task": "/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/"
     }
   },
   "review": {

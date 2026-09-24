@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | Recorded the S45 decision (third row of the S43 task). |
 | 2026-09-24 | Recorded the N1 decision (rejected drafts in the vllm_v1 scheduler frontier). |
 | 2026-09-24 | Recorded the spec-decode branch base decision (Q6 follow-up). |
 | 2026-09-24 | Recorded the G3b dispositions and the spec-decode live-batch decisions (Q6-Q8). |
@@ -250,3 +251,13 @@ Message, verbatim: "Q2、Q4、N1采纳你的推荐方案"
 | Item | Decision |
 | --- | --- |
 | N1 | Option (a): second commit on `fix/spec-decode-live-batch-metadata` (draft PR 39), with tests. |
+
+## [Decision] 2026-09-25 — S45: next prefill chunk while the previous one is in flight
+
+Question: where does candidate row S45 (WG12) go? (a) the S43 task's third row, like S44, analysed after S43 with no code before its analysis; (b) its own calibration-and-repair task; (c) record only. Recommended (a): the same G4 evidence and the same PP>1 admission code, so one analysis and no two tasks editing that loop. G4 holds one S45 instance; quantifying it alone needs a new native run with its own authorization.
+
+Message, verbatim: "S45采纳你的推荐方案"
+
+| Item | Decision |
+| --- | --- |
+| S45 | Option (a): third row of `/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/`, analysed after S43; no code before its analysis is reviewed. |

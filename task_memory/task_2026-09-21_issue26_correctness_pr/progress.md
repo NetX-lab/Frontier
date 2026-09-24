@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | S45 decided: third row of the S43 task. |
 | 2026-09-25 | G3b disposition (D) records and the WG05 rewrite from admission intervals; new rows WG12, S45 (awaits review) and S46. |
 | 2026-09-24 | N1 fixed on draft PR 39 (`fd096ea`, pushed): rejected drafts leave the vllm_v1 frontier at step end; gates PASS with one explained fidelity difference (`pdd_spec_dec_offline` loses a spurious DECODE preemption). PR 39 body and title updated. |
 | 2026-09-24 | Spec-decode fix committed on the stacked branch (`e2c2937`) with a PP4 end-to-end case; gates PASS; draft PR 39 opened. New finding N1: the vllm_v1 scheduler frontier keeps rejected drafts. |
@@ -673,4 +674,4 @@ Reason: disposition (D) and HARNESS-correctness-1 left records that state more t
 - `review.md`: §14.2 W3 answer corrected (only leaf payloads are released; empty containers remain, 16 and 180 leaves in two drained MoE runs; no result reads them), W3-correctness-0. S9-04 corrected (stale drops and PP≥4 deferred terminal releases lost held keys; fixed in `dfb0b25`, oracle `_assert_every_held_key_is_reported`), CROSS-quality-2.
 - `AGENTS.md:622`: the policy's load reports list the stale drop and the deferred release of finished requests.
 - The upper-bound figures 21.3–47.4 and 129.5–311.8 ms annotated in `test_report_2026-09-23_step9_dp_pp_groundtruth.md`, `future.md` §3 and `plan.md` §18.21. `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/plan.md:38-41` quotes the same bounds; it belongs to the S43 task and is not edited here.
-- Open: S45 (WG12) awaits the user's review before any repair.
+- S45 (WG12) decided 2026-09-25 (`requirements.md`): the third row of the S43 task.
