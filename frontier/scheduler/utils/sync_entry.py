@@ -66,8 +66,6 @@ def enter_layer_sync(
     """
 
     del stage_execution_time
-    if mode not in ("prefill", "decode"):
-        raise ValueError(f"unsupported layer synchronization mode: {mode!r}")
     mode_name = mode.upper()
 
     waiting_room = scheduler._sync_waiting_room

@@ -14,8 +14,6 @@ drained simulation alive; a deadline that has passed is applied the next time
 the balancer is consulted.
 """
 
-from math import isfinite
-
 from frontier.logger import init_logger
 from frontier.scheduler.request_load import RequestLoad
 
@@ -44,8 +42,6 @@ class VllmDPLoadBalancer:
     """
 
     def __init__(self, num_engines: int):
-        if type(num_engines) is not int or num_engines < 1:
-            raise ValueError("DP load balancing requires at least one engine")
         self.engine_counts = [RequestLoad(0, 0) for _ in range(num_engines)]
         self.frontend_counts = list(self.engine_counts)
         self.last_step_counts: list[RequestLoad] | None = None
@@ -58,7 +54,6 @@ class VllmDPLoadBalancer:
         # the past reproduces that first deadline without special-casing it.
         self.last_publish_ms = -UNCHANGED_PUBLISH_INTERVAL_MS
         self.next_publish_ms = SNAPSHOT_COLLECTION_WAIT_MS
-        self.time_ms = 0
 
     def _poll_deadline(self, now_ms: int) -> int:
         """Return the next publish time, as the reference's poll timeout does.
@@ -86,11 +81,7 @@ class VllmDPLoadBalancer:
         lands on its deadline is processed before the publish it triggers.
         """
 
-        if not isfinite(time) or time < 0:
-            raise ValueError("DP load balancing requires finite nonnegative time")
         now_ms = int(time * 1000)
-        if now_ms < self.time_ms:
-            raise ValueError("DP load balancing time cannot move backwards")
         while (
             self.next_publish_ms < now_ms
             or self.next_publish_ms == now_ms
@@ -107,11 +98,10 @@ class VllmDPLoadBalancer:
                 self.stats_changed = False
             self.last_publish_ms = published_ms
             self.next_publish_ms = self._poll_deadline(published_ms)
-        self.time_ms = now_ms
         return now_ms
 
     def report(self, time: float, engine: int, step: int, load: RequestLoad) -> None:
-        """Record one engine's counts after it completed one forward step.
+        """Record one engine's counts after one engine iteration.
 
         Ordering is advisory, as in the reference: a strictly newer step latches
         the previous counts when there are unpublished changes, an equal step is
@@ -120,16 +110,6 @@ class VllmDPLoadBalancer:
         applied either way; nothing here aborts a run.
         """
 
-        if type(engine) is not int or not 0 <= engine < len(self.engine_counts):
-            raise ValueError(
-                "DP load report references an unknown engine: "
-                f"engine={engine!r}, num_engines={len(self.engine_counts)}"
-            )
-        if type(step) is not int or step < 0 or min(load) < 0:
-            raise ValueError(
-                "DP load report requires a nonnegative int step and nonnegative "
-                f"counts, got step={step!r}, load={load!r}"
-            )
         if load == self.engine_counts[engine]:
             # The reference engine compares against its own `last_counts` and
             # emits no coordinator message when they match
