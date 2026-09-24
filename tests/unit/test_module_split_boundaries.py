@@ -26,6 +26,7 @@ import pytest
 import frontier.config
 from frontier.config.config import SimulationConfig
 from frontier.config.flat_dataclass import create_flat_dataclass
+from tests.frontier_sources import iter_frontier_sources
 
 
 # --- annotation resolution in each defining module --------------------------
@@ -103,11 +104,8 @@ def _names_imported_from_frontier_config(repo_root: Path) -> dict[str, set[str]]
     import ast
 
     wanted: dict[str, set[str]] = {"frontier.config": set(), "frontier.config.config": set()}
-    for path in sorted((repo_root / "frontier").rglob("*.py")):
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
-            continue
+    for path in sorted(iter_frontier_sources(repo_root)):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module in wanted:
                 wanted[node.module].update(

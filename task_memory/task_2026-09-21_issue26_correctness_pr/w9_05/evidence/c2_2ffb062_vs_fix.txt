@@ -1,0 +1,26 @@
+SAME moe_dp2__burst_fixed_n4 [drained 4/4]: reports [10, 10], keys_equal=True, selections=4, snapshots=4, lanes=[0, 1], metric_diffs=0
+SAME moe_dp2__burst_fixed_n16 [drained 16/16]: reports [22, 22], keys_equal=True, selections=16, snapshots=16, lanes=[0, 1], metric_diffs=0
+SAME moe_dp2__burst_uniform_n24 [drained 24/24]: reports [85, 85], keys_equal=True, selections=24, snapshots=24, lanes=[0, 1], metric_diffs=0
+SAME moe_dp2__poisson_fixed_n16_q20 [drained 16/16]: reports [26, 26], keys_equal=True, selections=16, snapshots=16, lanes=[0, 1], metric_diffs=0
+SAME moe_dp2__poisson_uniform_n24_q50 [drained 24/24]: reports [82, 82], keys_equal=True, selections=24, snapshots=22, lanes=[0, 1], metric_diffs=0
+SAME moe_dp2__poisson_uniform_n24_q200 [drained 24/24]: reports [85, 85], keys_equal=True, selections=24, snapshots=14, lanes=[0, 1], metric_diffs=0
+DIFF moe_dp2__poisson_uniform_n24_q200_tight_kv [drained 24/24]: reports [81, 94], keys_equal=False, selections=24, snapshots=14, lanes=[0, 1], metric_diffs=12
+SAME moe_dp2__asymmetric_trace [drained 6/6]: reports [44, 44], keys_equal=True, selections=6, snapshots=5, lanes=[0, 1], metric_diffs=0
+SAME moe_dp4__burst_fixed_n4 [drained 4/4]: reports [12, 12], keys_equal=True, selections=4, snapshots=4, lanes=[0, 1, 2, 3], metric_diffs=0
+SAME moe_dp4__burst_fixed_n16 [drained 16/16]: reports [28, 28], keys_equal=True, selections=16, snapshots=16, lanes=[0, 1, 2, 3], metric_diffs=0
+SAME moe_dp4__burst_uniform_n24 [drained 24/24]: reports [102, 102], keys_equal=True, selections=24, snapshots=24, lanes=[0, 1, 2, 3], metric_diffs=0
+SAME moe_dp4__poisson_fixed_n16_q20 [drained 16/16]: reports [38, 38], keys_equal=True, selections=16, snapshots=16, lanes=[0, 1, 2, 3], metric_diffs=0
+SAME moe_dp4__poisson_uniform_n24_q50 [drained 24/24]: reports [101, 101], keys_equal=True, selections=24, snapshots=22, lanes=[0, 1, 2, 3], metric_diffs=0
+SAME moe_dp4__poisson_uniform_n24_q200 [drained 24/24]: reports [103, 103], keys_equal=True, selections=24, snapshots=14, lanes=[0, 1, 2, 3], metric_diffs=0
+DIFF moe_dp4__poisson_uniform_n24_q200_tight_kv [drained 24/24]: reports [107, 107], keys_equal=True, selections=24, snapshots=14, lanes=[0, 1, 2, 3], metric_diffs=20
+SAME moe_dp4__asymmetric_trace [drained 6/6]: reports [44, 44], keys_equal=True, selections=6, snapshots=6, lanes=[0, 1, 2, 3], metric_diffs=0
+SAME dense_dp1__burst_fixed_n4 [drained 4/4]: reports [7, 7], keys_equal=True, selections=4, snapshots=4, lanes=[0], metric_diffs=0
+SAME dense_dp1__burst_fixed_n16 [drained 16/16]: reports [20, 20], keys_equal=True, selections=16, snapshots=16, lanes=[0], metric_diffs=0
+SAME dense_dp1__burst_uniform_n24 [drained 24/24]: reports [75, 75], keys_equal=True, selections=24, snapshots=24, lanes=[0], metric_diffs=0
+SAME dense_dp1__poisson_fixed_n16_q20 [drained 16/16]: reports [20, 20], keys_equal=True, selections=16, snapshots=16, lanes=[0], metric_diffs=0
+SAME dense_dp1__poisson_uniform_n24_q50 [drained 24/24]: reports [76, 76], keys_equal=True, selections=24, snapshots=19, lanes=[0], metric_diffs=0
+SAME dense_dp1__poisson_uniform_n24_q200 [drained 24/24]: reports [76, 76], keys_equal=True, selections=24, snapshots=14, lanes=[0], metric_diffs=0
+DIFF dense_dp1__poisson_uniform_n24_q200_tight_kv [drained 24/24]: reports [74, 90], keys_equal=False, selections=24, snapshots=14, lanes=[0], metric_diffs=11
+SAME dense_dp1__asymmetric_trace [drained 6/6]: reports [40, 40], keys_equal=True, selections=6, snapshots=4, lanes=[0], metric_diffs=0
+=== 21 of 24 identical ===
+c2 compare exit 3

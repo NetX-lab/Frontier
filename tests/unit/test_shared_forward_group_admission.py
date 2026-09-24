@@ -1,6 +1,5 @@
 """Regression coverage for unequal online lane histories and stage membership."""
 
-from collections import defaultdict
 from types import SimpleNamespace
 
 import pytest
@@ -10,6 +9,7 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import R
 from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import ReplicaStageScheduler
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import EP_WAVE, StageExecutionContext
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 from frontier.types import ClusterType
 
 
@@ -51,6 +51,43 @@ def test_admitted_lanes_share_identity_after_unequal_batch_histories(cluster_typ
     assert [batch.global_id for batch in batches] == [2, 1]
 
 
+@pytest.mark.parametrize("first_lane", [0, 1])
+def test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket(first_lane):
+    """Under PP a busy lane can hold the FIFO head; the other lane must still join."""
+
+    other_lane = 1 - first_lane
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=2)
+    stages = [make_stage(context, lane, ClusterType.MONOLITHIC) for lane in range(2)]
+    first_now, first_next = make_batch(first_lane, 0), make_batch(first_lane, 1)
+    # Distinct provisional ids, so that sharing a bound group is observable.
+    other_now, other_next = make_batch(other_lane, 5), make_batch(other_lane, 6)
+    stages[first_lane].add_batch(first_now)
+    assert stages[first_lane].pop_batch_if_not_busy() is first_now
+    stages[first_lane].add_batch(first_next)
+    stages[other_lane].add_batch(other_now)
+    stages[other_lane].add_batch(other_next)
+    assert context.queued_tickets[0] == first_next._stage_admission_ticket
+
+    assert stages[other_lane].pop_batch_if_not_busy() is other_now
+    assert other_now._forward_cohort_provisional_id == first_now._forward_cohort_provisional_id
+
+    wave = context.replace_full_stage_owners_with_ep_wave(
+        (first_now._stage_admission_ticket, other_now._stage_admission_ticket),
+        operation_id="wave", participant_ep_ids=(0, 1),
+    )
+    owners = context.replace_ep_wave_with_full_stage_owners(wave, operation_ids=("restored0", "restored1"))
+    for owner in owners:
+        context.release(owner)
+    for stage in stages:
+        stage.on_stage_end()
+
+    assert stages[first_lane].pop_batch_if_not_busy() is first_next
+    assert stages[other_lane].pop_batch_if_not_busy() is other_next
+    assert first_next._forward_cohort_provisional_id == other_next._forward_cohort_provisional_id
+    assert first_next._forward_cohort_provisional_id > first_now._forward_cohort_provisional_id
+    assert context.queued_tickets == ()
+
+
 def test_started_group_blocks_new_lane_through_ep_restore_and_partial_release():
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=4)
     first = context.enqueue_full_stage(operation_id="first")
@@ -77,6 +114,26 @@ def test_started_group_blocks_new_lane_through_ep_restore_and_partial_release():
     assert context.queued_tickets == ()
 
 
+def test_a_new_lane_joins_the_bound_group_only_until_it_is_sealed():
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=2)
+    assert context.joinable_forward_group_id == 0
+    first = context.enqueue_full_stage(operation_id="first")
+    assert context.try_acquire(first)
+    group = context.bind_forward_group(first)
+    assert context.joinable_forward_group_id == group
+    wave = context.replace_full_stage_owners_with_ep_wave(
+        (first,), operation_id="wave", participant_ep_ids=(0, 1),
+    )
+    assert context.joinable_forward_group_id == group + 1
+    (owner,) = context.replace_ep_wave_with_full_stage_owners(wave, operation_ids=("next",))
+    context.release(owner)
+    assert context.is_idle
+    assert context.joinable_forward_group_id == group + 1
+    later = context.enqueue_full_stage(operation_id="later")
+    assert context.try_acquire(later)
+    assert context.bind_forward_group(later) == group + 1
+
+
 @pytest.mark.parametrize("sync_kind", ["prefill", "decode"])
 def test_next_group_queue_does_not_block_current_group_idle_participation(sync_kind):
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=2)
@@ -96,13 +153,13 @@ def test_next_group_queue_does_not_block_current_group_idle_participation(sync_k
 
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = getattr(ClusterType, sync_kind.upper())
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(model_config=SimpleNamespace(is_moe=True))
+    )
+    initialize_sync_waiting_rooms(scheduler)
     scheduler._forward_sync_state = ForwardSyncState()
     scheduler._stage_execution_contexts = {(0, 0): context}
     scheduler._replica_dp_size = 2
-    rooms = defaultdict(lambda: defaultdict(lambda: defaultdict(
-        lambda: defaultdict(lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}}))
-    )))
-    setattr(scheduler, f"_{sync_kind}_sync_waiting_room", rooms)
     setattr(scheduler, f"_uses_shared_{sync_kind}_layer_path", lambda *_: True)
     scheduler._replica_schedulers = {
         (0, lane): SimpleNamespace(get_replica_stage_scheduler=lambda _, stage=stage: stage)
@@ -120,4 +177,4 @@ def test_next_group_queue_does_not_block_current_group_idle_participation(sync_k
     assert completed[0]["cohort_batches"][1].is_idle
     assert not stages[1].is_empty()
     assert not stages[1].is_busy
-    assert scheduler._forward_sync_state.open_steps(sync_kind) == {}
+    assert scheduler._forward_sync_state._open_steps == {}

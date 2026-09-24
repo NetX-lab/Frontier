@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
     )
+    from frontier.scheduler.request_load import RequestLoad
 
 
 class BaseReplicaScheduler(ABC):
@@ -508,6 +509,18 @@ class BaseReplicaScheduler(ABC):
 
     def peek_waiting_requests(self) -> List[Request]:
         return list(self._request_queue)
+
+    def get_request_load(self) -> "RequestLoad":
+        """Return this lane's waiting and admitted request populations.
+
+        A serving load balancer needs both, with the same meaning the scheduler
+        uses internally. Only schedulers that define those populations
+        unambiguously implement it.
+        """
+
+        raise NotImplementedError(
+            f"{type(self).__name__} does not expose a serving request load"
+        )
 
     @property
     def replica_id(self) -> int:
@@ -1042,6 +1055,12 @@ class BaseReplicaScheduler(ABC):
                     break
                 scheduled_batches.append(batch)
                 self._num_running_batches += 1
+                # Reported per admission here, not after the call returns: the
+                # lane state after each of several admissions is visible only
+                # inside this loop.
+                self._cluster_scheduler.on_replica_batch_scheduled(
+                    time, self._replica_id, self._replica_local_id, batch
+                )
                 if (
                     hasattr(self, "_has_monolithic_pp_mtp_output_wait")
                     and self._has_monolithic_pp_mtp_output_wait()

@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-22 | Recorded the `moe_grouped_gemm` measurement scope and the limits of the backend identity columns. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-14 | Documented standard ROCm/GDN output contracts and the experimental SGLang boundary. |
 
@@ -206,6 +207,53 @@ experts resident per device. Shared-expert linear work uses its profile-owned
 TP domain independently of these MoE EP values. At runtime, Step3 shared-expert
 work uses `attn_tp` in co-location/PREFILL/unified DECODE and the role-local
 `moe_tp` in DECODE_FFN.
+
+#### What `moe_grouped_gemm` measures
+
+`moe_grouped_gemm` is the complete local expert computation: the first expert
+GEMM, the gated activation, the optional activation quantization, the second
+expert GEMM with the routing weights applied, and the local reduction over one
+token's top-k expert outputs. That reduction is a per-token sum, not a
+collective, so it carries no communication cost. `MOE_FAMILY` has no separate
+operator for it, and the vLLM functional backend has always included it, so
+counting it here counts the reduction once on each backend.
+
+The two backends still time different envelopes. The low-level path runs block
+alignment (`moe_align_block_size`) once before the timed step on caller-prepared
+buffers; vLLM's `fused_experts` aligns inside the call, per chunk, with its own
+workspace. A `moe_grouped_gemm` row from the functional backend therefore
+includes preparation work that a low-level row does not, while Frontier adds
+`moe_shuffling` as a separate term for both. Treat rows from the two backends as
+different measurements under one operator name, and do not mix them in one
+dataset.
+
+Before commit `7269bac` the vLLM 0.10.x low-level profiling path omitted the
+gated activation and the reduction. Rows produced by that path under-measure
+`moe_grouped_gemm`, and the gap grows with token count: on the checked-in
+`a800/qwen3-a3b-30b-moe` dataset the two missing kernels are an estimated 16.5%
+of the corrected value at 4096 tokens, against 6.8% at the median row. Rows
+produced by the vLLM functional backend, or by the low-level path from
+`7269bac` on, include both kernels. The `frontier_loop` backend
+(`use_vllm_kernel=False`) times a per-expert loop without routing weights or
+the top-k reduction, so its rows are a different measurement again.
+
+Before commit `f236c17` the low-level FP8 path also differed from vLLM's
+`fused_experts_impl`: it used the unquantized kernel config instead of the
+`fp8_w8a8` one, accumulated in FP16 whatever the hidden-state dtype, and
+quantized the hidden state outside the timed step. No checked-in dataset holds
+FP8 MoE rows.
+
+#### Backend identity columns cannot date a row
+
+`moe_grouped_gemm_backend` records `vllm_fused` for both the vLLM 0.10.x
+low-level path and the current functional path, so it does not distinguish a
+row measured before that fix from one measured after it.
+`profiling_patch_tag` appears in one historical CSV header, but nothing in the
+source writes it, so it is not a live mechanism either.
+
+Re-profile rather than infer. If you need corrected `moe_grouped_gemm` timings
+from a `vllm>=0.10,<0.11` environment, re-run the producer; an existing row
+cannot be checked for completeness from its own metadata.
 
 ### Standard GDN on ROCm
 

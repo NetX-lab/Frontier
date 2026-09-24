@@ -1,0 +1,9 @@
+{
+ "device": "h800",
+ "network_device": "h100_dgx",
+ "cc_backend": "analytical",
+ "moe_routing_distribution_type": "balanced",
+ "moe_routing_seed": 0,
+ "num_blocks": 284775,
+ "dummy_execution_time_ms": 0.8943
+}

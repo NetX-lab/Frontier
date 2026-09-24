@@ -1,4 +1,4 @@
-"""PREFILL and DECODE forward-step synchronization entry handlers."""
+"""Per-layer forward-step synchronization entry for PREFILL, DECODE, MONOLITHIC."""
 
 from typing import Any
 
@@ -14,7 +14,35 @@ def _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
     return scheduler.get_stage_execution_context(replica_id, stage_id).forward_group_sealed
 
 
-def enter_prefill_sync(
+def _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, stage_id):
+    """Remove placeholders whose lanes have since joined this forward.
+
+    A placeholder is placed only for a lane whose stage is not busy. A stage
+    admits new work into a forward only before the forward is sealed, and opens
+    a new forward only once it is idle. A lane that is busy while this room is
+    open has therefore joined this forward, and its own batch will arrive here.
+    Counting its placeholder would dispatch the room without that batch.
+    """
+
+    for lane_id, placed in list(sync_room["batches"].items()):
+        if placed.is_idle and scheduler._replica_schedulers[
+            (replica_id, lane_id)
+        ].get_replica_stage_scheduler(stage_id).is_busy:
+            del sync_room["batches"][lane_id]
+            del sync_room["arrival_times"][lane_id]
+
+
+def _load_sync_event(mode: str):
+    if mode == "prefill":
+        from frontier.events.prefill_sync_event import PrefillSyncEvent
+
+        return PrefillSyncEvent
+    from frontier.events.decode_sync_event import DecodeSyncEvent
+
+    return DecodeSyncEvent
+
+
+def enter_layer_sync(
     scheduler: Any,
     time: float,
     replica_id: int,
@@ -25,32 +53,52 @@ def enter_prefill_sync(
     layer_id: int,
     stage_execution_time: float,
     *,
+    mode: str,
     metrics_store: Any = None,
 ) -> list:
+    """Admit one lane into its forward's pre_moe room, and dispatch when full.
+
+    `mode` is the entering batch's own local phase. It selects the layer-path
+    check and the event class used to fill an idle lane. Every lane of the
+    cluster waits in its one room, and the cluster's sync kind selects the wave
+    handler, so on a monolithic cluster a cohort whose lanes disagree about
+    their phase still resolves to one forward.
+    """
+
     del stage_execution_time
-    if scheduler._prefill_sync_waiting_room is None:
+    mode_name = mode.upper()
+
+    waiting_room = scheduler._sync_waiting_room
+    if waiting_room is None:
         raise ValueError(
-            "PREFILL synchronization is unavailable for a dense model; dense execution must use the full-stage protocol"
+            f"{mode_name} synchronization is unavailable for a dense model; "
+            "dense execution must use the full-stage protocol"
         )
     if sync_stage != "pre_moe":
         raise ValueError(
-            "PREFILL synchronization entry must start at pre_moe; post_moe completion is handled by PrefillSyncCollectiveEvent"
+            f"{mode_name} synchronization entry must start at pre_moe; post_moe "
+            "completion is handled by the collective event"
         )
-    if not scheduler._uses_shared_prefill_layer_path(batch, layer_id):
+    layer_path_ok = (
+        scheduler._uses_shared_prefill_layer_path(batch, layer_id)
+        if mode == "prefill"
+        else scheduler._uses_shared_decode_layer_path(batch, layer_id)
+    )
+    if not layer_path_ok:
         raise RuntimeError(
-            "Legacy PREFILL DP synchronization is removed; the current layer must use the canonical per-layer protocol"
+            f"Legacy {mode_name} DP synchronization is removed; the current "
+            "layer must use the canonical per-layer protocol"
         )
     if replica_local_id is None:
         lane_id = 0
     elif type(replica_local_id) is not int or replica_local_id < 0:
         raise ValueError(
-            "PREFILL replica_local_id must be an exact non-negative int or None"
+            f"{mode_name} replica_local_id must be an exact non-negative int or None"
         )
     else:
         lane_id = replica_local_id
+
     step_id = scheduler._resolve_forward_step(
-        sync_kind="prefill",
-        waiting_room=scheduler._prefill_sync_waiting_room,
         replica_id=replica_id,
         stage_id=stage_id,
         batch=batch,
@@ -60,7 +108,7 @@ def enter_prefill_sync(
     )
     if step_id is None:
         return []
-    sync_room = scheduler._prefill_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
+    sync_room = waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
     # resolve_step retains this binding identity while step_id advances per layer.
     provisional_id = batch._forward_cohort_provisional_id
     sync_room.setdefault("provisional_cohort_id", provisional_id)
@@ -69,12 +117,16 @@ def enter_prefill_sync(
         return []
     sync_room["batches"][lane_id] = batch
     sync_room["arrival_times"][lane_id] = float(time)
+    _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, stage_id)
 
     expected_lanes = scheduler._replica_dp_size
     if type(expected_lanes) is not int or expected_lanes <= 0:
-        raise ValueError(f"PREFILL attention-DP lane count must be positive, got {expected_lanes}")
+        raise ValueError(
+            f"{mode_name} attention-DP lane count must be positive, got {expected_lanes}"
+        )
     if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
         idle_events = []
+        event_cls = _load_sync_event(mode)
         replica_schedulers = scheduler._replica_schedulers
         for missing_lane in range(expected_lanes):
             if missing_lane in sync_room["batches"]:
@@ -101,10 +153,8 @@ def enter_prefill_sync(
             idle_batch._stage_owner_replica_local_id = missing_lane
             sync_room["batches"][missing_lane] = idle_batch
             sync_room["arrival_times"][missing_lane] = float(time)
-            from frontier.events.prefill_sync_event import PrefillSyncEvent
-
             idle_events.append(
-                PrefillSyncEvent(
+                event_cls(
                     time=float(time),
                     replica_id=replica_id,
                     stage_id=stage_id,
@@ -126,11 +176,10 @@ def enter_prefill_sync(
     provisional_id = sync_room["provisional_cohort_id"]
     if type(provisional_id) is not int or provisional_id < 0:
         raise RuntimeError(
-            "PREFILL synchronization room has an invalid provisional step id: "
+            f"{mode_name} synchronization room has an invalid provisional step id: "
             f"{provisional_id!r}"
         )
     scheduler._close_forward_step(
-        sync_kind="prefill",
         replica_id=replica_id,
         stage_id=stage_id,
         layer_id=layer_id,
@@ -140,7 +189,14 @@ def enter_prefill_sync(
     sync_room.pop("batches", None)
     sync_room.pop("arrival_times", None)
     sync_room.pop("provisional_cohort_id", None)
-    return scheduler._on_prefill_ep_wave_ready(
+
+    if scheduler._sync_kind == "forward":
+        ready = scheduler._on_forward_ep_wave_ready
+    elif scheduler._sync_kind == "prefill":
+        ready = scheduler._on_prefill_ep_wave_ready
+    else:
+        ready = scheduler._on_decode_ep_wave_ready
+    return ready(
         time=sync_time,
         replica_id=replica_id,
         stage_id=stage_id,
@@ -149,6 +205,28 @@ def enter_prefill_sync(
         replica_local_id=replica_local_id,
         cohort_batches=step_batches,
         metrics_store=metrics_store,
+    )
+
+
+def enter_prefill_sync(
+    scheduler: Any,
+    time: float,
+    replica_id: int,
+    stage_id: int,
+    batch: Batch,
+    replica_local_id: int | None,
+    sync_stage: str,
+    layer_id: int,
+    stage_execution_time: float,
+    *,
+    metrics_store: Any = None,
+) -> list:
+    """Admit a lane whose local phase is prefill."""
+
+    return enter_layer_sync(
+        scheduler, time, replica_id, stage_id, batch, replica_local_id,
+        sync_stage, layer_id, stage_execution_time,
+        mode="prefill", metrics_store=metrics_store,
     )
 
 
@@ -165,125 +243,10 @@ def enter_decode_sync(
     *,
     metrics_store: Any = None,
 ) -> list:
-    del stage_execution_time
-    if scheduler._decode_sync_waiting_room is None:
-        raise ValueError(
-            "DECODE synchronization is unavailable for a dense model; dense execution must use the full-stage protocol"
-        )
-    if sync_stage != "pre_moe":
-        raise ValueError(
-            "DECODE synchronization entry must start at pre_moe; post_moe completion is handled by DecodeSyncCollectiveEvent"
-        )
-    if not scheduler._uses_shared_decode_layer_path(batch, layer_id):
-        raise RuntimeError(
-            "Legacy DECODE DP synchronization is removed; the current layer must use the canonical per-layer protocol"
-        )
-    if replica_local_id is None:
-        lane_id = 0
-    elif type(replica_local_id) is not int or replica_local_id < 0:
-        raise ValueError(
-            "DECODE replica_local_id must be an exact non-negative int or None"
-        )
-    else:
-        lane_id = replica_local_id
-    step_id = scheduler._resolve_forward_step(
-        sync_kind="decode",
-        waiting_room=scheduler._decode_sync_waiting_room,
-        replica_id=replica_id,
-        stage_id=stage_id,
-        batch=batch,
-        lane_id=lane_id,
-        layer_id=layer_id,
-        sync_stage=sync_stage,
-    )
-    if step_id is None:
-        return []
-    sync_room = scheduler._decode_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
-    # resolve_step retains this binding identity while step_id advances per layer.
-    provisional_id = batch._forward_cohort_provisional_id
-    sync_room.setdefault("provisional_cohort_id", provisional_id)
-    existing_batch = sync_room["batches"].get(lane_id)
-    if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
-        return []
-    sync_room["batches"][lane_id] = batch
-    sync_room["arrival_times"][lane_id] = float(time)
+    """Admit a lane whose local phase is decode."""
 
-    expected_lanes = scheduler._replica_dp_size
-    if type(expected_lanes) is not int or expected_lanes <= 0:
-        raise ValueError(f"DECODE attention-DP lane count must be positive, got {expected_lanes}")
-    if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
-        idle_events = []
-        replica_schedulers = scheduler._replica_schedulers
-        for missing_lane in range(expected_lanes):
-            if missing_lane in sync_room["batches"]:
-                continue
-            sibling = replica_schedulers.get((replica_id, missing_lane))
-            if sibling is None:
-                raise RuntimeError(
-                    "Missing Replica scheduler for expected attention-DP lane: "
-                    f"replica_id={replica_id}, replica_local_id={missing_lane}"
-                )
-            sibling_stage = sibling.get_replica_stage_scheduler(stage_id)
-            if not _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
-                continue
-            idle_batch = Batch(
-                replica_id=replica_id,
-                requests=[],
-                num_tokens=[],
-                is_idle=True,
-                is_moe=batch.is_moe,
-            )
-            idle_batch.set_global_id(expected_lanes * step_id + missing_lane)
-            idle_batch._forward_cohort_id = step_id
-            idle_batch._forward_cohort_provisional_id = provisional_id
-            idle_batch._stage_owner_replica_local_id = missing_lane
-            sync_room["batches"][missing_lane] = idle_batch
-            sync_room["arrival_times"][missing_lane] = float(time)
-            from frontier.events.decode_sync_event import DecodeSyncEvent
-
-            idle_events.append(
-                DecodeSyncEvent(
-                    time=float(time),
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    batch=idle_batch,
-                    replica_local_id=missing_lane,
-                    sync_stage=sync_stage,
-                    layer_id=layer_id,
-                    stage_execution_time=0.0,
-                    cluster_type=scheduler._cluster_type,
-                )
-            )
-        if idle_events:
-            return idle_events
-    if len(sync_room["batches"]) != expected_lanes:
-        return []
-    sync_time = max(sync_room["arrival_times"].values())
-    step_batches = dict(sync_room["batches"])
-    provisional_id = sync_room["provisional_cohort_id"]
-    if type(provisional_id) is not int or provisional_id < 0:
-        raise RuntimeError(
-            "DECODE synchronization room has an invalid provisional step id: "
-            f"{provisional_id!r}"
-        )
-    scheduler._close_forward_step(
-        sync_kind="decode",
-        replica_id=replica_id,
-        stage_id=stage_id,
-        layer_id=layer_id,
-        sync_stage=sync_stage,
-        provisional_id=provisional_id,
-    )
-    sync_room.pop("batches", None)
-    sync_room.pop("arrival_times", None)
-    sync_room.pop("provisional_cohort_id", None)
-    return scheduler._on_decode_ep_wave_ready(
-        time=sync_time,
-        replica_id=replica_id,
-        stage_id=stage_id,
-        batch=batch,
-        layer_id=layer_id,
-        replica_local_id=replica_local_id,
-        cohort_batches=step_batches,
-        metrics_store=metrics_store,
+    return enter_layer_sync(
+        scheduler, time, replica_id, stage_id, batch, replica_local_id,
+        sync_stage, layer_id, stage_execution_time,
+        mode="decode", metrics_store=metrics_store,
     )

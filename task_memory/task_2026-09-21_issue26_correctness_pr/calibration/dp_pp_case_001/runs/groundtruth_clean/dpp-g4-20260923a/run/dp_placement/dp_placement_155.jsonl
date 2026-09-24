@@ -1,0 +1,132 @@
+{"kind": "frontend_snapshot", "pid": 155, "seq": 0, "monotonic": 560603.924539144, "snapshot": 2, "counts": [[0, 0], [0, 0]], "wave": 0, "engines_running": false}
+{"kind": "frontend_route", "pid": 155, "seq": 1, "monotonic": 560607.165806584, "request_id": "cmpl-dpp2-w0-0", "engine": 0, "snapshot": 2, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 2, "monotonic": 560607.217656548, "snapshot": 3, "counts": [[0, 1], [0, 0]], "wave": 0, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 3, "monotonic": 560608.158726065, "request_id": "cmpl-dpp2-w1-0", "engine": 1, "snapshot": 3, "counts": [[0, 1], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 4, "monotonic": 560608.221232823, "snapshot": 4, "counts": [[0, 1], [0, 1]], "wave": 0, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 5, "monotonic": 560608.351771496, "snapshot": 5, "counts": [[0, 0], [0, 1]], "wave": 0, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 6, "monotonic": 560608.451708453, "snapshot": 6, "counts": [[0, 0], [0, 0]], "wave": 0, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 7, "monotonic": 560609.157678991, "request_id": "cmpl-dpp2-w2-0", "engine": 0, "snapshot": 6, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 8, "monotonic": 560609.209318441, "snapshot": 7, "counts": [[0, 1], [0, 0]], "wave": 1, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 9, "monotonic": 560609.309654296, "snapshot": 8, "counts": [[0, 0], [0, 0]], "wave": 1, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 10, "monotonic": 560614.312452033, "snapshot": 9, "counts": [[0, 0], [0, 0]], "wave": 2, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 11, "monotonic": 560619.3164643, "snapshot": 10, "counts": [[0, 0], [0, 0]], "wave": 2, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 12, "monotonic": 560624.321669207, "snapshot": 11, "counts": [[0, 0], [0, 0]], "wave": 2, "engines_running": false}
+{"kind": "frontend_route", "pid": 155, "seq": 13, "monotonic": 560629.169212476, "request_id": "cmpl-dpp2-a-b1-0", "engine": 0, "snapshot": 11, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 14, "monotonic": 560629.169606897, "request_id": "cmpl-dpp2-a-b3-0", "engine": 1, "snapshot": 11, "counts": [[1, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 15, "monotonic": 560629.169825509, "request_id": "cmpl-dpp2-a-b4-0", "engine": 0, "snapshot": 11, "counts": [[1, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 16, "monotonic": 560629.170041398, "request_id": "cmpl-dpp2-a-b5-0", "engine": 1, "snapshot": 11, "counts": [[2, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 17, "monotonic": 560629.170273582, "request_id": "cmpl-dpp2-a-b2-0", "engine": 0, "snapshot": 11, "counts": [[2, 0], [2, 0]], "score": 8, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 18, "monotonic": 560629.20443025, "snapshot": 12, "counts": [[0, 1], [0, 1]], "wave": 2, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 19, "monotonic": 560629.242492339, "request_id": "cmpl-dpp2-a-b6-0", "engine": 0, "snapshot": 12, "counts": [[0, 1], [0, 1]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 20, "monotonic": 560629.305360018, "snapshot": 13, "counts": [[0, 1], [0, 2]], "wave": 2, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 21, "monotonic": 560629.405579243, "snapshot": 14, "counts": [[0, 3], [0, 2]], "wave": 2, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 22, "monotonic": 560629.50580157, "snapshot": 15, "counts": [[0, 4], [0, 2]], "wave": 2, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 23, "monotonic": 560631.604016863, "snapshot": 16, "counts": [[0, 3], [0, 1]], "wave": 2, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 24, "monotonic": 560631.703786127, "snapshot": 17, "counts": [[0, 2], [0, 0]], "wave": 2, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 25, "monotonic": 560631.803979236, "snapshot": 18, "counts": [[0, 0], [0, 0]], "wave": 2, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 26, "monotonic": 560636.807342555, "snapshot": 19, "counts": [[0, 0], [0, 0]], "wave": 3, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 27, "monotonic": 560641.811563899, "snapshot": 20, "counts": [[0, 0], [0, 0]], "wave": 3, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 28, "monotonic": 560646.814455837, "snapshot": 21, "counts": [[0, 0], [0, 0]], "wave": 3, "engines_running": false}
+{"kind": "frontend_route", "pid": 155, "seq": 29, "monotonic": 560649.250360203, "request_id": "cmpl-dpp2-b-b1-0", "engine": 0, "snapshot": 21, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 30, "monotonic": 560649.25079756, "request_id": "cmpl-dpp2-b-b3-0", "engine": 1, "snapshot": 21, "counts": [[1, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 31, "monotonic": 560649.251092433, "request_id": "cmpl-dpp2-b-b4-0", "engine": 0, "snapshot": 21, "counts": [[1, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 32, "monotonic": 560649.251332406, "request_id": "cmpl-dpp2-b-b5-0", "engine": 1, "snapshot": 21, "counts": [[2, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 33, "monotonic": 560649.251596917, "request_id": "cmpl-dpp2-b-b2-0", "engine": 0, "snapshot": 21, "counts": [[2, 0], [2, 0]], "score": 8, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 34, "monotonic": 560649.281776738, "snapshot": 22, "counts": [[0, 1], [0, 1]], "wave": 3, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 35, "monotonic": 560649.348222477, "request_id": "cmpl-dpp2-b-b6-0", "engine": 0, "snapshot": 22, "counts": [[0, 1], [0, 1]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 36, "monotonic": 560649.381666521, "snapshot": 23, "counts": [[0, 3], [0, 2]], "wave": 3, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 37, "monotonic": 560649.631767062, "snapshot": 24, "counts": [[0, 4], [0, 2]], "wave": 3, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 38, "monotonic": 560651.018743513, "snapshot": 25, "counts": [[0, 3], [0, 1]], "wave": 3, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 39, "monotonic": 560651.118861916, "snapshot": 26, "counts": [[0, 2], [0, 0]], "wave": 3, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 40, "monotonic": 560651.21916654, "snapshot": 27, "counts": [[0, 0], [0, 0]], "wave": 3, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 41, "monotonic": 560656.224182275, "snapshot": 28, "counts": [[0, 0], [0, 0]], "wave": 4, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 42, "monotonic": 560661.22931547, "snapshot": 29, "counts": [[0, 0], [0, 0]], "wave": 4, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 43, "monotonic": 560666.23447002, "snapshot": 30, "counts": [[0, 0], [0, 0]], "wave": 4, "engines_running": false}
+{"kind": "frontend_route", "pid": 155, "seq": 44, "monotonic": 560669.354859205, "request_id": "cmpl-dpp2-c-b1-0", "engine": 0, "snapshot": 30, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 45, "monotonic": 560669.355235821, "request_id": "cmpl-dpp2-c-b3-0", "engine": 1, "snapshot": 30, "counts": [[1, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 46, "monotonic": 560669.355465083, "request_id": "cmpl-dpp2-c-b4-0", "engine": 0, "snapshot": 30, "counts": [[1, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 47, "monotonic": 560669.355661694, "request_id": "cmpl-dpp2-c-b5-0", "engine": 1, "snapshot": 30, "counts": [[2, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 48, "monotonic": 560669.355894666, "request_id": "cmpl-dpp2-c-b2-0", "engine": 0, "snapshot": 30, "counts": [[2, 0], [2, 0]], "score": 8, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 49, "monotonic": 560669.376662528, "snapshot": 31, "counts": [[0, 1], [0, 1]], "wave": 4, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 50, "monotonic": 560669.473652481, "request_id": "cmpl-dpp2-c-b6-0", "engine": 0, "snapshot": 31, "counts": [[0, 1], [0, 1]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 51, "monotonic": 560669.476883923, "snapshot": 32, "counts": [[0, 2], [0, 2]], "wave": 4, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 52, "monotonic": 560669.577128308, "snapshot": 33, "counts": [[0, 3], [0, 2]], "wave": 4, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 53, "monotonic": 560669.678096863, "snapshot": 34, "counts": [[0, 4], [0, 2]], "wave": 4, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 54, "monotonic": 560670.862225314, "snapshot": 35, "counts": [[0, 3], [0, 1]], "wave": 4, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 55, "monotonic": 560670.962401908, "snapshot": 36, "counts": [[0, 2], [0, 0]], "wave": 4, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 56, "monotonic": 560671.108340409, "snapshot": 37, "counts": [[0, 0], [0, 0]], "wave": 5, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 57, "monotonic": 560676.112425022, "snapshot": 38, "counts": [[0, 0], [0, 0]], "wave": 5, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 58, "monotonic": 560681.115385627, "snapshot": 39, "counts": [[0, 0], [0, 0]], "wave": 5, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 59, "monotonic": 560686.117529008, "snapshot": 40, "counts": [[0, 0], [0, 0]], "wave": 5, "engines_running": false}
+{"kind": "frontend_route", "pid": 155, "seq": 60, "monotonic": 560689.474002719, "request_id": "cmpl-dpp2-d-b1-0", "engine": 0, "snapshot": 40, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 61, "monotonic": 560689.485976857, "request_id": "cmpl-dpp2-d-b2-0", "engine": 1, "snapshot": 40, "counts": [[1, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 62, "monotonic": 560689.487042308, "request_id": "cmpl-dpp2-d-b3-0", "engine": 0, "snapshot": 40, "counts": [[1, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 63, "monotonic": 560689.491157158, "request_id": "cmpl-dpp2-d-b4-0", "engine": 1, "snapshot": 40, "counts": [[2, 0], [1, 0]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 64, "monotonic": 560689.495595224, "snapshot": 41, "counts": [[0, 1], [0, 0]], "wave": 5, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 65, "monotonic": 560689.49689752, "request_id": "cmpl-dpp2-d-b5-0", "engine": 1, "snapshot": 41, "counts": [[0, 1], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 66, "monotonic": 560689.578844274, "request_id": "cmpl-dpp2-d-b6-0", "engine": 0, "snapshot": 41, "counts": [[0, 1], [1, 0]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 67, "monotonic": 560689.595969357, "snapshot": 42, "counts": [[0, 1], [1, 1]], "wave": 5, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 68, "monotonic": 560689.695460141, "snapshot": 43, "counts": [[0, 3], [1, 1]], "wave": 5, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 69, "monotonic": 560689.836756426, "snapshot": 44, "counts": [[0, 3], [0, 3]], "wave": 5, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 70, "monotonic": 560691.44759667, "snapshot": 45, "counts": [[0, 2], [0, 3]], "wave": 5, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 71, "monotonic": 560691.547522248, "snapshot": 46, "counts": [[0, 0], [0, 2]], "wave": 5, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 72, "monotonic": 560691.647704053, "snapshot": 47, "counts": [[0, 0], [0, 0]], "wave": 5, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 73, "monotonic": 560696.649544779, "snapshot": 48, "counts": [[0, 0], [0, 0]], "wave": 6, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 74, "monotonic": 560701.654726097, "snapshot": 49, "counts": [[0, 0], [0, 0]], "wave": 6, "engines_running": false}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 75, "monotonic": 560706.659865048, "snapshot": 50, "counts": [[0, 0], [0, 0]], "wave": 6, "engines_running": false}
+{"kind": "frontend_route", "pid": 155, "seq": 76, "monotonic": 560709.475592747, "request_id": "cmpl-dpp2-s00-0", "engine": 0, "snapshot": 50, "counts": [[0, 0], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 77, "monotonic": 560709.527209443, "snapshot": 51, "counts": [[0, 1], [0, 0]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 78, "monotonic": 560709.533312157, "request_id": "cmpl-dpp2-s01-0", "engine": 1, "snapshot": 51, "counts": [[0, 1], [0, 0]], "score": 0, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 79, "monotonic": 560709.593818746, "request_id": "cmpl-dpp2-s02-0", "engine": 0, "snapshot": 51, "counts": [[0, 1], [1, 0]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 80, "monotonic": 560709.628104512, "snapshot": 52, "counts": [[0, 1], [0, 1]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 81, "monotonic": 560709.655024982, "request_id": "cmpl-dpp2-s03-0", "engine": 0, "snapshot": 52, "counts": [[0, 1], [0, 1]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 82, "monotonic": 560709.713445578, "request_id": "cmpl-dpp2-s04-0", "engine": 1, "snapshot": 52, "counts": [[1, 1], [0, 1]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 83, "monotonic": 560709.728585705, "snapshot": 53, "counts": [[0, 2], [0, 1]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 84, "monotonic": 560709.774040315, "request_id": "cmpl-dpp2-s05-0", "engine": 1, "snapshot": 53, "counts": [[0, 2], [0, 1]], "score": 1, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 85, "monotonic": 560709.828542985, "snapshot": 54, "counts": [[0, 3], [0, 2]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 86, "monotonic": 560709.833276079, "request_id": "cmpl-dpp2-s06-0", "engine": 1, "snapshot": 54, "counts": [[0, 3], [0, 2]], "score": 2, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 87, "monotonic": 560709.893455189, "request_id": "cmpl-dpp2-s07-0", "engine": 0, "snapshot": 54, "counts": [[0, 3], [1, 2]], "score": 3, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 88, "monotonic": 560709.928538384, "snapshot": 55, "counts": [[0, 3], [0, 4]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 89, "monotonic": 560709.954253859, "request_id": "cmpl-dpp2-s08-0", "engine": 0, "snapshot": 55, "counts": [[0, 3], [0, 4]], "score": 3, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 90, "monotonic": 560710.012971884, "request_id": "cmpl-dpp2-s09-0", "engine": 1, "snapshot": 55, "counts": [[1, 3], [0, 4]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 91, "monotonic": 560710.028414421, "snapshot": 56, "counts": [[0, 5], [0, 4]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 92, "monotonic": 560710.07379471, "request_id": "cmpl-dpp2-s10-0", "engine": 1, "snapshot": 56, "counts": [[0, 5], [0, 4]], "score": 4, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 93, "monotonic": 560710.128585802, "snapshot": 57, "counts": [[0, 5], [0, 5]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 94, "monotonic": 560710.134418873, "request_id": "cmpl-dpp2-s11-0", "engine": 0, "snapshot": 57, "counts": [[0, 5], [0, 5]], "score": 5, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 95, "monotonic": 560710.193068382, "request_id": "cmpl-dpp2-s12-0", "engine": 1, "snapshot": 57, "counts": [[1, 5], [0, 5]], "score": 5, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 96, "monotonic": 560710.228977885, "snapshot": 58, "counts": [[0, 6], [0, 6]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 97, "monotonic": 560710.25408213, "request_id": "cmpl-dpp2-s13-0", "engine": 0, "snapshot": 58, "counts": [[0, 6], [0, 6]], "score": 6, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 98, "monotonic": 560710.312292339, "request_id": "cmpl-dpp2-s14-0", "engine": 1, "snapshot": 58, "counts": [[1, 6], [0, 6]], "score": 6, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 99, "monotonic": 560710.328574073, "snapshot": 59, "counts": [[0, 7], [0, 6]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 100, "monotonic": 560710.373142171, "request_id": "cmpl-dpp2-s15-0", "engine": 1, "snapshot": 59, "counts": [[0, 7], [0, 6]], "score": 6, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 101, "monotonic": 560710.428669629, "snapshot": 60, "counts": [[0, 7], [0, 7]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 102, "monotonic": 560710.433787161, "request_id": "cmpl-dpp2-s16-0", "engine": 0, "snapshot": 60, "counts": [[0, 7], [0, 7]], "score": 7, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 103, "monotonic": 560710.494818158, "request_id": "cmpl-dpp2-s17-0", "engine": 1, "snapshot": 60, "counts": [[1, 7], [0, 7]], "score": 7, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 104, "monotonic": 560710.529076425, "snapshot": 61, "counts": [[0, 8], [0, 7]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 105, "monotonic": 560710.553201742, "request_id": "cmpl-dpp2-s18-0", "engine": 1, "snapshot": 61, "counts": [[0, 8], [0, 7]], "score": 7, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 106, "monotonic": 560710.614222338, "request_id": "cmpl-dpp2-s19-0", "engine": 0, "snapshot": 61, "counts": [[0, 8], [1, 7]], "score": 8, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 107, "monotonic": 560710.628742485, "snapshot": 62, "counts": [[0, 8], [0, 8]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 108, "monotonic": 560710.674497786, "request_id": "cmpl-dpp2-s20-0", "engine": 0, "snapshot": 62, "counts": [[0, 8], [0, 8]], "score": 8, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 109, "monotonic": 560710.728367052, "snapshot": 63, "counts": [[0, 9], [0, 9]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 110, "monotonic": 560710.733526337, "request_id": "cmpl-dpp2-s21-0", "engine": 0, "snapshot": 63, "counts": [[0, 9], [0, 9]], "score": 9, "start_index": 0, "reservation": 1}
+{"kind": "frontend_route", "pid": 155, "seq": 111, "monotonic": 560710.794143678, "request_id": "cmpl-dpp2-s22-0", "engine": 1, "snapshot": 63, "counts": [[1, 9], [0, 9]], "score": 9, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 112, "monotonic": 560710.82888798, "snapshot": 64, "counts": [[0, 11], [0, 9]], "wave": 6, "engines_running": true}
+{"kind": "frontend_route", "pid": 155, "seq": 113, "monotonic": 560710.853001187, "request_id": "cmpl-dpp2-s23-0", "engine": 1, "snapshot": 64, "counts": [[0, 11], [0, 9]], "score": 9, "start_index": 0, "reservation": 1}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 114, "monotonic": 560710.92880872, "snapshot": 65, "counts": [[0, 10], [0, 9]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 115, "monotonic": 560711.028771243, "snapshot": 66, "counts": [[0, 10], [0, 10]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 116, "monotonic": 560711.128702506, "snapshot": 67, "counts": [[0, 8], [0, 10]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 117, "monotonic": 560711.228881472, "snapshot": 68, "counts": [[0, 7], [0, 10]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 118, "monotonic": 560711.328741186, "snapshot": 69, "counts": [[0, 7], [0, 9]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 119, "monotonic": 560711.428979274, "snapshot": 70, "counts": [[0, 6], [0, 8]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 120, "monotonic": 560711.529103758, "snapshot": 71, "counts": [[0, 4], [0, 8]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 121, "monotonic": 560711.630228136, "snapshot": 72, "counts": [[0, 4], [0, 7]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 122, "monotonic": 560711.768369846, "snapshot": 73, "counts": [[0, 4], [0, 6]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 123, "monotonic": 560711.86802452, "snapshot": 74, "counts": [[0, 3], [0, 6]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 124, "monotonic": 560711.968094509, "snapshot": 75, "counts": [[0, 2], [0, 5]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 125, "monotonic": 560712.068257391, "snapshot": 76, "counts": [[0, 1], [0, 5]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 126, "monotonic": 560712.169097571, "snapshot": 77, "counts": [[0, 1], [0, 4]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 127, "monotonic": 560712.269386529, "snapshot": 78, "counts": [[0, 0], [0, 4]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 128, "monotonic": 560712.370236301, "snapshot": 79, "counts": [[0, 0], [0, 3]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 129, "monotonic": 560712.580126766, "snapshot": 80, "counts": [[0, 0], [0, 2]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 130, "monotonic": 560712.789349144, "snapshot": 81, "counts": [[0, 0], [0, 1]], "wave": 6, "engines_running": true}
+{"kind": "frontend_snapshot", "pid": 155, "seq": 131, "monotonic": 560712.955325707, "snapshot": 82, "counts": [[0, 0], [0, 0]], "wave": 6, "engines_running": true}

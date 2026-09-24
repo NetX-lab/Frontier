@@ -1,0 +1,16 @@
+{
+ "entry": "workflow-gap-analysis (T1 replay and per-burst T2 qualification of G4 against the G5 Frontier runs)",
+ "command": "/data/ycfeng/envs/frontier-py310/bin/python tests/comparison/dp_placement_pp/compare_placement.py --vllm-chain task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a/extraction/chain.json --request-ids task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/trace_g4/request_ids.json --frontier-dir /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g4 --output-dir task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/analysis/g5_comparison",
+ "working_directory": "/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr",
+ "environment": {
+  "PYTHONPATH": "<worktree>",
+  "WANDB_DISABLED": "true",
+  "VIDUR_DISABLE_WANDB": "1",
+  "FRONTIER_TMP_ROOT": "/data/ycfeng/tmp"
+ },
+ "start_utc": "2026-09-23T15:15:53Z",
+ "end_utc": "2026-09-23T15:15:54Z",
+ "exit_code": 0,
+ "result": "T1 51/51 routes MATCH (48/48 formal). T2: bursts a, b, c SCENARIO_NOT_REACHED (burst_routed_in_trace_order, no_output_applied_before_probe); burst d SCENARIO_NOT_REACHED (burst_routed_from_one_snapshot, probe_snapshot_scheduled_in_burst_on_every_engine, no_output_applied_before_probe). Probe: native engine 0, fixed 0, control 1, round_robin 0 in every burst.",
+ "time_source": "artifact mtimes; the receipt was written after the run"
+}

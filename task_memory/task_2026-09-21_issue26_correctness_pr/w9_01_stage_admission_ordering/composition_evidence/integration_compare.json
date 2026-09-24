@@ -1,0 +1,22 @@
+{
+ "counts_before": {
+  "error": 5,
+  "skipped": 22,
+  "passed": 16
+ },
+ "counts_after": {
+  "error": 5,
+  "skipped": 22,
+  "passed": 19
+ },
+ "regressions": [],
+ "now_passing": [],
+ "skip_changes": [],
+ "new_failures": [],
+ "only_before": [],
+ "only_after": [
+  "tests.integration.test_stage_admission_pipeline_lanes::test_dense_lanes_start_in_the_same_first_forward",
+  "tests.integration.test_stage_admission_pipeline_lanes::test_moe_lanes_complete_every_request[G3a-moe-dp2-pp2-n4-expected0]",
+  "tests.integration.test_stage_admission_pipeline_lanes::test_moe_lanes_complete_every_request[G3a-moe-dp4-pp2-n8-expected1]"
+ ]
+}

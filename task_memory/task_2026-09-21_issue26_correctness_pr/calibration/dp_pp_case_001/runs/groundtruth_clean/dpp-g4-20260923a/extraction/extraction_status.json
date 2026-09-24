@@ -1,0 +1,16 @@
+{
+ "run_dir": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a/run",
+ "num_engine_files": 2,
+ "num_engine_iterations": 1620,
+ "num_published_iterations": 92,
+ "num_coordinator_receipts": 92,
+ "num_publications": 83,
+ "num_frontend_snapshots": 81,
+ "num_routes": 51,
+ "num_requests": 51,
+ "num_placements": 51,
+ "out_of_order_receipts": 0,
+ "request_metrics_complete": true,
+ "problems": [],
+ "status": "PASS"
+}

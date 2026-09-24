@@ -1,0 +1,20 @@
+{
+ "counts_before": {
+  "error": 5,
+  "passed": 27,
+  "skipped": 22
+ },
+ "counts_after": {
+  "error": 5,
+  "passed": 28,
+  "skipped": 22
+ },
+ "regressions": [],
+ "now_passing": [],
+ "skip_changes": [],
+ "new_failures": [],
+ "only_before": [],
+ "only_after": [
+  "tests.integration.test_vllm_v1_decode_preemption_runtime::test_a_request_preempted_during_decode_resumes_and_completes"
+ ]
+}

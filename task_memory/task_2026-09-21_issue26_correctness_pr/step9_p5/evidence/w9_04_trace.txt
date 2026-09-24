@@ -1,0 +1,23 @@
+STUCK
+      TRY ('stage_batch', 0, 1) FULL_STAGE_WORLD ok=True | g=None sealed=False full=["('stage_batch', 0)"] ep=False fifo=[]
+      BIND ('stage_batch', 0, 1) -> 0
+      POP lane=0 -> (0, [0])
+      TRY ('stage_batch', 1, 1) FULL_STAGE_WORLD ok=True | g=0 sealed=False full=["('stage_batch', 0)", "('stage_batch', 1)"] ep=False fifo=[]
+      BIND ('stage_batch', 1, 1) -> 0
+      POP lane=1 -> (1, [1])
+0.012100 ENTER lane=0 b=0 idle=False reqs=[0] L0 prefill prov=0 step 0->0 out=['PrefillSyncEvent:2', 'PrefillSyncEvent:3'] | g=0 sealed=False full=["('stage_batch', 0)", "('stage_batch', 1)"] ep=False fifo=[]
+0.012100 ENTER lane=2 b=2 idle=True reqs=[] L0 prefill prov=0 step 0->0 out=[] | g=0 sealed=False full=["('stage_batch', 0)", "('stage_batch', 1)"] ep=False fifo=[]
+0.012100 ENTER lane=3 b=3 idle=True reqs=[] L0 prefill prov=0 step 0->0 out=[] | g=0 sealed=False full=["('stage_batch', 0)", "('stage_batch', 1)"] ep=False fifo=[]
+      TRY ('stage_batch', 4, 1) FULL_STAGE_WORLD ok=True | g=0 sealed=False full=["('stage_batch', 0)", "('stage_batch', 1)", "('stage_batch', 4)"] ep=False fifo=[]
+      BIND ('stage_batch', 4, 1) -> 0
+      POP lane=2 -> (4, [2])
+      replace_full_stage_owners_with_ep_wave | g=0 sealed=True full=["('stage_batch', 4)"] ep=True fifo=[]
+0.013708 ENTER lane=1 b=1 idle=False reqs=[1] L0 prefill prov=0 step 0->0 out=['PrefillSyncCollectiveEvent:None'] | g=0 sealed=True full=["('stage_batch', 4)"] ep=True fifo=[]
+0.020376 ENTER lane=2 b=4 idle=False reqs=[2] L0 prefill prov=0 step 0->1 out=['PrefillSyncEvent:3'] | g=0 sealed=True full=["('stage_batch', 4)"] ep=True fifo=[]
+0.020376 ENTER lane=3 b=9 idle=True reqs=[] L0 prefill prov=0 step 1->1 out=[] | g=0 sealed=True full=["('stage_batch', 4)"] ep=True fifo=[]
+      replace_ep_wave_with_full_stage_owners | g=0 sealed=True full=["('shared_layer', 0)", "('shared_layer', 1)", "('stage_batch', 4)"] ep=False fifo=[]
+      TRY ('stage_batch', 10, 1) FULL_STAGE_WORLD ok=False | g=0 sealed=True full=["('shared_layer', 0)", "('shared_layer', 1)", "('stage_batch', 4)"] ep=False fifo=["('stage_batch', 10)"]
+      POP lane=3 -> None
+0.027708 ENTER lane=0 b=0 idle=False reqs=[0] L1 prefill prov=0 step 0->2 out=['PrefillSyncEvent:3'] | g=0 sealed=True full=["('shared_layer', 0)", "('shared_layer', 1)", "('stage_batch', 4)"] ep=False fifo=["('stage_batch', 10)"]
+0.027708 ENTER lane=1 b=1 idle=False reqs=[1] L1 prefill prov=0 step 0->2 out=[] | g=0 sealed=True full=["('shared_layer', 0)", "('shared_layer', 1)", "('stage_batch', 4)"] ep=False fifo=["('stage_batch', 10)"]
+0.027708 ENTER lane=3 b=11 idle=True reqs=[] L1 prefill prov=0 step 2->2 out=[] | g=0 sealed=True full=["('shared_layer', 0)", "('shared_layer', 1)", "('stage_batch', 4)"] ep=False fifo=["('stage_batch', 10)"]

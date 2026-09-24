@@ -1,0 +1,16 @@
+cells 72
+2ffb062 drained 72 complete 31 requests lost 176 short output 0 prefill preemptions 34 decode preemptions 176
+fix drained 72 complete 72 requests lost 0 short output 0 prefill preemptions 38 decode preemptions 206
+lossy cells at 2ffb062 41 ; cells with a decode-phase preemption after the fix 41 ; same set True
+  dense_dp1 num_blocks=10: lost at 2ffb062 42, decode preemptions after 50, lost after 0
+  dense_dp1 num_blocks=12: lost at 2ffb062 26, decode preemptions after 30, lost after 0
+  dense_dp1 num_blocks=16: lost at 2ffb062 4, decode preemptions after 14, lost after 0
+  dense_dp1 num_blocks=24: lost at 2ffb062 0, decode preemptions after 0, lost after 0
+  moe_dp2 num_blocks=10: lost at 2ffb062 36, decode preemptions after 39, lost after 0
+  moe_dp2 num_blocks=12: lost at 2ffb062 29, decode preemptions after 34, lost after 0
+  moe_dp2 num_blocks=16: lost at 2ffb062 5, decode preemptions after 4, lost after 0
+  moe_dp2 num_blocks=24: lost at 2ffb062 0, decode preemptions after 0, lost after 0
+  moe_dp4 num_blocks=10: lost at 2ffb062 21, decode preemptions after 21, lost after 0
+  moe_dp4 num_blocks=12: lost at 2ffb062 12, decode preemptions after 13, lost after 0
+  moe_dp4 num_blocks=16: lost at 2ffb062 1, decode preemptions after 1, lost after 0
+  moe_dp4 num_blocks=24: lost at 2ffb062 0, decode preemptions after 0, lost after 0

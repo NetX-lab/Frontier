@@ -1,0 +1,2 @@
+frontier.config /data/ycfeng/tmp/issue26-correctness-pr/pre_change_d1a2a06/frontier/config/__init__.py num_pipeline_stages 2
+REJECTED ValueError vllm_load_balancing supports one co-location Replica with vllm_v1 and PP1, got cluster_type=MONOLITHIC, num_replicas=1, num_pipeline_stages=2, replica_scheduler=vllm_v1

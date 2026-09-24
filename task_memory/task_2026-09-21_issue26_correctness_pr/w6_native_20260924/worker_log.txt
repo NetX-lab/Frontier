@@ -1,0 +1,135 @@
+===== exp-0924-114241-429126-cfcd2084 =====
+{"@caller":"gitlab.basemind.com/basemind/brainpp/projects/kubebrain/cmd/worker-init/app/options.(*Options).Run","@file":"projects/kubebrain/cmd/worker-init/app/options/options.go:80","@level":"info","@msg":"SSHD not enabled","@timestamp":"2026-09-23T20:44:56.636Z"}
+2026-09-23 20:44:56: DEBUG: Calling worker_init, DISTRIBUTED_JOB_ENVS_INITIALIZED=
+2026-09-23 20:44:56: DEBUG: worker_init() function called
+2026-09-23 20:44:56: DEBUG: SCRIPT_PATH=/jobutils/scripts, BASE_DIR=/jobutils
+SOCKET_IP=10.191.9.10
+0 reranked to 0
+MASTER_NODE_NAME=gpu-h800-0203.host.platform.shaipower.com, LAST_NODE_NAME=gpu-h800-0203.host.platform.shaipower.com
+MASTER_SOCKET_ADDR=10.191.9.10, LAST_SOCKET_ADDR=10.191.9.10
+NODE_NAME=gpu-h800-0203.host.platform.shaipower.com
+GPU_TYPE=H800
+GPU_VENDOR=NVIDIA
+NODE_RANK=0
+NODE_COUNT=1
+MASTER_ADDR=10.191.9.10
+PROC_PER_NODE=1
+JOB_ID=exp-0924-114241-429126
+RDMA_NETWORK_LINK_TYPE=RoCE
+[33mWarning: Not a full machine job, skipped IB HCA auto detection[0m
+NCCL_SOCKET_IFNAME=ens22np0
+NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME=ens22np0
+NCCL_IB_HCA=
+NCCL_IB_GID_INDEX=
+NVSHMEM_HCA_PE_MAPPING=
+2026-09-23 20:44:56: Ready to go.
+2026/09/23 20:44:56 [DEBUG] packaging-url , packaging-dir /workdir/src/rjob, Starting packaging server
+=== WORKER PREAMBLE ===
+W6:HOST=gpu-h800-0203.host.platform.shaipower.com
+W6:PWD=/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr
+W6:PYTHON=/usr/bin/python3
+=== DRIVER DISCOVERY ===
+/dev/nvidia-modeset
+/dev/nvidia-uvm
+/dev/nvidia-uvm-tools
+/dev/nvidia5
+/dev/nvidiactl
+LD_LIBRARY_PATH_IN=/usr/local/cuda/lib64
+	libcudart.so.12 (libc6,x86-64) => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so.12
+	libcudart.so (libc6,x86-64) => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so
+/usr/local/nvidia/lib64/libcuda.so.570.124.06
+/usr/local/nvidia/lib64/libcuda.so
+/usr/local/nvidia/lib64/libcuda.so.1
+/usr/local/cuda-12.8/compat/libcuda.so
+/usr/local/cuda-12.8/compat/libcuda.so.1
+W6:LIBCUDA_DIR=/usr/local/nvidia/lib64
+environment: line 34: nvidia-smi: command not found
+W6:NVIDIA_SMI=unavailable
+=== VERSIONS ===
+W6:PYVER=3.12.11
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+W6:TORCH=2.8.0+cu128 cuda=12.8
+W6:CUDA_AVAILABLE=True
+W6:DEVICE=NVIDIA H800
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+W6:VLLM=0.10.2
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+INFO 09-23 20:45:10 [__init__.py:216] Automatically detected platform cuda.
+W6:FUSED_MOE_SOURCE=/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/fused_moe.py
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+INFO 09-23 20:45:21 [__init__.py:216] Automatically detected platform cuda.
+vLLM 0.10.2 loaded successfully (API: 0.10.x)
+FP8 quantization utilities loaded successfully
+W6:API_VERSION=0.10.x
+W6:FP8=True
+=== INSTALLING TEST DEPENDENCIES ===
+
+[notice] A new release of pip is available: 25.2 -> 26.2.1
+[notice] To update, run: python3 -m pip install --upgrade pip
+W6:PYTEST=9.1.1
+W6:PANDAS=3.0.6
+=== PARITY RUN ===
+........                                                                 [100%]
+==================================== PASSES ====================================
+__________ test_production_shaped_expert_output_matches_vllm[0-4096] ___________
+----------------------------- Captured stdout call -----------------------------
+WARNING 09-23 20:45:43 [fused_moe.py:727] Using default MoE config. Performance might be sub-optimal! Config file not found at ['/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=16,N=768,device_name=NVIDIA_H800.json']
+------------------------------ Captured log call -------------------------------
+WARNING  vllm.model_executor.layers.fused_moe.fused_moe:fused_moe.py:727 Using default MoE config. Performance might be sub-optimal! Config file not found at ['/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=16,N=768,device_name=NVIDIA_H800.json']
+_________________ test_uneven_expert_occupancy_matches_vllm[2] _________________
+----------------------------- Captured stdout call -----------------------------
+WARNING 09-23 20:45:44 [fused_moe.py:727] Using default MoE config. Performance might be sub-optimal! Config file not found at ['/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=8,N=256,device_name=NVIDIA_H800.json']
+------------------------------ Captured log call -------------------------------
+WARNING  vllm.model_executor.layers.fused_moe.fused_moe:fused_moe.py:727 Using default MoE config. Performance might be sub-optimal! Config file not found at ['/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=8,N=256,device_name=NVIDIA_H800.json']
+__________________ test_fp8_path_runs_on_the_gated_activation __________________
+----------------------------- Captured stdout call -----------------------------
+WARNING 09-23 20:45:45 [fused_moe.py:727] Using default MoE config. Performance might be sub-optimal! Config file not found at ['/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=8,N=256,device_name=NVIDIA_H800,dtype=fp8_w8a8,block_shape=[128,128].json']
+------------------------------ Captured log call -------------------------------
+WARNING  vllm.model_executor.layers.fused_moe.fused_moe:fused_moe.py:727 Using default MoE config. Performance might be sub-optimal! Config file not found at ['/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs/E=8,N=256,device_name=NVIDIA_H800,dtype=fp8_w8a8,block_shape=[128,128].json']
+DEBUG    vllm.logger:deep_gemm.py:39 DeepGEMM E8M0 disabled: DeepGEMM not supported on this system.
+=========================== short test summary info ============================
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[0-4096]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[0-4097]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[1-4096]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[1-4097]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_uneven_expert_occupancy_matches_vllm[2]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_uneven_expert_occupancy_matches_vllm[4]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_repeated_invocations_do_not_reuse_a_stale_result
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_fp8_path_runs_on_the_gated_activation
+8 passed in 14.53s
+W6:PARITY_EXIT=0
+
+=== W6 SUMMARY (the platform log keeps only a tail) ===
+W6:HOST=gpu-h800-0203.host.platform.shaipower.com
+W6:PWD=/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr
+W6:PYTHON=/usr/bin/python3
+W6:LIBCUDA_DIR=/usr/local/nvidia/lib64
+W6:NVIDIA_SMI=unavailable
+W6:PYVER=3.12.11
+W6:TORCH=2.8.0+cu128 cuda=12.8
+W6:CUDA_AVAILABLE=True
+W6:DEVICE=NVIDIA H800
+W6:VLLM=0.10.2
+W6:FUSED_MOE_SOURCE=/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/fused_moe.py
+W6:API_VERSION=0.10.x
+W6:FP8=True
+W6:PYTEST=9.1.1
+W6:PANDAS=3.0.6
+W6:PARITY_EXIT=0
+--- pytest outcomes ---
+=========================== short test summary info ============================
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[0-4096]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[0-4097]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[1-4096]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_production_shaped_expert_output_matches_vllm[1-4097]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_uneven_expert_occupancy_matches_vllm[2]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_uneven_expert_occupancy_matches_vllm[4]
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_repeated_invocations_do_not_reuse_a_stale_result
+PASSED tests/integration/test_moe_fused_expert_numerical_parity.py::test_fp8_path_runs_on_the_gated_activation
+8 passed in 14.53s
+W6:PARITY_EXIT=0
+=== WORKER DONE status=0 ===

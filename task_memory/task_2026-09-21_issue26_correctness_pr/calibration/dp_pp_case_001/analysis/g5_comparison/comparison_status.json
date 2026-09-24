@@ -1,0 +1,387 @@
+{
+ "vllm_chain": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g4-20260923a/extraction/chain.json",
+ "frontier_dir": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g4",
+ "t1_routes": 51,
+ "t1_formal_routes": 48,
+ "t1_formal_match": 48,
+ "t1_mismatch_by_cause": {},
+ "t2_bursts": {
+  "a": {
+   "qualification": {
+    "checks": {
+     "burst_routed_in_trace_order": false,
+     "burst_routed_from_one_snapshot": true,
+     "probe_snapshot_scheduled_in_burst_on_every_engine": true,
+     "no_output_applied_before_probe": false
+    },
+    "qualified": false,
+    "failed_checks": [
+     "burst_routed_in_trace_order",
+     "no_output_applied_before_probe"
+    ],
+    "route_order": [
+     "dpp2-a-b1",
+     "dpp2-a-b3",
+     "dpp2-a-b4",
+     "dpp2-a-b5",
+     "dpp2-a-b2",
+     "dpp2-a-b6"
+    ],
+    "probe_request_id": "dpp2-a-b6",
+    "probe_snapshot": 12,
+    "probe_snapshot_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    "probe_snapshot_provenance": [
+     {
+      "engine": 0,
+      "wave": 2,
+      "step": 0,
+      "iteration_seq": 20,
+      "branch": "scheduled_without_applying"
+     },
+     {
+      "engine": 1,
+      "wave": 2,
+      "step": 0,
+      "iteration_seq": 10,
+      "branch": "scheduled_without_applying"
+     }
+    ],
+    "probe_route_after_burst_s": 0.07327986299060285,
+    "probe_snapshot_applied_after_burst_s": 0.03521777398418635,
+    "first_applied_output_after_burst_s": 0.0338344790507108
+   },
+   "probe_status": "SCENARIO_NOT_REACHED",
+   "probe_native_engine": 0,
+   "probe_frontier": {
+    "vllm_load_balancing": 0,
+    "completion_reporting_control": 1,
+    "round_robin": 0
+   },
+   "control_differs_from_native": true,
+   "probe_frontier_selection": {
+    "vllm_load_balancing": {
+     "time": 22.085,
+     "snapshot": [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "engine": 0,
+     "request_id": "dpp2-a-b6"
+    },
+    "completion_reporting_control": {
+     "time": 22.085,
+     "snapshot": [
+      [
+       3,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "engine": 1,
+     "request_id": "dpp2-a-b6"
+    }
+   }
+  },
+  "b": {
+   "qualification": {
+    "checks": {
+     "burst_routed_in_trace_order": false,
+     "burst_routed_from_one_snapshot": true,
+     "probe_snapshot_scheduled_in_burst_on_every_engine": true,
+     "no_output_applied_before_probe": false
+    },
+    "qualified": false,
+    "failed_checks": [
+     "burst_routed_in_trace_order",
+     "no_output_applied_before_probe"
+    ],
+    "route_order": [
+     "dpp2-b-b1",
+     "dpp2-b-b3",
+     "dpp2-b-b4",
+     "dpp2-b-b5",
+     "dpp2-b-b2",
+     "dpp2-b-b6"
+    ],
+    "probe_request_id": "dpp2-b-b6",
+    "probe_snapshot": 22,
+    "probe_snapshot_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    "probe_snapshot_provenance": [
+     {
+      "engine": 0,
+      "wave": 3,
+      "step": 0,
+      "iteration_seq": 154,
+      "branch": "scheduled_without_applying"
+     },
+     {
+      "engine": 1,
+      "wave": 3,
+      "step": 0,
+      "iteration_seq": 141,
+      "branch": "scheduled_without_applying"
+     }
+    ],
+    "probe_route_after_burst_s": 0.09786227403674275,
+    "probe_snapshot_applied_after_burst_s": 0.031416535028256476,
+    "first_applied_output_after_burst_s": 0.025101540028117597
+   },
+   "probe_status": "SCENARIO_NOT_REACHED",
+   "probe_native_engine": 0,
+   "probe_frontier": {
+    "vllm_load_balancing": 0,
+    "completion_reporting_control": 1,
+    "round_robin": 0
+   },
+   "control_differs_from_native": true,
+   "probe_frontier_selection": {
+    "vllm_load_balancing": {
+     "time": 42.19,
+     "snapshot": [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "engine": 0,
+     "request_id": "dpp2-b-b6"
+    },
+    "completion_reporting_control": {
+     "time": 42.19,
+     "snapshot": [
+      [
+       3,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "engine": 1,
+     "request_id": "dpp2-b-b6"
+    }
+   }
+  },
+  "c": {
+   "qualification": {
+    "checks": {
+     "burst_routed_in_trace_order": false,
+     "burst_routed_from_one_snapshot": true,
+     "probe_snapshot_scheduled_in_burst_on_every_engine": true,
+     "no_output_applied_before_probe": false
+    },
+    "qualified": false,
+    "failed_checks": [
+     "burst_routed_in_trace_order",
+     "no_output_applied_before_probe"
+    ],
+    "route_order": [
+     "dpp2-c-b1",
+     "dpp2-c-b3",
+     "dpp2-c-b4",
+     "dpp2-c-b5",
+     "dpp2-c-b2",
+     "dpp2-c-b6"
+    ],
+    "probe_request_id": "dpp2-c-b6",
+    "probe_snapshot": 31,
+    "probe_snapshot_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    "probe_snapshot_provenance": [
+     {
+      "engine": 0,
+      "wave": 4,
+      "step": 0,
+      "iteration_seq": 288,
+      "branch": "scheduled_without_applying"
+     },
+     {
+      "engine": 1,
+      "wave": 4,
+      "step": 0,
+      "iteration_seq": 273,
+      "branch": "scheduled_without_applying"
+     }
+    ],
+    "probe_route_after_burst_s": 0.11879327602218837,
+    "probe_snapshot_applied_after_burst_s": 0.021803323063068092,
+    "first_applied_output_after_burst_s": 0.021274978993460536
+   },
+   "probe_status": "SCENARIO_NOT_REACHED",
+   "probe_native_engine": 0,
+   "probe_frontier": {
+    "vllm_load_balancing": 0,
+    "completion_reporting_control": 1,
+    "round_robin": 0
+   },
+   "control_differs_from_native": true,
+   "probe_frontier_selection": {
+    "vllm_load_balancing": {
+     "time": 62.316,
+     "snapshot": [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "engine": 0,
+     "request_id": "dpp2-c-b6"
+    },
+    "completion_reporting_control": {
+     "time": 62.316,
+     "snapshot": [
+      [
+       3,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "engine": 1,
+     "request_id": "dpp2-c-b6"
+    }
+   }
+  },
+  "d": {
+   "qualification": {
+    "checks": {
+     "burst_routed_in_trace_order": true,
+     "burst_routed_from_one_snapshot": false,
+     "probe_snapshot_scheduled_in_burst_on_every_engine": false,
+     "no_output_applied_before_probe": false
+    },
+    "qualified": false,
+    "failed_checks": [
+     "burst_routed_from_one_snapshot",
+     "probe_snapshot_scheduled_in_burst_on_every_engine",
+     "no_output_applied_before_probe"
+    ],
+    "route_order": [
+     "dpp2-d-b1",
+     "dpp2-d-b2",
+     "dpp2-d-b3",
+     "dpp2-d-b4",
+     "dpp2-d-b5",
+     "dpp2-d-b6"
+    ],
+    "probe_request_id": "dpp2-d-b6",
+    "probe_snapshot": 41,
+    "probe_snapshot_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      0
+     ]
+    ],
+    "probe_snapshot_provenance": [
+     {
+      "engine": 0,
+      "wave": 5,
+      "step": 0,
+      "iteration_seq": 422,
+      "branch": "scheduled_without_applying"
+     },
+     {
+      "engine": 1,
+      "wave": 4,
+      "step": 128,
+      "iteration_seq": 401,
+      "branch": "applied_after_scheduling"
+     }
+    ],
+    "probe_route_after_burst_s": 0.10484155500307679,
+    "probe_snapshot_applied_after_burst_s": 0.02159250492695719,
+    "first_applied_output_after_burst_s": 0.01972248498350382
+   },
+   "probe_status": "SCENARIO_NOT_REACHED",
+   "probe_native_engine": 0,
+   "probe_frontier": {
+    "vllm_load_balancing": 0,
+    "completion_reporting_control": 1,
+    "round_robin": 0
+   },
+   "control_differs_from_native": true,
+   "probe_frontier_selection": {
+    "vllm_load_balancing": {
+     "time": 82.421,
+     "snapshot": [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "engine": 0,
+     "request_id": "dpp2-d-b6"
+    },
+    "completion_reporting_control": {
+     "time": 82.421,
+     "snapshot": [
+      [
+       3,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "engine": 1,
+     "request_id": "dpp2-d-b6"
+    }
+   }
+  }
+ }
+}
