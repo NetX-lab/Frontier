@@ -13,7 +13,7 @@
 | 2026-09-06 | Added cleanup-first and split-analysis requirements for critical modules above 2,000 lines. |
 | 2026-09-22 | Completed the cluster-scheduler implementation list and recorded the opt-in vLLM DP placement policy and its supported scope. |
 | 2026-09-23 | Extended the vLLM DP placement policy's supported scope to pipeline parallelism. |
-| 2026-09-24 | Scoped the round-robin placement description to its roles and described the random scheduler's lane rotation. |
+| 2026-09-24 | Scoped the round-robin placement description to its roles, including the PD-AF threshold waves, and described the random scheduler's lane rotation. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -614,7 +614,7 @@ The scheduling logic is split across four distinct layers to mirror real-world s
 2.  **Cluster Scheduler** (`ClusterSchedulerRegistry`):
     - **Role**: Manages workload distribution within a specific `ClusterType` (e.g., selecting which Replica gets a request).
     - **Implementations**:
-      - `RoundRobinClusterScheduler`: For the `MONOLITHIC`, `PREFILL` and unified `DECODE` roles, distributes requests cyclically over replicas and, inside each replica, over attention-DP lanes. The ordinal persists across scheduling calls, so an identical ordered request stream lands identically however it is divided between calls. For PD-AF `DECODE_ATTN`, an optional threshold wave is dealt from the first replica, and later requests go to the replica with the fewest pending requests, with ties broken in rotation.
+      - `RoundRobinClusterScheduler`: For the `MONOLITHIC`, `PREFILL` and unified `DECODE` roles, distributes requests cyclically over replicas and, inside each replica, over attention-DP lanes. The ordinal persists across scheduling calls, so an identical ordered request stream lands identically however it is divided between calls. For PD-AF `DECODE_ATTN`, requests go to the replica with the fewest pending requests, with ties broken in rotation. When `decode_attn_request_allocation_threshold` is set, requests are instead dealt in threshold-sized waves until `num_requests` are allocated; each wave starts from the first replica, and requests that arrive while a buffered wave is held go by load.
       - `LORClusterScheduler`: Least Outstanding Requests (load balancing).
       - `RandomClusterScheduler`: Random replica assignment; inside each replica, requests rotate over attention-DP lanes across scheduling calls.
       - `StickyRoundRobinClusterScheduler`: Round-robin over targets, pinned per session so a session's later requests return to the same target.
