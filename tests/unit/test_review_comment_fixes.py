@@ -71,7 +71,7 @@ class _BrokenParticipantBatches:
 def test_prefill_collective_surfaces_malformed_participant_mapping() -> None:
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.PREFILL,
-        _prefill_sync_waiting_room={
+        _sync_waiting_room={
             0: {0: {1: {0: {"post_moe": {"batches": _BrokenParticipantBatches()}}}}}
         },
     )
@@ -112,7 +112,7 @@ def test_collective_rejects_invalid_stage_before_removing_waiting_room() -> None
     room = {"batches": {0: object()}, "arrival_times": {0: 0.0}}
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.PREFILL,
-        _prefill_sync_waiting_room={0: {0: {1: {0: {"post_moe": room}}}}},
+        _sync_waiting_room={0: {0: {1: {0: {"post_moe": room}}}}},
     )
 
     with pytest.raises(ValueError, match="accepts only post_moe"):
@@ -127,7 +127,7 @@ def test_collective_rejects_invalid_stage_before_removing_waiting_room() -> None
             metrics_store=None,
         )
 
-    assert scheduler._prefill_sync_waiting_room[0][0][1][0]["post_moe"] is room
+    assert scheduler._sync_waiting_room[0][0][1][0]["post_moe"] is room
 
 
 def test_diagnostics_do_not_materialize_unused_state() -> None:
@@ -151,7 +151,8 @@ def test_prefill_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
     batch._forward_cohort_provisional_id = 7
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.PREFILL,
-        _prefill_sync_waiting_room={
+        _sync_kind="prefill",
+        _sync_waiting_room={
             0: {0: {7: {0: {"pre_moe": {"batches": {}, "arrival_times": {}}}}}}
         },
         _replica_dp_size=2,
@@ -181,7 +182,8 @@ def test_decode_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
     batch._forward_cohort_provisional_id = 7
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.DECODE,
-        _decode_sync_waiting_room={
+        _sync_kind="decode",
+        _sync_waiting_room={
             0: {0: {7: {0: {"pre_moe": {"batches": {}, "arrival_times": {}}}}}}
         },
         _replica_dp_size=2,
@@ -211,7 +213,8 @@ def test_sync_entry_consumes_stale_idle_without_materializing_room() -> None:
     batch.set_global_id(7)
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.PREFILL,
-        _prefill_sync_waiting_room=waiting_room,
+        _sync_kind="prefill",
+        _sync_waiting_room=waiting_room,
         _uses_shared_prefill_layer_path=lambda *_args: True,
         _get_forward_step_id=lambda current_batch: current_batch.global_id,
         _resolve_forward_step=lambda **_kwargs: None,

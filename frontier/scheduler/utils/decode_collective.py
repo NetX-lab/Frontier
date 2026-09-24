@@ -52,7 +52,7 @@ def handle_decode_sync_collective(
     if direct_batch is not None:
         dp_batches = {None: direct_batch}
     else:
-        replica_rooms = scheduler._decode_sync_waiting_room.get(replica_id)
+        replica_rooms = scheduler._sync_waiting_room.get(replica_id)
         stage_rooms = replica_rooms.get(stage_id) if replica_rooms is not None else None
         step_rooms = stage_rooms.get(batch_global_id) if stage_rooms is not None else None
         layer_rooms = step_rooms.get(layer_id) if step_rooms is not None else None

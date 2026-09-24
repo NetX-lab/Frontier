@@ -1,6 +1,5 @@
 """Regression coverage for unequal online lane histories and stage membership."""
 
-from collections import defaultdict
 from types import SimpleNamespace
 
 import pytest
@@ -10,6 +9,7 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import R
 from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import ReplicaStageScheduler
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import EP_WAVE, StageExecutionContext
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 from frontier.types import ClusterType
 
 
@@ -153,13 +153,13 @@ def test_next_group_queue_does_not_block_current_group_idle_participation(sync_k
 
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = getattr(ClusterType, sync_kind.upper())
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(model_config=SimpleNamespace(is_moe=True))
+    )
+    initialize_sync_waiting_rooms(scheduler)
     scheduler._forward_sync_state = ForwardSyncState()
     scheduler._stage_execution_contexts = {(0, 0): context}
     scheduler._replica_dp_size = 2
-    rooms = defaultdict(lambda: defaultdict(lambda: defaultdict(
-        lambda: defaultdict(lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}}))
-    )))
-    setattr(scheduler, f"_{sync_kind}_sync_waiting_room", rooms)
     setattr(scheduler, f"_uses_shared_{sync_kind}_layer_path", lambda *_: True)
     scheduler._replica_schedulers = {
         (0, lane): SimpleNamespace(get_replica_stage_scheduler=lambda _, stage=stage: stage)
@@ -177,4 +177,4 @@ def test_next_group_queue_does_not_block_current_group_idle_participation(sync_k
     assert completed[0]["cohort_batches"][1].is_idle
     assert not stages[1].is_empty()
     assert not stages[1].is_busy
-    assert scheduler._forward_sync_state.open_steps(sync_kind) == {}
+    assert scheduler._forward_sync_state._open_steps == {}

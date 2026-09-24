@@ -323,7 +323,7 @@ def test_every_phase_pairing_reaches_one_shared_completion(
     }
     assert all(event._layer_id == 1 for event in follow_on)
     # The room is consumed: nothing is left waiting for a second completion.
-    room = scheduler._forward_sync_waiting_room[0][0][event._batch_global_id][0]
+    room = scheduler._sync_waiting_room[0][0][event._batch_global_id][0]
     assert "post_moe" not in room
 
 
@@ -493,11 +493,9 @@ def test_successive_forwards_release_owners_rooms_and_open_step_bindings() -> No
         follow_on = collective[0].handle_event(_global(scheduler), None)
         assert len(follow_on) == 2
         # Every layer consumes its own room and its own open-step binding.
-        room = scheduler._forward_sync_waiting_room[0][0][cohort_ids[-1]][layer_id]
+        room = scheduler._sync_waiting_room[0][0][cohort_ids[-1]][layer_id]
         assert "post_moe" not in room
-        assert scheduler._forward_sync_state.open_steps("forward") == {}
-        assert scheduler._forward_sync_state.open_steps("prefill") == {}
-        assert scheduler._forward_sync_state.open_steps("decode") == {}
+        assert scheduler._forward_sync_state._open_steps == {}
         # Ownership is restored to exactly one full-stage ticket per live lane.
         assert all(
             batch._stage_admission_ticket.scope is FULL_STAGE_WORLD
