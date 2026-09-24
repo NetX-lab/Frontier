@@ -670,11 +670,13 @@ class DisaggregatedRoleScheduling:
                         f"after preemption, num_tokens={num_new_tokens}"
                     )
                 else:
-                    # Request itself was preempted or no victim available
+                    # The request preempted itself (or preemption is disabled):
+                    # stop scheduling running requests, as vLLM v1 does.
                     logger.debug(
                         f"[VLLMv1Engine][DECODE_ATTN] Phase 1: req={request.id} "
-                        f"preempted or allocation failed"
+                        f"preempted or allocation failed, stopping"
                     )
+                    break
 
         # Check micro-batch size limit
         remaining_slots = self._micro_batch_size - len(scheduled_requests)

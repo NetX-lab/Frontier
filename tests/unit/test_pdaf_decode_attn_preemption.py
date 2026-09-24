@@ -182,6 +182,27 @@ def test_priority_lowest_priority_requester_preempts_itself() -> None:
     assert scheduler._num_allocated_blocks == 17
 
 
+def test_decode_attn_self_preempted_requester_stops_running_schedule() -> None:
+    """After the requester preempts itself, vLLM v1 schedules no later running request."""
+
+    scheduler = _decode_attn_scheduler()
+    scheduler._scheduling_policy = "priority"
+    scheduler._micro_batch_size = 4
+    earlier, requester, later, tail = (_request(i) for i in range(4))
+    requester.priority = 1
+    scheduler._running_requests[:] = [earlier, requester, later, tail]
+    scheduler._allocation_map = {request.id: 1 for request in scheduler._running_requests}
+    scheduler._num_allocated_blocks = 4
+    scheduler._can_allocate_request = lambda request, tokens: request is not requester
+
+    batch = scheduler._schedule_decode_attn_only()
+
+    assert batch is not None
+    assert batch.requests == [earlier]
+    assert scheduler._running_requests == [earlier, later, tail]
+    assert scheduler._waiting_requests == [requester]
+
+
 def test_decode_attn_preemption_preserves_handoff_token_progress() -> None:
     """DECODE_ATTN preemption must not rewind the completed PREFILL handoff."""
 
