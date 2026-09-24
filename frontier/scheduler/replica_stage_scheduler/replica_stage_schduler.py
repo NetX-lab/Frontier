@@ -229,7 +229,10 @@ class ReplicaStageScheduler:
         live_batch.decode_cuda_graph_metadata = batch.decode_cuda_graph_metadata
         live_batch.afd_stage_idx = batch.afd_stage_idx
         live_batch.afd_stage_metadata = batch.afd_stage_metadata
-        live_batch.spec_decode_metadata = batch.spec_decode_metadata
+        if batch.spec_decode_metadata is not None:
+            live_batch.spec_decode_metadata = batch.spec_decode_metadata.select_requests(
+                live_indices
+            )
         live_batch.time = batch.time
         live_batch._scheduled = batch.scheduled
         live_batch._scheduled_at = batch._scheduled_at

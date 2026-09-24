@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from frontier.entities import Batch, EPBatchGroup, Request
+from frontier.entities import Batch, EPBatchGroup, Request, SpecDecodeBatchMetadata
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
@@ -47,6 +47,40 @@ def test_runtime_live_batch_preserves_forward_cohort_identity() -> None:
     assert live_batch._forward_cohort_id == 12
     assert live_batch._forward_cohort_provisional_id == 4
     assert live_batch._stage_owner_replica_local_id == 1
+
+
+def test_runtime_live_batch_keeps_the_spec_decode_metadata_of_its_live_requests() -> None:
+    scheduler = object.__new__(ReplicaStageScheduler)
+    requests = [
+        Request(arrived_at=0.0, num_prefill_tokens=2, num_decode_tokens=8)
+        for _ in range(3)
+    ]
+    batch = Batch(0, requests, [3, 2, 3], is_moe=True)
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="ngram",
+        planned_draft_tokens_per_request=[2, 1, 2],
+        verify_tokens_per_request=[3, 2, 3],
+        accepted_draft_tokens_per_request=[2, 0, 1],
+        rejected_draft_tokens_per_request=[0, 1, 1],
+        committed_tokens_per_request=[3, 1, 2],
+        uses_lookahead_slots=False,
+        terminal_overshoot_planned_draft_tokens_per_request=[[], [1], [2]],
+    )
+    # The middle request was preempted after the batch was scheduled.
+    batch._request_execution_matches_snapshot = lambda index: index != 1
+
+    live_batch = scheduler._materialize_runtime_live_batch(batch)
+
+    metadata = live_batch.spec_decode_metadata
+    metadata.validate(len(live_batch.requests))
+    assert metadata.planned_draft_tokens_per_request == [2, 2]
+    assert metadata.verify_tokens_per_request == [3, 3]
+    assert metadata.accepted_draft_tokens_per_request == [2, 1]
+    assert metadata.rejected_draft_tokens_per_request == [0, 1]
+    assert metadata.committed_tokens_per_request == [3, 2]
+    assert metadata.terminal_overshoot_planned_draft_tokens_per_request == [[], [2]]
+    assert metadata.terminal_overshoot_verify_tokens_per_request is None
+    assert batch.spec_decode_metadata.committed_tokens_per_request == [3, 1, 2]
 
 
 def test_ep_wave_owns_stage_before_dense_can_start() -> None:

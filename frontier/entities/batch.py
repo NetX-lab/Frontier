@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Dict, Iterable, List, Optional
 from types import MappingProxyType
 
@@ -365,6 +365,38 @@ class SpecDecodeBatchMetadata:
     terminal_overshoot_accepted_draft_tokens_per_request: Optional[List[List[int]]] = None
     terminal_overshoot_rejected_draft_tokens_per_request: Optional[List[List[int]]] = None
     terminal_overshoot_raw_committed_tokens_per_request: Optional[List[List[int]]] = None
+
+    def select_requests(self, request_indices: List[int]) -> "SpecDecodeBatchMetadata":
+        """Return the metadata of the requests at `request_indices`, in that order."""
+
+        def select(values):
+            if values is None:
+                return None
+            return [values[index] for index in request_indices]
+
+        return replace(
+            self,
+            planned_draft_tokens_per_request=select(self.planned_draft_tokens_per_request),
+            verify_tokens_per_request=select(self.verify_tokens_per_request),
+            accepted_draft_tokens_per_request=select(self.accepted_draft_tokens_per_request),
+            rejected_draft_tokens_per_request=select(self.rejected_draft_tokens_per_request),
+            committed_tokens_per_request=select(self.committed_tokens_per_request),
+            terminal_overshoot_planned_draft_tokens_per_request=select(
+                self.terminal_overshoot_planned_draft_tokens_per_request
+            ),
+            terminal_overshoot_verify_tokens_per_request=select(
+                self.terminal_overshoot_verify_tokens_per_request
+            ),
+            terminal_overshoot_accepted_draft_tokens_per_request=select(
+                self.terminal_overshoot_accepted_draft_tokens_per_request
+            ),
+            terminal_overshoot_rejected_draft_tokens_per_request=select(
+                self.terminal_overshoot_rejected_draft_tokens_per_request
+            ),
+            terminal_overshoot_raw_committed_tokens_per_request=select(
+                self.terminal_overshoot_raw_committed_tokens_per_request
+            ),
+        )
 
     def validate(self, num_requests: int) -> None:
         vectors = [
