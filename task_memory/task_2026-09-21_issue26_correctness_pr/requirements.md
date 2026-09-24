@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-24 | Recorded the N1 decision (rejected drafts in the vllm_v1 scheduler frontier). |
 | 2026-09-24 | Recorded the spec-decode branch base decision (Q6 follow-up). |
 | 2026-09-24 | Recorded the G3b dispositions and the spec-decode live-batch decisions (Q6-Q8). |
 | 2026-09-24 | Recorded the calibration-tool follow-up decision (Q8 round 2) and the user's merge of companion PR 1. |
@@ -239,3 +240,13 @@ Message, verbatim: "Q2：请你评估该部分逻辑修改的代价，涉及多�
 | Item | Decision |
 | --- | --- |
 | Spec-decode branch base | Option (a): stacked on `fix/issue26-correctness-pr`, own draft PR, unit test plus a PP4 spec end-to-end case; merged into PR 38 afterwards. This refines Q6 (b). |
+
+## [Decision] 2026-09-24 — N1: rejected drafts in the vllm_v1 scheduler frontier
+
+Question: the vllm_v1 scheduler frontier grows by the verify width of each speculative step and is never reduced by the rejected drafts, as vLLM does in `update_from_output` (`scheduler.py:1296-1308`); runs with a committed count below `1 + num_speculative_tokens` over-account KV and can end with a non-empty scheduler state (pre-existing on `main`). (a) fix it as a second commit on draft PR 39; (b) its own branch and PR; (c) record only. Recommended (a).
+
+Message, verbatim: "Q2、Q4、N1采纳你的推荐方案"
+
+| Item | Decision |
+| --- | --- |
+| N1 | Option (a): second commit on `fix/spec-decode-live-batch-metadata` (draft PR 39), with tests. |
