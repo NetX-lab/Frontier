@@ -59,6 +59,8 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
     instrumented, _ = server_env(
         "instrumented", {"attention_backend": "FLASHINFER"}, out, inherited
     )
+    op_timing, _ = server_env("op_timing", {}, out, inherited)
+    kernel_timing, _ = server_env("kernel_timing", {}, out, inherited)
 
     assert clean == {
         "PATH": "/usr/bin",
@@ -73,3 +75,16 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_FRONTIER_MOE_ROUTING_LOG_PATH": "/run/moe_routing.jsonl",
         "VLLM_ATTENTION_BACKEND": "FLASHINFER",
     }
+    assert op_timing == {
+        "PATH": "/usr/bin",
+        "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": "/run/dp_placement",
+        "VLLM_FRONTIER_INSTRUMENTATION": "1",
+        "VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH": "/run/op_timing.jsonl",
+        "VLLM_FRONTIER_OP_TIMING_MODE": "cuda_event",
+        "VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": "default",
+        "VLLM_FRONTIER_OP_AGG_MODE": "per_scope",
+        "VLLM_FRONTIER_BATCH_LOG_PATH": "/run/batch_log.jsonl",
+        "VLLM_FRONTIER_PP_BOUNDARY_LOG_PATH": "/run/pp_boundary.jsonl",
+        "VLLM_FRONTIER_SCHED_LOG_PATH": "/run/schedule.jsonl",
+    }
+    assert kernel_timing == op_timing | {"VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": "kernel_only"}
