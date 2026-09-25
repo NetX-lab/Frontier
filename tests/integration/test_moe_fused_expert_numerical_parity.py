@@ -298,9 +298,8 @@ def test_fp8_path_runs_on_the_gated_activation():
     """The FP8 path quantizes the gated activation and still produces output.
 
     This is a structural check on native kernels, not FP8 parity. Frontier
-    quantizes weights and activations with its own helpers, so a bit-exact
-    comparison against `fused_experts` would first require matching those
-    schemes. What it does settle is that the step quantizes the hidden state
+    quantizes weights with its own helpers, so a bit-exact comparison against
+    `fused_experts` would first require matching that scheme. What it does settle is that the step quantizes the hidden state
     and then the gated activation buffer, rather than a raw slice of the first
     projection, and that the real kernels accept those operands with the FP8
     kernel config and return finite values.
@@ -341,9 +340,9 @@ def test_fp8_path_runs_on_the_gated_activation():
         observed = []
         original_quantize = kernel.quantize_activations_to_fp8
 
-        def observing_quantize(tensor, *, group_size):
+        def observing_quantize(tensor, per_channel_quant, block_shape):
             observed.append(tuple(tensor.shape))
-            return original_quantize(tensor, group_size=group_size)
+            return original_quantize(tensor, per_channel_quant, block_shape)
 
         kernel.quantize_activations_to_fp8 = observing_quantize
         try:

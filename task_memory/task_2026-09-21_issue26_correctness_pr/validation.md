@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | Step 9 ground truth: C3 scope stated (it checks the balancer on native reports, not Frontier's report emission). Fix review: the W7 row marked superseded by W7-R4 and the gitlink re-point. |
 | 2026-09-24 | Step 7: gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`). |
 | 2026-09-24 | Rerun review G3a lead 26: the fix-review limits cite the later native rerun. |
 | 2026-09-24 | Step 6: native rerun of the current FP8 code, `exp-0924-114241-429126`, 8 passed. |
@@ -642,7 +643,7 @@ Commands, environment and per-check values are in
 | G4 | `run_dp_pp_job.sh` `dpp-g4-20260923a` (4 H800, DP2 PP2 EP); `extract_vllm_placement.py` | fresh artifacts; exit 0; tuple verified; first-chunk duration recorded; extraction PASS over 51 routes | `exp-0923-230103-591735` succeeded; 51/51 HTTP 200; 284775 blocks; first chunk 111.00 ms mean; extraction PASS, 51 placements, 0 out-of-order | PASS |
 | G5-pre | `pre_change_rejection.py` on `git archive d1a2a06` | constructor rejects PP2 | `ValueError ... num_pipeline_stages=2` | PASS |
 | G5-sim | `run_frontier_case.py` at `47d9190`, three runs | 51/51 complete, tokens conserved | 51/51 in each; first completion 111.14 ms | PASS |
-| C3 | `compare_placement.py` T1; `workflow_gap_table.csv` | every route matches with matched inputs; differences labeled by first cause | 51/51 (48/48 formal); 4 MATCH and 7 MISMATCH rows, each with a cause | PASS |
+| C3 | `compare_placement.py` T1; `workflow_gap_table.csv` | every route matches with matched inputs; differences labeled by first cause | 51/51 (48/48 formal); 4 MATCH and 7 MISMATCH rows, each with a cause. **Scope, stated 2026-09-25:** T1 feeds the native reports into the balancer, so C3 checks the balancer, not Frontier's own report emission (the Step 9 change); that comparison is a step of the S43 task. WG05 was rewritten from admission intervals and WG12 added (`calibration/dp_pp_case_001/analysis/workflow_gap_summary.md`). | PASS |
 | C4 | `compare_placement.py` T2 `qualify_burst` | on a qualified burst, fixed = native and control ≠ native; else `SCENARIO_NOT_REACHED` with the checks named | a–c fail trace order and output-before-probe; d fails one-snapshot, provenance and output-before-probe | SCENARIO_NOT_REACHED |
 
 Limits:
@@ -662,7 +663,7 @@ per-fix negative controls in section 4, final validation in section 7).
 | Unit suite, `ba0a804` against `6aee289` | 84F/3829P/51S/10E → 84F/3828P/51S/10E; 0 regressions, 0 new failures; the id changes are the review's own test additions and removals. |
 | Integration suite | 28P → 33P, 22 skipped, 5 errors (absent PD-AF Reference checkout) on both sides; 0 regressions. |
 | W6 CPU tests (`openmopd-py312`) | 31 passed; `f236c17~1` with the new tests 10 failed, 21 passed. |
-| W7 (`ff11ee6`) | Companion 12 passed, Frontier 3 passed; the new cases fail at `eb7bc4f`. |
+| W7 (`ff11ee6`) | Companion 12 passed, Frontier 3 passed; the new cases fail at `eb7bc4f`. **Superseded 2026-09-24** by W7-R4 (companion `e922c77`, gitlink `9adf759`: 16 passed and 3 passed) and then by the gitlink re-point to the merged `d28fe917` (`1b11eff`); see Step 7. |
 | Fidelity matrix | 74 of 74 identical. The comparator's provenance flag comes from an untracked output directory the unit suite wrote first; no tracked file differs from either commit. |
 | Examples | 16 of 16 pass and are identical. |
 | Stage-admission G3b, G9, G10 | 51 of 51 PASS, identical `sha256sums.txt`. |
