@@ -27,6 +27,16 @@ from frontier.spec_decode import compute_iteration_outcome, get_planned_draft_to
 from frontier.types import ClusterType
 
 
+def priority_policy_key(request: Request) -> Tuple[int, float, int]:
+    """Order of the priority policy: priority value, then arrival.
+
+    vLLM stamps a request's arrival time when the engine receives it, so no two
+    requests share one. Trace requests can share a timestamp; their ids keep
+    them in arrival order.
+    """
+    return (request.priority, request.arrived_at, request.id)
+
+
 class IterationSchedulingPolicy:
     """Iteration ordering, fast lanes, CUDA graph sizing and batch metadata."""
 
@@ -416,7 +426,7 @@ class IterationSchedulingPolicy:
                 )
             )
         elif self._scheduling_policy == "priority":
-            ordered_requests.sort(key=lambda r: (r.priority, r.arrived_at))
+            ordered_requests.sort(key=priority_policy_key)
 
         if (
             self._cluster_type == ClusterType.DECODE
@@ -449,7 +459,7 @@ class IterationSchedulingPolicy:
         if not candidates:
             return None
         if self._scheduling_policy == "priority":
-            return max(candidates, key=lambda r: (r.priority, r.arrived_at))
+            return max(candidates, key=priority_policy_key)
         return candidates[-1]
 
     def _reclaim_borrowed_final_running_slots(

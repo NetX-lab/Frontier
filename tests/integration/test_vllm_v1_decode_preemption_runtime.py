@@ -15,6 +15,9 @@ vLLM; Frontier applies it where it removes the victim's row.
 
 from __future__ import annotations
 
+import collections
+import dataclasses
+
 import pytest
 
 from frontier.config import global_vars
@@ -33,6 +36,7 @@ from frontier.config import (
     VllmV1SchedulerConfig,
 )
 from frontier.entities.batch import Batch
+from frontier.events import global_batch_end_event
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.metrics.metrics_store import MetricsStore
@@ -611,14 +615,13 @@ def test_a_recompute_is_one_chunk_without_chunked_prefill(tmp_path, monkeypatch)
     _assert_every_request_completes(simulator, 3)
 
 
-# Two 48-token prompts, each fitting the pool alone, with a 16-token prefill
-# chunk and a 32-token budget. Once both run, the pool is full and the first
-# running request is the priority victim of its own next chunk: the pass
-# preempts it, forms no rows and leaves the other request running with no
-# batch in flight. The priority case admits the lower-priority request first;
-# the equal-priority case arrives together, and the tie picks running[0].
-# Both stalled before the follow-up poll; a grid over pool size, budget, arrival
-# order and PP found them.
+# A 16-token prefill chunk and a 32-token budget. Once the pool is full, the
+# first running request is the priority victim of its own next chunk: the pass
+# preempts it, forms no rows and leaves a higher-priority request running with
+# no batch in flight. The PP1 case admits the lower-priority request first; the
+# PP2 case reaches the state after two earlier preemptions. Both stalled before
+# the follow-up poll; a grid over pool size, budget, arrival order and PP found
+# the first, and a random search over short priority traces the second.
 EMPTY_PREEMPTING_PASS_CASES = {
     "pp1_lower_priority_first": dict(
         trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
@@ -628,12 +631,13 @@ EMPTY_PREEMPTING_PASS_CASES = {
         num_blocks=3,
         num_pipeline_stages=1,
     ),
-    "pp2_equal_priority": dict(
+    "pp2_after_two_preemptions": dict(
         trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
-0.0,48,1,0
-0.0,48,1,0
+0.49,64,3,2
+0.62,56,2,2
+0.87,24,2,1
 """,
-        num_blocks=4,
+        num_blocks=5,
         num_pipeline_stages=2,
     ),
 }
@@ -694,6 +698,7 @@ def test_an_empty_pass_that_preempts_runs_the_next_step_at_once(
     tmp_path, monkeypatch, case
 ):
     passes = _observe_empty_preempting_passes(monkeypatch)
+    trace_text = EMPTY_PREEMPTING_PASS_CASES[case]["trace_text"]
     simulator = Simulator(
         _priority_chunk_config(tmp_path, **EMPTY_PREEMPTING_PASS_CASES[case])
     )
@@ -703,7 +708,7 @@ def test_an_empty_pass_that_preempts_runs_the_next_step_at_once(
         observed["running"] and observed["batches_in_flight"] == 0
         for observed in passes
     ), passes
-    _assert_every_request_completes(simulator, 2)
+    _assert_every_request_completes(simulator, len(trace_text.splitlines()) - 1)
     (replica_scheduler,) = simulator._global_scheduler.get_cluster_scheduler(
         ClusterType.MONOLITHIC
     )._full_stage_replica_schedulers.values()
@@ -714,24 +719,56 @@ def test_an_empty_pass_that_preempts_runs_the_next_step_at_once(
 def test_a_request_larger_than_the_pool_still_ends_the_run(tmp_path, monkeypatch):
     # The request preempts itself alone, so no request is left running and no
     # follow-up poll runs: the run ends with the request unfinished instead of
-    # admitting and preempting it until the time limit.
+    # admitting and preempting it without end.
     passes = _observe_empty_preempting_passes(monkeypatch)
-    config = _priority_chunk_config(
-        tmp_path,
-        trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+    simulator = Simulator(
+        _priority_chunk_config(
+            tmp_path,
+            trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
 0.0,64,1,0
 """,
-        num_blocks=3,
-        num_pipeline_stages=1,
+            num_blocks=3,
+            num_pipeline_stages=1,
+        )
     )
-    config.time_limit = 60
-    simulator = Simulator(config)
 
     with pytest.raises(RuntimeError, match="non-empty scheduler state"):
         simulator.run()
     assert len(passes) == 1
     assert passes[0]["running"] == []
     assert passes[0]["batches_in_flight"] == 0
+
+
+@pytest.mark.parametrize("num_pipeline_stages", [1, 2])
+def test_a_priority_tie_preempts_the_later_arrival(
+    tmp_path, monkeypatch, num_pipeline_stages
+):
+    # Both requests share one trace timestamp and priority, and the pool holds
+    # only one of them. vLLM stamps each arrival, so the second row is the later
+    # arrival and every victim; the first row finishes before it resumes.
+    preempt_request = VLLMv1EngineReplicaScheduler._preempt_request
+
+    def observed_preempt_request(self, victim, preempted_requests):
+        assert victim.num_prefill_tokens == 56, victim.id
+        preempt_request(self, victim, preempted_requests)
+
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_preempt_request", observed_preempt_request
+    )
+    simulator = Simulator(
+        _priority_chunk_config(
+            tmp_path,
+            trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.0,40,1,0
+0.0,56,3,0
+""",
+            num_blocks=4,
+            num_pipeline_stages=num_pipeline_stages,
+        )
+    )
+    simulator.run()
+
+    _assert_every_request_completes(simulator, 2)
 
 
 PREFIX_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens,session_id,block_hash_ids
@@ -1100,6 +1137,21 @@ LENGTH_STOP_CASE = dict(
 # An in-flight decode victim on the unified PDD decode replica.
 PDD_INFLIGHT_CASE = dict(num_pipeline_stages=2, num_blocks=6, num_requests=8, seed=7)
 
+# Each request thinks one 48-token round with a one-token answer first. The
+# lowest-priority request is preempted while the last chunk of that round is in
+# flight, and a later stage removes the row whose sample ends the round. A
+# random search over short priority traces found it.
+THINKING_INFLIGHT_CASE = dict(
+    trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.03,16,2,2
+0.61,16,1,0
+0.63,32,3,1
+0.9,16,2,0
+""",
+    num_blocks=6,
+    num_pipeline_stages=4,
+)
+
 
 @pytest.mark.parametrize("name", INFLIGHT_DECODE_CASES)
 def test_an_inflight_decode_victim_keeps_the_sample_of_its_removed_row(
@@ -1163,6 +1215,69 @@ def test_a_victim_that_stops_on_its_inflight_sample_leaves_waiting(
         assert recorder.rows_after(removal) == [], removal
         assert recorder.end_ids.count(request.id) == 1, removal
     _assert_every_request_completes(simulator, LENGTH_STOP_CASE["num_requests"])
+
+
+def test_an_inflight_sample_that_ends_a_thinking_round_requeues_it_once(
+    tmp_path, monkeypatch
+):
+    running_stage_events = []
+    stage_stops = []
+    requeues = []
+    ends = []
+    stage_handle = ReplicaStageScheduleEvent.handle_event
+    apply_samples = Batch.apply_preempted_step_samples
+    requeue_event = global_batch_end_event.thinking_round_requeue_event
+    on_request_end = MetricsStore._on_request_end
+
+    def observed_stage(self, scheduler, metrics_store):
+        running_stage_events.append(self)
+        events = stage_handle(self, scheduler, metrics_store)
+        running_stage_events.pop()
+        return events
+
+    def observed_apply_samples(self, time, cluster_type, **signatures):
+        stopped = apply_samples(self, time, cluster_type, **signatures)
+        if running_stage_events:
+            stage_stops.extend((request.id, time) for _, request in stopped)
+        return stopped
+
+    def observed_requeue_event(time, request, round_started_at):
+        event = requeue_event(time, request, round_started_at)
+        if event is not None:
+            requeues.append((request.id, time))
+        return event
+
+    def observed_request_end(self, time, request):
+        ends.append(request.id)
+        return on_request_end(self, time, request)
+
+    monkeypatch.setattr(ReplicaStageScheduleEvent, "handle_event", observed_stage)
+    monkeypatch.setattr(Batch, "apply_preempted_step_samples", observed_apply_samples)
+    monkeypatch.setattr(
+        global_batch_end_event, "thinking_round_requeue_event", observed_requeue_event
+    )
+    monkeypatch.setattr(MetricsStore, "_on_request_end", observed_request_end)
+    simulator = Simulator(
+        dataclasses.replace(
+            _priority_chunk_config(tmp_path, **THINKING_INFLIGHT_CASE),
+            enable_thinking_mode=True,
+            thinking_depth=2,
+            tool_call_latency=0.01,
+            thinking_round_prefill_tokens=[48],
+            thinking_round_decode_tokens=[1],
+        )
+    )
+    simulator.run()
+
+    assert set(stage_stops) & set(requeues), (stage_stops, requeues)
+    requests = list(simulator._all_requests)
+    assert collections.Counter(request_id for request_id, _ in requeues) == {
+        request.id: 1 for request in requests
+    }
+    assert sorted(ends) == sorted(request.id for request in requests)
+    _assert_every_request_completes(
+        simulator, len(THINKING_INFLIGHT_CASE["trace_text"].splitlines()) - 1
+    )
 
 
 def test_a_pdd_decode_inflight_victim_resumes_with_one_token(tmp_path, monkeypatch):
