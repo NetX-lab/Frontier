@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Dict, List, Optional, Sequence
+from typing import NamedTuple, Tuple, Dict, List, Optional, Sequence
 from collections import defaultdict
 
 from frontier.entities.base_entity import BaseEntity
@@ -13,6 +13,13 @@ logger = init_logger(__name__)
 class RequestRoundPlan:
     num_prefill_tokens: int
     num_decode_tokens: int
+
+
+class PreemptedStep(NamedTuple):
+    execution_signature: Tuple[int, int, int]
+    was_decoding: bool
+    num_tokens_to_sample: int
+    recompute: bool
 
 
 # a decorator which checks if the request has been scheduled
@@ -145,6 +152,9 @@ class Request(BaseEntity):
 
         self._scheduled = False
         self._preempted = False
+        # Recompute cursor after a vLLM v1 preemption; None when no recompute is pending.
+        self._num_recomputed_tokens: Optional[int] = None
+        self._preempted_step: Optional[PreemptedStep] = None
         self._completed = False
         self._is_prefill_complete = False
 
@@ -534,13 +544,18 @@ class Request(BaseEntity):
         # for Prefix-cache re-admission, so allow that one recovery transition.
         if self._scheduled and not self._preempted:
             raise ValueError(f"Request {self._id} already scheduled.")
-        if self._num_processed_tokens != 0:
-            raise ValueError(
-                f"Request {self._id} already has processed tokens: {self._num_processed_tokens}"
-            )
         if num_tokens_cached < 0 or num_tokens_cached > self._num_prefill_tokens:
             raise ValueError(
                 f"Invalid cached token count for request {self._id}: {num_tokens_cached}"
+            )
+        if self._num_recomputed_tokens is not None:
+            # vLLM keeps the first admission's cached-token count, so
+            # _num_prefill_tokens_cached is not rewritten.
+            self._num_recomputed_tokens = int(num_tokens_cached)
+            return
+        if self._num_processed_tokens != 0:
+            raise ValueError(
+                f"Request {self._id} already has processed tokens: {self._num_processed_tokens}"
             )
         self._num_processed_tokens = int(num_tokens_cached)
         self._num_prefill_tokens_cached = int(num_tokens_cached)
@@ -676,18 +691,29 @@ class Request(BaseEntity):
     def has_started_decode(self) -> bool:
         return self._num_processed_tokens > self._num_prefill_tokens + 1
 
-    # A request is in ongoing decoding if prefill is complete.
-    # This is used by batch.all_requests_ongoing_decoding to determine
-    # whether to use decode-phase token counting (1 token per request)
-    # or prefill-phase token counting (num_prefill_tokens).
-    #
-    # In PD+AF disaggregation mode:
-    # - After PREFILL completes: num_processed_tokens = num_prefill_tokens
-    # - The first decode token is granted by DECODE_ATTN via GlobalBatchEndEvent
-    # - Therefore, ongoing_decoding should be True when is_prefill_complete is True
+    # A request decodes once its prefill is complete, except while it
+    # recomputes the tokens it kept after a preemption.
     @property
-    def ongoing_decoding(self) -> bool:
-        return self._is_prefill_complete
+    def is_decoding(self) -> bool:
+        return self._is_prefill_complete and self._num_recomputed_tokens is None
+
+    @property
+    def is_recomputing(self) -> bool:
+        return self._num_recomputed_tokens is not None
+
+    @property
+    def num_context_tokens(self) -> int:
+        if self._num_recomputed_tokens is None:
+            return self._num_processed_tokens
+        return self._num_recomputed_tokens
+
+    @property
+    def execution_signature(self) -> Tuple[int, int, int]:
+        return (
+            self.current_thinking_round_index,
+            self._num_restarts,
+            self._execution_epoch,
+        )
 
     @property
     def spec_decode_enabled(self) -> bool:
@@ -1017,6 +1043,61 @@ class Request(BaseEntity):
             return
         self._first_decode_token_completed_at = time
 
+    def on_preempted(self, recompute: bool, step_in_flight: bool) -> None:
+        # vLLM v1 keeps the prompt and every output token. A victim still in
+        # prefill restarts its prompt. The step in flight, if any, keeps its
+        # sample until that row is removed; the layers it already ran no
+        # longer count.
+        if step_in_flight:
+            if self.is_decoding:
+                num_tokens_to_sample = 1
+            elif self._num_recomputed_tokens is not None:
+                num_tokens_to_sample = (
+                    self._num_processed_tokens - self._num_recomputed_tokens
+                )
+            else:
+                num_tokens_to_sample = (
+                    self._num_prefill_tokens - self._num_processed_tokens
+                )
+            self._preempted_step = PreemptedStep(
+                execution_signature=self.execution_signature,
+                was_decoding=self.is_decoding,
+                num_tokens_to_sample=num_tokens_to_sample,
+                recompute=recompute,
+            )
+        self._preempted = True
+        if self._is_prefill_complete:
+            self._completed_layer_count = 0
+        else:
+            self._num_processed_tokens = 0
+        if self._is_prefill_complete and recompute:
+            self._num_recomputed_tokens = 0
+
+    def was_preempted_from(self, execution_signature: Tuple[int, int, int]) -> bool:
+        record = self._preempted_step
+        return record is not None and record.execution_signature == execution_signature
+
+    def on_preempted_step_end(
+        self,
+        time: float,
+        num_scheduled_tokens: int,
+        num_committed_tokens: int,
+        cluster_type: ClusterType,
+    ) -> None:
+        record = self._preempted_step
+        self._preempted_step = None
+        if num_scheduled_tokens < record.num_tokens_to_sample:
+            return
+        self._num_recomputed_tokens = None
+        if record.was_decoding:
+            self.on_batch_end(time, num_committed_tokens, cluster_type)
+        elif self._is_prefill_complete:
+            self.on_batch_end(time, 1, cluster_type)
+        else:
+            self.on_batch_end(time, self._num_prefill_tokens, cluster_type)
+        if record.recompute and not self._completed:
+            self._num_recomputed_tokens = 0
+
     def record_preemption(self, cluster_type: ClusterType, num_tokens_completed: int) -> None:
         """
         Record a preemption event for this request.
@@ -1121,6 +1202,9 @@ class Request(BaseEntity):
         cluster_type: ClusterType,
     ) -> None:
         assert time >= 0, f"Invalid scheduling time: {time}"
+        # A new admission drops the sample of the step this request was
+        # preempted from; vLLM would still append it during the replay.
+        self._preempted_step = None
         self._latest_iteration_scheduled_at = time
         self._latest_iteration_round_class = self.current_round_class
         self._latest_iteration_round_number = self.current_thinking_round_number
@@ -1219,6 +1303,16 @@ class Request(BaseEntity):
             )
 
         assert self._num_processed_tokens <= self.total_tokens
+
+        # vLLM samples a new token only on the chunk that reaches the last kept token.
+        if self._num_recomputed_tokens is not None:
+            self._num_recomputed_tokens += num_tokens_processed
+            if self._num_recomputed_tokens < self._num_processed_tokens:
+                self._completed_layer_count = 0
+                self.reset_spec_verify_state_after_batch_end()
+                return
+            self._num_recomputed_tokens = None
+            num_tokens_processed = 1
 
         # PREFILL cluster: when prefill completes, mark completion
         # Note: In disaggregated mode (PD or PD+AF), the first decode token is NOT

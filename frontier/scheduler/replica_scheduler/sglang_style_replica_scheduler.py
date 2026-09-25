@@ -90,14 +90,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         _log_frontier_vllm_v1_schedule_decision(payload)
 
     def _is_prefill_stage_request(self, request: Request) -> bool:
-        return bool(getattr(request, "_preempted", False)) or not request.is_prefill_complete
-
-    def _get_request_next_num_tokens(self, request: Request) -> int:
-        if getattr(request, "_preempted", False):
-            computed_tokens = self._get_scheduler_num_computed_tokens(request)
-            remaining_prefill_tokens = int(request.num_prefill_tokens) - computed_tokens
-            return max(remaining_prefill_tokens, 0)
-        return super()._get_request_next_num_tokens(request)
+        return not request.is_decoding
 
     def _get_split_waiting_requests(self) -> Tuple[List[Request], List[Request]]:
         ordered_waiting_requests = self._get_sorted_waiting_queue()

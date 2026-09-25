@@ -597,6 +597,7 @@ def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> 
         get_queue_batches=Mock(return_value=[batch]),
         pop_batch_if_not_busy=Mock(return_value=batch),
         consume_last_stale_drops=Mock(return_value=[]),
+        consume_last_stale_row_batches=Mock(return_value=[]),
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(

@@ -129,6 +129,8 @@ def test_stage_ledger_identity_is_captured_from_live_batch_state() -> None:
         current_decode_token_index=4,
         completed_layer_count=9,
         is_prefill_complete=False,
+        is_decoding=False,
+        is_recomputing=False,
         completed=False,
     )
     batch = SimpleNamespace(

@@ -97,6 +97,10 @@ class KvBlockAllocation:
         if scheduled_frontier is not None:
             return scheduled_frontier
 
+        if request.is_recomputing:
+            # vLLM resets num_computed_tokens to 0; prefix hits and chunks move it.
+            return request.num_context_tokens
+
         processed_tokens = int(request.num_processed_tokens)
         if (
             getattr(self, "_cluster_type", None) == ClusterType.MONOLITHIC
@@ -129,6 +133,9 @@ class KvBlockAllocation:
         first decode scheduling step is executed. To align block semantics, KV
         accounting excludes that boundary token.
         """
+        if request.is_recomputing:
+            # Blocks follow the recompute frontier, not the logical length.
+            return self._get_scheduler_num_computed_tokens(request)
         explicit_scheduler_frontier = self._get_explicit_scheduler_num_computed_tokens(
             request
         )
@@ -161,6 +168,10 @@ class KvBlockAllocation:
 
         computed_tokens = self._get_scheduler_num_computed_tokens(request)
         cluster_type = getattr(self, "_cluster_type", None)
+
+        if request.is_recomputing:
+            # vLLM schedules num_tokens - num_computed_tokens and excludes drafts.
+            return int(request.num_processed_tokens) - computed_tokens
 
         if request.is_prefill_complete:
             if getattr(request, "spec_decode_enabled", False):
@@ -196,7 +207,7 @@ class KvBlockAllocation:
             raise ValueError(
                 f"scheduled_tokens must be > 0, got={scheduled_tokens}"
             )
-        if not getattr(request, "is_prefill_complete", False):
+        if not request.is_decoding:
             return reserved_tokens
         if not getattr(request, "spec_decode_enabled", False):
             return reserved_tokens
@@ -409,43 +420,30 @@ class KvBlockAllocation:
         self.allocate(request.id, num_additional_blocks)
         return None
 
-    def _select_preemption_victim(
-        self, exclude: Optional[Request] = None
-    ) -> Optional[Request]:
+    def _select_preemption_victim(self) -> Request:
         """
-        Select a victim request for preemption based on scheduling policy.
+        Select the running request to preempt based on scheduling policy.
 
         FCFS policy: Preempt the most recently added request (queue tail).
         Priority policy: Preempt the request with lowest priority
                         (highest priority value, then latest arrival).
 
-        Args:
-            exclude: Optional request to exclude from victim selection (typically the requesting request)
+        As in vLLM v1 (0.10.2 ``Scheduler.schedule``), every running request
+        is a candidate, including the one whose allocation failed.
 
         Returns:
-            Optional[Request]: The victim request, or None if no victims available
+            Request: The victim request
         """
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
 
-        if not self._running_requests:
-            return None
-
-        # Filter out excluded request
-        candidates = (
-            [r for r in self._running_requests if r != exclude]
-            if exclude
-            else self._running_requests
-        )
-
-        if not candidates:
-            return None
-
         if self._scheduling_policy == "priority":
             # Priority policy: preempt request with highest priority value (lowest priority)
             # Tie-breaker: latest arrival time
-            victim = max(candidates, key=lambda r: (r.priority, r.arrived_at))
+            victim = max(
+                self._running_requests, key=lambda r: (r.priority, r.arrived_at)
+            )
 
             # Flow validation: log victim selection
             logger.info(
@@ -455,26 +453,18 @@ class KvBlockAllocation:
                 f"reason=highest_priority_value"
             )
             return victim
-        else:
-            # FCFS policy: preempt most recently added (queue tail)
-            # If exclude is specified and is the tail, select the second-to-last
-            if exclude and candidates and candidates[-1] != self._running_requests[-1]:
-                # exclude was the tail, use candidates[-1] which is second-to-last
-                victim = candidates[-1]
-            else:
-                victim = candidates[-1] if candidates else None
 
-            if victim is None:
-                return None
+        # FCFS policy: preempt most recently added (queue tail)
+        victim = self._running_requests[-1]
 
-            # Flow validation: log victim selection
-            logger.info(
-                f"[VICTIM_SELECTION] policy=FCFS, "
-                f"victim={victim.id}, "
-                f"position=tail, "
-                f"reason=last_in_running_queue"
-            )
-            return victim
+        # Flow validation: log victim selection
+        logger.info(
+            f"[VICTIM_SELECTION] policy=FCFS, "
+            f"victim={victim.id}, "
+            f"position=tail, "
+            f"reason=last_in_running_queue"
+        )
+        return victim
 
     def _preempt_request(
         self, victim: Request, preempted_requests: List[Request]
@@ -515,6 +505,12 @@ class KvBlockAllocation:
         # Remove from running requests
         if victim in self._running_requests:
             self._running_requests.remove(victim)
+        # Read before the pop below clears the active mark. MONOLITHIC and
+        # unified DECODE apply the sample of the step still in flight.
+        step_in_flight = (
+            self._cluster_type in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+            and self._is_request_active_in_batch(victim)
+        )
         # A batch still in flight no longer executes for the victim: its later
         # stages drop it as stale. Its membership ends here, so the release at
         # that batch's end, or a batch dropped whole, cannot leave it marked.
@@ -535,19 +531,15 @@ class KvBlockAllocation:
             self._monolithic_pp_waiting_sensitive_release_extensions.discard(victim.id)
             return
 
-        # Mark as preempted and reset the scheduler-visible computed frontier.
-        # As in vLLM v1, preemption discards computed KV but keeps generated
-        # output tokens. A victim still in prefill has no output and restarts
-        # its prompt. A victim past prefill keeps its Request-level token
-        # progress; only scheduler-local computed state and KV allocation
-        # restart, and the replay of its prompt and output is not modeled.
-        # Its decode step in flight, if any, is discarded with the KV, so the
-        # layers that step completed no longer count.
-        victim._preempted = True
-        if victim.is_prefill_complete:
-            victim._completed_layer_count = 0
-        else:
-            victim._num_processed_tokens = 0
+        # A MONOLITHIC victim past prefill recomputes its prompt and kept
+        # output as in vLLM. DECODE and DECODE_ATTN victims still resume with
+        # one token because the predictor cannot price a recompute on those roles.
+        # The signature is captured here, before the waiting-queue entry
+        # advances the execution epoch.
+        victim.on_preempted(
+            recompute=self._cluster_type == ClusterType.MONOLITHIC,
+            step_in_flight=step_in_flight,
+        )
 
         # Record re-entry to waiting queue for waiting time tracking after the
         # lifecycle decision above and before adding the request to the queue.
@@ -608,17 +600,21 @@ class KvBlockAllocation:
         scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         """
-        Try to allocate memory for a request, preempting other requests if necessary.
+        Try to allocate memory for a running request, preempting running
+        requests if necessary.
 
-        This implements the core preemption loop from vLLM v1 scheduler.
+        This implements the core preemption loop from vLLM v1 scheduler: each
+        failed allocation preempts one victim and retries. When the victim is
+        the request itself, it stops being scheduled.
 
         Args:
-            request: The request to allocate for
+            request: The running request to allocate for
             num_new_tokens: Number of new tokens to process
             preempted_requests: List to track preempted requests
 
         Returns:
-            bool: True if allocation succeeded (possibly after preemption)
+            bool: True if allocation succeeded (possibly after preemption),
+                False if preemption is disabled or the request preempted itself
         """
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
@@ -657,17 +653,11 @@ class KvBlockAllocation:
                 f"running_queue_size={len(self._running_requests)}"
             )
 
-            # Select victim for preemption (exclude current request)
-            victim = self._select_preemption_victim(exclude=request)
-
-            if victim is None:
-                # No victims available (all other requests have higher priority or no other requests)
-                # Preempt self and move to waiting queue
-                self._preempt_request(request, preempted_requests)
-                return False
-
-            # Preempt victim and try again
+            # The request is still running, so a victim always exists.
+            victim = self._select_preemption_victim()
             self._preempt_request(victim, preempted_requests)
+            if victim is request:
+                return False
 
     def _rollback_current_iteration_preempted_requests(
         self,

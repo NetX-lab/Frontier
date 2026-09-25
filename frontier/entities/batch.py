@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional
+from dataclasses import dataclass, replace
+from typing import Dict, Iterable, List, Optional, Tuple
 from types import MappingProxyType
 
 from frontier.entities.base_entity import BaseEntity
@@ -366,6 +366,38 @@ class SpecDecodeBatchMetadata:
     terminal_overshoot_rejected_draft_tokens_per_request: Optional[List[List[int]]] = None
     terminal_overshoot_raw_committed_tokens_per_request: Optional[List[List[int]]] = None
 
+    def select_requests(self, request_indices: List[int]) -> "SpecDecodeBatchMetadata":
+        """Return the metadata of the requests at `request_indices`, in that order."""
+
+        def select(values):
+            if values is None:
+                return None
+            return [values[index] for index in request_indices]
+
+        return replace(
+            self,
+            planned_draft_tokens_per_request=select(self.planned_draft_tokens_per_request),
+            verify_tokens_per_request=select(self.verify_tokens_per_request),
+            accepted_draft_tokens_per_request=select(self.accepted_draft_tokens_per_request),
+            rejected_draft_tokens_per_request=select(self.rejected_draft_tokens_per_request),
+            committed_tokens_per_request=select(self.committed_tokens_per_request),
+            terminal_overshoot_planned_draft_tokens_per_request=select(
+                self.terminal_overshoot_planned_draft_tokens_per_request
+            ),
+            terminal_overshoot_verify_tokens_per_request=select(
+                self.terminal_overshoot_verify_tokens_per_request
+            ),
+            terminal_overshoot_accepted_draft_tokens_per_request=select(
+                self.terminal_overshoot_accepted_draft_tokens_per_request
+            ),
+            terminal_overshoot_rejected_draft_tokens_per_request=select(
+                self.terminal_overshoot_rejected_draft_tokens_per_request
+            ),
+            terminal_overshoot_raw_committed_tokens_per_request=select(
+                self.terminal_overshoot_raw_committed_tokens_per_request
+            ),
+        )
+
     def validate(self, num_requests: int) -> None:
         vectors = [
             self.planned_draft_tokens_per_request,
@@ -485,7 +517,7 @@ class Batch(BaseEntity):
         self._total_num_tokens: int = sum(num_tokens)
         self._num_prefill_tokens = sum(
             [
-                (t if not r.is_prefill_complete else 0)
+                (t if not r.is_decoding else 0)
                 for r, t in zip(self.requests, self._num_tokens)
             ]
         )
@@ -557,11 +589,7 @@ class Batch(BaseEntity):
         batch-end event is processed on another cluster thread. In that case, the old
         batch must not mutate the newer Request state.
         """
-        return (
-            request.current_thinking_round_index,
-            request.num_restarts,
-            request.execution_epoch,
-        )
+        return request.execution_signature
 
     @staticmethod
     def _get_request_mutation_signature(request: Request) -> tuple[int, int, int, int]:
@@ -915,15 +943,7 @@ class Batch(BaseEntity):
                 self.decode_cuda_graph_metadata.get_effective_decode_batch_size_for_attention()
             )
 
-        return sum(
-            1
-            for request in self.requests
-            if getattr(
-                request,
-                "is_prefill_complete",
-                getattr(request, "_is_prefill_complete", False),
-            )
-        )
+        return sum(1 for request in self.requests if request.is_decoding)
 
     @property
     def is_moe(self) -> bool:
@@ -995,7 +1015,7 @@ class Batch(BaseEntity):
     # include first to second decode token processing
     @property
     def all_requests_ongoing_decoding(self) -> bool:
-        return all([request.ongoing_decoding for request in self._requests])
+        return all([request.is_decoding for request in self._requests])
         
     @property
     def all_requests_early_decoding_on_first_layer(self) -> bool:
@@ -1057,6 +1077,35 @@ class Batch(BaseEntity):
 
         for request in self._requests:
             request.on_batch_schedule(time, cluster_type)
+
+    def apply_preempted_step_samples(
+        self,
+        time: float,
+        cluster_type: "ClusterType",
+        request_execution_signatures: Optional[List[tuple[int, int, int]]] = None,
+    ) -> List[Tuple[int, Request]]:
+        signatures = (
+            self._request_execution_signatures
+            if request_execution_signatures is None
+            else request_execution_signatures
+        )
+        stopped: List[Tuple[int, Request]] = []
+        for index, (request, num_tokens) in enumerate(
+            zip(self._requests, self._num_tokens)
+        ):
+            if not request.was_preempted_from(signatures[index]):
+                continue
+            committed_tokens = int(num_tokens)
+            if self.spec_decode_metadata is not None:
+                committed_tokens = int(
+                    self.spec_decode_metadata.committed_tokens_per_request[index]
+                )
+            request.on_preempted_step_end(
+                time, int(num_tokens), committed_tokens, cluster_type
+            )
+            if request.completed:
+                stopped.append((index, request))
+        return stopped
 
     def on_batch_end(
         self,
@@ -1136,6 +1185,12 @@ class Batch(BaseEntity):
                         expected_round_start,
                         time,
                     )
+                    seen_request_ids.add(request.id)
+                    continue
+                if request.is_recomputing:
+                    # A recompute chunk's width is not committed output, so the
+                    # speculative completion-time logic below does not apply.
+                    request.on_batch_end(time, num_tokens, cluster_type)
                     seen_request_ids.add(request.id)
                     continue
                 effective_tokens = num_tokens

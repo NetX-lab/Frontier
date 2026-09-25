@@ -309,6 +309,32 @@ class VLLMv1EngineReplicaScheduler(
     def _is_request_active_in_batch(self, request: Request) -> bool:
         return self._get_active_batch_request_counts().get(request.id, 0) > 0
 
+    def _roll_back_rejected_drafts(self, batch: Batch) -> None:
+        """Take a speculative step's rejected drafts off the scheduler frontier.
+
+        vLLM advances num_computed_tokens by the scheduled width when it
+        schedules the step and, when the step's output arrives, subtracts the
+        scheduled tokens that produced no output (scheduler.py
+        update_from_output). The scheduled width is one token short of the
+        verify width on a MONOLITHIC target-embedded MTP request's first
+        decode step, so the rollback is taken against the scheduled width.
+        """
+        metadata = batch.spec_decode_metadata
+        if metadata is None:
+            return
+        rejected_by_request_id = {
+            request.id: scheduled - committed
+            for request, scheduled, committed in zip(
+                batch.requests,
+                batch.num_tokens,
+                metadata.committed_tokens_per_request,
+            )
+        }
+        for request in batch.current_execution_requests:
+            rejected = rejected_by_request_id[request.id]
+            if rejected:
+                self._scheduled_num_computed_tokens_by_request[request.id] -= rejected
+
     def complete_kv_transfer_for_requests(
         self, requests: Sequence[Request]
     ) -> None:
@@ -346,6 +372,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
         self._release_batch_requests_active(batch)
+        self._roll_back_rejected_drafts(batch)
 
         for request in batch.requests:
             self._refresh_target_embedded_mtp_prefill_boundary_state(batch, request)
@@ -377,6 +404,13 @@ class VLLMv1EngineReplicaScheduler(
                                 self._decode_attn_open_cohort_id = None
 
             if request.completed:
+                if any(request in queue for queue in self._waiting_queues()):
+                    # It stopped on the sample of the step it was preempted
+                    # from, and preemption already freed its KV.
+                    self.remove_stopped_waiting_request(
+                        request, batch.completed_at
+                    )
+                    continue
                 extra_release_iters = (
                     self._get_monolithic_pp_extra_terminal_release_iters()
                 )
@@ -480,6 +514,23 @@ class VLLMv1EngineReplicaScheduler(
                     f"[VLLMv1Engine] Request {request.id} continues, "
                     f"processed_tokens={request.num_processed_tokens}"
                 )
+
+    def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
+        # Preemption inserts a victim into `_request_queue`, or into
+        # `_waiting_requests` on DECODE and DECODE_ATTN. A later waiting-queue
+        # rebuild may move it into `_preempted_requests`.
+        return (self._request_queue, self._preempted_requests, self._waiting_requests)
+
+    def remove_stopped_waiting_request(self, request: Request, time: float) -> None:
+        """Remove a preempted request that stopped on its in-flight sample.
+
+        vLLM removes such a request from waiting, so it never resumes.
+        """
+        for waiting_queue in self._waiting_queues():
+            if request in waiting_queue:
+                waiting_queue.remove(request)
+                break
+        request.on_leave_waiting_queue(time, self._cluster_type)
 
     def _schedule_running_requests(
         self, token_budget: int, preempted_requests: List[Request]
@@ -818,7 +869,7 @@ class VLLMv1EngineReplicaScheduler(
             )
 
             # Calculate number of new tokens to process
-            if self._is_prefix_caching_enabled() and not request.is_prefill_complete:
+            if self._is_prefix_caching_enabled() and not request.is_decoding:
                 prefix_cache_admission = self._prepare_prefix_cache_admission(
                     request
                 )
@@ -876,7 +927,7 @@ class VLLMv1EngineReplicaScheduler(
             # budget are skipped for this iteration.
             if (
                 not self._enable_chunked_prefill
-                and not request.is_prefill_complete
+                and not request.is_decoding
                 and num_new_tokens > effective_token_budget
             ):
                 waiting_queue.popleft()

@@ -99,7 +99,12 @@ class PrefixCacheLedger:
                 )
             raw_hit_bindings.append(binding)
         raw_cached_tokens = int(num_computed_tokens)
-        num_new_tokens = int(request.num_prefill_tokens) - int(num_computed_tokens)
+        schedule_target_tokens = int(
+            request.num_processed_tokens
+            if request.is_recomputing
+            else request.num_prefill_tokens
+        )
+        num_new_tokens = schedule_target_tokens - int(num_computed_tokens)
         full_hit_backoff_applied = False
         if num_new_tokens == 0 and computed_blocks:
             num_computed_tokens -= int(self._config.block_size)
