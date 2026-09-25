@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | W9 row: C3 scope stated (balancer on native reports, not Frontier's report emission); the G3b fixes `dfb0b25`, `20f0f94`, `df8ebc6` added. |
 | 2026-09-24 | Open items: W3-R5/W3-R6 fixed and merged; F-R5 on stacked draft PR 38. |
 | 2026-09-24 | Gitlink re-pointed at the merged companion `main` (`d28fe917`, `1b11eff`); the open item removed. |
 | 2026-09-24 | Rerun review G3a lead 26: the W6 row and Limits now cite the native rerun of the current FP8 step. |
@@ -49,7 +50,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | W5 | Routing implementation identity separated from expert-load distribution | **Closed, not ported**, by user decision after the premise check showed the collision unreachable from any released configuration. Drafted implementation reverted before commit and archived as `w5_reverted_moe_routing_runtime_path.patch`. |
 | W6 | Legacy fused-MoE profiling performs the real gated expert computation | Landed. `7269bac`, native parity test `697f219`, identity limits documented in `79f599a`. |
 | W7 | The collective-sim backend accepts an empty collective | Landed companion-side. Frontier gitlink moved in `1b95187`; governance scans narrowed in `beded3c`. |
-| W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). Against a real vLLM 0.10.2 DP2 PP2 deployment (G4), Frontier's balancer reproduces all 48 formal routes from the native history (C3). The discriminating slice was not reached (C4 `SCENARIO_NOT_REACHED`, plan §18.21). |
+| W9 | The opt-in vLLM DP placement policy supports pipeline parallelism (Step 9) | Landed on the CPU: `2ffe78d`, tests `bacdbb4`. Behavior at PP=1 unchanged (24 of 24 policy scenarios). Against a real vLLM 0.10.2 DP2 PP2 deployment (G4), Frontier's balancer reproduces all 48 formal routes from the native history (C3). C3 feeds the native reports into the balancer, so it checks the balancer, not Frontier's own report emission; that comparison is a step of the S43 task. The discriminating slice was not reached (C4 `SCENARIO_NOT_REACHED`, plan §18.21). The G3b review fixes (`dfb0b25`, `20f0f94`, `df8ebc6`) publish lane load after stale drops and after deferred terminal releases, and remove guards for unreachable states; `test_report_2026-09-24_g3b_fixes.md`. |
 | W9-04 | A lane that joins a forward after receiving a first-layer placeholder no longer stalls it | Landed. `2ffb062`; checks A1–A7 pass, including fidelity 71 of 71 and stage-admission 51 of 51. |
 | Fix review (2026-09-24) | Review of W2, W3, W4, W6, W7, W9 and W9-05 as landed | Ten commits `c647e95`..`6aee289`: PP>1 decode preemption (F-R1..F-R4), random-policy lane collapse (W2-R1), unreachable guards and a single phase rule (W3), FP8 wiring (W6-R1..R4), cross-server empty all-to-all (W7-R1, companion `ff11ee6`), the reference loop's idle iteration and two stagger cases (W9). Proposals F-R5, F-R6, W3-R5, W3-R6, S44 await decisions. `test_report_2026-09-24_fix_review.md`. |
 | W9-05 | A `vllm_v1` MONOLITHIC request preempted during decode resumes instead of disappearing | Landed. `75c1140`; checks B1–B8 pass. A 72-cell KV-pressure sweep lost 176 requests before and none after; fidelity 71 of 71 identical. |

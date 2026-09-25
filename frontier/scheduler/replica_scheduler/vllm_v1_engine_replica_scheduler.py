@@ -122,6 +122,7 @@ class VLLMv1EngineReplicaScheduler(
         self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
         self._monolithic_pp_waiting_admission_delay_iters: Dict[int, int] = {}
         self._active_batch_request_counts: Dict[int, int] = {}
+        self._preemption_followup_poll_pending = False
 
         # The EngineCore batch queue: in-flight batch ids in admission order,
         # and the oldest one the engine blocks on once a pass leaves work in
@@ -332,17 +333,22 @@ class VLLMv1EngineReplicaScheduler(
     def _roll_back_rejected_drafts(self, batch: Batch) -> None:
         """Take a speculative step's rejected drafts off the scheduler frontier.
 
-        vLLM advances num_computed_tokens by the whole verify width when it
-        schedules the step and subtracts the rejected drafts when the step's
-        output arrives (scheduler.py update_from_output).
+        vLLM advances num_computed_tokens by the scheduled width when it
+        schedules the step and, when the step's output arrives, subtracts the
+        scheduled tokens that produced no output (scheduler.py
+        update_from_output). The scheduled width is one token short of the
+        verify width on a MONOLITHIC target-embedded MTP request's first
+        decode step, so the rollback is taken against the scheduled width.
         """
         metadata = batch.spec_decode_metadata
         if metadata is None:
             return
         rejected_by_request_id = {
-            request.id: rejected
-            for request, rejected in zip(
-                batch.requests, metadata.rejected_draft_tokens_per_request
+            request.id: scheduled - committed
+            for request, scheduled, committed in zip(
+                batch.requests,
+                batch.num_tokens,
+                metadata.committed_tokens_per_request,
             )
         }
         for request in batch.current_execution_requests:
@@ -566,6 +572,25 @@ class VLLMv1EngineReplicaScheduler(
         # `_waiting_requests` on DECODE and DECODE_ATTN. A later waiting-queue
         # rebuild may move it into `_preempted_requests`.
         return (self._request_queue, self._preempted_requests, self._waiting_requests)
+
+    def _update_preemption_followup_poll(self, preempted_requests: List[Request]) -> None:
+        # vLLM runs its next step right after a step that schedules nothing,
+        # unless it waits for a batch in flight (`EngineCore.run_busy_loop`,
+        # `step_with_batch_queue`). Frontier starts a pass on an arrival or a
+        # batch end, so with no batch in flight an empty pass has no successor.
+        # A preemption in that pass freed blocks for the requests still
+        # running, so their next step follows at once. Each such pass removes
+        # a request from running, which bounds the chain.
+        self._preemption_followup_poll_pending = bool(
+            preempted_requests
+            and self._running_requests
+            and self._num_running_batches == 0
+        )
+
+    def consume_preemption_followup_poll(self) -> bool:
+        pending = self._preemption_followup_poll_pending
+        self._preemption_followup_poll_pending = False
+        return pending
 
     def remove_stopped_waiting_request(self, request: Request, time: float) -> None:
         """Remove a preempted request that stopped on its in-flight sample.
@@ -1313,6 +1338,7 @@ class VLLMv1EngineReplicaScheduler(
                 self._clear_monolithic_pp_mtp_output_wait()
                 self._monolithic_pp_mtp_output_wait_followup_poll_pending = True
             released += self._advance_monolithic_pp_terminal_release_boundary()
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,

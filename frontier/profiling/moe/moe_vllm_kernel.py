@@ -147,8 +147,8 @@ try:
 
     # Try to import FP8 quantization utilities
     try:
-        from vllm.model_executor.layers.quantization.utils.fp8_utils import (
-            per_token_group_quant_fp8,
+        from vllm.model_executor.layers.fused_moe.utils import (
+            moe_kernel_quantize_input as _moe_kernel_quantize_input,
         )
         from vllm.utils.deep_gemm import (
             per_block_cast_to_fp8 as _per_block_cast_to_fp8,
@@ -271,25 +271,25 @@ def quantize_weights_to_fp8(
 
 def quantize_activations_to_fp8(
     activations: torch.Tensor,
-    group_size: int = 128,
+    per_channel_quant: bool,
+    block_shape: Optional[List[int]],
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Quantize activations to FP8 using per-token-group quantization.
+    """Quantize one expert GEMM input to FP8 with dynamic scales, as vLLM does.
 
-    Args:
-        activations: Activation tensor [num_tokens, hidden_dim]
-        group_size: Group size for quantization (default 128)
-
-    Returns:
-        Tuple of (quantized_activations, scales)
+    vLLM's `moe_kernel_quantize_input` gives a block shape per-token-group
+    scales and otherwise per-token or per-tensor scales, the layouts the
+    fused kernel reads in each mode.
     """
     if not FP8_QUANT_AVAILABLE:
         raise ImportError(
             "vLLM FP8 activation quantization utilities are required for FP8 "
             "MoE activation profiling. Install the profiling environment from "
             "environment_profiling.yml or use an existing vLLM environment with "
-            "per_token_group_quant_fp8 available."
+            "moe_kernel_quantize_input available."
         )
-    return per_token_group_quant_fp8(activations, group_size=group_size)
+    return _moe_kernel_quantize_input(
+        activations, None, torch.float8_e4m3fn, per_channel_quant, block_shape
+    )
 
 
 def _invoke_kernel(
@@ -409,11 +409,10 @@ def _run_fused_moe_iteration(
     `fused_experts_impl` and the profiled cost includes that work.
     """
 
-    group_size = block_shape[1] if block_shape else 128
     first_input, first_A_scale = A.contiguous(), None
     if use_fp8:
         first_input, first_A_scale = quantize_activations_to_fp8(
-            first_input, group_size=group_size
+            first_input, per_channel_quant, block_shape
         )
 
     _invoke_kernel(
@@ -445,7 +444,7 @@ def _run_fused_moe_iteration(
     second_input, second_A_scale = intermediate_cache2, None
     if use_fp8:
         second_input, second_A_scale = quantize_activations_to_fp8(
-            second_input, group_size=group_size
+            second_input, per_channel_quant, block_shape
         )
 
     _invoke_kernel(

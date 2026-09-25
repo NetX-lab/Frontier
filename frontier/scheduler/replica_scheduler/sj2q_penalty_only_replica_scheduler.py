@@ -271,7 +271,7 @@ class SJ2QPenaltyOnlyReplicaScheduler(VLLMv1EngineReplicaScheduler):
     def _is_decode_slice(self, request: Request) -> bool:
         if self._cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}:
             return True
-        return bool(getattr(request, "is_prefill_complete", False))
+        return request.is_decoding
 
     def _select_forced_qlong_request_id(self, requests: Sequence[Request]) -> Optional[int]:
         if self._sj2q_penalty_short_streak_counter < self._sj2q_penalty_long_liveness_quota:

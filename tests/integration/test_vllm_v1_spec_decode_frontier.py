@@ -1,11 +1,15 @@
 """Rejected drafts leave the vllm_v1 scheduler frontier when their step ends.
 
-vLLM schedules a speculative step with its whole verify width and, when the
-step's output arrives, subtracts the rejected drafts from num_computed_tokens.
-After every decode step the frontier therefore stands one token behind the
-request's tokens: the last sampled token is not computed yet. A frontier that
+vLLM advances num_computed_tokens by a speculative step's scheduled width and,
+when the step's output arrives, subtracts the scheduled tokens that produced no
+output. After every decode step the frontier therefore stands one token behind
+the request's tokens: the last sampled token is not computed yet. A frontier that
 keeps the rejected drafts runs ahead of the request, inflates its KV accounting
 and, near max_model_len, leaves the request with nothing it may schedule.
+
+A MONOLITHIC target-embedded MTP request schedules one token fewer than its
+verify width on its first decode step, so the rollback is taken against the
+scheduled width, not the verify width.
 """
 
 from __future__ import annotations
@@ -31,22 +35,39 @@ from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler impor
 from frontier.simulator import Simulator
 
 # Two drafts with two committed tokens per step reject one draft every step.
-SPEC_DECODE = SpeculativeDecodingConfig(
+NGRAM = SpeculativeDecodingConfig(
     enabled=True,
     method="ngram",
     num_speculative_tokens=2,
     committed_tokens_per_iteration=2,
 )
+QWEN3_NEXT_MTP = SpeculativeDecodingConfig(
+    enabled=True,
+    method="qwen3_next_mtp",
+    num_speculative_tokens=2,
+    committed_tokens_per_iteration=2,
+    mtp_n_predict=1,
+    mtp_num_layers=1,
+)
 
-# Each case ended with a request stranded at max_model_len (96 tokens) before
-# the fix. There is no preemption: 64 blocks hold every request.
+# The ngram cases ended with a request stranded at max_model_len (96 tokens)
+# before the rollback; the MTP case left the frontier two tokens behind the
+# request after every step. There is no preemption: 64 blocks hold every request.
 CASES = {
     "dense": dict(
+        spec_decode=NGRAM,
+        replica=dict(model_name="llama2_7b_dense_example"),
+        num_requests=12,
+        seed=7,
+    ),
+    "dense_qwen3_next_mtp": dict(
+        spec_decode=QWEN3_NEXT_MTP,
         replica=dict(model_name="llama2_7b_dense_example"),
         num_requests=12,
         seed=7,
     ),
     "moe_dp2_ep2": dict(
+        spec_decode=NGRAM,
         replica=dict(
             model_name="Qwen3-30B-A3B-tiny",
             attn_dp=2,
@@ -82,7 +103,7 @@ def _config(root, case):
                 device="a100",
                 network_device="a100_pairwise_nvlink",
                 attn_tensor_parallel_size=1,
-                speculative_decoding_config=SPEC_DECODE,
+                speculative_decoding_config=case["spec_decode"],
                 **case["replica"],
             ),
             replica_scheduler_config=VllmV1SchedulerConfig(
