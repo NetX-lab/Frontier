@@ -7,18 +7,21 @@
 #
 # Required environment:
 #   RUN_TAG        identifier of this run
+#   MODE           ground-truth mode of vllm_replay.py: clean or instrumented
+#   REPLAY_TIMEOUT_S  wall-time limit of the replay, below the job's cap so
+#                  that a stopped replay is still published
 #   FRONTIER_TREE  Frontier worktree on the mounted workspace
 #   GROUNDTRUTH    vLLM-BS checkout on the mounted workspace
 #   CASE_DIR       calibration case directory on the mounted workspace; reads
-#                  inputs/, writes runs/groundtruth_clean/<RUN_TAG>/
+#                  inputs/, writes runs/groundtruth_<MODE>/<RUN_TAG>/
 #   ENGINE_CONFIG  engine settings file under CASE_DIR/inputs
 #   TRACE_DIR      trace directory (trace.csv, request_ids.json) under CASE_DIR/inputs
 #   ARCHIVE_DIR    cloud-volume directory for this run
 set -euo pipefail
 set +x
-: "${RUN_TAG:?}" "${FRONTIER_TREE:?}" "${GROUNDTRUTH:?}" "${CASE_DIR:?}" \
-  "${ENGINE_CONFIG:?}" "${TRACE_DIR:?}" "${ARCHIVE_DIR:?}"
-EVIDENCE_DIR="$CASE_DIR/runs/groundtruth_clean/$RUN_TAG"
+: "${RUN_TAG:?}" "${MODE:?}" "${REPLAY_TIMEOUT_S:?}" "${FRONTIER_TREE:?}" "${GROUNDTRUTH:?}" \
+  "${CASE_DIR:?}" "${ENGINE_CONFIG:?}" "${TRACE_DIR:?}" "${ARCHIVE_DIR:?}"
+EVIDENCE_DIR="$CASE_DIR/runs/groundtruth_$MODE/$RUN_TAG"
 # A run never writes over an earlier run's evidence.
 for target in "$EVIDENCE_DIR/run" "$ARCHIVE_DIR"; do
   if [ -e "$target" ]; then
@@ -82,9 +85,9 @@ export PYTHONPATH="$WORK/overlay"
 "$PY" -c 'import vllm, vllm.v1.frontier_trace as t; print("VLLM_IMPORT", vllm.__version__, vllm.__file__, t.__file__)' \
   | tee "$WORK/vllm_import.txt"
 
-if timeout 2400 "$PY" "$SCRIPT_DIR/vllm_replay.py" \
+if timeout "$REPLAY_TIMEOUT_S" "$PY" "$SCRIPT_DIR/vllm_replay.py" \
      --engine-config "$ENGINE_CONFIG" --trace-dir "$TRACE_DIR" \
-     --output-dir "$WORK/run" > "$WORK/run/replay.log" 2>&1; then
+     --output-dir "$WORK/run" --mode "$MODE" > "$WORK/run/replay.log" 2>&1; then
   echo "REPLAY_PASS"
 else
   status=$?
@@ -96,6 +99,6 @@ publish "$ARCHIVE_DIR"
 publish_evidence
 
 grep -h "REPLAY_DONE" "$WORK/run/replay.log" || tail -n 30 "$WORK/run/replay.log" || true
-wc -l "$WORK"/run/dp_placement/*.jsonl "$WORK/run/client_requests.jsonl" "$WORK/run/request_metrics.jsonl" 2>/dev/null || true
+wc -l "$WORK"/run/dp_placement/*.jsonl "$WORK"/run/*.jsonl 2>/dev/null || true
 echo "WORKER_STATUS=$status RUN_TAG=$RUN_TAG"
 exit "$status"
