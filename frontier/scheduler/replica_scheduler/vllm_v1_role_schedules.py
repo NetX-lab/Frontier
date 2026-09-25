@@ -124,6 +124,7 @@ class DisaggregatedRoleScheduling:
             )
 
         if not all_scheduled_requests:
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,
@@ -289,6 +290,7 @@ class DisaggregatedRoleScheduling:
             )
 
         if not all_scheduled_requests:
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,

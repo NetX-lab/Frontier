@@ -611,6 +611,129 @@ def test_a_recompute_is_one_chunk_without_chunked_prefill(tmp_path, monkeypatch)
     _assert_every_request_completes(simulator, 3)
 
 
+# Two 48-token prompts, each fitting the pool alone, with a 16-token prefill
+# chunk and a 32-token budget. Once both run, the pool is full and the first
+# running request is the priority victim of its own next chunk: the pass
+# preempts it, forms no rows and leaves the other request running with no
+# batch in flight. The priority case admits the lower-priority request first;
+# the equal-priority case arrives together, and the tie picks running[0].
+# Both stalled before the follow-up poll; a grid over pool size, budget, arrival
+# order and PP found them.
+EMPTY_PREEMPTING_PASS_CASES = {
+    "pp1_lower_priority_first": dict(
+        trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.0,48,1,1
+0.2,48,1,0
+""",
+        num_blocks=3,
+        num_pipeline_stages=1,
+    ),
+    "pp2_equal_priority": dict(
+        trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.0,48,1,0
+0.0,48,1,0
+""",
+        num_blocks=4,
+        num_pipeline_stages=2,
+    ),
+}
+
+
+def _priority_chunk_config(root, *, trace_text, num_blocks, num_pipeline_stages):
+    return _trace_config(
+        root,
+        trace_text=trace_text,
+        num_blocks=num_blocks,
+        max_tokens_in_batch=32,
+        long_prefill_token_threshold=16,
+        scheduling_policy="priority",
+        replica_config=ReplicaConfig(
+            model_name="llama2_7b_dense_example",
+            device="a100",
+            network_device="a100_pairwise_nvlink",
+            num_pipeline_stages=num_pipeline_stages,
+            attn_tensor_parallel_size=1,
+        ),
+    )
+
+
+def _observe_empty_preempting_passes(monkeypatch):
+    """The replica state after each MONOLITHIC pass that preempts and forms no batch."""
+
+    passes = []
+    pass_victims = []
+    preempt_request = VLLMv1EngineReplicaScheduler._preempt_request
+    schedule_two_phase = VLLMv1EngineReplicaScheduler._schedule_two_phase
+
+    def observed_preempt_request(self, victim, preempted_requests):
+        pass_victims.append(victim.id)
+        preempt_request(self, victim, preempted_requests)
+
+    def observed_schedule_two_phase(self):
+        pass_victims.clear()
+        batch = schedule_two_phase(self)
+        if batch is None and pass_victims:
+            passes.append(dict(
+                victims=list(pass_victims),
+                running=[request.id for request in self._running_requests],
+                batches_in_flight=self._num_running_batches,
+            ))
+        return batch
+
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_preempt_request", observed_preempt_request
+    )
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_schedule_two_phase", observed_schedule_two_phase
+    )
+    return passes
+
+
+@pytest.mark.parametrize("case", EMPTY_PREEMPTING_PASS_CASES)
+def test_an_empty_pass_that_preempts_runs_the_next_step_at_once(
+    tmp_path, monkeypatch, case
+):
+    passes = _observe_empty_preempting_passes(monkeypatch)
+    simulator = Simulator(
+        _priority_chunk_config(tmp_path, **EMPTY_PREEMPTING_PASS_CASES[case])
+    )
+    simulator.run()
+
+    assert any(
+        observed["running"] and observed["batches_in_flight"] == 0
+        for observed in passes
+    ), passes
+    _assert_every_request_completes(simulator, 2)
+    (replica_scheduler,) = simulator._global_scheduler.get_cluster_scheduler(
+        ClusterType.MONOLITHIC
+    )._full_stage_replica_schedulers.values()
+    assert replica_scheduler._allocation_map == {}
+    assert replica_scheduler._num_allocated_blocks == 0
+
+
+def test_a_request_larger_than_the_pool_still_ends_the_run(tmp_path, monkeypatch):
+    # The request preempts itself alone, so no request is left running and no
+    # follow-up poll runs: the run ends with the request unfinished instead of
+    # admitting and preempting it until the time limit.
+    passes = _observe_empty_preempting_passes(monkeypatch)
+    config = _priority_chunk_config(
+        tmp_path,
+        trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.0,64,1,0
+""",
+        num_blocks=3,
+        num_pipeline_stages=1,
+    )
+    config.time_limit = 60
+    simulator = Simulator(config)
+
+    with pytest.raises(RuntimeError, match="non-empty scheduler state"):
+        simulator.run()
+    assert len(passes) == 1
+    assert passes[0]["running"] == []
+    assert passes[0]["batches_in_flight"] == 0
+
+
 PREFIX_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens,session_id,block_hash_ids
 0.0,32,30,7,11|22
 0.0,32,30,7,11|22
@@ -717,19 +840,14 @@ def _observe_prefill_first_victims(monkeypatch):
     """Where each victim of an SGLang prefill-first pass sits once that pass forms no rows."""
 
     victims = []
-    pass_victims = []
-    preempt_request = VLLMv1EngineReplicaScheduler._preempt_request
     schedule_prefill_stage_first = (
         SGLangStyleReplicaScheduler._schedule_prefill_stage_first
     )
 
-    def observed_preempt_request(self, victim, preempted_requests):
-        pass_victims.append(victim)
-        preempt_request(self, victim, preempted_requests)
-
-    def observed_schedule_prefill_stage_first(self, token_budget):
-        pass_victims.clear()
-        result = schedule_prefill_stage_first(self, token_budget)
+    def observed_schedule_prefill_stage_first(
+        self, token_budget, preempted_requests
+    ):
+        result = schedule_prefill_stage_first(self, token_budget, preempted_requests)
         _, waiting_scheduled, _, running_scheduled, _ = result
         if not waiting_scheduled and not running_scheduled:
             waiting = [*self._preempted_requests, *self._request_queue]
@@ -740,13 +858,10 @@ def _observe_prefill_first_victims(monkeypatch):
                     waiting_entries=waiting.count(victim),
                     blocks=self._allocation_map.get(victim.id, 0),
                 )
-                for victim in pass_victims
+                for victim in preempted_requests
             )
         return result
 
-    monkeypatch.setattr(
-        VLLMv1EngineReplicaScheduler, "_preempt_request", observed_preempt_request
-    )
     monkeypatch.setattr(
         SGLangStyleReplicaScheduler,
         "_schedule_prefill_stage_first",

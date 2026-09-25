@@ -107,7 +107,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         return prefill_waiting_requests, other_waiting_requests
 
     def _schedule_prefill_stage_first(
-        self, token_budget: int
+        self, token_budget: int, preempted_requests: List[Request]
     ) -> Tuple[int, List[Request], List[int], List[Request], List[int]]:
         original_running_requests = list(self._running_requests)
 
@@ -129,7 +129,6 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         self._running_requests = list(prefill_running_requests)
         self._set_waiting_queues_from_ordered_requests(prefill_waiting_requests)
 
-        preempted_requests: List[Request] = []
         token_budget, running_scheduled, running_tokens = self._schedule_running_requests(
             token_budget,
             preempted_requests,
@@ -160,7 +159,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         )
 
     def _schedule_decode_fallback_running_requests(
-        self, token_budget: int
+        self, token_budget: int, preempted_requests: List[Request]
     ) -> Tuple[int, List[Request], List[int]]:
         original_running_requests = list(self._running_requests)
         prefill_running_requests = [
@@ -175,7 +174,6 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         ]
 
         self._running_requests = list(decode_running_requests)
-        preempted_requests: List[Request] = []
         token_budget, running_scheduled, running_tokens = self._schedule_running_requests(
             token_budget,
             preempted_requests,
@@ -242,13 +240,14 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             f"[PREFILL_FIRST_START] running_count={len(self._running_requests)}, "
             f"waiting_count={waiting_count}, token_budget={token_budget}"
         )
+        preempted_requests: List[Request] = []
         (
             token_budget,
             waiting_scheduled,
             waiting_tokens,
             running_prefill_scheduled,
             running_prefill_tokens,
-        ) = self._schedule_prefill_stage_first(token_budget)
+        ) = self._schedule_prefill_stage_first(token_budget, preempted_requests)
 
         if waiting_scheduled or running_prefill_scheduled:
             ordered_scheduled_requests = waiting_scheduled + running_prefill_scheduled
@@ -287,11 +286,14 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             "falling back to running decode"
         )
         token_budget, running_decode_scheduled, running_decode_tokens = (
-            self._schedule_decode_fallback_running_requests(token_budget)
+            self._schedule_decode_fallback_running_requests(
+                token_budget, preempted_requests
+            )
         )
 
         if not running_decode_scheduled:
             self._advance_monolithic_pp_terminal_release_boundary()
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,
