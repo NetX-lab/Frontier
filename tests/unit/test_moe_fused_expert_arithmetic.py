@@ -218,8 +218,8 @@ def test_both_gemm_inputs_are_quantized_inside_the_step(
 
     seen = []
 
-    def fake_quantize(tensor, *, group_size):
-        seen.append((tensor, group_size))
+    def fake_quantize(tensor, per_channel_quant, block_shape):
+        seen.append((tensor, per_channel_quant, block_shape))
         return tensor, torch.ones(1)
 
     monkeypatch.setattr(kernel, "quantize_activations_to_fp8", fake_quantize)
@@ -229,7 +229,54 @@ def test_both_gemm_inputs_are_quantized_inside_the_step(
     assert len(seen) == 2
     assert seen[0][0] is expert_problem.A
     assert seen[1][0] is result.cache2
-    assert [group_size for _, group_size in seen] == [64, 64]
+    assert [mode for _, *mode in seen] == [[False, [128, 64]], [False, [128, 64]]]
+
+
+@pytest.mark.parametrize(
+    "per_channel_quant,block_shape",
+    [(False, None), (True, None), (False, [128, 64])],
+)
+def test_each_gemm_input_takes_the_scale_layout_of_its_fp8_mode(
+    monkeypatch, expert_problem, native_stubs, per_channel_quant, block_shape
+):
+    """Both inputs go through vLLM's `moe_kernel_quantize_input` with dynamic scales.
+
+    vLLM gives a block shape per-token-group scales and otherwise per-token or
+    per-tensor scales. The fused kernel reads one scale per tensor or per token
+    without a block shape, so per-group scales there are read at the wrong
+    element and time the wrong quantization kernel.
+    """
+
+    seen = []
+
+    def fake_moe_kernel_quantize_input(
+        tensor, a_scale, quant_dtype, per_act_token_quant, block_shape
+    ):
+        seen.append((a_scale, quant_dtype, per_act_token_quant, block_shape))
+        return tensor, torch.ones(1)
+
+    # `native_stubs` replaces the module's torch with the activation stub.
+    monkeypatch.setattr(
+        kernel,
+        "torch",
+        SimpleNamespace(ops=kernel.torch.ops, float8_e4m3fn=torch.float8_e4m3fn),
+    )
+    monkeypatch.setattr(kernel, "FP8_QUANT_AVAILABLE", True)
+    monkeypatch.setattr(
+        kernel,
+        "_moe_kernel_quantize_input",
+        fake_moe_kernel_quantize_input,
+        raising=False,
+    )
+
+    _run(
+        expert_problem,
+        use_fp8=True,
+        per_channel_quant=per_channel_quant,
+        block_shape=block_shape,
+    )
+
+    assert seen == [(None, torch.float8_e4m3fn, per_channel_quant, block_shape)] * 2
 
 
 def test_the_block_shape_reaches_both_expert_gemms(
@@ -245,7 +292,7 @@ def test_the_block_shape_reaches_both_expert_gemms(
     monkeypatch.setattr(
         kernel,
         "quantize_activations_to_fp8",
-        lambda tensor, *, group_size: (tensor, torch.ones(1)),
+        lambda tensor, per_channel_quant, block_shape: (tensor, torch.ones(1)),
     )
 
     _run(expert_problem, use_fp8=True, block_shape=[128, 64])
@@ -442,7 +489,7 @@ def test_the_kernel_config_is_looked_up_for_the_profiled_quantization(
         monkeypatch.setattr(
             kernel,
             "quantize_activations_to_fp8",
-            lambda tensor, *, group_size: (tensor, torch.ones(1)),
+            lambda tensor, per_channel_quant, block_shape: (tensor, torch.ones(1)),
         )
 
     _, native_calls = _profile_on_cpu(
