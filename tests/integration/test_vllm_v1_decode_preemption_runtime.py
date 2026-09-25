@@ -271,19 +271,19 @@ def _pdd_config(root, case):
     return _config(
         root,
         ClusterConfig(
-            prefill_cluster_num_replicas=1,
+            prefill_cluster_num_replicas=case["num_prefill_replicas"],
             decode_cluster_num_replicas=1,
             replica_config=ReplicaConfig(
-                model_name="llama2_7b_dense_example",
                 device="a100",
                 network_device="a100_pairwise_nvlink",
                 attn_tensor_parallel_size=1,
+                **case["replica"],
             ),
             decode_replica_config_num_pipeline_stages=case["num_pipeline_stages"],
             replica_scheduler_config=VllmV1SchedulerConfig(
                 num_blocks=64,
                 block_size=16,
-                batch_size_cap=4,
+                batch_size_cap=case["batch_size_cap"],
                 max_tokens_in_batch=16,
                 enable_chunked_prefill=True,
             ),
@@ -1193,7 +1193,29 @@ LENGTH_STOP_CASE = dict(
 # A decode victim on the unified PDD decode replica. Every running decode fits
 # one step, so each pass forms one batch and the engine blocks on it: no victim
 # is in flight when a later pass preempts it.
-PDD_PREEMPTION_CASE = dict(num_pipeline_stages=2, num_blocks=6, num_requests=8, seed=7)
+PDD_PREEMPTION_CASE = dict(
+    replica=DENSE_REPLICA,
+    num_prefill_replicas=1,
+    batch_size_cap=4,
+    num_pipeline_stages=2,
+    num_blocks=6,
+    num_requests=8,
+    seed=7,
+)
+
+# Four prefill replicas keep more 3-token speculative decodes running than one
+# 16-token step holds, so the decodes split over two in-flight batches. When the
+# older batch ends, the next pass can preempt a request of the other one. Found
+# by a probe over 1-4 prefill replicas, 24-48 requests, 20-28 blocks and seeds 0-3.
+PDD_INFLIGHT_CASE = dict(
+    replica=DENSE_SPEC_DECODE_REPLICA,
+    num_prefill_replicas=4,
+    batch_size_cap=16,
+    num_pipeline_stages=2,
+    num_blocks=28,
+    num_requests=48,
+    seed=1,
+)
 
 # Each request thinks one 48-token round with a one-token answer first. The
 # later of two equal-priority requests is preempted while the last chunk of
@@ -1355,6 +1377,31 @@ def test_a_pdd_decode_victim_resumes_with_one_token(tmp_path, monkeypatch):
         assert victim["processed_after"] == victim["processed_before"], victim
         assert not victim["recomputing"], victim
     _assert_every_request_completes(simulator, PDD_PREEMPTION_CASE["num_requests"])
+
+
+def test_an_inflight_pdd_decode_victim_resumes_with_a_decode_step(
+    tmp_path, monkeypatch
+):
+    recorder = _observe_inflight_removals(monkeypatch)
+    simulator = Simulator(_pdd_config(tmp_path, PDD_INFLIGHT_CASE))
+    simulator.run()
+
+    resumed = [
+        removal
+        for removal in _decode_removals(recorder)
+        if not removal["completed_after"]
+    ]
+    assert resumed, _decode_removals(recorder)
+    for removal in resumed:
+        _assert_gains_the_committed_tokens(removal)
+        assert not removal["recomputing"] and removal["cursor_after"] is None
+        rows = recorder.rows_after(removal)
+        assert rows, removal
+        # A decode step, never wider than the one the victim had in flight.
+        assert rows[0]["width"] <= removal["width"], rows[0]
+        assert not rows[0]["recomputing"], rows[0]
+        assert rows[0]["processed"] == removal["processed_after"], rows[0]
+    _assert_every_request_completes(simulator, PDD_INFLIGHT_CASE["num_requests"])
 
 
 def test_an_inflight_speculative_victim_gains_its_rows_committed_tokens(
