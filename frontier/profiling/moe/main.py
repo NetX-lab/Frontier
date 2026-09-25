@@ -282,7 +282,7 @@ def parse_args():
         "--load_distributions",
         nargs="+",
         default=["uniform"],
-        choices=["uniform", "skewed", "extremely_skewed"],
+        choices=["uniform", "balanced", "skewed", "extremely_skewed"],
         help="Load distribution types to profile when --enable_load_imbalance is set "
              "(default: %(default)s)",
     )
