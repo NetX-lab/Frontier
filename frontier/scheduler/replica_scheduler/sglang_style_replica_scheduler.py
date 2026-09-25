@@ -110,7 +110,6 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         self, token_budget: int
     ) -> Tuple[int, List[Request], List[int], List[Request], List[int]]:
         original_running_requests = list(self._running_requests)
-        original_waiting_requests = self._get_sorted_waiting_queue()
 
         prefill_running_requests = [
             request
@@ -142,15 +141,10 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
                 self._schedule_waiting_requests(token_budget)
             )
 
-        scheduled_any = bool(running_scheduled or waiting_scheduled)
+        # A preemption above freed its victim and queued it, even when nothing
+        # was scheduled, so both views keep the updated prefill side.
         updated_prefill_running_requests = list(self._running_requests)
         updated_prefill_waiting_requests = self._get_sorted_waiting_queue()
-
-        if not scheduled_any:
-            self._running_requests = original_running_requests
-            self._set_waiting_queues_from_ordered_requests(original_waiting_requests)
-            return token_budget, [], [], [], []
-
         self._running_requests = (
             decode_running_requests + list(updated_prefill_running_requests)
         )

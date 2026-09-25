@@ -36,6 +36,9 @@ from frontier.entities.batch import Batch
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.metrics.metrics_store import MetricsStore
+from frontier.scheduler.replica_scheduler.sglang_style_replica_scheduler import (
+    SGLangStyleReplicaScheduler,
+)
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
@@ -43,6 +46,7 @@ from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
     ReplicaStageScheduler,
 )
 from frontier.simulator import Simulator
+from frontier.types import ClusterType
 
 # Each request ends at 60 tokens, four 16-token blocks; eight blocks hold two.
 TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens
@@ -167,6 +171,7 @@ def _trace_config(
     long_prefill_token_threshold=0,
     enable_prefix_caching=False,
     scheduler_config_cls=VllmV1SchedulerConfig,
+    scheduling_policy="fcfs",
     replica_config=None,
 ):
     trace = root / "decode_preemption.csv"
@@ -189,6 +194,7 @@ def _trace_config(
                 enable_chunked_prefill=enable_chunked_prefill,
                 long_prefill_token_threshold=long_prefill_token_threshold,
                 enable_prefix_caching=enable_prefix_caching,
+                scheduling_policy=scheduling_policy,
             ),
         ),
         TraceRequestGeneratorConfig(trace_file=str(trace)),
@@ -705,6 +711,80 @@ def test_an_sglang_victim_recomputes_its_kept_tokens(tmp_path, monkeypatch):
     for episode in episodes:
         assert episode["rows"][0]["width"] > 1, episode
     _assert_every_request_completes(simulator, 3)
+
+
+def _observe_prefill_first_victims(monkeypatch):
+    """Where each victim of an SGLang prefill-first pass sits once that pass forms no rows."""
+
+    victims = []
+    pass_victims = []
+    preempt_request = VLLMv1EngineReplicaScheduler._preempt_request
+    schedule_prefill_stage_first = (
+        SGLangStyleReplicaScheduler._schedule_prefill_stage_first
+    )
+
+    def observed_preempt_request(self, victim, preempted_requests):
+        pass_victims.append(victim)
+        preempt_request(self, victim, preempted_requests)
+
+    def observed_schedule_prefill_stage_first(self, token_budget):
+        pass_victims.clear()
+        result = schedule_prefill_stage_first(self, token_budget)
+        _, waiting_scheduled, _, running_scheduled, _ = result
+        if not waiting_scheduled and not running_scheduled:
+            waiting = [*self._preempted_requests, *self._request_queue]
+            victims.extend(
+                dict(
+                    request_id=victim.id,
+                    in_running=victim in self._running_requests,
+                    waiting_entries=waiting.count(victim),
+                    blocks=self._allocation_map.get(victim.id, 0),
+                )
+                for victim in pass_victims
+            )
+        return result
+
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_preempt_request", observed_preempt_request
+    )
+    monkeypatch.setattr(
+        SGLangStyleReplicaScheduler,
+        "_schedule_prefill_stage_first",
+        observed_schedule_prefill_stage_first,
+    )
+    return victims
+
+
+@pytest.mark.parametrize("scheduling_policy", ["fcfs", "priority"])
+def test_an_sglang_prefill_victim_waits_when_its_pass_forms_no_rows(
+    tmp_path, monkeypatch, scheduling_policy
+):
+    # A 16-token budget makes a recomputing victim resume in chunks, so its
+    # next chunk can preempt it inside the prefill-only view while the
+    # decoding requests hold the rest of the pool. The pass then forms no
+    # rows, and the victim must stay freed and queued, as it was preempted.
+    victims = _observe_prefill_first_victims(monkeypatch)
+    simulator = Simulator(
+        _trace_config(
+            tmp_path,
+            max_tokens_in_batch=16,
+            scheduler_config_cls=SglangSchedulerConfig,
+            scheduling_policy=scheduling_policy,
+        )
+    )
+    simulator.run()
+
+    assert victims
+    for victim in victims:
+        assert victim == dict(
+            request_id=victim["request_id"],
+            in_running=False,
+            waiting_entries=1,
+            blocks=0,
+        )
+    _assert_every_request_completes(simulator, 3)
+    for request in simulator._all_requests:
+        assert not request._is_waiting[ClusterType.MONOLITHIC], request.id
 
 
 class _InflightRemovals:
