@@ -12,6 +12,9 @@ from frontier.attention.gdn.guards import validate_gdn_runtime_support
 from frontier.entities.batch import Request
 from frontier.kv_cache.base_kv_cache_manager import KVCacheAllocationResult
 from frontier.logger import get_cluster_logger
+from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
+    priority_policy_key,
+)
 from frontier.scheduler.replica_scheduler.vllm_v1_prefix_cache import (
     PrefixCacheAdmission,
 )
@@ -439,11 +442,8 @@ class KvBlockAllocation:
         )
 
         if self._scheduling_policy == "priority":
-            # Priority policy: preempt request with highest priority value (lowest priority)
-            # Tie-breaker: latest arrival time
-            victim = max(
-                self._running_requests, key=lambda r: (r.priority, r.arrived_at)
-            )
+            # Priority policy: preempt the request that comes last in priority order.
+            victim = max(self._running_requests, key=priority_policy_key)
 
             # Flow validation: log victim selection
             logger.info(

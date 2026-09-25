@@ -37,6 +37,7 @@ from frontier.scheduler.replica_scheduler.vllm_v1_decode_attn_cohort import (
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
     IterationSchedulingPolicy,
+    priority_policy_key,
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_kv_allocation import KvBlockAllocation
 from frontier.scheduler.replica_scheduler.vllm_v1_mtp_wait import (
@@ -852,8 +853,7 @@ class VLLMv1EngineReplicaScheduler(
                 ),
             )
         elif self._scheduling_policy == "priority":
-            # Sort by priority (ascending) then arrival time (ascending)
-            return sorted(combined, key=lambda r: (r.priority, r.arrived_at))
+            return sorted(combined, key=priority_policy_key)
         else:
             # FCFS: maintain insertion order (preempted first)
             return combined
@@ -1129,7 +1129,7 @@ class VLLMv1EngineReplicaScheduler(
             if self._scheduling_policy == "priority":
                 merged_requests = list(waiting_queue) + list(skipped_waiting_requests)
                 waiting_queue = deque(
-                    sorted(merged_requests, key=lambda r: (r.priority, r.arrived_at))
+                    sorted(merged_requests, key=priority_policy_key)
                 )
             else:
                 waiting_queue.extend(skipped_waiting_requests)
