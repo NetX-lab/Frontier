@@ -312,17 +312,22 @@ class VLLMv1EngineReplicaScheduler(
     def _roll_back_rejected_drafts(self, batch: Batch) -> None:
         """Take a speculative step's rejected drafts off the scheduler frontier.
 
-        vLLM advances num_computed_tokens by the whole verify width when it
-        schedules the step and subtracts the rejected drafts when the step's
-        output arrives (scheduler.py update_from_output).
+        vLLM advances num_computed_tokens by the scheduled width when it
+        schedules the step and, when the step's output arrives, subtracts the
+        scheduled tokens that produced no output (scheduler.py
+        update_from_output). The scheduled width is one token short of the
+        verify width on a MONOLITHIC target-embedded MTP request's first
+        decode step, so the rollback is taken against the scheduled width.
         """
         metadata = batch.spec_decode_metadata
         if metadata is None:
             return
         rejected_by_request_id = {
-            request.id: rejected
-            for request, rejected in zip(
-                batch.requests, metadata.rejected_draft_tokens_per_request
+            request.id: scheduled - committed
+            for request, scheduled, committed in zip(
+                batch.requests,
+                batch.num_tokens,
+                metadata.committed_tokens_per_request,
             )
         }
         for request in batch.current_execution_requests:
