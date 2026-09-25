@@ -274,6 +274,7 @@ def _make_completion_scheduler(
 ) -> VLLMv1EngineReplicaScheduler:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_ATTN
+    scheduler._has_engine_batch_queue = False
     scheduler._num_running_batches = len(requests)
     scheduler._running_requests = list(requests)
     scheduler._active_batch_request_counts = {

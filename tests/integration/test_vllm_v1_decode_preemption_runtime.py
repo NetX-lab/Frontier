@@ -285,6 +285,7 @@ def _observe_preemptions(monkeypatch):
         ))
         preempt_request(self, victim, preempted_requests)
         victims[-1]["processed_after"] = victim.num_processed_tokens
+        victims[-1]["recomputing"] = victim.is_recomputing
 
     monkeypatch.setattr(
         VLLMv1EngineReplicaScheduler, "_preempt_request", observed_preempt_request
@@ -902,7 +903,7 @@ INFLIGHT_DECODE_CASES = {
         num_pipeline_stages=4,
         num_blocks=10,
         num_requests=24,
-        seed=53,
+        seed=11,
     ),
     "dense_pp2": dict(
         replica=DENSE_REPLICA,
@@ -932,8 +933,10 @@ LENGTH_STOP_CASE = dict(
     seed=45,
 )
 
-# An in-flight decode victim on the unified PDD decode replica.
-PDD_INFLIGHT_CASE = dict(num_pipeline_stages=2, num_blocks=6, num_requests=8, seed=7)
+# A decode victim on the unified PDD decode replica. Every running decode fits
+# one step, so each pass forms one batch and the engine blocks on it: no victim
+# is in flight when a later pass preempts it.
+PDD_PREEMPTION_CASE = dict(num_pipeline_stages=2, num_blocks=6, num_requests=8, seed=7)
 
 
 @pytest.mark.parametrize("name", INFLIGHT_DECODE_CASES)
@@ -1004,25 +1007,19 @@ def test_a_victim_that_stops_on_its_inflight_sample_leaves_waiting(
     _assert_every_request_completes(simulator, LENGTH_STOP_CASE["num_requests"])
 
 
-def test_a_pdd_decode_inflight_victim_resumes_with_one_token(tmp_path, monkeypatch):
-    recorder = _observe_inflight_removals(monkeypatch)
-    simulator = Simulator(_pdd_config(tmp_path, PDD_INFLIGHT_CASE))
+def test_a_pdd_decode_victim_resumes_with_one_token(tmp_path, monkeypatch):
+    victims = _observe_preemptions(monkeypatch)
+    simulator = Simulator(_pdd_config(tmp_path, PDD_PREEMPTION_CASE))
     simulator.run()
 
-    resumed = [
-        removal
-        for removal in _decode_removals(recorder)
-        if not removal["completed_after"]
-    ]
-    assert resumed, _decode_removals(recorder)
-    for removal in resumed:
-        _assert_gains_the_committed_tokens(removal)
-        assert not removal["recomputing"] and removal["cursor_after"] is None
-        rows = recorder.rows_after(removal)
-        assert rows, removal
-        assert rows[0]["width"] == 1 and not rows[0]["recomputing"], rows[0]
-        assert rows[0]["processed"] == removal["processed_after"], rows[0]
-    _assert_every_request_completes(simulator, PDD_INFLIGHT_CASE["num_requests"])
+    # The decode role never recomputes: a victim keeps its tokens and resumes
+    # with its next decode step.
+    decode_victims = [victim for victim in victims if victim["decoding"]]
+    assert decode_victims, victims
+    for victim in decode_victims:
+        assert victim["processed_after"] == victim["processed_before"], victim
+        assert not victim["recomputing"], victim
+    _assert_every_request_completes(simulator, PDD_PREEMPTION_CASE["num_requests"])
 
 
 def test_an_inflight_speculative_victim_gains_its_rows_committed_tokens(

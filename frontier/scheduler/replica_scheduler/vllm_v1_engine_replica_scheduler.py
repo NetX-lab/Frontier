@@ -18,7 +18,7 @@ Reference:
 
 from collections import deque
 from dataclasses import replace
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.config import global_vars
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
@@ -122,6 +122,17 @@ class VLLMv1EngineReplicaScheduler(
         self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
         self._monolithic_pp_waiting_admission_delay_iters: Dict[int, int] = {}
         self._active_batch_request_counts: Dict[int, int] = {}
+
+        # The EngineCore batch queue: in-flight batch ids in admission order,
+        # and the oldest one the engine blocks on once a pass leaves work in
+        # flight. The PD-AF roles schedule micro-batches in their own loops.
+        self._has_engine_batch_queue = self._cluster_type in (
+            ClusterType.MONOLITHIC,
+            ClusterType.PREFILL,
+            ClusterType.DECODE,
+        )
+        self._in_flight_batch_ids: Deque[int] = deque()
+        self._blocking_batch_id: Optional[int] = None
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -356,6 +367,36 @@ class VLLMv1EngineReplicaScheduler(
                 self._free_request_resources(request)
             self._pending_kv_transfer_requests.discard(request.id)
 
+    def on_schedule(self, time: float = 0.0) -> List[Batch]:
+        # vLLM runs iterations until its batch queue is full or an iteration
+        # schedules nothing, then blocks on the oldest in-flight batch
+        # (`EngineCore.step_with_batch_queue`). A request that arrives during
+        # the block waits for that batch's output.
+        if not self._has_engine_batch_queue:
+            return super().on_schedule(time)
+        if self._blocking_batch_id is not None:
+            return []
+        batches = super().on_schedule(time)
+        self._in_flight_batch_ids.extend(batch.id for batch in batches)
+        if self._in_flight_batch_ids:
+            self._blocking_batch_id = self._in_flight_batch_ids[0]
+            # No iteration runs during the block; the output that ends it
+            # starts the next one.
+            self._monolithic_pp_terminal_release_followup_poll_pending = False
+            self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
+        return batches
+
+    def _leave_engine_batch_queue(self, batch: Batch) -> None:
+        if not self._has_engine_batch_queue:
+            return
+        self._in_flight_batch_ids.remove(batch.id)
+        if batch.id == self._blocking_batch_id:
+            self._blocking_batch_id = None
+
+    def on_stale_batch_drop(self, batch: Batch) -> None:
+        super().on_stale_batch_drop(batch)
+        self._leave_engine_batch_queue(batch)
+
     def on_batch_end(self, batch: Batch) -> None:
         """
         Handle batch completion - update running requests state.
@@ -371,6 +412,7 @@ class VLLMv1EngineReplicaScheduler(
             batch: The batch that has completed execution
         """
         self._num_running_batches -= 1
+        self._leave_engine_batch_queue(batch)
 
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None

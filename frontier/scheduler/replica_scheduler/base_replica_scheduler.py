@@ -553,6 +553,10 @@ class BaseReplicaScheduler(ABC):
     def decrement_num_running_batches(self) -> None:
         self._num_running_batches -= 1
 
+    def on_stale_batch_drop(self, batch: Batch) -> None:
+        """A stage dropped the batch: every one of its requests was preempted."""
+        self._num_running_batches -= 1
+
     @staticmethod
     def _debug_request_id(request: Request) -> int:
         if not hasattr(request, "id"):

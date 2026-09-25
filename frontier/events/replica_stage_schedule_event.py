@@ -125,7 +125,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     f"num_running_batches={replica_scheduler.num_running_batches}"
                 )
             for dropped_batch in stale_drops:
-                replica_scheduler.decrement_num_running_batches()
+                replica_scheduler.on_stale_batch_drop(dropped_batch)
                 cluster_scheduler.on_replica_batch_end(
                     self.time,
                     self._replica_id,
