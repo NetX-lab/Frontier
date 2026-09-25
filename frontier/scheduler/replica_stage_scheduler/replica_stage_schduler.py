@@ -222,6 +222,9 @@ class ReplicaStageScheduler:
             num_context_tokens=[
                 batch.num_context_tokens[index] for index in live_indices
             ],
+            request_is_decoding=[
+                batch.request_is_decoding[index] for index in live_indices
+            ],
         )
         live_batch._id = batch.id
         live_batch.set_global_id(batch.global_id)
@@ -346,8 +349,9 @@ class ReplicaStageScheduler:
             heapq.heappop(self._batch_queue)
             # vLLM executes a dispatched step whole: a row whose request a later
             # iteration of the same schedule preempted still runs the first
-            # stage, and the next stage boundary removes it. PD-AF roles send a
-            # batch through stage 0 again for every layer and keep the removal.
+            # stage, priced in the phase it was scheduled in, and the next stage
+            # boundary removes it. PD-AF roles send a batch through stage 0
+            # again for every layer and keep the removal.
             dispatches_as_scheduled = self._stage_id == 0 and self._cluster_type in (
                 ClusterType.MONOLITHIC,
                 ClusterType.PREFILL,
@@ -477,6 +481,7 @@ class ReplicaStageScheduler:
                 0,
                 batch.requests,
                 batch.num_tokens,
+                batch.request_is_decoding,
                 self._cluster_type,
                 effective_total_tokens_compute=effective_tokens_compute,
                 effective_total_tokens_transfer=effective_tokens_transfer,
@@ -497,6 +502,7 @@ class ReplicaStageScheduler:
             model_execution_time,
             batch.requests,
             batch.num_tokens,
+            batch.request_is_decoding,
             self._cluster_type,
             effective_total_tokens_compute=effective_tokens_compute,
             effective_total_tokens_transfer=effective_tokens_transfer,

@@ -15,6 +15,8 @@ vLLM; Frontier applies it where it removes the victim's row.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from frontier.config import global_vars
@@ -34,6 +36,12 @@ from frontier.config import (
 )
 from frontier.entities.batch import Batch
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+from frontier.execution_time_predictor.base_execution_time_predictor import (
+    BaseExecutionTimePredictor,
+)
+from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+    SklearnExecutionTimePredictor,
+)
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.metrics.metrics_store import MetricsStore
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
@@ -104,6 +112,18 @@ PIPELINED_CASES = {
         num_requests=6, seed=7,
     ),
 }
+
+# dense PP4, 8 blocks, 24 requests, seed 5, with token-proportional stage
+# times. A schedule pass preempts a decode row of a batch it formed earlier
+# before stage 0 runs that batch. Found by a probe over PP 2/4, 8-12 blocks,
+# long-prefill thresholds 0/6 and seeds 0-5; a fixed dummy time never reaches it.
+SCHEDULED_DECODE_VICTIM_CASE = dict(
+    replica=DENSE_REPLICA,
+    num_pipeline_stages=4,
+    num_blocks=8,
+    num_requests=24,
+    seed=5,
+)
 
 # dense PP4, 6 blocks, 6 requests, seed 2. A victim is preempted again while
 # its kept tokens are still being recomputed. Found on the first probe of that
@@ -1036,4 +1056,94 @@ def test_an_inflight_speculative_victim_gains_its_rows_committed_tokens(
         _assert_gains_the_committed_tokens(removal)
         if not removal["completed_after"]:
             _assert_resumes_with_a_recompute(recorder, removal)
+    _assert_every_request_completes(simulator, case["num_requests"])
+
+
+def _scale_stage_time_with_tokens(monkeypatch):
+    dummy_execution_time = BaseExecutionTimePredictor._get_dummy_execution_time
+
+    def token_scaled(self, batch, pipeline_stage):
+        unit_time = self._dummy_execution_time
+        self._dummy_execution_time = unit_time * max(1, batch.total_num_tokens)
+        try:
+            return dummy_execution_time(self, batch, pipeline_stage)
+        finally:
+            self._dummy_execution_time = unit_time
+
+    monkeypatch.setattr(
+        BaseExecutionTimePredictor, "_get_dummy_execution_time", token_scaled
+    )
+
+
+def _observe_stage0_decode_victims(monkeypatch):
+    """Price each stage-0 batch that holds a decode row preempted since it formed.
+
+    The phase of every row is recorded when its batch is built, apart from the
+    batch; the pricing reads run at the stage-0 pop, before the batch ends.
+    """
+    scheduled_phases = {}
+    batch_init = Batch.__init__
+
+    def recorded_init(self, *args, **kwargs):
+        batch_init(self, *args, **kwargs)
+        scheduled_phases[self.id] = [request.is_decoding for request in self.requests]
+
+    monkeypatch.setattr(Batch, "__init__", recorded_init)
+    predictor = SimpleNamespace(
+        _config=SimpleNamespace(kv_cache_prediction_granularity=1)
+    )
+    priced = []
+    pop_batch = ReplicaStageScheduler.pop_batch_if_not_busy
+
+    def recorded_pop(self):
+        batch = pop_batch(self)
+        if self._stage_id != 0 or batch is None or batch.id not in scheduled_phases:
+            return batch
+        phases = scheduled_phases[batch.id]
+        if any(
+            was_decoding and request.is_recomputing
+            for was_decoding, request in zip(phases, batch.requests)
+        ):
+            priced.append(
+                dict(
+                    batch=batch,
+                    scheduled_phases=phases,
+                    mla_shape=SklearnExecutionTimePredictor._get_mla_batch_runtime_shape_components(
+                        batch
+                    ),
+                    prefill_attention_params=SklearnExecutionTimePredictor._get_batch_prefill_attention_params(
+                        predictor, batch
+                    ),
+                )
+            )
+        return batch
+
+    monkeypatch.setattr(ReplicaStageScheduler, "pop_batch_if_not_busy", recorded_pop)
+    return priced
+
+
+def test_a_scheduled_decode_row_is_priced_as_decode_after_a_later_preemption(
+    tmp_path, monkeypatch
+):
+    # vLLM runs the step in its batch queue as it was scheduled; the victim's
+    # recompute is a later step of its own.
+    _scale_stage_time_with_tokens(monkeypatch)
+    priced = _observe_stage0_decode_victims(monkeypatch)
+    case = SCHEDULED_DECODE_VICTIM_CASE
+    simulator = Simulator(_pipelined_config(tmp_path, case))
+    simulator.run()
+
+    assert priced
+    for entry in priced:
+        batch, phases = entry["batch"], entry["scheduled_phases"]
+        assert batch.request_is_decoding == phases
+        decode_tokens = [
+            tokens for tokens, is_decoding in zip(batch.num_tokens, phases) if is_decoding
+        ]
+        prefill_tokens = [
+            tokens for tokens, is_decoding in zip(batch.num_tokens, phases) if not is_decoding
+        ]
+        assert entry["mla_shape"]["decode_active_token_counts"] == decode_tokens
+        assert entry["mla_shape"]["prefill_active_token_counts"] == prefill_tokens
+        assert [chunk for _, chunk in entry["prefill_attention_params"]] == prefill_tokens
     _assert_every_request_completes(simulator, case["num_requests"])

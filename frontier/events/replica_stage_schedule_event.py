@@ -750,6 +750,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     model_execution_time,
                     batch.requests,
                     batch.num_tokens,
+                    batch.request_is_decoding,
                     cluster_type=self._cluster_type,
                     effective_total_tokens_compute=effective_tokens_compute,
                     effective_total_tokens_transfer=effective_tokens_transfer,

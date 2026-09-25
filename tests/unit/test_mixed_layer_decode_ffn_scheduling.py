@@ -1591,6 +1591,7 @@ def test_post_routing_batch_stage_does_not_mutate_original_requests() -> None:
         model_execution_time=0.10,
         requests=[request],
         num_tokens=[1],
+        request_is_decoding=[True],
         cluster_type=ClusterType.DECODE_FFN,
         tokens_are_post_routing=True,
     )
@@ -1620,6 +1621,7 @@ def test_regular_batch_stage_accounts_requests_once() -> None:
         model_execution_time=0.10,
         requests=[request],
         num_tokens=[1],
+        request_is_decoding=[True],
         cluster_type=ClusterType.DECODE_ATTN,
         tokens_are_post_routing=False,
     )
