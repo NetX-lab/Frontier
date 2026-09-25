@@ -53,9 +53,13 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="output file name, then its sources as paths relative to --run-dir",
     )
     args = parser.parse_args(argv)
+    names = set()
     for table in args.table:
         if len(table) < 2:
             parser.error(f"--table {table[0]} names no source")
+        if table[0] in names:
+            parser.error(f"--table {table[0]} is given more than once")
+        names.add(table[0])
     return args
 
 

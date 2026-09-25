@@ -104,6 +104,20 @@ def test_only_the_files_a_passing_run_published_are_merged(tmp_path):
               "--table", "attention.csv", "out/first.csv"])
 
 
+def test_a_table_named_twice_is_refused(tmp_path, capsys):
+    run = tmp_path / "run"
+    publish_run(run, {"out/first.csv": STANDARD, "out/second.csv": TRUE_MIXED})
+
+    with pytest.raises(SystemExit):
+        main([
+            "--run-dir", str(run), "--output-dir", str(tmp_path / "supplement"),
+            "--table", "attention.csv", "out/first.csv",
+            "--table", "attention.csv", "out/second.csv",
+        ])
+    assert "--table attention.csv is given more than once" in capsys.readouterr().err
+    assert not (tmp_path / "supplement").exists()
+
+
 def test_an_existing_output_is_never_written_over(tmp_path):
     run = tmp_path / "run"
     publish_run(run, {"out/first.csv": STANDARD})
