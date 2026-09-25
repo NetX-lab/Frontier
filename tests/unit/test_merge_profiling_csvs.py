@@ -115,3 +115,61 @@ def test_an_existing_output_is_never_written_over(tmp_path):
         "--table", "attention.csv", "out/first.csv",
     ]) == 2
     assert list(output.iterdir()) == []
+
+
+def build_base(tmp_path: Path) -> Path:
+    first = tmp_path / "first"
+    publish_run(first, {"out/first.csv": STANDARD, "out/linear.csv": [
+        {"num_tokens": "8", "time_stats.mlp_up_proj.median": "0.01"},
+    ]})
+    base = tmp_path / "base"
+    assert main([
+        "--run-dir", str(first), "--output-dir", str(base),
+        "--table", "attention.csv", "out/first.csv",
+        "--table", "linear_op.csv", "out/linear.csv",
+    ]) == 0
+    return base
+
+
+def test_a_base_keeps_its_rows_and_a_repeated_identity_is_recorded_not_added(tmp_path):
+    base = build_base(tmp_path)
+    run = tmp_path / "run"
+    remeasured = {**STANDARD[1], "time_stats.attn_prefill.median": "0.08"}
+    extended = {"batch_size": "4", "kv_cache_size": "0", "time_stats.attn_prefill.median": "0.12"}
+    publish_run(run, {"out/extension.csv": [remeasured, extended]})
+    output = tmp_path / "supplement"
+
+    assert main([
+        "--run-dir", str(run), "--output-dir", str(output), "--base-dir", str(base),
+        "--table", "attention.csv", "out/extension.csv",
+    ]) == 0
+
+    _, rows = read_rows(output / "attention.csv")
+    assert [row["time_stats.attn_prefill.median"] for row in rows] == ["0.05", "0.07", "0.12"]
+    assert (output / "linear_op.csv").read_bytes() == (base / "linear_op.csv").read_bytes()
+    receipt = json.loads((output / "merge_receipt.json").read_text())
+    assert receipt["base_dir"] == str(base)
+    attention = receipt["tables"]["attention.csv"]
+    assert attention["base"]["output_rows"] == [0, 2]
+    assert attention["sources"][0]["output_rows"] == [2, 3]
+    assert attention["repeated_base_rows"] == [{
+        "location": "out/extension.csv:2", "base_row": 1,
+        "measurements": {"time_stats.attn_prefill.median": "0.08"},
+    }]
+    assert receipt["tables"]["linear_op.csv"]["sources"] == []
+
+
+def test_only_a_complete_unchanged_base_is_extended(tmp_path):
+    run = tmp_path / "run"
+    publish_run(run, {"out/extension.csv": TRUE_MIXED})
+    changed = build_base(tmp_path).rename(tmp_path / "changed")
+    write_csv(changed / "attention.csv", STANDARD[:1])
+    incomplete = build_base(tmp_path)
+    incomplete.joinpath("COMPLETE").write_text("status=1\n")
+
+    with pytest.raises(ValueError, match="not the table its supplement recorded"):
+        main(["--run-dir", str(run), "--output-dir", str(tmp_path / "a"), "--base-dir", str(changed),
+              "--table", "attention.csv", "out/extension.csv"])
+    with pytest.raises(ValueError, match="not a complete supplement"):
+        main(["--run-dir", str(run), "--output-dir", str(tmp_path / "b"), "--base-dir", str(incomplete),
+              "--table", "attention.csv", "out/extension.csv"])
