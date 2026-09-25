@@ -18,12 +18,16 @@ def _decode_request(*, processed: int, prefill: int = 8, decode: int = 8) -> Req
     return request
 
 
-def _batch(request: Request, width: int, committed: int | None = None) -> Batch:
+def _batch(
+    request: Request, width: int, context: int, committed: int | None = None
+) -> Batch:
+    """A row formed before the preemption, `context` tokens into the request."""
     batch = Batch(
         replica_id=0,
         requests=[request],
         num_tokens=[width],
         is_moe=False,
+        num_context_tokens=[context],
     )
     if committed is not None:
         batch.spec_decode_metadata = SpecDecodeBatchMetadata(
@@ -44,7 +48,7 @@ def _batch(request: Request, width: int, committed: int | None = None) -> Batch:
 def test_decode_step_in_flight_commits_its_tokens() -> None:
     plain = _decode_request(processed=10)
     plain.on_preempted(recompute=True, step_in_flight=True)
-    stopped = _batch(plain, 1).apply_preempted_step_samples(5.0, ClusterType.MONOLITHIC)
+    stopped = _batch(plain, 1, 10).apply_preempted_step_samples(5.0, ClusterType.MONOLITHIC)
     assert stopped == []
     assert plain.num_processed_tokens == 11
     assert plain.is_recomputing
@@ -52,7 +56,7 @@ def test_decode_step_in_flight_commits_its_tokens() -> None:
     speculative = _decode_request(processed=10)
     speculative._spec_decode_enabled = True
     speculative.on_preempted(recompute=True, step_in_flight=True)
-    stopped = _batch(speculative, 3, committed=2).apply_preempted_step_samples(
+    stopped = _batch(speculative, 3, 10, committed=2).apply_preempted_step_samples(
         5.0, ClusterType.MONOLITHIC
     )
     assert stopped == []
@@ -67,7 +71,7 @@ def test_partial_recompute_chunk_samples_nothing() -> None:
     assert request.num_context_tokens == 20
 
     request.on_preempted(recompute=True, step_in_flight=True)
-    stopped = _batch(request, 8).apply_preempted_step_samples(
+    stopped = _batch(request, 8, 20).apply_preempted_step_samples(
         5.0, ClusterType.MONOLITHIC
     )
 
@@ -82,7 +86,7 @@ def test_final_recompute_chunk_commits_one_and_restarts() -> None:
     request.on_batch_end(2.0, 20, ClusterType.MONOLITHIC)
     request.on_preempted(recompute=True, step_in_flight=True)
 
-    stopped = _batch(request, 20).apply_preempted_step_samples(
+    stopped = _batch(request, 20, 20).apply_preempted_step_samples(
         5.0, ClusterType.MONOLITHIC
     )
 
@@ -102,7 +106,7 @@ def test_partial_prefill_chunk_samples_nothing() -> None:
     request._scheduled = True
     request.on_preempted(recompute=True, step_in_flight=True)
 
-    stopped = _batch(request, 8).apply_preempted_step_samples(
+    stopped = _batch(request, 8, 10).apply_preempted_step_samples(
         3.0, ClusterType.MONOLITHIC
     )
 
@@ -122,7 +126,7 @@ def test_final_prefill_chunk_grants_the_first_token_and_recomputes() -> None:
     request._scheduled = True
     request.on_preempted(recompute=True, step_in_flight=True)
 
-    stopped = _batch(request, 22).apply_preempted_step_samples(
+    stopped = _batch(request, 22, 10).apply_preempted_step_samples(
         4.0, ClusterType.MONOLITHIC
     )
 
@@ -135,10 +139,31 @@ def test_final_prefill_chunk_grants_the_first_token_and_recomputes() -> None:
     assert request.num_context_tokens == 0
 
 
+def test_an_earlier_chunk_leaves_the_sample_to_the_final_chunk() -> None:
+    request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=32,
+        num_decode_tokens=8,
+        num_processed_tokens=0,
+    )
+    request._scheduled = True
+    request.on_preempted(recompute=True, step_in_flight=True)
+    earlier_chunk = _batch(request, 16, 0)
+    final_chunk = _batch(request, 16, 16)
+
+    assert earlier_chunk.apply_preempted_step_samples(3.0, ClusterType.MONOLITHIC) == []
+    assert request.num_processed_tokens == 0
+    assert final_chunk.apply_preempted_step_samples(4.0, ClusterType.MONOLITHIC) == []
+    assert request.is_prefill_complete
+    assert request.num_processed_tokens == 33
+    assert request.prefill_completed_at == 4.0
+    assert request.is_recomputing
+
+
 def test_length_stop_completes_the_request_and_is_returned() -> None:
     request = _decode_request(processed=8, prefill=8, decode=1)
     request.on_preempted(recompute=True, step_in_flight=True)
-    batch = _batch(request, 1)
+    batch = _batch(request, 1, 8)
 
     stopped = batch.apply_preempted_step_samples(6.0, ClusterType.MONOLITHIC)
 
@@ -161,7 +186,7 @@ def test_decode_role_commits_the_token_without_a_recompute_cursor() -> None:
     request = _decode_request(processed=10)
     request.on_preempted(recompute=False, step_in_flight=True)
 
-    stopped = _batch(request, 1).apply_preempted_step_samples(5.0, ClusterType.DECODE)
+    stopped = _batch(request, 1, 10).apply_preempted_step_samples(5.0, ClusterType.DECODE)
 
     assert stopped == []
     assert request.num_processed_tokens == 11
