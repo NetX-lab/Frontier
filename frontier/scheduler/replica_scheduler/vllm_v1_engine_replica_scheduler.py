@@ -273,7 +273,16 @@ class VLLMv1EngineReplicaScheduler(
             )
 
     def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
-        batch = super()._create_batch(requests, num_tokens)
+        # The scheduler frontier already counts this batch's tokens. A prompt
+        # chunk scheduled while the request's previous chunk is in flight
+        # attends to tokens the Request counts only when that chunk ends.
+        num_context_tokens = [
+            request.num_context_tokens
+            if request.is_decoding
+            else self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
+            for request, scheduled_tokens in zip(requests, num_tokens)
+        ]
+        batch = super()._create_batch(requests, num_tokens, num_context_tokens)
         metadata = self._build_decode_cuda_graph_metadata(batch)
         if metadata is not None:
             batch.decode_cuda_graph_metadata = metadata
@@ -603,10 +612,17 @@ class VLLMv1EngineReplicaScheduler(
                 req_index += 1
                 continue
 
+            # vLLM skips an in-flight request only once every prompt token is
+            # scheduled; the next chunk goes out while the previous one is in
+            # flight (scheduler.py, the num_new_tokens == 0 branch).
             active_in_pp_batch = (
                 self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE}
                 and self._num_stages > 1
                 and self._is_request_active_in_batch(request)
+                and (
+                    request.is_decoding
+                    or self._get_request_next_num_tokens(request) == 0
+                )
             )
             if active_in_pp_batch:
                 if self._cluster_type == ClusterType.MONOLITHIC:

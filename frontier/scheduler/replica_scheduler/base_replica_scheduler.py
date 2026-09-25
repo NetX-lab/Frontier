@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Sequence
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from frontier.config import (
     BaseReplicaSchedulerConfig,
@@ -443,7 +443,12 @@ class BaseReplicaScheduler(ABC):
             and batch.num_decode_tokens > 0
         )
 
-    def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
+    def _create_batch(
+        self,
+        requests: List[Request],
+        num_tokens: List[int],
+        num_context_tokens: Optional[List[int]] = None,
+    ) -> Batch:
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name if self._cluster_type else None)
 
@@ -452,6 +457,7 @@ class BaseReplicaScheduler(ABC):
             requests,
             num_tokens,
             is_moe=self._replica_is_moe,
+            num_context_tokens=num_context_tokens,
         )
         # Preserve the scheduler lane that owns this batch across asynchronous
         # layer-sync and stage-completion events. ``None`` remains the explicit

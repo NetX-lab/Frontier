@@ -72,14 +72,16 @@ DENSE_SPEC_DECODE_REPLICA = dict(
 
 # Poisson arrivals of 8-96 token requests into KV for a few of them, so decode
 # growth preempts requests that an earlier batch still carries through a later
-# stage. Each case failed before the fix named in its comment.
+# stage. Each comment names the fix its case guards. With prompt chunks
+# scheduled while the previous chunk is in flight, the request being chunked
+# is the usual victim; the seeds were picked to reach each decode shape.
 PIPELINED_CASES = {
     # The in-flight batch drops the victim at a later stage, whole or as a copy
     # without it. The victim's active mark used to outlive that batch, so the
     # running phase skipped the victim for good and the run stalled.
     "dense_pp4": dict(
         replica=DENSE_REPLICA, num_pipeline_stages=4, num_blocks=8,
-        num_requests=6, seed=2,
+        num_requests=6, seed=1,
     ),
     # The victim is preempted part-way through a decode step. The rest of the
     # stale step used to credit its layers, and the resumed step then overran
@@ -91,15 +93,15 @@ PIPELINED_CASES = {
     # PP4 holds a finished request in running for one more iteration. Chosen
     # as the victim there, it used to re-enter the waiting queue.
     "dense_pp4_finished_victim": dict(
-        replica=DENSE_REPLICA, num_pipeline_stages=4, num_blocks=8,
-        num_requests=6, seed=2,
+        replica=DENSE_REPLICA, num_pipeline_stages=4, num_blocks=10,
+        num_requests=8, seed=7,
     ),
     # A later stage keeps only the live rows of a speculative decode step.
     # That copy used to keep the whole batch's draft plan, so its batch end
     # rejected the plan's length.
     "dense_pp4_spec_decode": dict(
         replica=DENSE_SPEC_DECODE_REPLICA, num_pipeline_stages=4, num_blocks=7,
-        num_requests=6, seed=11,
+        num_requests=6, seed=7,
     ),
 }
 
@@ -291,7 +293,11 @@ def _observe_preemptions(monkeypatch):
 
 
 def _observe_rescheduling(monkeypatch):
-    """Record each request scheduled while a batch in flight still runs it."""
+    """Record each request scheduled while a batch in flight runs its decode step.
+
+    A prompt chunk is scheduled while the previous chunk is in flight, as in
+    vLLM; a decode step waits for the one in flight.
+    """
 
     rescheduled = []
     in_flight = {}
@@ -300,15 +306,16 @@ def _observe_rescheduling(monkeypatch):
 
     def observed_create_batch(self, requests, num_tokens):
         batches = in_flight.setdefault(id(self), {})
-        running = {
+        decoding = {
             request.id
-            for batch in batches.values()
+            for batch, decoding_ids in batches.values()
             for request in batch.current_execution_requests
-            if not request.completed
+            if request.id in decoding_ids and not request.completed
         }
-        rescheduled.extend(request.id for request in requests if request.id in running)
+        rescheduled.extend(request.id for request in requests if request.id in decoding)
+        decoding_ids = {request.id for request in requests if request.is_decoding}
         batch = create_batch(self, requests, num_tokens)
-        batches[batch.id] = batch
+        batches[batch.id] = (batch, decoding_ids)
         return batch
 
     def observed_on_batch_end(self, batch):
@@ -712,7 +719,9 @@ class _InflightRemovals:
 
     The sample is applied inside the stage-boundary event and the batch-end
     event, so the state is read after those events return. A victim scheduled
-    again before its row is removed takes no sample and is not tracked.
+    again before its row is removed takes no sample and is not tracked. A
+    prefill or recompute victim can have several chunks in flight; the rows
+    before the one that completes its tokens take no sample and are skipped.
     """
 
     def __init__(self):
@@ -724,13 +733,24 @@ class _InflightRemovals:
 
     def note(self, kind, batch, index):
         request = batch.requests[index]
-        if request.id not in self.open or request.id in self._pending:
+        episode = self.open.get(request.id)
+        if episode is None or request.id in self._pending:
             return
         width = int(batch.num_tokens[index])
+        context = int(batch.num_context_tokens[index])
+        if not episode["decoding"]:
+            sample_seq_len = (
+                episode["processed_before"]
+                if episode["prefill_complete"]
+                else request.num_prefill_tokens
+            )
+            if context + width < sample_seq_len:
+                return
         metadata = batch.spec_decode_metadata
         self._pending[request.id] = dict(
             kind=kind,
             width=width,
+            context=context,
             committed=(
                 width
                 if metadata is None
@@ -882,16 +902,26 @@ INFLIGHT_DECODE_CASES = {
         num_pipeline_stages=4,
         num_blocks=10,
         num_requests=24,
-        seed=33,
+        seed=53,
     ),
     "dense_pp2": dict(
         replica=DENSE_REPLICA,
         num_pipeline_stages=2,
         num_blocks=8,
         num_requests=24,
-        seed=2,
+        seed=0,
     ),
 }
+
+# A victim's final prompt chunk is in flight behind an earlier chunk of the
+# same prompt.
+FINAL_CHUNK_CASE = dict(
+    replica=DENSE_REPLICA,
+    num_pipeline_stages=4,
+    num_blocks=10,
+    num_requests=24,
+    seed=3,
+)
 
 # A victim's in-flight decode sample reaches its length stop.
 LENGTH_STOP_CASE = dict(
@@ -899,7 +929,7 @@ LENGTH_STOP_CASE = dict(
     num_pipeline_stages=2,
     num_blocks=12,
     num_requests=24,
-    seed=11,
+    seed=45,
 )
 
 # An in-flight decode victim on the unified PDD decode replica.
@@ -928,25 +958,29 @@ def test_an_inflight_decode_victim_keeps_the_sample_of_its_removed_row(
 def test_an_inflight_final_prefill_chunk_grants_the_first_token_and_recomputes(
     tmp_path, monkeypatch
 ):
-    case = INFLIGHT_DECODE_CASES["dense_pp4"]
     recorder = _observe_inflight_removals(monkeypatch)
-    simulator = Simulator(_pipelined_config(tmp_path, case))
+    simulator = Simulator(_pipelined_config(tmp_path, FINAL_CHUNK_CASE))
     simulator.run()
 
     finals = [
         removal
         for removal in recorder.removals
         if not removal["prefill_complete"]
-        and removal["processed_before"] + removal["width"]
+        and removal["context"] + removal["width"]
         >= removal["request"].num_prefill_tokens
     ]
     assert finals, recorder.removals
+    # The final chunk was scheduled while an earlier chunk was in flight, and
+    # that chunk's end took no sample.
+    assert any(
+        removal["context"] > removal["processed_before"] for removal in finals
+    ), finals
     for removal in finals:
         assert removal["processed_after"] == removal["request"].num_prefill_tokens + 1
         assert removal["prefill_completed_at"] == removal["time"], removal
         assert removal["first_decode_at"] == removal["time"], removal
         _assert_resumes_with_a_recompute(recorder, removal)
-    _assert_every_request_completes(simulator, case["num_requests"])
+    _assert_every_request_completes(simulator, FINAL_CHUNK_CASE["num_requests"])
 
 
 def test_a_victim_that_stops_on_its_inflight_sample_leaves_waiting(
