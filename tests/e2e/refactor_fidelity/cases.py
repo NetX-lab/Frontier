@@ -146,6 +146,15 @@ def _colocation_dense_offline() -> list[FidelityCase]:
             (),
         ),
         (
+            # A batch cap below the request count keeps requests waiting, which
+            # is when a finished request's deferred KV release is extended.
+            "coloc_dense_offline_pp4",
+            "four pipeline stages, where terminal KV release waits an extra iteration",
+            {"NUM_REQUESTS": "16", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "32",
+             "PP": "4", "DECODE_CUDA_GRAPH_MODE": "none"},
+            ("--vllm_v1_scheduler_config_batch_size_cap", "4"),
+        ),
+        (
             "coloc_dense_offline_tp1",
             "no attention tensor parallelism",
             {"NUM_REQUESTS": "8", "PREFILL_TOKENS": "512", "DECODE_TOKENS": "32",
@@ -330,6 +339,10 @@ def _colocation_features() -> list[FidelityCase]:
         ("coloc_spec_dec_offline_ntokens4", COLOCATION_OFFLINE_SPEC_DEC,
          "four speculative tokens per iteration",
          {"NUM_SPECULATIVE_TOKENS": "4", "COMMITTED_TOKENS_PER_ITERATION": "4"}),
+        ("coloc_mtp_offline_pp2", COLOCATION_OFFLINE_SPEC_DEC,
+         "target-embedded MTP over two pipeline stages, which holds admission and output",
+         {"SPEC_METHOD": "qwen3_next_mtp", "MTP_N_PREDICT": "2",
+          "MTP_NUM_LAYERS": "1", "PP": "2"}),
     ]
     return [
         FidelityCase(case_id, "colocation_features", script, purpose, env)
@@ -378,10 +391,18 @@ def _pdd() -> list[FidelityCase]:
          "PDD dense at a higher arrival rate",
          {"QPS": "8.0", "NUM_REQUESTS": "16", "PREFILL_TOKENS": "256"}),
     ]
-    return [
+    cases = [
         FidelityCase(case_id, "pd_disaggregation", script, purpose, env)
         for case_id, script, purpose, env in rows
     ]
+    cases.append(FidelityCase(
+        case_id="pdd_dense_offline_astra_sim_analytical",
+        group="pd_disaggregation",
+        script=PDD_OFFLINE_DENSE,
+        purpose="both roles build their CC backend from an astra-sim analytical base",
+        extra_args=("--cc_backend_config_type", "astra_sim_analytical"),
+    ))
+    return cases
 
 
 def _pdaf() -> list[FidelityCase]:

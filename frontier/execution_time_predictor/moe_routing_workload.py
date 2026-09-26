@@ -6,12 +6,10 @@ expert-parallel domain sees, and admit the aggregate a lane may process.
 """
 
 import json
+import math
 
 from frontier.config import ReplicaConfig
 from frontier.entities import Batch
-from frontier.execution_time_predictor.moe_predictor_helpers import (
-    _normalize_routing_details_for_trace,
-)
 from frontier.logger import init_logger
 from frontier.moe_ep_workload import (
     EPLaneWorkload,
@@ -28,6 +26,61 @@ from typing import Dict, List, Mapping, Optional
 
 
 logger = init_logger(__name__)
+
+
+def _normalize_routing_details_for_trace(
+    routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
+) -> dict[str, dict[str, dict[str, float]]]:
+    """Return a strict JSON-safe copy of runtime routing details.
+
+    The matrix checker compares this emitted object with an independently
+    materialized sidecar.  The trace must therefore contain the actual
+    predictor-owned map, not a derived token allocation or a digest.
+    """
+
+    if not isinstance(routing_details, Mapping) or not routing_details:
+        raise ValueError("routing_details trace payload must be a non-empty mapping")
+    normalized: dict[str, dict[str, dict[str, float]]] = {}
+    for replica_id, per_layer in routing_details.items():
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError(
+                "routing_details trace replica IDs must be non-negative integers"
+            )
+        if not isinstance(per_layer, Mapping) or not per_layer:
+            raise ValueError(
+                f"routing_details trace replica {replica_id} has no layer map"
+            )
+        normalized_layers: dict[str, dict[str, float]] = {}
+        for layer_id, per_expert in per_layer.items():
+            if type(layer_id) is not int or layer_id < 0:
+                raise ValueError(
+                    "routing_details trace layer IDs must be non-negative integers"
+                )
+            if not isinstance(per_expert, Mapping) or not per_expert:
+                raise ValueError(
+                    f"routing_details trace layer {layer_id} has no expert map"
+                )
+            normalized_experts: dict[str, float] = {}
+            for expert_id, ratio in per_expert.items():
+                if type(expert_id) is not int or expert_id < 0:
+                    raise ValueError(
+                        "routing_details trace expert IDs must be non-negative integers"
+                    )
+                value = float(ratio)
+                if not math.isfinite(value) or value < 0.0:
+                    raise ValueError(
+                        "routing_details trace ratios must be finite and non-negative"
+                    )
+                normalized_experts[str(expert_id)] = value
+            ratio_sum = sum(normalized_experts.values())
+            if not math.isclose(ratio_sum, 1.0, rel_tol=0.0, abs_tol=1e-12):
+                raise ValueError(
+                    "routing_details trace ratios must sum to one "
+                    f"for replica={replica_id} layer={layer_id}, got {ratio_sum}"
+                )
+            normalized_layers[str(layer_id)] = normalized_experts
+        normalized[str(replica_id)] = normalized_layers
+    return normalized
 
 
 class MoeRoutingWorkload:

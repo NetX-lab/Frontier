@@ -282,7 +282,7 @@ class BaseTrainer(ABC):
         """
         Extract only the configuration parameters that affect model performance.
 
-        This method MUST match the implementation in shared_prediction_model_manager.py
+        This method MUST match the implementation in prediction_model_registry.py
         to ensure hash consistency between training and simulation.
 
         Parameters that should be included:
