@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -143,22 +144,15 @@ def test_share_expert_visibility_hook_is_removed() -> None:
 
 
 def test_moe_predictor_source_has_no_empirical_visibility_or_calibration_hooks() -> None:
-    source = (
-        __import__(
-            "pathlib"
-        ).Path(
-            "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py"
-        ).read_text(encoding="utf-8")
+    source = "".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted(Path("frontier/execution_time_predictor").glob("*.py"))
     )
-    base_source = __import__("pathlib").Path(
-        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py"
-    ).read_text(encoding="utf-8")
 
     assert "share_expert_tp_allreduce_visibility_scale" not in source
     assert "_get_decode_request_length_calibration_scale" not in source
     assert "_get_moe_compute_calibration_scale" not in source
     assert "_get_expert_parallel_communication_calibration_scale" not in source
-    assert "_get_decode_request_length_calibration_scale" not in base_source
 
 
 def test_moe_scaling_fields_are_not_public_configuration() -> None:
