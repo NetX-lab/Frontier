@@ -10,9 +10,15 @@ and, near max_model_len, leaves the request with nothing it may schedule.
 A MONOLITHIC target-embedded MTP request schedules one token fewer than its
 verify width on its first decode step, so the rollback is taken against the
 scheduled width, not the verify width.
+
+On the PDD DECODE role the first output token arrives with the KV handoff and
+is not part of the request's processed tokens there, so the frontier equals
+them after every decode step.
 """
 
 from __future__ import annotations
+
+import json
 
 import pytest
 
@@ -29,10 +35,12 @@ from frontier.config import (
     UniformRequestLengthGeneratorConfig,
     VllmV1SchedulerConfig,
 )
+from frontier.entities import Request
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
 from frontier.simulator import Simulator
+from frontier.types import ClusterType
 
 # Two drafts with two committed tokens per step reject one draft every step.
 NGRAM = SpeculativeDecodingConfig(
@@ -91,11 +99,14 @@ def _fresh_global_vars():
     global_vars.reset_global_vars()
 
 
-def _config(root, case):
+def _config(root, case, sys_arch="co-location"):
     seed = case["seed"]
+    role_args = {}
+    if sys_arch == "pd-disaggregation":
+        role_args = dict(prefill_cluster_num_replicas=1, decode_cluster_num_replicas=1)
     return SimulationConfig(
         simulation_mode="online",
-        sys_arch="co-location",
+        sys_arch=sys_arch,
         enable_parallel_clusters=False,
         decode_cuda_graph_mode="none",
         cluster_config=ClusterConfig(
@@ -116,6 +127,7 @@ def _config(root, case):
             execution_time_predictor_config=RandomForrestExecutionTimePredictorConfig(
                 enable_dummy_mode=True
             ),
+            **role_args,
         ),
         metrics_config=MetricsConfig(
             output_dir=str(root / "metrics"),
@@ -146,7 +158,7 @@ def _config(root, case):
 
 
 def _observe_decode_frontiers(monkeypatch):
-    """Record (frontier, tokens) of each unfinished decode request at step end."""
+    """Record (frontier, tokens, rejected) of each unfinished decode request at step end."""
 
     frontiers = []
     on_batch_end = VLLMv1EngineReplicaScheduler.on_batch_end
@@ -155,13 +167,23 @@ def _observe_decode_frontiers(monkeypatch):
         on_batch_end(self, batch)
         if batch.spec_decode_metadata is None:
             return
+        rejected_by_request_id = {
+            request.id: scheduled - committed
+            for request, scheduled, committed in zip(
+                batch.requests,
+                batch.num_tokens,
+                batch.spec_decode_metadata.committed_tokens_per_request,
+            )
+        }
         for request in batch.current_execution_requests:
             if request.completed or not request.is_prefill_complete:
                 continue
             frontiers.append(dict(
+                cluster_type=self._cluster_type,
                 request_id=request.id,
                 frontier=self._get_scheduler_num_computed_tokens(request),
                 tokens=request.num_processed_tokens,
+                rejected=rejected_by_request_id[request.id],
             ))
 
     monkeypatch.setattr(VLLMv1EngineReplicaScheduler, "on_batch_end", observed_on_batch_end)
@@ -183,3 +205,41 @@ def test_a_speculative_decode_step_returns_its_rejected_drafts(name, tmp_path, m
     for request in requests:
         assert request.completed, request.id
         assert request.num_processed_decode_tokens == request.num_decode_tokens
+
+
+def test_a_pdd_decode_step_returns_its_rejected_drafts(tmp_path, monkeypatch):
+    # Request i commits 1 + (i % 3) tokens per step, so its steps reject
+    # 2, 1 or 0 of their two drafts. The trace is keyed by request id, and
+    # ids count per process.
+    monkeypatch.setattr(Request, "_id", -1)
+    trace = tmp_path / "acceptance_trace.json"
+    trace.write_text(json.dumps({
+        "per_request_committed_tokens_per_iteration": {
+            str(i): [1 + (i % 3)] * 96 for i in range(CASES["dense"]["num_requests"])
+        }
+    }))
+    case = dict(
+        CASES["dense"],
+        spec_decode=SpeculativeDecodingConfig(
+            enabled=True,
+            method="ngram",
+            num_speculative_tokens=2,
+            acceptance_trace_file=str(trace),
+        ),
+    )
+    frontiers = _observe_decode_frontiers(monkeypatch)
+    simulator = Simulator(_config(tmp_path, case, sys_arch="pd-disaggregation"))
+    simulator.run()
+
+    decode_steps = [
+        step for step in frontiers if step["cluster_type"] == ClusterType.DECODE
+    ]
+    assert len(decode_steps) == len(frontiers)
+    assert {step["rejected"] for step in decode_steps} == {0, 1, 2}
+    for step in decode_steps:
+        assert step["frontier"] == step["tokens"], step
+    requests = list(simulator._all_requests)
+    assert len(requests) == case["num_requests"]
+    for request in requests:
+        assert request.completed, request.id
+        assert request.num_emitted_decode_tokens == request.num_decode_tokens

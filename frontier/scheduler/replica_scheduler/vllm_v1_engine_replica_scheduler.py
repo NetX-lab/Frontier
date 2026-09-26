@@ -923,6 +923,12 @@ class VLLMv1EngineReplicaScheduler(
                 break
 
             request = waiting_queue[0]
+            if request.stops_on_preempted_step:
+                # vLLM would admit it again only to free it when the sample of
+                # the step it was preempted from arrives.
+                waiting_queue.popleft()
+                skipped_waiting_requests.append(request)
+                continue
             if self._should_defer_monolithic_pp_waiting_admission(request):
                 logger.debug(
                     "[VLLMv1Engine][MONOLITHIC] Phase 2: delaying req=%s "
@@ -1070,6 +1076,14 @@ class VLLMv1EngineReplicaScheduler(
                 self._current_schedule_time, self._cluster_type
             )
 
+            # A victim admitted before the step it was preempted from ends
+            # takes that step's sample here. vLLM appends it when the step's
+            # output arrives, before this admission's step can end, and sized
+            # this admission without it.
+            if request.has_preempted_step:
+                request.on_preempted_step_end(
+                    self._current_schedule_time, self._cluster_type
+                )
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)

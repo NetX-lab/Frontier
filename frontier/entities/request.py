@@ -17,10 +17,11 @@ class RequestRoundPlan:
 
 class PreemptedStep(NamedTuple):
     execution_signature: Tuple[int, int, int]
-    was_decoding: bool
-    # A row of the step samples once its context plus its tokens reach this
+    # The row that samples is the one whose context plus tokens reach this
     # length, as vLLM samples only a row that completes the request's tokens.
     sample_seq_len: int
+    # Output tokens the step appends when its output arrives.
+    num_sampled_tokens: int
     recompute: bool
 
 
@@ -138,9 +139,6 @@ class Request(BaseEntity):
             Tuple[int, ClusterType], float
         ] = defaultdict(float)
         self._round_class_preemption_count: Dict[str, int] = defaultdict(int)
-        self._round_class_tokens_at_preemption: Dict[str, List[int]] = defaultdict(
-            list
-        )
 
         self._completed_at = 0
         self._prefill_completed_at = 0
@@ -465,10 +463,6 @@ class Request(BaseEntity):
         return self._num_prefill_tokens + self._num_decode_tokens
 
     @property
-    def num_processed_prefill_tokens(self) -> int:
-        return min(self._num_processed_tokens, self._num_prefill_tokens)
-
-    @property
     def num_processed_decode_tokens(self) -> int:
         return max(self._num_processed_tokens - self._num_prefill_tokens, 0)
 
@@ -604,11 +598,6 @@ class Request(BaseEntity):
             List of token counts at each preemption event (chronological order)
         """
         return self._tokens_at_preemption.get(cluster_type, [])
-
-    def get_round_class_tokens_at_preemption(self, round_class: str) -> List[int]:
-        if round_class not in {"hidden", "final"}:
-            raise ValueError(f"Unsupported round_class={round_class!r}")
-        return list(self._round_class_tokens_at_preemption.get(round_class, []))
 
     # Waiting time tracking accessor methods
     def get_cluster_waiting_time(self, cluster_type: ClusterType) -> float:
@@ -858,12 +847,6 @@ class Request(BaseEntity):
     def reset_spec_verify_state_after_batch_end(self) -> None:
         self._spec_current_verify_tokens = 1
 
-    def set_spec_current_verify_tokens_for_reservation(self, verify_tokens: int) -> None:
-        value = int(verify_tokens)
-        if value <= 0:
-            raise ValueError(f"verify_tokens must be > 0, got={verify_tokens}")
-        self._spec_current_verify_tokens = value
-
     @property
     def early_decoding_on_first_layer(self) -> bool:
         # Early decoding on first layer: first decode token, layer 0
@@ -1045,25 +1028,41 @@ class Request(BaseEntity):
             return
         self._first_decode_token_completed_at = time
 
-    def on_preempted(self, recompute: bool, step_in_flight: bool) -> None:
+    def on_preempted(
+        self, recompute: bool, scheduler_num_computed_tokens: Optional[int]
+    ) -> None:
+        """Reset the request's progress when the scheduler preempts it.
+
+        scheduler_num_computed_tokens is vLLM's num_computed_tokens at the
+        preemption, which counts the tokens of the step still in flight, or
+        None when no step of the request is in flight.
+        """
         # vLLM v1 keeps the prompt and every output token. A victim still in
-        # prefill restarts its prompt. The rows in flight, if any, keep the
-        # sample of the one that completes the decode step, the prompt, or the
-        # recompute until that row is removed; the layers they already ran no
-        # longer count.
-        if step_in_flight:
+        # prefill restarts its prompt. vLLM still appends the sample of a step
+        # in flight when that step's output arrives: a decode step, or a chunk
+        # that reaches the end of the prompt or of the recompute. The layers
+        # the step already ran no longer count.
+        if scheduler_num_computed_tokens is not None:
             if self.is_decoding:
                 sample_seq_len = self._num_processed_tokens + 1
-            elif self._num_recomputed_tokens is not None:
-                sample_seq_len = self._num_processed_tokens
+                step_samples = True
             else:
-                sample_seq_len = self._num_prefill_tokens
-            self._preempted_step = PreemptedStep(
-                execution_signature=self.execution_signature,
-                was_decoding=self.is_decoding,
-                sample_seq_len=sample_seq_len,
-                recompute=recompute,
-            )
+                if self._num_recomputed_tokens is not None:
+                    sample_seq_len = self._num_processed_tokens
+                else:
+                    sample_seq_len = self._num_prefill_tokens
+                step_samples = scheduler_num_computed_tokens >= sample_seq_len
+            if step_samples:
+                self._preempted_step = PreemptedStep(
+                    execution_signature=self.execution_signature,
+                    sample_seq_len=sample_seq_len,
+                    num_sampled_tokens=(
+                        self._spec_last_committed_tokens
+                        if self.is_decoding and self._spec_decode_enabled
+                        else 1
+                    ),
+                    recompute=recompute,
+                )
         self._preempted = True
         if self._is_prefill_complete:
             self._completed_layer_count = 0
@@ -1072,27 +1071,38 @@ class Request(BaseEntity):
         if self._is_prefill_complete and recompute:
             self._num_recomputed_tokens = 0
 
-    def was_preempted_from(self, execution_signature: Tuple[int, int, int]) -> bool:
+    def samples_preempted_step(
+        self, execution_signature: Tuple[int, int, int], row_seq_len: int
+    ) -> bool:
+        """Whether a row that ends at row_seq_len tokens carries the pending sample."""
         record = self._preempted_step
-        return record is not None and record.execution_signature == execution_signature
+        return (
+            record is not None
+            and record.execution_signature == execution_signature
+            and row_seq_len >= record.sample_seq_len
+        )
 
-    def on_preempted_step_end(
-        self,
-        time: float,
-        num_context_tokens: int,
-        num_scheduled_tokens: int,
-        num_committed_tokens: int,
-        cluster_type: ClusterType,
-    ) -> None:
+    @property
+    def has_preempted_step(self) -> bool:
+        """Whether the sample of the step this request was preempted from is pending."""
+        return self._preempted_step is not None
+
+    @property
+    def stops_on_preempted_step(self) -> bool:
+        """Whether the pending sample of its preempted step ends this round."""
         record = self._preempted_step
-        if num_context_tokens + num_scheduled_tokens < record.sample_seq_len:
-            return
+        return (
+            record is not None
+            and record.num_sampled_tokens >= self.remaining_decode_tokens
+        )
+
+    def on_preempted_step_end(self, time: float, cluster_type: ClusterType) -> None:
+        """Append the sample of the step this request was preempted from."""
+        record = self._preempted_step
         self._preempted_step = None
         self._num_recomputed_tokens = None
-        if record.was_decoding:
-            self.on_batch_end(time, num_committed_tokens, cluster_type)
-        elif self._is_prefill_complete:
-            self.on_batch_end(time, 1, cluster_type)
+        if self._is_prefill_complete:
+            self.on_batch_end(time, record.num_sampled_tokens, cluster_type)
         else:
             self.on_batch_end(time, self._num_prefill_tokens, cluster_type)
         if record.recompute and not self._completed:
@@ -1119,9 +1129,6 @@ class Request(BaseEntity):
         # This is meaningful for DECODE (PD mode) and DECODE_ATTN (PD+AF mode)
         if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN]:
             self._tokens_at_preemption[cluster_type].append(num_tokens_completed)
-            self._round_class_tokens_at_preemption[round_class].append(
-                num_tokens_completed
-            )
 
     def is_finished_for_cluster(self, cluster_type: ClusterType) -> bool:
         """
@@ -1202,9 +1209,6 @@ class Request(BaseEntity):
         cluster_type: ClusterType,
     ) -> None:
         assert time >= 0, f"Invalid scheduling time: {time}"
-        # A new admission drops the sample of the step this request was
-        # preempted from; vLLM would still append it during the replay.
-        self._preempted_step = None
         self._latest_iteration_scheduled_at = time
         self._latest_iteration_round_class = self.current_round_class
         self._latest_iteration_round_number = self.current_thinking_round_number
@@ -1668,261 +1672,6 @@ class Request(BaseEntity):
                 # If round_index is out of bounds, return the most recent time
                 return cluster_times[-1] if cluster_times else self._arrived_at
         return self._arrived_at
-
-    def get_cluster_scheduled_at(self, cluster_type: ClusterType, round_index: int = -1) -> float:
-        """
-        Get the scheduled time for a specific cluster and round.
-
-        Args:
-            cluster_type: The cluster type to get scheduled time for
-            round_index: The round index (default: -1 for most recent, 0 for first)
-
-        Returns:
-            Scheduled time for the cluster and round, or 0 if not scheduled in that cluster
-        """
-        cluster_times = self._scheduled_at.get(cluster_type, [])
-        if cluster_times:
-            try:
-                return cluster_times[round_index]
-            except IndexError:
-                # If round_index is out of bounds, return the most recent time
-                return cluster_times[-1] if cluster_times else 0
-        return 0
-
-    def get_cluster_scheduling_delay(self, cluster_type: ClusterType, round_index: int = -1) -> float:
-        """
-        Get the scheduling delay for a specific cluster and round.
-
-        Args:
-            cluster_type: The cluster type to get scheduling delay for
-            round_index: The round index (default: -1 for most recent, 0 for first)
-
-        Returns:
-            Scheduling delay for the cluster and round, or 0 if not scheduled in that cluster
-        """
-        cluster_delays = self._scheduling_delay.get(cluster_type, [])
-        if cluster_delays:
-            try:
-                return cluster_delays[round_index]
-            except IndexError:
-                # If round_index is out of bounds, return the most recent delay
-                return cluster_delays[-1] if cluster_delays else 0
-        return 0
-
-    def has_been_scheduled_in_cluster(self, cluster_type: ClusterType) -> bool:
-        """
-        Check if the request has been scheduled in a specific cluster.
-
-        Args:
-            cluster_type: The cluster type to check
-
-        Returns:
-            True if the request has been scheduled in the cluster, False otherwise
-        """
-        cluster_times = self._scheduled_at.get(cluster_type, [])
-        return len(cluster_times) > 0
-
-    def get_cluster_scheduling_round_count(self, cluster_type: ClusterType) -> int:
-        """
-        Get the number of scheduling rounds for a specific cluster.
-
-        Args:
-            cluster_type: The cluster type to check
-
-        Returns:
-            Number of times the request has been scheduled in the cluster
-        """
-        cluster_times = self._scheduled_at.get(cluster_type, [])
-        return len(cluster_times)
-
-    def get_total_cluster_execution_time(self, cluster_type: ClusterType) -> float:
-        """
-        Get the total execution time for a specific cluster across all rounds.
-
-        Args:
-            cluster_type: The cluster type to get execution time for
-
-        Returns:
-            Total execution time for the cluster across all rounds
-        """
-        cluster_times = self._execution_time.get(cluster_type, [])
-        return sum(cluster_times)
-
-    def get_total_cluster_model_execution_time(self, cluster_type: ClusterType) -> float:
-        """
-        Get the total model execution time for a specific cluster across all rounds.
-
-        Args:
-            cluster_type: The cluster type to get model execution time for
-
-        Returns:
-            Total model execution time for the cluster across all rounds
-        """
-        cluster_times = self._model_execution_time.get(cluster_type, [])
-        return sum(cluster_times)
-
-    def get_cluster_execution_time_by_round(self, cluster_type: ClusterType, round_index: int = -1) -> float:
-        """
-        Get the execution time for a specific cluster and round.
-
-        Args:
-            cluster_type: The cluster type to get execution time for
-            round_index: The round index (default: -1 for most recent, 0 for first)
-
-        Returns:
-            Execution time for the cluster and round, or 0 if not found
-        """
-        cluster_times = self._execution_time.get(cluster_type, [])
-        if cluster_times:
-            try:
-                return cluster_times[round_index]
-            except IndexError:
-                return 0
-        return 0
-
-    def complete_decode_attn_processing(self) -> None:
-        """
-        Mark that this request has completed attention processing in decode-attn cluster.
-        This method is called when a request finishes processing in the decode-attn cluster
-        and is ready to be transferred to decode-ffn cluster.
-        """
-        # For now, we don't need to update any internal state since the request
-        # will be handled by the cluster transfer logic in BatchEndEvent
-        pass
-
-    # TODO: legacy, to be removed
-    def advance_decode_layer(self, total_layers: int, time: float, num_layers_completed: int = 1, num_token_completed: int = 1) -> bool:
-        """
-        Advance the decode processing by completing additional layers.
-
-        Note: This method is kept for compatibility but may not be used in the
-        current decode-attn cluster implementation where each cluster processes
-        only specific layers.
-
-        Args:
-            num_layers_completed: Number of layers completed in this processing step
-        """
-        # Enhanced debugging: Log layer advancement (before)
-        logger.info(
-            f"[ADVANCE-LAYER][BEFORE] req={self._id} token_idx={self._current_decode_token_index} "
-            f"completed_layer_count={self._completed_layer_count}/{total_layers} num_processed_tokens={self._num_processed_tokens}/{self.total_tokens}"
-        )
-        if self._id == 0:
-            logger.info(
-                f"[TRACE-R0][ADVANCE-LAYER-BEFORE] token_idx={self._current_decode_token_index} "
-                f"layer={self._completed_layer_count}/{total_layers} decode_progress={self.num_processed_decode_tokens}/{self._num_decode_tokens}"
-            )
-
-        assert self._completed_layer_count <= total_layers, f"Request {self._id} completed_layer_count ({self._completed_layer_count}) " \
-            f"does not match total_layers ({total_layers}) in complete_decode_token"
-
-        assert self._num_processed_tokens <= self.total_tokens, f"Request {self._id} already completed, " \
-            f"num_processed_tokens={self._num_processed_tokens}, total_tokens={self.total_tokens}"
-
-        self._completed_layer_count += num_layers_completed
-
-        is_final_layer = self._completed_layer_count == total_layers
-        is_final_token = False
-        if is_final_layer:
-            before_tokens = self._num_processed_tokens
-            # rollout
-            self._num_processed_tokens += num_token_completed
-            # Reset layer count for next token
-            self._completed_layer_count = 0
-            # Advance to next decode token index
-            self._current_decode_token_index += 1
-
-            is_final_token = self._num_processed_tokens == self.total_tokens
-
-            # self._completed will be updated in requests.on_batch_end()
-            if is_final_token:
-                self._completed = True
-                self._completed_at = time
-
-            # Log token increment
-            logger.info(
-                f"[ADVANCE-LAYER][AFTER] req={self._id} FINAL_LAYER=True token_inc {before_tokens}->{self._num_processed_tokens} "
-                f"new_token_idx={self._current_decode_token_index} is_final_token={is_final_token}"
-            )
-            if self._id == 0:
-                logger.info(
-                    f"[TRACE-R0][ADVANCE-LAYER-AFTER] decode_progress={self.num_processed_decode_tokens}/{self._num_decode_tokens} "
-                    f"is_final_token={is_final_token}"
-                )
-        else:
-            logger.info(
-                f"[ADVANCE-LAYER][AFTER] req={self._id} FINAL_LAYER=False layer_progress={self._completed_layer_count}/{total_layers}"
-            )
-            if self._id == 0:
-                logger.info(
-                    f"[TRACE-R0][ADVANCE-LAYER-AFTER] layer_progress={self._completed_layer_count}/{total_layers}"
-                )
-
-        # return status: whether the is the final layer and whether request finished rollout process.
-        return is_final_layer, is_final_token
-
-
-
-    # def complete_decode_token(self, total_layers: int) -> bool:
-    #     """
-    #     Complete the current decode token and advance to the next one.
-
-    #     Note: This method is kept for compatibility but may not be used in the
-    #     current disaggregated implementation where token completion is handled
-    #     differently across clusters.
-
-    #     Args:
-    #         total_layers: Total number of layers in the model
-
-    #     Returns:
-    #         True if a new decode token was generated, False if request is completed
-    #     """
-    #     # Enhanced debugging: Log detailed token completion state
-    #     from frontier.logger import init_logger
-    #     logger = init_logger(__name__)
-
-    #     logger.info(f"🔍 [TOKEN_DEBUG] Request {self._id} complete_decode_token called: "
-    #                f"completed_layer_count={self._completed_layer_count}, "
-    #                f"total_layers={total_layers}, "
-    #                f"current_decode_token_index={self._current_decode_token_index}, "
-    #                f"num_processed_tokens={self._num_processed_tokens}, "
-    #                f"total_tokens={self.total_tokens}, "
-    #                f"num_decode_tokens={self._num_decode_tokens}")
-
-
-    #     # CRITICAL FIX: Check if request is already completed before incrementing tokens
-    #     # This prevents _num_processed_tokens from exceeding total_tokens
-    #     if self._num_processed_tokens == self.total_tokens:
-    #         self._completed = True
-    #         logger.info(f"✅ [TOKEN_DEBUG] Request {self._id} ALREADY COMPLETED! "
-    #                     f"All {self._num_decode_tokens} decode tokens generated, "
-    #                     f"processed_tokens={self._num_processed_tokens}, total_tokens={self.total_tokens}")
-    #         return False
-
-    #     # Reset layer count for next token
-    #     self._completed_layer_count = 0
-
-    #     # Advance to next decode token index
-    #     self._current_decode_token_index += 1
-
-    #     logger.info(f"🎯 [TOKEN_DEBUG] Request {self._id} TOKEN GENERATED! "
-    #                 f"New token index: {self._current_decode_token_index}, "
-    #                 f"Total processed tokens: {self._num_processed_tokens}, "
-    #                 f"Decode tokens progress: {self.num_processed_decode_tokens}/{self._num_decode_tokens}")
-
-    #     # Check if request is fully completed after token generation
-    #     if self._num_processed_tokens >= self.total_tokens:
-    #         self._completed = True
-    #         logger.info(f"✅ [TOKEN_DEBUG] Request {self._id} COMPLETED! "
-    #                     f"Generated all {self._num_decode_tokens} decode tokens")
-    #         return False
-
-    #     logger.info(f"🔄 [TOKEN_DEBUG] Request {self._id} CONTINUING: "
-    #                 f"Need {self._num_decode_tokens - self.num_processed_decode_tokens} more decode tokens")
-    #     return True
-
-
-
 
     def to_dict(self) -> dict:
         return {

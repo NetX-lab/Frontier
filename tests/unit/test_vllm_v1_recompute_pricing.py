@@ -29,7 +29,7 @@ def _request_at_cursor(cursor: int) -> Request:
     request._is_prefill_complete = True
     request._prefill_completed_at = 1.0
     request._first_decode_token_completed_at = 1.0
-    request.on_preempted(recompute=True, step_in_flight=False)
+    request.on_preempted(recompute=True, scheduler_num_computed_tokens=None)
     request.on_batch_end(2.0, cursor, ClusterType.MONOLITHIC)
     return request
 
@@ -103,7 +103,7 @@ def test_a_decode_row_keeps_its_scheduled_phase_after_a_later_preemption() -> No
     request._first_decode_token_completed_at = 1.0
     batch = Batch(replica_id=0, requests=[request], num_tokens=[1], is_moe=False)
 
-    request.on_preempted(recompute=True, step_in_flight=True)
+    request.on_preempted(recompute=True, scheduler_num_computed_tokens=40)
     assert request.is_recomputing
 
     assert batch.request_is_decoding == [True]

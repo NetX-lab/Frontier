@@ -387,6 +387,10 @@ class DisaggregatedRoleScheduling:
                 break
 
             request = waiting_queue[0]
+            if request.has_preempted_step:
+                # It resumes decoding from the sample of the step it was
+                # preempted from, which has not arrived yet.
+                break
             is_final_decode_request = fast_lane_decode_enabled and (
                 self._is_final_decode_fast_lane_request(request)
             )
