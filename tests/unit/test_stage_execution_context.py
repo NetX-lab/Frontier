@@ -9,6 +9,9 @@ from frontier.entities import Batch, EPBatchGroup, Request, SpecDecodeBatchMetad
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
+from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
+    VLLMv1EngineReplicaScheduler,
+)
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
@@ -81,6 +84,39 @@ def test_runtime_live_batch_keeps_the_spec_decode_metadata_of_its_live_requests(
     assert metadata.terminal_overshoot_planned_draft_tokens_per_request == [[], [2]]
     assert metadata.terminal_overshoot_verify_tokens_per_request is None
     assert batch.spec_decode_metadata.committed_tokens_per_request == [3, 1, 2]
+
+
+def test_a_live_batch_rolls_back_the_rejected_drafts_of_its_own_rows() -> None:
+    stage_scheduler = object.__new__(ReplicaStageScheduler)
+    requests = [
+        Request(arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=16)
+        for _ in range(4)
+    ]
+    batch = Batch(0, requests, [3, 3, 3, 3], is_moe=False)
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="ngram",
+        planned_draft_tokens_per_request=[2, 2, 2, 2],
+        verify_tokens_per_request=[3, 3, 3, 3],
+        accepted_draft_tokens_per_request=[1, 0, 2, 1],
+        rejected_draft_tokens_per_request=[1, 2, 0, 1],
+        committed_tokens_per_request=[2, 1, 3, 2],
+        uses_lookahead_slots=False,
+    )
+    # The first request was preempted after the batch was scheduled.
+    batch._request_execution_matches_snapshot = lambda index: index != 0
+    live_batch = stage_scheduler._materialize_runtime_live_batch(batch)
+
+    replica_scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    replica_scheduler._scheduled_num_computed_tokens_by_request = {
+        request.id: 100 for request in requests
+    }
+    replica_scheduler._roll_back_rejected_drafts(live_batch)
+
+    # vLLM subtracts each row's scheduled tokens that produced no output.
+    assert [
+        replica_scheduler._scheduled_num_computed_tokens_by_request[request.id]
+        for request in requests
+    ] == [100, 98, 100, 99]
 
 
 def test_ep_wave_owns_stage_before_dense_can_start() -> None:
