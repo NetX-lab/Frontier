@@ -116,9 +116,7 @@ def _admissions_while_the_engine_blocks(run: dict) -> list[dict]:
     oldest in-flight batch, and a request that arrives meanwhile waits for the
     next iteration. So a lane with a batch in flight admits only in the pass of
     a previous admission or at the end of its oldest batch; an idle lane admits
-    at any time. Iterations take no host time here, as in Frontier. A stale
-    drop of the oldest batch removes its remaining work, so it ends the block
-    as its completion would.
+    at any time. Iterations take no host time here, as in Frontier.
     """
 
     in_flight: dict[int, list[int]] = defaultdict(list)
@@ -190,16 +188,16 @@ def _assert_completions_report_post_step_load(run: dict) -> None:
     )
 
 
-def _assert_every_held_key_is_reported(run: dict) -> list[str]:
+def _assert_every_held_key_is_reported(run: dict) -> list[dict]:
     """A held admission key is published by the next end record, and by no later one.
 
-    Walks every record except stage-0 starts. Returns the source of each end
-    record that published a key its lane was holding.
+    Walks every record except stage-0 starts. Returns each end record that
+    published a key its lane was holding.
     """
 
     pending: dict[int, int] = {}
     last_key: dict[int, int] = defaultdict(lambda: -1)
-    consumed: list[str] = []
+    consumed: list[dict] = []
     for record in run["records"]:
         if record["kind"] == "stage0":
             continue
@@ -217,7 +215,7 @@ def _assert_every_held_key_is_reported(run: dict) -> list[str]:
         key = record["report"][0]
         if lane in pending:
             assert key == pending.pop(lane), record
-            consumed.append(record["source"])
+            consumed.append(record)
         assert key >= last_key[lane], (record, last_key[lane])
         last_key[lane] = key
     assert not pending, pending
@@ -480,15 +478,18 @@ def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
     "case",
     ["dense_dp1_pp4_kv_pressure", "moe_dp2_pp4_kv_pressure"],
 )
-def test_a_stale_dropped_batch_reports_the_key_its_admission_held(tmp_path, case):
+def test_a_step_preempted_in_flight_reports_the_key_its_admission_held(
+    tmp_path, case
+):
     evidence = _run_child(tmp_path, case)
     policy = evidence["vllm_load_balancing"]
     baseline = evidence["round_robin"]
 
-    sources = _assert_every_held_key_is_reported(policy)
-    assert policy["num_preemptions"] >= 1
-    assert policy["stale_drops"]
-    assert "stale_drop" in sources
+    reporters = _assert_every_held_key_is_reported(policy)
+    # A step whose every row was preempted in flight still runs each stage,
+    # and its end publishes the key that its admission held.
+    assert any(record["live_rows"] == 0 for record in reporters), reporters
+    assert policy["stale_drops"] == []
     assert _admissions_while_the_engine_blocks(policy) == []
     _assert_run_conserves_work(policy)
     _assert_run_conserves_work(baseline)
@@ -760,10 +761,12 @@ def run_case(
 
         def observed(self, batch):
             before = list(self.get_request_load())
+            live_rows = len(batch.current_execution_requests)
             result = original(self, batch)
             releases[batch.id] = {
                 "before": before,
                 "after": list(self.get_request_load()),
+                "live_rows": live_rows,
             }
             return result
 
@@ -838,6 +841,7 @@ def run_case(
                     "released": release is not None,
                     "pre_step": release["before"] if release else None,
                     "post_step": release["after"] if release else None,
+                    "live_rows": release["live_rows"] if release else None,
                     "source": source,
                     "held_key": self._held_key[replica_local_id],
                     "lane_load": list(lane.get_request_load()),

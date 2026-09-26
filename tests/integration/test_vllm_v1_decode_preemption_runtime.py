@@ -39,6 +39,7 @@ from frontier.config import (
 )
 from frontier.entities.batch import Batch
 from frontier.events import global_batch_end_event
+from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 from frontier.execution_time_predictor.base_execution_time_predictor import (
     BaseExecutionTimePredictor,
@@ -46,7 +47,6 @@ from frontier.execution_time_predictor.base_execution_time_predictor import (
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
-from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.metrics.metrics_store import MetricsStore
 from frontier.scheduler.replica_scheduler.sglang_style_replica_scheduler import (
     SGLangStyleReplicaScheduler,
@@ -123,7 +123,7 @@ PIPELINED_CASES = {
 
 # dense PP4, 8 blocks, 24 requests, seed 5, with token-proportional stage
 # times. A schedule pass preempts a decode row of a batch it formed earlier
-# before stage 0 runs that batch. Found by a probe over PP 2/4, 8-12 blocks,
+# before a stage runs that batch. Found by a probe over PP 2/4, 8-12 blocks,
 # long-prefill thresholds 0/6 and seeds 0-5; a fixed dummy time never reaches it.
 SCHEDULED_DECODE_VICTIM_CASE = dict(
     replica=DENSE_REPLICA,
@@ -974,12 +974,12 @@ def test_an_sglang_prefill_victim_waits_when_its_pass_forms_no_rows(
 
 
 class _InflightRemovals:
-    """Where Frontier removes a preempted request's in-flight row, and its state after.
+    """A preempted request's in-flight row at its step's end, and its state after.
 
-    The sample is applied inside the stage-boundary event and the batch-end
-    event, so the state is read after those events return. A victim admitted
-    again before its row is removed takes the sample at that admission and is
-    not tracked here. A prefill or recompute victim can have several chunks in
+    The step runs every stage whole and its end applies the sample, so the
+    state is read after the batch-end event returns. A victim admitted again
+    before its row ends takes the sample at that admission and is not tracked
+    here. A prefill or recompute victim can have several chunks in
     flight; the rows before the one that completes its tokens take no sample
     and are skipped.
     """
@@ -991,7 +991,7 @@ class _InflightRemovals:
         self.open = {}
         self._pending = {}
 
-    def note(self, kind, batch, index):
+    def note(self, batch, index):
         request = batch.requests[index]
         episode = self.open.get(request.id)
         if episode is None or request.id in self._pending:
@@ -1008,7 +1008,6 @@ class _InflightRemovals:
                 return
         metadata = batch.spec_decode_metadata
         self._pending[request.id] = dict(
-            kind=kind,
             width=width,
             context=context,
             committed=(
@@ -1060,8 +1059,6 @@ def _observe_inflight_removals(monkeypatch):
     recorder = _InflightRemovals()
     preempt_request = VLLMv1EngineReplicaScheduler._preempt_request
     create_batch = VLLMv1EngineReplicaScheduler._create_batch
-    materialize = ReplicaStageScheduler._materialize_runtime_live_batch
-    stage_handle = ReplicaStageScheduleEvent.handle_event
     global_handle = GlobalBatchEndEvent.handle_event
     on_request_end = MetricsStore._on_request_end
 
@@ -1090,29 +1087,11 @@ def _observe_inflight_removals(monkeypatch):
             ))
         return batch
 
-    def observed_materialize(self, batch):
-        stale = [
-            index
-            for index in range(len(batch.requests))
-            if not batch._request_execution_matches_snapshot(index)
-        ]
-        live = materialize(self, batch)
-        if live is not batch:
-            kind = "whole_drop" if live is None else "stage_boundary"
-            for index in stale:
-                recorder.note(kind, batch, index)
-        return live
-
-    def observed_stage(self, scheduler, metrics_store):
-        events = stage_handle(self, scheduler, metrics_store)
-        recorder.finish(self, scheduler)
-        return events
-
     def observed_global(self, scheduler, metrics_store):
         for index, request in enumerate(self._batch.requests):
             signature = Batch._get_request_execution_signature(request)
             if signature != self._request_execution_signatures[index]:
-                recorder.note("batch_end", self._batch, index)
+                recorder.note(self._batch, index)
         events = global_handle(self, scheduler, metrics_store)
         recorder.finish(self, scheduler)
         return events
@@ -1127,10 +1106,6 @@ def _observe_inflight_removals(monkeypatch):
     monkeypatch.setattr(
         VLLMv1EngineReplicaScheduler, "_create_batch", observed_create_batch
     )
-    monkeypatch.setattr(
-        ReplicaStageScheduler, "_materialize_runtime_live_batch", observed_materialize
-    )
-    monkeypatch.setattr(ReplicaStageScheduleEvent, "handle_event", observed_stage)
     monkeypatch.setattr(GlobalBatchEndEvent, "handle_event", observed_global)
     monkeypatch.setattr(MetricsStore, "_on_request_end", observed_end)
     return recorder
@@ -1153,16 +1128,17 @@ def _assert_resumes_with_a_recompute(recorder, removal):
     assert rows[0]["processed"] == removal["processed_after"], rows[0]
 
 
-# PP4 reaches a stage-boundary removal. PP2 removes in-flight decode rows at
-# batch end: with equal stage times the next pop is ordered before the
-# schedule that preempts, so two stages leave no later stage to drop the row.
+# A decode victim's row is still in flight when the pass preempts it, at PP4
+# and at PP2. A step now runs every stage whole, so the PP4 victim is chosen
+# where its row ends before it is admitted again (a probe over 6-12 blocks,
+# 12-48 requests and 24 seeds).
 INFLIGHT_DECODE_CASES = {
     "dense_pp4": dict(
         replica=DENSE_REPLICA,
         num_pipeline_stages=4,
-        num_blocks=10,
-        num_requests=24,
-        seed=11,
+        num_blocks=8,
+        num_requests=12,
+        seed=1,
     ),
     "dense_pp2": dict(
         replica=DENSE_REPLICA,
@@ -1174,13 +1150,13 @@ INFLIGHT_DECODE_CASES = {
 }
 
 # A victim's final prompt chunk is in flight behind an earlier chunk of the
-# same prompt.
+# same prompt, and that row ends before the victim is admitted again.
 FINAL_CHUNK_CASE = dict(
     replica=DENSE_REPLICA,
     num_pipeline_stages=4,
     num_blocks=10,
     num_requests=24,
-    seed=3,
+    seed=9,
 )
 
 # A victim's in-flight decode sample reaches its length stop.
@@ -1219,16 +1195,14 @@ PDD_INFLIGHT_CASE = dict(
     seed=1,
 )
 
-# Each request thinks one 48-token round with a one-token answer first. The
-# later of two equal-priority requests is preempted while the last chunk of
-# that round is in flight, and a later stage removes the row whose sample ends
-# the round. The engine batch queue changes when passes run, so the trace the
-# stack below uses no longer preempts there; a random search over short
-# priority traces found this one.
+# Each request thinks one 48-token round with a one-token answer first. A
+# request is preempted while the last chunk of that round is in flight, and
+# the step's end applies the sample that ends the round. A random search over
+# short priority traces found this one.
 THINKING_INFLIGHT_CASE = dict(
     trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
-0.09,32,1,2
-0.12,16,3,2
+0.28,16,2,2
+0.34,32,1,2
 """,
     num_blocks=4,
     num_pipeline_stages=4,
@@ -1245,8 +1219,7 @@ def test_an_inflight_decode_victim_keeps_the_sample_of_its_removed_row(
     simulator.run()
 
     removals = _decode_removals(recorder)
-    kind = "stage_boundary" if case["num_pipeline_stages"] > 2 else "batch_end"
-    assert any(removal["kind"] == kind for removal in removals), removals
+    assert removals, recorder.removals
     for removal in removals:
         _assert_gains_the_committed_tokens(removal)
         if not removal["completed_after"]:
@@ -1306,25 +1279,16 @@ def test_a_victim_that_stops_on_its_inflight_sample_leaves_waiting(
 def test_an_inflight_sample_that_ends_a_thinking_round_requeues_it_once(
     tmp_path, monkeypatch
 ):
-    running_stage_events = []
-    stage_stops = []
+    sample_stops = []
     requeues = []
     ends = []
-    stage_handle = ReplicaStageScheduleEvent.handle_event
     apply_samples = Batch.apply_preempted_step_samples
     requeue_event = global_batch_end_event.thinking_round_requeue_event
     on_request_end = MetricsStore._on_request_end
 
-    def observed_stage(self, scheduler, metrics_store):
-        running_stage_events.append(self)
-        events = stage_handle(self, scheduler, metrics_store)
-        running_stage_events.pop()
-        return events
-
     def observed_apply_samples(self, time, cluster_type, **signatures):
         stopped = apply_samples(self, time, cluster_type, **signatures)
-        if running_stage_events:
-            stage_stops.extend((request.id, time) for _, request in stopped)
+        sample_stops.extend((request.id, time) for _, request in stopped)
         return stopped
 
     def observed_requeue_event(time, request, round_started_at):
@@ -1337,7 +1301,6 @@ def test_an_inflight_sample_that_ends_a_thinking_round_requeues_it_once(
         ends.append(request.id)
         return on_request_end(self, time, request)
 
-    monkeypatch.setattr(ReplicaStageScheduleEvent, "handle_event", observed_stage)
     monkeypatch.setattr(Batch, "apply_preempted_step_samples", observed_apply_samples)
     monkeypatch.setattr(
         global_batch_end_event, "thinking_round_requeue_event", observed_requeue_event
@@ -1355,7 +1318,7 @@ def test_an_inflight_sample_that_ends_a_thinking_round_requeues_it_once(
     )
     simulator.run()
 
-    assert set(stage_stops) & set(requeues), (stage_stops, requeues)
+    assert set(sample_stops) & set(requeues), (sample_stops, requeues)
     requests = list(simulator._all_requests)
     assert collections.Counter(request_id for request_id, _ in requeues) == {
         request.id: 1 for request in requests
@@ -1423,6 +1386,66 @@ def test_an_inflight_speculative_victim_gains_its_rows_committed_tokens(
     _assert_every_request_completes(simulator, case["num_requests"])
 
 
+def _observe_blocking_steps(monkeypatch):
+    """Each step the engine blocked on: the stages it ran before leaving the
+    engine batch queue, and how many of its rows were still live."""
+
+    stages_run = collections.defaultdict(list)
+    blocking_steps = []
+    stage_end = BatchStageEndEvent.handle_event
+    leave_queue = VLLMv1EngineReplicaScheduler._leave_engine_batch_queue
+
+    def observed_stage_end(self, scheduler, metrics_store):
+        stages_run[self._batch.id].append(self._stage_id)
+        return stage_end(self, scheduler, metrics_store)
+
+    def observed_leave(self, batch):
+        if self._has_engine_batch_queue and batch.id == self._blocking_batch_id:
+            blocking_steps.append(dict(
+                batch_id=batch.id,
+                stages=list(stages_run[batch.id]),
+                num_stages=self._num_stages,
+                live_rows=sum(
+                    batch._request_execution_matches_snapshot(index)
+                    for index in range(len(batch.requests))
+                ),
+            ))
+        leave_queue(self, batch)
+
+    monkeypatch.setattr(BatchStageEndEvent, "handle_event", observed_stage_end)
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_leave_engine_batch_queue", observed_leave
+    )
+    return blocking_steps
+
+
+# Dense PP4 under KV pressure: every row of a step the engine blocks on is
+# preempted while that step is in flight.
+BLOCKING_PREEMPTED_STEP_CASE = dict(
+    replica=DENSE_REPLICA,
+    num_pipeline_stages=4,
+    num_blocks=8,
+    num_requests=6,
+    seed=1,
+)
+
+
+def test_the_engine_stays_blocked_until_its_step_runs_every_stage(
+    tmp_path, monkeypatch
+):
+    blocking_steps = _observe_blocking_steps(monkeypatch)
+    simulator = Simulator(_pipelined_config(tmp_path, BLOCKING_PREEMPTED_STEP_CASE))
+    simulator.run()
+
+    assert any(step["live_rows"] == 0 for step in blocking_steps), blocking_steps
+    for step in blocking_steps:
+        # vLLM waits for the step's output, which its last PP rank returns.
+        assert step["stages"] == list(range(step["num_stages"])), step
+    _assert_every_request_completes(
+        simulator, BLOCKING_PREEMPTED_STEP_CASE["num_requests"]
+    )
+
+
 def _scale_stage_time_with_tokens(monkeypatch):
     dummy_execution_time = BaseExecutionTimePredictor._get_dummy_execution_time
 
@@ -1439,11 +1462,11 @@ def _scale_stage_time_with_tokens(monkeypatch):
     )
 
 
-def _observe_stage0_decode_victims(monkeypatch):
-    """Price each stage-0 batch that holds a decode row preempted since it formed.
+def _observe_popped_decode_victims(monkeypatch):
+    """Price each popped stage batch that holds a decode row preempted since it formed.
 
     The phase of every row is recorded when its batch is built, apart from the
-    batch; the pricing reads run at the stage-0 pop, before the batch ends.
+    batch; the pricing reads run at the stage pop, before the batch ends.
     """
     scheduled_phases = {}
     batch_init = Batch.__init__
@@ -1461,7 +1484,7 @@ def _observe_stage0_decode_victims(monkeypatch):
 
     def recorded_pop(self):
         batch = pop_batch(self)
-        if self._stage_id != 0 or batch is None or batch.id not in scheduled_phases:
+        if batch is None or batch.id not in scheduled_phases:
             return batch
         phases = scheduled_phases[batch.id]
         if any(
@@ -1492,7 +1515,7 @@ def test_a_scheduled_decode_row_is_priced_as_decode_after_a_later_preemption(
     # vLLM runs the step in its batch queue as it was scheduled; the victim's
     # recompute is a later step of its own.
     _scale_stage_time_with_tokens(monkeypatch)
-    priced = _observe_stage0_decode_victims(monkeypatch)
+    priced = _observe_popped_decode_victims(monkeypatch)
     case = SCHEDULED_DECODE_VICTIM_CASE
     simulator = Simulator(_pipelined_config(tmp_path, case))
     simulator.run()
@@ -1623,26 +1646,42 @@ def _observe_readmissions(monkeypatch):
     return recorder
 
 
-# Dense PP4 with twelve blocks for 48 requests. A decode victim, a victim with
-# the last chunk of its prompt in flight, and one with the last chunk of its
-# recompute in flight are each admitted again before that row ends. Found by a
-# probe over dense and MoE, PP2/PP4, 6-12 blocks, 6-48 requests and 26 seeds;
-# with prompt chunks scheduled while the previous chunk is in flight, one
-# configuration reaches all three.
-READMISSION_CASE = dict(
-    replica=DENSE_REPLICA,
-    num_pipeline_stages=4,
-    num_blocks=12,
-    num_requests=48,
-    seed=3,
-)
+# Dense PP4 runs. A decode victim, a victim with the last chunk of its prompt
+# in flight, and one with the last chunk of its recompute in flight are each
+# admitted again before that row ends; each case names the victims it reaches.
+# Found by a probe over dense and MoE, PP2/PP4, 6-12 blocks, 12-48 requests
+# and 24 seeds, where no one configuration reaches all three.
+READMISSION_CASES = {
+    "decode_and_prefill": (
+        dict(
+            replica=DENSE_REPLICA,
+            num_pipeline_stages=4,
+            num_blocks=6,
+            num_requests=12,
+            seed=14,
+        ),
+        {"decode", "prefill"},
+    ),
+    "decode_and_recompute": (
+        dict(
+            replica=DENSE_REPLICA,
+            num_pipeline_stages=4,
+            num_blocks=12,
+            num_requests=24,
+            seed=3,
+        ),
+        {"decode", "recompute"},
+    ),
+}
 
 
+@pytest.mark.parametrize("name", READMISSION_CASES)
 def test_a_victim_admitted_again_before_its_inflight_row_ends_keeps_its_sample(
-    tmp_path, monkeypatch
+    name, tmp_path, monkeypatch
 ):
+    case, readmitted_kinds = READMISSION_CASES[name]
     recorder = _observe_readmissions(monkeypatch)
-    simulator = Simulator(_pipelined_config(tmp_path, READMISSION_CASE))
+    simulator = Simulator(_pipelined_config(tmp_path, case))
     simulator.run()
 
     readmitted = collections.Counter(
@@ -1650,7 +1689,7 @@ def test_a_victim_admitted_again_before_its_inflight_row_ends_keeps_its_sample(
         for episode in recorder.episodes
         if episode.get("readmitted_first")
     )
-    assert set(readmitted) == {"decode", "prefill", "recompute"}, recorder.episodes
+    assert readmitted_kinds <= set(readmitted), recorder.episodes
     for episode in recorder.episodes:
         request, row = episode["request"], episode.get("next_row")
         if row is None:
@@ -1668,7 +1707,7 @@ def test_a_victim_admitted_again_before_its_inflight_row_ends_keeps_its_sample(
         if episode["readmitted_first"]:
             # vLLM sized that admission before the sample arrived.
             assert row["width"] <= tokens_before_the_sample, episode
-    _assert_every_request_completes(simulator, READMISSION_CASE["num_requests"])
+    _assert_every_request_completes(simulator, case["num_requests"])
 
 
 

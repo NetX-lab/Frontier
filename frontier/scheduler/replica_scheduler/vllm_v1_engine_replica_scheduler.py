@@ -400,10 +400,6 @@ class VLLMv1EngineReplicaScheduler(
         if batch.id == self._blocking_batch_id:
             self._blocking_batch_id = None
 
-    def on_stale_batch_drop(self, batch: Batch) -> None:
-        super().on_stale_batch_drop(batch)
-        self._leave_engine_batch_queue(batch)
-
     def on_batch_end(self, batch: Batch) -> None:
         """
         Handle batch completion - update running requests state.
