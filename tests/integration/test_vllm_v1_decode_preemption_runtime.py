@@ -38,6 +38,7 @@ from frontier.config import (
     VllmV1SchedulerConfig,
 )
 from frontier.entities.batch import Batch
+from frontier.errors import FrontierMemoryOOMError
 from frontier.events import global_batch_end_event
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
@@ -750,11 +751,11 @@ def test_an_empty_pass_that_preempts_runs_the_next_step_at_once(
     assert replica_scheduler._num_allocated_blocks == 0
 
 
-def test_a_request_larger_than_the_pool_still_ends_the_run(tmp_path, monkeypatch):
-    # The request preempts itself alone, so no request is left running and no
-    # follow-up poll runs: the run ends with the request unfinished instead of
-    # admitting and preempting it without end.
-    passes = _observe_empty_preempting_passes(monkeypatch)
+@pytest.mark.parametrize("num_pipeline_stages", [1, 2, 4])
+def test_a_request_larger_than_the_kv_pool_is_refused(tmp_path, num_pipeline_stages):
+    # vLLM refuses to start when its KV cache cannot hold a max_model_len
+    # request. This request's 64-token context needs 4 of the 3 blocks; it
+    # would otherwise preempt itself and be admitted again without end.
     simulator = Simulator(
         _priority_chunk_config(
             tmp_path,
@@ -762,15 +763,32 @@ def test_a_request_larger_than_the_pool_still_ends_the_run(tmp_path, monkeypatch
 0.0,64,1,0
 """,
             num_blocks=3,
-            num_pipeline_stages=1,
+            num_pipeline_stages=num_pipeline_stages,
         )
     )
 
-    with pytest.raises(RuntimeError, match="non-empty scheduler state"):
+    with pytest.raises(
+        FrontierMemoryOOMError, match="needs 4 KV blocks for its 64-token context"
+    ):
         simulator.run()
-    assert len(passes) == 1
-    assert passes[0]["running"] == []
-    assert passes[0]["batches_in_flight"] == 0
+
+
+def test_a_request_whose_context_fills_the_kv_pool_completes(tmp_path):
+    # 63 prompt tokens and 2 output tokens: the last output token is never
+    # written to the cache, so the context peaks at the pool's 64 tokens.
+    simulator = Simulator(
+        _priority_chunk_config(
+            tmp_path,
+            trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.0,63,2,0
+""",
+            num_blocks=4,
+            num_pipeline_stages=2,
+        )
+    )
+    simulator.run()
+
+    _assert_every_request_completes(simulator, 1)
 
 
 @pytest.mark.parametrize("num_pipeline_stages", [1, 2])

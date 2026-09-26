@@ -1495,6 +1495,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
 
+        self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         self._maybe_promote_final_round_priority(request)
 
