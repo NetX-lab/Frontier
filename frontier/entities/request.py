@@ -17,8 +17,8 @@ class RequestRoundPlan:
 
 class PreemptedStep(NamedTuple):
     execution_signature: Tuple[int, int, int]
-    was_decoding: bool
-    num_tokens_to_sample: int
+    # Output tokens the step appends when its output arrives.
+    num_sampled_tokens: int
     recompute: bool
 
 
@@ -1043,28 +1043,41 @@ class Request(BaseEntity):
             return
         self._first_decode_token_completed_at = time
 
-    def on_preempted(self, recompute: bool, step_in_flight: bool) -> None:
+    def on_preempted(
+        self, recompute: bool, scheduler_num_computed_tokens: Optional[int]
+    ) -> None:
+        """Reset the request's progress when the scheduler preempts it.
+
+        scheduler_num_computed_tokens is vLLM's num_computed_tokens at the
+        preemption, which counts the tokens of the step still in flight, or
+        None when no step of the request is in flight.
+        """
         # vLLM v1 keeps the prompt and every output token. A victim still in
-        # prefill restarts its prompt. The step in flight, if any, keeps its
-        # sample until that row is removed; the layers it already ran no
-        # longer count.
-        if step_in_flight:
+        # prefill restarts its prompt. vLLM still appends the sample of a step
+        # in flight when that step's output arrives: a decode step, or a chunk
+        # that reaches the end of the prompt or of the recompute. The layers
+        # the step already ran no longer count.
+        if scheduler_num_computed_tokens is not None:
             if self.is_decoding:
-                num_tokens_to_sample = 1
+                step_samples = True
             elif self._num_recomputed_tokens is not None:
-                num_tokens_to_sample = (
-                    self._num_processed_tokens - self._num_recomputed_tokens
+                step_samples = (
+                    scheduler_num_computed_tokens >= self._num_processed_tokens
                 )
             else:
-                num_tokens_to_sample = (
-                    self._num_prefill_tokens - self._num_processed_tokens
+                step_samples = (
+                    scheduler_num_computed_tokens >= self._num_prefill_tokens
                 )
-            self._preempted_step = PreemptedStep(
-                execution_signature=self.execution_signature,
-                was_decoding=self.is_decoding,
-                num_tokens_to_sample=num_tokens_to_sample,
-                recompute=recompute,
-            )
+            if step_samples:
+                self._preempted_step = PreemptedStep(
+                    execution_signature=self.execution_signature,
+                    num_sampled_tokens=(
+                        self._spec_last_committed_tokens
+                        if self.is_decoding and self._spec_decode_enabled
+                        else 1
+                    ),
+                    recompute=recompute,
+                )
         self._preempted = True
         if self._is_prefill_complete:
             self._completed_layer_count = 0
@@ -1077,22 +1090,27 @@ class Request(BaseEntity):
         record = self._preempted_step
         return record is not None and record.execution_signature == execution_signature
 
-    def on_preempted_step_end(
-        self,
-        time: float,
-        num_scheduled_tokens: int,
-        num_committed_tokens: int,
-        cluster_type: ClusterType,
-    ) -> None:
+    @property
+    def has_preempted_step(self) -> bool:
+        """Whether the sample of the step this request was preempted from is pending."""
+        return self._preempted_step is not None
+
+    @property
+    def stops_on_preempted_step(self) -> bool:
+        """Whether the pending sample of its preempted step ends this round."""
+        record = self._preempted_step
+        return (
+            record is not None
+            and record.num_sampled_tokens >= self.remaining_decode_tokens
+        )
+
+    def on_preempted_step_end(self, time: float, cluster_type: ClusterType) -> None:
+        """Append the sample of the step this request was preempted from."""
         record = self._preempted_step
         self._preempted_step = None
-        if num_scheduled_tokens < record.num_tokens_to_sample:
-            return
         self._num_recomputed_tokens = None
-        if record.was_decoding:
-            self.on_batch_end(time, num_committed_tokens, cluster_type)
-        elif self._is_prefill_complete:
-            self.on_batch_end(time, 1, cluster_type)
+        if self._is_prefill_complete:
+            self.on_batch_end(time, record.num_sampled_tokens, cluster_type)
         else:
             self.on_batch_end(time, self._num_prefill_tokens, cluster_type)
         if record.recompute and not self._completed:
@@ -1202,9 +1220,6 @@ class Request(BaseEntity):
         cluster_type: ClusterType,
     ) -> None:
         assert time >= 0, f"Invalid scheduling time: {time}"
-        # A new admission drops the sample of the step this request was
-        # preempted from; vLLM would still append it during the replay.
-        self._preempted_step = None
         self._latest_iteration_scheduled_at = time
         self._latest_iteration_round_class = self.current_round_class
         self._latest_iteration_round_number = self.current_thinking_round_number

@@ -1090,19 +1090,10 @@ class Batch(BaseEntity):
             else request_execution_signatures
         )
         stopped: List[Tuple[int, Request]] = []
-        for index, (request, num_tokens) in enumerate(
-            zip(self._requests, self._num_tokens)
-        ):
+        for index, request in enumerate(self._requests):
             if not request.was_preempted_from(signatures[index]):
                 continue
-            committed_tokens = int(num_tokens)
-            if self.spec_decode_metadata is not None:
-                committed_tokens = int(
-                    self.spec_decode_metadata.committed_tokens_per_request[index]
-                )
-            request.on_preempted_step_end(
-                time, int(num_tokens), committed_tokens, cluster_type
-            )
+            request.on_preempted_step_end(time, cluster_type)
             if request.completed:
                 stopped.append((index, request))
         return stopped

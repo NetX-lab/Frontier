@@ -538,7 +538,9 @@ class KvBlockAllocation:
         # advances the execution epoch.
         victim.on_preempted(
             recompute=self._cluster_type == ClusterType.MONOLITHIC,
-            step_in_flight=step_in_flight,
+            scheduler_num_computed_tokens=(
+                num_computed_tokens_before if step_in_flight else None
+            ),
         )
 
         # Record re-entry to waiting queue for waiting time tracking after the

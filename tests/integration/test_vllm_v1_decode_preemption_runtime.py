@@ -10,7 +10,8 @@ With pipeline stages, the victim can also be preempted while an earlier batch
 still carries it through a later stage, or after it finished but before deep PP
 releases it. The pipelined cases below drive those shapes through the same loop.
 A victim preempted with a step still in flight keeps that step's sample, as in
-vLLM; Frontier applies it where it removes the victim's row.
+vLLM; Frontier applies it where it removes the victim's row, or at the victim's
+re-admission when that comes first.
 """
 
 from __future__ import annotations
@@ -943,8 +944,9 @@ class _InflightRemovals:
     """Where Frontier removes a preempted request's in-flight row, and its state after.
 
     The sample is applied inside the stage-boundary event and the batch-end
-    event, so the state is read after those events return. A victim scheduled
-    again before its row is removed takes no sample and is not tracked.
+    event, so the state is read after those events return. A victim admitted
+    again before its row is removed takes the sample at that admission and is
+    not tracked here.
     """
 
     def __init__(self):
@@ -992,7 +994,7 @@ class _InflightRemovals:
                 cursor_after=request._num_recomputed_tokens,
                 recomputing=request.is_recomputing,
                 completed_after=request.completed,
-                prefill_completed_at=request.prefill_completed_at,
+                prefill_completed_at=request._prefill_completed_at,
                 first_decode_at=request.first_decode_token_completed_at,
                 in_waiting_after=request in waiting,
                 num_rows_before=len(self.rows),
@@ -1316,3 +1318,214 @@ def test_an_inflight_speculative_victim_gains_its_rows_committed_tokens(
         if not removal["completed_after"]:
             _assert_resumes_with_a_recompute(recorder, removal)
     _assert_every_request_completes(simulator, case["num_requests"])
+
+
+class _Readmissions:
+    """Each victim preempted with a sampling row in flight, and its next row.
+
+    On this path a request has at most one row in flight, so the victim's
+    newest row is the one in flight. The row samples when it is a decode step
+    or a chunk that reaches the end of the prompt or of the recompute.
+    """
+
+    def __init__(self):
+        self.episodes = []
+        self._newest_rows = {}
+        self._awaiting_row = {}
+
+    def on_row(self, request, row):
+        episode = self._awaiting_row.pop(request.id, None)
+        if episode is not None:
+            episode.update(next_row=row, readmitted_first=not episode["row_ended"])
+        self._newest_rows[request.id] = row
+
+    def on_preempted(self, victim, processed_before, remaining_before):
+        row = self._newest_rows[victim.id]
+        if not row["prefill_complete"]:
+            kind = "prefill"
+            samples = row["processed"] + row["width"] >= victim.num_prefill_tokens
+        elif row["recomputing"]:
+            kind = "recompute"
+            samples = row["cursor"] + row["width"] >= row["processed"]
+        else:
+            kind, samples = "decode", True
+        if samples:
+            episode = dict(
+                request=victim, kind=kind, processed_before=processed_before,
+                remaining_before=remaining_before, signature=row["signature"],
+                row_ended=False, at_head_before_the_row_ends=False,
+            )
+            self.episodes.append(episode)
+            self._awaiting_row[victim.id] = episode
+
+    def on_waiting_pass(self, head):
+        episode = self._awaiting_row.get(head.id)
+        if episode is not None and not episode["row_ended"]:
+            episode["at_head_before_the_row_ends"] = True
+
+    def on_rows_end(self, requests, signatures):
+        for request, signature in zip(requests, signatures):
+            episode = self._awaiting_row.get(request.id)
+            if episode is not None and episode["signature"] == signature:
+                episode["row_ended"] = True
+
+
+def _observe_readmissions(monkeypatch):
+    recorder = _Readmissions()
+    preempt_request = VLLMv1EngineReplicaScheduler._preempt_request
+    create_batch = VLLMv1EngineReplicaScheduler._create_batch
+    schedule_waiting = VLLMv1EngineReplicaScheduler._schedule_waiting_requests
+    apply_samples = Batch.apply_preempted_step_samples
+
+    def observed_preempt(self, victim, preempted_requests):
+        in_flight = self._is_request_active_in_batch(victim) and not victim.completed
+        processed_before = victim.num_processed_tokens
+        remaining_before = victim.remaining_decode_tokens
+        preempt_request(self, victim, preempted_requests)
+        if in_flight:
+            recorder.on_preempted(victim, processed_before, remaining_before)
+
+    def observed_schedule_waiting(self, token_budget):
+        waiting = self._get_sorted_waiting_queue()
+        if waiting and token_budget > 0:
+            recorder.on_waiting_pass(waiting[0])
+        return schedule_waiting(self, token_budget)
+
+    def observed_create_batch(self, requests, num_tokens):
+        batch = create_batch(self, requests, num_tokens)
+        for request, width, signature in zip(
+            requests, num_tokens, batch.request_execution_signatures
+        ):
+            recorder.on_row(request, dict(
+                time=self._current_schedule_time,
+                width=int(width),
+                processed=request.num_processed_tokens,
+                prefill_complete=request.is_prefill_complete,
+                recomputing=request.is_recomputing,
+                cursor=request._num_recomputed_tokens,
+                prefill_completed_at=request._prefill_completed_at,
+                signature=signature,
+            ))
+        return batch
+
+    def observed_apply_samples(
+        self, time, cluster_type, request_execution_signatures=None
+    ):
+        recorder.on_rows_end(
+            self.requests,
+            request_execution_signatures or self.request_execution_signatures,
+        )
+        return apply_samples(self, time, cluster_type, request_execution_signatures)
+
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_preempt_request", observed_preempt
+    )
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_create_batch", observed_create_batch
+    )
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler,
+        "_schedule_waiting_requests",
+        observed_schedule_waiting,
+    )
+    monkeypatch.setattr(Batch, "apply_preempted_step_samples", observed_apply_samples)
+    return recorder
+
+
+# Dense PP4 with six blocks for 24 requests. A decode victim, a victim with the
+# last chunk of its prompt in flight, and one with the last chunk of its
+# recompute in flight are each admitted again before that row ends. Found by a
+# probe over dense/MoE/ngram, PP2/PP4, 6-12 blocks, 6-24 requests and five seeds.
+READMISSION_CASE = dict(
+    replica=DENSE_REPLICA,
+    num_pipeline_stages=4,
+    num_blocks=6,
+    num_requests=24,
+    seed=33,
+)
+
+
+def test_a_victim_admitted_again_before_its_inflight_row_ends_keeps_its_sample(
+    tmp_path, monkeypatch
+):
+    recorder = _observe_readmissions(monkeypatch)
+    simulator = Simulator(_pipelined_config(tmp_path, READMISSION_CASE))
+    simulator.run()
+
+    readmitted = collections.Counter(
+        episode["kind"]
+        for episode in recorder.episodes
+        if episode.get("readmitted_first")
+    )
+    assert set(readmitted) == {"decode", "prefill", "recompute"}, recorder.episodes
+    for episode in recorder.episodes:
+        request, row = episode["request"], episode.get("next_row")
+        if row is None:
+            # The sample ended the request when its row ended.
+            assert episode["row_ended"] and request.completed, episode
+            continue
+        assert row["recomputing"] and row["cursor"] == 0, episode
+        if episode["kind"] == "prefill":
+            assert row["processed"] == request.num_prefill_tokens + 1, episode
+            assert 0 < row["prefill_completed_at"] <= row["time"], episode
+            tokens_before_the_sample = request.num_prefill_tokens
+        else:
+            assert row["processed"] == episode["processed_before"] + 1, episode
+            tokens_before_the_sample = episode["processed_before"]
+        if episode["readmitted_first"]:
+            # vLLM sized that admission before the sample arrived.
+            assert row["width"] <= tokens_before_the_sample, episode
+    _assert_every_request_completes(simulator, READMISSION_CASE["num_requests"])
+
+
+
+# Three-request priority traces at PP4. A victim whose one remaining output
+# token is the sample of its in-flight row heads the waiting queue, with blocks
+# for it, before that row ends: a decode victim and a victim with the last chunk
+# of its prompt in flight in the first trace, a decode victim and one with the
+# last chunk of its recompute in flight in the second. A random search over
+# short priority traces found both.
+SAMPLE_ENDS_THE_VICTIM_CASES = {
+    "decode_and_prefill": dict(
+        trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.06,32,3,1
+0.36,32,1,2
+0.56,48,2,0
+""",
+        num_blocks=5,
+        num_pipeline_stages=4,
+    ),
+    "decode_and_recompute": dict(
+        trace_text="""arrived_at,num_prefill_tokens,num_decode_tokens,priority
+0.54,16,2,2
+0.8,32,2,1
+0.83,32,3,0
+""",
+        num_blocks=4,
+        num_pipeline_stages=4,
+    ),
+}
+
+
+@pytest.mark.parametrize("name", SAMPLE_ENDS_THE_VICTIM_CASES)
+def test_a_victim_that_its_inflight_sample_ends_is_not_admitted_again(
+    name, tmp_path, monkeypatch
+):
+    case = SAMPLE_ENDS_THE_VICTIM_CASES[name]
+    recorder = _observe_readmissions(monkeypatch)
+    simulator = Simulator(_priority_chunk_config(tmp_path, **case))
+    simulator.run()
+
+    ended_by_the_sample = [
+        episode for episode in recorder.episodes if episode["remaining_before"] == 1
+    ]
+    assert any(
+        episode["at_head_before_the_row_ends"] for episode in ended_by_the_sample
+    ), recorder.episodes
+    for episode in ended_by_the_sample:
+        # vLLM would admit it again only to free it when the sample arrives.
+        assert "next_row" not in episode, episode
+        assert episode["row_ended"] and episode["request"].completed, episode
+    _assert_every_request_completes(
+        simulator, len(case["trace_text"].splitlines()) - 1
+    )

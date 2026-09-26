@@ -29,7 +29,7 @@ def _request_at_cursor(cursor: int) -> Request:
     request._is_prefill_complete = True
     request._prefill_completed_at = 1.0
     request._first_decode_token_completed_at = 1.0
-    request.on_preempted(recompute=True, step_in_flight=False)
+    request.on_preempted(recompute=True, scheduler_num_computed_tokens=None)
     request.on_batch_end(2.0, cursor, ClusterType.MONOLITHIC)
     return request
 
