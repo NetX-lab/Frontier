@@ -23,6 +23,7 @@ from frontier.config import (
     RandomForrestExecutionTimePredictorConfig,
     ReplicaConfig,
     SimulationConfig,
+    SpeculativeDecodingConfig,
     SyntheticRequestGeneratorConfig,
     TraceRequestGeneratorConfig,
     UniformRequestLengthGeneratorConfig,
@@ -49,6 +50,15 @@ MOE_DP2_EP2_REPLICA = dict(
     total_expert_num=16,
     router_topk=8,
 )
+DENSE_SPEC_DECODE_REPLICA = dict(
+    DENSE_REPLICA,
+    speculative_decoding_config=SpeculativeDecodingConfig(
+        enabled=True,
+        method="ngram",
+        num_speculative_tokens=2,
+        committed_tokens_per_iteration=2,
+    ),
+)
 
 # Poisson arrivals of 8-96 token requests into KV for a few of them, so decode
 # growth preempts requests that an earlier batch still carries through a later
@@ -73,6 +83,13 @@ PIPELINED_CASES = {
     "dense_pp4_finished_victim": dict(
         replica=DENSE_REPLICA, num_pipeline_stages=4, num_blocks=10,
         num_requests=24, seed=7,
+    ),
+    # A later stage keeps only the live rows of a speculative decode step.
+    # That copy used to keep the whole batch's draft plan, so its batch end
+    # rejected the plan's length.
+    "dense_pp4_spec_decode": dict(
+        replica=DENSE_SPEC_DECODE_REPLICA, num_pipeline_stages=4, num_blocks=8,
+        num_requests=12, seed=42,
     ),
 }
 
