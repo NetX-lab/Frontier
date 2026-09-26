@@ -6,9 +6,15 @@ Frontier counterpart, so a semantic difference can only come from the mapping
 in `case_config`, which the semantic-alignment table reads back from the
 constructed configuration (`effective_settings.json`). The model name is an
 engine setting. Expert count and router top-k come from that model's config.
-Frontier-only settings (dummy execution time, device labels, the KV block
+Frontier-only settings (the execution-time source, device labels, the KV block
 count, the MoE routing distribution and its seed, and the analytical backend)
 come from the case's Frontier settings file.
+
+The execution-time source is either a fixed dummy time
+(`dummy_execution_time_ms`), for timing-independent checks, or a directory of
+profiled operator tables (`profiling_dir`, relative to the settings file) that
+holds `linear_op.csv`, `attention.csv` and `moe.csv`. With profiled tables the
+predictor's prediction ranges are the engine's token budget and model length.
 
 Three runs share the trace and differ in one thing each:
 
@@ -47,13 +53,37 @@ RUNS = {
 }
 
 
-def case_config(engine: dict, frontier: dict, trace_path: Path, root: Path, policy):
+def execution_time_predictor_config(engine: dict, frontier: dict, frontier_dir: Path):
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+
+    if ("profiling_dir" in frontier) == ("dummy_execution_time_ms" in frontier):
+        raise ValueError(
+            "the Frontier settings name exactly one execution-time source: "
+            "profiling_dir or dummy_execution_time_ms"
+        )
+    if "dummy_execution_time_ms" in frontier:
+        return RandomForrestExecutionTimePredictorConfig(
+            enable_dummy_mode=True,
+            dummy_execution_time_ms=frontier["dummy_execution_time_ms"],
+        )
+    profiling_dir = (frontier_dir / frontier["profiling_dir"]).resolve()
+    return RandomForrestExecutionTimePredictorConfig(
+        linear_op_input_file=str(profiling_dir / "linear_op.csv"),
+        atten_input_file=str(profiling_dir / "attention.csv"),
+        moe_input_file=str(profiling_dir / "moe.csv"),
+        prediction_max_prefill_chunk_size=engine["max_num_batched_tokens"],
+        prediction_max_tokens_per_request=engine["max_model_len"],
+    )
+
+
+def case_config(
+    engine: dict, frontier: dict, frontier_dir: Path, trace_path: Path, root: Path, policy
+):
     from frontier.cc_backend.cc_backend_config import AnalyticalCCBackendConfig
     from frontier.config.parallel_semantics import resolve_frontier_parallelism_mapping
     from frontier.config import (
         ClusterConfig,
         MetricsConfig,
-        RandomForrestExecutionTimePredictorConfig,
         ReplicaConfig,
         SimulationConfig,
         TraceRequestGeneratorConfig,
@@ -100,9 +130,8 @@ def case_config(engine: dict, frontier: dict, trace_path: Path, root: Path, poli
         replica_config=replica,
         replica_scheduler_config=scheduler,
         cluster_scheduler_config=policy(),
-        execution_time_predictor_config=RandomForrestExecutionTimePredictorConfig(
-            enable_dummy_mode=True,
-            dummy_execution_time_ms=frontier["dummy_execution_time_ms"],
+        execution_time_predictor_config=execution_time_predictor_config(
+            engine, frontier, frontier_dir
         ),
         cc_backend_config=AnalyticalCCBackendConfig(),
     )
@@ -137,6 +166,17 @@ def effective_settings(config) -> dict:
     cluster = config.cluster_config
     replica = cluster.replica_config
     scheduler = cluster.replica_scheduler_config
+    predictor = cluster.execution_time_predictor_config
+    if predictor.enable_dummy_mode:
+        execution_time = {"dummy_execution_time_ms": predictor.dummy_execution_time_ms}
+    else:
+        execution_time = {
+            "linear_op_input_file": predictor.linear_op_input_file,
+            "atten_input_file": predictor.atten_input_file,
+            "moe_input_file": predictor.moe_input_file,
+            "prediction_max_prefill_chunk_size": predictor.prediction_max_prefill_chunk_size,
+            "prediction_max_tokens_per_request": predictor.prediction_max_tokens_per_request,
+        }
     return {
         "attn_dp": replica.attn_dp,
         "attn_tensor_parallel_size": replica.attn_tensor_parallel_size,
@@ -160,7 +200,7 @@ def effective_settings(config) -> dict:
         "long_prefill_token_threshold": scheduler.long_prefill_token_threshold,
         "scheduling_policy": scheduler.scheduling_policy,
         "decode_cuda_graph_mode": config.decode_cuda_graph_mode,
-        "dummy_execution_time_ms": cluster.execution_time_predictor_config.dummy_execution_time_ms,
+        **execution_time,
         "trace_max_tokens": config.request_generator_config.max_tokens,
     }
 
@@ -182,7 +222,9 @@ def run_one(args: argparse.Namespace) -> None:
     built = {}
 
     def build(policy):
-        built["config"] = case_config(engine, frontier, trace_path, root, policy)
+        built["config"] = case_config(
+            engine, frontier, args.frontier_config.parent, trace_path, root, policy
+        )
         return built["config"]
 
     evidence = load_runtime_module().run_case(
@@ -214,7 +256,7 @@ def summarize(output_dir: Path, request_ids: dict) -> dict:
         for run in RUNS
     }, "bursts": {}}
     for name, burst in bursts.items():
-        probe_id = burst[-1]["request_id"]
+        probe_id = burst[-1]["request_id"] if burst[-1]["probe"] else None
         burst_start = burst[0]["arrived_at"]
         summary["bursts"][name] = {"probe_request_id": probe_id, "runs": {}}
         for run in RUNS:
@@ -224,14 +266,16 @@ def summarize(output_dir: Path, request_ids: dict) -> dict:
                 record["time"] for record in evidence[run]["records"]
                 if record["kind"] == "end" and record["time"] >= burst_start
             ]
-            summary["bursts"][name]["runs"][run] = {
+            run_summary = {
                 "burst_placements": [placement[row["request_id"]] for row in burst],
-                "probe_placement": placement[probe_id],
-                "probe_selection": selections.get(probe_id),
                 "first_completion_after_burst_s": (
                     min(burst_ends) - burst_start if burst_ends else None
                 ),
             }
+            if probe_id is not None:
+                run_summary["probe_placement"] = placement[probe_id]
+                run_summary["probe_selection"] = selections.get(probe_id)
+            summary["bursts"][name]["runs"][run] = run_summary
     return summary
 
 

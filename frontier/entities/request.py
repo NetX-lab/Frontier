@@ -18,7 +18,9 @@ class RequestRoundPlan:
 class PreemptedStep(NamedTuple):
     execution_signature: Tuple[int, int, int]
     was_decoding: bool
-    num_tokens_to_sample: int
+    # A row of the step samples once its context plus its tokens reach this
+    # length, as vLLM samples only a row that completes the request's tokens.
+    sample_seq_len: int
     recompute: bool
 
 
@@ -1045,24 +1047,21 @@ class Request(BaseEntity):
 
     def on_preempted(self, recompute: bool, step_in_flight: bool) -> None:
         # vLLM v1 keeps the prompt and every output token. A victim still in
-        # prefill restarts its prompt. The step in flight, if any, keeps its
-        # sample until that row is removed; the layers it already ran no
+        # prefill restarts its prompt. The rows in flight, if any, keep the
+        # sample of the one that completes the decode step, the prompt, or the
+        # recompute until that row is removed; the layers they already ran no
         # longer count.
         if step_in_flight:
             if self.is_decoding:
-                num_tokens_to_sample = 1
+                sample_seq_len = self._num_processed_tokens + 1
             elif self._num_recomputed_tokens is not None:
-                num_tokens_to_sample = (
-                    self._num_processed_tokens - self._num_recomputed_tokens
-                )
+                sample_seq_len = self._num_processed_tokens
             else:
-                num_tokens_to_sample = (
-                    self._num_prefill_tokens - self._num_processed_tokens
-                )
+                sample_seq_len = self._num_prefill_tokens
             self._preempted_step = PreemptedStep(
                 execution_signature=self.execution_signature,
                 was_decoding=self.is_decoding,
-                num_tokens_to_sample=num_tokens_to_sample,
+                sample_seq_len=sample_seq_len,
                 recompute=recompute,
             )
         self._preempted = True
@@ -1080,14 +1079,15 @@ class Request(BaseEntity):
     def on_preempted_step_end(
         self,
         time: float,
+        num_context_tokens: int,
         num_scheduled_tokens: int,
         num_committed_tokens: int,
         cluster_type: ClusterType,
     ) -> None:
         record = self._preempted_step
-        self._preempted_step = None
-        if num_scheduled_tokens < record.num_tokens_to_sample:
+        if num_context_tokens + num_scheduled_tokens < record.sample_seq_len:
             return
+        self._preempted_step = None
         self._num_recomputed_tokens = None
         if record.was_decoding:
             self.on_batch_end(time, num_committed_tokens, cluster_type)

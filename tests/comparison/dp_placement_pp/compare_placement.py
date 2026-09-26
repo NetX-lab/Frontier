@@ -198,6 +198,8 @@ def main(argv: list[str] | None = None) -> int:
     for row in request_ids["rows"]:
         if row["segment"] == "burst":
             bursts.setdefault(row["burst"], []).append(row)
+    # T2 is the placement of a probe; a burst without one has no T2 row.
+    bursts = {name: burst for name, burst in bursts.items() if burst[-1]["probe"]}
     num_engines = len(chain["placement"][0]["counts_used"])
 
     t1 = replay_native_history(chain, num_engines)

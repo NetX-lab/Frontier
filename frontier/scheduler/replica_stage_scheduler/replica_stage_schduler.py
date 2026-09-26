@@ -219,6 +219,9 @@ class ReplicaStageScheduler:
             num_tokens=live_num_tokens,
             is_idle=batch.is_idle,
             is_moe=batch.is_moe,
+            num_context_tokens=[
+                batch.num_context_tokens[index] for index in live_indices
+            ],
         )
         live_batch._id = batch.id
         live_batch.set_global_id(batch.global_id)
@@ -341,7 +344,20 @@ class ReplicaStageScheduler:
                 parent_acquired = True
             # Remove the same candidate whose ticket was just acquired.
             heapq.heappop(self._batch_queue)
-            live_batch = self._materialize_runtime_live_batch(batch)
+            # vLLM executes a dispatched step whole: a row whose request a later
+            # iteration of the same schedule preempted still runs the first
+            # stage, and the next stage boundary removes it. PD-AF roles send a
+            # batch through stage 0 again for every layer and keep the removal.
+            dispatches_as_scheduled = self._stage_id == 0 and self._cluster_type in (
+                ClusterType.MONOLITHIC,
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+            )
+            live_batch = (
+                batch
+                if dispatches_as_scheduled
+                else self._materialize_runtime_live_batch(batch)
+            )
             if live_batch is not batch:
                 self._last_stale_row_batches.append(batch)
             if live_batch is None:

@@ -48,6 +48,7 @@ We support load imbalance profiling through:
 
 2. **Load Distribution Generator**: Simulates different load distributions
    - `uniform`: Uniform distribution (baseline)
+   - `balanced`: Equal loads, up to one token, by the `uniform_topk` round-robin assignment; covers the queries of the simulator's `balanced` routing
    - `skewed`: Skewed distribution (some experts more popular)
    - `extremely_skewed`: Extremely skewed (80-20 rule)
 

@@ -4245,14 +4245,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         prefill_params = []
 
-        for request, num_tokens_to_process in zip(batch.requests, batch.num_tokens):
+        for request, num_tokens_to_process, num_context_tokens in zip(
+            batch.requests, batch.num_tokens, batch.num_context_tokens
+        ):
             if request.is_decoding:
                 continue
 
             prefill_chunk_size = num_tokens_to_process
             kv_cache_size = (
                 (
-                    request.num_context_tokens
+                    num_context_tokens
                     + self._config.kv_cache_prediction_granularity
                     - 1
                 )
@@ -4290,10 +4292,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # Collect sequence lengths and live cache context for prefill requests only.
         seq_lens = []
         kv_cache_sizes = []
-        for request, num_tokens in zip(batch.requests, batch.num_tokens):
+        for request, num_tokens, num_context_tokens in zip(
+            batch.requests, batch.num_tokens, batch.num_context_tokens
+        ):
             if not request.is_decoding:
                 seq_lens.append(num_tokens)
-                kv_cache_sizes.append(request.num_context_tokens)
+                kv_cache_sizes.append(num_context_tokens)
 
         if not seq_lens:
             # No prefill requests - return zeros (should not happen in normal flow)
@@ -6982,18 +6986,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         current_tokens_by_request: list[tuple[Any, int]] = []
         prefill_active_token_counts: list[int] = []
         decode_active_token_counts: list[int] = []
-        for request, num_tokens in zip(requests, request_token_counts):
+        for request, num_tokens, context_tokens in zip(
+            requests, request_token_counts, batch.num_context_tokens
+        ):
             current_tokens = int(num_tokens)
             if current_tokens <= 0:
                 raise ValueError(
                     "MLA exact-row prediction requires positive per-request "
                     f"token counts, got num_tokens={num_tokens}."
-                )
-            context_tokens = getattr(request, "num_context_tokens", None)
-            if context_tokens is None:
-                raise ValueError(
-                    "MLA exact-row prediction requires request.num_context_tokens "
-                    "to derive vLLM max_seqlen_k."
                 )
             current_seq_len = int(context_tokens) + current_tokens
             if current_seq_len <= 0:

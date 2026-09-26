@@ -487,6 +487,7 @@ class Batch(BaseEntity):
         num_tokens: List[int],
         is_idle: bool = False,
         is_moe: bool = None,
+        num_context_tokens: Optional[List[int]] = None,
     ) -> None:
         if is_moe is None:
             raise ValueError("Batch.is_moe must be explicitly set")
@@ -514,6 +515,15 @@ class Batch(BaseEntity):
         self._replica_id = replica_id
         self._requests = requests
         self._num_tokens: List[int] = num_tokens
+        # KV tokens each request had computed when this batch was scheduled,
+        # which its attention reads (vLLM's num_computed_tokens in the scheduler
+        # output). A scheduler that schedules a request again before its
+        # earlier batch ends passes them; otherwise the Request state holds them.
+        self._num_context_tokens: List[int] = (
+            [request.num_context_tokens for request in requests]
+            if num_context_tokens is None
+            else num_context_tokens
+        )
         self._total_num_tokens: int = sum(num_tokens)
         self._num_prefill_tokens = sum(
             [
@@ -769,6 +779,10 @@ class Batch(BaseEntity):
     @property
     def num_tokens(self) -> List[int]:
         return self._num_tokens
+
+    @property
+    def num_context_tokens(self) -> List[int]:
+        return self._num_context_tokens
 
     @property
     def total_num_tokens(self) -> int:
@@ -1090,8 +1104,8 @@ class Batch(BaseEntity):
             else request_execution_signatures
         )
         stopped: List[Tuple[int, Request]] = []
-        for index, (request, num_tokens) in enumerate(
-            zip(self._requests, self._num_tokens)
+        for index, (request, num_tokens, num_context_tokens) in enumerate(
+            zip(self._requests, self._num_tokens, self._num_context_tokens)
         ):
             if not request.was_preempted_from(signatures[index]):
                 continue
@@ -1101,7 +1115,11 @@ class Batch(BaseEntity):
                     self.spec_decode_metadata.committed_tokens_per_request[index]
                 )
             request.on_preempted_step_end(
-                time, int(num_tokens), committed_tokens, cluster_type
+                time,
+                int(num_context_tokens),
+                int(num_tokens),
+                committed_tokens,
+                cluster_type,
             )
             if request.completed:
                 stopped.append((index, request))
