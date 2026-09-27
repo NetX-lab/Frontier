@@ -1,6 +1,7 @@
 import pytest
 
 from frontier.profiling.attention.attention_input import AttentionInput
+from frontier.profiling.attention.true_mixed_batch_input import TrueMixedBatchInput
 from frontier.profiling.utils import (
     get_attention_batch_sizes_to_profile,
     get_attention_input_combinations,
@@ -106,6 +107,15 @@ def test_decode_memory_limit_reserves_the_current_token():
 
     assert not decode_input.is_under_memory_limit(32)
     assert decode_input.is_under_memory_limit(33)
+
+
+def test_true_mixed_memory_limit_counts_whole_blocks_per_sequence():
+    # Three 2048-token prefills and 64 decodes at KV 2176 hold 145,472 tokens,
+    # which fit in 9122 blocks of 16, but the wrapper allocates 9152 blocks.
+    batch = TrueMixedBatchInput([2048] * 3, [0] * 3, [2176] * 64)
+
+    assert not batch.is_under_memory_limit(9122, 16)
+    assert batch.is_under_memory_limit(9152, 16)
 
 
 def test_explicit_decode_cache_endpoint_remains_bounded():

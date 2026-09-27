@@ -1922,7 +1922,7 @@ def main():
                 filtered_true_mixed_combinations[(model, num_tensor_parallel_workers)] = list(
                     filter(
                         lambda true_mixed_input: true_mixed_input.is_under_memory_limit(
-                            max_num_blocks * args.block_size
+                            max_num_blocks, args.block_size
                         ),
                         true_mixed_input_combinations,
                     )

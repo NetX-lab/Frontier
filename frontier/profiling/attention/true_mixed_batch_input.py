@@ -1,6 +1,7 @@
 """Input specification for true mixed prefill+decode attention profiling."""
 
 from dataclasses import dataclass
+from math import ceil
 from typing import List
 
 
@@ -72,32 +73,26 @@ class TrueMixedBatchInput:
             return 0.0
         return float(self.num_prefill_seqs) / float(self.total_batch_size)
 
-    def is_valid(self, max_seq_len: int, max_batch_size: int) -> bool:
-        if self.total_batch_size > max_batch_size:
-            return False
-
-        prefill_total_lens = [
+    @property
+    def sequence_total_lens(self) -> List[int]:
+        """KV cache tokens of each sequence after this step, prefills first."""
+        return [
             seq_len + kv_cache
             for seq_len, kv_cache in zip(
                 self.prefill_seq_lens,
                 self.prefill_kv_cache_sizes,
             )
-        ]
-        decode_total_lens = [kv_cache + 1 for kv_cache in self.decode_kv_cache_sizes]
+        ] + [kv_cache + 1 for kv_cache in self.decode_kv_cache_sizes]
 
-        return (
-            all(x <= max_seq_len for x in prefill_total_lens)
-            and all(x <= max_seq_len for x in decode_total_lens)
-        )
+    def is_valid(self, max_seq_len: int, max_batch_size: int) -> bool:
+        if self.total_batch_size > max_batch_size:
+            return False
+        return all(x <= max_seq_len for x in self.sequence_total_lens)
 
-    def is_under_memory_limit(self, max_num_tokens: int) -> bool:
-        total_with_cache = (
-            self.total_prefill_tokens
-            + sum(self.prefill_kv_cache_sizes)
-            + self.total_decode_tokens
-            + sum(self.decode_kv_cache_sizes)
-        )
-        return total_with_cache <= max_num_tokens
+    def is_under_memory_limit(self, max_num_blocks: int, block_size: int) -> bool:
+        # The profiling wrapper gives every sequence its own blocks.
+        num_blocks = sum(ceil(total_len / block_size) for total_len in self.sequence_total_lens)
+        return num_blocks <= max_num_blocks
 
     def to_dict(self) -> dict:
         return {
