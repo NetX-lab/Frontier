@@ -1,0 +1,473 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_a_lane_joining_after_its_placeholder_completes_the_forward ________
+
+tmp_path = PosixPath('/data/ycfeng/tmp/pytest-of-brainpp/pytest-366/test_a_lane_joining_after_its_0')
+
+    def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
+        """Issue W9-04 on the policy's four-lane MoE shape, under both policies.
+    
+        Lane 0 waits in the first MoE room of forward 0 while lane 1 is still in
+        attention, so the room places placeholders for the idle lanes 2 and 3.
+        Request 2 then reaches lane 2, which joins forward 0 because it is not yet
+        sealed. The room used to count lane 2's stale placeholder and dispatch when
+        lane 1 arrived. Lane 2's own batch then opened a room that its busy peers
+        never enter, and both runs stalled with no request complete.
+        """
+    
+>       evidence = _run_child(tmp_path, "moe_dp4_late_join")
+
+tests/integration/test_vllm_dp_placement_runtime.py:332: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/data/ycfeng/tmp/pytest-of-brainpp/pytest-366/test_a_lane_joining_after_its_0')
+case = 'moe_dp4_late_join'
+
+    def _run_child(tmp_path: Path, case: str) -> dict:
+        repo_root = Path(__file__).resolve().parents[2]
+        result = subprocess.run(
+            [sys.executable, str(Path(__file__).resolve()), str(tmp_path), case],
+            env={
+                **os.environ,
+                "OMP_NUM_THREADS": "1",
+                "OPENBLAS_NUM_THREADS": "1",
+                "PYTHONPATH": os.pathsep.join(
+                    [str(repo_root), os.environ.get("PYTHONPATH", "")]
+                ).rstrip(os.pathsep),
+            },
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=900,
+        )
+        (tmp_path / f"{case}.log").write_text(result.stdout)
+>       assert result.returncode == 0, result.stdout[-15000:]
+E       AssertionError: R 20:19:45 simulator.py:708]                 0
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               ],
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               "requests": [
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 {
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "af_roundtrip_inflight": false,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "arrived_at": 0.0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "completed": false,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "completed_layer_count": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "current_decode_token_index": 1,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "id": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "num_decode_tokens": 2,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "num_prefill_tokens": 8,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "num_processed_tokens": 0
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 }
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               ]
+E         ⚠️ ERROR 20:19:45 simulator.py:708]             },
+E         ⚠️ ERROR 20:19:45 simulator.py:708]             "scheduler_class": "VLLMv1EngineReplicaScheduler",
+E         ⚠️ ERROR 20:19:45 simulator.py:708]             "stage_schedulers": {
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               "0": {
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 "batch_queue": {
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "batch_global_ids": [],
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "batch_ids": [],
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "count": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                   "request_ids": []
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 },
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 "is_busy": true,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 "is_empty": true,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 "replica_id": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 "replica_local_id": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]                 "stage_id": 0
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               }
+E         ⚠️ ERROR 20:19:45 simulator.py:708]             },
+E         ⚠️ ERROR 20:19:45 simulator.py:708]             "waiting_requests": {
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               "count": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               "request_ids": [],
+E         ⚠️ ERROR 20:19:45 simulator.py:708]               "requests": []
+E         ⚠️ ERROR 20:19:45 simulator.py:708]             }
+E         ⚠️ ERROR 20:19:45 simulator.py:708]           }
+E         ⚠️ ERROR 20:19:45 simulator.py:708]         },
+E         ⚠️ ERROR 20:19:45 simulator.py:708]         "request_queue": {
+E         ⚠️ ERROR 20:19:45 simulator.py:708]           "count": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]           "request_ids": [],
+E         ⚠️ ERROR 20:19:45 simulator.py:708]           "requests": []
+E         ⚠️ ERROR 20:19:45 simulator.py:708]         },
+E         ⚠️ ERROR 20:19:45 simulator.py:708]         "scheduler_class": "VllmLoadBalancingClusterScheduler"
+E         ⚠️ ERROR 20:19:45 simulator.py:708]       }
+E         ⚠️ ERROR 20:19:45 simulator.py:708]     }
+E         ⚠️ ERROR 20:19:45 simulator.py:708]   ],
+E         ⚠️ ERROR 20:19:45 simulator.py:708]   "event_queue_length": 0,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]   "global_scheduler_is_empty": false,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]   "message": "Sequential simulation ended with non-empty scheduler state",
+E         ⚠️ ERROR 20:19:45 simulator.py:708]   "simulation_time": 0.023,
+E         ⚠️ ERROR 20:19:45 simulator.py:708]   "terminate": false
+E         ⚠️ ERROR 20:19:45 simulator.py:708] }
+E         Traceback (most recent call last):
+E           File "/data/ycfeng/tmp/issue26-correctness-pr/w9_04/trees/control/tests/integration/test_vllm_dp_placement_runtime.py", line 850, in <module>
+E             evidence[run_name] = run_case(
+E           File "/data/ycfeng/tmp/issue26-correctness-pr/w9_04/trees/control/tests/integration/test_vllm_dp_placement_runtime.py", line 717, in run_case
+E             simulator.run()
+E           File "/data/ycfeng/tmp/issue26-correctness-pr/w9_04/trees/control/frontier/simulator.py", line 428, in run
+E             self._run_sequential()
+E           File "/data/ycfeng/tmp/issue26-correctness-pr/w9_04/trees/control/frontier/simulator.py", line 714, in _run_sequential
+E             raise RuntimeError(report)
+E         RuntimeError: Sequential simulation ended with non-empty scheduler state:
+E         {
+E           "clusters": [
+E             {
+E               "cluster_key": "MONOLITHIC",
+E               "state": {
+E                 "af_queue": {
+E                   "status": "not_applicable"
+E                 },
+E                 "cluster_type": "MONOLITHIC",
+E                 "m2n_ready_groups": {
+E                   "status": "not_applicable"
+E                 },
+E                 "m2n_waiting_groups": {
+E                   "status": "not_applicable"
+E                 },
+E                 "raw_batch_waiting_map": {
+E                   "status": "not_applicable"
+E                 },
+E                 "replica_schedulers": {
+E                   "(0, 0)": {
+E                     "activation_bytes_allocated": 0,
+E                     "activation_memory_capacity_bytes": null,
+E                     "af_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "allocation_map": {
+E                       "allocated_blocks_by_request_id": {
+E                         "0": 1
+E                       },
+E                       "count": 1,
+E                       "request_ids": [
+E                         0
+E                       ]
+E                     },
+E                     "cluster_type": "MONOLITHIC",
+E                     "m2n_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "num_running_batches": 1,
+E                     "replica_id": 0,
+E                     "replica_local_id": 0,
+E                     "request_queue": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     },
+E                     "running_requests": {
+E                       "count": 1,
+E                       "request_ids": [
+E                         0
+E                       ],
+E                       "requests": [
+E                         {
+E                           "af_roundtrip_inflight": false,
+E                           "arrived_at": 0.0,
+E                           "completed": false,
+E                           "completed_layer_count": 0,
+E                           "current_decode_token_index": 1,
+E                           "id": 0,
+E                           "num_decode_tokens": 2,
+E                           "num_prefill_tokens": 8,
+E                           "num_processed_tokens": 0
+E                         }
+E                       ]
+E                     },
+E                     "scheduler_class": "VLLMv1EngineReplicaScheduler",
+E                     "stage_schedulers": {
+E                       "0": {
+E                         "batch_queue": {
+E                           "batch_global_ids": [],
+E                           "batch_ids": [],
+E                           "count": 0,
+E                           "request_ids": []
+E                         },
+E                         "is_busy": true,
+E                         "is_empty": true,
+E                         "replica_id": 0,
+E                         "replica_local_id": 0,
+E                         "stage_id": 0
+E                       }
+E                     },
+E                     "waiting_requests": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     }
+E                   },
+E                   "(0, 1)": {
+E                     "activation_bytes_allocated": 0,
+E                     "activation_memory_capacity_bytes": null,
+E                     "af_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "allocation_map": {
+E                       "allocated_blocks_by_request_id": {
+E                         "1": 1
+E                       },
+E                       "count": 1,
+E                       "request_ids": [
+E                         1
+E                       ]
+E                     },
+E                     "cluster_type": "MONOLITHIC",
+E                     "m2n_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "num_running_batches": 1,
+E                     "replica_id": 0,
+E                     "replica_local_id": 1,
+E                     "request_queue": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     },
+E                     "running_requests": {
+E                       "count": 1,
+E                       "request_ids": [
+E                         1
+E                       ],
+E                       "requests": [
+E                         {
+E                           "af_roundtrip_inflight": false,
+E                           "arrived_at": 0.002,
+E                           "completed": false,
+E                           "completed_layer_count": 0,
+E                           "current_decode_token_index": 1,
+E                           "id": 1,
+E                           "num_decode_tokens": 2,
+E                           "num_prefill_tokens": 24,
+E                           "num_processed_tokens": 0
+E                         }
+E                       ]
+E                     },
+E                     "scheduler_class": "VLLMv1EngineReplicaScheduler",
+E                     "stage_schedulers": {
+E                       "0": {
+E                         "batch_queue": {
+E                           "batch_global_ids": [],
+E                           "batch_ids": [],
+E                           "count": 0,
+E                           "request_ids": []
+E                         },
+E                         "is_busy": true,
+E                         "is_empty": true,
+E                         "replica_id": 0,
+E                         "replica_local_id": 1,
+E                         "stage_id": 0
+E                       }
+E                     },
+E                     "waiting_requests": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     }
+E                   },
+E                   "(0, 2)": {
+E                     "activation_bytes_allocated": 0,
+E                     "activation_memory_capacity_bytes": null,
+E                     "af_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "allocation_map": {
+E                       "allocated_blocks_by_request_id": {
+E                         "2": 1
+E                       },
+E                       "count": 1,
+E                       "request_ids": [
+E                         2
+E                       ]
+E                     },
+E                     "cluster_type": "MONOLITHIC",
+E                     "m2n_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "num_running_batches": 1,
+E                     "replica_id": 0,
+E                     "replica_local_id": 2,
+E                     "request_queue": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     },
+E                     "running_requests": {
+E                       "count": 1,
+E                       "request_ids": [
+E                         2
+E                       ],
+E                       "requests": [
+E                         {
+E                           "af_roundtrip_inflight": false,
+E                           "arrived_at": 0.008,
+E                           "completed": false,
+E                           "completed_layer_count": 0,
+E                           "current_decode_token_index": 1,
+E                           "id": 2,
+E                           "num_decode_tokens": 2,
+E                           "num_prefill_tokens": 48,
+E                           "num_processed_tokens": 0
+E                         }
+E                       ]
+E                     },
+E                     "scheduler_class": "VLLMv1EngineReplicaScheduler",
+E                     "stage_schedulers": {
+E                       "0": {
+E                         "batch_queue": {
+E                           "batch_global_ids": [],
+E                           "batch_ids": [],
+E                           "count": 0,
+E                           "request_ids": []
+E                         },
+E                         "is_busy": true,
+E                         "is_empty": true,
+E                         "replica_id": 0,
+E                         "replica_local_id": 2,
+E                         "stage_id": 0
+E                       }
+E                     },
+E                     "waiting_requests": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     }
+E                   },
+E                   "(0, 3)": {
+E                     "activation_bytes_allocated": 0,
+E                     "activation_memory_capacity_bytes": null,
+E                     "af_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "allocation_map": {
+E                       "allocated_blocks_by_request_id": {},
+E                       "count": 0,
+E                       "request_ids": []
+E                     },
+E                     "cluster_type": "MONOLITHIC",
+E                     "m2n_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "num_running_batches": 0,
+E                     "replica_id": 0,
+E                     "replica_local_id": 3,
+E                     "request_queue": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     },
+E                     "running_requests": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     },
+E                     "scheduler_class": "VLLMv1EngineReplicaScheduler",
+E                     "stage_schedulers": {
+E                       "0": {
+E                         "batch_queue": {
+E                           "batch_global_ids": [],
+E                           "batch_ids": [],
+E                           "count": 0,
+E                           "request_ids": []
+E                         },
+E                         "is_busy": false,
+E                         "is_empty": true,
+E                         "replica_id": 0,
+E                         "replica_local_id": 3,
+E                         "stage_id": 0
+E                       }
+E                     },
+E                     "waiting_requests": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     }
+E                   },
+E                   "(0, None)": {
+E                     "activation_bytes_allocated": 0,
+E                     "activation_memory_capacity_bytes": null,
+E                     "af_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "allocation_map": {
+E                       "allocated_blocks_by_request_id": {
+E                         "0": 1
+E                       },
+E                       "count": 1,
+E                       "request_ids": [
+E                         0
+E                       ]
+E                     },
+E                     "cluster_type": "MONOLITHIC",
+E                     "m2n_immediate_batch_queue": {
+E                       "status": "not_applicable"
+E                     },
+E                     "num_running_batches": 1,
+E                     "replica_id": 0,
+E                     "replica_local_id": 0,
+E                     "request_queue": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     },
+E                     "running_requests": {
+E                       "count": 1,
+E                       "request_ids": [
+E                         0
+E                       ],
+E                       "requests": [
+E                         {
+E                           "af_roundtrip_inflight": false,
+E                           "arrived_at": 0.0,
+E                           "completed": false,
+E                           "completed_layer_count": 0,
+E                           "current_decode_token_index": 1,
+E                           "id": 0,
+E                           "num_decode_tokens": 2,
+E                           "num_prefill_tokens": 8,
+E                           "num_processed_tokens": 0
+E                         }
+E                       ]
+E                     },
+E                     "scheduler_class": "VLLMv1EngineReplicaScheduler",
+E                     "stage_schedulers": {
+E                       "0": {
+E                         "batch_queue": {
+E                           "batch_global_ids": [],
+E                           "batch_ids": [],
+E                           "count": 0,
+E                           "request_ids": []
+E                         },
+E                         "is_busy": true,
+E                         "is_empty": true,
+E                         "replica_id": 0,
+E                         "replica_local_id": 0,
+E                         "stage_id": 0
+E                       }
+E                     },
+E                     "waiting_requests": {
+E                       "count": 0,
+E                       "request_ids": [],
+E                       "requests": []
+E                     }
+E                   }
+E                 },
+E                 "request_queue": {
+E                   "count": 0,
+E                   "request_ids": [],
+E                   "requests": []
+E                 },
+E                 "scheduler_class": "VllmLoadBalancingClusterScheduler"
+E               }
+E             }
+E           ],
+E           "event_queue_length": 0,
+E           "global_scheduler_is_empty": false,
+E           "message": "Sequential simulation ended with non-empty scheduler state",
+E           "simulation_time": 0.023,
+E           "terminate": false
+E         }
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/data/ycfeng/envs/frontier-py310/bin/python', '/data/ycfeng/tmp/issue26-correctness-pr/w9_04/t..."Sequential simulation ended with non-empty scheduler state",\n  "simulation_time": 0.023,\n  "terminate": false\n}\n').returncode
+
+tests/integration/test_vllm_dp_placement_runtime.py:48: AssertionError
+=========================== short test summary info ============================
+FAILED tests/integration/test_vllm_dp_placement_runtime.py::test_a_lane_joining_after_its_placeholder_completes_the_forward
+1 failed, 9 deselected in 2.32s

@@ -1,0 +1,54 @@
+{
+ "request_id_namespace": "dpp1g3",
+ "warmups": {
+  "count": 3,
+  "interval_s": 1.0,
+  "num_prefill_tokens": 64,
+  "num_decode_tokens": 4
+ },
+ "idle_gap_s": 8.0,
+ "burst": {
+  "order": [
+   "short",
+   "long",
+   "short",
+   "short",
+   "short"
+  ],
+  "short_prefill_tokens": 32,
+  "long_prefill_tokens": 32768,
+  "num_decode_tokens": 64,
+  "probe_offset_s": 0.15,
+  "probe_prefill_tokens": 32,
+  "probe_decode_tokens": 64
+ },
+ "steady": {
+  "gap_after_burst_s": 20.0,
+  "count": 24,
+  "interval_s": 0.06,
+  "num_prefill_tokens": [
+   128,
+   512,
+   256,
+   1024
+  ],
+  "num_decode_tokens": [
+   64,
+   32,
+   96,
+   48
+  ]
+ },
+ "sizing": {
+  "gap_before_s": 8.0,
+  "interval_s": 4.0,
+  "num_prefill_tokens": [
+   1024,
+   4096,
+   8192,
+   16384,
+   32768
+  ],
+  "num_decode_tokens": 8
+ }
+}

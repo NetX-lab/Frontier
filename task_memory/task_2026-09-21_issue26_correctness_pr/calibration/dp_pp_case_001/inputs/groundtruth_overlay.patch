@@ -1,0 +1,24 @@
+--- a/vllm/_custom_ops.py
++++ b/vllm/_custom_ops.py
+@@ -1505,9 +1505,9 @@
+ 
+ def topk_softmax(topk_weights: torch.Tensor, topk_ids: torch.Tensor,
+                  token_expert_indices: torch.Tensor,
+-                 gating_output: torch.Tensor, renormalize: bool) -> None:
++                 gating_output: torch.Tensor) -> None:
+     torch.ops._moe_C.topk_softmax(topk_weights, topk_ids, token_expert_indices,
+-                                  gating_output, renormalize)
++                                  gating_output)
+ 
+ 
+ def grouped_topk(scores: torch.Tensor, scores_with_bias: torch.Tensor,
+--- a/vllm/model_executor/layers/fused_moe/fused_moe.py
++++ b/vllm/model_executor/layers/fused_moe/fused_moe.py
+@@ -890,7 +890,6 @@
+         topk_indices,
+         token_expert_indices,
+         gating_output,
+-        renormalize,
+     )
+     if renormalize:
+         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)

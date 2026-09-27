@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Sequence
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from frontier.config import (
     BaseReplicaSchedulerConfig,
@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
     )
+    from frontier.scheduler.request_load import RequestLoad
 
 
 class BaseReplicaScheduler(ABC):
@@ -442,7 +443,12 @@ class BaseReplicaScheduler(ABC):
             and batch.num_decode_tokens > 0
         )
 
-    def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
+    def _create_batch(
+        self,
+        requests: List[Request],
+        num_tokens: List[int],
+        num_context_tokens: Optional[List[int]] = None,
+    ) -> Batch:
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name if self._cluster_type else None)
 
@@ -451,6 +457,7 @@ class BaseReplicaScheduler(ABC):
             requests,
             num_tokens,
             is_moe=self._replica_is_moe,
+            num_context_tokens=num_context_tokens,
         )
         # Preserve the scheduler lane that owns this batch across asynchronous
         # layer-sync and stage-completion events. ``None`` remains the explicit
@@ -509,6 +516,18 @@ class BaseReplicaScheduler(ABC):
     def peek_waiting_requests(self) -> List[Request]:
         return list(self._request_queue)
 
+    def get_request_load(self) -> "RequestLoad":
+        """Return this lane's waiting and admitted request populations.
+
+        A serving load balancer needs both, with the same meaning the scheduler
+        uses internally. Only schedulers that define those populations
+        unambiguously implement it.
+        """
+
+        raise NotImplementedError(
+            f"{type(self).__name__} does not expose a serving request load"
+        )
+
     @property
     def replica_id(self) -> int:
         return self._replica_id
@@ -532,6 +551,10 @@ class BaseReplicaScheduler(ABC):
         return self._num_running_batches
 
     def decrement_num_running_batches(self) -> None:
+        self._num_running_batches -= 1
+
+    def on_stale_batch_drop(self, batch: Batch) -> None:
+        """A stage dropped the batch: every one of its requests was preempted."""
         self._num_running_batches -= 1
 
     @staticmethod
@@ -894,6 +917,10 @@ class BaseReplicaScheduler(ABC):
                 batch = self._get_next_batch(is_micro_batch=False)
                 if not batch:
                     break
+                # Each batch is scheduled as it is handed out, as vLLM
+                # dispatches each step it schedules: the next iteration may
+                # preempt one of its requests.
+                batch.on_schedule(time, self._cluster_type)
                 for req in batch.requests:
                     scheduled_request_ids.add(req.id)
                 self._continuation_request_ids = scheduled_request_ids
@@ -927,6 +954,7 @@ class BaseReplicaScheduler(ABC):
                         scheduled_request_ids.add(req.id)
                         self._decode_attn_active_request_ids.add(req.id)
                     # Inflight micro-batches already occupy a pipeline slot; do NOT increment _num_running_batches
+                    micro_batch.on_schedule(time, self._cluster_type)
                     scheduled_batches.append(micro_batch)
                     logger.info(
                         f"[DECODE_ATTN][Replica {self._replica_id}][local={self._replica_local_id}] Scheduled inflight micro-batch {getattr(micro_batch,'id','?')} (no slot increment)"
@@ -964,6 +992,7 @@ class BaseReplicaScheduler(ABC):
                 micro_batch = self._get_next_batch(is_micro_batch=True)
                 if not micro_batch:
                     break
+                micro_batch.on_schedule(time, self._cluster_type)
 
                 if not had_pending_before:
                     allow_new_decode_attn_cohort = False
@@ -987,6 +1016,8 @@ class BaseReplicaScheduler(ABC):
 
         elif self._cluster_type == ClusterType.DECODE_FFN:
             scheduled_batches.extend(self._m2n_immediate_batch_queue)
+            for batch in scheduled_batches:
+                batch.on_schedule(time, self._cluster_type)
 
             # M2N receipt records each request as waiting in DECODE_FFN. The
             # logical FFN BatchGroup intentionally skips Request.on_batch_schedule()
@@ -1040,8 +1071,15 @@ class BaseReplicaScheduler(ABC):
                 batch = self._get_next_batch(is_micro_batch=False)
                 if not batch:
                     break
+                batch.on_schedule(time, self._cluster_type)
                 scheduled_batches.append(batch)
                 self._num_running_batches += 1
+                # Reported per admission here, not after the call returns: the
+                # lane state after each of several admissions is visible only
+                # inside this loop.
+                self._cluster_scheduler.on_replica_batch_scheduled(
+                    time, self._replica_id, self._replica_local_id, batch
+                )
                 if (
                     hasattr(self, "_has_monolithic_pp_mtp_output_wait")
                     and self._has_monolithic_pp_mtp_output_wait()

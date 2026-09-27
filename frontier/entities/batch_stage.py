@@ -29,6 +29,7 @@ class BatchStage(BaseEntity):
         model_execution_time: float,
         requests: List[Request],
         num_tokens: List[int],
+        request_is_decoding: List[bool],
         cluster_type: ClusterType,
         effective_total_tokens_compute: Optional[int] = None,
         effective_total_tokens_transfer: Optional[int] = None,
@@ -46,8 +47,8 @@ class BatchStage(BaseEntity):
             None
             if tokens_are_post_routing
             else [
-                int(token_count) if not request.is_prefill_complete else 0
-                for request, token_count in zip(requests, num_tokens)
+                0 if is_decoding else int(token_count)
+                for token_count, is_decoding in zip(num_tokens, request_is_decoding)
             ]
         )
         total_tokens = sum(num_tokens)

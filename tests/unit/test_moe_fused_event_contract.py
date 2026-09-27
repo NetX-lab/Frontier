@@ -114,7 +114,7 @@ def test_device_events_reach_legacy_low_level_kernel(event_runtime, monkeypatch)
     runtime, _, arguments = event_runtime
     runtime.empty = lambda *shape, **kwargs: torch.zeros(*shape, dtype=kwargs["dtype"])
     monkeypatch.setattr(kernel, "VLLM_API_VERSION", "0.10.x")
-    monkeypatch.setattr(kernel, "get_config_dtype_str", lambda dtype: "float16", raising=False)
+    monkeypatch.setattr(kernel, "get_config_dtype_str", lambda dtype, **flags: "float16", raising=False)
     monkeypatch.setattr(kernel, "try_get_optimal_moe_config", lambda **kwargs: {"BLOCK_SIZE_M": 16}, raising=False)
     monkeypatch.setattr(kernel, "moe_align_block_size", lambda *args, **kwargs: (None, None, None), raising=False)
     iteration = Mock()

@@ -357,36 +357,20 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         return request_mapping
 
     def _schedule_batch_mode(self) -> List[Tuple[int, int, Request]]:
+        """Place the whole queue by the lane rotation, grouped per replica.
+
+        The grouping keeps the order in which the cluster schedule event wakes
+        each replica lane, and so the id order that breaks ties between those
+        events.
         """
-        Original batch processing logic for prefill cluster and other cluster types.
-        Processes all requests in the queue at once using traditional round-robin.
-        """
-
-        # First, distribute requests to replicas using round-robin
-        replica_requests = [[] for _ in range(self._num_replicas)]
-        replica_ids = list(self._cluster.replicas.keys())
-
-        request_idx = 0
-        while self._request_queue:
-            request = self._request_queue.pop(0)
-            replica_idx = (self._request_counter + request_idx) % self._num_replicas
-            replica_requests[replica_idx].append(request)
-            request_idx += 1
-
-        self._request_counter += request_idx
-
-        # Distribute requests across logical DP lanes inside each Replica.
-        request_mapping = []
-        for replica_idx, requests in enumerate(replica_requests):
-            if not requests:
-                continue
-
-            replica_id = replica_ids[replica_idx]
-            for local_idx, request in enumerate(requests):
-                dp_id = local_idx % self._replica_dp_size
-                request_mapping.append((replica_id, dp_id, request))
-
-        return request_mapping
+        replica_position = {
+            replica_id: position
+            for position, replica_id in enumerate(self._cluster.replicas)
+        }
+        return sorted(
+            self._schedule_lane_round_robin(),
+            key=lambda placement: replica_position[placement[0]],
+        )
 
     def _schedule_decode_with_priority(self) -> List[Tuple[int, int, Request]]:
         """
@@ -417,14 +401,19 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         # If each scheduling cycle contains one request, the generic batch-mode
         # split still selects the serving Replica deterministically. There is no
         # retired intra-Replica attention-DP allocation to flatten here.
-        request_mapping = self._schedule_decode_lane_round_robin()
+        request_mapping = self._schedule_lane_round_robin()
 
         logger.debug(f"[DECODE-PRIORITY] Scheduled {len(request_mapping)} requests across replicas")
 
         return request_mapping
 
-    def _schedule_decode_lane_round_robin(self) -> List[Tuple[int, int, Request]]:
-        """Schedule unified PD decode requests across Replica-local DP lanes."""
+    def _schedule_lane_round_robin(self) -> List[Tuple[int, int, Request]]:
+        """Place queued requests on Replica-local DP lanes in arrival order.
+
+        Both the replica and the lane come from one ordinal that persists across
+        calls, so an ordered request stream lands the same way however it is
+        divided between calls.
+        """
         replica_ids = list(self._cluster.replicas.keys())
         if not replica_ids:
             return []

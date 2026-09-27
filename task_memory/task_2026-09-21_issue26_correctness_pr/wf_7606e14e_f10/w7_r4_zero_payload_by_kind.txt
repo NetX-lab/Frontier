@@ -1,0 +1,27 @@
+# W7-R4 fix, 2026-09-24: zero tensor_bytes refused for every collective kind except alltoall
+# User decision: option (a). Companion e922c77 on fix/zero-payload-input-handling; Frontier gitlink 9adf759.
+# Python: /data/ycfeng/envs/frontier-py310/bin/python (Python 3.10.6); simulator built in the branch worktree.
+
+## Companion tests/test_zero_payload_input.py
+HEAD e922c77: 16 passed (12 earlier + 4 new: test_only_an_all_to_all_accepts_an_empty_payload[allreduce|allgather|reducescatter|p2p]).
+Negative control, the final test file on ff11ee6 (export at /data/ycfeng/tmp/issue26-correctness-pr/w7_r4/negctl_ff11ee6):
+FAILED tests/test_zero_payload_input.py::test_only_an_all_to_all_accepts_an_empty_payload[allreduce]
+FAILED tests/test_zero_payload_input.py::test_only_an_all_to_all_accepts_an_empty_payload[allgather]
+FAILED tests/test_zero_payload_input.py::test_only_an_all_to_all_accepts_an_empty_payload[reducescatter]
+FAILED tests/test_zero_payload_input.py::test_only_an_all_to_all_accepts_an_empty_payload[p2p]
+4 failed, 12 passed in 56.38s
+An earlier draft also held a t2g case. It was removed: its one-server scenario is not a valid t2g configuration ('collective=t2g requires dp>=2' on ff11ee6), so it could not show the rule.
+
+## The same one-server scenario, ff11ee6 runner, payload 0
+allreduce rc 0, 896 flows of size 1, makespan_us 123.764 (equal to payload 32768)
+allgather rc 0, 448 flows of size 1, makespan_us 62.5318
+reducescatter rc 0, 448 flows of size 1, makespan_us 62.5318
+p2p rc 0, 0 flows
+Reason: with exclude_intra_server, intra-server edges are _INTRA_SERVER_BYTES = 1 placeholders (htsim_runner.py:480, :500-502); only cross-server edges take the payload-derived size, so only a cross-server group hangs (zero_byte_allreduce_probe.txt).
+
+## Cross-server probe (2 x 8 GPUs, DP=16 ring) on e922c77, payload 0
+allreduce, allgather, reducescatter: RuntimeError from predict_collective_time, runner returncode 2, 'Error: tensor_bytes=0 is defined only for alltoall, not <kind>.' Returned at once; before the fix the allreduce run was stopped after about 9 minutes.
+
+## Frontier, gitlink at e922c77
+tests/unit/test_collective_sim_zero_payload.py: 3 passed (all all-to-all).
+With test_cc_backend_replica_local_layout, test_parallel_semantics, test_comm_operator_families, test_moe_no_scaling_policy, test_shared_expert_parallel_semantics, test_colocation_release_review_contracts: 10 failed, 59 passed; the 10 are the known test_colocation_release_review_contracts.py failures on main 1f694f7 (missing tests/debug scripts), unrelated to the backend.

@@ -1,0 +1,5 @@
+        assert decode_preemptions
+>           assert processed_after == processed_before, request_id
+E           AssertionError: 1
+E           assert 0 == 34
+../../../w9_05/negctl/test_vllm_v1_decode_preemption_runtime.py:96: AssertionError

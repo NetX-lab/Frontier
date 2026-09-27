@@ -46,7 +46,7 @@ class ReplicaStageScheduler:
         self._batch_queue = []  # Priority queue: list of (global_id, insertion_counter, schedule_epoch, batch)
         self._insertion_counter = 0  # Monotonically increasing counter for FIFO tie-breaking
         self._is_busy = False
-        self._last_stale_drop_count = 0
+        self._last_stale_drops: list[Batch] = []
 
     # gurantee only one batch is in current stage at a time;
     # other batches are in the self._batch_queue
@@ -189,10 +189,10 @@ class ReplicaStageScheduler:
     def on_stage_end(self) -> None:
         self._is_busy = False
 
-    def consume_last_stale_drop_count(self) -> int:
-        count = self._last_stale_drop_count
-        self._last_stale_drop_count = 0
-        return count
+    def consume_last_stale_drops(self) -> list[Batch]:
+        dropped = self._last_stale_drops
+        self._last_stale_drops = []
+        return dropped
 
     def _materialize_runtime_live_batch(self, batch: Batch) -> Optional[Batch]:
         live_indices = [
@@ -213,6 +213,12 @@ class ReplicaStageScheduler:
             num_tokens=live_num_tokens,
             is_idle=batch.is_idle,
             is_moe=batch.is_moe,
+            num_context_tokens=[
+                batch.num_context_tokens[index] for index in live_indices
+            ],
+            request_is_decoding=[
+                batch.request_is_decoding[index] for index in live_indices
+            ],
         )
         live_batch._id = batch.id
         live_batch.set_global_id(batch.global_id)
@@ -229,7 +235,6 @@ class ReplicaStageScheduler:
         live_batch.decode_cuda_graph_metadata = batch.decode_cuda_graph_metadata
         live_batch.afd_stage_idx = batch.afd_stage_idx
         live_batch.afd_stage_metadata = batch.afd_stage_metadata
-        live_batch.spec_decode_metadata = batch.spec_decode_metadata
         live_batch.time = batch.time
         live_batch._scheduled = batch.scheduled
         live_batch._scheduled_at = batch._scheduled_at
@@ -250,15 +255,15 @@ class ReplicaStageScheduler:
 
     def _drop_queued_lanes_for_ticket(
         self, admission_ticket: StageAdmissionTicket
-    ) -> int:
+    ) -> list[Batch]:
         """Drop every queued sibling that belongs to one invalid EP wave."""
 
         retained = []
-        dropped = 0
+        dropped: list[Batch] = []
         for queue_item in self._batch_queue:
             queued_batch = queue_item[3]
             if getattr(queued_batch, "_stage_admission_ticket", None) == admission_ticket:
-                dropped += 1
+                dropped.append(queued_batch)
                 queued_batch.__dict__.pop("_stage_admission_ticket", None)
             else:
                 retained.append(queue_item)
@@ -294,7 +299,7 @@ class ReplicaStageScheduler:
         Returns:
             The batch with smallest global_id, or None if cannot pop
         """
-        self._last_stale_drop_count = 0
+        self._last_stale_drops = []
         if self._is_busy or not self._batch_queue:
             return None
         while self._batch_queue:
@@ -310,8 +315,8 @@ class ReplicaStageScheduler:
             if self._stage_execution_context.is_cancelled(admission_ticket):
                 heapq.heappop(self._batch_queue)
                 batch.__dict__.pop("_stage_admission_ticket", None)
-                self._last_stale_drop_count += 1
-                self._last_stale_drop_count += (
+                self._last_stale_drops.append(batch)
+                self._last_stale_drops.extend(
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
                 continue
@@ -319,10 +324,10 @@ class ReplicaStageScheduler:
                 heapq.heappop(self._batch_queue)
                 self._discard_stale_ticket(admission_ticket)
                 batch.__dict__.pop("_stage_admission_ticket", None)
-                self._last_stale_drop_count += (
+                self._last_stale_drops.append(batch)
+                self._last_stale_drops.extend(
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
-                self._last_stale_drop_count += 1
                 continue
             parent_acquired = False
             if not self._stage_execution_context.owns(admission_ticket):
@@ -331,7 +336,22 @@ class ReplicaStageScheduler:
                 parent_acquired = True
             # Remove the same candidate whose ticket was just acquired.
             heapq.heappop(self._batch_queue)
-            live_batch = self._materialize_runtime_live_batch(batch)
+            # vLLM executes a dispatched step whole on every PP rank: a row whose
+            # request a later schedule preempted still runs each stage, priced in
+            # the phase it was scheduled in, and the step's end applies its
+            # sample. The engine stays blocked on that step until its last
+            # stage ends. PD-AF roles send a batch through stage 0 again for
+            # every layer and drop the rows of preempted requests.
+            dispatches_as_scheduled = self._cluster_type in (
+                ClusterType.MONOLITHIC,
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+            )
+            live_batch = (
+                batch
+                if dispatches_as_scheduled
+                else self._materialize_runtime_live_batch(batch)
+            )
             if live_batch is None:
                 context = self._stage_execution_context
                 if parent_acquired and context.is_active(admission_ticket):
@@ -339,10 +359,10 @@ class ReplicaStageScheduler:
                 elif context.is_queued(admission_ticket):
                     context.cancel(admission_ticket)
                 batch.__dict__.pop("_stage_admission_ticket", None)
-                self._last_stale_drop_count += (
+                self._last_stale_drops.append(batch)
+                self._last_stale_drops.extend(
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
-                self._last_stale_drop_count += 1
                 continue
             if (
                 self._is_moe
@@ -449,6 +469,7 @@ class ReplicaStageScheduler:
                 0,
                 batch.requests,
                 batch.num_tokens,
+                batch.request_is_decoding,
                 self._cluster_type,
                 effective_total_tokens_compute=effective_tokens_compute,
                 effective_total_tokens_transfer=effective_tokens_transfer,
@@ -469,6 +490,7 @@ class ReplicaStageScheduler:
             model_execution_time,
             batch.requests,
             batch.num_tokens,
+            batch.request_is_decoding,
             self._cluster_type,
             effective_total_tokens_compute=effective_tokens_compute,
             effective_total_tokens_transfer=effective_tokens_transfer,

@@ -1,0 +1,17 @@
+== 2ffb062 (/data/ycfeng/tmp/issue26-correctness-pr/w9_05/trees/before)
+INFO 21:13:22 request.py:1385] [TOKEN-ROLLOUT-COMPLETE] req=0 completed_at=13.679999999999998, total_tokens=60
+INFO 21:13:22 request.py:1385] [TOKEN-ROLLOUT-COMPLETE] req=2 completed_at=14.135999999999997, total_tokens=60
+INFO 21:13:22 simulator.py:1265] Metrics output completed
+0 completed True decode 30 / 30
+1 completed False decode 0 / 30
+2 completed True decode 30 / 30
+exit 0
+== fix (/data/ycfeng/Frontier/.worktrees/w9-05-after)
+INFO 21:13:24 request.py:1385] [TOKEN-ROLLOUT-COMPLETE] req=0 completed_at=13.679999999999998, total_tokens=60
+INFO 21:13:24 request.py:1385] [TOKEN-ROLLOUT-COMPLETE] req=2 completed_at=14.135999999999997, total_tokens=60
+INFO 21:13:24 request.py:1385] [TOKEN-ROLLOUT-COMPLETE] req=1 completed_at=25.535999999999987, total_tokens=60
+INFO 21:13:24 simulator.py:1265] Metrics output completed
+0 completed True decode 30 / 30
+1 completed True decode 30 / 30
+2 completed True decode 30 / 30
+exit 0

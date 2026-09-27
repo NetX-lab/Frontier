@@ -1,0 +1,62 @@
+{
+ "counts_before": {
+  "skipped": 50,
+  "error": 10,
+  "passed": 3814,
+  "failed": 84
+ },
+ "counts_after": {
+  "skipped": 51,
+  "error": 10,
+  "passed": 3829,
+  "failed": 84
+ },
+ "regressions": [],
+ "now_passing": [],
+ "skip_changes": [],
+ "new_failures": [],
+ "only_before": [
+  "tests.unit.test_collective_sim_zero_payload::test_a_negative_payload_is_still_rejected",
+  "tests.unit.test_collective_sim_zero_payload::test_a_populated_all_to_all_costs_more_than_an_empty_one",
+  "tests.unit.test_collective_sim_zero_payload::test_an_empty_all_to_all_keeps_its_synchronization_latency",
+  "tests.unit.test_collective_sim_zero_payload::test_an_empty_reduce_scatter_keeps_its_synchronization_latency",
+  "tests.unit.test_vllm_dp_load_balancer::test_an_unknown_lane_identity_is_rejected_at_the_report_boundary",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[dense_multi_lane-kwargs3-monotonic per Replica]",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[pipeline_parallel-kwargs1-one co-location Replica]",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[wrong_replica_scheduler-kwargs2-one co-location Replica]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_default_batch_end_seam_is_inert",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[False-1-1]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-1-1]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-2-2]"
+ ],
+ "only_after": [
+  "::tests.unit.test_collective_sim_zero_payload",
+  "tests.unit.test_shared_forward_group_admission::test_a_new_lane_joins_the_bound_group_only_until_it_is_sealed",
+  "tests.unit.test_vllm_dp_load_balancer::test_a_completion_and_the_admission_it_makes_room_for_share_one_key",
+  "tests.unit.test_vllm_dp_load_balancer::test_a_full_pipeline_makes_one_report_per_iteration[False]",
+  "tests.unit.test_vllm_dp_load_balancer::test_a_full_pipeline_makes_one_report_per_iteration[True]",
+  "tests.unit.test_vllm_dp_load_balancer::test_a_lane_that_drains_to_zero_reports_it_and_new_work_keys_coherently",
+  "tests.unit.test_vllm_dp_load_balancer::test_a_pp2_cold_fill_keys_peer_lanes_by_the_forward_they_share[lane_order0]",
+  "tests.unit.test_vllm_dp_load_balancer::test_a_pp2_cold_fill_keys_peer_lanes_by_the_forward_they_share[lane_order1]",
+  "tests.unit.test_vllm_dp_load_balancer::test_an_unknown_lane_identity_is_rejected_at_the_report_boundary[on_replica_batch_end]",
+  "tests.unit.test_vllm_dp_load_balancer::test_an_unknown_lane_identity_is_rejected_at_the_report_boundary[on_replica_batch_scheduled]",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[dense_multi_lane-kwargs2-monotonic per Replica]",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[dense_multi_lane_pipeline_parallel-kwargs3-monotonic per Replica]",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[uneven_layer_partition-kwargs4-evenly divisible]",
+  "tests.unit.test_vllm_dp_load_balancer::test_each_unsupported_topology_is_rejected_at_construction[wrong_replica_scheduler-kwargs1-one co-location Replica]",
+  "tests.unit.test_vllm_dp_load_balancer::test_pp1_admissions_are_reported_only_with_the_completion_they_join",
+  "tests.unit.test_vllm_dp_load_balancer::test_pp3_publishes_two_admission_only_iterations_before_any_completion[lane_order0]",
+  "tests.unit.test_vllm_dp_load_balancer::test_pp3_publishes_two_admission_only_iterations_before_any_completion[lane_order1]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_admission_loop_reports_the_state_after_each_admission",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_default_batch_seams_are_inert[on_replica_batch_end]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_default_batch_seams_are_inert[on_replica_batch_scheduled]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[False-1-1-1-4]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[False-1-1-2-4]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-1-1-1-4]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-1-1-2-4]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-1-1-3-6]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-2-2-1-4]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-2-2-2-4]",
+  "tests.unit.test_vllm_dp_load_balancer::test_the_supported_shapes_construct[True-2-2-3-6]"
+ ]
+}

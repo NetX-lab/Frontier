@@ -1,0 +1,1576 @@
+{
+ "K1": {
+  "cases": {
+   "G10-dense-dp2-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp1-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp2-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp2-n8-q5": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp2-n8-q80": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp2-pp3-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp4-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp4-pp1-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp4-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp4-pp2-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp4-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-dense-dp4-pp3-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp1-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp2-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp2-n8-q5": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp2-n8-q80": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp2-pp3-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp4-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp4-pp1-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp4-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp4-pp2-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp4-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G10-moe-dp4-pp3-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      8
+     ],
+     "observed": [
+      8,
+      128,
+      8
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp2-pp1-n4": {
+    "conservation": {
+     "expected": [
+      4,
+      64,
+      12
+     ],
+     "observed": [
+      4,
+      64,
+      12
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp2-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp2-pp2-n4": {
+    "conservation": {
+     "expected": [
+      4,
+      64,
+      12
+     ],
+     "observed": [
+      4,
+      64,
+      12
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp2-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp2-pp3-n4": {
+    "conservation": {
+     "expected": [
+      4,
+      64,
+      12
+     ],
+     "observed": [
+      4,
+      64,
+      12
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp2-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp4-pp1-n4": {
+    "conservation": {
+     "expected": [
+      4,
+      64,
+      12
+     ],
+     "observed": [
+      4,
+      64,
+      12
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp4-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp4-pp2-n4": {
+    "conservation": {
+     "expected": [
+      4,
+      64,
+      12
+     ],
+     "observed": [
+      4,
+      64,
+      12
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp4-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp4-pp3-n4": {
+    "conservation": {
+     "expected": [
+      4,
+      64,
+      12
+     ],
+     "observed": [
+      4,
+      64,
+      12
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G3b-moe-dp4-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-dense-dp1-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp2-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp2-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp2-pp2-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp2-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp2-pp3-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp4-pp1-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp4-pp2-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp4-pp2-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp4-pp3-n8": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   },
+   "G9-moe-dp4-pp3-n8-burst": {
+    "conservation": {
+     "expected": [
+      8,
+      128,
+      24
+     ],
+     "observed": [
+      8,
+      128,
+      24
+     ],
+     "ok": true
+    },
+    "outcome": "success"
+   }
+  },
+  "pass": true
+ },
+ "K2_explain": {
+  "cases": {
+   "G10-dense-dp2-pp2-n8-burst": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   },
+   "G10-dense-dp2-pp2-n8-q5": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   },
+   "G10-dense-dp2-pp3-n8": {
+    "first_divergence": {
+     "batch": [
+      "MONOLITHIC",
+      0,
+      0,
+      1,
+      [
+       "1"
+      ]
+     ],
+     "earlier_admission_of_same_batch": true,
+     "position": 12,
+     "start_before": 0.1836596024435351,
+     "start_composed": 0.16026945631587702
+    },
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 2, 0)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": false
+   },
+   "G10-dense-dp2-pp3-n8-burst": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)",
+     "('MONOLITHIC', 0, 2, 0)",
+     "('MONOLITHIC', 0, 2, 1)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   },
+   "G10-dense-dp4-pp2-n8": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 0, 2)",
+     "('MONOLITHIC', 0, 0, 3)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)",
+     "('MONOLITHIC', 0, 1, 2)",
+     "('MONOLITHIC', 0, 1, 3)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   },
+   "G10-dense-dp4-pp2-n8-burst": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 0, 2)",
+     "('MONOLITHIC', 0, 0, 3)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)",
+     "('MONOLITHIC', 0, 1, 2)",
+     "('MONOLITHIC', 0, 1, 3)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   },
+   "G10-dense-dp4-pp3-n8": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 0, 2)",
+     "('MONOLITHIC', 0, 0, 3)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)",
+     "('MONOLITHIC', 0, 1, 2)",
+     "('MONOLITHIC', 0, 1, 3)",
+     "('MONOLITHIC', 0, 2, 0)",
+     "('MONOLITHIC', 0, 2, 1)",
+     "('MONOLITHIC', 0, 2, 2)",
+     "('MONOLITHIC', 0, 2, 3)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   },
+   "G10-dense-dp4-pp3-n8-burst": {
+    "identical_lanes": [
+     "('MONOLITHIC', 0, 0, 0)",
+     "('MONOLITHIC', 0, 0, 1)",
+     "('MONOLITHIC', 0, 0, 2)",
+     "('MONOLITHIC', 0, 0, 3)",
+     "('MONOLITHIC', 0, 1, 0)",
+     "('MONOLITHIC', 0, 1, 1)",
+     "('MONOLITHIC', 0, 1, 2)",
+     "('MONOLITHIC', 0, 1, 3)",
+     "('MONOLITHIC', 0, 2, 0)",
+     "('MONOLITHIC', 0, 2, 1)",
+     "('MONOLITHIC', 0, 2, 2)",
+     "('MONOLITHIC', 0, 2, 3)"
+    ],
+    "pass": true,
+    "same_batches_and_component_durations": true
+   }
+  },
+  "pass": true
+ },
+ "K3": {
+  "cases": {
+   "G10-dense-dp2-pp1-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp2-pp2-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp2-pp2-n8-q5": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp2-pp2-n8-q80": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp2-pp3-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/2": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ],
+     "MONOLITHIC/0/2": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp4-pp1-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp4-pp2-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-dense-dp4-pp3-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "MONOLITHIC/0/2": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ],
+     "MONOLITHIC/0/2": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp2-pp1-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp2-pp2-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp2-pp2-n8-q5": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp2-pp2-n8-q80": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp2-pp3-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1
+     ],
+     "MONOLITHIC/0/2": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ],
+     "MONOLITHIC/0/2": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp4-pp1-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp4-pp2-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ]
+    }
+   },
+   "G10-moe-dp4-pp3-n8": {
+    "all_lanes": true,
+    "composed": {
+     "MONOLITHIC/0/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "MONOLITHIC/0/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "MONOLITHIC/0/2": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "MONOLITHIC/0/0": [
+      0
+     ],
+     "MONOLITHIC/0/1": [
+      0
+     ],
+     "MONOLITHIC/0/2": [
+      0
+     ]
+    }
+   },
+   "G9-moe-dp2-pp1-n8": {
+    "all_lanes": true,
+    "composed": {
+     "DECODE/1/0": [
+      0,
+      1
+     ],
+     "PREFILL/0/0": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "DECODE/1/0": [
+      0,
+      1
+     ],
+     "PREFILL/0/0": [
+      0
+     ]
+    }
+   },
+   "G9-moe-dp2-pp2-n8": {
+    "all_lanes": true,
+    "composed": {
+     "DECODE/1/0": [
+      0,
+      1
+     ],
+     "DECODE/1/1": [
+      0,
+      1
+     ],
+     "PREFILL/0/0": [
+      0,
+      1
+     ],
+     "PREFILL/0/1": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "DECODE/1/0": [
+      0,
+      1
+     ],
+     "DECODE/1/1": [
+      0,
+      1
+     ],
+     "PREFILL/0/0": [
+      0
+     ],
+     "PREFILL/0/1": [
+      0
+     ]
+    }
+   },
+   "G9-moe-dp2-pp3-n8": {
+    "all_lanes": true,
+    "composed": {
+     "DECODE/1/0": [
+      0,
+      1
+     ],
+     "DECODE/1/1": [
+      0,
+      1
+     ],
+     "DECODE/1/2": [
+      0,
+      1
+     ],
+     "PREFILL/0/0": [
+      0,
+      1
+     ],
+     "PREFILL/0/1": [
+      0,
+      1
+     ],
+     "PREFILL/0/2": [
+      0,
+      1
+     ]
+    },
+    "reference": {
+     "DECODE/1/0": [
+      0,
+      1
+     ],
+     "DECODE/1/1": [
+      0,
+      1
+     ],
+     "DECODE/1/2": [
+      0,
+      1
+     ],
+     "PREFILL/0/0": [
+      0
+     ],
+     "PREFILL/0/1": [
+      0
+     ],
+     "PREFILL/0/2": [
+      0
+     ]
+    }
+   },
+   "G9-moe-dp4-pp1-n8": {
+    "all_lanes": true,
+    "composed": {
+     "DECODE/1/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/0": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "DECODE/1/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/0": [
+      0
+     ]
+    }
+   },
+   "G9-moe-dp4-pp2-n8": {
+    "all_lanes": true,
+    "composed": {
+     "DECODE/1/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "DECODE/1/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/1": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "DECODE/1/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "DECODE/1/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/0": [
+      0
+     ],
+     "PREFILL/0/1": [
+      0
+     ]
+    }
+   },
+   "G9-moe-dp4-pp3-n8": {
+    "all_lanes": true,
+    "composed": {
+     "DECODE/1/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "DECODE/1/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "DECODE/1/2": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/2": [
+      0,
+      1,
+      2,
+      3
+     ]
+    },
+    "reference": {
+     "DECODE/1/0": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "DECODE/1/1": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "DECODE/1/2": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "PREFILL/0/0": [
+      0
+     ],
+     "PREFILL/0/1": [
+      0
+     ],
+     "PREFILL/0/2": [
+      0
+     ]
+    }
+   }
+  },
+  "pass": true
+ },
+ "sets": {
+  "before": "c-pr35",
+  "composed": "c-merged",
+  "reference": "after-r2"
+ }
+}

@@ -5,9 +5,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.entities.batch import Batch, Request
 from frontier.logger import get_cluster_logger
+from frontier.scheduler.replica_scheduler.vllm_v1_decision_log import (
+    _log_frontier_vllm_v1_schedule_decision,
+)
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
-    _log_frontier_vllm_v1_schedule_decision,
 )
 from frontier.types import ClusterType
 
@@ -50,6 +52,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
+        request_load = self.get_request_load()
         payload: Dict[str, Any] = {
             "event": event,
             "source": "frontier",
@@ -61,8 +64,8 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             "token_budget": int(token_budget),
             "available_blocks": int(available_blocks),
             "num_tokens": int(num_tokens),
-            "num_running_reqs": len(self._running_requests),
-            "num_waiting_reqs": self._get_num_waiting_reqs_for_decision_log(),
+            "num_running_reqs": request_load.running,
+            "num_waiting_reqs": request_load.waiting,
             "max_num_running_reqs": int(self._max_num_running_reqs),
             "max_num_scheduled_tokens": int(self._max_num_scheduled_tokens),
             "batch_request_ids": [str(req_id) for req_id in (batch_request_ids or [])],
@@ -89,14 +92,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         _log_frontier_vllm_v1_schedule_decision(payload)
 
     def _is_prefill_stage_request(self, request: Request) -> bool:
-        return bool(getattr(request, "_preempted", False)) or not request.is_prefill_complete
-
-    def _get_request_next_num_tokens(self, request: Request) -> int:
-        if getattr(request, "_preempted", False):
-            computed_tokens = self._get_scheduler_num_computed_tokens(request)
-            remaining_prefill_tokens = int(request.num_prefill_tokens) - computed_tokens
-            return max(remaining_prefill_tokens, 0)
-        return super()._get_request_next_num_tokens(request)
+        return not request.is_decoding
 
     def _get_split_waiting_requests(self) -> Tuple[List[Request], List[Request]]:
         ordered_waiting_requests = self._get_sorted_waiting_queue()
@@ -113,10 +109,9 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         return prefill_waiting_requests, other_waiting_requests
 
     def _schedule_prefill_stage_first(
-        self, token_budget: int
+        self, token_budget: int, preempted_requests: List[Request]
     ) -> Tuple[int, List[Request], List[int], List[Request], List[int]]:
         original_running_requests = list(self._running_requests)
-        original_waiting_requests = self._get_sorted_waiting_queue()
 
         prefill_running_requests = [
             request
@@ -136,7 +131,6 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         self._running_requests = list(prefill_running_requests)
         self._set_waiting_queues_from_ordered_requests(prefill_waiting_requests)
 
-        preempted_requests: List[Request] = []
         token_budget, running_scheduled, running_tokens = self._schedule_running_requests(
             token_budget,
             preempted_requests,
@@ -148,15 +142,10 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
                 self._schedule_waiting_requests(token_budget)
             )
 
-        scheduled_any = bool(running_scheduled or waiting_scheduled)
+        # A preemption above freed its victim and queued it, even when nothing
+        # was scheduled, so both views keep the updated prefill side.
         updated_prefill_running_requests = list(self._running_requests)
         updated_prefill_waiting_requests = self._get_sorted_waiting_queue()
-
-        if not scheduled_any:
-            self._running_requests = original_running_requests
-            self._set_waiting_queues_from_ordered_requests(original_waiting_requests)
-            return token_budget, [], [], [], []
-
         self._running_requests = (
             decode_running_requests + list(updated_prefill_running_requests)
         )
@@ -172,7 +161,7 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         )
 
     def _schedule_decode_fallback_running_requests(
-        self, token_budget: int
+        self, token_budget: int, preempted_requests: List[Request]
     ) -> Tuple[int, List[Request], List[int]]:
         original_running_requests = list(self._running_requests)
         prefill_running_requests = [
@@ -187,7 +176,6 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
         ]
 
         self._running_requests = list(decode_running_requests)
-        preempted_requests: List[Request] = []
         token_budget, running_scheduled, running_tokens = self._schedule_running_requests(
             token_budget,
             preempted_requests,
@@ -254,13 +242,14 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             f"[PREFILL_FIRST_START] running_count={len(self._running_requests)}, "
             f"waiting_count={waiting_count}, token_budget={token_budget}"
         )
+        preempted_requests: List[Request] = []
         (
             token_budget,
             waiting_scheduled,
             waiting_tokens,
             running_prefill_scheduled,
             running_prefill_tokens,
-        ) = self._schedule_prefill_stage_first(token_budget)
+        ) = self._schedule_prefill_stage_first(token_budget, preempted_requests)
 
         if waiting_scheduled or running_prefill_scheduled:
             ordered_scheduled_requests = waiting_scheduled + running_prefill_scheduled
@@ -299,11 +288,14 @@ class SGLangStyleReplicaScheduler(VLLMv1EngineReplicaScheduler):
             "falling back to running decode"
         )
         token_budget, running_decode_scheduled, running_decode_tokens = (
-            self._schedule_decode_fallback_running_requests(token_budget)
+            self._schedule_decode_fallback_running_requests(
+                token_budget, preempted_requests
+            )
         )
 
         if not running_decode_scheduled:
             self._advance_monolithic_pp_terminal_release_boundary()
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,

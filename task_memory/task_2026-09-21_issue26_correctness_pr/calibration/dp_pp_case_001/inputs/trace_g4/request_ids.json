@@ -1,0 +1,546 @@
+{
+ "workload": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/inputs/workload_g4.json",
+ "request_id_namespace": "dpp2",
+ "request_id_encoding": "x-request-id header <request_id>; vLLM completions name the engine request cmpl-<request_id>-0; Frontier numbers trace rows from 0",
+ "warmup_request_ids": [
+  "dpp2-w0",
+  "dpp2-w1",
+  "dpp2-w2"
+ ],
+ "formal_request_ids": [
+  "dpp2-a-b1",
+  "dpp2-a-b2",
+  "dpp2-a-b3",
+  "dpp2-a-b4",
+  "dpp2-a-b5",
+  "dpp2-a-b6",
+  "dpp2-b-b1",
+  "dpp2-b-b2",
+  "dpp2-b-b3",
+  "dpp2-b-b4",
+  "dpp2-b-b5",
+  "dpp2-b-b6",
+  "dpp2-c-b1",
+  "dpp2-c-b2",
+  "dpp2-c-b3",
+  "dpp2-c-b4",
+  "dpp2-c-b5",
+  "dpp2-c-b6",
+  "dpp2-d-b1",
+  "dpp2-d-b2",
+  "dpp2-d-b3",
+  "dpp2-d-b4",
+  "dpp2-d-b5",
+  "dpp2-d-b6",
+  "dpp2-s00",
+  "dpp2-s01",
+  "dpp2-s02",
+  "dpp2-s03",
+  "dpp2-s04",
+  "dpp2-s05",
+  "dpp2-s06",
+  "dpp2-s07",
+  "dpp2-s08",
+  "dpp2-s09",
+  "dpp2-s10",
+  "dpp2-s11",
+  "dpp2-s12",
+  "dpp2-s13",
+  "dpp2-s14",
+  "dpp2-s15",
+  "dpp2-s16",
+  "dpp2-s17",
+  "dpp2-s18",
+  "dpp2-s19",
+  "dpp2-s20",
+  "dpp2-s21",
+  "dpp2-s22",
+  "dpp2-s23"
+ ],
+ "sizing_request_ids": [],
+ "rows": [
+  {
+   "frontier_request_id": 0,
+   "request_id": "dpp2-w0",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 0.0,
+   "num_prefill_tokens": 64,
+   "num_decode_tokens": 4
+  },
+  {
+   "frontier_request_id": 1,
+   "request_id": "dpp2-w1",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 1.0,
+   "num_prefill_tokens": 64,
+   "num_decode_tokens": 4
+  },
+  {
+   "frontier_request_id": 2,
+   "request_id": "dpp2-w2",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 2.0,
+   "num_prefill_tokens": 64,
+   "num_decode_tokens": 4
+  },
+  {
+   "frontier_request_id": 3,
+   "request_id": "dpp2-a-b1",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 22.0,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "a"
+  },
+  {
+   "frontier_request_id": 4,
+   "request_id": "dpp2-a-b2",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 22.00025,
+   "num_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "burst": "a"
+  },
+  {
+   "frontier_request_id": 5,
+   "request_id": "dpp2-a-b3",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 22.0005,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "a"
+  },
+  {
+   "frontier_request_id": 6,
+   "request_id": "dpp2-a-b4",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 22.00075,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "a"
+  },
+  {
+   "frontier_request_id": 7,
+   "request_id": "dpp2-a-b5",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 22.001,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "a"
+  },
+  {
+   "frontier_request_id": 8,
+   "request_id": "dpp2-a-b6",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 22.085,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "a"
+  },
+  {
+   "frontier_request_id": 9,
+   "request_id": "dpp2-b-b1",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 42.085,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "b"
+  },
+  {
+   "frontier_request_id": 10,
+   "request_id": "dpp2-b-b2",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 42.08525,
+   "num_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "burst": "b"
+  },
+  {
+   "frontier_request_id": 11,
+   "request_id": "dpp2-b-b3",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 42.0855,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "b"
+  },
+  {
+   "frontier_request_id": 12,
+   "request_id": "dpp2-b-b4",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 42.08575,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "b"
+  },
+  {
+   "frontier_request_id": 13,
+   "request_id": "dpp2-b-b5",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 42.086,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "b"
+  },
+  {
+   "frontier_request_id": 14,
+   "request_id": "dpp2-b-b6",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 42.19,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "b"
+  },
+  {
+   "frontier_request_id": 15,
+   "request_id": "dpp2-c-b1",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 62.19,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "c"
+  },
+  {
+   "frontier_request_id": 16,
+   "request_id": "dpp2-c-b2",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 62.19025,
+   "num_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "burst": "c"
+  },
+  {
+   "frontier_request_id": 17,
+   "request_id": "dpp2-c-b3",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 62.1905,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "c"
+  },
+  {
+   "frontier_request_id": 18,
+   "request_id": "dpp2-c-b4",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 62.19075,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "c"
+  },
+  {
+   "frontier_request_id": 19,
+   "request_id": "dpp2-c-b5",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 62.191,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "c"
+  },
+  {
+   "frontier_request_id": 20,
+   "request_id": "dpp2-c-b6",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 62.316,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "c"
+  },
+  {
+   "frontier_request_id": 21,
+   "request_id": "dpp2-d-b1",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 82.316,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "d"
+  },
+  {
+   "frontier_request_id": 22,
+   "request_id": "dpp2-d-b2",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 82.322,
+   "num_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "burst": "d"
+  },
+  {
+   "frontier_request_id": 23,
+   "request_id": "dpp2-d-b3",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 82.328,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "d"
+  },
+  {
+   "frontier_request_id": 24,
+   "request_id": "dpp2-d-b4",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 82.334,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "d"
+  },
+  {
+   "frontier_request_id": 25,
+   "request_id": "dpp2-d-b5",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 82.34,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "d"
+  },
+  {
+   "frontier_request_id": 26,
+   "request_id": "dpp2-d-b6",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 82.421,
+   "num_prefill_tokens": 32,
+   "num_decode_tokens": 64,
+   "burst": "d"
+  },
+  {
+   "frontier_request_id": 27,
+   "request_id": "dpp2-s00",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.316,
+   "num_prefill_tokens": 128,
+   "num_decode_tokens": 64
+  },
+  {
+   "frontier_request_id": 28,
+   "request_id": "dpp2-s01",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.376,
+   "num_prefill_tokens": 512,
+   "num_decode_tokens": 32
+  },
+  {
+   "frontier_request_id": 29,
+   "request_id": "dpp2-s02",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.436,
+   "num_prefill_tokens": 256,
+   "num_decode_tokens": 96
+  },
+  {
+   "frontier_request_id": 30,
+   "request_id": "dpp2-s03",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.496,
+   "num_prefill_tokens": 1024,
+   "num_decode_tokens": 48
+  },
+  {
+   "frontier_request_id": 31,
+   "request_id": "dpp2-s04",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.556,
+   "num_prefill_tokens": 128,
+   "num_decode_tokens": 64
+  },
+  {
+   "frontier_request_id": 32,
+   "request_id": "dpp2-s05",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.616,
+   "num_prefill_tokens": 512,
+   "num_decode_tokens": 32
+  },
+  {
+   "frontier_request_id": 33,
+   "request_id": "dpp2-s06",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.676,
+   "num_prefill_tokens": 256,
+   "num_decode_tokens": 96
+  },
+  {
+   "frontier_request_id": 34,
+   "request_id": "dpp2-s07",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.736,
+   "num_prefill_tokens": 1024,
+   "num_decode_tokens": 48
+  },
+  {
+   "frontier_request_id": 35,
+   "request_id": "dpp2-s08",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.796,
+   "num_prefill_tokens": 128,
+   "num_decode_tokens": 64
+  },
+  {
+   "frontier_request_id": 36,
+   "request_id": "dpp2-s09",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.856,
+   "num_prefill_tokens": 512,
+   "num_decode_tokens": 32
+  },
+  {
+   "frontier_request_id": 37,
+   "request_id": "dpp2-s10",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.916,
+   "num_prefill_tokens": 256,
+   "num_decode_tokens": 96
+  },
+  {
+   "frontier_request_id": 38,
+   "request_id": "dpp2-s11",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.976,
+   "num_prefill_tokens": 1024,
+   "num_decode_tokens": 48
+  },
+  {
+   "frontier_request_id": 39,
+   "request_id": "dpp2-s12",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.036,
+   "num_prefill_tokens": 128,
+   "num_decode_tokens": 64
+  },
+  {
+   "frontier_request_id": 40,
+   "request_id": "dpp2-s13",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.096,
+   "num_prefill_tokens": 512,
+   "num_decode_tokens": 32
+  },
+  {
+   "frontier_request_id": 41,
+   "request_id": "dpp2-s14",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.156,
+   "num_prefill_tokens": 256,
+   "num_decode_tokens": 96
+  },
+  {
+   "frontier_request_id": 42,
+   "request_id": "dpp2-s15",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.216,
+   "num_prefill_tokens": 1024,
+   "num_decode_tokens": 48
+  },
+  {
+   "frontier_request_id": 43,
+   "request_id": "dpp2-s16",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.276,
+   "num_prefill_tokens": 128,
+   "num_decode_tokens": 64
+  },
+  {
+   "frontier_request_id": 44,
+   "request_id": "dpp2-s17",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.336,
+   "num_prefill_tokens": 512,
+   "num_decode_tokens": 32
+  },
+  {
+   "frontier_request_id": 45,
+   "request_id": "dpp2-s18",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.396,
+   "num_prefill_tokens": 256,
+   "num_decode_tokens": 96
+  },
+  {
+   "frontier_request_id": 46,
+   "request_id": "dpp2-s19",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.456,
+   "num_prefill_tokens": 1024,
+   "num_decode_tokens": 48
+  },
+  {
+   "frontier_request_id": 47,
+   "request_id": "dpp2-s20",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.516,
+   "num_prefill_tokens": 128,
+   "num_decode_tokens": 64
+  },
+  {
+   "frontier_request_id": 48,
+   "request_id": "dpp2-s21",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.576,
+   "num_prefill_tokens": 512,
+   "num_decode_tokens": 32
+  },
+  {
+   "frontier_request_id": 49,
+   "request_id": "dpp2-s22",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.636,
+   "num_prefill_tokens": 256,
+   "num_decode_tokens": 96
+  },
+  {
+   "frontier_request_id": 50,
+   "request_id": "dpp2-s23",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.696,
+   "num_prefill_tokens": 1024,
+   "num_decode_tokens": 48
+  }
+ ]
+}

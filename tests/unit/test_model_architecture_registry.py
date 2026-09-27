@@ -29,6 +29,7 @@ from frontier.model_architectures import (
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.types import ActivationType, ClusterType, NormType
+from tests.frontier_sources import iter_frontier_sources
 
 
 class _LogRecordCollector(logging.Handler):
@@ -515,7 +516,7 @@ def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
         ("frontier/config/model_config.py", "BaseModelConfig.__post_init__", "helper"): 1,
         # Config-like prediction adapters may not own a BaseModelConfig snapshot.
         (
-            "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+            "frontier/execution_time_predictor/prediction_model_identity.py",
             "_resolve_model_architecture_profile",
             "helper",
         ): 1,
@@ -572,7 +573,7 @@ def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
     }
     observed_call_counts: dict[tuple[str, str, str], int] = {}
 
-    for path in (repo_root / "frontier").rglob("*.py"):
+    for path in iter_frontier_sources(repo_root):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         function_aliases: set[str] = set()
         module_aliases: set[str] = set()
@@ -1398,9 +1399,7 @@ def test_param_counter_share_expert_uses_profile_for_new_model_name() -> None:
 def test_phase2_predictor_consumers_do_not_use_step2_step3_identity_wrappers() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     consumer_paths = (
-        repo_root / "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
-        repo_root / "frontier/execution_time_predictor/shared_prediction_model_manager.py",
-        repo_root / "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+        *sorted((repo_root / "frontier/execution_time_predictor").glob("*.py")),
         repo_root / "frontier/utils/param_counter.py",
         repo_root / "frontier/profiling/utils/confirmation.py",
     )

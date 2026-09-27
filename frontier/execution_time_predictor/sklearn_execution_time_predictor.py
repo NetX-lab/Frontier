@@ -1942,10 +1942,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if num_decode_tokens <= 0:
             return num_prefill_tokens, num_decode_tokens
 
-        decode_sequence_count = 0
-        for request in getattr(batch, "requests", []):
-            if bool(getattr(request, "is_prefill_complete", False)):
-                decode_sequence_count += 1
+        decode_sequence_count = sum(batch.request_is_decoding)
         if decode_sequence_count <= 0:
             decode_sequence_count = int(getattr(batch, "size", 0))
 
@@ -4185,8 +4182,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         decode_kv_cache_sizes = []
 
-        for request in batch.requests:
-            if request._is_prefill_complete:
+        for request, is_decoding in zip(batch.requests, batch.request_is_decoding):
+            if is_decoding:
                 decode_kv_cache_sizes.append(
                     self._get_decode_attention_context_tokens(request)
                 )
@@ -4245,14 +4242,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         prefill_params = []
 
-        for request, num_tokens_to_process in zip(batch.requests, batch.num_tokens):
-            if request._is_prefill_complete:
+        for is_decoding, num_tokens_to_process, num_context_tokens in zip(
+            batch.request_is_decoding, batch.num_tokens, batch.num_context_tokens
+        ):
+            if is_decoding:
                 continue
 
             prefill_chunk_size = num_tokens_to_process
             kv_cache_size = (
                 (
-                    request.num_processed_tokens
+                    num_context_tokens
                     + self._config.kv_cache_prediction_granularity
                     - 1
                 )
@@ -4290,10 +4289,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # Collect sequence lengths and live cache context for prefill requests only.
         seq_lens = []
         kv_cache_sizes = []
-        for request, num_tokens in zip(batch.requests, batch.num_tokens):
-            if not request._is_prefill_complete:
+        for is_decoding, num_tokens, num_context_tokens in zip(
+            batch.request_is_decoding, batch.num_tokens, batch.num_context_tokens
+        ):
+            if not is_decoding:
                 seq_lens.append(num_tokens)
-                kv_cache_sizes.append(request.num_processed_tokens)
+                kv_cache_sizes.append(num_context_tokens)
 
         if not seq_lens:
             # No prefill requests - return zeros (should not happen in normal flow)
@@ -4364,8 +4365,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         prefill_tokens = []
         decode_kv_cache_sizes = []
-        for request, num_tokens in zip(batch.requests, batch.num_tokens):
-            if request._is_prefill_complete:
+        for request, num_tokens, is_decoding in zip(
+            batch.requests, batch.num_tokens, batch.request_is_decoding
+        ):
+            if is_decoding:
                 decode_kv_cache_sizes.append(request.num_processed_tokens)
             else:
                 prefill_tokens.append(num_tokens)
@@ -5254,6 +5257,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 else [1 for _ in active_indices]
             ),
             is_moe=bool(is_moe),
+            num_context_tokens=[
+                source_batch.num_context_tokens[idx] for idx in active_indices
+            ],
+            request_is_decoding=[
+                source_batch.request_is_decoding[idx] for idx in active_indices
+            ],
         )
         synthetic_batch._suppress_spec_decode_proposer_overhead = True
         if copy_spec_decode_metadata:
@@ -5311,6 +5320,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         committed_tokens: int,
     ) -> Any:
         request_copy = copy.copy(request)
+        # A terminal row decodes in its scheduled step, even when a later
+        # schedule pass preempted the request and set a recompute cursor.
+        request_copy._num_recomputed_tokens = None
         processed_tokens = int(getattr(request_copy, "_num_processed_tokens", 0))
         total_tokens = int(getattr(request_copy, "total_tokens", processed_tokens))
         committed_tokens_int = max(int(committed_tokens), 0)
@@ -6427,10 +6439,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         verify_entries: List[Tuple[Any, int]] = []
         normal_decode_request_count = 0
-        for request, verify_tokens in zip(
-            batch.requests, metadata.verify_tokens_per_request
+        for request, is_decoding, verify_tokens in zip(
+            batch.requests,
+            batch.request_is_decoding,
+            metadata.verify_tokens_per_request,
         ):
-            if not request.is_prefill_complete:
+            if not is_decoding:
                 continue
             verify_tokens_int = int(verify_tokens)
             if verify_tokens_int <= 1:
@@ -6548,10 +6562,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         verify_tokens_list: List[int] = []
         decode_kv_cache_sizes = []
-        for request, verify_tokens in zip(
-            batch.requests, metadata.verify_tokens_per_request
+        for request, is_decoding, verify_tokens in zip(
+            batch.requests,
+            batch.request_is_decoding,
+            metadata.verify_tokens_per_request,
         ):
-            if not request.is_prefill_complete:
+            if not is_decoding:
                 continue
             verify_tokens_int = int(verify_tokens)
             if verify_tokens_int > 1:
@@ -6688,10 +6704,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         metadata.validate(len(batch.requests))
 
         speculative_verify_request_count = 0
-        for request, verify_tokens in zip(
-            batch.requests, metadata.verify_tokens_per_request
+        for is_decoding, verify_tokens in zip(
+            batch.request_is_decoding, metadata.verify_tokens_per_request
         ):
-            if not getattr(request, "is_prefill_complete", False):
+            if not is_decoding:
                 continue
             if int(verify_tokens) <= 1:
                 continue
@@ -6982,35 +6998,29 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         current_tokens_by_request: list[tuple[Any, int]] = []
         prefill_active_token_counts: list[int] = []
         decode_active_token_counts: list[int] = []
-        for request, num_tokens in zip(requests, request_token_counts):
+        for request, is_decoding, num_tokens, context_tokens in zip(
+            requests,
+            batch.request_is_decoding,
+            request_token_counts,
+            batch.num_context_tokens,
+        ):
             current_tokens = int(num_tokens)
             if current_tokens <= 0:
                 raise ValueError(
                     "MLA exact-row prediction requires positive per-request "
                     f"token counts, got num_tokens={num_tokens}."
                 )
-            processed_tokens = getattr(request, "num_processed_tokens", None)
-            if processed_tokens is None:
-                raise ValueError(
-                    "MLA exact-row prediction requires request.num_processed_tokens "
-                    "to derive vLLM max_seqlen_k."
-                )
-            current_seq_len = int(processed_tokens) + current_tokens
+            current_seq_len = int(context_tokens) + current_tokens
             if current_seq_len <= 0:
                 raise ValueError(
                     "MLA exact-row prediction requires positive runtime sequence "
-                    f"lengths, got processed={processed_tokens}, "
+                    f"lengths, got context={context_tokens}, "
                     f"num_tokens={num_tokens}."
                 )
             max_seqlen_k = max(max_seqlen_k, current_seq_len)
             batch_num_tokens += current_tokens
             current_tokens_by_request.append((request, current_tokens))
-            if not hasattr(request, "is_prefill_complete"):
-                raise ValueError(
-                    "MLA exact-row prediction requires request.is_prefill_complete "
-                    "to derive the current vLLM prefill/decode phase partition."
-                )
-            if bool(getattr(request, "is_prefill_complete")):
+            if is_decoding:
                 decode_active_token_counts.append(current_tokens)
             else:
                 prefill_active_token_counts.append(current_tokens)
@@ -7036,14 +7046,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         decode_active_token_sum = sum(decode_active_token_counts)
         if prefill_active_token_sum != batch_num_prefill_tokens:
             raise ValueError(
-                "MLA exact-row prediction requires request.is_prefill_complete "
+                "MLA exact-row prediction requires batch.request_is_decoding "
                 "partition to match batch.num_prefill_tokens: "
                 f"partition_prefill={prefill_active_token_sum}, "
                 f"batch_num_prefill_tokens={batch_num_prefill_tokens}."
             )
         if decode_active_token_sum != batch_num_decode_tokens:
             raise ValueError(
-                "MLA exact-row prediction requires request.is_prefill_complete "
+                "MLA exact-row prediction requires batch.request_is_decoding "
                 "partition to match batch.num_decode_tokens: "
                 f"partition_decode={decode_active_token_sum}, "
                 f"batch_num_decode_tokens={batch_num_decode_tokens}."

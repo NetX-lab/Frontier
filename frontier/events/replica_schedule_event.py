@@ -96,6 +96,22 @@ class ReplicaScheduleEvent(BaseEvent):
         if not self._batches:
             logger.info(f"Replica scheduling completed: no batches formed for replica {self._replica_id}")
             if (
+                hasattr(replica_scheduler, "consume_preemption_followup_poll")
+                and replica_scheduler.consume_preemption_followup_poll()
+            ):
+                logger.info(
+                    "Replica scheduling completed: emitting one follow-up "
+                    "schedule poll after an empty pass that preempted"
+                )
+                return [
+                    ReplicaScheduleEvent(
+                        self.time,
+                        self._replica_id,
+                        self._cluster_type,
+                        self._replica_local_id,
+                    )
+                ]
+            if (
                 hasattr(
                     replica_scheduler,
                     "consume_monolithic_pp_terminal_release_followup_poll",
@@ -150,24 +166,6 @@ class ReplicaScheduleEvent(BaseEvent):
         metrics_store.on_replica_schedule(
             self.time, self._replica_id, memory_usage_percent, self._cluster_type
         )
-
-        # record schedule time and status of batch and requests in batch
-        try:
-            for i, batch in enumerate(self._batches):
-                logger.info(f"Processing batch {i}: batch_id={batch.id}, num_requests={len(batch.requests)}")
-                batch.on_schedule(self.time, self._cluster_type)
-
-                # Log individual batch scheduling
-                request_ids = [req.id for req in batch.requests]
-                logger.info(f"Batch {batch.id} scheduled at {self.time:.3f}s in {self._cluster_type.name} cluster, "
-                           f"requests={request_ids}, scheduled_at={self.time:.3f}s")
-        except Exception as e:
-            logger.error(f"Error in batch scheduling loop: {e}")
-            logger.error(f"Batch details: num_batches={len(self._batches)}")
-            for i, batch in enumerate(self._batches):
-                logger.error(f"Batch {i}: id={batch.id}, num_requests={len(batch.requests)}, "
-                            f"requests={[req.id for req in batch.requests]}")
-            raise
 
         return [
             BatchStageArrivalEvent(

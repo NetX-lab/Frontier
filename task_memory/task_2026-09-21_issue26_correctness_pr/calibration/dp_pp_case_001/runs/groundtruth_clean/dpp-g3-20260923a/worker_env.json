@@ -1,0 +1,1 @@
+{"python": "3.12.11", "torch": "2.8.0+cu128", "cuda_available": true, "device_count": 2, "devices": ["NVIDIA H800", "NVIDIA H800"]}

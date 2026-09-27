@@ -92,6 +92,13 @@ class StageExecutionContext:
         return self._forward_group_sealed
 
     @property
+    def joinable_forward_group_id(self) -> int:
+        """Id of the stage forward that a lane not already in it would join now."""
+        if self._forward_group_id is not None and not self._forward_group_sealed:
+            return self._forward_group_id
+        return self._next_forward_group_id
+
+    @property
     def replica_id(self) -> int:
         return self._replica_id
 

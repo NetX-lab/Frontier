@@ -79,6 +79,7 @@ def test_batch_stage_keeps_descriptor_without_copying_a_mutable_map() -> None:
         model_execution_time=0.1,
         requests=[Request(0.0, 0, 2)],
         num_tokens=[2],
+        request_is_decoding=[False],
         cluster_type=ClusterType.DECODE_FFN,
     )
 

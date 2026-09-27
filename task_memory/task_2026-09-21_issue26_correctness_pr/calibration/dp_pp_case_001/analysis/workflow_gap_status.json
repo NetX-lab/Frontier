@@ -1,0 +1,51 @@
+{
+  "entry": "workflow-gap-analysis",
+  "case_id": "dp_pp_case_001",
+  "run_generation": 1,
+  "manifest_path": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/manifest.yaml",
+  "table": "analysis/workflow_gap_table.csv",
+  "summary": "analysis/workflow_gap_summary.md",
+  "inputs": {
+    "groundtruth": "runs/groundtruth_clean/dpp-g4-20260923a/extraction/chain.json (extraction PASS)",
+    "simulator": "runs/frontier_g4/ (commit 47d9190; full evidence under /data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g4/)",
+    "comparison": "analysis/g5_comparison/comparison_status.json",
+    "pre_change_rejection": "runs/frontier_pre_change_d1a2a06/rejection.txt"
+  },
+  "written_at_utc": "2026-09-23T15:27:54Z",
+  "row_counts": {
+    "MATCH": 4,
+    "MISMATCH": 8,
+    "UNSET": 0,
+    "UNSUPPORTED": 0
+  },
+  "acceptance": {
+    "C3": "PASS: T1 replay 51/51 routes (48/48 formal) MATCH; natural-history differences labeled by first cause (WG02-WG12)",
+    "C4": "SCENARIO_NOT_REACHED in all four bursts; failed checks in analysis/g5_comparison/comparison_status.json; the pre-change baseline is rejected by its constructor"
+  },
+  "analysis_state": "COMPLETE",
+  "status": "PASS",
+  "status_basis": "Every declared phase has a row with values and anchors on both sides, the native chain is complete, and T1 settles the placement semantics with matched inputs. The eight MISMATCH rows carry a first cause and none is unexplained.",
+  "correction_state": "not_applicable",
+  "next_action": "None in this case. S43 and S42 continue as separate calibration-and-repair tasks; each starts from its own analysis and needs its own human review before any Frontier code change. S45 (WG12) joins the S43 task as its third row (user, 2026-09-25).",
+  "transferred_corrections": {
+    "S43_WG05": {
+      "finding": "PP>1 admission after an empty schedule: vLLM blocks on the oldest batch, Frontier admits into any free stage slot (frontier/scheduler/replica_scheduler/base_replica_scheduler.py:1052-1063, report hook :1061)",
+      "task": "/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/"
+    },
+    "S42_WG03": {
+      "finding": "DP wave-start and idle dummy forwards not modeled (vllm/v1/engine/core.py:1170-1216)",
+      "task": "/data/ycfeng/Frontier/task_memory/task_2026-09-24_s42_dp_wave_idle_forward/"
+    },
+    "S45_WG12": {
+      "finding": "PP>1 prefill chunk pipelining: vLLM schedules a request's next prefill chunk while the previous chunk is in flight (vllm/v1/core/sched/scheduler.py:1029-1045); Frontier's vllm_v1 skips a request in an in-flight batch (frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:560-564)",
+      "task": "/data/ycfeng/Frontier/task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/"
+    }
+  },
+  "review": {
+    "decision_id": "G5-review",
+    "answer": "C4 选择a; S43 和 S42 各开一个单独的校准和修复任务",
+    "requesting_user": "i-fengyicheng",
+    "reviewer_identity": "i-fengyicheng",
+    "decided_at_utc": "2026-09-24"
+  }
+}

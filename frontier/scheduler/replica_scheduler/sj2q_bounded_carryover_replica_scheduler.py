@@ -72,12 +72,6 @@ class SJ2QBoundedCarryoverReplicaScheduler(VLLMv1EngineReplicaScheduler):
     def _maybe_promote_final_round_priority(self, request: Request) -> None:
         return None
 
-    def _is_final_prefill_fast_lane_request(self, request: Request) -> bool:
-        return False
-
-    def _is_final_decode_fast_lane_request(self, request: Request) -> bool:
-        return False
-
     # ------------------------------------------------------------------
     # Session-state helpers
     # ------------------------------------------------------------------
@@ -290,7 +284,7 @@ class SJ2QBoundedCarryoverReplicaScheduler(VLLMv1EngineReplicaScheduler):
     def _is_decode_slice(self, request: Request) -> bool:
         if self._cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}:
             return True
-        return bool(getattr(request, "is_prefill_complete", False))
+        return request.is_decoding
 
     def _select_forced_qlong_request_id(self, requests: Sequence[Request]) -> Optional[int]:
         if self._sj2q_bounded_short_streak_counter < self._sj2q_bounded_long_liveness_quota:
@@ -483,6 +477,8 @@ class SJ2QBoundedCarryoverReplicaScheduler(VLLMv1EngineReplicaScheduler):
     # vLLM-v1 hook overrides
     # ------------------------------------------------------------------
     def add_request(self, request: Request) -> None:
+        self._check_request_fits_max_model_len(request)
+        self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         state = self._load_or_create_session_state(request)
         if self._cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN} and bool(

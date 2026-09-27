@@ -8,7 +8,7 @@ import pandas as pd
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import ReplicaConfig
-from frontier.execution_time_predictor import shared_prediction_model_manager
+from frontier.execution_time_predictor import prediction_family_trainers
 from frontier.execution_time_predictor import sklearn_execution_time_predictor
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
@@ -158,7 +158,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
     manager._get_attention_df_with_derived_features = lambda df: df  # type: ignore[attr-defined]
 
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_predictor_metric_names",
         lambda family: (
             ("catalog_kv", "catalog_prefill", "catalog_decode")
@@ -167,7 +167,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
         ),
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_predictor_metric_name_by_role",
         lambda family, role: (
             {
@@ -180,7 +180,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
         ),
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_predictor_median_columns",
         lambda family: (
             (
@@ -193,7 +193,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
         ),
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_shared_predictor_feature_columns",
         lambda family: (
             {
@@ -293,7 +293,7 @@ def test_shared_manager_dense_physical_attention_roles_do_not_depend_on_family_o
     manager._get_attention_df_with_derived_features = lambda df: df  # type: ignore[attr-defined]
 
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_predictor_metric_names",
         lambda family: (
             ("role_prefill", "role_decode", "role_cache")
@@ -302,7 +302,7 @@ def test_shared_manager_dense_physical_attention_roles_do_not_depend_on_family_o
         ),
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_predictor_metric_name_by_role",
         lambda family, role: (
             {
@@ -315,7 +315,7 @@ def test_shared_manager_dense_physical_attention_roles_do_not_depend_on_family_o
         ),
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_predictor_median_columns",
         lambda family: (
             (
@@ -328,7 +328,7 @@ def test_shared_manager_dense_physical_attention_roles_do_not_depend_on_family_o
         ),
     )
     monkeypatch.setattr(
-        shared_prediction_model_manager,
+        prediction_family_trainers,
         "get_enabled_shared_predictor_feature_columns",
         lambda family: (
             {

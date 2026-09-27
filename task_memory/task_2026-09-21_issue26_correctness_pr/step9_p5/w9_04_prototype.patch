@@ -1,0 +1,17 @@
+--- after/frontier/scheduler/utils/sync_entry.py	2026-09-23 16:16:02.000000000 +0800
++++ proto/frontier/scheduler/utils/sync_entry.py	2026-09-23 16:38:48.007544809 +0800
+@@ -130,6 +130,14 @@
+         return []
+     sync_room["batches"][lane_id] = batch
+     sync_room["arrival_times"][lane_id] = float(time)
++    # A lane that received a placeholder here and then joined this forward with
++    # real work will bring that work to this room; its placeholder is stale.
++    for placed_lane, placed in list(sync_room["batches"].items()):
++        if placed.is_idle and scheduler._replica_schedulers[
++            (replica_id, placed_lane)
++        ].get_replica_stage_scheduler(stage_id).is_busy:
++            del sync_room["batches"][placed_lane]
++            del sync_room["arrival_times"][placed_lane]
+ 
+     expected_lanes = scheduler._replica_dp_size
+     if type(expected_lanes) is not int or expected_lanes <= 0:

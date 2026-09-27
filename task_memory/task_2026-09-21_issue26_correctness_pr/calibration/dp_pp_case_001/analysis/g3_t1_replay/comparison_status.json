@@ -1,0 +1,105 @@
+{
+ "vllm_chain": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/runs/groundtruth_clean/dpp-g3-20260923a/extraction/chain.json",
+ "frontier_dir": "/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/runs/frontier_g3_test",
+ "t1_routes": 38,
+ "t1_formal_routes": 30,
+ "t1_formal_match": 30,
+ "t1_mismatch_by_cause": {},
+ "t2_bursts": {
+  "": {
+   "qualification": {
+    "checks": {
+     "burst_routed_in_trace_order": false,
+     "burst_routed_from_one_snapshot": true,
+     "probe_snapshot_scheduled_in_burst_on_every_engine": false,
+     "no_output_applied_before_probe": false
+    },
+    "qualified": false,
+    "failed_checks": [
+     "burst_routed_in_trace_order",
+     "probe_snapshot_scheduled_in_burst_on_every_engine",
+     "no_output_applied_before_probe"
+    ],
+    "route_order": [
+     "dpp1g3-b5",
+     "dpp1g3-b4",
+     "dpp1g3-b3",
+     "dpp1g3-b1",
+     "dpp1g3-b2",
+     "dpp1g3-b6"
+    ],
+    "probe_request_id": "dpp1g3-b6",
+    "probe_snapshot": 9,
+    "probe_snapshot_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      1
+     ]
+    ],
+    "probe_snapshot_provenance": [
+     {
+      "engine": 0,
+      "wave": 2,
+      "step": 0,
+      "iteration_seq": 15,
+      "branch": "applied_after_scheduling"
+     },
+     {
+      "engine": 1,
+      "wave": 2,
+      "step": 0,
+      "iteration_seq": 0,
+      "branch": "applied_after_scheduling"
+     }
+    ],
+    "probe_route_after_burst_s": 0.10794385615736246,
+    "probe_snapshot_applied_after_burst_s": 0.0874275341629982,
+    "first_applied_output_after_burst_s": 0.0343034197576344
+   },
+   "probe_status": "SCENARIO_NOT_REACHED",
+   "probe_native_engine": 0,
+   "probe_frontier": {
+    "vllm_load_balancing": 1,
+    "completion_reporting_control": 1,
+    "round_robin": 0
+   },
+   "control_differs_from_native": true,
+   "probe_frontier_selection": {
+    "vllm_load_balancing": {
+     "time": 10.15,
+     "snapshot": [
+      [
+       3,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "engine": 1,
+     "request_id": "dpp1g3-b6"
+    },
+    "completion_reporting_control": {
+     "time": 10.15,
+     "snapshot": [
+      [
+       3,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "engine": 1,
+     "request_id": "dpp1g3-b6"
+    }
+   }
+  }
+ }
+}

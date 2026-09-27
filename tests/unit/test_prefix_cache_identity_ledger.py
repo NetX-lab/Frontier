@@ -10,7 +10,7 @@ from frontier.entities.request import Request
 from frontier.kv_cache.base_kv_cache_manager import KVCacheManager
 from frontier.kv_cache.kv_cache_block_pool import BlockPool
 from frontier.scheduler.replica_scheduler import (
-    vllm_v1_engine_replica_scheduler as scheduler_module,
+    vllm_v1_prefix_cache as prefix_cache_module,
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
@@ -18,19 +18,19 @@ from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler impor
 from frontier.types import ClusterType
 
 
-def _request(*, hashes: list[int]) -> Request:
+def _request(*, hashes: list[int], num_prefill_tokens: int = 4) -> Request:
     return Request(
         arrived_at=0.0,
-        num_prefill_tokens=4,
+        num_prefill_tokens=num_prefill_tokens,
         num_decode_tokens=1,
         block_hash_ids=hashes,
     )
 
 
-def _manager() -> KVCacheManager:
+def _manager(num_gpu_blocks: int = 2) -> KVCacheManager:
     return KVCacheManager(
         block_size=2,
-        num_gpu_blocks=2,
+        num_gpu_blocks=num_gpu_blocks,
         enable_caching=True,
         caching_hash_algo="builtin",
         num_preallocate_tokens=0,
@@ -104,7 +104,7 @@ def test_committed_full_hit_admission_records_reuse_eviction_and_rebinding(
 
     events: list[dict[str, object]] = []
     monkeypatch.setattr(
-        scheduler_module,
+        prefix_cache_module,
         "_log_frontier_vllm_v1_schedule_decision",
         lambda event: events.append(dict(event)),
     )
@@ -181,3 +181,32 @@ def test_committed_full_hit_admission_records_reuse_eviction_and_rebinding(
             "binding_epoch": 2,
         }
     ]
+
+
+@pytest.mark.parametrize(
+    "num_prefill_tokens, admitted_hashes",
+    [(3, [11]), (5, [11, 22])],
+    ids=["prompt_inside_the_second_block", "prompt_inside_the_third_block"],
+)
+def test_a_hit_beyond_the_prompt_leaves_its_last_token_to_compute(
+    num_prefill_tokens, admitted_hashes
+) -> None:
+    # A clipped trace row keeps the hashes of its longer original prompt.
+    # vLLM caps a hit at num_tokens - 1 (kv_cache_manager.get_computed_blocks).
+    manager = _manager(num_gpu_blocks=4)
+    creator = _request(hashes=[11, 22, 33], num_prefill_tokens=6)
+    assert manager.allocate_slots(creator, 6) is not None
+    manager.free(creator)
+    consumer = _request(hashes=[11, 22, 33], num_prefill_tokens=num_prefill_tokens)
+    scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._kv_cache_manager = manager
+    scheduler._config = SimpleNamespace(block_size=2, num_blocks=4)
+
+    admission = scheduler._prepare_prefix_cache_admission(consumer)
+
+    assert [block.block_hash for block in admission.raw_hit_blocks] == [11, 22, 33]
+    assert [block.block_hash for block in admission.effective_hit_blocks] == admitted_hashes
+    assert admission.effective_cached_tokens == 2 * len(admitted_hashes)
+    assert admission.num_new_tokens == num_prefill_tokens - 2 * len(admitted_hashes)
+    assert admission.full_hit_backoff_applied is True
+    assert manager.prefix_cache_stats.hits == len(admitted_hashes)

@@ -1,0 +1,31 @@
+{
+  "entry": "semantic-alignment-check",
+  "case_id": "dp_pp_case_001",
+  "run_generation": 1,
+  "manifest_path": "task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/manifest.yaml",
+  "table": "analysis/semantic_alignment_table.csv",
+  "scope": "DP placement comparison (T1, T2) for the ground-truth runs G3 and G4 and the G5 simulator runs; no E2E numeric gate in this case (plan section 18.5 G5, decision D-e)",
+  "written_at_utc": "2026-09-23T15:19:22Z",
+  "row_counts": {
+    "MATCH": 38,
+    "MISMATCH": 6,
+    "UNSET": 1,
+    "UNSUPPORTED": 0
+  },
+  "mismatch_rows": {
+    "S30": "IPC latency not modeled; declared simulator abstraction",
+    "S31": "dummy execution time, approved treatment D-e; 0.8943 ms matches the mean G4 first-chunk duration (111.00 ms native, 111.14 ms Frontier) and is token-independent",
+    "S33": "burst route order is arrival/delivery order: G4 bursts a-c routed the long body last, burst d in trace order; Frontier routes in trace order",
+    "S42": "DP wave start and dummy forwards not modeled; G4 record gaps are consistent with them (inference from source)",
+    "S43": "vLLM blocks on the oldest batch after an empty schedule and delays later admissions; Frontier admits into any free pipeline slot; confirmed by G4 admission times",
+    "S45": "vLLM schedules a long prefill's next chunk while the previous chunk is in flight; Frontier waits for that batch to end (G4 burst d engine 1, WG12)"
+  },
+  "unset_rows": {
+    "S39": "MoE routing records absent on the vLLM side; affects only the E2E numeric gate, which this case does not run"
+  },
+  "analysis_state": "COMPLETE",
+  "status": "PASS",
+  "status_basis": "Every row that decides the T1 replay (coordinator and frontend semantics, parallel domains, scheduler budgets, KV blocks) is MATCH. The six MISMATCH rows are declared abstractions (S30, S31) or natural-history differences (S33, S42, S43, S45) that workflow-gap-analysis labels by first cause instead of counting as agreement. The remaining UNSET row (S39) blocks only an E2E gate this case does not run.",
+  "correction_state": "not_applicable",
+  "next_action": "none for this entry; workflow-gap-analysis for G4/G5 (analysis/workflow_gap_status.json) carries the case forward"
+}
