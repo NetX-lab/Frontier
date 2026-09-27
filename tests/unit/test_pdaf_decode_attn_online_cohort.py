@@ -250,7 +250,11 @@ def test_active_cohort_blocks_unrelated_new_decode_attn_cohort() -> None:
 
 def test_active_cohort_allows_pending_stage_sibling_to_drain() -> None:
     active_request = _make_decode_request(0, 1)
-    pending_batch = SimpleNamespace(id=100, requests=[active_request])
+    pending_batch = SimpleNamespace(
+        id=100,
+        requests=[active_request],
+        on_schedule=lambda time, cluster_type: None,
+    )
     scheduler = _DecodeAttnScheduleHarness(
         active_request_ids={active_request.id},
         pending_siblings=[pending_batch],
@@ -270,6 +274,7 @@ def _make_completion_scheduler(
 ) -> VLLMv1EngineReplicaScheduler:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_ATTN
+    scheduler._has_engine_batch_queue = False
     scheduler._num_running_batches = len(requests)
     scheduler._running_requests = list(requests)
     scheduler._active_batch_request_counts = {

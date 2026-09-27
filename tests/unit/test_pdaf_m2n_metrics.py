@@ -110,6 +110,7 @@ def _trace_replica_config() -> SimpleNamespace:
 def _decode_ffn_scheduler() -> VLLMv1EngineReplicaScheduler:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._has_engine_batch_queue = False
     scheduler._replica_id = 0
     scheduler._replica_local_id = 0
     scheduler._af_pipeline_num_micro_batch = 1

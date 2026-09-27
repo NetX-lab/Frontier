@@ -56,13 +56,14 @@ def handle_forward_sync_collective(
             f"batch_global_id={batch_global_id}, layer={layer_id}"
         )
     # One completed layer advances a request's decode counter once, and only if
-    # that request is decoding. A prefill chunk has no decode layer to credit,
-    # and a request carried in a prefill batch after its own prefill finished
-    # does, which is the case the phase-specific paths could not express.
+    # that request is decoding. A prefill or recompute chunk has no decode layer
+    # to credit, and a request carried in a prefill batch after its own prefill
+    # finished does, which is the case the phase-specific paths could not
+    # express. Recompute chunks of one request may be in flight together.
     decoding_requests = [
         request
         for request in collect_active_requests(source_batches.values())
-        if request.is_prefill_complete
+        if request.is_decoding
     ]
     advance_decode_layer(
         decoding_requests, scheduler._config.replica_config.model_config.num_layers

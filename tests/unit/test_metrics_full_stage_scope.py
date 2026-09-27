@@ -148,6 +148,7 @@ def test_stage_ledger_identity_is_captured_from_live_batch_state() -> None:
         model_execution_time=0.1,
         requests=[request],
         num_tokens=[1],
+        request_is_decoding=[False],
         cluster_type=ClusterType.MONOLITHIC,
     )
 

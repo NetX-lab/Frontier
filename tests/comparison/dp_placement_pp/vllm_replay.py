@@ -13,12 +13,21 @@ header ``X-Request-Id: <request_id>``; the server names the engine request
 ``cmpl-<request_id>-0``. Request bodies are encoded before the origin so that
 dispatch times are not delayed by encoding.
 
-The clean ground-truth mode (calibration contract, "Run Modes") keeps the
-E2E request metrics on and the operator probes off: the server environment
-sets the request-metrics path and the placement-record directory, and removes
-every other Frontier switch of the checkout. Outputs in ``--output-dir``:
-``server.log``, ``client_requests.jsonl``, ``request_metrics.jsonl``,
-``dp_placement/``, ``replay_summary.json``.
+The run mode (calibration contract, "Run Modes") sets the server's Frontier
+switches; none is inherited from the worker. Both modes write the placement
+records to ``dp_placement/``, declared scheduler-level workflow evidence.
+
+``clean``
+    E2E request metrics on (``request_metrics.jsonl``), operator probes off.
+``instrumented``
+    Instrumentation on with the MoE routing records (``moe_routing.jsonl``),
+    E2E request metrics off.
+
+The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
+from the engine file's ``attention_backend`` and is otherwise left to vLLM's
+own selection. Outputs in ``--output-dir``: ``server.log``,
+``client_requests.jsonl``, the mode's record file, ``dp_placement/``,
+``replay_summary.json``.
 """
 
 from __future__ import annotations
@@ -40,16 +49,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "stage_admission_pp
 from vllm_burst_driver import prompt_token_ids, write_model_dir  # noqa: E402
 
 SERVED_MODEL_NAME = "dp_pp_case"
-# Switches of the checkout that belong to other modes or change scheduling.
-REMOVED_ENV_VARS = (
-    "VLLM_FRONTIER_INSTRUMENTATION",
-    "VLLM_FRONTIER_PP_BOUNDARY_LOG_PATH",
-    "VLLM_FRONTIER_SCHED_LOG_PATH",
-    "VLLM_FRONTIER_TRACE_SKIP_WARMUP",
-    "VLLM_FRONTIER_WAIT_INITIAL_REQUESTS",
-    "VLLM_FRONTIER_EXPECTED_NUM_REQUESTS",
-)
+MODES = ("clean", "instrumented")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
+
+
+def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tuple[dict, dict]:
+    """Return the server environment and the variables the mode set in it."""
+
+    env = {
+        key: value for key, value in inherited.items()
+        if not key.startswith("VLLM_FRONTIER_") and key != "VLLM_ATTENTION_BACKEND"
+    }
+    mode_env = {"VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": str(output_dir / "dp_placement")}
+    if mode == "clean":
+        mode_env["VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH"] = str(output_dir / "request_metrics.jsonl")
+    else:
+        mode_env["VLLM_FRONTIER_INSTRUMENTATION"] = "1"
+        mode_env["VLLM_FRONTIER_MOE_ROUTING_LOG_PATH"] = str(output_dir / "moe_routing.jsonl")
+    if "attention_backend" in engine:
+        mode_env["VLLM_ATTENTION_BACKEND"] = engine["attention_backend"]
+    return env | mode_env, mode_env
 
 
 def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
@@ -175,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--engine-config", type=Path, required=True)
     parser.add_argument("--trace-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--mode", choices=MODES, required=True)
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--startup-timeout-s", type=float, default=900.0)
     parser.add_argument("--origin-lead-s", type=float, default=1.0)
@@ -191,15 +211,16 @@ def main(argv: list[str] | None = None) -> int:
         output_dir / "model",
     )
 
-    env = {key: value for key, value in os.environ.items() if key not in REMOVED_ENV_VARS}
-    env["VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR"] = str(output_dir / "dp_placement")
-    env["VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH"] = str(output_dir / "request_metrics.jsonl")
+    env, mode_env = server_env(args.mode, engine, output_dir, dict(os.environ))
     command = server_command(engine, output_dir / "model", args.port)
     summary: dict = {
+        "mode": args.mode,
         "engine_config": engine,
         "server_command": command,
-        "server_env_set": ["VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR", "VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH"],
-        "server_env_removed": [name for name in REMOVED_ENV_VARS if name in os.environ],
+        "server_env_set": mode_env,
+        "server_env_removed": sorted(
+            name for name in os.environ if name not in env or name in mode_env
+        ),
         "trace_dir": str(args.trace_dir),
     }
     with (output_dir / "server.log").open("w") as server_log:

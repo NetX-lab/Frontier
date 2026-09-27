@@ -17,6 +17,9 @@ class RequestRoundPlan:
 
 class PreemptedStep(NamedTuple):
     execution_signature: Tuple[int, int, int]
+    # The row that samples is the one whose context plus tokens reach this
+    # length, as vLLM samples only a row that completes the request's tokens.
+    sample_seq_len: int
     # Output tokens the step appends when its output arrives.
     num_sampled_tokens: int
     recompute: bool
@@ -1041,18 +1044,18 @@ class Request(BaseEntity):
         # the step already ran no longer count.
         if scheduler_num_computed_tokens is not None:
             if self.is_decoding:
+                sample_seq_len = self._num_processed_tokens + 1
                 step_samples = True
-            elif self._num_recomputed_tokens is not None:
-                step_samples = (
-                    scheduler_num_computed_tokens >= self._num_processed_tokens
-                )
             else:
-                step_samples = (
-                    scheduler_num_computed_tokens >= self._num_prefill_tokens
-                )
+                if self._num_recomputed_tokens is not None:
+                    sample_seq_len = self._num_processed_tokens
+                else:
+                    sample_seq_len = self._num_prefill_tokens
+                step_samples = scheduler_num_computed_tokens >= sample_seq_len
             if step_samples:
                 self._preempted_step = PreemptedStep(
                     execution_signature=self.execution_signature,
+                    sample_seq_len=sample_seq_len,
                     num_sampled_tokens=(
                         self._spec_last_committed_tokens
                         if self.is_decoding and self._spec_decode_enabled
@@ -1068,9 +1071,16 @@ class Request(BaseEntity):
         if self._is_prefill_complete and recompute:
             self._num_recomputed_tokens = 0
 
-    def was_preempted_from(self, execution_signature: Tuple[int, int, int]) -> bool:
+    def samples_preempted_step(
+        self, execution_signature: Tuple[int, int, int], row_seq_len: int
+    ) -> bool:
+        """Whether a row that ends at row_seq_len tokens carries the pending sample."""
         record = self._preempted_step
-        return record is not None and record.execution_signature == execution_signature
+        return (
+            record is not None
+            and record.execution_signature == execution_signature
+            and row_seq_len >= record.sample_seq_len
+        )
 
     @property
     def has_preempted_step(self) -> bool:

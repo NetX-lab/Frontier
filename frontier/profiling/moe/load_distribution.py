@@ -7,6 +7,8 @@ for profiling MoE grouped GEMM performance under various load imbalance scenario
 
 Supported distributions:
 - uniform: All experts receive roughly equal number of tokens
+- balanced: Every expert receives the same number of tokens, up to one; the
+  round-robin assignment of the uniform_topk routing path
 - skewed: Some experts are more popular than others (power law distribution)
 - extremely_skewed: Majority of tokens go to a small subset of experts (80-20 rule)
 """
@@ -14,6 +16,8 @@ Supported distributions:
 import torch
 import numpy as np
 from typing import Tuple, List, Optional
+
+from frontier.profiling.moe.moe_impl import uniform_topk
 
 
 def generate_expert_routing(
@@ -34,7 +38,7 @@ def generate_expert_routing(
         num_tokens: Number of input tokens
         num_experts: Total number of experts
         top_k: Number of experts selected per token
-        load_distribution: Distribution type ("uniform", "skewed", "extremely_skewed")
+        load_distribution: Distribution type ("uniform", "balanced", "skewed", "extremely_skewed")
         seed: Random seed for reproducibility
         dtype: Data type for routing weights
     
@@ -79,6 +83,11 @@ def generate_expert_routing(
         topk_weights = torch.rand(num_tokens, top_k, dtype=dtype, device=device)
         topk_weights = topk_weights / topk_weights.sum(dim=1, keepdim=True)
         
+    elif load_distribution == "balanced":
+        scores = torch.empty(num_tokens, num_experts, device=device)
+        topk_weights, topk_ids, _ = uniform_topk(scores, scores, top_k)
+        topk_weights = topk_weights.to(dtype)
+
     elif load_distribution == "skewed":
         # Skewed distribution: some experts are more popular (power law)
         # Use a positive offset so every expert remains reachable while higher
@@ -138,7 +147,7 @@ def generate_expert_routing(
     else:
         raise ValueError(
             f"Unknown load_distribution: {load_distribution}. "
-            f"Must be one of: uniform, skewed, extremely_skewed"
+            f"Must be one of: uniform, balanced, skewed, extremely_skewed"
         )
     
     return topk_weights, topk_ids
