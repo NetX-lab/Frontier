@@ -1159,25 +1159,6 @@ class VLLMv1EngineReplicaScheduler(
         token_budget = self._max_num_scheduled_tokens
         available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
         waiting_count = len(self._request_queue) + len(self._preempted_requests)
-        waiting_final_prefill_count = self._count_final_fast_lane_requests(
-            self._preempted_requests + self._request_queue,
-            final_predicate=self._is_final_prefill_fast_lane_request,
-        )
-        self._prefill_iteration_reserved_tokens_remaining = (
-            self._final_prefill_reserved_tokens
-            if (
-                self._enable_final_running_request_reclaim
-                and waiting_final_prefill_count > 0
-            )
-            else 0
-        )
-        waiting_final_prefill_count = self._count_final_fast_lane_requests(
-            self._preempted_requests + self._request_queue,
-            final_predicate=self._is_final_prefill_fast_lane_request,
-        )
-        self._prefill_iteration_reserved_tokens_remaining = (
-            self._final_prefill_reserved_tokens if waiting_final_prefill_count > 0 else 0
-        )
 
         # Flow validation: log iteration start
         logger.info(
