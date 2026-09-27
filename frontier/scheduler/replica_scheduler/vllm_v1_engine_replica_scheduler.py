@@ -1133,8 +1133,8 @@ class VLLMv1EngineReplicaScheduler(
                     f"recompute_tokens={recompute_tokens}"
                 )
 
-        # vLLM parity for skipped waiting requests:
-        # prepend skipped queue back to waiting queue.
+        # vLLM (ea95f571) prepends the skipped requests to the waiting queue in
+        # the order they were skipped (scheduler.py:882-883, request_queue.py:102-105).
         if skipped_waiting_requests:
             if self._scheduling_policy == "priority":
                 merged_requests = list(waiting_queue) + list(skipped_waiting_requests)
@@ -1142,7 +1142,7 @@ class VLLMv1EngineReplicaScheduler(
                     sorted(merged_requests, key=priority_policy_key)
                 )
             else:
-                waiting_queue.extend(skipped_waiting_requests)
+                waiting_queue.extendleft(reversed(skipped_waiting_requests))
 
         self._set_waiting_queues_from_ordered_requests(list(waiting_queue))
 
