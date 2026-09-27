@@ -82,9 +82,6 @@ class KVCacheManager:
         self.prefix_cache_stats = PrefixCacheStats()
         return stats
 
-    def _get_request_block_hashes(self, request: Request) -> list[int]:
-        return list(request.block_hash_ids or [])
-
     def _resolve_scheduler_num_computed_tokens(
         self,
         request: Request,
@@ -102,7 +99,7 @@ class KVCacheManager:
         if not self.enable_caching:
             return [], 0
 
-        block_hashes = self._get_request_block_hashes(request)
+        block_hashes = request.prompt_block_hash_ids(self.block_size)
         computed_blocks: list[KVCacheBlock] = []
         for block_hash in block_hashes:
             cached_block = self.block_pool.get_cached_block(block_hash)
@@ -216,7 +213,7 @@ class KVCacheManager:
         num_cached_blocks = self.num_cached_blocks.get(request.id, len(computed_blocks))
         new_bindings = self.block_pool.cache_full_blocks(
             blocks=request_blocks,
-            block_hashes=self._get_request_block_hashes(request),
+            block_hashes=request.prompt_block_hash_ids(self.block_size),
             num_cached_blocks=num_cached_blocks,
             num_full_blocks=num_full_blocks,
             creator_request_id=request.id,
