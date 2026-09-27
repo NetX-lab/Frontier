@@ -1344,6 +1344,11 @@ class Simulator:
 
     def _set_time(self, time: float) -> None:
         self._time = time
+        if self._time > self._time_limit:
+            logger.info(
+                f"Time limit reached: {self._time_limit}s terminating the simulation."
+            )
+            self._terminate = True
 
     def _is_sequential_checkpoint_observer_enabled(self) -> bool:
         return bool(
@@ -1461,11 +1466,6 @@ class Simulator:
         self._checkpoint_export_completed = True
         self._terminate = True
         return True
-        if self._time > self._time_limit:
-            logger.info(
-                f"Time limit reached: {self._time_limit}s terminating the simulation."
-            )
-            self._terminate = True
 
     def _write_event_trace(self) -> None:
         trace_file = f"{self._config.metrics_config.output_dir}/event_trace.json"
