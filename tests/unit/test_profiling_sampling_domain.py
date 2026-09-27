@@ -1,6 +1,7 @@
 import pytest
 
 from frontier.profiling.attention.attention_input import AttentionInput
+from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
 from frontier.profiling.attention.true_mixed_batch_input import TrueMixedBatchInput
 from frontier.profiling.utils import (
     get_attention_batch_sizes_to_profile,
@@ -103,10 +104,26 @@ def test_decode_attention_input_reserves_the_current_token():
 
 
 def test_decode_memory_limit_reserves_the_current_token():
+    # 32 KV tokens fill two blocks of 16; the current token needs a third.
     decode_input = AttentionInput(0, 32, 1, False)
 
-    assert not decode_input.is_under_memory_limit(32)
-    assert decode_input.is_under_memory_limit(33)
+    assert not decode_input.is_under_memory_limit(2, 16)
+    assert decode_input.is_under_memory_limit(3, 16)
+
+
+def test_decode_memory_limit_counts_whole_blocks_per_sequence():
+    # 64 decodes at KV 2272 hold 64 x 2273 = 145,472 tokens, under 9122 x 16,
+    # but each takes 143 blocks of 16: 9152 blocks in all.
+    assert not AttentionInput(0, 2272, 64, False).is_under_memory_limit(9122, 16)
+    assert AttentionInput(0, 2272, 64, False).is_under_memory_limit(9152, 16)
+
+
+def test_mixed_memory_limit_counts_whole_blocks_per_sequence():
+    # Sequences of 40, 48 and 56 tokens (with KV 32) take 3 + 3 + 4 blocks of 16.
+    batch = MixedAttentionInput(seq_lens=[8, 16, 24], kv_cache_size=32)
+
+    assert not batch.is_under_memory_limit(9, 16)
+    assert batch.is_under_memory_limit(10, 16)
 
 
 def test_true_mixed_memory_limit_counts_whole_blocks_per_sequence():

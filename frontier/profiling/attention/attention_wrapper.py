@@ -111,6 +111,13 @@ class AttentionWrapper:
         self.kv_cache = attention_backend_wrapper.get_cache_block(
             self.max_num_blocks, dtype=self._dtype, device=self._device
         )
+        if self.profile_method == ProfileMethod.RECORD_FUNCTION.value:
+            # The engine reads each layer's KV cold, while the traced call follows a
+            # warmup call on the same KV. Reading twice the L2 size in between evicts it.
+            l2_cache_bytes = torch.cuda.get_device_properties(self._device).L2_cache_size
+            self._l2_flush_buffer = torch.empty(
+                2 * l2_cache_bytes, dtype=torch.uint8, device=self._device
+            )
 
     def _make_qkv_tensors(self, total_tokens: int):
         if self._uses_latent_mla:
@@ -185,6 +192,25 @@ class AttentionWrapper:
             )
         return allowed_ops
 
+    def _allocate_block_tables(self, total_lens: List[int]) -> List[List[int]]:
+        """Give every sequence its own consecutive KV blocks, as the engine's paged cache does."""
+        block_tables = []
+        next_block_index = 0
+        for total_len in total_lens:
+            num_blocks = ceil(total_len / self._block_size)
+            block_tables.append(list(range(next_block_index, next_block_index + num_blocks)))
+            next_block_index += num_blocks
+        if next_block_index > self.max_num_blocks:
+            raise ValueError(
+                "Requested block tables exceed max_num_blocks: "
+                f"num_blocks={next_block_index} max_num_blocks={self.max_num_blocks}"
+            )
+        return block_tables
+
+    def _flush_l2(self) -> None:
+        self._l2_flush_buffer.sum()
+        torch.cuda.synchronize()
+
     def _get_input_tensors(
         self,
         attention_input: AttentionInput,
@@ -195,24 +221,16 @@ class AttentionWrapper:
         batch_size = attention_input.batch_size
         total_tokens = batch_size * num_tokens_per_seq
         query, key, value = self._make_qkv_tensors(total_tokens)
-        # Create SequenceMetadataProxy objects corresponding to AttentionInput
-        seq_metadata_list: List[SequenceMetadataProxy] = []
-        for _ in range(attention_input.batch_size):
-            num_blocks = ceil(
-                (num_tokens_per_seq + attention_input.kv_cache_size) / self._block_size
-            )
-            if num_blocks > self.max_num_blocks:
-                raise ValueError(
-                    "Requested block_table size exceeds max_num_blocks: "
-                    f"num_blocks={num_blocks} max_num_blocks={self.max_num_blocks}"
-                )
-            seq_metadata = SequenceMetadataProxy(
+        total_len = num_tokens_per_seq + attention_input.kv_cache_size
+        seq_metadata_list = [
+            SequenceMetadataProxy(
                 is_prompt=attention_input.is_prefill,
-                total_len=num_tokens_per_seq + attention_input.kv_cache_size,
+                total_len=total_len,
                 processed_len=attention_input.kv_cache_size,
-                block_table=list(range(num_blocks)),
+                block_table=block_table,
             )
-            seq_metadata_list.append(seq_metadata)
+            for block_table in self._allocate_block_tables([total_len] * batch_size)
+        ]
         return seq_metadata_list, query, key, value, self.kv_cache
 
     def _get_mixed_input_tensors(
@@ -228,33 +246,22 @@ class AttentionWrapper:
         Returns:
             Tuple of (seq_metadata_list, query, key, value, kv_cache).
         """
-        batch_size = mixed_input.batch_size
         seq_lens = mixed_input.seq_lens
         total_tokens = sum(seq_lens)
         query, key, value = self._make_qkv_tensors(total_tokens)
-        
-        # Create SequenceMetadataProxy objects for each sequence
-        seq_metadata_list: List[SequenceMetadataProxy] = []
-        for seq_len in seq_lens:
-            # Calculate number of blocks needed for this sequence
-            num_blocks = ceil(
-                (seq_len + mixed_input.kv_cache_size) / self._block_size
-            )
-            if num_blocks > self.max_num_blocks:
-                raise ValueError(
-                    "Requested block_table size exceeds max_num_blocks: "
-                    f"num_blocks={num_blocks} max_num_blocks={self.max_num_blocks}"
-                )
 
-            # Create metadata for this sequence
-            seq_metadata = SequenceMetadataProxy(
+        total_lens = [seq_len + mixed_input.kv_cache_size for seq_len in seq_lens]
+        seq_metadata_list = [
+            SequenceMetadataProxy(
                 is_prompt=True,  # All sequences are prefill
-                total_len=seq_len + mixed_input.kv_cache_size,
+                total_len=total_len,
                 processed_len=mixed_input.kv_cache_size,
-                block_table=list(range(num_blocks)),
+                block_table=block_table,
             )
-            seq_metadata_list.append(seq_metadata)
-        
+            for total_len, block_table in zip(
+                total_lens, self._allocate_block_tables(total_lens)
+            )
+        ]
         return seq_metadata_list, query, key, value, self.kv_cache
 
     def _get_true_mixed_input_tensors(
@@ -272,50 +279,30 @@ class AttentionWrapper:
         )
         query, key, value = self._make_qkv_tensors(total_tokens)
 
-        seq_metadata_list: List[SequenceMetadataProxy] = []
-        next_block_index = 0
-
-        for seq_len, kv_cache_size in zip(
-            true_mixed_input.prefill_seq_lens,
-            true_mixed_input.prefill_kv_cache_sizes,
-        ):
-            total_len = seq_len + kv_cache_size
-            num_blocks = ceil(total_len / self._block_size)
-            if next_block_index + num_blocks > self.max_num_blocks:
-                raise ValueError(
-                    "Requested block_table size exceeds max_num_blocks: "
-                    f"num_blocks={next_block_index + num_blocks} "
-                    f"max_num_blocks={self.max_num_blocks}"
-                )
-            seq_metadata_list.append(
-                SequenceMetadataProxy(
-                    is_prompt=True,
-                    total_len=total_len,
-                    processed_len=kv_cache_size,
-                    block_table=list(range(next_block_index, next_block_index + num_blocks)),
-                )
+        # sequence_total_lens lists the prefill sequences first, then the decodes.
+        total_lens = true_mixed_input.sequence_total_lens
+        processed_lens = (
+            true_mixed_input.prefill_kv_cache_sizes
+            + true_mixed_input.decode_kv_cache_sizes
+        )
+        is_prompt = (
+            [True] * true_mixed_input.num_prefill_seqs
+            + [False] * true_mixed_input.num_decode_seqs
+        )
+        seq_metadata_list = [
+            SequenceMetadataProxy(
+                is_prompt=seq_is_prompt,
+                total_len=total_len,
+                processed_len=processed_len,
+                block_table=block_table,
             )
-            next_block_index += num_blocks
-
-        for kv_cache_size in true_mixed_input.decode_kv_cache_sizes:
-            total_len = kv_cache_size + 1
-            num_blocks = ceil(total_len / self._block_size)
-            if next_block_index + num_blocks > self.max_num_blocks:
-                raise ValueError(
-                    "Requested block_table size exceeds max_num_blocks: "
-                    f"num_blocks={next_block_index + num_blocks} "
-                    f"max_num_blocks={self.max_num_blocks}"
-                )
-            seq_metadata_list.append(
-                SequenceMetadataProxy(
-                    is_prompt=False,
-                    total_len=total_len,
-                    processed_len=kv_cache_size,
-                    block_table=list(range(next_block_index, next_block_index + num_blocks)),
-                )
+            for seq_is_prompt, total_len, processed_len, block_table in zip(
+                is_prompt,
+                total_lens,
+                processed_lens,
+                self._allocate_block_tables(total_lens),
             )
-            next_block_index += num_blocks
-
+        ]
         return seq_metadata_list, query, key, value, self.kv_cache
 
     @torch.inference_mode()
@@ -337,7 +324,7 @@ class AttentionWrapper:
             get_attention_wrapper().forward(
                 query, key, value, kv_cache, softmax_scale=self._softmax_scale
             )
-            torch.cuda.synchronize()
+            self._flush_l2()
 
             self.time_stats_store.clear_stats()
 
@@ -450,7 +437,7 @@ class AttentionWrapper:
             get_attention_wrapper().forward(
                 query, key, value, kv_cache, softmax_scale=self._softmax_scale
             )
-            torch.cuda.synchronize()
+            self._flush_l2()
 
             self.time_stats_store.clear_stats()
 
@@ -527,7 +514,7 @@ class AttentionWrapper:
             get_attention_wrapper().forward(
                 query, key, value, kv_cache, softmax_scale=self._softmax_scale
             )
-            torch.cuda.synchronize()
+            self._flush_l2()
 
             self.time_stats_store.clear_stats()
 

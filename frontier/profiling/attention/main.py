@@ -827,7 +827,8 @@ def _validate_cli_conflicts(args: argparse.Namespace) -> None:
 
 def _filter_standard_attention_inputs_by_memory(
     input_combinations: List[AttentionInput],
-    max_num_tokens: int,
+    max_num_blocks: int,
+    block_size: int,
     model: str,
     tensor_parallel_size: int,
     explicit_decode_kv_cache_sizes: Optional[List[int]] = None,
@@ -848,7 +849,9 @@ def _filter_standard_attention_inputs_by_memory(
     discarded_explicit_inputs: List[AttentionInput] = []
 
     for input_combination in input_combinations:
-        under_memory_limit = input_combination.is_under_memory_limit(max_num_tokens)
+        under_memory_limit = input_combination.is_under_memory_limit(
+            max_num_blocks, block_size
+        )
         if under_memory_limit:
             filtered_inputs.append(input_combination)
 
@@ -871,7 +874,7 @@ def _filter_standard_attention_inputs_by_memory(
             f"{len(discarded_explicit_inputs)} combination(s) for explicit "
             f"decode KV values={discarded_values}; model={model!r}, "
             f"tensor_parallel_size={tensor_parallel_size}, "
-            f"physical_capacity={max_num_tokens} tokens. "
+            f"physical_capacity={max_num_blocks} blocks of {block_size} tokens. "
             f"Retained explicit KV values for this target={retained_values}. "
             "The discarded rows were omitted for this target; other selected "
             "targets may retain them.",
@@ -1893,7 +1896,7 @@ def main():
                 filtered_mixed_combinations[(model, num_tensor_parallel_workers)] = list(
                     filter(
                         lambda mixed_input: mixed_input.is_under_memory_limit(
-                            max_num_blocks * args.block_size
+                            max_num_blocks, args.block_size
                         ),
                         mixed_input_combinations,
                     )
@@ -1961,7 +1964,8 @@ def main():
                 retained_target_explicit_kv,
             ) = _filter_standard_attention_inputs_by_memory(
                 input_combinations,
-                max_num_tokens=target_capacity,
+                max_num_blocks=max_num_blocks,
+                block_size=args.block_size,
                 model=model,
                 tensor_parallel_size=num_tensor_parallel_workers,
                 explicit_decode_kv_cache_sizes=args.decode_kv_cache_size_list,
