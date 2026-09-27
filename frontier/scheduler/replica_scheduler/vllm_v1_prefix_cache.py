@@ -83,7 +83,7 @@ class PrefixCacheLedger:
         )
         raw_hit_blocks = tuple(computed_blocks)
         raw_hit_bindings: list[KVCacheBlockBinding] = []
-        query_hashes = list(request.block_hash_ids)
+        query_hashes = request.prompt_block_hash_ids(int(self._config.block_size))
         for query_index, block in enumerate(raw_hit_blocks):
             binding = block.binding
             if binding is None:
@@ -105,9 +105,7 @@ class PrefixCacheLedger:
             else request.num_prefill_tokens
         )
         # vLLM computes at least the last target token for its logits: a hit
-        # covers at most num_tokens - 1 tokens, in whole blocks. Hashes past
-        # the target (a clipped trace row, a shorter thinking round) admit no
-        # hit.
+        # covers at most num_tokens - 1 tokens, in whole blocks.
         num_admitted_blocks = min(
             len(computed_blocks),
             (schedule_target_tokens - 1) // int(self._config.block_size),
@@ -175,7 +173,7 @@ class PrefixCacheLedger:
         request: Request,
         bindings: Sequence[KVCacheBlockBinding],
     ) -> List[Dict[str, Any]]:
-        query_hashes = list(request.block_hash_ids or [])
+        query_hashes = request.prompt_block_hash_ids(int(self._config.block_size))
         if len(bindings) > len(query_hashes):
             raise ValueError(
                 "Prefix cache hit count exceeds the ordered query hash count."
@@ -212,7 +210,9 @@ class PrefixCacheLedger:
             )
             admission_payload.update(
                 {
-                    "query_hashes": list(request.block_hash_ids or []),
+                    "query_hashes": request.prompt_block_hash_ids(
+                        int(self._config.block_size)
+                    ),
                     "raw_hit_blocks": self._serialize_prefix_cache_hit_bindings(
                         request=request,
                         bindings=admission.raw_hit_bindings,

@@ -183,30 +183,53 @@ def test_committed_full_hit_admission_records_reuse_eviction_and_rebinding(
     ]
 
 
+def _admission_scheduler(manager: KVCacheManager) -> VLLMv1EngineReplicaScheduler:
+    scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._kv_cache_manager = manager
+    scheduler._config = SimpleNamespace(block_size=2, num_blocks=manager.num_gpu_blocks)
+    return scheduler
+
+
+# A trace row that trace replay shortened keeps the hashes of its longer
+# original prompt. They name tokens the request does not have.
 @pytest.mark.parametrize(
-    "num_prefill_tokens, admitted_hashes",
+    "num_prefill_tokens, prompt_hashes",
     [(3, [11]), (5, [11, 22])],
     ids=["prompt_inside_the_second_block", "prompt_inside_the_third_block"],
 )
-def test_a_hit_beyond_the_prompt_leaves_its_last_token_to_compute(
-    num_prefill_tokens, admitted_hashes
+def test_a_prompt_looks_up_only_the_hashes_of_its_full_blocks(
+    num_prefill_tokens, prompt_hashes
 ) -> None:
-    # A clipped trace row keeps the hashes of its longer original prompt.
-    # vLLM caps a hit at num_tokens - 1 (kv_cache_manager.get_computed_blocks).
     manager = _manager(num_gpu_blocks=4)
     creator = _request(hashes=[11, 22, 33], num_prefill_tokens=6)
     assert manager.allocate_slots(creator, 6) is not None
     manager.free(creator)
     consumer = _request(hashes=[11, 22, 33], num_prefill_tokens=num_prefill_tokens)
-    scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
-    scheduler._kv_cache_manager = manager
-    scheduler._config = SimpleNamespace(block_size=2, num_blocks=4)
 
-    admission = scheduler._prepare_prefix_cache_admission(consumer)
+    admission = _admission_scheduler(manager)._prepare_prefix_cache_admission(consumer)
 
-    assert [block.block_hash for block in admission.raw_hit_blocks] == [11, 22, 33]
-    assert [block.block_hash for block in admission.effective_hit_blocks] == admitted_hashes
-    assert admission.effective_cached_tokens == 2 * len(admitted_hashes)
-    assert admission.num_new_tokens == num_prefill_tokens - 2 * len(admitted_hashes)
-    assert admission.full_hit_backoff_applied is True
-    assert manager.prefix_cache_stats.hits == len(admitted_hashes)
+    assert [block.block_hash for block in admission.raw_hit_blocks] == prompt_hashes
+    assert [block.block_hash for block in admission.effective_hit_blocks] == prompt_hashes
+    assert admission.num_new_tokens == num_prefill_tokens - 2 * len(prompt_hashes)
+    assert admission.full_hit_backoff_applied is False
+    assert manager.prefix_cache_stats.queries == len(prompt_hashes)
+
+
+def test_blocks_past_the_prompt_keep_no_trace_hash() -> None:
+    # The creator's decode tokens fill the blocks its extra hashes name, so a
+    # longer prompt with the same hashes hits only the creator's prompt block.
+    manager = _manager(num_gpu_blocks=4)
+    creator = _request(hashes=[11, 22, 33], num_prefill_tokens=3)
+
+    result = manager.allocate_slots(creator, 6)
+
+    assert result is not None
+    assert [binding.block_hash for binding in result.new_bindings] == [11]
+    manager.free(creator)
+    consumer = _request(hashes=[11, 22, 33], num_prefill_tokens=6)
+
+    admission = _admission_scheduler(manager)._prepare_prefix_cache_admission(consumer)
+
+    assert [block.block_hash for block in admission.raw_hit_blocks] == [11]
+    assert admission.effective_cached_tokens == 2
+    assert admission.num_new_tokens == 4
