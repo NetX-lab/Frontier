@@ -118,6 +118,18 @@ def test_true_mixed_memory_limit_counts_whole_blocks_per_sequence():
     assert batch.is_under_memory_limit(9152, 16)
 
 
+@pytest.mark.parametrize("grid_search", [False, True])
+def test_a_prefill_that_is_both_a_first_chunk_and_a_full_prefill_is_profiled_once(grid_search):
+    inputs = _attention_input_tuples(
+        get_attention_input_combinations(
+            4096, 1, 1, True, False, enable_chunked_prefill_grid_search=grid_search
+        )
+    )
+
+    assert len(inputs) == len(set(inputs))
+    assert inputs.count((4096, 0, 1, True)) == 1
+
+
 def test_explicit_decode_cache_endpoint_remains_bounded():
     inputs = get_attention_input_combinations(
         max_seq_len=1000,
