@@ -14,7 +14,7 @@ header ``X-Request-Id: <request_id>``; the server names the engine request
 dispatch times are not delayed by encoding.
 
 The run mode (calibration contract, "Run Modes") sets the server's Frontier
-switches; none is inherited from the worker. Both modes write the placement
+switches; none is inherited from the worker. Every mode writes the placement
 records to ``dp_placement/``, declared scheduler-level workflow evidence.
 
 ``clean``
@@ -22,6 +22,14 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
 ``instrumented``
     Instrumentation on with the MoE routing records (``moe_routing.jsonl``),
     E2E request metrics off.
+``op_timing``, ``kernel_timing``
+    Instrumentation on with CUDA-event timing per operator scope
+    (``op_timing.jsonl``) and the batch, PP boundary and schedule records
+    (``batch_log.jsonl``, ``pp_boundary.jsonl``, ``schedule.jsonl``); MoE
+    routing records and E2E request metrics off. ``op_timing`` times each scope
+    as it runs, launch gaps included. ``kernel_timing`` synchronizes the device
+    before each scope, so a scope holds its kernels only. The step times of
+    neither mode are ground truth.
 
 The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
 from the engine file's ``attention_backend`` and is otherwise left to vLLM's
@@ -49,7 +57,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "stage_admission_pp
 from vllm_burst_driver import prompt_token_ids, write_model_dir  # noqa: E402
 
 SERVED_MODEL_NAME = "dp_pp_case"
-MODES = ("clean", "instrumented")
+# Operator-timing modes and the CUDA-event scope mode each one runs.
+OP_TIMING_SCOPE_MODES = {"op_timing": "default", "kernel_timing": "kernel_only"}
+MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES)
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 
 
@@ -64,9 +74,20 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
     mode_env = {"VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": str(output_dir / "dp_placement")}
     if mode == "clean":
         mode_env["VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH"] = str(output_dir / "request_metrics.jsonl")
-    else:
+    elif mode == "instrumented":
         mode_env["VLLM_FRONTIER_INSTRUMENTATION"] = "1"
         mode_env["VLLM_FRONTIER_MOE_ROUTING_LOG_PATH"] = str(output_dir / "moe_routing.jsonl")
+    else:
+        mode_env |= {
+            "VLLM_FRONTIER_INSTRUMENTATION": "1",
+            "VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH": str(output_dir / "op_timing.jsonl"),
+            "VLLM_FRONTIER_OP_TIMING_MODE": "cuda_event",
+            "VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": OP_TIMING_SCOPE_MODES[mode],
+            "VLLM_FRONTIER_OP_AGG_MODE": "per_scope",
+            "VLLM_FRONTIER_BATCH_LOG_PATH": str(output_dir / "batch_log.jsonl"),
+            "VLLM_FRONTIER_PP_BOUNDARY_LOG_PATH": str(output_dir / "pp_boundary.jsonl"),
+            "VLLM_FRONTIER_SCHED_LOG_PATH": str(output_dir / "schedule.jsonl"),
+        }
     if "attention_backend" in engine:
         mode_env["VLLM_ATTENTION_BACKEND"] = engine["attention_backend"]
     if not engine["enable_chunked_prefill"]:
