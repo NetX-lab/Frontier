@@ -905,6 +905,14 @@ class VLLMv1EngineReplicaScheduler(
                 waiting_queue.popleft()
                 skipped_waiting_requests.append(request)
                 continue
+            if request.id in self._get_monolithic_pp_pending_terminal_release_iters():
+                # Its previous thinking round still waits for the terminal
+                # release that resets its scheduler frontier. Only SGLang
+                # reaches this: the vllm_v1 pass admits nothing while any
+                # release is pending.
+                waiting_queue.popleft()
+                skipped_waiting_requests.append(request)
+                continue
             if self._should_defer_monolithic_pp_waiting_admission(request):
                 logger.debug(
                     "[VLLMv1Engine][MONOLITHIC] Phase 2: delaying req=%s "
