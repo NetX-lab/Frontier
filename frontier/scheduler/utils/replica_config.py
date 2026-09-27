@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import fields, is_dataclass
+from dataclasses import fields, is_dataclass, replace
 from typing import Any
 
 from frontier.config import BaseReplicaSchedulerConfig
@@ -42,7 +42,11 @@ _OVERRIDE_FIELDS = (
 
 
 def resolve_replica_scheduler_config(config: Any, cluster_type: ClusterType) -> Any:
-    """Return a copied scheduler config with cluster-local overrides applied."""
+    """Return a copied scheduler config with cluster-local overrides applied.
+
+    The role config is rebuilt with ``dataclasses.replace`` so that its
+    ``__post_init__`` checks the values the role actually runs with.
+    """
 
     base_config = config.replica_scheduler_config
     prefix = _CLUSTER_PREFIX.get(cluster_type)
@@ -55,6 +59,7 @@ def resolve_replica_scheduler_config(config: Any, cluster_type: ClusterType) -> 
         if hasattr(config, type_field)
         else None
     )
+    role_values = {}
     if override_type_name is None:
         cluster_config = copy.deepcopy(base_config)
     else:
@@ -73,12 +78,12 @@ def resolve_replica_scheduler_config(config: Any, cluster_type: ClusterType) -> 
         base_names = {field.name for field in fields(base_config)}
         cluster_names = {field.name for field in fields(cluster_config)}
         for field_name in sorted(base_names & cluster_names):
-            setattr(cluster_config, field_name, getattr(base_config, field_name))
+            role_values[field_name] = getattr(base_config, field_name)
 
     for field_name in _OVERRIDE_FIELDS:
         config_name = f"{prefix}_replica_scheduler_config_{field_name}"
         if hasattr(config, config_name):
             value = getattr(config, config_name)
             if value is not None and hasattr(cluster_config, field_name):
-                setattr(cluster_config, field_name, value)
-    return cluster_config
+                role_values[field_name] = value
+    return replace(cluster_config, **role_values)

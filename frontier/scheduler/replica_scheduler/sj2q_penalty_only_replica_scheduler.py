@@ -69,12 +69,6 @@ class SJ2QPenaltyOnlyReplicaScheduler(VLLMv1EngineReplicaScheduler):
     def _maybe_promote_final_round_priority(self, request: Request) -> None:
         return None
 
-    def _is_final_prefill_fast_lane_request(self, request: Request) -> bool:
-        return False
-
-    def _is_final_decode_fast_lane_request(self, request: Request) -> bool:
-        return False
-
     # ------------------------------------------------------------------
     # Session-state helpers
     # ------------------------------------------------------------------
@@ -407,6 +401,7 @@ class SJ2QPenaltyOnlyReplicaScheduler(VLLMv1EngineReplicaScheduler):
     # vLLM-v1 hook overrides
     # ------------------------------------------------------------------
     def add_request(self, request: Request) -> None:
+        self._check_request_fits_max_model_len(request)
         self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         state = self._load_or_create_session_state(request)

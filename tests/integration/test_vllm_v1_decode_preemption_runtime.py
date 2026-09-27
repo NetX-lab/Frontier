@@ -38,6 +38,7 @@ from frontier.config import (
     VllmV1SchedulerConfig,
 )
 from frontier.entities.batch import Batch
+from frontier.entities.request import Request
 from frontier.errors import FrontierMemoryOOMError
 from frontier.events import global_batch_end_event
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
@@ -868,6 +869,39 @@ def test_a_recompute_uses_whole_prompt_blocks_from_the_prefix_cache(
     )
     _assert_every_request_completes(simulator, 3)
 
+
+# The hashes name three blocks; each 20-token prompt fills one. Decode fills
+# the other two, so they keep no hash, and a recompute hits only the prompt
+# block.
+LONG_HASH_TRACE = """arrived_at,num_prefill_tokens,num_decode_tokens,session_id,block_hash_ids
+0.0,20,30,1,11|22|33
+0.0,20,30,1,11|22|33
+0.0,20,30,1,11|22|33
+"""
+
+
+def test_a_recompute_hits_only_the_blocks_of_its_prompt(tmp_path, monkeypatch):
+    hits = []
+    on_cache_hit = Request.on_cache_hit
+
+    def observed_on_cache_hit(self, num_tokens_cached):
+        hits.append((self.is_recomputing, num_tokens_cached))
+        on_cache_hit(self, num_tokens_cached)
+
+    monkeypatch.setattr(Request, "on_cache_hit", observed_on_cache_hit)
+    simulator = Simulator(
+        _trace_config(
+            tmp_path,
+            trace_text=LONG_HASH_TRACE,
+            num_blocks=4,
+            enable_prefix_caching=True,
+        )
+    )
+    simulator.run()
+
+    assert (True, 16) in hits, hits
+    assert max(cached for _, cached in hits) == 16, hits
+    _assert_every_request_completes(simulator, 3)
 
 def test_a_recompute_step_carries_no_drafts(tmp_path, monkeypatch):
     events = _observe_recompute(monkeypatch)
