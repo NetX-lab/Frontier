@@ -2,14 +2,14 @@
 
 vLLM 0.10.2 appends an empty scheduler output to the batch queue and then
 blocks on the oldest in-flight batch, even when the queue still has room
-(`EngineCore.step_with_batch_queue`, `vllm/v1/engine/core.py:364-424`). A
-request that arrives meanwhile waits in the input queue until the next busy-loop
-iteration drains it, after that oldest output is applied (`:804-856`). With
-PP=1 every iteration blocks on its own batch.
+(`EngineCore.step_with_batch_queue`, `vllm/v1/engine/core.py:318-369` at the
+fork commit `ea95f571`). A request that arrives meanwhile waits in the input
+queue until the next busy-loop iteration drains it, after that oldest output is
+applied (`:749-801`). With PP=1 every iteration blocks on its own batch.
 
 The MONOLITHIC case and the unified PDD DECODE case follow the same rule. Both
 use one attention-DP lane, so no DP dummy forward follows the empty iteration
-(`:1183-1190`).
+(`:1102-1109`).
 """
 
 from __future__ import annotations

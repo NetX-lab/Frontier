@@ -111,12 +111,13 @@ def _assert_reports_follow_engine_iterations(run: dict, num_pipeline_stages: int
 def _admissions_while_the_engine_blocks(run: dict) -> list[dict]:
     """Return the admissions a reference engine could not make at that instant.
 
-    Reference `step_with_batch_queue` (`vllm/v1/engine/core.py:364-424`): an
-    iteration that schedules nothing, or fills the pipeline, blocks on the
-    oldest in-flight batch, and a request that arrives meanwhile waits for the
-    next iteration. So a lane with a batch in flight admits only in the pass of
-    a previous admission or at the end of its oldest batch; an idle lane admits
-    at any time. Iterations take no host time here, as in Frontier.
+    Reference `step_with_batch_queue` (`vllm/v1/engine/core.py:318-369` at the
+    fork commit `ea95f571`): an iteration that schedules nothing, or fills the
+    pipeline, blocks on the oldest in-flight batch, and a request that arrives
+    meanwhile waits for the next iteration. So a lane with a batch in flight
+    admits only in the pass of a previous admission or at the end of its oldest
+    batch; an idle lane admits at any time. Iterations take no host time here,
+    as in Frontier.
     """
 
     in_flight: dict[int, list[int]] = defaultdict(list)
