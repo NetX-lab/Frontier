@@ -7,6 +7,10 @@ throughput over the formal window (first formal arrival to last formal completio
 each side on its own clock). A metric passes when its relative error
 abs(frontier - vllm) / abs(vllm) is at most 0.10.
 
+The vLLM rows follow the case manifest's topology.frontier.sys_arch: request_metrics.jsonl
+of the one instance for co-location, the joined 1P1D rows of pd_metrics.py
+(pd_request_metrics.jsonl) for pd-disaggregation.
+
 Several Frontier runs of the same case may be given. The first is the gated checkout;
 the others are reference checkouts reported next to it and never change the verdict.
 
@@ -72,6 +76,18 @@ def vllm_rows(run_dir: Path) -> tuple:
         "tpot": "tpot_ms", "request_e2e_time": "request_e2e_time_ms",
     })
     return rows[NORMALIZED_COLUMNS], [file_record(manifest), file_record(metrics)]
+
+
+def vllm_pd_rows(run_dir: Path) -> tuple:
+    manifest = run_dir / "run_manifest.json"
+    metrics = run_dir / "run" / "pd_request_metrics.jsonl"
+    require_written_after(metrics, manifest)
+    rows = pd.read_json(metrics, lines=True, convert_dates=False, dtype={"request_id": str})
+    return rows[NORMALIZED_COLUMNS], [file_record(manifest), file_record(metrics),
+                                      file_record(run_dir / "run" / "pd_join_report.json")]
+
+
+VLLM_ROWS = {"co-location": vllm_rows, "pd-disaggregation": vllm_pd_rows}
 
 
 def frontier_rows(run_dir: Path, trace_rows: pd.DataFrame) -> tuple:
@@ -207,7 +223,7 @@ def main() -> None:
     classified_ids = setup_ids | set(formal_ids)
     trace_rows = pd.DataFrame(request_ids["rows"])
 
-    rows, vllm_files = vllm_rows(args.vllm_run_dir)
+    rows, vllm_files = VLLM_ROWS[manifest["topology"]["frontier"]["sys_arch"]](args.vllm_run_dir)
     sides = {"vllm": formal_sample(rows, formal_ids, classified_ids)}
     inputs = {"manifest": file_record(args.manifest), "request_ids": file_record(args.request_ids),
               "vllm": vllm_files, "frontier": {}}

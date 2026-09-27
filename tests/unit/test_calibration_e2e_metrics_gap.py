@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -22,9 +23,10 @@ def write_after(path, content, mtime):
     os.utime(path, (mtime, mtime))
 
 
-def write_case(root, frontier_runs, vllm_rows=VLLM_ROWS):
+def write_case(root, frontier_runs, vllm_rows=VLLM_ROWS, sys_arch="co-location"):
     """frontier_runs: label -> (rows like VLLM_ROWS, metrics mtime minus config mtime)."""
-    write_after(root / "manifest.yaml", "case_id: synthetic\nrun_generation: 1\n", 0)
+    write_after(root / "manifest.yaml", "case_id: synthetic\nrun_generation: 1\n"
+                f"topology: {{frontier: {{sys_arch: {sys_arch}}}}}\n", 0)
     trace = [{"frontier_request_id": 0, "request_id": "w", "arrived_at": 0.0}]
     trace += [{"frontier_request_id": index + 1, "request_id": request_id, "arrived_at": arrival}
               for index, (request_id, arrival) in enumerate(FORMAL.items())]
@@ -34,12 +36,22 @@ def write_case(root, frontier_runs, vllm_rows=VLLM_ROWS):
     arrivals = {"w": 0.0, **FORMAL, "x": 3.0}  # x: a row in no id list
     vllm_run = root / "vllm_run"
     write_after(vllm_run / "run_manifest.json", "{}", 100)
-    write_after(vllm_run / "run" / "request_metrics.jsonl", "".join(
-        json.dumps({"request_id": f"cmpl-{request_id}-0", "arrival_time": 1000 + arrivals[request_id],
-                    "completion_time": 1000 + arrivals[request_id] + e2e / 1000, "ttft": ttft,
-                    "tpot": tpot, "request_e2e_time": e2e, "request_num_prefill_tokens": prefill,
-                    "request_num_decode_tokens": decode}) + "\n"
-        for request_id, (ttft, tpot, e2e, prefill, decode) in vllm_rows.items()), 200)
+    if sys_arch == "pd-disaggregation":
+        write_after(vllm_run / "run" / "pd_join_report.json", "{}", 200)
+        write_after(vllm_run / "run" / "pd_request_metrics.jsonl", "".join(
+            json.dumps({"request_id": request_id, "arrival_s": 1000 + arrivals[request_id],
+                        "completion_s": 1000 + arrivals[request_id] + e2e / 1000, "ttft_ms": ttft,
+                        "tpot_ms": tpot, "request_e2e_time_ms": e2e,
+                        "request_num_prefill_tokens": prefill, "request_num_decode_tokens": decode,
+                        "handoff_ms": 1.0}) + "\n"
+            for request_id, (ttft, tpot, e2e, prefill, decode) in vllm_rows.items()), 200)
+    else:
+        write_after(vllm_run / "run" / "request_metrics.jsonl", "".join(
+            json.dumps({"request_id": f"cmpl-{request_id}-0", "arrival_time": 1000 + arrivals[request_id],
+                        "completion_time": 1000 + arrivals[request_id] + e2e / 1000, "ttft": ttft,
+                        "tpot": tpot, "request_e2e_time": e2e, "request_num_prefill_tokens": prefill,
+                        "request_num_decode_tokens": decode}) + "\n"
+            for request_id, (ttft, tpot, e2e, prefill, decode) in vllm_rows.items()), 200)
     arguments = []
     for label, (rows, metrics_age) in frontier_runs.items():
         metrics = root / label / "metrics" / "model" / "online_serving" / "run"
@@ -134,3 +146,14 @@ def test_a_routing_mismatch_fails_every_metric(tmp_path, monkeypatch):
     table, status = run_gap(monkeypatch, tmp_path, arguments, routing_status="MISMATCH")
 
     assert (table["status"] == "FAIL").all() and status["gate"] == "FAIL"
+
+
+def test_a_pd_case_reads_the_joined_rows_of_both_instances(tmp_path, monkeypatch):
+    runs = {"stack_head": (scaled(VLLM_ROWS, 1.05), 1)}
+    colocation, _ = run_gap(monkeypatch, tmp_path / "colocation", write_case(tmp_path / "colocation", runs))
+    pd_table, status = run_gap(monkeypatch, tmp_path / "pd",
+                               write_case(tmp_path / "pd", runs, sys_arch="pd-disaggregation"))
+
+    pd.testing.assert_frame_equal(pd_table, colocation)
+    assert [Path(record["path"]).name for record in status["inputs"]["vllm"]] == [
+        "run_manifest.json", "pd_request_metrics.jsonl", "pd_join_report.json"]
