@@ -7,10 +7,7 @@ needs and the model selection that decides which trained estimator answers.
 
 from frontier.config import get_quantization_manager
 from frontier.entities import Batch, ExecutionTime
-from frontier.entities.time_components import MoETime
-from frontier.execution_time_predictor.moe_predictor_helpers import (
-    _MOE_GATING_OPERATOR_NAMES,
-)
+from frontier.entities.time_components import MoEOperatorTimes, MoETime
 from frontier.logger import init_logger
 from frontier.moe_ep_workload import EPLaneWorkload, resolve_ep_lane_workload
 from frontier.moe_gating_runtime import (
@@ -30,6 +27,43 @@ from typing import Dict, Mapping, Optional
 
 
 logger = init_logger(__name__)
+
+
+_MOE_GATING_OPERATOR_NAMES = frozenset(
+    operator.name
+    for operator in MOE_FAMILY.profiling_ops()
+    if operator.precision_name() == "moe_gating"
+)
+
+
+def _build_moe_operator_times(
+    *,
+    mlp_norm_time: float,
+    moe_gating_linear_time: float,
+    moe_gating_routing_topk_time: float,
+    moe_shuffling_time: float,
+    moe_grouped_gemm_time: float,
+    share_expert_up_proj_time: float = 0.0,
+    share_expert_act_time: float = 0.0,
+    share_expert_down_proj_time: float = 0.0,
+    include_share_expert: bool = False,
+) -> MoEOperatorTimes:
+    op_times = {
+        "post_attention_layernorm": mlp_norm_time,
+        "moe_gating_linear": moe_gating_linear_time,
+        "moe_gating_routing_topk": moe_gating_routing_topk_time,
+        "moe_shuffling": moe_shuffling_time,
+        "moe_grouped_gemm": moe_grouped_gemm_time,
+    }
+    if include_share_expert:
+        op_times.update(
+            {
+                "share_expert_up_proj": share_expert_up_proj_time,
+                "share_expert_act": share_expert_act_time,
+                "share_expert_down_proj": share_expert_down_proj_time,
+            }
+        )
+    return MoEOperatorTimes(op_times=op_times)
 
 
 class MoeOperatorTimes:

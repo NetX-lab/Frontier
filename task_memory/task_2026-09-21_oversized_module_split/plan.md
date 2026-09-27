@@ -8,6 +8,7 @@
 | 2026-09-21 | Recorded the boundaries actually implemented for `config.py` in section 3.1, which differ from the proposal. |
 | 2026-09-21 | Recorded the boundaries actually implemented for the vLLM V1 replica scheduler in section 3.2. |
 | 2026-09-21 | Recorded the boundaries actually implemented for the shared prediction model manager in section 3.3 and the MoE predictor in 3.4. |
+| 2026-09-26 | Review cleanup (open-PR review D10): unused imports removed, `moe_predictor_helpers.py` dissolved into its owners, PP terminal release moved out of the MTP wait mixin; tables in 3.2, 3.3 and 3.4 updated. |
 
 ## 1. Scope and result
 
@@ -81,12 +82,13 @@ Same mixin mechanism as the configuration split, for the same reason: the move s
 | Module | Lines | Content |
 | --- | --- | --- |
 | `vllm_v1_engine_replica_scheduler.py` | 1386 | The class shell, `__init__`, batch creation and active-set bookkeeping, `complete_kv_transfer_for_requests`, `on_batch_end`, phase 1 and phase 2 scheduling, the two-phase entry point, and the public overrides |
-| `vllm_v1_mtp_wait.py` | 1142 | `TargetEmbeddedMtpWaitPolicy`: admission delay, output wait and terminal release timing for target-embedded MTP under monolithic pipeline parallelism |
+| `vllm_v1_mtp_wait.py` | 970 | `TargetEmbeddedMtpWaitPolicy`: admission delay and output wait for target-embedded MTP under monolithic pipeline parallelism |
+| `vllm_v1_pp_terminal_release.py` | 188 | `PipelineTerminalRelease`: the deferred KV release of every finished request under MONOLITHIC PP, with or without MTP |
 | `vllm_v1_role_schedules.py` | 858 | `DisaggregatedRoleScheduling`: the prefill-only, decode-only, decode-waiting and decode-attention entry points a disaggregated cluster drives |
 | `vllm_v1_kv_allocation.py` | 713 | `KvBlockAllocation`: token accounting, block allocation, preemption and resource release |
 | `vllm_v1_iteration_policy.py` | 597 | `IterationSchedulingPolicy`: scheduling policy, fast lanes, CUDA graph capture sizing, speculative-decoding batch metadata, decision-log emission |
 | `vllm_v1_prefix_cache.py` | 253 | `PrefixCacheAdmission`, `PrefixCacheLedger`: admission and identity events |
-| `vllm_v1_decode_attn_cohort.py` | 219 | `DecodeAttentionCohort`: cohort identity, stage slots and phase for the PD-AF decode-attention role |
+| `vllm_v1_decode_attn_cohort.py` | 217 | `DecodeAttentionCohort`: cohort identity, stage slots and phase for the PD-AF decode-attention role |
 | `vllm_v1_decision_log.py` | 44 | The optional JSONL decision log and its enabled predicate |
 
 Cleanup first: removed `_attach_afd_metadata_if_needed`, 65 lines with no caller anywhere, which duplicated `frontier/scheduler/utils/afd_metadata.py`.
@@ -112,12 +114,12 @@ Correctness-branch owner after split: request-load accounting for Step 4 (`waiti
 
 | Module | Lines | Content |
 | --- | --- | --- |
-| `shared_prediction_model_manager.py` | 722 | Construction, cluster requirement analysis, measurement-family and input-file selection, the estimator and scorer factory, training orchestration, the GDN predictor, and the public API |
+| `shared_prediction_model_manager.py` | 620 | Construction, cluster requirement analysis, measurement-family and input-file selection, the estimator and scorer factory, training orchestration, the GDN predictor, and the public API |
 | `prediction_family_trainers.py` | 1700 | `PredictionFamilyTrainers`: one method per operator family, plus the shared fitting routine |
 | `profiling_dataframe_loaders.py` | 985 | `ProfilingDataFrameLoaders`: one loader per profiling CSV, its column validation, the feature-column constants and the derived features |
 | `prediction_model_registry.py` | 587 | `PredictionModelRegistry`: cache keys, trained-model identity, the in-memory registries and the persistent cache |
 | `layer_contract_resolution.py` | 495 | `LayerContractResolution`: typed layer contract and TP/EP key resolution, the FFN contract signature, the MoE dataset contract |
-| `prediction_model_identity.py` | 324 | Module-level identity helpers with no state: operator-family names, architecture-profile resolution, layer cache identity, typed contract matching |
+| `prediction_model_identity.py` | 324 | Module-level identity helpers with no state: operator-family names, architecture-profile resolution, layer cache identity, typed contract matching; the only copy of the MoE family-name functions |
 
 Cleanup first, all three verified definition-only repo-wide: `get_required_capabilities`, `get_training_context` and `_get_moe_df_with_derived_features`.
 
@@ -144,16 +146,17 @@ Correctness-branch owner after split: routing-runtime identity (Step 5) enters `
 
 | Module | Lines | Content |
 | --- | --- | --- |
-| `sklearn_moe_execution_time_predictor.py` | 1557 | The class shell, dummy-mode timing, layer classification, the attention query cache, the layer and stage orchestration and the public prediction entry points |
-| `moe_operator_times.py` | 710 | `MoeOperatorTimes`: gating, routing top-k, shuffling, grouped expert GEMM, the expert-parallel collective, and the token-count resolution each needs |
-| `moe_routing_workload.py` | 583 | `MoeRoutingWorkload`: the expert-load distribution and the per-lane routed workload it produces |
-| `moe_dataset_training.py` | 438 | `MoeDatasetTraining`: dataset admission, per-operator training, and the load-imbalance feature list |
+| `sklearn_moe_execution_time_predictor.py` | 1516 | The class shell, dummy-mode timing, layer classification, the attention query cache, the layer and stage orchestration and the public prediction entry points |
+| `moe_operator_times.py` | 747 | `MoeOperatorTimes`: gating, routing top-k, shuffling, grouped expert GEMM, the expert-parallel collective, the token-count resolution each needs, and the `MoEOperatorTimes` builder |
+| `moe_routing_workload.py` | 636 | `MoeRoutingWorkload`: the expert-load distribution, the per-lane routed workload it produces, and the routing-details trace normalization |
+| `moe_dataset_training.py` | 477 | `MoeDatasetTraining`: dataset admission, MoE column validation, per-operator training, and the load-imbalance feature list |
 | `moe_mtp_replay.py` | 216 | `MoeMtpReplay`: MoE time for speculative-decoding replay rows |
-| `moe_predictor_helpers.py` | 176 | The module-level helpers, in a leaf module so the mixins can use them without importing the predictor |
+
+The first cut also had `moe_predictor_helpers.py`, which held copies of five MoE family-name functions from `prediction_model_identity.py`. The review cleanup removed it: those callers import `prediction_model_identity`, and each remaining helper moved to the module that uses it.
 
 Cleanup removed `_is_grouped_gemm_on_demand_mode`, 14 lines with no reference anywhere.
 
-Three tests needed a second patch target rather than a moved one: `MOE_FAMILY` is now read in two modules, so a fake family has to be installed in both for it to be seen end to end. That is recorded in `issues.md` I10, and it is the one case in this branch where a test gained a line rather than changing one.
+Three tests needed a second patch target rather than a moved one: `MOE_FAMILY` is now read in several modules (after the review cleanup: `moe_dataset_training`, `moe_operator_times` and `prediction_model_identity`), so a fake family has to be installed in each for it to be seen end to end. That is recorded in `issues.md` I10, and it is the one case in this branch where a test gained a line rather than changing one.
 
 ### 3.4a Original proposal (superseded)
 

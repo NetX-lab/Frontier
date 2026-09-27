@@ -18,9 +18,8 @@ Reference:
 
 from collections import deque
 from dataclasses import replace
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
-from frontier.config import global_vars
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
 from frontier.entities.batch import Batch, Request
@@ -28,9 +27,6 @@ from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
     BaseReplicaScheduler,
-)
-from frontier.scheduler.replica_scheduler.vllm_v1_decision_log import (
-    _log_frontier_vllm_v1_schedule_decision,
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_decode_attn_cohort import (
     DecodeAttentionCohort,
@@ -42,6 +38,9 @@ from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
 from frontier.scheduler.replica_scheduler.vllm_v1_kv_allocation import KvBlockAllocation
 from frontier.scheduler.replica_scheduler.vllm_v1_mtp_wait import (
     TargetEmbeddedMtpWaitPolicy,
+)
+from frontier.scheduler.replica_scheduler.vllm_v1_pp_terminal_release import (
+    PipelineTerminalRelease,
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_prefix_cache import (
     PrefixCacheAdmission,
@@ -59,6 +58,7 @@ class VLLMv1EngineReplicaScheduler(
     KvBlockAllocation,
     PrefixCacheLedger,
     TargetEmbeddedMtpWaitPolicy,
+    PipelineTerminalRelease,
     DecodeAttentionCohort,
     DisaggregatedRoleScheduling,
     BaseReplicaScheduler,

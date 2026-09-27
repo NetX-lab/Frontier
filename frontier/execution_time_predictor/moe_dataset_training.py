@@ -9,11 +9,10 @@ import numpy as np
 import os
 import pandas as pd
 
-from frontier.execution_time_predictor.moe_predictor_helpers import (
+from frontier.execution_time_predictor.prediction_model_identity import (
     _get_moe_family_model_names,
     _get_prefill_hot_moe_gating_model_names,
     _is_moe_gating_family_model_name,
-    _validate_moe_columns,
 )
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import (
@@ -26,6 +25,7 @@ from frontier.moe_gating_runtime import (
     should_enable_prefill_hot_moe_gating_contract,
 )
 from frontier.moe_routing_runtime import filter_moe_gating_routing_topk_rows
+from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
 from frontier.operators.typed_contracts import (
     TYPED_OPERATOR_CONTRACTS_COLUMN,
     validate_typed_operator_contracts,
@@ -35,6 +35,45 @@ from typing import Any, Dict, List, Optional
 
 
 logger = init_logger(__name__)
+
+
+def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
+    """
+    Validate that MoE DataFrame contains required split gating columns.
+
+    This function enforces fail-fast behavior by rejecting legacy moe_gating
+    column format and requiring the split columns (moe_gating_linear and
+    moe_gating_routing_topk).
+
+    Args:
+        moe_df: DataFrame containing MoE profiling data
+
+    Raises:
+        ValueError: If required split columns are missing or if legacy
+                   moe_gating column is present without split columns
+    """
+    required_columns = [
+        f"time_stats.{operator_name}.median"
+        for operator_name in get_family_profiling_names(MOE_FAMILY)
+    ]
+
+    missing_columns = [col for col in required_columns if col not in moe_df.columns]
+
+    if missing_columns:
+        # Check if legacy moe_gating column exists (for better error message)
+        legacy_col = "time_stats.moe_gating.median"
+        if legacy_col in moe_df.columns:
+            raise ValueError(
+                f"Missing required MoE columns: {missing_columns}. "
+                f"Found legacy '{legacy_col}' column which is no longer supported. "
+                f"Re-run MoE profiling with split gating scopes enabled to generate "
+                f"'moe_gating_linear' and 'moe_gating_routing_topk' columns."
+            )
+        else:
+            raise ValueError(
+                f"Missing required MoE columns: {missing_columns}. "
+                f"Re-run MoE profiling with split gating scopes enabled."
+            )
 
 
 class MoeDatasetTraining:

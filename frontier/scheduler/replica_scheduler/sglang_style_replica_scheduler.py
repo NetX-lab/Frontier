@@ -5,9 +5,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.entities.batch import Batch, Request
 from frontier.logger import get_cluster_logger
+from frontier.scheduler.replica_scheduler.vllm_v1_decision_log import (
+    _log_frontier_vllm_v1_schedule_decision,
+)
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
-    _log_frontier_vllm_v1_schedule_decision,
 )
 from frontier.types import ClusterType
 
