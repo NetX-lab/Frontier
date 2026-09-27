@@ -294,21 +294,35 @@ def test_repeated_invocations_do_not_reuse_a_stale_result():
     assert not torch.equal(first_actual, second_actual)
 
 
-def test_fp8_path_runs_on_the_gated_activation():
+@pytest.mark.parametrize(
+    ("per_channel_quant", "block_shape", "width"),
+    [
+        (False, [128, 128], 256),
+        # A width that is not a multiple of 128 is legal outside block mode;
+        # a per-token-group quantizer with groups of 128 rejects it.
+        (False, None, 192),
+        (True, None, 192),
+    ],
+    ids=["block", "per_tensor", "per_token"],
+)
+def test_fp8_path_runs_on_the_gated_activation(per_channel_quant, block_shape, width):
     """The FP8 path quantizes the gated activation and still produces output.
 
     This is a structural check on native kernels, not FP8 parity. Frontier
     quantizes weights with its own helpers, so a bit-exact comparison against
-    `fused_experts` would first require matching that scheme. What it does settle is that the step quantizes the hidden state
-    and then the gated activation buffer, rather than a raw slice of the first
-    projection, and that the real kernels accept those operands with the FP8
+    `fused_experts` would first require matching that scheme. What it does
+    settle, in each FP8 mode, is that the step quantizes the hidden state and
+    then the gated activation buffer, rather than a raw slice of the first
+    projection; that each input gets the scale layout the kernel reads in that
+    mode (per-token groups of the block's K size, one scale per token, or one
+    per tensor); and that the real kernels accept those operands with the FP8
     kernel config and return finite values.
     """
 
     if not kernel.check_fp8_available():
         pytest.skip("FP8 quantization utilities are unavailable in this build")
 
-    num_tokens, hidden, width, top_k, num_experts = 256, 512, 256, 2, 16
+    num_tokens, hidden, top_k, num_experts = 256, 512, 2, 16
     activations, w1, w2, topk_weights, topk_ids, expert_map = _build_case(
         num_tokens=num_tokens,
         hidden=hidden,
@@ -320,9 +334,12 @@ def test_fp8_path_runs_on_the_gated_activation():
         seed=17,
     )
 
-    block_shape = [128, 128]
-    quantized_w1, w1_scale = kernel.quantize_weights_to_fp8(w1, block_shape=block_shape)
-    quantized_w2, w2_scale = kernel.quantize_weights_to_fp8(w2, block_shape=block_shape)
+    quantized_w1, w1_scale = kernel.quantize_weights_to_fp8(
+        w1, per_channel=per_channel_quant, block_shape=block_shape
+    )
+    quantized_w2, w2_scale = kernel.quantize_weights_to_fp8(
+        w2, per_channel=per_channel_quant, block_shape=block_shape
+    )
 
     with vllm_config_context():
         config = kernel.try_get_optimal_moe_config(
@@ -341,8 +358,9 @@ def test_fp8_path_runs_on_the_gated_activation():
         original_quantize = kernel.quantize_activations_to_fp8
 
         def observing_quantize(tensor, per_channel_quant, block_shape):
-            observed.append(tuple(tensor.shape))
-            return original_quantize(tensor, per_channel_quant, block_shape)
+            quantized, scale = original_quantize(tensor, per_channel_quant, block_shape)
+            observed.append((tuple(tensor.shape), tuple(scale.shape)))
+            return quantized, scale
 
         kernel.quantize_activations_to_fp8 = observing_quantize
         try:
@@ -372,9 +390,10 @@ def test_fp8_path_runs_on_the_gated_activation():
                 w1_scale=w1_scale,
                 w2_scale=w2_scale,
                 use_fp8=True,
-                # The production block-quantized path hands the kernel its
-                # block shape; without it the kernel reads the scales as
-                # per-tensor and this check would exercise a different path.
+                # The production path hands the kernel its FP8 mode; without
+                # it the kernel reads the scales as per-tensor and this check
+                # would exercise a different path.
+                per_channel_quant=per_channel_quant,
                 block_shape=block_shape,
             )
         finally:
@@ -384,6 +403,13 @@ def test_fp8_path_runs_on_the_gated_activation():
     # The step quantizes the hidden state, then the gated activation. The gated
     # activation is `(M * top_k, width)`; the raw first projection would be
     # twice as wide.
-    assert observed == [(num_tokens, hidden), (num_tokens * top_k, width)]
+    input_shapes = [(num_tokens, hidden), (num_tokens * top_k, width)]
+    if block_shape is not None:
+        scale_shapes = [(rows, cols // block_shape[1]) for rows, cols in input_shapes]
+    elif per_channel_quant:
+        scale_shapes = [(rows, 1) for rows, _ in input_shapes]
+    else:
+        scale_shapes = [(1,), (1,)]
+    assert observed == list(zip(input_shapes, scale_shapes))
     assert out_hidden_states.shape == (num_tokens, hidden)
     assert torch.isfinite(out_hidden_states).all()
