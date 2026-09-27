@@ -10,7 +10,7 @@ import random
 from pathlib import Path
 
 from tests.comparison.dp_placement_pp.make_trace import build_rows
-from tests.comparison.dp_placement_pp.vllm_replay import server_env
+from tests.comparison.dp_placement_pp.vllm_replay import OP_TIMING_SCOPES, server_env
 
 
 def workload(bursts: list[dict]) -> dict:
@@ -115,6 +115,7 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": "/run/dp_placement",
         "VLLM_FRONTIER_INSTRUMENTATION": "1",
         "VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH": "/run/op_timing.jsonl",
+        "VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES": ",".join(OP_TIMING_SCOPES),
         "VLLM_FRONTIER_OP_TIMING_MODE": "cuda_event",
         "VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": "default",
         "VLLM_FRONTIER_OP_AGG_MODE": "per_scope",
@@ -123,3 +124,5 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_FRONTIER_SCHED_LOG_PATH": "/run/schedule.jsonl",
     }
     assert kernel_timing == op_timing | {"VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": "kernel_only"}
+    # The fork's default scope list has no dense MLP scope; the timing modes name them.
+    assert {"mlp_up_proj", "mlp_act", "mlp_down_proj"} <= set(OP_TIMING_SCOPES)

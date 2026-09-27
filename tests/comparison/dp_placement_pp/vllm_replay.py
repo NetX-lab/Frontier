@@ -29,7 +29,7 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
     routing records and E2E request metrics off. ``op_timing`` times each scope
     as it runs, launch gaps included. ``kernel_timing`` synchronizes the device
     before each scope, so a scope holds its kernels only. The step times of
-    neither mode are ground truth.
+    neither mode are ground truth. Both time the scopes in ``OP_TIMING_SCOPES``.
 
 The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
 from the engine file's ``attention_backend`` and is otherwise left to vLLM's
@@ -59,6 +59,17 @@ from vllm_burst_driver import prompt_token_ids, write_model_dir  # noqa: E402
 SERVED_MODEL_NAME = "dp_pp_case"
 # Operator-timing modes and the CUDA-event scope mode each one runs.
 OP_TIMING_SCOPE_MODES = {"op_timing": "default", "kernel_timing": "kernel_only"}
+# Operator scopes the vLLM-BS Llama and Qwen3-MoE models open in the calibration
+# cases (TP=1, EP by all-to-all, P2P KV transfer). The fork's default scope list
+# leaves out the dense MLP scopes.
+OP_TIMING_SCOPES = (
+    "input_layernorm", "attn_pre_proj", "attn_rope", "attn_kv_cache_save", "attn_prefill",
+    "attn_decode", "attn_post_proj", "post_attention_layernorm",
+    "mlp_up_proj", "mlp_act", "mlp_down_proj",
+    "moe_gating", "moe_shuffling", "moe_grouped_gemm", "add",
+    "expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine",
+    "kv_p2p_send", "kv_p2p_recv",
+)
 MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES)
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 
@@ -81,6 +92,7 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
         mode_env |= {
             "VLLM_FRONTIER_INSTRUMENTATION": "1",
             "VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH": str(output_dir / "op_timing.jsonl"),
+            "VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES": ",".join(OP_TIMING_SCOPES),
             "VLLM_FRONTIER_OP_TIMING_MODE": "cuda_event",
             "VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": OP_TIMING_SCOPE_MODES[mode],
             "VLLM_FRONTIER_OP_AGG_MODE": "per_scope",
