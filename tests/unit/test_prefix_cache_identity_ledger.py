@@ -181,3 +181,44 @@ def test_committed_full_hit_admission_records_reuse_eviction_and_rebinding(
             "binding_epoch": 2,
         }
     ]
+
+
+@pytest.mark.parametrize(
+    "num_prefill_tokens, admitted_hashes",
+    [(3, [11]), (5, [11, 22])],
+    ids=["prompt_inside_the_second_block", "prompt_inside_the_third_block"],
+)
+def test_a_hit_beyond_the_prompt_leaves_its_last_token_to_compute(
+    num_prefill_tokens, admitted_hashes
+) -> None:
+    # A clipped trace row keeps the hashes of its longer original prompt.
+    # vLLM caps a hit at num_tokens - 1 (kv_cache_manager.get_computed_blocks).
+    manager = KVCacheManager(
+        block_size=2,
+        num_gpu_blocks=4,
+        enable_caching=True,
+        caching_hash_algo="builtin",
+        num_preallocate_tokens=0,
+    )
+    creator = Request(
+        arrived_at=0.0, num_prefill_tokens=6, num_decode_tokens=1,
+        block_hash_ids=[11, 22, 33],
+    )
+    assert manager.allocate_slots(creator, 6) is not None
+    manager.free(creator)
+    consumer = Request(
+        arrived_at=0.0, num_prefill_tokens=num_prefill_tokens, num_decode_tokens=1,
+        block_hash_ids=[11, 22, 33],
+    )
+    scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._kv_cache_manager = manager
+    scheduler._config = SimpleNamespace(block_size=2, num_blocks=4)
+
+    admission = scheduler._prepare_prefix_cache_admission(consumer)
+
+    assert [block.block_hash for block in admission.raw_hit_blocks] == [11, 22, 33]
+    assert [block.block_hash for block in admission.effective_hit_blocks] == admitted_hashes
+    assert admission.effective_cached_tokens == 2 * len(admitted_hashes)
+    assert admission.num_new_tokens == num_prefill_tokens - 2 * len(admitted_hashes)
+    assert admission.full_hit_backoff_applied is True
+    assert manager.prefix_cache_stats.hits == len(admitted_hashes)
