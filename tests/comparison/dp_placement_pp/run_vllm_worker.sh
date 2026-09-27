@@ -8,7 +8,7 @@
 # Required environment:
 #   RUN_TAG        identifier of this run
 #   MODE           ground-truth mode of vllm_replay.py: clean, instrumented,
-#                  op_timing or kernel_timing
+#                  op_timing, kernel_timing or schedule_timing
 #   REPLAY_TIMEOUT_S  wall-time limit of the replay, below the job's cap so
 #                  that a stopped replay is still published
 #   FRONTIER_TREE  Frontier worktree on the mounted workspace

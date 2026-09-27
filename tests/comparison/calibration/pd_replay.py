@@ -25,7 +25,7 @@ none has a default here:
 
 The trace is replayed with ``vllm_replay.replay`` against the proxy, and the
 run mode sets the Frontier switches of both instances with
-``vllm_replay.server_env``. Both modes also write each instance's per-layer
+``vllm_replay.server_env``. Every mode also writes each instance's per-layer
 KV-transfer log (``VLLM_FRONTIER_KV_TRANSFER_LOG_PATH``), declared PD workflow
 evidence.
 

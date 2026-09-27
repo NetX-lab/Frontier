@@ -6,11 +6,12 @@ the pieces that decide them are checked here.
 
 from __future__ import annotations
 
+import json
 import random
 from pathlib import Path
 
 from tests.comparison.dp_placement_pp.make_trace import build_rows
-from tests.comparison.dp_placement_pp.vllm_replay import OP_TIMING_SCOPES, server_env
+from tests.comparison.dp_placement_pp.vllm_replay import OP_TIMING_SCOPES, server_command, server_env
 
 
 def workload(bursts: list[dict]) -> dict:
@@ -95,6 +96,7 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
     )
     op_timing, _ = server_env("op_timing", {"enable_chunked_prefill": True}, out, inherited)
     kernel_timing, _ = server_env("kernel_timing", {"enable_chunked_prefill": True}, out, inherited)
+    schedule_timing, _ = server_env("schedule_timing", {"enable_chunked_prefill": True}, out, inherited)
 
     assert clean == {
         "PATH": "/usr/bin",
@@ -124,5 +126,34 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_FRONTIER_SCHED_LOG_PATH": "/run/schedule.jsonl",
     }
     assert kernel_timing == op_timing | {"VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": "kernel_only"}
+    assert schedule_timing == {
+        "PATH": "/usr/bin",
+        "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": "/run/dp_placement",
+        "VLLM_FRONTIER_SCHED_LOG_PATH": "/run/schedule.jsonl",
+    }
     # The fork's default scope list has no dense MLP scope; the timing modes name them.
     assert {"mlp_up_proj", "mlp_act", "mlp_down_proj"} <= set(OP_TIMING_SCOPES)
+
+
+def test_the_engine_file_alone_sets_the_cuda_graph_setup_of_the_server():
+    engine = {
+        "load_format": "dummy", "dtype": "float16", "tensor_parallel_size": 1,
+        "pipeline_parallel_size": 1, "data_parallel_size": 1, "max_num_batched_tokens": 16384,
+        "max_num_seqs": 64, "block_size": 16, "max_model_len": 4096,
+        "gpu_memory_utilization": 0.9, "seed": 0, "skip_tokenizer_init": True,
+        "enable_expert_parallel": False, "enforce_eager": True,
+        "enable_chunked_prefill": False, "enable_prefix_caching": False,
+    }
+    graph = engine | {
+        "enforce_eager": False,
+        "compilation_config": {"level": 0, "cudagraph_mode": "FULL_DECODE_ONLY"},
+    }
+
+    eager_command = server_command(engine, Path("/m"), 8000)
+    graph_command = server_command(graph, Path("/m"), 8000)
+
+    assert "--enforce-eager" in eager_command
+    assert "--compilation-config" not in eager_command
+    assert "--enforce-eager" not in graph_command
+    config = graph_command[graph_command.index("--compilation-config") + 1]
+    assert json.loads(config) == {"level": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}

@@ -9,7 +9,7 @@
 #
 # Required environment:
 #   RUN_TAG        identifier of this run
-#   MODE           ground-truth mode of pd_replay.py: clean or instrumented
+#   MODE           ground-truth mode of pd_replay.py, one of vllm_replay.MODES
 #   REPLAY_TIMEOUT_S  wall-time limit of the replay, below the job's cap so
 #                  that a stopped replay is still published
 #   FRONTIER_TREE  Frontier worktree on the mounted workspace

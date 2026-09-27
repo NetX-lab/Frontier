@@ -30,10 +30,17 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
     as it runs, launch gaps included. ``kernel_timing`` synchronizes the device
     before each scope, so a scope holds its kernels only. The step times of
     neither mode are ground truth. Both time the scopes in ``OP_TIMING_SCOPES``.
+``schedule_timing``
+    The scheduler's per-step record (``schedule.jsonl``) only: instrumentation,
+    operator probes and E2E request metrics off. The scheduler writes one line
+    per step on the host, with no device sync, so the step timestamps measure
+    the steps of an otherwise clean engine. E2E metrics come from ``clean`` runs.
 
 The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
 from the engine file's ``attention_backend`` and is otherwise left to vLLM's
-own selection. Outputs in ``--output-dir``: ``server.log``,
+own selection. So is the CUDA graph setup: the engine file's
+``compilation_config`` is passed to ``--compilation-config`` as given, and
+without it vLLM keeps its own default. Outputs in ``--output-dir``: ``server.log``,
 ``client_requests.jsonl``, the mode's record file, ``dp_placement/``,
 ``replay_summary.json``.
 """
@@ -70,7 +77,7 @@ OP_TIMING_SCOPES = (
     "expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine",
     "kv_p2p_send", "kv_p2p_recv",
 )
-MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES)
+MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 
 
@@ -88,6 +95,8 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
     elif mode == "instrumented":
         mode_env["VLLM_FRONTIER_INSTRUMENTATION"] = "1"
         mode_env["VLLM_FRONTIER_MOE_ROUTING_LOG_PATH"] = str(output_dir / "moe_routing.jsonl")
+    elif mode == "schedule_timing":
+        mode_env["VLLM_FRONTIER_SCHED_LOG_PATH"] = str(output_dir / "schedule.jsonl")
     else:
         mode_env |= {
             "VLLM_FRONTIER_INSTRUMENTATION": "1",
@@ -135,7 +144,10 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
         "--enable-prefix-caching": engine["enable_prefix_caching"],
         "--no-enable-prefix-caching": not engine["enable_prefix_caching"],
     }
-    return command + [flag for flag, enabled in flags.items() if enabled]
+    command += [flag for flag, enabled in flags.items() if enabled]
+    if "compilation_config" in engine:
+        command += ["--compilation-config", json.dumps(engine["compilation_config"])]
+    return command
 
 
 def wait_until_ready(server: subprocess.Popen, port: int, timeout_s: float) -> float:
