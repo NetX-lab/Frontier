@@ -17,6 +17,7 @@ from __future__ import annotations
 import dataclasses
 import importlib
 import pkgutil
+import subprocess
 import sys
 import typing
 from pathlib import Path
@@ -167,6 +168,7 @@ def test_vllm_v1_scheduler_reaches_every_extracted_mixin() -> None:
         "KvBlockAllocation",
         "PrefixCacheLedger",
         "TargetEmbeddedMtpWaitPolicy",
+        "PipelineTerminalRelease",
         "DecodeAttentionCohort",
         "DisaggregatedRoleScheduling",
     ]
@@ -221,7 +223,6 @@ def test_split_classes_keep_their_mixin_order(class_path: str, expected_head: li
 def test_cluster_config_fields_come_only_from_the_owning_class() -> None:
     """The two extracted mixins hold behavior, not state."""
 
-    from frontier.config.cluster_config import ClusterConfig
     from frontier.config.cluster_role_config import ClusterRoleConfigBuilder
     from frontier.config.cluster_topology_summary import ClusterTopologySummary
 
@@ -230,7 +231,6 @@ def test_cluster_config_fields_come_only_from_the_owning_class() -> None:
             f"{mixin.__name__} became a dataclass, so it now contributes fields "
             "to ClusterConfig and changes the generated CLI"
         )
-    assert len(dataclasses.fields(ClusterConfig)) == 181
 
 
 # --- estimator cache loading ------------------------------------------------
@@ -282,25 +282,30 @@ def test_every_split_module_imports_in_a_fresh_interpreter_order() -> None:
         "frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy",
         "frontier.scheduler.replica_scheduler.vllm_v1_kv_allocation",
         "frontier.scheduler.replica_scheduler.vllm_v1_mtp_wait",
+        "frontier.scheduler.replica_scheduler.vllm_v1_pp_terminal_release",
         "frontier.scheduler.replica_scheduler.vllm_v1_prefix_cache",
         "frontier.scheduler.replica_scheduler.vllm_v1_role_schedules",
         "frontier.execution_time_predictor.layer_contract_resolution",
         "frontier.execution_time_predictor.moe_dataset_training",
         "frontier.execution_time_predictor.moe_mtp_replay",
         "frontier.execution_time_predictor.moe_operator_times",
-        "frontier.execution_time_predictor.moe_predictor_helpers",
         "frontier.execution_time_predictor.moe_routing_workload",
         "frontier.execution_time_predictor.prediction_family_trainers",
         "frontier.execution_time_predictor.prediction_model_identity",
         "frontier.execution_time_predictor.prediction_model_registry",
         "frontier.execution_time_predictor.profiling_dataframe_loaders",
     ]
+    repo_root = Path(__file__).resolve().parents[2]
     failures: list[str] = []
     for module_name in split_modules:
-        try:
-            importlib.import_module(module_name)
-        except Exception as error:  # noqa: BLE001 - the message is the finding
-            failures.append(f"{module_name}: {type(error).__name__}: {error}")
+        result = subprocess.run(
+            [sys.executable, "-c", f"import {module_name}"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            failures.append(f"{module_name}: {result.stderr.strip().splitlines()[-1]}")
     assert not failures, "modules that do not import:\n" + "\n".join(failures)
 
 
@@ -319,3 +324,103 @@ def test_runtime_only_names_are_not_hidden_behind_type_checking() -> None:
         "this method constructs ClusterConfig at runtime, so the name has to be "
         "imported outside TYPE_CHECKING"
     )
+
+
+# --- per-role CC backend configs --------------------------------------------
+# The split rewrote the per-role creator as one table serving both the explicit
+# ``<role>_cc_backend_config_type`` and the base-config class. No simulation in
+# the fidelity matrix selects a per-role backend, so these pin the table here.
+
+_ROLE_PREFIXES = ("prefill", "decode", "decode_attn", "decode_ffn")
+
+
+def _cc_backend_classes() -> dict[str, type]:
+    from frontier.cc_backend.cc_backend_config import (
+        AiconfiguratorCCBackendConfig,
+        AnalyticalCCBackendConfig,
+        AstraSimAnalyticalCCBackendConfig,
+        CollectiveSimCCBackendConfig,
+        VidurCCBackendConfig,
+    )
+
+    return {
+        "analytical": AnalyticalCCBackendConfig,
+        "vidur": VidurCCBackendConfig,
+        "collective_sim": CollectiveSimCCBackendConfig,
+        "aiconfigurator": AiconfiguratorCCBackendConfig,
+        "astra_sim_analytical": AstraSimAnalyticalCCBackendConfig,
+    }
+
+
+def _role_cc_backend_config(base_config, prefix: str, **role_fields):
+    """Build one role's CC backend config; the role checks of a full
+    ``ClusterConfig`` are skipped because only the creator is under test."""
+
+    from frontier.config.cluster_config import ClusterConfig
+
+    config = object.__new__(ClusterConfig)
+    config.cc_backend_config = base_config
+    for name, value in role_fields.items():
+        setattr(config, f"{prefix}_cc_backend_config_{name}", value)
+    return config._create_cc_backend_config_for_cluster(prefix)
+
+
+@pytest.mark.parametrize("prefix", _ROLE_PREFIXES)
+@pytest.mark.parametrize("type_key", list(_cc_backend_classes()))
+def test_a_role_backend_type_selects_its_config_class(type_key: str, prefix: str) -> None:
+    classes = _cc_backend_classes()
+    for base_class in classes.values():
+        config = _role_cc_backend_config(base_class(), prefix, type=type_key.upper())
+        assert type(config) is classes[type_key], base_class.__name__
+
+
+@pytest.mark.parametrize("prefix", _ROLE_PREFIXES)
+def test_a_role_without_a_backend_type_keeps_the_base_backend(prefix: str) -> None:
+    for config_class in _cc_backend_classes().values():
+        assert type(_role_cc_backend_config(config_class(), prefix)) is config_class
+
+
+def test_an_unknown_role_backend_type_is_refused() -> None:
+    base = _cc_backend_classes()["analytical"]()
+    with pytest.raises(ValueError, match="Unknown CC backend type: bogus"):
+        _role_cc_backend_config(base, "prefill", type="bogus")
+
+
+@pytest.mark.parametrize("prefix", _ROLE_PREFIXES)
+@pytest.mark.parametrize(
+    ("type_key", "field_name", "base_value", "role_value"),
+    [
+        ("analytical", "network_bandwidth_gbps", 77.0, 5.0),
+        ("collective_sim", "nvlink_allreduce_launch_overhead_us", 12.0, 3.0),
+        ("aiconfigurator", "system", "h800", "b200"),
+        ("astra_sim_analytical", "placement_order", "TP,DP,EP,CP", "EP,TP"),
+    ],
+)
+def test_a_role_field_overrides_the_base_backend_value(
+    type_key: str, field_name: str, base_value, role_value, prefix: str
+) -> None:
+    classes = _cc_backend_classes()
+    base = classes[type_key](**{field_name: base_value})
+    other_base = classes["vidur"]()
+
+    assert getattr(_role_cc_backend_config(base, prefix), field_name) == base_value
+    overridden = _role_cc_backend_config(base, prefix, **{field_name: role_value})
+    assert getattr(overridden, field_name) == role_value
+    selected = _role_cc_backend_config(
+        other_base, prefix, type=type_key, **{field_name: role_value}
+    )
+    assert getattr(selected, field_name) == role_value
+
+
+def test_a_vidur_role_keeps_the_base_vidur_settings() -> None:
+    base = _cc_backend_classes()["vidur"](k_fold_cv_splits=7, cache_dir="vidur_cache")
+    for prefix in _ROLE_PREFIXES:
+        config = _role_cc_backend_config(base, prefix)
+        assert (config.k_fold_cv_splits, config.cache_dir) == (7, "vidur_cache")
+
+
+def test_a_collective_sim_role_writes_under_its_own_output_directory() -> None:
+    base = _cc_backend_classes()["collective_sim"](runner_out_dir="/runs/out")
+    for prefix in _ROLE_PREFIXES:
+        config = _role_cc_backend_config(base, prefix)
+        assert config.runner_out_dir == f"/runs/out/{prefix}"

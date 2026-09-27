@@ -230,6 +230,9 @@ def test_a_case_absent_from_both_sides_needs_allow_partial(tmp_path: Path) -> No
     exit_code, report = _compare(tmp_path, allow_partial=True)
     assert exit_code == 0
     assert report["cases_absent_from_both_sides"] == [ALL_CASES[0].case_id]
+    # A deliberate subset leaves the cache names uncompared without failing.
+    assert report["predictor_cache_compared"] is False
+    assert report["complete_comparison"] is False
 
 
 # --- R34-02: one label describes one measurement -----------------------------
@@ -269,7 +272,11 @@ def test_a_side_without_provenance_is_reported(tmp_path: Path) -> None:
 
 
 def test_an_assembled_cache_is_not_compared(tmp_path: Path) -> None:
-    """A filtered continuation without a cache clean cannot be compared by name."""
+    """A filtered continuation without a cache clean cannot be compared by name.
+
+    Every artifact agrees, but the full gate also covers the cache names, so
+    leaving them unverified fails it.
+    """
 
     _write_side(tmp_path, "baseline", revision=BASELINE_REVISION,
                 clean_cache=False, case_filter="dp_")
@@ -277,7 +284,8 @@ def test_an_assembled_cache_is_not_compared(tmp_path: Path) -> None:
 
     exit_code, report = _compare(tmp_path)
 
-    assert exit_code == 0, "an assembled cache is not by itself a fidelity failure"
+    assert exit_code == 1
+    assert report["complete_comparison"] is True
     assert report["predictor_cache_compared"] is False
     assert report["predictor_cache_populated_cleanly"] is False
 
@@ -325,7 +333,7 @@ def test_a_continuation_narrowed_without_a_filter_is_not_compared(
 
     exit_code, report = _compare(tmp_path)
 
-    assert exit_code == 0
+    assert exit_code == 1
     assert report["cases_compared"] == len(ALL_CASES)
     assert report["predictor_cache_populated_cleanly"] is False
     assert report["predictor_cache_compared"] is False
@@ -341,7 +349,7 @@ def test_two_sides_narrowed_the_same_way_are_still_not_compared(tmp_path: Path) 
 
     exit_code, report = _compare(tmp_path)
 
-    assert exit_code == 0
+    assert exit_code == 1
     assert report["predictor_cache_compared"] is False
     assert report["predictor_cache_files_only_in_baseline"] == []
     assert report["predictor_cache_files_only_in_candidate"] == []
@@ -356,7 +364,7 @@ def test_a_manifest_without_the_executed_list_is_not_compared(tmp_path: Path) ->
 
     exit_code, report = _compare(tmp_path)
 
-    assert exit_code == 0
+    assert exit_code == 1
     assert report["predictor_cache_populated_cleanly"] is False
     assert report["predictor_cache_compared"] is False
 

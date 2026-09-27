@@ -777,6 +777,16 @@ def compare_labels(args: argparse.Namespace) -> int:
             "Re-run both sides without a filter, or pass --allow-partial to "
             "accept a deliberate subset."
         )
+    # The full gate also compares the predictor cache names, which only one
+    # clean run of the whole table on each side makes comparable. A deliberate
+    # subset cannot compare them and does not claim to.
+    cache_unverified = not cache_comparable and not (absent_from_both and args.allow_partial)
+    if cache_unverified:
+        print(
+            "\nCACHE NOT VERIFIED: the predictor cache names were not compared, "
+            "so the cache identity of the branch is unknown. Re-run both sides "
+            "with --clean-cache and without --case-filter, --start or --limit."
+        )
     failed = bool(
         mismatched
         or baseline_failures
@@ -789,6 +799,7 @@ def compare_labels(args: argparse.Namespace) -> int:
         or cache_only_in_baseline
         or cache_only_in_candidate
         or incomplete
+        or cache_unverified
     )
     return 1 if failed else 0
 

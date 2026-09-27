@@ -5,11 +5,9 @@ through the attention and FFN stages together.  These methods own the cohort
 identity, its stage slots and its phase.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict
 
-from frontier.config import global_vars
-from frontier.entities.batch import Batch, Request
-from frontier.logger import get_cluster_logger
+from frontier.entities.batch import Batch
 from frontier.types import ClusterType
 
 
