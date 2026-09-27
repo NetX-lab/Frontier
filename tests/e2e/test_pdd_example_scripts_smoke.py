@@ -18,6 +18,7 @@ SCRIPT_CASES = (
     ("offline_dense", PDD_DIR / "offline" / "dense_model_basic.sh", {"NUM_REQUESTS": "1", "PREFILL_TOKENS": "8", "DECODE_TOKENS": "2"}, 1, 1),
     ("offline_moe", PDD_DIR / "offline" / "moe_model_basic.sh", {"NUM_REQUESTS": "1", "PREFILL_TOKENS": "8", "DECODE_TOKENS": "2"}, 1, 1),
     ("offline_thinking", PDD_DIR / "offline" / "thinking_mode_basic.sh", {"NUM_REQUESTS": "1", "PREFILL_TOKENS": "8", "DECODE_TOKENS": "2"}, 1, 2),
+    ("offline_thinking_hidden_decode_4", PDD_DIR / "offline" / "thinking_mode_basic.sh", {"NUM_REQUESTS": "1", "PREFILL_TOKENS": "8", "DECODE_TOKENS": "2", "THINKING_ROUND_DECODE_TOKENS": "4"}, 1, 2),
     ("offline_spec_dec", PDD_DIR / "offline" / "moe_spec_dec.sh", {"NUM_REQUESTS": "1", "PREFILL_TOKENS": "8", "DECODE_TOKENS": "2"}, 1, 1),
     ("offline_prefix", PDD_DIR / "offline" / "moe_prefix_caching.sh", {}, 2, 2),
     ("online_dense", PDD_DIR / "online" / "dense_model_basic_online.sh", {"NUM_REQUESTS": "1", "PREFILL_TOKENS": "8", "DECODE_TOKENS": "2"}, 1, 1),
