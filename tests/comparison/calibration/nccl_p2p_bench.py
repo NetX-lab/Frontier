@@ -8,9 +8,16 @@ sends to rank 1. Two patterns are timed:
   time = latency + bytes / bandwidth.
 - `request`: the per-request KV transfer of vLLM's P2P NCCL connector in
   PUT_ASYNC mode, one message per layer of
-  kv_factor * tokens * kv_heads * head_dim * dtype_bytes, sent back to back.
-  The shapes come from the model configs under `data/config/models/`, sized
-  by the same layout the simulator's analytical KV-cache transfer uses.
+  kv_factor * tokens * kv_heads * head_dim * dtype_bytes. The shapes come from
+  the model configs under `data/config/models/`, sized by the same layout the
+  simulator's analytical KV-cache transfer uses.
+
+The sender synchronizes after every message, as the connector's `send_sync`
+does, and both ranks create their communicator under the connector's NCCL
+settings (`set_p2p_nccl_context`: `NCCL_MAX_NCHANNELS` and `NCCL_MIN_NCHANNELS`
+set to `--nccl_num_channels`, `NCCL_CUMEM_ENABLE=1`). The connector's ZMQ
+handshake before each message is not reproduced, so the request time is a lower
+bound of the connector's.
 
 Each repeat starts after a barrier and is timed by the receiver with CUDA
 events, so it ends when the last message has arrived. Warmup repeats are
@@ -31,6 +38,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import socket
 import statistics
 from pathlib import Path
@@ -106,6 +114,15 @@ def frontier_transfer_mapping(
     }
 
 
+def connector_nccl_env(num_channels: int) -> dict[str, str]:
+    """NCCL variables P2pNcclEngine sets while it creates its communicator."""
+    return {
+        "NCCL_MAX_NCHANNELS": str(num_channels),
+        "NCCL_MIN_NCHANNELS": str(num_channels),
+        "NCCL_CUMEM_ENABLE": "1",
+    }
+
+
 def time_statistics(times_ms: list[float]) -> dict:
     return {
         "median_ms": statistics.median(times_ms),
@@ -129,6 +146,7 @@ def timed_repeats(rank: int, messages: list, warmup: int, repeats: int) -> list[
         for message in messages:
             if rank == SENDER:
                 dist.send(message, dst=RECEIVER)
+                torch.cuda.synchronize()
             else:
                 dist.recv(message, src=SENDER)
         end.record()
@@ -170,7 +188,9 @@ def write_outputs(args: argparse.Namespace, rows: list[dict], world: dict) -> No
     ]
     summary = {
         "world": world,
-        "timing": "receiver CUDA events per repeat, after a barrier; warmup repeats discarded",
+        "timing": "receiver CUDA events per repeat, after a barrier; sender synchronizes after "
+                  "every message; warmup repeats discarded",
+        "nccl_env": connector_nccl_env(args.nccl_num_channels),
         "num_tokens": args.num_tokens,
         "warmup": args.warmup,
         "repeats": args.repeats,
@@ -202,6 +222,7 @@ def run_rank(rank: int, args: argparse.Namespace, port: int) -> None:
     import torch.distributed as dist
 
     torch.cuda.set_device(rank)
+    os.environ.update(connector_nccl_env(args.nccl_num_channels))
     dist.init_process_group(
         "nccl", init_method=f"tcp://127.0.0.1:{port}", rank=rank, world_size=2,
         device_id=torch.device("cuda", rank),
@@ -241,6 +262,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max_bytes", type=int, required=True)
     parser.add_argument("--warmup", type=int, required=True)
     parser.add_argument("--repeats", type=int, required=True)
+    parser.add_argument("--nccl_num_channels", type=int, required=True)
     parser.add_argument("--output_dir", required=True)
     return parser.parse_args()
 
