@@ -738,10 +738,11 @@ class VLLMv1EngineReplicaScheduler(
             # Keep draft tokens within max_model_len: vLLM computes at most
             # max_model_len - 1 tokens so the token a step samples fits too
             # (scheduler.py, running phase). The DECODE frontier is one token
-            # ahead of vLLM's num_computed_tokens, whose decode side computes
-            # the last prompt token again (_update_waiting_for_remote_kv), so
-            # there the frontier already leaves that token of room. The
-            # request itself fits (checked on arrival).
+            # ahead of vLLM's num_computed_tokens: after the KV transfer vLLM's
+            # decode side leaves the last prompt token to compute
+            # (get_num_new_matched_tokens, or _update_waiting_for_remote_kv
+            # for async connectors), so there the frontier already leaves that
+            # token of room. The request itself fits (checked on arrival).
             scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )

@@ -106,7 +106,8 @@ class PrefixCacheLedger:
         )
         # vLLM computes at least the last target token for its logits: a hit
         # covers at most num_tokens - 1 tokens, in whole blocks. Hashes past
-        # the target (a clipped trace row, a shorter thinking round) add nothing.
+        # the target (a clipped trace row, a shorter thinking round) admit no
+        # hit.
         num_admitted_blocks = min(
             len(computed_blocks),
             (schedule_target_tokens - 1) // int(self._config.block_size),

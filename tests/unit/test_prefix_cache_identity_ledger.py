@@ -18,19 +18,19 @@ from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler impor
 from frontier.types import ClusterType
 
 
-def _request(*, hashes: list[int]) -> Request:
+def _request(*, hashes: list[int], num_prefill_tokens: int = 4) -> Request:
     return Request(
         arrived_at=0.0,
-        num_prefill_tokens=4,
+        num_prefill_tokens=num_prefill_tokens,
         num_decode_tokens=1,
         block_hash_ids=hashes,
     )
 
 
-def _manager() -> KVCacheManager:
+def _manager(num_gpu_blocks: int = 2) -> KVCacheManager:
     return KVCacheManager(
         block_size=2,
-        num_gpu_blocks=2,
+        num_gpu_blocks=num_gpu_blocks,
         enable_caching=True,
         caching_hash_algo="builtin",
         num_preallocate_tokens=0,
@@ -193,23 +193,11 @@ def test_a_hit_beyond_the_prompt_leaves_its_last_token_to_compute(
 ) -> None:
     # A clipped trace row keeps the hashes of its longer original prompt.
     # vLLM caps a hit at num_tokens - 1 (kv_cache_manager.get_computed_blocks).
-    manager = KVCacheManager(
-        block_size=2,
-        num_gpu_blocks=4,
-        enable_caching=True,
-        caching_hash_algo="builtin",
-        num_preallocate_tokens=0,
-    )
-    creator = Request(
-        arrived_at=0.0, num_prefill_tokens=6, num_decode_tokens=1,
-        block_hash_ids=[11, 22, 33],
-    )
+    manager = _manager(num_gpu_blocks=4)
+    creator = _request(hashes=[11, 22, 33], num_prefill_tokens=6)
     assert manager.allocate_slots(creator, 6) is not None
     manager.free(creator)
-    consumer = Request(
-        arrived_at=0.0, num_prefill_tokens=num_prefill_tokens, num_decode_tokens=1,
-        block_hash_ids=[11, 22, 33],
-    )
+    consumer = _request(hashes=[11, 22, 33], num_prefill_tokens=num_prefill_tokens)
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._kv_cache_manager = manager
     scheduler._config = SimpleNamespace(block_size=2, num_blocks=4)

@@ -257,9 +257,10 @@ def test_a_speculative_step_leaves_room_for_the_token_it_samples(
 ):
     # 80 + 16 tokens fill max_model_len (96). The trace schedules two drafts on
     # every step and commits two tokens, so the frontier reaches 94 with three
-    # tokens wanted. vLLM allows max_model_len - 1 - num_computed_tokens of
-    # them: one on co-location, where the frontier is num_computed_tokens, and
-    # two on DECODE, where vLLM's decode side still stands at 93.
+    # tokens wanted. The clamp keeps max_model_len - 1 - num_computed_tokens of
+    # them, as vLLM's running phase does. On co-location the frontier is
+    # num_computed_tokens: one token. The DECODE frontier is one token ahead of
+    # num_computed_tokens, so its cap is max_model_len - frontier: two tokens.
     requests = tmp_path / "requests.csv"
     requests.write_text("arrived_at,num_prefill_tokens,num_decode_tokens\n0.0,80,16\n")
     acceptance_trace = tmp_path / "acceptance_trace.json"
