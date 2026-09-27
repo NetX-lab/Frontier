@@ -58,7 +58,8 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
 
     env = {
         key: value for key, value in inherited.items()
-        if not key.startswith("VLLM_FRONTIER_") and key != "VLLM_ATTENTION_BACKEND"
+        if not key.startswith("VLLM_FRONTIER_")
+        and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL")
     }
     mode_env = {"VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": str(output_dir / "dp_placement")}
     if mode == "clean":
@@ -68,6 +69,10 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
         mode_env["VLLM_FRONTIER_MOE_ROUTING_LOG_PATH"] = str(output_dir / "moe_routing.jsonl")
     if "attention_backend" in engine:
         mode_env["VLLM_ATTENTION_BACKEND"] = engine["attention_backend"]
+    if not engine["enable_chunked_prefill"]:
+        # vLLM-BS refuses V1 generation without chunked prefill unless this is
+        # set (EngineArgs._set_default_args_v1).
+        mode_env["VLLM_V1_ALLOW_NO_CHUNKED_PREFILL"] = "1"
     return env | mode_env, mode_env
 
 

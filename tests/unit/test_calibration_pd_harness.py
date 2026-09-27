@@ -174,7 +174,7 @@ def test_the_connector_check_needs_its_put_async_init_line_and_no_fault(tmp_path
 
 
 def test_each_instance_gets_its_role_gpu_and_connector_values_from_the_engine_file():
-    engine = {"attention_backend": "FLASHINFER", "kv_transfer": {
+    engine = {"attention_backend": "FLASHINFER", "enable_chunked_prefill": False, "kv_transfer": {
         "kv_buffer_size": 8e9, "mem_pool_size_gb": 1, "prefill_kv_port": 21001,
         "decode_kv_port": 22001, "nccl_num_channels": 16,
     }}
@@ -189,6 +189,7 @@ def test_each_instance_gets_its_role_gpu_and_connector_values_from_the_engine_fi
         "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": "/run/decode/dp_placement",
         "VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH": "/run/decode/request_metrics.jsonl",
         "VLLM_ATTENTION_BACKEND": "FLASHINFER",
+        "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL": "1",
         "CUDA_VISIBLE_DEVICES": "5",
         "VLLM_FRONTIER_KV_TRANSFER_LOG_PATH": "/run/decode/kv_transfer.jsonl",
     }

@@ -82,12 +82,16 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_FRONTIER_SCHED_LOG_PATH": "/tmp/sched.jsonl",
         "VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH": "/tmp/old.jsonl",
         "VLLM_ATTENTION_BACKEND": "FLASH_ATTN",
+        "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL": "1",
     }
     out = Path("/run")
 
-    clean, clean_set = server_env("clean", {}, out, inherited)
+    clean, clean_set = server_env("clean", {"enable_chunked_prefill": True}, out, inherited)
     instrumented, _ = server_env(
-        "instrumented", {"attention_backend": "FLASHINFER"}, out, inherited
+        "instrumented",
+        {"attention_backend": "FLASHINFER", "enable_chunked_prefill": False},
+        out,
+        inherited,
     )
 
     assert clean == {
@@ -102,4 +106,5 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_FRONTIER_INSTRUMENTATION": "1",
         "VLLM_FRONTIER_MOE_ROUTING_LOG_PATH": "/run/moe_routing.jsonl",
         "VLLM_ATTENTION_BACKEND": "FLASHINFER",
+        "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL": "1",
     }

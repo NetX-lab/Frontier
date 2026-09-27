@@ -5,6 +5,11 @@ the imports that must succeed, and one entry per profiler invocation. Each
 invocation writes under its own output root, so two runs of the same profiler
 (for example two MoE gating contexts) do not overwrite each other's CSVs.
 
+An invocation names a `module`, run with `python -m`, or a `script` path in the
+Frontier tree. A tool under `tests/` needs `script`: `tests` has no
+`__init__.py`, so an image that installs its own `tests` package shadows it for
+`-m`.
+
 The run is published twice, to the cloud-volume archive and to the evidence
 directory on the mounted workspace. Each copy is assembled beside its target
 and renamed into place, and `COMPLETE` is written last. Neither target may
@@ -155,8 +160,10 @@ def main() -> int:
         manifest["invocations"] = []
         for invocation in plan["invocations"]:
             output_root = run_dir / "out" / invocation["name"]
+            entry = (["-m", invocation["module"]] if "module" in invocation
+                     else [str(args.frontier_tree / invocation["script"])])
             result = run_logged(
-                [sys.executable, "-m", invocation["module"], *plan["common_args"],
+                [sys.executable, *entry, *plan["common_args"],
                  *invocation["args"], "--output_dir", str(output_root)],
                 logs / f"{invocation['name']}.log", invocation["timeout_s"],
                 cwd=args.frontier_tree, env=env,
