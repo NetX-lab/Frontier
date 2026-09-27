@@ -5,7 +5,6 @@ that stays on the scheduler itself.  A disaggregated cluster instead drives one
 role per replica, and each of those roles has its own entry point here.
 """
 
-from collections import deque
 from typing import List, Optional, Tuple
 
 from frontier.config import global_vars
@@ -197,13 +196,6 @@ class DisaggregatedRoleScheduling:
         waiting_tokens: List[int] = []
         token_budget = self._max_num_scheduled_tokens
         available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
-        waiting_final_decode_count = self._count_final_fast_lane_requests(
-            self._waiting_requests,
-            final_predicate=self._is_final_decode_fast_lane_request,
-        )
-        self._decode_iteration_reserved_slots_remaining = (
-            self._final_decode_reserved_slots if waiting_final_decode_count > 0 else 0
-        )
 
         # Flow validation: log iteration start
         logger.info(
@@ -360,24 +352,11 @@ class DisaggregatedRoleScheduling:
         scheduled: List[Request] = []
         num_tokens_list: List[int] = []
 
-        fast_lane_decode_enabled = self._cluster_type == ClusterType.DECODE and (
-            self._final_decode_reserved_slots > 0
-        )
         waiting_queue = self._build_decode_waiting_queue()
-        skipped_waiting_requests: deque[Request] = deque()
 
         self._current_iteration_token_budget = token_budget
         while waiting_queue and token_budget > 0:
             self._current_iteration_token_budget = token_budget
-            final_waiting_count = (
-                self._count_final_fast_lane_requests(
-                    waiting_queue,
-                    final_predicate=self._is_final_decode_fast_lane_request,
-                )
-                if fast_lane_decode_enabled
-                else 0
-            )
-            has_final_waiting = final_waiting_count > 0
             # Check max concurrent requests limit
             if len(self._running_requests) >= self._max_num_running_reqs:
                 logger.debug(
@@ -391,26 +370,6 @@ class DisaggregatedRoleScheduling:
                 # It resumes decoding from the sample of the step it was
                 # preempted from, which has not arrived yet.
                 break
-            is_final_decode_request = fast_lane_decode_enabled and (
-                self._is_final_decode_fast_lane_request(request)
-            )
-            is_hidden_decode_request = (
-                fast_lane_decode_enabled and not is_final_decode_request
-            )
-
-            if (
-                is_hidden_decode_request
-                and has_final_waiting
-                and self._decode_iteration_reserved_slots_remaining > 0
-                and len(self._running_requests)
-                >= (
-                    self._max_num_running_reqs
-                    - self._decode_iteration_reserved_slots_remaining
-                )
-            ):
-                waiting_queue.popleft()
-                skipped_waiting_requests.append(request)
-                continue
 
             num_new_tokens = self._get_request_next_num_tokens(request)
 
@@ -475,11 +434,6 @@ class DisaggregatedRoleScheduling:
             num_tokens_list.append(num_new_tokens)
             token_budget -= num_new_tokens
             self._current_iteration_token_budget = token_budget
-            if is_final_decode_request:
-                self._decode_iteration_reserved_slots_remaining = max(
-                    self._decode_iteration_reserved_slots_remaining - 1,
-                    0,
-                )
 
             # Flow validation: log ADMISSION event (matching vLLM v1)
             logger.info(
@@ -511,8 +465,6 @@ class DisaggregatedRoleScheduling:
                     f"recompute_tokens={recompute_tokens}"
                 )
 
-        if skipped_waiting_requests:
-            waiting_queue.extend(skipped_waiting_requests)
         self._waiting_requests = list(waiting_queue)
 
         return token_budget, scheduled, num_tokens_list
