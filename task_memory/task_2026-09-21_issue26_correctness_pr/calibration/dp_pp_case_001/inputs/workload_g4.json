@@ -1,0 +1,97 @@
+{
+ "request_id_namespace": "dpp2",
+ "warmups": {
+  "count": 3,
+  "interval_s": 1.0,
+  "num_prefill_tokens": 64,
+  "num_decode_tokens": 4
+ },
+ "idle_gap_s": 20.0,
+ "bursts": [
+  {
+   "name": "a",
+   "order": [
+    "short",
+    "long",
+    "short",
+    "short",
+    "short"
+   ],
+   "spacing_s": 0.00025,
+   "short_prefill_tokens": 32,
+   "long_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "probe_offset_s": 0.085,
+   "probe_prefill_tokens": 32,
+   "probe_decode_tokens": 64
+  },
+  {
+   "name": "b",
+   "order": [
+    "short",
+    "long",
+    "short",
+    "short",
+    "short"
+   ],
+   "spacing_s": 0.00025,
+   "short_prefill_tokens": 32,
+   "long_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "probe_offset_s": 0.105,
+   "probe_prefill_tokens": 32,
+   "probe_decode_tokens": 64
+  },
+  {
+   "name": "c",
+   "order": [
+    "short",
+    "long",
+    "short",
+    "short",
+    "short"
+   ],
+   "spacing_s": 0.00025,
+   "short_prefill_tokens": 32,
+   "long_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "probe_offset_s": 0.126,
+   "probe_prefill_tokens": 32,
+   "probe_decode_tokens": 64
+  },
+  {
+   "name": "d",
+   "order": [
+    "short",
+    "long",
+    "short",
+    "short",
+    "short"
+   ],
+   "spacing_s": 0.006,
+   "short_prefill_tokens": 32,
+   "long_prefill_tokens": 40896,
+   "num_decode_tokens": 64,
+   "probe_offset_s": 0.105,
+   "probe_prefill_tokens": 32,
+   "probe_decode_tokens": 64
+  }
+ ],
+ "steady": {
+  "gap_after_burst_s": 20.0,
+  "count": 24,
+  "interval_s": 0.06,
+  "num_prefill_tokens": [
+   128,
+   512,
+   256,
+   1024
+  ],
+  "num_decode_tokens": [
+   64,
+   32,
+   96,
+   48
+  ]
+ }
+}

@@ -1,0 +1,1956 @@
+[
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G3b-moe-dp2-pp1-n4",
+  "group": "G3b",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G3b-moe-dp2-pp1-n8",
+  "group": "G3b",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G3b-moe-dp2-pp2-n4",
+  "conservation": {
+   "expected": [
+    4,
+    64,
+    12
+   ],
+   "observed": [
+    4,
+    64,
+    12
+   ],
+   "ok": true
+  },
+  "group": "G3b",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G3b-moe-dp2-pp2-n8",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G3b",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G3b-moe-dp2-pp3-n4",
+  "conservation": {
+   "expected": [
+    4,
+    64,
+    12
+   ],
+   "observed": [
+    4,
+    64,
+    12
+   ],
+   "ok": true
+  },
+  "group": "G3b",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G3b-moe-dp2-pp3-n8",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G3b",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G3b-moe-dp4-pp1-n4",
+  "group": "G3b",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G3b-moe-dp4-pp1-n8",
+  "group": "G3b",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G3b-moe-dp4-pp2-n4",
+  "group": "G3b",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.14400000000000007,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.24000000000000016,
+    "multi_lane_busy_time": 0.14400000000000007,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.14400000000000013,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.2880000000000002,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.14400000000000007,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.24000000000000016,
+    "multi_lane_busy_time": 0.14400000000000007,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.14400000000000013,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.2880000000000002,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G3b-moe-dp4-pp2-n8",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G3b",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G3b-moe-dp4-pp3-n4",
+  "group": "G3b",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.10200000000000006,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.23800000000000016,
+    "multi_lane_busy_time": 0.10200000000000006,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.10200000000000006,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.2720000000000002,
+    "multi_lane_busy_time": 0.10200000000000006,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.10200000000000009,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3060000000000002,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.10200000000000006,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.23800000000000016,
+    "multi_lane_busy_time": 0.10200000000000006,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.10200000000000006,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.2720000000000002,
+    "multi_lane_busy_time": 0.10200000000000006,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.10200000000000009,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3060000000000002,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G3b-moe-dp4-pp3-n8",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G3b",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G9-moe-dp2-pp1-n8",
+  "group": "G9",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G9-moe-dp2-pp2-n8",
+  "group": "G9",
+  "lane_metric_after": {
+   "DECODE/1/0": {
+    "busy_time": 0.4499999999999997,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6373733884758764,
+    "multi_lane_busy_time": 0.4049999999999997,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "DECODE/1/1": {
+    "busy_time": 0.44999999999999934,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6823733884758761,
+    "multi_lane_busy_time": 0.40499999999999964,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "PREFILL/0/0": {
+    "busy_time": 0.23081406218246542,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.3650302780913621,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "PREFILL/0/1": {
+    "busy_time": 0.2250000000000002,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.41003027809136217,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "DECODE/1/0": {
+    "busy_time": 0.4499999999999997,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6373733884758764,
+    "multi_lane_busy_time": 0.4049999999999997,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "DECODE/1/1": {
+    "busy_time": 0.44999999999999934,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6823733884758761,
+    "multi_lane_busy_time": 0.40499999999999964,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "PREFILL/0/0": {
+    "busy_time": 0.23081406218246542,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.3650302780913621,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "PREFILL/0/1": {
+    "busy_time": 0.2250000000000002,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.41003027809136217,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G9-moe-dp2-pp3-n8",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G9",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G9-moe-dp4-pp1-n8",
+  "group": "G9",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G9-moe-dp4-pp2-n8",
+  "group": "G9",
+  "lane_metric_after": {
+   "DECODE/1/0": {
+    "busy_time": 0.4499999999999997,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6373733884758764,
+    "multi_lane_busy_time": 0.4049999999999997,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "DECODE/1/1": {
+    "busy_time": 0.44999999999999934,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6823733884758761,
+    "multi_lane_busy_time": 0.40499999999999964,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "PREFILL/0/0": {
+    "busy_time": 0.23081406218246542,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3650302780913621,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "PREFILL/0/1": {
+    "busy_time": 0.2250000000000002,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.41003027809136217,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "DECODE/1/0": {
+    "busy_time": 0.4499999999999997,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6373733884758764,
+    "multi_lane_busy_time": 0.4049999999999997,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "DECODE/1/1": {
+    "busy_time": 0.44999999999999934,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6823733884758761,
+    "multi_lane_busy_time": 0.40499999999999964,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "PREFILL/0/0": {
+    "busy_time": 0.23081406218246542,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3650302780913621,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "PREFILL/0/1": {
+    "busy_time": 0.2250000000000002,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.41003027809136217,
+    "multi_lane_busy_time": 0.13500000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G9-moe-dp4-pp3-n8",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G9",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G9-dense-dp1-pp2-n8",
+  "group": "G9",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G9-moe-dp2-pp2-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G9",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G9-moe-dp2-pp3-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G9",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G9-moe-dp4-pp2-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G9",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G9-moe-dp4-pp3-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    24
+   ],
+   "observed": [
+    8,
+    128,
+    24
+   ],
+   "ok": true
+  },
+  "group": "G9",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp2-pp1-n8",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp2-pp1-n8-burst",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp2-pp2-n8",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.24581406218246543,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.36803027809136213,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.2400000000000002,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.41603027809136217,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.24581406218246543,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.36803027809136213,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.2400000000000002,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.41603027809136217,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G10-moe-dp2-pp2-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    8
+   ],
+   "observed": [
+    8,
+    128,
+    8
+   ],
+   "ok": true
+  },
+  "group": "G10",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp2-pp3-n8",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.17581406218246537,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.3540302780913621,
+    "multi_lane_busy_time": 0.10200000000000008,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.38803027809136215,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.4220302780913622,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.17581406218246537,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.3540302780913621,
+    "multi_lane_busy_time": 0.10200000000000008,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.38803027809136215,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.4220302780913622,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G10-moe-dp2-pp3-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    8
+   ],
+   "observed": [
+    8,
+    128,
+    8
+   ],
+   "ok": true
+  },
+  "group": "G10",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp4-pp1-n8",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp4-pp1-n8-burst",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp4-pp2-n8",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.24581406218246543,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.36803027809136213,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.2400000000000002,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.41603027809136217,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.24581406218246543,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.36803027809136213,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.2400000000000002,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.41603027809136217,
+    "multi_lane_busy_time": 0.14400000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G10-moe-dp4-pp2-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    8
+   ],
+   "observed": [
+    8,
+    128,
+    8
+   ],
+   "ok": true
+  },
+  "group": "G10",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp4-pp3-n8",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.17581406218246537,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3540302780913621,
+    "multi_lane_busy_time": 0.10200000000000008,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.38803027809136215,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.4220302780913622,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.17581406218246537,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3540302780913621,
+    "multi_lane_busy_time": 0.10200000000000008,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.38803027809136215,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.17000000000000015,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.4220302780913622,
+    "multi_lane_busy_time": 0.10200000000000009,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "admission_deadlock",
+  "case_id": "G10-moe-dp4-pp3-n8-burst",
+  "conservation": {
+   "expected": [
+    8,
+    128,
+    8
+   ],
+   "observed": [
+    8,
+    128,
+    8
+   ],
+   "ok": true
+  },
+  "group": "G10",
+  "path": "L",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp2-pp2-n8-q5",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.3410657678085461,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.357930631444134,
+    "multi_lane_busy_time": 0.04800000000000004,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.3359999999999983,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.4059306314441333,
+    "multi_lane_busy_time": 0.04800000000000004,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.3410657678085461,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.357930631444134,
+    "multi_lane_busy_time": 0.04800000000000004,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.3359999999999983,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.4059306314441333,
+    "multi_lane_busy_time": 0.04800000000000004,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-moe-dp2-pp2-n8-q80",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.19231661048803433,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.20506736407896936,
+    "multi_lane_busy_time": 0.19200000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.19200000000000014,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.2530673640789694,
+    "multi_lane_busy_time": 0.19200000000000014,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.19231661048803433,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.20506736407896936,
+    "multi_lane_busy_time": 0.19200000000000012,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.19200000000000014,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.2530673640789694,
+    "multi_lane_busy_time": 0.19200000000000014,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp1-n8",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp1-n8-burst",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp2-n8",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.5050657678085477,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7022694563158771,
+    "multi_lane_busy_time": 0.4949342321914525,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.5050657678085477,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7522694563158772,
+    "multi_lane_busy_time": 0.49493423219145255,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.5050657678085477,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7022694563158771,
+    "multi_lane_busy_time": 0.4949342321914525,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.5050657678085477,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7522694563158772,
+    "multi_lane_busy_time": 0.49493423219145255,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp2-n8-burst",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp2_n8_burst/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp2_n8_burst/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp2_n8_burst/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.49999999999999994,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.49999999999999994,
+    "multi_lane_busy_time": 0.49999999999999994,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.49999999999999994,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5499999999999999,
+    "multi_lane_busy_time": 0.49999999999999994,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.5499999999999999,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5499999999999999,
+    "multi_lane_busy_time": 0.44999999999999996,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.55,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6,
+    "multi_lane_busy_time": 0.4499999999999999,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp3-n8",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp3_n8/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp3_n8/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp3_n8/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.471096003569163,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7002694563158774,
+    "multi_lane_busy_time": 0.35690399643083753,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.47109600356916304,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7362694563158775,
+    "multi_lane_busy_time": 0.35690399643083753,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.47109600356916304,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7722694563158775,
+    "multi_lane_busy_time": 0.3569039964308376,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.46926644195213724,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6876596024435355,
+    "multi_lane_busy_time": 0.3947335580478633,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.4692664419521373,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7236596024435356,
+    "multi_lane_busy_time": 0.39473355804786336,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.4692664419521373,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.7596596024435356,
+    "multi_lane_busy_time": 0.39473355804786336,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp3-n8-burst",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp3_n8_burst/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp3_n8_burst/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp3_n8_burst/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.39600000000000013,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.4680000000000002,
+    "multi_lane_busy_time": 0.39600000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.39600000000000013,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5040000000000002,
+    "multi_lane_busy_time": 0.39600000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.3960000000000002,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5400000000000003,
+    "multi_lane_busy_time": 0.3960000000000002,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.5760000000000003,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6120000000000003,
+    "multi_lane_busy_time": 0.21600000000000008,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.5760000000000003,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6480000000000004,
+    "multi_lane_busy_time": 0.21600000000000014,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.5760000000000003,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.6840000000000004,
+    "multi_lane_busy_time": 0.2160000000000001,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp4-pp1-n8",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp4-pp1-n8-burst",
+  "group": "G10",
+  "path": "U",
+  "verdict": "PASS"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp4-pp2-n8",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp2_n8/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp2_n8/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp2_n8/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.46946797964256276,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.580979968803131,
+    "multi_lane_busy_time": 0.3821624064074965,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.4694679796425628,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.630979968803131,
+    "multi_lane_busy_time": 0.3821624064074965,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.4299769544393909,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.5976596024435351,
+    "multi_lane_busy_time": 0.36608120320374826,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.42997695443939093,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6476596024435352,
+    "multi_lane_busy_time": 0.3660812032037483,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp4-pp2-n8-burst",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp2_n8_burst/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp2_n8_burst/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp2_n8_burst/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.3,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3,
+    "multi_lane_busy_time": 0.3,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.3,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.35,
+    "multi_lane_busy_time": 0.3,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.65,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.65,
+    "multi_lane_busy_time": 0.55,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.6500000000000001,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.7000000000000001,
+    "multi_lane_busy_time": 0.55,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp4-pp3-n8",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp3_n8/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp3_n8/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp3_n8/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.40792663008249286,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.5849799688031313,
+    "multi_lane_busy_time": 0.2695639759708406,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.4079266300824929,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6209799688031313,
+    "multi_lane_busy_time": 0.26956397597084064,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.40792663008249286,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6569799688031314,
+    "multi_lane_busy_time": 0.26956397597084064,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.40061768715858287,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.5849799688031313,
+    "multi_lane_busy_time": 0.2374015695633443,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.4006176871585829,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6209799688031313,
+    "multi_lane_busy_time": 0.2374015695633443,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.4006176871585829,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.6569799688031314,
+    "multi_lane_busy_time": 0.2374015695633443,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp4-pp3-n8-burst",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp3_n8_burst/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp3_n8_burst/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp4_pp3_n8_burst/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.21600000000000003,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.28800000000000003,
+    "multi_lane_busy_time": 0.21600000000000003,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.21600000000000008,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.32400000000000007,
+    "multi_lane_busy_time": 0.21600000000000008,
+    "peak_lanes": 4,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.21600000000000005,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.3600000000000001,
+    "multi_lane_busy_time": 0.21600000000000005,
+    "peak_lanes": 4,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.4680000000000002,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.4680000000000002,
+    "multi_lane_busy_time": 0.39600000000000013,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.4680000000000002,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.5040000000000002,
+    "multi_lane_busy_time": 0.3960000000000002,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/2": {
+    "busy_time": 0.46800000000000025,
+    "lanes": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "makespan": 0.5400000000000003,
+    "multi_lane_busy_time": 0.39600000000000024,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp2-n8-q5",
+  "differing_files": [
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp2_n8_q5/frontier_stage_batch_ledger.jsonl",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp2_n8_q5/request_metrics.csv",
+   "stage_admission_dense/online_serving/g10_dense_dp2_pp2_n8_q5/system_metrics.json"
+  ],
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.8170323968428383,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.5301211123654486,
+    "multi_lane_busy_time": 0.3829676031571622,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.8170323968428383,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.5801211123654486,
+    "multi_lane_busy_time": 0.3829676031571623,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.8027075840278453,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.5301211123654486,
+    "multi_lane_busy_time": 0.3972924159721553,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.8027075840278453,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 1.5801211123654486,
+    "multi_lane_busy_time": 0.39729241597215537,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "EXPLAIN"
+ },
+ {
+  "after": "success",
+  "before": "success",
+  "case_id": "G10-dense-dp2-pp2-n8-q80",
+  "group": "G10",
+  "lane_metric_after": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.5003166104880342,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5130673640789692,
+    "multi_lane_busy_time": 0.4996833895119658,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.5003166104880342,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5630673640789693,
+    "multi_lane_busy_time": 0.49968338951196584,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "lane_metric_before": {
+   "MONOLITHIC/0/0": {
+    "busy_time": 0.5003166104880342,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5130673640789692,
+    "multi_lane_busy_time": 0.4996833895119658,
+    "peak_lanes": 2,
+    "self_overlap": false
+   },
+   "MONOLITHIC/0/1": {
+    "busy_time": 0.5003166104880342,
+    "lanes": [
+     0,
+     1
+    ],
+    "makespan": 0.5630673640789693,
+    "multi_lane_busy_time": 0.49968338951196584,
+    "peak_lanes": 2,
+    "self_overlap": false
+   }
+  },
+  "path": "T",
+  "verdict": "PASS"
+ }
+]

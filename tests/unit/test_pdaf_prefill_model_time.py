@@ -21,6 +21,7 @@ class _ConcreteClusterScheduler(BaseClusterScheduler):
 
 def test_prefill_sync_entry_delegates_to_collective_utility(monkeypatch) -> None:
     scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._sync_kind = "prefill"
     sentinel = object()
 
     def fake_handler(_scheduler, *args, **kwargs):
@@ -52,6 +53,7 @@ def test_prefill_sync_entry_delegates_to_collective_utility(monkeypatch) -> None
 def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction() -> None:
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._sync_kind = "prefill"
 
     class _ExecutionTime:
         pipeline_time = 2.0
@@ -115,7 +117,7 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
     )
 
     scheduler._predictor = _Predictor()
-    scheduler._prefill_sync_waiting_room = {
+    scheduler._sync_waiting_room = {
         0: {0: {9: {31: {"post_moe": {"batches": {0: batch}}}}}}
     }
     scheduler.get_replica_stage_scheduler = Mock(return_value=stage_scheduler)
@@ -270,6 +272,7 @@ def _make_final_sync_scheduler(
 ) -> tuple[_ConcreteClusterScheduler, Mock]:
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._sync_kind = "prefill"
 
     predictor = _LayerPredictor({
         layer_id: execution_time for layer_id in range(num_layers)
@@ -282,7 +285,7 @@ def _make_final_sync_scheduler(
     )
 
     scheduler._predictor = predictor
-    scheduler._prefill_sync_waiting_room = {
+    scheduler._sync_waiting_room = {
         0: {
             0: {
                 9: {
@@ -439,6 +442,7 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
     )
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._sync_kind = "prefill"
     scheduler._predictor = predictor
     scheduler.get_replica_stage_scheduler = Mock(return_value=stage_scheduler)
     scheduler.get_replica = Mock(return_value=SimpleNamespace(dp_size=1))
@@ -448,7 +452,7 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
     scheduler._should_trigger_kv_transfer = Mock(return_value=False)
 
     def set_waiting_room(layer_id: int, sync_stage: str) -> None:
-        scheduler._prefill_sync_waiting_room = {
+        scheduler._sync_waiting_room = {
             0: {
                 0: {
                     9: {
@@ -534,8 +538,9 @@ def test_prefill_pp2_stage_one_advances_with_global_layer_ids() -> None:
     )
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._sync_kind = "prefill"
     scheduler._predictor = predictor
-    scheduler._prefill_sync_waiting_room = {
+    scheduler._sync_waiting_room = {
         0: {
             1: {
                 9: {
@@ -565,7 +570,11 @@ def test_prefill_pp2_stage_one_advances_with_global_layer_ids() -> None:
     assert len(events) == 1
     assert isinstance(events[0], PrefillSyncEvent)
     assert events[0]._layer_id == 3
-    assert predictor.calls == [(1, 2), (1, 3)]
+    # Stage 1 must address layers by their global ids: stage-local numbering
+    # would have asked for layer 1 here, not layer 3. Only the next layer is
+    # predicted on this path; the completed layer's prediction is made in the
+    # final-layer branch, which is the only place its value is used.
+    assert predictor.calls == [(1, 3)]
 
 
 def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> None:
@@ -587,7 +596,7 @@ def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> 
         is_busy=False,
         get_queue_batches=Mock(return_value=[batch]),
         pop_batch_if_not_busy=Mock(return_value=batch),
-        consume_last_stale_drop_count=Mock(return_value=0),
+        consume_last_stale_drops=Mock(return_value=[]),
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(

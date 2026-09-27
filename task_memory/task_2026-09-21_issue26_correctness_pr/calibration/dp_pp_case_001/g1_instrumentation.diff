@@ -1,0 +1,403 @@
+diff --git a/vllm/v1/engine/coordinator.py b/vllm/v1/engine/coordinator.py
+index 596edfdbe..1fd9ad16f 100644
+--- a/vllm/v1/engine/coordinator.py
++++ b/vllm/v1/engine/coordinator.py
+@@ -12,6 +12,7 @@ import zmq
+ from vllm.config import ParallelConfig
+ from vllm.logger import init_logger
+ from vllm.utils import get_mp_context, make_zmq_socket, set_process_title
++from vllm.v1 import frontier_trace
+ from vllm.v1.engine import EngineCoreOutputs, EngineCoreRequestType
+ from vllm.v1.serial_utils import MsgpackDecoder
+ from vllm.v1.utils import get_engine_client_zmq_addr, shutdown
+@@ -157,6 +158,10 @@ class DPCoordinatorProc:
+         last_stats_wave = -1
+         last_step_counts: Optional[list[list[int]]] = None
+ 
++        # Identifies each set of counts sent to the front ends, so a placement
++        # can be traced back to the engine reports it was computed from.
++        snapshot_id = 0
++
+         with make_zmq_socket(
+                 path=front_publish_address,  # IPC
+                 ctx=self.ctx,
+@@ -208,12 +213,23 @@ class DPCoordinatorProc:
+                     if last_step_counts is not None:
+                         engine_req_counts_list = last_step_counts
+                         last_step_counts = None
++                        counts_source = "latched_previous_step"
+                     else:
+                         engine_req_counts_list = self._get_engine_counts()
+                         stats_changed = False
++                        counts_source = "current"
++
++                    snapshot_id += 1
++                    frontier_trace.log_dp_placement_record(
++                        "coordinator_publish",
++                        snapshot=snapshot_id,
++                        counts=engine_req_counts_list,
++                        counts_source=counts_source,
++                        wave=current_wave,
++                        engines_running=engines_running)
+ 
+                     to_publish = (engine_req_counts_list, current_wave,
+-                                  engines_running)
++                                  engines_running, snapshot_id)
+                     publish_front.send(msgspec.msgpack.encode(to_publish))
+                     last_publish_time = int(time.time() * 1000)
+                     continue
+@@ -290,21 +306,35 @@ class DPCoordinatorProc:
+                         stats = self.engines[eng_index].request_counts
+                         stats_step = scheduler_stats.step_counter
+                         stats_wave = scheduler_stats.current_wave
++                        disposition = "applied_without_latch"
+                         if (stats_wave > last_stats_wave
+                                 or stats_wave == last_stats_wave
+                                 and stats_step > last_stats_step):
+                             if stats_changed:
+                                 last_step_counts = self._get_engine_counts(
+                                     do_copy=True)
++                                disposition = "latched_previous_step"
++                            else:
++                                disposition = "advanced_without_latch"
+                             last_stats_step = stats_step
+                             last_stats_wave = stats_wave
+                         elif stats_wave != last_stats_wave or (
+                                 stats_step != last_stats_step):
++                            disposition = "out_of_order"
+                             logger.warning(
+                                 "Received stats for out-of-order "
+                                 "step (%d, %d) from engine %d (expected "
+                                 "> (%d, %d))", stats_wave, stats_step,
+                                 eng_index, last_stats_wave, last_stats_step)
++                        frontier_trace.log_dp_placement_record(
++                            "coordinator_receive",
++                            engine=eng_index,
++                            wave=stats_wave,
++                            step=stats_step,
++                            waiting=scheduler_stats.num_waiting_reqs,
++                            running=scheduler_stats.num_running_reqs,
++                            disposition=disposition,
++                            latched_counts=last_step_counts)
+                         stats[0] = scheduler_stats.num_waiting_reqs
+                         stats[1] = scheduler_stats.num_running_reqs
+                         stats_changed = True
+@@ -335,7 +365,8 @@ class DPCoordinatorProc:
+                         self._send_start_wave(publish_back, wave, eng_index)
+ 
+                 if wave_state_changed:
+-                    message = (None, current_wave, engines_running)
++                    message = (None, current_wave, engines_running,
++                               snapshot_id)
+                     publish_front.send(msgspec.msgpack.encode(message))
+ 
+     @staticmethod
+diff --git a/vllm/v1/engine/core.py b/vllm/v1/engine/core.py
+index bfc29fc78..c61236776 100644
+--- a/vllm/v1/engine/core.py
++++ b/vllm/v1/engine/core.py
+@@ -45,6 +45,7 @@ from vllm.v1.engine.utils import (EngineHandshakeMetadata, EngineZmqAddresses,
+ from vllm.v1.executor.abstract import Executor
+ from vllm.v1.kv_cache_interface import KVCacheConfig
+ from vllm.v1.metrics.stats import SchedulerStats
++from vllm.v1 import frontier_trace
+ from vllm.v1.outputs import ModelRunnerOutput
+ from vllm.v1.request import Request, RequestStatus
+ from vllm.v1.serial_utils import MsgpackDecoder, MsgpackEncoder
+@@ -156,6 +157,12 @@ class EngineCore:
+                         self.batch_queue_size)
+             self.batch_queue = deque(maxlen=self.batch_queue_size)
+ 
++        # Classification of the most recent iteration, written by the step
++        # methods and consumed by the data-parallel busy loop, which is where
++        # the wave, step counter and published counts are known. Stays None
++        # while Frontier placement logging is off.
++        self.frontier_iteration: Optional[dict[str, Any]] = None
++
+         self.request_block_hasher: Optional[Callable[[Request],
+                                                      list[BlockHash]]] = None
+         if (self.vllm_config.cache_config.enable_prefix_caching
+@@ -305,9 +312,48 @@ class EngineCore:
+         engine_core_outputs = self.scheduler.update_from_output(
+             scheduler_output, model_output)  # type: ignore
+ 
++        self._record_frontier_iteration(scheduler_output,
++                                        applied_output=True,
++                                        queue_occupancy=0)
++
+         return (engine_core_outputs,
+                 scheduler_output.total_num_scheduled_tokens > 0)
+ 
++    def _record_frontier_iteration(self,
++                                   scheduled_output: Optional[SchedulerOutput],
++                                   *, applied_output: bool,
++                                   queue_occupancy: int) -> None:
++        """Classify one engine iteration for Frontier placement analysis.
++
++        Which branch an iteration takes is what decides whether it publishes
++        request counts on its own, so the branch is recorded rather than
++        inferred later from the counts.
++        """
++        if not frontier_trace.is_dp_placement_logging_enabled():
++            return
++
++        if scheduled_output is None:
++            branch = "applied_without_scheduling"
++        elif applied_output:
++            branch = "applied_after_scheduling"
++        else:
++            branch = "scheduled_without_applying"
++
++        self.frontier_iteration = {
++            "branch":
++            branch,
++            "applied_output":
++            applied_output,
++            "queue_occupancy":
++            queue_occupancy,
++            "scheduled_new_req_ids":
++            [data.req_id for data in scheduled_output.scheduled_new_reqs]
++            if scheduled_output is not None else [],
++            "num_scheduled_tokens":
++            scheduled_output.total_num_scheduled_tokens
++            if scheduled_output is not None else 0,
++        }
++
+     def post_step(self, model_executed: bool) -> None:
+         if self.use_spec_decode and model_executed:
+             # Take the draft token ids.
+@@ -339,17 +385,22 @@ class EngineCore:
+         assert len(batch_queue) < self.batch_queue_size
+ 
+         model_executed = False
++        scheduled_output: Optional[SchedulerOutput] = None
+         if self.scheduler.has_requests():
+-            scheduler_output = self.scheduler.schedule()
+-            future = self.model_executor.execute_model(scheduler_output)
++            scheduled_output = self.scheduler.schedule()
++            future = self.model_executor.execute_model(scheduled_output)
+             batch_queue.appendleft(
+-                (future, scheduler_output))  # type: ignore[arg-type]
++                (future, scheduled_output))  # type: ignore[arg-type]
+ 
+-            model_executed = scheduler_output.total_num_scheduled_tokens > 0
++            model_executed = scheduled_output.total_num_scheduled_tokens > 0
+             if model_executed and len(batch_queue) < self.batch_queue_size \
+                 and not batch_queue[-1][0].done():
+                 # Don't block on next worker response unless the queue is full
+                 # or there are no more requests to schedule.
++                self._record_frontier_iteration(
++                    scheduled_output,
++                    applied_output=False,
++                    queue_occupancy=len(batch_queue))
+                 return None, True
+ 
+         elif not batch_queue:
+@@ -366,6 +417,10 @@ class EngineCore:
+         engine_core_outputs = self.scheduler.update_from_output(
+             scheduler_output, model_output)
+ 
++        self._record_frontier_iteration(scheduled_output,
++                                        applied_output=True,
++                                        queue_occupancy=len(batch_queue))
++
+         return engine_core_outputs, model_executed
+ 
+     def shutdown(self):
+@@ -1072,9 +1127,10 @@ class DPEngineCoreProc(EngineCoreProc):
+         else:
+             super()._handle_client_request(request_type, request)
+ 
+-    def _maybe_publish_request_counts(self):
++    def _maybe_publish_request_counts(self) -> bool:
++        """Returns whether this iteration published its request counts."""
+         if not self.publish_dp_lb_stats:
+-            return
++            return False
+ 
+         # Publish our request counts (if they've changed).
+         counts = self.scheduler.get_request_counts()
+@@ -1085,6 +1141,31 @@ class DPEngineCoreProc(EngineCoreProc):
+                                    current_wave=self.current_wave)
+             self.output_queue.put_nowait(
+                 (-1, EngineCoreOutputs(scheduler_stats=stats)))
++            return True
++        return False
++
++    def _log_frontier_iteration(self, published: bool) -> None:
++        """Emit the iteration the step methods classified.
++
++        `step_counter` is read before `_has_global_unfinished_reqs` advances
++        it, so it is the same value a published report carried, which makes
++        `(engine, wave, step)` the join for the whole placement chain.
++        """
++        iteration = self.frontier_iteration
++        if iteration is None:
++            return
++        self.frontier_iteration = None
++
++        num_running_reqs, num_waiting_reqs = self.scheduler.get_request_counts()
++        frontier_trace.log_dp_placement_record(
++            "engine_iteration",
++            engine=self.dp_rank,
++            wave=self.current_wave,
++            step=self.step_counter,
++            waiting=num_waiting_reqs,
++            running=num_running_reqs,
++            published=published,
++            **iteration)
+ 
+     def run_busy_loop(self):
+         """Core busy loop of the EngineCore for data parallel case."""
+@@ -1096,7 +1177,7 @@ class DPEngineCoreProc(EngineCoreProc):
+ 
+             # 2) Step the engine core.
+             executed = self._process_engine_step()
+-            self._maybe_publish_request_counts()
++            self._log_frontier_iteration(self._maybe_publish_request_counts())
+ 
+             local_unfinished_reqs = self.scheduler.has_unfinished_requests()
+             if not executed:
+diff --git a/vllm/v1/engine/core_client.py b/vllm/v1/engine/core_client.py
+index 605bedaf1..daf8a67ef 100644
+--- a/vllm/v1/engine/core_client.py
++++ b/vllm/v1/engine/core_client.py
+@@ -29,6 +29,7 @@ from vllm.v1.engine import (EngineCoreOutputs, EngineCoreRequest,
+                             EngineCoreRequestType,
+                             ReconfigureDistributedRequest, ReconfigureRankType,
+                             UtilityOutput)
++from vllm.v1 import frontier_trace
+ from vllm.v1.engine.coordinator import DPCoordinator
+ from vllm.v1.engine.core import EngineCore, EngineCoreProc
+ from vllm.v1.engine.exceptions import EngineDeadError
+@@ -977,6 +978,10 @@ class DPAsyncMPClient(AsyncMPClient):
+         # List of [waiting, running] pair per engine.
+         # Used only by DPLBAsyncMPClient subclass.
+         self.lb_engines: list[list[int]] = [[0, 0] for _ in self.core_engines]
++        # Coordinator snapshot the counts above came from; 0 until the first
++        # one arrives, so a placement made from the initial zeros is visible
++        # as such.
++        self.lb_snapshot: int = 0
+ 
+         self.first_req_sock_addr = get_open_zmq_inproc_path()
+         self.first_req_send_socket = self.resources.first_req_send_socket = (
+@@ -1070,12 +1075,20 @@ class DPAsyncMPClient(AsyncMPClient):
+                         continue
+ 
+                     # Update local load-balancing state.
+-                    counts, wave, running = msgspec.msgpack.decode(buf)
++                    counts, wave, running, snapshot = msgspec.msgpack.decode(
++                        buf)
+                     self.current_wave = wave
+                     self.engines_running = running
+                     if counts is not None:
+                         sliced_counts = counts[count_slice]
+                         self.lb_engines = sliced_counts
++                        self.lb_snapshot = snapshot
++                        frontier_trace.log_dp_placement_record(
++                            "frontend_snapshot",
++                            snapshot=snapshot,
++                            counts=sliced_counts,
++                            wave=wave,
++                            engines_running=running)
+                         logger.debug("Received counts: %s (%s)", sliced_counts,
+                                      count_slice)
+ 
+@@ -1147,6 +1160,15 @@ class DPLBAsyncMPClient(DPAsyncMPClient):
+                 if score < min_score:
+                     min_score = score
+                     eng_index = idx
++            frontier_trace.log_dp_placement_record(
++                "frontend_route",
++                request_id=request.request_id,
++                engine=eng_index,
++                snapshot=self.lb_snapshot,
++                counts=[list(counts) for counts in current_counts],
++                score=min_score,
++                start_index=self.eng_start_index,
++                reservation=self.client_count)
+             # Increment local waiting count for better balancing between stats
+             # updates from the coordinator (which happen every 100ms).
+             current_counts[eng_index][0] += self.client_count
+diff --git a/vllm/v1/frontier_trace.py b/vllm/v1/frontier_trace.py
+index d9bddeea5..d28b09101 100644
+--- a/vllm/v1/frontier_trace.py
++++ b/vllm/v1/frontier_trace.py
+@@ -5,11 +5,13 @@
+ from contextlib import contextmanager
+ import json
+ import os
+-from typing import Any, Mapping
++import time
++from typing import Any, Mapping, Optional, TextIO
+ 
+ _SKIP_WARMUP = os.environ.get("VLLM_FRONTIER_TRACE_SKIP_WARMUP", "0") == "1"
+ _TRACE_ACTIVE = not _SKIP_WARMUP
+ _PP_BOUNDARY_LOG_ENV_VAR = "VLLM_FRONTIER_PP_BOUNDARY_LOG_PATH"
++_DP_PLACEMENT_LOG_DIR_ENV_VAR = "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR"
+ _PP_BOUNDARY_REQUIRED_FIELDS = (
+     "model_name",
+     "timestamp",
+@@ -99,3 +101,62 @@ def disable_for_warmup():
+         yield
+     finally:
+         _TRACE_ACTIVE = True
++
++
++# Data-parallel placement records. Every process that takes part in a placement
++# decision -- each engine core, the coordinator, each API server -- writes its
++# own file, so records never interleave and the reader can tell the roles
++# apart. Each record reaches the file as it is written: engine cores and the
++# coordinator are forked and stopped by a signal, so a forked process never
++# runs exit hooks and a buffer held in memory would be lost with it.
++_dp_placement_file: Optional[TextIO] = None
++_dp_placement_file_pid: Optional[int] = None
++_dp_placement_seq = 0
++
++
++def get_dp_placement_log_dir() -> str:
++    return os.environ.get(_DP_PLACEMENT_LOG_DIR_ENV_VAR, "")
++
++
++def is_dp_placement_logging_enabled() -> bool:
++    return is_active() and bool(get_dp_placement_log_dir())
++
++
++def log_dp_placement_record(kind: str, **fields: Any) -> None:
++    """Write one placement record of the given kind.
++
++    `seq` orders the records one process wrote and is the tie-break when two
++    of them carry the same correlation id. Timestamps are for reading; the
++    join between processes is always a correlation id.
++    """
++    if not is_dp_placement_logging_enabled():
++        return
++
++    global _dp_placement_file, _dp_placement_file_pid, _dp_placement_seq
++    pid = os.getpid()
++    if _dp_placement_file_pid != pid:
++        # A forked process inherits the parent's handle; it opens its own.
++        log_dir = get_dp_placement_log_dir()
++        os.makedirs(log_dir, exist_ok=True)
++        log_path = os.path.join(log_dir, f"dp_placement_{pid}.jsonl")
++        try:
++            _dp_placement_file = open(log_path,
++                                      "a",
++                                      encoding="utf-8",
++                                      buffering=1)
++        except OSError as exc:
++            raise RuntimeError(
++                f"Failed to open Frontier DP placement log file: {log_path}"
++            ) from exc
++        _dp_placement_file_pid = pid
++        _dp_placement_seq = 0
++
++    record: dict[str, Any] = {
++        "kind": kind,
++        "pid": pid,
++        "seq": _dp_placement_seq,
++        "monotonic": time.monotonic(),
++    }
++    record.update(fields)
++    _dp_placement_file.write(json.dumps(record) + "\n")
++    _dp_placement_seq += 1

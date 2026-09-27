@@ -1,0 +1,81 @@
+{
+ "probe_request_id": "dpp1-b6",
+ "runs": {
+  "vllm_load_balancing": {
+   "completed_requests": 33,
+   "num_requests": 33,
+   "tokens_conserved": true,
+   "burst_placements": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    0
+   ],
+   "probe_placement": 0,
+   "probe_selection": {
+    "time": 10.15,
+    "snapshot": [
+     [
+      0,
+      3
+     ],
+     [
+      1,
+      1
+     ]
+    ],
+    "engine": 0,
+    "request_id": "dpp1-b6"
+   },
+   "first_completion_after_burst_s": 0.24799999999999045
+  },
+  "completion_reporting_control": {
+   "completed_requests": 33,
+   "num_requests": 33,
+   "tokens_conserved": true,
+   "burst_placements": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    1
+   ],
+   "probe_placement": 1,
+   "probe_selection": {
+    "time": 10.15,
+    "snapshot": [
+     [
+      3,
+      0
+     ],
+     [
+      2,
+      0
+     ]
+    ],
+    "engine": 1,
+    "request_id": "dpp1-b6"
+   },
+   "first_completion_after_burst_s": 0.24799999999999045
+  },
+  "round_robin": {
+   "completed_requests": 33,
+   "num_requests": 33,
+   "tokens_conserved": true,
+   "burst_placements": [
+    1,
+    0,
+    1,
+    0,
+    1,
+    0
+   ],
+   "probe_placement": 0,
+   "probe_selection": null,
+   "first_completion_after_burst_s": null
+  }
+ }
+}

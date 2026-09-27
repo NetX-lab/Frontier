@@ -1,0 +1,41 @@
+# W6 negative controls, 2026-09-24 (openmopd-py312: Python 3.12.13, Torch 2.8.0+cu128, vLLM 0.11.0; native calls stubbed)
+
+## 1. The 7269bac tests against the unrepaired kernel (7269bac^ moe_vllm_kernel.py)
+1 failed, 6 errors: every error is fixture setup, 'module frontier.profiling.moe.moe_vllm_kernel has no attribute _vllm_custom_ops'; the discriminating test never reaches its assertion.
+
+## 2. The 7269bac tests against a mutant that restores only the slice arithmetic
+435,439c435,436
+<     torch.ops._C.silu_and_mul(
+<         intermediate_cache2,
+<         intermediate_cache1.view(-1, intermediate_cache1.shape[-1]),
+<     )
+<     intermediate_cache2_input = intermediate_cache2
+---
+>     intermediate_cache1_flat = intermediate_cache1.view(-1, intermediate_cache1.shape[-1])
+>     intermediate_cache2_input = intermediate_cache1_flat[:, :expert_hidden_dim_per_partition].contiguous()
+Result: 5 failed, 2 passed; test_a_gated_activation_is_not_the_first_half_of_the_projection fails on its assertion (the output equals the slice-only arithmetic). Unmodified 7269bac: 7 passed.
+
+## 3. Setup-argument mutants of HEAD 5e7221d's kernel, with the new test test_the_tile_config_and_the_alignment_follow_fused_experts
+### m5
+930c930
+<         block_shape=block_shape,
+---
+>         block_shape=None,
+FAILED tests/unit/test_moe_fused_expert_arithmetic.py::test_the_tile_config_and_the_alignment_follow_fused_experts
+1 failed, 31 passed in 6.65s
+### m6
+936c936
+<         align_num_experts,
+---
+>         num_experts,
+FAILED tests/unit/test_moe_fused_expert_arithmetic.py::test_the_tile_config_and_the_alignment_follow_fused_experts
+1 failed, 31 passed in 6.72s
+### m7
+937c937
+<         expert_map=expert_map,
+---
+>         expert_map=None,
+FAILED tests/unit/test_moe_fused_expert_arithmetic.py::test_the_tile_config_and_the_alignment_follow_fused_experts
+1 failed, 31 passed in 6.70s
+
+Every mutant passes the 31 earlier tests; only the new test fails. Unmodified HEAD with the new test: 32 passed.

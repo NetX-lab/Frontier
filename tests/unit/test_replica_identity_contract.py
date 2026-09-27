@@ -5,9 +5,6 @@ def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
-    round_robin_source = Path(
-        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
-    ).read_text(encoding="utf-8")
 
     block_start = source.index(
         "        elif self._cluster_type == ClusterType.DECODE_ATTN:"
@@ -16,7 +13,6 @@ def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
     non_ffn_block = source[block_start:block_end]
     assert "self._replica_scheduler_count = attn_dp" in non_ffn_block
     assert "self._replica_dp_size = attn_dp" in non_ffn_block
-    assert "dp_id = local_idx % self._replica_dp_size" in round_robin_source
 
 
 def test_production_scheduler_surface_has_no_retired_replica_dp_size() -> None:

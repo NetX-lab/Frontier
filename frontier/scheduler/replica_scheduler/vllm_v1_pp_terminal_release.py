@@ -61,12 +61,12 @@ class PipelineTerminalRelease:
         # aware instead of assuming a single remaining hop for every PP size.
         return max(pp // 4, 1)
 
-    def _advance_monolithic_pp_terminal_release_boundary(self) -> None:
+    def _advance_monolithic_pp_terminal_release_boundary(self) -> int:
         pending_release_iters = (
             self._get_monolithic_pp_pending_terminal_release_iters()
         )
         if not pending_release_iters:
-            return
+            return 0
 
         release_visible_threshold = (
             self._get_monolithic_pp_iteration_start_release_threshold()
@@ -106,7 +106,7 @@ class PipelineTerminalRelease:
                     "with one follow-up schedule poll while pending state remains: %s",
                     dict(pending_release_iters),
                 )
-            return
+            return 0
 
         ready_request_id_set = set(ready_request_ids)
         for request_id in ready_request_ids:
@@ -129,17 +129,18 @@ class PipelineTerminalRelease:
             len(ready_request_ids),
             ready_request_ids,
         )
+        return len(ready_request_ids)
 
     def _materialize_monolithic_pp_terminal_release_before_iteration_start(
         self,
-    ) -> None:
+    ) -> int:
         pending_release_iters = (
             self._get_monolithic_pp_pending_terminal_release_iters()
         )
         if not pending_release_iters:
-            return
+            return 0
         if self._has_monolithic_pp_visible_waiting_requests():
-            return
+            return 0
 
         release_visible_threshold = (
             self._get_monolithic_pp_iteration_start_release_threshold()
@@ -150,7 +151,7 @@ class PipelineTerminalRelease:
             if remaining_iters <= release_visible_threshold
         ]
         if not ready_request_ids:
-            return
+            return 0
 
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
@@ -175,6 +176,7 @@ class PipelineTerminalRelease:
             len(ready_request_ids),
             ready_request_ids,
         )
+        return len(ready_request_ids)
 
     def consume_monolithic_pp_terminal_release_followup_poll(self) -> bool:
         pending = bool(

@@ -4,7 +4,27 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-25 | §18.21 S43: admission times marked as upper bounds; intervals in WG05/WG12. |
+| 2026-09-24 | §18.22: W7-R4 decided (option a) and fixed (`e922c77`, gitlink `9adf759`); final-validation worktrees removed. |
+| 2026-09-24 | §18.22 added: user decisions after G5 (C4 option a; S43 and S42 become separate tasks), the review of the branch's fixes with its dispositions, the dummy-mode answer and candidate row S44. §18.20/§18.21 admission anchors corrected from `base_replica_scheduler.py:906` (unified DECODE loop) to `:1050-1063` (MONOLITHIC/PREFILL loop, hook at `:1061`). §18 status line updated. |
+| 2026-09-23 | §18.21 added: G4 and G5 results. C3 PASS (T1 48/48 formal routes at PP2). C4 `SCENARIO_NOT_REACHED` in all four bursts, and why the last GPU job is not used. Candidate findings S43 and S42 await the user's review. §18 status line updated. |
+| 2026-09-24 | §18 P1(a): the Frontier-versus-oracle comparison marked as not implemented (rerun review G3a lead 31). |
+| 2026-09-23 | §18.20 added: G3 results (T1 replay 38/38) and the G4 inputs as amended (four bursts, 20 s gaps, per-burst T2 qualification), written before G4. |
+| 2026-09-23 | §18.19 added: G2 as built (amends the §18.5 G2 row), the G3 sizing segment and the G4 retune rule, written before G3. |
+| 2026-09-23 | §18.18 results: B1–B8 pass. |
+| 2026-09-23 | §18.18 added: the W9-05 fix (user direction "推进W9-05"), its root cause, regression test and acceptance criteria B1–B8, written before measuring. |
+| 2026-09-23 | §18.17 results: A1–A7 pass on `2ffb062`. |
+| 2026-09-23 | §18.17 added: the W9-04 fix (user decision: option 1 in this PR), its regression test and acceptance criteria A1–A7, written before measuring. |
+| 2026-09-23 | §18.16 added: P2–P5 results against their acceptance rows, and the two pre-existing defects found in P5 (W9-04, W9-05). Status line under §18 updated. |
+| 2026-09-23 | D9-2 decided by the user: group-anchored key (§18.15, `requirements.md`); C1 PP3 row amended; P2 started. |
+| 2026-09-23 | §18.15 added: P1(b) completed on seven shapes; D9-2 proposal (group-anchored key) and the C1 PP3 amendment await the user's decision. §18.13 blocker marked resolved. |
+| 2026-09-23 | §18.14 results: K1–K4 pass on `03d5f24`; K2 amended after measuring for online cells (one cell's batches differ after an earlier admission). |
+| 2026-09-23 | §18.14 added: W9-01 merge-forward and the composition check, with pass criteria fixed before measuring. |
+| 2026-09-22 | Step 9 execution started. §18.13 added: P1(a) oracle complete with the state-table evidence, P1(b) blocked by the pre-existing stage-admission deadlock W9-01 (`issues.md`), design checkpoint D9-2 left open because the candidate key fails invariant I5 and I1/I5 can only be settled on the deadlocking shape. C1 amended per W9-02: the PP3 row uses `attn_dp=1`. |
+| 2026-09-22 | §18 second review at the user's direction (codebase integration, readability, value, no hard-coding/patches/over-defense/redundancy, plain names): findings R9-01..R9-08 in §18.12; D9-1, D9-2, P1(a), §18.10 and the §18.11 representation column amended in place. Execution still not started. |
 | 2026-09-21 | Landed the execution specification verbatim (Section "Execution Specification" below) and recorded the amendments agreed with the user before Step 0. |
+| 2026-09-22 | Added amendment A12 and the Step 9 draft (§18; numbered §17 until 2026-09-22, when the duplicate number was fixed) for PP>1 support of the opt-in vLLM DP placement; awaiting user approval. |
+| 2026-09-22 | Step 9 section renumbered §17 → §18 (the source index already held §17). §18 corrected per the 2026-09-22 external review, P9-01..P9-06: engine-iteration state table instead of a room-only hook rule; K1, K3-as-written and stride keys rejected as acceptance basis, six key invariants; instrumentation chain and T2 qualification; CPU reference-loop oracle and valid negative controls; PP3 fixture with a valid layer count; revised work graph and C1–C5. Corrections collected in §18.11. Execution still not started. |
 
 ## Amendments (authoritative where they differ from the specification below)
 
@@ -23,6 +43,7 @@ Facts were verified against `origin/main` at `1f694f7c549aa3aeeb7c5bbae04e119c09
 | A9 | §3.3 publication, §3.5 approvals | User authorized (Q5) pushing both branches to `origin` (`NetX-lab/Frontier`) and creating/updating the two draft PRs for the whole task. Not authorized: merge, force-push, history rewrite, closing Issue 26. | Checkpoint pushes need no further approval. Q6=a: this session stops after the Step 0 push for user review. |
 | A10 | §2.1 candidate snapshot | Verified: merge-base is `d71ad80b…`; the final candidate commit `a7b3320` touches only `task_memory/` (1006 files, no source); the candidate gitlink is `e564935d…`; donor design documents exist at the archive top level; `tests/unit/test_moe_routing_runtime.py` already exists on main and is modified by the candidate. | No change to the specification; facts recorded for Step 1. |
 | A11 | §7.1 candidate scope | The candidate adds ~80 `tests/e2e|integration|performance/issue26_*` experiment scripts. | Default disposition `DROP` unless Step 1 finds a specific reusable helper (the specification already names `tests/integration/issue26_dp_coordinator_reference.py` for review). |
+| A12 | §10 Step 4 "Initial support remains … PP1"; §14 Step 8 "remains PP1-only" | User request 2026-09-22: complete `vllm_load_balancing_cluster_scheduler.py` so it is not limited to PP=1, after research of both codebases and a real vLLM 0.10.2 PP>1 DP-scheduling comparison run under the calibration skill. Same day: GPU workers use `charged_group="codesign"` only; `steptron_ci` is suspended until the user allows it. | Step 9 (§17) supersedes the PP1 boundary once approved. Until approval, §17 is a plan only: no source, GPU, or publication action. |
 
 ## Execution Specification (verbatim copy of `.local-draft/Frontier_Issue26_Correctness_PR_Execution_Spec_2026-09-21.md`)
 
@@ -501,6 +522,8 @@ The selection and publication rules are source-backed; actual Frontier events ex
 
 ## 11. Step 5 — Separate routing load distribution from implementation identity
 
+> **Closed 2026-09-22 without source changes (user decision; see `review.md` W5 "Final disposition" and `requirements.md`).** The premise check found the collision this step fixes unreachable on main: the routing distribution has one global field and no per-role override, so every cluster resolves one routing path per run. The override that would have made it reachable was judged not worth its configuration surface, and the drafted implementation is archived as `w5_reverted_moe_routing_runtime_path.patch`. The specification below is kept as written for the record.
+
 ### Source scope
 
 ```text
@@ -839,3 +862,731 @@ Under [R1]: `frontier/profiling/moe/moe_vllm_kernel.py`, `frontier/entities/stag
 ---
 
 **First action for a fresh Claude Code session:** perform Step 0, publish the new worktree branch and tracked plan, then complete the source audit in Step 1. Do not begin by cherry-picking the calibration branch or launching a GPU job.
+
+## 18. Step 9 — PP>1 support for the opt-in vLLM DP placement
+
+**Status 2026-09-22:** the user answered every §18.7 decision the same day (verbatim in `requirements.md`). Later the same day an external review of PR34/PR35 (`.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_Review_2026-09-22.md`, findings P9-01..P9-06) corrected this plan; the corrections are applied in place below and collected with their evidence in §18.11. A second review at the user's direction (2026-09-22, quality gates for core-module changes) is recorded in §18.12 and amended D9-1, D9-2, P1 and §18.10 in place. No Step 9 source edit has been made; execution starts at the first node of the §18.5 graph once the user confirms the start. Research followed the `codebase-design` skill (§18.10); the ground-truth comparison follows `frontier-calibration` v2 as written (§18.9).
+
+**Status 2026-09-23:** P1–P5 are complete on the CPU at `bacdbb4` and P6 records are being published (§18.16). G3–G5 stay blocked on GPU authorization.
+
+**Status 2026-09-23 (after G5):** G3, G4 and G5 are complete (§18.20, §18.21), using 2 of the 3 authorized GPU jobs. C3 passes. C4 is `SCENARIO_NOT_REACHED` in every burst, with the failed preconditions named. The case waits for the user's review of C4 and of the candidate findings S43 and S42.
+
+**Status 2026-09-24:** the user chose C4 option (a) and moved S43 and S42 into separate calibration tasks. The case is closed for this PR. The review of the branch's fixes is recorded in §18.22.
+
+### 18.1 Goal and acceptance criteria
+
+`VllmLoadBalancingClusterScheduler` accepts valid `num_pipeline_stages > 1` configurations and reproduces vLLM 0.10.2's per-iteration DP request-count publication under the batch-queue stepping path that PP>1 selects — one observable engine scheduling iteration and its frontend-visible load, not a counter made monotonic after the fact — verified on a controlled or demonstrably matched iteration history against a real `vllm serve --data-parallel-size 2 --pipeline-parallel-size 2` deployment.
+
+| # | Criterion | Evidence |
+| --- | --- | --- |
+| C1 | Valid PP2 and PP3 configurations (layer count divisible by PP; `MONOLITHIC`, one Replica, `vllm_v1`, MoE or `attn_dp == 1` — the PP1 clause is the only guard removed) complete every request with request/token/owner conservation, for dense `attn_dp=1` and MoE `attn_dp=2` at PP2. **Amended 2026-09-22 (W9-02):** the PP3 row uses `attn_dp=1`; `attn_dp=2, moe_ep=2, PP=3` is rejected at construction because 6 devices do not divide the node size of 4. **Amended 2026-09-23 (D9-2 decision):** that rejection is the collective-sim topology rule; a MoE `attn_dp=2, PP=3` row on the analytical backend is restored, because I5 needs a multi-lane PP3 case. PP3 uses a separate CPU fixture with a valid layer count (6 or 12); the native PP2 model stays the approved 8-layer tiny Qwen3-MoE. | P4 real-loop PP2 and PP3 cases; §18.11 behavioral matrix. |
+| C2 | Previously supported behavior is unchanged under the stated comparison contract: every existing PP1 `vllm_load_balancing` scenario has value-identical `request_metrics.csv` and identical `system_metrics.json` (timestamps/run ids removed, the Q11 rule), with no additional admission-only report; every other cluster scheduler, including the supported disaggregated paths, has identical event outcomes (the hook is inert for them). | P5 byte comparison; Step 8 regression set rerun. |
+| C3 | For a controlled or demonstrably matched iteration history, the emitted loads, the equality/order relation of logical-iteration keys, the coordinator snapshots and the frontend-visible counts agree with the reference. Natural-history divergence is classified by first cause (arrival/delivery order, batch composition, output readiness, count calculation, key grouping, snapshot publication, frontend selection), not hidden by re-indexing. Boundary-index comparison alone is not an alignment method. | CPU reference-loop oracle (P1) + causal join of the G4 trace (§18.11 instrumentation chain) + `workflow-gap-analysis`. |
+| C4 | In a trace-qualified native discriminating slice (§18.6, qualified per §18.11: the intended snapshot was applied at the frontend before the probe was routed), the corrected placement matches the reference and the explicit test-only completion-reporting control fails for the expected reason. The actual unmodified PP2 baseline is reported as rejected by its constructor, not as a placement. Otherwise the slice is `SCENARIO_NOT_REACHED` with the failed precondition named. | §18.6 comparison table with the control column. |
+| C5 | Source tuples, commands, every effective setting, observation completeness, negative controls and limitations are committed and reviewable: `design.md` section, `AGENTS.md:620` wording, test report, `validation.md` rows, the calibration case records. A clean worktree and an author-written receipt are provenance evidence, not a semantic PASS. A native out-of-order warning is evidence to analyze, not proof of a simulator bug. | Files listed in P6. |
+
+### 18.2 Reference semantics (pinned vLLM 0.10.2, `.real-engine/vLLM-BS` at `ea95f571e`)
+
+| Fact | Source |
+| --- | --- |
+| PP>1 makes `max_concurrent_batches = pipeline_parallel_size`, which builds the `batch_queue` and selects `step_with_batch_queue`. | `vllm/v1/executor/multiproc_executor.py:325-329`, `vllm/v1/engine/core.py:147-157` |
+| One iteration: `scheduler.schedule()` (waiting→running for new requests; in-flight requests are skipped by the `num_new_tokens == 0` rule), append; if the queue still has room and the oldest batch is not done, return without completing anything (a **schedule-only iteration**); otherwise pop the oldest, wait, `update_from_output` (finished requests leave `running`). | `core.py:318-370`, `vllm/v1/core/sched/scheduler.py:436-441` |
+| `_maybe_publish_request_counts()` runs after **every** iteration and publishes `(running, waiting)` whenever it changed, carrying `step_counter` and `current_wave`. `step_counter` is incremented afterwards in `_has_global_unfinished_reqs`, so the publication of iteration `k` carries `k-1`. That method all-reduces only every 32 steps, so DP engines' step counters are not held in lockstep per iteration (R9-08). | `core.py:1075-1087, 1089-1137` |
+| Coordinator: a report whose `(wave, step)` is strictly greater than the last latches the previous counts when `stats_changed`; equal keys apply without latching; smaller keys warn. Publication every `stats_update_interval_ms` (100 ms) while changed, 5000 ms otherwise, with a 50 ms first-collection wait. | `vllm/v1/engine/coordinator.py:196-227, 280-312` |
+| Frontend: `score = waiting * 4 + running`, first minimum from `eng_start_index`, local `+client_count` waiting reservation until the next publication. Only the online `vllm serve` path builds `DPLBAsyncMPClient`; offline `LLM` DP is SPMD without a balancer. | `vllm/v1/engine/core_client.py:85-103, 1131-1156` |
+| No DP+PP prohibition: per-engine `world_size = PP*TP`; the `arg_utils` assertions concern hybrid/external LB and the `mp` backend only. | `vllm/config/parallel.py:314`, `vllm/engine/arg_utils.py:1221-1269` |
+| Schedule log rows carry request ids and queue sizes but **no engine identity**; all DP engine processes inherit one `VLLM_FRONTIER_SCHED_LOG_PATH`. Coordinator publications are not logged. | `scheduler.py:91-92, 985-998` |
+
+### 18.3 Frontier model today and the gap
+
+| Fact | Source |
+| --- | --- |
+| `on_schedule` admits while `_num_running_batches < _num_stages`; `on_batch_end` decrements at the batch's last stage, immediately before the cluster-scheduler report. | `base_replica_scheduler.py:1052-1057`, `global_batch_end_event.py:180-185` |
+| `_running_requests` grows at admission; `get_request_load()` returns `(queue + preempted, len(_running_requests))`, the same population as vLLM's `get_request_counts()`. | `vllm_v1_engine_replica_scheduler.py:948`, `vllm_v1_iteration_policy.py:528-545` |
+| The only report boundary is `on_replica_batch_end` with key `ForwardSyncState.get_step_id(batch)`. | `vllm_load_balancing_cluster_scheduler.py`, `design.md` "The report key" |
+| At admission a batch carries only the provisional per-lane creation counter; the Replica-scoped key is assigned when the shared sync room opens during execution. | `base_replica_scheduler.py:460-467`, `forward_sync_state.py:152-158` |
+
+Equivalence argument, as corrected by P9-01. The reference decides each engine iteration by the conjunction `model_executed and len(batch_queue) < batch_queue_size and not batch_queue[-1][0].done()`; only that branch returns without applying an output, and publication follows every iteration. With queue depth `P`, appending `B_k` to a queue holding `P-1` earlier outputs completes `B_(k-P+1)` — `B_(k-1)` is the `P=2` case only — and equal queue occupancy does not by itself prove equal `waiting`/`running` populations: request membership, empty schedules, completions and the time at which each change becomes visible must correspond. The narrow hypothesis retained: in a controlled execution history Frontier already exposes the correct combined state at completion boundaries where `B_k` was admitted at `B_(k-P)`'s end and reported at `B_(k-P+1)`'s end; §18.11 states these preconditions as a test table instead of the earlier sentence "steady state needs no change", which is withdrawn. The gap is every iteration the completion report cannot represent: the admission-only iteration (vLLM publishes `waiting -n, running +n`, score `-3n`, under a key strictly greater than the last completion's, while Frontier stays silent until the batch ends and, when one `on_schedule` call admits two batches, never exposes the state after the first), the iteration whose oldest output is already ready when room remains (one combined observation, not an extra admission-only report), the zero-token iteration with queued work, and the drain iteration. At PP=1 `step()` is atomic, so none of these occur and the PP=1 path is unaffected by construction. The existing key cannot be reused at the admission boundary because it is not yet resolved there (the dense multi-lane INVALID row in `design.md` shows what per-lane counters do to the latch), and a per-callback fresh key is not a valid substitute (P9-02, §18.11).
+
+### 18.4 Design
+
+| Id | Decision | Content |
+| --- | --- | --- |
+| D9-1 | Schedule-time hook (corrected per P9-01; payload fixed per §18.12 R9-01/R9-04) | Name fixed by the user (D-d): `BaseClusterScheduler.on_replica_batch_scheduled(time, replica_id, replica_local_id, batch)`, the same signature as `on_replica_batch_end`, inert default (`return None`). Called once per admitted batch from the MONOLITHIC/PREFILL admission loop of `BaseReplicaScheduler.on_schedule`, immediately after `self._num_running_batches += 1`, through the constructor-required `self._cluster_scheduler` (no `getattr`/`hasattr`). No readiness flag and no observation record: the DES has no "ready but unapplied" state (R9-01). Whether pipeline room remains after the admission is the reference's second conjunct and does decide whether the admission is published on its own or folded into the completion the engine then waits for; the policy scheduler computes it from the lane's existing `num_running_batches` property and `replica_config.num_pipeline_stages`, so it is not a hook argument. The policy reads the post-admission load through `get_request_load()`. One rule for every PP: at PP=1 the single slot is always filled, so no admission is ever published on its own. The publish decision stays in `VllmLoadBalancingClusterScheduler`. Rejected, unchanged: reconstructing the report in `ReplicaScheduleEvent` after `on_schedule` (cannot see the state after the first of two admissions in one call). |
+| D9-2 | Report key (corrected per P9-02; candidates per §18.12 R9-02/R9-03) | **Rejected as acceptance basis:** K1 (equal key; never latches, misses the reference latch of the pre-admission state), **K3 as written** (a fresh label per admission callback equates callback order with iteration order and gives two peer lanes of one logical iteration different keys — the executable counterexample in §18.11 shows the coordinator then latches a partial snapshot and routes differently), and stride keys (`2*cohort±1`; arbitrary factor, no room for consecutive admission-only iterations at PP≥3). **Rule to be chosen at the design checkpoint:** first identify the reference-equivalent logical engine iteration, then reuse an existing scheduler iteration/forward identity if it actually represents it; otherwise a derived identity or a small additional report-state field. Not a per-batch counter because it is available; not a global identity registry because the old getter is unavailable at admission. The chosen rule must satisfy invariants I1–I6 of §18.11, and the P1 probe must establish logical-iteration membership, not print provisional/resolved Batch ids and pick whichever looks monotonic. Only comparisons are used, so PP=1 behavior stays identical (C2 verifies).  **Consequence stated by R9-02:** the rule keys *both* observation kinds by the observing iteration; the current completion key `ForwardSyncState.get_step_id(batch)` names the iteration that scheduled the batch, which coincides with the applying iteration only at PP=1. **First candidate to test in P1 (R9-03):** the Replica-scoped `ForwardSyncState._next_step_id_by_replica` value read at the observation boundary, through a plain accessor; it needs no new bookkeeping and meets I1–I4 and I6, and its known gap is I5 (consecutive admission-only iterations on one lane while stage 0 is busy collapse to one key). Whether the reference itself keeps peer keys equal in that case is a P1/G4 question (R9-08), not an assumption. |
+| D9-3 | Guard | Drop `num_pipeline_stages == 1`; keep the other four clauses and the dense multi-lane rejection (its evidence is PP-independent); update the error text. The layer-partition guard (`num_layers % num_pipeline_stages == 0`, `replica_config.py`) is untouched: removing the PP1 clause is not permission to bypass the other independent guards or to add uneven partitioning. |
+| D9-4 | Determinism and flags | No new `EventType`, no new config flag, no balancer constant change (`design.md` event-type determinism; plan §10 "no tuning flags"). |
+| D9-5 | Docs | `AGENTS.md:620` ("one pipeline stage" removed), `design.md` guard row plus a section "Schedule-time reports under pipeline parallelism" with the P1 probe table, `plan.md`/`progress.md`/`validation.md`/`review.md`. |
+
+### 18.5 Work packages (sequence revised per P9-06)
+
+```text
+existing PR corrections and scoped regressions (done 2026-09-22, review packages A–E)
+    -> publish the amended W9 plan and observation schema (this section)
+    -> explicit W9 start approval from the user
+    -> {expanded P1 CPU reference-loop and Frontier probes,
+        G1 local instrumentation,
+        G2 case and extraction preparation}
+    -> design checkpoint: source-backed state table + key-grouping rule (D9-1 fields, D9-2 rule)
+    -> {P2 implementation + P3 focused tests,
+        G3 native PP1 infrastructure smoke once G1/G2 are ready}
+    -> P4 real-loop PP2 and valid PP3 tests
+    -> G4 qualified native PP2 run
+    -> G5 causal comparison and gap classification
+    -> P5 unchanged-path regressions
+    -> P6 final records and review handoff
+```
+
+CPU packages `P*` change Frontier; ground-truth packages `G*` never change Frontier and run in parallel where the graph allows. GPU queue time on `codesign` is the expected critical path, so `G1`/`G2` start with `P1`. P2 implements the selected state model, not a test that repeats `pipeline_room_remaining`; the earlier "about 80 lines" estimate and "K1/K3 decided from P1" no longer constrain the decision. If the reference evidence shows the required state cannot be represented by a small change, record the missing responsibility and request a scoped decision before broadening the design; do not build a second trace framework or migrate unrelated scheduler code.
+
+| Package | Content | Acceptance |
+| --- | --- | --- |
+| P1 Probes | (a) A small CPU reference-loop harness (`tests/comparison/dp_placement_pp/reference_loop.py`) that models only the engine iteration — the `step_with_batch_queue` conjunction, `_maybe_publish_request_counts` changed-count emission and the per-iteration `step_counter` — over scripted admissions, empty schedules and completions with controllable output readiness, and feeds the emitted `(engine, step, counts)` reports into a `VllmDPLoadBalancer` instance (R9-05: the coordinator latch and frontend scoring are already modeled there and are not re-implemented). A Frontier-driven balancer instance is compared against it on the same scripted history, which isolates the iteration-to-report mapping W9 changes. (Not implemented: only the oracle's own unit tests exercise it; `review.md` S9-08 assigns the comparison to the S43 task.) (b) Scratch Frontier probes at PP=2 and PP=3 for four shapes (MoE `attn_dp=2` burst and staggered, MoE `attn_dp=1`, dense `attn_dp=1`) recording `(lane, boundary, logical-iteration membership, load)` — membership, not merely provisional/resolved Batch ids. No source change. | State table (§18.11) confirmed or amended from evidence; the key-grouping rule proposed with its I1–I6 argument; both recorded in `design.md` for the design checkpoint. |
+| P2 Implement | D9-1..D9-3 in `base_cluster_scheduler.py`, `base_replica_scheduler.py`, `vllm_load_balancing_cluster_scheduler.py`, implementing the state model fixed at the design checkpoint. | Existing unit tests pass except the intentionally inverted guard case; the §18.11 matrix rows that P3 owns pass. |
+| P3 Unit | `tests/unit/test_vllm_dp_load_balancer.py`: guard param at `:538` becomes positive; PP=1 never reports at schedule time; PP=2 cold fill with peer lanes in both callback orders groups peer reports under one logical iteration (no partial peer snapshot); room remaining with the oldest output ready yields one combined report; PP=3 two admission-only iterations before the first completion are distinct iterations with peer equality inside each; full queue yields one report decision; idle/changed-to-zero peers; bounded bookkeeping after many iterations; helper `num_pipeline_stages` parameter. Expected counts, keys and placements are written independently, not taken from a run. | New tests fail before P2 and pass after. |
+| P4 Integration | `tests/integration/test_vllm_dp_placement_runtime.py`: PP=2 dense `attn_dp=1` and MoE `attn_dp=2` (`moe_ep=2`) cases and a PP=3 case on a separate fixture with 6 or 12 layers (`_model()` today has 4; the tiny Qwen has 8; the divisibility guard stays) — completion with request/token/owner conservation, `routing_times == cluster_schedule_times`, reports only at classified iterations, event-type set equal to the round-robin baseline; the §18.6 discriminating scenario against the §18.11 controls (test-only guard-lifted completion-reporting baseline vs corrected implementation; `placements_fixed != placements_round_robin` is not sufficient because PP1 `vllm_load_balancing` already differs from round-robin); the C35-01 hybrid-layer mixed-batch credit case carried into the PP2 fixture. | Pass; each control fails for its stated reason. |
+| P5 Fidelity | Byte comparison of all PP=1 `vllm_load_balancing` scenarios before/after; Step 8 regression set (unit, integration, 16 examples) rerun. | C2. |
+| P6 Records | Docs of D9-5, test report `test_report_2026-09-22_w9_pp_dp_placement.md`, commits per package, push (Q5), PR body update. | Pushed and verified. |
+| G1 Ground-truth checkout (instrumentation scope revised per P9-03) | `.real-engine/vLLM-BS` is detached at `ea95f571e` with only the remote ref `origin/feature/frontier-comparison-instrumentation` (same commit). Create the local branch at that commit and commit the D-b instrumentation on it: the case-gated event chain of §18.11 (engine iteration result, changed-count report emitted, coordinator receive/publish with a snapshot id, frontend snapshot application, frontend routing decision), named `waiting`/`running` fields, correlation ids rather than timestamps as the join, buffered per-process JSONL flushed at case completion, no CUDA synchronization or per-operator profiling. Changed files (to be confirmed at start approval): `vllm/v1/core/sched/scheduler.py` (schedule row gains `dp_rank`), `vllm/v1/engine/core.py` (iteration classification and emitted report), `vllm/v1/engine/coordinator.py` (receive/latch/publish with snapshot id), `vllm/v1/engine/core_client.py` (snapshot application and routing decision), plus one env-var switch. Keep the tree clean; record the tuple with `groundtruth_remote_tip=ea95f571e`, the diff artifact `remote_tip..HEAD` and its SHA-256. No push (D-b covers the commit only). | Clean tree on the exact branch; tuple and changed-file list recorded in the manifest. |
+| G2 Harness and case | `tests/comparison/dp_placement_pp/`: `make_trace.py` (three warmups, ≥5 s idle gap, discriminating burst, steady-state segment → Frontier trace CSV and request-id namespace), `replay_client.py` (online token-id replay, `x-request-id`, dispatch offsets recorded), `extract_vllm_placement.py` (schedule log + DP-stats log → per-engine publication sequence and placement per request id), `compare_placement.py` (T1 boundary table, T2 placement table, `workflow_gap_table.csv` rows). Case directory `task_memory/task_2026-09-21_issue26_correctness_pr/calibration/dp_pp_case_001/` (`manifest.yaml`, `case_init`, `analysis/`, receipts); `runs/*` under `/data/ycfeng/tmp/issue26-correctness-pr/calibration/dp_pp_case_001/`, mirrored to `/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/`. `semantic-alignment-check` table written before any run. | Semantic table `PASS`; Frontier-only pre-check shows the discriminating request differs between round-robin/current and the expected reference placement. |
+| G3 S0 smoke | 2×H800, DP=2, PP=1: `groundtruth-run-check` (clean mode) → run → verify `vllm.__file__` resolves to the overlay, instrumentation rows exist with `dp_rank`, request-id mapping and extraction work end to end. | Run-check `PASS`; extraction produces one placement per formal request. |
+| G4 S1 ground truth | 4×H800, DP=2, PP=2, TP=1, EP=2: `groundtruth-run-check` → `groundtruth-run` (clean mode, ≥3 warmups, E2E runtime metrics on, no CUDA-op or CPU probes; the schedule log and DP-stats log are scheduler-level workflow evidence declared in the manifest). Measure `e1`'s first-chunk duration; if it is below the window, retune the chunk budget/prompt length and rerun (S2). | Fresh artifacts, exit 0, tuple verified, first-chunk duration recorded. |
+| G5 Simulator runs and analysis (revised per P9-04) | `simulator-run` on the post-P2 revision and on the explicit test-only completion-reporting control (guard lifted, old reporting logic; the exact test-only change published) with the same trace; the unmodified pre-change revision is run once to record its constructor rejection under PP2. `workflow-gap-analysis` joins native rows to Frontier rows by causal inputs (same admissions/applied outputs), or replays a declared controlled history through the CPU reference loop and the Frontier observation path; a natural-history divergence is traced to its first cause and labeled (arrival/delivery order, batch composition, output readiness, count calculation, key grouping, snapshot publication, frontend selection). T2 is accepted only when the trace shows the intended snapshot applied at the frontend before the probe was routed; otherwise `SCENARIO_NOT_REACHED`. `e2e-metrics-gap` is not run: Frontier timing is dummy (D-e) and the entry's pinned normalizer is absent, which the skill treats as `FAIL`; recorded as not applicable to this step's acceptance. | C3 and C4 tables with `MATCH`/`MISMATCH`/`NOT_REACHED` rows, first-cause labels and source anchors. |
+
+### 18.6 Ground-truth comparison under `frontier-calibration`
+
+Workflow: `case_init` manifest → `parity-run` → `semantic-alignment-check` → `groundtruth-run-check` → `groundtruth-run` → `simulator-run` → `workflow-gap-analysis`; `$grill-me` questions for any setting the skill cannot resolve; human review before any code change that the comparison motivates.
+
+| Item | Setting |
+| --- | --- |
+| Topology | vLLM `--data-parallel-size 2 --pipeline-parallel-size 2 --tensor-parallel-size 1 --enable-expert-parallel` (EP = TP×DP = 2). Frontier `attn_dp=2, attn_tp=1, moe_tp=1, moe_ep=2, num_pipeline_stages=2, num_replicas=1`, `cluster_scheduler=vllm_load_balancing`, `replica_scheduler=vllm_v1`. 4×H800. |
+| Model | `Qwen3MoeForCausalLM` from `data/config/models/Qwen3-30B-A3B-tiny.json` (8 layers, 16 experts, top-8; `SupportsPP` and `FusedMoE` EP in 0.10.2, `qwen3_moe.py:146,582,767`), `--load-format dummy`, `--skip-tokenizer-init`, served from a local config directory; Frontier loads the same JSON through `create_from_name`. |
+| Semantic-alignment rows | DP/PP/TP/EP sizes, `max_num_batched_tokens`, `max_num_seqs`, block size, KV block count (Frontier `num_blocks` taken from vLLM's startup log), chunked prefill on, prefix caching off, FCFS policy, `stats_update_interval_ms=100`, dummy weights, tokenizer skipped, `ignore_eos`, request-id mapping, arrival-time origin. |
+| Workload | One Frontier trace CSV (`arrived_at,num_prefill_tokens,num_decode_tokens`) is the single source. A replay client posts `/v1/completions` with `prompt=[token ids]`, `max_tokens=num_decode_tokens`, `ignore_eos=true`, header `x-request-id=<row>` (propagated to the engine request id, `serving_engine.py:971-978`, so schedule-log `scheduled_new_req_ids` map back) at `arrived_at` offsets from one origin. |
+| Discriminating scenario (T2) | Burst of 5 at `t0`: the frontend reservation alternates them (`e0: r1,r3,r5`, `e1: r2,r4`). `r2` has a long prompt that fills `e1`'s chunk budget so `r4` waits; `r1,r3,r5` are short. Probe `r6` arrives at `t0+~100 ms`, after the first coordinator publication (≥50 ms) and before `e1`'s first chunk completes. Reference publication S1: `e0 = 3 running → 3`, `e1 = 1 running + 1 waiting → 5`, so `r6 → e0`. Current Frontier never reports before the first completion, the reservations persist (`e0 12`, `e1 8`), so `r6 → e1`. Fixed Frontier reports S1 at admission, so `r6 → e0`. Robustness requires `e1`'s first chunk to exceed ~150 ms in both systems: vLLM through the chunk budget (8k-16k tokens, measured in S0), Frontier through decision D-e. A steady-state segment (staggered arrivals, long decodes) supplies T1. **Conditional witness (P9-04 §15.3):** the algebra `4k_e - 3a_e` holds for `k_e` assigned, `a_e` admitted and no intervening completion or published state; `k=(3,2), a=(3,1)` is the target, not a guaranteed live outcome. Before asserting `r6`'s lane, verify from the trace the actual routing order of the burst, the admissions, the in-flight requests, later scheduling attempts and the applied snapshot. HTTP-client concurrency does not fix engine-receipt order: preserve request ids, record dispatch and receipt order, and qualify it in the case. Long decodes and chunk sizes are explicit frozen values; the balancer's constants are never changed to make the witness occur; if the trace does not show the premise, the slice is `SCENARIO_NOT_REACHED`. |
+| Extraction | vLLM: the §18.11 event chain (engine iteration, emitted report, coordinator receive/publish, frontend application, frontend routing), joined by correlation ids (needs D-b, scope per G1). Frontier: balancer report trace (the hook `test_vllm_dp_placement_runtime.py` already uses), `metrics_ground_truth.jsonl`, placement ledger. Comparison script emits the T1 causal-join table (rows matched on iteration inputs, divergences labeled by first cause) and the T2 placement table with the control column and qualification status. |
+| Harness location | `tests/comparison/dp_placement_pp/` (replay client, extraction, comparison) — pending D-a. |
+| GPU job | StepMind `RJobBackend`, `charged_group="codesign"` only, `positive_tags=["H800"]`, `gpu=4, cpu=16, mem_gb=128`, image `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`, `code_mount_point` per D-f, libcuda path fix and internal PyPI mirror from handbook §10, vLLM-BS as a Python overlay (copy the checkout to worker-local disk, copy the image's compiled `vllm/*.so` and `vllm_flash_attn` in, `PYTHONPATH` first; the vLLM-BS delta touches no `csrc/`, `cmake/`, `setup.py`, or `requirements/` — verified). Durable logs under `/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/<run>`. Sequence: S0 2-GPU smoke (DP=2, PP=1: stack, overlay, client, extraction), S1 4-GPU DP=2×PP=2 (T1+T2), S2 rerun only if the workload needs retuning. Budget ≤ 3 jobs × ≤ 1 h; launcher kept alive locally; no resubmission while queued; verify creator, mount, `torch.cuda` device, outputs, terminal status. |
+
+### 18.7 Decisions (answered by the user on 2026-09-22; verbatim text in `requirements.md`)
+
+| Id | Decision | Effect on this plan |
+| --- | --- | --- |
+| D-a | "依据该skills" — follow `/home/brainpp/.claude/skills/frontier-calibration` as written. | Route `parity-run` (`semantic-alignment-check` → `groundtruth-run-check` → `groundtruth-run` → `simulator-run`), then `workflow-gap-analysis`. None of these entries binds a pinned helper file; the absent archive `/data/ycfeng/frontier-calibration-old-20260831/` affects only `e2e-metrics-gap`, `op-supplement`, and `dispatch-align-trace`, which are not on this case's path. If one of them becomes necessary it is `FAIL` per `tool-boundaries.md` and the case stops there; no substitute helper is used. The G2 scripts are the case's declared ground-truth client and analysis producers, not stand-ins for a listed helper. `$grill-me` is not installed; the decisions in this table were obtained by direct Q&A and are stored in the manifest as decision records with the user as `requesting_user` and `reviewer_identity`. |
+| D-b | "授权" — the minimal vLLM-BS instrumentation commit is authorized. | G1. The commit stays local on the exact branch; pushing to `fwyc0573/vLLM-BS` was not requested and is not needed because the tuple records the remote tip plus the diff artifact. |
+| D-c | tiny Qwen3-MoE + dummy weights + tokenizer skipped (no download). | §18.6 model row unchanged. |
+| D-d | Hook name `on_replica_batch_scheduled`. | D9-1 final. The key rule (K1/K3) was not chosen by the user; K3 remains the recommendation and is fixed after the P1 probe. |
+| D-e | Dummy mode first; if an unresolvable blocker appears, switch to H800 profiling mode. | Frontier runs use `dummy_execution_time_ms` sized so `e1`'s first chunk exceeds the window. The fallback is new H800 profiling CSVs and a trained predictor, taken only on a recorded blocker. |
+| D-f | `code_mount_point=/data/ycfeng/Frontier`. | Parent mount covering the worktree and `.real-engine/vLLM-BS`; the worker copies vLLM-BS to local disk for the overlay. |
+| D-g | The intended skill is `/home/brainpp/.claude/plugins/cache/claude-plugins-official/mattpocock-skills/1.2.3/skills/engineering/codebase-design`. | Read in full; its vocabulary and principles are applied in §18.10 and in `design.md` W9. |
+
+### 18.8 Limits
+
+Unchanged and not claimed: multiple Replicas, multiple frontends (`client_count > 1`), `data_parallel_hybrid_lb`/`external_lb`, wave-reset semantics, elastic EP, IPC timing, latency equivalence of placement. The hook is inert for PDD/PD-AF roles and the DECODE (M2N) branch of `on_schedule` is untouched. T1 on a controlled or causally matched history is the primary evidence; T2 is confirmatory and conditional on trace qualification. Comparing by boundary index alone is not an alignment method (P9-04).
+
+### 18.9 Calibration case binding (`frontier-calibration` v2)
+
+| Contract item | Value for `dp_pp_case_001` |
+| --- | --- |
+| Entries used | `parity-run` → `semantic-alignment-check`, `groundtruth-run-check`, `groundtruth-run`, `simulator-run`; then `workflow-gap-analysis`. Not used: `e2e-metrics-gap` (dummy Frontier timing; pinned normalizer absent → `FAIL`), `dispatch-align-trace` (pinned helpers absent; dispatch offsets are still recorded by the client as audit evidence), operator/CPU/residual lanes. |
+| Manifest | `case_id=dp_pp_case_001`, `run_generation`, `formal_request_ids`, three `warmup_request_ids`, requesting user and `reviewer_identity` (the user), `case_init.auto_recycle=false`, `groundtruth_weight_mode=dummy`, `real_weight_download=false`, model/dtype/trace/architecture/scheduler/parallel domains/backend/eager mode/KV budget, each mode's source path, producer profile, request-id namespace and encoding, artifact path and fresh-file assertion, decision records D-a..D-g. |
+| Ground-truth checkout tuple | path `/data/ycfeng/Frontier/.real-engine/vLLM-BS`, branch `feature/frontier-comparison-instrumentation`, ref `refs/heads/feature/frontier-comparison-instrumentation`, commit = G1 instrumentation commit, `groundtruth_tree_dirty=false`, remote `https://github.com/fwyc0573/vLLM-BS.git`, `groundtruth_remote_tip=ea95f571e`, diff artifact `remote_tip..HEAD` with SHA-256, `groundtruth_overlay_patch_applied=false`. |
+| Mode predicates | Clean ground truth: ≥3 warmups, E2E runtime metrics on, CUDA-op and CPU probes off. Frontier: clean-style E2E metrics plus `metrics_ground_truth.jsonl`. Disjoint run directories per mode and per Frontier revision. |
+| Semantic rows | DP/PP/TP/EP sizes and meaning (attention vs MoE domains kept separate), `max_num_batched_tokens`, `max_num_seqs`, block size, KV block count, chunked prefill, prefix caching off, FCFS, `min_stats_update_interval_ms=100` (`coordinator.py:116`), 50 ms first-collection wait, dummy weights, tokenizer skipped, `ignore_eos`, request-id mapping, arrival-time origin, warmup/idle-gap layout, MoE routing audit rows (router path, `top_k=8`, renormalization, 16 experts, EP scope 2; routing distortion is diagnostic here because no numeric E2E gate is claimed). |
+| Receipts | Caller-written command receipts (command, cwd, environment declarations, UTC start/end, exit code, artifact paths) for every command the case issues; `exec capture: UNKNOWN` as the contract states. |
+| Code-change gate | The P2 change is the user-approved feature of this step, not a calibration repair. Any further Frontier change motivated by the G5 analysis needs `analysis_state=COMPLETE`, `status=PASS`, and the user's review `PASS` before it is applied (`repair-approval.md`). |
+
+### 18.10 Design vocabulary (`codebase-design`)
+
+- **Module.** `VllmLoadBalancingClusterScheduler`, with `VllmDPLoadBalancer` as an internal module. Its **interface** is `schedule_at`, `on_replica_batch_end`, and (new) `on_replica_batch_scheduled`, plus the facts a caller must know: reports are per lane, an admission is published on its own only while pipeline room remains after it (otherwise it is folded into the completion the engine then waits for), at equal simulated time the completion report precedes the admissions it triggers, and the module never raises on an inert path.
+- **Seam.** `BaseClusterScheduler.on_replica_batch_*` already has two **adapters** — the inert default used by every other cluster scheduler and this module — so the new hook extends a real seam rather than creating a hypothetical one. The call site in `on_schedule` is the only place that knows whether pipeline room remains, which is why the seam sits there and not in `ReplicaScheduleEvent`.
+- **Depth.** The reservation, publish deadlines, latch, the admission observation and the key rule all stay behind the same three methods; callers learn nothing new to gain PP>1 support. **Deletion test:** removing the hook would force every event that admits a batch to reconstruct vLLM's per-iteration publication — the complexity reappears across callers, so the module earns its keep.
+- **Test surface.** Tests drive the module through its interface and assert observable placements and published counts; the relabeled keys are implementation and are not asserted directly.
+- **Design it twice.** Three interface shapes were compared: (1) in-loop push hook with the completion hook's signature — chosen: smallest interface, called where the per-admission state is visible, one adapter per cluster scheduler (R9-01 moved the room test from a hook argument into the policy, which reads the lane's existing `num_running_batches`); (2) event-level reconstruction after `on_schedule` — rejected: cannot observe the state after the first of two admissions in one call, so it is shallow and wrong; (3) pull-style `iter_admission_loads()` on the replica scheduler — rejected: widens the replica scheduler's interface for one caller and inverts the push direction the completion report already uses.
+
+### 18.11 Corrections from the 2026-09-22 external review (P9-01..P9-06)
+
+Recorded the day the review arrived; every item below is a plan/record change, not a source change. The review document is `.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_Review_2026-09-22.md` (local, not committed).
+
+**P9-01 — the engine iteration, not the queue slot.** Reference branch (`core.py`, `step_with_batch_queue`): `model_executed = total_num_scheduled_tokens > 0; if model_executed and len(batch_queue) < batch_queue_size and not batch_queue[-1][0].done(): return None, True`; otherwise the oldest queued output is processed before the iteration returns, and an empty scheduled output can be enqueued before that completion path. Publication follows the iteration. The state table the hook must represent:
+
+| State after a scheduling attempt | Reference behavior | What W9 must represent |
+| --- | --- | --- |
+| Nonzero tokens, room remains, oldest result not ready | Return without applying an output, then publish changed counts | Admission-only observation |
+| Nonzero tokens, room remains, oldest result already ready | Apply the oldest output, then publish changed counts | One combined admission/completion observation, not an extra admission-only report |
+| Nonzero tokens, queue reaches capacity | Wait for / apply the oldest output, then publish changed counts | Completion-path observation |
+| Zero-token scheduled output, prior work queued | Does not take the early-return branch | Explicit mapping of the empty iteration; the current hook design has no representation for it |
+| No new request work, prior output queued | Drain an output, publish changed counts | Completion-only observation |
+
+Representation column revised by §18.12 R9-01: in the DES a completion is atomic at its end event and itself triggers the lane's same-time schedule, so rows 2, 3 and 5 are the existing completion report (row 2's merge with the following admission is the key rule's invariant 3), row 4 changes no counts and needs no observation, and only row 1 is new. The reference column stands.
+
+Steady-state preconditions (replacing "needs no change"): with depth `P`, `B_k`'s append completes `B_(k-P+1)`; Frontier's completion report at `B_(k-P+1)`'s end shows the combined state only if `B_k` was admitted at `B_(k-P)`'s end, no empty iteration intervened, and no completion became visible between the two boundaries. These rows are tested, not assumed (P3/P4).
+
+**P9-02 — K3 as written is not order-preserving.** The coordinator distinguishes equal keys (apply without latch) from strictly greater keys (latch the previous counts). A global `next_label += 1` per report callback preserves neither the equality class of two peer lanes reporting one logical iteration nor the source ordering. Executable counterexample, reproduced on this branch's `VllmDPLoadBalancer` on 2026-09-22 (zero initial counts; lane 0 reports `waiting=0, running=3` at 10 ms, lane 1 the same at 20 ms; a request is placed at 80 ms): with one iteration key for both reports the frontend sees `[(0,3),(0,3)]`, last publication 70 ms, and selects lane 0 by first minimum; with a fresh key for the second report the coordinator latches the partial snapshot `[(0,3),(0,0)]` at 20 ms and the request goes to lane 1. Same inputs, different published state. Second interleaving to cover: one lane completes cohort `C`, moves on to an admission-only observation, and the peer's completion of `C` arrives later; reusing `C`'s label after minting the next one contradicts strict emission order, and suppressing the native out-of-order warning by inventing newer identities is not a fix. Invariants for the chosen rule:
+
+1. Peer observations of one logical iteration compare equal whatever the callback order.
+2. A new logical iteration orders after the previous one; the key is captured at the observation boundary, not read later from a mutable Batch.
+3. An iteration that both schedules new work and completes older work owns one report decision.
+4. Suppressed unchanged-count reports create no fictitious coordinator messages.
+5. PP3 allows more than one admission-only iteration before a completion without spacing constants.
+6. Bookkeeping kept for in-flight work is released when no pending observation can refer to it; it does not grow with the lifetime number of batches.
+
+**P9-03 — observe the whole path that determines a placement.** An emission log in `_maybe_publish_request_counts` shows neither when the coordinator received the report, which previous-step snapshot it latched, when it published, nor when the frontend applied it; the schedule log shows where a request was admitted, not the frontend's decision or the load estimate it used. Minimal case-gated chain:
+
+| Observation | Minimum fields |
+| --- | --- |
+| Engine iteration result | engine/lane id, `(wave, step)`, scheduled request ids/tokens, whether an older output was applied, queue occupancy, readiness classification of the chosen branch |
+| Changed-count report emitted | engine id, `(wave, step)`, named `waiting` and `running`, local timestamp |
+| Coordinator receives/publishes | id of the received report; snapshot id and the published per-engine counts; link from a previous-step snapshot to its inputs |
+| Frontend applies a snapshot | snapshot id and resulting counts |
+| Frontend routes a request | request id, chosen engine, snapshot id or counts used, local reservation update |
+
+Named fields because the reference count accessor and Frontier's `RequestLoad` do not share positional order everywhere. Correlation ids are the join; a timestamp is never a causal id. Buffered per-process files, flushed at case completion; no CUDA synchronization, per-operator profiling or per-record `fsync`. The local-commit / no-vLLM-push boundary stands (D-b).
+
+**P9-04 — comparable history and valid controls.** Native GPU timing and dummy timing can batch the same arrivals differently, and under PP the `oldest.done()` branch depends on that timing, so the fifth report on each side need not describe the same admissions. T1 therefore (a) tests the state transformation first on the CPU reference loop with scripted inputs, (b) joins native and Frontier rows only where causal inputs match or replays a declared controlled history through both, and (c) labels any natural divergence by first cause. Controls:
+
+| Control | Establishes |
+| --- | --- |
+| Unmodified `0137269` (or the pre-P2 tip) under PP2 | Constructor rejection — a capability result, not a placement |
+| Test-only completion-reporting baseline, guard lifted only, change published | Diagnostic behavior of the old reporting logic under PP2 |
+| Corrected PP2 implementation | Proposed behavior under the same qualified inputs |
+| Round-robin (optional) | A different policy; not the causal baseline for the reporting fix |
+
+**P9-05 — PP3 and lifecycle coverage.** The tiny Qwen3-MoE has 8 layers and Frontier requires `num_layers % PP == 0`, so PP3 needs its own CPU fixture (6 or 12 layers); the eight-layer native PP2 configuration stays. Behavioral matrix, owned by P3/P4/P5:
+
+| Case | Assertions |
+| --- | --- |
+| Existing PP1 dense DP1 and MoE DP>1 controls | Placements, results and visible snapshots unchanged; no added admission-only report |
+| PP2 cold fill, peer lanes in both callback orders | One logical iteration groups the peers; no partial snapshot manufactured by relabeling |
+| PP2, room remains, oldest output ready | One combined report, no spurious intermediate report |
+| PP3, two admission-only iterations before the first completion | Distinct iterations, peer equality within each, no stride assumptions |
+| Full queue: new batch scheduled, older completed | One report decision with the correct post-iteration populations |
+| Empty schedule with queued output | Drain behavior and changed counts represented |
+| Last request finishes; quiet interval; new work | Counts return to zero; new ordering coherent |
+| Idle peer and changed-to-zero peer | Unchanged zeros may be suppressed; a real change never disappears |
+| Mixed phases and dense layers inside a MoE model | C35-01 layer credits, request/token conservation, released ownership (carried from the 2026-09-22 fix) |
+| Invalid dense DP>1 and invalid layer partition | Existing explicit errors remain |
+| Other cluster schedulers, including supported disaggregated paths | Hook inert; event outcomes unchanged |
+| Many completed iterations | Report-key bookkeeping bounded by live work |
+
+Exact baseline comparison only for behavior meant to stay unchanged; new PP2/PP3 behavior needs independently written expected counts, placements and transitions.
+
+**P9-06 — work graph and acceptance language.** Applied in §18.5 and §18.1. A native out-of-order warning is evidence to analyze (the reference applies the counts after warning), not proof of a simulator bug nor a reason to rewrite native ordering.
+
+### 18.13 Execution status and the P1(b) blocker (2026-09-22)
+
+Start approval was given ("开始执行step9"). P1(a) is complete and P1(b) stopped on a pre-existing runtime defect that blocks the design checkpoint.
+
+**P1(a) reference-loop oracle — done.** `tests/comparison/dp_placement_pp/reference_loop.py` models the engine iteration only (the `step_with_batch_queue` conjunction, changed-count emission, per-iteration `step_counter`) and feeds emitted reports into the real `VllmDPLoadBalancer`. `tests/unit/test_dp_placement_reference_loop.py` pins the §18.11 state table: 9 tests, all pass. Findings:
+
+| §18.11 row | Oracle result |
+| --- | --- |
+| Depth 1 (PP=1) | Every iteration both schedules and applies; the admission-only row cannot occur. Frontier's completion-only report is already exact at PP=1. |
+| Room remains, oldest not ready | `scheduled=True, applied=False`, counts published. The admission-only observation is real. |
+| Room remains, oldest ready | One combined publication, not two. Confirms invariant I3. |
+| Zero-token schedule | Does not early-return; applies the oldest; publishes only if counts changed. |
+| Drain | `scheduled=False, applied=True`, published. |
+| Depth 3 | Two consecutive admission-only iterations, both published, steps 0 and 1. No stride constant can reproduce this (I5). |
+| Peer keys | Equal only while two engines sit at the same iteration index. Superseded (2026-09-24, §18.15): while the wave runs an idle engine executes a dummy iteration and advances its counter, so peers stay on one index; the oracle now models that step. |
+
+**P1(b) Frontier boundary probe — blocked.** Three shapes ran; the fourth deadlocks. Recorded as W9-01 in `issues.md`.
+
+| Shape | Boundaries | Candidate key `ForwardSyncState._next_step_id_by_replica` |
+| --- | --- | --- |
+| `attn_dp=2, moe_ep=2, PP=1` | 24, 6/6 completed | Peers of one forward always read the same value; values advance 0, 6, 12, 18, 24 (one per layer); each completion and the admission it triggers share a value. I1, I2, I3, I4, I6 hold. |
+| `attn_dp=1, moe_ep=1, PP=2` | 28, 6/6 completed | The two cold-fill admissions **both read 0**. Afterwards each completion/admission pair reads a common increasing value. |
+| `attn_dp=1, moe_ep=1, PP=3` | 32, 6/6 completed | The three cold-fill admissions **all read 0**, then pairs read 12, 18, 24, ... |
+| `attn_dp=2, moe_ep=2, PP=2` | — | Event queue drains with requests unfinished (W9-01). |
+
+**Design-checkpoint conclusion.** The candidate key satisfies I1–I4 and I6 but **fails I5**: it advances when a forward room opens, not once per engine iteration, so consecutive admissions on one lane while a stage is busy collapse into one key. That is exactly the cold fill the discriminating scenario in §18.6 depends on. A per-lane counter would fix I5 but breaks I1, and whether a candidate satisfies both can only be observed on a shape with `attn_dp > 1` **and** `PP > 1` — the shape W9-01 deadlocks. The key rule therefore cannot be fixed at this checkpoint, and D9-2 stays open.
+
+**Consequence.** Step 9 packages P2, P3, P4, G3, G4 and G5 all depend on the design checkpoint or on a running `attn_dp=2, PP=2` shape. They are paused pending the user's scope decision on W9-01. P1 and its records are complete.
+
+**Resolved 2026-09-23.** W9-01 is fixed on `main` (PR 36) and merged forward (§18.14). P1(b) is complete and D9-2 is proposed in §18.15.
+
+### 18.12 Second review (2026-09-22, user-directed): codebase integration and quality gates
+
+Review question, as set by the user: is every planned change to Frontier's core modules grounded in the whole codebase, readable and maintainable, high-value (fidelity or simulation function, not replaceable), and free of hard-coding, temporary patches, over-defensive code, redundant design and vague names. Findings are against the code on `c231322`; each states the source it rests on and what it changes in this plan. None of them changes source now.
+
+| Id | Finding (source) | Effect on the plan |
+| --- | --- | --- |
+| R9-01 | **The state table over-specifies what Frontier must represent.** `GlobalBatchEndEvent` applies a batch's completion atomically (`replica_scheduler.on_batch_end`, then `cluster_scheduler.on_replica_batch_end`, `global_batch_end_event.py:180-185`) and the lane's next `ReplicaScheduleEvent` follows at the same simulated time. There is no "oldest output ready but unapplied" state to classify. A zero-token iteration changes no counts, and `_maybe_publish_request_counts` (`core.py:1075-1087`) publishes only changed counts, so it needs no Frontier observation; its `step_counter` increment shifts later key *values*, and only comparisons are used. The room conjunct (`len(batch_queue) < batch_queue_size`) is real: it is `num_running_batches < num_pipeline_stages` after the increment, and an admission that fills the pipeline is published together with the completion the engine then blocks on — which is exactly the PP=1 behavior, where the single slot is always filled. Of the five §18.11 rows, only the admission-only row is new; rows 2, 3, 5 are the existing completion report and row 2's merge with the same-time admission is invariant I3 of the key rule. | D9-1 payload reduced to the completion hook's signature; no readiness field, no observation record; the room test is computed by the policy from the lane's existing `num_running_batches` property, not passed in. One mechanism for all PP. §18.11 representation column annotated. |
+| R9-02 | **The existing completion key changes meaning under PP.** `on_replica_batch_end` keys by `ForwardSyncState.get_step_id(batch)`, the forward identity resolved when the batch's own forward opened (`forward_sync_state.py`, `resolve_step`). vLLM keys a publication by the iteration whose counts changed; a completion is published under the iteration that *applied* the output, `P-1` iterations after the one that scheduled it. The two coincide only at PP=1. Keeping the batch key at PP>1 would order every completion report before the admission reports emitted while it was in flight — the P9-02 "second interleaving" is the normal case, not an edge. | D9-2 now requires both observation kinds to be keyed by the observing iteration. C2's PP=1 byte comparison is the check that the changed key keeps identical comparisons at PP=1. |
+| R9-03 | **An existing identity is the first candidate; do not mint a new counter before testing it.** `ForwardSyncState._next_step_id_by_replica[replica_id]` is Replica-scoped, monotonic, equal for every lane between room openings and strictly greater than every open or completed step. Read at an observation boundary it satisfies I1, I2, I3 (a completion and the admission it triggers at the same time read the same value), I4 and I6 with no bookkeeping. Known gap: I5 — on one lane, admissions made while stage 0 is still busy (cold fill of several slots in one `on_schedule` call) read the same value, whereas the reference gives them strictly increasing steps and latches the intermediate state for one publish interval. | P1(b) probes this candidate first and measures the I5 case; the design checkpoint decides whether the I5 gap is material (the §18.6 scenario admits one batch per lane) or needs a derived identity. A plain accessor on `ForwardSyncState` (named for what it returns) is the only new surface if adopted. |
+| R9-04 | **Call site and layering.** `BaseReplicaScheduler` requires `cluster_scheduler` at construction (`TypeError` otherwise) and stores it as `self._cluster_scheduler` (`base_replica_scheduler.py:43-56`). The two `getattr(self, "_cluster_scheduler", None)`/`hasattr(...)` reach-ups at `:423` and `:468` are the over-defensive pattern the gates forbid; the new call must not add a third. The completion hook is invoked by an event, the admission hook by the replica scheduler, because per-admission state is visible only inside the loop; record the asymmetry and its reason in `design.md` so nobody later "fixes" it by moving the call to `ReplicaScheduleEvent`. | D9-1 wording; `design.md` planned-edits row. |
+| R9-05 | **The CPU oracle must not re-implement what `VllmDPLoadBalancer` already models.** The balancer reproduces the coordinator latch/publish and the frontend score with line-cited constants (`vllm_dp_load_balancer.py`). A second implementation of the same in `tests/comparison/` would duplicate W4 and could encode one misunderstanding twice. | P1(a) narrowed to the engine-iteration loop feeding the real balancer; comparison isolates the iteration-to-report mapping. |
+| R9-06 | **Test surface and names.** `test_vllm_dp_placement_runtime.py` asserts only key ordering and lane distinctness per key (`keys == sorted(keys)`, `len(lanes) == len(set(lanes))`); these hold under any rule meeting I1–I2 and stay as the PP>1 assertions too. New names stay plain: the user's hook name; an accessor named for its value; no "observation", "classifier" or "snapshot manager" objects. `AGENTS.md:620` is the sentence to edit ("one pipeline stage"). | P3/P4 acceptance wording; D9-5 anchor verified. |
+| R9-07 | **Value and size.** The Frontier change is a guard clause, one inert base method, one call in `on_schedule`, one method in the policy scheduler and possibly one accessor; it completes a user-requested simulation capability and touches no other cluster scheduler's behavior. The G-packages (vLLM-BS instrumentation, three GPU jobs) are validation and must not leak into `frontier/`: no env-var switches, no trace fields on Frontier events; Frontier-side evidence uses the runtime test's existing report trace and `metrics_ground_truth.jsonl`. | Boundary stated for P2/G1. |
+| R9-08 | **Reference precision.** `_has_global_unfinished_reqs` increments `step_counter` every iteration but all-reduces only every 32 steps (`core.py:1131-1135`), so DP engines are not iteration-lockstep in the reference; peer-key equality is an idealization inherited from W4 and, under PP with independent admission-only iterations, peer steps can drift until the next forward aligns them. | §18.2 row amended; "key grouping" stays a first-cause label in G5, and the I5 question of R9-03 is answered from the G4 trace, not assumed either way. |
+
+Gate check of the plan after these amendments: no hard-coded constants beyond the cited reference values already in `vllm_dp_load_balancer.py`; no temporary patch (the guard is removed, not bypassed); no new defensive branches (the hook is unconditional on a constructor-required reference); no redundant state (no readiness classifier, no second coordinator model); names are the user's hook name and plain accessors.
+
+### 18.14 W9-01 merge-forward and composition check (2026-09-23)
+
+PR 36 was squash-merged into `main` as `4ab1964`. Merging `origin/main` into
+this branch (merge commit `dd9b8d9`) brings one source file,
+`frontier/scheduler/replica_stage_scheduler/stage_execution_context.py`, plus
+PR 36's tests and harnesses. No file overlaps this branch's changes. The
+composition check asks whether the admission rule and this branch's W2 (lane
+rotation across scheduling calls) and W3 (one shared monolithic forward)
+still behave as each did alone. It covers the PR 36 matrix groups G3b (MoE,
+mixed prefill/decode, offline), G9 (PDD online) and G10 (co-location online),
+51 cases.
+
+Sets, under the matrix root `/data/ycfeng/tmp/stage_admission_ordering`:
+
+| Set | Tree |
+| --- | --- |
+| `c-merged` | merged tree `dd9b8d9` |
+| `c-pr35` | merged tree with the rule file taken from `1f694f7`: this branch's source before the merge |
+| `base`, `after-r2` (existing) | `main` without and with the rule (PR 36 runs) |
+
+Pass criteria, fixed before measuring:
+
+| Id | Check | Pass |
+| --- | --- | --- |
+| K1 | Liveness on `c-merged` | all 51 cases succeed; requests and prefill/decode tokens equal the generated workload |
+| K2 | The rule behaves on this branch as on `main`: `compare --before c-pr35 --after c-merged` | 0 STOP; path U byte-identical; path L complete and conserved; every EXPLAIN runs the same ordered batches with the same component durations on each (cluster, replica, stage, lane), so only start times differ |
+| K3 | W2 still reaches every lane | every `c-merged` Poisson cell with `attn_dp > 1` places batches on all `attn_dp` lanes of each MONOLITHIC and PREFILL stage; `after-r2` is reported beside it |
+| K4 | Tests on the merged tree | PR 36's tests, W2 and W3 tests and the forward-sync regression set pass; `tests/unit` and `tests/integration` show no regression against `8315d9b` |
+
+Not a criterion, reported: which Poisson cells deadlock on `c-pr35`. With W2
+the online arrivals reach several lanes, so the W9-01 defect becomes
+reachable in cells that ran on lane 0 only on `main`.
+
+On a pass, Step 9 resumes at P1(b) with the fourth shape, MoE `attn_dp=2,
+moe_ep=2, PP=2`, and then the design checkpoint D9-2.
+
+**Results (2026-09-23, `03d5f24`; `test_report_2026-09-23_w9_01_composition_check.md`).**
+K1 51/51. K2 0 STOP (U 15, L 16, T 12 identical, 8 EXPLAIN). K3 22/22 cells
+use every lane; `after-r2` uses lane 0 only. K4 0 regressions. The run found
+and fixed a drain-reader defect in the harness (`03d5f24`: dispatched rooms
+keep an empty entry). Two Poisson PDD cells, `G9-moe-dp{2,4}-pp3-n8`, drain
+under the pre-merge rule but not on `main`, because W2 spreads their
+arrivals. Both complete on the merged tree.
+
+**K2 amended after measuring.** One EXPLAIN cell, `G10-dense-dp2-pp3-n8`
+(online), changes lane 1's batches (36 → 33 ledger rows) while lane 0 is
+identical. The first divergence is the same batch on stage 0, lane 1,
+admitted 23.4 ms earlier: the removed W9-01 coupling. Lane 1 then meets later
+Poisson arrivals at other points of its schedule. "Only start times differ"
+holds where batch contents are fixed at t=0 (offline and burst). For online
+cells K2 now accepts a batch difference when the first divergence is an
+identical batch admitted earlier on the same stage and lane.
+
+### 18.15 P1(b) completed and the D9-2 proposal (2026-09-23)
+
+The fourth shape runs after the merge-forward. P1(b) now covers seven shapes:
+
+- MoE `attn_dp` 1 and 2;
+- PP 1, 2 and 3;
+- offline bursts, plus online Poisson for `attn_dp=2` at PP 2 and 3.
+
+All seven complete 6/6. The probe and the scorer are
+`step9_p1b/probe_boundaries.py` and `step9_p1b/analyze_keys.py`. The scores
+are in `step9_p1b/evidence/key_scores.json`, and the full argument is in
+`design.md` ("Design checkpoint D9-2: the key from the fourth shape").
+
+**Reference correction (amends R9-08).** Peer step counters are aligned
+through forward pairing. Each iteration launches exactly one forward, real or
+the blocking dummy. On every stage, each forward joins the peers' DP
+all-reduce and the MoE collectives. The report key is therefore the index of
+the shared forward. Frontier's analog is the stage-0 forward-group id.
+
+**Scores.** Each candidate is compared with the report's actual stage-0
+group.
+
+| Candidate | Result |
+| --- | --- |
+| `ForwardSyncState` next id (A) | Merges the PP3 cold fill; 148–400 ms of frontend-visible mismatch in replay. |
+| Lane report counter | Drifts under staggered arrivals: 6 splits, 5 merges and 5 inversions on real-forward reports. |
+| Every-report variant of the proposal | Drifts in the same way. |
+| Group-anchored (proposed) | 0 splits, merges or inversions and 0 ms mismatch in all seven shapes. |
+
+**Proposed D9-2 rule.**
+
+```
+key(l) = max(C.joinable_forward_group_id, last_admitted_key[l] + 1)
+```
+
+Here `C` is the Replica's stage-0 context and `joinable_forward_group_id` is
+the bound group while it is unsealed, otherwise the next id. The rule updates
+state as follows:
+
+- An admission stores `key(l)` as `last_admitted_key[l]`.
+- It reports that key while the pipeline has room. Otherwise it holds the key
+  for the next completion.
+- A completion reports the held key, or `key(l)` without storing it.
+
+This meets I1–I6, and at PP=1 it keeps today's comparisons (C2).
+
+New surface:
+
+- one read-only property on `StageExecutionContext`, replacing the planned
+  `ForwardSyncState` accessor;
+- two per-lane lists in the policy scheduler.
+
+The policy's `ForwardSyncState` key is removed.
+
+**Residuals (documented, not fixed).**
+
+1. A completion-only report shares its key with the lane's next report when
+   no Frontier forward runs between them. The reference gives them `k` and
+   `k+1`. This happens 17 times in the seven shapes, 3 with changed counts. At
+   worst the frontend sees the later counts one 100 ms publication early.
+2. The reference's forward pairing when lanes diverge (W9-03) is a
+   forward-model difference and is outside Step 9.
+
+**C1 amendment (part of the proposal).** Restore a MoE `attn_dp=2, PP=3` row
+that uses the analytical backend. W9-02 is specific to collective-sim, and I5
+needs a multi-lane PP3 case.
+
+**Decision needed before P2.** The user chooses the D9-2 rule. Once it is
+chosen, P2 implements it with the D9-1 hook and the guard change. P3/P4 carry
+the §18.11 matrix with the restored PP3 row. P2–P6 and G3–G5 stay paused until
+then.
+
+**Decided 2026-09-23.** The user chose the group-anchored rule, with the C1
+amendment (`requirements.md`, "[Decision] 2026-09-23 — D9-2 report key").
+P2–P5 proceed on the CPU. G3 and G4 need GPU runs whose authorization is still
+BLOCKED in the case manifest, so G3–G5 wait for a separate go.
+
+### 18.16 P2–P5 results (2026-09-23)
+
+Commits: P2/P3 `2ffe78d`, P4 `bacdbb4`. Evidence rows are in `validation.md`
+Step 9 and the W9 report §4–§6; the self-review is in `review.md`
+("Step 9 implementation self-review 2026-09-23").
+
+| Package | Acceptance (§18.5) | Result |
+| --- | --- | --- |
+| P2 | Existing unit tests pass except the inverted guard case | 1 failed (the `pipeline_parallel` guard case), 112 passed |
+| P3 | New tests fail before P2 and pass after | 132 passed; 19 of 19 new or changed cases fail on the pre-P2 tree |
+| P4 | Pass; each control fails for its stated reason | 9 + 3 passed; the completion-reporting control places the probe on lane 1, the policy on lane 0 |
+| P5 | C2 | 24 of 24 PP=1 policy scenarios identical; fidelity 71 of 71; examples 16 of 16; suites 0 regressions |
+
+Found in P5, both pre-existing (`issues.md`):
+
+- **W9-04**: a MoE `attn_dp=4` online deadlock caused by a stale first-layer
+  placeholder. A scratch prototype drains 72 of 72 sweep cells; it is not
+  applied and awaits the user's decision.
+- **W9-05**: `vllm_v1` loses requests mid-decode under KV pressure, also on
+  `origin/main`. It is not yet diagnosed.
+
+### 18.17 W9-04 fix (2026-09-23)
+
+Decision: option 1 of `issues.md` W9-04, in this PR (`requirements.md`,
+"[Decision] 2026-09-23 — W9-04, W9-05 and the P5 worktrees").
+
+Change. In `frontier/scheduler/utils/sync_entry.py`, `enter_layer_sync`
+withdraws a room's idle batches whose lane's stage has become busy since the
+placeholder was placed. A placeholder is placed only for a lane whose stage is
+not busy (`_can_supply_idle_lane`). A stage opens a new forward group only when
+it is idle, and a sealed group admits no full-stage work
+(`stage_execution_context.py` `release`, `try_acquire`). So a lane that becomes
+busy while the room is open has joined this forward, and its real batch will
+reach this room. No other file changes.
+
+Regression test. A new case in `tests/integration/test_vllm_dp_placement_runtime.py`
+covers a MoE `attn_dp=4, moe_ep=4` online trace of three requests, at 0, 2 and
+8 ms. It stalls under both `vllm_load_balancing` and `round_robin` at
+`339e6bd`. The run records each withdrawal, so the test can show that the
+race was reached.
+
+Acceptance, fixed before measuring:
+
+| Id | Check | Pass condition |
+| --- | --- | --- |
+| A1 | Regression test | Passes with the fix. With only the call removed, it fails because the run ends with non-empty scheduler state. |
+| A2 | `step9_p5/deadlock_sweep.py` on the fixed tree, three cluster schedulers | 72 of 72 cells drain |
+| A3 | `step9_p5/c2_pp1_policy_matrix.py`, `bacdbb4` against the fix | The 22 cases that finished before are identical. The 2 stalled cases now finish, except for losses attributable to W9-05. |
+| A4 | Fidelity matrix, `step9_p5/run_fidelity.sh`, `bacdbb4` against the fix | 71 of 71 identical |
+| A5 | Stage-admission matrix groups G3b, G9 and G10, before against after | 0 STOP; every cell identical |
+| A6 | Unit and integration suites, by test id against the P5 JUnit at `bacdbb4` | 0 regressions and 0 new failures; the only additions are the new test's ids |
+| A7 | 16 architecture examples | 16 of 16 pass and are identical to `bacdbb4` |
+
+**Result 2026-09-23:** A1–A7 all pass on `2ffb062`. The numbers are in
+`validation.md` "W9-04 fix" and `issues.md` W9-04 "Resolution".
+
+### 18.18 W9-05 fix (2026-09-23)
+
+Direction: "授权上述1-2，推进W9-05" (`requirements.md`, "[Decision] 2026-09-23 —
+G3–G5 GPU authorization and W9-05").
+
+Root cause. `KvBlockAllocation._preempt_request`
+(`vllm_v1_kv_allocation.py`) reset `_num_processed_tokens` to 0 for every
+cluster type except DECODE and DECODE_ATTN. A MONOLITHIC victim past its
+prefill kept `is_prefill_complete=True`, so `_get_request_next_num_tokens`
+returned `max(processed - computed, 0) = 0`. Phase 2
+(`_schedule_waiting_requests`) takes the `num_new_tokens <= 0` branch, pops the
+request and rebuilds the waiting queues without it. The request is then held by
+no queue, the drain check passes, and the run ends with it incomplete. Traced on
+the C2 dense `tight_kv` case: request 7 is preempted at t=1.093 with 45 of 55
+tokens processed and removed by `_set_waiting_queues_from_ordered_requests` at
+t=1.157 (`w9_05/membership_trace.py`).
+
+Change. vLLM v1 preemption discards computed KV and keeps generated output. The
+reset now applies only to a victim still in prefill, which has no output yet. A
+victim past prefill keeps its Request-level progress, and only its scheduler
+frontier and KV allocation restart. This rule covers DECODE and DECODE_ATTN,
+whose requests always arrive past prefill, so the cluster-type set
+`_REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES` is deleted. The replay
+of prompt and output tokens that vLLM runs on resumption stays unmodeled, as it
+already is for DECODE and DECODE_ATTN since `35eb631`.
+
+Tests.
+- New `tests/integration/test_vllm_v1_decode_preemption_runtime.py`: three
+  requests of 30+30 tokens with eight 16-token blocks, real `Simulator`. It
+  asserts that a victim past prefill keeps its progress and that every request
+  completes all decode tokens. At `2ffb062` it fails: request 1 is preempted
+  with 34 tokens processed and reset to 0.
+- `tests/unit/test_pdaf_decode_attn_preemption.py`: the MONOLITHIC reset test
+  now uses a real `Request` still in prefill, and the disaggregated-decode
+  fixture request states `is_prefill_complete=True`.
+
+Acceptance, fixed before measuring (baseline `2ffb062`):
+
+| Id | Check | Pass condition |
+| --- | --- | --- |
+| B1 | Regression test | Passes with the fix; fails at `2ffb062` on the progress assertion. |
+| B2 | C2 `tight_kv` cases, three shapes | 24 of 24 complete, each with all decode tokens; before: dense 20, dp2 20, dp4 23. |
+| B3 | C2 PP=1 policy matrix, `2ffb062` against the fix | Every case without a decode-phase MONOLITHIC preemption is identical; each differing case has one, and completes at least as many requests. |
+| B4 | Deadlock sweep, three cluster schedulers | 72 of 72 drain; per-cell completion does not fall. |
+| B5 | Fidelity matrix, 71 cases | Identical, except cases with a decode-phase MONOLITHIC preemption, each listed with its preemption count. |
+| B6 | Stage-admission matrix G3b, G9, G10 | 0 STOP; cells identical or explained as in B5. |
+| B7 | Unit and integration suites by test id against the W9-04 JUnit at `2ffb062` | 0 regressions and 0 new failures; additions are the new test id and the renamed MONOLITHIC test. |
+| B8 | 16 architecture examples | 16 of 16 pass; identical, or explained as in B5. |
+
+**Result 2026-09-23:** B1–B8 all pass; committed as `75c1140`. The numbers are in `validation.md`
+"W9-05 fix" and `issues.md` W9-05 "Resolution".
+
+### 18.19 G2 as built, and the G3/G4 sizing rule (2026-09-23, before G3)
+
+This section amends the §18.5 G2 row. It was written before any GPU run.
+
+| §18.5 G2 said | As built | Reason |
+| --- | --- | --- |
+| `replay_client.py` | `vllm_replay.py` starts `vllm serve`, replays the trace over HTTP and stops the server. `run_vllm_worker.sh` builds the overlay and publishes the evidence. | The server is part of the measured deployment. Start, replay and stop in one process share one clock origin. |
+| `extract_vllm_placement.py` reads the schedule log and the DP-stats log | It reads the G1 placement records and joins them by correlation ids only. Each engine's published iterations pair in order with the coordinator's receipts from that engine. Publications and routes join by snapshot id, routes and admissions by request id. | G1 records every link of the chain; neither log is needed. |
+| `runs/*` under `/data/ycfeng/tmp/...` | Ground truth: `calibration/dp_pp_case_001/runs/groundtruth_clean/<RUN_TAG>/`, archived to `/mnt/codesign-exp/ycfeng/frontier/dp_pp_calibration/<RUN_TAG>/`. Frontier runs stay under `/data/ycfeng/tmp`; the summaries are kept in the case. | The worker mounts `/data/ycfeng/Frontier` only (D-f). |
+| — | `run_frontier_case.py` builds the Frontier configuration from the same engine file and reuses `run_case` of the P4 test through a `build_config` seam. | One mapping, read back by the semantic table (`effective_settings.json`). |
+
+G3 (S0) runs `inputs/engine_g3.json` (DP=2, PP=1, `max_num_batched_tokens=32768`)
+with `inputs/trace_g3/`. That is the case workload plus a sizing segment of
+isolated prompts of 1024 to 32768 tokens, 4 s apart. G3 acceptance is
+unchanged. It measures three things for G4:
+
+- the forward time `f(n)` of an isolated prompt: route to admitting-iteration
+  record, and TTFT;
+- the route latency of the 32768-token body against the short ones;
+- the route order of the simultaneous burst (semantic row S33).
+
+Rule for the G4 inputs, fixed now. They are written as new input files with a
+new request-id namespace, and the balancer constants never change.
+
+1. Chunk budget `B`. Take the smallest multiple of 1024 whose estimated PP2
+   first-completion time, about `f(B)` plus the PP1 to PP2 overhead G3 shows,
+   is at least 250 ms. Also require `2B + 64 <= 40960`, so the long prompt
+   `2B` still fills the second chunk and `r4` keeps waiting. If no `B` fits,
+   use `B = 20448` and record that T2 may end `SCENARIO_NOT_REACHED`.
+2. Burst order. If G3 shows the long body routed out of its trace position,
+   stagger the burst in trace order. The stagger must exceed the measured
+   route latency of the long body, and the whole burst must stay inside the
+   50 ms collection wait. Frontier reads the same offsets from the trace.
+3. Probe offset. Place it midway between the first frontend-applied snapshot
+   after the burst and the estimated first completion, each measured from the
+   burst start.
+4. Frontier `dummy_execution_time_ms`. After G4, set it so Frontier's PP2
+   first-completion time matches the measured one (D-e). `num_blocks` becomes
+   the per-engine value from the G4 startup log (semantic row S17).
+
+### 18.20 G3 results, and the G4 inputs as amended (2026-09-23, before G4)
+
+G3 ran as `exp-0923-221233-009652` (2×H800, codesign, 14:12:33Z to
+14:16:29Z). `WORKER_STATUS=0`, 38/38 HTTP 200, and extraction `PASS`: 565
+engine iterations, 69 published reports paired one to one with 69 receipts,
+50 publications, 49 frontend applications, no out-of-order receipt. vLLM
+reported 140985 blocks per engine at PP1. G3 acceptance holds. The T1 replay
+of the native history through `VllmDPLoadBalancer`
+(`compare_placement.py`) matches 38 of 38 routes, 30 of them formal, in both
+engine and counts. This is the first native evidence that the modeled
+coordinator latch, publication timing and frontend selection reproduce vLLM
+at PP1.
+
+Measurements used by the §18.19 rules
+(`runs/groundtruth_clean/dpp-g3-20260923a/extraction/chain.json`):
+
+| Quantity | Value |
+| --- | --- |
+| Route to admitting-iteration record, isolated prompts | 1024: 22.1 ms, 4096: 20.5, 8192: 38.6, 16384: 81.0, 32768: 558.1 |
+| Burst iteration with the 32768-token chunk | 207 ms, from the previous iteration record on engine 0 |
+| Fit used for `f(n)` | `1.248e-7 n^2 + 2.227e-3 n` ms through z2, z3 and the burst's 32768-token iteration. z4 is left out: it is 2.7 times the same-size burst iteration and its cause was not established. |
+| Dispatch to route | Burst: 42.6 to 42.9 ms for all five, common mode, cause not established. Isolated: 0.9 to 3.7 ms, the 32768-token body the slowest. |
+| Burst route order | b5, b4, b3, b1, b2: the client's dispatch order. All five had one arrival time and the client dispatched them in that order. |
+
+Rule 1: `f(20448)` is about 98 ms, so no `B` with `2B + 64 <= 40960` reaches
+250 ms. `B = 20448`, and T2 may end `SCENARIO_NOT_REACHED` (semantic row S14).
+Rule 2 applies, because the long body did not route in its trace position.
+
+Why rule 2 alone is not enough at PP2. Source reading of 0.10.2 after G3
+(`vllm/v1/engine/core.py:364-424, 1170-1216`, `coordinator.py`) adds three
+facts the rule did not account for:
+
+- An idle engine woken by `START_DP_WAVE` runs a dummy forward before it
+  sees its first request, in EP lockstep with the peer. A stagger long enough
+  for the peer's wave notice to arrive first puts that dummy ahead of the
+  long chunk, and the peer's short first request then applies an output
+  early.
+- At PP>1, after an iteration that schedules nothing, the engine blocks on
+  its oldest in-flight batch even when the batch queue has room. Arrivals
+  wait in the input queue meanwhile. Frontier admits whenever a stage slot is
+  free (`base_replica_scheduler.py:1050-1063`, the MONOLITHIC/PREFILL loop;
+  corrected 2026-09-24 from `:906`, the unified DECODE loop). This is recorded as semantic row
+  S43, a candidate difference to confirm from the G4 records.
+- The coordinator publishes the collection snapshot about 50 ms after the
+  last event, and any receipt or `FIRST_REQ` resets that wait.
+
+The T2 premise at PP2 therefore needs four things. R1: each engine's first
+burst request is delivered before engine 1 handles the wave notice; in
+practice the first two routes land within about 0.5 ms. R2: the long chunk is
+in the first lockstepped forward, so no output is applied until about
+`f(B)`. R3: the probe routes after the collection publication, about 52 ms
+after the burst routes, and before the first completion, about 110 to 120 ms.
+R4: the reference score of engine 0 is at most engine 1's, so a tie goes to
+engine 0.
+
+G4 inputs as amended (`inputs/workload_g4.json`, namespace `dpp2`,
+`inputs/trace_g4/`). Rule 2 as written is kept as burst d, and three tight
+bursts are added instead of one:
+
+| Burst | Spacing | Probe offset | Why |
+| --- | --- | --- | --- |
+| a | 0.25 ms | 85 ms | R1 by timing; distinct arrivals fix the dispatch order |
+| b | 0.25 ms | 105 ms | as a |
+| c | 0.25 ms | 126 ms | as a |
+| d | 6 ms | 105 ms | Rule 2: 6 ms exceeds the 3.7 ms isolated long-body route latency; the burst spans 24 ms, inside the 50 ms wait |
+
+Every burst is `[short, long, short, short, short]` plus the probe, with
+short 32 tokens, long `2B = 40896`, 64 decode tokens and a 32/64 probe. The
+three probe offsets bracket both readings of the 42.7 ms common delay. If it
+recurs for the burst but not for the isolated probe, the probe routes about
+44, 64 and 85 ms after the burst. If it does not recur, it routes at 85, 105
+and 126 ms. Either way at least one tight burst falls inside the R3 window.
+Idle gaps are 20 s, because Frontier's dummy-timed decodes (64 at about
+248 ms) outlast the 8 s and 15 s gaps of the G2 trace. Engine file
+`inputs/engine_g4.json`: PP2, DP2, EP, `max_num_batched_tokens=20448`. The
+balancer constants are unchanged.
+
+T2 is qualified per burst (`compare_placement.py qualify_burst`). The burst
+must route in trace order, from one snapshot. Every engine's count in the
+probe's snapshot must come from a burst iteration that scheduled without
+applying an output. No output may be applied between the burst's first
+route and the probe's route. A burst failing any check is
+`SCENARIO_NOT_REACHED`, with the checks named. The Frontier pre-check of this
+trace, at the provisional 2 ms dummy time, discriminates in all four bursts:
+the fixed policy routes each probe to lane 0 from `[[0,1],[0,1]]`, and the
+completion-reporting control routes it to lane 1 from `[[3,0],[2,0]]`
+(`runs/frontier_precheck_g4_2ms/`).
+
+G4 acceptance is the §18.5 row plus extraction `PASS` over 51 routes. After
+G4, and before G5: S17 (`num_blocks` from the startup log), S31 (dummy time
+matched to the measured PP2 first completion, rule 4) and S33 (route order
+per burst). One GPU job remains in the budget after G4. It is used only if
+all four bursts end `SCENARIO_NOT_REACHED` for a reason a retune can
+address, and that retune is written here before it runs.
+
+### 18.21 G4 and G5 results (2026-09-23)
+
+**G4** `dpp-g4-20260923a`, rjob `exp-0923-230103-591735`:
+
+- Platform: creator `i-fengyicheng`, `codesign`, 4xH800, current-host NFS source. The job was created at 15:01:03Z and succeeded at 15:07:04Z.
+- Run: worker status 0, 51/51 HTTP 200.
+- KV cache: 4,556,400 tokens (284,775 blocks) per engine, the minimum over the PP workers.
+- Extraction `PASS`: 1620 iterations, 92 reports paired with receipts, 83 publications, 81 frontend snapshots, 51 placements, 0 out-of-order receipts.
+- Rule-4 measurement: the mean first-chunk duration of the 20448-token chunk is 111.00 ms over bursts a–d (108.73, 116.13, 110.76 and 108.39 ms).
+
+The G4 row of §18.5 is met. Before G5, the case inputs were set from these records:
+
+- S17: `num_blocks=284775`.
+- S31: `dummy_execution_time_ms = 2.0 × 111.00 / 248.25 = 0.8943`. A check run gave a Frontier first completion of 111.14 ms.
+- S33: route order per burst.
+
+**G5.** The simulator was run at `47d9190` (`runs/frontier_g4/`): `vllm_load_balancing`, the completion-reporting control and `round_robin`. Each run completed 51/51 requests with tokens conserved. The pre-change revision `d1a2a06` rejects PP2 in its constructor (`runs/frontier_pre_change_d1a2a06/rejection.txt`), and C4 reports that rejection in place of a placement. `workflow-gap-analysis` is `COMPLETE`/`PASS` with `correction_state=pending` (`analysis/workflow_gap_status.json`, rows WG01–WG11).
+
+**C3: PASS.**
+
+- T1 fed the native receipts and routes through `VllmDPLoadBalancer`. The engine and the counts match on 51/51 routes (48/48 formal); G3 gave 38/38 at PP1.
+- W9 reports at the first admission, and so does vLLM in 7 of 8 engine-bursts (WG04). The eighth is burst d on engine 1, which starts with a dummy forward.
+- The first snapshot after bursts a–c carries the native counts `[[0,1],[0,1]]` (WG06).
+- Every other difference is labeled by first cause in `workflow_gap_table.csv`:
+  - arrival/delivery order: WG02, WG10;
+  - batch composition: WG03, WG05;
+  - key grouping: WG07;
+  - count calculation: WG09, the control's expected failure;
+  - output readiness: WG11, the declared dummy timing.
+
+**C4: `SCENARIO_NOT_REACHED` in all four bursts.** In every burst the native probe went to engine 0, the fixed policy chose lane 0 and the control chose lane 1. The per-burst checks failed as follows:
+
+| Burst | Failed checks | Observation |
+| --- | --- | --- |
+| a, b, c | trace order; output before probe | Route order was b1, b3, b4, b5, b2. The 40896-token body routed last, about 7 ms after dispatch. The first forward held only 32-token requests and applied an output 33.8, 25.1 and 21.3 ms after the first route. The probes routed at 73.3, 97.9 and 118.8 ms. |
+| d | one snapshot; schedule-time provenance; output before probe | Route order matched the trace. Engine 1 has no step-0 record, which by source is the wave-start dummy forward. Snapshot 41 carries engine 1's previous-wave count (step 128); the first output came at 19.7 ms. |
+
+**Why the last GPU job is not used.** The §18.20 rule allows it only for a reason a retune can address. The G4 records rule that out:
+
+- The frontend spends about 7 ms processing the long body, and shorter requests dispatched in that window route first.
+- R1 requires the first two routes within about 0.5 ms. Otherwise the idle engine runs a wave-start dummy first.
+
+A trace-ordered burst whose first two routes include the long body and land within 0.5 ms therefore cannot be produced by changing spacing or offsets. Any other redesign (for example, a long body per engine, or a different probe premise) is a new pre-registration and needs the user's decision. It is not a retune.
+
+**Candidate fidelity findings.** Both are outside the Step 9 placement scope, and neither is a repair authorization:
+
+- S43 / WG05: at PP>1, vLLM appends an empty schedule and blocks on the oldest batch (`vllm/v1/engine/core.py:385-424`). Frontier admits whenever a stage slot is free (`base_replica_scheduler.py:1050-1063`, hook at `:1061`; the unified DECODE loop at `:896-924` does the same). In the G4 records the later burst requests are admitted 21.3–47.4 ms after the burst's first route in bursts a–c and 129.5–311.8 ms in burst d. **Corrected 2026-09-25:** these are iteration-record times, which bound an admission only from above; the admission intervals and the narrowed S43 evidence are in `calibration/dp_pp_case_001/analysis/workflow_gap_summary.md` (WG05, and WG12 for burst d engine 1). Frontier admits them on arrival, 0.5–18 ms after the first arrival.
+- S42 / WG03: DP wave-start and idle dummy forwards (`core.py:1170-1216`) are not modeled. The d record gap agrees with that source reading, but because the dummy pass writes no record this is an inference.
+
+The calibration contract requires `human review decision=PASS` before a `workflow-repair` scoped to either finding. They are recorded in `future.md`.
+
+### 18.22 After G5: decisions, the fix review and the dummy-mode question (2026-09-24)
+
+**Decisions** (verbatim in `requirements.md`):
+
+| Item | Decision |
+| --- | --- |
+| C4 | Option (a): `SCENARIO_NOT_REACHED` stands, the qualification is not changed after the fact, and the third GPU job is not used. |
+| S43, S42 | Each becomes its own calibration-and-repair task outside this PR: `task_memory/task_2026-09-24_s43_pp_empty_schedule_admission/` and `task_memory/task_2026-09-24_s42_dp_wave_idle_forward/`, under the main checkout `/data/ycfeng/Frontier/` (local records, not part of PR 35). |
+| W9-05 validation worktrees | Removed. |
+
+**Fix review.** The review covered W2, W3, W4, W6, W7, W9, W9-04, W9-05 and their cross effects. Each finding was confirmed by source reading or execution before it was fixed, and each fix with a test was checked against a tree that lacks it. Findings, commands and results are in `test_report_2026-09-24_fix_review.md`.
+
+| Commit | Fix |
+| --- | --- |
+| `c647e95` | W9-05 at PP>1: a request preempted while an earlier batch still carries it leaves that batch (F-R1 to F-R4). |
+| `3ec7bbf` | Random-policy DP lanes rotate across calls; round-robin batch mode uses the one lane rotation; two guard tests that could not fail removed; AGENTS.md scoped. |
+| `3a8767c` | Two unreachable shared-forward guards removed; the phase rule has one source; per-lane PDD continuation pinned by a test. |
+| `f236c17` | Legacy FP8 fused-MoE step timed as `fused_experts_impl` runs it (FP8 config, compute type, quantization inside the step). |
+| `6d621c8` | collective-sim gitlink to `ff11ee6`: an empty all-to-all across servers sends one byte per peer. |
+| `7309f5d` | The config-name scan parses every owned source. |
+| `748e757` | Three fidelity rows reach MoE attention-DP lanes in co-location and PDD; the matrix has 74 cases. |
+| `b7a7ac5` | Profiling README dates the fused-MoE fixes by commit. |
+| `8ca0387` | The reference oracle runs an idle engine's dummy iteration; the §18.13 "Peer keys" row is superseded. |
+| `6aee289` | Two PP>1 stagger cases cover a lane joining a peer's started forward. |
+
+Proposals that need a decision: F-R5 victim selection and F-R6 in-flight token (fidelity), the strict `sync_entry` predicate, the sync-room alias refactor, candidate row S44, a native W6 FP8 rerun, and the pinned calibration tools.
+
+Later the same day (verbatim in `requirements.md`): W7-R4, found while reconciling workflow `wf_7606e14e-f10`, was decided as option (a) and fixed. Companion `e922c77` refuses a zero payload for every kind except all-to-all; gitlink `9adf759`. `.worktrees/review-final-{base,head}` were removed.
+
+**Candidate row S44.** vLLM drains the engine input queue at the top of each busy-loop iteration and publishes after the step (`core.py:1170-1216`). A request routed during the step is therefore absent from that iteration's published counts. Frontier's completion report includes it. In G4, 1 of 92 native receipts has `waiting > 0`, against 24 of 106 Frontier reports. Hiding the undrained requests does not improve G4 placement agreement under dummy timing. The row shares S43's mechanism and is proposed as a second row of the S43 task.
+
+**Dummy-mode answer.**
+- Dummy mode is adequate for timing-independent control-flow repairs, which is what this branch's fixes are. W9-05 F-R1 to F-R4 and the random-lane collapse were found and verified that way, against the vLLM source.
+- It cannot see:
+  - per-lane durations: the dummy PDD two-lane row is identical with borrowed timing, while the trained row moves TPOT by +0.26 %;
+  - load imbalance: the lane-0 collapse moved dummy TTFT by 1.1 %;
+  - branches that timing selects: burst-a peer keys are 12/12 in dummy mode and 12/13 in non-dummy mode.
+- It cannot close a calibration repair:
+  - diagnostic dummy E2E relative error is TTFT 0.60, TPOT 3.34 and E2E 3.17, against a gate of 0.10;
+  - the pinned E2E normalizer and op-supplement tool are absent;
+  - S39 routing is `UNSET`.
+- The non-dummy fallback extrapolates. Its profiles stop at 128 tokens (64 for MoE), and `balanced` routing has no rows.
+- S43 and S42 therefore need shape-dependent timing and the pinned tools before they can close. Both new task plans state this as a blocker.
+
+**Final validation** (`ba0a804` against `6aee289`, clean worktrees; `test_report_2026-09-24_fix_review.md` §7): unit and integration suites 0 regressions and 0 new failures, fidelity 74 of 74 identical, examples 16 of 16 identical, stage-admission 51 of 51 PASS, KV-pressure probe 72 of 72 drained. Every expectation recorded beforehand was met.

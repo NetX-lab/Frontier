@@ -73,8 +73,10 @@ def test_collect_active_requests_deduplicates_and_skips_idle_or_completed():
     first = SimpleNamespace(id=1, completed=False)
     duplicate = SimpleNamespace(id=1, completed=False)
     done = SimpleNamespace(id=2, completed=True)
-    idle = SimpleNamespace(is_idle=True, requests=[first])
-    active = SimpleNamespace(is_idle=False, requests=[first, duplicate, done])
+    idle = SimpleNamespace(is_idle=True, current_execution_requests=[first])
+    active = SimpleNamespace(
+        is_idle=False, current_execution_requests=[first, duplicate, done]
+    )
     assert collect_active_requests([idle, active]) == [first]
 
 
