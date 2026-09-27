@@ -6,6 +6,7 @@ the pieces that decide them are checked here.
 
 from __future__ import annotations
 
+import random
 from pathlib import Path
 
 from tests.comparison.dp_placement_pp.make_trace import build_rows
@@ -44,6 +45,35 @@ def test_a_burst_has_a_probe_only_when_it_names_an_offset_and_may_set_its_own_ga
         ("t-l-b1", 23.0005, 4096, False),
     ]
     assert rows[-1]["arrived_at"] == 28.0005
+
+
+def test_warmup_groups_precede_seeded_poisson_arrivals():
+    workload = {
+        "request_id_namespace": "t",
+        "warmups": {"groups": [
+            {"name": "single", "count": 2, "interval_s": 1.0,
+             "num_prefill_tokens": 2048, "num_decode_tokens": 16},
+            {"name": "batch", "gap_before_s": 3.0, "count": 2, "interval_s": 0.03,
+             "num_prefill_tokens": 2048, "num_decode_tokens": 64},
+        ]},
+        "poisson": {"gap_before_s": 10.0, "count": 3, "qps": 2.0, "seed": 0,
+                    "num_prefill_tokens": 2048, "num_decode_tokens": 256},
+    }
+    rows = build_rows(workload)
+
+    assert [(row["request_id"], row["arrived_at"]) for row in rows if row["role"] == "warmup"] == [
+        ("t-single-w0", 0.0), ("t-single-w1", 1.0), ("t-batch-w0", 4.0), ("t-batch-w1", 4.03),
+    ]
+    formal = [row for row in rows if row["role"] == "formal"]
+    assert [row["request_id"] for row in formal] == ["t-p000", "t-p001", "t-p002"]
+    assert {row["segment"] for row in formal} == {"poisson"}
+    assert {(row["num_prefill_tokens"], row["num_decode_tokens"]) for row in formal} == {(2048, 256)}
+    intervals = random.Random(0)
+    expected = [14.03]
+    expected.append(expected[-1] + intervals.expovariate(2.0))
+    expected.append(expected[-1] + intervals.expovariate(2.0))
+    assert [row["arrived_at"] for row in formal] == [round(value, 6) for value in expected]
+    assert build_rows(workload) == rows
 
 
 def test_the_mode_alone_sets_the_frontier_switches_of_the_server():

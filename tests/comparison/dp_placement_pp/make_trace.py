@@ -9,8 +9,12 @@ file, so a retuned case is a new input file, not a code change.
 Segments, in time order:
 
 ``warmup``
-    Evenly spaced short requests. Excluded from every comparison.
-``burst``
+    Evenly spaced requests. Excluded from every comparison. A workload lists
+    either one group of them or several named `groups`, each with its own
+    lengths and spacing, the first at time zero and every later one
+    `gap_before_s` after the previous group's last request; a named group's
+    request ids carry its name.
+``burst`` (optional)
     Requests that arrive after an idle gap, in the order the workload lists
     their prompt kinds and `spacing_s` apart (together when it is absent),
     followed, when the burst names `probe_offset_s`, by one probe at that
@@ -19,9 +23,14 @@ Segments, in time order:
     several named `bursts`, each after its own idle gap (the burst's
     `idle_gap_s` where it names one, else the workload's); a named burst's
     request ids carry its name.
-``steady``
+``steady`` (optional, after a burst)
     Staggered arrivals whose prompt and decode lengths cycle through the listed
     values. They supply the causal-join rows of T1.
+``poisson`` (optional)
+    Open-loop arrivals at `qps` requests per second, `gap_before_s` after the
+    last earlier request: the first arrives at once and each later one after
+    an exponential interval drawn from a generator seeded with `seed`, as a
+    serving benchmark sends them. Every request has the listed lengths.
 ``sizing`` (optional)
     Isolated single prompts of increasing length, used only to measure the
     engine's iteration time before a pipeline-parallel run is sized.
@@ -38,6 +47,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import random
 from itertools import cycle, islice
 from pathlib import Path
 
@@ -57,12 +67,21 @@ def build_rows(workload: dict) -> list[dict]:
         })
 
     warmups = workload["warmups"]
-    for index in range(warmups["count"]):
-        add("warmup", "warmup", f"w{index}", warmups["interval_s"] * index,
-            warmups["num_prefill_tokens"], warmups["num_decode_tokens"])
+    groups = warmups["groups"] if "groups" in warmups else [{"name": "", **warmups}]
+    for group in groups:
+        group_start = rows[-1]["arrived_at"] + group["gap_before_s"] if rows else 0.0
+        prefix = f"{group['name']}-" if group["name"] else ""
+        for index in range(group["count"]):
+            add("warmup", "warmup", f"{prefix}w{index}", group_start + group["interval_s"] * index,
+                group["num_prefill_tokens"], group["num_decode_tokens"])
     last_arrival = rows[-1]["arrived_at"] if rows else 0.0
 
-    bursts = workload["bursts"] if "bursts" in workload else [{"name": "", **workload["burst"]}]
+    if "bursts" in workload:
+        bursts = workload["bursts"]
+    elif "burst" in workload:
+        bursts = [{"name": "", **workload["burst"]}]
+    else:
+        bursts = []
     for burst in bursts:
         burst_start = last_arrival + burst.get("idle_gap_s", workload["idle_gap_s"])
         prefix = f"{burst['name']}-" if burst["name"] else ""
@@ -82,12 +101,22 @@ def build_rows(workload: dict) -> list[dict]:
             rows[-1]["probe"] = True
         last_arrival = rows[-1]["arrived_at"]
 
-    steady = workload["steady"]
-    steady_start = burst_start + steady["gap_after_burst_s"]
-    lengths = zip(cycle(steady["num_prefill_tokens"]), cycle(steady["num_decode_tokens"]))
-    for index, (prefill, decode) in enumerate(islice(lengths, steady["count"])):
-        add("steady", "formal", f"s{index:02d}", steady_start + steady["interval_s"] * index,
-            prefill, decode)
+    steady = workload.get("steady")
+    if steady is not None:
+        steady_start = burst_start + steady["gap_after_burst_s"]
+        lengths = zip(cycle(steady["num_prefill_tokens"]), cycle(steady["num_decode_tokens"]))
+        for index, (prefill, decode) in enumerate(islice(lengths, steady["count"])):
+            add("steady", "formal", f"s{index:02d}", steady_start + steady["interval_s"] * index,
+                prefill, decode)
+
+    poisson = workload.get("poisson")
+    if poisson is not None:
+        intervals = random.Random(poisson["seed"])
+        arrived_at = rows[-1]["arrived_at"] + poisson["gap_before_s"]
+        for index in range(poisson["count"]):
+            add("poisson", "formal", f"p{index:03d}", arrived_at,
+                poisson["num_prefill_tokens"], poisson["num_decode_tokens"])
+            arrived_at += intervals.expovariate(poisson["qps"])
 
     sizing = workload.get("sizing")
     if sizing is not None:
