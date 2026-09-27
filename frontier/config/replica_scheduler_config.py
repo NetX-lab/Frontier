@@ -101,6 +101,12 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
             "help": "Maximum tokens per scheduling iteration (max_num_batched_tokens in vLLM v1)."
         },
     )
+    max_model_len: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "Model context length, prompt plus output (--max-model-len in vLLM). A request or thinking round that does not fit stops the run when it arrives. Defaults to the model's max_position_embeddings."
+        },
+    )
     scheduling_policy: str = field(
         default="fcfs",
         metadata={
@@ -386,6 +392,7 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
             )
 
         for field_name in (
+            "max_model_len",
             "hidden_phase_max_tokens_in_batch",
             "hidden_phase_batch_size_cap",
             "final_phase_max_tokens_in_batch",

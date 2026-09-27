@@ -78,7 +78,7 @@ class VLLMv1EngineReplicaScheduler(
         _scheduling_policy: Scheduling policy ('fcfs' or 'priority')
         _enable_preemption: Whether preemption is enabled
         _watermark_blocks: Number of blocks to keep as watermark
-        _max_model_len: Maximum sequence length from model config
+        _max_model_len: Longest context (prompt plus output) a request may reach
     """
 
     def __init__(self, *args, **kwargs):
@@ -190,9 +190,12 @@ class VLLMv1EngineReplicaScheduler(
             self._config.watermark_blocks_fraction * self._config.num_blocks
         )
 
-        # Max model length from replica config
-        self._max_model_len = getattr(
-            self._request_generator_config, "max_tokens", 8192
+        # vLLM's max_model_len: set by --max-model-len, otherwise derived
+        # from the model config.
+        self._max_model_len = (
+            self._config.max_model_len
+            if self._config.max_model_len is not None
+            else self._replica_config.model_config.max_position_embeddings
         )
 
         # Speculative decoding runtime (Phase 1)
@@ -732,7 +735,8 @@ class VLLMv1EngineReplicaScheduler(
             # Calculate number of new tokens to process
             num_new_tokens = self._get_request_next_num_tokens(request)
 
-            # Apply max_model_len limit
+            # Keep draft tokens within max_model_len; the request itself fits
+            # (checked on arrival).
             scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
@@ -928,13 +932,9 @@ class VLLMv1EngineReplicaScheduler(
                     prefix_cache_admission.effective_cached_tokens
                 )
                 num_new_tokens = int(prefix_cache_admission.num_new_tokens)
-                max_allowed = self._max_model_len - prefix_cached_tokens
             else:
                 num_new_tokens = self._get_request_next_num_tokens(request)
-                max_allowed = self._max_model_len - scheduler_num_computed_tokens
 
-            # Apply max_model_len limit
-            num_new_tokens = min(num_new_tokens, max_allowed)
             num_new_tokens = self._apply_long_prefill_token_threshold(
                 request, num_new_tokens
             )
@@ -952,10 +952,6 @@ class VLLMv1EngineReplicaScheduler(
 
             # Apply token budget limit after chunked-prefill guard
             num_new_tokens = min(num_new_tokens, token_budget)
-
-            if num_new_tokens <= 0:
-                waiting_queue.popleft()
-                continue
 
             # Try to allocate (no preemption for waiting requests in Phase 2)
             if not self._can_allocate_request(
@@ -1375,6 +1371,28 @@ class VLLMv1EngineReplicaScheduler(
 
     # ========== Request Addition Override ==========
 
+    def _check_request_fits_max_model_len(self, request: Request) -> None:
+        """Reject a request that does not fit max_model_len, as vLLM's OpenAI server does.
+
+        Each thinking round reaches vLLM as a new request, so every round is
+        checked when it arrives.
+        """
+        num_prompt_tokens = request.num_prefill_tokens
+        num_output_tokens = request.num_decode_tokens
+        if (
+            num_prompt_tokens >= self._max_model_len
+            or num_prompt_tokens + num_output_tokens > self._max_model_len
+        ):
+            raise ValueError(
+                f"Request {request.id} (round index "
+                f"{request.current_thinking_round_index}) has {num_prompt_tokens} "
+                f"prompt and {num_output_tokens} output tokens, which do not fit "
+                f"max_model_len={self._max_model_len}: vLLM requires "
+                "prompt < max_model_len and prompt + output <= max_model_len. "
+                "Raise max_model_len (default: the model's max_position_embeddings) "
+                "or shorten the request."
+            )
+
     def add_request(self, request: Request) -> None:
         """
         Add a new request to the scheduler.
@@ -1392,6 +1410,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
 
+        self._check_request_fits_max_model_len(request)
         self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         self._maybe_promote_final_round_priority(request)

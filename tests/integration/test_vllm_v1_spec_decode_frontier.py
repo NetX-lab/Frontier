@@ -122,6 +122,7 @@ def _config(root, case, sys_arch="co-location"):
                 block_size=16,
                 batch_size_cap=4,
                 max_tokens_in_batch=16,
+                max_model_len=96,
                 enable_chunked_prefill=True,
             ),
             execution_time_predictor_config=RandomForrestExecutionTimePredictorConfig(

@@ -373,7 +373,8 @@ class DisaggregatedRoleScheduling:
 
             num_new_tokens = self._get_request_next_num_tokens(request)
 
-            # Apply max_model_len limit
+            # Keep draft tokens within max_model_len; the request itself fits
+            # (checked on arrival).
             scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
@@ -382,15 +383,6 @@ class DisaggregatedRoleScheduling:
 
             # Apply token budget limit
             num_new_tokens = min(num_new_tokens, token_budget)
-
-            if num_new_tokens <= 0:
-                # Request has reached max length, remove from queue
-                waiting_queue.popleft()
-                logger.debug(
-                    f"[VLLMv1Engine][DECODE] Phase 2: req={request.id} "
-                    f"reached max length, removing from waiting queue"
-                )
-                continue
 
             # Try to allocate (no preemption for waiting requests in Phase 2)
             if not self._can_allocate_request(
