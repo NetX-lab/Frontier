@@ -5,6 +5,9 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.config.model_config import BaseModelConfig
+from frontier.execution_time_predictor.moe_dataset_training import (
+    _validate_moe_columns,
+)
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
@@ -21,6 +24,20 @@ from frontier.operators.spec import (
 )
 from frontier.types import ActivationType, NormType
 from frontier.types import ClusterType
+
+
+# Each module that reads MOE_FAMILY holds its own binding, so a fake family has
+# to replace all of them to be seen end to end.
+_MOE_FAMILY_READERS = (
+    "frontier.execution_time_predictor.moe_dataset_training",
+    "frontier.execution_time_predictor.moe_operator_times",
+    "frontier.execution_time_predictor.prediction_model_identity",
+)
+
+
+def _use_moe_family(monkeypatch, family) -> None:
+    for module_name in _MOE_FAMILY_READERS:
+        monkeypatch.setattr(f"{module_name}.MOE_FAMILY", family)
 
 
 class _ConcreteSklearnMoEExecutionTimePredictor(SklearnMoEExecutionTimePredictor):
@@ -202,17 +219,12 @@ def test_moe_auxiliary_tp_key_preserves_deferred_pdd_legacy_scope() -> None:
 
 def test_moe_column_validation_uses_moe_family_profiling_names(monkeypatch) -> None:
     import pandas as pd
-    import frontier.execution_time_predictor.moe_predictor_helpers as moe_module
-    # MOE_FAMILY is read in two modules after the split, so both bindings
-    # have to be patched for the fake family to be seen end to end.
-    import frontier.execution_time_predictor.moe_operator_times as moe_operator_module
 
     def _operator(name: str):
         return SimpleNamespace(name=name, profiling_name=lambda: name)
 
-    monkeypatch.setattr(
-        moe_module,
-        "MOE_FAMILY",
+    _use_moe_family(
+        monkeypatch,
         SimpleNamespace(
             profiling_ops=lambda: (
                 _operator("moe_family_first"),
@@ -220,10 +232,9 @@ def test_moe_column_validation_uses_moe_family_profiling_names(monkeypatch) -> N
             )
         ),
     )
-    monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
 
     with pytest.raises(ValueError, match="time_stats.moe_family_second.median"):
-        moe_module._validate_moe_columns(
+        _validate_moe_columns(
             pd.DataFrame({"time_stats.moe_family_first.median": [1.0]})
         )
 
@@ -233,10 +244,6 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
     tmp_path,
 ) -> None:
     import pandas as pd
-    import frontier.execution_time_predictor.moe_predictor_helpers as moe_module
-    # MOE_FAMILY is read in two modules after the split, so both bindings
-    # have to be patched for the fake family to be seen end to end.
-    import frontier.execution_time_predictor.moe_operator_times as moe_operator_module
 
     def _operator(name: str):
         return SimpleNamespace(
@@ -247,9 +254,8 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
             ep_agnostic=True,
         )
 
-    monkeypatch.setattr(
-        moe_module,
-        "MOE_FAMILY",
+    _use_moe_family(
+        monkeypatch,
         SimpleNamespace(
             profiling_ops=lambda: (
                 _operator("moe_family_first"),
@@ -257,7 +263,6 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
             )
         ),
     )
-    monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
 
     csv_path = tmp_path / "moe.csv"
     pd.DataFrame(
@@ -322,10 +327,6 @@ def test_sklearn_moe_dataset_contract_filters_gating_context_from_operator_preci
     monkeypatch,
 ) -> None:
     import pandas as pd
-    import frontier.execution_time_predictor.moe_predictor_helpers as moe_module
-    # MOE_FAMILY is read in two modules after the split, so both bindings
-    # have to be patched for the fake family to be seen end to end.
-    import frontier.execution_time_predictor.moe_operator_times as moe_operator_module
 
     def _operator(name: str):
         return SimpleNamespace(
@@ -336,12 +337,10 @@ def test_sklearn_moe_dataset_contract_filters_gating_context_from_operator_preci
             ep_agnostic=True,
         )
 
-    monkeypatch.setattr(
-        moe_module,
-        "MOE_FAMILY",
+    _use_moe_family(
+        monkeypatch,
         SimpleNamespace(profiling_ops=lambda: (_operator("moe_family_gate"),)),
     )
-    monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
 
     predictor = object.__new__(_ConcreteSklearnMoEExecutionTimePredictor)
     predictor._model_config = SimpleNamespace(
