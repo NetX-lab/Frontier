@@ -124,6 +124,7 @@ class DisaggregatedRoleScheduling:
             )
 
         if not all_scheduled_requests:
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,
@@ -289,6 +290,7 @@ class DisaggregatedRoleScheduling:
             )
 
         if not all_scheduled_requests:
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,
@@ -385,6 +387,10 @@ class DisaggregatedRoleScheduling:
                 break
 
             request = waiting_queue[0]
+            if request.has_preempted_step:
+                # It resumes decoding from the sample of the step it was
+                # preempted from, which has not arrived yet.
+                break
             is_final_decode_request = fast_lane_decode_enabled and (
                 self._is_final_decode_fast_lane_request(request)
             )
@@ -670,11 +676,13 @@ class DisaggregatedRoleScheduling:
                         f"after preemption, num_tokens={num_new_tokens}"
                     )
                 else:
-                    # Request itself was preempted or no victim available
+                    # The request preempted itself (or preemption is disabled):
+                    # stop scheduling running requests, as vLLM v1 does.
                     logger.debug(
                         f"[VLLMv1Engine][DECODE_ATTN] Phase 1: req={request.id} "
-                        f"preempted or allocation failed"
+                        f"preempted or allocation failed, stopping"
                     )
+                    break
 
         # Check micro-batch size limit
         remaining_slots = self._micro_batch_size - len(scheduled_requests)

@@ -403,7 +403,10 @@ def test_spec_verify_attention_prefill_uses_on_demand_prediction() -> None:
     request = SimpleNamespace(
         id=9,
         is_prefill_complete=True,
+        is_decoding=True,
+        is_recomputing=False,
         num_processed_tokens=262143,
+        num_context_tokens=262143,
     )
     metadata = SimpleNamespace(
         verify_tokens_per_request=[3],
@@ -444,7 +447,10 @@ def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
     predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
     request = SimpleNamespace(
         _is_prefill_complete=True,
+        is_decoding=True,
+        is_recomputing=False,
         num_processed_tokens=512,
+        num_context_tokens=512,
         num_processed_decode_tokens=0,
         num_emitted_decode_tokens=1,
     )
@@ -454,7 +460,10 @@ def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
 
     no_handoff_request = SimpleNamespace(
         _is_prefill_complete=True,
+        is_decoding=True,
+        is_recomputing=False,
         num_processed_tokens=512,
+        num_context_tokens=512,
         num_processed_decode_tokens=0,
         num_emitted_decode_tokens=0,
     )

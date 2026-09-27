@@ -63,10 +63,13 @@ def _build_spec_request(request_id: int) -> SimpleNamespace:
     return SimpleNamespace(
         id=request_id,
         is_prefill_complete=True,
+        is_decoding=True,
+        is_recomputing=False,
         spec_decode_enabled=True,
         current_thinking_round_index=0,
         num_restarts=0,
         execution_epoch=0,
+        execution_signature=(0, 0, 0),
         current_decode_token_index=0,
         is_thinking_mode_enabled=False,
         thinking_home_cluster_type=None,
