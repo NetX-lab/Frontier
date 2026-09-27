@@ -265,7 +265,6 @@ class VLLMv1EngineReplicaScheduler(
         self._prefix_cache_identity_event_seq = 0
         self._decode_attn_next_cohort_id = 0
         self._current_iteration_token_budget = 0
-        self._prefill_iteration_reserved_tokens_remaining = 0
         self._kv_cache_manager: Optional[ReplicaKVCacheManager] = None
         if (
             bool(getattr(self._config, "enable_prefix_caching", False))
@@ -625,6 +624,9 @@ class VLLMv1EngineReplicaScheduler(
             if self._cluster_type == ClusterType.PREFILL
             else 0
         )
+        reserved_tokens_remaining = (
+            self._final_prefill_reserved_tokens if waiting_final_prefill_count > 0 else 0
+        )
 
         self._current_iteration_token_budget = token_budget
         req_index = 0
@@ -740,24 +742,11 @@ class VLLMv1EngineReplicaScheduler(
                 request, num_new_tokens
             )
 
-            # Apply token budget limit
+            # Apply token budget limit; a hidden-round prefill leaves the
+            # reserved tokens to the waiting final-round requests.
             effective_token_budget = token_budget
-            if (
-                is_hidden_prefill_running_request
-                and waiting_final_prefill_count > 0
-                and self._prefill_iteration_reserved_tokens_remaining > 0
-            ):
-                effective_token_budget = max(
-                    token_budget
-                    - min(
-                        self._prefill_iteration_reserved_tokens_remaining,
-                        token_budget,
-                    ),
-                    0,
-                )
-                if effective_token_budget <= 0:
-                    req_index += 1
-                    continue
+            if is_hidden_prefill_running_request:
+                effective_token_budget = max(token_budget - reserved_tokens_remaining, 0)
             num_new_tokens = min(num_new_tokens, effective_token_budget)
 
             if num_new_tokens <= 0:
@@ -788,10 +777,8 @@ class VLLMv1EngineReplicaScheduler(
                 token_budget -= num_new_tokens
                 self._current_iteration_token_budget = token_budget
                 if is_final_prefill_running_request:
-                    self._prefill_iteration_reserved_tokens_remaining = max(
-                        self._prefill_iteration_reserved_tokens_remaining
-                        - num_new_tokens,
-                        0,
+                    reserved_tokens_remaining = max(
+                        reserved_tokens_remaining - num_new_tokens, 0
                     )
                 req_index += 1
 
@@ -922,9 +909,6 @@ class VLLMv1EngineReplicaScheduler(
                 )
                 break
 
-            is_final_prefill_request = fast_lane_prefill_enabled and (
-                self._is_final_prefill_fast_lane_request(request)
-            )
             computed_blocks = None
             prefix_cached_tokens = 0
             prefix_cache_admission: Optional[PrefixCacheAdmission] = None
@@ -1046,11 +1030,6 @@ class VLLMv1EngineReplicaScheduler(
             num_tokens_list.append(num_new_tokens)
             token_budget -= num_new_tokens
             self._current_iteration_token_budget = token_budget
-            if is_final_prefill_request:
-                self._prefill_iteration_reserved_tokens_remaining = max(
-                    self._prefill_iteration_reserved_tokens_remaining - num_new_tokens,
-                    0,
-                )
 
             # Flow validation: log WAITING request admission
             logger.info(

@@ -2,10 +2,13 @@
 
 While a final-round prefill waits, running hidden-round prefills leave the
 reserved tokens of the iteration budget, and the final round is admitted with
-them in the same iteration. The reserve must stay below every per-iteration
-token budget, or running hidden-round prefills get no tokens while a final
-round that cannot be admitted waits, and scheduling stops.
+them in the same iteration. The reserve must stay below the final-round token
+budget, or running hidden-round prefills get no tokens while a final round
+that cannot be admitted waits, and scheduling stops. A per-role override is
+checked with the values the role runs with.
 """
+
+from types import SimpleNamespace
 
 import pytest
 
@@ -24,6 +27,7 @@ from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler impor
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     StageExecutionContext,
 )
+from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.types import ClusterType
 
 TOKEN_BUDGET = 32
@@ -114,10 +118,34 @@ def test_running_hidden_prefill_leaves_the_reserved_tokens_to_a_waiting_final_ro
         {
             "max_tokens_in_batch": 4 * TOKEN_BUDGET,
             "enable_phase_aware_thinking_profile": True,
-            "hidden_phase_max_tokens_in_batch": TOKEN_BUDGET,
+            "final_phase_max_tokens_in_batch": TOKEN_BUDGET,
         },
     ],
 )
-def test_a_reserve_that_fills_an_iteration_budget_is_rejected(budget_fields) -> None:
+def test_a_reserve_that_fills_the_final_round_budget_is_rejected(budget_fields) -> None:
     with pytest.raises(ValueError, match="final_prefill_reserved_tokens must be below"):
         VllmV1SchedulerConfig(final_prefill_reserved_tokens=TOKEN_BUDGET, **budget_fields)
+
+
+@pytest.mark.parametrize(
+    "role_override, message",
+    [
+        (
+            {"prefill_replica_scheduler_config_max_tokens_in_batch": RESERVED_TOKENS},
+            "final_prefill_reserved_tokens must be below",
+        ),
+        (
+            {"prefill_replica_scheduler_config_type": "sj2q_penalty_only"},
+            "final reserved slot/token settings to remain 0",
+        ),
+    ],
+)
+def test_a_role_override_is_checked_with_the_values_it_runs_with(role_override, message) -> None:
+    config = SimpleNamespace(
+        replica_scheduler_config=VllmV1SchedulerConfig(
+            final_prefill_reserved_tokens=RESERVED_TOKENS
+        ),
+        **role_override,
+    )
+    with pytest.raises(ValueError, match=message):
+        resolve_replica_scheduler_config(config, ClusterType.PREFILL)

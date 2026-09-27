@@ -164,19 +164,19 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
     final_prefill_reserved_slots: int = field(
         default=0,
         metadata={
-            "help": "PREFILL running slots kept for final-round prefill requests. A value above 0 puts waiting final-round requests ahead of hidden-round ones; with enable_final_running_request_reclaim, running hidden-round requests are preempted so that waiting final-round requests can fill up to this many slots."
+            "help": "PREFILL running slots that waiting final-round prefill requests may reclaim. A value above 0 puts waiting final-round requests ahead of hidden-round ones; with enable_final_running_request_reclaim, running hidden-round requests are preempted so that waiting final-round requests can fill up to this many slots. Without reclaim, no slot is held back."
         },
     )
     final_prefill_reserved_tokens: int = field(
         default=0,
         metadata={
-            "help": "PREFILL tokens per iteration kept for final-round prefill requests. A value above 0 puts waiting final-round requests ahead of hidden-round ones; while a final-round request waits, running hidden-round prefills leave this many tokens of the iteration budget. With no final-round request waiting, hidden rounds use the whole budget. Must be below max_tokens_in_batch and any phase-aware max_tokens_in_batch override."
+            "help": "PREFILL tokens per iteration kept for final-round prefill requests. A value above 0 puts waiting final-round requests ahead of hidden-round ones; while a final-round request waits, running hidden-round prefills leave this many tokens of the iteration budget. With no final-round request waiting, hidden rounds use the whole budget. Must be below the final-round token budget: final_phase_max_tokens_in_batch when set, otherwise max_tokens_in_batch, including a per-role max_tokens_in_batch override."
         },
     )
     final_decode_reserved_slots: int = field(
         default=0,
         metadata={
-            "help": "DECODE running slots kept for final-round decode requests. A value above 0 puts waiting final-round requests ahead of hidden-round ones; with enable_final_running_request_reclaim, running hidden-round requests are preempted so that waiting final-round requests can fill up to this many slots."
+            "help": "DECODE running slots that waiting final-round decode requests may reclaim. A value above 0 puts waiting final-round requests ahead of hidden-round ones; with enable_final_running_request_reclaim, running hidden-round requests are preempted so that waiting final-round requests can fill up to this many slots. Without reclaim, no slot is held back."
         },
     )
     enable_final_running_request_reclaim: bool = field(
@@ -410,19 +410,17 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
                     f"got={field_value!r}"
                 )
 
-        smallest_token_budget = min(
-            budget
-            for budget in (
-                self.max_tokens_in_batch,
-                self.hidden_phase_max_tokens_in_batch,
-                self.final_phase_max_tokens_in_batch,
-            )
-            if budget is not None
+        # A waiting final-round request makes the iteration a final-round one,
+        # so the reserve is cut from the final-round token budget.
+        final_round_token_budget = (
+            self.final_phase_max_tokens_in_batch
+            if self.final_phase_max_tokens_in_batch is not None
+            else self.max_tokens_in_batch
         )
-        if self.final_prefill_reserved_tokens >= smallest_token_budget:
+        if self.final_prefill_reserved_tokens >= final_round_token_budget:
             raise ValueError(
                 "VllmV1SchedulerConfig.final_prefill_reserved_tokens must be below "
-                f"every per-iteration token budget (smallest={smallest_token_budget}), "
+                f"the final-round token budget ({final_round_token_budget}), "
                 f"got={self.final_prefill_reserved_tokens!r}; otherwise running "
                 "hidden-round prefills get no tokens while a final-round request waits"
             )

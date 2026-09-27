@@ -72,9 +72,6 @@ class DisaggregatedRoleScheduling:
         )
         if reclaimed_requests:
             waiting_count = len(self._request_queue) + len(self._preempted_requests)
-        self._prefill_iteration_reserved_tokens_remaining = (
-            self._final_prefill_reserved_tokens
-        )
 
         all_scheduled_requests: List[Request] = []
         all_num_tokens: List[int] = []
