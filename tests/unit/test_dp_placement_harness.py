@@ -97,6 +97,7 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
     op_timing, _ = server_env("op_timing", {"enable_chunked_prefill": True}, out, inherited)
     kernel_timing, _ = server_env("kernel_timing", {"enable_chunked_prefill": True}, out, inherited)
     schedule_timing, _ = server_env("schedule_timing", {"enable_chunked_prefill": True}, out, inherited)
+    cpu, _ = server_env("cpu", {"enable_chunked_prefill": True}, out, inherited)
 
     assert clean == {
         "PATH": "/usr/bin",
@@ -130,6 +131,11 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "PATH": "/usr/bin",
         "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": "/run/dp_placement",
         "VLLM_FRONTIER_SCHED_LOG_PATH": "/run/schedule.jsonl",
+    }
+    assert cpu == {
+        "PATH": "/usr/bin",
+        "VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": "/run/dp_placement",
+        "VLLM_FRONTIER_CPU_PROBE_LOG_PATH": "/run/cpu_probe.jsonl",
     }
     # The fork's default scope list has no dense MLP scope; the timing modes name them.
     assert {"mlp_up_proj", "mlp_act", "mlp_down_proj"} <= set(OP_TIMING_SCOPES)

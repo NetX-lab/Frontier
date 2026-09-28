@@ -35,6 +35,12 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
     operator probes and E2E request metrics off. The scheduler writes one line
     per step on the host, with no device sync, so the step timestamps measure
     the steps of an otherwise clean engine. E2E metrics come from ``clean`` runs.
+``cpu``
+    The CPU probe only (``cpu_probe.jsonl``): per-step host timestamps of
+    schedule, input preparation, the forward call, logits and sampling,
+    bookkeeping and ``update_from_output``, kept in memory and written when the
+    engine core shuts down. Instrumentation, operator probes and E2E request
+    metrics off.
 
 The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
 from the engine file's ``attention_backend`` and is otherwise left to vLLM's
@@ -77,7 +83,7 @@ OP_TIMING_SCOPES = (
     "expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine",
     "kv_p2p_send", "kv_p2p_recv",
 )
-MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing")
+MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 
 
@@ -97,6 +103,8 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
         mode_env["VLLM_FRONTIER_MOE_ROUTING_LOG_PATH"] = str(output_dir / "moe_routing.jsonl")
     elif mode == "schedule_timing":
         mode_env["VLLM_FRONTIER_SCHED_LOG_PATH"] = str(output_dir / "schedule.jsonl")
+    elif mode == "cpu":
+        mode_env["VLLM_FRONTIER_CPU_PROBE_LOG_PATH"] = str(output_dir / "cpu_probe.jsonl")
     else:
         mode_env |= {
             "VLLM_FRONTIER_INSTRUMENTATION": "1",
