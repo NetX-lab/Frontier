@@ -41,6 +41,15 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
     bookkeeping and ``update_from_output``, kept in memory and written when the
     engine core shuts down. Instrumentation, operator probes and E2E request
     metrics off.
+``kv_save_timing``, ``kv_save_device_ids``
+    Diagnostic modes of a pd-disaggregation case, for a vLLM-BS diagnostic
+    commit only: the CPU probe plus the producer connector's KV-save probe
+    (``kv_save_probe.jsonl``), per-layer host stamps of each request's KV
+    extraction, logger write and send queueing, each send in the send thread
+    and each ``wait_for_save``, written when the engine core shuts down.
+    ``kv_save_device_ids`` also sets ``VLLM_FRONTIER_KV_SAVE_DEVICE_BLOCK_IDS``,
+    so the connector indexes the KV cache with a device copy of the block ids.
+    Instrumentation, operator probes and E2E request metrics off.
 
 The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
 from the engine file's ``attention_backend`` and is otherwise left to vLLM's
@@ -83,7 +92,8 @@ OP_TIMING_SCOPES = (
     "expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine",
     "kv_p2p_send", "kv_p2p_recv",
 )
-MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu")
+MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu",
+         "kv_save_timing", "kv_save_device_ids")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 
 
@@ -105,6 +115,11 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
         mode_env["VLLM_FRONTIER_SCHED_LOG_PATH"] = str(output_dir / "schedule.jsonl")
     elif mode == "cpu":
         mode_env["VLLM_FRONTIER_CPU_PROBE_LOG_PATH"] = str(output_dir / "cpu_probe.jsonl")
+    elif mode in ("kv_save_timing", "kv_save_device_ids"):
+        mode_env["VLLM_FRONTIER_CPU_PROBE_LOG_PATH"] = str(output_dir / "cpu_probe.jsonl")
+        mode_env["VLLM_FRONTIER_KV_SAVE_PROBE_LOG_PATH"] = str(output_dir / "kv_save_probe.jsonl")
+        if mode == "kv_save_device_ids":
+            mode_env["VLLM_FRONTIER_KV_SAVE_DEVICE_BLOCK_IDS"] = "1"
     else:
         mode_env |= {
             "VLLM_FRONTIER_INSTRUMENTATION": "1",
