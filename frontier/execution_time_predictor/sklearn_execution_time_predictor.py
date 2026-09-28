@@ -757,12 +757,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for family, suffix in (("eager", ""), ("device_event", "_device_event"), ("kernel_only", "_kernel_only")):
             for name in ("compute", "attention", "moe"):
                 setattr(self, f"_{name}_input_file_{family}", paths[f"{name}{suffix}_input_file"])
-        for name in ("all_reduce", "send_recv", "cpu_overhead", "pp_stage_boundary",
+        self._cpu_overhead_input_file_eager = paths["cpu_overhead_input_file"]
+        self._cpu_overhead_input_file_kernel_only = paths["cpu_overhead_kernel_only_input_file"]
+        for name in ("all_reduce", "send_recv", "pp_stage_boundary",
                      "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
             setattr(self, f"_{name}_input_file", paths[f"{name}_input_file"])
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
         self._moe_input_file = self._moe_input_file_eager
+        self._cpu_overhead_input_file = self._cpu_overhead_input_file_eager
 
     def _get_input_files(
         self, measurement_type: MeasurementType = MeasurementType.CUDA_EVENT
@@ -916,18 +919,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._compute_input_file = self._compute_input_file_eager
             self._attention_input_file = self._attention_input_file_eager
             self._moe_input_file = self._moe_input_file_eager
+            self._cpu_overhead_input_file = self._cpu_overhead_input_file_eager
             self._models = self._models_eager
             self._predictions = self._predictions_eager
         elif measurement_type == MeasurementType.DEVICE_EVENT:
             self._compute_input_file = self._compute_input_file_device_event
             self._attention_input_file = self._attention_input_file_device_event
             self._moe_input_file = self._moe_input_file_device_event
+            # The device-event family shares the eager CPU-overhead file (resolve_measurement_input_paths).
+            self._cpu_overhead_input_file = self._cpu_overhead_input_file_eager
             self._models = self._models_device_event
             self._predictions = self._predictions_device_event
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             self._compute_input_file = self._compute_input_file_kernel_only
             self._attention_input_file = self._attention_input_file_kernel_only
             self._moe_input_file = self._moe_input_file_kernel_only
+            self._cpu_overhead_input_file = self._cpu_overhead_input_file_kernel_only
             self._models = self._models_kernel_only
             self._predictions = self._predictions_kernel_only
         else:

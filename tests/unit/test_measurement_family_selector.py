@@ -407,6 +407,27 @@ def test_shared_manager_uses_active_family_cpu_overhead_path() -> None:
     assert input_files[4] == "cpu_kernel/a100/meta-llama/Llama-2-7b-hf.csv"
 
 
+def test_independent_predictor_uses_active_family_cpu_overhead_path() -> None:
+    cluster_config = _make_manager()._cluster_configs[ClusterType.MONOLITHIC]
+    predictor = _make_predictor(ClusterType.MONOLITHIC, runtime_mode="FULL")
+    predictor._config = cluster_config.execution_time_predictor_config
+    predictor._replica_config = SimpleNamespace(
+        **vars(cluster_config.replica_config), device_config=H800DeviceSKUConfig()
+    )
+    predictor._model_config = cluster_config.replica_config.model_config
+    predictor._models_eager = predictor._models_kernel_only = {}
+    predictor._predictions_eager = predictor._predictions_kernel_only = {}
+    predictor._initialize_file_paths()
+
+    decode_batch = SimpleNamespace(num_prefill_tokens=0, num_decode_tokens=8)
+    predictor._activate_measurement_type(predictor._select_measurement_type_for_batch(decode_batch))
+    assert predictor._cpu_overhead_input_file == "cpu_kernel/a100/meta-llama/Llama-2-7b-hf.csv"
+
+    prefill_batch = SimpleNamespace(num_prefill_tokens=16, num_decode_tokens=0)
+    predictor._activate_measurement_type(predictor._select_measurement_type_for_batch(prefill_batch))
+    assert predictor._cpu_overhead_input_file == "cpu/a100/meta-llama/Llama-2-7b-hf.csv"
+
+
 def test_shared_manager_returns_complete_training_file_paths() -> None:
     manager = _make_manager()
 
