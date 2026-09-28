@@ -137,6 +137,7 @@ frontier/profiling/
 │   ├── validation.py            # Contract validation helpers
 │   ├── planning.py              # Single-node TP planning helpers
 │   ├── analytical.py            # Analytical TP extrapolation helpers
+│   ├── vllm_cpu_probe.py        # CSVs from vLLM CPU-probe step logs
 │   └── backends/                # Backend abstraction
 │       ├── base_backend.py
 │       ├── sarathi_backend.py
@@ -296,6 +297,38 @@ Semantics:
 - TP 1/2/4 are measured directly.
 - TP 8 is analytically generated from measured rows when enabled.
 - If analytical modeling is not enabled and unmeasurable TP exists, profiling fails fast.
+
+### From vLLM CPU-probe logs
+
+`vllm_cpu_probe.py` builds the CPU-overhead CSVs from the per-step log that Frontier's
+instrumented vLLM writes when `VLLM_FRONTIER_CPU_PROBE_LOG_PATH` is set. Each record holds
+host timestamps around the step's phases and the CUDA-event device time of the model
+forward, so the four measured terms add up to the step period minus the forward's device
+time, the part Frontier prices from its operator tables:
+
+| Term | Probe interval |
+| --- | --- |
+| `schedule` | `step_start -> schedule_end` |
+| `prepare_inputs_e2e` | `schedule_end -> preprocess_end` |
+| `sampler_e2e` | `preprocess_end -> sample_end`, minus `forward_device_ms` |
+| `process_model_outputs` | `sample_end ->` next `step_start`, only when the next step shares a request |
+| `ray_comm_time_mean` | `0` (one worker) |
+
+Steps are grouped by `(batch_size, num_prefill_tokens, num_decode_tokens)`. A pure decode
+tuple whose batch fits a decode CUDA-graph capture size goes to the kernel-only file, which
+the predictor reads for FULL graph replays; every other tuple goes to the eager file. A tuple
+with no step followed by a step of the same requests has no `process_model_outputs` and is
+not written.
+
+```bash
+python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \
+  --cpu_probe_logs run/prefill/cpu_probe.jsonl run/decode/cpu_probe.jsonl \
+  --decode_cudagraph_capture_sizes 1 2 4 8 16 24 32 40 48 56 64 \
+  --model_name llama2_7b_dense_example --tensor_parallel_degree 1 \
+  --profiling_precision FP16 --scheduling_mode sync \
+  --eager_output_file cpu_overheads.csv \
+  --kernel_only_output_file cpu_overheads_kernel_only.csv
+```
 
 ## PP Receiver-Head Overhead Materialization
 
