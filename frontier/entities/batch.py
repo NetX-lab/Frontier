@@ -345,11 +345,6 @@ class DecodeCudaGraphMetadata:
             return self.padded_total_tokens
         return self.original_total_tokens
 
-    def get_effective_decode_batch_size_for_attention(self) -> int:
-        if self.runtime_mode == "FULL":
-            return self.padded_decode_batch_size
-        return self.original_decode_batch_size
-
 
 @dataclass
 class SpecDecodeBatchMetadata:
@@ -933,14 +928,6 @@ class Batch(BaseEntity):
         AFDStageMetadata and consumed through get_effective_total_tokens_for_compute().
         """
         return self.get_effective_total_tokens_for_compute(cluster_type)
-
-    def get_effective_decode_batch_size_for_attention(self) -> int:
-        if self.decode_cuda_graph_metadata is not None:
-            return (
-                self.decode_cuda_graph_metadata.get_effective_decode_batch_size_for_attention()
-            )
-
-        return sum(self._request_is_decoding)
 
     @property
     def is_moe(self) -> bool:

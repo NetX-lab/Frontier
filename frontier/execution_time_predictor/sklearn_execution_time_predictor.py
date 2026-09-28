@@ -4199,12 +4199,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             batch._decode_params = (0, 0)
             return batch._decode_params
 
-        if hasattr(batch, "get_effective_decode_batch_size_for_attention"):
-            decode_batch_size = int(
-                batch.get_effective_decode_batch_size_for_attention()
-            )
-        else:
-            decode_batch_size = len(decode_kv_cache_sizes)
+        # A FULL graph replay pads the batch, but vLLM's padded rows hold no KV
+        # pages, so decode attention runs on the real decode requests only.
+        decode_batch_size = len(decode_kv_cache_sizes)
 
         decode_avg_kv_cache_size = int(np.mean(decode_kv_cache_sizes))
         # round up to the nearest multiple of kv_cache_prediction_granularity in csv file
