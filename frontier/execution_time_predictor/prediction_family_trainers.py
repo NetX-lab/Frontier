@@ -1657,24 +1657,24 @@ class PredictionFamilyTrainers:
         # ============================================================
 
         estimator, grid_search_params = self._create_estimator_and_params(execution_time_predictor_config)
-
-        cv = min(execution_time_predictor_config.k_fold_cv_splits, len(df)) if len(df) >= 2 else 2
-
-        grid_search = GridSearchCV(
-            estimator=estimator,
-            param_grid=grid_search_params,
-            scoring=self._get_scorer(),
-            cv=cv,
-            n_jobs=execution_time_predictor_config.num_training_job_threads,
-        )
-
         X, y = df[feature_cols], df[target_col]
-        grid_search.fit(X, y)
-        score = grid_search.score(X, y)
 
-        logger.info(f"✓ Trained model {model_name} with MAPE {-score}%")
-
-        best_estimator = grid_search.best_estimator_
+        if len(df) == 1:
+            # Cross-validation needs two rows, and every grid candidate fitted
+            # on one row predicts that row's value.
+            best_estimator = estimator.fit(X, y)
+            logger.info(f"✓ Trained model {model_name} on its single row")
+        else:
+            grid_search = GridSearchCV(
+                estimator=estimator,
+                param_grid=grid_search_params,
+                scoring=self._get_scorer(),
+                cv=min(execution_time_predictor_config.k_fold_cv_splits, len(df)),
+                n_jobs=execution_time_predictor_config.num_training_job_threads,
+            )
+            grid_search.fit(X, y)
+            logger.info(f"✓ Trained model {model_name} with MAPE {-grid_search.score(X, y)}%")
+            best_estimator = grid_search.best_estimator_
         # Persist feature metadata for runtime on-demand prediction (e.g., moe_grouped_gemm load imbalance mode).
         setattr(best_estimator, "_frontier_feature_names", list(feature_cols))
         setattr(best_estimator, "_frontier_target_col", target_col)

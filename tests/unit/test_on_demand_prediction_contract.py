@@ -374,3 +374,48 @@ def test_shared_manager_exact_lookup_survives_cache_round_trip_by_default(
     expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
     assert loaded._frontier_exact_lookup == expected
     assert reloaded._frontier_exact_lookup == expected
+
+
+def test_shared_manager_trains_a_one_row_table_without_cross_validation(
+    tmp_path, monkeypatch
+) -> None:
+    from frontier.config.execution_time_predictor_config import (
+        RandomForrestExecutionTimePredictorConfig,
+    )
+    from frontier.execution_time_predictor import prediction_family_trainers
+
+    def _no_grid_search(*_args, **_kwargs):
+        raise AssertionError("a one-row table has no cross-validation split")
+
+    monkeypatch.setattr(prediction_family_trainers, "GridSearchCV", _no_grid_search)
+    manager = ExecutionTimePredictionModelManager.__new__(
+        ExecutionTimePredictionModelManager
+    )
+    manager._cache_dir = str(tmp_path)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._get_model_hash = lambda *_args: "one_row"
+    manager._store_model_precision = lambda *_args: None
+    dataframe = pd.DataFrame(
+        {
+            "batch_size": [1],
+            "num_prefill_tokens": [2048],
+            "num_decode_tokens": [0],
+            "schedule_median": [0.2168],
+            "profiling_precision": ["FP16"],
+            "measurement_type": [MeasurementType.CUDA_EVENT.value],
+        }
+    )
+    feature_cols = ["batch_size", "num_prefill_tokens", "num_decode_tokens"]
+
+    model = manager._train_single_model(
+        model_name="schedule",
+        df=dataframe,
+        feature_cols=feature_cols,
+        target_col="schedule_median",
+        execution_time_predictor_config=RandomForrestExecutionTimePredictorConfig(),
+    )
+
+    unseen = pd.DataFrame({"batch_size": [2], "num_prefill_tokens": [4096], "num_decode_tokens": [0]})
+    assert model.predict(unseen)[0] == pytest.approx(0.2168)
+    assert model._frontier_exact_lookup == {(1.0, 2048.0, 0.0): 0.2168}
+    assert manager._load_model_from_cache("schedule", "one_row") is not None
