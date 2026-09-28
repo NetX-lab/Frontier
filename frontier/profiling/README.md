@@ -311,14 +311,15 @@ time, the part Frontier prices from its operator tables:
 | `schedule` | `step_start -> schedule_end` |
 | `prepare_inputs_e2e` | `schedule_end -> preprocess_end` |
 | `sampler_e2e` | `preprocess_end -> sample_end`, minus `forward_device_ms` |
-| `process_model_outputs` | `sample_end ->` next `step_start`, only when the next step shares a request |
+| `process_model_outputs` | `sample_end ->` next `step_start` when the next step shares a request, else `sample_end -> update_end` |
 | `ray_comm_time_mean` | `0` (one worker) |
 
 Steps are grouped by `(batch_size, num_prefill_tokens, num_decode_tokens)`. A pure decode
 tuple whose batch fits a decode CUDA-graph capture size goes to the kernel-only file, which
-the predictor reads for FULL graph replays; every other tuple goes to the eager file. A tuple
-with no step followed by a step of the same requests has no `process_model_outputs` and is
-not written.
+the predictor reads for FULL graph replays; every other tuple goes to the eager file. When
+the next step shares no request, the engine may have waited for an arrival, so
+`process_model_outputs` ends at `update_end` and leaves out the engine loop gap; a PD
+prefill instance, whose requests run one step each, always takes this form.
 
 ```bash
 python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \

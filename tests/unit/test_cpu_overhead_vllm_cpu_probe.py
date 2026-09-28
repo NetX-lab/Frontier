@@ -58,9 +58,10 @@ def test_step_terms_cover_the_period_outside_the_forward_device_time() -> None:
     assert first["sampler_e2e"] == pytest.approx(6.0 - 4.0)
     assert first["process_model_outputs"] == pytest.approx(7.0 - 6.6)
     assert sum(first.values()) == pytest.approx(7.0 - 4.0)
-    # Step 1 is followed by a step of another request, step 2 by an empty step.
-    assert steps[1][1]["process_model_outputs"] is None
-    assert steps[2][1]["process_model_outputs"] is None
+    # Step 1 is followed by a step of another request, step 2 by an empty step:
+    # the engine may have waited, so the term ends at update_end.
+    assert steps[1][1]["process_model_outputs"] == pytest.approx(0.3)
+    assert steps[2][1]["process_model_outputs"] == pytest.approx(0.3)
 
 
 def test_step_terms_require_the_probe_device_times() -> None:
@@ -85,28 +86,28 @@ def test_tables_split_graph_replayed_decode_from_eager_tuples() -> None:
     assert set(kernel_only["measurement_type"]) == {MeasurementType.KERNEL_ONLY.value}
 
 
-def test_tables_take_medians_per_tuple_and_skip_tuples_without_a_successor() -> None:
+def test_tables_take_mean_and_median_per_tuple() -> None:
     steps = [
         ((2, 0, 2), {"schedule": s, "prepare_inputs_e2e": 0.5, "sampler_e2e": 2.0, "process_model_outputs": p})
-        for s, p in ((0.1, 0.4), (0.2, None), (0.6, 0.8))
-    ] + [((5, 0, 5), {"schedule": 0.1, "prepare_inputs_e2e": 0.5, "sampler_e2e": 2.0, "process_model_outputs": None})]
+        for s, p in ((0.1, 0.4), (0.2, 0.3), (0.6, 0.8))
+    ]
 
     tables = cpu_overhead_tables(steps, decode_capture_sizes=[8], **IDENTITY)
 
     row = tables[MeasurementType.KERNEL_ONLY].set_index("batch_size").loc[2]
     assert row["schedule_median"] == pytest.approx(0.2)
     assert row["schedule_mean"] == pytest.approx(0.3)
-    assert row["process_model_outputs_median"] == pytest.approx(0.6)
+    assert row["process_model_outputs_median"] == pytest.approx(0.4)
     assert row["num_steps"] == 3
-    assert 5 not in tables[MeasurementType.KERNEL_ONLY]["batch_size"].tolist()
 
 
 def test_cli_writes_one_csv_per_family_readable_by_the_loader_validation(tmp_path) -> None:
     decode_log = tmp_path / "decode.jsonl"
     records = [_step(i, 10.0 + 0.007 * i, {"a": 1, "b": 1}) for i in range(3)] + [_step(3, 11.0, {})]
     decode_log.write_text("".join(json.dumps(record) + "\n" for record in records))
+    # A PD prefill instance runs each request for one step.
     prefill_log = tmp_path / "prefill.jsonl"
-    prefill_log.write_text("".join(json.dumps(r) + "\n" for r in [_step(0, 5.0, {"a": 16}), _step(1, 5.007, {"a": 16})]))
+    prefill_log.write_text("".join(json.dumps(r) + "\n" for r in [_step(0, 5.0, {"a": 16}), _step(1, 5.007, {"b": 16})]))
     eager_file, kernel_file = tmp_path / "out/cpu_overheads.csv", tmp_path / "out/cpu_overheads_kernel_only.csv"
 
     main([
@@ -120,6 +121,8 @@ def test_cli_writes_one_csv_per_family_readable_by_the_loader_validation(tmp_pat
     eager = validate_cpu_overhead_dataframe(pd.read_csv(eager_file))
     kernel_only = validate_cpu_overhead_dataframe(pd.read_csv(kernel_file))
     assert eager[["batch_size", "num_prefill_tokens", "num_decode_tokens"]].values.tolist() == [[1, 16, 0]]
+    assert eager.loc[0, "num_steps"] == 2
+    assert eager.loc[0, "process_model_outputs_median"] == pytest.approx(0.3)
     assert kernel_only[["batch_size", "num_prefill_tokens", "num_decode_tokens"]].values.tolist() == [[2, 0, 2]]
     assert kernel_only.loc[0, "num_steps"] == 3
 

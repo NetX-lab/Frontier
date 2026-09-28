@@ -16,9 +16,11 @@ terms price the rest of the step period:
     ray_comm_time          0 (one worker, no Ray hop)
 
 so the four measured terms add up to the step period minus the forward's device
-time. process_model_outputs needs the next step: a step contributes it only when
-the next step shares a request with it, because otherwise the engine may have
-waited for an arrival.
+time. process_model_outputs runs to the next step's start only when the next
+step shares a request with it; otherwise the engine may have waited for an
+arrival before that step, so the term ends at update_end and leaves out the
+engine loop gap. A PD prefill instance, whose requests run one step each, always
+takes the second form.
 
 Steps are grouped by Frontier's CPU-overhead identity (batch_size,
 num_prefill_tokens, num_decode_tokens), counting a request scheduled more than
@@ -63,7 +65,7 @@ def load_cpu_probe_log(path: Path) -> list[dict]:
     return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
 
 
-def step_overhead_terms(records: Sequence[Mapping]) -> list[tuple[StepIdentity, dict[str, float | None]]]:
+def step_overhead_terms(records: Sequence[Mapping]) -> list[tuple[StepIdentity, dict[str, float]]]:
     """Return each scheduled step's identity and CPU-overhead terms in milliseconds."""
 
     steps = []
@@ -81,19 +83,19 @@ def step_overhead_terms(records: Sequence[Mapping]) -> list[tuple[StepIdentity, 
         next_shares_request = following is not None and bool(
             set(following["num_scheduled_tokens"]) & set(scheduled)
         )
+        outputs_end = following["step_start"] if next_shares_request else record["update_end"]
         steps.append((identity, {
             "schedule": (record["schedule_end"] - record["step_start"]) * 1e3,
             "prepare_inputs_e2e": (record["preprocess_end"] - record["schedule_end"]) * 1e3,
             "sampler_e2e": (record["sample_end"] - record["preprocess_end"]) * 1e3
                            - record["forward_device_ms"],
-            "process_model_outputs": (following["step_start"] - record["sample_end"]) * 1e3
-                                     if next_shares_request else None,
+            "process_model_outputs": (outputs_end - record["sample_end"]) * 1e3,
         }))
     return steps
 
 
 def cpu_overhead_tables(
-    steps: Sequence[tuple[StepIdentity, Mapping[str, float | None]]],
+    steps: Sequence[tuple[StepIdentity, Mapping[str, float]]],
     *,
     decode_capture_sizes: Sequence[int],
     model_name: str,
@@ -108,13 +110,8 @@ def cpu_overhead_tables(
         groups[identity].append(terms)
     largest_graph_batch = max(decode_capture_sizes, default=0)
     rows = defaultdict(list)
-    without_successor = []
     for identity, group in sorted(groups.items()):
         batch_size, num_prefill_tokens, num_decode_tokens = identity
-        values = {term: [terms[term] for terms in group if terms[term] is not None] for term in TERMS}
-        if not values["process_model_outputs"]:
-            without_successor.append(identity)
-            continue
         family = (MeasurementType.KERNEL_ONLY
                   if num_prefill_tokens == 0 and batch_size <= largest_graph_batch
                   else MeasurementType.CUDA_EVENT)
@@ -126,7 +123,8 @@ def cpu_overhead_tables(
             "num_decode_tokens": num_decode_tokens,
             "scheduling_mode": scheduling_mode,
         }
-        for term, term_values in values.items():
+        for term in TERMS:
+            term_values = [terms[term] for terms in group]
             row[f"{term}_mean"] = float(np.mean(term_values))
             row[f"{term}_median"] = float(np.median(term_values))
         row.update(
@@ -137,12 +135,6 @@ def cpu_overhead_tables(
             num_steps=len(group),
         )
         rows[family].append(row)
-    if without_successor:
-        logger.warning(
-            "No step of tuples %s was followed by a step of the same requests; "
-            "they have no process_model_outputs and are not written.",
-            without_successor,
-        )
     return {
         family: validate_cpu_overhead_dataframe(pd.DataFrame(family_rows), expected_precision=profiling_precision)
         for family, family_rows in rows.items()
