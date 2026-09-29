@@ -13,7 +13,9 @@ writes:
 - `batch_windows_<run>.csv` (op, kernel): one row per (pp_rank, dp_rank,
   batch_id) joining `op_timing.jsonl`, `batch_log.jsonl` and
   `pp_boundary.jsonl`. `uncovered_ms` is the forward window less the summed
-  non-collective scope time and the summed collective scope time.
+  non-collective scope time and the summed collective scope time; a TP
+  all-reduce nested in attn_post_proj or mlp_down_proj counts once, as a
+  collective. Only TP rank 0 writes these logs, so the key holds no TP rank.
 - `scope_by_shape.csv`, `window_by_shape.csv`: per run, pp_rank and shape
   class, the scope times and the parts of the batch window.
 - `host_gap_by_shape.csv`: per scope, the op-run per-batch time less the
@@ -52,7 +54,14 @@ import numpy as np
 import pandas as pd
 
 BATCH_KEY = ["pp_rank", "dp_rank", "batch_id"]
-COLLECTIVE_SCOPES = ("expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine")
+COLLECTIVE_SCOPES = (
+    "expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine",
+    "attn_post_proj_tp_allreduce", "mlp_down_proj_tp_allreduce",
+    "moe_tensor_parallel_allreduce", "tensor_parallel_allreduce",
+)
+# Collective scopes that run inside a non-collective scope: attn_post_proj and
+# mlp_down_proj hold their row-parallel TP all-reduce.
+NESTED_COLLECTIVE_SCOPES = ("attn_post_proj_tp_allreduce", "mlp_down_proj_tp_allreduce")
 WINDOW_PARTS = (
     "forward_ms", "scope_sum_ms", "collective_sum_ms", "uncovered_ms",
     "preprocess_ms", "send_ms", "recv_ms", "execute_tail_ms",
@@ -185,10 +194,15 @@ def key_problem(source: str, problem: str, keys: pd.DataFrame, rows: int | None 
 
 
 def scope_totals(records: pd.DataFrame) -> pd.DataFrame:
-    """Per batch key: summed non-collective and collective scope time and record counts."""
+    """Per batch key: summed non-collective and collective scope time and record counts.
+
+    A nested collective's time is taken out of the non-collective sum, whose
+    enclosing scope already holds it.
+    """
     collective = records.op_name.isin(COLLECTIVE_SCOPES)
+    nested = records.op_name.isin(NESTED_COLLECTIVE_SCOPES)
     timed = records.assign(
-        scope_ms=records.cuda_time_ms.where(~collective, 0.0),
+        scope_ms=records.cuda_time_ms.where(~collective, 0.0) - records.cuda_time_ms.where(nested, 0.0),
         collective_ms=records.cuda_time_ms.where(collective, 0.0),
     )
     grouped = timed.groupby(BATCH_KEY)

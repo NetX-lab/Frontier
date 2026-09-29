@@ -82,14 +82,17 @@ SERVED_MODEL_NAME = "dp_pp_case"
 # Operator-timing modes and the CUDA-event scope mode each one runs.
 OP_TIMING_SCOPE_MODES = {"op_timing": "default", "kernel_timing": "kernel_only"}
 # Operator scopes the vLLM-BS Llama and Qwen3-MoE models open in the calibration
-# cases (TP=1, EP by all-to-all, P2P KV transfer). The fork's default scope list
-# leaves out the dense MLP scopes.
+# cases (EP by all-to-all, P2P KV transfer, TP all-reduce). The fork's default
+# scope list leaves out the dense MLP scopes. The TP all-reduce scopes open only
+# at TP > 1; the first two run inside attn_post_proj and mlp_down_proj.
 OP_TIMING_SCOPES = (
     "input_layernorm", "attn_pre_proj", "attn_rope", "attn_kv_cache_save", "attn_prefill",
     "attn_decode", "attn_post_proj", "post_attention_layernorm",
     "mlp_up_proj", "mlp_act", "mlp_down_proj",
     "moe_gating", "moe_shuffling", "moe_grouped_gemm", "add",
     "expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine",
+    "attn_post_proj_tp_allreduce", "mlp_down_proj_tp_allreduce",
+    "moe_tensor_parallel_allreduce", "tensor_parallel_allreduce",
     "kv_p2p_send", "kv_p2p_recv",
 )
 MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu",

@@ -18,7 +18,7 @@ from tests.comparison.calibration.op_gap_analysis import (
 def boundary_row(batch_id: int, forward: tuple[float, float], request_ids: list[str]) -> dict:
     """A first-rank pp_boundary row on (pp_rank 0, dp_rank 0); times in seconds."""
     return {
-        "pp_rank": 0, "dp_rank": 0, "batch_id": batch_id, "batch_size": len(request_ids),
+        "pp_rank": 0, "tp_rank": 0, "dp_rank": 0, "batch_id": batch_id, "batch_size": len(request_ids),
         "num_prefill_tokens": 0, "num_decode_tokens": len(request_ids), "request_ids": request_ids,
         "preprocess_start_ts": forward[0] - 0.001, "preprocess_end_ts": forward[0],
         "forward_start_ts": forward[0], "forward_end_ts": forward[1],
@@ -29,7 +29,7 @@ def boundary_row(batch_id: int, forward: tuple[float, float], request_ids: list[
 
 def log_row(batch_id: int, request_ids: list[str]) -> dict:
     return {
-        "pp_rank": 0, "dp_rank": 0, "batch_id": batch_id, "batch_size": len(request_ids),
+        "pp_rank": 0, "tp_rank": 0, "dp_rank": 0, "batch_id": batch_id, "batch_size": len(request_ids),
         "batch_num_prefill_tokens": 0, "batch_num_decode_tokens": len(request_ids),
         "request_ids": request_ids, "batch_execution_time_ms": 10.0,
     }
@@ -37,7 +37,7 @@ def log_row(batch_id: int, request_ids: list[str]) -> dict:
 
 def scope_row(batch_id: int, op_name: str, scope_seq: int, cuda_time_ms: float) -> dict:
     return {
-        "pp_rank": 0, "dp_rank": 0, "batch_id": batch_id, "batch_size": 1, "batch_num_prefill_tokens": 0,
+        "pp_rank": 0, "tp_rank": 0, "dp_rank": 0, "batch_id": batch_id, "batch_size": 1, "batch_num_prefill_tokens": 0,
         "batch_num_decode_tokens": 1, "op_name": op_name, "scope_seq": scope_seq,
         "cuda_time_ms": cuda_time_ms, "timestamp": 100.0 + batch_id,
     }
@@ -67,6 +67,22 @@ def test_batch_window_join_reports_duplicate_key():
         "source": "batch_log", "problem": "duplicate key", "keys": 1, "rows": 2,
         "examples": [{"pp_rank": 0, "dp_rank": 0, "batch_id": 1}],
     }]
+
+
+def test_tp_allreduce_nested_in_projection_counts_once():
+    ids = ["cmpl-r1-0"]
+    boundary = pd.DataFrame([boundary_row(0, (1.000, 1.010), ids)])
+    log = pd.DataFrame([log_row(0, ids)])
+    records = pd.DataFrame([
+        scope_row(0, "attn_post_proj", 0, 2.0), scope_row(0, "attn_post_proj_tp_allreduce", 0, 0.5),
+        scope_row(0, "moe_tensor_parallel_allreduce", 0, 1.0),
+    ])
+    windows, problems = batch_windows(records, log, boundary, warmup_ids=set())
+
+    first = windows.iloc[0]
+    assert (first.scope_sum_ms, first.collective_sum_ms) == pytest.approx((1.5, 1.5))
+    assert first.uncovered_ms == pytest.approx(7.0)
+    assert problems == []
 
 
 def window(dp_rank: int, batch_id: int, start: float, end: float, shape: str = "decode_b1") -> dict:
