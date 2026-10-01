@@ -106,7 +106,8 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
     env = {
         key: value for key, value in inherited.items()
         if not key.startswith("VLLM_FRONTIER_")
-        and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL")
+        and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL",
+                        "VLLM_MOE_UNIFORM_ROUTING")
     }
     mode_env = {"VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": str(output_dir / "dp_placement")}
     if mode == "clean":
@@ -137,6 +138,10 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
         }
     if "attention_backend" in engine:
         mode_env["VLLM_ATTENTION_BACKEND"] = engine["attention_backend"]
+    if engine.get("moe_uniform_routing"):
+        # vLLM-BS routes token i to experts (i * top_k + k) mod num_experts,
+        # the same split as Frontier's balanced routing distribution.
+        mode_env["VLLM_MOE_UNIFORM_ROUTING"] = "1"
     if not engine["enable_chunked_prefill"]:
         # vLLM-BS refuses V1 generation without chunked prefill unless this is
         # set (EngineArgs._set_default_args_v1).
