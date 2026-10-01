@@ -60,7 +60,7 @@ from frontier.config import (
     global_vars,
     get_quantization_manager,
 )
-from frontier.entities import Batch, Request
+from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.entities.time_components import (
     AttentionTime,
     AttentionOperatorTimes,
@@ -334,7 +334,6 @@ def _validate_prediction_constraints(
 
 
 if TYPE_CHECKING:
-    from frontier.entities import EPBatchGroup
     from frontier.cc_backend import BaseCCBackend
     from frontier.moe_ep_workload import EPLaneWorkload
 
@@ -903,15 +902,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ):
             return self._get_default_measurement_type_for_cluster()
 
-        if getattr(batch, "num_prefill_tokens", 0) > 0:
+        step_batch = self._forward_step_batch(batch)
+        if getattr(step_batch, "num_prefill_tokens", 0) > 0:
             return event_measurement_type
 
-        if getattr(batch, "num_decode_tokens", 0) > 0:
-            runtime_mode = self._get_decode_cuda_graph_runtime_mode(batch)
+        if getattr(step_batch, "num_decode_tokens", 0) > 0:
+            runtime_mode = self._get_decode_cuda_graph_runtime_mode(step_batch)
             if runtime_mode != "NONE":
                 return MeasurementType.KERNEL_ONLY
 
         return event_measurement_type
+
+    @staticmethod
+    def _forward_step_batch(batch: Batch) -> Batch:
+        """Return the scheduled batch of the forward step that ``batch`` prices.
+
+        An EP lane batch prices one MoE layer of its source step. Its logical
+        requests are local experts, so it carries neither the step's decode
+        state nor its CUDA-graph metadata; those belong to the source batch.
+        """
+        if isinstance(batch, EPBatchGroup):
+            return batch.source_batches[0]
+        return batch
 
     def _activate_measurement_type(self, measurement_type: MeasurementType) -> None:
         self._active_measurement_type = measurement_type
@@ -4894,16 +4906,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             measurement_type = self._select_measurement_type_for_batch(batch)
         if measurement_type != MeasurementType.KERNEL_ONLY:
             return False
-        if getattr(batch, "num_decode_tokens", 0) <= 0:
+        step_batch = self._forward_step_batch(batch)
+        if getattr(step_batch, "num_decode_tokens", 0) <= 0:
             return False
-        runtime_mode = self._get_decode_cuda_graph_runtime_mode(batch)
+        runtime_mode = self._get_decode_cuda_graph_runtime_mode(step_batch)
         if runtime_mode == "FULL":
             return True
         if runtime_mode != "PIECEWISE":
             return False
         # PIECEWISE mixed batches still pay explicit communication. Only the
         # pure-decode captured path should strip eager-only launch overhead.
-        return getattr(batch, "num_prefill_tokens", 0) <= 0
+        return getattr(step_batch, "num_prefill_tokens", 0) <= 0
 
     def _strip_collective_sim_allreduce_launch_overhead_if_needed(
         self,

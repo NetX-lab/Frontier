@@ -8,13 +8,17 @@ import pytest
 
 from frontier.config import global_vars
 from frontier.config.device_sku_config import H800DeviceSKUConfig
+from frontier.entities import EPBatchGroup
+from frontier.moe_ep_workload import materialize_layer_ep_workload
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
+from frontier.scheduler.utils.batch_builders import build_ep_lane_batch
 from frontier.types import ClusterType, MeasurementType
 
 
-def _make_predictor(cluster_type: ClusterType, runtime_mode: str = "NONE"):
+def _make_predictor(cluster_type: ClusterType, runtime_mode: str | None = "NONE"):
+    """Build a selector-only predictor; ``runtime_mode=None`` reads the batch's graph mode."""
     from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
         SklearnExecutionTimePredictor,
     )
@@ -23,7 +27,8 @@ def _make_predictor(cluster_type: ClusterType, runtime_mode: str = "NONE"):
         def __init__(self):
             self._cluster_type = cluster_type
             self._replica_config = SimpleNamespace(device_config=H800DeviceSKUConfig())
-            self._get_decode_cuda_graph_runtime_mode = lambda _batch: runtime_mode
+            if runtime_mode is not None:
+                self._get_decode_cuda_graph_runtime_mode = lambda _batch: runtime_mode
 
         def _get_estimator(self):
             return None
@@ -92,6 +97,95 @@ def test_monolithic_prefill_and_true_mixed_use_eager() -> None:
 
     assert predictor._select_measurement_type_for_batch(prefill_batch) == MeasurementType.CUDA_EVENT
     assert predictor._select_measurement_type_for_batch(mixed_batch) == MeasurementType.CUDA_EVENT
+
+
+UNIFORM_ROUTING = {expert: 1.0 for expert in range(4)}
+
+
+def _forward_step(
+    num_prefill_tokens: int, num_decode_tokens: int, runtime_mode: str | None
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        id=1,
+        global_id=1,
+        replica_id=0,
+        time=0.0,
+        total_num_tokens=num_prefill_tokens + num_decode_tokens,
+        num_prefill_tokens=num_prefill_tokens,
+        num_decode_tokens=num_decode_tokens,
+        decode_cuda_graph_metadata=(
+            None if runtime_mode is None else SimpleNamespace(runtime_mode=runtime_mode)
+        ),
+    )
+
+
+def _ep_lane(
+    step: SimpleNamespace,
+    *,
+    ep_id: int,
+    routing_ratios: dict[int, float],
+    moe_expert_parallel_size: int,
+) -> EPBatchGroup:
+    workload = materialize_layer_ep_workload(
+        routing_ratios=routing_ratios,
+        target_replica_id=0,
+        global_layer_id=0,
+        routing_token_count=step.total_num_tokens,
+        router_topk=2,
+        total_expert_num=4,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+        expert_to_ep={expert: expert * moe_expert_parallel_size // 4 for expert in range(4)},
+    )
+    return build_ep_lane_batch(
+        source_batch=step,
+        layer_id=0,
+        ep_id=ep_id,
+        layer_workload=workload,
+        create_batch_group=lambda *args: EPBatchGroup(
+            *args, cluster_type=ClusterType.MONOLITHIC, is_moe=True
+        ),
+        cluster_type=ClusterType.MONOLITHIC,
+    )
+
+
+def test_monolithic_ep_lane_of_graph_decode_step_uses_kernel_only() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC, runtime_mode=None)
+    lane = _ep_lane(
+        _forward_step(0, 4, "FULL"),
+        ep_id=0,
+        routing_ratios=UNIFORM_ROUTING,
+        moe_expert_parallel_size=1,
+    )
+
+    # The lane's routed tokens count as prefill; its forward step is pure decode.
+    assert lane.num_prefill_tokens == 8
+    assert predictor._select_measurement_type_for_batch(lane) == MeasurementType.KERNEL_ONLY
+    assert predictor._should_strip_collective_sim_allreduce_launch_overhead(lane) is True
+
+
+def test_monolithic_ep_lane_of_mixed_step_uses_eager() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC, runtime_mode=None)
+    lane = _ep_lane(
+        _forward_step(8, 4, None),
+        ep_id=0,
+        routing_ratios=UNIFORM_ROUTING,
+        moe_expert_parallel_size=1,
+    )
+
+    assert predictor._select_measurement_type_for_batch(lane) == MeasurementType.CUDA_EVENT
+
+
+def test_monolithic_zero_token_ep_lane_of_graph_decode_step_uses_kernel_only() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC, runtime_mode=None)
+    lane = _ep_lane(
+        _forward_step(0, 4, "FULL"),
+        ep_id=1,
+        routing_ratios={0: 1.0, 1: 1.0, 2: 0.0, 3: 0.0},
+        moe_expert_parallel_size=2,
+    )
+
+    assert lane.total_num_tokens == 0
+    assert predictor._select_measurement_type_for_batch(lane) == MeasurementType.KERNEL_ONLY
 
 
 def test_specialized_clusters_use_eager_when_cuda_graph_disabled() -> None:
