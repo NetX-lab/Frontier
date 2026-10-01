@@ -109,6 +109,7 @@ class ExecutionTime(BaseEntity):
         attn_tensor_parallel_allreduce_time: float | None = None,
         moe_tensor_parallel_allreduce_time: float | None = None,
         pp_stage_boundary_handoff_time: float = 0.0,
+        forward_launch_time: float = 0.0,
         decode_draft_proposer_time: float = 0.0,
         mtp_terminal_overshoot_time: float = 0.0,
         attn_mla_kv_cache_save_time: float = 0.0,
@@ -410,6 +411,7 @@ class ExecutionTime(BaseEntity):
                 pp_stage_boundary_residual_runtime_time
             ),
             pp_stage_boundary_handoff_time=pp_stage_boundary_handoff_time,
+            forward_launch_time=forward_launch_time,
         )
 
         self._residual_time = ResidualTime(
@@ -1401,6 +1403,19 @@ class ExecutionTime(BaseEntity):
     def pp_stage_boundary_handoff_time(self) -> float:
         """Stage-aware PP handoff overhead time (not scaled by layers)."""
         return self._overhead_time.pp_stage_boundary_handoff_time
+
+    @property
+    def forward_launch_time(self) -> float:
+        """Host time to launch an eager forward step's kernels (not scaled by layers)."""
+        return self._overhead_time.forward_launch_time
+
+    def forward_launch_stall_time(self, device_span: float) -> float:
+        """Launch time, in seconds, that a device stream of ``device_span`` seconds leaves exposed.
+
+        An eager step's host launches the forward's kernels while the device
+        runs them, so the forward lasts as long as the slower of the two streams.
+        """
+        return max(0.0, self.forward_launch_time * 1e-3 - device_span)
 
     @property
     def decode_draft_proposer_time(self) -> float:

@@ -12,6 +12,7 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     resolve_measurement_input_paths,
     resolve_training_file_paths,
     resolve_event_measurement_type,
+    uses_two_stream_eager_pricing,
 )
 from frontier.logger import init_logger
 
@@ -62,6 +63,11 @@ class ExecutionTimePredictionModelManager(
 
         # Check if all clusters are in dummy mode
         self._all_dummy_mode = self._check_all_dummy_mode()
+        self._two_stream_eager_clusters = frozenset(
+            cluster_type
+            for cluster_type, cluster_config in cluster_configs.items()
+            if self._uses_two_stream_eager_pricing(cluster_config)
+        )
 
         self._active_measurement_type = MeasurementType.CUDA_EVENT
         self._trained_models_eager = {}
@@ -106,6 +112,22 @@ class ExecutionTimePredictionModelManager(
         return all(
             cluster_config.execution_time_predictor_config.enable_dummy_mode
             for cluster_config in self._cluster_configs.values()
+        )
+
+    def _uses_two_stream_eager_pricing(self, cluster_config: ClusterConfig) -> bool:
+        """Whether the cluster's predictor prices eager steps in two streams."""
+        replica_config = cluster_config.replica_config
+        execution_time_predictor_config = cluster_config.execution_time_predictor_config
+        _, _, _, _, cpu_overhead_file, _ = self._resolve_measurement_input_files_for_config(
+            replica_config,
+            execution_time_predictor_config,
+            self._event_measurement_type_for_replica(replica_config),
+        )
+        return uses_two_stream_eager_pricing(
+            execution_time_predictor_config,
+            cpu_overhead_file,
+            sys_arch=global_vars.get_sys_arch(),
+            num_pipeline_stages=replica_config.num_pipeline_stages,
         )
 
     def _should_train_communication_models(self, cluster_config: ClusterConfig) -> bool:
@@ -234,8 +256,13 @@ class ExecutionTimePredictionModelManager(
                 return [event_measurement, MeasurementType.KERNEL_ONLY]
             raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
 
+        eager_step_families = [event_measurement]
+        if cluster_type in self._two_stream_eager_clusters:
+            # Two-stream eager pricing takes eager steps' device stream from
+            # kernel-only operator tables.
+            eager_step_families.append(MeasurementType.KERNEL_ONLY)
         if cluster_type == ClusterType.PREFILL:
-            return [event_measurement]
+            return eager_step_families
         if cluster_type in (
             ClusterType.DECODE,
             ClusterType.DECODE_ATTN,
@@ -243,11 +270,11 @@ class ExecutionTimePredictionModelManager(
         ):
             if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
                 return [MeasurementType.KERNEL_ONLY]
-            return [event_measurement]
+            return eager_step_families
         if cluster_type == ClusterType.MONOLITHIC:
             if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
                 return [event_measurement, MeasurementType.KERNEL_ONLY]
-            return [event_measurement]
+            return eager_step_families
         raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
 
     def _resolve_measurement_input_files_for_config(
@@ -542,66 +569,25 @@ class ExecutionTimePredictionModelManager(
             models["device_event"] = device_event_models
         return models
 
-    def _event_family_for_cluster(self, cluster_type: ClusterType) -> str:
-        cluster_config = (getattr(self, "_cluster_configs", None) or {}).get(
-            cluster_type
-        )
-        replica_config = getattr(cluster_config, "replica_config", None)
-        measurement_type = self._event_measurement_type_for_replica(replica_config)
-        return self._measurement_family_name(measurement_type)
-
     def get_models_for_cluster(self, cluster_type: ClusterType) -> Dict[str, Dict[str, BaseEstimator]]:
         """Return a cluster-specific view of trained models grouped by measurement family."""
         if self._all_dummy_mode:
             return {"eager": {}, "kernel_only": {}}
 
-        event_family = self._event_family_for_cluster(cluster_type)
-
-        def _event_models() -> Dict[str, BaseEstimator]:
-            return self._models_view_for_family(event_family, cluster_type)
-
-        event_key = "eager" if event_family == "eager" else event_family
-
-        if cluster_type == ClusterType.PREFILL:
-            models = {
-                event_key: _event_models(),
-                "kernel_only": {},
-            }
-            return models
-        if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN]:
-            if (
-                global_vars.get_sys_arch() == "pd-af-disaggregation"
-                and cluster_type == ClusterType.DECODE_ATTN
-            ):
-                models = {
-                    event_key: _event_models(),
-                    "kernel_only": self._models_view_for_family(
-                        "kernel_only", cluster_type
-                    ),
-                }
-                return models
-            if not self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                return {
-                    event_key: _event_models(),
-                    "kernel_only": {},
-                }
-            return {
-                "eager": {},
-                "kernel_only": self._models_view_for_family(
-                    "kernel_only", cluster_type
-                ),
-            }
-        if cluster_type == ClusterType.MONOLITHIC:
-            kernel_only_models = {}
-            if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                kernel_only_models = self._models_view_for_family(
-                    "kernel_only", cluster_type
-                )
-            return {
-                event_key: _event_models(),
-                "kernel_only": kernel_only_models,
-            }
-        raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
+        replica_config = self._cluster_configs[cluster_type].replica_config
+        measurement_types = self._get_measurement_types_for_cluster(cluster_type, replica_config)
+        models = {}
+        for measurement_type in (
+            self._event_measurement_type_for_replica(replica_config),
+            MeasurementType.KERNEL_ONLY,
+        ):
+            family_name = self._measurement_family_name(measurement_type)
+            models[family_name] = (
+                self._models_view_for_family(family_name, cluster_type)
+                if measurement_type in measurement_types
+                else {}
+            )
+        return models
 
     def get_training_file_paths(self, cluster_type: ClusterType) -> Dict[str, str]:
         """Get the resolved profiling file paths for a specific cluster type."""

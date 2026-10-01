@@ -368,6 +368,10 @@ class StageExecutionTime:
     def diagnostic_total_time_ms(self) -> float:
         return self.diagnostic_total_time * 1e3
 
+    def forward_launch_stall_time(self, device_span: float) -> float:
+        """Launch time, in seconds, that the stage's device span leaves exposed."""
+        return self._stage_execution_time.forward_launch_stall_time(device_span)
+
     def _owner_cpu_overhead_ms(self) -> float:
         return float(self._stage_execution_time._get_cpu_overhead())
 

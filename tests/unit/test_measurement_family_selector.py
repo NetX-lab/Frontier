@@ -9,6 +9,9 @@ import pytest
 from frontier.config import global_vars
 from frontier.config.device_sku_config import H800DeviceSKUConfig
 from frontier.entities import EPBatchGroup
+from frontier.execution_time_predictor.measurement_input_paths import (
+    uses_two_stream_eager_pricing,
+)
 from frontier.moe_ep_workload import materialize_layer_ep_workload
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
@@ -17,7 +20,11 @@ from frontier.scheduler.utils.batch_builders import build_ep_lane_batch
 from frontier.types import ClusterType, MeasurementType
 
 
-def _make_predictor(cluster_type: ClusterType, runtime_mode: str | None = "NONE"):
+def _make_predictor(
+    cluster_type: ClusterType,
+    runtime_mode: str | None = "NONE",
+    two_stream_eager_pricing: bool = False,
+):
     """Build a selector-only predictor; ``runtime_mode=None`` reads the batch's graph mode."""
     from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
         SklearnExecutionTimePredictor,
@@ -27,6 +34,7 @@ def _make_predictor(cluster_type: ClusterType, runtime_mode: str | None = "NONE"
         def __init__(self):
             self._cluster_type = cluster_type
             self._replica_config = SimpleNamespace(device_config=H800DeviceSKUConfig())
+            self._two_stream_eager_pricing = two_stream_eager_pricing
             if runtime_mode is not None:
                 self._get_decode_cuda_graph_runtime_mode = lambda _batch: runtime_mode
 
@@ -680,3 +688,167 @@ def test_device_event_path_contract_handles_extensionless_legacy_and_explicit_va
     assert paths.all_reduce == "net/xgmi/all_reduce.csv"
     assert paths.send_recv == ""
     assert paths.cpu_overhead == ""
+
+
+PLAIN_CPU_OVERHEAD_HEADER = "model_name,batch_size,sampler_e2e_mean,sampler_e2e_median\n"
+PROBED_CPU_OVERHEAD_HEADER = (
+    "model_name,batch_size,sampler_e2e_mean,sampler_e2e_median,"
+    "forward_launch_mean,forward_launch_median\n"
+)
+
+
+def _predictor_config(**flags) -> SimpleNamespace:
+    return SimpleNamespace(
+        **{"enable_dummy_mode": False, "skip_cpu_overhead_modeling": False, **flags}
+    )
+
+
+def test_two_stream_eager_pricing_follows_forward_launch_columns(tmp_path) -> None:
+    plain = tmp_path / "plain.csv"
+    plain.write_text(PLAIN_CPU_OVERHEAD_HEADER)
+    probed = tmp_path / "probed.csv"
+    probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
+    layout = {"sys_arch": "co-location", "num_pipeline_stages": 1}
+
+    assert uses_two_stream_eager_pricing(_predictor_config(), str(probed), **layout) is True
+    assert uses_two_stream_eager_pricing(_predictor_config(), str(plain), **layout) is False
+    assert (
+        uses_two_stream_eager_pricing(_predictor_config(), str(tmp_path / "absent.csv"), **layout)
+        is False
+    )
+    assert (
+        uses_two_stream_eager_pricing(_predictor_config(enable_dummy_mode=True), str(probed), **layout)
+        is False
+    )
+    assert (
+        uses_two_stream_eager_pricing(
+            _predictor_config(skip_cpu_overhead_modeling=True), str(probed), **layout
+        )
+        is False
+    )
+
+
+def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_pipeline_stages(tmp_path) -> None:
+    probed = tmp_path / "probed.csv"
+    probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
+
+    with pytest.raises(ValueError, match="PD-AF"):
+        uses_two_stream_eager_pricing(
+            _predictor_config(), str(probed), sys_arch="pd-af-disaggregation", num_pipeline_stages=1
+        )
+    with pytest.raises(ValueError, match="num_pipeline_stages=2"):
+        uses_two_stream_eager_pricing(
+            _predictor_config(), str(probed), sys_arch="co-location", num_pipeline_stages=2
+        )
+
+
+def test_two_stream_enables_kernel_only_family_for_eager_step_roles() -> None:
+    for cluster_type in (ClusterType.PREFILL, ClusterType.DECODE, ClusterType.MONOLITHIC):
+        predictor = _make_predictor(cluster_type, two_stream_eager_pricing=True)
+
+        assert predictor._should_enable_measurement_family(MeasurementType.CUDA_EVENT) is True
+        assert predictor._should_enable_measurement_family(MeasurementType.KERNEL_ONLY) is True
+        assert predictor._get_default_measurement_type_for_cluster() == MeasurementType.CUDA_EVENT
+
+
+def _bind_step_pricing(predictor, cpu_overhead_ms: float) -> list:
+    """Stub family activation and record the family each CPU-overhead lookup reads."""
+    lookups = []
+    predictor._config = SimpleNamespace(skip_cpu_overhead_modeling=False)
+    predictor._require_predictions_for_measurement_type = lambda *_args: None
+    predictor._activate_measurement_type = lambda measurement_type: setattr(
+        predictor, "_active_measurement_type", measurement_type
+    )
+
+    def lookup(metric_name, _batch):
+        lookups.append((metric_name, predictor._active_measurement_type))
+        return cpu_overhead_ms
+
+    predictor._lookup_cpu_overhead_prediction = lookup
+    return lookups
+
+
+def test_two_stream_eager_step_prices_kernel_only_operators_and_event_cpu_terms() -> None:
+    global_vars.set_cuda_graph_config(False, [1, 2, 4, 8], "full_decode_only")
+    predictor = _make_predictor(
+        ClusterType.MONOLITHIC, runtime_mode=None, two_stream_eager_pricing=True
+    )
+    lookups = _bind_step_pricing(predictor, cpu_overhead_ms=4.0)
+
+    eager_step = _forward_step(16, 4, None)
+    assert predictor._activate_measurement_type_for_batch(eager_step) == MeasurementType.KERNEL_ONLY
+    assert predictor._step_measurement_type == MeasurementType.CUDA_EVENT
+    assert predictor._get_forward_launch_time(eager_step) == 4.0
+    assert predictor._get_sampler_e2e_time(eager_step) == 4.0
+    assert lookups == [
+        ("forward_launch", MeasurementType.CUDA_EVENT),
+        ("sampler_e2e", MeasurementType.CUDA_EVENT),
+    ]
+    assert predictor._active_measurement_type == MeasurementType.KERNEL_ONLY
+
+    lookups.clear()
+    graph_step = _forward_step(0, 4, "FULL")
+    assert predictor._activate_measurement_type_for_batch(graph_step) == MeasurementType.KERNEL_ONLY
+    assert predictor._step_measurement_type == MeasurementType.KERNEL_ONLY
+    assert predictor._get_forward_launch_time(graph_step) == 0.0
+    assert predictor._get_sampler_e2e_time(graph_step) == 4.0
+    assert lookups == [("sampler_e2e", MeasurementType.KERNEL_ONLY)]
+
+
+def test_eager_step_without_two_stream_keeps_event_operators_and_no_forward_launch() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC, runtime_mode=None)
+    lookups = _bind_step_pricing(predictor, cpu_overhead_ms=4.0)
+
+    eager_step = _forward_step(16, 4, None)
+    assert predictor._activate_measurement_type_for_batch(eager_step) == MeasurementType.CUDA_EVENT
+    assert predictor._get_forward_launch_time(eager_step) == 0.0
+    assert predictor._get_sampler_e2e_time(eager_step) == 4.0
+    assert lookups == [("sampler_e2e", MeasurementType.CUDA_EVENT)]
+
+
+def test_shared_manager_trains_and_exposes_kernel_only_for_two_stream_clusters() -> None:
+    manager = _make_manager()
+    manager._two_stream_eager_clusters = frozenset(
+        {ClusterType.PREFILL, ClusterType.DECODE, ClusterType.MONOLITHIC}
+    )
+    replica = manager._cluster_configs[ClusterType.PREFILL].replica_config
+    both_families = [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY]
+
+    for cluster_type in (ClusterType.PREFILL, ClusterType.DECODE, ClusterType.MONOLITHIC):
+        assert manager._get_measurement_types_for_cluster(cluster_type, replica) == both_families
+        models = manager.get_models_for_cluster(cluster_type)
+        assert set(models["eager"]) == {"attn_prefill"}
+        assert set(models["kernel_only"]) == {"attn_decode"}
+
+    # Graph decode steps never run eager, so a graph DECODE role keeps kernel-only only.
+    global_vars.set_cuda_graph_config(False, [1, 2, 4], "piecewise")
+    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE, replica) == [
+        MeasurementType.KERNEL_ONLY
+    ]
+
+
+def test_shared_manager_detects_two_stream_from_eager_cpu_overhead_table(tmp_path) -> None:
+    manager = _make_manager()
+    probed = tmp_path / "probed.csv"
+    probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
+    plain = tmp_path / "plain.csv"
+    plain.write_text(PLAIN_CPU_OVERHEAD_HEADER)
+    cluster_config = manager._cluster_configs[ClusterType.PREFILL]
+    replica = SimpleNamespace(**vars(cluster_config.replica_config), num_pipeline_stages=1)
+
+    def cluster_with(eager_cpu_file: str, kernel_only_cpu_file: str) -> SimpleNamespace:
+        predictor_config = SimpleNamespace(
+            **{
+                **vars(cluster_config.execution_time_predictor_config),
+                "cpu_overhead_input_file": eager_cpu_file,
+                "cpu_overhead_kernel_only_input_file": kernel_only_cpu_file,
+                "enable_dummy_mode": False,
+                "skip_cpu_overhead_modeling": False,
+            }
+        )
+        return SimpleNamespace(
+            replica_config=replica, execution_time_predictor_config=predictor_config
+        )
+
+    assert manager._uses_two_stream_eager_pricing(cluster_with(str(probed), str(plain))) is True
+    assert manager._uses_two_stream_eager_pricing(cluster_with(str(plain), str(probed))) is False

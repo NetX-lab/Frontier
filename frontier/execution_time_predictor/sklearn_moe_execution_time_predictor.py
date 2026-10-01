@@ -767,6 +767,9 @@ class SklearnMoEExecutionTimePredictor(
             prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch) if include_stage_owned else 0.0,
             process_model_outputs_time=self._get_process_model_outputs_time(batch) if include_stage_owned else 0.0,
             ray_comm_time=self._get_ray_comm_time(batch) if include_stage_owned else 0.0,
+            forward_launch_time=(
+                self._get_forward_launch_time(batch) if include_stage_owned else 0.0
+            ),
             pp_producer_send_path_runtime_time=pp_producer_send_path_runtime_time,
             pp_receiver_head_runtime_time=pp_receiver_head_runtime_time,
             pp_prefill_consumer_active_runtime_time=(
@@ -1318,9 +1321,7 @@ class SklearnMoEExecutionTimePredictor(
             batch.num_tokens,
         )
 
-        measurement_type = self._select_measurement_type_for_batch(batch)
-        self._require_predictions_for_measurement_type(measurement_type, batch)
-        self._activate_measurement_type(measurement_type)
+        measurement_type = self._activate_measurement_type_for_batch(batch)
         self._emit_cuda_graph_activation_records(
             batch,
             measurement_type,

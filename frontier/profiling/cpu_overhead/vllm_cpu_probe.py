@@ -11,12 +11,20 @@ terms price the rest of the step period:
 
     schedule               step_start -> schedule_end
     prepare_inputs_e2e     schedule_end -> preprocess_end
-    sampler_e2e            preprocess_end -> sample_end, minus forward_device_ms
+    sampler_e2e            preprocess_end -> sample_end, minus the forward's time
     process_model_outputs  sample_end -> the next step's step_start
     ray_comm_time          0 (one worker, no Ray hop)
 
-so the four measured terms add up to the step period minus the forward's device
-time. process_model_outputs runs to the next step's start only when the next
+so the four measured terms add up to the step period minus the forward's time.
+A CUDA-graph replay's forward takes forward_device_ms. An eager step's host
+launches the forward's kernels one by one while the device runs them, so its
+forward takes the slower of the two streams, max(forward_launch,
+forward_device_ms), and its tuple also publishes
+
+    forward_launch         preprocess_end -> forward_end
+
+for Frontier to price the launch time the device stream cannot hide.
+process_model_outputs runs to the next step's start only when the next
 step shares a request with it; otherwise the engine may have waited for an
 arrival before that step, so the term ends at update_end and leaves out the
 engine loop gap. A PD prefill instance, whose requests run one step each, always
@@ -56,8 +64,6 @@ from frontier.types import MeasurementType
 
 logger = init_logger(__name__)
 
-TERMS = ("schedule", "prepare_inputs_e2e", "sampler_e2e", "process_model_outputs")
-
 StepIdentity = tuple[int, int, int]
 
 
@@ -65,7 +71,14 @@ def load_cpu_probe_log(path: Path) -> list[dict]:
     return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
 
 
-def step_overhead_terms(records: Sequence[Mapping]) -> list[tuple[StepIdentity, dict[str, float]]]:
+def replays_decode_graph(identity: StepIdentity, largest_graph_batch: int) -> bool:
+    batch_size, num_prefill_tokens, _ = identity
+    return num_prefill_tokens == 0 and batch_size <= largest_graph_batch
+
+
+def step_overhead_terms(
+    records: Sequence[Mapping], *, largest_graph_batch: int,
+) -> list[tuple[StepIdentity, dict[str, float]]]:
     """Return each scheduled step's identity and CPU-overhead terms in milliseconds."""
 
     steps = []
@@ -84,13 +97,19 @@ def step_overhead_terms(records: Sequence[Mapping]) -> list[tuple[StepIdentity, 
             set(following["num_scheduled_tokens"]) & set(scheduled)
         )
         outputs_end = following["step_start"] if next_shares_request else record["update_end"]
-        steps.append((identity, {
+        forward_launch = (record["forward_end"] - record["preprocess_end"]) * 1e3
+        graph = replays_decode_graph(identity, largest_graph_batch)
+        forward_time = (record["forward_device_ms"] if graph
+                        else max(forward_launch, record["forward_device_ms"]))
+        terms = {
             "schedule": (record["schedule_end"] - record["step_start"]) * 1e3,
             "prepare_inputs_e2e": (record["preprocess_end"] - record["schedule_end"]) * 1e3,
-            "sampler_e2e": (record["sample_end"] - record["preprocess_end"]) * 1e3
-                           - record["forward_device_ms"],
+            "sampler_e2e": (record["sample_end"] - record["preprocess_end"]) * 1e3 - forward_time,
             "process_model_outputs": (outputs_end - record["sample_end"]) * 1e3,
-        }))
+        }
+        if not graph:
+            terms["forward_launch"] = forward_launch
+        steps.append((identity, terms))
     return steps
 
 
@@ -112,8 +131,7 @@ def cpu_overhead_tables(
     rows = defaultdict(list)
     for identity, group in sorted(groups.items()):
         batch_size, num_prefill_tokens, num_decode_tokens = identity
-        family = (MeasurementType.KERNEL_ONLY
-                  if num_prefill_tokens == 0 and batch_size <= largest_graph_batch
+        family = (MeasurementType.KERNEL_ONLY if replays_decode_graph(identity, largest_graph_batch)
                   else MeasurementType.CUDA_EVENT)
         row = {
             "model_name": model_name,
@@ -123,7 +141,7 @@ def cpu_overhead_tables(
             "num_decode_tokens": num_decode_tokens,
             "scheduling_mode": scheduling_mode,
         }
-        for term in TERMS:
+        for term in group[0]:
             term_values = [terms[term] for terms in group]
             row[f"{term}_mean"] = float(np.mean(term_values))
             row[f"{term}_median"] = float(np.median(term_values))
@@ -155,7 +173,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--kernel_only_output_file", type=Path, required=True)
     args = parser.parse_args(argv)
 
-    steps = [step for log in args.cpu_probe_logs for step in step_overhead_terms(load_cpu_probe_log(log))]
+    largest_graph_batch = max(args.decode_cudagraph_capture_sizes, default=0)
+    steps = [step for log in args.cpu_probe_logs
+             for step in step_overhead_terms(load_cpu_probe_log(log), largest_graph_batch=largest_graph_batch)]
     tables = cpu_overhead_tables(
         steps,
         decode_capture_sizes=args.decode_cudagraph_capture_sizes,
