@@ -960,7 +960,11 @@ def test_shared_materializer_rejects_missing_layer_instead_of_using_layer_zero()
         router_topk=1,
     )
     predictor._monolithic_routing_details = {0: {0: {0: 0.5, 1: 0.5}}}
-    batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
+    batch = SimpleNamespace(
+        replica_id=0,
+        total_num_tokens=4,
+        get_effective_total_tokens_for_compute=lambda _cluster_type: 4,
+    )
 
     with pytest.raises(ValueError, match="missing global_layer_id 3"):
         predictor._materialize_layer_ep_workload(

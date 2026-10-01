@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 from predictor_cache_fixtures import (
     CacheFixturePredictor,
     CacheFixtureDisaggregationPredictor,
 )
 
+from frontier.entities import Batch, Request
+from frontier.entities.batch import DecodeCudaGraphMetadata
+from frontier.scheduler.utils.layer_workload import materialize_layer_workload
 from frontier.types import ClusterType
 
 
@@ -35,6 +41,9 @@ class _DisaggregationPredictor(CacheFixtureDisaggregationPredictor):
 class _Batch:
     replica_id = 3
     total_num_tokens = 4
+
+    def get_effective_total_tokens_for_compute(self, cluster_type):
+        return self.total_num_tokens
 
 
 def test_monolithic_predictor_materializes_global_routing_with_shared_tie_break() -> None:
@@ -81,6 +90,58 @@ def test_disaggregation_predictor_uses_shared_materializer_tie_break() -> None:
 
     assert dict(result.global_per_expert_tokens) == {0: 2, 1: 2, 2: 3, 3: 1}
     assert sum(result.global_per_expert_tokens.values()) == 8
+
+
+def _nine_token_step(*, padded_total_tokens: int | None) -> Batch:
+    """Nine tokens; with a FULL decode graph the step runs at the capture size."""
+    requests = [
+        Request(arrived_at=0.0, num_prefill_tokens=1, num_decode_tokens=1)
+        for _ in range(9)
+    ]
+    batch = Batch(3, requests, [1] * 9, is_moe=True)
+    if padded_total_tokens is not None:
+        batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
+            config_mode="full_decode_only",
+            runtime_mode="FULL",
+            capture_hit=False,
+            is_mixed_batch=False,
+            original_total_tokens=9,
+            padded_total_tokens=padded_total_tokens,
+            original_decode_batch_size=9,
+            padded_decode_batch_size=padded_total_tokens,
+        )
+    return batch
+
+
+@pytest.mark.parametrize(
+    ("padded_total_tokens", "routed_tokens"), ((None, 9), (16, 16))
+)
+def test_routed_width_follows_decode_graph_padding_at_both_sites(
+    padded_total_tokens, routed_tokens
+) -> None:
+    predictor = _MoEPredictor(replica_id=3, total_experts=4, ep_size=2)
+    predictor._monolithic_routing_details = {
+        3: {7: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
+    scheduler = SimpleNamespace(
+        _config=SimpleNamespace(replica_config=predictor._replica_config),
+        _cluster_type=ClusterType.MONOLITHIC,
+        _predictor=predictor,
+    )
+    batch = _nine_token_step(padded_total_tokens=padded_total_tokens)
+
+    workloads = (
+        predictor._materialize_layer_ep_workload(
+            batch=batch, cluster_type=ClusterType.MONOLITHIC, layer_id=7
+        ),
+        materialize_layer_workload(
+            scheduler=scheduler, batch=batch, target_replica_id=3, global_layer_id=7
+        ),
+    )
+
+    for workload in workloads:
+        assert workload.routing_token_count == routed_tokens
+        assert sum(workload.global_per_expert_tokens.values()) == 2 * routed_tokens
 
 
 def test_moe_layer_prediction_has_no_one_token_conservation_tolerance() -> None:

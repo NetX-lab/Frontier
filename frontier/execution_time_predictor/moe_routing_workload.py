@@ -395,7 +395,8 @@ class MoeRoutingWorkload:
         routing_details = self._get_routing_details_for_cluster(cluster_type)
         target_replica_id = int(batch.replica_id)
         global_layer_id = int(layer_id)
-        routing_token_count = int(batch.total_num_tokens)
+        # A decode CUDA-graph step routes its padding tokens too.
+        routing_token_count = int(batch.get_effective_total_tokens_for_compute(cluster_type))
         router_topk = int(cluster_replica_config.router_topk)
         total_expert_num = int(cluster_replica_config.total_expert_num)
         moe_ep_size = int(cluster_replica_config.moe_expert_parallel_size)

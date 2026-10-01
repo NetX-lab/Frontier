@@ -132,7 +132,11 @@ def test_predictor_reuses_immutable_layer_workload_for_same_semantics() -> None:
         0: {3: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
     }
     predictor._layer_workload_cache_capacity = 2
-    batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
+    batch = SimpleNamespace(
+        replica_id=0,
+        total_num_tokens=4,
+        get_effective_total_tokens_for_compute=lambda _cluster_type: 4,
+    )
 
     first = predictor._materialize_layer_ep_workload(
         batch, ClusterType.MONOLITHIC, 3
@@ -152,7 +156,14 @@ def test_predictor_layer_workload_cache_is_bounded() -> None:
     }
     predictor._layer_workload_cache_capacity = 2
 
-    batches = [SimpleNamespace(replica_id=0, total_num_tokens=tokens) for tokens in (4, 5, 6)]
+    batches = [
+        SimpleNamespace(
+            replica_id=0,
+            total_num_tokens=tokens,
+            get_effective_total_tokens_for_compute=lambda _cluster_type, tokens=tokens: tokens,
+        )
+        for tokens in (4, 5, 6)
+    ]
     first = predictor._materialize_layer_ep_workload(
         batches[0], ClusterType.MONOLITHIC, 3
     )

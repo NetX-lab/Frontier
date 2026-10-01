@@ -139,7 +139,9 @@ def micro():
     attention = predictor.predict_attention_layer_time(
         batch=batch, layer_id=0, cluster_type=ClusterType.MONOLITHIC)
     workload_predictor = CacheFixturePredictor()
-    workload_batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
+    workload_batch = SimpleNamespace(
+        replica_id=0, total_num_tokens=4,
+        get_effective_total_tokens_for_compute=lambda _cluster_type: 4)
     workload_predictor._materialize_layer_ep_workload(workload_batch, ClusterType.MONOLITHIC, 0)
 
     def key():

@@ -207,6 +207,7 @@ def test_sklearn_moe_predictor_materializes_typed_ep_lane_workload():
     batch = SimpleNamespace(
         replica_id=0,
         total_num_tokens=8,
+        get_effective_total_tokens_for_compute=lambda _cluster_type: 8,
         get_effective_total_tokens_rounded=effective_tokens,
     )
 
