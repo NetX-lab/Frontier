@@ -149,7 +149,6 @@ def test_rocm_replica_selects_device_event_without_host_detection() -> None:
     manager = ExecutionTimePredictionModelManager.__new__(
         ExecutionTimePredictionModelManager
     )
-    manager._two_stream_eager_clusters = frozenset()
     replica = SimpleNamespace(device="mi355x")
 
     assert manager._get_measurement_types_for_cluster(

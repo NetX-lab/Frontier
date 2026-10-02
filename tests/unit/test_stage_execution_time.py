@@ -296,20 +296,6 @@ def test_stage_owner_terminal_work_and_diagnostic_overhead_are_once_only() -> No
     )
 
 
-def test_forward_launch_stays_outside_totals_and_stalls_only_past_the_device_span() -> None:
-    owner = _layer(layer_id=0, forward_launch_time=30.0)
-    plain = _layer(layer_id=0)
-    stage = StageExecutionTime((owner, _layer(layer_id=1)), stage_execution_time=owner)
-
-    assert owner.total_time == plain.total_time
-    assert owner.diagnostic_total_time == plain.diagnostic_total_time
-    # Device-bound: a 40 ms device span hides the 30 ms launch stream.
-    assert stage.forward_launch_stall_time(0.040) == 0.0
-    # Host-bound: a 25 ms device span leaves 5 ms of launch exposed.
-    assert stage.forward_launch_stall_time(0.025) == pytest.approx(0.005)
-    assert plain.forward_launch_stall_time(0.0) == 0.0
-
-
 def test_stage_rejects_duplicate_global_layer_ids() -> None:
     first = _layer(layer_id=2)
     duplicate = _layer(layer_id=2)

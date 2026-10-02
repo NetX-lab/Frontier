@@ -20,7 +20,7 @@ IDENTITY = dict(model_name="tiny", tensor_parallel_degree=1, profiling_precision
 
 def _step(step: int, start: float, scheduled: dict[str, int], forward_device_ms: float | None = 4.0) -> dict:
     # Host phases in seconds after step_start: schedule 0.1 ms, dispatch plus preprocess 0.5 ms,
-    # forward launch 0.4 ms, forward launch plus sampling 6.0 ms, bookkeeping to update_end 0.3 ms.
+    # forward launch plus sampling 6.0 ms, bookkeeping to update_end 0.3 ms.
     record = {
         "step": step,
         "step_start": start,
@@ -41,9 +41,6 @@ def _step(step: int, start: float, scheduled: dict[str, int], forward_device_ms:
     return record
 
 
-PERIOD_TERMS = ("schedule", "prepare_inputs_e2e", "sampler_e2e", "process_model_outputs")
-
-
 def test_step_terms_cover_the_period_outside_the_forward_device_time() -> None:
     records = [
         _step(0, 10.0, {"a": 16}),
@@ -52,44 +49,24 @@ def test_step_terms_cover_the_period_outside_the_forward_device_time() -> None:
         _step(3, 10.5, {}),
     ]
 
-    steps = step_overhead_terms(records, largest_graph_batch=0)
+    steps = step_overhead_terms(records)
 
     assert [identity for identity, _ in steps] == [(1, 16, 0), (1, 0, 1), (1, 16, 0)]
     first = steps[0][1]
     assert first["schedule"] == pytest.approx(0.1)
     assert first["prepare_inputs_e2e"] == pytest.approx(0.5)
-    # Device-bound eager step: the 4.0 ms device stream hides the 0.4 ms launch.
-    assert first["forward_launch"] == pytest.approx(0.4)
     assert first["sampler_e2e"] == pytest.approx(6.0 - 4.0)
     assert first["process_model_outputs"] == pytest.approx(7.0 - 6.6)
-    assert sum(first[term] for term in PERIOD_TERMS) == pytest.approx(7.0 - 4.0)
+    assert sum(first.values()) == pytest.approx(7.0 - 4.0)
     # Step 1 is followed by a step of another request, step 2 by an empty step:
     # the engine may have waited, so the term ends at update_end.
     assert steps[1][1]["process_model_outputs"] == pytest.approx(0.3)
     assert steps[2][1]["process_model_outputs"] == pytest.approx(0.3)
 
 
-def test_host_bound_eager_step_terms_leave_out_the_launch_stream() -> None:
-    steps = step_overhead_terms([_step(0, 10.0, {"a": 16}, forward_device_ms=0.25)], largest_graph_batch=0)
-
-    terms = steps[0][1]
-    assert terms["forward_launch"] == pytest.approx(0.4)
-    assert terms["sampler_e2e"] == pytest.approx(6.0 - 0.4)
-    assert sum(terms[term] for term in PERIOD_TERMS) == pytest.approx(6.9 - 0.4)
-
-
-def test_graph_replay_terms_leave_out_the_device_time_and_publish_no_launch() -> None:
-    steps = step_overhead_terms([_step(0, 10.0, {"a": 1, "b": 1}, forward_device_ms=0.25)], largest_graph_batch=4)
-
-    identity, terms = steps[0]
-    assert identity == (2, 0, 2)
-    assert "forward_launch" not in terms
-    assert terms["sampler_e2e"] == pytest.approx(6.0 - 0.25)
-
-
 def test_step_terms_require_the_probe_device_times() -> None:
     with pytest.raises(ValueError, match="step 0 has no forward_device_ms"):
-        step_overhead_terms([_step(0, 10.0, {"a": 16}, forward_device_ms=None)], largest_graph_batch=0)
+        step_overhead_terms([_step(0, 10.0, {"a": 16}, forward_device_ms=None)])
 
 
 def test_tables_split_graph_replayed_decode_from_eager_tuples() -> None:
@@ -146,8 +123,6 @@ def test_cli_writes_one_csv_per_family_readable_by_the_loader_validation(tmp_pat
     assert eager[["batch_size", "num_prefill_tokens", "num_decode_tokens"]].values.tolist() == [[1, 16, 0]]
     assert eager.loc[0, "num_steps"] == 2
     assert eager.loc[0, "process_model_outputs_median"] == pytest.approx(0.3)
-    assert eager.loc[0, "forward_launch_median"] == pytest.approx(0.4)
-    assert "forward_launch_median" not in kernel_only.columns
     assert kernel_only[["batch_size", "num_prefill_tokens", "num_decode_tokens"]].values.tolist() == [[2, 0, 2]]
     assert kernel_only.loc[0, "num_steps"] == 3
 
@@ -166,12 +141,3 @@ def test_cli_writes_no_kernel_only_file_for_an_eager_engine(tmp_path) -> None:
 
     assert (tmp_path / "cpu_overheads.csv").exists()
     assert not kernel_file.exists()
-
-
-def test_validation_requires_both_forward_launch_columns() -> None:
-    terms = {"schedule": 0.1, "prepare_inputs_e2e": 0.5, "sampler_e2e": 2.0,
-             "process_model_outputs": 0.4, "forward_launch": 0.4}
-    eager = cpu_overhead_tables([((1, 16, 0), terms)], decode_capture_sizes=[], **IDENTITY)[MeasurementType.CUDA_EVENT]
-
-    with pytest.raises(ValueError, match="must appear together"):
-        validate_cpu_overhead_dataframe(eager.drop(columns=["forward_launch_mean"]))

@@ -480,11 +480,8 @@ class ReplicaStageScheduler:
             batch_stage.attach_runtime_identity(batch)
             return batch_stage, None
 
+        total_execution_time = execution_time.total_time
         model_execution_time = execution_time.model_time
-        total_execution_time = (
-            execution_time.total_time
-            + execution_time.forward_launch_stall_time(model_execution_time)
-        )
         batch_stage = BatchStage(
             batch.id,
             self._replica_id,

@@ -909,15 +909,8 @@ class PredictionFamilyTrainers:
         standard_df = attention_df[~attention_df["is_true_mixed_batch"]].copy()
         prefill_df = standard_df[~standard_df["is_decode"]].copy()
         decode_df = standard_df[standard_df["is_decode"]].copy()
-        is_event = measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT)
-        if not is_event and measurement_type != MeasurementType.KERNEL_ONLY:
-            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
-        family_name = self._measurement_family_name(measurement_type)
-        # Event tables always profile prefill attention. Kernel-only tables
-        # profile it for two-stream eager pricing, whose eager steps take their
-        # device stream from kernel-only operator tables.
-        trains_prefill = is_event or not prefill_df.empty
-        if trains_prefill:
+        standard_prefill_df = pd.DataFrame()
+        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT):
             if "prefill_chunk_size" not in prefill_df.columns:
                 raise ValueError(
                     "Missing required column 'prefill_chunk_size' in attention profiling data."
@@ -932,8 +925,7 @@ class PredictionFamilyTrainers:
             if prefill_model_signature not in trained_model_signatures:
                 if len(standard_prefill_df) == 0:
                     raise ValueError(
-                        "No standard prefill rows (prefill_chunk_size > 0) found in "
-                        f"{family_name} attention profiling data."
+                        "No standard prefill rows (prefill_chunk_size > 0) found in eager attention profiling data."
                     )
                 models[prefill_model_name] = self._train_single_model(
                     model_name=prefill_model_name,
@@ -944,14 +936,13 @@ class PredictionFamilyTrainers:
                     training_context=training_context,
                 )
                 trained_model_signatures.add(prefill_model_signature)
-                logger.info(f"Trained {family_name} {prefill_model_name} for {cluster_type}")
+                logger.info(f"Trained {prefill_model_name} for {cluster_type}")
 
-        decode_model_name = get_enabled_predictor_metric_name_by_role(
-            DENSE_ATTENTION_FAMILY,
-            AttentionOperatorRole.DECODE_KERNEL,
-        )
-        decode_model_signature = f"{decode_model_name}_{attention_signature}"
-        if is_event:
+            decode_model_name = get_enabled_predictor_metric_name_by_role(
+                DENSE_ATTENTION_FAMILY,
+                AttentionOperatorRole.DECODE_KERNEL,
+            )
+            decode_model_signature = f"{decode_model_name}_{attention_signature}"
             if decode_model_signature not in trained_model_signatures:
                 if len(decode_df) == 0:
                     logger.info(
@@ -989,7 +980,12 @@ class PredictionFamilyTrainers:
                         )
                         trained_model_signatures.add(decode_model_signature)
                         logger.info(f"Trained eager {decode_model_name} for {cluster_type}")
-        else:
+        elif measurement_type == MeasurementType.KERNEL_ONLY:
+            decode_model_name = get_enabled_predictor_metric_name_by_role(
+                DENSE_ATTENTION_FAMILY,
+                AttentionOperatorRole.DECODE_KERNEL,
+            )
+            decode_model_signature = f"{decode_model_name}_{attention_signature}"
             if decode_model_signature not in trained_model_signatures:
                 if len(decode_df) == 0:
                     raise ValueError(
@@ -1005,12 +1001,14 @@ class PredictionFamilyTrainers:
                 )
                 trained_model_signatures.add(decode_model_signature)
                 logger.info(f"Trained {decode_model_name} for {cluster_type}")
+        else:
+            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
         # ========== Part 3: Mixed-batch prefill model (optional, high-dimensional) ==========
         # attn_prefill_mixed uses 12 features and requires on-demand prediction at runtime
         # Check if profiling data contains mixed-batch features
         mixed_batch_model_signature = f"attn_prefill_mixed_{attention_signature}"
-        if trains_prefill and mixed_batch_model_signature not in trained_model_signatures:
+        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT) and mixed_batch_model_signature not in trained_model_signatures:
             # Check for mixed-batch specific columns in the dataframe
             required_mixed_features = self.ATTN_PREFILL_MIXED_FEATURES
             has_mixed_batch_data = all(feat in prefill_df.columns for feat in required_mixed_features)
@@ -1042,7 +1040,7 @@ class PredictionFamilyTrainers:
                 logger.info(f"Skipping attn_prefill_mixed for {cluster_type} - missing features: {missing_features}")
 
         decode_in_mixed_signature = f"attn_decode_in_mixed_{attention_signature}"
-        if decode_in_mixed_signature not in trained_model_signatures:
+        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT) and decode_in_mixed_signature not in trained_model_signatures:
             required_decode_mixed_features = self.ATTN_DECODE_IN_MIXED_FEATURES
             has_decode_mixed_data = all(
                 feat in true_mixed_df.columns for feat in required_decode_mixed_features
@@ -1465,8 +1463,6 @@ class PredictionFamilyTrainers:
             "process_model_outputs",
             "ray_comm_time",
         ]
-        if "forward_launch_median" in cpu_overhead_df.columns:
-            model_names.append("forward_launch")
 
         for model_name in model_names:
             target_col = "ray_comm_time_mean" if model_name == "ray_comm_time" else f"{model_name}_median"

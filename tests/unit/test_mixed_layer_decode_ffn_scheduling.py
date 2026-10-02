@@ -1510,7 +1510,6 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
     predictor.predict_stage_execution_time.return_value = SimpleNamespace(
         total_time=1.0,
         model_time=0.8,
-        forward_launch_stall_time=lambda _device_span: 0.0,
     )
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     return ReplicaStageScheduler(

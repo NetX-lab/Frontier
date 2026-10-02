@@ -20,9 +20,6 @@ class _ExecutionTime:
     decode_draft_proposer_time = 0.0
     mtp_terminal_overshoot_time = 0.0
 
-    def forward_launch_stall_time(self, device_span: float) -> float:
-        return 0.0
-
     def get_single_layer_attention_time(self) -> float:
         return 0.0
 

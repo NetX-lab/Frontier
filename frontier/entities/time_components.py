@@ -637,10 +637,6 @@ class OverheadTime:
     pp_prefill_consumer_active_runtime_time: float = 0.0  # Active PP prefill consumer runtime overhead
     pp_stage_boundary_residual_runtime_time: float = 0.0  # Active shared-domain PP boundary residual on consumer stage
     pp_stage_boundary_handoff_time: float = 0.0   # Diagnostic-only PP boundary overhead beyond wire cost
-    # Host time to launch an eager forward step's kernels. It runs alongside the
-    # device stream, so it is outside every total; only the part the device
-    # stream cannot hide adds to the step (forward_launch_stall_time).
-    forward_launch_time: float = 0.0
 
     def simulated_total_time(self) -> float:
         """Calculate overhead time that actively contributes to simulated stage occupancy."""
