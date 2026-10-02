@@ -22,8 +22,8 @@ Two chains are available:
 The gap of one pair of consecutive chain kernels is the next kernel's start
 minus the previous kernel's end in the CUPTI kernel records of a
 torch.profiler trace; each execution mode's row holds the median over all
-pairs of all chain settings and repeats. The per-setting medians are printed
-as JSON lines.
+pairs of all chain settings and repeats. Each setting's mean, median and
+percentiles are printed as JSON lines.
 
     python -m frontier.profiling.kernel_gap.main --device h800 --output_dir data/profiling \
         --chain decoder_layer --model Qwen3-235B-A22B --num_tensor_parallel_workers 8
@@ -242,9 +242,11 @@ def main() -> None:
             for mode in EXECUTION_MODES:
                 setting_gaps = measure_gaps(mode, launch_chain, args.repeats, args.host_ahead_ms, Path(trace_dir))
                 print(json.dumps({"execution_mode": mode, **setting, "num_gaps": len(setting_gaps),
+                                  "mean_us": float(np.mean(setting_gaps)),
                                   "median_us": float(np.median(setting_gaps)),
                                   "p10_us": float(np.percentile(setting_gaps, 10)),
-                                  "p90_us": float(np.percentile(setting_gaps, 90))}), flush=True)
+                                  "p90_us": float(np.percentile(setting_gaps, 90)),
+                                  "p99_us": float(np.percentile(setting_gaps, 99))}), flush=True)
                 gaps[mode].extend(setting_gaps)
     chain = args.chain if args.chain == "elementwise" else f"decoder_layer:{args.model}:tp{args.num_tensor_parallel_workers}"
     rows = [{
