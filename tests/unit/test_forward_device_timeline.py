@@ -1,4 +1,4 @@
-"""Reduction of a vLLM torch-profiler trace to per-forward device timelines.
+"""Reduction of vLLM torch-profiler traces to per-forward device timelines.
 
 The reduction runs on the GPU worker after the replay, so a wrong join or idle
 split would only show after a multi-GPU run; a synthetic kineto trace checks it.
@@ -54,16 +54,28 @@ def rank0_events() -> list[dict]:
         # Another thread's launch inside the forward's range is not the forward's work.
         complete("cuda_runtime", "cudaLaunchKernel", 1041, 1, tid=9, correlation=5),
         complete("kernel", "other_thread_kernel", 1041, 4, pid=0, tid=7, correlation=5),
+        # A graph replay: its kernels carry the cudaGraphLaunch call's correlation id.
         complete("user_annotation", "Forward", 2000, 50),
         complete("cuda_runtime", "cudaGraphLaunch", 2005, 10, correlation=10),
         complete("kernel", "graph_kernel", 2020, 10, pid=0, tid=7, correlation=10),
-        complete("kernel", "graph_kernel", 2032, 8, pid=0, tid=7, correlation=10),
+        complete("kernel", "cross_device_reduce_1stage", 2032, 8, pid=0, tid=7, correlation=10),
     ]
 
 
-def test_each_eager_forward_splits_its_device_span_into_busy_and_idle_time(tmp_path: Path) -> None:
+def rank1_events() -> list[dict]:
+    # Rank 1 replays the same graph; its all-reduce waits less (5 against 8) and ends with rank 0's.
+    # It has no eager forward in the window, so rank 0's eager forward gets no cross-rank minimum.
+    return [
+        complete("user_annotation", "Forward", 2001, 40),
+        complete("cuda_runtime", "cudaGraphLaunch", 2004, 8, correlation=20),
+        complete("kernel", "graph_kernel", 2018, 9, pid=1, tid=7, correlation=20),
+        complete("kernel", "cross_device_reduce_1stage", 2035, 5, pid=1, tid=7, correlation=20),
+    ]
+
+
+def test_each_forward_splits_its_device_span_into_busy_and_idle_time(tmp_path: Path) -> None:
     write_trace(tmp_path / "api_server.async_llm.pt.trace.json.gz", [], rank=None)
-    write_trace(tmp_path / "worker_rank1.pt.trace.json.gz", [], rank=1)
+    write_trace(tmp_path / "worker_rank1.pt.trace.json.gz", rank1_events(), rank=1)
     write_trace(tmp_path / "worker_rank0.pt.trace.json.gz", rank0_events(), rank=0)
     output = tmp_path / "device_timeline.json"
 
@@ -72,7 +84,6 @@ def test_each_eager_forward_splits_its_device_span_into_busy_and_idle_time(tmp_p
     result = json.loads(output.read_text())
     assert result["trace_file"] == "worker_rank0.pt.trace.json.gz"
     assert result["distributed_info"] == {"backend": "nccl", "rank": 0, "world_size": 2}
-    assert result["graph_forwards"] == 1
     [forward] = result["forwards"]
     base_us = BASE_NS / 1000
     assert forward["host_start_us"] == base_us + 1000 and forward["host_end_us"] == base_us + 1100
@@ -87,9 +98,19 @@ def test_each_eager_forward_splits_its_device_span_into_busy_and_idle_time(tmp_p
     assert forward["device_ms_by_name"] == pytest.approx({
         "gemm": 0.020, "rms_norm": 0.020, "fused_moe_kernel": 0.014, "Memcpy DtoD (Device -> Device)": 0.005,
     })
+    assert forward["all_reduce_us"] == [] and forward["all_reduce_min_us"] is None
+
+    [graph] = result["graph_forwards"]
+    assert graph["launch_calls"] == 1 and graph["device_activities"] == 2
+    assert graph["device_start_us"] == base_us + 2020 and graph["device_end_us"] == base_us + 2040
+    assert graph["busy_ms"] == pytest.approx(0.018)
+    # The graph launch returned at 2015, before the gap 2030-2032 opened.
+    assert graph["idle_host_wait_ms"] == 0 and graph["idle_other_ms"] == pytest.approx(0.002)
+    assert graph["all_reduce_us"] == [8] and graph["all_reduce_min_us"] == [5]
 
 
-def test_the_reduction_needs_exactly_one_rank_0_trace(tmp_path: Path) -> None:
+def test_the_reduction_needs_one_trace_per_rank(tmp_path: Path) -> None:
     write_trace(tmp_path / "api_server.pt.trace.json.gz", [], rank=None)
-    with pytest.raises(SystemExit, match="expected one rank-0 trace"):
+    write_trace(tmp_path / "worker_rank0.pt.trace.json.gz", rank0_events(), rank=0)
+    with pytest.raises(SystemExit, match="expected one trace per rank"):
         main(["--trace-dir", str(tmp_path), "--output", str(tmp_path / "out.json")])
