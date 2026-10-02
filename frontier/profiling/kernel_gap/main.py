@@ -121,8 +121,10 @@ def spin_cycles_per_ms() -> float:
     return cycles / start.elapsed_time(end)
 
 
-def measure_gaps(mode: str, launch_chain: Callable[[], None], repeats: int,
-                 host_ahead_ms: float, trace_dir: Path) -> list[float]:
+def profiled_chains(mode: str, launch_chain: Callable[[], None], repeats: int,
+                    host_ahead_ms: float, trace_dir: Path) -> list[Sequence[dict]]:
+    """Kernel records of each of `repeats` chains run in `mode`."""
+
     import torch
 
     launch_chain()
@@ -153,7 +155,7 @@ def measure_gaps(mode: str, launch_chain: Callable[[], None], repeats: int,
     chains = split_chains(chain_kernels(events), repeats)
     if mode == "eager":
         require_host_ahead(events, chains)
-    return chain_gaps_us(chains)
+    return chains
 
 
 def elementwise_chains(num_elements: Sequence[int], num_kernels: int) -> Iterator[tuple[dict, Callable[[], None]]]:
@@ -240,7 +242,8 @@ def main() -> None:
                                             Path(trace_dir)))
         for setting, launch_chain in chains:
             for mode in EXECUTION_MODES:
-                setting_gaps = measure_gaps(mode, launch_chain, args.repeats, args.host_ahead_ms, Path(trace_dir))
+                setting_gaps = chain_gaps_us(profiled_chains(mode, launch_chain, args.repeats,
+                                                             args.host_ahead_ms, Path(trace_dir)))
                 print(json.dumps({"execution_mode": mode, **setting, "num_gaps": len(setting_gaps),
                                   "mean_us": float(np.mean(setting_gaps)),
                                   "median_us": float(np.median(setting_gaps)),
