@@ -94,6 +94,7 @@ class RecordFunctionTracer:
 
     def get_operation_time_stats(self, debug=False):
         per_operation_times_ms: dict[str, list[float]] = {}
+        per_operation_kernel_counts: dict[str, list[int]] = {}
 
         with open(self.trace_path, "r", encoding="utf-8") as trace_file:
             trace = json.load(trace_file)["traceEvents"]
@@ -107,6 +108,7 @@ class RecordFunctionTracer:
                 continue
             children = self.find_children(trace, event) or []
             cuda_time = 0
+            kernel_count = 0
             for child in children:
                 # Check for both cuda_runtime (cudaLaunchKernel) and cuda_driver (cuLaunchKernel)
                 if not ("cat" in child and child["cat"] in ("cuda_runtime", "cuda_driver")):
@@ -119,13 +121,16 @@ class RecordFunctionTracer:
                 if not correlated_event:
                     continue
                 cuda_time += correlated_event["dur"]
+                kernel_count += 1
 
             name = event_name.replace("vidur_", "")
 
             if name not in per_operation_times_ms:
                 per_operation_times_ms[name] = []
+                per_operation_kernel_counts[name] = []
 
             per_operation_times_ms[name].append(cuda_time * 1e-3)  # to convert to ms
+            per_operation_kernel_counts[name].append(kernel_count)
 
         for name, times_ms in per_operation_times_ms.items():
             if name in self.allow_zero_cuda_ops:
@@ -142,6 +147,17 @@ class RecordFunctionTracer:
                     f"Trace path: {self.trace_path}"
                 )
 
+        # The kernel count of an operation is a property of its code path for
+        # one input shape; calls that launch different counts measure
+        # different work and cannot share one row.
+        for name, kernel_counts in per_operation_kernel_counts.items():
+            if len(set(kernel_counts)) > 1:
+                raise ValueError(
+                    f"RecordFunctionTracer: operation '{name}' launched different kernel "
+                    f"counts across calls: {sorted(set(kernel_counts))}. "
+                    f"Trace path: {self.trace_path}"
+                )
+
         if debug:
             print(f"[DEBUG] Collected operations: {list(per_operation_times_ms.keys())}")
 
@@ -153,6 +169,7 @@ class RecordFunctionTracer:
                 "median": np.median(times),
                 "std": np.std(times),
                 "count": len(times),
+                "kernel_count": per_operation_kernel_counts[operation][0],
             }
             for operation, times in per_operation_times_ms.items()
         }
