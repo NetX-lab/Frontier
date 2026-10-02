@@ -3,30 +3,28 @@
 A forward step's device time is its kernels' durations plus the idle time
 between consecutive kernels. The kernel-only operator tables price the first
 part; this profiler measures the second, per kernel, for the two ways a
-forward runs:
+forward runs. The chain is one forward of the linear-op profiler's model (its
+decoder block repeated, with dummy weights) for --model at each token count in
+--num_tokens, so it has the kernel mix of a layer's norms, GEMMs and rotary
+embedding:
 
 - eager: a spin kernel holds the stream until the host has queued every launch
   of the chain, so the idle time between two kernels is the device's own gap
   and never a wait for the host;
-- cuda_graph: the same chain captured once and replayed.
+- cuda_graph: the chain followed by one FlashInfer rmsnorm launched with
+  programmatic dependent launch (PDL), captured once and replayed. vLLM's
+  decode graphs on sm90 hold a PDL launch (FlashInfer attention), and one PDL
+  launch in a graph raises the gap between all of its kernels. Only the
+  kernels of each graph launch are measured, not PyTorch's replay prologue.
 
-Two chains are available:
-
-- elementwise: a run of in-place adds on one tensor, for each element count in
-  --num_elements;
-- decoder_layer: one forward of the linear-op profiler's model (its decoder
-  block repeated, with dummy weights) for --model at each token count in
-  --num_tokens, so the chain has the kernel mix of a layer's norms, GEMMs and
-  rotary embedding.
-
-The gap of one pair of consecutive chain kernels is the next kernel's start
-minus the previous kernel's end in the CUPTI kernel records of a
-torch.profiler trace; each execution mode's row holds the median over all
-pairs of all chain settings and repeats. Each setting's mean, median and
-percentiles are printed as JSON lines.
+The gap before a chain kernel is the device idle time since the kernels before
+it ended (0 when it overlaps them), from the CUPTI kernel records of a
+torch.profiler trace; each execution mode's row holds the mean over all gaps
+of all token counts and repeats, the device idle per kernel. Each setting's
+mean, median and percentiles are printed as JSON lines.
 
     python -m frontier.profiling.kernel_gap.main --device h800 --output_dir data/profiling \
-        --chain decoder_layer --model Qwen3-235B-A22B --num_tensor_parallel_workers 8
+        --model Qwen3-235B-A22B --num_tensor_parallel_workers 8
 
 Output: <output_dir>/compute/<device>/kernel_gap.csv
 """
@@ -36,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import tempfile
+from collections import defaultdict
 from pathlib import Path
 from typing import Callable, Iterator, Sequence
 
@@ -46,10 +45,11 @@ EXECUTION_MODES = ("eager", "cuda_graph")
 # torch.cuda._sleep launches this kernel; it holds the stream and is not part of a chain.
 SPIN_KERNEL_NAME = "spin_kernel"
 LAUNCH_API_NAMES = ("cudaLaunchKernel", "cuLaunchKernel", "cudaLaunchKernelExC", "cuLaunchKernelEx")
+GRAPH_LAUNCH_API_NAMES = ("cudaGraphLaunch", "cuGraphLaunch")
 
 
 def chain_kernels(trace_events: Sequence[dict]) -> list[dict]:
-    """Kernel records of the measured chains in device order (spin kernels removed)."""
+    """Kernel records of the measured eager chains in device order (spin kernels removed)."""
 
     kernels = [event for event in trace_events
                if event.get("cat") == "kernel" and SPIN_KERNEL_NAME not in event["name"]]
@@ -69,11 +69,33 @@ def split_chains(kernels: Sequence[dict], repeats: int) -> list[Sequence[dict]]:
     return chains
 
 
-def chain_gaps_us(chains: Sequence[Sequence[dict]]) -> list[float]:
-    """Idle time between consecutive kernels inside each repeat of a chain, in us."""
+def graph_launch_chains(trace_events: Sequence[dict], repeats: int) -> list[list[dict]]:
+    """Kernel records of each of `repeats` graph replays, joined to their cudaGraphLaunch call by correlation id."""
 
-    return [following["ts"] - (previous["ts"] + previous["dur"])
-            for chain in chains for previous, following in zip(chain, chain[1:])]
+    kernels_by_correlation: dict[int, list[dict]] = defaultdict(list)
+    for event in trace_events:
+        if event.get("cat") == "kernel":
+            kernels_by_correlation[event["args"]["correlation"]].append(event)
+    chains = [sorted(kernels_by_correlation[event["args"]["correlation"]], key=lambda kernel: kernel["ts"])
+              for event in trace_events
+              if event.get("cat") in ("cuda_runtime", "cuda_driver")
+              and event["name"].startswith(GRAPH_LAUNCH_API_NAMES)]
+    if len(chains) != repeats or len({len(chain) for chain in chains}) != 1:
+        raise ValueError(f"expected {repeats} graph launches with the same kernel count, "
+                         f"found kernel counts {[len(chain) for chain in chains]}")
+    return chains
+
+
+def chain_gaps_us(chains: Sequence[Sequence[dict]]) -> list[float]:
+    """Device idle time before each kernel but the first of each chain, in us (0 when it overlaps earlier kernels)."""
+
+    gaps = []
+    for chain in chains:
+        covered_end = chain[0]["ts"] + chain[0]["dur"]
+        for kernel in chain[1:]:
+            gaps.append(max(0.0, kernel["ts"] - covered_end))
+            covered_end = max(covered_end, kernel["ts"] + kernel["dur"])
+    return gaps
 
 
 def require_host_ahead(trace_events: Sequence[dict], chains: Sequence[Sequence[dict]]) -> None:
@@ -137,7 +159,12 @@ def profiled_chains(mode: str, launch_chain: Callable[[], None], repeats: int,
                 torch.cuda._sleep(spin_cycles)
                 launch_chain()
                 torch.cuda.synchronize()
-    elif mode == "cuda_graph":
+
+        events = profiled_trace(run, trace_dir)
+        chains = split_chains(chain_kernels(events), repeats)
+        require_host_ahead(events, chains)
+        return chains
+    if mode == "cuda_graph":
         graph = torch.cuda.CUDAGraph()
         with torch.cuda.graph(graph):
             launch_chain()
@@ -148,32 +175,17 @@ def profiled_chains(mode: str, launch_chain: Callable[[], None], repeats: int,
             for _ in range(repeats):
                 graph.replay()
                 torch.cuda.synchronize()
-    else:
-        raise ValueError(f"unknown execution mode {mode!r}; expected one of {EXECUTION_MODES}")
 
-    events = profiled_trace(run, trace_dir)
-    chains = split_chains(chain_kernels(events), repeats)
-    if mode == "eager":
-        require_host_ahead(events, chains)
-    return chains
-
-
-def elementwise_chains(num_elements: Sequence[int], num_kernels: int) -> Iterator[tuple[dict, Callable[[], None]]]:
-    import torch
-
-    for elements in num_elements:
-        tensor = torch.zeros(elements, device="cuda", dtype=torch.float32)
-
-        def launch_chain(tensor=tensor) -> None:
-            for _ in range(num_kernels):
-                tensor.add_(1.0)
-
-        yield {"num_elements": elements, "num_kernels": num_kernels}, launch_chain
+        return graph_launch_chains(profiled_trace(run, trace_dir), repeats)
+    raise ValueError(f"unknown execution mode {mode!r}; expected one of {EXECUTION_MODES}")
 
 
 def decoder_layer_chains(model: str, num_tensor_parallel_workers: int, num_tokens: Sequence[int],
-                         trace_dir: Path) -> Iterator[tuple[dict, Callable[[], None]]]:
+                         trace_dir: Path) -> Iterator[tuple[dict, dict[str, Callable[[], None]]]]:
+    """Per token count: the setting and the chain launch of each execution mode."""
+
     import torch
+    from flashinfer.norm import rmsnorm
 
     from frontier.profiling.common.model_config import ModelConfig
     from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
@@ -184,18 +196,25 @@ def decoder_layer_chains(model: str, num_tensor_parallel_workers: int, num_token
     # so they add no device work and the block can be captured in a graph.
     wrapper = LinearOpWrapper(model_config, num_tensor_parallel_workers, "record_function",
                               rank=0, output_dir=str(trace_dir))
+    norm_weight = torch.ones(model_config.embedding_dim, device="cuda", dtype=model_config.dtype)
     for tokens in num_tokens:
         input_ids = torch.randint(0, wrapper.padded_vocab_size // num_tensor_parallel_workers, (tokens,),
                                   device="cuda", dtype=torch.long)
         positions = torch.tensor(build_profile_position_indices(tokens, model_config.max_position_embeddings),
                                  device="cuda", dtype=torch.long)
 
+        norm_input = torch.randn(tokens, model_config.embedding_dim, device="cuda", dtype=model_config.dtype)
+
         def launch_chain(input_ids=input_ids, positions=positions) -> None:
             with torch.inference_mode():
                 wrapper.model(input_ids, positions)
 
-        yield {"model": model, "num_tensor_parallel_workers": num_tensor_parallel_workers,
-               "num_tokens": tokens}, launch_chain
+        def launch_graph_chain(launch_chain=launch_chain, norm_input=norm_input) -> None:
+            launch_chain()
+            rmsnorm(norm_input, norm_weight, enable_pdl=True)
+
+        yield ({"model": model, "num_tensor_parallel_workers": num_tensor_parallel_workers, "num_tokens": tokens},
+               {"eager": launch_chain, "cuda_graph": launch_graph_chain})
 
 
 def driver_version() -> str:
@@ -214,21 +233,14 @@ def parse_args():
                         help="Root output directory for profiling results (default: data/profiling)")
     parser.add_argument("--device", type=str, required=True,
                         help="Hardware SKU for the output path (e.g. h800)")
-    parser.add_argument("--chain", choices=("elementwise", "decoder_layer"), required=True)
-    parser.add_argument("--num_elements", type=int, nargs="+", default=[512, 67584, 1081344],
-                        help="elementwise: element counts of the chain tensor (float32)")
-    parser.add_argument("--num_kernels", type=int, default=256, help="elementwise: kernels per chain")
-    parser.add_argument("--model", type=str, help="decoder_layer: model name of data/config/models")
-    parser.add_argument("--num_tensor_parallel_workers", type=int, default=1, help="decoder_layer: TP shard")
+    parser.add_argument("--model", type=str, required=True, help="Model name of data/config/models")
+    parser.add_argument("--num_tensor_parallel_workers", type=int, default=1, help="Attention TP shard")
     parser.add_argument("--num_tokens", type=int, nargs="+", default=[16, 2048],
-                        help="decoder_layer: token counts of the forward")
+                        help="Token counts of the forward")
     parser.add_argument("--repeats", type=int, default=20, help="Chains per setting and mode")
     parser.add_argument("--host_ahead_ms", type=float, default=50.0,
                         help="Spin time before each eager chain, so the host queues every launch first")
-    args = parser.parse_args()
-    if args.chain == "decoder_layer" and not args.model:
-        parser.error("--chain decoder_layer requires --model")
-    return args
+    return parser.parse_args()
 
 
 def main() -> None:
@@ -237,12 +249,10 @@ def main() -> None:
 
     gaps = {mode: [] for mode in EXECUTION_MODES}
     with tempfile.TemporaryDirectory() as trace_dir:
-        chains = (elementwise_chains(args.num_elements, args.num_kernels) if args.chain == "elementwise"
-                  else decoder_layer_chains(args.model, args.num_tensor_parallel_workers, args.num_tokens,
-                                            Path(trace_dir)))
-        for setting, launch_chain in chains:
+        for setting, launches in decoder_layer_chains(args.model, args.num_tensor_parallel_workers,
+                                                      args.num_tokens, Path(trace_dir)):
             for mode in EXECUTION_MODES:
-                setting_gaps = chain_gaps_us(profiled_chains(mode, launch_chain, args.repeats,
+                setting_gaps = chain_gaps_us(profiled_chains(mode, launches[mode], args.repeats,
                                                              args.host_ahead_ms, Path(trace_dir)))
                 print(json.dumps({"execution_mode": mode, **setting, "num_gaps": len(setting_gaps),
                                   "mean_us": float(np.mean(setting_gaps)),
@@ -251,12 +261,12 @@ def main() -> None:
                                   "p90_us": float(np.percentile(setting_gaps, 90)),
                                   "p99_us": float(np.percentile(setting_gaps, 99))}), flush=True)
                 gaps[mode].extend(setting_gaps)
-    chain = args.chain if args.chain == "elementwise" else f"decoder_layer:{args.model}:tp{args.num_tensor_parallel_workers}"
+    chain = f"decoder_layer:{args.model}:tp{args.num_tensor_parallel_workers}"
     rows = [{
         "execution_mode": mode,
-        "kernel_gap_us": float(np.median(mode_gaps)),
+        "kernel_gap_us": float(np.mean(mode_gaps)),
         "num_gaps": len(mode_gaps),
-        "chain": chain,
+        "chain": f"{chain}+pdl" if mode == "cuda_graph" else chain,
         "gpu_name": torch.cuda.get_device_name(),
         "driver_version": driver_version(),
         "torch_version": torch.__version__,
