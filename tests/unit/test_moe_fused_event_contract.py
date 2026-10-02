@@ -116,7 +116,8 @@ def test_device_events_reach_legacy_low_level_kernel(event_runtime, monkeypatch)
     monkeypatch.setattr(kernel, "VLLM_API_VERSION", "0.10.x")
     monkeypatch.setattr(kernel, "get_config_dtype_str", lambda dtype, **flags: "float16", raising=False)
     monkeypatch.setattr(kernel, "try_get_optimal_moe_config", lambda **kwargs: {"BLOCK_SIZE_M": 16}, raising=False)
-    monkeypatch.setattr(kernel, "moe_align_block_size", lambda *args, **kwargs: (None, None, None), raising=False)
+    monkeypatch.setattr(kernel, "moe_align_block_size",
+                        lambda *args, **kwargs: (None, None, torch.tensor([32])), raising=False)
     iteration = Mock()
     monkeypatch.setattr(kernel, "_run_fused_moe_iteration", iteration)
 
@@ -124,6 +125,8 @@ def test_device_events_reach_legacy_low_level_kernel(event_runtime, monkeypatch)
 
     assert iteration.call_count == 3
     assert result["mean"] == pytest.approx(2.5)
+    assert result["block_size_m"] == 16
+    assert result["num_tokens_post_padded"] == 32
 
 
 @pytest.mark.parametrize("steps", [0, -1, True, 1.5])
