@@ -58,7 +58,8 @@ def rank0_events() -> list[dict]:
         complete("user_annotation", "Forward", 2000, 50),
         complete("cuda_runtime", "cudaGraphLaunch", 2005, 10, correlation=10),
         complete("kernel", "graph_kernel", 2020, 10, pid=0, tid=7, correlation=10),
-        complete("kernel", "cross_device_reduce_1stage", 2032, 8, pid=0, tid=7, correlation=10),
+        complete("kernel", "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm::RankData*)", 2032, 8,
+                 pid=0, tid=7, correlation=10),
     ]
 
 
@@ -69,7 +70,8 @@ def rank1_events() -> list[dict]:
         complete("user_annotation", "Forward", 2001, 40),
         complete("cuda_runtime", "cudaGraphLaunch", 2004, 8, correlation=20),
         complete("kernel", "graph_kernel", 2018, 9, pid=1, tid=7, correlation=20),
-        complete("kernel", "cross_device_reduce_1stage", 2035, 5, pid=1, tid=7, correlation=20),
+        complete("kernel", "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 8>(vllm::RankData*)", 2035, 5,
+                 pid=1, tid=7, correlation=20),
     ]
 
 

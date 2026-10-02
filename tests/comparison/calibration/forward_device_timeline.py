@@ -47,8 +47,9 @@ from pathlib import Path
 DEVICE_CATEGORIES = ("kernel", "gpu_memcpy", "gpu_memset")
 LAUNCH_CATEGORIES = ("cuda_runtime", "cuda_driver")
 GRAPH_LAUNCHES = ("cudaGraphLaunch", "cuGraphLaunch")
-# vLLM's TP all-reduce kernels: pynccl and the custom all-reduce (cuda_communicator.py all_reduce).
-ALL_REDUCE_KERNELS = ("ncclDevKernel_AllReduce", "cross_device_reduce_")
+# Name substrings of vLLM's TP all-reduce kernels: pynccl and the custom all-reduce
+# (cuda_communicator.py all_reduce), whose kernels are named "void vllm::cross_device_reduce_1stage<...>(...)".
+ALL_REDUCE_KERNELS = ("ncclDevKernel_AllReduce", "vllm::cross_device_reduce_")
 
 
 def trace_header(path: Path) -> dict:
@@ -148,7 +149,7 @@ def device_timeline(trace: dict) -> dict:
             "device_ms_by_name": {name: duration / 1000.0 for name, duration in
                                   sorted(by_name.items(), key=lambda item: -item[1])},
             "all_reduce_us": [activity["dur"] for activity, _ in work
-                              if activity["name"].startswith(ALL_REDUCE_KERNELS)],
+                              if any(kernel in activity["name"] for kernel in ALL_REDUCE_KERNELS)],
         })
     return {"base_time_ns": trace["baseTimeNanoseconds"], **records}
 
