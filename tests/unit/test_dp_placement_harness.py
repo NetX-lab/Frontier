@@ -85,6 +85,9 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
         "VLLM_ATTENTION_BACKEND": "FLASH_ATTN",
         "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL": "1",
         "VLLM_MOE_UNIFORM_ROUTING": "1",
+        "VLLM_TORCH_PROFILER_DIR": "/tmp/old_traces",
+        "VLLM_TORCH_PROFILER_RECORD_SHAPES": "1",
+        "VLLM_CUSTOM_SCOPES_FOR_PROFILING": "1",
     }
     out = Path("/run")
 
@@ -102,6 +105,8 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
     cpu, _ = server_env("cpu", {"enable_chunked_prefill": True}, out, inherited)
     kv_save_timing, _ = server_env("kv_save_timing", {"enable_chunked_prefill": True}, out, inherited)
     kv_save_device_ids, _ = server_env("kv_save_device_ids", {"enable_chunked_prefill": True}, out, inherited)
+    device_timeline, _ = server_env("device_timeline", {"enable_chunked_prefill": True}, out, inherited,
+                                    Path("/traces"))
 
     assert clean == {
         "PATH": "/usr/bin",
@@ -144,6 +149,11 @@ def test_the_mode_alone_sets_the_frontier_switches_of_the_server():
     }
     assert kv_save_timing == cpu | {"VLLM_FRONTIER_KV_SAVE_PROBE_LOG_PATH": "/run/kv_save_probe.jsonl"}
     assert kv_save_device_ids == kv_save_timing | {"VLLM_FRONTIER_KV_SAVE_DEVICE_BLOCK_IDS": "1"}
+    assert device_timeline == cpu | {
+        "VLLM_TORCH_PROFILER_DIR": "/traces",
+        "VLLM_TORCH_PROFILER_WITH_STACK": "0",
+        "VLLM_CUSTOM_SCOPES_FOR_PROFILING": "1",
+    }
     # The fork's default scope list has no dense MLP scope; the timing modes name them.
     assert {"mlp_up_proj", "mlp_act", "mlp_down_proj"} <= set(OP_TIMING_SCOPES)
 

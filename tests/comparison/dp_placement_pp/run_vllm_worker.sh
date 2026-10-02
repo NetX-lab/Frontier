@@ -7,8 +7,9 @@
 #
 # Required environment:
 #   RUN_TAG        identifier of this run
-#   MODE           ground-truth mode of vllm_replay.py: clean, instrumented,
-#                  op_timing, kernel_timing, schedule_timing or cpu
+#   MODE           ground-truth mode of vllm_replay.py; device_timeline also
+#                  reduces rank 0's profiler trace to run/device_timeline.json
+#                  (forward_device_timeline.py) and archives the traces only
 #   REPLAY_TIMEOUT_S  wall-time limit of the replay, below the job's cap so
 #                  that a stopped replay is still published
 #   FRONTIER_TREE  Frontier worktree on the mounted workspace
@@ -88,18 +89,33 @@ export PYTHONPATH="$WORK/overlay"
 
 if timeout "$REPLAY_TIMEOUT_S" "$PY" "$SCRIPT_DIR/vllm_replay.py" \
      --engine-config "$ENGINE_CONFIG" --trace-dir "$TRACE_DIR" \
-     --output-dir "$WORK/run" --mode "$MODE" > "$WORK/run/replay.log" 2>&1; then
+     --output-dir "$WORK/run" --mode "$MODE" --torch-trace-dir "$WORK/torch_trace" \
+     > "$WORK/run/replay.log" 2>&1; then
   echo "REPLAY_PASS"
 else
   status=$?
   echo "REPLAY_FAIL exit=$status"
   tail -n 80 "$WORK/run/server.log" 2>/dev/null || true
 fi
+if [ "$status" -eq 0 ] && [ "$MODE" = device_timeline ]; then
+  if "$PY" "$FRONTIER_TREE/tests/comparison/calibration/forward_device_timeline.py" \
+       --trace-dir "$WORK/torch_trace" --output "$WORK/run/device_timeline.json" \
+       > "$WORK/run/device_timeline.log" 2>&1; then
+    echo "DEVICE_TIMELINE_PASS"
+  else
+    status=$?
+    echo "DEVICE_TIMELINE_FAIL exit=$status"
+    tail -n 20 "$WORK/run/device_timeline.log"
+  fi
+fi
 
 publish "$ARCHIVE_DIR"
+# The profiler traces are too large for the workspace evidence.
+if [ -d "$WORK/torch_trace" ]; then cp -r "$WORK/torch_trace" "$ARCHIVE_DIR/"; fi
 publish_evidence
 
 grep -h "REPLAY_DONE" "$WORK/run/replay.log" || tail -n 30 "$WORK/run/replay.log" || true
+ls -l "$WORK/torch_trace" 2>/dev/null || true
 wc -l "$WORK"/run/dp_placement/*.jsonl "$WORK"/run/*.jsonl 2>/dev/null || true
 echo "WORKER_STATUS=$status RUN_TAG=$RUN_TAG"
 exit "$status"

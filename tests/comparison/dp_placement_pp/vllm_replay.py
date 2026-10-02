@@ -50,6 +50,17 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
     ``kv_save_device_ids`` also sets ``VLLM_FRONTIER_KV_SAVE_DEVICE_BLOCK_IDS``,
     so the connector indexes the KV cache with a device copy of the block ids.
     Instrumentation, operator probes and E2E request metrics off.
+``device_timeline``
+    The CPU probe plus vLLM's own torch profiler (``VLLM_TORCH_PROFILER_DIR``,
+    CPU and CUDA activities, no Python stacks) with the model runner's
+    ``Forward`` range of each step (``VLLM_CUSTOM_SCOPES_FOR_PROFILING``). The
+    replay opens the profiler through ``/start_profile`` at
+    ``--profile-start-s`` after the first formal arrival and closes it through
+    ``/stop_profile`` ``--profile-duration-s`` later; every process of the
+    server then writes its trace to ``--torch-trace-dir``, outside the output
+    directory. Step times inside the window carry the profiler's host
+    overhead; the probe's steps before it carry none. Instrumentation, operator
+    probes and E2E request metrics off.
 
 The attention backend is an engine setting: ``VLLM_ATTENTION_BACKEND`` is set
 from the engine file's ``attention_backend`` and is otherwise left to vLLM's
@@ -95,17 +106,21 @@ OP_TIMING_SCOPES = (
     "moe_tensor_parallel_allreduce", "tensor_parallel_allreduce",
     "kv_p2p_send", "kv_p2p_recv",
 )
+# Modes shared with pd_replay.py. device_timeline profiles the one server this
+# script starts, so it is this script's own.
 MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu",
          "kv_save_timing", "kv_save_device_ids")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
 
 
-def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tuple[dict, dict]:
+def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
+               torch_trace_dir: Path | None = None) -> tuple[dict, dict]:
     """Return the server environment and the variables the mode set in it."""
 
     env = {
         key: value for key, value in inherited.items()
-        if not key.startswith("VLLM_FRONTIER_")
+        if not key.startswith(("VLLM_FRONTIER_", "VLLM_TORCH_PROFILER_"))
+        and key != "VLLM_CUSTOM_SCOPES_FOR_PROFILING"
         and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL",
                         "VLLM_MOE_UNIFORM_ROUTING")
     }
@@ -124,6 +139,14 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict) -> tu
         mode_env["VLLM_FRONTIER_KV_SAVE_PROBE_LOG_PATH"] = str(output_dir / "kv_save_probe.jsonl")
         if mode == "kv_save_device_ids":
             mode_env["VLLM_FRONTIER_KV_SAVE_DEVICE_BLOCK_IDS"] = "1"
+    elif mode == "device_timeline":
+        mode_env |= {
+            "VLLM_FRONTIER_CPU_PROBE_LOG_PATH": str(output_dir / "cpu_probe.jsonl"),
+            "VLLM_TORCH_PROFILER_DIR": str(torch_trace_dir),
+            # vLLM records Python stacks unless told otherwise, at a host cost per operator.
+            "VLLM_TORCH_PROFILER_WITH_STACK": "0",
+            "VLLM_CUSTOM_SCOPES_FOR_PROFILING": "1",
+        }
     else:
         mode_env |= {
             "VLLM_FRONTIER_INSTRUMENTATION": "1",
@@ -196,7 +219,10 @@ def wait_until_ready(server: subprocess.Popen, port: int, timeout_s: float) -> f
     raise RuntimeError(f"vllm serve not ready after {timeout_s} s")
 
 
-async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float) -> tuple[dict, list[dict]]:
+async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
+                 profile_window_s: tuple[float, float] | None = None) -> tuple[dict, list[dict]]:
+    """Post every row at its arrival offset; with profile_window_s, also open and
+    close the server's torch profiler at those two offsets of the same clock."""
     import aiohttp
 
     url = f"http://127.0.0.1:{port}/v1/completions"
@@ -247,8 +273,25 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 record["error"] = payload
             records.append(record)
 
-        await asyncio.gather(*(post(row) for row in rows))
-    return {"origin_monotonic": origin, "origin_wall": origin_wall}, records
+        profile_marks: dict = {}
+
+        async def profile(start_s: float, stop_s: float) -> None:
+            for endpoint, at in (("start_profile", start_s), ("stop_profile", stop_s)):
+                await asyncio.sleep(max(0.0, origin + at - time.monotonic()))
+                requested = time.monotonic()
+                async with session.post(f"http://127.0.0.1:{port}/{endpoint}") as response:
+                    response.raise_for_status()
+                profile_marks[endpoint] = {"requested_monotonic": requested,
+                                           "returned_monotonic": time.monotonic()}
+
+        posts = [post(row) for row in rows]
+        if profile_window_s is not None:
+            posts.append(profile(*profile_window_s))
+        await asyncio.gather(*posts)
+    clock = {"origin_monotonic": origin, "origin_wall": origin_wall}
+    if profile_window_s is not None:
+        clock["profile_marks"] = profile_marks
+    return clock, records
 
 
 def stop_server(server: subprocess.Popen, timeout_s: float) -> dict:
@@ -275,13 +318,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--engine-config", type=Path, required=True)
     parser.add_argument("--trace-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--mode", choices=MODES, required=True)
+    parser.add_argument("--mode", choices=(*MODES, "device_timeline"), required=True)
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--startup-timeout-s", type=float, default=900.0)
     parser.add_argument("--origin-lead-s", type=float, default=1.0)
     parser.add_argument("--drain-s", type=float, default=3.0)
     parser.add_argument("--stop-timeout-s", type=float, default=60.0)
+    parser.add_argument("--torch-trace-dir", type=Path,
+                        help="device_timeline: the profiler's trace directory, outside --output-dir")
+    parser.add_argument("--profile-start-s", type=float, default=20.0,
+                        help="device_timeline: profiler start, seconds after the first formal arrival")
+    parser.add_argument("--profile-duration-s", type=float, default=10.0,
+                        help="device_timeline: seconds the profiler stays open")
     args = parser.parse_args(argv)
+    if args.mode == "device_timeline" and args.torch_trace_dir is None:
+        parser.error("mode device_timeline needs --torch-trace-dir")
 
     engine = json.loads(args.engine_config.read_text())
     request_ids = json.loads((args.trace_dir / "request_ids.json").read_text())
@@ -292,7 +343,12 @@ def main(argv: list[str] | None = None) -> int:
         output_dir / "model",
     )
 
-    env, mode_env = server_env(args.mode, engine, output_dir, dict(os.environ))
+    env, mode_env = server_env(args.mode, engine, output_dir, dict(os.environ), args.torch_trace_dir)
+    profile_window_s = None
+    if args.mode == "device_timeline":
+        first_formal = min(row["arrived_at"] for row in request_ids["rows"] if row["role"] == "formal")
+        start = first_formal + args.profile_start_s
+        profile_window_s = (start, start + args.profile_duration_s)
     command = server_command(engine, output_dir / "model", args.port)
     summary: dict = {
         "mode": args.mode,
@@ -303,13 +359,15 @@ def main(argv: list[str] | None = None) -> int:
             name for name in os.environ if name not in env or name in mode_env
         ),
         "trace_dir": str(args.trace_dir),
+        "profile_window_s": profile_window_s,
     }
     with (output_dir / "server.log").open("w") as server_log:
         server = subprocess.Popen(command, env=env, stdout=server_log, stderr=subprocess.STDOUT)
         try:
             summary["startup_s"] = wait_until_ready(server, args.port, args.startup_timeout_s)
             clock, records = asyncio.run(replay(
-                request_ids["rows"], args.port, int(model_config["vocab_size"]), args.origin_lead_s
+                request_ids["rows"], args.port, int(model_config["vocab_size"]), args.origin_lead_s,
+                profile_window_s,
             ))
             summary.update(clock)
             time.sleep(args.drain_s)
