@@ -51,20 +51,20 @@ def test_graph_launch_chains_keep_only_the_kernels_of_each_graph_launch() -> Non
         _launch(400.0, 300.0, 20, name="cudaGraphLaunch"),
         _kernel(710.0, 4.0, 20),
         _kernel(714.5, 2.0, 20, name=NORM_KERNEL),
+        _kernel(717.0, 1.0, 20),
     ]
 
-    chains = graph_launch_chains(events, repeats=2)
+    chains = graph_launch_chains(events)
 
-    assert [[kernel["ts"] for kernel in chain] for chain in chains] == [[310.0, 320.0], [710.0, 714.5]]
-    assert chain_gaps_us(chains) == [6.0, 0.5]
+    assert [[kernel["ts"] for kernel in chain] for chain in chains] == [[310.0, 320.0], [710.0, 714.5, 717.0]]
+    assert chain_gaps_us(chains) == [6.0, 0.5, 0.5]
 
 
-def test_graph_launch_chains_reject_a_launch_with_a_different_kernel_count() -> None:
-    events = [_launch(0.0, 3.0, 10, name="cudaGraphLaunch"), _kernel(10.0, 1.0, 10), _kernel(12.0, 1.0, 10),
-              _launch(20.0, 3.0, 20, name="cudaGraphLaunch"), _kernel(30.0, 1.0, 20)]
+def test_graph_launch_chains_reject_a_trace_without_graph_launches() -> None:
+    events = [_launch(0.0, 3.0, 10), _kernel(10.0, 1.0, 10)]
 
-    with pytest.raises(ValueError, match="kernel counts \\[2, 1\\]"):
-        graph_launch_chains(events, repeats=2)
+    with pytest.raises(ValueError, match="no CUDA-graph launch"):
+        graph_launch_chains(events)
 
 
 def test_split_chains_rejects_a_kernel_count_that_does_not_divide_into_repeats() -> None:

@@ -3,31 +3,38 @@
 A forward step's device time is its kernels' durations plus the idle time
 between consecutive kernels. The kernel-only operator tables price the first
 part; this profiler measures the second, per kernel, for the two ways a
-forward runs. The chain is one forward of the linear-op profiler's model (its
-decoder block repeated, with dummy weights) for --model, so it has the kernel
-mix of a layer's norms, GEMMs and rotary embedding:
+forward runs:
 
-- cuda_graph: the chain at each of --cuda_graph_num_tokens, the case's vLLM
-  CUDA-graph capture sizes, captured as one graph per size and replayed. vLLM
-  captures all of its decode graphs at startup, and on H800 a process that
-  holds more than three captured graphs replays each of them with about
-  0.4 us between kernels instead of about 0.05 us; so every graph is captured
-  before any is measured, and all stay alive. Only the kernels of each graph
-  launch are measured, not PyTorch's replay prologue;
-- eager: the chain at each token count in --num_tokens, measured after the
-  graphs in the same process. A spin kernel holds the stream until the host
-  has queued every launch of the chain, so the idle time between two kernels
-  is the device's own gap and never a wait for the host.
+- eager: one forward of the linear-op profiler's model (its decoder block
+  repeated, with dummy weights) for --model at each token count in
+  --num_tokens, so the chain has the kernel mix of a layer's norms, GEMMs and
+  rotary embedding. A spin kernel holds the stream until the host has queued
+  every launch of the chain, so the idle time between two kernels is the
+  device's own gap and never a wait for the host;
+- cuda_graph: the decode CUDA graphs of a vLLM engine with dummy weights for
+  --model and the deployment's engine arguments (--vllm_engine_args). The gap
+  inside a graph replay depends on the process that replays it (on H800 the
+  same chain graph idled 0.05-0.45 us per gap by how many graphs the process
+  held and by model and TP), so it is measured on the engine's own graphs.
+  Request i of max_num_seqs requests stops after i + 1 tokens, so the decode
+  batch shrinks by one per step and every capture size's graph is replayed
+  under vLLM's torch profiler; only the kernels of each cudaGraphLaunch are
+  measured, on every rank. The eager chain runs first, before the engine
+  starts.
 
-The gap before a chain kernel is the device idle time since the kernels before
-it ended (0 when it overlaps them), from the CUPTI kernel records of a
-torch.profiler trace; each execution mode's row holds the mean over all gaps
-of all token counts and repeats, the device idle per kernel. Each setting's
-mean, median and percentiles are printed as JSON lines.
+The gap before a kernel is the device idle time since the kernels before it
+ended (0 when it overlaps them), from the CUPTI kernel records of a
+torch.profiler trace; each execution mode's row holds the mean over all its
+gaps, the device idle per kernel. Each eager token count's and each rank
+trace's mean, median and percentiles are printed as JSON lines.
 
     python -m frontier.profiling.kernel_gap.main --device h800 --output_dir data/profiling \
-        --model Qwen3-235B-A22B --num_tensor_parallel_workers 8 \
-        --cuda_graph_num_tokens 1 2 4 8 16 24 32 40 48 56 64 --num_tokens 16 2048
+        --model Qwen3-235B-A22B --num_tensor_parallel_workers 8 --num_tokens 16 2048 \
+        --vllm_engine_args engine_args.json --vllm_attention_backend FLASHINFER
+
+engine_args.json holds vllm.LLM keyword arguments other than the model, e.g.
+{"load_format": "dummy", "skip_tokenizer_init": true, "tensor_parallel_size": 8,
+"compilation_config": {"level": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}, "max_num_seqs": 64}.
 
 Output: <output_dir>/compute/<device>/kernel_gap.csv
 """
@@ -35,7 +42,10 @@ Output: <output_dir>/compute/<device>/kernel_gap.csv
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
+import os
+import shutil
 import tempfile
 from collections import defaultdict
 from pathlib import Path
@@ -72,8 +82,8 @@ def split_chains(kernels: Sequence[dict], repeats: int) -> list[Sequence[dict]]:
     return chains
 
 
-def graph_launch_chains(trace_events: Sequence[dict], repeats: int) -> list[list[dict]]:
-    """Kernel records of each of `repeats` graph replays, joined to their cudaGraphLaunch call by correlation id."""
+def graph_launch_chains(trace_events: Sequence[dict]) -> list[list[dict]]:
+    """Kernel records of each CUDA-graph launch in a trace, joined to its cudaGraphLaunch call by correlation id."""
 
     kernels_by_correlation: dict[int, list[dict]] = defaultdict(list)
     for event in trace_events:
@@ -83,9 +93,8 @@ def graph_launch_chains(trace_events: Sequence[dict], repeats: int) -> list[list
               for event in trace_events
               if event.get("cat") in ("cuda_runtime", "cuda_driver")
               and event["name"].startswith(GRAPH_LAUNCH_API_NAMES)]
-    if len(chains) != repeats or len({len(chain) for chain in chains}) != 1:
-        raise ValueError(f"expected {repeats} graph launches with the same kernel count, "
-                         f"found kernel counts {[len(chain) for chain in chains]}")
+    if not chains:
+        raise ValueError("the trace holds no CUDA-graph launch")
     return chains
 
 
@@ -168,32 +177,38 @@ def eager_chains(launch_chain: Callable[[], None], repeats: int, host_ahead_ms: 
     return chains
 
 
-def captured_graph(launch_chain: Callable[[], None]):
-    """The chain captured as a CUDA graph, replayed once."""
+def vllm_decode_graph_gaps(model: str, engine_args: dict, attention_backend: str | None, prompt_tokens: int,
+                           work_dir: Path) -> dict[str, list[float]]:
+    """Per rank trace: the gaps inside every decode CUDA-graph launch of a vLLM engine with dummy weights."""
 
-    import torch
+    trace_dir = work_dir / "vllm_traces"
+    os.environ["VLLM_TORCH_PROFILER_DIR"] = str(trace_dir)
+    # vLLM records Python stacks unless told otherwise, at a host cost per operator.
+    os.environ["VLLM_TORCH_PROFILER_WITH_STACK"] = "0"
+    if attention_backend is not None:
+        os.environ["VLLM_ATTENTION_BACKEND"] = attention_backend
+    from vllm import LLM, SamplingParams
+    from vllm.inputs import TokensPrompt
 
-    launch_chain()
-    torch.cuda.synchronize()
-    graph = torch.cuda.CUDAGraph()
-    with torch.cuda.graph(graph):
-        launch_chain()
-    graph.replay()
-    torch.cuda.synchronize()
-    return graph
+    model_dir = work_dir / "model"
+    model_dir.mkdir()
+    shutil.copyfile(Path("data/config/models") / f"{model.replace('/', '__')}.json", model_dir / "config.json")
+    llm = LLM(model=str(model_dir), **engine_args)
+    num_requests = llm.llm_engine.vllm_config.scheduler_config.max_num_seqs
+    prompts = [TokensPrompt(prompt_token_ids=[index + 1] * prompt_tokens) for index in range(num_requests)]
+    params = [SamplingParams(max_tokens=index + 1, ignore_eos=True, detokenize=False) for index in range(num_requests)]
+    llm.generate(prompts, params, use_tqdm=False)
+    llm.start_profile()
+    llm.generate(prompts, params, use_tqdm=False)
+    llm.stop_profile()
 
-
-def graph_replay_chains(graph, repeats: int, trace_dir: Path) -> list[list[dict]]:
-    """Kernel records of each of `repeats` replays of a captured graph."""
-
-    import torch
-
-    def run() -> None:
-        for _ in range(repeats):
-            graph.replay()
-            torch.cuda.synchronize()
-
-    return graph_launch_chains(profiled_trace(run, trace_dir), repeats)
+    gaps = {}
+    for trace_path in sorted(trace_dir.glob("*.pt.trace.json.gz")):
+        with gzip.open(trace_path, "rt") as handle:
+            gaps[trace_path.name] = chain_gaps_us(graph_launch_chains(json.load(handle)["traceEvents"]))
+    if not gaps:
+        raise RuntimeError(f"vLLM wrote no profiler trace to {trace_dir}")
+    return gaps
 
 
 def decoder_layer_chain(model: str, num_tensor_parallel_workers: int,
@@ -245,13 +260,17 @@ def parse_args():
                         help="Hardware SKU for the output path (e.g. h800)")
     parser.add_argument("--model", type=str, required=True, help="Model name of data/config/models")
     parser.add_argument("--num_tensor_parallel_workers", type=int, default=1, help="Attention TP shard")
-    parser.add_argument("--cuda_graph_num_tokens", type=int, nargs="+", required=True,
-                        help="The case's vLLM CUDA-graph capture sizes; one graph is captured per size")
     parser.add_argument("--num_tokens", type=int, nargs="+", default=[16, 2048],
                         help="Token counts of the eager forward")
-    parser.add_argument("--repeats", type=int, default=20, help="Chains per setting and mode")
+    parser.add_argument("--repeats", type=int, default=20, help="Eager chains per token count")
     parser.add_argument("--host_ahead_ms", type=float, default=50.0,
                         help="Spin time before each eager chain, so the host queues every launch first")
+    parser.add_argument("--vllm_engine_args", type=str, required=True,
+                        help="JSON file of the deployment's vllm.LLM keyword arguments, without the model")
+    parser.add_argument("--vllm_attention_backend", type=str, default=None,
+                        help="VLLM_ATTENTION_BACKEND of the deployment (default: vLLM's own selection)")
+    parser.add_argument("--vllm_prompt_tokens", type=int, default=16,
+                        help="Prompt length of each request of the profiled vLLM decode run")
     return parser.parse_args()
 
 
@@ -261,9 +280,8 @@ def main() -> None:
 
     gaps = {mode: [] for mode in EXECUTION_MODES}
 
-    def record(mode: str, tokens: int, setting_gaps: list[float]) -> None:
-        print(json.dumps({"execution_mode": mode, "model": args.model,
-                          "num_tensor_parallel_workers": args.num_tensor_parallel_workers, "num_tokens": tokens,
+    def record(mode: str, setting: dict, setting_gaps: list[float]) -> None:
+        print(json.dumps({"execution_mode": mode, "model": args.model, **setting,
                           "num_gaps": len(setting_gaps),
                           "mean_us": float(np.mean(setting_gaps)),
                           "median_us": float(np.median(setting_gaps)),
@@ -272,20 +290,26 @@ def main() -> None:
                           "p99_us": float(np.percentile(setting_gaps, 99))}), flush=True)
         gaps[mode].extend(setting_gaps)
 
-    with tempfile.TemporaryDirectory() as work_dir:
-        trace_dir = Path(work_dir)
-        chain_launch = decoder_layer_chain(args.model, args.num_tensor_parallel_workers, trace_dir)
-        graphs = {tokens: captured_graph(chain_launch(tokens)) for tokens in args.cuda_graph_num_tokens}
-        for tokens, graph in graphs.items():
-            record("cuda_graph", tokens, chain_gaps_us(graph_replay_chains(graph, args.repeats, trace_dir)))
+    with tempfile.TemporaryDirectory() as temporary_dir:
+        work_dir = Path(temporary_dir)
+        chain_launch = decoder_layer_chain(args.model, args.num_tensor_parallel_workers, work_dir)
         for tokens in args.num_tokens:
-            record("eager", tokens, chain_gaps_us(eager_chains(chain_launch(tokens), args.repeats,
-                                                               args.host_ahead_ms, trace_dir)))
+            record("eager", {"num_tensor_parallel_workers": args.num_tensor_parallel_workers, "num_tokens": tokens},
+                   chain_gaps_us(eager_chains(chain_launch(tokens), args.repeats, args.host_ahead_ms, work_dir)))
+        # vLLM's workers start only when the device has the free memory the engine asks for.
+        del chain_launch
+        torch.cuda.empty_cache()
+        engine_args = json.loads(Path(args.vllm_engine_args).read_text())
+        for trace_name, trace_gaps in vllm_decode_graph_gaps(args.model, engine_args, args.vllm_attention_backend,
+                                                             args.vllm_prompt_tokens, work_dir).items():
+            record("cuda_graph", {"trace": trace_name}, trace_gaps)
+    sources = {"eager": f"decoder_layer:{args.model}:tp{args.num_tensor_parallel_workers}",
+               "cuda_graph": f"vllm_decode_graphs:{args.model}"}
     rows = [{
         "execution_mode": mode,
         "kernel_gap_us": float(np.mean(mode_gaps)),
         "num_gaps": len(mode_gaps),
-        "chain": f"decoder_layer:{args.model}:tp{args.num_tensor_parallel_workers}",
+        "chain": sources[mode],
         "gpu_name": torch.cuda.get_device_name(),
         "driver_version": driver_version(),
         "torch_version": torch.__version__,
