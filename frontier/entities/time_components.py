@@ -406,6 +406,7 @@ class AttentionTime:
     # Attention auxiliary operations
     attention_rope_execution_time: float = 0.0              # RoPE (Rotary Position Embedding)
     attention_kv_cache_save_execution_time: float = 0.0     # KV cache write
+    attention_kv_cache_extract_execution_time: float = 0.0  # KV connector's gather of completed prompts
 
     # MLA physical attention operations from the vLLM V1 latent-attention path.
     attn_mla_kv_cache_save_time: float = 0.0
@@ -436,6 +437,7 @@ class AttentionTime:
             + self.attention_layer_post_proj_execution_time
             + self.attention_rope_execution_time
             + self.attention_kv_cache_save_execution_time
+            + self.attention_kv_cache_extract_execution_time
             + self.attn_mla_kv_cache_save_time
             + self.attn_mla_prefill_kv_up_proj_time
             + self.attn_mla_prefill_time

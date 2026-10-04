@@ -122,6 +122,7 @@ class ExecutionTime(BaseEntity):
         attn_mla_decode_q_latent_proj_time: float = 0.0,
         attn_mla_decode_time: float = 0.0,
         attn_mla_v_up_proj_time: float = 0.0,
+        attention_kv_cache_extract_execution_time: float = 0.0,
         attention_operator_times: AttentionOperatorTimes | None = None,
         communication_operator_times: CommunicationOperatorTimes | None = None,
         mlp_operator_times: MLPOperatorTimes | None = None,
@@ -348,6 +349,7 @@ class ExecutionTime(BaseEntity):
             attention_layer_post_proj_execution_time=attention_layer_post_proj_execution_time,
             attention_rope_execution_time=attention_rope_execution_time,
             attention_kv_cache_save_execution_time=attention_kv_cache_save_execution_time,
+            attention_kv_cache_extract_execution_time=attention_kv_cache_extract_execution_time,
             attn_mla_kv_cache_save_time=attn_mla_kv_cache_save_time,
             attn_mla_prefill_kv_up_proj_time=attn_mla_prefill_kv_up_proj_time,
             attn_mla_prefill_time=attn_mla_prefill_time,
@@ -1316,6 +1318,11 @@ class ExecutionTime(BaseEntity):
             "attention_kv_cache_save_execution_time",
             self._attention_time.attention_kv_cache_save_execution_time,
         )
+
+    @property
+    def attention_kv_cache_extract_execution_time(self) -> float:
+        """KV connector's gather of the prompts this step completes (one physical layer)."""
+        return self._attention_time.attention_kv_cache_extract_execution_time
 
     @property
     def attention_decode_execution_time(self) -> float:

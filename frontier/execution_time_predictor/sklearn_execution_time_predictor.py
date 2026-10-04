@@ -31,6 +31,7 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -4129,6 +4130,17 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
             }
 
+        extract_op_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        if self._cluster_type == ClusterType.PREFILL and extract_op_name in self._models:
+            model = self._models[extract_op_name]
+            predictions[extract_op_name] = {
+                "_on_demand_prediction": True,
+                "_n_features": 1,
+                "_model": model,
+                "_feature_names": ["num_blocks"],
+                "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
+            }
+
         # Handle attn_prefill_mixed: high-dimensional model requiring on-demand prediction
         # This model uses 12 features and cannot be pre-computed efficiently
         if need_prefill and "attn_prefill_mixed" in self._models:
@@ -6369,6 +6381,31 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             "attn_kv_cache_save_calibration_scale",
         )
 
+    def _get_attention_kv_cache_extract_execution_time(self, batch: Batch) -> float:
+        """Gather the KV blocks of each prompt this step completes, one launch per request.
+
+        vLLM's P2P NCCL connector adds a request to the step that completes its
+        prompt (build_connector_meta) and gathers all its prompt blocks after
+        each layer's attention (save_kv_layer).
+        """
+        extract_op_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        if extract_op_name not in self._predictions:
+            raise ValueError(
+                f"kv_connector=p2p_nccl prices {extract_op_name} from the "
+                f"time_stats.{extract_op_name} rows of {self._attention_input_file}, "
+                "which has none; profile the attention table with the KV extract."
+            )
+        extract_time = 0.0
+        for request, num_tokens in zip(batch.requests, batch.num_tokens):
+            if request.num_processed_tokens + num_tokens < request.num_prefill_tokens:
+                continue
+            with self._counting_launch():
+                extract_time += self._get_on_demand_prediction(
+                    extract_op_name,
+                    {"num_blocks": math.ceil(request.num_prefill_tokens / self._block_size)},
+                )
+        return extract_time
+
     def _get_attention_decode_execution_time(self, batch: Batch) -> float:
         (
             decode_batch_size,
@@ -7438,6 +7475,14 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
         attention_family.require_enabled_for_execution()
+        prices_kv_cache_extract = (
+            cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
+        )
+        if prices_kv_cache_extract and attention_family is not DENSE_ATTENTION_FAMILY:
+            raise NotImplementedError(
+                f"kv_connector=p2p_nccl prices the KV extract of dense attention layers; "
+                f"layer {layer_id} is {attention_family.family_id}."
+            )
 
         if attention_family.family_id == GATED_DELTA_NET_ATTENTION_FAMILY.family_id:
             if self._gdn_predictor is None:
@@ -7533,6 +7578,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             attn_kv_cache_save_time = self._get_attention_kv_cache_save_execution_time(
                 batch
             )
+        attn_kv_cache_extract_time = (
+            self._get_attention_kv_cache_extract_execution_time(batch)
+            if prices_kv_cache_extract
+            else 0.0
+        )
         attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
 
         # Architecture-profile attention extras are 0.0 when not declared by the profile.
@@ -7585,6 +7635,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             f"[OP-TRACE][{cluster_name}][ATTENTION][{cache_write_op_name}] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_kv_cache_save_time:.6f}"
         )
+        if prices_kv_cache_extract:
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][ATTENTION][{DENSE_ATTENTION_KV_CACHE_EXTRACT.name}] "
+                f"batch_id={batch.id}, layer_id={layer_id}, "
+                f"predicted_time_ms={attn_kv_cache_extract_time:.6f}"
+            )
         logger.info(
             f"[OP-TRACE][{cluster_name}][ATTENTION][attn_post_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_post_proj_time:.6f}"
@@ -7608,6 +7664,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             + attn_prefill_time
             + attn_decode_time
             + attn_kv_cache_save_time
+            + attn_kv_cache_extract_time
             + attn_post_proj_time
             # Architecture-profile attention extras are 0.0 when absent.
             + attn_inter_norm_time
@@ -7625,6 +7682,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             attention_layer_post_proj_execution_time=attn_post_proj_time,
             attention_rope_execution_time=attn_rope_time,
             attention_kv_cache_save_execution_time=attn_kv_cache_save_time,
+            attention_kv_cache_extract_execution_time=attn_kv_cache_extract_time,
             attn_norm_time=attn_norm_time,
             # Architecture-profile attention extras are 0.0 when absent.
             attn_inter_norm_time=attn_inter_norm_time,

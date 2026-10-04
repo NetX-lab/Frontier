@@ -1265,6 +1265,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 cluster_type,
                 num_layers,
             ),
+            attention_kv_cache_extract_execution_time=(
+                attention_time.attention_kv_cache_extract_execution_time
+            ),
             attention_decode_execution_time=self._predict_one_op_time(
                 "attention_decode_execution_time",
                 attention_time.attention_decode_execution_time,
@@ -2615,6 +2618,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         cluster_type,
                         num_layers,
                     ),
+                    attention_kv_cache_extract_execution_time=(
+                        attention_time.attention_kv_cache_extract_execution_time
+                    ),
                     attention_decode_execution_time=self._predict_one_op_time(
                         "attention_decode_execution_time",
                         attention_time.attention_decode_execution_time,
@@ -2839,6 +2845,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    attention_kv_cache_extract_execution_time=(
+                        attention_time.attention_kv_cache_extract_execution_time
                     ),
                     attention_decode_execution_time=self._predict_one_op_time(
                         "attention_decode_execution_time",

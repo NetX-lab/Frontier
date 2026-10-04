@@ -130,6 +130,20 @@ class KernelGapPricing:
         finally:
             self._kernel_count_scopes = self._kernel_count_scopes[:-1]
 
+    @contextmanager
+    def _counting_launch(self) -> Iterator[None]:
+        """Add the kernels of one more launch of the operators looked up in this block.
+
+        Unlike a repeated lookup, such as one KV extract per request, each
+        launch runs its kernels again.
+        """
+        with self._counting_kernels() as launch:
+            yield
+        if self._kernel_count_scopes:
+            operators = self._kernel_count_scopes[-1].operators
+            for name, count in launch.operators.items():
+                operators[name] = operators.get(name, 0.0) + count
+
     def _record_kernel_count(
         self,
         model_name: str,

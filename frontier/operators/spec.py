@@ -17,6 +17,7 @@ class OperatorRole(Enum):
     """Semantic role of a physical operator."""
 
     CACHE_WRITE = "cache_write"
+    CACHE_EXTRACT = "cache_extract"
     PREFILL_KERNEL = "prefill_kernel"
     DECODE_KERNEL = "decode_kernel"
     PROJECTION = "projection"

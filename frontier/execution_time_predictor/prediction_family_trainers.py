@@ -8,10 +8,12 @@ frame, and hands one model at a time to the shared fitting routine.
 
 import functools
 import os
+import numpy as np
 import pandas as pd
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     LATENT_MLA_ATTENTION_FAMILY,
 )
 from frontier.attention.model_binding import resolve_runtime_attention_family
@@ -24,6 +26,7 @@ from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
 from frontier.attention.string_coercion import coerce_truthy_int
+from frontier.config import global_vars
 from frontier.execution_time_predictor.kernel_gap import KernelCountTraining
 from frontier.execution_time_predictor.moe_dataset_training import (
     profiled_block_sizes,
@@ -906,6 +909,21 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 trained_model_signatures.add(prefill_model_signature)
                 logger.info(f"Trained {family_name} {prefill_model_name} for {cluster_type}")
 
+            extract_model_signature = f"{DENSE_ATTENTION_KV_CACHE_EXTRACT.name}_{attention_signature}"
+            if (
+                global_vars.get_kv_connector() == "p2p_nccl"
+                and extract_model_signature not in trained_model_signatures
+            ):
+                models.update(
+                    self._train_kv_cache_extract_model(
+                        standard_prefill_df,
+                        replica_scheduler_config.block_size,
+                        execution_time_predictor_config,
+                        training_context,
+                    )
+                )
+                trained_model_signatures.add(extract_model_signature)
+
         decode_model_name = get_enabled_predictor_metric_name_by_role(
             DENSE_ATTENTION_FAMILY,
             AttentionOperatorRole.DECODE_KERNEL,
@@ -1036,6 +1054,47 @@ class PredictionFamilyTrainers(KernelCountTraining):
 
         trained_model_signatures.add(attention_signature)
         return models
+
+    def _train_kv_cache_extract_model(
+        self,
+        standard_prefill_df: pd.DataFrame,
+        block_size: int,
+        execution_time_predictor_config,
+        training_context: Dict[str, Any],
+    ) -> Dict[str, BaseEstimator]:
+        """Train the KV extract of one request's prompt blocks, when the table times it.
+
+        A one-request prefill row times the gather of all the blocks its
+        prompt occupies, the work P2pNcclConnector.save_kv_layer launches per
+        request and layer.
+        """
+        model_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        target_col = f"time_stats.{model_name}.median"
+        if target_col not in standard_prefill_df.columns:
+            return {}
+        extract_df = standard_prefill_df[
+            (standard_prefill_df["batch_size"] == 1) & standard_prefill_df[target_col].notna()
+        ].copy()
+        if extract_df.empty:
+            return {}
+        extract_df["num_blocks"] = np.ceil(
+            (extract_df["kv_cache_size"] + extract_df["prefill_chunk_size"]) / block_size
+        )
+        model = self._train_single_model(
+            model_name=model_name,
+            df=extract_df,
+            feature_cols=["num_blocks"],
+            target_col=target_col,
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+        )
+        logger.info(
+            "Trained %s %s on %d one-request prefill rows",
+            self._measurement_family_name(self._active_measurement_type),
+            model_name,
+            len(extract_df),
+        )
+        return {model_name: model}
 
     @staticmethod
 
