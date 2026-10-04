@@ -36,7 +36,7 @@ engine_args.json holds vllm.LLM keyword arguments other than the model, e.g.
 {"load_format": "dummy", "skip_tokenizer_init": true, "tensor_parallel_size": 8,
 "compilation_config": {"level": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}, "max_num_seqs": 64}.
 
-Output: <output_dir>/compute/<device>/kernel_gap.csv
+Output: <output_dir>/compute/<device>/<model>/kernel_gap.csv
 """
 
 from __future__ import annotations
@@ -53,6 +53,8 @@ from typing import Callable, Sequence
 
 import numpy as np
 import pandas as pd
+
+from frontier.profiling.utils import build_profiling_output_path
 
 EXECUTION_MODES = ("eager", "cuda_graph")
 # torch.cuda._sleep launches this kernel; it holds the stream and is not part of a chain.
@@ -315,7 +317,8 @@ def main() -> None:
         "torch_version": torch.__version__,
         "cuda_version": torch.version.cuda,
     } for mode, mode_gaps in gaps.items()]
-    output_path = Path(args.output_dir) / "compute" / args.device / "kernel_gap.csv"
+    output_path = build_profiling_output_path(output_root=args.output_dir, profiling_type="compute",
+                                              hardware=args.device, model_name=args.model, op_name="kernel_gap")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows).to_csv(output_path, index=False)
     print(f"Wrote {len(rows)} kernel-gap rows to {output_path}")

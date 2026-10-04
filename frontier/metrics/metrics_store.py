@@ -4279,6 +4279,8 @@ class MetricsStore:
                 execution_time.mtp_terminal_overshoot_time
             ),
         }
+        if execution_time.has_kernel_gap:
+            component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
         return component_ledger
 
     def _build_frontier_stage_batch_diagnostic_component_ledger(

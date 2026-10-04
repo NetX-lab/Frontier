@@ -6,6 +6,7 @@ and CPU overhead.  Each selects the rows its family owns, builds the feature
 frame, and hands one model at a time to the shared fitting routine.
 """
 
+import functools
 import os
 import pandas as pd
 
@@ -23,6 +24,7 @@ from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
 from frontier.attention.string_coercion import coerce_truthy_int
+from frontier.execution_time_predictor.kernel_gap import KernelCountTraining
 from frontier.execution_time_predictor.moe_dataset_training import (
     profiled_block_sizes,
     select_moe_operator_features,
@@ -71,7 +73,7 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = init_logger(__name__)
 
 
-class PredictionFamilyTrainers:
+class PredictionFamilyTrainers(KernelCountTraining):
     """Per-family model training for the execution-time predictor."""
 
     def _train_ffn_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config,
@@ -1468,11 +1470,42 @@ class PredictionFamilyTrainers:
         persist_exact_lookup: bool = True,
         layer_contract: Optional[ResolvedLayerContract] = None,
     ) -> BaseEstimator:
-        """Train a single model with given data and configuration."""
+        """Train a single model and register it under the active measurement family."""
         layer_contract, training_context = _normalize_layer_contract_context(
             training_context,
             explicit_layer_contract=layer_contract,
         )
+        fit = functools.partial(
+            self._fit_single_model,
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+            persist_exact_lookup=persist_exact_lookup,
+            layer_contract=layer_contract,
+        )
+        model, profiling_precision = fit(model_name, df, feature_cols, target_col)
+        self._store_model_precision(
+            model_name,
+            profiling_precision,
+            model,
+            **_layer_contract_kwargs(layer_contract),
+        )
+        return self._paired_with_kernel_count_model(
+            model, model_name, df, feature_cols, target_col,
+            train=lambda *count_model_args: fit(*count_model_args)[0],
+        )
+
+    def _fit_single_model(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols: List[str],
+        target_col: str,
+        execution_time_predictor_config,
+        training_context: Optional[Dict[str, Any]],
+        persist_exact_lookup: bool,
+        layer_contract: Optional[ResolvedLayerContract],
+    ) -> Tuple[BaseEstimator, str]:
+        """Load or fit one model; return it with its profiling precision."""
         if len(df) == 0:
             # 提供详细的错误信息，以便调试
             context_info = ""
@@ -1549,13 +1582,7 @@ class PredictionFamilyTrainers:
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            self._store_model_precision(
-                model_name,
-                profiling_precision,
-                cached_model,
-                **_layer_contract_kwargs(layer_contract),
-            )
-            return cached_model
+            return cached_model, profiling_precision
 
         # ============================================================
         # CACHE MISS: Model not found in cache
@@ -1653,10 +1680,4 @@ class PredictionFamilyTrainers:
             )
 
         self._store_model_in_cache(model_name, model_hash, best_estimator)
-        self._store_model_precision(
-            model_name,
-            profiling_precision,
-            best_estimator,
-            **_layer_contract_kwargs(layer_contract),
-        )
-        return best_estimator
+        return best_estimator, profiling_precision

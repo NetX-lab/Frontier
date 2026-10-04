@@ -82,6 +82,11 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     uses_two_stream_eager_pricing,
 )
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
+from frontier.execution_time_predictor.kernel_gap import (
+    KernelCountTraining,
+    KernelGapPricing,
+    load_kernel_gap_ms,
+)
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
@@ -354,7 +359,7 @@ def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
     return matches[0]
 
 
-class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
+class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseExecutionTimePredictor):
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
         return get_enabled_predictor_metric_name_by_role(
@@ -578,6 +583,21 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 self._moe_input_file_kernel_only,
                 self._cpu_overhead_input_file_eager,
             )
+        self._kernel_gap_ms = load_kernel_gap_ms(
+            self._config,
+            self._kernel_gap_input_file,
+            self._replica_config,
+            sys_arch=global_vars.get_sys_arch(),
+        )
+        if self._kernel_gap_ms is not None:
+            logger.info(
+                "Cluster %s adds the mean device gap before each kernel of a kernel-only step "
+                "(eager %.4f us, cuda_graph %.4f us) from %s.",
+                cluster_type,
+                self._kernel_gap_ms["eager"] * 1e3,
+                self._kernel_gap_ms["cuda_graph"] * 1e3,
+                self._kernel_gap_input_file,
+            )
         self._active_measurement_type = self._get_default_measurement_type_for_cluster()
 
         if not self._enable_dummy_mode:
@@ -777,8 +797,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 setattr(self, f"_{name}_input_file_{family}", paths[f"{name}{suffix}_input_file"])
         self._cpu_overhead_input_file_eager = paths["cpu_overhead_input_file"]
         self._cpu_overhead_input_file_kernel_only = paths["cpu_overhead_kernel_only_input_file"]
-        for name in ("all_reduce", "send_recv", "pp_stage_boundary",
-                     "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+        for name in ("all_reduce", "send_recv", "pp_stage_boundary", "pp_receiver_head",
+                     "pp_producer_send_path", "pp_prefill_consumer_active", "kernel_gap"):
             setattr(self, f"_{name}_input_file", paths[f"{name}_input_file"])
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
@@ -3108,7 +3128,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            return cached_model
+            return self._paired_with_kernel_count_model(
+                cached_model, model_name, df, feature_cols, target_col, self._train_model
+            )
 
         model = self._get_estimator()
         grid_search_params = self._get_grid_search_params()
@@ -3160,7 +3182,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             target_col=target_col,
             model=best_estimator,
         )
-        return best_estimator
+        return self._paired_with_kernel_count_model(
+            best_estimator, model_name, df, feature_cols, target_col, self._train_model
+        )
 
     def _store_model_predication_cache(
         self, model_name: str, prediction_hash: str, predictions: Dict[Tuple, float]
@@ -4541,6 +4565,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"model has {model_feature_count}"
             )
 
+        self._record_kernel_count(model_name, model, feature_key, normalized_feature_names)
         # A persisted measured row is authoritative when the producer attached
         # exact metadata to the estimator.  Finite prediction tables remain
         # compatible with older artifacts that do not carry this optional map.
@@ -4822,6 +4847,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 )
 
         feature_key = tuple(normalized_features[name] for name in feature_names)
+        self._record_kernel_count(model_name, model, feature_key, feature_names)
         exact_lookup = model_info.get("_exact_lookup", {})
         if exact_lookup is None:
             exact_lookup = {}
@@ -7326,6 +7352,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             exact_lookup = model_info.get("_exact_lookup") or {}
             if exact_key in exact_lookup:
                 op_times[op_name] = float(exact_lookup[exact_key])
+                self._record_kernel_count(op_name, model_info.get("_model"), exact_key, feature_names)
                 continue
 
             model = model_info.get("_model")
@@ -7365,6 +7392,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return AttentionTime(operator_times=operator_times)
 
     def predict_attention_layer_time(
+        self, batch: Batch, layer_id: int, cluster_type: ClusterType
+    ) -> AttentionTime:
+        """Predict one layer's attention; inside a layer's kernel counting, count its kernels."""
+        if not self._kernel_count_scopes:
+            return self._predict_attention_layer_time(batch, layer_id, cluster_type)
+        with self._counting_kernels() as counts:
+            attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
+        attention_time.kernel_count = math.fsum(counts.operators.values())
+        self._record_attention_kernels(attention_time.kernel_count)
+        return attention_time
+
+    def _predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
         """
@@ -7949,7 +7988,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         """Predict homogeneous layer numerics once and publish ordered identities."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
-        timing = self._predict_dense_layer_execution_time(
+        timing = self._predict_layer_with_kernel_gap(
+            self._predict_dense_layer_execution_time,
             batch, stage_id, cluster_type, num_layers, layer_id,
             include_moe, include_ffn, include_attention,
         )

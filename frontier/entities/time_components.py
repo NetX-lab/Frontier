@@ -422,6 +422,9 @@ class AttentionTime:
     # These are 0.0 for non-Step2Mini models
     attn_inter_norm_time: float = 0.0  # RMSNorm on Q after split from QKV
     attn_wq_proj_time: float = 0.0     # ColumnParallelLinear on Q after inter_norm
+    # Kernels these operators launch (a count, not a time), when a predictor
+    # prices the device gap before each kernel of a kernel-only step.
+    kernel_count: float = 0.0
     operator_times: AttentionOperatorTimes | None = None
 
     def total_time(self) -> float:

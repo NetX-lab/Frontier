@@ -439,6 +439,7 @@ class SklearnMoEExecutionTimePredictor(
         cached = cache.get(key)
         if cached is not None:
             self._attention_query_cache_hits += 1
+            self._record_attention_kernels(cached.kernel_count)
             return self._clone_attention_time(cached)
         self._attention_query_cache_misses += 1
         result = self.predict_attention_layer_time(
@@ -1226,7 +1227,8 @@ class SklearnMoEExecutionTimePredictor(
             raise ValueError("num_layers must be a positive int")
         cache: dict[tuple[str, str], AttentionTime] = {}
         layers = [
-            self._predict_moe_layer_execution_time(
+            self._predict_layer_with_kernel_gap(
+                self._predict_moe_layer_execution_time,
                 batch, stage_id, cluster_type, layer_id + offset,
                 include_moe, include_ffn, include_attention, cache,
                 include_stage_owned=offset == 0,

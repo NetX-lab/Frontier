@@ -146,7 +146,8 @@ def resolve_training_file_paths(
                             cpu_overhead_input_file=paths.cpu_overhead)
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             resolved["cpu_overhead_kernel_only_input_file"] = paths.cpu_overhead
-    for name in ("pp_stage_boundary", "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+    for name in ("pp_stage_boundary", "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active",
+                 "kernel_gap"):
         key = f"{name}_input_file"
         value = (overrides or {}).get(key, getattr(config, key, ""))
         resolved[key] = substitute_input_path(value, device=device, model=model, network_device=network_device)
