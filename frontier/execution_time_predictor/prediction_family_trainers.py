@@ -1332,6 +1332,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
             target_col="time_stats.send_recv.median",
             execution_time_predictor_config=execution_time_predictor_config,
             training_context=training_context,
+            count_kernels=False,
         )
 
         trained_model_signatures.add(pp_signature)
@@ -1377,7 +1378,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
             feature_cols=["num_tokens"],
             target_col="time_stats.all_reduce.median",
             execution_time_predictor_config=execution_time_predictor_config,
-            training_context=training_context
+            training_context=training_context,
+            count_kernels=False,
         )
         
         trained_model_signatures.add(tp_signature)
@@ -1469,8 +1471,13 @@ class PredictionFamilyTrainers(KernelCountTraining):
         training_context: Optional[Dict[str, Any]] = None,
         persist_exact_lookup: bool = True,
         layer_contract: Optional[ResolvedLayerContract] = None,
+        count_kernels: bool = True,
     ) -> BaseEstimator:
-        """Train a single model and register it under the active measurement family."""
+        """Train a single model and register it under the active measurement family.
+
+        A collective's model passes ``count_kernels=False``: a collective launches
+        the kernels of its operator spec, so it has no kernel-count model.
+        """
         layer_contract, training_context = _normalize_layer_contract_context(
             training_context,
             explicit_layer_contract=layer_contract,
@@ -1489,6 +1496,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
             model,
             **_layer_contract_kwargs(layer_contract),
         )
+        if not count_kernels:
+            return model
         return self._paired_with_kernel_count_model(
             model, model_name, df, feature_cols, target_col,
             train=lambda *count_model_args: fit(*count_model_args)[0],

@@ -54,9 +54,9 @@ from typing import Callable, Sequence
 import numpy as np
 import pandas as pd
 
+from frontier.profiling.kernel_gap.schema import EXECUTION_MODE_COLUMN, EXECUTION_MODES, KERNEL_GAP_US_COLUMN
 from frontier.profiling.utils import build_profiling_output_path
 
-EXECUTION_MODES = ("eager", "cuda_graph")
 # torch.cuda._sleep launches this kernel; it holds the stream and is not part of a chain.
 SPIN_KERNEL_NAME = "spin_kernel"
 LAUNCH_API_NAMES = ("cudaLaunchKernel", "cuLaunchKernel", "cudaLaunchKernelExC", "cuLaunchKernelEx")
@@ -283,7 +283,7 @@ def main() -> None:
     gaps = {mode: [] for mode in EXECUTION_MODES}
 
     def record(mode: str, setting: dict, setting_gaps: list[float]) -> None:
-        print(json.dumps({"execution_mode": mode, "model": args.model, **setting,
+        print(json.dumps({EXECUTION_MODE_COLUMN: mode, "model": args.model, **setting,
                           "num_gaps": len(setting_gaps),
                           "mean_us": float(np.mean(setting_gaps)),
                           "median_us": float(np.median(setting_gaps)),
@@ -308,8 +308,8 @@ def main() -> None:
     sources = {"eager": f"decoder_layer:{args.model}:tp{args.num_tensor_parallel_workers}",
                "cuda_graph": f"vllm_decode_graphs:{args.model}"}
     rows = [{
-        "execution_mode": mode,
-        "kernel_gap_us": float(np.mean(mode_gaps)),
+        EXECUTION_MODE_COLUMN: mode,
+        KERNEL_GAP_US_COLUMN: float(np.mean(mode_gaps)),
         "num_gaps": len(mode_gaps),
         "chain": sources[mode],
         "gpu_name": torch.cuda.get_device_name(),

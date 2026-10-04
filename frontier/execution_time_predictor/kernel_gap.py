@@ -18,7 +18,7 @@ from typing import Any, Callable, Iterator, Sequence
 
 import pandas as pd
 
-from frontier.profiling.kernel_gap.main import EXECUTION_MODES
+from frontier.profiling.kernel_gap.schema import EXECUTION_MODE_COLUMN, EXECUTION_MODES, KERNEL_GAP_US_COLUMN
 from frontier.types import MeasurementType
 
 KERNEL_COUNT_STAT = "kernel_count"
@@ -37,10 +37,11 @@ def read_kernel_gap_ms(path: str) -> dict[str, float]:
     table = pd.read_csv(path)
     gaps_ms = {}
     for mode in EXECUTION_MODES:
-        gaps_us = table.loc[table["execution_mode"] == mode, "kernel_gap_us"]
+        gaps_us = table.loc[table[EXECUTION_MODE_COLUMN] == mode, KERNEL_GAP_US_COLUMN]
         if len(gaps_us) != 1 or not math.isfinite(gaps_us.iloc[0]) or gaps_us.iloc[0] < 0:
             raise ValueError(
-                f"{path} needs one finite, non-negative kernel_gap_us row for execution_mode={mode}"
+                f"{path} needs one finite, non-negative {KERNEL_GAP_US_COLUMN} row for "
+                f"{EXECUTION_MODE_COLUMN}={mode}"
             )
         gaps_ms[mode] = float(gaps_us.iloc[0]) * 1e-3
     return gaps_ms

@@ -20,6 +20,7 @@ from frontier.execution_time_predictor.kernel_gap import (
     load_kernel_gap_ms,
     read_kernel_gap_ms,
 )
+from frontier.execution_time_predictor.prediction_family_trainers import PredictionFamilyTrainers
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
@@ -141,6 +142,33 @@ def test_kernel_only_rows_without_counts_fail_fast(counts):
             SimpleNamespace(), "linear_mlp_up_proj", rows, ["num_tokens"], "time_stats.mlp_up_proj.median",
             lambda *args: SimpleNamespace(),
         )
+
+
+class _FamilyTrainers(PredictionFamilyTrainers):
+    def __init__(self):
+        self._kernel_gap_ms = GAP_MS
+        self._kernel_gap_input_file = "kernel_gap.csv"
+        self._active_measurement_type = MeasurementType.KERNEL_ONLY
+        self.fitted, self.registered = [], []
+
+    def _fit_single_model(self, model_name, df, feature_cols, target_col, **kwargs):
+        self.fitted.append(model_name)
+        return SimpleNamespace(), "fp16"
+
+    def _store_model_precision(self, model_name, *args, **kwargs):
+        self.registered.append(model_name)
+
+
+def test_shared_manager_registers_only_time_models_and_skips_collectives():
+    trainers = _FamilyTrainers()
+    rows = _operator_rows(**{"time_stats.mlp_up_proj.kernel_count": [3, 3, None]})
+    trainers._train_single_model("mlp_up_proj", rows, ["num_tokens"], "time_stats.mlp_up_proj.median", None)
+    collective_rows = pd.DataFrame({"num_tokens": [8], "time_stats.all_reduce.median": [1.0]})
+    trainers._train_single_model("all_reduce", collective_rows, ["num_tokens"], "time_stats.all_reduce.median",
+                                 None, count_kernels=False)
+
+    assert trainers.fitted == ["mlp_up_proj", "mlp_up_proj_kernel_count", "all_reduce"]
+    assert trainers.registered == ["mlp_up_proj", "all_reduce"]
 
 
 def _priced_model(operator, count_model):
