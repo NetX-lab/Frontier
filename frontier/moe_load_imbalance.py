@@ -2,10 +2,55 @@
 
 from __future__ import annotations
 
+import bisect
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import numpy as np
+
+# Features of the load-aware grouped-GEMM and shuffling models, in training order.
+MOE_LOAD_IMBALANCE_FEATURES = (
+    "total_routed_tokens",
+    "num_experts_per_device",
+    "hidden_dim",
+    "expert_hidden_dim",
+    "router_topk",
+    "model_expansion_ratio",
+    "tokens_per_expert_avg",
+    "tokens_to_experts_ratio",
+    "expert_utilization",
+    "min_load_ratio",
+    "load_imbalance_cv",
+    "max_load_ratio",
+    "load_entropy",
+    "load_gini_coefficient",
+)
+
+# Features of the grouped-GEMM model when the MoE table records
+# moe_align_block_size's padded token count: the w13 and w2 GEMMs run over
+# BLOCK_SIZE_M-padded expert blocks, the activation and moe_sum kernels over the
+# routed tokens.
+MOE_GROUPED_GEMM_PADDED_FEATURES = ("total_routed_tokens", "num_tokens_post_padded")
+
+
+def num_tokens_post_padded(expert_token_counts: Sequence[int], block_size_m: int) -> int:
+    """Routed tokens after padding each expert's tokens to a multiple of BLOCK_SIZE_M."""
+    return sum(-(-int(count) // block_size_m) * block_size_m for count in expert_token_counts)
+
+
+def block_size_m_for_tokens(profiled_block_sizes: Sequence[tuple[int, int]], num_tokens: int) -> int:
+    """BLOCK_SIZE_M of the smallest profiled ``num_tokens`` row at or above ``num_tokens``.
+
+    ``profiled_block_sizes`` holds sorted ``(num_tokens, block_size_m)`` pairs of
+    the MoE table the grouped-GEMM model was trained on.
+    """
+    index = bisect.bisect_left(profiled_block_sizes, (num_tokens,))
+    if index == len(profiled_block_sizes):
+        raise ValueError(
+            f"grouped GEMM at {num_tokens} tokens is above the largest profiled MoE row "
+            f"({profiled_block_sizes[-1][0]} tokens), so its BLOCK_SIZE_M is unknown"
+        )
+    return profiled_block_sizes[index][1]
 
 
 @dataclass

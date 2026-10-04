@@ -33,6 +33,7 @@ from frontier.execution_time_predictor.profiling_metadata import (
 )
 from frontier.logger import init_logger
 from frontier.model_architectures import ResolvedLayerContract
+from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES
 from frontier.operators.typed_contracts import (
     TYPED_OPERATOR_CONTRACTS_COLUMN,
     validate_typed_operator_contracts,
@@ -572,30 +573,6 @@ class ProfilingDataFrameLoaders:
             )
         return filtered_df
 
-    # Load imbalance feature columns used for MoE training
-    # These features describe the load distribution across experts
-    # Reference: frontier/training/moe_trainer.py lines 224-239 (authoritative source)
-    # Reference: frontier/profiling/moe/LOAD_IMBALANCE_GUIDE.md
-    MOE_LOAD_IMBALANCE_FEATURES = [
-        # Config features (6) - describe model configuration
-        "total_routed_tokens",      # Total tokens after routing (num_tokens * router_topk)
-        "num_experts_per_device",   # Number of experts per device after EP sharding
-        "hidden_dim",               # Model hidden dimension
-        "expert_hidden_dim",        # Expert FFN hidden dimension
-        "router_topk",              # Number of experts each token is routed to
-        "model_expansion_ratio",    # expert_hidden_dim / hidden_dim
-        # Derived features (2) - derived from config and routing
-        "tokens_per_expert_avg",    # Average tokens per expert
-        "tokens_to_experts_ratio",  # tokens / num_experts ratio
-        # Load features (6) - describe load distribution characteristics
-        "expert_utilization",       # Proportion of experts with non-zero load
-        "min_load_ratio",           # Min load / average load
-        "load_imbalance_cv",        # Coefficient of Variation: std/mean, key imbalance metric
-        "max_load_ratio",           # Max load / average load
-        "load_entropy",             # Entropy of load distribution (higher = more uniform)
-        "load_gini_coefficient",    # Gini coefficient: 0=equality, 1=inequality
-    ]
-
     # Feature columns for mixed-batch attention prefill model
     # These features capture batch heterogeneity characteristics together with
     # the uniform KV-cache context used by MixedAttentionInput profiling.
@@ -821,7 +798,7 @@ class ProfilingDataFrameLoaders:
         # Check for load imbalance features if load_imbalance mode is enabled
         if load_imbalance:
             missing_features = [
-                f for f in self.MOE_LOAD_IMBALANCE_FEATURES
+                f for f in MOE_LOAD_IMBALANCE_FEATURES
                 if f not in filtered_df.columns
             ]
             if missing_features:
@@ -834,7 +811,7 @@ class ProfilingDataFrameLoaders:
                 raise ValueError("Missing load imbalance features")
                 # Note: We don't change load_imbalance here, caller should handle feature selection
             else:
-                logger.info(f"Load imbalance features available: {self.MOE_LOAD_IMBALANCE_FEATURES}")
+                logger.info(f"Load imbalance features available: {MOE_LOAD_IMBALANCE_FEATURES}")
 
         if len(filtered_df) == 0:
             ep_requirement = "ANY" if expert_parallel_size is None else expert_parallel_size

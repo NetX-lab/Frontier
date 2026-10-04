@@ -23,6 +23,10 @@ from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
 from frontier.attention.string_coercion import coerce_truthy_int
+from frontier.execution_time_predictor.moe_dataset_training import (
+    profiled_block_sizes,
+    select_moe_operator_features,
+)
 from frontier.execution_time_predictor.prediction_model_identity import (
     _add_layer_contract_to_training_context,
     _build_exact_feature_lookup,
@@ -47,6 +51,7 @@ from frontier.moe_gating_runtime import (
     has_prefill_hot_moe_gating_rows,
     should_enable_prefill_hot_moe_gating_contract,
 )
+from frontier.moe_load_imbalance import MOE_GROUPED_GEMM_PADDED_FEATURES
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
@@ -297,63 +302,12 @@ class PredictionFamilyTrainers:
                         "ANY" if moe_ep_key is None else moe_ep_key
                     )
 
-                    # Per-operation feature selection.
-                    if model_name == "moe_grouped_gemm":
-                        available_load_features = [
-                            f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                            if f in op_moe_df.columns
-                        ]
-                        has_load_imbalance_features = (
-                            len(available_load_features)
-                            == len(self.MOE_LOAD_IMBALANCE_FEATURES)
-                        )
-                        if 0 < len(available_load_features) < len(self.MOE_LOAD_IMBALANCE_FEATURES):
-                            missing_features = [
-                                f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                                if f not in op_moe_df.columns
-                            ]
-                            raise ValueError(
-                                f"Partial load imbalance features found ({len(available_load_features)}/"
-                                f"{len(self.MOE_LOAD_IMBALANCE_FEATURES)}) for {model_name} at TP={moe_tp_key}. "
-                                f"Missing: {missing_features}."
-                            )
-
-                        if has_load_imbalance_features:
-                            op_feature_cols = available_load_features
-                            logger.info(
-                                f"  {model_name}: Using load imbalance features "
-                                f"({len(op_feature_cols)} features, TP={moe_tp_key})"
-                            )
-                        else:
-                            op_feature_cols = ["num_tokens"]
-                            logger.info(
-                                f"  {model_name}: Load imbalance features not found; "
-                                f"using num_tokens only (TP={moe_tp_key})."
-                            )
-                    elif model_name == "moe_shuffling":
-                        available_load_features = [
-                            f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                            if f in op_moe_df.columns
-                        ]
-                        if len(available_load_features) == len(self.MOE_LOAD_IMBALANCE_FEATURES):
-                            op_feature_cols = available_load_features
-                            logger.info(
-                                f"  {model_name}: Using load imbalance features "
-                                f"({len(op_feature_cols)} features, TP={moe_tp_key})"
-                            )
-                        else:
-                            # For shuffling we allow partial/legacy datasets and fall back to
-                            # num_tokens-only training when the full load feature set is absent.
-                            op_feature_cols = ["num_tokens"]
-                            logger.info(
-                                f"  {model_name}: Full load imbalance features unavailable; "
-                                f"using num_tokens only (TP={moe_tp_key})."
-                            )
-                    else:
-                        op_feature_cols = ["num_tokens"]
-                        logger.info(
-                            f"  {model_name}: Using num_tokens only (1 feature, TP={moe_tp_key})"
-                        )
+                    op_moe_df, op_feature_cols = select_moe_operator_features(
+                        model_name, op_moe_df
+                    )
+                    logger.info(
+                        f"  {model_name}: features {op_feature_cols} (TP={moe_tp_key})"
+                    )
 
                     # Store feature_cols in training_context for this specific operation
                     op_training_context['feature_cols'] = op_feature_cols
@@ -371,6 +325,10 @@ class PredictionFamilyTrainers:
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
+                    if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+                        models[model_name]._frontier_block_size_m = profiled_block_sizes(
+                            op_moe_df
+                        )
                     trained_model_signatures.add(model_signature)
                     logger.info(f"Trained {model_name} for {cluster_type} with features: {op_feature_cols}")
 
