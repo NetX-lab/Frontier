@@ -60,6 +60,9 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
         model_time = 15.0
         total_time = 20.0
 
+        def forward_launch_stall_time(self, device_span: float) -> float:
+            return 0.0
+
         def get_single_layer_attention_time(self) -> float:
             return 1.0
 
@@ -197,6 +200,9 @@ class _LayerExecutionTime:
             attention_ms + post_attention_ms + pipeline_ms
         ) * 1e-3
         self.total_time = self.model_time
+
+    def forward_launch_stall_time(self, device_span: float) -> float:
+        return 0.0
 
     def get_single_layer_attention_time(self) -> float:
         return self._attention_ms

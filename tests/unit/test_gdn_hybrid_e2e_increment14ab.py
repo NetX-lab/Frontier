@@ -297,6 +297,7 @@ def _build_predictor(config: BaseModelConfig, gdn: GDNPredictor):
     predictor._enable_dummy_mode = False
     predictor._dummy_execution_time = 0.0
     predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._two_stream_eager_pricing = False
     predictor._replica_config = SimpleNamespace(
         num_pipeline_stages=1,
         attn_tensor_parallel_size=1,

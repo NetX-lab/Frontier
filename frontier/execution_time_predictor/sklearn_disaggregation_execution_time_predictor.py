@@ -1118,6 +1118,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             pp_stage_boundary_handoff_time=(
                 self._get_pp_stage_boundary_handoff_time(batch, stage_id)
             ),
+            forward_launch_time=self._get_forward_launch_time(batch),
         )
 
     def _get_pp_stage_boundary_residual_runtime_time(
@@ -1344,6 +1345,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 overhead_time.pp_stage_boundary_residual_runtime_time
             ),
             pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+            forward_launch_time=overhead_time.forward_launch_time,
             mlp_layer_up_proj_execution_time=0.0,
             mlp_layer_down_proj_execution_time=0.0,
             mlp_layer_act_execution_time=0.0,
@@ -1530,9 +1532,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
             return self._get_zero_decode_ffn_ep_barrier_execution_time(num_layers)
 
-        measurement_type = self._select_measurement_type_for_batch(batch)
-        self._require_predictions_for_measurement_type(measurement_type, batch)
-        self._activate_measurement_type(measurement_type)
+        measurement_type = self._activate_measurement_type_for_batch(batch)
         self._emit_cuda_graph_activation_records(
             batch,
             measurement_type,
@@ -2355,6 +2355,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         overhead_time.pp_stage_boundary_residual_runtime_time
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+                    forward_launch_time=overhead_time.forward_launch_time,
                     is_moe=True,
                 )
             else:
@@ -2439,6 +2440,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         overhead_time.pp_stage_boundary_residual_runtime_time
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+                    forward_launch_time=overhead_time.forward_launch_time,
                     **self._get_zero_moe_params(),
                 )
 
@@ -2801,6 +2803,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         overhead_time.pp_stage_boundary_residual_runtime_time
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+                    forward_launch_time=overhead_time.forward_launch_time,
                     is_moe=True,
                 )
             else:
@@ -2942,6 +2945,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         overhead_time.pp_stage_boundary_residual_runtime_time
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+                    forward_launch_time=overhead_time.forward_launch_time,
                     **self._get_zero_moe_params(),
                 )
 

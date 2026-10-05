@@ -9,6 +9,7 @@ from typing import Any, Iterable, Mapping, Optional
 class PrefillFinalTiming:
     pipeline_time: float
     cpu_overhead: float
+    forward_launch_stall_time: float
     explicit_model_time: float
     total_time: float
     completion_time: float
@@ -19,6 +20,7 @@ class PrefillFinalTiming:
 class DecodeFinalTiming:
     pipeline_time: float
     cpu_overhead: float
+    forward_launch_stall_time: float
     draft_proposer_time: float
     mtp_terminal_overshoot_time: float
     total_time: float
@@ -78,7 +80,11 @@ def prepare_prefill_final_timing(
     sync_time: float,
     original_start_time: float,
 ) -> PrefillFinalTiming:
-    """Prepare PREFILL final-stage timing values without scheduler mutation."""
+    """Prepare PREFILL final-stage timing values without scheduler mutation.
+
+    The layer events simulated the stage's device work up to ``sync_time``; with
+    the pipeline send it is the device span that hides the forward's launch.
+    """
 
     elapsed_stage_wall_time = sync_time - original_start_time
     if elapsed_stage_wall_time < 0:
@@ -98,10 +104,14 @@ def prepare_prefill_final_timing(
             f"model_time={execution_time.model_time}, "
             f"stage_cpu_overhead={cpu_overhead}"
         )
-    total_time = pipeline_time + cpu_overhead
+    forward_launch_stall_time = execution_time.forward_launch_stall_time(
+        elapsed_stage_wall_time + pipeline_time
+    )
+    total_time = pipeline_time + cpu_overhead + forward_launch_stall_time
     return PrefillFinalTiming(
         pipeline_time=pipeline_time,
         cpu_overhead=cpu_overhead,
+        forward_launch_stall_time=forward_launch_stall_time,
         explicit_model_time=explicit_model_time,
         total_time=total_time,
         completion_time=sync_time + total_time,
@@ -109,13 +119,23 @@ def prepare_prefill_final_timing(
     )
 
 
-def prepare_decode_final_timing(execution_time: Any) -> DecodeFinalTiming:
-    """Prepare DECODE final-stage timing values without scheduler mutation."""
+def prepare_decode_final_timing(
+    execution_time: Any, elapsed_stage_wall_time: float
+) -> DecodeFinalTiming:
+    """Prepare DECODE final-stage timing values without scheduler mutation.
+
+    ``elapsed_stage_wall_time`` is the device work the layer events simulated
+    since the stage start; with the pipeline send it is the device span that
+    hides the forward's launch.
+    """
 
     pipeline_time = execution_time.pipeline_time * 1e-3
     cpu_overhead = max(
         execution_time.total_time - execution_time.model_time,
         0.0,
+    )
+    forward_launch_stall_time = execution_time.forward_launch_stall_time(
+        elapsed_stage_wall_time + pipeline_time
     )
     draft_proposer_time = execution_time.decode_draft_proposer_time * 1e-3
     mtp_terminal_overshoot_time = (
@@ -124,7 +144,10 @@ def prepare_decode_final_timing(execution_time: Any) -> DecodeFinalTiming:
     return DecodeFinalTiming(
         pipeline_time=pipeline_time,
         cpu_overhead=cpu_overhead,
+        forward_launch_stall_time=forward_launch_stall_time,
         draft_proposer_time=draft_proposer_time,
         mtp_terminal_overshoot_time=mtp_terminal_overshoot_time,
-        total_time=pipeline_time + cpu_overhead + draft_proposer_time,
+        total_time=(
+            pipeline_time + cpu_overhead + forward_launch_stall_time + draft_proposer_time
+        ),
     )

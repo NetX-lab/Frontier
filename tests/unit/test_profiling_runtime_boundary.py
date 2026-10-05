@@ -19,6 +19,9 @@ RUNTIME_IMPORTS = {
     "profiling_dataframe_loaders.py": {
         "frontier.profiling.cpu_overhead.validation",
     },
+    "measurement_input_paths.py": {
+        "frontier.profiling.cpu_overhead.schema",
+    },
 }
 
 

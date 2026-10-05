@@ -37,6 +37,13 @@ CPU_OVERHEAD_NUMERIC_COLUMNS: Final[tuple[str, ...]] = (
     "ray_comm_time_mean",
 )
 
+# Optional host time to launch an eager forward step's kernels. A table that
+# carries it prices eager steps as the slower of the launch and device streams.
+CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS: Final[tuple[str, ...]] = (
+    "forward_launch_mean",
+    "forward_launch_median",
+)
+
 # Required fields for contract validation.
 CPU_OVERHEAD_REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     "model_name",

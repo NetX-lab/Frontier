@@ -9,6 +9,7 @@ import pandas as pd
 
 from frontier.logger import init_logger
 from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS,
     CPU_OVERHEAD_IDENTITY_COLUMNS,
     CPU_OVERHEAD_NUMERIC_COLUMNS,
     CPU_OVERHEAD_REQUIRED_COLUMNS,
@@ -110,11 +111,23 @@ def validate_cpu_overhead_dataframe(
             f"Required columns: {list(CPU_OVERHEAD_REQUIRED_COLUMNS)}"
         )
 
-    numeric_frame = validated.loc[:, CPU_OVERHEAD_NUMERIC_COLUMNS].apply(
+    forward_launch_columns = [
+        column for column in CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS if column in validated.columns
+    ]
+    if forward_launch_columns and len(forward_launch_columns) != len(
+        CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS
+    ):
+        raise ValueError(
+            f"CPU overhead columns {list(CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS)} must appear "
+            f"together, got {forward_launch_columns}"
+        )
+    numeric_columns = [*CPU_OVERHEAD_NUMERIC_COLUMNS, *forward_launch_columns]
+
+    numeric_frame = validated.loc[:, numeric_columns].apply(
         pd.to_numeric, errors="coerce"
     )
     invalid_numeric_columns = [
-        column for column in CPU_OVERHEAD_NUMERIC_COLUMNS if numeric_frame[column].isna().any()
+        column for column in numeric_columns if numeric_frame[column].isna().any()
     ]
     if invalid_numeric_columns:
         raise ValueError(
@@ -125,7 +138,7 @@ def validate_cpu_overhead_dataframe(
     if not np.isfinite(numeric_frame.to_numpy(dtype=float)).all():
         raise ValueError("CPU overhead profiling dataframe contains non-finite numeric values.")
 
-    validated.loc[:, CPU_OVERHEAD_NUMERIC_COLUMNS] = numeric_frame
+    validated.loc[:, numeric_columns] = numeric_frame
 
     if (validated["batch_size"] <= 0).any():
         raise ValueError("batch_size must be positive for all CPU overhead rows.")

@@ -699,8 +699,11 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 # Create batch stage
                 from frontier.entities import BatchStage
 
-                total_execution_time = execution_time.total_time
                 model_execution_time = execution_time.model_time
+                total_execution_time = (
+                    execution_time.total_time
+                    + execution_time.forward_launch_stall_time(model_execution_time)
+                )
                 effective_tokens_compute = batch.get_effective_total_tokens_for_compute(
                     self._cluster_type
                 )

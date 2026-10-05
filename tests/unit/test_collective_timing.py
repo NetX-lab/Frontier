@@ -25,19 +25,49 @@ def test_attention_delay_converts_milliseconds():
     assert attention_delay_seconds(execution_time) == pytest.approx(0.0025)
 
 
+def _launch_stall(forward_launch_ms, spans=None):
+    def stall(device_span):
+        if spans is not None:
+            spans.append(device_span)
+        return max(0.0, forward_launch_ms * 1e-3 - device_span)
+
+    return stall
+
+
 def test_prefill_final_timing_preserves_component_and_pipeline_units():
-    execution_time = SimpleNamespace(pipeline_time=4.0, total_time=10.0, model_time=8.0)
+    execution_time = SimpleNamespace(
+        pipeline_time=4.0, total_time=10.0, model_time=8.0,
+        forward_launch_stall_time=_launch_stall(0.0),
+    )
     timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.0, 0.0)
     assert timing.pipeline_time == pytest.approx(0.004)
     assert timing.cpu_overhead == pytest.approx(2.0)
+    assert timing.forward_launch_stall_time == 0.0
     assert timing.explicit_model_time == pytest.approx(0.008)
     assert timing.total_time == pytest.approx(2.004)
     assert timing.completion_time == pytest.approx(3.004)
     assert timing.actual_execution_time == pytest.approx(3.004)
 
 
+def test_prefill_final_timing_charges_launch_left_exposed_by_the_simulated_span():
+    spans = []
+    execution_time = SimpleNamespace(
+        pipeline_time=4.0, total_time=10.0, model_time=8.0,
+        forward_launch_stall_time=_launch_stall(1500.0, spans),
+    )
+    # The layer events simulated 1.0 s of device work and the pipeline send 4 ms.
+    timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.5, 0.5)
+    assert spans == [pytest.approx(1.004)]
+    assert timing.forward_launch_stall_time == pytest.approx(0.496)
+    assert timing.total_time == pytest.approx(0.004 + 2.0 + 0.496)
+    assert timing.completion_time == pytest.approx(1.5 + 2.5)
+
+
 def test_prefill_final_timing_rejects_negative_cpu_overhead():
-    execution_time = SimpleNamespace(pipeline_time=4.0, total_time=7.0, model_time=8.0)
+    execution_time = SimpleNamespace(
+        pipeline_time=4.0, total_time=7.0, model_time=8.0,
+        forward_launch_stall_time=_launch_stall(0.0),
+    )
     with pytest.raises(ValueError, match="CPU overhead"):
         prepare_prefill_final_timing(execution_time, [1.0], 1.0, 0.0)
 
@@ -49,13 +79,31 @@ def test_decode_final_timing_matches_existing_decomposition():
         model_time=8.0,
         decode_draft_proposer_time=3.0,
         mtp_terminal_overshoot_time=2.0,
+        forward_launch_stall_time=_launch_stall(0.0),
     )
-    timing = prepare_decode_final_timing(execution_time)
+    timing = prepare_decode_final_timing(execution_time, 0.02)
     assert timing.pipeline_time == pytest.approx(0.004)
     assert timing.cpu_overhead == pytest.approx(2.0)
+    assert timing.forward_launch_stall_time == 0.0
     assert timing.draft_proposer_time == pytest.approx(0.003)
     assert timing.mtp_terminal_overshoot_time == pytest.approx(0.002)
     assert timing.total_time == pytest.approx(2.007)
+
+
+def test_decode_final_timing_charges_launch_left_exposed_by_the_simulated_span():
+    spans = []
+    execution_time = SimpleNamespace(
+        pipeline_time=0.0,
+        total_time=10.0,
+        model_time=8.0,
+        decode_draft_proposer_time=0.0,
+        mtp_terminal_overshoot_time=0.0,
+        forward_launch_stall_time=_launch_stall(30.0, spans),
+    )
+    timing = prepare_decode_final_timing(execution_time, 0.025)
+    assert spans == [pytest.approx(0.025)]
+    assert timing.forward_launch_stall_time == pytest.approx(0.005)
+    assert timing.total_time == pytest.approx(2.005)
 
 
 def test_decode_layer_advance_rejects_completed_request():
