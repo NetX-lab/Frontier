@@ -39,8 +39,12 @@ records to ``dp_placement/``, declared scheduler-level workflow evidence.
     The CPU probe only (``cpu_probe.jsonl``): per-step host timestamps of
     schedule, input preparation, the forward call, logits and sampling,
     bookkeeping and ``update_from_output``, kept in memory and written when the
-    engine core shuts down. Instrumentation, operator probes and E2E request
-    metrics off.
+    engine core shuts down. With DP > 1 the engine core of DP rank d writes
+    ``cpu_probe_dp<d>.jsonl``. With PP > 1 the TP rank 0 worker of each PP
+    stage also writes one record per forward (PP receive and send stamps,
+    forward start, forward device time, padded input tokens, CUDA graph mode)
+    to ``cpu_probe[_dp<d>]_pp<p>.jsonl`` when it shuts down. Instrumentation,
+    operator probes and E2E request metrics off.
 ``kv_save_timing``, ``kv_save_device_ids``
     Diagnostic modes of a pd-disaggregation case, for a vLLM-BS diagnostic
     commit only: the CPU probe plus the producer connector's KV-save probe
