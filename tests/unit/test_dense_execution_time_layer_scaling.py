@@ -85,11 +85,11 @@ def _build_predictor() -> _DummySklearnPredictor:
     predictor._get_attn_norm_layer_act_execution_time = lambda _batch: 10.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 11.0
     predictor._get_add_layer_act_execution_time = lambda _batch: 12.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor._get_pipeline_parallel_communication_time = lambda _batch: 0.0
     predictor._get_tensor_parallel_communication_time = lambda _batch: 0.0
     predictor._select_measurement_type_for_batch = lambda _batch: None

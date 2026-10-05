@@ -1100,11 +1100,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
         )
         return OverheadTime(
-            schedule_time=self._get_schedule_time(batch),
-            sampler_e2e_time=self._get_sampler_e2e_time(batch),
-            prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch),
-            process_model_outputs_time=self._get_process_model_outputs_time(batch),
-            ray_comm_time=self._get_ray_comm_time(batch),
+            schedule_time=self._get_schedule_time(batch, stage_id),
+            sampler_e2e_time=self._get_sampler_e2e_time(batch, stage_id),
+            prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch, stage_id),
+            process_model_outputs_time=self._get_process_model_outputs_time(batch, stage_id),
+            ray_comm_time=self._get_ray_comm_time(batch, stage_id),
             pp_producer_send_path_runtime_time=(
                 self._get_pp_producer_send_path_runtime_time(batch, stage_id)
             ),
@@ -1118,7 +1118,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             pp_stage_boundary_handoff_time=(
                 self._get_pp_stage_boundary_handoff_time(batch, stage_id)
             ),
-            forward_launch_time=self._get_forward_launch_time(batch),
+            forward_launch_time=self._get_forward_launch_time(batch, stage_id),
         )
 
     def _get_pp_stage_boundary_residual_runtime_time(
