@@ -406,6 +406,7 @@ class AttentionTime:
     # Attention auxiliary operations
     attention_rope_execution_time: float = 0.0              # RoPE (Rotary Position Embedding)
     attention_kv_cache_save_execution_time: float = 0.0     # KV cache write
+    attention_kv_cache_extract_execution_time: float = 0.0  # KV connector's gather of completed prompts
 
     # MLA physical attention operations from the vLLM V1 latent-attention path.
     attn_mla_kv_cache_save_time: float = 0.0
@@ -422,6 +423,9 @@ class AttentionTime:
     # These are 0.0 for non-Step2Mini models
     attn_inter_norm_time: float = 0.0  # RMSNorm on Q after split from QKV
     attn_wq_proj_time: float = 0.0     # ColumnParallelLinear on Q after inter_norm
+    # Kernels these operators launch (a count, not a time), when a predictor
+    # prices the device gap before each kernel of a kernel-only step.
+    kernel_count: float = 0.0
     operator_times: AttentionOperatorTimes | None = None
 
     def total_time(self) -> float:
@@ -433,6 +437,7 @@ class AttentionTime:
             + self.attention_layer_post_proj_execution_time
             + self.attention_rope_execution_time
             + self.attention_kv_cache_save_execution_time
+            + self.attention_kv_cache_extract_execution_time
             + self.attn_mla_kv_cache_save_time
             + self.attn_mla_prefill_kv_up_proj_time
             + self.attn_mla_prefill_time

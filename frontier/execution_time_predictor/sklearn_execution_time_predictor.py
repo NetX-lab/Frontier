@@ -31,6 +31,7 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -82,6 +83,11 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     uses_two_stream_eager_pricing,
 )
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
+from frontier.execution_time_predictor.kernel_gap import (
+    KernelCountTraining,
+    KernelGapPricing,
+    load_kernel_gap_ms,
+)
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
@@ -354,7 +360,7 @@ def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
     return matches[0]
 
 
-class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
+class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseExecutionTimePredictor):
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
         return get_enabled_predictor_metric_name_by_role(
@@ -578,6 +584,21 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 self._moe_input_file_kernel_only,
                 self._cpu_overhead_input_file_eager,
             )
+        self._kernel_gap_ms = load_kernel_gap_ms(
+            self._config,
+            self._kernel_gap_input_file,
+            self._replica_config,
+            sys_arch=global_vars.get_sys_arch(),
+        )
+        if self._kernel_gap_ms is not None:
+            logger.info(
+                "Cluster %s adds the mean device gap before each kernel of a kernel-only step "
+                "(eager %.4f us, cuda_graph %.4f us) from %s.",
+                cluster_type,
+                self._kernel_gap_ms["eager"] * 1e3,
+                self._kernel_gap_ms["cuda_graph"] * 1e3,
+                self._kernel_gap_input_file,
+            )
         self._active_measurement_type = self._get_default_measurement_type_for_cluster()
 
         if not self._enable_dummy_mode:
@@ -777,8 +798,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 setattr(self, f"_{name}_input_file_{family}", paths[f"{name}{suffix}_input_file"])
         self._cpu_overhead_input_file_eager = paths["cpu_overhead_input_file"]
         self._cpu_overhead_input_file_kernel_only = paths["cpu_overhead_kernel_only_input_file"]
-        for name in ("all_reduce", "send_recv", "pp_stage_boundary",
-                     "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+        for name in ("all_reduce", "send_recv", "pp_stage_boundary", "pp_receiver_head",
+                     "pp_producer_send_path", "pp_prefill_consumer_active", "kernel_gap"):
             setattr(self, f"_{name}_input_file", paths[f"{name}_input_file"])
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
@@ -3108,7 +3129,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            return cached_model
+            return self._paired_with_kernel_count_model(
+                cached_model, model_name, df, feature_cols, target_col, self._train_model
+            )
 
         model = self._get_estimator()
         grid_search_params = self._get_grid_search_params()
@@ -3160,7 +3183,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             target_col=target_col,
             model=best_estimator,
         )
-        return best_estimator
+        return self._paired_with_kernel_count_model(
+            best_estimator, model_name, df, feature_cols, target_col, self._train_model
+        )
 
     def _store_model_predication_cache(
         self, model_name: str, prediction_hash: str, predictions: Dict[Tuple, float]
@@ -4105,6 +4130,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
             }
 
+        extract_op_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        if self._cluster_type == ClusterType.PREFILL and extract_op_name in self._models:
+            model = self._models[extract_op_name]
+            predictions[extract_op_name] = {
+                "_on_demand_prediction": True,
+                "_n_features": 1,
+                "_model": model,
+                "_feature_names": ["num_blocks"],
+                "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
+            }
+
         # Handle attn_prefill_mixed: high-dimensional model requiring on-demand prediction
         # This model uses 12 features and cannot be pre-computed efficiently
         if need_prefill and "attn_prefill_mixed" in self._models:
@@ -4541,6 +4577,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"model has {model_feature_count}"
             )
 
+        self._record_kernel_count(model_name, model, feature_key, normalized_feature_names)
         # A persisted measured row is authoritative when the producer attached
         # exact metadata to the estimator.  Finite prediction tables remain
         # compatible with older artifacts that do not carry this optional map.
@@ -4822,6 +4859,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 )
 
         feature_key = tuple(normalized_features[name] for name in feature_names)
+        self._record_kernel_count(model_name, model, feature_key, feature_names)
         exact_lookup = model_info.get("_exact_lookup", {})
         if exact_lookup is None:
             exact_lookup = {}
@@ -6343,6 +6381,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "attn_kv_cache_save_calibration_scale",
         )
 
+    def _get_attention_kv_cache_extract_execution_time(self, batch: Batch) -> float:
+        """Gather the KV blocks of each prompt this step completes, one launch per request.
+
+        vLLM's P2P NCCL connector adds a request to the step that completes its
+        prompt (build_connector_meta) and gathers all its prompt blocks after
+        each layer's attention (save_kv_layer).
+        """
+        extract_op_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        if extract_op_name not in self._predictions:
+            raise ValueError(
+                f"kv_connector=p2p_nccl prices {extract_op_name} from the "
+                f"time_stats.{extract_op_name} rows of {self._attention_input_file}, "
+                "which has none; profile the attention table with the KV extract."
+            )
+        extract_time = 0.0
+        for request, num_tokens in zip(batch.requests, batch.num_tokens):
+            if request.num_processed_tokens + num_tokens < request.num_prefill_tokens:
+                continue
+            with self._counting_launch():
+                extract_time += self._get_on_demand_prediction(
+                    extract_op_name,
+                    {"num_blocks": math.ceil(request.num_prefill_tokens / self._block_size)},
+                )
+        return extract_time
+
     def _get_attention_decode_execution_time(self, batch: Batch) -> float:
         (
             decode_batch_size,
@@ -7326,6 +7389,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             exact_lookup = model_info.get("_exact_lookup") or {}
             if exact_key in exact_lookup:
                 op_times[op_name] = float(exact_lookup[exact_key])
+                self._record_kernel_count(op_name, model_info.get("_model"), exact_key, feature_names)
                 continue
 
             model = model_info.get("_model")
@@ -7367,6 +7431,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
+        """Predict one layer's attention; inside a layer's kernel counting, count its kernels."""
+        if not self._kernel_count_scopes:
+            return self._predict_attention_layer_time(batch, layer_id, cluster_type)
+        with self._counting_kernels() as counts:
+            attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
+        attention_time.kernel_count = math.fsum(counts.operators.values())
+        self._record_attention_kernels(attention_time.kernel_count)
+        return attention_time
+
+    def _predict_attention_layer_time(
+        self, batch: Batch, layer_id: int, cluster_type: ClusterType
+    ) -> AttentionTime:
         """
         Predict attention execution time for a single transformer layer.
 
@@ -7399,6 +7475,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
         attention_family.require_enabled_for_execution()
+        prices_kv_cache_extract = (
+            cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
+        )
+        if prices_kv_cache_extract and attention_family is not DENSE_ATTENTION_FAMILY:
+            raise NotImplementedError(
+                f"kv_connector=p2p_nccl prices the KV extract of dense attention layers; "
+                f"layer {layer_id} is {attention_family.family_id}."
+            )
 
         if attention_family.family_id == GATED_DELTA_NET_ATTENTION_FAMILY.family_id:
             if self._gdn_predictor is None:
@@ -7494,6 +7578,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             attn_kv_cache_save_time = self._get_attention_kv_cache_save_execution_time(
                 batch
             )
+        attn_kv_cache_extract_time = (
+            self._get_attention_kv_cache_extract_execution_time(batch)
+            if prices_kv_cache_extract
+            else 0.0
+        )
         attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
 
         # Architecture-profile attention extras are 0.0 when not declared by the profile.
@@ -7546,6 +7635,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             f"[OP-TRACE][{cluster_name}][ATTENTION][{cache_write_op_name}] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_kv_cache_save_time:.6f}"
         )
+        if prices_kv_cache_extract:
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][ATTENTION][{DENSE_ATTENTION_KV_CACHE_EXTRACT.name}] "
+                f"batch_id={batch.id}, layer_id={layer_id}, "
+                f"predicted_time_ms={attn_kv_cache_extract_time:.6f}"
+            )
         logger.info(
             f"[OP-TRACE][{cluster_name}][ATTENTION][attn_post_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_post_proj_time:.6f}"
@@ -7569,6 +7664,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             + attn_prefill_time
             + attn_decode_time
             + attn_kv_cache_save_time
+            + attn_kv_cache_extract_time
             + attn_post_proj_time
             # Architecture-profile attention extras are 0.0 when absent.
             + attn_inter_norm_time
@@ -7586,6 +7682,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             attention_layer_post_proj_execution_time=attn_post_proj_time,
             attention_rope_execution_time=attn_rope_time,
             attention_kv_cache_save_execution_time=attn_kv_cache_save_time,
+            attention_kv_cache_extract_execution_time=attn_kv_cache_extract_time,
             attn_norm_time=attn_norm_time,
             # Architecture-profile attention extras are 0.0 when absent.
             attn_inter_norm_time=attn_inter_norm_time,
@@ -7949,7 +8046,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         """Predict homogeneous layer numerics once and publish ordered identities."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
-        timing = self._predict_dense_layer_execution_time(
+        timing = self._predict_layer_with_kernel_gap(
+            self._predict_dense_layer_execution_time,
             batch, stage_id, cluster_type, num_layers, layer_id,
             include_moe, include_ffn, include_attention,
         )

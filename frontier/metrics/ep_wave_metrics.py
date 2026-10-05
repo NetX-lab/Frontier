@@ -49,6 +49,10 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                     "duration_ms": sum(duration for _, _, duration in operators),
                     "operators_ms": {name: duration for _, name, duration in operators},
                 }
+                if layer.has_kernel_gap:
+                    kernel_gap_ms = layer.moe_phase_kernel_gap_time(phase)
+                    ledger_phases[phase]["kernel_gap_ms"] = kernel_gap_ms
+                    ledger_phases[phase]["duration_ms"] += kernel_gap_ms
             if trace_enabled and any(duration > 0 for _, _, duration in operators):
                 routed = phase == "routed_compute"
                 tokens = (batch.lane_workload.routed_token_count if routed

@@ -399,7 +399,7 @@ def _profile_on_cpu(monkeypatch, **arguments):
         kernel,
         "moe_align_block_size",
         lambda *args, **kwargs: native_calls.alignment.append((args, kwargs))
-        or (None, None, None),
+        or (None, None, torch.tensor([16])),
         raising=False,
     )
     monkeypatch.setattr(

@@ -21,6 +21,7 @@ from frontier.moe_gating_runtime import (
     has_prefill_hot_moe_gating_rows,
     validate_moe_gating_runtime_context,
 )
+from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES
 from frontier.moe_routing_runtime import (
     STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
     filter_moe_gating_routing_topk_rows,
@@ -108,27 +109,6 @@ class MoETrainer(BaseTrainer):
     based on the provided configuration parameters.
     """
 
-    # Full load-imbalance feature set produced by MoELoadImbalanceInput.to_features_dict().
-    # Training strategy:
-    # - If ALL features exist: train moe_grouped_gemm using this full feature set (load-imbalance mode)
-    # - If NONE exist: train moe_grouped_gemm using num_tokens only (standard mode)
-    # - If PARTIAL exist: fail-fast with a clear error (dataset is inconsistent)
-    LOAD_IMBALANCE_FEATURES: List[str] = [
-        "total_routed_tokens",
-        "num_experts_per_device",
-        "hidden_dim",
-        "expert_hidden_dim",
-        "router_topk",
-        "model_expansion_ratio",
-        "tokens_per_expert_avg",
-        "tokens_to_experts_ratio",
-        "expert_utilization",
-        "min_load_ratio",
-        "load_imbalance_cv",
-        "max_load_ratio",
-        "load_entropy",
-        "load_gini_coefficient",
-    ]
     REQUIRED_TARGET_COLUMNS: List[str] = _get_moe_required_target_columns()
     REPLICATED_TARGET_COLUMNS: List[str] = _get_moe_replicated_target_columns()
     
@@ -291,14 +271,14 @@ class MoETrainer(BaseTrainer):
         logger.info("Dataset column verification passed")
 
         # Auto-detect load-imbalance mode based on the *full* feature set presence.
-        available = [feat for feat in self.LOAD_IMBALANCE_FEATURES if feat in df.columns]
-        if 0 < len(available) < len(self.LOAD_IMBALANCE_FEATURES):
-            missing = [feat for feat in self.LOAD_IMBALANCE_FEATURES if feat not in df.columns]
+        available = [feat for feat in MOE_LOAD_IMBALANCE_FEATURES if feat in df.columns]
+        if 0 < len(available) < len(MOE_LOAD_IMBALANCE_FEATURES):
+            missing = [feat for feat in MOE_LOAD_IMBALANCE_FEATURES if feat not in df.columns]
             logger.error(
                 "Partial load imbalance features detected in dataset. "
                 "This is an inconsistent dataset and is not supported."
             )
-            logger.error(f"  - Available load-imbalance features ({len(available)}/{len(self.LOAD_IMBALANCE_FEATURES)}): {available}")
+            logger.error(f"  - Available load-imbalance features ({len(available)}/{len(MOE_LOAD_IMBALANCE_FEATURES)}): {available}")
             logger.error(f"  - Missing load-imbalance features: {missing}")
             logger.error(f"  - Dataset: {self.dataset_path}")
             raise ValueError(
@@ -307,7 +287,7 @@ class MoETrainer(BaseTrainer):
                 "or use a dataset without any load-imbalance columns."
             )
 
-        if len(available) == len(self.LOAD_IMBALANCE_FEATURES):
+        if len(available) == len(MOE_LOAD_IMBALANCE_FEATURES):
             logger.info("Load imbalance features detected (full feature set) - will use enhanced feature set for moe_grouped_gemm")
         else:
             logger.info("Load imbalance features not detected - will use standard mode (num_tokens only) for moe_grouped_gemm")
@@ -354,7 +334,7 @@ class MoETrainer(BaseTrainer):
             columns = self.df.columns
         else:
             columns = pd.read_csv(self.dataset_path, nrows=0).columns
-        return all(feat in columns for feat in self.LOAD_IMBALANCE_FEATURES)
+        return all(feat in columns for feat in MOE_LOAD_IMBALANCE_FEATURES)
 
     def _get_model_names(self) -> List[str]:
         """
@@ -385,14 +365,15 @@ class MoETrainer(BaseTrainer):
         Returns:
             List of feature column names
         """
-        # Check if load imbalance features are available in the dataset (full feature set only).
-        # Partial presence is rejected earlier in _verify_dataset_columns().
+        # The full load-imbalance set trains grouped GEMM and shuffling; without it
+        # every model uses num_tokens. Partial presence is rejected earlier in
+        # _verify_dataset_columns().
         has_load_imbalance = self._has_full_load_imbalance_features()
 
         if has_load_imbalance:
             if model_name in {"moe_grouped_gemm", "moe_shuffling"}:
                 logger.info(f"  Using load imbalance features for {model_name} (14 features)")
-                return self.LOAD_IMBALANCE_FEATURES
+                return list(MOE_LOAD_IMBALANCE_FEATURES)
 
             logger.info(f"  Using num_tokens only for {model_name} (1 feature)")
             return ["num_tokens"]

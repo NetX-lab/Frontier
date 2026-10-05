@@ -419,6 +419,7 @@ def _make_manager():
         linear_op_kernel_only_input_file="compute_kernel/{DEVICE}/{MODEL}.csv",
         atten_kernel_only_input_file="attention_kernel/{DEVICE}/{MODEL}.csv",
         moe_kernel_only_input_file="moe_kernel/{DEVICE}/{MODEL}.csv",
+        kernel_gap_input_file="compute/{DEVICE}/{MODEL}/kernel_gap.csv",
     )
     cluster_config = SimpleNamespace(
         replica_config=replica_config,
@@ -553,6 +554,7 @@ def test_shared_manager_returns_complete_training_file_paths() -> None:
         "compute_kernel_only_input_file": "compute_kernel/a100/meta-llama/Llama-2-7b-hf.csv",
         "attention_kernel_only_input_file": "attention_kernel/a100/meta-llama/Llama-2-7b-hf.csv",
         "moe_kernel_only_input_file": "moe_kernel/a100/meta-llama/Llama-2-7b-hf.csv",
+        "kernel_gap_input_file": "compute/a100/meta-llama/Llama-2-7b-hf/kernel_gap.csv",
     }
 
 

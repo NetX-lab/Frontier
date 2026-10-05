@@ -23,6 +23,7 @@ from frontier.moe_ep_workload import (
     materialize_layer_ep_workload,
     resolve_ep_lane_workload,
 )
+from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -50,7 +51,10 @@ class _CountingPredictor(_Predictor):
         self._supports_operation = lambda _operation: True
         self._predictions = {
             "moe_shuffling": {"_on_demand_prediction": True},
-            "moe_grouped_gemm": {"_on_demand_prediction": True},
+            "moe_grouped_gemm": {
+                "_on_demand_prediction": True,
+                "_feature_names": list(MOE_LOAD_IMBALANCE_FEATURES),
+            },
         }
         self._model_calls: list[tuple[str, dict[str, float]]] = []
         self._model_result = model_result

@@ -387,6 +387,8 @@ class SimulationConfig(ABC):
         self._validate_thinking_mode_config()
         self._validate_sequential_checkpoint_observer_config()
         global_vars.set_global_vars(self.simulation_mode, self.sys_arch)
+        self._validate_kv_connector()
+        global_vars.set_kv_connector(self.kv_cache_transfer_config.kv_connector)
         self._validate_cuda_graph_config()
         self._validate_gdn_runtime_guards()
         global_vars.set_cuda_graph_config(
@@ -602,6 +604,15 @@ class SimulationConfig(ABC):
                     "thinking_round_decode_tokens length must equal "
                     f"thinking_depth - 1 ({expected_hidden_rounds})."
                 )
+
+    def _validate_kv_connector(self) -> None:
+        # The connector's device work is priced in PDD prefill steps only.
+        kv_connector = self.kv_cache_transfer_config.kv_connector
+        if kv_connector != "none" and self.sys_arch != "pd-disaggregation":
+            raise ValueError(
+                f"kv_connector={kv_connector!r} prices the KV extract of PDD prefill steps; "
+                f"sys_arch={self.sys_arch!r} has none."
+            )
 
     def _validate_cuda_graph_config(self) -> None:
         valid_decode_cuda_graph_modes = {"none", "full_decode_only", "piecewise"}

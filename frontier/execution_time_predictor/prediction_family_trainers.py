@@ -6,11 +6,14 @@ and CPU overhead.  Each selects the rows its family owns, builds the feature
 frame, and hands one model at a time to the shared fitting routine.
 """
 
+import functools
 import os
+import numpy as np
 import pandas as pd
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     LATENT_MLA_ATTENTION_FAMILY,
 )
 from frontier.attention.model_binding import resolve_runtime_attention_family
@@ -23,6 +26,12 @@ from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
 from frontier.attention.string_coercion import coerce_truthy_int
+from frontier.config import global_vars
+from frontier.execution_time_predictor.kernel_gap import KernelCountTraining
+from frontier.execution_time_predictor.moe_dataset_training import (
+    profiled_block_sizes,
+    select_moe_operator_features,
+)
 from frontier.execution_time_predictor.prediction_model_identity import (
     _add_layer_contract_to_training_context,
     _build_exact_feature_lookup,
@@ -47,6 +56,7 @@ from frontier.moe_gating_runtime import (
     has_prefill_hot_moe_gating_rows,
     should_enable_prefill_hot_moe_gating_contract,
 )
+from frontier.moe_load_imbalance import MOE_GROUPED_GEMM_PADDED_FEATURES
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
@@ -66,7 +76,7 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = init_logger(__name__)
 
 
-class PredictionFamilyTrainers:
+class PredictionFamilyTrainers(KernelCountTraining):
     """Per-family model training for the execution-time predictor."""
 
     def _train_ffn_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config,
@@ -297,63 +307,12 @@ class PredictionFamilyTrainers:
                         "ANY" if moe_ep_key is None else moe_ep_key
                     )
 
-                    # Per-operation feature selection.
-                    if model_name == "moe_grouped_gemm":
-                        available_load_features = [
-                            f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                            if f in op_moe_df.columns
-                        ]
-                        has_load_imbalance_features = (
-                            len(available_load_features)
-                            == len(self.MOE_LOAD_IMBALANCE_FEATURES)
-                        )
-                        if 0 < len(available_load_features) < len(self.MOE_LOAD_IMBALANCE_FEATURES):
-                            missing_features = [
-                                f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                                if f not in op_moe_df.columns
-                            ]
-                            raise ValueError(
-                                f"Partial load imbalance features found ({len(available_load_features)}/"
-                                f"{len(self.MOE_LOAD_IMBALANCE_FEATURES)}) for {model_name} at TP={moe_tp_key}. "
-                                f"Missing: {missing_features}."
-                            )
-
-                        if has_load_imbalance_features:
-                            op_feature_cols = available_load_features
-                            logger.info(
-                                f"  {model_name}: Using load imbalance features "
-                                f"({len(op_feature_cols)} features, TP={moe_tp_key})"
-                            )
-                        else:
-                            op_feature_cols = ["num_tokens"]
-                            logger.info(
-                                f"  {model_name}: Load imbalance features not found; "
-                                f"using num_tokens only (TP={moe_tp_key})."
-                            )
-                    elif model_name == "moe_shuffling":
-                        available_load_features = [
-                            f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                            if f in op_moe_df.columns
-                        ]
-                        if len(available_load_features) == len(self.MOE_LOAD_IMBALANCE_FEATURES):
-                            op_feature_cols = available_load_features
-                            logger.info(
-                                f"  {model_name}: Using load imbalance features "
-                                f"({len(op_feature_cols)} features, TP={moe_tp_key})"
-                            )
-                        else:
-                            # For shuffling we allow partial/legacy datasets and fall back to
-                            # num_tokens-only training when the full load feature set is absent.
-                            op_feature_cols = ["num_tokens"]
-                            logger.info(
-                                f"  {model_name}: Full load imbalance features unavailable; "
-                                f"using num_tokens only (TP={moe_tp_key})."
-                            )
-                    else:
-                        op_feature_cols = ["num_tokens"]
-                        logger.info(
-                            f"  {model_name}: Using num_tokens only (1 feature, TP={moe_tp_key})"
-                        )
+                    op_moe_df, op_feature_cols = select_moe_operator_features(
+                        model_name, op_moe_df
+                    )
+                    logger.info(
+                        f"  {model_name}: features {op_feature_cols} (TP={moe_tp_key})"
+                    )
 
                     # Store feature_cols in training_context for this specific operation
                     op_training_context['feature_cols'] = op_feature_cols
@@ -371,6 +330,10 @@ class PredictionFamilyTrainers:
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
+                    if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+                        models[model_name]._frontier_block_size_m = profiled_block_sizes(
+                            op_moe_df
+                        )
                     trained_model_signatures.add(model_signature)
                     logger.info(f"Trained {model_name} for {cluster_type} with features: {op_feature_cols}")
 
@@ -946,6 +909,21 @@ class PredictionFamilyTrainers:
                 trained_model_signatures.add(prefill_model_signature)
                 logger.info(f"Trained {family_name} {prefill_model_name} for {cluster_type}")
 
+            extract_model_signature = f"{DENSE_ATTENTION_KV_CACHE_EXTRACT.name}_{attention_signature}"
+            if (
+                global_vars.get_kv_connector() == "p2p_nccl"
+                and extract_model_signature not in trained_model_signatures
+            ):
+                models.update(
+                    self._train_kv_cache_extract_model(
+                        standard_prefill_df,
+                        replica_scheduler_config.block_size,
+                        execution_time_predictor_config,
+                        training_context,
+                    )
+                )
+                trained_model_signatures.add(extract_model_signature)
+
         decode_model_name = get_enabled_predictor_metric_name_by_role(
             DENSE_ATTENTION_FAMILY,
             AttentionOperatorRole.DECODE_KERNEL,
@@ -1076,6 +1054,47 @@ class PredictionFamilyTrainers:
 
         trained_model_signatures.add(attention_signature)
         return models
+
+    def _train_kv_cache_extract_model(
+        self,
+        standard_prefill_df: pd.DataFrame,
+        block_size: int,
+        execution_time_predictor_config,
+        training_context: Dict[str, Any],
+    ) -> Dict[str, BaseEstimator]:
+        """Train the KV extract of one request's prompt blocks, when the table times it.
+
+        A one-request prefill row times the gather of all the blocks its
+        prompt occupies, the work P2pNcclConnector.save_kv_layer launches per
+        request and layer.
+        """
+        model_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        target_col = f"time_stats.{model_name}.median"
+        if target_col not in standard_prefill_df.columns:
+            return {}
+        extract_df = standard_prefill_df[
+            (standard_prefill_df["batch_size"] == 1) & standard_prefill_df[target_col].notna()
+        ].copy()
+        if extract_df.empty:
+            return {}
+        extract_df["num_blocks"] = np.ceil(
+            (extract_df["kv_cache_size"] + extract_df["prefill_chunk_size"]) / block_size
+        )
+        model = self._train_single_model(
+            model_name=model_name,
+            df=extract_df,
+            feature_cols=["num_blocks"],
+            target_col=target_col,
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+        )
+        logger.info(
+            "Trained %s %s on %d one-request prefill rows",
+            self._measurement_family_name(self._active_measurement_type),
+            model_name,
+            len(extract_df),
+        )
+        return {model_name: model}
 
     @staticmethod
 
@@ -1372,6 +1391,7 @@ class PredictionFamilyTrainers:
             target_col="time_stats.send_recv.median",
             execution_time_predictor_config=execution_time_predictor_config,
             training_context=training_context,
+            count_kernels=False,
         )
 
         trained_model_signatures.add(pp_signature)
@@ -1417,7 +1437,8 @@ class PredictionFamilyTrainers:
             feature_cols=["num_tokens"],
             target_col="time_stats.all_reduce.median",
             execution_time_predictor_config=execution_time_predictor_config,
-            training_context=training_context
+            training_context=training_context,
+            count_kernels=False,
         )
         
         trained_model_signatures.add(tp_signature)
@@ -1509,12 +1530,50 @@ class PredictionFamilyTrainers:
         training_context: Optional[Dict[str, Any]] = None,
         persist_exact_lookup: bool = True,
         layer_contract: Optional[ResolvedLayerContract] = None,
+        count_kernels: bool = True,
     ) -> BaseEstimator:
-        """Train a single model with given data and configuration."""
+        """Train a single model and register it under the active measurement family.
+
+        A collective's model passes ``count_kernels=False``: a collective launches
+        the kernels of its operator spec, so it has no kernel-count model.
+        """
         layer_contract, training_context = _normalize_layer_contract_context(
             training_context,
             explicit_layer_contract=layer_contract,
         )
+        fit = functools.partial(
+            self._fit_single_model,
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+            persist_exact_lookup=persist_exact_lookup,
+            layer_contract=layer_contract,
+        )
+        model, profiling_precision = fit(model_name, df, feature_cols, target_col)
+        self._store_model_precision(
+            model_name,
+            profiling_precision,
+            model,
+            **_layer_contract_kwargs(layer_contract),
+        )
+        if not count_kernels:
+            return model
+        return self._paired_with_kernel_count_model(
+            model, model_name, df, feature_cols, target_col,
+            train=lambda *count_model_args: fit(*count_model_args)[0],
+        )
+
+    def _fit_single_model(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols: List[str],
+        target_col: str,
+        execution_time_predictor_config,
+        training_context: Optional[Dict[str, Any]],
+        persist_exact_lookup: bool,
+        layer_contract: Optional[ResolvedLayerContract],
+    ) -> Tuple[BaseEstimator, str]:
+        """Load or fit one model; return it with its profiling precision."""
         if len(df) == 0:
             # 提供详细的错误信息，以便调试
             context_info = ""
@@ -1591,13 +1650,7 @@ class PredictionFamilyTrainers:
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            self._store_model_precision(
-                model_name,
-                profiling_precision,
-                cached_model,
-                **_layer_contract_kwargs(layer_contract),
-            )
-            return cached_model
+            return cached_model, profiling_precision
 
         # ============================================================
         # CACHE MISS: Model not found in cache
@@ -1695,10 +1748,4 @@ class PredictionFamilyTrainers:
             )
 
         self._store_model_in_cache(model_name, model_hash, best_estimator)
-        self._store_model_precision(
-            model_name,
-            profiling_precision,
-            best_estimator,
-            **_layer_contract_kwargs(layer_contract),
-        )
-        return best_estimator
+        return best_estimator, profiling_precision

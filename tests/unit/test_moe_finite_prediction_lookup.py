@@ -12,6 +12,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
     SklearnMoEExecutionTimePredictor,
 )
 from frontier.moe_ep_workload import EPLaneWorkload
+from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -206,7 +207,7 @@ def _build_load_aware_predictor(
     predictor._replica_config = SimpleNamespace(total_expert_num=8)
     predictor._get_moe_compute_calibration_scale = lambda *args, **kwargs: 1.0
 
-    feature_names = tuple(predictor.MOE_LOAD_IMBALANCE_FEATURES)
+    feature_names = tuple(MOE_LOAD_IMBALANCE_FEATURES)
     model = _CountingLoadAwareModel(feature_names, model_result)
     predictor._predictions = {
         "moe_grouped_gemm": {
@@ -227,7 +228,7 @@ def test_moe_load_imbalance_runtime_features_match_training_schema() -> None:
         batch=_batch(4),
     )
 
-    assert tuple(features) == tuple(predictor.MOE_LOAD_IMBALANCE_FEATURES)
+    assert tuple(features) == tuple(MOE_LOAD_IMBALANCE_FEATURES)
     assert "seed" not in features
     assert "load_distribution" not in features
 
@@ -259,7 +260,7 @@ def test_moe_exact_lookup_precedes_runtime_cache_for_load_imbalance_query() -> N
         _lane_workload({0: 4, 1: 4}),
         batch=_batch(4),
     )
-    key = tuple(float(features[name]) for name in predictor.MOE_LOAD_IMBALANCE_FEATURES)
+    key = tuple(float(features[name]) for name in MOE_LOAD_IMBALANCE_FEATURES)
     predictor._predictions["moe_grouped_gemm"]["_exact_lookup"] = {key: 2.25}
     predictor._runtime_cache["eager"]["moe_grouped_gemm"][key] = 9.0
 

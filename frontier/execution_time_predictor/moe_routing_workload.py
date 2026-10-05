@@ -20,6 +20,13 @@ from frontier.moe_ep_workload import (
     resolve_ep_lane_workload,
     resolve_routing_details,
 )
+from frontier.moe_load_imbalance import (
+    MOE_GROUPED_GEMM_PADDED_FEATURES,
+    MOE_LOAD_IMBALANCE_FEATURES,
+    MoELoadImbalanceInput,
+    block_size_m_for_tokens,
+    num_tokens_post_padded,
+)
 from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
 from frontier.types import ClusterType
 from typing import Dict, List, Mapping, Optional
@@ -524,8 +531,6 @@ class MoeRoutingWorkload:
         lane_workload = resolve_ep_lane_workload(lane_workload, required=True)
         assert lane_workload is not None
 
-        from frontier.moe_load_imbalance import MoELoadImbalanceInput
-
         expert_token_counts = [int(v) for v in lane_workload.local_token_counts]
 
         total_routed_tokens = int(sum(expert_token_counts))
@@ -548,7 +553,7 @@ class MoeRoutingWorkload:
         features.pop("seed", None)
         missing_features = [
             name
-            for name in self.MOE_LOAD_IMBALANCE_FEATURES
+            for name in MOE_LOAD_IMBALANCE_FEATURES
             if name not in features
         ]
         if missing_features:
@@ -557,7 +562,7 @@ class MoeRoutingWorkload:
                 f"features: {missing_features}"
             )
         unexpected_features = sorted(
-            set(features) - set(self.MOE_LOAD_IMBALANCE_FEATURES)
+            set(features) - set(MOE_LOAD_IMBALANCE_FEATURES)
         )
         if unexpected_features:
             raise ValueError(
@@ -566,7 +571,34 @@ class MoeRoutingWorkload:
             )
         return {
             name: features[name]
-            for name in self.MOE_LOAD_IMBALANCE_FEATURES
+            for name in MOE_LOAD_IMBALANCE_FEATURES
+        }
+
+    def _build_grouped_gemm_features(
+        self,
+        lane_workload: EPLaneWorkload,
+        *,
+        batch: Optional[Batch] = None,
+    ) -> Dict[str, float]:
+        """Features of the on-demand grouped-GEMM model for one EP lane.
+
+        A model trained on a table with moe_align_block_size's padded count
+        (decision T33-C2-F) takes the lane's routed and padded token counts; the
+        padding block is the profiled BLOCK_SIZE_M at the step's pre-routing
+        token count (decision T33-C2-B). Other models take the load-imbalance
+        features.
+        """
+        model_info = self._predictions["moe_grouped_gemm"]
+        if tuple(model_info["_feature_names"]) != MOE_GROUPED_GEMM_PADDED_FEATURES:
+            return self._build_moe_load_imbalance_features(lane_workload, batch=batch)
+        block_size_m = block_size_m_for_tokens(
+            model_info["_model"]._frontier_block_size_m,
+            self._get_moe_pre_routing_token_count(batch),
+        )
+        expert_token_counts = lane_workload.local_token_counts
+        return {
+            "total_routed_tokens": sum(expert_token_counts),
+            "num_tokens_post_padded": num_tokens_post_padded(expert_token_counts, block_size_m),
         }
 
     def _simulate_routing_per_layer(

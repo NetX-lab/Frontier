@@ -744,7 +744,10 @@ def profile_fused_moe_kernel(
         model_type: Actual model identity required by the pinned MXFP4 adapter.
 
     Returns:
-        Dictionary containing timing statistics.
+        Dictionary containing timing statistics. On the vLLM 0.10.x path it also
+        holds the kernel config's ``block_size_m`` and moe_align_block_size's
+        ``num_tokens_post_padded`` (each expert's routed tokens rounded up to a
+        multiple of ``block_size_m``), the row count the grouped GEMM computes.
 
     Raises:
         RuntimeError: If vLLM is not available.
@@ -991,17 +994,20 @@ def profile_fused_moe_kernel(
     torch.cuda.synchronize()
 
     if profile_method == "record_function":
-        return _collect_record_function_stats(
+        stats = _collect_record_function_stats(
             step_fn=_step,
             active_steps=active_steps,
             output_dir=output_dir,
             operation_name="moe_grouped_gemm",
         )
-
-    return _collect_cuda_event_stats(
-        step_fn=_step,
-        active_steps=active_steps,
-    )
+    else:
+        stats = _collect_cuda_event_stats(
+            step_fn=_step,
+            active_steps=active_steps,
+        )
+    stats["block_size_m"] = config["BLOCK_SIZE_M"]
+    stats["num_tokens_post_padded"] = int(num_tokens_post_padded.item())
+    return stats
 
 
 def generate_expert_weights(

@@ -1265,6 +1265,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 cluster_type,
                 num_layers,
             ),
+            attention_kv_cache_extract_execution_time=(
+                attention_time.attention_kv_cache_extract_execution_time
+            ),
             attention_decode_execution_time=self._predict_one_op_time(
                 "attention_decode_execution_time",
                 attention_time.attention_decode_execution_time,
@@ -1375,13 +1378,15 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         ):
             # Homogeneous dense layers share numerical work. Stage-owned
             # values belong to the first identity in the assembled stage.
-            timing = self._predict_disaggregated_layer_execution_time(
+            timing = self._predict_layer_with_kernel_gap(
+                self._predict_disaggregated_layer_execution_time,
                 batch, stage_id, cluster_type, layer_id,
                 include_moe, include_ffn, include_attention,
             ).finalized_copy()
             return self._assemble_stage([timing] * num_layers, first_layer_id=layer_id)
         layers = [
-            self._predict_disaggregated_layer_execution_time(
+            self._predict_layer_with_kernel_gap(
+                self._predict_disaggregated_layer_execution_time,
                 batch, stage_id, cluster_type, layer_id + offset,
                 include_moe, include_ffn, include_attention,
                 include_stage_owned=offset == 0,
@@ -2613,6 +2618,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         cluster_type,
                         num_layers,
                     ),
+                    attention_kv_cache_extract_execution_time=(
+                        attention_time.attention_kv_cache_extract_execution_time
+                    ),
                     attention_decode_execution_time=self._predict_one_op_time(
                         "attention_decode_execution_time",
                         attention_time.attention_decode_execution_time,
@@ -2837,6 +2845,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    attention_kv_cache_extract_execution_time=(
+                        attention_time.attention_kv_cache_extract_execution_time
                     ),
                     attention_decode_execution_time=self._predict_one_op_time(
                         "attention_decode_execution_time",

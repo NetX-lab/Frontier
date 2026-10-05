@@ -14,6 +14,7 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     resolve_event_measurement_type,
     uses_two_stream_eager_pricing,
 )
+from frontier.execution_time_predictor.kernel_gap import load_kernel_gap_ms
 from frontier.logger import init_logger
 
 
@@ -385,6 +386,15 @@ class ExecutionTimePredictionModelManager(
             logger.info(f"Network Device: {replica_config.network_device}")
             logger.info(f"Block Size: {replica_scheduler_config.block_size}")
             logger.info(f"Is MoE Model: {is_moe_model}")
+            self._kernel_gap_input_file = self.get_training_file_paths(cluster_type)[
+                "kernel_gap_input_file"
+            ]
+            self._kernel_gap_ms = load_kernel_gap_ms(
+                execution_time_predictor_config,
+                self._kernel_gap_input_file,
+                replica_config,
+                sys_arch=global_vars.get_sys_arch(),
+            )
 
             for measurement_type in self._get_measurement_types_for_cluster(
                 cluster_type, replica_config
