@@ -699,6 +699,15 @@ PROBED_CPU_OVERHEAD_HEADER = (
 )
 
 
+def _stage_table(path, stages) -> str:
+    """Write a forward_launch table with one row per pipeline stage in ``stages``."""
+    path.write_text(
+        PROBED_CPU_OVERHEAD_HEADER.replace("\n", ",pipeline_stage_id\n")
+        + "".join(f"m,7,0.1,0.1,58.0,58.0,{stage}\n" for stage in stages)
+    )
+    return str(path)
+
+
 def _predictor_config(**flags) -> SimpleNamespace:
     return SimpleNamespace(
         **{"enable_dummy_mode": False, "skip_cpu_overhead_modeling": False, **flags}
@@ -730,7 +739,7 @@ def test_two_stream_eager_pricing_follows_forward_launch_columns(tmp_path) -> No
     )
 
 
-def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_pipeline_stages(tmp_path) -> None:
+def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_single_stage_tables_at_pp2(tmp_path) -> None:
     probed = tmp_path / "probed.csv"
     probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
 
@@ -738,9 +747,30 @@ def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_pipeline_stages(tmp_p
         uses_two_stream_eager_pricing(
             _predictor_config(), str(probed), sys_arch="pd-af-disaggregation", num_pipeline_stages=1
         )
-    with pytest.raises(ValueError, match="num_pipeline_stages=2"):
+    with pytest.raises(ValueError, match="pipeline_stage_id"):
         uses_two_stream_eager_pricing(
             _predictor_config(), str(probed), sys_arch="co-location", num_pipeline_stages=2
+        )
+
+
+def test_two_stream_eager_pricing_takes_stage_tables_covering_every_stage(tmp_path) -> None:
+    both = _stage_table(tmp_path / "both.csv", (0, 1))
+    first = _stage_table(tmp_path / "first.csv", (0,))
+
+    assert uses_two_stream_eager_pricing(
+        _predictor_config(), both, sys_arch="co-location", num_pipeline_stages=2
+    ) is True
+    with pytest.raises(ValueError, match=r"stages \[0, 1\]; num_pipeline_stages=1"):
+        uses_two_stream_eager_pricing(
+            _predictor_config(), both, sys_arch="co-location", num_pipeline_stages=1
+        )
+    with pytest.raises(ValueError, match=r"stages \[0\]; num_pipeline_stages=2"):
+        uses_two_stream_eager_pricing(
+            _predictor_config(), first, sys_arch="co-location", num_pipeline_stages=2
+        )
+    with pytest.raises(ValueError, match="pd-disaggregation does not take stage-keyed rows"):
+        uses_two_stream_eager_pricing(
+            _predictor_config(), both, sys_arch="pd-disaggregation", num_pipeline_stages=2
         )
 
 
@@ -762,7 +792,7 @@ def _bind_step_pricing(predictor, cpu_overhead_ms: float) -> list:
         predictor, "_active_measurement_type", measurement_type
     )
 
-    def lookup(metric_name, _batch):
+    def lookup(metric_name, _batch, _stage_id):
         lookups.append((metric_name, predictor._active_measurement_type))
         return cpu_overhead_ms
 
@@ -780,8 +810,8 @@ def test_two_stream_eager_step_prices_kernel_only_operators_and_event_cpu_terms(
     eager_step = _forward_step(16, 4, None)
     assert predictor._activate_measurement_type_for_batch(eager_step) == MeasurementType.KERNEL_ONLY
     assert predictor._step_measurement_type == MeasurementType.CUDA_EVENT
-    assert predictor._get_forward_launch_time(eager_step) == 4.0
-    assert predictor._get_sampler_e2e_time(eager_step) == 4.0
+    assert predictor._get_forward_launch_time(eager_step, 0) == 4.0
+    assert predictor._get_sampler_e2e_time(eager_step, 0) == 4.0
     assert lookups == [
         ("forward_launch", MeasurementType.CUDA_EVENT),
         ("sampler_e2e", MeasurementType.CUDA_EVENT),
@@ -792,8 +822,8 @@ def test_two_stream_eager_step_prices_kernel_only_operators_and_event_cpu_terms(
     graph_step = _forward_step(0, 4, "FULL")
     assert predictor._activate_measurement_type_for_batch(graph_step) == MeasurementType.KERNEL_ONLY
     assert predictor._step_measurement_type == MeasurementType.KERNEL_ONLY
-    assert predictor._get_forward_launch_time(graph_step) == 0.0
-    assert predictor._get_sampler_e2e_time(graph_step) == 4.0
+    assert predictor._get_forward_launch_time(graph_step, 0) == 0.0
+    assert predictor._get_sampler_e2e_time(graph_step, 0) == 4.0
     assert lookups == [("sampler_e2e", MeasurementType.KERNEL_ONLY)]
 
 
@@ -803,9 +833,67 @@ def test_eager_step_without_two_stream_keeps_event_operators_and_no_forward_laun
 
     eager_step = _forward_step(16, 4, None)
     assert predictor._activate_measurement_type_for_batch(eager_step) == MeasurementType.CUDA_EVENT
-    assert predictor._get_forward_launch_time(eager_step) == 0.0
-    assert predictor._get_sampler_e2e_time(eager_step) == 4.0
+    assert predictor._get_forward_launch_time(eager_step, 0) == 0.0
+    assert predictor._get_sampler_e2e_time(eager_step, 0) == 4.0
     assert lookups == [("sampler_e2e", MeasurementType.CUDA_EVENT)]
+
+
+STEP_FEATURE_NAMES = ["batch_size", "num_prefill_tokens", "num_decode_tokens"]
+
+
+def test_stage_keyed_cpu_overhead_rows_price_each_stage() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC)
+    predictor._config = SimpleNamespace(skip_cpu_overhead_modeling=False)
+    predictor._activate_measurement_type = lambda measurement_type: setattr(
+        predictor, "_active_measurement_type", measurement_type
+    )
+    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+    predictor._step_measurement_type = MeasurementType.CUDA_EVENT
+    step = (7.0, 0.0, 7.0)
+    predictor._predictions = {
+        "forward_launch": {
+            "_on_demand_prediction": True,
+            "_feature_names": [*STEP_FEATURE_NAMES, "pipeline_stage_id"],
+            "_exact_lookup": {(*step, 0.0): 58.65, (*step, 1.0): 58.98},
+        },
+        "schedule": {
+            "_on_demand_prediction": True,
+            "_feature_names": STEP_FEATURE_NAMES,
+            "_exact_lookup": {step: 0.2},
+        },
+    }
+    batch = SimpleNamespace(size=7, num_prefill_tokens=0, num_decode_tokens=7)
+
+    assert [predictor._get_forward_launch_time(batch, stage) for stage in (0, 1)] == [58.65, 58.98]
+    # A table from a single-stage probe has no stage feature, so every stage reads the same row.
+    assert [predictor._get_schedule_time(batch, stage) for stage in (0, 1)] == [0.2, 0.2]
+
+
+class _CpuOverheadTableRead(Exception):
+    pass
+
+
+def test_kernel_only_family_trains_no_cpu_overhead_models_without_decode_graphs() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC, two_stream_eager_pricing=True)
+    predictor._config = SimpleNamespace(skip_cpu_overhead_modeling=False)
+    predictor._cpu_overhead_input_file = "cpu_overheads.csv"
+
+    def read_table(_path):
+        raise _CpuOverheadTableRead
+
+    predictor._load_cpu_overhead_df = read_table
+    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+    assert predictor._train_cpu_overhead_models() == {}
+
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    with pytest.raises(_CpuOverheadTableRead):
+        predictor._train_cpu_overhead_models()
+
+    # Decode graphs run steps in the kernel-only family, which then prices their CPU terms.
+    global_vars.set_cuda_graph_config(False, [1, 2, 4], "full_decode_only")
+    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+    with pytest.raises(_CpuOverheadTableRead):
+        predictor._train_cpu_overhead_models()
 
 
 def test_shared_manager_trains_and_exposes_kernel_only_for_two_stream_clusters() -> None:

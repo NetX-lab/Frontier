@@ -470,11 +470,11 @@ def test_mixed_share_expert_dense_layer_uses_shared_expert_profile_rows() -> Non
     )
     predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_producer_send_path_runtime_time = lambda *_args: 0.0
     predictor._get_pp_receiver_head_runtime_time = lambda *_args: 0.0
     predictor._get_pp_prefill_consumer_active_runtime_time = lambda *_args: 0.0
@@ -529,11 +529,11 @@ def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
     predictor._get_mtp_terminal_overshoot_time = lambda *_args, **_kwargs: 0.0
     predictor._should_include_spec_decode_proposer_overhead = lambda _batch: False
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor._model_config.supports_share_expert = lambda: False
 
     def _unexpected_ffn_lookup(_batch):
@@ -597,11 +597,11 @@ def test_common_moe_post_attention_probe_skips_attention_lookup() -> None:
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
     predictor._get_mtp_terminal_overshoot_time = lambda *_args, **_kwargs: 0.0
     predictor._should_include_spec_decode_proposer_overhead = lambda _batch: False
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor._model_config.supports_share_expert = lambda: False
 
     lane_workload = EPLaneWorkload(
@@ -866,11 +866,11 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
     predictor._get_share_expert_up_proj_execution_time = lambda _batch: 0.0
     predictor._get_share_expert_down_proj_execution_time = lambda _batch: 0.0
     predictor._get_share_expert_act_execution_time = lambda _batch: 0.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor.predict_dp_moe_allreduce_times = lambda _batch, _cluster_type: (0.0, 0.0)
     predictor.predict_allgather_time = MagicMock(return_value=0.0)
     predictor.predict_allreduce_time = MagicMock(return_value=0.0)

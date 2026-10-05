@@ -121,11 +121,13 @@ from frontier.operators.spec import (
     ZeroPayloadPolicy,
 )
 from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
 )
 from frontier.profiling.cpu_overhead.validation import (
     apply_cpu_overhead_schema_v2_defaults,
+    cpu_overhead_feature_columns,
     validate_cpu_overhead_dataframe,
 )
 from frontier.profiling.other_overhead.validation import (
@@ -3469,6 +3471,15 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     def _train_cpu_overhead_models(self) -> Dict[str, BaseEstimator]:
         if self._config.skip_cpu_overhead_modeling:
             return {}
+        if (
+            self._active_measurement_type == MeasurementType.KERNEL_ONLY
+            and global_vars.get_sys_arch() != "pd-af-disaggregation"
+            and self._cluster_type in (None, ClusterType.MONOLITHIC, ClusterType.DECODE)
+            and str(global_vars.get_decode_cuda_graph_mode()).strip().lower() == "none"
+        ):
+            # Without decode graphs, kernel-only tables price only the device stream
+            # of eager steps; every step's CPU-overhead terms come from its own family.
+            return {}
 
         models = {}
         model_names = [
@@ -3493,6 +3504,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         )
         if "forward_launch_median" in cpu_overhead_df.columns:
             model_names.append("forward_launch")
+        feature_cols = cpu_overhead_feature_columns(cpu_overhead_df)
 
         for model_name in model_names:
             if model_name == "ray_comm_time":
@@ -3500,24 +3512,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             else:
                 target_col = f"{model_name}_median"
 
-            model = self._train_model(
+            models[model_name] = self._train_model(
                 model_name=model_name,
                 df=cpu_overhead_df,
-                feature_cols=[
-                    "batch_size",
-                    "num_prefill_tokens",
-                    "num_decode_tokens",
-                ],
+                feature_cols=feature_cols,
                 target_col=target_col,
                 persist_exact_lookup=True,
             )
-            if not hasattr(model, "_frontier_exact_lookup"):
-                model._frontier_exact_lookup = _build_exact_feature_lookup(
-                    cpu_overhead_df,
-                    ["batch_size", "num_prefill_tokens", "num_decode_tokens"],
-                    target_col,
-                )
-            models[model_name] = model
 
         return models
 
@@ -6918,6 +6919,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         self,
         metric_name: str,
         batch: Batch,
+        stage_id: int,
     ) -> float:
         if self._config.skip_cpu_overhead_modeling:
             return 0.0
@@ -6925,9 +6927,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         # CPU-overhead terms belong to the forward step's family, which differs
         # from the operator tables' family under two-stream eager pricing.
         with self._temporary_measurement_type(self._step_measurement_type):
-            return self._lookup_cpu_overhead_prediction(metric_name, batch)
+            return self._lookup_cpu_overhead_prediction(metric_name, batch, stage_id)
 
-    def _lookup_cpu_overhead_prediction(self, metric_name: str, batch: Batch) -> float:
+    def _lookup_cpu_overhead_prediction(self, metric_name: str, batch: Batch, stage_id: int) -> float:
         metric_predictions = self._predictions.get(metric_name)
         if metric_predictions is None:
             self._log_missing_cpu_overhead_prediction_once(metric_name)
@@ -6936,12 +6938,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         if isinstance(metric_predictions, dict) and metric_predictions.get(
             "_on_demand_prediction"
         ):
+            feature_names = metric_predictions["_feature_names"]
             features = self._get_cpu_overhead_features(batch)
-            feature_key = (
-                float(features["batch_size"]),
-                float(features["num_prefill_tokens"]),
-                float(features["num_decode_tokens"]),
-            )
+            # A table from a PP>1 probe keys rows by the stage that runs the interval.
+            if CPU_OVERHEAD_PIPELINE_STAGE_COLUMN in feature_names:
+                features[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN] = stage_id
+            feature_key = tuple(float(features[name]) for name in feature_names)
             exact_lookup = metric_predictions.get("_exact_lookup") or {}
             if feature_key in exact_lookup:
                 return float(exact_lookup[feature_key])
@@ -6955,20 +6957,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         if batch_size_key in metric_predictions:
             return float(metric_predictions[batch_size_key])
 
-        features = self._get_cpu_overhead_features(batch)
-        feature_key = (
-            float(features["batch_size"]),
-            float(features["num_prefill_tokens"]),
-            float(features["num_decode_tokens"]),
-        )
-        if feature_key in metric_predictions:
-            return float(metric_predictions[feature_key])
-
         self._log_missing_cpu_overhead_prediction_once(metric_name)
         return 0.0
 
-    def _get_schedule_time(self, batch: Batch) -> float:
-        return self._get_cpu_overhead_prediction_or_default("schedule", batch)
+    def _get_schedule_time(self, batch: Batch, stage_id: int) -> float:
+        return self._get_cpu_overhead_prediction_or_default("schedule", batch, stage_id)
 
     def _log_architecture_attention_shape(self, batch: Batch) -> None:
         architecture_profile = self._get_model_architecture_profile()
@@ -6999,27 +6992,27 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             qkv_out_dim,
         )
 
-    def _get_sampler_e2e_time(self, batch: Batch) -> float:
-        return self._get_cpu_overhead_prediction_or_default("sampler_e2e", batch)
+    def _get_sampler_e2e_time(self, batch: Batch, stage_id: int) -> float:
+        return self._get_cpu_overhead_prediction_or_default("sampler_e2e", batch, stage_id)
 
-    def _get_prepare_inputs_e2e_time(self, batch: Batch) -> float:
+    def _get_prepare_inputs_e2e_time(self, batch: Batch, stage_id: int) -> float:
         return self._get_cpu_overhead_prediction_or_default(
-            "prepare_inputs_e2e", batch
+            "prepare_inputs_e2e", batch, stage_id
         )
 
-    def _get_process_model_outputs_time(self, batch: Batch) -> float:
+    def _get_process_model_outputs_time(self, batch: Batch, stage_id: int) -> float:
         return self._get_cpu_overhead_prediction_or_default(
-            "process_model_outputs", batch
+            "process_model_outputs", batch, stage_id
         )
 
-    def _get_ray_comm_time(self, batch: Batch) -> float:
-        return self._get_cpu_overhead_prediction_or_default("ray_comm_time", batch)
+    def _get_ray_comm_time(self, batch: Batch, stage_id: int) -> float:
+        return self._get_cpu_overhead_prediction_or_default("ray_comm_time", batch, stage_id)
 
-    def _get_forward_launch_time(self, batch: Batch) -> float:
+    def _get_forward_launch_time(self, batch: Batch, stage_id: int) -> float:
         """Host time to launch the forward's kernels of a step priced in two streams."""
         if self._active_measurement_type == self._step_measurement_type:
             return 0.0
-        return self._get_cpu_overhead_prediction_or_default("forward_launch", batch)
+        return self._get_cpu_overhead_prediction_or_default("forward_launch", batch, stage_id)
 
     # Phase 2.5: Removed deprecated get_moe_stage_execution_details() method
     # MoE models now use predict_moe_layer_time() and other fine-grained APIs
@@ -8234,28 +8227,28 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             mlp_norm_time = 0.0
             add_time = 0.0
         schedule_time = self._validate_prediction_value(
-            self._get_schedule_time(batch), "schedule", batch, f"stage={stage_id}"
+            self._get_schedule_time(batch, stage_id), "schedule", batch, f"stage={stage_id}"
         )
         sampler_time = self._validate_prediction_value(
-            self._get_sampler_e2e_time(batch), "sampler", batch, f"stage={stage_id}"
+            self._get_sampler_e2e_time(batch, stage_id), "sampler", batch, f"stage={stage_id}"
         )
         prepare_inputs_time = self._validate_prediction_value(
-            self._get_prepare_inputs_e2e_time(batch),
+            self._get_prepare_inputs_e2e_time(batch, stage_id),
             "prepare_inputs",
             batch,
             f"stage={stage_id}",
         )
         process_outputs_time = self._validate_prediction_value(
-            self._get_process_model_outputs_time(batch),
+            self._get_process_model_outputs_time(batch, stage_id),
             "process_outputs",
             batch,
             f"stage={stage_id}",
         )
         ray_comm_time = self._validate_prediction_value(
-            self._get_ray_comm_time(batch), "ray_comm", batch, f"stage={stage_id}"
+            self._get_ray_comm_time(batch, stage_id), "ray_comm", batch, f"stage={stage_id}"
         )
         forward_launch_time = self._validate_prediction_value(
-            self._get_forward_launch_time(batch), "forward_launch", batch, f"stage={stage_id}"
+            self._get_forward_launch_time(batch, stage_id), "forward_launch", batch, f"stage={stage_id}"
         )
         pp_producer_send_path_runtime_time = self._validate_prediction_value(
             self._get_pp_producer_send_path_runtime_time(batch, stage_id),

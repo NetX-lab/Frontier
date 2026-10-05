@@ -12,7 +12,9 @@ from frontier.profiling.cpu_overhead.schema import (
     CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS,
     CPU_OVERHEAD_IDENTITY_COLUMNS,
     CPU_OVERHEAD_NUMERIC_COLUMNS,
+    CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
     CPU_OVERHEAD_REQUIRED_COLUMNS,
+    CPU_OVERHEAD_STEP_FEATURE_COLUMNS,
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
     DEFAULT_SCHEDULING_MODE,
@@ -20,6 +22,15 @@ from frontier.profiling.cpu_overhead.schema import (
 )
 
 logger = init_logger(__name__)
+
+
+def _stage_columns(df: pd.DataFrame) -> list[str]:
+    return [CPU_OVERHEAD_PIPELINE_STAGE_COLUMN] if CPU_OVERHEAD_PIPELINE_STAGE_COLUMN in df.columns else []
+
+
+def cpu_overhead_feature_columns(df: pd.DataFrame) -> list[str]:
+    """Features of the CPU-overhead models trained from ``df``."""
+    return [*CPU_OVERHEAD_STEP_FEATURE_COLUMNS, *_stage_columns(df)]
 
 
 def _default_warn_fn(message: str) -> None:
@@ -121,7 +132,8 @@ def validate_cpu_overhead_dataframe(
             f"CPU overhead columns {list(CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS)} must appear "
             f"together, got {forward_launch_columns}"
         )
-    numeric_columns = [*CPU_OVERHEAD_NUMERIC_COLUMNS, *forward_launch_columns]
+    stage_columns = _stage_columns(validated)
+    numeric_columns = [*CPU_OVERHEAD_NUMERIC_COLUMNS, *forward_launch_columns, *stage_columns]
 
     numeric_frame = validated.loc[:, numeric_columns].apply(
         pd.to_numeric, errors="coerce"
@@ -161,6 +173,7 @@ def validate_cpu_overhead_dataframe(
         "tensor_parallel_degree",
         "num_prefill_tokens",
         "num_decode_tokens",
+        *stage_columns,
     )
     for column in int_columns:
         if not (validated[column] == validated[column].astype(int)).all():
@@ -203,16 +216,13 @@ def validate_cpu_overhead_dataframe(
         )
     validated["profiling_precision"] = actual_precision
 
-    duplicate_rows = validated.duplicated(
-        subset=list(CPU_OVERHEAD_IDENTITY_COLUMNS), keep=False
-    )
+    identity_columns = [*CPU_OVERHEAD_IDENTITY_COLUMNS, *stage_columns]
+    duplicate_rows = validated.duplicated(subset=identity_columns, keep=False)
     if duplicate_rows.any():
-        duplicated_entries = validated.loc[
-            duplicate_rows, list(CPU_OVERHEAD_IDENTITY_COLUMNS)
-        ].to_dict("records")
+        duplicated_entries = validated.loc[duplicate_rows, identity_columns].to_dict("records")
         raise ValueError(
             "Duplicate CPU overhead rows found for identity columns "
-            f"{CPU_OVERHEAD_IDENTITY_COLUMNS}: {duplicated_entries}"
+            f"{tuple(identity_columns)}: {duplicated_entries}"
         )
 
     return validated

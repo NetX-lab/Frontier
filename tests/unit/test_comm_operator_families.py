@@ -624,11 +624,11 @@ def test_dense_stage_live_path_records_comm_operator_sequence_and_totals() -> No
     predictor._get_mlp_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_producer_send_path_runtime_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_receiver_head_runtime_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_prefill_consumer_active_runtime_time = (
@@ -701,11 +701,11 @@ def test_moe_stage_live_path_records_comm_operator_sequence_and_totals() -> None
     )
     predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor.predict_dp_moe_allreduce_times = lambda _batch, _cluster_type: (0.0, 0.0)
     predictor._get_pp_producer_send_path_runtime_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_receiver_head_runtime_time = lambda _batch, _stage_id: 0.0
@@ -797,11 +797,11 @@ def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
     )
     predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor.predict_dp_moe_allreduce_times = lambda _batch, _cluster_type: (0.0, 0.0)
     predictor._get_pp_producer_send_path_runtime_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_receiver_head_runtime_time = lambda _batch, _stage_id: 0.0
@@ -870,11 +870,11 @@ def test_moe_stage_preserves_attention_operator_times_for_fast_and_view_paths() 
     )
     predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
-    predictor._get_schedule_time = lambda _batch: 0.0
-    predictor._get_sampler_e2e_time = lambda _batch: 0.0
-    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
-    predictor._get_process_model_outputs_time = lambda _batch: 0.0
-    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch, _stage_id: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch, _stage_id: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch, _stage_id: 0.0
+    predictor._get_ray_comm_time = lambda _batch, _stage_id: 0.0
     predictor.predict_dp_moe_allreduce_times = lambda _batch, _cluster_type: (0.0, 0.0)
     predictor._get_pp_producer_send_path_runtime_time = lambda _batch, _stage_id: 0.0
     predictor._get_pp_receiver_head_runtime_time = lambda _batch, _stage_id: 0.0

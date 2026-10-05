@@ -763,13 +763,13 @@ class SklearnMoEExecutionTimePredictor(
             moe_gating_linear_time=moe_gating_linear_time,
             moe_gating_routing_topk_time=moe_gating_routing_topk_time,
             moe_shuffling_time=moe_shuffling_time,
-            schedule_time=self._get_schedule_time(batch) if include_stage_owned else 0.0,
-            sampler_e2e_time=self._get_sampler_e2e_time(batch) if include_stage_owned else 0.0,
-            prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch) if include_stage_owned else 0.0,
-            process_model_outputs_time=self._get_process_model_outputs_time(batch) if include_stage_owned else 0.0,
-            ray_comm_time=self._get_ray_comm_time(batch) if include_stage_owned else 0.0,
+            schedule_time=self._get_schedule_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            sampler_e2e_time=self._get_sampler_e2e_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            process_model_outputs_time=self._get_process_model_outputs_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            ray_comm_time=self._get_ray_comm_time(batch, pipeline_stage) if include_stage_owned else 0.0,
             forward_launch_time=(
-                self._get_forward_launch_time(batch) if include_stage_owned else 0.0
+                self._get_forward_launch_time(batch, pipeline_stage) if include_stage_owned else 0.0
             ),
             pp_producer_send_path_runtime_time=pp_producer_send_path_runtime_time,
             pp_receiver_head_runtime_time=pp_receiver_head_runtime_time,

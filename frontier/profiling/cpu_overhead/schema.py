@@ -44,6 +44,17 @@ CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS: Final[tuple[str, ...]] = (
     "forward_launch_median",
 )
 
+# A PP>1 CPU-probe table keys each row by the pipeline stage that runs the row's
+# intervals; single-stage tables have no such column.
+CPU_OVERHEAD_PIPELINE_STAGE_COLUMN: Final[str] = "pipeline_stage_id"
+
+# Step features of the CPU-overhead models; a stage-keyed table adds the stage.
+CPU_OVERHEAD_STEP_FEATURE_COLUMNS: Final[tuple[str, ...]] = (
+    "batch_size",
+    "num_prefill_tokens",
+    "num_decode_tokens",
+)
+
 # Required fields for contract validation.
 CPU_OVERHEAD_REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     "model_name",

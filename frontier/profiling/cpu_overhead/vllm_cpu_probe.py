@@ -36,6 +36,32 @@ one token as prefill, which holds for logs without speculative decoding. A pure
 decode tuple whose batch fits a decode CUDA-graph capture size ran as a FULL
 graph replay and belongs to the kernel-only family; every other tuple is eager.
 
+Pipeline stages. A PP>1 engine runs vLLM's batch-queue loop. Its engine log
+(``cpu_probe[_dp<d>].jsonl``) stamps schedule when a batch is submitted and the
+output stage's runner and sampling when the batch is popped. Each stage's
+workers write ``<engine log stem>_pp<p><suffix>`` with one record per forward;
+the n-th record of every stage file is the forward of the engine's n-th step
+that scheduled tokens. Stamps are compared across the stage processes, so all
+stages of one engine run on one host. Each interval is charged once, to the
+stage that runs it, in rows keyed by ``pipeline_stage_id``:
+
+    schedule               stage 0: step_start -> schedule_end
+    prepare_inputs_e2e     each stage: its execute_start -> preprocess_end
+    forward_launch         each stage: from the later of its dp_sync_end (after
+                           the DP token-count all-reduce) and the upstream
+                           stage's device end, to its forward_end
+    sampler_e2e            last stage: from the later of its forward_end and its
+                           device end, to sample_end
+    process_model_outputs  last stage: sample_end -> update_end
+
+and every other term is 0. The device end of stage p is
+D_p = max(forward_start_p, D_(p-1)) + forward_device_ms_p: stage p's device work
+starts after its own forward_start and after its upstream stage's device work.
+The batch-queue loop pops batches in submission order, so the next record's
+step_start may precede this batch's update_end, and process_model_outputs
+always ends at update_end. Frontier prices each stage's forward and the waits
+between stages itself, so no stage row carries them.
+
     python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \\
         --cpu_probe_logs run/prefill/cpu_probe.jsonl run/decode/cpu_probe.jsonl \\
         --decode_cudagraph_capture_sizes 1 2 4 8 16 24 32 40 48 56 64 \\
@@ -43,12 +69,16 @@ graph replay and belongs to the kernel-only family; every other tuple is eager.
         --profiling_precision BF16 --scheduling_mode sync \\
         --eager_output_file cpu_overheads.csv \\
         --kernel_only_output_file cpu_overheads_kernel_only.csv
+
+A PP>1 engine adds ``--num_pipeline_stages`` and lists each DP engine's log;
+each is read with its stage logs.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 from collections import defaultdict
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -58,7 +88,7 @@ import pandas as pd
 
 from frontier.config.precision_type import PrecisionType
 from frontier.logger import init_logger
-from frontier.profiling.cpu_overhead.schema import VALID_SCHEDULING_MODES
+from frontier.profiling.cpu_overhead.schema import CPU_OVERHEAD_PIPELINE_STAGE_COLUMN, VALID_SCHEDULING_MODES
 from frontier.profiling.cpu_overhead.validation import validate_cpu_overhead_dataframe
 from frontier.types import MeasurementType
 
@@ -69,6 +99,15 @@ StepIdentity = tuple[int, int, int]
 
 def load_cpu_probe_log(path: Path) -> list[dict]:
     return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+
+
+def step_identity(num_scheduled_tokens: Mapping[str, int]) -> StepIdentity:
+    tokens = list(num_scheduled_tokens.values())
+    return len(tokens), sum(t for t in tokens if t > 1), sum(t for t in tokens if t == 1)
+
+
+def stage_log_path(engine_log: Path, pipeline_stage_id: int) -> Path:
+    return engine_log.with_name(f"{engine_log.stem}_pp{pipeline_stage_id}{engine_log.suffix}")
 
 
 def replays_decode_graph(identity: StepIdentity, largest_graph_batch: int) -> bool:
@@ -83,6 +122,11 @@ def step_overhead_terms(
 
     steps = []
     for record, following in zip(records, [*records[1:], None]):
+        if record.get("engine_loop") == "batch_queue":
+            raise ValueError(
+                f"CPU-probe step {record['step']} comes from vLLM's batch-queue loop, whose stamps "
+                "the single-stage terms cannot use; read a PP>1 engine's logs with --num_pipeline_stages."
+            )
         scheduled = record["num_scheduled_tokens"]
         if not scheduled:
             continue
@@ -91,8 +135,7 @@ def step_overhead_terms(
                 f"CPU-probe step {record['step']} has no forward_device_ms; "
                 "the log predates the probe's CUDA events"
             )
-        tokens = list(scheduled.values())
-        identity = (len(tokens), sum(t for t in tokens if t > 1), sum(t for t in tokens if t == 1))
+        identity = step_identity(scheduled)
         next_shares_request = following is not None and bool(
             set(following["num_scheduled_tokens"]) & set(scheduled)
         )
@@ -111,6 +154,39 @@ def step_overhead_terms(
             terms["forward_launch"] = forward_launch
         steps.append((identity, terms))
     return steps
+
+
+def stage_overhead_terms(
+    engine_records: Sequence[Mapping], stage_records: Sequence[Sequence[Mapping]],
+) -> list[list[tuple[StepIdentity, dict[str, float]]]]:
+    """Return, per pipeline stage, each scheduled step's identity and CPU-overhead terms in milliseconds."""
+
+    steps = [record for record in engine_records if record["num_scheduled_tokens"]]
+    scheduled = [record["num_scheduled_tokens"] for record in steps]
+    for stage_id, records in enumerate(stage_records):
+        if [record["num_scheduled_tokens"] for record in records] != scheduled:
+            raise ValueError(
+                f"pipeline stage {stage_id} logged {len(records)} forwards whose scheduled tokens do not "
+                f"match the engine's {len(steps)} steps that scheduled tokens"
+            )
+    last_stage = len(stage_records) - 1
+    stage_steps = [[] for _ in stage_records]
+    for n, record in enumerate(steps):
+        identity = step_identity(record["num_scheduled_tokens"])
+        device_end = -math.inf
+        for stage_id, records in enumerate(stage_records):
+            stage = records[n]
+            launch_start = max(stage["dp_sync_end"], device_end)
+            device_end = max(stage["forward_start"], device_end) + stage["forward_device_ms"] * 1e-3
+            last = stage_id == last_stage
+            stage_steps[stage_id].append((identity, {
+                "schedule": (record["schedule_end"] - record["step_start"]) * 1e3 if stage_id == 0 else 0.0,
+                "prepare_inputs_e2e": (stage["preprocess_end"] - stage["execute_start"]) * 1e3,
+                "sampler_e2e": (record["sample_end"] - max(stage["forward_end"], device_end)) * 1e3 if last else 0.0,
+                "process_model_outputs": (record["update_end"] - record["sample_end"]) * 1e3 if last else 0.0,
+                "forward_launch": (stage["forward_end"] - launch_start) * 1e3,
+            }))
+    return stage_steps
 
 
 def cpu_overhead_tables(
@@ -159,10 +235,32 @@ def cpu_overhead_tables(
     }
 
 
+def stage_cpu_overhead_tables(
+    stage_steps: Sequence[Sequence[tuple[StepIdentity, Mapping[str, float]]]],
+    *,
+    profiling_precision: str,
+    **table_identity,
+) -> dict[MeasurementType, pd.DataFrame]:
+    """Aggregate each pipeline stage's step terms into one validated table per family, keyed by stage."""
+
+    stage_tables = defaultdict(list)
+    for stage_id, steps in enumerate(stage_steps):
+        tables = cpu_overhead_tables(steps, profiling_precision=profiling_precision, **table_identity)
+        for family, table in tables.items():
+            stage_tables[family].append(table.assign(**{CPU_OVERHEAD_PIPELINE_STAGE_COLUMN: stage_id}))
+    return {
+        family: validate_cpu_overhead_dataframe(pd.concat(tables, ignore_index=True), expected_precision=profiling_precision)
+        for family, tables in stage_tables.items()
+    }
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cpu_probe_logs", type=Path, nargs="+", required=True,
-                        help="CPU-probe logs of one engine configuration, e.g. both PD roles")
+                        help="CPU-probe logs of one engine configuration, e.g. both PD roles or each DP engine")
+    parser.add_argument("--num_pipeline_stages", type=int, default=1,
+                        help="the engine's pipeline-parallel size; above 1 each engine log is read with its "
+                             "stage logs <stem>_pp<p><suffix> and rows are keyed by pipeline_stage_id")
     parser.add_argument("--decode_cudagraph_capture_sizes", type=int, nargs="*", required=True,
                         help="the engine's decode CUDA-graph capture sizes; none for an eager engine")
     parser.add_argument("--model_name", required=True, help="model name as Frontier's model config reports it")
@@ -173,17 +271,25 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--kernel_only_output_file", type=Path, required=True)
     args = parser.parse_args(argv)
 
-    largest_graph_batch = max(args.decode_cudagraph_capture_sizes, default=0)
-    steps = [step for log in args.cpu_probe_logs
-             for step in step_overhead_terms(load_cpu_probe_log(log), largest_graph_batch=largest_graph_batch)]
-    tables = cpu_overhead_tables(
-        steps,
+    table_identity = dict(
         decode_capture_sizes=args.decode_cudagraph_capture_sizes,
         model_name=args.model_name,
         tensor_parallel_degree=args.tensor_parallel_degree,
         profiling_precision=args.profiling_precision,
         scheduling_mode=args.scheduling_mode,
     )
+    if args.num_pipeline_stages == 1:
+        largest_graph_batch = max(args.decode_cudagraph_capture_sizes, default=0)
+        steps = [step for log in args.cpu_probe_logs
+                 for step in step_overhead_terms(load_cpu_probe_log(log), largest_graph_batch=largest_graph_batch)]
+        tables = cpu_overhead_tables(steps, **table_identity)
+    else:
+        stage_steps = [[] for _ in range(args.num_pipeline_stages)]
+        for log in args.cpu_probe_logs:
+            stage_logs = [load_cpu_probe_log(stage_log_path(log, p)) for p in range(args.num_pipeline_stages)]
+            for steps, terms in zip(stage_steps, stage_overhead_terms(load_cpu_probe_log(log), stage_logs)):
+                steps.extend(terms)
+        tables = stage_cpu_overhead_tables(stage_steps, **table_identity)
     outputs = {MeasurementType.CUDA_EVENT: args.eager_output_file,
                MeasurementType.KERNEL_ONLY: args.kernel_only_output_file}
     for family, path in outputs.items():
