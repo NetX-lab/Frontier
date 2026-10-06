@@ -300,31 +300,48 @@ Semantics:
 
 ### From vLLM CPU-probe logs
 
-`vllm_cpu_probe.py` builds the CPU-overhead CSVs from the per-step log that Frontier's
-instrumented vLLM writes when `VLLM_FRONTIER_CPU_PROBE_LOG_PATH` is set. Each record holds
-host timestamps around the step's phases and the CUDA-event device time of the model
-forward, so the four measured terms add up to the step period minus the forward's device
-time, the part Frontier prices from its operator tables:
+`vllm_cpu_probe.py` builds the CPU-overhead CSVs from the logs that Frontier's instrumented
+vLLM writes when `VLLM_FRONTIER_CPU_PROBE_LOG_PATH` is set. The engine log
+`cpu_probe[_dp<d>].jsonl` holds one record per engine step with host timestamps of the
+schedule and the output update. Each pipeline stage writes `cpu_probe[_dp<d>]_pp<p>.jsonl`,
+`_pp0` for a single-stage engine, with one record per forward: the runner's timestamps, the
+start and end of the DP token-count all-reduce, the CUDA graph mode and the CUDA-event device
+time of the forward, timed from the forward-context entry.
+
+Frontier prices each stage's forward from its operator tables, and prices itself the waits
+between stages, between DP engines and for a PD decode instance's KV load. The terms price
+every other host interval of a step, each once, on the stage that runs it:
 
 | Term | Probe interval |
 | --- | --- |
-| `schedule` | `step_start -> schedule_end` |
-| `prepare_inputs_e2e` | `schedule_end -> preprocess_end` |
-| `sampler_e2e` | `preprocess_end -> sample_end`, minus `forward_device_ms` |
-| `process_model_outputs` | `sample_end ->` next `step_start` when the next step shares a request, else `sample_end -> update_end` |
-| `ray_comm_time_mean` | `0` (one worker) |
+| `schedule` | stage 0: `step_start -> schedule_end` |
+| `prepare_inputs_e2e` | each stage: dispatch start `-> forward_context_entered`, less the DP wait and the KV-load wait |
+| `forward_launch` | each stage, eager forwards only: launch start `-> forward_end` |
+| `sampler_e2e` | last stage: `max(forward_end, device end) -> sample_end` |
+| `process_model_outputs` | last stage: `sample_end ->` next `step_start` when the next step shares a request and starts after `update_end`, else `sample_end -> update_end` |
+| `ray_comm_time_mean` | `0` (no Ray hop) |
 
-Steps are grouped by `(batch_size, num_prefill_tokens, num_decode_tokens)`. A pure decode
-tuple whose batch fits a decode CUDA-graph capture size goes to the kernel-only file, which
-the predictor reads for FULL graph replays; every other tuple goes to the eager file. When
-the next step shares no request, the engine may have waited for an arrival, so
-`process_model_outputs` ends at `update_end` and leaves out the engine loop gap; a PD
-prefill instance, whose requests run one step each, always takes this form.
+- Stage 0's dispatch starts at the later of `schedule_end` and the end of its previous
+  forward, which leaves out queueing behind the previous batch; a later stage's dispatch
+  starts at its `execute_start`, after its receive wait.
+- The DP wait is the all-reduce's duration beyond its own latency: the median duration on
+  the DP engine that reaches an all-reduce last, over the all-reduces recorded by every DP
+  engine of the serving instance.
+- The KV-load wait is the forward-context entry, less an all-reduce inside it, beyond its
+  median over the stage log.
+- The launch start is the later of `forward_context_entered` and the upstream stage's device
+  end; a stage's device end is its launch start plus its forward's device time.
+
+Forwards are grouped per stage by `(batch_size, num_prefill_tokens, num_decode_tokens)` and
+keyed by `pipeline_stage_id`. A forward that replayed a FULL CUDA graph goes to the
+kernel-only file and publishes no `forward_launch`; every other forward goes to the eager
+file. Each `--cpu_probe_logs` lists the engine logs of one serving instance, one per DP
+engine; a PP>1 engine adds `--num_pipeline_stages`:
 
 ```bash
 python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \
-  --cpu_probe_logs run/prefill/cpu_probe.jsonl run/decode/cpu_probe.jsonl \
-  --decode_cudagraph_capture_sizes 1 2 4 8 16 24 32 40 48 56 64 \
+  --cpu_probe_logs run/prefill/cpu_probe.jsonl \
+  --cpu_probe_logs run/decode/cpu_probe.jsonl \
   --model_name llama2_7b_dense_example --tensor_parallel_degree 1 \
   --profiling_precision FP16 --scheduling_mode sync \
   --eager_output_file cpu_overheads.csv \

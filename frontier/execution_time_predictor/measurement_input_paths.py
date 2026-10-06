@@ -166,8 +166,9 @@ def uses_two_stream_eager_pricing(
     them. When the eager CPU-overhead table carries forward_launch, the device
     stream is priced from kernel-only operator tables, the host stream from
     forward_launch, and the step pays the launch time the device cannot hide.
-    With pipeline stages, each stage launches its own forward, so the table
-    must key its rows by pipeline_stage_id for every stage of the replica.
+    Each pipeline stage launches its own forward, so the table keys its rows by
+    pipeline_stage_id for every stage of the replica, stage 0 alone for a
+    single-stage replica.
     """
     if config.enable_dummy_mode or config.skip_cpu_overhead_modeling:
         return False
@@ -182,17 +183,9 @@ def uses_two_stream_eager_pricing(
             "price eager steps in two streams; use a CPU-overhead table without it."
         )
     if CPU_OVERHEAD_PIPELINE_STAGE_COLUMN not in columns:
-        if num_pipeline_stages > 1:
-            raise ValueError(
-                f"{cpu_overhead_input_file} carries forward_launch from a single-stage CPU probe; "
-                f"num_pipeline_stages={num_pipeline_stages} needs rows keyed by "
-                f"{CPU_OVERHEAD_PIPELINE_STAGE_COLUMN} from a probe run with the same pipeline stages."
-            )
-        return True
-    if sys_arch == "pd-disaggregation":
         raise ValueError(
-            f"{cpu_overhead_input_file} keys rows by {CPU_OVERHEAD_PIPELINE_STAGE_COLUMN}; the PD roles "
-            "share one CPU-overhead model set, so pd-disaggregation does not take stage-keyed rows."
+            f"{cpu_overhead_input_file} carries forward_launch without {CPU_OVERHEAD_PIPELINE_STAGE_COLUMN}; "
+            "republish it from the CPU-probe logs with frontier.profiling.cpu_overhead.vllm_cpu_probe."
         )
     stages = set(pd.read_csv(cpu_overhead_input_file, usecols=[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN])[
         CPU_OVERHEAD_PIPELINE_STAGE_COLUMN

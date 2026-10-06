@@ -717,8 +717,7 @@ def _predictor_config(**flags) -> SimpleNamespace:
 def test_two_stream_eager_pricing_follows_forward_launch_columns(tmp_path) -> None:
     plain = tmp_path / "plain.csv"
     plain.write_text(PLAIN_CPU_OVERHEAD_HEADER)
-    probed = tmp_path / "probed.csv"
-    probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
+    probed = _stage_table(tmp_path / "probed.csv", (0,))
     layout = {"sys_arch": "co-location", "num_pipeline_stages": 1}
 
     assert uses_two_stream_eager_pricing(_predictor_config(), str(probed), **layout) is True
@@ -739,17 +738,18 @@ def test_two_stream_eager_pricing_follows_forward_launch_columns(tmp_path) -> No
     )
 
 
-def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_single_stage_tables_at_pp2(tmp_path) -> None:
-    probed = tmp_path / "probed.csv"
-    probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
+def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_tables_without_stages(tmp_path) -> None:
+    probed = _stage_table(tmp_path / "probed.csv", (0,))
+    unstaged = tmp_path / "unstaged.csv"
+    unstaged.write_text(PROBED_CPU_OVERHEAD_HEADER)
 
     with pytest.raises(ValueError, match="PD-AF"):
         uses_two_stream_eager_pricing(
-            _predictor_config(), str(probed), sys_arch="pd-af-disaggregation", num_pipeline_stages=1
+            _predictor_config(), probed, sys_arch="pd-af-disaggregation", num_pipeline_stages=1
         )
-    with pytest.raises(ValueError, match="pipeline_stage_id"):
+    with pytest.raises(ValueError, match="without pipeline_stage_id; republish"):
         uses_two_stream_eager_pricing(
-            _predictor_config(), str(probed), sys_arch="co-location", num_pipeline_stages=2
+            _predictor_config(), str(unstaged), sys_arch="co-location", num_pipeline_stages=1
         )
 
 
@@ -768,10 +768,9 @@ def test_two_stream_eager_pricing_takes_stage_tables_covering_every_stage(tmp_pa
         uses_two_stream_eager_pricing(
             _predictor_config(), first, sys_arch="co-location", num_pipeline_stages=2
         )
-    with pytest.raises(ValueError, match="pd-disaggregation does not take stage-keyed rows"):
-        uses_two_stream_eager_pricing(
-            _predictor_config(), both, sys_arch="pd-disaggregation", num_pipeline_stages=2
-        )
+    assert uses_two_stream_eager_pricing(
+        _predictor_config(), first, sys_arch="pd-disaggregation", num_pipeline_stages=1
+    ) is True
 
 
 def test_two_stream_enables_kernel_only_family_for_eager_step_roles() -> None:
@@ -919,8 +918,7 @@ def test_shared_manager_trains_and_exposes_kernel_only_for_two_stream_clusters()
 
 def test_shared_manager_detects_two_stream_from_eager_cpu_overhead_table(tmp_path) -> None:
     manager = _make_manager()
-    probed = tmp_path / "probed.csv"
-    probed.write_text(PROBED_CPU_OVERHEAD_HEADER)
+    probed = _stage_table(tmp_path / "probed.csv", (0,))
     plain = tmp_path / "plain.csv"
     plain.write_text(PLAIN_CPU_OVERHEAD_HEADER)
     cluster_config = manager._cluster_configs[ClusterType.PREFILL]
