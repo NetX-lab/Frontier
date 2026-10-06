@@ -7,8 +7,9 @@ from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 
 
 @pytest.mark.parametrize("sync_kind", ["prefill", "decode"])
-def test_single_active_lane_completes_successive_layers(sync_kind):
-    from frontier.entities import Batch, Request
+def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forward(sync_kind):
+    from frontier.entities import Batch, DummyForwardBatch, Request
+    from frontier.events.replica_schedule_event import ReplicaScheduleEvent
     from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
         RoundRobinClusterScheduler,
     )
@@ -23,46 +24,49 @@ def test_single_active_lane_completes_successive_layers(sync_kind):
     scheduler._forward_sync_state = ForwardSyncState()
     scheduler._replica_dp_size = 2
     setattr(scheduler, f"_uses_shared_{sync_kind}_layer_path", lambda *_: True)
+    sibling_engine = SimpleNamespace(engine_loop_idle=True)
     scheduler._replica_schedulers = {
-        (0, 1): SimpleNamespace(get_replica_stage_scheduler=lambda _: SimpleNamespace(
-            is_busy=False, is_empty=lambda: True
-        ))
+        (0, 0): SimpleNamespace(engine_loop_idle=False),
+        (0, 1): sibling_engine,
     }
+    batch = Batch(0, [Request(0.0, 16, 4)], [16], is_moe=True)
+    dummy = DummyForwardBatch(0, 0, forward_index=0)
+    for lane_id, lane_batch in enumerate((batch, dummy)):
+        lane_batch.set_global_id(lane_id)
+        lane_batch._forward_cohort_id = 0
+        lane_batch._forward_cohort_provisional_id = 0
+    # The woken engine starts its stage forward after the lone lane did.
+    batch._forward_launch_start_time = 0.0
+    dummy._forward_launch_start_time = 0.5
     completed = []
 
     def wave_ready(**kwargs):
         completed.append(kwargs["layer_id"])
-        assert kwargs["cohort_batches"][0] is batch
-        assert kwargs["cohort_batches"][1].is_idle
+        assert kwargs["cohort_batches"] == {0: batch, 1: dummy}
         return []
 
     setattr(scheduler, f"_on_{sync_kind}_ep_wave_ready", wave_ready)
-    global_scheduler = SimpleNamespace(get_cluster_scheduler=lambda _: scheduler)
-    batch = Batch(0, [Request(0.0, 16, 4)], [16], is_moe=True)
-    batch.set_global_id(0)
     sync = getattr(scheduler, f"on_{sync_kind}_sync")
-    stale_events = []
     for layer_id in range(4):
         events = sync(float(layer_id), 0, 0, batch, 0, "pre_moe", layer_id, 0.0)
-        assert len(events) == 1
-        assert events[0].handle_event(global_scheduler, None) == []
+        if layer_id == 0:
+            assert [type(event) for event in events] == [ReplicaScheduleEvent]
+            assert events[0]._replica_local_id == 1
+            # The woken engine issues its dummy forward and is no longer idle.
+            sibling_engine.engine_loop_idle = False
+        else:
+            assert events == []
+        assert completed == list(range(layer_id))
+        assert sync(float(layer_id), 0, 0, dummy, 1, "pre_moe", layer_id, 0.0) == []
         assert completed == list(range(layer_id + 1))
+        # vLLM's per-forward DP all-reduce: both lanes launch from the later start.
+        assert batch._forward_launch_start_time == dummy._forward_launch_start_time == 0.5
         assert scheduler._forward_sync_state._open_steps == {}
-        assert batch._forward_cohort_id == layer_id
-        assert batch._forward_cohort_provisional_id == 0
-        stale_events.extend(events)
-        for stale in stale_events:
-            assert stale.handle_event(global_scheduler, None) == []
-        assert completed == list(range(layer_id + 1))
-        assert scheduler._forward_sync_state._open_steps == {}
+        assert batch._forward_cohort_id == dummy._forward_cohort_id == layer_id
 
 
-def make_batch(batch_id, *, step_id=None, provisional_id=None, idle=False):
-    batch = SimpleNamespace(
-        id=batch_id,
-        global_id=batch_id,
-        is_idle=idle,
-    )
+def make_batch(batch_id, *, step_id=None, provisional_id=None):
+    batch = SimpleNamespace(id=batch_id, global_id=batch_id)
     if step_id is not None:
         batch._forward_cohort_id = step_id
     if provisional_id is not None:
@@ -127,75 +131,6 @@ def test_late_real_batch_gets_a_fresh_step_after_step_close():
 
     assert result == 5
     assert batch._forward_cohort_id == 5
-
-
-def test_closed_step_suppresses_late_idle_placeholder():
-    state = ForwardSyncState()
-    real = make_batch(11, step_id=4, provisional_id=4)
-    state.close_step(
-        replica_id=0,
-        stage_id=1,
-        layer_id=2,
-        sync_stage="pre_moe",
-        provisional_id=4,
-    )
-    late_idle = make_batch(12, step_id=4, provisional_id=4, idle=True)
-
-    result = state.resolve_step(
-        replica_id=0,
-        stage_id=1,
-        batch=late_idle,
-        lane_id=1,
-        layer_id=2,
-        sync_stage="pre_moe",
-        room_lookup=room_lookup({}),
-    )
-
-    assert result is None
-    assert state._open_steps == {}
-
-
-def test_closed_step_late_idle_result_is_optional_step_id():
-    state = ForwardSyncState()
-    batch = make_batch(13, step_id=6, provisional_id=6, idle=True)
-    state.close_step(
-        replica_id=0,
-        stage_id=0,
-        layer_id=1,
-        sync_stage="pre_moe",
-        provisional_id=6,
-    )
-
-    result = state.resolve_step(
-        replica_id=0,
-        stage_id=0,
-        batch=batch,
-        lane_id=1,
-        layer_id=1,
-        sync_stage="pre_moe",
-        room_lookup=room_lookup({}),
-    )
-
-    assert result is None
-
-
-def test_idle_placeholder_can_be_replaced_in_open_step():
-    state = ForwardSyncState()
-    idle = make_batch(20, step_id=9, provisional_id=9, idle=True)
-    real = make_batch(21, step_id=9, provisional_id=9)
-    rooms = {9: {"batches": {1: idle}}}
-
-    result = state.resolve_step(
-        replica_id=0,
-        stage_id=0,
-        batch=real,
-        lane_id=1,
-        layer_id=0,
-        sync_stage="pre_moe",
-        room_lookup=room_lookup(rooms),
-    )
-
-    assert result == 9
 
 
 def test_closed_hint_gets_fresh_step_id():
@@ -334,34 +269,6 @@ def test_same_batch_reentry_fails_fast():
             sync_stage="pre_moe",
             room_lookup=room_lookup(rooms),
         )
-
-
-def test_late_idle_event_does_not_replace_real_batch_in_new_step():
-    state = ForwardSyncState()
-    real = make_batch(62, step_id=10, provisional_id=10)
-    old_idle = make_batch(63, step_id=10, provisional_id=10, idle=True)
-    rooms = {10: {"batches": {1: real}}}
-    state.resolve_step(
-        replica_id=0,
-        stage_id=0,
-        batch=real,
-        lane_id=1,
-        layer_id=0,
-        sync_stage="pre_moe",
-        room_lookup=room_lookup(rooms),
-    )
-    old_idle_step = state.resolve_step(
-        replica_id=0,
-        stage_id=0,
-        batch=old_idle,
-        lane_id=1,
-        layer_id=0,
-        sync_stage="pre_moe",
-        room_lookup=room_lookup(rooms),
-    )
-
-    assert old_idle_step == 10
-    assert rooms[10]["batches"][1] is real
 
 
 def test_completed_step_state_stays_bounded():

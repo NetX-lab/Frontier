@@ -78,7 +78,7 @@ class ForwardSyncState:
         layer_id: int,
         sync_stage: str,
         room_lookup: Callable[[int], Mapping | None],
-    ) -> int | None:
+    ) -> int:
         for value, field_name in (
             (replica_id, "replica_id"),
             (stage_id, "stage_id"),
@@ -117,13 +117,7 @@ class ForwardSyncState:
                     f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
                     f"sync_stage={sync_stage}, step={open_step_id}"
                 )
-            existing_batch = room.get("batches", {}).get(lane_id)
-            if (
-                existing_batch is None
-                or (existing_batch is batch and batch.is_idle)
-                or (existing_batch.is_idle and not batch.is_idle)
-                or (batch.is_idle and not existing_batch.is_idle)
-            ):
+            if room.get("batches", {}).get(lane_id) is None:
                 if current_id != open_step_id:
                     batch._forward_cohort_id = open_step_id
                 return open_step_id
@@ -131,11 +125,9 @@ class ForwardSyncState:
                 "one attention-DP lane cannot occupy two open sync cohorts: "
                 f"replica={replica_id}, stage={stage_id}, lane={lane_id}, "
                 f"layer={layer_id}, sync_stage={sync_stage}"
-                )
+            )
 
         next_id = int(self._next_step_id_by_replica.get(replica_id, 0))
-        if getattr(batch, "is_idle", False) and current_id < next_id:
-            return None
         resolved_id = max(current_id, next_id)
         self._open_steps[binding_key] = resolved_id
         batch._forward_cohort_id = resolved_id

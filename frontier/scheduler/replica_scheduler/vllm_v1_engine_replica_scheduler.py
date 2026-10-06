@@ -22,7 +22,7 @@ from typing import Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
-from frontier.entities.batch import Batch, Request
+from frontier.entities.batch import Batch, DummyForwardBatch, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -135,6 +135,17 @@ class VLLMv1EngineReplicaScheduler(
         )
         self._in_flight_batch_ids: Deque[int] = deque()
         self._blocking_batch_id: Optional[int] = None
+        # vLLM's DPEngineCoreProc: after a step that executed no batch, an
+        # attention-DP engine of a MoE model runs a dummy forward on every
+        # pipeline stage while its DP wave runs (`run_busy_loop`), so the other
+        # engines' MoE layers always find a partner.
+        self._runs_dp_dummy_passes = (
+            self._has_engine_batch_queue
+            and self._replica_is_moe
+            and self._replica_config.attn_dp > 1
+        )
+        self._dummy_pass_due = False
+        self._dummy_forwards_in_flight = 0
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -381,17 +392,84 @@ class VLLMv1EngineReplicaScheduler(
         # the block waits for that batch's output.
         if not self._has_engine_batch_queue:
             return super().on_schedule(time)
-        if self._blocking_batch_id is not None:
+        if self._blocking_batch_id is not None or self._dummy_forwards_in_flight:
             return []
+        if self._dummy_pass_due:
+            self._dummy_pass_due = False
+            if self._dp_wave_runs():
+                return self._issue_dummy_pass()
         batches = super().on_schedule(time)
         self._in_flight_batch_ids.extend(batch.id for batch in batches)
         if self._in_flight_batch_ids:
             self._blocking_batch_id = self._in_flight_batch_ids[0]
-            # No iteration runs during the block; the output that ends it
-            # starts the next one.
-            self._monolithic_pp_terminal_release_followup_poll_pending = False
-            self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
+            # A pass that ended on an iteration that scheduled nothing returns
+            # model_executed=False once the block ends; a pass that filled the
+            # queue returns True.
+            self._dummy_pass_due = (
+                self._runs_dp_dummy_passes
+                and self._num_running_batches < self._num_stages
+            )
+            self._clear_followup_polls()
+        elif self._runs_dp_dummy_passes and self._dp_wave_runs():
+            return self._issue_dummy_pass()
         return batches
+
+    def _clear_followup_polls(self) -> None:
+        # No iteration runs while the engine waits; the output or the dummy
+        # forward that ends the wait starts the next one.
+        self._monolithic_pp_terminal_release_followup_poll_pending = False
+        self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
+
+    @property
+    def has_unfinished_requests(self) -> bool:
+        """vLLM's `Scheduler.has_unfinished_requests`: a waiting or running request."""
+        return bool(self._running_requests) or any(self._waiting_queues())
+
+    @property
+    def engine_loop_idle(self) -> bool:
+        """Whether the engine has neither a batch nor a dummy forward in flight."""
+        return not self._in_flight_batch_ids and not self._dummy_forwards_in_flight
+
+    def _dp_wave_runs(self) -> bool:
+        """Whether vLLM's DP wave still runs this engine.
+
+        The wave runs while any engine of the DP group has unfinished requests,
+        and vLLM ends it for every engine at one step count. The n-th forward of
+        every lane meets in one forward step, so a lane that has created fewer
+        forwards than a sibling still owes that sibling's MoE layers a partner.
+        """
+        group = [
+            self._cluster_scheduler.get_replica_scheduler(self._replica_id, lane_id)
+            for lane_id in range(self._replica_config.attn_dp)
+        ]
+        return any(lane.has_unfinished_requests for lane in group) or any(
+            lane._batch_creation_counter > self._batch_creation_counter
+            for lane in group
+        )
+
+    def _issue_dummy_pass(self) -> List[Batch]:
+        """Start one dummy forward on every pipeline stage at once.
+
+        `execute_dummy_batch` is one RPC to every worker of the engine. Each
+        stage runs its part once its earlier work ends, with no PP transfer
+        between parts, and the engine waits for every part.
+        """
+        dummy_forwards = []
+        for stage_id in range(self._num_stages):
+            dummy_forward = DummyForwardBatch(
+                self._replica_id, stage_id, self._batch_creation_counter
+            )
+            self._assign_lane_identity(dummy_forward, self._batch_creation_counter)
+            dummy_forwards.append(dummy_forward)
+        self._batch_creation_counter += 1
+        self._dummy_forwards_in_flight = self._num_stages
+        self._clear_followup_polls()
+        return dummy_forwards
+
+    def on_dummy_forward_end(self) -> bool:
+        """Record one ended dummy forward; return whether the engine iterates again."""
+        self._dummy_forwards_in_flight -= 1
+        return self._dummy_forwards_in_flight == 0
 
     def _leave_engine_batch_queue(self, batch: Batch) -> None:
         if not self._has_engine_batch_queue:

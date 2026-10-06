@@ -17,14 +17,14 @@ def promote_to_ep_wave(
 ) -> None:
     """Replace active lane owners with one Replica-local EP wave ticket."""
 
-    live_batches = [batch for batch in source_batches.values() if not batch.is_idle]
+    lane_batches = list(source_batches.values())
     tickets = []
-    for source_batch in live_batches:
+    for source_batch in lane_batches:
         ticket = getattr(source_batch, "_stage_admission_ticket", None)
         if ticket is None:
             if getattr(scheduler, "_stage_execution_contexts", None) is None:
                 return
-            raise ValueError("cohort EP promotion requires a stage admission ticket for every live batch")
+            raise ValueError("cohort EP promotion requires a stage admission ticket for every lane batch")
         if ticket not in tickets:
             tickets.append(ticket)
     if not tickets:
@@ -34,7 +34,7 @@ def promote_to_ep_wave(
         wave_ticket = tickets[0]
     elif len(tickets) == 1:
         owner_batch = next(
-            source_batch for source_batch in live_batches
+            source_batch for source_batch in lane_batches
             if getattr(source_batch, "_stage_admission_ticket", None) == tickets[0]
         )
         scheduler.transition_stage_admission_for_layer(
@@ -54,7 +54,7 @@ def promote_to_ep_wave(
             operation_id=("shared_ep_wave", int(replica_id), int(stage_id), int(step_id), int(layer_id)),
             participant_ep_ids=participant_ep_ids,
         )
-    for source_batch in live_batches:
+    for source_batch in lane_batches:
         source_batch._stage_admission_ticket = wave_ticket
         history = getattr(source_batch, "_stage_admission_scope_history", None)
         if history is None:
@@ -80,16 +80,14 @@ def restore_full_stage_owners(
 ) -> bool:
     """Restore one full-stage ticket per request-owner lane."""
 
-    live_batches = [batch for batch in source_batches.values() if not batch.is_idle]
-    if not live_batches:
-        return False
+    lane_batches = list(source_batches.values())
     tickets = []
-    for batch in live_batches:
+    for batch in lane_batches:
         ticket = getattr(batch, "_stage_admission_ticket", None)
         if ticket is None:
             if getattr(scheduler, "_stage_execution_contexts", None) is None:
                 return False
-            raise ValueError("cohort full-stage restoration requires a stage admission ticket for every live batch")
+            raise ValueError("cohort full-stage restoration requires a stage admission ticket for every lane batch")
         tickets.append(ticket)
     wave_tickets = list(dict.fromkeys(tickets))
     if len(wave_tickets) != 1 or wave_tickets[0].scope != EP_WAVE:
@@ -99,9 +97,9 @@ def restore_full_stage_owners(
         wave_tickets[0],
         operation_ids=[
             ("shared_layer", int(batch.id), int(batch.schedule_epoch), int(stage_id), int(layer_id), operation_kind, FULL_STAGE_WORLD)
-            for batch in live_batches
+            for batch in lane_batches
         ],
     )
-    for source_batch, owner in zip(live_batches, owners):
+    for source_batch, owner in zip(lane_batches, owners):
         source_batch._stage_admission_ticket = owner
     return True

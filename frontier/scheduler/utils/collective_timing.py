@@ -2,7 +2,7 @@
 
 import math
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable
 
 
 @dataclass(frozen=True)
@@ -24,15 +24,6 @@ class DecodeFinalTiming:
     draft_proposer_time: float
     mtp_terminal_overshoot_time: float
     total_time: float
-
-
-def select_active_batch(participant_batches: Mapping[Any, Any]) -> Optional[Any]:
-    """Return the first non-idle batch, or ``None`` when all lanes are idle."""
-
-    for batch in participant_batches.values():
-        if not batch.is_idle:
-            return batch
-    return None
 
 
 def attention_delay_seconds(execution_time: Any) -> float:
@@ -79,11 +70,13 @@ def prepare_prefill_final_timing(
     component_times_ms: Iterable[float],
     sync_time: float,
     original_start_time: float,
+    launch_start_time: float,
 ) -> PrefillFinalTiming:
     """Prepare PREFILL final-stage timing values without scheduler mutation.
 
-    The layer events simulated the stage's device work up to ``sync_time``; with
-    the pipeline send it is the device span that hides the forward's launch.
+    The layer events simulated the stage's device work up to ``sync_time``.
+    From the forward's launch start, with the pipeline send, it is the device
+    span that hides the forward's launch.
     """
 
     elapsed_stage_wall_time = sync_time - original_start_time
@@ -105,7 +98,7 @@ def prepare_prefill_final_timing(
             f"stage_cpu_overhead={cpu_overhead}"
         )
     forward_launch_stall_time = execution_time.forward_launch_stall_time(
-        elapsed_stage_wall_time + pipeline_time
+        sync_time - launch_start_time + pipeline_time
     )
     total_time = pipeline_time + cpu_overhead + forward_launch_stall_time
     return PrefillFinalTiming(
@@ -120,13 +113,13 @@ def prepare_prefill_final_timing(
 
 
 def prepare_decode_final_timing(
-    execution_time: Any, elapsed_stage_wall_time: float
+    execution_time: Any, launched_device_span: float
 ) -> DecodeFinalTiming:
     """Prepare DECODE final-stage timing values without scheduler mutation.
 
-    ``elapsed_stage_wall_time`` is the device work the layer events simulated
-    since the stage start; with the pipeline send it is the device span that
-    hides the forward's launch.
+    ``launched_device_span`` is the device work the layer events simulated
+    since the forward's launch start; with the pipeline send it is the device
+    span that hides the forward's launch.
     """
 
     pipeline_time = execution_time.pipeline_time * 1e-3
@@ -135,7 +128,7 @@ def prepare_decode_final_timing(
         0.0,
     )
     forward_launch_stall_time = execution_time.forward_launch_stall_time(
-        elapsed_stage_wall_time + pipeline_time
+        launched_device_span + pipeline_time
     )
     draft_proposer_time = execution_time.decode_draft_proposer_time * 1e-3
     mtp_terminal_overshoot_time = (

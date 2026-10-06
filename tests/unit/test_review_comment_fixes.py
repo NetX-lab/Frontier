@@ -16,7 +16,6 @@ from frontier.scheduler.utils.scheduler_diagnostics import (
     scheduler_is_empty,
 )
 from frontier.scheduler.utils.scheduler_state_views import SchedulerStateViews
-from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
 from frontier.scheduler.utils.forward_sync_state import source_batches_by_lane
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
 from frontier.types import ClusterType
@@ -89,25 +88,6 @@ def test_prefill_collective_surfaces_malformed_participant_mapping() -> None:
         )
 
 
-def test_prefill_collective_rejects_all_idle_participants() -> None:
-    scheduler = SimpleNamespace(_cluster_type=ClusterType.PREFILL)
-    idle_batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=True, is_moe=True)
-    idle_batch.set_global_id(1)
-
-    with pytest.raises(RuntimeError, match="requires a non-idle participant batch"):
-        handle_prefill_sync_collective(
-            scheduler,
-            0.0,
-            0,
-            0,
-            1,
-            "post_moe",
-            0,
-            metrics_store=None,
-            direct_batch=idle_batch,
-        )
-
-
 def test_collective_rejects_invalid_stage_before_removing_waiting_room() -> None:
     room = {"batches": {0: object()}, "arrival_times": {0: 0.0}}
     scheduler = SimpleNamespace(
@@ -143,95 +123,6 @@ def test_diagnostics_do_not_materialize_unused_state() -> None:
     assert state["raw_batch_waiting_map"] == {"status": "not_applicable"}
     assert "_attention_transfer_state" not in scheduler.__dict__
     assert "_m2n_state" not in scheduler.__dict__
-
-
-def test_prefill_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
-    batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
-    batch.set_global_id(7)
-    batch._forward_cohort_provisional_id = 7
-    scheduler = SimpleNamespace(
-        _cluster_type=ClusterType.PREFILL,
-        _sync_kind="prefill",
-        _sync_waiting_room={
-            0: {0: {7: {0: {"pre_moe": {"batches": {}, "arrival_times": {}}}}}}
-        },
-        _replica_dp_size=2,
-        _replica_schedulers={},
-        _uses_shared_prefill_layer_path=lambda *_args: True,
-        _get_forward_step_id=lambda current_batch: current_batch.global_id,
-        _resolve_forward_step=lambda **_kwargs: 7,
-    )
-
-    with pytest.raises(RuntimeError, match="Missing Replica scheduler"):
-        enter_prefill_sync(
-            scheduler,
-            time=0.0,
-            replica_id=0,
-            stage_id=0,
-            batch=batch,
-            replica_local_id=0,
-            sync_stage="pre_moe",
-            layer_id=0,
-            stage_execution_time=0.0,
-        )
-
-
-def test_decode_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
-    batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
-    batch.set_global_id(7)
-    batch._forward_cohort_provisional_id = 7
-    scheduler = SimpleNamespace(
-        _cluster_type=ClusterType.DECODE,
-        _sync_kind="decode",
-        _sync_waiting_room={
-            0: {0: {7: {0: {"pre_moe": {"batches": {}, "arrival_times": {}}}}}}
-        },
-        _replica_dp_size=2,
-        _replica_schedulers={},
-        _uses_shared_decode_layer_path=lambda *_args: True,
-        _get_forward_step_id=lambda current_batch: current_batch.global_id,
-        _resolve_forward_step=lambda **_kwargs: 7,
-    )
-
-    with pytest.raises(RuntimeError, match="Missing Replica scheduler"):
-        enter_decode_sync(
-            scheduler,
-            time=0.0,
-            replica_id=0,
-            stage_id=0,
-            batch=batch,
-            replica_local_id=0,
-            sync_stage="pre_moe",
-            layer_id=0,
-            stage_execution_time=0.0,
-        )
-
-
-def test_sync_entry_consumes_stale_idle_without_materializing_room() -> None:
-    waiting_room = defaultdict(dict)
-    batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=True, is_moe=True)
-    batch.set_global_id(7)
-    scheduler = SimpleNamespace(
-        _cluster_type=ClusterType.PREFILL,
-        _sync_kind="prefill",
-        _sync_waiting_room=waiting_room,
-        _uses_shared_prefill_layer_path=lambda *_args: True,
-        _get_forward_step_id=lambda current_batch: current_batch.global_id,
-        _resolve_forward_step=lambda **_kwargs: None,
-    )
-
-    assert enter_prefill_sync(
-        scheduler,
-        time=0.0,
-        replica_id=0,
-        stage_id=0,
-        batch=batch,
-        replica_local_id=1,
-        sync_stage="pre_moe",
-        layer_id=0,
-        stage_execution_time=0.0,
-    ) == []
-    assert dict(waiting_room) == {}
 
 
 def test_missing_forward_sync_owner_fails_fast() -> None:

@@ -180,6 +180,7 @@ def test_monolithic_prefill_dense_layer_uses_full_stage_protocol_without_ep_mate
     batch = Batch(0, [request], [4], is_moe=True)
     batch.set_global_id(3)
     batch._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
+    batch._forward_launch_start_time = 0.0
 
     monkeypatch.setattr(
         "frontier.scheduler.cluster_scheduler.base_cluster_scheduler.materialize_layer_ep_workload",
@@ -224,6 +225,7 @@ def test_monolithic_decode_dense_layer_uses_full_stage_protocol_without_ep_mater
     batch = Batch(0, [request], [4], is_moe=True)
     batch.set_global_id(5)
     batch.decode_sync_global_id = 5
+    batch._forward_launch_start_time = 0.0
 
     monkeypatch.setattr(
         "frontier.scheduler.cluster_scheduler.base_cluster_scheduler.materialize_layer_ep_workload",
@@ -257,6 +259,7 @@ def test_dense_prefill_completion_advances_to_next_layer_without_collective() ->
     batch = Batch(0, [request], [4], is_moe=True)
     batch.set_global_id(3)
     batch._prefill_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
     batch._prefill_model_execution_components_ms_by_stage = {0: [1.0, 4.0]}
 
     events = scheduler.on_dense_layer_complete(
@@ -291,6 +294,7 @@ def test_dense_decode_completion_advances_to_next_layer_without_collective() -> 
     batch.set_global_id(5)
     batch.decode_sync_global_id = 5
     batch._decode_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
 
     events = scheduler.on_dense_layer_complete(
         0.006,

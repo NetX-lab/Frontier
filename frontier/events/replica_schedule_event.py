@@ -1,5 +1,6 @@
 from typing import List
 
+from frontier.entities import DummyForwardBatch
 from frontier.events import BaseEvent
 from frontier.logger import init_logger
 from frontier.metrics import MetricsStore
@@ -150,6 +151,21 @@ class ReplicaScheduleEvent(BaseEvent):
                     )
                 ]
             return []
+
+        if isinstance(self._batches[0], DummyForwardBatch):
+            # A dummy forward runs on every pipeline stage at once, with no
+            # transfer between its parts.
+            return [
+                BatchStageArrivalEvent(
+                    self.time,
+                    self._replica_id,
+                    dummy_forward.pipeline_stage_id,
+                    dummy_forward,
+                    self._cluster_type,
+                    self._replica_local_id,
+                )
+                for dummy_forward in self._batches
+            ]
 
         # Log batching results
         total_requests = sum(len(batch.requests) for batch in self._batches)

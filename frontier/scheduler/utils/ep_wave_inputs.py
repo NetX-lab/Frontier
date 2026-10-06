@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Mapping, NamedTuple
+from typing import Callable, Mapping, NamedTuple
 
-from frontier.entities import Batch
+from frontier.entities import Batch, DummyForwardBatch
 
 
 class EPWaveInputs(NamedTuple):
@@ -12,7 +12,6 @@ class EPWaveInputs(NamedTuple):
 
     source_batches: dict[int, Batch]
     step_id: int
-    non_idle_batches: tuple[Batch, ...]
     sample_batch: Batch
     aggregate_batch: Batch
     total_step_tokens: int
@@ -45,21 +44,27 @@ def prepare_ep_wave_inputs(
     for lane_id, source_batch in normalized.items():
         if int(step_id_getter(source_batch)) != step_id:
             raise ValueError("all EP wave source batches must share one forward step ID")
-    non_idle = tuple(source_batch for source_batch in normalized.values() if not source_batch.is_idle)
-    if not non_idle:
-        raise ValueError("EP wave requires a non-idle source batch")
-    sample_batch = non_idle[0]
-    total_tokens = sum(int(source_batch.total_num_tokens) for source_batch in non_idle)
-    total_prefill_tokens = sum(int(source_batch.num_prefill_tokens) for source_batch in non_idle)
+    lane_batches = tuple(normalized.values())
+    # A dummy forward has no runtime shape of its own; the aggregate takes a
+    # request-carrying lane's shape whenever one runs.
+    sample_batch = next(
+        (
+            source_batch
+            for source_batch in lane_batches
+            if not isinstance(source_batch, DummyForwardBatch)
+        ),
+        lane_batches[0],
+    )
+    total_tokens = sum(int(source_batch.total_num_tokens) for source_batch in lane_batches)
+    total_prefill_tokens = sum(int(source_batch.num_prefill_tokens) for source_batch in lane_batches)
     aggregate_batch = (
         sample_batch
-        if len(non_idle) == 1
+        if len(lane_batches) == 1
         else aggregate_batch_builder(sample_batch, total_tokens, total_prefill_tokens)
     )
     return EPWaveInputs(
         source_batches=normalized,
         step_id=step_id,
-        non_idle_batches=non_idle,
         sample_batch=sample_batch,
         aggregate_batch=aggregate_batch,
         total_step_tokens=total_tokens,

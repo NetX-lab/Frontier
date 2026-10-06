@@ -449,29 +449,38 @@ def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
     assert probe["completion_reporting_control"]["engine"] == 1
 
 
-def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
-    """Issue W9-04 on the policy's four-lane MoE shape, under both policies.
+def test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward(
+    tmp_path,
+):
+    """Issue W9-04's four-lane MoE shape, under both policies.
 
     Lane 0 waits in the first MoE room of forward 0 while lane 1 is still in
-    attention, so the room places placeholders for the idle lanes 2 and 3.
-    Request 2 then reaches lane 2, which joins forward 0 because it is not yet
-    sealed. The room used to count lane 2's stale placeholder and dispatch when
-    lane 1 arrived. Lane 2's own batch then opened a room that its busy peers
-    never enter, and both runs stalled with no request complete.
+    attention, so the room wakes the idle engines of lanes 2 and 3, and each
+    joins forward 0 with a dummy forward. Request 2 then reaches lane 2. vLLM's
+    busy loop schedules it only once `execute_dummy_batch` returns, so its
+    batch starts the lane's next forward.
     """
 
     evidence = _run_child(tmp_path, "moe_dp4_late_join")
 
     for run in evidence.values():
         assert run["placements"] == [0, 1, 2]
-        first_groups = {}
-        for record in run["records"]:
-            if record["kind"] == "stage0":
-                first_groups.setdefault(record["lane"], record["group"])
-        # The race is reached: lane 2 joined forward 0, and the placeholder it
-        # had been given there was withdrawn.
-        assert first_groups == {0: 0, 1: 0, 2: 0}
-        assert run["withdrawn_placeholder_lanes"] == [2]
+        stage0 = [record for record in run["records"] if record["kind"] == "stage0"]
+        first_starts = {}
+        for record in stage0:
+            first_starts.setdefault(record["lane"], (record["group"], record["dummy"]))
+        assert first_starts == {
+            0: (0, False),
+            1: (0, False),
+            2: (0, True),
+            3: (0, True),
+        }
+        lane_two_groups = [
+            record["group"]
+            for record in stage0
+            if record["lane"] == 2 and not record["dummy"]
+        ]
+        assert lane_two_groups[0] > 0
         _assert_run_conserves_work(run)
 
 
@@ -681,7 +690,6 @@ def run_case(
     policy_name: str,
     completion_reporting_control: bool = False,
     build_config=None,
-    observe_placeholder_withdrawal: bool = False,
     **shape,
 ):
     """Run one configuration and return what only the event loop can show.
@@ -701,6 +709,7 @@ def run_case(
         RoundRobinClusterSchedulerConfig,
         VllmLoadBalancingClusterSchedulerConfig,
     )
+    from frontier.entities import DummyForwardBatch
     from frontier.events.cluster_schedule_event import ClusterScheduleEvent
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
@@ -714,7 +723,7 @@ def run_case(
     from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
         ReplicaStageScheduler,
     )
-    from frontier.scheduler.utils import sync_entry
+    from frontier.scheduler.utils import ep_wave_inputs
     from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
     from frontier.scheduler.utils.vllm_dp_load_balancer import VllmDPLoadBalancer
     from frontier.simulator import Simulator
@@ -734,7 +743,10 @@ def run_case(
     records: list[dict] = []
     reports: list[list] = []
     selections: list[dict] = []
-    withdrawn_placeholder_lanes: list[int] = []
+    # Dummy passes, engine iterations held by one, and dummy forward ends.
+    engine_loop: list[dict] = []
+    # Lane count of each MoE wave whose every lane ran a dummy forward.
+    all_dummy_waves: list[int] = []
     stale_drops: list[dict] = []
 
     original_cluster_schedule = ClusterScheduleEvent.handle_event
@@ -742,6 +754,9 @@ def run_case(
     original_select = VllmDPLoadBalancer.select
     original_stage_pop = ReplicaStageScheduler.pop_batch_if_not_busy
     original_consume = ReplicaStageScheduler.consume_last_stale_drops
+    original_engine_schedule = VLLMv1EngineReplicaScheduler.on_schedule
+    original_dummy_forward_end = VLLMv1EngineReplicaScheduler.on_dummy_forward_end
+    original_wave_inputs = ep_wave_inputs.prepare_ep_wave_inputs
 
     def observed_cluster_schedule(self, scheduler, metrics_store):
         cluster_schedule_times.append(float(self.time))
@@ -799,9 +814,52 @@ def run_case(
                     "group": batch._forward_cohort_provisional_id
                     if self._is_moe
                     else None,
+                    "dummy": isinstance(batch, DummyForwardBatch),
                 }
             )
         return batch
+
+    def observed_engine_schedule(self, time):
+        parts_in_flight = self._dummy_forwards_in_flight
+        after_empty_pass = self._dummy_pass_due
+        lane_has_requests = self.has_unfinished_requests
+        batches = original_engine_schedule(self, time)
+        if parts_in_flight:
+            engine_loop.append(
+                {
+                    "kind": "held",
+                    "lane": self._replica_local_id,
+                    "returned": len(batches),
+                }
+            )
+        elif batches and isinstance(batches[0], DummyForwardBatch):
+            engine_loop.append(
+                {
+                    "kind": "dummy_pass",
+                    "lane": self._replica_local_id,
+                    "after_empty_pass": after_empty_pass,
+                    "lane_has_requests": lane_has_requests,
+                }
+            )
+        return batches
+
+    def observed_dummy_forward_end(self):
+        pass_ended = original_dummy_forward_end(self)
+        engine_loop.append(
+            {
+                "kind": "dummy_end",
+                "lane": self._replica_local_id,
+                "pass_ended": pass_ended,
+            }
+        )
+        return pass_ended
+
+    def observed_wave_inputs(**kwargs):
+        inputs = original_wave_inputs(**kwargs)
+        lane_batches = inputs.source_batches.values()
+        if all(isinstance(batch, DummyForwardBatch) for batch in lane_batches):
+            all_dummy_waves.append(len(lane_batches))
+        return inputs
 
     def observed_consume(self):
         dropped = original_consume(self)
@@ -879,23 +937,13 @@ def run_case(
         patch.setattr(VllmDPLoadBalancer, "select", observed_select)
         patch.setattr(ReplicaStageScheduler, "pop_batch_if_not_busy", observed_stage_pop)
         patch.setattr(ReplicaStageScheduler, "consume_last_stale_drops", observed_consume)
-        if observe_placeholder_withdrawal:
-            original_withdraw = sync_entry._withdraw_idle_batches_of_joined_lanes
-
-            def observed_withdraw(scheduler, sync_room, replica_id, stage_id):
-                placed = {
-                    lane
-                    for lane, batch in sync_room["batches"].items()
-                    if batch.is_idle
-                }
-                original_withdraw(scheduler, sync_room, replica_id, stage_id)
-                withdrawn_placeholder_lanes.extend(
-                    sorted(placed - set(sync_room["batches"]))
-                )
-
-            patch.setattr(
-                sync_entry, "_withdraw_idle_batches_of_joined_lanes", observed_withdraw
-            )
+        patch.setattr(VLLMv1EngineReplicaScheduler, "on_schedule", observed_engine_schedule)
+        patch.setattr(
+            VLLMv1EngineReplicaScheduler,
+            "on_dummy_forward_end",
+            observed_dummy_forward_end,
+        )
+        patch.setattr(ep_wave_inputs, "prepare_ep_wave_inputs", observed_wave_inputs)
         # Both the inert base seam and the policy's override have to be
         # wrapped for routing: patching only the base would silently observe
         # nothing on the very policy under test.
@@ -967,7 +1015,10 @@ def run_case(
         "placement_request_ids": placement_request_ids,
         "records": records,
         "selections": selections,
-        "withdrawn_placeholder_lanes": withdrawn_placeholder_lanes,
+        "engine_loop": engine_loop,
+        "all_dummy_waves": all_dummy_waves,
+        "lane_forward_counts": [lane._batch_creation_counter for lane in lanes],
+        "dummy_forwards_in_flight": [lane._dummy_forwards_in_flight for lane in lanes],
         "stale_drops": stale_drops,
         "num_preemptions": sum(
             request.get_total_preemption_count() for request in requests
@@ -1098,7 +1149,7 @@ CASES = {
     ),
     "moe_dp4_late_join": dict(
         is_moe=True, attn_dp=4, moe_ep=4, trace="late_join",
-        dummy_execution_time_ms=1.0, observe_placeholder_withdrawal=True,
+        dummy_execution_time_ms=1.0,
     ),
     "moe_dp2_pp4": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,

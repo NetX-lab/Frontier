@@ -2,7 +2,7 @@
 
 from typing import Any, Optional
 
-from frontier.entities import Batch
+from frontier.entities import Batch, DummyForwardBatch
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
@@ -10,8 +10,8 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
 from frontier.scheduler.utils.collective_timing import (
     attention_delay_seconds,
     prepare_prefill_final_timing,
-    select_active_batch,
 )
+from frontier.scheduler.utils.dp_dummy_forward import advance_dummy_forward
 
 
 def handle_prefill_sync_collective(
@@ -77,14 +77,6 @@ def handle_prefill_sync_collective(
     )
 
     events = []
-    sample_batch = select_active_batch(participant_batches)
-    if sample_batch is None:
-        raise RuntimeError(
-            "PREFILL collective completion requires a non-idle participant batch: "
-            f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
-            f"layer={layer_id}"
-        )
-
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
     stage_layer_start, stage_layer_end = scheduler.get_pipeline_stage_layer_bounds(
         stage_id,
@@ -107,12 +99,13 @@ def handle_prefill_sync_collective(
 
     if layer_id < stage_layer_end - 1:
         for replica_local_id, batch in participant_batches.items():
-            if batch.is_idle:
-                logger.info(
-                    f"[PREFILL_SYNC][IDLE_SKIP] Skip next-layer pre_moe scheduling for idle batch {batch.id} "
-                    f"(replica={replica_id}, replica_local_id={replica_local_id}, "
-                    f"layer={layer_id})"
-                )
+            if isinstance(batch, DummyForwardBatch):
+                events.extend(advance_dummy_forward(
+                    scheduler, time=time, replica_id=replica_id, stage_id=stage_id,
+                    dummy_forward=batch, next_layer_id=next_layer_id,
+                    stage_layer_end=stage_layer_end,
+                    owners_restored=restored_full_stage_owners,
+                ))
                 continue
             # Each lane continues on its own inputs: its own context lengths and
             # its own token count give its own next-attention time. Borrowing one
@@ -172,12 +165,13 @@ def handle_prefill_sync_collective(
             )
     else:
         for replica_local_id, batch in participant_batches.items():
-            if batch.is_idle:
-                logger.info(
-                    f"[PREFILL_SYNC][IDLE_SKIP] Skip final stage-end for idle batch {batch.id} "
-                    f"(replica={replica_id}, replica_local_id={replica_local_id}, "
-                    f"layer={layer_id})"
-                )
+            if isinstance(batch, DummyForwardBatch):
+                events.extend(advance_dummy_forward(
+                    scheduler, time=time, replica_id=replica_id, stage_id=stage_id,
+                    dummy_forward=batch, next_layer_id=next_layer_id,
+                    stage_layer_end=stage_layer_end,
+                    owners_restored=restored_full_stage_owners,
+                ))
                 continue
 
             stage_identity = getattr(
@@ -227,6 +221,7 @@ def handle_prefill_sync_collective(
                 component_ledger[stage_id],
                 time,
                 original_start_time,
+                batch._forward_launch_start_time,
             )
             actual_model_execution_time = (
                 final_timing.explicit_model_time + final_timing.pipeline_time

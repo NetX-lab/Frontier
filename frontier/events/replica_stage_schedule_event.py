@@ -4,11 +4,12 @@ from typing import List, TYPE_CHECKING
 
 from frontier.events import BaseEvent
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
-from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
+from frontier.entities.batch import DenseFFNBatchGroup, DummyForwardBatch, EPBatchGroup
 from frontier.logger import init_logger
 from frontier.metrics import MetricsStore
 from frontier.scheduler import BaseClusterScheduler
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
+from frontier.scheduler.utils.dp_dummy_forward import start_dummy_forward
 from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 from frontier.types import EventType, ClusterType
 
@@ -162,6 +163,11 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             return []
 
+        if isinstance(batch, DummyForwardBatch):
+            return start_dummy_forward(
+                cluster_scheduler, self.time, self._replica_id, self._stage_id, batch
+            )
+
         debug_logger.info(
             f"[STAGE] Popped batch {batch.id} for processing, "
             f"requests={[r.id for r in batch.requests]}, global_id={batch.global_id}"
@@ -219,6 +225,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._prefill_stage_start_time = self.time
+                    batch._forward_launch_start_time = self.time
 
                     num_layers = (
                         stage_scheduler._execution_time_predictor
@@ -530,6 +537,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._decode_stage_start_time = self.time
+                    batch._forward_launch_start_time = self.time
 
                     # Predictor single-layer attention component is in milliseconds;
                     # event queue timestamps are in seconds.
