@@ -443,27 +443,11 @@ class BaseReplicaScheduler(ABC):
             and batch.num_decode_tokens > 0
         )
 
-    def _create_batch(
-        self,
-        requests: List[Request],
-        num_tokens: List[int],
-        num_context_tokens: Optional[List[int]] = None,
-    ) -> Batch:
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name if self._cluster_type else None)
-
-        batch = Batch(
-            self._replica_id,
-            requests,
-            num_tokens,
-            is_moe=self._replica_is_moe,
-            num_context_tokens=num_context_tokens,
-        )
+    def _assign_lane_identity(self, batch: Batch, lane_batch_counter: int) -> None:
         # Preserve the scheduler lane that owns this batch across asynchronous
         # layer-sync and stage-completion events. ``None`` remains the explicit
         # full-stage identity for single-lane paths.
         batch._stage_owner_replica_local_id = self._replica_local_id
-        lane_batch_counter = self._batch_creation_counter
         # ``global_id`` remains lane-scoped for queue ordering and ownership.
         # The forward cohort is the cross-DP identity used only at the shared
         # attention/EP synchronization boundary.
@@ -487,6 +471,24 @@ class BaseReplicaScheduler(ABC):
         else:
             global_id = lane_batch_counter
         batch.set_global_id(global_id)
+
+    def _create_batch(
+        self,
+        requests: List[Request],
+        num_tokens: List[int],
+        num_context_tokens: Optional[List[int]] = None,
+    ) -> Batch:
+        from frontier.logger import get_cluster_logger
+        logger = get_cluster_logger(__name__, self._cluster_type.name if self._cluster_type else None)
+
+        batch = Batch(
+            self._replica_id,
+            requests,
+            num_tokens,
+            is_moe=self._replica_is_moe,
+            num_context_tokens=num_context_tokens,
+        )
+        self._assign_lane_identity(batch, self._batch_creation_counter)
         self._batch_creation_counter += 1
         if self._should_assign_decode_sync_global_id(batch):
             batch.decode_sync_global_id = self._allocate_decode_sync_global_id()

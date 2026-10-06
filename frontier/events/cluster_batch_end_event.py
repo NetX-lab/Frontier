@@ -455,17 +455,6 @@ class ClusterBatchEndEvent(BaseEvent):
             return next_events
 
         if self._cluster_type == ClusterType.DECODE:
-            if self._batch.is_idle:
-                logger.info(
-                    f"[DECODE-END][IDLE] batch_id={self._batch.id} is idle batch, skipping normal end logic"
-                )
-                next_events.append(
-                    ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._replica_local_id
-                    )
-                )
-                return next_events
-
             replica = cluster_scheduler._cluster.replicas[self._replica_id]
             is_moe = replica.is_moe
             # MoE layer stepping is required even for EP=1; the complete
@@ -557,18 +546,6 @@ class ClusterBatchEndEvent(BaseEvent):
         # Therefore, when ClusterBatchEndEvent is triggered, all layers have already been
         # processed, and we should directly emit GlobalBatchEndEvent.
         if self._cluster_type == ClusterType.MONOLITHIC:
-            # IMPORTANT: Handle idle batches specially
-            if self._batch.is_idle:
-                logger.info(
-                    f"[MONOLITHIC-END][IDLE] batch_id={self._batch.id} is idle batch, skipping normal end logic"
-                )
-                next_events.append(
-                    ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._replica_local_id
-                    )
-                )
-                return next_events
-
             # Check if this is a dense model (non-MoE) for logging purposes
             replica = cluster_scheduler._cluster.replicas[self._replica_id]
             is_moe = replica.is_moe

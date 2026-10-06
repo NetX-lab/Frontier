@@ -214,12 +214,11 @@ def _request(completed_layer_count: int = 0, *, completed: bool = False) -> Requ
     return request
 
 
-def _batch(requests: list[Request], *, is_idle: bool = False) -> Batch:
+def _batch(requests: list[Request]) -> Batch:
     batch = Batch(
         replica_id=1,
         requests=requests,
         num_tokens=[1] * len(requests),
-        is_idle=is_idle,
         is_moe=True,
     )
     batch.set_global_id(41)
@@ -317,24 +316,6 @@ def test_terminal_collective_requires_decode_stage_start_time() -> None:
         )
 
 
-def test_terminal_collective_rejects_all_idle_participants() -> None:
-    scheduler = _DecodeSyncScheduler(
-        total_layers=2,
-        num_layers_per_pipeline_stage=2,
-        pipeline_parallel_size=1,
-    )
-    idle_batch = _batch([], is_idle=True)
-
-    with pytest.raises(RuntimeError, match="requires a non-idle participant batch"):
-        _run_terminal_collective(
-            scheduler,
-            _MetricsStore(),
-            stage_id=0,
-            layer_id=1,
-            batches={0: idle_batch},
-        )
-
-
 @pytest.mark.parametrize("pipeline_parallel_size", [1, 2])
 def test_monolithic_shared_domain_terminal_collectives_account_all_layers(
     pipeline_parallel_size: int,
@@ -407,12 +388,11 @@ def test_terminal_collective_increments_duplicate_active_request_once() -> None:
     request = _request(completed_layer_count=3)
     first_batch = _batch([request])
     duplicate_lane_batch = _batch([request])
-    idle_batch = _batch([], is_idle=True)
     scheduler = _DecodeSyncScheduler(
         total_layers=8,
         num_layers_per_pipeline_stage=4,
         pipeline_parallel_size=2,
-        participant_count=3,
+        participant_count=2,
     )
     metrics_store = _MetricsStore()
 
@@ -421,7 +401,7 @@ def test_terminal_collective_increments_duplicate_active_request_once() -> None:
         metrics_store,
         stage_id=0,
         layer_id=3,
-        batches={0: first_batch, 1: duplicate_lane_batch, 2: idle_batch},
+        batches={0: first_batch, 1: duplicate_lane_batch},
     )
 
     assert request.completed_layer_count == 4

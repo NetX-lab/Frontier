@@ -13,6 +13,7 @@ import math
 from numbers import Real
 from typing import Any, Callable, Dict, Tuple
 
+from frontier.entities import DummyForwardBatch
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.scheduler.utils.scheduler_diagnostics import format_ep_trace_identity
 from frontier.types import ClusterType
@@ -178,7 +179,10 @@ def build_trace_identity(
         requests = source_requests
     else:
         requests = getattr(batch, "requests", None)
-    if not isinstance(requests, (list, tuple)) or not requests:
+    # A cohort of dummy forwards carries no request; its records name only the operation.
+    if not isinstance(requests, (list, tuple)) or not (
+        requests or isinstance(batch, DummyForwardBatch)
+    ):
         raise ValueError("EP trace identity requires a non-empty request list")
     request_ids = [getattr(request, "id", None) for request in requests]
     if any(type(request_id) is not int or request_id < 0 for request_id in request_ids):

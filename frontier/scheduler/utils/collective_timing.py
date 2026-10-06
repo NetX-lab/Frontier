@@ -2,7 +2,7 @@
 
 import math
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable
 
 
 @dataclass(frozen=True)
@@ -24,15 +24,6 @@ class DecodeFinalTiming:
     draft_proposer_time: float
     mtp_terminal_overshoot_time: float
     total_time: float
-
-
-def select_active_batch(participant_batches: Mapping[Any, Any]) -> Optional[Any]:
-    """Return the first non-idle batch, or ``None`` when all lanes are idle."""
-
-    for batch in participant_batches.values():
-        if not batch.is_idle:
-            return batch
-    return None
 
 
 def attention_delay_seconds(execution_time: Any) -> float:

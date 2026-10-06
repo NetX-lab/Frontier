@@ -1292,6 +1292,29 @@ class Batch(BaseEntity):
         return self.__str__()
 
 
+class DummyForwardBatch(Batch):
+    """One pipeline stage's part of vLLM's attention-DP dummy pass.
+
+    A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
+    ``_dummy_run(1)`` on every pipeline stage: one request slot with one token
+    and no attention metadata. Attention kernels and KV-cache writes are
+    skipped, while projections, norms and every MoE layer with its EP
+    collectives run. The forward carries no request.
+    """
+
+    def __init__(
+        self, replica_id: int, pipeline_stage_id: int, forward_index: int
+    ) -> None:
+        super().__init__(replica_id, requests=[], num_tokens=[1], is_moe=True)
+        self.pipeline_stage_id = pipeline_stage_id
+        # Position among the lane's forwards; each stage runs them in this order.
+        self.forward_index = forward_index
+        self.stage_start_time: Optional[float] = None
+
+    @property
+    def size(self) -> int:
+        return len(self._num_tokens)
+
 
 class EPBatchGroup(Batch):
     """
