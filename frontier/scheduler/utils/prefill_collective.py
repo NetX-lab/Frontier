@@ -221,6 +221,7 @@ def handle_prefill_sync_collective(
                 component_ledger[stage_id],
                 time,
                 original_start_time,
+                batch._forward_launch_start_time,
             )
             actual_model_execution_time = (
                 final_timing.explicit_model_time + final_timing.pipeline_time

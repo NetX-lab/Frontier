@@ -36,7 +36,7 @@ def test_disabled_reporting_avoids_stage_payload_allocation_and_prediction(monke
     for reporting in (True, False):
         stage_constructor.reset_mock()
         batch = SimpleNamespace(
-            id=8, is_idle=False, _prefill_stage_start_time=10.0,
+            id=8, is_idle=False, _prefill_stage_start_time=10.0, _forward_launch_start_time=10.0,
             _prefill_model_execution_components_ms_by_stage={0: [1.0, 2.0]},
             schedule_epoch=0, request_execution_signatures=[],
             request_mutation_signatures=[], thinking_round_start_times=[],

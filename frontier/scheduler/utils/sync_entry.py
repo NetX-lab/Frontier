@@ -101,6 +101,14 @@ def enter_layer_sync(
         return _wake_idle_engines(scheduler, time, replica_id, sync_room)
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
+    # vLLM all-reduces the token count over the DP group as each stage forward
+    # starts, and an eager forward launches its kernels only after it. Every
+    # lane of this forward therefore launches from the latest lane's start.
+    launch_start_time = max(
+        lane_batch._forward_launch_start_time for lane_batch in step_batches.values()
+    )
+    for lane_batch in step_batches.values():
+        lane_batch._forward_launch_start_time = launch_start_time
     provisional_id = sync_room["provisional_cohort_id"]
     if type(provisional_id) is not int or provisional_id < 0:
         raise RuntimeError(

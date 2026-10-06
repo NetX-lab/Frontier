@@ -251,6 +251,7 @@ def _admit(stages, batch: Batch, lane: int) -> None:
     batch._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch._prefill_stage_start_time = 0.0
     batch._decode_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
 
 
 def _global(scheduler):

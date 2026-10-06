@@ -225,6 +225,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._prefill_stage_start_time = self.time
+                    batch._forward_launch_start_time = self.time
 
                     num_layers = (
                         stage_scheduler._execution_time_predictor
@@ -536,6 +537,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._decode_stage_start_time = self.time
+                    batch._forward_launch_start_time = self.time
 
                     # Predictor single-layer attention component is in milliseconds;
                     # event queue timestamps are in seconds.

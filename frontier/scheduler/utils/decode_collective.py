@@ -177,7 +177,9 @@ def handle_decode_sync_collective(
                 f"batch={batch.id}, replica={replica_id}, stage={stage_id}, "
                 f"layer={layer_id}"
             )
-        final_timing = prepare_decode_final_timing(full_execution, time - original_start)
+        final_timing = prepare_decode_final_timing(
+            full_execution, time - batch._forward_launch_start_time
+        )
         last_completion_time = time + final_timing.total_time
         scheduler._record_mtp_terminal_completion_delay(
             batch, final_timing.mtp_terminal_overshoot_time

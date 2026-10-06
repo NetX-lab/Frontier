@@ -227,6 +227,7 @@ def _batch(requests: list[Request]) -> Batch:
     batch._decode_ep_wave_lane_times_ms = (0.0,)
     batch._decode_ep_wave_post_moe_comm_time_s = 0.0
     batch._decode_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
     return batch
 
 

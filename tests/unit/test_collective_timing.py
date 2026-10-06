@@ -31,7 +31,7 @@ def test_prefill_final_timing_preserves_component_and_pipeline_units():
         pipeline_time=4.0, total_time=10.0, model_time=8.0,
         forward_launch_stall_time=_launch_stall(0.0),
     )
-    timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.0, 0.0)
+    timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.0, 0.0, 0.0)
     assert timing.pipeline_time == pytest.approx(0.004)
     assert timing.cpu_overhead == pytest.approx(2.0)
     assert timing.forward_launch_stall_time == 0.0
@@ -48,12 +48,27 @@ def test_prefill_final_timing_charges_launch_left_exposed_by_the_simulated_span(
         forward_launch_stall_time=_launch_stall(1500.0, spans),
     )
     # The layer events simulated 1.0 s of device work and the pipeline send 4 ms.
-    timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.5, 0.5)
+    timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.5, 0.5, 0.5)
     assert spans == [pytest.approx(1.004)]
     assert timing.forward_launch_stall_time == pytest.approx(0.496)
     assert timing.total_time == pytest.approx(0.004 + 2.0 + 0.496)
     assert timing.completion_time == pytest.approx(1.5 + 2.5)
 
+
+
+def test_prefill_final_timing_launches_from_the_dp_sync_not_the_stage_start():
+    spans = []
+    execution_time = SimpleNamespace(
+        pipeline_time=4.0, total_time=10.0, model_time=8.0,
+        forward_launch_stall_time=_launch_stall(1500.0, spans),
+    )
+    # The stage started at 0.5 s; its DP peer reached the same stage at 1.0 s.
+    timing = prepare_prefill_final_timing(execution_time, [3.0, 5.0], 1.5, 0.5, 1.0)
+    assert spans == [pytest.approx(0.504)]
+    assert timing.forward_launch_stall_time == pytest.approx(0.996)
+    # Launch start, then the 1.5 s launch, then the CPU overhead.
+    assert timing.completion_time == pytest.approx(1.0 + 1.5 + 2.0)
+    assert timing.actual_execution_time == pytest.approx(timing.completion_time - 0.5)
 
 def test_prefill_final_timing_rejects_negative_cpu_overhead():
     execution_time = SimpleNamespace(
@@ -61,7 +76,7 @@ def test_prefill_final_timing_rejects_negative_cpu_overhead():
         forward_launch_stall_time=_launch_stall(0.0),
     )
     with pytest.raises(ValueError, match="CPU overhead"):
-        prepare_prefill_final_timing(execution_time, [1.0], 1.0, 0.0)
+        prepare_prefill_final_timing(execution_time, [1.0], 1.0, 0.0, 0.0)
 
 
 def test_decode_final_timing_matches_existing_decomposition():

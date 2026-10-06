@@ -35,6 +35,9 @@ def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forwa
         lane_batch.set_global_id(lane_id)
         lane_batch._forward_cohort_id = 0
         lane_batch._forward_cohort_provisional_id = 0
+    # The woken engine starts its stage forward after the lone lane did.
+    batch._forward_launch_start_time = 0.0
+    dummy._forward_launch_start_time = 0.5
     completed = []
 
     def wave_ready(**kwargs):
@@ -56,6 +59,8 @@ def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forwa
         assert completed == list(range(layer_id))
         assert sync(float(layer_id), 0, 0, dummy, 1, "pre_moe", layer_id, 0.0) == []
         assert completed == list(range(layer_id + 1))
+        # vLLM's per-forward DP all-reduce: both lanes launch from the later start.
+        assert batch._forward_launch_start_time == dummy._forward_launch_start_time == 0.5
         assert scheduler._forward_sync_state._open_steps == {}
         assert batch._forward_cohort_id == dummy._forward_cohort_id == layer_id
 

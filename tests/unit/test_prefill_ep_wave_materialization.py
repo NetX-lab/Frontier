@@ -173,6 +173,7 @@ def _scheduler(
     batch._stage_admission_ticket = ticket
     batch._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch._prefill_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
     return scheduler, predictor, batch
 
 
@@ -303,6 +304,7 @@ def test_prefill_ep_wave_aggregates_attention_dp_lanes_once():
     batch_one.time = 0.0
     batch_one._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch_one._prefill_stage_start_time = 0.0
+    batch_one._forward_launch_start_time = 0.0
     ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
     assert context.try_acquire(ticket) is True
     batch_one._stage_admission_ticket = ticket
@@ -344,6 +346,7 @@ def test_prefill_dense_layer_emits_one_completion_per_attention_dp_owner():
     batch_one._stage_owner_replica_local_id = 1
     batch_one._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch_one._prefill_stage_start_time = 0.0
+    batch_one._forward_launch_start_time = 0.0
     ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
     assert context.try_acquire(ticket) is True
     batch_one._stage_admission_ticket = ticket
