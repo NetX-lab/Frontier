@@ -30,7 +30,11 @@ Segments, in time order:
     Open-loop arrivals at `qps` requests per second, `gap_before_s` after the
     last earlier request: the first arrives at once and each later one after
     an exponential interval drawn from a generator seeded with `seed`, as a
-    serving benchmark sends them. Every request has the listed lengths.
+    serving benchmark sends them. Every request has the listed lengths; a
+    length given as an inclusive `[low, high]` range is drawn uniformly per
+    request, prompt before decode, from a second generator seeded with
+    `length_seed`, so the arrival times match the fixed-length workload with
+    the same `seed`.
 ``sizing`` (optional)
     Isolated single prompts of increasing length, used only to measure the
     engine's iteration time before a pipeline-parallel run is sized.
@@ -112,10 +116,15 @@ def build_rows(workload: dict) -> list[dict]:
     poisson = workload.get("poisson")
     if poisson is not None:
         intervals = random.Random(poisson["seed"])
+        prefill, decode = poisson["num_prefill_tokens"], poisson["num_decode_tokens"]
+        lengths = random.Random(poisson["length_seed"]) if isinstance(prefill, list) or isinstance(decode, list) else None
+
+        def draw(length):
+            return lengths.randint(*length) if isinstance(length, list) else length
+
         arrived_at = rows[-1]["arrived_at"] + poisson["gap_before_s"]
         for index in range(poisson["count"]):
-            add("poisson", "formal", f"p{index:03d}", arrived_at,
-                poisson["num_prefill_tokens"], poisson["num_decode_tokens"])
+            add("poisson", "formal", f"p{index:03d}", arrived_at, draw(prefill), draw(decode))
             arrived_at += intervals.expovariate(poisson["qps"])
 
     sizing = workload.get("sizing")
