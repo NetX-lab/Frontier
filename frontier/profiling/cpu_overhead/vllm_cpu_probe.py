@@ -37,9 +37,11 @@ and every other term is 0, where
 - the DP wait is the all-reduce's duration beyond the all-reduce's own latency,
   the median duration on the DP engine that reaches it last. The engines of one
   all-reduce overlap in it, so it is found as a set of overlapping intervals
-  with one record from every DP engine of the serving instance. The all-reduce
-  runs at forward-context entry for eager forwards and in the input preparation
-  for CUDA graphs;
+  with one record from every DP engine of the serving instance. When no
+  all-reduce has one (every partner ran a DP dummy forward, which writes no
+  record), the latency is the median of all recorded all-reduce durations. The
+  all-reduce runs at forward-context entry for eager forwards and in the input
+  preparation for CUDA graphs;
 - the KV-load wait is the forward-context entry, less an all-reduce inside it,
   beyond its median over the stage log. A PD decode instance's KV connector
   loads there; elsewhere the excess is noise around zero;
@@ -111,7 +113,8 @@ def dp_allreduce_latency(stage_logs_per_engine: Sequence[Sequence[Sequence[Mappi
 
     ``stage_logs_per_engine[e][p]`` holds DP engine e's stage-p records. The latency is the
     median duration on the engine that reaches an all-reduce last, over the all-reduces with a
-    record from every engine; one with a DP dummy forward has none.
+    record from every engine; one with a DP dummy forward has none. Without such an all-reduce,
+    it is the median of all recorded all-reduce durations.
     """
 
     num_engines = len(stage_logs_per_engine)
@@ -120,7 +123,7 @@ def dp_allreduce_latency(stage_logs_per_engine: Sequence[Sequence[Sequence[Mappi
             "the CPU-probe records carry DP all-reduce stamps; list the logs of every DP engine "
             "of the serving instance in one --cpu_probe_logs"
         )
-    latest_starter_ms = []
+    latest_starter_ms, recorded_ms = [], []
     for stage_logs in zip(*stage_logs_per_engine):
         intervals = sorted(
             (record["dp_allreduce_start"], record["dp_allreduce_end"], engine)
@@ -128,6 +131,7 @@ def dp_allreduce_latency(stage_logs_per_engine: Sequence[Sequence[Sequence[Mappi
             for record in records
             if record["dp_allreduce_start"] is not None
         )
+        recorded_ms += [(end - start) * 1e3 for start, end, _ in intervals]
         groups, group_end = [], -math.inf
         for start, end, engine in intervals:
             if start > group_end:
@@ -138,9 +142,7 @@ def dp_allreduce_latency(stage_logs_per_engine: Sequence[Sequence[Sequence[Mappi
             if sorted(engine for *_, engine in group) == list(range(num_engines)):
                 start, end, _ = max(group)
                 latest_starter_ms.append((end - start) * 1e3)
-    if not latest_starter_ms:
-        raise ValueError("no DP all-reduce has a record from every DP engine of the serving instance")
-    return float(np.median(latest_starter_ms))
+    return float(np.median(latest_starter_ms or recorded_ms))
 
 
 def _context_entry_ms(stage: Mapping) -> float:

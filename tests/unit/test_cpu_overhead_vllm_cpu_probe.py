@@ -173,8 +173,15 @@ def test_dp_allreduce_latency_is_the_latest_starter_median_over_complete_all_red
     assert dp_allreduce_latency([[forwards0], [forwards1]]) == pytest.approx(0.36)
     with pytest.raises(ValueError, match="list the logs of every DP engine"):
         dp_allreduce_latency([[forwards0]])
-    with pytest.raises(ValueError, match="no DP all-reduce has a record from every DP engine"):
-        dp_allreduce_latency([[forwards0[1:]], [forwards1]])
+
+
+def test_dp_allreduce_latency_without_a_complete_all_reduce_is_the_median_of_all_recorded() -> None:
+    # Engine 0's second all-reduce (0.5 ms) pairs with a dummy forward of engine 1, and engine 1's
+    # (0.36 ms) with a forward outside the logs: no all-reduce has a record from both engines.
+    _, forwards0, _, forwards1 = _dp_pair()
+    engine1_alone = [dict(forwards1[0], dp_allreduce_start=20.0, dp_allreduce_end=20.00036)]
+
+    assert dp_allreduce_latency([[forwards0[1:]], [engine1_alone]]) == pytest.approx((0.5 + 0.36) / 2)
 
 
 def test_prepare_charges_the_dp_all_reduce_latency_and_leaves_out_the_dp_wait() -> None:
