@@ -13,7 +13,9 @@ Segments, in time order:
     either one group of them or several named `groups`, each with its own
     lengths and spacing, the first at time zero and every later one
     `gap_before_s` after the previous group's last request; a named group's
-    request ids carry its name.
+    request ids carry its name. A group's lengths may be `[low, high]` ranges,
+    drawn as the `poisson` segment draws them, from a generator seeded with
+    the group's own `length_seed`.
 ``burst`` (optional)
     Requests that arrive after an idle gap, in the order the workload lists
     their prompt kinds and `spacing_s` apart (together when it is absent),
@@ -56,6 +58,16 @@ from itertools import cycle, islice
 from pathlib import Path
 
 
+def length_generator(segment: dict) -> random.Random | None:
+    """The generator of a segment whose prompt or decode length is a `[low, high]` range."""
+    ranged = isinstance(segment["num_prefill_tokens"], list) or isinstance(segment["num_decode_tokens"], list)
+    return random.Random(segment["length_seed"]) if ranged else None
+
+
+def draw(length: int | list[int], lengths: random.Random | None) -> int:
+    return lengths.randint(*length) if isinstance(length, list) else length
+
+
 def build_rows(workload: dict) -> list[dict]:
     namespace = workload["request_id_namespace"]
     rows: list[dict] = []
@@ -75,9 +87,10 @@ def build_rows(workload: dict) -> list[dict]:
     for group in groups:
         group_start = rows[-1]["arrived_at"] + group["gap_before_s"] if rows else 0.0
         prefix = f"{group['name']}-" if group["name"] else ""
+        lengths = length_generator(group)
         for index in range(group["count"]):
             add("warmup", "warmup", f"{prefix}w{index}", group_start + group["interval_s"] * index,
-                group["num_prefill_tokens"], group["num_decode_tokens"])
+                draw(group["num_prefill_tokens"], lengths), draw(group["num_decode_tokens"], lengths))
     last_arrival = rows[-1]["arrived_at"] if rows else 0.0
 
     if "bursts" in workload:
@@ -116,15 +129,11 @@ def build_rows(workload: dict) -> list[dict]:
     poisson = workload.get("poisson")
     if poisson is not None:
         intervals = random.Random(poisson["seed"])
-        prefill, decode = poisson["num_prefill_tokens"], poisson["num_decode_tokens"]
-        lengths = random.Random(poisson["length_seed"]) if isinstance(prefill, list) or isinstance(decode, list) else None
-
-        def draw(length):
-            return lengths.randint(*length) if isinstance(length, list) else length
-
+        lengths = length_generator(poisson)
         arrived_at = rows[-1]["arrived_at"] + poisson["gap_before_s"]
         for index in range(poisson["count"]):
-            add("poisson", "formal", f"p{index:03d}", arrived_at, draw(prefill), draw(decode))
+            add("poisson", "formal", f"p{index:03d}", arrived_at,
+                draw(poisson["num_prefill_tokens"], lengths), draw(poisson["num_decode_tokens"], lengths))
             arrived_at += intervals.expovariate(poisson["qps"])
 
     sizing = workload.get("sizing")
