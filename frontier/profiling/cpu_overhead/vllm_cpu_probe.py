@@ -64,8 +64,9 @@ Rows are keyed by pipeline_stage_id.
 With ``--engine_idle_edges_ms``, rows are also keyed by engine_idle_ms: the
 largest edge at or below the engine's idle time before the step, from the latest
 update_end of its earlier steps or the end of its latest DP dummy forward to the
-step's step_start. An engine's first step has no such end and takes the largest
-edge. A DP>1
+step's step_start. An engine's first step that schedules tokens carries the
+engine's one-time start costs, which a ground-truth run's warmups absorb, and is
+left out. A DP>1
 instance reads its dummy forwards from the ``dummy_pass`` records of
 ``dp_placement/*.jsonl`` beside its engine logs, whose ``engine`` field is the
 position of the engine log in ``--cpu_probe_logs``; they share the
@@ -262,7 +263,8 @@ def stage_overhead_terms(
                 family = MeasurementType.CUDA_EVENT
                 terms["forward_launch"] = (stage["forward_end"] - launch_start) * 1e3
                 terms["forward_drain"] = max(0.0, device_end - stage["forward_end"]) * 1e3
-            stage_steps.append(StageStep(stage_id, family, identity, terms, idle_edge))
+            if n or engine_idle_edges_ms is None:
+                stage_steps.append(StageStep(stage_id, family, identity, terms, idle_edge))
         n += 1
     return stage_steps
 

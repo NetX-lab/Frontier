@@ -456,10 +456,14 @@ def test_engine_idle_buckets_count_from_the_last_iteration_or_dummy_forward() ->
         engine, stages, dp_allreduce_ms=None, engine_idle_edges_ms=IDLE_EDGES_MS, dummy_ends=[10.003, 11.15]
     )
 
-    # An engine's first step follows no iteration and takes the largest edge.
-    assert [step.engine_idle_ms for step in alone] == [500.0, 0.0, 100.0, 500.0]
-    assert [step.engine_idle_ms for step in with_dummies] == [500.0, 0.0, 100.0, 0.0]
+    # An engine's first step carries its one-time start costs and is left out; its forward still
+    # ends where the next step's dispatch can start.
+    assert [step.engine_idle_ms for step in alone] == [0.0, 100.0, 500.0]
+    assert [step.engine_idle_ms for step in with_dummies] == [0.0, 100.0, 0.0]
     assert [step.terms for step in with_dummies] == [step.terms for step in alone]
+    assert [step.terms for step in alone] == [
+        step.terms for step in stage_overhead_terms(engine, stages, dp_allreduce_ms=None)[1:]
+    ]
 
 
 def test_engine_idle_time_counts_from_the_latest_update_of_any_earlier_step() -> None:
@@ -472,7 +476,7 @@ def test_engine_idle_time_counts_from_the_latest_update_of_any_earlier_step() ->
     out = stage_overhead_terms(engine, [[first[1], second[1]]], dp_allreduce_ms=None,
                                engine_idle_edges_ms=IDLE_EDGES_MS)
 
-    assert [step.engine_idle_ms for step in out] == [500.0, 0.0]
+    assert [step.engine_idle_ms for step in out] == [0.0]
 
 
 def test_tables_key_rows_by_engine_idle_bucket() -> None:
@@ -526,9 +530,9 @@ def test_cli_buckets_dp_engines_by_engine_idle_with_their_dummy_forwards(tmp_pat
 
     eager = validate_cpu_overhead_dataframe(pd.read_csv(tmp_path / "cpu_overheads.csv"))
     columns = ["batch_size", "num_prefill_tokens", "num_decode_tokens", "engine_idle_ms"]
-    # Engine 0's steps 2 and 3 fall in the 100 and 0 buckets; both engines' first steps in 500.
-    assert eager[columns].values.tolist() == [[1, 0, 1, 0], [1, 16, 0, 0], [1, 16, 0, 100], [1, 16, 0, 500]]
-    assert eager["num_steps"].tolist() == [1, 1, 1, 2]
+    # Engine 0's steps 2 and 3 fall in the 100 and 0 buckets; both engines' first steps are left out.
+    assert eager[columns].values.tolist() == [[1, 0, 1, 0], [1, 16, 0, 0], [1, 16, 0, 100]]
+    assert eager["num_steps"].tolist() == [1, 1, 1]
 
 
 def test_cli_rejects_dp_idle_buckets_without_dummy_forwards_and_edges_not_from_0(tmp_path) -> None:
