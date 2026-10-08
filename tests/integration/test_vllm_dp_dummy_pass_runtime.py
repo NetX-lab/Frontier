@@ -85,6 +85,37 @@ def test_dummy_forwards_pair_with_each_other_and_the_wave_ends_when_drained(
         _assert_run_conserves_work(run)
 
 
+@pytest.mark.parametrize(
+    ("case", "a_batch_ends_during_the_sync"),
+    [("moe_dp2_pp2_online", False), ("moe_dp2_pp4_kv_pressure", True)],
+)
+def test_every_lane_leaves_the_dp_finish_sync_together_after_32_iterations(
+    tmp_path, case, a_batch_ends_during_the_sync
+):
+    """`DPEngineCoreProc._has_global_unfinished_reqs` all-reduces over the DP
+    group after every 32nd busy-loop iteration of a wave. Each iteration runs
+    one forward, so every lane has run as many forwards when the last lane
+    joins and the sync releases them all. A batch that ends while its engine
+    waits keeps its output until an iteration after the release pops it."""
+
+    evidence = _run_child(tmp_path, case)
+
+    for run in evidence.values():
+        releases = run["dp_sync_releases"]
+        assert releases, "no wave ran 32 iterations"
+        for release in releases:
+            assert sorted(release["lanes"]) == list(range(run["num_lanes"]))
+            assert len(set(release["forward_counts"])) == 1, release
+        # Once drained, the last sync found no unfinished request and ended the
+        # wave on every lane.
+        assert run["dp_wave_states"] == [
+            {"running": False, "steps": 0, "waits": False, "unpopped": 0}
+        ] * run["num_lanes"]
+        _assert_run_conserves_work(run)
+    if a_batch_ends_during_the_sync:
+        assert any(run["held_outputs"] for run in evidence.values())
+
+
 def test_an_attention_dp_one_replica_runs_no_dummy_pass(tmp_path):
     evidence = _run_child(tmp_path, "moe_dp1_pp3")
 

@@ -1445,13 +1445,13 @@ def _observe_blocking_steps(monkeypatch):
     stages_run = collections.defaultdict(list)
     blocking_steps = []
     stage_end = BatchStageEndEvent.handle_event
-    leave_queue = VLLMv1EngineReplicaScheduler._leave_engine_batch_queue
+    pop_output = VLLMv1EngineReplicaScheduler._pop_batch_output
 
     def observed_stage_end(self, scheduler, metrics_store):
         stages_run[self._batch.id].append(self._stage_id)
         return stage_end(self, scheduler, metrics_store)
 
-    def observed_leave(self, batch):
+    def observed_pop(self, batch):
         if self._has_engine_batch_queue and batch.id == self._blocking_batch_id:
             blocking_steps.append(dict(
                 batch_id=batch.id,
@@ -1462,11 +1462,11 @@ def _observe_blocking_steps(monkeypatch):
                     for index in range(len(batch.requests))
                 ),
             ))
-        leave_queue(self, batch)
+        pop_output(self, batch)
 
     monkeypatch.setattr(BatchStageEndEvent, "handle_event", observed_stage_end)
     monkeypatch.setattr(
-        VLLMv1EngineReplicaScheduler, "_leave_engine_batch_queue", observed_leave
+        VLLMv1EngineReplicaScheduler, "_pop_batch_output", observed_pop
     )
     return blocking_steps
 

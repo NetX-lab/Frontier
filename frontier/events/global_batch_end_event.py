@@ -197,10 +197,15 @@ class GlobalBatchEndEvent(BaseEvent):
         )
         replica_scheduler.on_batch_end(self._batch)  # decrement running batches
         # After the lane's request-state transition, so a routing policy that
-        # reads lane populations here observes the post-step load.
-        cluster_scheduler.on_replica_batch_end(
-            self.time, self._replica_id, self._replica_local_id, self._batch
-        )
+        # reads lane populations here observes the post-step load. An output
+        # that stays in the engine's batch queue is reported when it is popped.
+        if not (
+            hasattr(replica_scheduler, "holds_batch_output")
+            and replica_scheduler.holds_batch_output(self._batch)
+        ):
+            cluster_scheduler.on_replica_batch_end(
+                self.time, self._replica_id, self._replica_local_id, self._batch
+            )
 
         thinking_requeue_events: List[BaseEvent] = []
         for index, request in request_entries:

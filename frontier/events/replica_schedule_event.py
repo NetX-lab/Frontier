@@ -29,7 +29,6 @@ class ReplicaScheduleEvent(BaseEvent):
     def handle_event(
         self, scheduler: "BaseGlobalScheduler", metrics_store: MetricsStore
     ) -> List[BaseEvent]:
-        from frontier.events.batch_stage_arrival_event import BatchStageArrivalEvent
         from frontier.logger import get_cluster_logger
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -92,6 +91,20 @@ class ReplicaScheduleEvent(BaseEvent):
         # bachting operation based on the replica scheduler (internal engine like orca/vllm/..., )
         # also consider current running batch in pipeline stage
         self._batches = replica_scheduler.on_schedule(self.time)
+        events = self._events_for_schedule_pass(replica_scheduler, metrics_store, logger)
+        if hasattr(replica_scheduler, "consume_dp_sync_release"):
+            # A pass that ended the DP sync's all-reduce resumes the other
+            # engines of the group, whose hosts waited in it.
+            events.extend(
+                ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, lane_id)
+                for lane_id in replica_scheduler.consume_dp_sync_release()
+            )
+        return events
+
+    def _events_for_schedule_pass(
+        self, replica_scheduler: BaseReplicaScheduler, metrics_store: MetricsStore, logger
+    ) -> List[BaseEvent]:
+        from frontier.events.batch_stage_arrival_event import BatchStageArrivalEvent
 
         # if there are no batches, we return an empty list
         if not self._batches:
@@ -152,29 +165,34 @@ class ReplicaScheduleEvent(BaseEvent):
                 ]
             return []
 
-        if isinstance(self._batches[0], DummyForwardBatch):
-            # A dummy forward runs on every pipeline stage at once, with no
-            # transfer between its parts.
-            return [
-                BatchStageArrivalEvent(
-                    self.time,
-                    self._replica_id,
-                    dummy_forward.pipeline_stage_id,
-                    dummy_forward,
-                    self._cluster_type,
-                    self._replica_local_id,
-                )
-                for dummy_forward in self._batches
-            ]
+        # A dummy forward runs on every pipeline stage at once, with no transfer
+        # between its parts. It may follow batches of the same pass.
+        dummy_forward_arrivals = [
+            BatchStageArrivalEvent(
+                self.time,
+                self._replica_id,
+                dummy_forward.pipeline_stage_id,
+                dummy_forward,
+                self._cluster_type,
+                self._replica_local_id,
+            )
+            for dummy_forward in self._batches
+            if isinstance(dummy_forward, DummyForwardBatch)
+        ]
+        batches = [
+            batch for batch in self._batches if not isinstance(batch, DummyForwardBatch)
+        ]
+        if not batches:
+            return dummy_forward_arrivals
 
         # Log batching results
-        total_requests = sum(len(batch.requests) for batch in self._batches)
+        total_requests = sum(len(batch.requests) for batch in batches)
         batch_info = []
-        for i, batch in enumerate(self._batches):
+        for i, batch in enumerate(batches):
             request_ids = [req.id for req in batch.requests]
             batch_info.append(f"batch_{i}(requests={request_ids})")
             
-        logger.info(f"Replica scheduling completed: {len(self._batches)} batches formed with {total_requests} total requests")
+        logger.info(f"Replica scheduling completed: {len(batches)} batches formed with {total_requests} total requests")
         logger.info(f"Batch details: {', '.join(batch_info)}")
 
         # we get the memory usage percent from the replica scheduler
@@ -192,8 +210,8 @@ class ReplicaScheduleEvent(BaseEvent):
                 self._cluster_type,
                 self._replica_local_id,
             )
-            for batch in self._batches
-        ]
+            for batch in batches
+        ] + dummy_forward_arrivals
 
     def to_dict(self):
         return {
