@@ -256,6 +256,7 @@ def _combine_lane(*, activation_bytes: int | None = 8) -> SimpleNamespace:
         total_expert_num=1,
         owned_expert_ids=(0,),
         local_token_counts=(1,),
+        global_token_counts=(1,),
         routed_token_count=1,
         router_topk=1,
     )

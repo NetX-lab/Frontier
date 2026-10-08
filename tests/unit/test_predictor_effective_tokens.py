@@ -72,6 +72,7 @@ def _lane_workload(
         total_expert_num=total_expert_num,
         owned_expert_ids=owned_expert_ids,
         local_token_counts=local_token_counts,
+        global_token_counts=(0,) * (ep_id * width) + local_token_counts + (0,) * (total_expert_num - (ep_id + 1) * width),
         routed_token_count=sum(local_token_counts),
         router_topk=router_topk,
     )

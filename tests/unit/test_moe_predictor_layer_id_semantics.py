@@ -236,6 +236,7 @@ def test_predict_stage_execution_time_forwards_layer_id_to_moe_tokens_input() ->
         total_expert_num=4,
         owned_expert_ids=(0, 1),
         local_token_counts=(8, 8),
+        global_token_counts=(8, 8, 0, 0),
         routed_token_count=16,
         router_topk=2,
     )
@@ -610,6 +611,7 @@ def test_common_moe_post_attention_probe_skips_attention_lookup() -> None:
         total_expert_num=2,
         owned_expert_ids=(0,),
         local_token_counts=(4,),
+        global_token_counts=(4, 0),
         routed_token_count=4,
         router_topk=1,
     )
@@ -645,6 +647,7 @@ def test_predict_stage_execution_time_keeps_per_layer_components_and_scales_line
         total_expert_num=4,
         owned_expert_ids=(0, 1),
         local_token_counts=(8, 8),
+        global_token_counts=(8, 8, 0, 0),
         routed_token_count=16,
         router_topk=2,
     )
@@ -684,6 +687,7 @@ def test_moe_predictor_attention_op_trace_labels_use_dense_role_names(
         total_expert_num=4,
         owned_expert_ids=(0, 1),
         local_token_counts=(8, 8),
+        global_token_counts=(8, 8, 0, 0),
         routed_token_count=16,
         router_topk=2,
     )

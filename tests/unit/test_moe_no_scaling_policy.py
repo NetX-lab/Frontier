@@ -90,6 +90,7 @@ def test_ep_communication_uses_raw_collective_prediction_without_calibration_sca
         total_expert_num=4,
         owned_expert_ids=(0, 1),
         local_token_counts=(16, 16),
+        global_token_counts=(16, 16, 0, 0),
         routed_token_count=32,
         router_topk=2,
     )

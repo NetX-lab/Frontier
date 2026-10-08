@@ -89,6 +89,7 @@ def _batch(
             total_expert_num=2,
             owned_expert_ids=(ep_id,),
             local_token_counts=(total_num_tokens,),
+            global_token_counts=(0,) * ep_id + (total_num_tokens,) + (0,) * (1 - ep_id),
             routed_token_count=total_num_tokens,
             router_topk=1,
         ),

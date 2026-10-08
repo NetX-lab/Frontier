@@ -1,4 +1,4 @@
-"""Grouped-GEMM features from moe_align_block_size's padded token count (decisions T33-C2-F, T33-C2-B)."""
+"""Grouped-GEMM features from moe_align_block_size's padded token count (decisions T33-C2-F, T33-C2-B, T43-PAD)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from frontier.execution_time_predictor.moe_dataset_training import (
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
-from frontier.moe_ep_workload import EPLaneWorkload
+from frontier.moe_ep_workload import EPLaneWorkload, split_global_expert_tokens_into_lanes
 from frontier.moe_load_imbalance import (
     MOE_GROUPED_GEMM_PADDED_FEATURES,
     MOE_LOAD_IMBALANCE_FEATURES,
@@ -145,6 +145,7 @@ def _lane(local_token_counts: tuple[int, ...]) -> EPLaneWorkload:
         total_expert_num=len(local_token_counts),
         owned_expert_ids=tuple(range(len(local_token_counts))),
         local_token_counts=local_token_counts,
+        global_token_counts=local_token_counts,
         routed_token_count=sum(local_token_counts),
         router_topk=2,
     )
@@ -173,3 +174,19 @@ def test_runtime_padded_features_hit_the_profiled_row_exactly() -> None:
 
     assert predictor._get_grouped_gemm_time(_lane((13, 3, 0, 0)), batch=_batch(8)) == 0.25
     assert model.seen == []
+
+
+def test_each_ep_rank_pads_every_expert_of_the_domain() -> None:
+    predictor, model = _padded_predictor({})
+    lanes = split_global_expert_tokens_into_lanes(
+        {0: 17, 1: 3, 2: 5, 3: 0},
+        total_expert_num=4,
+        moe_expert_parallel_size=2,
+        router_topk=2,
+    )
+
+    # 10 pre-routing tokens -> BLOCK_SIZE_M 64; experts 0, 1 and 2 each pad to one block.
+    for lane in lanes:
+        assert predictor._get_grouped_gemm_time(lane, batch=_batch(10)) == 0.5
+
+    assert model.seen == [[20.0, 192.0], [5.0, 192.0]]

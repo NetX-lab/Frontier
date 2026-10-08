@@ -583,10 +583,10 @@ class MoeRoutingWorkload:
         """Features of the on-demand grouped-GEMM model for one EP lane.
 
         A model trained on a table with moe_align_block_size's padded count
-        (decision T33-C2-F) takes the lane's routed and padded token counts; the
-        padding block is the profiled BLOCK_SIZE_M at the step's pre-routing
-        token count (decision T33-C2-B). Other models take the load-imbalance
-        features.
+        (decision T33-C2-F) takes the lane's routed token count and the padded
+        count. Each rank pads every expert of the EP domain (decision T43-PAD)
+        with the profiled BLOCK_SIZE_M at the step's pre-routing token count
+        (decision T33-C2-B). Other models take the load-imbalance features.
         """
         model_info = self._predictions["moe_grouped_gemm"]
         if tuple(model_info["_feature_names"]) != MOE_GROUPED_GEMM_PADDED_FEATURES:
@@ -595,10 +595,11 @@ class MoeRoutingWorkload:
             model_info["_model"]._frontier_block_size_m,
             self._get_moe_pre_routing_token_count(batch),
         )
-        expert_token_counts = lane_workload.local_token_counts
         return {
-            "total_routed_tokens": sum(expert_token_counts),
-            "num_tokens_post_padded": num_tokens_post_padded(expert_token_counts, block_size_m),
+            "total_routed_tokens": lane_workload.routed_token_count,
+            "num_tokens_post_padded": num_tokens_post_padded(
+                lane_workload.global_token_counts, block_size_m
+            ),
         }
 
     def _simulate_routing_per_layer(

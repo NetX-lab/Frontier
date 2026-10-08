@@ -302,6 +302,7 @@ def _lane_workload(per_expert_tokens: dict[int, int]) -> EPLaneWorkload:
         total_expert_num=4,
         owned_expert_ids=owned_expert_ids,
         local_token_counts=local_token_counts,
+        global_token_counts=(0, 0) * ep_id + local_token_counts + (0, 0) * (1 - ep_id),
         routed_token_count=sum(local_token_counts),
         router_topk=2,
     )

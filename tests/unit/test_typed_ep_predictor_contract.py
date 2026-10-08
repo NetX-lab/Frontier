@@ -83,6 +83,7 @@ def _lane(
         total_expert_num=total_experts,
         owned_expert_ids=owned_ids,
         local_token_counts=counts,
+        global_token_counts=(0,) * (ep_id * width) + counts + (0,) * (total_experts - (ep_id + 1) * width),
         routed_token_count=sum(counts),
         router_topk=2,
     )

@@ -426,6 +426,7 @@ def test_shared_ep_lane_preserves_source_pre_routing_tokens_for_zero_lane() -> N
             total_expert_num=4,
             owned_expert_ids=(2, 3),
             local_token_counts=(0, 0),
+            global_token_counts=(0, 0, 0, 0),
             routed_token_count=0,
             router_topk=1,
         ),
