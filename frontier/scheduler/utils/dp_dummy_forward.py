@@ -15,20 +15,10 @@ from frontier.scheduler.utils.collective_timing import attention_delay_seconds
 from frontier.types import ClusterType
 
 
-def _enter_layer(
-    scheduler: Any,
-    time: float,
-    replica_id: int,
-    stage_id: int,
-    dummy_forward: DummyForwardBatch,
-    layer_id: int,
-) -> list:
-    """Run the layer's attention-free projections, then enter its pre_moe room."""
-
-    from frontier.events.decode_sync_event import DecodeSyncEvent
-    from frontier.events.prefill_sync_event import PrefillSyncEvent
-
-    execution_time = scheduler._predictor.predict_stage_execution_time(
+def _predict_layer(
+    scheduler: Any, stage_id: int, dummy_forward: DummyForwardBatch, layer_id: int
+) -> Any:
+    return scheduler._predictor.predict_stage_execution_time(
         dummy_forward,
         stage_id,
         scheduler._cluster_type,
@@ -36,6 +26,22 @@ def _enter_layer(
         layer_id=layer_id,
         include_ffn=False,
     )
+
+
+def _enter_layer(
+    scheduler: Any,
+    time: float,
+    replica_id: int,
+    stage_id: int,
+    dummy_forward: DummyForwardBatch,
+    layer_id: int,
+    execution_time: Any,
+) -> list:
+    """Run the layer's attention-free projections, then enter its pre_moe room."""
+
+    from frontier.events.decode_sync_event import DecodeSyncEvent
+    from frontier.events.prefill_sync_event import PrefillSyncEvent
+
     delay = attention_delay_seconds(execution_time)
     # A PREFILL cluster admits lanes to its rooms through the prefill entry.
     event_cls = (
@@ -69,9 +75,13 @@ def start_dummy_forward(
 
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
     first_layer_id, _ = scheduler.get_pipeline_stage_layer_bounds(stage_id, num_layers)
+    execution_time = _predict_layer(scheduler, stage_id, dummy_forward, first_layer_id)
     dummy_forward.stage_start_time = time
     dummy_forward._forward_launch_start_time = time
-    return _enter_layer(scheduler, time, replica_id, stage_id, dummy_forward, first_layer_id)
+    dummy_forward._forward_launch_time = execution_time.forward_launch_time * 1e-3
+    return _enter_layer(
+        scheduler, time, replica_id, stage_id, dummy_forward, first_layer_id, execution_time
+    )
 
 
 def advance_dummy_forward(
@@ -99,7 +109,8 @@ def advance_dummy_forward(
                 scope=FULL_STAGE_WORLD,
             )
         return _enter_layer(
-            scheduler, time, replica_id, stage_id, dummy_forward, next_layer_id
+            scheduler, time, replica_id, stage_id, dummy_forward, next_layer_id,
+            _predict_layer(scheduler, stage_id, dummy_forward, next_layer_id),
         )
 
     predictor = scheduler._predictor

@@ -23,6 +23,14 @@ def _wake_idle_engines(scheduler: Any, time: float, replica_id: int, sync_room: 
     ]
 
 
+def _launched_share(scheduler: Any, stage_id: int, layer_id: int) -> float:
+    """Share of the stage forward's launch done once the layer is launched."""
+
+    num_layers = scheduler._predictor._num_layers_per_pipeline_stage
+    first_layer_id, _ = scheduler.get_pipeline_stage_layer_bounds(stage_id, num_layers)
+    return (layer_id - first_layer_id + 1) / num_layers
+
+
 def enter_layer_sync(
     scheduler: Any,
     time: float,
@@ -109,6 +117,17 @@ def enter_layer_sync(
     )
     for lane_batch in step_batches.values():
         lane_batch._forward_launch_start_time = launch_start_time
+    if expected_lanes > 1:
+        # Each lane's host launches the stage's layers in order, so a lane's
+        # collective for this layer starts only once its launch reached the
+        # layer. With one lane no peer waits here, and the stage end already
+        # adds the launch time its device work did not hide.
+        sync_time = max(
+            sync_time,
+            launch_start_time
+            + _launched_share(scheduler, stage_id, layer_id)
+            * max(lane_batch._forward_launch_time for lane_batch in step_batches.values()),
+        )
     provisional_id = sync_room["provisional_cohort_id"]
     if type(provisional_id) is not int or provisional_id < 0:
         raise RuntimeError(

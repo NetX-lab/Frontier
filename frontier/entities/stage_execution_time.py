@@ -86,6 +86,7 @@ _STAGE_ONLY_PUBLIC_NAMES = frozenset(
         "pp_stage_boundary_handoff_time",
         "decode_draft_proposer_time",
         "mtp_terminal_overshoot_time",
+        "forward_launch_time",
     }
 )
 
