@@ -113,31 +113,17 @@ def advance_dummy_forward(
             _predict_layer(scheduler, stage_id, dummy_forward, next_layer_id),
         )
 
-    predictor = scheduler._predictor
-    num_layers = predictor._num_layers_per_pipeline_stage
-    stage_execution = predictor.predict_stage_execution_time(
-        dummy_forward,
-        stage_id,
-        scheduler._cluster_type,
-        num_layers=num_layers,
-        layer_id=stage_layer_end - num_layers,
-        include_ffn=False,
-    )
     start_time = dummy_forward.stage_start_time
-    # A dummy run samples nothing and sends nothing to the next rank; only a
-    # kernel launch slower than the device work it overlaps extends it. The
-    # launch starts at the forward's DP sync, so a part that waited for a peer
-    # still launches its whole stage after that peer arrived.
-    end_time = time + stage_execution.forward_launch_stall_time(
-        time - dummy_forward._forward_launch_start_time
-    )
+    # A dummy run samples nothing and sends nothing to the next rank. Its last
+    # layer's room opened only once every lane had launched the whole stage
+    # (sync_entry), so no launch is left exposed and the part ends here.
     lane_id = dummy_forward._stage_owner_replica_local_id
     stage_scheduler = scheduler.get_replica_stage_scheduler(replica_id, lane_id, stage_id)
     batch_stage = BatchStage(
         dummy_forward.id,
         replica_id,
         stage_id,
-        end_time - start_time,
+        time - start_time,
         time - start_time,
         dummy_forward.requests,
         dummy_forward.num_tokens,
@@ -147,7 +133,7 @@ def advance_dummy_forward(
     batch_stage.on_schedule(start_time)
     return [
         BatchStageEndEvent(
-            end_time,
+            time,
             replica_id,
             stage_id,
             stage_scheduler.is_last_stage,
