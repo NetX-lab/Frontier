@@ -771,6 +771,9 @@ class SklearnMoEExecutionTimePredictor(
             forward_launch_time=(
                 self._get_forward_launch_time(batch, pipeline_stage) if include_stage_owned else 0.0
             ),
+            forward_drain_time=(
+                self._get_forward_drain_time(batch, pipeline_stage) if include_stage_owned else 0.0
+            ),
             pp_producer_send_path_runtime_time=pp_producer_send_path_runtime_time,
             pp_receiver_head_runtime_time=pp_receiver_head_runtime_time,
             pp_prefill_consumer_active_runtime_time=(

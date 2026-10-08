@@ -166,7 +166,7 @@ class BatchStageEndEvent(BaseEvent):
             replica_scheduler = cluster_scheduler.get_replica_scheduler(
                 self._replica_id, self._replica_local_id
             )
-            if replica_scheduler.on_dummy_forward_end():
+            if replica_scheduler.on_dummy_forward_end(self.time):
                 next_events.append(
                     ReplicaScheduleEvent(
                         self.time,

@@ -66,7 +66,7 @@ from frontier.operators.families import (
     SHARE_EXPERT_FAMILY,
     get_family_profiling_names,
 )
-from frontier.profiling.cpu_overhead.validation import cpu_overhead_feature_columns
+from frontier.profiling.cpu_overhead.validation import cpu_overhead_feature_columns, cpu_overhead_model_names
 from frontier.spec_decode.runtime import is_target_embedded_mtp_enabled
 from frontier.types import ClusterType, MeasurementType
 from sklearn.base import BaseEstimator
@@ -1480,18 +1480,9 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'input_file': cpu_overhead_input_file,
         }
 
-        model_names = [
-            "schedule",
-            "sampler_e2e",
-            "prepare_inputs_e2e",
-            "process_model_outputs",
-            "ray_comm_time",
-        ]
-        if "forward_launch_median" in cpu_overhead_df.columns:
-            model_names.append("forward_launch")
         feature_cols = cpu_overhead_feature_columns(cpu_overhead_df)
 
-        for model_name in model_names:
+        for model_name in cpu_overhead_model_names(cpu_overhead_df):
             target_col = "ray_comm_time_mean" if model_name == "ray_comm_time" else f"{model_name}_median"
 
             model_signature = f"{model_name}_{cpu_signature}"

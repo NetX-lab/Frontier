@@ -646,6 +646,9 @@ class OverheadTime:
     # device stream, so it is outside every total; only the part the device
     # stream cannot hide adds to the step (forward_launch_stall_time).
     forward_launch_time: float = 0.0
+    # Device time after the last kernel launch of an eager forward step. It adds
+    # to the step only with a launch the device stream cannot hide.
+    forward_drain_time: float = 0.0
 
     def simulated_total_time(self) -> float:
         """Calculate overhead time that actively contributes to simulated stage occupancy."""

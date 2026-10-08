@@ -514,6 +514,10 @@ class Batch(BaseEntity):
         self._scheduled = False
         self._completed = False
         self._schedule_epoch = 0
+        # Seconds the engine loop was idle before the iteration that formed this
+        # batch; the vLLM V1 engine scheduler sets it on the roles that run
+        # vLLM's engine loop.
+        self.engine_idle_time = 0.0
 
         # Time attribute for timing information preservation
         self._time = None

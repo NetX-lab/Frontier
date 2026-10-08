@@ -1,4 +1,5 @@
 import ast
+import bisect
 import copy
 import hashlib
 import json
@@ -121,13 +122,16 @@ from frontier.operators.spec import (
     ZeroPayloadPolicy,
 )
 from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_ENGINE_IDLE_COLUMN,
     CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
+    CPU_OVERHEAD_TERMS,
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
 )
 from frontier.profiling.cpu_overhead.validation import (
     apply_cpu_overhead_schema_v2_defaults,
     cpu_overhead_feature_columns,
+    cpu_overhead_model_names,
     validate_cpu_overhead_dataframe,
 )
 from frontier.profiling.other_overhead.validation import (
@@ -3482,14 +3486,6 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             return {}
 
         models = {}
-        model_names = [
-            "schedule",
-            "sampler_e2e",
-            "prepare_inputs_e2e",
-            "process_model_outputs",
-            "ray_comm_time",
-        ]
-
         cpu_overhead_df = self._load_cpu_overhead_df(self._cpu_overhead_input_file)
         if cpu_overhead_df.empty:
             logger.warning(
@@ -3502,11 +3498,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         cpu_overhead_df = self._get_cpu_overhead_df_with_derived_features(
             cpu_overhead_df
         )
-        if "forward_launch_median" in cpu_overhead_df.columns:
-            model_names.append("forward_launch")
         feature_cols = cpu_overhead_feature_columns(cpu_overhead_df)
 
-        for model_name in model_names:
+        for model_name in cpu_overhead_model_names(cpu_overhead_df):
             if model_name == "ray_comm_time":
                 target_col = "ray_comm_time_mean"
             else:
@@ -3941,19 +3935,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         predictions = {}
 
-        model_names = [
-            "schedule",
-            "sampler_e2e",
-            "prepare_inputs_e2e",
-            "process_model_outputs",
-            "ray_comm_time",
-            "forward_launch",
-        ]
-
         batch_size_range = np.arange(1, self._config.prediction_max_batch_size + 1)
         X = pd.DataFrame({"batch_size": batch_size_range})
 
-        for model_name in model_names:
+        for model_name in CPU_OVERHEAD_TERMS:
             if model_name in self._models:
                 model = self._models[model_name]
                 n_features = getattr(model, "n_features_in_", None)
@@ -3985,6 +3970,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                     "_feature_names": list(feature_names),
                     "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
                 }
+                if CPU_OVERHEAD_ENGINE_IDLE_COLUMN in feature_names:
+                    column = list(feature_names).index(CPU_OVERHEAD_ENGINE_IDLE_COLUMN)
+                    predictions[model_name]["_engine_idle_edges_ms"] = sorted(
+                        {key[column] for key in predictions[model_name]["_exact_lookup"]}
+                    )
 
         return predictions
 
@@ -6943,6 +6933,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             # A table from a PP>1 probe keys rows by the stage that runs the interval.
             if CPU_OVERHEAD_PIPELINE_STAGE_COLUMN in feature_names:
                 features[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN] = stage_id
+            # A table with engine-idle buckets keys rows by the largest bucket
+            # edge at or below the engine's idle time before the step.
+            if CPU_OVERHEAD_ENGINE_IDLE_COLUMN in feature_names:
+                edges = metric_predictions["_engine_idle_edges_ms"]
+                features[CPU_OVERHEAD_ENGINE_IDLE_COLUMN] = edges[
+                    bisect.bisect_right(edges, batch.engine_idle_time * 1e3) - 1
+                ]
             feature_key = tuple(float(features[name]) for name in feature_names)
             exact_lookup = metric_predictions.get("_exact_lookup") or {}
             if feature_key in exact_lookup:
@@ -7013,6 +7010,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         if self._active_measurement_type == self._step_measurement_type:
             return 0.0
         return self._get_cpu_overhead_prediction_or_default("forward_launch", batch, stage_id)
+
+    def _get_forward_drain_time(self, batch: Batch, stage_id: int) -> float:
+        """Device time after the last kernel launch of a step priced in two streams."""
+        if self._active_measurement_type == self._step_measurement_type:
+            return 0.0
+        return self._get_cpu_overhead_prediction_or_default("forward_drain", batch, stage_id)
 
     # Phase 2.5: Removed deprecated get_moe_stage_execution_details() method
     # MoE models now use predict_moe_layer_time() and other fine-grained APIs
@@ -8250,6 +8253,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         forward_launch_time = self._validate_prediction_value(
             self._get_forward_launch_time(batch, stage_id), "forward_launch", batch, f"stage={stage_id}"
         )
+        forward_drain_time = self._validate_prediction_value(
+            self._get_forward_drain_time(batch, stage_id), "forward_drain", batch, f"stage={stage_id}"
+        )
         pp_producer_send_path_runtime_time = self._validate_prediction_value(
             self._get_pp_producer_send_path_runtime_time(batch, stage_id),
             "pp_producer_send_path_runtime",
@@ -8385,6 +8391,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             process_model_outputs_time=process_outputs_time,
             ray_comm_time=ray_comm_time,
             forward_launch_time=forward_launch_time,
+            forward_drain_time=forward_drain_time,
             is_moe=False,
             pp_producer_send_path_runtime_time=pp_producer_send_path_runtime_time,
             pp_receiver_head_runtime_time=pp_receiver_head_runtime_time,

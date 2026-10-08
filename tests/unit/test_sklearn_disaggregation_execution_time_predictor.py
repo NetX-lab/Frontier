@@ -993,6 +993,7 @@ def test_disaggregation_moe_live_paths_use_registered_role_context(
         pp_stage_boundary_residual_runtime_time=0.0,
         pp_stage_boundary_handoff_time=0.0,
         forward_launch_time=0.0,
+        forward_drain_time=0.0,
     )
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
     predictor.predict_attention_layer_time = lambda *_args, **_kwargs: AttentionTime()
@@ -1128,6 +1129,7 @@ def test_pdd_attention_only_prediction_preserves_global_layer_id() -> None:
         pp_stage_boundary_residual_runtime_time=0.0,
         pp_stage_boundary_handoff_time=0.0,
         forward_launch_time=0.0,
+        forward_drain_time=0.0,
     )
     predictor._predict_one_op_time = (
         lambda _name, value, *_args, **_kwargs: value
@@ -1194,6 +1196,7 @@ def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
         pp_stage_boundary_residual_runtime_time=0.0,
         pp_stage_boundary_handoff_time=0.0,
         forward_launch_time=0.0,
+        forward_drain_time=0.0,
     )
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
     model_config = _Step3NamedGenericProfileModelConfig()

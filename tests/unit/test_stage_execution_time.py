@@ -310,6 +310,17 @@ def test_forward_launch_stays_outside_totals_and_stalls_only_past_the_device_spa
     assert plain.forward_launch_stall_time(0.0) == 0.0
 
 
+def test_host_bound_forward_ends_after_the_drain_of_its_last_launched_kernels() -> None:
+    owner = _layer(layer_id=0, forward_launch_time=30.0, forward_drain_time=4.0)
+    stage = StageExecutionTime((owner, _layer(layer_id=1)), stage_execution_time=owner)
+
+    assert owner.total_time == _layer(layer_id=0).total_time
+    # Device-bound: the device span already holds the drain.
+    assert stage.forward_launch_stall_time(0.040) == 0.0
+    # Host-bound: the forward ends 4 ms after its 30 ms launch, 9 ms past a 25 ms device span.
+    assert stage.forward_launch_stall_time(0.025) == pytest.approx(0.009)
+
+
 def test_stage_rejects_duplicate_global_layer_ids() -> None:
     first = _layer(layer_id=2)
     duplicate = _layer(layer_id=2)

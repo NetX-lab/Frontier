@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from types import SimpleNamespace
 
 import pytest
@@ -866,6 +867,42 @@ def test_stage_keyed_cpu_overhead_rows_price_each_stage() -> None:
     assert [predictor._get_forward_launch_time(batch, stage) for stage in (0, 1)] == [58.65, 58.98]
     # A table from a single-stage probe has no stage feature, so every stage reads the same row.
     assert [predictor._get_schedule_time(batch, stage) for stage in (0, 1)] == [0.2, 0.2]
+
+
+def test_engine_idle_keyed_cpu_overhead_rows_price_the_idle_bucket_of_each_step() -> None:
+    predictor = _make_predictor(ClusterType.MONOLITHIC)
+    predictor._config = SimpleNamespace(skip_cpu_overhead_modeling=False)
+    predictor._activate_measurement_type = lambda measurement_type: setattr(
+        predictor, "_active_measurement_type", measurement_type
+    )
+    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+    predictor._step_measurement_type = MeasurementType.CUDA_EVENT
+    step = (1.0, 16.0, 0.0)
+    keyed = {
+        "_on_demand_prediction": True,
+        "_feature_names": [*STEP_FEATURE_NAMES, "pipeline_stage_id", "engine_idle_ms"],
+        "_engine_idle_edges_ms": [0.0, 100.0, 500.0],
+    }
+    predictor._predictions = {
+        "forward_launch": {
+            **keyed,
+            "_exact_lookup": {(*step, 0.0, 0.0): 10.7, (*step, 0.0, 100.0): 11.5, (*step, 0.0, 500.0): 12.3},
+        },
+        "forward_drain": {**keyed, "_exact_lookup": {(*step, 0.0, 0.0): 0.4, (*step, 0.0, 100.0): 0.6,
+                                                     (*step, 0.0, 500.0): 0.9}},
+    }
+
+    def idle_step(engine_idle_time: float) -> SimpleNamespace:
+        return SimpleNamespace(size=1, num_prefill_tokens=16, num_decode_tokens=0, engine_idle_time=engine_idle_time)
+
+    # A step takes the largest bucket edge at or below its idle time; an engine's first step, with
+    # no earlier iteration, the largest edge.
+    assert [
+        predictor._get_forward_launch_time(idle_step(idle), 0) for idle in (0.0, 0.05, 0.25, 0.6, math.inf)
+    ] == [10.7, 10.7, 11.5, 12.3, 12.3]
+    assert predictor._get_forward_drain_time(idle_step(0.25), 0) == 0.6
+    predictor._step_measurement_type = MeasurementType.KERNEL_ONLY
+    assert predictor._get_forward_drain_time(idle_step(0.25), 0) == 0.0
 
 
 class _CpuOverheadTableRead(Exception):

@@ -317,6 +317,7 @@ every other host interval of a step, each once, on the stage that runs it:
 | `schedule` | stage 0: `step_start -> schedule_end` |
 | `prepare_inputs_e2e` | each stage: dispatch start `-> forward_context_entered`, less the DP wait and the KV-load wait |
 | `forward_launch` | each stage, eager forwards only: launch start `-> forward_end` |
+| `forward_drain` | each stage, eager forwards only: `forward_end ->` device end, at least `0` |
 | `sampler_e2e` | last stage: `max(forward_end, device end) -> sample_end` |
 | `process_model_outputs` | last stage: `sample_end ->` next `step_start` when the next step shares a request and starts after `update_end`, else `sample_end -> update_end` |
 | `ray_comm_time_mean` | `0` (no Ray hop) |
@@ -331,12 +332,22 @@ every other host interval of a step, each once, on the stage that runs it:
   median over the stage log.
 - The launch start is the later of `forward_context_entered` and the upstream stage's device
   end; a stage's device end is its launch start plus its forward's device time.
+- Frontier adds `forward_drain` to a forward only when its launch outlasts its predicted
+  device time: the forward then ends once the device has run the kernels launched last.
 
 Forwards are grouped per stage by `(batch_size, num_prefill_tokens, num_decode_tokens)` and
 keyed by `pipeline_stage_id`. A forward that replayed a FULL CUDA graph goes to the
-kernel-only file and publishes no `forward_launch`; every other forward goes to the eager
-file. Each `--cpu_probe_logs` lists the engine logs of one serving instance, one per DP
-engine; a PP>1 engine adds `--num_pipeline_stages`:
+kernel-only file and publishes no `forward_launch` or `forward_drain`; every other forward
+goes to the eager file. Each `--cpu_probe_logs` lists the engine logs of one serving
+instance, one per DP engine in DP rank order; a PP>1 engine adds `--num_pipeline_stages`.
+
+With `--engine_idle_edges_ms 0 100 500`, rows are also keyed by `engine_idle_ms`, the
+largest edge at or below the engine's idle time before the step: from the latest
+`update_end` of its earlier steps, or the end of its latest DP dummy forward, to its
+`step_start`. A DP>1 instance reads its dummy forwards from the `dummy_pass` records of
+`dp_placement/*.jsonl` beside its engine logs. An engine's first step takes the largest
+edge. Frontier keys each batch the same way, from the end of its engine's latest loop
+iteration or dummy forward to the batch's schedule time.
 
 ```bash
 python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \

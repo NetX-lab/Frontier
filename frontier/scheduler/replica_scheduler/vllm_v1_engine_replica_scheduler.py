@@ -16,6 +16,7 @@ Reference:
 - Admission control guide: tests/debug/flow-level/admission_control_dev_guide_en.md
 """
 
+import math
 from collections import deque
 from dataclasses import replace
 from typing import Deque, Dict, List, Optional, Sequence, Tuple
@@ -146,6 +147,10 @@ class VLLMv1EngineReplicaScheduler(
         )
         self._dummy_pass_due = False
         self._dummy_forwards_in_flight = 0
+        # End of the engine loop's latest iteration: a schedule call that formed
+        # a batch, a batch output, or a dummy forward. None before the first.
+        # Only the batch-queue roles run vLLM's engine loop.
+        self._last_iteration_end: Optional[float] = None
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -398,7 +403,7 @@ class VLLMv1EngineReplicaScheduler(
             self._dummy_pass_due = False
             if self._dp_wave_runs():
                 return self._issue_dummy_pass()
-        batches = super().on_schedule(time)
+        batches = self._start_iterations(super().on_schedule(time), time)
         self._in_flight_batch_ids.extend(batch.id for batch in batches)
         if self._in_flight_batch_ids:
             self._blocking_batch_id = self._in_flight_batch_ids[0]
@@ -412,6 +417,20 @@ class VLLMv1EngineReplicaScheduler(
             self._clear_followup_polls()
         elif self._runs_dp_dummy_passes and self._dp_wave_runs():
             return self._issue_dummy_pass()
+        return batches
+
+    def _start_iterations(self, batches: List[Batch], time: float) -> List[Batch]:
+        """Give each batch the engine's idle time before the iteration that forms it.
+
+        Each batch is one loop iteration of vLLM's engine, so a second batch of
+        the same call follows the first with no idle time. An engine's first
+        batch follows no iteration.
+        """
+        for batch in batches:
+            batch.engine_idle_time = (
+                math.inf if self._last_iteration_end is None else time - self._last_iteration_end
+            )
+            self._last_iteration_end = time
         return batches
 
     def _clear_followup_polls(self) -> None:
@@ -466,14 +485,19 @@ class VLLMv1EngineReplicaScheduler(
         self._clear_followup_polls()
         return dummy_forwards
 
-    def on_dummy_forward_end(self) -> bool:
+    def on_dummy_forward_end(self, time: float) -> bool:
         """Record one ended dummy forward; return whether the engine iterates again."""
         self._dummy_forwards_in_flight -= 1
-        return self._dummy_forwards_in_flight == 0
+        if self._dummy_forwards_in_flight:
+            return False
+        self._last_iteration_end = time
+        return True
 
     def _leave_engine_batch_queue(self, batch: Batch) -> None:
         if not self._has_engine_batch_queue:
             return
+        # The iteration that pops a batch's output ends with it.
+        self._last_iteration_end = batch.completed_at
         self._in_flight_batch_ids.remove(batch.id)
         if batch.id == self._blocking_batch_id:
             self._blocking_batch_id = None

@@ -1119,6 +1119,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 self._get_pp_stage_boundary_handoff_time(batch, stage_id)
             ),
             forward_launch_time=self._get_forward_launch_time(batch, stage_id),
+            forward_drain_time=self._get_forward_drain_time(batch, stage_id),
         )
 
     def _get_pp_stage_boundary_residual_runtime_time(
@@ -1349,6 +1350,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             ),
             pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
             forward_launch_time=overhead_time.forward_launch_time,
+            forward_drain_time=overhead_time.forward_drain_time,
             mlp_layer_up_proj_execution_time=0.0,
             mlp_layer_down_proj_execution_time=0.0,
             mlp_layer_act_execution_time=0.0,
@@ -2361,6 +2363,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     forward_launch_time=overhead_time.forward_launch_time,
+                    forward_drain_time=overhead_time.forward_drain_time,
                     is_moe=True,
                 )
             else:
@@ -2446,6 +2449,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     forward_launch_time=overhead_time.forward_launch_time,
+                    forward_drain_time=overhead_time.forward_drain_time,
                     **self._get_zero_moe_params(),
                 )
 
@@ -2812,6 +2816,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     forward_launch_time=overhead_time.forward_launch_time,
+                    forward_drain_time=overhead_time.forward_drain_time,
                     is_moe=True,
                 )
             else:
@@ -2957,6 +2962,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     forward_launch_time=overhead_time.forward_launch_time,
+                    forward_drain_time=overhead_time.forward_drain_time,
                     **self._get_zero_moe_params(),
                 )
 

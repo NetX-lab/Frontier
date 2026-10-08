@@ -44,11 +44,36 @@ CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS: Final[tuple[str, ...]] = (
     "forward_launch_median",
 )
 
+# Optional device time after an eager forward's last kernel launch. It comes
+# with forward_launch and extends a step whose launch outlasts its device work.
+CPU_OVERHEAD_FORWARD_DRAIN_COLUMNS: Final[tuple[str, ...]] = (
+    "forward_drain_mean",
+    "forward_drain_median",
+)
+
+# The terms a CPU-overhead table prices, one model each. The eager-forward terms
+# are optional columns.
+CPU_OVERHEAD_TERMS: Final[tuple[str, ...]] = (
+    "schedule",
+    "sampler_e2e",
+    "prepare_inputs_e2e",
+    "process_model_outputs",
+    "ray_comm_time",
+    "forward_launch",
+    "forward_drain",
+)
+CPU_OVERHEAD_OPTIONAL_TERMS: Final[tuple[str, ...]] = ("forward_launch", "forward_drain")
+
 # A PP>1 CPU-probe table keys each row by the pipeline stage that runs the row's
 # intervals; single-stage tables have no such column.
 CPU_OVERHEAD_PIPELINE_STAGE_COLUMN: Final[str] = "pipeline_stage_id"
 
-# Step features of the CPU-overhead models; a stage-keyed table adds the stage.
+# A table probed with engine-idle buckets keys each row by the lower edge, in ms,
+# of the bucket that holds the engine's idle time before the step.
+CPU_OVERHEAD_ENGINE_IDLE_COLUMN: Final[str] = "engine_idle_ms"
+
+# Step features of the CPU-overhead models; a stage-keyed or idle-keyed table
+# adds its key columns.
 CPU_OVERHEAD_STEP_FEATURE_COLUMNS: Final[tuple[str, ...]] = (
     "batch_size",
     "num_prefill_tokens",

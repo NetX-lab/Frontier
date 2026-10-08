@@ -843,8 +843,8 @@ def run_case(
             )
         return batches
 
-    def observed_dummy_forward_end(self):
-        pass_ended = original_dummy_forward_end(self)
+    def observed_dummy_forward_end(self, time):
+        pass_ended = original_dummy_forward_end(self, time)
         engine_loop.append(
             {
                 "kind": "dummy_end",

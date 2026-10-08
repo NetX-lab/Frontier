@@ -24,6 +24,8 @@ once, on the stage that runs it:
     prepare_inputs_e2e     each stage: dispatch start -> forward_context_entered,
                            less the DP wait and the KV-load wait
     forward_launch         each stage, eager forwards: launch start -> forward_end
+    forward_drain          each stage, eager forwards: forward_end -> device end,
+                           at least 0
     sampler_e2e            last stage: max(forward_end, device end) -> sample_end
     process_model_outputs  last stage: sample_end -> outputs end
     ray_comm_time          0 (no Ray hop)
@@ -56,8 +58,18 @@ Forwards are grouped per stage by Frontier's CPU-overhead identity (batch_size,
 num_prefill_tokens, num_decode_tokens), counting a request scheduled more than
 one token as prefill, which holds for logs without speculative decoding. A
 forward that replayed a FULL CUDA graph belongs to the kernel-only family and
-publishes no forward_launch; every other forward is eager. Rows are keyed by
-pipeline_stage_id.
+publishes no forward_launch or forward_drain; every other forward is eager.
+Rows are keyed by pipeline_stage_id.
+
+With ``--engine_idle_edges_ms``, rows are also keyed by engine_idle_ms: the
+largest edge at or below the engine's idle time before the step, from the latest
+update_end of its earlier steps or the end of its latest DP dummy forward to the
+step's step_start. An engine's first step has no such end and takes the largest
+edge. A DP>1
+instance reads its dummy forwards from the ``dummy_pass`` records of
+``dp_placement/*.jsonl`` beside its engine logs, whose ``engine`` field is the
+position of the engine log in ``--cpu_probe_logs``; they share the
+perf_counter clock (CLOCK_MONOTONIC).
 
     python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \\
         --cpu_probe_logs run/prefill/cpu_probe.jsonl \\
@@ -74,25 +86,39 @@ DP engine. A PP>1 engine adds ``--num_pipeline_stages``.
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import math
 from collections import defaultdict
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Mapping, NamedTuple, Sequence
 
 import numpy as np
 import pandas as pd
 
 from frontier.config.precision_type import PrecisionType
 from frontier.logger import init_logger
-from frontier.profiling.cpu_overhead.schema import CPU_OVERHEAD_PIPELINE_STAGE_COLUMN, VALID_SCHEDULING_MODES
+from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_ENGINE_IDLE_COLUMN,
+    CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
+    VALID_SCHEDULING_MODES,
+)
 from frontier.profiling.cpu_overhead.validation import validate_cpu_overhead_dataframe
 from frontier.types import MeasurementType
 
 logger = init_logger(__name__)
 
 StepIdentity = tuple[int, int, int]
-StageStep = tuple[int, MeasurementType, StepIdentity, dict[str, float]]
+
+
+class StageStep(NamedTuple):
+    """One forward's row key and CPU-overhead terms in milliseconds."""
+
+    stage_id: int
+    family: MeasurementType
+    identity: StepIdentity
+    terms: dict[str, float]
+    engine_idle_ms: float | None = None
 
 
 def load_cpu_probe_log(path: Path) -> list[dict]:
@@ -152,13 +178,26 @@ def _context_entry_ms(stage: Mapping) -> float:
     return entry * 1e3
 
 
+def dummy_pass_ends(placement_dir: Path) -> dict[int, list[float]]:
+    """Return each DP engine's dummy-forward end stamps, in order, from its dp_placement records."""
+
+    ends = defaultdict(list)
+    for path in sorted(placement_dir.glob("*.jsonl")):
+        for record in load_cpu_probe_log(path):
+            if record["kind"] == "dummy_pass":
+                ends[record["engine"]].append(record["monotonic"])
+    return {engine: sorted(engine_ends) for engine, engine_ends in ends.items()}
+
+
 def stage_overhead_terms(
     engine_records: Sequence[Mapping],
     stage_records: Sequence[Sequence[Mapping]],
     *,
     dp_allreduce_ms: float | None,
+    engine_idle_edges_ms: Sequence[float] | None = None,
+    dummy_ends: Sequence[float] = (),
 ) -> list[StageStep]:
-    """Return each forward's stage, family, identity and CPU-overhead terms in milliseconds."""
+    """Return each forward's row key and CPU-overhead terms."""
 
     scheduled = [record["num_scheduled_tokens"] for record in engine_records if record["num_scheduled_tokens"]]
     for stage_id, records in enumerate(stage_records):
@@ -172,11 +211,23 @@ def stage_overhead_terms(
     last_stage = len(stage_records) - 1
     stage_steps = []
     previous_forward_end = -math.inf
+    # A batch-queue step's update_end stamps the update of its own batch's output,
+    # which can follow later steps, so the engine is busy until the latest one.
+    previous_iteration_end = -math.inf
     n = 0
     for record, following in zip(engine_records, [*engine_records[1:], None]):
+        engine_busy_until = previous_iteration_end
+        previous_iteration_end = max(previous_iteration_end, record["update_end"])
         if not record["num_scheduled_tokens"]:
             continue
         identity = step_identity(record["num_scheduled_tokens"])
+        idle_edge = None
+        if engine_idle_edges_ms is not None:
+            dummy_index = bisect.bisect_right(dummy_ends, record["step_start"])
+            if dummy_index:
+                engine_busy_until = max(engine_busy_until, dummy_ends[dummy_index - 1])
+            idle_ms = max(0.0, (record["step_start"] - engine_busy_until) * 1e3)
+            idle_edge = engine_idle_edges_ms[bisect.bisect_right(engine_idle_edges_ms, idle_ms) - 1]
         device_end = -math.inf
         for stage_id, records in enumerate(stage_records):
             stage = records[n]
@@ -210,12 +261,15 @@ def stage_overhead_terms(
             else:
                 family = MeasurementType.CUDA_EVENT
                 terms["forward_launch"] = (stage["forward_end"] - launch_start) * 1e3
-            stage_steps.append((stage_id, family, identity, terms))
+                terms["forward_drain"] = max(0.0, device_end - stage["forward_end"]) * 1e3
+            stage_steps.append(StageStep(stage_id, family, identity, terms, idle_edge))
         n += 1
     return stage_steps
 
 
-def instance_stage_steps(engine_logs: Sequence[Path], num_pipeline_stages: int) -> list[StageStep]:
+def instance_stage_steps(
+    engine_logs: Sequence[Path], num_pipeline_stages: int, engine_idle_edges_ms: Sequence[float] | None = None
+) -> list[StageStep]:
     """Read one serving instance's DP engine logs with their stage logs and return their forwards' terms."""
 
     engines = [
@@ -227,10 +281,22 @@ def instance_stage_steps(engine_logs: Sequence[Path], num_pipeline_stages: int) 
            for _, stage_logs in engines for records in stage_logs for stage in records):
         dp_allreduce_ms = dp_allreduce_latency([stage_logs for _, stage_logs in engines])
         logger.info("DP all-reduce latency of %s: %.3f ms.", [str(log) for log in engine_logs], dp_allreduce_ms)
+    dummy_ends = {}
+    if engine_idle_edges_ms is not None and len(engine_logs) > 1:
+        placement_dir = Path(engine_logs[0]).parent / "dp_placement"
+        dummy_ends = dummy_pass_ends(placement_dir)
+        if not dummy_ends:
+            raise ValueError(
+                f"engine-idle buckets of a DP>1 instance need its dummy forwards; no dummy_pass record in "
+                f"{placement_dir}"
+            )
     return [
         step
-        for engine_records, stage_logs in engines
-        for step in stage_overhead_terms(engine_records, stage_logs, dp_allreduce_ms=dp_allreduce_ms)
+        for engine, (engine_records, stage_logs) in enumerate(engines)
+        for step in stage_overhead_terms(
+            engine_records, stage_logs, dp_allreduce_ms=dp_allreduce_ms,
+            engine_idle_edges_ms=engine_idle_edges_ms, dummy_ends=dummy_ends.get(engine, ()),
+        )
     ]
 
 
@@ -245,10 +311,10 @@ def cpu_overhead_tables(
     """Aggregate forward terms into one validated CPU-overhead table per family, keyed by stage."""
 
     groups = defaultdict(list)
-    for stage_id, family, identity, terms in stage_steps:
-        groups[family, stage_id, identity].append(terms)
+    for step in stage_steps:
+        groups[step.family, step.stage_id, step.identity, step.engine_idle_ms].append(step.terms)
     rows = defaultdict(list)
-    for (family, stage_id, identity), group in sorted(groups.items(), key=lambda item: item[0][1:]):
+    for (family, stage_id, identity, idle_edge), group in sorted(groups.items(), key=lambda item: item[0][1:]):
         batch_size, num_prefill_tokens, num_decode_tokens = identity
         row = {
             "model_name": model_name,
@@ -270,6 +336,8 @@ def cpu_overhead_tables(
             num_steps=len(group),
             **{CPU_OVERHEAD_PIPELINE_STAGE_COLUMN: stage_id},
         )
+        if idle_edge is not None:
+            row[CPU_OVERHEAD_ENGINE_IDLE_COLUMN] = idle_edge
         rows[family].append(row)
     return {
         family: validate_cpu_overhead_dataframe(pd.DataFrame(family_rows), expected_precision=profiling_precision)
@@ -280,8 +348,11 @@ def cpu_overhead_tables(
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cpu_probe_logs", type=Path, nargs="+", action="append", required=True,
-                        help="the engine logs of one serving instance, one per DP engine; repeat the flag for "
-                             "each instance of the engine configuration, e.g. a PD prefill and a PD decode instance")
+                        help="the engine logs of one serving instance, one per DP engine in DP rank order; repeat "
+                             "the flag for each instance of the engine configuration, e.g. a PD prefill and a PD "
+                             "decode instance")
+    parser.add_argument("--engine_idle_edges_ms", type=float, nargs="+",
+                        help="increasing engine-idle bucket edges in ms, the first 0; rows are keyed by bucket")
     parser.add_argument("--num_pipeline_stages", type=int, default=1,
                         help="the engine's pipeline-parallel size; each engine log is read with its stage logs "
                              "<stem>_pp<p><suffix>")
@@ -292,9 +363,12 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--eager_output_file", type=Path, required=True)
     parser.add_argument("--kernel_only_output_file", type=Path, required=True)
     args = parser.parse_args(argv)
+    edges = args.engine_idle_edges_ms
+    if edges is not None and (edges[0] != 0 or any(b <= a for a, b in zip(edges, edges[1:]))):
+        parser.error(f"--engine_idle_edges_ms must increase from 0, got {edges}")
 
     stage_steps = [step for engine_logs in args.cpu_probe_logs
-                   for step in instance_stage_steps(engine_logs, args.num_pipeline_stages)]
+                   for step in instance_stage_steps(engine_logs, args.num_pipeline_stages, edges)]
     tables = cpu_overhead_tables(
         stage_steps,
         model_name=args.model_name,
