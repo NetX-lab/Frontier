@@ -33,6 +33,7 @@ class _ExecutionTime:
     def __init__(self, post_attention_ms: float) -> None:
         self._post_attention_ms = post_attention_ms
         self.expert_parallel_communication_time = 0.0
+        self.forward_preparation_time = 0.0
         self.forward_launch_time = 0.0
 
     def get_single_layer_post_attention_time(self) -> float:
@@ -63,8 +64,9 @@ class _LayerPredictor:
 class _StageOffsetPredictor:
     _num_layers_per_pipeline_stage = 16
 
-    def __init__(self) -> None:
+    def __init__(self, forward_preparation_ms: float = 0.0) -> None:
         self.calls: list[tuple[int, ClusterType, int, int]] = []
+        self._forward_preparation_ms = forward_preparation_ms
 
     def predict_stage_execution_time(
         self,
@@ -77,7 +79,9 @@ class _StageOffsetPredictor:
         **_kwargs,
     ):
         self.calls.append((stage_id, cluster_type, num_layers, layer_id))
-        return _ExecutionTime(1.0)
+        execution_time = _ExecutionTime(1.0)
+        execution_time.forward_preparation_time = self._forward_preparation_ms
+        return execution_time
 
 
 def _scheduler(cluster_type: ClusterType):
@@ -100,20 +104,12 @@ def _scheduler(cluster_type: ClusterType):
     return scheduler
 
 
-@pytest.mark.parametrize(
-    ("cluster_type", "num_prefill_tokens", "num_decode_tokens", "event_type"),
-    [
-        (ClusterType.MONOLITHIC, 4, 0, PrefillSyncEvent),
-        (ClusterType.MONOLITHIC, 0, 4, DecodeSyncEvent),
-    ],
-)
-def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
+def _schedule_stage_one(
     cluster_type: ClusterType,
     num_prefill_tokens: int,
     num_decode_tokens: int,
-    event_type,
-) -> None:
-    predictor = _StageOffsetPredictor()
+    predictor: _StageOffsetPredictor,
+):
     request = Request(
         arrived_at=0.0,
         num_prefill_tokens=num_prefill_tokens,
@@ -145,11 +141,54 @@ def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
         cluster_type=cluster_type,
         replica_local_id=None,
     ).handle_event(global_scheduler, Mock())
+    return events, batch
+
+
+_STAGE_ONE_CASES = pytest.mark.parametrize(
+    ("cluster_type", "num_prefill_tokens", "num_decode_tokens", "event_type"),
+    [
+        (ClusterType.MONOLITHIC, 4, 0, PrefillSyncEvent),
+        (ClusterType.MONOLITHIC, 0, 4, DecodeSyncEvent),
+    ],
+)
+
+
+@_STAGE_ONE_CASES
+def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
+    cluster_type: ClusterType,
+    num_prefill_tokens: int,
+    num_decode_tokens: int,
+    event_type,
+) -> None:
+    predictor = _StageOffsetPredictor()
+    events, _batch = _schedule_stage_one(
+        cluster_type, num_prefill_tokens, num_decode_tokens, predictor
+    )
 
     assert len(events) == 1
     assert isinstance(events[0], event_type)
     assert events[0]._layer_id == 16
     assert predictor.calls == [(1, cluster_type, 1, 16)]
+
+
+@_STAGE_ONE_CASES
+def test_stage_forward_launches_after_its_preparation(
+    cluster_type: ClusterType,
+    num_prefill_tokens: int,
+    num_decode_tokens: int,
+    event_type,
+) -> None:
+    # vLLM's model runner prepares the inputs before the forward's DP
+    # all-reduce and kernel launches.
+    events, batch = _schedule_stage_one(
+        cluster_type,
+        num_prefill_tokens,
+        num_decode_tokens,
+        _StageOffsetPredictor(forward_preparation_ms=2.0),
+    )
+
+    assert batch._forward_launch_start_time == pytest.approx(1.002)
+    assert events[0].time == pytest.approx(1.002 + 0.009)
 
 
 def test_monolithic_prefill_guard_only_admits_moe_layers() -> None:

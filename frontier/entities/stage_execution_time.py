@@ -77,6 +77,7 @@ _STAGE_ONLY_PUBLIC_NAMES = frozenset(
         "schedule_time",
         "sampler_e2e_time",
         "prepare_inputs_e2e_time",
+        "forward_preparation_time",
         "process_model_outputs_time",
         "ray_comm_time",
         "pp_receiver_head_runtime_time",

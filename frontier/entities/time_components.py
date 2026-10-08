@@ -650,6 +650,14 @@ class OverheadTime:
     # to the step only with a launch the device stream cannot hide.
     forward_drain_time: float = 0.0
 
+    def forward_preparation_time(self) -> float:
+        """Host time of a step before its forward starts: the schedule call and the input preparation.
+
+        vLLM all-reduces a forward's token count over the DP group only after
+        this work, so a lane prepares its inputs while a later lane catches up.
+        """
+        return self.schedule_time + self.prepare_inputs_e2e_time
+
     def simulated_total_time(self) -> float:
         """Calculate overhead time that actively contributes to simulated stage occupancy."""
         return (

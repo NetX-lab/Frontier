@@ -1440,6 +1440,11 @@ class ExecutionTime(BaseEntity):
         return self._overhead_time.prepare_inputs_e2e_time
 
     @property
+    def forward_preparation_time(self) -> float:
+        """Host time before the forward starts (not scaled by layers)."""
+        return self._overhead_time.forward_preparation_time()
+
+    @property
     def process_model_outputs_time(self) -> float:
         """Output processing time (not scaled by layers)."""
         return self._overhead_time.process_model_outputs_time

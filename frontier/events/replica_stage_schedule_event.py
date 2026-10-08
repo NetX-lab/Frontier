@@ -225,7 +225,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._prefill_stage_start_time = self.time
-                    batch._forward_launch_start_time = self.time
 
                     num_layers = (
                         stage_scheduler._execution_time_predictor
@@ -247,6 +246,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         layer_id=first_layer_id,
                         include_ffn=False,
                     )
+                    # The host prepares the forward before its kernels launch.
+                    preparation_time = execution_time.forward_preparation_time * 1e-3
+                    batch._forward_launch_start_time = self.time + preparation_time
                     batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
@@ -286,7 +288,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Schedule first sync point (pre_moe) after first layer's attention computation
                     return [
                         PrefillSyncEvent(
-                            self.time + attention_time,
+                            batch._forward_launch_start_time + attention_time,
                             self._replica_id,
                             self._stage_id,
                             batch,
@@ -538,7 +540,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._decode_stage_start_time = self.time
-                    batch._forward_launch_start_time = self.time
+                    # The host prepares the forward before its kernels launch.
+                    preparation_time = execution_time.forward_preparation_time * 1e-3
+                    batch._forward_launch_start_time = self.time + preparation_time
                     batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
 
                     # Predictor single-layer attention component is in milliseconds;
@@ -577,7 +581,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Schedule first sync point (pre_moe) after first layer's attention computation
                     return [
                         DecodeSyncEvent(
-                            self.time + attention_time,
+                            batch._forward_launch_start_time + attention_time,
                             self._replica_id,
                             self._stage_id,
                             batch,

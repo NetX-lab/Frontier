@@ -17,6 +17,7 @@ class _ExecutionTime:
     pipeline_time = 0.0
     total_time = 0.0
     model_time = 0.0
+    forward_preparation_time = 0.0
     decode_draft_proposer_time = 0.0
     mtp_terminal_overshoot_time = 0.0
 

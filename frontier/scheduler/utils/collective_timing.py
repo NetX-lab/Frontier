@@ -97,6 +97,8 @@ def prepare_prefill_final_timing(
             f"model_time={execution_time.model_time}, "
             f"stage_cpu_overhead={cpu_overhead}"
         )
+    # The forward's preparation ran before its first layer.
+    cpu_overhead = max(cpu_overhead - execution_time.forward_preparation_time * 1e-3, 0.0)
     forward_launch_stall_time = execution_time.forward_launch_stall_time(
         sync_time - launch_start_time + pipeline_time
     )
@@ -123,8 +125,11 @@ def prepare_decode_final_timing(
     """
 
     pipeline_time = execution_time.pipeline_time * 1e-3
+    # The forward's preparation ran before its first layer.
     cpu_overhead = max(
-        execution_time.total_time - execution_time.model_time,
+        execution_time.total_time
+        - execution_time.model_time
+        - execution_time.forward_preparation_time * 1e-3,
         0.0,
     )
     forward_launch_stall_time = execution_time.forward_launch_stall_time(
