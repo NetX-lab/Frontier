@@ -202,6 +202,7 @@ class _LayerExecutionTime:
             attention_ms + post_attention_ms + pipeline_ms
         ) * 1e-3
         self.total_time = self.model_time
+        self.forward_launch_time = 0.0
 
     def forward_launch_stall_time(self, device_span: float) -> float:
         return 0.0

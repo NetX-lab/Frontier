@@ -33,6 +33,7 @@ class _ExecutionTime:
     def __init__(self, post_attention_ms: float) -> None:
         self._post_attention_ms = post_attention_ms
         self.expert_parallel_communication_time = 0.0
+        self.forward_launch_time = 0.0
 
     def get_single_layer_post_attention_time(self) -> float:
         return self._post_attention_ms

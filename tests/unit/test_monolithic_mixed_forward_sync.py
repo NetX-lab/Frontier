@@ -71,6 +71,7 @@ class _ExecutionTime:
         self.total_time = float(tokens)
         self.decode_draft_proposer_time = 0.0
         self.expert_parallel_communication_time = 0.0
+        self.forward_launch_time = 0.0
 
     def get_single_layer_attention_scope_time(self) -> float:
         return float(self.tokens)
@@ -252,6 +253,7 @@ def _admit(stages, batch: Batch, lane: int) -> None:
     batch._prefill_stage_start_time = 0.0
     batch._decode_stage_start_time = 0.0
     batch._forward_launch_start_time = 0.0
+    batch._forward_launch_time = 0.0
 
 
 def _global(scheduler):

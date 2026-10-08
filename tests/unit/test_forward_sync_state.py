@@ -23,6 +23,7 @@ def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forwa
     initialize_sync_waiting_rooms(scheduler)
     scheduler._forward_sync_state = ForwardSyncState()
     scheduler._replica_dp_size = 2
+    scheduler._predictor = SimpleNamespace(_num_layers_per_pipeline_stage=4)
     setattr(scheduler, f"_uses_shared_{sync_kind}_layer_path", lambda *_: True)
     sibling_engine = SimpleNamespace(engine_loop_idle=True)
     scheduler._replica_schedulers = {
@@ -38,11 +39,17 @@ def test_a_lone_lane_wakes_its_idle_sibling_engine_and_waits_for_its_dummy_forwa
     # The woken engine starts its stage forward after the lone lane did.
     batch._forward_launch_start_time = 0.0
     dummy._forward_launch_start_time = 0.5
+    # The real lane's host launches its stage over 8 s, the dummy's over 0.4 s.
+    batch._forward_launch_time = 8.0
+    dummy._forward_launch_time = 0.4
     completed = []
 
     def wave_ready(**kwargs):
         completed.append(kwargs["layer_id"])
         assert kwargs["cohort_batches"] == {0: batch, 1: dummy}
+        # Both lanes arrive at the layer's device time, but the room opens
+        # only when the slower launch, from the later start, reached the layer.
+        assert kwargs["time"] == 0.5 + 8.0 * (kwargs["layer_id"] + 1) / 4
         return []
 
     setattr(scheduler, f"_on_{sync_kind}_ep_wave_ready", wave_ready)
@@ -299,3 +306,34 @@ def test_completed_step_state_stays_bounded():
         "_open_steps",
         "_next_step_id_by_replica",
     }
+
+
+def test_a_one_lane_room_opens_at_the_lane_s_device_arrival():
+    from frontier.entities import Batch, Request
+    from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
+        RoundRobinClusterScheduler,
+    )
+    from frontier.types import ClusterType
+
+    scheduler = object.__new__(RoundRobinClusterScheduler)
+    scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(model_config=SimpleNamespace(is_moe=True))
+    )
+    initialize_sync_waiting_rooms(scheduler)
+    scheduler._forward_sync_state = ForwardSyncState()
+    scheduler._replica_dp_size = 1
+    scheduler._uses_shared_prefill_layer_path = lambda *_: True
+    batch = Batch(0, [Request(0.0, 16, 4)], [16], is_moe=True)
+    batch.set_global_id(0)
+    batch._forward_cohort_id = 0
+    batch._forward_cohort_provisional_id = 0
+    batch._forward_launch_start_time = 0.0
+    batch._forward_launch_time = 8.0
+    opened = []
+    scheduler._on_prefill_ep_wave_ready = lambda **kwargs: opened.append(kwargs["time"]) or []
+
+    scheduler.on_prefill_sync(0.25, 0, 0, batch, 0, "pre_moe", 0, 0.0)
+
+    # No peer waits on a one-lane room; the stage end prices the launch.
+    assert opened == [0.25]
