@@ -877,7 +877,7 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
 
     batch = _DummyBatch()
     with patch(
-        "frontier.execution_time_predictor.sklearn_moe_execution_time_predictor.get_quantization_manager",
+        "frontier.execution_time_predictor.moe_operator_times.get_quantization_manager",
         return_value=_IdentityQuantManager(),
     ):
         predictor._get_execution_time_internal(
