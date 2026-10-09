@@ -345,9 +345,12 @@ With `--engine_idle_edges_ms 0 100 500`, rows are also keyed by `engine_idle_ms`
 largest edge at or below the engine's idle time before the step: from the latest
 `update_end` of its earlier steps, or the end of its latest DP dummy forward, to its
 `step_start`. A DP>1 instance reads its dummy forwards from the `dummy_pass` records of
-`dp_placement/*.jsonl` beside its engine logs. An engine's first step takes the largest
-edge. Frontier keys each batch the same way, from the end of its engine's latest loop
-iteration or dummy forward to the batch's schedule time.
+`dp_placement/*.jsonl` beside its engine logs. An engine's first step that schedules tokens
+carries the engine's one-time start costs, which a ground-truth run's warmups absorb, so it
+is left out of the rows; its terms are still measured, so the step after it keeps its own
+dispatch queueing. Without `--engine_idle_edges_ms`, every step is kept. Frontier keys each
+batch the same way, from the end of its engine's latest loop iteration or dummy forward to
+the batch's schedule time.
 
 ```bash
 python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \
