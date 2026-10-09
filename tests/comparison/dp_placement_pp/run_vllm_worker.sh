@@ -45,6 +45,11 @@ WORK=/tmp/dp_placement_pp/$RUN_TAG
 mkdir -p "$WORK/run"
 export VLLM_CACHE_ROOT="$WORK/vllm_cache" HF_HOME="$WORK/hf" HF_HUB_OFFLINE=1 \
   TRANSFORMERS_OFFLINE=1 VLLM_NO_USAGE_STATS=1 DO_NOT_TRACK=1
+# The runs of one job share the Triton kernel cache, so an unmeasured warm run
+# compiles the eager kernel shapes before the measured runs (decision
+# T43-COMPILECACHE). vLLM redirects it only when it compiles the model with
+# torch.compile, which these eager-MoE cases do not.
+export TRITON_CACHE_DIR=/tmp/dp_placement_pp/triton_cache
 
 publish() {
   local target="$1"

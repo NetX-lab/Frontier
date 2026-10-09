@@ -94,6 +94,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "stage_admission_pp
 from vllm_burst_driver import prompt_token_ids, write_model_dir  # noqa: E402
 
 SERVED_MODEL_NAME = "dp_pp_case"
+# Longest wait of the replay's event loop, which bounds the dispatch lateness.
+HEARTBEAT_S = 0.01
 # Operator-timing modes and the CUDA-event scope mode each one runs.
 OP_TIMING_SCOPE_MODES = {"op_timing": "default", "kernel_timing": "kernel_only"}
 # Operator scopes the vLLM-BS Llama and Qwen3-MoE models open in the calibration
@@ -288,10 +290,19 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 profile_marks[endpoint] = {"requested_monotonic": requested,
                                            "returned_monotonic": time.monotonic()}
 
+        async def heartbeat() -> None:
+            # Linux lets a timed wait overshoot by up to about 0.1% of its
+            # timeout, so after an idle gap of seconds the event loop would wake
+            # a due post milliseconds late.
+            while True:
+                await asyncio.sleep(HEARTBEAT_S)
+
         posts = [post(row) for row in rows]
         if profile_window_s is not None:
             posts.append(profile(*profile_window_s))
+        beat = asyncio.ensure_future(heartbeat())
         await asyncio.gather(*posts)
+        beat.cancel()
     clock = {"origin_monotonic": origin, "origin_wall": origin_wall}
     if profile_window_s is not None:
         clock["profile_marks"] = profile_marks
