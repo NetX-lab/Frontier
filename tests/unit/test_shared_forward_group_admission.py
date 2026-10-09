@@ -51,6 +51,43 @@ def test_admitted_lanes_share_identity_after_unequal_batch_histories(cluster_typ
     assert [batch.global_id for batch in batches] == [2, 1]
 
 
+@pytest.mark.parametrize("first_lane", [0, 1])
+def test_idle_lane_is_admitted_behind_a_busy_lane_queued_ticket(first_lane):
+    """Under PP a busy lane can hold the FIFO head; the other lane must still join."""
+
+    other_lane = 1 - first_lane
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=2)
+    stages = [make_stage(context, lane, ClusterType.MONOLITHIC) for lane in range(2)]
+    first_now, first_next = make_batch(first_lane, 0), make_batch(first_lane, 1)
+    # Distinct provisional ids, so that sharing a bound group is observable.
+    other_now, other_next = make_batch(other_lane, 5), make_batch(other_lane, 6)
+    stages[first_lane].add_batch(first_now)
+    assert stages[first_lane].pop_batch_if_not_busy() is first_now
+    stages[first_lane].add_batch(first_next)
+    stages[other_lane].add_batch(other_now)
+    stages[other_lane].add_batch(other_next)
+    assert context.queued_tickets[0] == first_next._stage_admission_ticket
+
+    assert stages[other_lane].pop_batch_if_not_busy() is other_now
+    assert other_now._forward_cohort_provisional_id == first_now._forward_cohort_provisional_id
+
+    wave = context.replace_full_stage_owners_with_ep_wave(
+        (first_now._stage_admission_ticket, other_now._stage_admission_ticket),
+        operation_id="wave", participant_ep_ids=(0, 1),
+    )
+    owners = context.replace_ep_wave_with_full_stage_owners(wave, operation_ids=("restored0", "restored1"))
+    for owner in owners:
+        context.release(owner)
+    for stage in stages:
+        stage.on_stage_end()
+
+    assert stages[first_lane].pop_batch_if_not_busy() is first_next
+    assert stages[other_lane].pop_batch_if_not_busy() is other_next
+    assert first_next._forward_cohort_provisional_id == other_next._forward_cohort_provisional_id
+    assert first_next._forward_cohort_provisional_id > first_now._forward_cohort_provisional_id
+    assert context.queued_tickets == ()
+
+
 def test_started_group_blocks_new_lane_through_ep_restore_and_partial_release():
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2, full_stage_capacity=4)
     first = context.enqueue_full_stage(operation_id="first")
