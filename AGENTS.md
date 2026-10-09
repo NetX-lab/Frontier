@@ -15,6 +15,7 @@
 | 2026-09-23 | Extended the vLLM DP placement policy's supported scope to pipeline parallelism. |
 | 2026-09-24 | Scoped the round-robin placement description to its roles, including the PD-AF threshold waves, and described the random scheduler's lane rotation. |
 | 2026-09-25 | Listed the stale-drop and deferred-release load reports of the vLLM DP placement policy. |
+| 2026-10-09 | Corrected the vLLM V1 replica scheduler's class name to `VLLMv1EngineReplicaScheduler`, as registered in `ReplicaSchedulerRegistry`. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -629,7 +630,7 @@ The scheduling logic is split across four distinct layers to mirror real-world s
       - `VLLMReplicaScheduler`: Models vLLM's scheduling logic.
       - `SarathiReplicaScheduler`: Models Sarathi-serve (chunked prefill).
       - `OrcaReplicaScheduler`: Models Orca (iteration-level scheduling).
-      - `VllmV1EngineReplicaScheduler`: Models vLLM V1 architecture.
+      - `VLLMv1EngineReplicaScheduler`: Models vLLM V1 architecture.
       - `SGLangStyleReplicaScheduler`: Models SGLang-style prefill-first scheduling for monolithic runs.
 
 4.  **Replica Stage Scheduler** (`ReplicaStageScheduler`):
