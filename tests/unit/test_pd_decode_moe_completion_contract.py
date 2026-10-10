@@ -40,7 +40,16 @@ class _DecodeMoeBatch:
             if requests is None
             else list(requests)
         )
+        self.stale_request_ids = set()
         self.cluster_stage_end_calls = []
+
+    @property
+    def current_execution_requests(self):
+        return [
+            request
+            for request in self.requests
+            if request.id not in self.stale_request_ids
+        ]
 
     def on_cluster_stage_end(self, time: float, cluster_type: ClusterType) -> None:
         self.cluster_stage_end_calls.append((time, cluster_type))
@@ -209,6 +218,54 @@ def test_distributed_moe_decode_rejects_terminal_batch_without_active_requests()
 
     with pytest.raises(ValueError, match="no active request"):
         event.handle_event(scheduler, metrics_store)
+
+
+def test_moe_decode_terminal_batch_skips_rows_preempted_after_dispatch() -> None:
+    # The preempted row restarted with a reset layer counter; the live row
+    # finished every layer of this batch.
+    batch = _DecodeMoeBatch(
+        requests=[
+            _DecodeMoeRequest(completed_layer_count=0, request_id=1),
+            _DecodeMoeRequest(completed_layer_count=8, request_id=2),
+        ]
+    )
+    batch.stale_request_ids = {1}
+    scheduler = _DecodeMoeGlobalScheduler(
+        _DecodeMoeClusterScheduler(_DecodeMoeReplicaScheduler())
+    )
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        replica_local_id=None,
+    )
+
+    next_events = event.handle_event(scheduler, _DecodeMoeMetricsStore())
+
+    assert len(next_events) == 1
+    assert isinstance(next_events[0], GlobalBatchEndEvent)
+
+
+def test_moe_decode_terminal_batch_of_only_preempted_rows_still_ends() -> None:
+    # The global end applies the pending samples of the preempted rows.
+    batch = _DecodeMoeBatch(completed_layer_count=0)
+    batch.stale_request_ids = {0}
+    scheduler = _DecodeMoeGlobalScheduler(
+        _DecodeMoeClusterScheduler(_DecodeMoeReplicaScheduler())
+    )
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        replica_local_id=None,
+    )
+
+    next_events = event.handle_event(scheduler, _DecodeMoeMetricsStore())
+
+    assert len(next_events) == 1
+    assert isinstance(next_events[0], GlobalBatchEndEvent)
 
 
 def test_distributed_moe_decode_rejects_inconsistent_active_layer_counts() -> None:

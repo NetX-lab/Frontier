@@ -1051,8 +1051,11 @@ class Request(BaseEntity):
         # prefill restarts its prompt. vLLM still appends the sample of a step
         # in flight when that step's output arrives: a decode step, or a chunk
         # that reaches the end of the prompt or of the recompute. The layers
-        # the step already ran no longer count.
-        if scheduler_num_computed_tokens is not None:
+        # the step already ran no longer count. A victim admitted again before
+        # an earlier preempted step's output arrives keeps that pending sample:
+        # its rows since then were sized without the sample, so none of them
+        # reaches the length that samples once the sample is appended.
+        if scheduler_num_computed_tokens is not None and self._preempted_step is None:
             if self.is_decoding:
                 sample_seq_len = self._num_processed_tokens + 1
                 step_samples = True
@@ -1107,16 +1110,26 @@ class Request(BaseEntity):
         )
 
     def on_preempted_step_end(self, time: float, cluster_type: ClusterType) -> None:
-        """Append the sample of the step this request was preempted from."""
+        """Append the sample of the step this request was preempted from.
+
+        It arrives with that step's output. A victim admitted again before then
+        keeps the tokens its resumed execution has already computed, which
+        become the start of the recompute of the appended sample.
+        """
         record = self._preempted_step
         self._preempted_step = None
+        resumed_tokens = self.num_context_tokens
         self._num_recomputed_tokens = None
         if self._is_prefill_complete:
             self.on_batch_end(time, record.num_sampled_tokens, cluster_type)
         else:
-            self.on_batch_end(time, self._num_prefill_tokens, cluster_type)
+            self.on_batch_end(
+                time,
+                self._num_prefill_tokens - self._num_processed_tokens,
+                cluster_type,
+            )
         if record.recompute and not self._completed:
-            self._num_recomputed_tokens = 0
+            self._num_recomputed_tokens = resumed_tokens
 
     def record_preemption(self, cluster_type: ClusterType, num_tokens_completed: int) -> None:
         """
