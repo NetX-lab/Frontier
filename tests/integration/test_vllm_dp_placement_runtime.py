@@ -5,8 +5,9 @@ against reference-derived expectations. What can only be shown by running the
 simulator is the wiring: that `ClusterScheduleEvent` is what supplies the
 routing time, that each report stands for one reference engine iteration --
 an admission while the pipeline has room, or a completion -- with the lane's
-post-step load and the key of the forward it describes, and that the policy
-introduces no event that keeps a drained run alive.
+post-step load and the key of the forward it describes, that a lane with a
+batch in flight admits only when the reference engine runs an iteration, and
+that the policy introduces no event that keeps a drained run alive.
 
 The child process runs each configuration twice, once with the policy and once
 with a comparison run that differs only in the cluster scheduler policy or, for
@@ -107,6 +108,39 @@ def _assert_reports_follow_engine_iterations(run: dict, num_pipeline_stages: int
     return admission_only
 
 
+def _admissions_while_the_engine_blocks(run: dict) -> list[dict]:
+    """Return the admissions a reference engine could not make at that instant.
+
+    Reference `step_with_batch_queue` (`vllm/v1/engine/core.py:318-369` at the
+    fork commit `ea95f571`): an iteration that schedules nothing, or fills the
+    pipeline, blocks on the oldest in-flight batch, and a request that arrives
+    meanwhile waits for the next iteration. So a lane with a batch in flight
+    admits only in the pass of a previous admission or at the end of its oldest
+    batch; an idle lane admits at any time. Iterations take no host time here,
+    as in Frontier.
+    """
+
+    in_flight: dict[int, list[int]] = defaultdict(list)
+    last_iteration: dict[int, float] = {}
+    blocked = []
+    for record in run["records"]:
+        if record["kind"] == "stage0":
+            continue
+        lane, time = record["lane"], record["time"]
+        batches = in_flight[lane]
+        if record["kind"] == "end":
+            if record["batch"] in batches:
+                if record["batch"] == batches[0]:
+                    last_iteration[lane] = time
+                batches.remove(record["batch"])
+            continue
+        if batches and last_iteration[lane] != time:
+            blocked.append(record)
+        batches.append(record["batch"])
+        last_iteration[lane] = time
+    return blocked
+
+
 def _count_admissions_into_peer_forwards(run: dict) -> int:
     """Count published admissions whose batch joins a forward a peer lane
     already started at stage 0, the one case where the key is the open forward
@@ -155,16 +189,16 @@ def _assert_completions_report_post_step_load(run: dict) -> None:
     )
 
 
-def _assert_every_held_key_is_reported(run: dict) -> list[str]:
+def _assert_every_held_key_is_reported(run: dict) -> list[dict]:
     """A held admission key is published by the next end record, and by no later one.
 
-    Walks every record except stage-0 starts. Returns the source of each end
-    record that published a key its lane was holding.
+    Walks every record except stage-0 starts. Returns each end record that
+    published a key its lane was holding.
     """
 
     pending: dict[int, int] = {}
     last_key: dict[int, int] = defaultdict(lambda: -1)
-    consumed: list[str] = []
+    consumed: list[dict] = []
     for record in run["records"]:
         if record["kind"] == "stage0":
             continue
@@ -182,7 +216,7 @@ def _assert_every_held_key_is_reported(run: dict) -> list[str]:
         key = record["report"][0]
         if lane in pending:
             assert key == pending.pop(lane), record
-            consumed.append(record["source"])
+            consumed.append(record)
         assert key >= last_key[lane], (record, last_key[lane])
         last_key[lane] = key
     assert not pending, pending
@@ -334,7 +368,11 @@ def test_pipeline_parallel_shapes_report_once_per_engine_iteration(
     )
     assert admission_only >= policy["num_lanes"]
 
-    # 4. Completions still carry the post-step load.
+    # 4. With a batch in flight, a lane admits only when the reference engine
+    #    runs an iteration.
+    assert _admissions_while_the_engine_blocks(policy) == []
+
+    # 5. Completions still carry the post-step load.
     _assert_completions_report_post_step_load(policy)
     _assert_every_held_key_is_reported(policy)
     _assert_final_counts_match_lanes(policy)
@@ -355,6 +393,7 @@ def test_an_admission_into_a_started_forward_reports_under_that_forward(
     # forward its peer has already started. The burst shapes above never do.
     assert _count_admissions_into_peer_forwards(policy) >= 1
     _assert_reports_follow_engine_iterations(policy, num_pipeline_stages)
+    assert _admissions_while_the_engine_blocks(policy) == []
 
 
 def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
@@ -381,6 +420,8 @@ def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
             record["time"] for record in run["records"] if record["kind"] == "end"
         )
         assert first_completion > 1.1
+        # The probe reaches lane 0 while its batch is in flight, and waits.
+        assert _admissions_while_the_engine_blocks(run) == []
 
     probe = {name: run["selections"][5] for name, run in evidence.items()}
     assert probe["vllm_load_balancing"]["time"] == pytest.approx(1.1)
@@ -438,15 +479,19 @@ def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
     "case",
     ["dense_dp1_pp4_kv_pressure", "moe_dp2_pp4_kv_pressure"],
 )
-def test_a_stale_dropped_batch_reports_the_key_its_admission_held(tmp_path, case):
+def test_a_step_preempted_in_flight_reports_the_key_its_admission_held(
+    tmp_path, case
+):
     evidence = _run_child(tmp_path, case)
     policy = evidence["vllm_load_balancing"]
     baseline = evidence["round_robin"]
 
-    sources = _assert_every_held_key_is_reported(policy)
-    assert policy["num_preemptions"] >= 1
-    assert policy["stale_drops"]
-    assert "stale_drop" in sources
+    reporters = _assert_every_held_key_is_reported(policy)
+    # A step whose every row was preempted in flight still runs each stage,
+    # and its end publishes the key that its admission held.
+    assert any(record["live_rows"] == 0 for record in reporters), reporters
+    assert policy["stale_drops"] == []
+    assert _admissions_while_the_engine_blocks(policy) == []
     _assert_run_conserves_work(policy)
     _assert_run_conserves_work(baseline)
     _assert_final_counts_match_lanes(policy)
@@ -468,6 +513,7 @@ def test_a_deferred_terminal_release_is_reported(tmp_path):
     assert pp4["placements"] == [0, 0]
     assert pp2["placements"] == [0, 0]
     for run in (pp4, pp2):
+        assert _admissions_while_the_engine_blocks(run) == []
         _assert_final_counts_match_lanes(run)
         _assert_every_held_key_is_reported(run)
         _assert_run_conserves_work(run)
@@ -716,10 +762,12 @@ def run_case(
 
         def observed(self, batch):
             before = list(self.get_request_load())
+            live_rows = len(batch.current_execution_requests)
             result = original(self, batch)
             releases[batch.id] = {
                 "before": before,
                 "after": list(self.get_request_load()),
+                "live_rows": live_rows,
             }
             return result
 
@@ -794,6 +842,7 @@ def run_case(
                     "released": release is not None,
                     "pre_step": release["before"] if release else None,
                     "post_step": release["after"] if release else None,
+                    "live_rows": release["live_rows"] if release else None,
                     "source": source,
                     "held_key": self._held_key[replica_local_id],
                     "lane_load": list(lane.get_request_load()),

@@ -18,7 +18,7 @@ Reference:
 
 from collections import deque
 from dataclasses import replace
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
@@ -124,6 +124,17 @@ class VLLMv1EngineReplicaScheduler(
         self._monolithic_pp_waiting_admission_delay_iters: Dict[int, int] = {}
         self._active_batch_request_counts: Dict[int, int] = {}
         self._preemption_followup_poll_pending = False
+
+        # The EngineCore batch queue: in-flight batch ids in admission order,
+        # and the oldest one the engine blocks on once a pass leaves work in
+        # flight. The PD-AF roles schedule micro-batches in their own loops.
+        self._has_engine_batch_queue = self._cluster_type in (
+            ClusterType.MONOLITHIC,
+            ClusterType.PREFILL,
+            ClusterType.DECODE,
+        )
+        self._in_flight_batch_ids: Deque[int] = deque()
+        self._blocking_batch_id: Optional[int] = None
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -275,7 +286,16 @@ class VLLMv1EngineReplicaScheduler(
             )
 
     def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
-        batch = super()._create_batch(requests, num_tokens)
+        # The scheduler frontier already counts this batch's tokens. A prompt
+        # chunk scheduled while the request's previous chunk is in flight
+        # attends to tokens the Request counts only when that chunk ends.
+        num_context_tokens = [
+            request.num_context_tokens
+            if request.is_decoding
+            else self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
+            for request, scheduled_tokens in zip(requests, num_tokens)
+        ]
+        batch = super()._create_batch(requests, num_tokens, num_context_tokens)
         metadata = self._build_decode_cuda_graph_metadata(batch)
         if metadata is not None:
             batch.decode_cuda_graph_metadata = metadata
@@ -354,6 +374,32 @@ class VLLMv1EngineReplicaScheduler(
                 self._free_request_resources(request)
             self._pending_kv_transfer_requests.discard(request.id)
 
+    def on_schedule(self, time: float = 0.0) -> List[Batch]:
+        # vLLM runs iterations until its batch queue is full or an iteration
+        # schedules nothing, then blocks on the oldest in-flight batch
+        # (`EngineCore.step_with_batch_queue`). A request that arrives during
+        # the block waits for that batch's output.
+        if not self._has_engine_batch_queue:
+            return super().on_schedule(time)
+        if self._blocking_batch_id is not None:
+            return []
+        batches = super().on_schedule(time)
+        self._in_flight_batch_ids.extend(batch.id for batch in batches)
+        if self._in_flight_batch_ids:
+            self._blocking_batch_id = self._in_flight_batch_ids[0]
+            # No iteration runs during the block; the output that ends it
+            # starts the next one.
+            self._monolithic_pp_terminal_release_followup_poll_pending = False
+            self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
+        return batches
+
+    def _leave_engine_batch_queue(self, batch: Batch) -> None:
+        if not self._has_engine_batch_queue:
+            return
+        self._in_flight_batch_ids.remove(batch.id)
+        if batch.id == self._blocking_batch_id:
+            self._blocking_batch_id = None
+
     def on_batch_end(self, batch: Batch) -> None:
         """
         Handle batch completion - update running requests state.
@@ -369,6 +415,7 @@ class VLLMv1EngineReplicaScheduler(
             batch: The batch that has completed execution
         """
         self._num_running_batches -= 1
+        self._leave_engine_batch_queue(batch)
 
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
@@ -629,10 +676,17 @@ class VLLMv1EngineReplicaScheduler(
                 req_index += 1
                 continue
 
+            # vLLM skips an in-flight request only once every prompt token is
+            # scheduled; the next chunk goes out while the previous one is in
+            # flight (scheduler.py, the num_new_tokens == 0 branch).
             active_in_pp_batch = (
                 self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE}
                 and self._num_stages > 1
                 and self._is_request_active_in_batch(request)
+                and (
+                    request.is_decoding
+                    or self._get_request_next_num_tokens(request) == 0
+                )
             )
             if active_in_pp_batch:
                 if self._cluster_type == ClusterType.MONOLITHIC:
@@ -1019,13 +1073,9 @@ class VLLMv1EngineReplicaScheduler(
             )
 
             # A victim admitted before the step it was preempted from ends
-            # takes that step's sample here. vLLM appends it when the step's
-            # output arrives, before this admission's step can end, and sized
-            # this admission without it.
-            if request.has_preempted_step:
-                request.on_preempted_step_end(
-                    self._current_schedule_time, self._cluster_type
-                )
+            # keeps that step's sample pending. As in vLLM, this admission is
+            # sized without it, and the step's end appends it at the time its
+            # output arrives, before this admission's step can end.
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)
@@ -1441,6 +1491,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
 
+        self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         self._maybe_promote_final_round_priority(request)
 

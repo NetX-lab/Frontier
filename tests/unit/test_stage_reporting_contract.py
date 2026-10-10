@@ -84,7 +84,7 @@ def _schedule(store, stage):
         batch_id=73, replica_id=0, pipeline_stage=0,
         execution_time=stage.total_time, model_execution_time=stage.model_time,
         requests=[Request(arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=1)],
-        num_tokens=[8], cluster_type=ClusterType.MONOLITHIC,
+        num_tokens=[8], request_is_decoding=[False], cluster_type=ClusterType.MONOLITHIC,
     )
     batch.on_schedule(1.0)
     store.on_replica_stage_schedule(
@@ -386,7 +386,8 @@ def test_ep_and_attention_share_source_batch_expansion_decision(tmp_path, wave_f
         batch = BatchStage(
             batch_id=batch_id, replica_id=0, pipeline_stage=0,
             execution_time=stage.total_time, model_execution_time=stage.model_time,
-            requests=[current_request], num_tokens=[8], cluster_type=ClusterType.MONOLITHIC,
+            requests=[current_request], num_tokens=[8], request_is_decoding=[False],
+            cluster_type=ClusterType.MONOLITHIC,
         )
         batch.on_schedule(1.0)
         store.on_replica_stage_schedule(

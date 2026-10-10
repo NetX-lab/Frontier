@@ -78,6 +78,14 @@ class _DummyBatch:
         )
     ]
 
+    @property
+    def num_context_tokens(self):
+        return [request.num_context_tokens for request in self.requests]
+
+    @property
+    def request_is_decoding(self):
+        return [request.is_decoding for request in self.requests]
+
 
 def _base_meta(
     *,
@@ -308,6 +316,14 @@ class _PrefillDummyBatch:
             num_context_tokens=63,
         )
     ]
+
+    @property
+    def num_context_tokens(self):
+        return [request.num_context_tokens for request in self.requests]
+
+    @property
+    def request_is_decoding(self):
+        return [request.is_decoding for request in self.requests]
 
 
 def test_mla_runtime_predicts_six_operator_times_from_imported_exact_row(
@@ -549,27 +565,6 @@ def test_mla_runtime_rejects_non_sequence_request_token_counts() -> None:
         )
 
 
-def test_mla_runtime_rejects_missing_request_context_tokens() -> None:
-    predictor = _build_mla_predictor()
-    malformed_batch = _DummyBatch()
-    malformed_batch.requests = [
-        SimpleNamespace(
-            id=101,
-            num_prefill_tokens=64,
-            num_decode_tokens=128,
-            num_processed_decode_tokens=1,
-            is_prefill_complete=True,
-        )
-    ]
-
-    with pytest.raises(ValueError, match="request.num_context_tokens"):
-        predictor.predict_attention_layer_time(
-            batch=malformed_batch,
-            layer_id=0,
-            cluster_type=ClusterType.MONOLITHIC,
-        )
-
-
 def test_mla_runtime_rejects_missing_batch_token_totals_with_value_error() -> None:
     predictor = _build_mla_predictor()
     malformed_batch = SimpleNamespace(
@@ -634,6 +629,14 @@ class _MixedDummyBatch:
             num_context_tokens=0,
         ),
     ]
+
+    @property
+    def num_context_tokens(self):
+        return [request.num_context_tokens for request in self.requests]
+
+    @property
+    def request_is_decoding(self):
+        return [request.is_decoding for request in self.requests]
 
 
 def test_mla_runtime_predicts_mixed_batch_with_op_specific_exact_keys(
@@ -705,28 +708,6 @@ def test_mla_runtime_exact_miss_rejects_prediction_metadata_schema_mismatch() ->
         )
 
 
-def test_mla_runtime_requires_request_phase_metadata_for_exact_keys() -> None:
-    predictor = _build_mla_predictor()
-    missing_phase_batch = _DummyBatch()
-    missing_phase_batch.requests = [
-        SimpleNamespace(
-            id=101,
-            num_processed_tokens=64,
-            num_context_tokens=64,
-            num_prefill_tokens=64,
-            num_decode_tokens=128,
-            num_processed_decode_tokens=1,
-        )
-    ]
-
-    with pytest.raises(ValueError, match="request.is_decoding"):
-        predictor.predict_attention_layer_time(
-            batch=missing_phase_batch,
-            layer_id=0,
-            cluster_type=ClusterType.MONOLITHIC,
-        )
-
-
 def test_mla_runtime_rejects_phase_partition_token_mismatch() -> None:
     predictor = _build_mla_predictor()
     inconsistent_phase_batch = _DummyBatch()
@@ -746,7 +727,7 @@ def test_mla_runtime_rejects_phase_partition_token_mismatch() -> None:
         )
     ]
 
-    with pytest.raises(ValueError, match="request.is_decoding partition"):
+    with pytest.raises(ValueError, match="batch.request_is_decoding partition"):
         predictor.predict_attention_layer_time(
             batch=inconsistent_phase_batch,
             layer_id=0,

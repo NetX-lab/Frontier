@@ -109,6 +109,29 @@ def test_final_prefill_chunk_grants_the_first_token_and_recomputes() -> None:
     assert request.num_context_tokens == 0
 
 
+def test_an_earlier_chunk_leaves_the_sample_to_the_final_chunk() -> None:
+    request = _prefill_request(processed=0)
+    # Both prompt chunks were scheduled before either ended.
+    earlier_chunk = Batch(
+        replica_id=0, requests=[request], num_tokens=[16], is_moe=False,
+        num_context_tokens=[0],
+    )
+    final_chunk = Batch(
+        replica_id=0, requests=[request], num_tokens=[16], is_moe=False,
+        num_context_tokens=[16],
+    )
+    request.on_preempted(recompute=True, scheduler_num_computed_tokens=32)
+
+    assert earlier_chunk.apply_preempted_step_samples(3.0, ClusterType.MONOLITHIC) == []
+    assert request.num_processed_tokens == 0
+    assert request.has_preempted_step
+    assert final_chunk.apply_preempted_step_samples(4.0, ClusterType.MONOLITHIC) == []
+    assert request.is_prefill_complete
+    assert request.num_processed_tokens == 33
+    assert request.prefill_completed_at == 4.0
+    assert request.is_recomputing
+
+
 def test_length_stop_completes_the_request_and_is_returned() -> None:
     request = _decode_request(processed=8, prefill=8, decode=1)
     batch = _in_flight_batch(request, 1)

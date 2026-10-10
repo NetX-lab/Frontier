@@ -1591,6 +1591,7 @@ def test_post_routing_batch_stage_does_not_mutate_original_requests() -> None:
         model_execution_time=0.10,
         requests=[request],
         num_tokens=[1],
+        request_is_decoding=[True],
         cluster_type=ClusterType.DECODE_FFN,
         tokens_are_post_routing=True,
     )
@@ -1620,6 +1621,7 @@ def test_regular_batch_stage_accounts_requests_once() -> None:
         model_execution_time=0.10,
         requests=[request],
         num_tokens=[1],
+        request_is_decoding=[True],
         cluster_type=ClusterType.DECODE_ATTN,
         tokens_are_post_routing=False,
     )
@@ -1654,7 +1656,6 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     stage_scheduler.get_queue_batches.return_value = [batch]
     stage_scheduler.pop_batch_if_not_busy.return_value = batch
     stage_scheduler.consume_last_stale_drops.return_value = []
-    stage_scheduler.consume_last_stale_row_batches.return_value = []
     stage_scheduler.predict_and_create_stage.return_value = (
         batch_stage,
         execution_time,
