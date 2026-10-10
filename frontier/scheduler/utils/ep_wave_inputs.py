@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Mapping, NamedTuple
+from typing import Any, Callable, Mapping, NamedTuple
 
 from frontier.entities import Batch, DummyForwardBatch
 
@@ -24,8 +24,17 @@ def prepare_ep_wave_inputs(
     batch: Batch,
     step_id_getter: Callable[[Batch], int],
     aggregate_batch_builder: Callable[[Batch, int, int], Batch],
+    cluster_type: Any,
 ) -> EPWaveInputs:
-    """Validate the lane mapping and build the aggregate predictor input."""
+    """Validate the lane mapping and build the aggregate predictor input.
+
+    The aggregate runs at the lanes' physical compute width. Each lane runs
+    its forward at its CUDA-graph capture size or, eager, at its own tokens.
+    Unless the engine is eager, vLLM then pads every DP rank, a dummy pass
+    included, to the largest of those widths (gpu_model_runner
+    get_dp_padding). A role whose batches carry no decode CUDA-graph metadata
+    runs eager.
+    """
 
     if not isinstance(source_batches, Mapping) or not source_batches:
         raise ValueError("EP wave source_batches must be a non-empty lane mapping")
@@ -57,10 +66,16 @@ def prepare_ep_wave_inputs(
     )
     total_tokens = sum(int(source_batch.total_num_tokens) for source_batch in lane_batches)
     total_prefill_tokens = sum(int(source_batch.num_prefill_tokens) for source_batch in lane_batches)
+    lane_compute_tokens = [
+        int(source_batch.get_effective_total_tokens_for_compute(cluster_type))
+        for source_batch in lane_batches
+    ]
+    if any(source_batch.decode_cuda_graph_metadata is not None for source_batch in lane_batches):
+        lane_compute_tokens = [max(lane_compute_tokens)] * len(lane_batches)
     aggregate_batch = (
         sample_batch
         if len(lane_batches) == 1
-        else aggregate_batch_builder(sample_batch, total_tokens, total_prefill_tokens)
+        else aggregate_batch_builder(sample_batch, sum(lane_compute_tokens), total_prefill_tokens)
     )
     return EPWaveInputs(
         source_batches=normalized,

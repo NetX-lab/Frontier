@@ -53,6 +53,7 @@ def prepare_moe_wave(
         batch=batch,
         step_id_getter=step_id_getter,
         aggregate_batch_builder=aggregate_batch_builder,
+        cluster_type=cluster_type,
     )
     return prepare_moe_wave_from_inputs(
         wave_inputs=wave_inputs,

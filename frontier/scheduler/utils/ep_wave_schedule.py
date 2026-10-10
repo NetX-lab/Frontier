@@ -83,6 +83,7 @@ def schedule_layer_wave(
         batch=batch,
         step_id_getter=scheduler._get_forward_step_id,
         aggregate_batch_builder=scheduler._create_virtual_global_batch,
+        cluster_type=scheduler._cluster_type,
     )
     source_batches = wave_inputs.source_batches
     cohort_id = wave_inputs.step_id
