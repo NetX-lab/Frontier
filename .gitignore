@@ -187,6 +187,9 @@ tests/**/*.json
 tests/**/*.csv
 tests/**/*.png
 tests/**/*.txt
+# The E2E gate harness ships its case matrix, artifact pins and fixtures.
+!tests/comparison/e2e_gate/**/*.json
+!tests/comparison/e2e_gate/**/*.csv
 
 
 tests/training/test_output/

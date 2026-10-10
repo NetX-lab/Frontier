@@ -1,0 +1,172 @@
+{
+ "cell_id": "e2e_c6_moe_coloc_ep4_tp2_dp2_pp2/qps0.75_drain",
+ "formal_request_ids": [
+  "g6-p000",
+  "g6-p001",
+  "g6-p002",
+  "g6-p003",
+  "g6-p004",
+  "g6-p005",
+  "g6-p006",
+  "g6-p007",
+  "g6-p008",
+  "g6-p009",
+  "g6-p010",
+  "g6-p011",
+  "g6-p012",
+  "g6-p013",
+  "g6-p014",
+  "g6-p015",
+  "g6-p016",
+  "g6-p017",
+  "g6-p018",
+  "g6-p019",
+  "g6-p020",
+  "g6-p021",
+  "g6-p022",
+  "g6-p023",
+  "g6-p024",
+  "g6-p025",
+  "g6-p026",
+  "g6-p027",
+  "g6-p028",
+  "g6-p029",
+  "g6-p030",
+  "g6-p031",
+  "g6-p032",
+  "g6-p033",
+  "g6-p034",
+  "g6-p035",
+  "g6-p036",
+  "g6-p037",
+  "g6-p038",
+  "g6-p039",
+  "g6-p040",
+  "g6-p041",
+  "g6-p042",
+  "g6-p043",
+  "g6-p044",
+  "g6-p045",
+  "g6-p046",
+  "g6-p047",
+  "g6-p048",
+  "g6-p049",
+  "g6-p050",
+  "g6-p051",
+  "g6-p052",
+  "g6-p053",
+  "g6-p054",
+  "g6-p055",
+  "g6-p056",
+  "g6-p057",
+  "g6-p058",
+  "g6-p059",
+  "g6-p060",
+  "g6-p061",
+  "g6-p062",
+  "g6-p063",
+  "g6-p064",
+  "g6-p065",
+  "g6-p066",
+  "g6-p067",
+  "g6-p068",
+  "g6-p069",
+  "g6-p070",
+  "g6-p071",
+  "g6-p072",
+  "g6-p073",
+  "g6-p074",
+  "g6-p075",
+  "g6-p076",
+  "g6-p077",
+  "g6-p078",
+  "g6-p079",
+  "g6-p080",
+  "g6-p081",
+  "g6-p082",
+  "g6-p083",
+  "g6-p084",
+  "g6-p085",
+  "g6-p086",
+  "g6-p087",
+  "g6-p088",
+  "g6-p089",
+  "g6-p090",
+  "g6-p091",
+  "g6-p092",
+  "g6-p093",
+  "g6-p094",
+  "g6-p095",
+  "g6-p096",
+  "g6-p097",
+  "g6-p098",
+  "g6-p099"
+ ],
+ "sides": {
+  "vllm/c6-rr-h200-clean-qps0.75_drain-20261009a": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "in_phase": 43
+   }
+  },
+  "vllm/c6-rr-h200-clean-qps0.75_drain-20261009b": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "anti_phase": 16,
+    "split": 29
+   }
+  },
+  "vllm/c6-rr-h200-clean-qps0.75_drain-20261009c": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "anti_phase": 45
+   }
+  },
+  "frontier/x2_s1": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "in_phase": 41
+   }
+  },
+  "frontier/x2_s2": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "in_phase": 41
+   }
+  },
+  "frontier/x2_s3": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "in_phase": 41
+   }
+  },
+  "frontier/x2_s4": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "in_phase": 41
+   }
+  },
+  "frontier/x2_s5": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": [],
+   "windows": {
+    "in_phase": 41
+   }
+  }
+ }
+}

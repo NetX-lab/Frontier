@@ -1,0 +1,25 @@
+{
+ "run": "e2e_c1_dense_coloc/runs/groundtruth_cpu/c1-h200-cpu-qps2-20261010a",
+ "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+ "slice": "engine records of steps 0-99 (100 records) and the first 97 stage records, the forwards of the token-scheduling steps among them",
+ "source_sha256": {
+  "run/cpu_probe.jsonl": "a531db209509c83deac15115fd8d619004b2784c57bb779c4801628be2dffee0",
+  "run/cpu_probe_pp0.jsonl": "66c028f157ad274bec16d4525faa63af52d676176aeab1911447b6363bc080fc"
+ },
+ "producer_arguments": [
+  "--num_pipeline_stages",
+  "1",
+  "--model_name",
+  "llama2_7b_dense_example",
+  "--tensor_parallel_degree",
+  "1",
+  "--profiling_precision",
+  "FP16",
+  "--scheduling_mode",
+  "sync",
+  "--engine_idle_edges_ms",
+  "0",
+  "100",
+  "500"
+ ]
+}
