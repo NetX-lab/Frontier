@@ -192,6 +192,18 @@ class KvBlockAllocation:
             return decode_boundary_adjusted_tokens
         return max(explicit_scheduler_frontier, decode_boundary_adjusted_tokens)
 
+    def _is_short_first_mtp_step(self, request: Request, computed_tokens: int) -> bool:
+        """Whether a target-embedded MTP decode step from computed_tokens
+        schedules one token short of its verify width.
+
+        That is a MONOLITHIC request's first decode step.
+        """
+        return (
+            getattr(self, "_cluster_type", None) == ClusterType.MONOLITHIC
+            and int(getattr(request, "num_processed_decode_tokens", 0)) == 1
+            and computed_tokens <= int(request.num_prefill_tokens)
+        )
+
     def _get_request_next_num_tokens(self, request: Request) -> int:
         assert not request.completed
 
@@ -204,17 +216,13 @@ class KvBlockAllocation:
 
         if request.is_prefill_complete:
             if getattr(request, "spec_decode_enabled", False):
-                if getattr(request, "spec_method_is_target_embedded_mtp", False):
+                if getattr(
+                    request, "spec_method_is_target_embedded_mtp", False
+                ) and self._is_short_first_mtp_step(request, computed_tokens):
                     planned_drafts = int(
                         getattr(request, "spec_next_planned_draft_tokens", 0)
                     )
-                    if (
-                        cluster_type == ClusterType.MONOLITHIC
-                        and int(getattr(request, "num_processed_decode_tokens", 0))
-                        == 1
-                        and computed_tokens <= int(request.num_prefill_tokens)
-                    ):
-                        return max(planned_drafts, 1)
+                    return max(planned_drafts, 1)
                 return 1 + int(getattr(request, "spec_next_planned_draft_tokens", 0))
             if cluster_type == ClusterType.MONOLITHIC:
                 # In MONOLITHIC mode, request.num_processed_tokens includes the

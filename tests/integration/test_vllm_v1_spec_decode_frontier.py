@@ -248,12 +248,13 @@ def test_a_pdd_decode_step_returns_its_rejected_drafts(tmp_path, monkeypatch):
         assert request.num_emitted_decode_tokens == request.num_decode_tokens
 
 
+@pytest.mark.parametrize("method", ["ngram", "qwen3_next_mtp"])
 @pytest.mark.parametrize(
     "sys_arch, last_step_width",
     [("co-location", 1), ("pd-disaggregation", 2)],
 )
 def test_a_speculative_step_leaves_room_for_the_token_it_samples(
-    tmp_path, monkeypatch, sys_arch, last_step_width
+    tmp_path, monkeypatch, sys_arch, last_step_width, method
 ):
     # 80 + 16 tokens fill max_model_len (96). The trace schedules two drafts on
     # every step and commits two tokens, so the frontier reaches 94 with three
@@ -261,6 +262,7 @@ def test_a_speculative_step_leaves_room_for_the_token_it_samples(
     # them, as vLLM's running phase does. On co-location the frontier is
     # num_computed_tokens: one token. The DECODE frontier is one token ahead of
     # num_computed_tokens, so its cap is max_model_len - frontier: two tokens.
+    # As in vLLM, the step verifies only the drafts inside that width.
     requests = tmp_path / "requests.csv"
     requests.write_text("arrived_at,num_prefill_tokens,num_decode_tokens\n0.0,80,16\n")
     acceptance_trace = tmp_path / "acceptance_trace.json"
@@ -275,19 +277,39 @@ def test_a_speculative_step_leaves_room_for_the_token_it_samples(
         steps.append((self._get_scheduler_num_computed_tokens(request), num_scheduled_tokens))
         advance(self, request, num_scheduled_tokens)
 
+    spec_rows = []
+    create_batch = VLLMv1EngineReplicaScheduler._create_batch
+
+    def observed_create_batch(self, requests, num_tokens):
+        batch = create_batch(self, requests, num_tokens)
+        if batch.spec_decode_metadata is not None:
+            metadata = batch.spec_decode_metadata
+            spec_rows.append((
+                metadata.planned_draft_tokens_per_request[0],
+                metadata.verify_tokens_per_request[0],
+            ))
+        return batch
+
     monkeypatch.setattr(
         VLLMv1EngineReplicaScheduler,
         "_advance_scheduler_num_computed_tokens",
         observed_advance,
+    )
+    monkeypatch.setattr(
+        VLLMv1EngineReplicaScheduler, "_create_batch", observed_create_batch
+    )
+    mtp_args = (
+        dict(mtp_n_predict=1, mtp_num_layers=1) if method == "qwen3_next_mtp" else {}
     )
     case = dict(
         CASES["dense"],
         num_requests=1,
         spec_decode=SpeculativeDecodingConfig(
             enabled=True,
-            method="ngram",
+            method=method,
             num_speculative_tokens=2,
             acceptance_trace_file=str(acceptance_trace),
+            **mtp_args,
         ),
     )
     config = dataclasses.replace(
@@ -298,6 +320,7 @@ def test_a_speculative_step_leaves_room_for_the_token_it_samples(
     simulator.run()
 
     assert steps[-1] == (94, last_step_width), steps
+    assert spec_rows[-1] == (last_step_width - 1, last_step_width), spec_rows
     (request,) = simulator._all_requests
     assert request.completed
     assert request.num_emitted_decode_tokens == 16
