@@ -6,7 +6,7 @@ import copy
 from dataclasses import fields, is_dataclass, replace
 from typing import Any
 
-from frontier.config import BaseReplicaSchedulerConfig
+from frontier.config import BaseReplicaSchedulerConfig, VllmV1SchedulerConfig
 from frontier.types import ClusterType, ReplicaSchedulerType
 
 
@@ -86,4 +86,9 @@ def resolve_replica_scheduler_config(config: Any, cluster_type: ClusterType) -> 
             value = getattr(config, config_name)
             if value is not None and hasattr(cluster_config, field_name):
                 role_values[field_name] = value
-    return replace(cluster_config, **role_values)
+    cluster_config = replace(cluster_config, **role_values)
+    if cluster_type == ClusterType.PREFILL and isinstance(
+        cluster_config, VllmV1SchedulerConfig
+    ):
+        cluster_config.validate_final_prefill_reserve()
+    return cluster_config
