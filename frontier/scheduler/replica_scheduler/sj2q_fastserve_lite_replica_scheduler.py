@@ -221,7 +221,7 @@ class SJ2QFastServeLiteReplicaScheduler(VLLMv1EngineReplicaScheduler):
         if self._cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}:
             return 1
 
-        is_decode_slice = bool(getattr(request, "is_prefill_complete", False))
+        is_decode_slice = request.is_decoding
         if self._cluster_type == ClusterType.MONOLITHIC and is_decode_slice:
             return 1
 

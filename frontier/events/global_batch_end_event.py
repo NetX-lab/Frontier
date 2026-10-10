@@ -8,6 +8,20 @@ from frontier.entities import Batch
 from frontier.logger import get_cluster_logger
 
 
+def thinking_round_requeue_event(time: float, request, round_started_at):
+    """Build the requeue event for a non-final thinking round that just stopped."""
+    if not (
+        request.completed
+        and request.is_thinking_mode_enabled
+        and not request.is_final_thinking_round
+    ):
+        return None
+    from frontier.events.thinking_round_requeue_event import ThinkingRoundRequeueEvent
+
+    request.begin_thinking_tool_wait(time, round_started_at=round_started_at)
+    return ThinkingRoundRequeueEvent(time + request.tool_call_latency, request)
+
+
 def _should_mark_first_decode_token(request, cluster_type: ClusterType) -> bool:
     """Return whether this callback should stamp first_decode_token_completed_at.
 
@@ -88,9 +102,6 @@ class GlobalBatchEndEvent(BaseEvent):
 
     def handle_event(self, scheduler: BaseGlobalScheduler, metrics_store: MetricsStore) -> List[BaseEvent]:
         from frontier.events.replica_schedule_event import ReplicaScheduleEvent
-        from frontier.events.thinking_round_requeue_event import (
-            ThinkingRoundRequeueEvent,
-        )
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
@@ -169,6 +180,13 @@ class GlobalBatchEndEvent(BaseEvent):
                 ):
                     request.mark_first_decode_token_complete(self.time)
 
+        stopped_entries = self._batch.apply_preempted_step_samples(
+            self.time,
+            self._cluster_type,
+            request_execution_signatures=self._request_execution_signatures,
+        )
+        request_entries = pre_batch_request_entries + stopped_entries
+
         # Finalize at decode-attn
         self._batch.on_batch_end(
             self.time,
@@ -185,22 +203,14 @@ class GlobalBatchEndEvent(BaseEvent):
         )
 
         thinking_requeue_events: List[BaseEvent] = []
-        for index, request in pre_batch_request_entries:
-            if (
-                request.completed
-                and request.is_thinking_mode_enabled
-                and not request.is_final_thinking_round
-            ):
-                request.begin_thinking_tool_wait(
-                    self.time,
-                    round_started_at=self._thinking_round_start_times[index],
-                )
-                thinking_requeue_events.append(
-                    ThinkingRoundRequeueEvent(
-                        self.time + request.tool_call_latency,
-                        request,
-                    )
-                )
+        for index, request in request_entries:
+            requeue_event = thinking_round_requeue_event(
+                self.time,
+                request,
+                self._thinking_round_start_times[index],
+            )
+            if requeue_event is not None:
+                thinking_requeue_events.append(requeue_event)
 
         # Mark first decode token completion for TTFT tracking.
         # The marking must happen after request state transitions in on_batch_end().
@@ -251,7 +261,7 @@ class GlobalBatchEndEvent(BaseEvent):
         # Ensure completion counters update even if metrics writing is disabled.
         # Request metric validation errors must propagate; otherwise malformed KPI
         # state can be silently reported as a successful simulation.
-        for _, request in pre_batch_request_entries:
+        for _, request in request_entries:
             if not getattr(request, "completed", False):
                 continue
             metrics_store._on_request_end(self.time, request)

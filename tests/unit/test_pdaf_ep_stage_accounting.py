@@ -187,6 +187,7 @@ def _run_ep_stage(
     stage_scheduler.get_queue_batches.return_value = [batch]
     stage_scheduler.pop_batch_if_not_busy.return_value = batch
     stage_scheduler.consume_last_stale_drops.return_value = []
+    stage_scheduler.consume_last_stale_row_batches.return_value = []
     stage_scheduler.predict_and_create_stage.return_value = (
         batch_stage,
         execution_time,
