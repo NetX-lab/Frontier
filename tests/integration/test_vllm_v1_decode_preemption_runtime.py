@@ -313,6 +313,8 @@ def _observe_preemptions(monkeypatch):
             finished=victim.completed,
             in_flight=self._is_request_active_in_batch(victim),
             processed_before=victim.num_processed_tokens,
+            cluster_type=self._cluster_type,
+            layers_before=victim.completed_layer_count,
         ))
         preempt_request(self, victim, preempted_requests)
         victims[-1]["processed_after"] = victim.num_processed_tokens
@@ -1213,6 +1215,28 @@ PDD_INFLIGHT_CASE = dict(
     seed=1,
 )
 
+# MoE PDD with speculative decodes split over two in-flight batches on a PP2
+# decode replica. A decode victim is preempted after the first stage credited
+# its layers, while its old batch still runs the second stage and ends there.
+PDD_MOE_INFLIGHT_CASE = dict(
+    replica=dict(
+        model_name="Qwen3-30B-A3B-tiny",
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=1,
+        total_expert_num=16,
+        router_topk=8,
+        speculative_decoding_config=DENSE_SPEC_DECODE_REPLICA[
+            "speculative_decoding_config"
+        ],
+    ),
+    num_prefill_replicas=4,
+    batch_size_cap=16,
+    num_pipeline_stages=2,
+    num_blocks=28,
+    num_requests=48,
+    seed=1,
+)
+
 # Each request thinks one 48-token round with a one-token answer first. A
 # request is preempted while the last chunk of that round is in flight, and
 # the step's end applies the sample that ends the round. A random search over
@@ -1385,6 +1409,24 @@ def test_an_inflight_pdd_decode_victim_resumes_with_a_decode_step(
         assert not rows[0]["recomputing"], rows[0]
         assert rows[0]["processed"] == removal["processed_after"], rows[0]
     _assert_every_request_completes(simulator, PDD_INFLIGHT_CASE["num_requests"])
+
+
+def test_a_pdd_moe_victim_preempted_mid_step_lets_its_old_batch_end(
+    tmp_path, monkeypatch
+):
+    victims = _observe_preemptions(monkeypatch)
+    simulator = Simulator(_pdd_config(tmp_path, PDD_MOE_INFLIGHT_CASE))
+    simulator.run()
+
+    num_layers = simulator._config.cluster_config.replica_config.model_config.num_layers
+    mid_step = [
+        victim
+        for victim in victims
+        if victim["cluster_type"] == ClusterType.DECODE
+        and 0 < victim["layers_before"] < num_layers
+    ]
+    assert mid_step, victims
+    _assert_every_request_completes(simulator, PDD_MOE_INFLIGHT_CASE["num_requests"])
 
 
 def test_an_inflight_speculative_victim_gains_its_rows_committed_tokens(
