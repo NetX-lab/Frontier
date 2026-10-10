@@ -1153,7 +1153,14 @@ class Batch(BaseEntity):
                 current_mutation_signature = self._get_request_mutation_signature(
                     request
                 )
-                if current_mutation_signature != expected_mutation_signature:
+                # A recompute chunk commits no output. The pending sample of
+                # the step its request was preempted from can advance the
+                # output while the chunk is in flight, and the chunk still
+                # counts toward the recompute.
+                if (
+                    current_mutation_signature != expected_mutation_signature
+                    and not request.is_recomputing
+                ):
                     logger.warning(
                         "[STALE-BATCH-END-PROGRESS] Skipping request mutation for "
                         "batch=%s req=%s expected_signature=%s current_signature=%s",
