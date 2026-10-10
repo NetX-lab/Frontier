@@ -585,14 +585,15 @@ class MoeRoutingWorkload:
         A model trained on a table with moe_align_block_size's padded count
         (decision T33-C2-F) takes the lane's routed token count and the padded
         count. Each rank pads every expert of the EP domain (decision T43-PAD)
-        with the profiled BLOCK_SIZE_M at the step's pre-routing token count
-        (decision T33-C2-B). Other models take the load-imbalance features.
+        with the BLOCK_SIZE_M that vLLM's kernel config selects at the step's
+        pre-routing token count, from the ranges the profiler recorded. Other
+        models take the load-imbalance features.
         """
         model_info = self._predictions["moe_grouped_gemm"]
         if tuple(model_info["_feature_names"]) != MOE_GROUPED_GEMM_PADDED_FEATURES:
             return self._build_moe_load_imbalance_features(lane_workload, batch=batch)
         block_size_m = block_size_m_for_tokens(
-            model_info["_model"]._frontier_block_size_m,
+            model_info["_model"]._frontier_block_size_m_ranges,
             self._get_moe_pre_routing_token_count(batch),
         )
         return {

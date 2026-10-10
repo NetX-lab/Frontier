@@ -5,6 +5,7 @@ on, at its tensor- and expert-parallel sizes and its routing runtime.  The
 trainer then fits one model per MoE operator from the admitted rows.
 """
 
+import json
 import numpy as np
 import os
 import pandas as pd
@@ -27,6 +28,7 @@ from frontier.moe_gating_runtime import (
 from frontier.moe_load_imbalance import (
     MOE_GROUPED_GEMM_PADDED_FEATURES,
     MOE_LOAD_IMBALANCE_FEATURES,
+    block_size_m_for_tokens,
 )
 from frontier.moe_routing_runtime import filter_moe_gating_routing_topk_rows
 from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
@@ -42,6 +44,7 @@ logger = init_logger(__name__)
 
 NUM_TOKENS_POST_PADDED_COLUMN = "time_stats.moe_grouped_gemm.num_tokens_post_padded"
 BLOCK_SIZE_M_COLUMN = "time_stats.moe_grouped_gemm.block_size_m"
+BLOCK_SIZE_M_RANGES_COLUMN = "time_stats.moe_grouped_gemm.block_size_m_ranges"
 
 
 def select_moe_operator_features(
@@ -78,13 +81,42 @@ def select_moe_operator_features(
     return op_df, ["num_tokens"]
 
 
-def profiled_block_sizes(op_df: pd.DataFrame) -> tuple[tuple[int, int], ...]:
-    """Sorted ``(num_tokens, block_size_m)`` pairs of a padded grouped-GEMM table."""
-    block_sizes = op_df.groupby("num_tokens")[BLOCK_SIZE_M_COLUMN].unique()
-    conflicting = {int(tokens): sizes.tolist() for tokens, sizes in block_sizes.items() if len(sizes) != 1}
-    if conflicting:
-        raise ValueError(f"MoE rows with one num_tokens record different {BLOCK_SIZE_M_COLUMN}: {conflicting}")
-    return tuple((int(tokens), int(sizes[0])) for tokens, sizes in block_sizes.items())
+def block_size_m_ranges(op_df: pd.DataFrame) -> tuple[tuple[int, int, int], ...]:
+    """vLLM's BLOCK_SIZE_M ranges up to the largest ``num_tokens`` of a padded grouped-GEMM table.
+
+    Every row records the ``(first_num_tokens, last_num_tokens, block_size_m)``
+    ranges of the kernel config up to its own ``num_tokens``. The largest row's
+    ranges cover the table, and every row's ``block_size_m`` must agree with them.
+    """
+    if BLOCK_SIZE_M_RANGES_COLUMN not in op_df.columns:
+        raise ValueError(
+            f"the padded grouped-GEMM table lacks {BLOCK_SIZE_M_RANGES_COLUMN}; re-profile the MoE table "
+            "so the simulator can select vLLM's BLOCK_SIZE_M between profiled num_tokens"
+        )
+    rows_without_ranges = int(op_df[BLOCK_SIZE_M_RANGES_COLUMN].isna().sum())
+    if rows_without_ranges:
+        raise ValueError(
+            f"{rows_without_ranges} of {len(op_df)} MoE rows lack {BLOCK_SIZE_M_RANGES_COLUMN}; "
+            "the padded grouped GEMM needs it on every row"
+        )
+    largest_row = op_df.loc[op_df["num_tokens"].idxmax()]
+    ranges = tuple(
+        (int(first), int(last), int(block_size))
+        for first, last, block_size in json.loads(largest_row[BLOCK_SIZE_M_RANGES_COLUMN])
+    )
+    disagreeing = sorted(
+        {
+            (int(num_tokens), int(block_size))
+            for num_tokens, block_size in op_df[["num_tokens", BLOCK_SIZE_M_COLUMN]].itertuples(index=False)
+            if block_size_m_for_tokens(ranges, int(num_tokens)) != block_size
+        }
+    )
+    if disagreeing:
+        raise ValueError(
+            f"MoE rows (num_tokens, {BLOCK_SIZE_M_COLUMN}) {disagreeing} disagree with the "
+            f"{BLOCK_SIZE_M_RANGES_COLUMN} of the {int(largest_row['num_tokens'])}-token row {list(ranges)}"
+        )
+    return ranges
 
 
 def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
@@ -404,7 +436,7 @@ class MoeDatasetTraining:
                 target_col=target_col,
             )
             if feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
-                models[model_name]._frontier_block_size_m = profiled_block_sizes(op_df)
+                models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(op_df)
             logger.info(f"Trained MoE model: {model_name}")
 
         return models

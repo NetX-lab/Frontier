@@ -38,19 +38,22 @@ def num_tokens_post_padded(expert_token_counts: Sequence[int], block_size_m: int
     return sum(-(-int(count) // block_size_m) * block_size_m for count in expert_token_counts)
 
 
-def block_size_m_for_tokens(profiled_block_sizes: Sequence[tuple[int, int]], num_tokens: int) -> int:
-    """BLOCK_SIZE_M of the smallest profiled ``num_tokens`` row at or above ``num_tokens``.
+def block_size_m_for_tokens(block_size_m_ranges: Sequence[tuple[int, int, int]], num_tokens: int) -> int:
+    """vLLM's BLOCK_SIZE_M at ``num_tokens`` from the profiled kernel-config ranges.
 
-    ``profiled_block_sizes`` holds sorted ``(num_tokens, block_size_m)`` pairs of
-    the MoE table the grouped-GEMM model was trained on.
+    ``block_size_m_ranges`` holds sorted, contiguous ``(first_num_tokens,
+    last_num_tokens, block_size_m)`` ranges from 1 token to the largest
+    profiled ``num_tokens`` of the MoE table the grouped-GEMM model was
+    trained on.
     """
-    index = bisect.bisect_left(profiled_block_sizes, (num_tokens,))
-    if index == len(profiled_block_sizes):
+    largest_profiled_tokens = block_size_m_ranges[-1][1]
+    if num_tokens > largest_profiled_tokens:
         raise ValueError(
             f"grouped GEMM at {num_tokens} tokens is above the largest profiled MoE row "
-            f"({profiled_block_sizes[-1][0]} tokens), so its BLOCK_SIZE_M is unknown"
+            f"({largest_profiled_tokens} tokens), so its BLOCK_SIZE_M is unknown"
         )
-    return profiled_block_sizes[index][1]
+    index = bisect.bisect_right(block_size_m_ranges, num_tokens, key=lambda token_range: token_range[0]) - 1
+    return block_size_m_ranges[index][2]
 
 
 @dataclass

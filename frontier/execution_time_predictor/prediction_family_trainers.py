@@ -29,7 +29,7 @@ from frontier.attention.string_coercion import coerce_truthy_int
 from frontier.config import global_vars
 from frontier.execution_time_predictor.kernel_gap import KernelCountTraining
 from frontier.execution_time_predictor.moe_dataset_training import (
-    profiled_block_sizes,
+    block_size_m_ranges,
     select_moe_operator_features,
 )
 from frontier.execution_time_predictor.prediction_model_identity import (
@@ -332,7 +332,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
                         **train_kwargs,
                     )
                     if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
-                        models[model_name]._frontier_block_size_m = profiled_block_sizes(
+                        models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
                             op_moe_df
                         )
                     trained_model_signatures.add(model_signature)
