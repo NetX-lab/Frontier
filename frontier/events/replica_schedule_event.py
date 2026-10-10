@@ -93,6 +93,7 @@ class ReplicaScheduleEvent(BaseEvent):
         self._batches = replica_scheduler.on_schedule(self.time)
         events = self._events_for_schedule_pass(replica_scheduler, metrics_store, logger)
         if hasattr(replica_scheduler, "consume_dp_sync_release"):
+            events.extend(replica_scheduler.consume_popped_output_events())
             # A pass that ended the DP sync's all-reduce resumes the other
             # engines of the group, whose hosts waited in it.
             events.extend(

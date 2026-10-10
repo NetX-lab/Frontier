@@ -1,3 +1,4 @@
+import functools
 from typing import List
 
 from frontier.events.base_event import BaseEvent
@@ -74,9 +75,6 @@ class ClusterBatchEndEvent(BaseEvent):
     def handle_event(
         self, scheduler: BaseGlobalScheduler, metrics_store: MetricsStore
     ) -> List[BaseEvent]:
-        from frontier.events.kv_cache_transfer_start_event import (
-            KVCacheTransferStartEvent,
-        )
         from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
@@ -248,64 +246,19 @@ class ClusterBatchEndEvent(BaseEvent):
             replica_scheduler.on_cluster_stage_end(self._batch)
 
         if self._cluster_type == ClusterType.PREFILL:
-            self._batch.on_batch_end(
-                self.time,
-                self._cluster_type,
+            apply_output = functools.partial(
+                self._apply_prefill_output,
+                cluster_scheduler=cluster_scheduler,
+                replica_scheduler=replica_scheduler,
+                metrics_store=metrics_store,
             )
-            replica_scheduler.on_batch_end(self._batch)
-
-            memory_usage_percent = replica_scheduler.memory_usage_percent
-            metrics_store.on_batch_end(
-                self.time,
-                self._batch,
-                self._replica_id,
-                memory_usage_percent,
-                self._cluster_type,
-                self._replica_local_id,
-            )
-
-            kv_pred = cluster_scheduler._kv_cache_transfer_predictor
-            if kv_pred is None:
-                raise ValueError(
-                    "KV cache transfer predictor not found in ClusterScheduler"
-                )
-
-            replica_config = cluster_scheduler._config.replica_config
-            target_cluster = cluster_scheduler._get_decode_target_cluster()
-
-            for request in self._batch.requests:
-                if request.is_prefill_complete and request.num_decode_tokens > 0:
-                    kv_cache_size_bytes, transfer_time_ms = (
-                        kv_pred.get_transfer_info_for_request(
-                            source_cluster_type=self._cluster_type,
-                            target_cluster_type=target_cluster,
-                            request=request,
-                            replica_config=replica_config,
-                        )
-                    )
-
-                    from frontier.entities.batch import Batch as SingleBatch
-
-                    single_request_batch = SingleBatch(
-                        replica_id=self._replica_id,
-                        requests=[request],
-                        num_tokens=[request.num_prefill_tokens],
-                        is_moe=replica_config.model_config.is_moe,
-                    )
-                    next_events.append(
-                        KVCacheTransferStartEvent(
-                            self.time,
-                            source_replica_id=self._replica_id,
-                            source_replica_local_id=self._replica_local_id,
-                            target_cluster_type=target_cluster,
-                            batch=single_request_batch,
-                            kv_cache_size_bytes=kv_cache_size_bytes,
-                            transfer_time_ms=transfer_time_ms,
-                            source_cluster_type=self._cluster_type,
-                            source_batch_stage_id=self._source_batch_stage_id,
-                        )
-                    )
-
+            # An output held at the DP sync is applied by the engine's pass
+            # that pops it.
+            if not (
+                hasattr(replica_scheduler, "hold_batch_output")
+                and replica_scheduler.hold_batch_output(apply_output)
+            ):
+                next_events.extend(apply_output(self.time))
             next_events.append(
                 ReplicaScheduleEvent(
                     self.time, self._replica_id, self._cluster_type, self._replica_local_id
@@ -577,6 +530,83 @@ class ClusterBatchEndEvent(BaseEvent):
             f"[CLUSTER-END] Unhandled cluster type: {self._cluster_type}; no-op"
         )
         return []
+
+    def _apply_prefill_output(
+        self,
+        time: float,
+        *,
+        cluster_scheduler,
+        replica_scheduler,
+        metrics_store: MetricsStore,
+    ) -> List[BaseEvent]:
+        """Apply a PREFILL batch's output at `time` and start its KV transfers.
+
+        `time` is when the engine pops the output: the batch end, or a later
+        pass for an output held at the DP sync.
+        """
+        from frontier.events.kv_cache_transfer_start_event import (
+            KVCacheTransferStartEvent,
+        )
+
+        self._batch.on_batch_end(
+            time,
+            self._cluster_type,
+        )
+        replica_scheduler.on_batch_end(self._batch)
+
+        memory_usage_percent = replica_scheduler.memory_usage_percent
+        metrics_store.on_batch_end(
+            time,
+            self._batch,
+            self._replica_id,
+            memory_usage_percent,
+            self._cluster_type,
+            self._replica_local_id,
+        )
+
+        kv_pred = cluster_scheduler._kv_cache_transfer_predictor
+        if kv_pred is None:
+            raise ValueError(
+                "KV cache transfer predictor not found in ClusterScheduler"
+            )
+
+        replica_config = cluster_scheduler._config.replica_config
+        target_cluster = cluster_scheduler._get_decode_target_cluster()
+
+        transfer_events: List[BaseEvent] = []
+        for request in self._batch.requests:
+            if request.is_prefill_complete and request.num_decode_tokens > 0:
+                kv_cache_size_bytes, transfer_time_ms = (
+                    kv_pred.get_transfer_info_for_request(
+                        source_cluster_type=self._cluster_type,
+                        target_cluster_type=target_cluster,
+                        request=request,
+                        replica_config=replica_config,
+                    )
+                )
+
+                from frontier.entities.batch import Batch as SingleBatch
+
+                single_request_batch = SingleBatch(
+                    replica_id=self._replica_id,
+                    requests=[request],
+                    num_tokens=[request.num_prefill_tokens],
+                    is_moe=replica_config.model_config.is_moe,
+                )
+                transfer_events.append(
+                    KVCacheTransferStartEvent(
+                        time,
+                        source_replica_id=self._replica_id,
+                        source_replica_local_id=self._replica_local_id,
+                        target_cluster_type=target_cluster,
+                        batch=single_request_batch,
+                        kv_cache_size_bytes=kv_cache_size_bytes,
+                        transfer_time_ms=transfer_time_ms,
+                        source_cluster_type=self._cluster_type,
+                        source_batch_stage_id=self._source_batch_stage_id,
+                    )
+                )
+        return transfer_events
 
     def _get_current_layer_id_from_batch(self, batch: "Batch") -> int:
         if not batch.requests:

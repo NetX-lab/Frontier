@@ -584,6 +584,7 @@ def _config(
     analytical_backend: bool = False,
     dummy_execution_time_ms: float | None = None,
     num_blocks: int = 128,
+    thinking_depth: int = 1,
 ):
     from frontier.cc_backend.cc_backend_config import AnalyticalCCBackendConfig
     from frontier.config import (
@@ -674,6 +675,8 @@ def _config(
         sys_arch="co-location",
         enable_parallel_clusters=False,
         decode_cuda_graph_mode="none",
+        enable_thinking_mode=thinking_depth > 1,
+        thinking_depth=thinking_depth,
         cluster_config=cluster,
         metrics_config=MetricsConfig(
             output_dir=str(root / "metrics"),
@@ -719,6 +722,7 @@ def run_case(
     )
     from frontier.entities import DummyForwardBatch
     from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+    from frontier.events.global_batch_end_event import GlobalBatchEndEvent
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
     )
@@ -758,8 +762,14 @@ def run_case(
     all_dummy_waves: list[int] = []
     # Each DP finish sync that released its lanes, before the record at `position`.
     dp_sync_releases: list[dict] = []
-    # Batches that ended while their engine waited in the DP finish sync.
-    held_outputs: list[int] = []
+    # Batches that ended while their engine waited in the DP finish sync, with
+    # their rows' state then, and every applied output with its rows' state
+    # before and after the application.
+    held_outputs: list[dict] = []
+    applied_outputs: list[dict] = []
+    # Each schedule call of a busy-loop iteration, with the outputs it found
+    # held and the requests then holding KV blocks.
+    iteration_schedules: list[dict] = []
     schedule_time: list[float] = []
     stale_drops: list[dict] = []
 
@@ -771,7 +781,9 @@ def run_case(
     original_engine_schedule = VLLMv1EngineReplicaScheduler.on_schedule
     original_dummy_forward_end = VLLMv1EngineReplicaScheduler.on_dummy_forward_end
     original_end_iteration = VLLMv1EngineReplicaScheduler._end_iteration
-    original_holds_batch_output = VLLMv1EngineReplicaScheduler.holds_batch_output
+    original_schedule_iteration = VLLMv1EngineReplicaScheduler._schedule_iteration
+    original_global_batch_end = GlobalBatchEndEvent.handle_event
+    original_apply_output = GlobalBatchEndEvent._apply_output
     original_wave_inputs = ep_wave_inputs.prepare_ep_wave_inputs
 
     def observed_cluster_schedule(self, scheduler, metrics_store):
@@ -888,11 +900,75 @@ def run_case(
             )
         return waits
 
-    def observed_holds_batch_output(self, batch):
-        holds = original_holds_batch_output(self, batch)
-        if holds:
-            held_outputs.append(batch.id)
-        return holds
+    def row_states(lane, batch, metrics_store):
+        return {
+            request.id: {
+                "completed": request.completed,
+                "processed_tokens": request.num_processed_tokens,
+                "running": request in lane._running_requests,
+                "allocated": lane._allocation_map.get(request.id),
+                "completion_recorded": request.id
+                in metrics_store._completed_request_ids,
+                "tool_wait": request.pending_thinking_requeue,
+            }
+            for request in batch.requests
+        }
+
+    def observed_global_batch_end(self, scheduler, metrics_store):
+        lane = scheduler.get_cluster_scheduler(self._cluster_type).get_replica_scheduler(
+            self._replica_id, self._replica_local_id
+        )
+        before = row_states(lane, self._batch, metrics_store)
+        num_held = len(lane._unpopped_outputs)
+        events = original_global_batch_end(self, scheduler, metrics_store)
+        if len(lane._unpopped_outputs) > num_held:
+            held_outputs.append(
+                {
+                    "batch": self._batch.id,
+                    "lane": self._replica_local_id,
+                    "ended_at": float(self.time),
+                    "rows": before,
+                    "rows_after_hold": row_states(lane, self._batch, metrics_store),
+                    "schedules_before": len(iteration_schedules),
+                }
+            )
+        return events
+
+    def observed_apply_output(
+        self, time, *, cluster_scheduler, replica_scheduler, metrics_store
+    ):
+        before = row_states(replica_scheduler, self._batch, metrics_store)
+        events = original_apply_output(
+            self,
+            time,
+            cluster_scheduler=cluster_scheduler,
+            replica_scheduler=replica_scheduler,
+            metrics_store=metrics_store,
+        )
+        applied_outputs.append(
+            {
+                "batch": self._batch.id,
+                "lane": self._replica_local_id,
+                "ended_at": float(self.time),
+                "applied_at": float(time),
+                "before": before,
+                "after": row_states(replica_scheduler, self._batch, metrics_store),
+                "thinking_requeues": len(events),
+                "schedules_before": len(iteration_schedules),
+            }
+        )
+        return events
+
+    def observed_schedule_iteration(self, time):
+        iteration_schedules.append(
+            {
+                "lane": self._replica_local_id,
+                "time": float(time),
+                "held": len(self._unpopped_outputs),
+                "kv_holders": sorted(self._allocation_map),
+            }
+        )
+        return original_schedule_iteration(self, time)
 
     def observed_wave_inputs(**kwargs):
         inputs = original_wave_inputs(**kwargs)
@@ -984,10 +1060,12 @@ def run_case(
             observed_dummy_forward_end,
         )
         patch.setattr(VLLMv1EngineReplicaScheduler, "_end_iteration", observed_end_iteration)
+        patch.setattr(GlobalBatchEndEvent, "handle_event", observed_global_batch_end)
+        patch.setattr(GlobalBatchEndEvent, "_apply_output", observed_apply_output)
         patch.setattr(
             VLLMv1EngineReplicaScheduler,
-            "holds_batch_output",
-            observed_holds_batch_output,
+            "_schedule_iteration",
+            observed_schedule_iteration,
         )
         patch.setattr(ep_wave_inputs, "prepare_ep_wave_inputs", observed_wave_inputs)
         # Both the inert base seam and the policy's override have to be
@@ -1065,12 +1143,14 @@ def run_case(
         "all_dummy_waves": all_dummy_waves,
         "dp_sync_releases": dp_sync_releases,
         "held_outputs": held_outputs,
+        "applied_outputs": applied_outputs,
+        "iteration_schedules": iteration_schedules,
         "dp_wave_states": [
             {
                 "running": lane._dp_wave_running,
                 "steps": lane._dp_wave_steps,
                 "waits": lane._waits_at_dp_sync,
-                "unpopped": len(lane._unpopped_batches),
+                "unpopped": len(lane._unpopped_outputs),
             }
             for lane in lanes
         ],
@@ -1219,6 +1299,11 @@ CASES = {
     "moe_dp2_pp4_kv_pressure": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
         analytical_backend=True, num_blocks=8, trace="kv_pressure",
+    ),
+    "moe_dp2_pp4_kv_pressure_thinking": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
+        analytical_backend=True, num_blocks=8, trace="kv_pressure",
+        thinking_depth=2,
     ),
     "moe_dp2_pp2_release": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2, num_layers=4,

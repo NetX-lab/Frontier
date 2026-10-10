@@ -19,7 +19,7 @@ Reference:
 import math
 from collections import deque
 from dataclasses import replace
-from typing import Deque, Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
@@ -156,14 +156,15 @@ class VLLMv1EngineReplicaScheduler(
         # VLLM_DP_SYNC_INTERVAL-th, its host waits in an all-reduce over the DP
         # group, which ends the wave once no engine has unfinished requests.
         # A batch that ends during the wait keeps its output, and its queue
-        # slot, until a later iteration pops it.
+        # slot, until a later iteration pops it and applies the output.
         self._dp_wave_running = False
         self._dp_wave_steps = 0
         self._iteration_open = False
         self._waits_at_dp_sync = False
         self._unfinished_at_dp_sync = False
         self._dp_sync_released_lane_ids: List[int] = []
-        self._unpopped_batches: Deque[Batch] = deque()
+        self._unpopped_outputs: Deque[Callable[[float], List]] = deque()
+        self._popped_output_events: List = []
         self._iteration_running_limit = math.inf
         # End of the engine loop's latest iteration: a schedule call that formed
         # a batch, a batch output, or a dummy forward. None before the first.
@@ -455,15 +456,12 @@ class VLLMv1EngineReplicaScheduler(
         while True:
             formed = self._schedule_iteration(time)
             batches.extend(formed)
-            if self._unpopped_batches:
+            if self._unpopped_outputs:
                 # The oldest batch ended while the host waited at the DP sync,
-                # so this iteration pops it at once and publishes its output.
+                # so this iteration pops it at once and applies its output.
                 # The iteration ends with its own forward.
-                popped = self._unpopped_batches.popleft()
-                self._pop_batch_output(popped)
-                self._cluster_scheduler.on_replica_batch_end(
-                    time, self._replica_id, self._replica_local_id, popped
-                )
+                apply_output = self._unpopped_outputs.popleft()
+                self._popped_output_events.extend(apply_output(time))
                 if not formed:
                     return batches + self._issue_dummy_pass()
             elif not formed or self._num_running_batches == self._num_stages:
@@ -582,9 +580,24 @@ class VLLMv1EngineReplicaScheduler(
         self._last_iteration_end = time
         return True
 
-    def holds_batch_output(self, batch: Batch) -> bool:
-        """Whether the batch ended but the engine has not popped its output yet."""
-        return batch in self._unpopped_batches
+    def hold_batch_output(self, apply_output: Callable[[float], List]) -> bool:
+        """Keep the output of a batch that just ended while the host waits at the DP sync.
+
+        vLLM applies a batch's output (`Scheduler.update_from_output`) only
+        when an iteration pops it from the batch queue. Its effects on
+        requests, KV blocks and metrics wait for that pop, where
+        `apply_output(pop_time)` applies them and returns its events. Return
+        whether the output is held.
+        """
+        if not self._waits_at_dp_sync:
+            return False
+        self._unpopped_outputs.append(apply_output)
+        return True
+
+    def consume_popped_output_events(self) -> List:
+        """Events of the outputs this engine's latest pass popped."""
+        events, self._popped_output_events = self._popped_output_events, []
+        return events
 
     def _pop_batch_output(self, batch: Batch) -> None:
         """Take a batch's output from the engine: its queue slot and its requests are free."""
@@ -609,15 +622,10 @@ class VLLMv1EngineReplicaScheduler(
         Args:
             batch: The batch that has completed execution
         """
-        if self._waits_at_dp_sync:
-            # The host is in the DP sync's all-reduce, so the output waits in
-            # the batch queue for a later iteration to pop it.
-            self._unpopped_batches.append(batch)
-        else:
-            self._pop_batch_output(batch)
-            if self._has_engine_batch_queue:
-                # The iteration that pops a batch's output ends with it.
-                self._last_iteration_end = batch.completed_at
+        self._pop_batch_output(batch)
+        if self._has_engine_batch_queue:
+            # The iteration that pops a batch's output ends with it.
+            self._last_iteration_end = batch.completed_at
 
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None

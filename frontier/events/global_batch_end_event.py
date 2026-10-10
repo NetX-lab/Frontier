@@ -1,3 +1,4 @@
+import functools
 from typing import List
 
 from frontier.events.base_event import BaseEvent
@@ -131,6 +132,54 @@ class GlobalBatchEndEvent(BaseEvent):
         except Exception as e:
             logger.debug(f"[GLOBAL-END][ENTER] logging failed: {e}")
 
+        apply_output = functools.partial(
+            self._apply_output,
+            cluster_scheduler=cluster_scheduler,
+            replica_scheduler=replica_scheduler,
+            metrics_store=metrics_store,
+        )
+        if hasattr(replica_scheduler, "hold_batch_output") and (
+            replica_scheduler.hold_batch_output(apply_output)
+        ):
+            # Held at the DP sync: the engine's pass that pops it applies it.
+            return [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._replica_local_id)]
+        thinking_requeue_events = apply_output(self.time)
+
+        # Schedule the next batch for the same execution scope.
+        next_events = [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._replica_local_id)]
+
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            on_decode_attn_global_batch_end = getattr(
+                cluster_scheduler,
+                "on_decode_attn_global_batch_end",
+                None,
+            )
+            if callable(on_decode_attn_global_batch_end):
+                next_events.extend(
+                    on_decode_attn_global_batch_end(
+                        self.time,
+                        self._batch,
+                    )
+                )
+
+        return next_events + thinking_requeue_events
+
+    def _apply_output(
+        self,
+        time: float,
+        *,
+        cluster_scheduler: BaseClusterScheduler,
+        replica_scheduler: BaseReplicaScheduler,
+        metrics_store: MetricsStore,
+    ) -> List[BaseEvent]:
+        """Apply the batch's output to its requests, the replica and metrics at `time`.
+
+        `time` is when the engine pops the output: the batch end, or a later
+        pass for an output held at the DP sync. Return the requeue events of
+        the thinking rounds that stopped.
+        """
+        logger = get_cluster_logger(__name__, self._cluster_type.name)
+
         def _current_request_entries() -> list[tuple[int, object]]:
             current_entries: list[tuple[int, object]] = []
             seen_request_ids: set[int] = set()
@@ -153,7 +202,7 @@ class GlobalBatchEndEvent(BaseEvent):
                     thinking_round_start_time = self._thinking_round_start_times[index]
                     if Batch._thinking_round_start_is_in_future(
                         thinking_round_start_time,
-                        self.time,
+                        time,
                     ):
                         logger.warning(
                             "[STALE-GLOBAL-BATCH-END-FUTURE-ROUND-START] Skipping "
@@ -162,7 +211,7 @@ class GlobalBatchEndEvent(BaseEvent):
                             request.id,
                             getattr(self._batch, "id", "?"),
                             thinking_round_start_time,
-                            self.time,
+                            time,
                         )
                         continue
                     current_entries.append((index, request))
@@ -178,10 +227,10 @@ class GlobalBatchEndEvent(BaseEvent):
                     request.first_decode_token_completed_at == 0
                     and getattr(request, "current_decode_token_index", 0) == 1
                 ):
-                    request.mark_first_decode_token_complete(self.time)
+                    request.mark_first_decode_token_complete(time)
 
         stopped_entries = self._batch.apply_preempted_step_samples(
-            self.time,
+            time,
             self._cluster_type,
             request_execution_signatures=self._request_execution_signatures,
         )
@@ -189,7 +238,7 @@ class GlobalBatchEndEvent(BaseEvent):
 
         # Finalize at decode-attn
         self._batch.on_batch_end(
-            self.time,
+            time,
             self._cluster_type,
             request_execution_signatures=self._request_execution_signatures,
             request_mutation_signatures=self._request_mutation_signatures,
@@ -197,20 +246,15 @@ class GlobalBatchEndEvent(BaseEvent):
         )
         replica_scheduler.on_batch_end(self._batch)  # decrement running batches
         # After the lane's request-state transition, so a routing policy that
-        # reads lane populations here observes the post-step load. An output
-        # that stays in the engine's batch queue is reported when it is popped.
-        if not (
-            hasattr(replica_scheduler, "holds_batch_output")
-            and replica_scheduler.holds_batch_output(self._batch)
-        ):
-            cluster_scheduler.on_replica_batch_end(
-                self.time, self._replica_id, self._replica_local_id, self._batch
-            )
+        # reads lane populations here observes the post-step load.
+        cluster_scheduler.on_replica_batch_end(
+            time, self._replica_id, self._replica_local_id, self._batch
+        )
 
         thinking_requeue_events: List[BaseEvent] = []
         for index, request in request_entries:
             requeue_event = thinking_round_requeue_event(
-                self.time,
+                time,
                 request,
                 self._thinking_round_start_times[index],
             )
@@ -226,7 +270,7 @@ class GlobalBatchEndEvent(BaseEvent):
                 continue
             if self._cluster_type != ClusterType.DECODE:
                 if _should_mark_first_decode_token(request, self._cluster_type):
-                    request.mark_first_decode_token_complete(self.time)
+                    request.mark_first_decode_token_complete(time)
             decode_first_completed_at = getattr(
                 request, "decode_first_token_completed_at", 0
             )
@@ -253,7 +297,7 @@ class GlobalBatchEndEvent(BaseEvent):
 
         if getattr(self._batch, "scheduled", False):
             metrics_store.on_batch_end(
-                self.time,
+                time,
                 self._batch,
                 self._replica_id,
                 memory_usage_percent,
@@ -269,26 +313,9 @@ class GlobalBatchEndEvent(BaseEvent):
         for _, request in request_entries:
             if not getattr(request, "completed", False):
                 continue
-            metrics_store._on_request_end(self.time, request)
+            metrics_store._on_request_end(time, request)
 
-        # Schedule the next batch for the same execution scope.
-        next_events = [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._replica_local_id)]
-
-        if self._cluster_type == ClusterType.DECODE_ATTN:
-            on_decode_attn_global_batch_end = getattr(
-                cluster_scheduler,
-                "on_decode_attn_global_batch_end",
-                None,
-            )
-            if callable(on_decode_attn_global_batch_end):
-                next_events.extend(
-                    on_decode_attn_global_batch_end(
-                        self.time,
-                        self._batch,
-                    )
-                )
-
-        return next_events + thinking_requeue_events
+        return thinking_requeue_events
 
     def get_target_cluster(self) -> ClusterType:
         # Processed by DECODE_ATTN cluster
