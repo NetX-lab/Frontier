@@ -303,10 +303,13 @@ Semantics:
 `vllm_cpu_probe.py` builds the CPU-overhead CSVs from the logs that Frontier's instrumented
 vLLM writes when `VLLM_FRONTIER_CPU_PROBE_LOG_PATH` is set. The engine log
 `cpu_probe[_dp<d>].jsonl` holds one record per engine step with host timestamps of the
-schedule and the output update. Each pipeline stage writes `cpu_probe[_dp<d>]_pp<p>.jsonl`,
-`_pp0` for a single-stage engine, with one record per forward: the runner's timestamps, the
-start and end of the DP token-count all-reduce, the CUDA graph mode and the CUDA-event device
-time of the forward, timed from the forward-context entry.
+schedule and the output update, and for each scheduled request its tokens, its computed
+tokens before the step and its prompt length, with the engine's KV connector role `kv_role`.
+Each pipeline stage writes `cpu_probe[_dp<d>]_pp<p>.jsonl`, `_pp0` for a single-stage engine,
+with one record per forward: the runner's timestamps, the start and end of the DP token-count
+all-reduce and of the KV connector's `start_load_kv`, the CUDA graph mode and the CUDA-event
+device time of the forward, timed from the forward-context entry. Logs of an older probe,
+without the request-phase or KV-load fields, are rejected.
 
 Frontier prices each stage's forward from its operator tables, and prices itself the waits
 between stages, between DP engines and for a PD decode instance's KV load. The terms price
@@ -328,15 +331,19 @@ every other host interval of a step, each once, on the stage that runs it:
 - The DP wait is the all-reduce's duration beyond its own latency: the median duration on
   the DP engine that reaches an all-reduce last, over the all-reduces recorded by every DP
   engine of the serving instance.
-- The KV-load wait is the forward-context entry, less an all-reduce inside it, beyond its
-  median over the stage log.
+- The KV-load wait is the KV connector's `start_load_kv`, which runs inside the
+  forward-context entry; an engine without a connector waits `0`.
 - The launch start is the later of `forward_context_entered` and the upstream stage's device
   end; a stage's device end is its launch start plus its forward's device time.
 - Frontier adds `forward_drain` to a forward only when its launch outlasts its predicted
   device time: the forward then ends once the device has run the kernels launched last.
 
 Forwards are grouped per stage by `(batch_size, num_prefill_tokens, num_decode_tokens)` and
-keyed by `pipeline_stage_id`. A forward that replayed a FULL CUDA graph goes to the
+keyed by `pipeline_stage_id`. A request's tokens are prefill when they recompute tokens an
+earlier step computed (a resumed preemption victim) or continue its prompt, and decode
+otherwise; on a PD decode instance (`kv_consumer`) a request's first step, which computes the
+prompt tokens the connector did not load, is its first decode step, as in Frontier's DECODE
+role. A forward that replayed a FULL CUDA graph goes to the
 kernel-only file and publishes no `forward_launch` or `forward_drain`; every other forward
 goes to the eager file. Each `--cpu_probe_logs` lists the engine logs of one serving
 instance, one per DP engine in DP rank order; a PP>1 engine adds `--num_pipeline_stages`.

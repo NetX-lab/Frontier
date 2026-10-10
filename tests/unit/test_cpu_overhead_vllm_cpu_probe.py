@@ -18,19 +18,30 @@ from frontier.profiling.cpu_overhead.vllm_cpu_probe import (
     main,
     stage_log_path,
     stage_overhead_terms,
+    step_identities,
 )
 from frontier.types import MeasurementType
 
 IDENTITY = dict(model_name="tiny", tensor_parallel_degree=1, profiling_precision="BF16", scheduling_mode="sync")
 PERIOD_TERMS = ("schedule", "prepare_inputs_e2e", "sampler_e2e", "process_model_outputs")
 
+# Each test's requests: request id -> [prompt length, computed tokens]. Every engine record
+# built for a request advances it, so the records carry the probe's request-phase fields.
+_REQUESTS: dict[str, list[int]] = {}
+
+
+@pytest.fixture(autouse=True)
+def _fresh_requests():
+    _REQUESTS.clear()
+
 
 def _forward(step: int, stage_id: int, execute_start: float, scheduled: dict[str, int], *,
              device_ms: float = 4.0, mode: str = "NONE", allreduce: float | None = None,
-             entry: float = 0.00005) -> dict:
+             entry: float = 0.00005, kv_load: float | None = None) -> dict:
     # Preprocess ends 0.3 ms after execute_start and the forward starts 0.05 ms later. Entering the
-    # forward context takes `entry` seconds after a DP all-reduce of `allreduce` seconds; the host
-    # then launches the forward's kernels for 0.4 ms.
+    # forward context takes `entry` seconds after a DP all-reduce of `allreduce` seconds, the first
+    # `kv_load` of them in the KV connector's start_load_kv; the host then launches the forward's
+    # kernels for 0.4 ms.
     forward_start = execute_start + 0.00035
     allreduce_end = forward_start + (allreduce or 0.0)
     forward_context_entered = allreduce_end + entry
@@ -49,6 +60,8 @@ def _forward(step: int, stage_id: int, execute_start: float, scheduled: dict[str
         "execute_return": forward_context_entered + 0.0005,
         "dp_allreduce_start": forward_start if allreduce is not None else None,
         "dp_allreduce_end": allreduce_end if allreduce is not None else None,
+        "kv_load_start": allreduce_end if kv_load is not None else None,
+        "kv_load_end": allreduce_end + kv_load if kv_load is not None else None,
         "send_start": None,
         "send_end": None,
         "num_input_tokens": sum(scheduled.values()),
@@ -66,8 +79,17 @@ def _finish(forward: dict, device_end: float, sampling: float) -> float:
 
 
 def _engine_record(step: int, start: float, scheduled: dict[str, int], sample_end: float, *,
-                   engine_loop: str = "step") -> dict:
+                   engine_loop: str = "step", kv_role: str | None = None) -> dict:
     # Schedule takes 0.1 ms; the engine's output update ends 0.3 ms after the last stage's sampling.
+    # A request scheduled more than one token runs its prompt; one first scheduled one token decodes
+    # after an 8-token prompt.
+    computed, prompt = {}, {}
+    for request_id, num_tokens in scheduled.items():
+        request = _REQUESTS.setdefault(request_id, [0, 0] if num_tokens > 1 else [8, 8])
+        if num_tokens > 1:
+            request[0] = max(request[0], request[1] + num_tokens)
+        prompt[request_id], computed[request_id] = request
+        request[1] += num_tokens
     return {
         "step": step,
         "engine_loop": engine_loop,
@@ -76,6 +98,9 @@ def _engine_record(step: int, start: float, scheduled: dict[str, int], sample_en
         "execute_end": sample_end + 0.00025,
         "update_end": sample_end + 0.0003,
         "num_scheduled_tokens": scheduled,
+        "num_computed_tokens": computed,
+        "num_prompt_tokens": prompt,
+        "kv_role": kv_role,
     }
 
 
@@ -147,18 +172,98 @@ def test_full_graph_replays_are_kernel_only_and_publish_no_launch() -> None:
     assert step.engine_idle_ms is None
 
 
-def test_prepare_leaves_out_a_kv_load_at_forward_context_entry() -> None:
-    # The second forward's context entry waits 5 ms for a KV load.
+def test_prepare_leaves_out_the_recorded_kv_load_only() -> None:
+    # The second forward's context entry runs a 5 ms start_load_kv; the third enters as slowly
+    # without a KV load, which is host work and stays in prepare.
     steps = [
         _single_stage_step(0, 10.0, {"a": 1}),
-        _single_stage_step(1, 10.0070, {"a": 1, "b": 1}, entry=0.00505),
-        _single_stage_step(2, 10.0190, {"a": 1, "b": 1}),
+        _single_stage_step(1, 10.0070, {"a": 1, "b": 1}, entry=0.00505, kv_load=0.005),
+        _single_stage_step(2, 10.0190, {"a": 1, "b": 1}, entry=0.00505),
     ]
 
     out = stage_overhead_terms([r for r, _ in steps], [[f for _, f in steps]], dp_allreduce_ms=None)
 
-    assert [step.terms["prepare_inputs_e2e"] for step in out] == pytest.approx([0.5, 0.5, 0.5])
+    assert [step.terms["prepare_inputs_e2e"] for step in out] == pytest.approx([0.5, 0.5, 5.5])
     assert out[1][3]["sampler_e2e"] == pytest.approx(2.0)
+
+
+def test_prepare_leaves_out_a_kv_load_common_to_every_step() -> None:
+    # A PD decode instance whose every step loads KV for 5 ms: a median over the stage log would
+    # keep the wait in prepare.
+    steps = [_single_stage_step(i, 10.0 + 0.012 * i, {f"r{i}": 1}, entry=0.00505, kv_load=0.005)
+             for i in range(3)]
+
+    out = stage_overhead_terms([r for r, _ in steps], [[f for _, f in steps]], dp_allreduce_ms=None)
+
+    assert [step.terms["prepare_inputs_e2e"] for step in out] == pytest.approx([0.5, 0.5, 0.5])
+
+
+def _phase_record(step: int, phases: dict[str, tuple[int, int, int]], kv_role: str | None = None) -> dict:
+    """An engine record of requests given as (scheduled, computed before the step, prompt length)."""
+    return {
+        "step": step,
+        "num_scheduled_tokens": {r: phase[0] for r, phase in phases.items()},
+        "num_computed_tokens": {r: phase[1] for r, phase in phases.items()},
+        "num_prompt_tokens": {r: phase[2] for r, phase in phases.items()},
+        "kv_role": kv_role,
+    }
+
+
+def test_a_one_token_prompt_tail_and_a_decode_step_publish_distinct_identities() -> None:
+    # Chunk budget 64, prompt 65, output 2: the last prompt token runs alone, then one decode.
+    records = [
+        _phase_record(0, {"r": (64, 0, 65)}),
+        _phase_record(1, {"r": (1, 64, 65)}),
+        _phase_record(2, {"r": (1, 65, 65)}),
+    ]
+
+    assert step_identities(records) == [(1, 64, 0), (1, 1, 0), (1, 0, 1)]
+
+
+def test_a_pd_decode_instance_counts_a_request_first_step_as_decode() -> None:
+    # The connector loads 64 of 65 prompt tokens; the decode instance computes the last one,
+    # Frontier's first decode step on the DECODE role.
+    records = [
+        _phase_record(0, {"r": (1, 64, 65)}, kv_role="kv_consumer"),
+        _phase_record(1, {"r": (1, 65, 65)}, kv_role="kv_consumer"),
+    ]
+
+    assert step_identities(records) == [(1, 0, 1), (1, 0, 1)]
+    # A co-location prefix-cache hit leaves the same last prompt token, which is prefill.
+    assert step_identities([dict(records[0], kv_role=None)]) == [(1, 1, 0)]
+
+
+def test_a_resumed_preemption_victim_recomputes_as_prefill() -> None:
+    # Request r decodes once, is preempted and recomputes its 66 computed tokens in chunks of 64, 1
+    # and 1, all prefill; the step after computes its next token, a decode.
+    records = [
+        _phase_record(0, {"r": (65, 0, 65)}),
+        _phase_record(1, {"r": (1, 65, 65)}),
+        _phase_record(2, {"r": (64, 0, 65)}),
+        _phase_record(3, {"r": (1, 64, 65)}),
+        _phase_record(4, {"r": (1, 65, 65)}),
+        _phase_record(5, {"r": (1, 66, 65)}),
+    ]
+
+    assert step_identities(records) == [(1, 65, 0), (1, 0, 1), (1, 64, 0), (1, 1, 0), (1, 1, 0), (1, 0, 1)]
+
+
+def test_step_identities_reject_multi_token_decode_steps_and_unknown_kv_roles() -> None:
+    with pytest.raises(ValueError, match="schedules 3 decode tokens for request r"):
+        step_identities([_phase_record(0, {"r": (3, 65, 65)})])
+    with pytest.raises(ValueError, match="KV connector role 'kv_both'"):
+        step_identities([_phase_record(0, {"r": (1, 65, 65)}, kv_role="kv_both")])
+
+
+def test_records_of_an_older_probe_are_rejected() -> None:
+    engine, forward = _single_stage_step(0, 10.0, {"a": 16})
+    legacy_engine = {key: value for key, value in engine.items() if key != "num_prompt_tokens"}
+    legacy_forward = {key: value for key, value in forward.items() if not key.startswith("kv_load")}
+
+    with pytest.raises(ValueError, match=r"engine step 0 has no \['num_prompt_tokens'\]"):
+        stage_overhead_terms([legacy_engine], [[forward]], dp_allreduce_ms=None)
+    with pytest.raises(ValueError, match="pipeline stage 0 forward 0 has no kv_load_start"):
+        stage_overhead_terms([engine], [[legacy_forward]], dp_allreduce_ms=None)
 
 
 def _dp_pair() -> tuple[list[dict], list[dict], list[dict], list[dict]]:

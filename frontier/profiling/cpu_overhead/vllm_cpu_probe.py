@@ -4,16 +4,21 @@ The CPU probe of Frontier's instrumented vLLM (``VLLM_FRONTIER_CPU_PROBE_LOG_PAT
 writes ``time.perf_counter`` stamps, which every process on one host shares:
 
 - The engine log ``cpu_probe[_dp<d>].jsonl`` holds one record per engine step:
-  step_start, schedule_end, execute_end, update_end and the tokens scheduled per
-  request.
+  step_start, schedule_end, execute_end, update_end, and for each scheduled
+  request its tokens, its computed tokens before the step and its prompt length,
+  with the engine's KV connector role kv_role (None without a connector).
 - Each pipeline stage writes ``<engine log stem>_pp<p><suffix>``, ``_pp0`` for a
   single-stage engine, with one record per forward: the runner's stamps
   (execute_start, preprocess_end, forward_start, forward_context_entered,
   forward_end, and on the last stage sample_end), the start and end of the
-  forward's DP token-count all-reduce, the CUDA graph mode, and the forward's
-  device time forward_device_ms, timed by CUDA events from
-  forward_context_entered. The n-th record of every stage log is the forward of
-  the engine's n-th step that scheduled tokens.
+  forward's DP token-count all-reduce and of the KV connector's start_load_kv,
+  the CUDA graph mode, and the forward's device time forward_device_ms, timed by
+  CUDA events from forward_context_entered. The n-th record of every stage log
+  is the forward of the engine's n-th step that scheduled tokens.
+
+Logs of an older probe, without the request-phase or KV-load fields, are
+rejected: their prefill and decode tokens and their KV-load wait cannot be told
+apart.
 
 Frontier prices each stage's forward from its operator tables, and prices itself
 the waits between stages, between DP engines and for a PD decode instance's KV
@@ -44,9 +49,8 @@ and every other term is 0, where
   record), the latency is the median of all recorded all-reduce durations. The
   all-reduce runs at forward-context entry for eager forwards and in the input
   preparation for CUDA graphs;
-- the KV-load wait is the forward-context entry, less an all-reduce inside it,
-  beyond its median over the stage log. A PD decode instance's KV connector
-  loads there; elsewhere the excess is noise around zero;
+- the KV-load wait is the KV connector's start_load_kv, which runs inside the
+  forward-context entry; an engine without a connector waits 0;
 - the launch start is the later of forward_context_entered and the upstream
   stage's device end; the device end is the launch start plus forward_device_ms;
 - the outputs end is the next engine record's step_start when that step shares a
@@ -55,11 +59,11 @@ and every other term is 0, where
   overlap with the next batch.
 
 Forwards are grouped per stage by Frontier's CPU-overhead identity (batch_size,
-num_prefill_tokens, num_decode_tokens), counting a request scheduled more than
-one token as prefill, which holds for logs without speculative decoding. A
-forward that replayed a FULL CUDA graph belongs to the kernel-only family and
-publishes no forward_launch or forward_drain; every other forward is eager.
-Rows are keyed by pipeline_stage_id.
+num_prefill_tokens, num_decode_tokens), counting a request's tokens the way
+Frontier counts its phase (see ``step_identities``). A forward that replayed a
+FULL CUDA graph belongs to the kernel-only family and publishes no
+forward_launch or forward_drain; every other forward is eager. Rows are keyed
+by pipeline_stage_id.
 
 With ``--engine_idle_edges_ms``, rows are also keyed by engine_idle_ms: the
 largest edge at or below the engine's idle time before the step, from the latest
@@ -126,9 +130,63 @@ def load_cpu_probe_log(path: Path) -> list[dict]:
     return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
 
 
-def step_identity(num_scheduled_tokens: Mapping[str, int]) -> StepIdentity:
-    tokens = list(num_scheduled_tokens.values())
-    return len(tokens), sum(t for t in tokens if t > 1), sum(t for t in tokens if t == 1)
+def step_identities(engine_records: Sequence[Mapping]) -> list[StepIdentity]:
+    """Each token-scheduling step's (batch_size, num_prefill_tokens, num_decode_tokens).
+
+    A request's tokens are prefill when they recompute tokens an earlier step
+    computed (a resumed preemption victim, which Frontier recomputes before it
+    decodes again) or continue its prompt; otherwise they are decode. On a PD
+    decode instance (kv_role ``kv_consumer``) the prefill instance ran the
+    prompt, so a request's first step, which computes the prompt tokens the
+    connector did not load, is its first decode step, as in Frontier's DECODE
+    role. A decode step schedules one token.
+    """
+
+    computed_until: dict[str, int] = {}
+    identities = []
+    for record in engine_records:
+        scheduled = record["num_scheduled_tokens"]
+        if not scheduled:
+            continue
+        kv_role = record["kv_role"]
+        if kv_role not in (None, "kv_producer", "kv_consumer"):
+            raise ValueError(f"engine step {record['step']} has KV connector role {kv_role!r}; "
+                             "only kv_producer and kv_consumer instances are supported")
+        num_prefill_tokens = num_decode_tokens = 0
+        for request_id, num_tokens in scheduled.items():
+            computed = record["num_computed_tokens"][request_id]
+            handed_off = kv_role == "kv_consumer" and request_id not in computed_until
+            reached = computed_until.setdefault(request_id, computed)
+            computed_until[request_id] = max(reached, computed + num_tokens)
+            if computed < reached or (computed < record["num_prompt_tokens"][request_id] and not handed_off):
+                num_prefill_tokens += num_tokens
+            elif num_tokens == 1:
+                num_decode_tokens += 1
+            else:
+                raise ValueError(
+                    f"engine step {record['step']} schedules {num_tokens} decode tokens for request {request_id}; "
+                    "speculative decoding and partial KV loads are not supported"
+                )
+        identities.append((len(scheduled), num_prefill_tokens, num_decode_tokens))
+    return identities
+
+
+def _require_probe_fields(engine_records: Sequence[Mapping], stage_records: Sequence[Sequence[Mapping]]) -> None:
+    for record in engine_records:
+        missing = [field for field in ("num_computed_tokens", "num_prompt_tokens", "kv_role") if field not in record]
+        if missing:
+            raise ValueError(
+                f"engine step {record['step']} has no {missing}: an older CPU probe wrote it, so its prefill and "
+                "decode tokens cannot be told apart; record the run again with the current probe"
+            )
+    for stage_id, records in enumerate(stage_records):
+        for record in records:
+            if "kv_load_start" not in record:
+                raise ValueError(
+                    f"pipeline stage {stage_id} forward {record['step']} has no kv_load_start: an older CPU probe "
+                    "wrote it, so its KV-load wait cannot be told from its input preparation; record the run "
+                    "again with the current probe"
+                )
 
 
 def stage_log_path(engine_log: Path, pipeline_stage_id: int) -> Path:
@@ -172,13 +230,6 @@ def dp_allreduce_latency(stage_logs_per_engine: Sequence[Sequence[Sequence[Mappi
     return float(np.median(latest_starter_ms or recorded_ms))
 
 
-def _context_entry_ms(stage: Mapping) -> float:
-    entry = stage["forward_context_entered"] - stage["forward_start"]
-    if stage["dp_allreduce_start"] is not None and stage["dp_allreduce_start"] >= stage["forward_start"]:
-        entry -= stage["dp_allreduce_end"] - stage["dp_allreduce_start"]
-    return entry * 1e3
-
-
 def dummy_pass_ends(placement_dir: Path) -> dict[int, list[float]]:
     """Return each DP engine's dummy-forward end stamps, in order, from its dp_placement records."""
 
@@ -200,6 +251,7 @@ def stage_overhead_terms(
 ) -> list[StageStep]:
     """Return each forward's row key and CPU-overhead terms."""
 
+    _require_probe_fields(engine_records, stage_records)
     scheduled = [record["num_scheduled_tokens"] for record in engine_records if record["num_scheduled_tokens"]]
     for stage_id, records in enumerate(stage_records):
         if [record["num_scheduled_tokens"] for record in records] != scheduled:
@@ -207,8 +259,7 @@ def stage_overhead_terms(
                 f"pipeline stage {stage_id} logged {len(records)} forwards whose scheduled tokens do not "
                 f"match the engine's {len(scheduled)} steps that scheduled tokens"
             )
-    entry_medians = [float(np.median([_context_entry_ms(stage) for stage in records]) if records else 0.0)
-                     for records in stage_records]
+    identities = step_identities(engine_records)
     last_stage = len(stage_records) - 1
     stage_steps = []
     previous_forward_end = -math.inf
@@ -221,7 +272,7 @@ def stage_overhead_terms(
         previous_iteration_end = max(previous_iteration_end, record["update_end"])
         if not record["num_scheduled_tokens"]:
             continue
-        identity = step_identity(record["num_scheduled_tokens"])
+        identity = identities[n]
         idle_edge = None
         if engine_idle_edges_ms is not None:
             dummy_index = bisect.bisect_right(dummy_ends, record["step_start"])
@@ -241,7 +292,9 @@ def stage_overhead_terms(
             if stage["dp_allreduce_start"] is not None:
                 duration_ms = (stage["dp_allreduce_end"] - stage["dp_allreduce_start"]) * 1e3
                 dp_wait = max(0.0, duration_ms - dp_allreduce_ms)
-            kv_load_wait = max(0.0, _context_entry_ms(stage) - entry_medians[stage_id])
+            kv_load_wait = 0.0
+            if stage["kv_load_start"] is not None:
+                kv_load_wait = (stage["kv_load_end"] - stage["kv_load_start"]) * 1e3
             launch_start = max(stage["forward_context_entered"], device_end)
             device_end = launch_start + stage["forward_device_ms"] * 1e-3
             terms = {
