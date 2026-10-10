@@ -97,6 +97,7 @@ def test_lane_descriptor_rejects_out_of_owner_ids() -> None:
             total_expert_num=4,
             owned_expert_ids=(0, 2),
             local_token_counts=(1, 1),
+            global_token_counts=(1, 0, 1, 0),
             routed_token_count=2,
             router_topk=1,
         )

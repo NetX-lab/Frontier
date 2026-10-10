@@ -106,6 +106,7 @@ def _construct_attention_wrapper(
     model_config: ModelConfig | None = None,
     max_num_blocks: int = 4,
     fake_backend: _FakeBackendWrapper | None = None,
+    profile_method: str = "cuda_event",
 ):
     import frontier.profiling.attention.attention_wrapper as attention_wrapper_module
 
@@ -133,7 +134,7 @@ def _construct_attention_wrapper(
         block_size=64,
         attention_backend="FLASHINFER",
         dtype="bfloat16",
-        profile_method="cuda_event",
+        profile_method=profile_method,
         output_dir="unused",
     )
     return wrapper, fake_backend
@@ -454,3 +455,115 @@ def test_flashinfer_wrapper_rejects_mla_before_dense_cache_or_forward() -> None:
             kv_cache=object(),
             softmax_scale=1.0,
         )
+
+
+def _fake_randn(*shape, **_kwargs):
+    return {"shape": shape}
+
+
+def test_attention_wrapper_gives_each_sequence_its_own_blocks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wrapper, _fake_backend = _construct_attention_wrapper(
+        monkeypatch, model_config=_dense_model_config(), max_num_blocks=8
+    )
+    monkeypatch.setattr("frontier.profiling.attention.attention_wrapper.torch.randn", _fake_randn)
+
+    # Block size 64: a 101-token decode sequence takes two blocks.
+    decode_metadata, *_ = wrapper._get_input_tensors(AttentionInput(0, 100, 3, False))
+    mixed_metadata, *_ = wrapper._get_mixed_input_tensors(
+        MixedAttentionInput(seq_lens=[8, 16, 24], kv_cache_size=100)
+    )
+    true_mixed_metadata, *_ = wrapper._get_true_mixed_input_tensors(
+        TrueMixedBatchInput(
+            prefill_seq_lens=[32],
+            prefill_kv_cache_sizes=[16],
+            decode_kv_cache_sizes=[0, 64],
+        )
+    )
+
+    assert [seq.block_table for seq in decode_metadata] == [[0, 1], [2, 3], [4, 5]]
+    assert [seq.block_table for seq in mixed_metadata] == [[0, 1], [2, 3], [4, 5]]
+    assert [seq.block_table for seq in true_mixed_metadata] == [[0], [1], [2, 3]]
+    assert [seq.is_prompt for seq in true_mixed_metadata] == [True, False, False]
+    assert [seq.seq.get_len() for seq in true_mixed_metadata] == [48, 1, 65]
+    assert [seq.seq.get_num_prompt_tokens_processed() for seq in true_mixed_metadata] == [
+        16,
+        0,
+        64,
+    ]
+
+
+def test_attention_wrapper_rejects_block_tables_beyond_the_cache(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wrapper, _fake_backend = _construct_attention_wrapper(
+        monkeypatch, model_config=_dense_model_config(), max_num_blocks=8
+    )
+    monkeypatch.setattr("frontier.profiling.attention.attention_wrapper.torch.randn", _fake_randn)
+
+    with pytest.raises(ValueError, match="num_blocks=10 max_num_blocks=8"):
+        wrapper._get_input_tensors(AttentionInput(0, 100, 5, False))
+
+
+def test_kernel_only_profile_flushes_l2_between_warmup_and_traced_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import frontier.profiling.attention.attention_wrapper as module
+
+    events: list[str] = []
+    flush_buffer_sizes: list[int] = []
+
+    class _FlushBuffer:
+        def sum(self):
+            events.append("flush")
+
+    def fake_empty(num_bytes, **_kwargs):
+        flush_buffer_sizes.append(num_bytes)
+        return _FlushBuffer()
+
+    class _Tracer:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def __enter__(self):
+            events.append("trace_start")
+            return self
+
+        def __exit__(self, *_exc):
+            events.append("trace_end")
+
+        def get_operation_time_stats(self):
+            return {}
+
+    class _ForwardBackend(_FakeBackendWrapper):
+        def begin_forward(self, _seq_metadata_list):
+            pass
+
+        def forward(self, *_args, **_kwargs):
+            events.append("forward")
+
+        def end_forward(self):
+            pass
+
+    monkeypatch.setattr(
+        module.torch.cuda,
+        "get_device_properties",
+        lambda _device: type("Properties", (), {"L2_cache_size": 50})(),
+    )
+    monkeypatch.setattr(module.torch, "empty", fake_empty)
+    monkeypatch.setattr(module.torch.cuda, "synchronize", lambda: None)
+    monkeypatch.setattr(module, "RecordFunctionTracer", _Tracer)
+    monkeypatch.setattr(module.torch, "randn", _fake_randn)
+    wrapper, _fake_backend = _construct_attention_wrapper(
+        monkeypatch,
+        model_config=_dense_model_config(),
+        max_num_blocks=8,
+        fake_backend=_ForwardBackend(supported_family_ids={"dense_attention"}),
+        profile_method="record_function",
+    )
+
+    wrapper.profile(AttentionInput(0, 100, 2, False))
+
+    assert flush_buffer_sizes == [100]
+    assert events == ["forward", "flush", "trace_start", "forward", "trace_end"]

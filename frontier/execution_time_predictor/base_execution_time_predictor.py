@@ -182,23 +182,23 @@ class BaseExecutionTimePredictor(ABC):
         pass
 
     @abstractmethod
-    def _get_schedule_time(self, batch: Batch) -> float:
+    def _get_schedule_time(self, batch: Batch, stage_id: int) -> float:
         pass
 
     @abstractmethod
-    def _get_sampler_e2e_time(self, batch: Batch) -> float:
+    def _get_sampler_e2e_time(self, batch: Batch, stage_id: int) -> float:
         pass
 
     @abstractmethod
-    def _get_prepare_inputs_e2e_time(self, batch: Batch) -> float:
+    def _get_prepare_inputs_e2e_time(self, batch: Batch, stage_id: int) -> float:
         pass
 
     @abstractmethod
-    def _get_process_model_outputs_time(self, batch: Batch) -> float:
+    def _get_process_model_outputs_time(self, batch: Batch, stage_id: int) -> float:
         pass
 
     @abstractmethod
-    def _get_ray_comm_time(self, batch: Batch) -> float:
+    def _get_ray_comm_time(self, batch: Batch, stage_id: int) -> float:
         pass
 
     @abstractmethod

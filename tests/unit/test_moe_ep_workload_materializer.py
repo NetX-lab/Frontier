@@ -116,6 +116,7 @@ def test_lane_rejects_non_conserving_local_counts() -> None:
             total_expert_num=2,
             owned_expert_ids=(0, 1),
             local_token_counts=(1, 0),
+            global_token_counts=(1, 0),
             routed_token_count=2,
             router_topk=1,
         )

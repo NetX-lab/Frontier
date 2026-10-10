@@ -16,13 +16,14 @@ Reference:
 - Admission control guide: tests/debug/flow-level/admission_control_dev_guide_en.md
 """
 
+import math
 from collections import deque
 from dataclasses import replace
-from typing import Deque, Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
-from frontier.entities.batch import Batch, Request
+from frontier.entities.batch import Batch, DummyForwardBatch, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -51,6 +52,10 @@ from frontier.scheduler.replica_scheduler.vllm_v1_role_schedules import (
 )
 from frontier.spec_decode import is_spec_decode_enabled, method_uses_lookahead_slots
 from frontier.types import ClusterType
+
+# vLLM's DPEngineCoreProc runs its DP finish-sync all-reduce after every 32nd
+# busy-loop iteration of a wave (`_has_global_unfinished_reqs`).
+VLLM_DP_SYNC_INTERVAL = 32
 
 
 class VLLMv1EngineReplicaScheduler(
@@ -135,6 +140,36 @@ class VLLMv1EngineReplicaScheduler(
         )
         self._in_flight_batch_ids: Deque[int] = deque()
         self._blocking_batch_id: Optional[int] = None
+        # vLLM's DPEngineCoreProc: after a step that executed no batch, an
+        # attention-DP engine of a MoE model runs a dummy forward on every
+        # pipeline stage while its DP wave runs (`run_busy_loop`), so the other
+        # engines' MoE layers always find a partner.
+        self._runs_dp_dummy_passes = (
+            self._has_engine_batch_queue
+            and self._replica_is_moe
+            and self._replica_config.attn_dp > 1
+        )
+        self._dummy_pass_due = False
+        self._dummy_forwards_in_flight = 0
+        # Such an engine counts the busy-loop iterations of its DP wave, each
+        # running one forward, a batch or a dummy forward. After every
+        # VLLM_DP_SYNC_INTERVAL-th, its host waits in an all-reduce over the DP
+        # group, which ends the wave once no engine has unfinished requests.
+        # A batch that ends during the wait keeps its output, and its queue
+        # slot, until a later iteration pops it and applies the output.
+        self._dp_wave_running = False
+        self._dp_wave_steps = 0
+        self._iteration_open = False
+        self._waits_at_dp_sync = False
+        self._unfinished_at_dp_sync = False
+        self._dp_sync_released_lane_ids: List[int] = []
+        self._unpopped_outputs: Deque[Callable[[float], List]] = deque()
+        self._popped_output_events: List = []
+        self._iteration_running_limit = math.inf
+        # End of the engine loop's latest iteration: a schedule call that formed
+        # a batch, a batch output, or a dummy forward. None before the first.
+        # Only the batch-queue roles run vLLM's engine loop.
+        self._last_iteration_end: Optional[float] = None
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -381,24 +416,197 @@ class VLLMv1EngineReplicaScheduler(
         # the block waits for that batch's output.
         if not self._has_engine_batch_queue:
             return super().on_schedule(time)
-        if self._blocking_batch_id is not None:
+        if (
+            self._blocking_batch_id is not None
+            or self._dummy_forwards_in_flight
+            or self._waits_at_dp_sync
+        ):
             return []
-        batches = super().on_schedule(time)
+        if self._runs_dp_dummy_passes:
+            return self._run_dp_iterations(time)
+        batches = self._start_iterations(super().on_schedule(time), time)
         self._in_flight_batch_ids.extend(batch.id for batch in batches)
         if self._in_flight_batch_ids:
             self._blocking_batch_id = self._in_flight_batch_ids[0]
-            # No iteration runs during the block; the output that ends it
-            # starts the next one.
-            self._monolithic_pp_terminal_release_followup_poll_pending = False
-            self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
+            self._clear_followup_polls()
         return batches
 
-    def _leave_engine_batch_queue(self, batch: Batch) -> None:
-        if not self._has_engine_batch_queue:
-            return
-        self._in_flight_batch_ids.remove(batch.id)
-        if batch.id == self._blocking_batch_id:
-            self._blocking_batch_id = None
+    def _run_dp_iterations(self, time: float) -> List[Batch]:
+        """Run DPEngineCoreProc's busy-loop iterations from `time` until the host waits.
+
+        Each iteration schedules at most one batch. It returns at once while
+        the batch queue has room and its oldest batch is in flight; otherwise
+        it pops the oldest batch, waiting for it if it has not ended, and runs
+        a dummy forward if it scheduled nothing (`run_busy_loop`). An
+        iteration that waited or ran a dummy forward ends when the engine's
+        next pass starts.
+        """
+        if self._dummy_pass_due:
+            self._dummy_pass_due = False
+            return self._issue_dummy_pass()
+        if self._iteration_open:
+            self._iteration_open = False
+            if self._end_iteration():
+                return []
+        if not self._dp_wave_running and self.has_unfinished_requests:
+            # An engine that receives a request starts a wave on every engine.
+            for lane in self._dp_group():
+                lane._dp_wave_running = True
+        batches: List[Batch] = []
+        while True:
+            formed = self._schedule_iteration(time)
+            batches.extend(formed)
+            if self._unpopped_outputs:
+                # The oldest batch ended while the host waited at the DP sync,
+                # so this iteration pops it at once and applies its output.
+                # The iteration ends with its own forward.
+                apply_output = self._unpopped_outputs.popleft()
+                self._popped_output_events.extend(apply_output(time))
+                if not formed:
+                    return batches + self._issue_dummy_pass()
+            elif not formed or self._num_running_batches == self._num_stages:
+                if self._in_flight_batch_ids:
+                    self._blocking_batch_id = self._in_flight_batch_ids[0]
+                    self._dummy_pass_due = not formed
+                    self._iteration_open = True
+                    self._clear_followup_polls()
+                elif self._dp_wave_running:
+                    return self._issue_dummy_pass()
+                return batches
+            if self._end_iteration():
+                self._clear_followup_polls()
+                return batches
+
+    def _schedule_iteration(self, time: float) -> List[Batch]:
+        """Schedule call of one busy-loop iteration: at most one batch."""
+        self._iteration_running_limit = self._num_running_batches + 1
+        batches = self._start_iterations(super().on_schedule(time), time)
+        self._iteration_running_limit = math.inf
+        self._in_flight_batch_ids.extend(batch.id for batch in batches)
+        return batches
+
+    def _end_iteration(self) -> bool:
+        """Count one ended busy-loop iteration; return whether the host then waits at the DP sync."""
+        self._dp_wave_steps += 1
+        if self._dp_wave_steps % VLLM_DP_SYNC_INTERVAL:
+            return False
+        self._waits_at_dp_sync = True
+        self._unfinished_at_dp_sync = self.has_unfinished_requests
+        group = self._dp_group()
+        if all(lane._waits_at_dp_sync for lane in group):
+            # The all-reduce returns once the last engine joins it, and it ends
+            # the wave when no engine joined with unfinished requests.
+            wave_continues = any(lane._unfinished_at_dp_sync for lane in group)
+            for lane in group:
+                lane._waits_at_dp_sync = False
+                if not wave_continues:
+                    lane._dp_wave_running = False
+                    lane._dp_wave_steps = 0
+            self._dp_sync_released_lane_ids = [
+                lane._replica_local_id for lane in group if lane is not self
+            ]
+        return self._waits_at_dp_sync
+
+    def consume_dp_sync_release(self) -> List[int]:
+        """Lanes whose host this engine's latest pass released from the DP sync."""
+        released, self._dp_sync_released_lane_ids = self._dp_sync_released_lane_ids, []
+        return released
+
+    def _dp_group(self) -> List["VLLMv1EngineReplicaScheduler"]:
+        return [
+            self._cluster_scheduler.get_replica_scheduler(self._replica_id, lane_id)
+            for lane_id in range(self._replica_config.attn_dp)
+        ]
+
+    def _start_iterations(self, batches: List[Batch], time: float) -> List[Batch]:
+        """Give each batch the engine's idle time before the iteration that forms it.
+
+        Each batch is one loop iteration of vLLM's engine, so a second batch of
+        the same call follows the first with no idle time. An engine's first
+        batch follows no iteration.
+        """
+        for batch in batches:
+            batch.engine_idle_time = (
+                math.inf if self._last_iteration_end is None else time - self._last_iteration_end
+            )
+            self._last_iteration_end = time
+        return batches
+
+    def _clear_followup_polls(self) -> None:
+        # No iteration runs while the engine waits; the output or the dummy
+        # forward that ends the wait starts the next one.
+        self._monolithic_pp_terminal_release_followup_poll_pending = False
+        self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
+
+    @property
+    def has_unfinished_requests(self) -> bool:
+        """vLLM's `Scheduler.has_unfinished_requests`: a waiting or running request."""
+        return bool(self._running_requests) or any(self._waiting_queues())
+
+    @property
+    def engine_loop_idle(self) -> bool:
+        """Whether the engine waits for work: nothing in flight and no DP sync to finish."""
+        return (
+            not self._in_flight_batch_ids
+            and not self._dummy_forwards_in_flight
+            and not self._waits_at_dp_sync
+        )
+
+    def _issue_dummy_pass(self) -> List[Batch]:
+        """Start one dummy forward on every pipeline stage at once.
+
+        `execute_dummy_batch` is one RPC to every worker of the engine. Each
+        stage runs its part once its earlier work ends, with no PP transfer
+        between parts, and the engine waits for every part.
+        """
+        dummy_forwards = []
+        for stage_id in range(self._num_stages):
+            dummy_forward = DummyForwardBatch(
+                self._replica_id, stage_id, self._batch_creation_counter
+            )
+            self._assign_lane_identity(dummy_forward, self._batch_creation_counter)
+            dummy_forwards.append(dummy_forward)
+        self._batch_creation_counter += 1
+        self._dummy_forwards_in_flight = self._num_stages
+        self._iteration_open = True
+        self._clear_followup_polls()
+        return dummy_forwards
+
+    def on_dummy_forward_end(self, time: float) -> bool:
+        """Record one ended dummy forward; return whether the engine iterates again."""
+        self._dummy_forwards_in_flight -= 1
+        if self._dummy_forwards_in_flight:
+            return False
+        self._last_iteration_end = time
+        return True
+
+    def hold_batch_output(self, apply_output: Callable[[float], List]) -> bool:
+        """Keep the output of a batch that just ended while the host waits at the DP sync.
+
+        vLLM applies a batch's output (`Scheduler.update_from_output`) only
+        when an iteration pops it from the batch queue. Its effects on
+        requests, KV blocks and metrics wait for that pop, where
+        `apply_output(pop_time)` applies them and returns its events. Return
+        whether the output is held.
+        """
+        if not self._waits_at_dp_sync:
+            return False
+        self._unpopped_outputs.append(apply_output)
+        return True
+
+    def consume_popped_output_events(self) -> List:
+        """Events of the outputs this engine's latest pass popped."""
+        events, self._popped_output_events = self._popped_output_events, []
+        return events
+
+    def _pop_batch_output(self, batch: Batch) -> None:
+        """Take a batch's output from the engine: its queue slot and its requests are free."""
+        self._num_running_batches -= 1
+        if self._has_engine_batch_queue:
+            self._in_flight_batch_ids.remove(batch.id)
+            if batch.id == self._blocking_batch_id:
+                self._blocking_batch_id = None
+        self._release_batch_requests_active(batch)
 
     def on_batch_end(self, batch: Batch) -> None:
         """
@@ -414,13 +622,14 @@ class VLLMv1EngineReplicaScheduler(
         Args:
             batch: The batch that has completed execution
         """
-        self._num_running_batches -= 1
-        self._leave_engine_batch_queue(batch)
+        self._pop_batch_output(batch)
+        if self._has_engine_batch_queue:
+            # The iteration that pops a batch's output ends with it.
+            self._last_iteration_end = batch.completed_at
 
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
-        self._release_batch_requests_active(batch)
         self._roll_back_rejected_drafts(batch)
 
         for request in batch.requests:
@@ -1101,6 +1310,9 @@ class VLLMv1EngineReplicaScheduler(
         Returns:
             Optional[Batch]: The next batch to execute, or None if no work
         """
+        # DPEngineCoreProc schedules at most one batch per busy-loop iteration.
+        if self._num_running_batches >= self._iteration_running_limit:
+            return None
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
         )

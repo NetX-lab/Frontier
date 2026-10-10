@@ -356,7 +356,7 @@ To support **MoE Load Imbalance Profiling**, the following enhancements were mad
 **New Functionality**:
 ```python
 # Check for load imbalance features
-load_imbalance_features = self.LOAD_IMBALANCE_FEATURES
+load_imbalance_features = MOE_LOAD_IMBALANCE_FEATURES  # frontier.moe_load_imbalance
 has_load_imbalance = all(feat in df.columns for feat in load_imbalance_features)
 
 if has_load_imbalance:

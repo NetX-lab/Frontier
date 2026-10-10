@@ -1510,6 +1510,7 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
     predictor.predict_stage_execution_time.return_value = SimpleNamespace(
         total_time=1.0,
         model_time=0.8,
+        forward_launch_stall_time=lambda _device_span: 0.0,
     )
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     return ReplicaStageScheduler(
@@ -1718,6 +1719,7 @@ def test_mixed_moe_ffn_event_keeps_ep_dispatch_lifecycle(monkeypatch) -> None:
             total_expert_num=1,
             owned_expert_ids=(0,),
             local_token_counts=(1,),
+            global_token_counts=(1,),
             routed_token_count=1,
             router_topk=1,
         ),
@@ -1770,6 +1772,7 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
         total_expert_num=48,
         owned_expert_ids=tuple(range(48)),
         local_token_counts=(0,) * 48,
+        global_token_counts=(0,) * 48,
         routed_token_count=0,
         router_topk=1,
     )

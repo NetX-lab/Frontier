@@ -48,13 +48,6 @@ def handle_forward_sync_collective(
         )
     source_batches = layer_rooms.pop(sync_stage)["batches"]
 
-    live_batches = [batch for batch in source_batches.values() if not batch.is_idle]
-    if not live_batches:
-        raise RuntimeError(
-            "Forward collective completion requires a non-idle participant batch: "
-            f"replica={replica_id}, stage={stage_id}, "
-            f"batch_global_id={batch_global_id}, layer={layer_id}"
-        )
     # One completed layer advances a request's decode counter once, and only if
     # that request is decoding. A prefill or recompute chunk has no decode layer
     # to credit, and a request carried in a prefill batch after its own prefill
@@ -84,7 +77,7 @@ def handle_forward_sync_collective(
     from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
 
     events = []
-    for source_batch in live_batches:
+    for source_batch in source_batches.values():
         is_prefill_source = source_forward_mode(source_batch) == "prefill"
         handler = (
             handle_prefill_sync_collective

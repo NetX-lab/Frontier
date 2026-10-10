@@ -137,6 +137,7 @@ frontier/profiling/
 │   ├── validation.py            # Contract validation helpers
 │   ├── planning.py              # Single-node TP planning helpers
 │   ├── analytical.py            # Analytical TP extrapolation helpers
+│   ├── vllm_cpu_probe.py        # CSVs from vLLM CPU-probe step logs
 │   └── backends/                # Backend abstraction
 │       ├── base_backend.py
 │       ├── sarathi_backend.py
@@ -296,6 +297,77 @@ Semantics:
 - TP 1/2/4 are measured directly.
 - TP 8 is analytically generated from measured rows when enabled.
 - If analytical modeling is not enabled and unmeasurable TP exists, profiling fails fast.
+
+### From vLLM CPU-probe logs
+
+`vllm_cpu_probe.py` builds the CPU-overhead CSVs from the logs that Frontier's instrumented
+vLLM writes when `VLLM_FRONTIER_CPU_PROBE_LOG_PATH` is set. The engine log
+`cpu_probe[_dp<d>].jsonl` holds one record per engine step with host timestamps of the
+schedule and the output update, and for each scheduled request its tokens, its computed
+tokens before the step and its prompt length, with the engine's KV connector role `kv_role`.
+Each pipeline stage writes `cpu_probe[_dp<d>]_pp<p>.jsonl`, `_pp0` for a single-stage engine,
+with one record per forward: the runner's timestamps, the start and end of the DP token-count
+all-reduce and of the KV connector's `start_load_kv`, the CUDA graph mode and the CUDA-event
+device time of the forward, timed from the forward-context entry. Logs of an older probe,
+without the request-phase or KV-load fields, are rejected.
+
+Frontier prices each stage's forward from its operator tables, and prices itself the waits
+between stages, between DP engines and for a PD decode instance's KV load. The terms price
+every other host interval of a step, each once, on the stage that runs it:
+
+| Term | Probe interval |
+| --- | --- |
+| `schedule` | stage 0: `step_start -> schedule_end` |
+| `prepare_inputs_e2e` | each stage: dispatch start `-> forward_context_entered`, less the DP wait and the KV-load wait |
+| `forward_launch` | each stage, eager forwards only: launch start `-> forward_end` |
+| `forward_drain` | each stage, eager forwards only: `forward_end ->` device end, at least `0` |
+| `sampler_e2e` | last stage: `max(forward_end, device end) -> sample_end` |
+| `process_model_outputs` | last stage: `sample_end ->` next `step_start` when the next step shares a request and starts after `update_end`, else `sample_end -> update_end` |
+| `ray_comm_time_mean` | `0` (no Ray hop) |
+
+- Stage 0's dispatch starts at the later of `schedule_end` and the end of its previous
+  forward, which leaves out queueing behind the previous batch; a later stage's dispatch
+  starts at its `execute_start`, after its receive wait.
+- The DP wait is the all-reduce's duration beyond its own latency: the median duration on
+  the DP engine that reaches an all-reduce last, over the all-reduces recorded by every DP
+  engine of the serving instance.
+- The KV-load wait is the KV connector's `start_load_kv`, which runs inside the
+  forward-context entry; an engine without a connector waits `0`.
+- The launch start is the later of `forward_context_entered` and the upstream stage's device
+  end; a stage's device end is its launch start plus its forward's device time.
+- Frontier adds `forward_drain` to a forward only when its launch outlasts its predicted
+  device time: the forward then ends once the device has run the kernels launched last.
+
+Forwards are grouped per stage by `(batch_size, num_prefill_tokens, num_decode_tokens)` and
+keyed by `pipeline_stage_id`. A request's tokens are prefill when they recompute tokens an
+earlier step computed (a resumed preemption victim) or continue its prompt, and decode
+otherwise; on a PD decode instance (`kv_consumer`) a request's first step, which computes the
+prompt tokens the connector did not load, is its first decode step, as in Frontier's DECODE
+role. A forward that replayed a FULL CUDA graph goes to the
+kernel-only file and publishes no `forward_launch` or `forward_drain`; every other forward
+goes to the eager file. Each `--cpu_probe_logs` lists the engine logs of one serving
+instance, one per DP engine in DP rank order; a PP>1 engine adds `--num_pipeline_stages`.
+
+With `--engine_idle_edges_ms 0 100 500`, rows are also keyed by `engine_idle_ms`, the
+largest edge at or below the engine's idle time before the step: from the latest
+`update_end` of its earlier steps, or the end of its latest DP dummy forward, to its
+`step_start`. A DP>1 instance reads its dummy forwards from the `dummy_pass` records of
+`dp_placement/*.jsonl` beside its engine logs. An engine's first step that schedules tokens
+carries the engine's one-time start costs, which a ground-truth run's warmups absorb, so it
+is left out of the rows; its terms are still measured, so the step after it keeps its own
+dispatch queueing. Without `--engine_idle_edges_ms`, every step is kept. Frontier keys each
+batch the same way, from the end of its engine's latest loop iteration or dummy forward to
+the batch's schedule time.
+
+```bash
+python -m frontier.profiling.cpu_overhead.vllm_cpu_probe \
+  --cpu_probe_logs run/prefill/cpu_probe.jsonl \
+  --cpu_probe_logs run/decode/cpu_probe.jsonl \
+  --model_name llama2_7b_dense_example --tensor_parallel_degree 1 \
+  --profiling_precision FP16 --scheduling_mode sync \
+  --eager_output_file cpu_overheads.csv \
+  --kernel_only_output_file cpu_overheads_kernel_only.csv
+```
 
 ## PP Receiver-Head Overhead Materialization
 

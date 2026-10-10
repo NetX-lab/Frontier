@@ -19,6 +19,7 @@ class OperationMetrics(enum.Enum):
     ATTN_POST_PROJ = "attn_post_proj"
     ATTN_POST_PROJ_ALL_REDUCE = "attn_post_proj_all_reduce"
     ATTN_KV_CACHE_SAVE = "attn_kv_cache_save"
+    ATTN_KV_CACHE_EXTRACT = "attn_kv_cache_extract"
     ATTN = "attn"
     ATTN_PREFILL = "attn_prefill"
     ATTN_DECODE = "attn_decode"

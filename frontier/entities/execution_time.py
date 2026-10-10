@@ -23,6 +23,7 @@ from frontier.entities.time_components import (
     OverheadTime,
     ResidualTime,
 )
+from frontier.operators.families import get_comm_operator
 
 
 # Each operator has one physical EP phase and one existing public scalar source.
@@ -49,6 +50,9 @@ _MOE_PHASE_COMPONENTS = {
         ("COMPUTE", "add_ffn_residual", "add_ffn_residual_time"),
     ),
 }
+# The device idles before an EP collective's kernels while the lane-local phase
+# before it ends, so that phase owns the gap and the collective keeps its time.
+_EP_COLLECTIVE_GAP_PHASE = {"dispatch": "pre_dispatch", "combine": "routed_compute"}
 
 
 class ExecutionTime(BaseEntity):
@@ -109,6 +113,8 @@ class ExecutionTime(BaseEntity):
         attn_tensor_parallel_allreduce_time: float | None = None,
         moe_tensor_parallel_allreduce_time: float | None = None,
         pp_stage_boundary_handoff_time: float = 0.0,
+        forward_launch_time: float = 0.0,
+        forward_drain_time: float = 0.0,
         decode_draft_proposer_time: float = 0.0,
         mtp_terminal_overshoot_time: float = 0.0,
         attn_mla_kv_cache_save_time: float = 0.0,
@@ -117,6 +123,7 @@ class ExecutionTime(BaseEntity):
         attn_mla_decode_q_latent_proj_time: float = 0.0,
         attn_mla_decode_time: float = 0.0,
         attn_mla_v_up_proj_time: float = 0.0,
+        attention_kv_cache_extract_execution_time: float = 0.0,
         attention_operator_times: AttentionOperatorTimes | None = None,
         communication_operator_times: CommunicationOperatorTimes | None = None,
         mlp_operator_times: MLPOperatorTimes | None = None,
@@ -343,6 +350,7 @@ class ExecutionTime(BaseEntity):
             attention_layer_post_proj_execution_time=attention_layer_post_proj_execution_time,
             attention_rope_execution_time=attention_rope_execution_time,
             attention_kv_cache_save_execution_time=attention_kv_cache_save_execution_time,
+            attention_kv_cache_extract_execution_time=attention_kv_cache_extract_execution_time,
             attn_mla_kv_cache_save_time=attn_mla_kv_cache_save_time,
             attn_mla_prefill_kv_up_proj_time=attn_mla_prefill_kv_up_proj_time,
             attn_mla_prefill_time=attn_mla_prefill_time,
@@ -410,6 +418,8 @@ class ExecutionTime(BaseEntity):
                 pp_stage_boundary_residual_runtime_time
             ),
             pp_stage_boundary_handoff_time=pp_stage_boundary_handoff_time,
+            forward_launch_time=forward_launch_time,
+            forward_drain_time=forward_drain_time,
         )
 
         self._residual_time = ResidualTime(
@@ -481,6 +491,7 @@ class ExecutionTime(BaseEntity):
         self._mtp_terminal_overshoot_time = mtp_terminal_overshoot_time
         self._op_times = normalize_execution_op_times(merged_op_times)
         self._refresh_op_time_attr_values()
+        self._kernel_gap_times: Mapping[str, float] = {}
 
     @staticmethod
     def _merge_operator_time_sources(
@@ -504,6 +515,56 @@ class ExecutionTime(BaseEntity):
 
     def _refresh_op_time_attr_values(self) -> None:
         self._op_time_attr_values = execution_op_time_values_by_attr(self._op_times)
+
+    def add_kernel_gap(
+        self, gap_ms: float, attention_kernel_count: float, kernel_counts: Mapping[str, float],
+    ) -> None:
+        """Add the device idle time before each kernel this layer launches.
+
+        Kernel-only operator times hold kernel durations only; the device also
+        idles ``gap_ms`` before each kernel. ``attention_kernel_count`` counts
+        the attention operators' kernels and ``kernel_counts`` the other compute
+        operators' kernels by operator name; each priced collective launches the
+        kernels of its operator spec. The gap is its own term of the attention
+        scope and of the MLP or of each MoE phase.
+        """
+        self._require_mutable()
+        compute_counts = dict(kernel_counts)
+
+        def collective_count(op_name: str, time_ms: float) -> float:
+            return get_comm_operator(op_name).kernel_count if time_ms > 0 else 0.0
+
+        part_counts = {
+            "attention": attention_kernel_count
+            + collective_count("attn_tensor_parallel_allreduce", self._get_attn_tp_allreduce_time())
+        }
+        if self._is_moe:
+            for phase in ("pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine"):
+                owner = _EP_COLLECTIVE_GAP_PHASE.get(phase, phase)
+                part_counts[owner] = part_counts.get(owner, 0.0) + math.fsum(
+                    collective_count(name, time_ms) if kind == "COMM" else compute_counts.pop(name, 0.0)
+                    for kind, name, time_ms in self.moe_phase_operator_times(phase)
+                )
+            if compute_counts:
+                raise ValueError(f"No EP phase of a MoE layer runs operators {sorted(compute_counts)}")
+        else:
+            part_counts["mlp"] = math.fsum(compute_counts.values()) + collective_count(
+                "mlp_tensor_parallel_allreduce", self._get_moe_tp_allreduce_time()
+            )
+        self._kernel_gap_times = {part: gap_ms * count for part, count in part_counts.items()}
+
+    @property
+    def has_kernel_gap(self) -> bool:
+        return bool(self._kernel_gap_times)
+
+    @property
+    def kernel_gap_time(self) -> float:
+        """Device idle time before this layer's kernels, in milliseconds."""
+        return math.fsum(self._kernel_gap_times.values())
+
+    def moe_phase_kernel_gap_time(self, phase: str) -> float:
+        """The kernel-gap part of one EP phase, in milliseconds."""
+        return self._kernel_gap_times.get(phase, 0.0)
 
     def _merged_replacement_operator_time_source(
         self,
@@ -869,7 +930,10 @@ class ExecutionTime(BaseEntity):
                      for kind, name, attr in _MOE_PHASE_COMPONENTS[phase])
 
     def _moe_phase_time(self, phase: str) -> float:
-        return sum(value for _, _, value in self.moe_phase_operator_times(phase))
+        return (
+            sum(value for _, _, value in self.moe_phase_operator_times(phase))
+            + self.moe_phase_kernel_gap_time(phase)
+        )
 
     def get_single_layer_moe_pre_dispatch_time(self) -> float:
         """Return shared work before EP dispatch, in milliseconds."""
@@ -989,6 +1053,7 @@ class ExecutionTime(BaseEntity):
         return (
             self._moe_or_mlp_time.total_time()
             + self._get_moe_tp_allreduce_time()
+            + self._kernel_gap_times.get("mlp", 0.0)
         )
 
     def _get_moe_execution_time(self) -> float:
@@ -1007,6 +1072,7 @@ class ExecutionTime(BaseEntity):
             + self._get_share_expert_tensor_parallel_allreduce_time()
             + self._get_dp_input_allreduce_time()
             + self._get_dp_output_allreduce_time()
+            + math.fsum(self.moe_phase_kernel_gap_time(phase) for phase in _MOE_PHASE_COMPONENTS)
         )
 
     def _get_attn_tp_allreduce_time(self) -> float:
@@ -1034,6 +1100,7 @@ class ExecutionTime(BaseEntity):
         return (
             self._attention_time.total_time()
             + self._get_attn_tp_allreduce_time()
+            + self._kernel_gap_times.get("attention", 0.0)
         )
 
     def _get_block_execution_time(self) -> float:
@@ -1255,6 +1322,11 @@ class ExecutionTime(BaseEntity):
         )
 
     @property
+    def attention_kv_cache_extract_execution_time(self) -> float:
+        """KV connector's gather of the prompts this step completes (one physical layer)."""
+        return self._attention_time.attention_kv_cache_extract_execution_time
+
+    @property
     def attention_decode_execution_time(self) -> float:
         """Attention decode time (one physical layer)."""
         return self._time_attr_value(
@@ -1368,6 +1440,11 @@ class ExecutionTime(BaseEntity):
         return self._overhead_time.prepare_inputs_e2e_time
 
     @property
+    def forward_preparation_time(self) -> float:
+        """Host time before the forward starts (not scaled by layers)."""
+        return self._overhead_time.forward_preparation_time()
+
+    @property
     def process_model_outputs_time(self) -> float:
         """Output processing time (not scaled by layers)."""
         return self._overhead_time.process_model_outputs_time
@@ -1401,6 +1478,28 @@ class ExecutionTime(BaseEntity):
     def pp_stage_boundary_handoff_time(self) -> float:
         """Stage-aware PP handoff overhead time (not scaled by layers)."""
         return self._overhead_time.pp_stage_boundary_handoff_time
+
+    @property
+    def forward_launch_time(self) -> float:
+        """Host time to launch an eager forward step's kernels (not scaled by layers)."""
+        return self._overhead_time.forward_launch_time
+
+    @property
+    def forward_drain_time(self) -> float:
+        """Device time after an eager forward step's last kernel launch (not scaled by layers)."""
+        return self._overhead_time.forward_drain_time
+
+    def forward_launch_stall_time(self, device_span: float) -> float:
+        """Launch time, in seconds, that a device stream of ``device_span`` seconds leaves exposed.
+
+        An eager step's host launches the forward's kernels while the device
+        runs them. When the launch is the slower stream, the forward ends once
+        the device has run the kernels launched last.
+        """
+        launch = self.forward_launch_time * 1e-3
+        if launch <= device_span:
+            return 0.0
+        return launch + self.forward_drain_time * 1e-3 - device_span
 
     @property
     def decode_draft_proposer_time(self) -> float:

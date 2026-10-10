@@ -399,7 +399,7 @@ def _profile_on_cpu(monkeypatch, **arguments):
         kernel,
         "moe_align_block_size",
         lambda *args, **kwargs: native_calls.alignment.append((args, kwargs))
-        or (None, None, None),
+        or (None, None, torch.tensor([16])),
         raising=False,
     )
     monkeypatch.setattr(
@@ -541,11 +541,14 @@ def test_the_tile_config_and_the_alignment_follow_fused_experts(monkeypatch):
         expert_map=expert_map,
     )
 
-    (config_lookup,) = native_calls.config
+    config_lookup, *range_lookups = native_calls.config
     assert config_lookup["block_shape"] == [128, 128]
     assert config_lookup["M"] == 4
     assert config_lookup["top_k"] == 2
     assert config_lookup["dtype"] == "float16"
+    # The recorded BLOCK_SIZE_M ranges repeat the lookup at every token count up to the row's.
+    assert [lookup["M"] for lookup in range_lookups] == [1, 2, 3, 4]
+    assert all({**lookup, "M": 4} == config_lookup for lookup in range_lookups)
     (alignment,) = native_calls.alignment
     alignment_args, alignment_kwargs = alignment
     assert alignment_args[1:] == (16, 4)

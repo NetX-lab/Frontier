@@ -1,6 +1,6 @@
 from typing import List
 
-from frontier.entities.batch import Batch
+from frontier.entities.batch import Batch, DummyForwardBatch
 from frontier.entities.batch_stage import BatchStage
 from frontier.events import BaseEvent
 from frontier.logger import init_logger
@@ -45,6 +45,7 @@ class BatchStageEndEvent(BaseEvent):
     ) -> List[BaseEvent]:
         from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
         from frontier.events.batch_stage_arrival_event import BatchStageArrivalEvent
+        from frontier.events.replica_schedule_event import ReplicaScheduleEvent
         from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 
         if self._batch.schedule_epoch != self._batch_schedule_epoch:
@@ -119,14 +120,16 @@ class BatchStageEndEvent(BaseEvent):
         stage_scheduler.on_stage_end() # update status: _is_busy
 
         self._batch_stage.on_stage_end(self.time)
-        metrics_store.on_batch_stage_end(
-            self._batch_stage,
-            self.time,
-            self._replica_id,
-            self._stage_id,
-            self._cluster_type,
-            self._replica_local_id,
-        )
+        is_dummy_forward = isinstance(self._batch, DummyForwardBatch)
+        if not is_dummy_forward:
+            metrics_store.on_batch_stage_end(
+                self._batch_stage,
+                self.time,
+                self._replica_id,
+                self._stage_id,
+                self._cluster_type,
+                self._replica_local_id,
+            )
         cluster_scheduler.release_stage_admission_for_batch(
             self._batch,
             stage_id=self._stage_id,
@@ -156,6 +159,23 @@ class BatchStageEndEvent(BaseEvent):
                 exclude_replica_local_id=self._replica_local_id,
             )
         )
+
+        if is_dummy_forward:
+            # Each part ends on its own stage; the engine iterates again once
+            # every part of its dummy forward has ended.
+            replica_scheduler = cluster_scheduler.get_replica_scheduler(
+                self._replica_id, self._replica_local_id
+            )
+            if replica_scheduler.on_dummy_forward_end(self.time):
+                next_events.append(
+                    ReplicaScheduleEvent(
+                        self.time,
+                        self._replica_id,
+                        self._cluster_type,
+                        self._replica_local_id,
+                    )
+                )
+            return next_events
 
         if self._is_last_stage:
             return next_events + [

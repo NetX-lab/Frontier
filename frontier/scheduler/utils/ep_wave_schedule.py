@@ -6,6 +6,7 @@ import math
 from numbers import Real
 from typing import Any
 
+from frontier.entities import DummyForwardBatch
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
 )
@@ -16,17 +17,18 @@ def _source_mode(mode: str, source_batch: Any) -> str:
 
     For a disaggregated role the group mode is the source mode: those clusters
     run one phase. Only a shared monolithic forward can hold lanes in different
-    phases, and there each source follows its own.
+    phases, and there each source follows its own. A dummy forward carries no
+    prefill and follows the decode continuation in every role.
     """
 
-    if mode != "forward":
+    if mode != "forward" and not isinstance(source_batch, DummyForwardBatch):
         return mode
     from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 
     return source_forward_mode(source_batch)
 
 
-def _cohort_collective_event_mode(mode: str, non_idle_source_batches) -> str:
+def _cohort_collective_event_mode(mode: str, source_batches) -> str:
     """Pick one collective event class for the whole cohort, deterministically.
 
     Events order by `(time, event_type, id)`, so the class carries a priority.
@@ -41,7 +43,7 @@ def _cohort_collective_event_mode(mode: str, non_idle_source_batches) -> str:
         return mode
     from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 
-    for source_batch in non_idle_source_batches:
+    for source_batch in source_batches:
         if source_forward_mode(source_batch) == "prefill":
             return "prefill"
     return "decode"
@@ -81,6 +83,7 @@ def schedule_layer_wave(
         batch=batch,
         step_id_getter=scheduler._get_forward_step_id,
         aggregate_batch_builder=scheduler._create_virtual_global_batch,
+        cluster_type=scheduler._cluster_type,
     )
     source_batches = wave_inputs.source_batches
     cohort_id = wave_inputs.step_id
@@ -92,7 +95,6 @@ def schedule_layer_wave(
 
     model_config = scheduler._config.replica_config.model_config
     predictor = scheduler._predictor
-    non_idle_source_batches = list(wave_inputs.non_idle_batches)
     layer_workload = None
     lane_compute_times_ms: list[float] = []
     if model_config.is_moe_layer(layer_id):
@@ -123,7 +125,7 @@ def schedule_layer_wave(
     else:
         event_cls = _load_dense_layer_event()
         dense_events = []
-        for source_batch in non_idle_source_batches:
+        for source_batch in source_batches.values():
             source_mode = _source_mode(mode, source_batch)
             execution_time = predictor.predict_stage_execution_time(
                 source_batch,
@@ -190,7 +192,7 @@ def schedule_layer_wave(
         + timing.combine_barrier_time_ms
         + timing.post_combine_barrier_time_ms
     )
-    for source_batch in non_idle_source_batches:
+    for source_batch in source_batches.values():
         if _source_mode(mode, source_batch) == "prefill":
             component_ledger = getattr(
                 source_batch,
@@ -224,7 +226,7 @@ def schedule_layer_wave(
     sync_room["arrival_times"].update(
         {lane_id: barrier_end_time_s for lane_id in source_batches}
     )
-    collective_mode = _cohort_collective_event_mode(mode, non_idle_source_batches)
+    collective_mode = _cohort_collective_event_mode(mode, source_batches.values())
     event_cls = (
         _load_prefill_sync_event()
         if collective_mode == "prefill"

@@ -1,6 +1,8 @@
 import pytest
 
 from frontier.profiling.attention.attention_input import AttentionInput
+from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
+from frontier.profiling.attention.true_mixed_batch_input import TrueMixedBatchInput
 from frontier.profiling.utils import (
     get_attention_batch_sizes_to_profile,
     get_attention_input_combinations,
@@ -102,10 +104,47 @@ def test_decode_attention_input_reserves_the_current_token():
 
 
 def test_decode_memory_limit_reserves_the_current_token():
+    # 32 KV tokens fill two blocks of 16; the current token needs a third.
     decode_input = AttentionInput(0, 32, 1, False)
 
-    assert not decode_input.is_under_memory_limit(32)
-    assert decode_input.is_under_memory_limit(33)
+    assert not decode_input.is_under_memory_limit(2, 16)
+    assert decode_input.is_under_memory_limit(3, 16)
+
+
+def test_decode_memory_limit_counts_whole_blocks_per_sequence():
+    # 64 decodes at KV 2272 hold 64 x 2273 = 145,472 tokens, under 9122 x 16,
+    # but each takes 143 blocks of 16: 9152 blocks in all.
+    assert not AttentionInput(0, 2272, 64, False).is_under_memory_limit(9122, 16)
+    assert AttentionInput(0, 2272, 64, False).is_under_memory_limit(9152, 16)
+
+
+def test_mixed_memory_limit_counts_whole_blocks_per_sequence():
+    # Sequences of 40, 48 and 56 tokens (with KV 32) take 3 + 3 + 4 blocks of 16.
+    batch = MixedAttentionInput(seq_lens=[8, 16, 24], kv_cache_size=32)
+
+    assert not batch.is_under_memory_limit(9, 16)
+    assert batch.is_under_memory_limit(10, 16)
+
+
+def test_true_mixed_memory_limit_counts_whole_blocks_per_sequence():
+    # Three 2048-token prefills and 64 decodes at KV 2176 hold 145,472 tokens,
+    # which fit in 9122 blocks of 16, but the wrapper allocates 9152 blocks.
+    batch = TrueMixedBatchInput([2048] * 3, [0] * 3, [2176] * 64)
+
+    assert not batch.is_under_memory_limit(9122, 16)
+    assert batch.is_under_memory_limit(9152, 16)
+
+
+@pytest.mark.parametrize("grid_search", [False, True])
+def test_a_prefill_that_is_both_a_first_chunk_and_a_full_prefill_is_profiled_once(grid_search):
+    inputs = _attention_input_tuples(
+        get_attention_input_combinations(
+            4096, 1, 1, True, False, enable_chunked_prefill_grid_search=grid_search
+        )
+    )
+
+    assert len(inputs) == len(set(inputs))
+    assert inputs.count((4096, 0, 1, True)) == 1
 
 
 def test_explicit_decode_cache_endpoint_remains_bounded():

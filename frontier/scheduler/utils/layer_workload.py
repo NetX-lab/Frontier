@@ -48,9 +48,9 @@ def materialize_layer_workload(
         raise ValueError("moe_expert_parallel_size must be an exact positive int")
     if type(router_topk) is not int or router_topk <= 0:
         raise ValueError("router_topk must be an exact positive int")
-    routing_token_count = getattr(batch, "total_num_tokens", None)
-    if type(routing_token_count) is not int or routing_token_count < 0:
-        raise ValueError("batch.total_num_tokens must be an exact non-negative int for routing")
+    # A decode CUDA-graph step routes its padding tokens too, so routing uses
+    # the same compute width as every other operator of the step.
+    routing_token_count = batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
     return materialize_layer_ep_workload(
         routing_ratios=resolve_routing_details(
             routing_details, target_replica_id, global_layer_id

@@ -4,11 +4,12 @@ from typing import List, TYPE_CHECKING
 
 from frontier.events import BaseEvent
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
-from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
+from frontier.entities.batch import DenseFFNBatchGroup, DummyForwardBatch, EPBatchGroup
 from frontier.logger import init_logger
 from frontier.metrics import MetricsStore
 from frontier.scheduler import BaseClusterScheduler
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
+from frontier.scheduler.utils.dp_dummy_forward import start_dummy_forward
 from frontier.scheduler.utils.forward_sync_state import source_forward_mode
 from frontier.types import EventType, ClusterType
 
@@ -162,6 +163,11 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             return []
 
+        if isinstance(batch, DummyForwardBatch):
+            return start_dummy_forward(
+                cluster_scheduler, self.time, self._replica_id, self._stage_id, batch
+            )
+
         debug_logger.info(
             f"[STAGE] Popped batch {batch.id} for processing, "
             f"requests={[r.id for r in batch.requests]}, global_id={batch.global_id}"
@@ -240,6 +246,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         layer_id=first_layer_id,
                         include_ffn=False,
                     )
+                    # The host prepares the forward before its kernels launch.
+                    preparation_time = execution_time.forward_preparation_time * 1e-3
+                    batch._forward_launch_start_time = self.time + preparation_time
+                    batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
                     attention_time_ms = (
@@ -278,7 +288,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Schedule first sync point (pre_moe) after first layer's attention computation
                     return [
                         PrefillSyncEvent(
-                            self.time + attention_time,
+                            batch._forward_launch_start_time + attention_time,
                             self._replica_id,
                             self._stage_id,
                             batch,
@@ -530,6 +540,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Initialize batch metadata for layer-by-layer processing
                     batch._decode_stage_start_time = self.time
+                    # The host prepares the forward before its kernels launch.
+                    preparation_time = execution_time.forward_preparation_time * 1e-3
+                    batch._forward_launch_start_time = self.time + preparation_time
+                    batch._forward_launch_time = execution_time.forward_launch_time * 1e-3
 
                     # Predictor single-layer attention component is in milliseconds;
                     # event queue timestamps are in seconds.
@@ -567,7 +581,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Schedule first sync point (pre_moe) after first layer's attention computation
                     return [
                         DecodeSyncEvent(
-                            self.time + attention_time,
+                            batch._forward_launch_start_time + attention_time,
                             self._replica_id,
                             self._stage_id,
                             batch,
@@ -699,8 +713,11 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 # Create batch stage
                 from frontier.entities import BatchStage
 
-                total_execution_time = execution_time.total_time
                 model_execution_time = execution_time.model_time
+                total_execution_time = (
+                    execution_time.total_time
+                    + execution_time.forward_launch_stall_time(model_execution_time)
+                )
                 effective_tokens_compute = batch.get_effective_total_tokens_for_compute(
                     self._cluster_type
                 )

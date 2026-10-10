@@ -5,8 +5,9 @@ This module defines the input structure for profiling attention performance
 with mixed-length sequences in a single batch.
 """
 
-from typing import List, Optional
 from dataclasses import dataclass
+from math import ceil
+from typing import List, Optional
 import numpy as np
 
 
@@ -150,18 +151,12 @@ class MixedAttentionInput:
         
         return True
     
-    def is_under_memory_limit(self, max_num_tokens: int) -> bool:
-        """
-        Check if this input fits within memory constraints.
-        
-        Args:
-            max_num_tokens: Maximum total tokens (including KV cache).
-        
-        Returns:
-            True if within limits, False otherwise.
-        """
-        total_with_cache = self.total_tokens + self.batch_size * self.kv_cache_size
-        return total_with_cache <= max_num_tokens
+    def is_under_memory_limit(self, max_num_blocks: int, block_size: int) -> bool:
+        """Check whether the profiling KV cache holds every sequence's own blocks."""
+        num_blocks = sum(
+            ceil((seq_len + self.kv_cache_size) / block_size) for seq_len in self.seq_lens
+        )
+        return num_blocks <= max_num_blocks
     
     def __str__(self) -> str:
         """Human-readable string representation."""

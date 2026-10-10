@@ -14,8 +14,6 @@ def collect_active_requests(batches: Iterable[Any]) -> list[Any]:
     active_requests = []
     seen_request_ids = set()
     for batch in batches:
-        if batch.is_idle:
-            continue
         for request in batch.current_execution_requests:
             if request.completed or request.id in seen_request_ids:
                 continue

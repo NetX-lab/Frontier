@@ -14,12 +14,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from frontier.entities import Batch, Request
+from frontier.entities import Batch, DummyForwardBatch, Request
 from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
 from frontier.events.decode_sync_event import DecodeSyncEvent
 from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
 from frontier.events.prefill_sync_event import PrefillSyncEvent
+from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
@@ -30,6 +31,7 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
     StageExecutionContext,
 )
+from frontier.scheduler.utils.dp_dummy_forward import start_dummy_forward
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 from frontier.types import ClusterType
@@ -69,6 +71,7 @@ class _ExecutionTime:
         self.total_time = float(tokens)
         self.decode_draft_proposer_time = 0.0
         self.expert_parallel_communication_time = 0.0
+        self.forward_launch_time = 0.0
 
     def get_single_layer_attention_scope_time(self) -> float:
         return float(self.tokens)
@@ -223,7 +226,9 @@ def _build_scheduler(
     }
     scheduler._replica_schedulers = {
         (0, lane): SimpleNamespace(
-            get_replica_stage_scheduler=lambda _stage_id, stage=stage: stage
+            get_replica_stage_scheduler=lambda _stage_id, stage=stage: stage,
+            # Every lane's engine has the forward these tests admit in flight.
+            engine_loop_idle=False,
         )
         for lane, stage in stages.items()
     }
@@ -237,9 +242,7 @@ def _admit(stages, batch: Batch, lane: int) -> None:
     """Admit one lane's batch through the real stage queue.
 
     Going through `add_batch` / `pop_batch_if_not_busy` is what marks the lane's
-    stage busy and binds its forward group, so a sibling lane holding the other
-    phase is treated as occupied rather than as a lane that can be filled with
-    an idle batch.
+    stage busy and binds its forward group.
     """
 
     batch.set_global_id(NUM_LANES * _GLOBAL_ID_BASE + lane)
@@ -249,6 +252,8 @@ def _admit(stages, batch: Batch, lane: int) -> None:
     batch._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch._prefill_stage_start_time = 0.0
     batch._decode_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
+    batch._forward_launch_time = 0.0
 
 
 def _global(scheduler):
@@ -443,31 +448,36 @@ def test_a_disaggregated_role_continues_each_lane_on_its_own_duration(
     assert sorted(next_layer_calls) == [(1, count) for count in tokens]
 
 
-def test_an_idle_participant_does_not_gain_requests_progress_or_a_continuation() -> None:
+def test_an_idle_engine_joins_with_a_dummy_forward_that_gains_no_request_progress() -> None:
     scheduler, _predictor, _context, stages = _build_scheduler()
+    scheduler._replica_schedulers[(0, 1)].engine_loop_idle = True
     batch = _prefill_batch(4)
     _admit(stages, batch, 0)
-    # Lane 1 has no work at all, so the entry fills it with an idle batch.
+    # Lane 1's engine has no work, so the entry wakes it.
     events = _enter(scheduler, batch, 0, 0, None)
-    idle_entries = [event for event in events if event._batch.is_idle]
-    assert len(idle_entries) == 1
-    idle_batch = idle_entries[0]._batch
-    assert idle_batch.requests == []
-    assert idle_batch._forward_cohort_id == batch._forward_cohort_id
+    assert [(type(event), event._replica_local_id) for event in events] == [
+        (ReplicaScheduleEvent, 1)
+    ]
 
-    follow_on = idle_entries[0].handle_event(_global(scheduler), None)
+    # The woken engine runs vLLM's dummy forward through its own stage.
+    dummy = DummyForwardBatch(0, 0, forward_index=0)
+    _admit(stages, dummy, 1)
+    entry = start_dummy_forward(scheduler, 0.0, 0, 0, dummy)
+    assert [type(event) for event in entry] == [DecodeSyncEvent]
     collective = [
         event
-        for event in follow_on
+        for event in entry[0].handle_event(_global(scheduler), None)
         if isinstance(event, (PrefillSyncCollectiveEvent, DecodeSyncCollectiveEvent))
     ]
     assert len(collective) == 1
     completion = collective[0].handle_event(_global(scheduler), None)
-    # Only the real source continues; the idle lane produces no event, no
-    # request and no completed work.
-    assert [event._batch.id for event in completion] == [batch.id]
-    assert idle_batch.requests == []
-    assert not getattr(idle_batch, "_prefill_ep_wave_lane_times_ms", None)
+    # Both lanes continue to the next layer, and the dummy forward carries no
+    # request, no progress and no lane timing.
+    assert sorted(event._batch.id for event in completion) == sorted([batch.id, dummy.id])
+    dummy_next = [event for event in completion if event._batch is dummy]
+    assert [(type(event), event._layer_id) for event in dummy_next] == [(DecodeSyncEvent, 1)]
+    assert dummy.requests == []
+    assert not getattr(dummy, "_prefill_ep_wave_lane_times_ms", None)
 
 
 def test_successive_forwards_release_owners_rooms_and_open_step_bindings() -> None:

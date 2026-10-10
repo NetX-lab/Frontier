@@ -49,6 +49,7 @@ def _batch(ep_id: int) -> EPBatchGroup:
             total_expert_num=2,
             owned_expert_ids=(ep_id,),
             local_token_counts=(1,),
+            global_token_counts=(1, 1),
             routed_token_count=1,
             router_topk=1,
         ),
@@ -78,6 +79,7 @@ def _combine_batch(
             total_expert_num=2,
             owned_expert_ids=(ep_id,),
             local_token_counts=(1,),
+            global_token_counts=(1, 1),
             routed_token_count=1,
             router_topk=1,
         )
@@ -654,6 +656,7 @@ def test_ep_combine_collective_validates_token_conservation_before_mutation() ->
                 total_expert_num=2,
                 owned_expert_ids=(ep_id,),
                 local_token_counts=(2,),
+                global_token_counts=(2, 2),
                 routed_token_count=2,
                 router_topk=1,
             ),

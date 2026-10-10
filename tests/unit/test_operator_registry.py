@@ -159,6 +159,7 @@ def test_build_operator_manifest_returns_wave_b_dense_families() -> None:
         "attn_kv_cache_save",
         "attn_prefill",
         "attn_decode",
+        "attn_kv_cache_extract",
         "input_layernorm",
         "post_attention_layernorm",
         "add_attn_residual",

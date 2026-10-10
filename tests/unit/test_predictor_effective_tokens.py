@@ -13,6 +13,7 @@ from predictor_cache_fixtures import (
 )
 
 from frontier.moe_ep_workload import EPLaneWorkload
+from frontier.entities.batch import DecodeCudaGraphMetadata
 from frontier.types import ClusterType, MeasurementType
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
@@ -71,6 +72,7 @@ def _lane_workload(
         total_expert_num=total_expert_num,
         owned_expert_ids=owned_expert_ids,
         local_token_counts=local_token_counts,
+        global_token_counts=(0,) * (ep_id * width) + local_token_counts + (0,) * (total_expert_num - (ep_id + 1) * width),
         routed_token_count=sum(local_token_counts),
         router_topk=router_topk,
     )
@@ -206,6 +208,7 @@ def test_sklearn_moe_predictor_materializes_typed_ep_lane_workload():
     batch = SimpleNamespace(
         replica_id=0,
         total_num_tokens=8,
+        get_effective_total_tokens_for_compute=lambda _cluster_type: 8,
         get_effective_total_tokens_rounded=effective_tokens,
     )
 
@@ -709,11 +712,11 @@ def test_sklearn_moe_predictor_ignores_moe_shuffling_scales_for_mixed_batch():
     assert result == 4.0
 
 
-def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn_decode():
+def test_sklearn_execution_time_predictor_prices_padded_full_attn_decode_at_real_batch():
     predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
+    predictor._predictions = {"attn_decode": {(5, 1024): 5.0, (8, 1024): 9.0}}
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._config = SimpleNamespace(kv_cache_prediction_granularity=128)
 
@@ -734,8 +737,14 @@ def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn
         request_is_decoding=[True] * len(requests),
         num_prefill_tokens=0,
         num_decode_tokens=5,
-        get_effective_decode_batch_size_for_attention=lambda: 8,
-        decode_cuda_graph_metadata=SimpleNamespace(
+        decode_cuda_graph_metadata=DecodeCudaGraphMetadata(
+            config_mode="full_decode_only",
+            runtime_mode="FULL",
+            capture_hit=True,
+            is_mixed_batch=False,
+            original_total_tokens=5,
+            padded_total_tokens=8,
+            original_decode_batch_size=5,
             padded_decode_batch_size=8,
         ),
     )
@@ -751,7 +760,7 @@ def test_sklearn_execution_time_predictor_applies_attn_decode_calibration_scale(
     predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
+    predictor._predictions = {"attn_decode": {(5, 1024): 5.0}}
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._attn_decode_calibration_scale = 1.6
     predictor._config = SimpleNamespace(kv_cache_prediction_granularity=128)
@@ -773,10 +782,6 @@ def test_sklearn_execution_time_predictor_applies_attn_decode_calibration_scale(
         request_is_decoding=[True] * len(requests),
         num_prefill_tokens=0,
         num_decode_tokens=5,
-        get_effective_decode_batch_size_for_attention=lambda: 8,
-        decode_cuda_graph_metadata=SimpleNamespace(
-            padded_decode_batch_size=8,
-        ),
     )
 
     result = SklearnExecutionTimePredictor._get_attention_decode_execution_time(
@@ -790,7 +795,7 @@ def test_sklearn_execution_time_predictor_applies_late_decode_only_attn_decode_s
     predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
+    predictor._predictions = {"attn_decode": {(5, 1024): 5.0}}
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._attn_decode_calibration_scale = 1.0
     predictor._late_decode_attn_decode_calibration_scale = 1.2
@@ -813,10 +818,6 @@ def test_sklearn_execution_time_predictor_applies_late_decode_only_attn_decode_s
         request_is_decoding=[True] * len(requests),
         num_prefill_tokens=0,
         num_decode_tokens=5,
-        get_effective_decode_batch_size_for_attention=lambda: 8,
-        decode_cuda_graph_metadata=SimpleNamespace(
-            padded_decode_batch_size=8,
-        ),
     )
 
     result = SklearnExecutionTimePredictor._get_attention_decode_execution_time(
@@ -830,7 +831,7 @@ def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scal
     predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
+    predictor._predictions = {"attn_decode": {(5, 1024): 5.0}}
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._attn_decode_calibration_scale = 1.0
     predictor._late_decode_attn_decode_calibration_scale = 1.2
@@ -853,10 +854,6 @@ def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scal
         request_is_decoding=[True] * len(requests),
         num_prefill_tokens=0,
         num_decode_tokens=5,
-        get_effective_decode_batch_size_for_attention=lambda: 8,
-        decode_cuda_graph_metadata=SimpleNamespace(
-            padded_decode_batch_size=8,
-        ),
     )
 
     result = SklearnExecutionTimePredictor._get_attention_decode_execution_time(

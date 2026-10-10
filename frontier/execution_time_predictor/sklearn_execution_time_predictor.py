@@ -1,4 +1,5 @@
 import ast
+import bisect
 import copy
 import hashlib
 import json
@@ -31,6 +32,7 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -60,7 +62,7 @@ from frontier.config import (
     global_vars,
     get_quantization_manager,
 )
-from frontier.entities import Batch, Request
+from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.entities.time_components import (
     AttentionTime,
     AttentionOperatorTimes,
@@ -79,8 +81,14 @@ from frontier.execution_time_predictor.measurement_input_paths import (
     resolve_measurement_input_paths,
     resolve_training_file_paths,
     resolve_event_measurement_type,
+    uses_two_stream_eager_pricing,
 )
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
+from frontier.execution_time_predictor.kernel_gap import (
+    KernelCountTraining,
+    KernelGapPricing,
+    load_kernel_gap_ms,
+)
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
@@ -114,11 +122,16 @@ from frontier.operators.spec import (
     ZeroPayloadPolicy,
 )
 from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_ENGINE_IDLE_COLUMN,
+    CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
+    CPU_OVERHEAD_TERMS,
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
 )
 from frontier.profiling.cpu_overhead.validation import (
     apply_cpu_overhead_schema_v2_defaults,
+    cpu_overhead_feature_columns,
+    cpu_overhead_model_names,
     validate_cpu_overhead_dataframe,
 )
 from frontier.profiling.other_overhead.validation import (
@@ -334,7 +347,6 @@ def _validate_prediction_constraints(
 
 
 if TYPE_CHECKING:
-    from frontier.entities import EPBatchGroup
     from frontier.cc_backend import BaseCCBackend
     from frontier.moe_ep_workload import EPLaneWorkload
 
@@ -354,7 +366,7 @@ def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
     return matches[0]
 
 
-class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
+class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseExecutionTimePredictor):
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
         return get_enabled_predictor_metric_name_by_role(
@@ -561,6 +573,38 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._models = {}
         self._predictions = {}
         self._mtp_secondary_predictors: Dict[str, BaseExecutionTimePredictor] = {}
+        self._two_stream_eager_pricing = uses_two_stream_eager_pricing(
+            self._config,
+            self._cpu_overhead_input_file_eager,
+            sys_arch=global_vars.get_sys_arch(),
+            replica_config=self._replica_config,
+        )
+        if self._two_stream_eager_pricing:
+            logger.info(
+                "Cluster %s prices eager forward steps in two streams: the device stream "
+                "from kernel-only operator tables (%s, %s, %s) and the host launch stream "
+                "from forward_launch in %s.",
+                cluster_type,
+                self._compute_input_file_kernel_only,
+                self._attention_input_file_kernel_only,
+                self._moe_input_file_kernel_only,
+                self._cpu_overhead_input_file_eager,
+            )
+        self._kernel_gap_ms = load_kernel_gap_ms(
+            self._config,
+            self._kernel_gap_input_file,
+            self._replica_config,
+            sys_arch=global_vars.get_sys_arch(),
+        )
+        if self._kernel_gap_ms is not None:
+            logger.info(
+                "Cluster %s adds the mean device gap before each kernel of a kernel-only step "
+                "(eager %.4f us, cuda_graph %.4f us) from %s.",
+                cluster_type,
+                self._kernel_gap_ms["eager"] * 1e3,
+                self._kernel_gap_ms["cuda_graph"] * 1e3,
+                self._kernel_gap_input_file,
+            )
         self._active_measurement_type = self._get_default_measurement_type_for_cluster()
 
         if not self._enable_dummy_mode:
@@ -619,6 +663,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             lambda: defaultdict(dict)
         )
         self._activate_measurement_type(self._get_default_measurement_type_for_cluster())
+        self._step_measurement_type = self._active_measurement_type
 
 
     @staticmethod
@@ -757,12 +802,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for family, suffix in (("eager", ""), ("device_event", "_device_event"), ("kernel_only", "_kernel_only")):
             for name in ("compute", "attention", "moe"):
                 setattr(self, f"_{name}_input_file_{family}", paths[f"{name}{suffix}_input_file"])
-        for name in ("all_reduce", "send_recv", "cpu_overhead", "pp_stage_boundary",
-                     "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+        self._cpu_overhead_input_file_eager = paths["cpu_overhead_input_file"]
+        self._cpu_overhead_input_file_kernel_only = paths["cpu_overhead_kernel_only_input_file"]
+        for name in ("all_reduce", "send_recv", "pp_stage_boundary", "pp_receiver_head",
+                     "pp_producer_send_path", "pp_prefill_consumer_active", "kernel_gap"):
             setattr(self, f"_{name}_input_file", paths[f"{name}_input_file"])
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
         self._moe_input_file = self._moe_input_file_eager
+        self._cpu_overhead_input_file = self._cpu_overhead_input_file_eager
 
     def _get_input_files(
         self, measurement_type: MeasurementType = MeasurementType.CUDA_EVENT
@@ -867,14 +915,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return True
 
         if measurement_type == MeasurementType.KERNEL_ONLY:
+            # Two-stream eager pricing takes eager steps' device stream from
+            # kernel-only operator tables.
             if self._cluster_type in (None, ClusterType.MONOLITHIC, ClusterType.DECODE):
-                return decode_graph_mode != "none"
+                return decode_graph_mode != "none" or self._two_stream_eager_pricing
             if self._cluster_type in (
                 ClusterType.DECODE_ATTN,
                 ClusterType.DECODE_FFN,
             ):
                 return use_cuda_graph
-            return False
+            return self._two_stream_eager_pricing
 
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
@@ -900,15 +950,44 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ):
             return self._get_default_measurement_type_for_cluster()
 
-        if getattr(batch, "num_prefill_tokens", 0) > 0:
+        step_batch = self._forward_step_batch(batch)
+        if getattr(step_batch, "num_prefill_tokens", 0) > 0:
             return event_measurement_type
 
-        if getattr(batch, "num_decode_tokens", 0) > 0:
-            runtime_mode = self._get_decode_cuda_graph_runtime_mode(batch)
+        if getattr(step_batch, "num_decode_tokens", 0) > 0:
+            runtime_mode = self._get_decode_cuda_graph_runtime_mode(step_batch)
             if runtime_mode != "NONE":
                 return MeasurementType.KERNEL_ONLY
 
         return event_measurement_type
+
+    def _activate_measurement_type_for_batch(self, batch: Batch) -> MeasurementType:
+        """Bind the operator tables that price ``batch``'s forward step.
+
+        Under two-stream eager pricing an eager step takes its device stream from
+        kernel-only operator tables; its CPU-overhead terms, forward_launch
+        included, stay with the step's own family.
+        """
+        step_type = self._select_measurement_type_for_batch(batch)
+        operator_type = step_type
+        if self._two_stream_eager_pricing and self._is_event_measurement_type(step_type):
+            operator_type = MeasurementType.KERNEL_ONLY
+        self._require_predictions_for_measurement_type(operator_type, batch)
+        self._activate_measurement_type(operator_type)
+        self._step_measurement_type = step_type
+        return operator_type
+
+    @staticmethod
+    def _forward_step_batch(batch: Batch) -> Batch:
+        """Return the scheduled batch of the forward step that ``batch`` prices.
+
+        An EP lane batch prices one MoE layer of its source step. Its logical
+        requests are local experts, so it carries neither the step's decode
+        state nor its CUDA-graph metadata; those belong to the source batch.
+        """
+        if isinstance(batch, EPBatchGroup):
+            return batch.source_batches[0]
+        return batch
 
     def _activate_measurement_type(self, measurement_type: MeasurementType) -> None:
         self._active_measurement_type = measurement_type
@@ -916,18 +995,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._compute_input_file = self._compute_input_file_eager
             self._attention_input_file = self._attention_input_file_eager
             self._moe_input_file = self._moe_input_file_eager
+            self._cpu_overhead_input_file = self._cpu_overhead_input_file_eager
             self._models = self._models_eager
             self._predictions = self._predictions_eager
         elif measurement_type == MeasurementType.DEVICE_EVENT:
             self._compute_input_file = self._compute_input_file_device_event
             self._attention_input_file = self._attention_input_file_device_event
             self._moe_input_file = self._moe_input_file_device_event
+            # The device-event family shares the eager CPU-overhead file (resolve_measurement_input_paths).
+            self._cpu_overhead_input_file = self._cpu_overhead_input_file_eager
             self._models = self._models_device_event
             self._predictions = self._predictions_device_event
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             self._compute_input_file = self._compute_input_file_kernel_only
             self._attention_input_file = self._attention_input_file_kernel_only
             self._moe_input_file = self._moe_input_file_kernel_only
+            self._cpu_overhead_input_file = self._cpu_overhead_input_file_kernel_only
             self._models = self._models_kernel_only
             self._predictions = self._predictions_kernel_only
         else:
@@ -3052,7 +3135,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            return cached_model
+            return self._paired_with_kernel_count_model(
+                cached_model, model_name, df, feature_cols, target_col, self._train_model
+            )
 
         model = self._get_estimator()
         grid_search_params = self._get_grid_search_params()
@@ -3104,7 +3189,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             target_col=target_col,
             model=best_estimator,
         )
-        return best_estimator
+        return self._paired_with_kernel_count_model(
+            best_estimator, model_name, df, feature_cols, target_col, self._train_model
+        )
 
     def _store_model_predication_cache(
         self, model_name: str, prediction_hash: str, predictions: Dict[Tuple, float]
@@ -3388,16 +3475,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _train_cpu_overhead_models(self) -> Dict[str, BaseEstimator]:
         if self._config.skip_cpu_overhead_modeling:
             return {}
+        if (
+            self._active_measurement_type == MeasurementType.KERNEL_ONLY
+            and global_vars.get_sys_arch() != "pd-af-disaggregation"
+            and self._cluster_type in (None, ClusterType.MONOLITHIC, ClusterType.DECODE)
+            and str(global_vars.get_decode_cuda_graph_mode()).strip().lower() == "none"
+        ):
+            # Without decode graphs, kernel-only tables price only the device stream
+            # of eager steps; every step's CPU-overhead terms come from its own family.
+            return {}
 
         models = {}
-        model_names = [
-            "schedule",
-            "sampler_e2e",
-            "prepare_inputs_e2e",
-            "process_model_outputs",
-            "ray_comm_time",
-        ]
-
         cpu_overhead_df = self._load_cpu_overhead_df(self._cpu_overhead_input_file)
         if cpu_overhead_df.empty:
             logger.warning(
@@ -3410,31 +3498,21 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cpu_overhead_df = self._get_cpu_overhead_df_with_derived_features(
             cpu_overhead_df
         )
+        feature_cols = cpu_overhead_feature_columns(cpu_overhead_df)
 
-        for model_name in model_names:
+        for model_name in cpu_overhead_model_names(cpu_overhead_df):
             if model_name == "ray_comm_time":
                 target_col = "ray_comm_time_mean"
             else:
                 target_col = f"{model_name}_median"
 
-            model = self._train_model(
+            models[model_name] = self._train_model(
                 model_name=model_name,
                 df=cpu_overhead_df,
-                feature_cols=[
-                    "batch_size",
-                    "num_prefill_tokens",
-                    "num_decode_tokens",
-                ],
+                feature_cols=feature_cols,
                 target_col=target_col,
                 persist_exact_lookup=True,
             )
-            if not hasattr(model, "_frontier_exact_lookup"):
-                model._frontier_exact_lookup = _build_exact_feature_lookup(
-                    cpu_overhead_df,
-                    ["batch_size", "num_prefill_tokens", "num_decode_tokens"],
-                    target_col,
-                )
-            models[model_name] = model
 
         return models
 
@@ -3472,7 +3550,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             AttentionOperatorRole.DECODE_KERNEL,
         )
 
-        if self._is_event_measurement_type(measurement_type):
+        is_event = self._is_event_measurement_type(measurement_type)
+        if not is_event and measurement_type != MeasurementType.KERNEL_ONLY:
+            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
+        family_name = self._measurement_family_name(measurement_type)
+        # Event tables always profile prefill attention. Kernel-only tables
+        # profile it for two-stream eager pricing, whose eager steps take their
+        # device stream from kernel-only operator tables.
+        trains_prefill = is_event or not prefill_df.empty
+
+        if trains_prefill:
             if "prefill_chunk_size" not in prefill_df.columns:
                 raise ValueError(
                     "Missing required column 'prefill_chunk_size' in attention profiling data."
@@ -3480,7 +3567,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             standard_prefill_df = prefill_df[prefill_df["prefill_chunk_size"] > 0].copy()
             if len(standard_prefill_df) == 0:
                 raise ValueError(
-                    "No standard prefill rows (prefill_chunk_size > 0) found in eager attention profiling data."
+                    "No standard prefill rows (prefill_chunk_size > 0) found in "
+                    f"{family_name} attention profiling data."
                 )
 
             models[prefill_model_name] = self._train_model(
@@ -3490,6 +3578,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 target_col=dense_attention_target_columns[prefill_model_name],
             )
 
+        if is_event:
             if len(decode_df) > 0:
                 decode_feature_cols = list(
                     dense_attention_feature_columns[decode_model_name]
@@ -3520,7 +3609,19 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "Skipping eager %s training: no standard decode rows",
                     decode_model_name,
                 )
+        else:
+            if len(decode_df) == 0:
+                raise ValueError(
+                    "No standard decode rows found in kernel-only attention profiling data."
+                )
+            models[decode_model_name] = self._train_model(
+                model_name=decode_model_name,
+                df=decode_df,
+                feature_cols=list(dense_attention_feature_columns[decode_model_name]),
+                target_col=dense_attention_target_columns[decode_model_name],
+            )
 
+        if trains_prefill:
             mixed_feature_cols = [
                 "avg_seq_len",
                 "batch_cv_interaction",
@@ -3639,58 +3740,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     missing_cols,
                 )
 
-            decode_in_mixed_feature_cols = [
-                "decode_batch_size",
-                "decode_avg_kv_cache_size",
-                "num_prefill_seqs",
-                "total_prefill_tokens",
-                "total_batch_size",
-                "batch_composition_ratio",
-                "total_tokens",
-            ]
-            if all(col in true_mixed_df.columns for col in decode_in_mixed_feature_cols):
-                if len(true_mixed_df) > 0:
-                    models["attn_decode_in_mixed"] = self._train_model(
-                        model_name="attn_decode_in_mixed",
-                        df=true_mixed_df,
-                        feature_cols=decode_in_mixed_feature_cols,
-                        target_col="time_stats.attn_decode.median",
-                        persist_exact_lookup=True,
-                    )
-                    logger.info(
-                        "Trained model attn_decode_in_mixed with %d true mixed samples",
-                        len(true_mixed_df),
-                    )
-                else:
-                    logger.info(
-                        "Skipping attn_decode_in_mixed training: no true mixed rows"
-                    )
-            else:
-                missing_cols = [
-                    c for c in decode_in_mixed_feature_cols if c not in true_mixed_df.columns
-                ]
-                logger.info(
-                    "Skipping attn_decode_in_mixed training: missing true mixed feature columns %s",
-                    missing_cols,
-                )
-
-            return models
-
-        if measurement_type != MeasurementType.KERNEL_ONLY:
-            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
-
-        if len(decode_df) == 0:
-            raise ValueError(
-                "No standard decode rows found in kernel-only attention profiling data."
-            )
-
-        models[decode_model_name] = self._train_model(
-            model_name=decode_model_name,
-            df=decode_df,
-            feature_cols=list(dense_attention_feature_columns[decode_model_name]),
-            target_col=dense_attention_target_columns[decode_model_name],
-        )
-
         decode_in_mixed_feature_cols = [
             "decode_batch_size",
             "decode_avg_kv_cache_size",
@@ -3710,19 +3759,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     persist_exact_lookup=True,
                 )
                 logger.info(
-                    "Trained kernel-only model attn_decode_in_mixed with %d true mixed samples",
+                    "Trained %s model attn_decode_in_mixed with %d true mixed samples",
+                    family_name,
                     len(true_mixed_df),
                 )
             else:
                 logger.info(
-                    "Skipping kernel-only attn_decode_in_mixed training: no true mixed rows"
+                    "Skipping %s attn_decode_in_mixed training: no true mixed rows",
+                    family_name,
                 )
         else:
             missing_cols = [
                 c for c in decode_in_mixed_feature_cols if c not in true_mixed_df.columns
             ]
             logger.info(
-                "Skipping kernel-only attn_decode_in_mixed training: missing true mixed feature columns %s",
+                "Skipping %s attn_decode_in_mixed training: missing true mixed feature columns %s",
+                family_name,
                 missing_cols,
             )
         return models
@@ -3883,18 +3935,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         predictions = {}
 
-        model_names = [
-            "schedule",
-            "sampler_e2e",
-            "prepare_inputs_e2e",
-            "process_model_outputs",
-            "ray_comm_time",
-        ]
-
         batch_size_range = np.arange(1, self._config.prediction_max_batch_size + 1)
         X = pd.DataFrame({"batch_size": batch_size_range})
 
-        for model_name in model_names:
+        for model_name in CPU_OVERHEAD_TERMS:
             if model_name in self._models:
                 model = self._models[model_name]
                 n_features = getattr(model, "n_features_in_", None)
@@ -3926,6 +3970,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "_feature_names": list(feature_names),
                     "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
                 }
+                if CPU_OVERHEAD_ENGINE_IDLE_COLUMN in feature_names:
+                    column = list(feature_names).index(CPU_OVERHEAD_ENGINE_IDLE_COLUMN)
+                    predictions[model_name]["_engine_idle_edges_ms"] = sorted(
+                        {key[column] for key in predictions[model_name]["_exact_lookup"]}
+                    )
 
         return predictions
 
@@ -3983,7 +4032,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         measurement_type = getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
 
         # Cluster-specific needs with measurement-aware family split.
-        need_prefill = self._is_event_measurement_type(measurement_type) and self._cluster_type in [
+        need_prefill = self._cluster_type in [
             ClusterType.PREFILL,
             ClusterType.DECODE,
             ClusterType.MONOLITHIC,
@@ -4069,6 +4118,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "_n_features": n_features,
                 "_model": model,
                 "_feature_names": feature_names,
+                "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
+            }
+
+        extract_op_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        if self._cluster_type == ClusterType.PREFILL and extract_op_name in self._models:
+            model = self._models[extract_op_name]
+            predictions[extract_op_name] = {
+                "_on_demand_prediction": True,
+                "_n_features": 1,
+                "_model": model,
+                "_feature_names": ["num_blocks"],
                 "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
             }
 
@@ -4192,12 +4252,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             batch._decode_params = (0, 0)
             return batch._decode_params
 
-        if hasattr(batch, "get_effective_decode_batch_size_for_attention"):
-            decode_batch_size = int(
-                batch.get_effective_decode_batch_size_for_attention()
-            )
-        else:
-            decode_batch_size = len(decode_kv_cache_sizes)
+        # A FULL graph replay pads the batch, but vLLM's padded rows hold no KV
+        # pages, so decode attention runs on the real decode requests only.
+        decode_batch_size = len(decode_kv_cache_sizes)
 
         decode_avg_kv_cache_size = int(np.mean(decode_kv_cache_sizes))
         # round up to the nearest multiple of kv_cache_prediction_granularity in csv file
@@ -4511,6 +4568,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"model has {model_feature_count}"
             )
 
+        self._record_kernel_count(model_name, model, feature_key, normalized_feature_names)
         # A persisted measured row is authoritative when the producer attached
         # exact metadata to the estimator.  Finite prediction tables remain
         # compatible with older artifacts that do not carry this optional map.
@@ -4792,6 +4850,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 )
 
         feature_key = tuple(normalized_features[name] for name in feature_names)
+        self._record_kernel_count(model_name, model, feature_key, feature_names)
         exact_lookup = model_info.get("_exact_lookup", {})
         if exact_lookup is None:
             exact_lookup = {}
@@ -4890,16 +4949,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             measurement_type = self._select_measurement_type_for_batch(batch)
         if measurement_type != MeasurementType.KERNEL_ONLY:
             return False
-        if getattr(batch, "num_decode_tokens", 0) <= 0:
+        step_batch = self._forward_step_batch(batch)
+        if getattr(step_batch, "num_decode_tokens", 0) <= 0:
             return False
-        runtime_mode = self._get_decode_cuda_graph_runtime_mode(batch)
+        runtime_mode = self._get_decode_cuda_graph_runtime_mode(step_batch)
         if runtime_mode == "FULL":
             return True
         if runtime_mode != "PIECEWISE":
             return False
         # PIECEWISE mixed batches still pay explicit communication. Only the
         # pure-decode captured path should strip eager-only launch overhead.
-        return getattr(batch, "num_prefill_tokens", 0) <= 0
+        return getattr(step_batch, "num_prefill_tokens", 0) <= 0
 
     def _strip_collective_sim_allreduce_launch_overhead_if_needed(
         self,
@@ -6312,6 +6372,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "attn_kv_cache_save_calibration_scale",
         )
 
+    def _get_attention_kv_cache_extract_execution_time(self, batch: Batch) -> float:
+        """Gather the KV blocks of each prompt this step completes, one launch per request.
+
+        vLLM's P2P NCCL connector adds a request to the step that completes its
+        prompt (build_connector_meta) and gathers all its prompt blocks after
+        each layer's attention (save_kv_layer).
+        """
+        extract_op_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        if extract_op_name not in self._predictions:
+            raise ValueError(
+                f"kv_connector=p2p_nccl prices {extract_op_name} from the "
+                f"time_stats.{extract_op_name} rows of {self._attention_input_file}, "
+                "which has none; profile the attention table with the KV extract."
+            )
+        extract_time = 0.0
+        for request, num_tokens in zip(batch.requests, batch.num_tokens):
+            if request.num_processed_tokens + num_tokens < request.num_prefill_tokens:
+                continue
+            with self._counting_launch():
+                extract_time += self._get_on_demand_prediction(
+                    extract_op_name,
+                    {"num_blocks": math.ceil(request.num_prefill_tokens / self._block_size)},
+                )
+        return extract_time
+
     def _get_attention_decode_execution_time(self, batch: Batch) -> float:
         (
             decode_batch_size,
@@ -6824,30 +6909,60 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self,
         metric_name: str,
         batch: Batch,
+        stage_id: int,
+        required: bool = False,
     ) -> float:
         if self._config.skip_cpu_overhead_modeling:
             return 0.0
 
+        # CPU-overhead terms belong to the forward step's family, which differs
+        # from the operator tables' family under two-stream eager pricing.
+        with self._temporary_measurement_type(self._step_measurement_type):
+            return self._lookup_cpu_overhead_prediction(metric_name, batch, stage_id, required)
+
+    def _lookup_cpu_overhead_prediction(
+        self, metric_name: str, batch: Batch, stage_id: int, required: bool = False
+    ) -> float:
+        """A CPU-overhead term's prediction; a missing optional term prices 0.
+
+        A required term has no stand-in, so a missing or invalid prediction raises.
+        """
         metric_predictions = self._predictions.get(metric_name)
         if metric_predictions is None:
+            if required:
+                raise ValueError(
+                    f"CPU-overhead term {metric_name!r} has no trained model for "
+                    f"model_name={self._model_config.get_name()!r}, "
+                    f"tensor_parallel_degree={self._replica_config.attn_tensor_parallel_size} "
+                    f"in {getattr(self, '_cpu_overhead_input_file', '')}."
+                )
             self._log_missing_cpu_overhead_prediction_once(metric_name)
             return 0.0
 
         if isinstance(metric_predictions, dict) and metric_predictions.get(
             "_on_demand_prediction"
         ):
+            feature_names = metric_predictions["_feature_names"]
             features = self._get_cpu_overhead_features(batch)
-            feature_key = (
-                float(features["batch_size"]),
-                float(features["num_prefill_tokens"]),
-                float(features["num_decode_tokens"]),
-            )
+            # A table from a PP>1 probe keys rows by the stage that runs the interval.
+            if CPU_OVERHEAD_PIPELINE_STAGE_COLUMN in feature_names:
+                features[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN] = stage_id
+            # A table with engine-idle buckets keys rows by the largest bucket
+            # edge at or below the engine's idle time before the step.
+            if CPU_OVERHEAD_ENGINE_IDLE_COLUMN in feature_names:
+                edges = metric_predictions["_engine_idle_edges_ms"]
+                features[CPU_OVERHEAD_ENGINE_IDLE_COLUMN] = edges[
+                    bisect.bisect_right(edges, batch.engine_idle_time * 1e3) - 1
+                ]
+            feature_key = tuple(float(features[name]) for name in feature_names)
             exact_lookup = metric_predictions.get("_exact_lookup") or {}
             if feature_key in exact_lookup:
                 return float(exact_lookup[feature_key])
             try:
                 return self._get_on_demand_prediction(metric_name, features)
             except Exception:
+                if required:
+                    raise
                 self._log_missing_cpu_overhead_prediction_once(metric_name)
                 return 0.0
 
@@ -6855,20 +6970,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if batch_size_key in metric_predictions:
             return float(metric_predictions[batch_size_key])
 
-        features = self._get_cpu_overhead_features(batch)
-        feature_key = (
-            float(features["batch_size"]),
-            float(features["num_prefill_tokens"]),
-            float(features["num_decode_tokens"]),
-        )
-        if feature_key in metric_predictions:
-            return float(metric_predictions[feature_key])
-
+        if required:
+            raise ValueError(
+                f"CPU-overhead term {metric_name!r} has no prediction for batch size {batch_size_key[0]}."
+            )
         self._log_missing_cpu_overhead_prediction_once(metric_name)
         return 0.0
 
-    def _get_schedule_time(self, batch: Batch) -> float:
-        return self._get_cpu_overhead_prediction_or_default("schedule", batch)
+    def _get_schedule_time(self, batch: Batch, stage_id: int) -> float:
+        return self._get_cpu_overhead_prediction_or_default("schedule", batch, stage_id)
 
     def _log_architecture_attention_shape(self, batch: Batch) -> None:
         architecture_profile = self._get_model_architecture_profile()
@@ -6899,21 +7009,38 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             qkv_out_dim,
         )
 
-    def _get_sampler_e2e_time(self, batch: Batch) -> float:
-        return self._get_cpu_overhead_prediction_or_default("sampler_e2e", batch)
+    def _get_sampler_e2e_time(self, batch: Batch, stage_id: int) -> float:
+        return self._get_cpu_overhead_prediction_or_default("sampler_e2e", batch, stage_id)
 
-    def _get_prepare_inputs_e2e_time(self, batch: Batch) -> float:
+    def _get_prepare_inputs_e2e_time(self, batch: Batch, stage_id: int) -> float:
         return self._get_cpu_overhead_prediction_or_default(
-            "prepare_inputs_e2e", batch
+            "prepare_inputs_e2e", batch, stage_id
         )
 
-    def _get_process_model_outputs_time(self, batch: Batch) -> float:
+    def _get_process_model_outputs_time(self, batch: Batch, stage_id: int) -> float:
         return self._get_cpu_overhead_prediction_or_default(
-            "process_model_outputs", batch
+            "process_model_outputs", batch, stage_id
         )
 
-    def _get_ray_comm_time(self, batch: Batch) -> float:
-        return self._get_cpu_overhead_prediction_or_default("ray_comm_time", batch)
+    def _get_ray_comm_time(self, batch: Batch, stage_id: int) -> float:
+        return self._get_cpu_overhead_prediction_or_default("ray_comm_time", batch, stage_id)
+
+    def _get_forward_launch_time(self, batch: Batch, stage_id: int) -> float:
+        """Host time to launch the forward's kernels of a step priced in two streams.
+
+        It is the step's whole host stream, so it is required.
+        """
+        if self._active_measurement_type == self._step_measurement_type:
+            return 0.0
+        return self._get_cpu_overhead_prediction_or_default(
+            "forward_launch", batch, stage_id, required=True
+        )
+
+    def _get_forward_drain_time(self, batch: Batch, stage_id: int) -> float:
+        """Device time after the last kernel launch of a step priced in two streams."""
+        if self._active_measurement_type == self._step_measurement_type:
+            return 0.0
+        return self._get_cpu_overhead_prediction_or_default("forward_drain", batch, stage_id)
 
     # Phase 2.5: Removed deprecated get_moe_stage_execution_details() method
     # MoE models now use predict_moe_layer_time() and other fine-grained APIs
@@ -7283,6 +7410,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             exact_lookup = model_info.get("_exact_lookup") or {}
             if exact_key in exact_lookup:
                 op_times[op_name] = float(exact_lookup[exact_key])
+                self._record_kernel_count(op_name, model_info.get("_model"), exact_key, feature_names)
                 continue
 
             model = model_info.get("_model")
@@ -7324,6 +7452,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
+        """Predict one layer's attention; inside a layer's kernel counting, count its kernels."""
+        if not self._kernel_count_scopes:
+            return self._predict_attention_layer_time(batch, layer_id, cluster_type)
+        with self._counting_kernels() as counts:
+            attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
+        attention_time.kernel_count = math.fsum(counts.operators.values())
+        self._record_attention_kernels(attention_time.kernel_count)
+        return attention_time
+
+    def _predict_attention_layer_time(
+        self, batch: Batch, layer_id: int, cluster_type: ClusterType
+    ) -> AttentionTime:
         """
         Predict attention execution time for a single transformer layer.
 
@@ -7356,6 +7496,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
         attention_family.require_enabled_for_execution()
+        prices_kv_cache_extract = (
+            cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
+        )
+        if prices_kv_cache_extract and attention_family is not DENSE_ATTENTION_FAMILY:
+            raise NotImplementedError(
+                f"kv_connector=p2p_nccl prices the KV extract of dense attention layers; "
+                f"layer {layer_id} is {attention_family.family_id}."
+            )
 
         if attention_family.family_id == GATED_DELTA_NET_ATTENTION_FAMILY.family_id:
             if self._gdn_predictor is None:
@@ -7451,6 +7599,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             attn_kv_cache_save_time = self._get_attention_kv_cache_save_execution_time(
                 batch
             )
+        attn_kv_cache_extract_time = (
+            self._get_attention_kv_cache_extract_execution_time(batch)
+            if prices_kv_cache_extract
+            else 0.0
+        )
         attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
 
         # Architecture-profile attention extras are 0.0 when not declared by the profile.
@@ -7503,6 +7656,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             f"[OP-TRACE][{cluster_name}][ATTENTION][{cache_write_op_name}] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_kv_cache_save_time:.6f}"
         )
+        if prices_kv_cache_extract:
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][ATTENTION][{DENSE_ATTENTION_KV_CACHE_EXTRACT.name}] "
+                f"batch_id={batch.id}, layer_id={layer_id}, "
+                f"predicted_time_ms={attn_kv_cache_extract_time:.6f}"
+            )
         logger.info(
             f"[OP-TRACE][{cluster_name}][ATTENTION][attn_post_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_post_proj_time:.6f}"
@@ -7526,6 +7685,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             + attn_prefill_time
             + attn_decode_time
             + attn_kv_cache_save_time
+            + attn_kv_cache_extract_time
             + attn_post_proj_time
             # Architecture-profile attention extras are 0.0 when absent.
             + attn_inter_norm_time
@@ -7543,6 +7703,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             attention_layer_post_proj_execution_time=attn_post_proj_time,
             attention_rope_execution_time=attn_rope_time,
             attention_kv_cache_save_execution_time=attn_kv_cache_save_time,
+            attention_kv_cache_extract_execution_time=attn_kv_cache_extract_time,
             attn_norm_time=attn_norm_time,
             # Architecture-profile attention extras are 0.0 when absent.
             attn_inter_norm_time=attn_inter_norm_time,
@@ -7906,7 +8067,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         """Predict homogeneous layer numerics once and publish ordered identities."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
-        timing = self._predict_dense_layer_execution_time(
+        timing = self._predict_layer_with_kernel_gap(
+            self._predict_dense_layer_execution_time,
             batch, stage_id, cluster_type, num_layers, layer_id,
             include_moe, include_ffn, include_attention,
         )
@@ -7963,9 +8125,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         assert num_layers >= 1, f"num_layers must be >= 1, got {num_layers}"
 
-        measurement_type = self._select_measurement_type_for_batch(batch)
-        self._require_predictions_for_measurement_type(measurement_type, batch)
-        self._activate_measurement_type(measurement_type)
+        measurement_type = self._activate_measurement_type_for_batch(batch)
         self._emit_cuda_graph_activation_records(
             batch,
             measurement_type,
@@ -8095,25 +8255,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             mlp_norm_time = 0.0
             add_time = 0.0
         schedule_time = self._validate_prediction_value(
-            self._get_schedule_time(batch), "schedule", batch, f"stage={stage_id}"
+            self._get_schedule_time(batch, stage_id), "schedule", batch, f"stage={stage_id}"
         )
         sampler_time = self._validate_prediction_value(
-            self._get_sampler_e2e_time(batch), "sampler", batch, f"stage={stage_id}"
+            self._get_sampler_e2e_time(batch, stage_id), "sampler", batch, f"stage={stage_id}"
         )
         prepare_inputs_time = self._validate_prediction_value(
-            self._get_prepare_inputs_e2e_time(batch),
+            self._get_prepare_inputs_e2e_time(batch, stage_id),
             "prepare_inputs",
             batch,
             f"stage={stage_id}",
         )
         process_outputs_time = self._validate_prediction_value(
-            self._get_process_model_outputs_time(batch),
+            self._get_process_model_outputs_time(batch, stage_id),
             "process_outputs",
             batch,
             f"stage={stage_id}",
         )
         ray_comm_time = self._validate_prediction_value(
-            self._get_ray_comm_time(batch), "ray_comm", batch, f"stage={stage_id}"
+            self._get_ray_comm_time(batch, stage_id), "ray_comm", batch, f"stage={stage_id}"
+        )
+        forward_launch_time = self._validate_prediction_value(
+            self._get_forward_launch_time(batch, stage_id), "forward_launch", batch, f"stage={stage_id}"
+        )
+        forward_drain_time = self._validate_prediction_value(
+            self._get_forward_drain_time(batch, stage_id), "forward_drain", batch, f"stage={stage_id}"
         )
         pp_producer_send_path_runtime_time = self._validate_prediction_value(
             self._get_pp_producer_send_path_runtime_time(batch, stage_id),
@@ -8249,6 +8415,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             prepare_inputs_e2e_time=prepare_inputs_time,
             process_model_outputs_time=process_outputs_time,
             ray_comm_time=ray_comm_time,
+            forward_launch_time=forward_launch_time,
+            forward_drain_time=forward_drain_time,
             is_moe=False,
             pp_producer_send_path_runtime_time=pp_producer_send_path_runtime_time,
             pp_receiver_head_runtime_time=pp_receiver_head_runtime_time,

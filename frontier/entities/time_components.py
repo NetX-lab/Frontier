@@ -406,6 +406,7 @@ class AttentionTime:
     # Attention auxiliary operations
     attention_rope_execution_time: float = 0.0              # RoPE (Rotary Position Embedding)
     attention_kv_cache_save_execution_time: float = 0.0     # KV cache write
+    attention_kv_cache_extract_execution_time: float = 0.0  # KV connector's gather of completed prompts
 
     # MLA physical attention operations from the vLLM V1 latent-attention path.
     attn_mla_kv_cache_save_time: float = 0.0
@@ -422,6 +423,9 @@ class AttentionTime:
     # These are 0.0 for non-Step2Mini models
     attn_inter_norm_time: float = 0.0  # RMSNorm on Q after split from QKV
     attn_wq_proj_time: float = 0.0     # ColumnParallelLinear on Q after inter_norm
+    # Kernels these operators launch (a count, not a time), when a predictor
+    # prices the device gap before each kernel of a kernel-only step.
+    kernel_count: float = 0.0
     operator_times: AttentionOperatorTimes | None = None
 
     def total_time(self) -> float:
@@ -433,6 +437,7 @@ class AttentionTime:
             + self.attention_layer_post_proj_execution_time
             + self.attention_rope_execution_time
             + self.attention_kv_cache_save_execution_time
+            + self.attention_kv_cache_extract_execution_time
             + self.attn_mla_kv_cache_save_time
             + self.attn_mla_prefill_kv_up_proj_time
             + self.attn_mla_prefill_time
@@ -637,6 +642,21 @@ class OverheadTime:
     pp_prefill_consumer_active_runtime_time: float = 0.0  # Active PP prefill consumer runtime overhead
     pp_stage_boundary_residual_runtime_time: float = 0.0  # Active shared-domain PP boundary residual on consumer stage
     pp_stage_boundary_handoff_time: float = 0.0   # Diagnostic-only PP boundary overhead beyond wire cost
+    # Host time to launch an eager forward step's kernels. It runs alongside the
+    # device stream, so it is outside every total; only the part the device
+    # stream cannot hide adds to the step (forward_launch_stall_time).
+    forward_launch_time: float = 0.0
+    # Device time after the last kernel launch of an eager forward step. It adds
+    # to the step only with a launch the device stream cannot hide.
+    forward_drain_time: float = 0.0
+
+    def forward_preparation_time(self) -> float:
+        """Host time of a step before its forward starts: the schedule call and the input preparation.
+
+        vLLM all-reduces a forward's token count over the DP group only after
+        this work, so a lane prepares its inputs while a later lane catches up.
+        """
+        return self.schedule_time + self.prepare_inputs_e2e_time
 
     def simulated_total_time(self) -> float:
         """Calculate overhead time that actively contributes to simulated stage occupancy."""

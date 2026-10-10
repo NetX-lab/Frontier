@@ -439,6 +439,7 @@ class SklearnMoEExecutionTimePredictor(
         cached = cache.get(key)
         if cached is not None:
             self._attention_query_cache_hits += 1
+            self._record_attention_kernels(cached.kernel_count)
             return self._clone_attention_time(cached)
         self._attention_query_cache_misses += 1
         result = self.predict_attention_layer_time(
@@ -762,11 +763,17 @@ class SklearnMoEExecutionTimePredictor(
             moe_gating_linear_time=moe_gating_linear_time,
             moe_gating_routing_topk_time=moe_gating_routing_topk_time,
             moe_shuffling_time=moe_shuffling_time,
-            schedule_time=self._get_schedule_time(batch) if include_stage_owned else 0.0,
-            sampler_e2e_time=self._get_sampler_e2e_time(batch) if include_stage_owned else 0.0,
-            prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch) if include_stage_owned else 0.0,
-            process_model_outputs_time=self._get_process_model_outputs_time(batch) if include_stage_owned else 0.0,
-            ray_comm_time=self._get_ray_comm_time(batch) if include_stage_owned else 0.0,
+            schedule_time=self._get_schedule_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            sampler_e2e_time=self._get_sampler_e2e_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            prepare_inputs_e2e_time=self._get_prepare_inputs_e2e_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            process_model_outputs_time=self._get_process_model_outputs_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            ray_comm_time=self._get_ray_comm_time(batch, pipeline_stage) if include_stage_owned else 0.0,
+            forward_launch_time=(
+                self._get_forward_launch_time(batch, pipeline_stage) if include_stage_owned else 0.0
+            ),
+            forward_drain_time=(
+                self._get_forward_drain_time(batch, pipeline_stage) if include_stage_owned else 0.0
+            ),
             pp_producer_send_path_runtime_time=pp_producer_send_path_runtime_time,
             pp_receiver_head_runtime_time=pp_receiver_head_runtime_time,
             pp_prefill_consumer_active_runtime_time=(
@@ -1223,7 +1230,8 @@ class SklearnMoEExecutionTimePredictor(
             raise ValueError("num_layers must be a positive int")
         cache: dict[tuple[str, str], AttentionTime] = {}
         layers = [
-            self._predict_moe_layer_execution_time(
+            self._predict_layer_with_kernel_gap(
+                self._predict_moe_layer_execution_time,
                 batch, stage_id, cluster_type, layer_id + offset,
                 include_moe, include_ffn, include_attention, cache,
                 include_stage_owned=offset == 0,
@@ -1318,9 +1326,7 @@ class SklearnMoEExecutionTimePredictor(
             batch.num_tokens,
         )
 
-        measurement_type = self._select_measurement_type_for_batch(batch)
-        self._require_predictions_for_measurement_type(measurement_type, batch)
-        self._activate_measurement_type(measurement_type)
+        measurement_type = self._activate_measurement_type_for_batch(batch)
         self._emit_cuda_graph_activation_records(
             batch,
             measurement_type,

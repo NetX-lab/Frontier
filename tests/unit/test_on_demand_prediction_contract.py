@@ -374,3 +374,148 @@ def test_shared_manager_exact_lookup_survives_cache_round_trip_by_default(
     expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
     assert loaded._frontier_exact_lookup == expected
     assert reloaded._frontier_exact_lookup == expected
+
+
+def test_shared_manager_trains_a_one_row_table_without_cross_validation(
+    tmp_path, monkeypatch
+) -> None:
+    from frontier.config.execution_time_predictor_config import (
+        RandomForrestExecutionTimePredictorConfig,
+    )
+    from frontier.execution_time_predictor import prediction_family_trainers
+
+    def _no_grid_search(*_args, **_kwargs):
+        raise AssertionError("a one-row table has no cross-validation split")
+
+    monkeypatch.setattr(prediction_family_trainers, "GridSearchCV", _no_grid_search)
+    manager = ExecutionTimePredictionModelManager.__new__(
+        ExecutionTimePredictionModelManager
+    )
+    manager._cache_dir = str(tmp_path)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._get_model_hash = lambda *_args: "one_row"
+    manager._store_model_precision = lambda *_args: None
+    dataframe = pd.DataFrame(
+        {
+            "batch_size": [1],
+            "num_prefill_tokens": [2048],
+            "num_decode_tokens": [0],
+            "schedule_median": [0.2168],
+            "profiling_precision": ["FP16"],
+            "measurement_type": [MeasurementType.CUDA_EVENT.value],
+        }
+    )
+    feature_cols = ["batch_size", "num_prefill_tokens", "num_decode_tokens"]
+
+    model = manager._train_single_model(
+        model_name="schedule",
+        df=dataframe,
+        feature_cols=feature_cols,
+        target_col="schedule_median",
+        execution_time_predictor_config=RandomForrestExecutionTimePredictorConfig(),
+    )
+
+    unseen = pd.DataFrame({"batch_size": [2], "num_prefill_tokens": [4096], "num_decode_tokens": [0]})
+    assert model.predict(unseen)[0] == pytest.approx(0.2168)
+    assert model._frontier_exact_lookup == {(1.0, 2048.0, 0.0): 0.2168}
+    assert manager._load_model_from_cache("schedule", "one_row") is not None
+
+
+def test_shared_manager_trains_stage_keyed_cpu_overhead_models(tmp_path) -> None:
+    from frontier.config.execution_time_predictor_config import (
+        LinearRegressionExecutionTimePredictorConfig,
+    )
+    from frontier.types import ClusterType
+
+    manager = ExecutionTimePredictionModelManager.__new__(
+        ExecutionTimePredictionModelManager
+    )
+    manager._cache_dir = str(tmp_path)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._get_model_hash = lambda *_args, **_kwargs: "stage_table"
+    manager._store_model_precision = lambda *_args, **_kwargs: None
+    # Two PP stages: the first stage schedules, the last stage samples.
+    stage_table = pd.DataFrame(
+        {
+            "batch_size": [7, 7, 1, 1],
+            "num_prefill_tokens": [0, 0, 2048, 2048],
+            "num_decode_tokens": [7, 7, 0, 0],
+            "pipeline_stage_id": [0, 1, 0, 1],
+            "schedule_median": [0.2, 0.0, 0.3, 0.0],
+            "sampler_e2e_median": [0.0, 0.4, 0.0, 0.5],
+            "prepare_inputs_e2e_median": [1.0, 1.1, 2.0, 2.1],
+            "process_model_outputs_median": [0.0, 0.6, 0.0, 0.7],
+            "forward_launch_median": [58.65, 58.98, 70.0, 71.0],
+            "ray_comm_time_mean": [0.0, 0.0, 0.0, 0.0],
+            "profiling_precision": ["FP16"] * 4,
+            "measurement_type": [MeasurementType.CUDA_EVENT.value] * 4,
+        }
+    )
+    manager._get_input_files_for_config = lambda *_args: ("", "", "", "", "cpu_overheads.csv", "")
+    manager._load_cpu_overhead_df = lambda *_args: stage_table
+    replica = SimpleNamespace(
+        network_device="h800", model_name="moe", attn_tensor_parallel_size=2, device="h800"
+    )
+
+    models = manager._train_cpu_overhead_models_for_cluster(
+        ClusterType.MONOLITHIC,
+        replica,
+        LinearRegressionExecutionTimePredictorConfig(skip_cpu_overhead_modeling=False),
+        set(),
+    )
+
+    launch = models["forward_launch"]
+    assert launch._frontier_feature_names == [
+        "batch_size", "num_prefill_tokens", "num_decode_tokens", "pipeline_stage_id"
+    ]
+    assert launch._frontier_exact_lookup == {
+        (7.0, 0.0, 7.0, 0.0): 58.65,
+        (7.0, 0.0, 7.0, 1.0): 58.98,
+        (1.0, 2048.0, 0.0, 0.0): 70.0,
+        (1.0, 2048.0, 0.0, 1.0): 71.0,
+    }
+    assert models["schedule"]._frontier_exact_lookup[(7.0, 0.0, 7.0, 1.0)] == 0.0
+
+
+CPU_STEP_FEATURES = ("batch_size", "num_prefill_tokens", "num_decode_tokens")
+CPU_STEP = SimpleNamespace(size=1, num_prefill_tokens=16, num_decode_tokens=0)
+
+
+def _cpu_overhead_predictor(predictions: dict[str, Any]) -> _ConcretePredictor:
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    predictor._model_config = SimpleNamespace(get_name=lambda: "tiny")
+    predictor._replica_config = SimpleNamespace(attn_tensor_parallel_size=1)
+    predictor._cpu_overhead_input_file = "cpu_overheads.csv"
+    predictor._predictions = predictions
+    return predictor
+
+
+def _cpu_overhead_record(result: float) -> dict[str, Any]:
+    return {
+        "_on_demand_prediction": True,
+        "_feature_names": list(CPU_STEP_FEATURES),
+        "_model": _CountingModel(CPU_STEP_FEATURES, result),
+    }
+
+
+def test_a_required_cpu_term_without_a_model_raises_instead_of_pricing_zero() -> None:
+    predictor = _cpu_overhead_predictor({})
+
+    with pytest.raises(
+        ValueError, match=r"'forward_launch' has no trained model for model_name='tiny', tensor_parallel_degree=1"
+    ):
+        predictor._lookup_cpu_overhead_prediction("forward_launch", CPU_STEP, 0, required=True)
+    assert predictor._lookup_cpu_overhead_prediction("schedule", CPU_STEP, 0) == 0.0
+
+
+def test_a_required_cpu_term_with_an_invalid_estimate_raises_instead_of_pricing_zero() -> None:
+    predictor = _cpu_overhead_predictor(
+        {"forward_launch": _cpu_overhead_record(math.nan), "schedule": _cpu_overhead_record(math.nan)}
+    )
+
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        predictor._lookup_cpu_overhead_prediction("forward_launch", CPU_STEP, 0, required=True)
+    assert predictor._lookup_cpu_overhead_prediction("schedule", CPU_STEP, 0) == 0.0

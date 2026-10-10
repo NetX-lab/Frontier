@@ -17,6 +17,7 @@ Supported vLLM APIs:
 Note: vLLM 0.3.x support has been removed. Please use vLLM >= 0.10.0.
 """
 
+import json
 import math
 
 import torch
@@ -691,6 +692,38 @@ def _collect_record_function_stats(
     return time_stats[operation_name]
 
 
+def block_size_m_ranges(
+    *,
+    w1_shape: Tuple[int, ...],
+    w2_shape: Tuple[int, ...],
+    top_k: int,
+    dtype: Optional[str],
+    block_shape: Optional[List[int]],
+    max_tokens: int,
+) -> List[List[int]]:
+    """``[first_num_tokens, last_num_tokens, block_size_m]`` ranges of vLLM's kernel config.
+
+    The ranges cover 1..``max_tokens``. vLLM selects BLOCK_SIZE_M per step from
+    the step's token count, so the simulator needs the selection at every count
+    between profiled rows, not only at the rows themselves.
+    """
+    ranges: List[List[int]] = []
+    for num_tokens in range(1, max_tokens + 1):
+        block_size_m = try_get_optimal_moe_config(
+            w1_shape=w1_shape,
+            w2_shape=w2_shape,
+            top_k=top_k,
+            dtype=dtype,
+            M=num_tokens,
+            block_shape=block_shape,
+        )["BLOCK_SIZE_M"]
+        if ranges and ranges[-1][2] == block_size_m:
+            ranges[-1][1] = num_tokens
+        else:
+            ranges.append([num_tokens, num_tokens, block_size_m])
+    return ranges
+
+
 def profile_fused_moe_kernel(
     num_tokens: int,
     num_experts: int,
@@ -744,7 +777,12 @@ def profile_fused_moe_kernel(
         model_type: Actual model identity required by the pinned MXFP4 adapter.
 
     Returns:
-        Dictionary containing timing statistics.
+        Dictionary containing timing statistics. On the vLLM 0.10.x path it also
+        holds the kernel config's ``block_size_m``, moe_align_block_size's
+        ``num_tokens_post_padded`` (each expert's routed tokens rounded up to a
+        multiple of ``block_size_m``), the row count the grouped GEMM computes,
+        and ``block_size_m_ranges``, the JSON-encoded result of
+        ``block_size_m_ranges`` for this weight layout up to ``num_tokens``.
 
     Raises:
         RuntimeError: If vLLM is not available.
@@ -991,17 +1029,30 @@ def profile_fused_moe_kernel(
     torch.cuda.synchronize()
 
     if profile_method == "record_function":
-        return _collect_record_function_stats(
+        stats = _collect_record_function_stats(
             step_fn=_step,
             active_steps=active_steps,
             output_dir=output_dir,
             operation_name="moe_grouped_gemm",
         )
-
-    return _collect_cuda_event_stats(
-        step_fn=_step,
-        active_steps=active_steps,
+    else:
+        stats = _collect_cuda_event_stats(
+            step_fn=_step,
+            active_steps=active_steps,
+        )
+    stats["block_size_m"] = config["BLOCK_SIZE_M"]
+    stats["num_tokens_post_padded"] = int(num_tokens_post_padded.item())
+    stats["block_size_m_ranges"] = json.dumps(
+        block_size_m_ranges(
+            w1_shape=w1.shape,
+            w2_shape=w2.shape,
+            top_k=top_k,
+            dtype=config_dtype,
+            block_shape=block_shape,
+            max_tokens=num_tokens,
+        )
     )
+    return stats
 
 
 def generate_expert_weights(

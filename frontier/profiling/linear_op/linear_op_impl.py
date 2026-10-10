@@ -1088,11 +1088,15 @@ class GPTModel(torch.nn.Module):
 
     def forward(self, input_ids, positions):
         hidden_states = self.embed_tokens(input_ids)
-        residual = None
+        # In vLLM every decoder layer after the first adds the previous
+        # layer's residual, a tensor distinct from its hidden states, in
+        # input_layernorm. Passing that one tensor to every repeat gives the
+        # fused add-norm the engine's two input buffers; a residual aliased
+        # to the hidden states reads one buffer and times too short.
+        residual = torch.zeros_like(hidden_states)
         for _ in range(self.num_repeat_steps):
             hidden_states = self.embed_tokens(input_ids)
-            residual = hidden_states
-            hidden_states, residual = self.block(
+            hidden_states, _ = self.block(
                 positions,
                 hidden_states,
                 residual,
