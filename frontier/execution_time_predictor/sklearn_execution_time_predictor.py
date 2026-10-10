@@ -577,7 +577,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             self._config,
             self._cpu_overhead_input_file_eager,
             sys_arch=global_vars.get_sys_arch(),
-            num_pipeline_stages=self._replica_config.num_pipeline_stages,
+            replica_config=self._replica_config,
         )
         if self._two_stream_eager_pricing:
             logger.info(
@@ -6910,6 +6910,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         metric_name: str,
         batch: Batch,
         stage_id: int,
+        required: bool = False,
     ) -> float:
         if self._config.skip_cpu_overhead_modeling:
             return 0.0
@@ -6917,11 +6918,24 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         # CPU-overhead terms belong to the forward step's family, which differs
         # from the operator tables' family under two-stream eager pricing.
         with self._temporary_measurement_type(self._step_measurement_type):
-            return self._lookup_cpu_overhead_prediction(metric_name, batch, stage_id)
+            return self._lookup_cpu_overhead_prediction(metric_name, batch, stage_id, required)
 
-    def _lookup_cpu_overhead_prediction(self, metric_name: str, batch: Batch, stage_id: int) -> float:
+    def _lookup_cpu_overhead_prediction(
+        self, metric_name: str, batch: Batch, stage_id: int, required: bool = False
+    ) -> float:
+        """A CPU-overhead term's prediction; a missing optional term prices 0.
+
+        A required term has no stand-in, so a missing or invalid prediction raises.
+        """
         metric_predictions = self._predictions.get(metric_name)
         if metric_predictions is None:
+            if required:
+                raise ValueError(
+                    f"CPU-overhead term {metric_name!r} has no trained model for "
+                    f"model_name={self._model_config.get_name()!r}, "
+                    f"tensor_parallel_degree={self._replica_config.attn_tensor_parallel_size} "
+                    f"in {getattr(self, '_cpu_overhead_input_file', '')}."
+                )
             self._log_missing_cpu_overhead_prediction_once(metric_name)
             return 0.0
 
@@ -6947,6 +6961,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             try:
                 return self._get_on_demand_prediction(metric_name, features)
             except Exception:
+                if required:
+                    raise
                 self._log_missing_cpu_overhead_prediction_once(metric_name)
                 return 0.0
 
@@ -6954,6 +6970,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         if batch_size_key in metric_predictions:
             return float(metric_predictions[batch_size_key])
 
+        if required:
+            raise ValueError(
+                f"CPU-overhead term {metric_name!r} has no prediction for batch size {batch_size_key[0]}."
+            )
         self._log_missing_cpu_overhead_prediction_once(metric_name)
         return 0.0
 
@@ -7006,10 +7026,15 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         return self._get_cpu_overhead_prediction_or_default("ray_comm_time", batch, stage_id)
 
     def _get_forward_launch_time(self, batch: Batch, stage_id: int) -> float:
-        """Host time to launch the forward's kernels of a step priced in two streams."""
+        """Host time to launch the forward's kernels of a step priced in two streams.
+
+        It is the step's whole host stream, so it is required.
+        """
         if self._active_measurement_type == self._step_measurement_type:
             return 0.0
-        return self._get_cpu_overhead_prediction_or_default("forward_launch", batch, stage_id)
+        return self._get_cpu_overhead_prediction_or_default(
+            "forward_launch", batch, stage_id, required=True
+        )
 
     def _get_forward_drain_time(self, batch: Batch, stage_id: int) -> float:
         """Device time after the last kernel launch of a step priced in two streams."""

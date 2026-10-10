@@ -475,3 +475,47 @@ def test_shared_manager_trains_stage_keyed_cpu_overhead_models(tmp_path) -> None
         (1.0, 2048.0, 0.0, 1.0): 71.0,
     }
     assert models["schedule"]._frontier_exact_lookup[(7.0, 0.0, 7.0, 1.0)] == 0.0
+
+
+CPU_STEP_FEATURES = ("batch_size", "num_prefill_tokens", "num_decode_tokens")
+CPU_STEP = SimpleNamespace(size=1, num_prefill_tokens=16, num_decode_tokens=0)
+
+
+def _cpu_overhead_predictor(predictions: dict[str, Any]) -> _ConcretePredictor:
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    predictor._model_config = SimpleNamespace(get_name=lambda: "tiny")
+    predictor._replica_config = SimpleNamespace(attn_tensor_parallel_size=1)
+    predictor._cpu_overhead_input_file = "cpu_overheads.csv"
+    predictor._predictions = predictions
+    return predictor
+
+
+def _cpu_overhead_record(result: float) -> dict[str, Any]:
+    return {
+        "_on_demand_prediction": True,
+        "_feature_names": list(CPU_STEP_FEATURES),
+        "_model": _CountingModel(CPU_STEP_FEATURES, result),
+    }
+
+
+def test_a_required_cpu_term_without_a_model_raises_instead_of_pricing_zero() -> None:
+    predictor = _cpu_overhead_predictor({})
+
+    with pytest.raises(
+        ValueError, match=r"'forward_launch' has no trained model for model_name='tiny', tensor_parallel_degree=1"
+    ):
+        predictor._lookup_cpu_overhead_prediction("forward_launch", CPU_STEP, 0, required=True)
+    assert predictor._lookup_cpu_overhead_prediction("schedule", CPU_STEP, 0) == 0.0
+
+
+def test_a_required_cpu_term_with_an_invalid_estimate_raises_instead_of_pricing_zero() -> None:
+    predictor = _cpu_overhead_predictor(
+        {"forward_launch": _cpu_overhead_record(math.nan), "schedule": _cpu_overhead_record(math.nan)}
+    )
+
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        predictor._lookup_cpu_overhead_prediction("forward_launch", CPU_STEP, 0, required=True)
+    assert predictor._lookup_cpu_overhead_prediction("schedule", CPU_STEP, 0) == 0.0

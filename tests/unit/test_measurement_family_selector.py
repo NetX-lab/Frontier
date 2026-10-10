@@ -700,13 +700,21 @@ PROBED_CPU_OVERHEAD_HEADER = (
 )
 
 
-def _stage_table(path, stages) -> str:
-    """Write a forward_launch table with one row per pipeline stage in ``stages``."""
+def _stage_table(path, stages, tensor_parallel_degree=1) -> str:
+    """Write a forward_launch table for model m with one row per pipeline stage in ``stages``."""
     path.write_text(
-        PROBED_CPU_OVERHEAD_HEADER.replace("\n", ",pipeline_stage_id\n")
-        + "".join(f"m,7,0.1,0.1,58.0,58.0,{stage}\n" for stage in stages)
+        PROBED_CPU_OVERHEAD_HEADER.replace("\n", ",tensor_parallel_degree,pipeline_stage_id\n")
+        + "".join(f"m,7,0.1,0.1,58.0,58.0,{tensor_parallel_degree},{stage}\n" for stage in stages)
     )
     return str(path)
+
+
+def _replica(num_pipeline_stages, tensor_parallel_degree=1) -> SimpleNamespace:
+    return SimpleNamespace(
+        model_config=SimpleNamespace(get_name=lambda: "m"),
+        attn_tensor_parallel_size=tensor_parallel_degree,
+        num_pipeline_stages=num_pipeline_stages,
+    )
 
 
 def _predictor_config(**flags) -> SimpleNamespace:
@@ -719,7 +727,7 @@ def test_two_stream_eager_pricing_follows_forward_launch_columns(tmp_path) -> No
     plain = tmp_path / "plain.csv"
     plain.write_text(PLAIN_CPU_OVERHEAD_HEADER)
     probed = _stage_table(tmp_path / "probed.csv", (0,))
-    layout = {"sys_arch": "co-location", "num_pipeline_stages": 1}
+    layout = {"sys_arch": "co-location", "replica_config": _replica(1)}
 
     assert uses_two_stream_eager_pricing(_predictor_config(), str(probed), **layout) is True
     assert uses_two_stream_eager_pricing(_predictor_config(), str(plain), **layout) is False
@@ -746,11 +754,11 @@ def test_two_stream_eager_pricing_fails_fast_for_pd_af_and_tables_without_stages
 
     with pytest.raises(ValueError, match="PD-AF"):
         uses_two_stream_eager_pricing(
-            _predictor_config(), probed, sys_arch="pd-af-disaggregation", num_pipeline_stages=1
+            _predictor_config(), probed, sys_arch="pd-af-disaggregation", replica_config=_replica(1)
         )
     with pytest.raises(ValueError, match="without pipeline_stage_id; republish"):
         uses_two_stream_eager_pricing(
-            _predictor_config(), str(unstaged), sys_arch="co-location", num_pipeline_stages=1
+            _predictor_config(), str(unstaged), sys_arch="co-location", replica_config=_replica(1)
         )
 
 
@@ -759,19 +767,35 @@ def test_two_stream_eager_pricing_takes_stage_tables_covering_every_stage(tmp_pa
     first = _stage_table(tmp_path / "first.csv", (0,))
 
     assert uses_two_stream_eager_pricing(
-        _predictor_config(), both, sys_arch="co-location", num_pipeline_stages=2
+        _predictor_config(), both, sys_arch="co-location", replica_config=_replica(2)
     ) is True
     with pytest.raises(ValueError, match=r"stages \[0, 1\]; num_pipeline_stages=1"):
         uses_two_stream_eager_pricing(
-            _predictor_config(), both, sys_arch="co-location", num_pipeline_stages=1
+            _predictor_config(), both, sys_arch="co-location", replica_config=_replica(1)
         )
     with pytest.raises(ValueError, match=r"stages \[0\]; num_pipeline_stages=2"):
         uses_two_stream_eager_pricing(
-            _predictor_config(), first, sys_arch="co-location", num_pipeline_stages=2
+            _predictor_config(), first, sys_arch="co-location", replica_config=_replica(2)
         )
     assert uses_two_stream_eager_pricing(
-        _predictor_config(), first, sys_arch="pd-disaggregation", num_pipeline_stages=1
+        _predictor_config(), first, sys_arch="pd-disaggregation", replica_config=_replica(1)
     ) is True
+
+
+def test_two_stream_eager_pricing_needs_rows_for_the_replica_model_and_tp(tmp_path) -> None:
+    # Launch rows for TP2 only: a TP1 replica has no host stream to price.
+    tp2_only = _stage_table(tmp_path / "tp2.csv", (0,), tensor_parallel_degree=2)
+
+    assert uses_two_stream_eager_pricing(
+        _predictor_config(), tp2_only, sys_arch="co-location", replica_config=_replica(1, 2)
+    ) is True
+    with pytest.raises(
+        ValueError,
+        match=r"rows for model_name='m', tensor_parallel_degree=1 at pipeline stages \[\]",
+    ):
+        uses_two_stream_eager_pricing(
+            _predictor_config(), tp2_only, sys_arch="co-location", replica_config=_replica(1)
+        )
 
 
 def test_two_stream_enables_kernel_only_family_for_eager_step_roles() -> None:
@@ -792,7 +816,7 @@ def _bind_step_pricing(predictor, cpu_overhead_ms: float) -> list:
         predictor, "_active_measurement_type", measurement_type
     )
 
-    def lookup(metric_name, _batch, _stage_id):
+    def lookup(metric_name, _batch, _stage_id, _required=False):
         lookups.append((metric_name, predictor._active_measurement_type))
         return cpu_overhead_ms
 
@@ -959,7 +983,7 @@ def test_shared_manager_detects_two_stream_from_eager_cpu_overhead_table(tmp_pat
     plain = tmp_path / "plain.csv"
     plain.write_text(PLAIN_CPU_OVERHEAD_HEADER)
     cluster_config = manager._cluster_configs[ClusterType.PREFILL]
-    replica = SimpleNamespace(**vars(cluster_config.replica_config), num_pipeline_stages=1)
+    replica = SimpleNamespace(**{**vars(cluster_config.replica_config), **vars(_replica(1))})
 
     def cluster_with(eager_cpu_file: str, kernel_only_cpu_file: str) -> SimpleNamespace:
         predictor_config = SimpleNamespace(

@@ -128,7 +128,7 @@ class ExecutionTimePredictionModelManager(
             execution_time_predictor_config,
             cpu_overhead_file,
             sys_arch=global_vars.get_sys_arch(),
-            num_pipeline_stages=replica_config.num_pipeline_stages,
+            replica_config=replica_config,
         )
 
     def _should_train_communication_models(self, cluster_config: ClusterConfig) -> bool:

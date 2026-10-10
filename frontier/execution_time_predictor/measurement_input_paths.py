@@ -158,7 +158,7 @@ def resolve_training_file_paths(
 
 
 def uses_two_stream_eager_pricing(
-    config: Any, cpu_overhead_input_file: str, *, sys_arch: str, num_pipeline_stages: int,
+    config: Any, cpu_overhead_input_file: str, *, sys_arch: str, replica_config: Any,
 ) -> bool:
     """Whether eager forward steps are priced as the slower of two streams.
 
@@ -166,9 +166,9 @@ def uses_two_stream_eager_pricing(
     them. When the eager CPU-overhead table carries forward_launch, the device
     stream is priced from kernel-only operator tables, the host stream from
     forward_launch, and the step pays the launch time the device cannot hide.
-    Each pipeline stage launches its own forward, so the table keys its rows by
-    pipeline_stage_id for every stage of the replica, stage 0 alone for a
-    single-stage replica.
+    Each pipeline stage launches its own forward, so the replica's model and
+    attention TP degree need rows keyed by pipeline_stage_id for every stage of
+    the replica, stage 0 alone for a single-stage replica.
     """
     if config.enable_dummy_mode or config.skip_cpu_overhead_modeling:
         return False
@@ -187,12 +187,19 @@ def uses_two_stream_eager_pricing(
             f"{cpu_overhead_input_file} carries forward_launch without {CPU_OVERHEAD_PIPELINE_STAGE_COLUMN}; "
             "republish it from the CPU-probe logs with frontier.profiling.cpu_overhead.vllm_cpu_probe."
         )
-    stages = set(pd.read_csv(cpu_overhead_input_file, usecols=[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN])[
-        CPU_OVERHEAD_PIPELINE_STAGE_COLUMN
-    ])
+    model_name = replica_config.model_config.get_name()
+    tensor_parallel_degree = replica_config.attn_tensor_parallel_size
+    num_pipeline_stages = replica_config.num_pipeline_stages
+    rows = pd.read_csv(
+        cpu_overhead_input_file,
+        usecols=["model_name", "tensor_parallel_degree", CPU_OVERHEAD_PIPELINE_STAGE_COLUMN],
+    )
+    rows = rows[(rows["model_name"] == model_name) & (rows["tensor_parallel_degree"] == tensor_parallel_degree)]
+    stages = set(rows[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN])
     if stages != set(range(num_pipeline_stages)):
         raise ValueError(
-            f"{cpu_overhead_input_file} has rows for pipeline stages {sorted(stages)}; "
+            f"{cpu_overhead_input_file} has rows for model_name={model_name!r}, "
+            f"tensor_parallel_degree={tensor_parallel_degree} at pipeline stages {sorted(stages)}; "
             f"num_pipeline_stages={num_pipeline_stages} needs stages 0..{num_pipeline_stages - 1}."
         )
     return True
