@@ -101,6 +101,12 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
             "help": "Maximum tokens per scheduling iteration (max_num_batched_tokens in vLLM v1)."
         },
     )
+    max_model_len: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "Model context length, prompt plus output (--max-model-len in vLLM). A request or thinking round that does not fit stops the run when it arrives. Defaults to the model's max_position_embeddings."
+        },
+    )
     scheduling_policy: str = field(
         default="fcfs",
         metadata={
@@ -164,19 +170,19 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
     final_prefill_reserved_slots: int = field(
         default=0,
         metadata={
-            "help": "Per-iteration PREFILL admission slots reserved for final-round prefill requests. Hidden requests may borrow idle reserved slots."
+            "help": "PREFILL running slots that waiting final-round prefill requests may reclaim. A value above 0 puts waiting final-round requests ahead of hidden-round ones; with enable_final_running_request_reclaim, running hidden-round requests are preempted so that waiting final-round requests can fill up to this many slots. Without reclaim, no slot is held back."
         },
     )
     final_prefill_reserved_tokens: int = field(
         default=0,
         metadata={
-            "help": "Per-iteration PREFILL token budget reserved for final-round prefill requests. Hidden requests may borrow idle reserved tokens."
+            "help": "PREFILL tokens per iteration kept for final-round prefill requests. A value above 0 puts waiting final-round requests ahead of hidden-round ones; while a final-round request waits, running hidden-round prefills leave this many tokens of the iteration budget. With no final-round request waiting, hidden rounds use the whole budget. Must be below the PREFILL role's final-round token budget: final_phase_max_tokens_in_batch when set, otherwise max_tokens_in_batch, including the prefill_replica_scheduler_config_max_tokens_in_batch override. Other roles do not keep the reserve, so their budgets are not checked against it."
         },
     )
     final_decode_reserved_slots: int = field(
         default=0,
         metadata={
-            "help": "Per-iteration DECODE running/admission slots reserved for final-round decode requests. Hidden requests may borrow idle reserved slots."
+            "help": "DECODE running slots that waiting final-round decode requests may reclaim. A value above 0 puts waiting final-round requests ahead of hidden-round ones; with enable_final_running_request_reclaim, running hidden-round requests are preempted so that waiting final-round requests can fill up to this many slots. Without reclaim, no slot is held back."
         },
     )
     enable_final_running_request_reclaim: bool = field(
@@ -386,6 +392,7 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
             )
 
         for field_name in (
+            "max_model_len",
             "hidden_phase_max_tokens_in_batch",
             "hidden_phase_batch_size_cap",
             "final_phase_max_tokens_in_batch",
@@ -487,6 +494,27 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
     @staticmethod
     def get_type():
         return ReplicaSchedulerType.VLLM_V1
+
+    def validate_final_prefill_reserve(self) -> None:
+        """Reject a reserve that leaves running hidden-round prefills no tokens.
+
+        Only the PREFILL role keeps this reserve, so the check runs once that
+        role's own values are resolved.
+        """
+        # A waiting final-round request makes the iteration a final-round one,
+        # so the reserve is cut from the final-round token budget.
+        final_round_token_budget = (
+            self.final_phase_max_tokens_in_batch
+            if self.final_phase_max_tokens_in_batch is not None
+            else self.max_tokens_in_batch
+        )
+        if self.final_prefill_reserved_tokens >= final_round_token_budget:
+            raise ValueError(
+                "VllmV1SchedulerConfig.final_prefill_reserved_tokens must be below "
+                f"the final-round token budget ({final_round_token_budget}), "
+                f"got={self.final_prefill_reserved_tokens!r}; otherwise running "
+                "hidden-round prefills get no tokens while a final-round request waits"
+            )
 
 
 @dataclass

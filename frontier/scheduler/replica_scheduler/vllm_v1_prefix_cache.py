@@ -83,7 +83,7 @@ class PrefixCacheLedger:
         )
         raw_hit_blocks = tuple(computed_blocks)
         raw_hit_bindings: list[KVCacheBlockBinding] = []
-        query_hashes = list(request.block_hash_ids)
+        query_hashes = request.prompt_block_hash_ids(int(self._config.block_size))
         for query_index, block in enumerate(raw_hit_blocks):
             binding = block.binding
             if binding is None:
@@ -104,14 +104,19 @@ class PrefixCacheLedger:
             if request.is_recomputing
             else request.num_prefill_tokens
         )
-        num_new_tokens = schedule_target_tokens - int(num_computed_tokens)
-        full_hit_backoff_applied = False
-        if num_new_tokens == 0 and computed_blocks:
-            num_computed_tokens -= int(self._config.block_size)
-            num_new_tokens = int(self._config.block_size)
-            computed_blocks = list(computed_blocks[:-1])
-            self._kv_cache_manager.prefix_cache_stats.hits -= 1
-            full_hit_backoff_applied = True
+        # vLLM computes at least the last target token for its logits: a hit
+        # covers at most num_tokens - 1 tokens, in whole blocks.
+        num_admitted_blocks = min(
+            len(computed_blocks),
+            (schedule_target_tokens - 1) // int(self._config.block_size),
+        )
+        full_hit_backoff_applied = num_admitted_blocks < len(computed_blocks)
+        self._kv_cache_manager.prefix_cache_stats.hits -= (
+            len(computed_blocks) - num_admitted_blocks
+        )
+        computed_blocks = list(computed_blocks[:num_admitted_blocks])
+        num_computed_tokens = num_admitted_blocks * int(self._config.block_size)
+        num_new_tokens = schedule_target_tokens - num_computed_tokens
         return PrefixCacheAdmission(
             raw_hit_blocks=raw_hit_blocks,
             effective_hit_blocks=tuple(computed_blocks),
@@ -168,7 +173,7 @@ class PrefixCacheLedger:
         request: Request,
         bindings: Sequence[KVCacheBlockBinding],
     ) -> List[Dict[str, Any]]:
-        query_hashes = list(request.block_hash_ids or [])
+        query_hashes = request.prompt_block_hash_ids(int(self._config.block_size))
         if len(bindings) > len(query_hashes):
             raise ValueError(
                 "Prefix cache hit count exceeds the ordered query hash count."
@@ -205,7 +210,9 @@ class PrefixCacheLedger:
             )
             admission_payload.update(
                 {
-                    "query_hashes": list(request.block_hash_ids or []),
+                    "query_hashes": request.prompt_block_hash_ids(
+                        int(self._config.block_size)
+                    ),
                     "raw_hit_blocks": self._serialize_prefix_cache_hit_bindings(
                         request=request,
                         bindings=admission.raw_hit_bindings,

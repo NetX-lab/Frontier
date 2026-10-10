@@ -1077,7 +1077,7 @@ class Llama3_8BModelConfig(Llama2ModelConfig):
     num_kv_heads: int = 8
     embedding_dim: int = 4096
     mlp_hidden_dim: int = 14336
-    max_position_embeddings: int = 4096
+    max_position_embeddings: int = 8192
     rope_theta: Optional[float] = 500000
     vocab_size: int = 128256
 

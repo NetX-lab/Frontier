@@ -519,6 +519,16 @@ class Request(BaseEntity):
     def block_hash_ids(self) -> Optional[List[int]]:
         return self._block_hash_ids
 
+    def prompt_block_hash_ids(self, block_size: int) -> List[int]:
+        """Hashes of the full blocks of the active round's prompt.
+
+        A trace names the blocks of a prompt, and vLLM hashes only full
+        blocks. Hashes past them, such as those of a prompt that trace replay
+        shortened, name no tokens of this request: they are neither looked up
+        nor bound to its decode-token blocks.
+        """
+        return list(self._block_hash_ids or [])[: self._num_prefill_tokens // block_size]
+
     @property
     def session_id(self) -> Optional[int]:
         return self._session_id
