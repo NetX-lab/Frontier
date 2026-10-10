@@ -4,8 +4,9 @@ While a final-round prefill waits, running hidden-round prefills leave the
 reserved tokens of the iteration budget, and the final round is admitted with
 them in the same iteration. The reserve must stay below the final-round token
 budget, or running hidden-round prefills get no tokens while a final round
-that cannot be admitted waits, and scheduling stops. A per-role override is
-checked with the values the role runs with.
+that cannot be admitted waits, and scheduling stops. Only the PREFILL role
+keeps the reserve, so it is checked with the values that role runs with, and
+another role's smaller budget does not reject it.
 """
 
 from types import SimpleNamespace
@@ -123,8 +124,36 @@ def test_running_hidden_prefill_leaves_the_reserved_tokens_to_a_waiting_final_ro
     ],
 )
 def test_a_reserve_that_fills_the_final_round_budget_is_rejected(budget_fields) -> None:
+    config = SimpleNamespace(
+        replica_scheduler_config=VllmV1SchedulerConfig(
+            final_prefill_reserved_tokens=TOKEN_BUDGET, **budget_fields
+        )
+    )
     with pytest.raises(ValueError, match="final_prefill_reserved_tokens must be below"):
-        VllmV1SchedulerConfig(final_prefill_reserved_tokens=TOKEN_BUDGET, **budget_fields)
+        resolve_replica_scheduler_config(config, ClusterType.PREFILL)
+
+
+def test_a_decode_budget_below_the_prefill_reserve_is_accepted() -> None:
+    config = SimpleNamespace(
+        replica_scheduler_config=VllmV1SchedulerConfig(
+            max_tokens_in_batch=2 * TOKEN_BUDGET,
+            final_prefill_reserved_tokens=2 * RESERVED_TOKENS,
+            enable_chunked_prefill=True,
+        ),
+        decode_replica_scheduler_config_max_tokens_in_batch=RESERVED_TOKENS,
+    )
+
+    prefill = resolve_replica_scheduler_config(config, ClusterType.PREFILL)
+    decode = resolve_replica_scheduler_config(config, ClusterType.DECODE)
+
+    assert (prefill.max_tokens_in_batch, prefill.final_prefill_reserved_tokens) == (
+        2 * TOKEN_BUDGET,
+        2 * RESERVED_TOKENS,
+    )
+    assert (decode.max_tokens_in_batch, decode.final_prefill_reserved_tokens) == (
+        RESERVED_TOKENS,
+        2 * RESERVED_TOKENS,
+    )
 
 
 @pytest.mark.parametrize(

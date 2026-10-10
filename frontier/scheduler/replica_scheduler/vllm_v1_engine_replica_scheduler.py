@@ -1222,13 +1222,9 @@ class VLLMv1EngineReplicaScheduler(
             )
 
             # A victim admitted before the step it was preempted from ends
-            # takes that step's sample here. vLLM appends it when the step's
-            # output arrives, before this admission's step can end, and sized
-            # this admission without it.
-            if request.has_preempted_step:
-                request.on_preempted_step_end(
-                    self._current_schedule_time, self._cluster_type
-                )
+            # keeps that step's sample pending. As in vLLM, this admission is
+            # sized without it, and the step's end appends it at the time its
+            # output arrives, before this admission's step can end.
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)

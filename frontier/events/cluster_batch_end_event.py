@@ -481,45 +481,43 @@ class ClusterBatchEndEvent(BaseEvent):
 
             model_config = cluster_scheduler._config.replica_config.model_config
             total_layers = model_config.num_layers
-            active_requests = []
-            active_request_ids = set()
-            for request in self._batch.requests:
-                if request.completed or request.id in active_request_ids:
-                    continue
-                active_request_ids.add(request.id)
-                active_requests.append(request)
-
-            if not active_requests:
+            # A row preempted after dispatch still executed its layers, but its
+            # request restarted under a new execution epoch and owns no layer
+            # credit from this batch. Every row may be such a row; the global
+            # end still runs to apply their pending samples.
+            current_requests = self._batch.current_execution_requests
+            layer_counts = {
+                request.id: request.completed_layer_count
+                for request in current_requests
+                if not request.completed
+            }
+            if current_requests and not layer_counts:
                 raise ValueError(
                     "Distributed MoE DECODE terminal batch has no active request: "
                     f"batch_id={self._batch.id}, total_layers={total_layers}"
                 )
-
-            layer_counts = {
-                request.id: request.completed_layer_count
-                for request in active_requests
-            }
             unique_layer_counts = set(layer_counts.values())
-            if len(unique_layer_counts) != 1:
+            if len(unique_layer_counts) > 1:
                 raise ValueError(
                     "Distributed MoE DECODE terminal batch has inconsistent "
                     f"active request layer counts: batch_id={self._batch.id}, "
                     f"total_layers={total_layers}, layer_counts={layer_counts}"
                 )
 
-            completed_layer_count = next(iter(unique_layer_counts))
-            if completed_layer_count < total_layers:
-                raise ValueError(
-                    "Distributed MoE DECODE terminal layer undercount: "
-                    f"batch_id={self._batch.id}, total_layers={total_layers}, "
-                    f"layer_counts={layer_counts}"
-                )
-            if completed_layer_count > total_layers:
-                raise ValueError(
-                    "Distributed MoE DECODE terminal layer overflow: "
-                    f"batch_id={self._batch.id}, total_layers={total_layers}, "
-                    f"layer_counts={layer_counts}"
-                )
+            if unique_layer_counts:
+                completed_layer_count = next(iter(unique_layer_counts))
+                if completed_layer_count < total_layers:
+                    raise ValueError(
+                        "Distributed MoE DECODE terminal layer undercount: "
+                        f"batch_id={self._batch.id}, total_layers={total_layers}, "
+                        f"layer_counts={layer_counts}"
+                    )
+                if completed_layer_count > total_layers:
+                    raise ValueError(
+                        "Distributed MoE DECODE terminal layer overflow: "
+                        f"batch_id={self._batch.id}, total_layers={total_layers}, "
+                        f"layer_counts={layer_counts}"
+                    )
 
             from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 
