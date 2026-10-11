@@ -372,7 +372,10 @@ def test_stale_ep_wave_lane_drops_siblings_with_the_same_parent_ticket() -> None
     # A stale lane invalidates the whole EP wave, so its sibling is dropped
     # instead of carrying an admission ticket that has already been released.
     assert stage.pop_batch_if_not_busy() is None
-    assert stage.consume_last_stale_drop_count() == 2
+    assert [dropped.id for dropped in stage.consume_last_stale_drops()] == [
+        stale_lane.id,
+        live_lane.id,
+    ]
     assert context.is_idle
     assert context.queued_tickets == ()
 
@@ -406,7 +409,10 @@ def test_stale_schedule_epoch_drops_siblings_with_the_same_parent_ticket() -> No
     stale_lane._schedule_epoch += 1
 
     assert stage.pop_batch_if_not_busy() is None
-    assert stage.consume_last_stale_drop_count() == 2
+    assert [dropped.id for dropped in stage.consume_last_stale_drops()] == [
+        stale_lane.id,
+        live_lane.id,
+    ]
     assert context.is_idle
     assert context.queued_tickets == ()
 

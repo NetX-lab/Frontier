@@ -26,7 +26,7 @@ def prepare_ep_wave_inputs(
     step_id_getter: Callable[[Batch], int],
     aggregate_batch_builder: Callable[[Batch, int, int], Batch],
 ) -> EPWaveInputs:
-    """Validate lane ownership and build the aggregate predictor input."""
+    """Validate the lane mapping and build the aggregate predictor input."""
 
     if not isinstance(source_batches, Mapping) or not source_batches:
         raise ValueError("EP wave source_batches must be a non-empty lane mapping")

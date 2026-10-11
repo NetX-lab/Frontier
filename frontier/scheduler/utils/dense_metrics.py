@@ -8,10 +8,12 @@ from frontier.config.model_config import BaseModelConfig
 from frontier.entities.execution_time import ExecutionTime
 from frontier.entities.stage_execution_time import StageExecutionTime
 
+from frontier.scheduler.utils.collective_timing import advance_decode_layer
 from frontier.scheduler.utils.execution_time_metrics import (
     build_metrics_execution_time,
     build_single_layer_metrics_execution_time,
 )
+from frontier.scheduler.utils.request_selection import collect_active_requests
 
 
 def complete_dense_layer(
@@ -25,8 +27,24 @@ def complete_dense_layer(
     phase: str,
     metrics_store: Any,
 ) -> list:
-    """Advance a dense layer through the scheduler's existing phase handler."""
+    """Advance a dense layer through the scheduler's existing phase handler.
+
+    A dense layer completes per source, outside the shared forward completion
+    that credits a routed layer to every decoding request in the cohort. The
+    decode handler credits its own batch, but the prefill handler credits
+    nothing, so a decoding request carried in a prefill-mode batch (chunked
+    prefill mixes them) would miss this layer. Credit it here, once per
+    executed layer; a request still prefilling has no decode layer to credit.
+    """
     if phase == "prefill":
+        advance_decode_layer(
+            (
+                request
+                for request in collect_active_requests([batch])
+                if request.is_prefill_complete
+            ),
+            scheduler._config.replica_config.model_config.num_layers,
+        )
         return scheduler.on_prefill_sync_collective(
             time,
             replica_id,
