@@ -237,7 +237,7 @@
     "frontier_decode_cuda_graph_mode": "full_decode_only"
    },
    "routing": {
-    "status": "UNSET",
+    "status": "MATCH",
     "frontier": "balanced distribution, seed 0 (inputs/frontier.json)",
     "groundtruth": "instrumented routing-records run after the clean run (VLLM_FRONTIER_MOE_ROUTING_LOG_PATH)",
     "check": "e2e_c4_moe_pdd analysis/routing_check/check_routing_records_pd.py and routing_audit/routing_audit_pd.py, --layout pd"
@@ -262,7 +262,7 @@
    "measurement_families": "Decode-graph steps (pure decode batches, padded to the next capture size) read the KERNEL_ONLY tables attention_kernel_only.csv, linear_op_kernel_only.csv, moe_kernel_only.csv; prefill steps read the CUDA_EVENT tables. The runner names every path, so the checked-in default tables never load.",
    "manifest": {
     "path": "e2e_c4_moe_pdd/manifest.yaml",
-    "sha256": "f2a6845099f946c10ba2cea2a2abff7f4c60086a87cc01aa69c77728a5f71f36"
+    "sha256": "3b49e7a17b7ab7d31a60f453137559478382f5b898446c4b5a36f623872c0918"
    },
    "engine_config": {
     "path": "e2e_c4_moe_pdd/inputs/engine.json",
@@ -466,9 +466,9 @@
     "frontier_decode_cuda_graph_mode": "none"
    },
    "routing": {
-    "status": "UNSET",
+    "status": "MATCH",
     "frontier": "balanced distribution, seed 0 (inputs/frontier.json)",
-    "groundtruth": "instrumented routing-records run c2p-rr-routing-planned of ticket 41 (VLLM_FRONTIER_MOE_ROUTING_LOG_PATH)",
+    "groundtruth": "instrumented routing-records run after the clean run (VLLM_FRONTIER_MOE_ROUTING_LOG_PATH)",
     "check": "e2e_c4_moe_pdd analysis/routing_check/check_routing_records_pd.py and routing_audit/routing_audit_pd.py, --layout colocation"
    },
    "kv_transfer": {
@@ -478,7 +478,7 @@
    "measurement_families": "Every step runs eager. With forward_launch in the eager CPU-overhead CSV, Frontier prices each forward in two streams (ticket 33): the device stream from the KERNEL_ONLY tables attention_kernel_only.csv, linear_op_kernel_only.csv, moe_kernel_only.csv plus the eager kernel gap, the host stream from forward_launch. At PP2 this needs the per-stage forward_launch of ticket 38 (T33-G15); without forward_launch, eager steps read the CUDA_EVENT tables. The runner names every path, so the checked-in default tables never load.",
    "manifest": {
     "path": "e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2/manifest.yaml",
-    "sha256": "f6f374a878666bf45afe433421504e828d793ca22feabd3dc349996c7f28176c"
+    "sha256": "96e1e4ab67eed59f2917973357fb0bdf96298534b454ed1c52bb115fa0659e44"
    },
    "engine_config": {
     "path": "e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2/inputs/engine.json",
@@ -2159,7 +2159,7 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c4-h200-clean-qps2-20261007a"
+    "c4-rr-h200-clean-qps2-20261011a"
    ],
    "frontier_runs": {
     "x2": {
@@ -2430,7 +2430,7 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c4-h200-clean-qps37-20261007a"
+    "c4-rr-h200-clean-qps37-20261011b"
    ],
    "frontier_runs": {
     "x2": {
@@ -2701,7 +2701,7 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c4-h200-clean-qps75-20261007a"
+    "c4-rr-h200-clean-qps75-20261011c"
    ],
    "frontier_runs": {
     "x2": {
@@ -2991,7 +2991,7 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c4-h200-clean-qps37_mixed_warm-20261007a"
+    "c4-rr-h200-clean-qps37_mixed_warm-20261011d"
    ],
    "frontier_runs": {
     "x2": {

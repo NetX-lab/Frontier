@@ -174,8 +174,10 @@ A CPU-probe run enters a table only when it passes both of the following.
 ## Limits
 
 - The calibration bundle (raw runs, tables, traces) is pinned by hash. It is not shipped here.
-- Two MoE cases are blocked on routing: C4 and C2' have routing status `UNSET`, so their cells
-  stay `INSUFFICIENT_EVIDENCE` until a routing-records run sets it.
+- MoE routing: every MoE case's reference runs with vLLM-BS round-robin routing
+  (`moe_uniform_routing` in the engine file), which matches Frontier's `balanced` split. vLLM's
+  native router on the dummy weights does not match it. C4's CPU-overhead table was collected
+  with the native router and is kept.
 - Coverage: a cell classed `outside_profile` holds formal batches outside the profiled ranges or
   grid spacing (`coverage.gaps` names them). Its numbers are not in-domain evidence.
 - Mode boundaries: a DP x PP verdict covers only its gated mode pools.
