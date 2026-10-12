@@ -151,9 +151,25 @@ def test_pd_s33_reduces_the_vllm_ttft_by_the_minimum_endpoint_offset(tmp_path):
     vllm = frame(ROWS, endpoint_offset_proxy_api_ms=[5.0, 3.0, 4.0])
     rows = write_rows(tmp_path, {"vllm/run": vllm, "frontier/x": frame(ROWS).assign(ttft_ms=lambda t: t["ttft_ms"] - 3.0)})
     reading = gate_reading(PD, case(), rows)
-    assert reading["ttft_s33"]["bound_ms"] == 3.0
+    assert reading["ttft_s33"]["runs"]["vllm/run"]["bound_ms"] == 3.0
     assert reading["ttft_s33"]["vllm_ttft_adjusted_ms"] == pytest.approx(frame(ROWS)["ttft_ms"].mean() - 3.0)
     assert reading["verdict"] == "PASS"
+
+
+def test_pd_s33_pools_the_runs_each_reduced_by_its_own_bound(tmp_path):
+    fast = frame(ROWS, endpoint_offset_proxy_api_ms=[2.0, 2.0, 2.0])
+    slow = frame(scaled(ROWS, 1, 1.3), endpoint_offset_proxy_api_ms=[4.0, 5.0, 6.0])
+    frontier = frame(ROWS).assign(ttft_ms=lambda t: t["ttft_ms"] + 1.0)
+    rows = write_rows(tmp_path, {"vllm/fast": fast, "vllm/slow": slow, "frontier/x": frontier}, cell=PD)
+    reading = gate_reading(PD, case(), rows)
+    runs = reading["ttft_s33"]["runs"]
+    assert (runs["vllm/fast"]["bound_ms"], runs["vllm/slow"]["bound_ms"]) == (2.0, 4.0)
+    pooled = (runs["vllm/fast"]["vllm_ttft_adjusted_ms"] + runs["vllm/slow"]["vllm_ttft_adjusted_ms"]) / 2
+    assert reading["ttft_s33"]["vllm_ttft_adjusted_ms"] == pytest.approx(pooled)
+    # Against the fast run alone the TTFT error is 0.12; against the pooled reference it is 0.
+    assert statuses(reading)["ttft_ms"] == "PASS"
+    [ttft] = [row for row in reading["metrics"] if row["metric"] == "ttft_ms"]
+    assert ttft["relative_error"] == pytest.approx(0.0, abs=1e-12)
 
 
 def mode_rows(count, ttft_mode, tpot_mode="in_phase", ttft=20.0):

@@ -390,6 +390,72 @@
     }
    ]
   },
+  "c3-h200-clean-qps2-20261010a": {
+   "cell_id": "e2e_c3_dense_pdd/qps2",
+   "run_dir": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps2-20261010a",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1010-142857-493085",
+   "node": "gpu-h200-1087",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-10",
+   "inputs_sha256": {
+    "inputs/engine.json": "c9b5f4f4e947241d98882bc7d8c9957badb24e22f8bc2710c4b96d479a958122",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/workload.json": "ef9b82a3e23cd7612d75f89b8f1942dac7d9ede400c74c9ffd337f96dfd0ca34",
+    "inputs/trace/trace.csv": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409",
+    "inputs/trace/request_ids.json": "e98cd5d12b53f12facaafc011b382249e01390e745fa170643ab1e4309bef07f",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps2-20261010a/run_manifest.json",
+    "sha256": "1b80e135b488048fa97976447a1d645f76fdedfdf0fcbe9b38bbc0f268244484"
+   },
+   "rows": [
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps2-20261010a/run/pd_request_metrics.jsonl",
+     "sha256": "bda20aa288f17abd78219fd95620c8a41087d723ec3dbdf0cb0985860bcdae5d"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps2-20261010a/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps2-20261010a/run/client_requests.jsonl",
+     "sha256": "1ff061d47c5940767c3658d75e5fb4dee9fb60dd9321dfea78a6376fd35930a8"
+    }
+   ]
+  },
   "c3-h200-clean-qps8-20261007a": {
    "cell_id": "e2e_c3_dense_pdd/qps8",
    "run_dir": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps8-20261007a",
@@ -522,6 +588,270 @@
     }
    ]
   },
+  "c3-h200-clean-qps37_p512-20261007b": {
+   "cell_id": "e2e_c3_dense_pdd/qps37_p512",
+   "run_dir": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007b",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37_p512/trace",
+   "reference_commit": "8604683bfffe0d98a7ec3f767498b32a9d5cdd76",
+   "reference_tree_dirty": false,
+   "harness_commit": "118cc79147ecd683912a54715b1c55c283ec2b4c",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "1ff001276f5c3be4ea6eb43e88192f04d8b77d1d923f66d40579abf1b916c551",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1007-143852-544982",
+   "node": "gpu-h200-0399",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-07",
+   "inputs_sha256": {
+    "inputs/engine.json": "c9b5f4f4e947241d98882bc7d8c9957badb24e22f8bc2710c4b96d479a958122",
+    "inputs/fork_changed_files.txt": "7a4996bb13a0962fa7dded10e4167b7264dd2ea7070cda186b6b0414d3948653",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37_p512/workload.json": "392624a9337f2119bc45b13c564a628bd73d4c67b63013729734c4fcf817a284",
+    "inputs/cells/qps37_p512/trace/trace.csv": "a6412d48600e24771279428a7d3bf2a8c58e727ba0d47197b223b34dc0323ff3",
+    "inputs/cells/qps37_p512/trace/request_ids.json": "4c3701f1e8017f3b8d38ca418db876435956913eacd7bd9ca08ad87c8a9ff60a",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_8604683bf.diff": "2d12d76d23fd99fa062810f90292ffd528b83224a3f2725724ab9f4060ff85da"
+   },
+   "run_manifest": {
+    "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007b/run_manifest.json",
+    "sha256": "1f1fb88226a2928e9dcbf4868894ce1355df82ff1d9b4e7a01bf7680e4ae455b"
+   },
+   "rows": [
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007b/run/pd_request_metrics.jsonl",
+     "sha256": "6b0a4e0593f0332eb81732091664f64499fe5e034dc8d8e3e0c7c21ec348113c"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007b/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007b/run/client_requests.jsonl",
+     "sha256": "8e6171f902a405f11716196773733c68e2709e3ee5ac6eb88d94786b6558d2f0"
+    }
+   ]
+  },
+  "c3-h200-clean-qps37_p512-20261007c": {
+   "cell_id": "e2e_c3_dense_pdd/qps37_p512",
+   "run_dir": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007c",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37_p512/trace",
+   "reference_commit": "8604683bfffe0d98a7ec3f767498b32a9d5cdd76",
+   "reference_tree_dirty": false,
+   "harness_commit": "118cc79147ecd683912a54715b1c55c283ec2b4c",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "1ff001276f5c3be4ea6eb43e88192f04d8b77d1d923f66d40579abf1b916c551",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1007-143852-544982",
+   "node": "gpu-h200-0399",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-07",
+   "inputs_sha256": {
+    "inputs/engine.json": "c9b5f4f4e947241d98882bc7d8c9957badb24e22f8bc2710c4b96d479a958122",
+    "inputs/fork_changed_files.txt": "7a4996bb13a0962fa7dded10e4167b7264dd2ea7070cda186b6b0414d3948653",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37_p512/workload.json": "392624a9337f2119bc45b13c564a628bd73d4c67b63013729734c4fcf817a284",
+    "inputs/cells/qps37_p512/trace/trace.csv": "a6412d48600e24771279428a7d3bf2a8c58e727ba0d47197b223b34dc0323ff3",
+    "inputs/cells/qps37_p512/trace/request_ids.json": "4c3701f1e8017f3b8d38ca418db876435956913eacd7bd9ca08ad87c8a9ff60a",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_8604683bf.diff": "2d12d76d23fd99fa062810f90292ffd528b83224a3f2725724ab9f4060ff85da"
+   },
+   "run_manifest": {
+    "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007c/run_manifest.json",
+    "sha256": "9c54207054958622c3ed297fe31e09c81fe9b53ea4e3ca2b293c866c3ed27b67"
+   },
+   "rows": [
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007c/run/pd_request_metrics.jsonl",
+     "sha256": "4b50af920c33c71495b5305bee74ed14da5e9cde97eccf1f3f9b59a335ceb041"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007c/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261007c/run/client_requests.jsonl",
+     "sha256": "378b72160cc4032f436d962a65ac607b087e0cf04cd12c0cdce6326801c7c312"
+    }
+   ]
+  },
+  "c3-h200-clean-qps37_p512-20261010b": {
+   "cell_id": "e2e_c3_dense_pdd/qps37_p512",
+   "run_dir": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010b",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37_p512/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1010-142857-493085",
+   "node": "gpu-h200-1087",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-10",
+   "inputs_sha256": {
+    "inputs/engine.json": "c9b5f4f4e947241d98882bc7d8c9957badb24e22f8bc2710c4b96d479a958122",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37_p512/workload.json": "392624a9337f2119bc45b13c564a628bd73d4c67b63013729734c4fcf817a284",
+    "inputs/cells/qps37_p512/trace/trace.csv": "a6412d48600e24771279428a7d3bf2a8c58e727ba0d47197b223b34dc0323ff3",
+    "inputs/cells/qps37_p512/trace/request_ids.json": "4c3701f1e8017f3b8d38ca418db876435956913eacd7bd9ca08ad87c8a9ff60a",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010b/run_manifest.json",
+    "sha256": "8593982f13c2bbb06893c4be0ff487b25d280ec6b4ad3a95911e25c9a65f8b8e"
+   },
+   "rows": [
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010b/run/pd_request_metrics.jsonl",
+     "sha256": "36df9fca38f842165eb5495393304c9f19fff3a0666ddc7cda94edbcfd597a43"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010b/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010b/run/client_requests.jsonl",
+     "sha256": "8e5874421c2c48f2fe90b36faf47cc28dc4cc81d9ba518df942f7b2aea18e205"
+    }
+   ]
+  },
+  "c3-h200-clean-qps37_p512-20261010c": {
+   "cell_id": "e2e_c3_dense_pdd/qps37_p512",
+   "run_dir": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010c",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37_p512/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1010-142857-493085",
+   "node": "gpu-h200-1087",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-10",
+   "inputs_sha256": {
+    "inputs/engine.json": "c9b5f4f4e947241d98882bc7d8c9957badb24e22f8bc2710c4b96d479a958122",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37_p512/workload.json": "392624a9337f2119bc45b13c564a628bd73d4c67b63013729734c4fcf817a284",
+    "inputs/cells/qps37_p512/trace/trace.csv": "a6412d48600e24771279428a7d3bf2a8c58e727ba0d47197b223b34dc0323ff3",
+    "inputs/cells/qps37_p512/trace/request_ids.json": "4c3701f1e8017f3b8d38ca418db876435956913eacd7bd9ca08ad87c8a9ff60a",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010c/run_manifest.json",
+    "sha256": "bb3aa6576e9400b8eaca5866bf2853869ff9c2fe5d6428220e16fc780e2c9ab1"
+   },
+   "rows": [
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010c/run/pd_request_metrics.jsonl",
+     "sha256": "79a573abc3043bb890417929ff9643a8ef80d4b9cbd95d50814467b3643c6dc0"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010c/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c3_dense_pdd/runs/groundtruth_clean/c3-h200-clean-qps37_p512-20261010c/run/client_requests.jsonl",
+     "sha256": "aec3be13f4459428bb2c4bdeaf68c2794e6223149336c177d745a215f62310b4"
+    }
+   ]
+  },
   "c4-rr-h200-clean-qps2-20261011a": {
    "cell_id": "e2e_c4_moe_pdd/qps2",
    "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261011a",
@@ -586,6 +916,140 @@
     {
      "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261011a/run/client_requests.jsonl",
      "sha256": "0854887fc7d5476de178cef31661b929fec611729db8027aaeb7785bcaa6db0e"
+    }
+   ]
+  },
+  "c4-rr-h200-clean-qps2-20261012a": {
+   "cell_id": "e2e_c4_moe_pdd/qps2",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012a",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/workload.json": "0a03dcdde6d63eafc44a133d862cee3bd119d481a465b902cb45e0ae0fac28e7",
+    "inputs/trace/trace.csv": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409",
+    "inputs/trace/request_ids.json": "1623eaa5972b4fdf19fdf58b9bee2a748c8b68a81bbab05783204ab771213295",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012a/run_manifest.json",
+    "sha256": "b37038eb3710bfed46617b1fa47aed3a92d5d927d695797e1fb19a1611598c9d"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012a/run/pd_request_metrics.jsonl",
+     "sha256": "29345e7eabb63f392293955797e265ee829c6925cfc4e8e69cc302f957969c2d"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012a/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012a/run/client_requests.jsonl",
+     "sha256": "1e422c15ba836513aa40090c6b8aba59a10f837f6648a05651f017d3f867166d"
+    }
+   ]
+  },
+  "c4-rr-h200-clean-qps2-20261012e": {
+   "cell_id": "e2e_c4_moe_pdd/qps2",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012e",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/workload.json": "0a03dcdde6d63eafc44a133d862cee3bd119d481a465b902cb45e0ae0fac28e7",
+    "inputs/trace/trace.csv": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409",
+    "inputs/trace/request_ids.json": "1623eaa5972b4fdf19fdf58b9bee2a748c8b68a81bbab05783204ab771213295",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012e/run_manifest.json",
+    "sha256": "154a4d74daaf31e986f1b22850bb500573d611ba73f049265c402e84fffd5a8f"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012e/run/pd_request_metrics.jsonl",
+     "sha256": "85c4804c249f1876bc1c1e15f50e9b5a2e274b822a25b8e4712c43c62ff5afa9"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012e/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps2-20261012e/run/client_requests.jsonl",
+     "sha256": "859864722d98434eeb61dcccc1287f7180139831ee962061310f99db16dcb4cb"
     }
    ]
   },
@@ -656,6 +1120,140 @@
     }
    ]
   },
+  "c4-rr-h200-clean-qps37-20261012b": {
+   "cell_id": "e2e_c4_moe_pdd/qps37",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012b",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37/workload.json": "c13a129bc2ee4cfbd5ea72d0046fb5c18f85f0f5d3f9fb0899e51a518a62b1b9",
+    "inputs/cells/qps37/trace/trace.csv": "de89812e41858fdeb315c8558dd6f0d33048f32d9b4ac1ed574978ce75fa34ad",
+    "inputs/cells/qps37/trace/request_ids.json": "cd4a0060410b080b517c949b34c5298cb6402e33b1ba0cbc60257f166d05ea33",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012b/run_manifest.json",
+    "sha256": "85d626ac1d5686cb9168b9e0ce989accfcbd0a875f19f95e7c7a0062d3d9645e"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012b/run/pd_request_metrics.jsonl",
+     "sha256": "9e7bf85a0d705f911afd1491c317149b3e706fea82726b76b38d30809470d90d"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012b/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012b/run/client_requests.jsonl",
+     "sha256": "55399155767561958e0208507dfab27a7957782e0dd98c6908bbf68d17a7cc9e"
+    }
+   ]
+  },
+  "c4-rr-h200-clean-qps37-20261012f": {
+   "cell_id": "e2e_c4_moe_pdd/qps37",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012f",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37/workload.json": "c13a129bc2ee4cfbd5ea72d0046fb5c18f85f0f5d3f9fb0899e51a518a62b1b9",
+    "inputs/cells/qps37/trace/trace.csv": "de89812e41858fdeb315c8558dd6f0d33048f32d9b4ac1ed574978ce75fa34ad",
+    "inputs/cells/qps37/trace/request_ids.json": "cd4a0060410b080b517c949b34c5298cb6402e33b1ba0cbc60257f166d05ea33",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012f/run_manifest.json",
+    "sha256": "b34e8e5d8ad502a24d1046cceab5e3f91711ae4429d9f443b8bae2fc9537118b"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012f/run/pd_request_metrics.jsonl",
+     "sha256": "368adad29c5ca809c3c8e53a93e60d8638a052eeff9fc9bee3688f61ed0787e8"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012f/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37-20261012f/run/client_requests.jsonl",
+     "sha256": "3a550fe8251821c48dc6b87f645e30cf2d9d716d2a17b1a7c35022be18687f9d"
+    }
+   ]
+  },
   "c4-rr-h200-clean-qps75-20261011c": {
    "cell_id": "e2e_c4_moe_pdd/qps75",
    "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261011c",
@@ -723,6 +1321,140 @@
     }
    ]
   },
+  "c4-rr-h200-clean-qps75-20261012c": {
+   "cell_id": "e2e_c4_moe_pdd/qps75",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012c",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps75/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps75/workload.json": "997aaeda194af309632cb98f9938ef1713e928e2ad05b161a2e5d95c60633bea",
+    "inputs/cells/qps75/trace/trace.csv": "ef8130d3847bae10baa644e4e5939a401066178f6eaab4363d1a3e4c01dce2cd",
+    "inputs/cells/qps75/trace/request_ids.json": "8f21fcc745837690f15c89b66c3c88cbf398b510469dc81671393cbcbe7352e1",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012c/run_manifest.json",
+    "sha256": "54590c2f4796d2d09caf94146a72f04716dfb6cf59efef96c196fe083511b31f"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012c/run/pd_request_metrics.jsonl",
+     "sha256": "a78880cf43bc70cd8687a860b31add2087cd65c976ade11e853f8f4ad19efc99"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012c/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012c/run/client_requests.jsonl",
+     "sha256": "0dc1d2fd5d4e627068cf9e530c6dc79355ea4e04d35889770932f152464fe352"
+    }
+   ]
+  },
+  "c4-rr-h200-clean-qps75-20261012g": {
+   "cell_id": "e2e_c4_moe_pdd/qps75",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012g",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps75/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps75/workload.json": "997aaeda194af309632cb98f9938ef1713e928e2ad05b161a2e5d95c60633bea",
+    "inputs/cells/qps75/trace/trace.csv": "ef8130d3847bae10baa644e4e5939a401066178f6eaab4363d1a3e4c01dce2cd",
+    "inputs/cells/qps75/trace/request_ids.json": "8f21fcc745837690f15c89b66c3c88cbf398b510469dc81671393cbcbe7352e1",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012g/run_manifest.json",
+    "sha256": "4ab878144797eb42a28975a3772c4a1010121d2fc72bce82a4c0296a67feebd2"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012g/run/pd_request_metrics.jsonl",
+     "sha256": "be19bd773bb349a1b3a7dc9a154780c8847405438d38d8644b4ceea2809ab2b8"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012g/run/pd_join_report.json",
+     "sha256": "f972fd7a600c4003a008d237dde885735b026c390d5a8a62f516147857f72809"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps75-20261012g/run/client_requests.jsonl",
+     "sha256": "d29968589836b275de7c9645258cd4de71f462def1eb805bb14ccadd4cafb19b"
+    }
+   ]
+  },
   "c4-rr-h200-clean-qps37_mixed_warm-20261011d": {
    "cell_id": "e2e_c4_moe_pdd/qps37_mixed_warm",
    "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261011d",
@@ -787,6 +1519,140 @@
     {
      "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261011d/run/client_requests.jsonl",
      "sha256": "f6bfc0d7c29526dae25a99c7af79b87f1894db1d52ccb98098d1007e8beffb43"
+    }
+   ]
+  },
+  "c4-rr-h200-clean-qps37_mixed_warm-20261012d": {
+   "cell_id": "e2e_c4_moe_pdd/qps37_mixed_warm",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012d",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37_mixed_warm/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37_mixed_warm/workload.json": "ead33fd4c512a5e4e89c1796460fab8d3d70b210c93e847fe44d6b963f7f466b",
+    "inputs/cells/qps37_mixed_warm/trace/trace.csv": "4063fc2e76fcbece0070193524c71adb0226181cc90c7540461df5c01b6c615c",
+    "inputs/cells/qps37_mixed_warm/trace/request_ids.json": "269ea0a07f8f4c0471ea87c0add1c45137e9477af82dd3c64dab922f2b66b1bc",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012d/run_manifest.json",
+    "sha256": "f42edec68d9b625f2ae6a1ab9bc637ef621fba56ac3f7b8880d3b3c536186ff9"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012d/run/pd_request_metrics.jsonl",
+     "sha256": "65aff5bca8683339dd9518efd0f0384c81ca071d28842922ea68ed5815626663"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012d/run/pd_join_report.json",
+     "sha256": "b9fb394575eaf1ebed959b7c54dcd5134aa8f376924091dc6daf092c317f2e30"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012d/run/client_requests.jsonl",
+     "sha256": "bf79cffa42dd9886aeb4b2a5fc1f2b6181e25fc06ab87a2fa22bd4f6a061714e"
+    }
+   ]
+  },
+  "c4-rr-h200-clean-qps37_mixed_warm-20261012h": {
+   "cell_id": "e2e_c4_moe_pdd/qps37_mixed_warm",
+   "run_dir": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012h",
+   "mode": "groundtruth_clean",
+   "trace_dir": "inputs/cells/qps37_mixed_warm/trace",
+   "reference_commit": "eed75f5257be436e1bcecf41318bfc193232b936",
+   "reference_tree_dirty": false,
+   "harness_commit": "714f2c8723268ddb4bb2c098a6975f72a22f76c4",
+   "harness_sha256": {
+    "tests/comparison/calibration/run_pd_worker.sh": "08fcd6f23b1771954afa26f2400217a524c84ba13521ec96f85dcb9242d929f0",
+    "tests/comparison/calibration/pd_replay.py": "5c12f12591d9f2b85527a1dc892b04590717221c964ce5be6927fe16a985850b",
+    "tests/comparison/calibration/pd_proxy.py": "880461f2652a299d76e3e4db634507aac121f1b54110417b012d025994f41b05",
+    "tests/comparison/calibration/pd_metrics.py": "7445fd1a22c1f5a6b277f18813150a2c98fa22d380e86a68c9d10b023ccb7857",
+    "tests/comparison/dp_placement_pp/vllm_replay.py": "f2ce4d5a4eb67419977a1b342a81da4f5f375cefe0b83cd996e8804eabab2d6f",
+    "tests/comparison/stage_admission_pp/vllm_burst_driver.py": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+    "tests/comparison/dp_placement_pp/make_trace.py": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c"
+   },
+   "rjob": "exp-1012-135101-963575",
+   "node": "gpu-h200-0107",
+   "image": "artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2",
+   "resources": {
+    "gpus": 2,
+    "gpu_type": "H200",
+    "cpus": 16,
+    "mem_gb": 128,
+    "charged_group": "step_main"
+   },
+   "software": {
+    "python": "3.12.11",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "device_count": 2,
+    "devices": [
+     "NVIDIA H200",
+     "NVIDIA H200"
+    ]
+   },
+   "vllm_import": "10-12",
+   "inputs_sha256": {
+    "inputs/engine.json": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93",
+    "inputs/fork_changed_files.txt": "887e51e93d80c2c56feb7c30410b159589bbc8cde1a61e699cd2f57bb724ab55",
+    "inputs/groundtruth_overlay.patch": "d432e56c3609cf76d9d621f8053f42a5b746804059763ca1484761a611a38fe2",
+    "inputs/cells/qps37_mixed_warm/workload.json": "ead33fd4c512a5e4e89c1796460fab8d3d70b210c93e847fe44d6b963f7f466b",
+    "inputs/cells/qps37_mixed_warm/trace/trace.csv": "4063fc2e76fcbece0070193524c71adb0226181cc90c7540461df5c01b6c615c",
+    "inputs/cells/qps37_mixed_warm/trace/request_ids.json": "269ea0a07f8f4c0471ea87c0add1c45137e9477af82dd3c64dab922f2b66b1bc",
+    "inputs/engine_round_robin_routing.json": "3321f5afbd8ee91225bda166a20b173d6774315b1385145648145efea0d129a2",
+    "/data/ycfeng/Frontier/task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/groundtruth_instrumentation_eed75f525.diff": "3d70cc0cc5ae470fc73d5837ebefb9f3d333ba5d7d8f404e6e44b4acaaeb1b8d"
+   },
+   "run_manifest": {
+    "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012h/run_manifest.json",
+    "sha256": "c835d0639539ebb52906ce3974543cbd176e107aad4f30a6b6a672871aabb331"
+   },
+   "rows": [
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012h/run/pd_request_metrics.jsonl",
+     "sha256": "d0f9589e82a98844f9b4fa3d31c1e4b3828673ce9efd89d88348ca2c7a9d893c"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012h/run/pd_join_report.json",
+     "sha256": "b9fb394575eaf1ebed959b7c54dcd5134aa8f376924091dc6daf092c317f2e30"
+    },
+    {
+     "path": "e2e_c4_moe_pdd/runs/groundtruth_clean/c4-rr-h200-clean-qps37_mixed_warm-20261012h/run/client_requests.jsonl",
+     "sha256": "941109d76d067212bbfe74c94cca05c6df32b2083153a709a62a5ceb1f3f0a02"
     }
    ]
   },

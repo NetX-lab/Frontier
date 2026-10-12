@@ -1,5 +1,5 @@
 {
- "description": "Harness readings of the 22 claimed cells at Frontier fc94cbc on the X2 tables (cloud PR review X2), with C4 against its round-robin ground truth (decision C4-ROUTING); gate replay of a cell's normalized rows reproduces its entry.",
+ "description": "Harness readings of the 22 claimed cells at Frontier fc94cbc on the X2 tables (cloud PR review X2), with C4 against its round-robin ground truth (decision C4-ROUTING) and each PDD cell against all its admissible reference runs (decision PD-POOL); gate replay of a cell's normalized rows reproduces its entry.",
  "cells": [
   {
    "cell_id": "e2e_c1_dense_coloc/qps2",
@@ -182,30 +182,40 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.05841204156851447,
+     "relative_error": 0.06109044408032224,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.011159774400854477,
+     "relative_error": 0.008430529818420745,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.007861512734712294,
+     "relative_error": 0.004979531756547395,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0004964895404840559,
+     "relative_error": 0.0004872309465838049,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0004964895404841473,
+     "relative_error": 0.0004872309465837896,
      "status": "PASS"
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.880182302556932,
-    "vllm_ttft_mean_ms": 51.63564682006836,
-    "vllm_ttft_adjusted_ms": 49.75546451751143
+    "runs": {
+     "vllm/c3-h200-clean-qps2-20261007a": {
+      "bound_ms": 1.880182302556932,
+      "vllm_ttft_mean_ms": 51.63564682006836,
+      "vllm_ttft_adjusted_ms": 49.75546451751143
+     },
+     "vllm/c3-h200-clean-qps2-20261010a": {
+      "bound_ms": 1.9300198182463646,
+      "vllm_ttft_mean_ms": 51.969356536865234,
+      "vllm_ttft_adjusted_ms": 50.03933671861887
+     }
+    },
+    "vllm_ttft_adjusted_ms": 49.89740061806515
    }
   },
   {
@@ -246,8 +256,13 @@
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.7803404480218887,
-    "vllm_ttft_mean_ms": 57.246787548065186,
+    "runs": {
+     "vllm/c3-h200-clean-qps8-20261007a": {
+      "bound_ms": 1.7803404480218887,
+      "vllm_ttft_mean_ms": 57.246787548065186,
+      "vllm_ttft_adjusted_ms": 55.4664471000433
+     }
+    },
     "vllm_ttft_adjusted_ms": 55.4664471000433
    }
   },
@@ -263,35 +278,60 @@
      "x2_qps37_p512"
     ]
    },
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.12188167793438827,
-     "status": "FAIL"
+     "relative_error": 0.08001746227598404,
+     "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.001118235256958226,
+     "relative_error": 0.006801951803703632,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.020606742083122857,
+     "relative_error": 0.021327593779397344,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.003076165828199915,
+     "relative_error": 0.002112011285565393,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0030761658282000707,
+     "relative_error": 0.0021120112855652754,
      "status": "PASS"
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.3267470058053732,
-    "vllm_ttft_mean_ms": 24.51946258544922,
-    "vllm_ttft_adjusted_ms": 23.192715579643846
+    "runs": {
+     "vllm/c3-h200-clean-qps37_p512-20261007a": {
+      "bound_ms": 1.3267470058053732,
+      "vllm_ttft_mean_ms": 24.51946258544922,
+      "vllm_ttft_adjusted_ms": 23.192715579643846
+     },
+     "vllm/c3-h200-clean-qps37_p512-20261007b": {
+      "bound_ms": 1.3298066332936287,
+      "vllm_ttft_mean_ms": 24.478018283843994,
+      "vllm_ttft_adjusted_ms": 23.148211650550365
+     },
+     "vllm/c3-h200-clean-qps37_p512-20261007c": {
+      "bound_ms": 1.2927167117595673,
+      "vllm_ttft_mean_ms": 23.680899143218994,
+      "vllm_ttft_adjusted_ms": 22.388182431459427
+     },
+     "vllm/c3-h200-clean-qps37_p512-20261010b": {
+      "bound_ms": 1.2561790645122528,
+      "vllm_ttft_mean_ms": 22.074790000915527,
+      "vllm_ttft_adjusted_ms": 20.818610936403275
+     },
+     "vllm/c3-h200-clean-qps37_p512-20261010c": {
+      "bound_ms": 1.3356348499655724,
+      "vllm_ttft_mean_ms": 22.474517822265625,
+      "vllm_ttft_adjusted_ms": 21.138882972300053
+     }
+    },
+    "vllm_ttft_adjusted_ms": 22.137320714071393
    }
   },
   {
@@ -311,30 +351,45 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.11061533193569552,
+     "relative_error": 0.11178921670684482,
      "status": "FAIL"
     },
     "tpot_ms": {
-     "relative_error": 0.006083489088044529,
+     "relative_error": 0.011922779396533462,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.018755337034685734,
+     "relative_error": 0.024858071271391037,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0002139870986781158,
+     "relative_error": 0.000276857769914843,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0002139870986780859,
+     "relative_error": 0.0002768577699148131,
      "status": "PASS"
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.9230698235332966,
-    "vllm_ttft_mean_ms": 15.025410652160645,
-    "vllm_ttft_adjusted_ms": 13.102340828627348
+    "runs": {
+     "vllm/c4-rr-h200-clean-qps2-20261011a": {
+      "bound_ms": 1.9230698235332966,
+      "vllm_ttft_mean_ms": 15.025410652160645,
+      "vllm_ttft_adjusted_ms": 13.102340828627348
+     },
+     "vllm/c4-rr-h200-clean-qps2-20261012a": {
+      "bound_ms": 2.128058113157749,
+      "vllm_ttft_mean_ms": 15.309667587280273,
+      "vllm_ttft_adjusted_ms": 13.181609474122524
+     },
+     "vllm/c4-rr-h200-clean-qps2-20261012e": {
+      "bound_ms": 2.177962101995945,
+      "vllm_ttft_mean_ms": 15.252983570098877,
+      "vllm_ttft_adjusted_ms": 13.075021468102932
+     }
+    },
+    "vllm_ttft_adjusted_ms": 13.119657256950935
    }
   },
   {
@@ -354,30 +409,45 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.06390011218035235,
+     "relative_error": 0.0904018785973791,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.06391293856536323,
+     "relative_error": 0.07090909198644046,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.07433086498389375,
+     "relative_error": 0.08190120254587234,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.001971776089731208,
+     "relative_error": 0.004349990474086303,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.001971776089731208,
+     "relative_error": 0.004349990474086318,
      "status": "PASS"
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.8611018313094974,
-    "vllm_ttft_mean_ms": 14.68447208404541,
-    "vllm_ttft_adjusted_ms": 12.823370252735913
+    "runs": {
+     "vllm/c4-rr-h200-clean-qps37-20261011b": {
+      "bound_ms": 1.8611018313094974,
+      "vllm_ttft_mean_ms": 14.68447208404541,
+      "vllm_ttft_adjusted_ms": 12.823370252735913
+     },
+     "vllm/c4-rr-h200-clean-qps37-20261012b": {
+      "bound_ms": 1.7898119986057281,
+      "vllm_ttft_mean_ms": 15.102455615997314,
+      "vllm_ttft_adjusted_ms": 13.312643617391586
+     },
+     "vllm/c4-rr-h200-clean-qps37-20261012f": {
+      "bound_ms": 1.8365643918514252,
+      "vllm_ttft_mean_ms": 15.29151439666748,
+      "vllm_ttft_adjusted_ms": 13.454950004816055
+     }
+    },
+    "vllm_ttft_adjusted_ms": 13.196987958314518
    }
   },
   {
@@ -397,30 +467,45 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.10595730421585464,
+     "relative_error": 0.24903703484051568,
      "status": "FAIL"
     },
     "tpot_ms": {
-     "relative_error": 0.05992287498977059,
-     "status": "PASS"
+     "relative_error": 0.11069293139547919,
+     "status": "FAIL"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.06877621164142898,
-     "status": "PASS"
+     "relative_error": 0.12643456394964817,
+     "status": "FAIL"
     },
     "request_throughput_rps": {
-     "relative_error": 0.00694362411332875,
+     "relative_error": 0.022789141887585664,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.006943624113328731,
+     "relative_error": 0.022789141887585795,
      "status": "PASS"
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.838672673329711,
-    "vllm_ttft_mean_ms": 19.720566272735596,
-    "vllm_ttft_adjusted_ms": 17.881893599405885
+    "runs": {
+     "vllm/c4-rr-h200-clean-qps75-20261011c": {
+      "bound_ms": 1.838672673329711,
+      "vllm_ttft_mean_ms": 19.720566272735596,
+      "vllm_ttft_adjusted_ms": 17.881893599405885
+     },
+     "vllm/c4-rr-h200-clean-qps75-20261012c": {
+      "bound_ms": 1.8291585147380829,
+      "vllm_ttft_mean_ms": 21.471104621887207,
+      "vllm_ttft_adjusted_ms": 19.641946107149124
+     },
+     "vllm/c4-rr-h200-clean-qps75-20261012g": {
+      "bound_ms": 1.989436335861683,
+      "vllm_ttft_mean_ms": 28.332300186157227,
+      "vllm_ttft_adjusted_ms": 26.342863850295544
+     }
+    },
+    "vllm_ttft_adjusted_ms": 21.28890118561685
    }
   },
   {
@@ -440,30 +525,45 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.13631234405632853,
+     "relative_error": 0.13826371733488324,
      "status": "FAIL"
     },
     "tpot_ms": {
-     "relative_error": 0.04946140934687313,
+     "relative_error": 0.05955351199902912,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.05635542759752651,
+     "relative_error": 0.0664737767364059,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.004842462086275789,
+     "relative_error": 0.005914116430547623,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.004842462086275721,
+     "relative_error": 0.005914116430547541,
      "status": "PASS"
     }
    },
    "ttft_s33": {
-    "bound_ms": 1.3878702884539962,
-    "vllm_ttft_mean_ms": 22.007617950439453,
-    "vllm_ttft_adjusted_ms": 20.619747661985457
+    "runs": {
+     "vllm/c4-rr-h200-clean-qps37_mixed_warm-20261011d": {
+      "bound_ms": 1.3878702884539962,
+      "vllm_ttft_mean_ms": 22.007617950439453,
+      "vllm_ttft_adjusted_ms": 20.619747661985457
+     },
+     "vllm/c4-rr-h200-clean-qps37_mixed_warm-20261012d": {
+      "bound_ms": 1.3691773638129234,
+      "vllm_ttft_mean_ms": 22.360897064208984,
+      "vllm_ttft_adjusted_ms": 20.99171970039606
+     },
+     "vllm/c4-rr-h200-clean-qps37_mixed_warm-20261012h": {
+      "bound_ms": 1.5281923115253448,
+      "vllm_ttft_mean_ms": 21.916046142578125,
+      "vllm_ttft_adjusted_ms": 20.38785383105278
+     }
+    },
+    "vllm_ttft_adjusted_ms": 20.66644039781143
    }
   },
   {

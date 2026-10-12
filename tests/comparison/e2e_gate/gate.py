@@ -24,10 +24,13 @@ A failed identity, token or clock check makes every metric INSUFFICIENT_EVIDENCE
 
 Gate kinds (scenario matrix ``gate``):
 
-- ``single``: one vLLM run against one Frontier run.
-- ``pd_s33``: as ``single``, but the vLLM TTFT is reduced by the minimum endpoint offset of the
-  formal requests (proxy hop plus prefill API-server offset, column endpoint_offset_proxy_api_ms of
-  the vLLM rows), decision S33-TTFT (ii).
+- ``single``: one Frontier run against the cell's vLLM runs, pooled (decision PD-POOL): each
+  metric's numerator and denominator are summed over the runs. Every run replays the same formal
+  requests, so a latency reference is the mean of the runs' means and a throughput reference is
+  their formal requests or tokens over their summed formal windows. One run gives its own value.
+- ``pd_s33``: as ``single``, but each run's vLLM TTFT is reduced by that run's minimum endpoint
+  offset of the formal requests (proxy hop plus prefill API-server offset, column
+  endpoint_offset_proxy_api_ms of the vLLM rows), decision S33-TTFT (ii).
 - ``dp_pp_pairs``: decision T43-PAIRGATE. Every ground-truth run is paired with every Frontier
   ensemble member; a request's TTFT counts for mode M when its ttft_mode is M on both sides, its
   TPOT when its tpot_mode is. A (mode, metric) pool is gated when MIN_MODE_REQUESTS distinct
@@ -112,19 +115,27 @@ def s33_vllm_ttft(rows: pd.DataFrame) -> tuple[tuple, dict]:
     bound = float(rows["endpoint_offset_proxy_api_ms"].min())
     count = len(rows)
     numerator = float(rows["ttft_ms"].sum()) - bound * count
-    return (numerator, count, count), {"decision": "S33-TTFT (ii)", "bound": "endpoint_offset_proxy_api_ms.min",
-                                       "bound_ms": bound, "vllm_ttft_mean_ms": float(rows["ttft_ms"].mean()),
+    return (numerator, count, count), {"bound_ms": bound, "vllm_ttft_mean_ms": float(rows["ttft_ms"].mean()),
                                        "vllm_ttft_adjusted_ms": numerator / count}
 
 
 def single_reading(cell: dict, sample: dict, sides: dict[str, pd.DataFrame], checks: dict) -> dict:
-    [vllm_side] = [side for side in sides if side.startswith("vllm/")]
+    vllm_sides = [side for side in sides if side.startswith("vllm/")]
     [frontier_side] = [side for side in sides if side.startswith("frontier/")]
-    vllm, frontier = sides[vllm_side], sides[frontier_side]
-    vllm_metrics, frontier_metrics = metric_values(vllm), metric_values(frontier)
-    reading = {}
+    run_values = {side: metric_values(sides[side]) for side in vllm_sides}
+    runs = {}
     if cell["gate"] == "pd_s33":
-        vllm_metrics["ttft_ms"], reading["ttft_s33"] = s33_vllm_ttft(vllm)
+        for side in vllm_sides:
+            run_values[side]["ttft_ms"], runs[side] = s33_vllm_ttft(sides[side])
+    # Decision PD-POOL: each metric's numerator and denominator are summed over the runs.
+    vllm_metrics = {metric: tuple(map(sum, zip(*(values[metric] for values in run_values.values()))))
+                    for metric in run_values[vllm_sides[0]]}
+    reading = {}
+    if runs:
+        numerator, denominator, _ = vllm_metrics["ttft_ms"]
+        reading["ttft_s33"] = {"decision": "S33-TTFT (ii)", "bound": "endpoint_offset_proxy_api_ms.min",
+                               "runs": runs, "vllm_ttft_adjusted_ms": numerator / denominator}
+    frontier_metrics = metric_values(sides[frontier_side])
     count = len(sample["formal_request_ids"])
     metrics = [metric_row(metric, frontier_side, vllm_metrics[metric], frontier_metrics[metric], count,
                           checks["blocked_status"]) for metric in vllm_metrics]

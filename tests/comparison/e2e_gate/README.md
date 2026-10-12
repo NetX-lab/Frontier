@@ -59,7 +59,7 @@ Each ground-truth run in `artifacts.json` records the following:
 | `cases/scenario_matrix.json` | per case: architecture, model, devices, TP/PP/DP/EP, scheduler limits, graph mode, routing status, KV transfer, measurement families. Per cell: trace records, request counts, formal window, ground-truth runs, recorded Frontier commands, coverage class |
 | `artifacts.json` | Frontier and vLLM-BS identities, instrumentation diffs and overlay patches, ground-truth runs, profiling tables (current and k1d/k1e), CPU-overhead tables with their producer recipes, predictor-cache identities |
 | `cases/published_readings.json` | the published reading of every claimed cell: verdict, each gated metric or mode pool with its relative error and status (a pool also with its request count), routing, coverage, and for DP x PP cells each run's mode windows, the mode outcome, reference modes and whole-cell errors |
-| `fixtures/c1_qps2`, `fixtures/c3_qps2` | normalized rows of a co-location and a PDD cell |
+| `fixtures/c1_qps2`, `fixtures/c3_qps2` | normalized rows of a co-location cell and of a PDD cell with two pooled vLLM runs |
 | `fixtures/c6_qps0.75_drain` | normalized rows of a DP x PP cell: three vLLM runs, five ensemble members, a gated in_phase pool and two reference modes without pairs |
 | `fixtures/cpu_probe_c1` | a 100-step slice of a C1 CPU-probe run's engine and stage logs and the producer's CSVs for it |
 
@@ -107,10 +107,16 @@ If the identity, token or clock check fails, every metric is `INSUFFICIENT_EVIDE
 
 ## Gate kinds
 
-- **`single`** (co-location): one vLLM run against one Frontier run.
-- **`pd_s33`** (PDD; decision S33-TTFT (ii)): like `single`, except the vLLM TTFT is reduced by
-  the minimum endpoint offset of the formal requests. The offset is the proxy hop to the prefill
-  instance plus the prefill API-server time (prefill TTFT less its model execution time).
+- **`single`** (co-location): one Frontier run against the cell's vLLM runs. Each metric's
+  numerator and denominator are summed over the runs. Every run replays the same formal requests,
+  so a latency reference is the mean of the runs' means, and a throughput reference is their
+  formal requests or tokens over their summed formal windows. With one run the reference is that
+  run's value. Each co-location cell lists one run.
+- **`pd_s33`** (PDD; decision S33-TTFT (ii)): like `single`, except each run's vLLM TTFT is
+  reduced by that run's minimum endpoint offset of the formal requests. The offset is the proxy
+  hop to the prefill instance plus the prefill API-server time (prefill TTFT less its model
+  execution time). A PDD cell lists every clean run that passed its run check and meets the
+  case's routing status (decision PD-POOL).
 - **`dp_pp_pairs`** (DP x PP; decision T43-PAIRGATE):
   1. The two DP lanes move between four modes: `in_phase`, `anti_phase`, `split` and
      `double_split`. Each mode has its own per-token period (`dp_pp_modes.py`).
