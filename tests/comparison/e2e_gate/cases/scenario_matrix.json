@@ -547,7 +547,8 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c1-h200-clean-qps2-20261007a"
+    "c1-h200-clean-qps2-20261007a",
+    "c1-h200-clean-qps2-20261010a"
    ],
    "frontier_runs": {
     "x2": {
@@ -979,7 +980,8 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c1-h200-clean-qps12.5-20261007a"
+    "c1-h200-clean-qps12.5-20261007a",
+    "c1-h200-clean-qps12.5-20261010b"
    ],
    "frontier_runs": {
     "x2": {
@@ -1214,7 +1216,9 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c1-h200-clean-qps6.5_mixed_warm-20261007a"
+    "c1-h200-clean-qps6.5_mixed_warm-20261007a",
+    "c1-h200-clean-qps6.5_mixed_warm-20261008a",
+    "c1-h200-clean-qps6.5_mixed_warm-20261010c"
    ],
    "frontier_runs": {
     "x2": {
@@ -3275,7 +3279,8 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c5-rr-h200-clean-qps2-20261007a"
+    "c5-rr-h200-clean-qps2-20261007a",
+    "c5-rr-h200-clean-qps2-20261010a"
    ],
    "frontier_runs": {
     "x2": {
@@ -3763,7 +3768,9 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c5-rr-h200-clean-qps5-20261008a"
+    "c5-rr-h200-clean-qps5-20261008a",
+    "c5-rr-h200-clean-qps5-20261008b",
+    "c5-rr-h200-clean-qps5-20261010b"
    ],
    "frontier_runs": {
     "x2": {
@@ -4026,7 +4033,11 @@
     "formal_window": "first formal arrival to last formal completion, each side on its own clock"
    },
    "groundtruth_runs": [
-    "c5-rr-h200-clean-qps2_mixed_warm-20261008a"
+    "c5-rr-h200-clean-qps2_mixed_warm-20261008a",
+    "c5-rr-h200-clean-qps2_mixed_warm-20261010d",
+    "c5-rr-h200-clean-qps2_mixed_warm-20261010e",
+    "c5-rr-h200-clean-qps2_mixed_warm-20261010f",
+    "c5-rr-h200-clean-qps2_mixed_warm-20261010g"
    ],
    "frontier_runs": {
     "x2": {

@@ -108,6 +108,11 @@
    "duplicates": [],
    "unclassified": []
   },
+  "vllm/c1-h200-clean-qps2-20261010a": {
+   "missing": [],
+   "duplicates": [],
+   "unclassified": []
+  },
   "frontier/x2": {
    "missing": [],
    "duplicates": [],

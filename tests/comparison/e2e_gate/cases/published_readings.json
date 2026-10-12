@@ -18,23 +18,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.018396824702511052,
+     "relative_error": 0.013293647004283609,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.008513028000202021,
+     "relative_error": 0.015079949719432278,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.007779229432999389,
+     "relative_error": 0.01429599100552917,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0005020921511637304,
+     "relative_error": 0.0006831415660760862,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0005020921511638675,
+     "relative_error": 0.0006831415660761625,
      "status": "PASS"
     }
    }
@@ -94,23 +94,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.01219187403931506,
+     "relative_error": 0.03366748792849335,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.0040892083960912375,
+     "relative_error": 0.013254687309761473,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.0026947436558431574,
+     "relative_error": 0.015026437005202198,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.00395273526993543,
+     "relative_error": 0.010879080934701352,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0039527352699355355,
+     "relative_error": 0.01087908093470144,
      "status": "PASS"
     }
    }
@@ -144,23 +144,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.014812408228451828,
+     "relative_error": 0.004498946044306855,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.037047468663097584,
+     "relative_error": 0.023736659323395772,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.03540581754954507,
+     "relative_error": 0.022442046393349502,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.007267380533878676,
+     "relative_error": 0.005466583500041731,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.007267380533878714,
+     "relative_error": 0.005466583500041718,
      "status": "PASS"
     }
    }
@@ -583,23 +583,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.012103182179001418,
+     "relative_error": 0.01774861899518486,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.05030249583134541,
+     "relative_error": 0.05470282210544348,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.049662717201052135,
+     "relative_error": 0.054084556013038985,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.005205338208522434,
+     "relative_error": 0.005516627574840484,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.005205338208522465,
+     "relative_error": 0.005516627574840453,
      "status": "PASS"
     }
    }
@@ -659,23 +659,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.02832256240412415,
+     "relative_error": 0.03705434163447407,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.0011639767603547938,
+     "relative_error": 0.005687949546893925,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.000771957563253581,
+     "relative_error": 0.006107257449087457,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0069875716449317995,
+     "relative_error": 0.005284197428312947,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0069875716449318585,
+     "relative_error": 0.005284197428312976,
      "status": "PASS"
     }
    }
@@ -709,23 +709,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.03628360187097866,
+     "relative_error": 0.038033157336084165,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.05923099705418689,
+     "relative_error": 0.05075874553740936,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.05632799113403311,
+     "relative_error": 0.04816438600920724,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.010724525844455244,
+     "relative_error": 0.01016844787837495,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.01072452584445539,
+     "relative_error": 0.010168447878374957,
      "status": "PASS"
     }
    }
