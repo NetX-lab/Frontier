@@ -65,6 +65,14 @@ FULL CUDA graph belongs to the kernel-only family and publishes no
 forward_launch or forward_drain; every other forward is eager. Rows are keyed
 by pipeline_stage_id.
 
+The DP engines of a MoE instance meet in every layer's expert-parallel
+all-to-all, so a forward that runs beside another engine's prompt lasts until
+that engine's device work ends. Frontier prices this wait between DP engines
+itself, from the lanes it simulates. A forward whose device interval, from its
+launch start to its device end, overlaps a forward of another DP engine of the
+instance at the same pipeline stage that holds prefill tokens is therefore left
+out of the rows.
+
 With ``--engine_idle_edges_ms``, rows are also keyed by engine_idle_ms: the
 largest edge at or below the engine's idle time before the step, from the latest
 update_end of its earlier steps or the end of its latest DP dummy forward to the
@@ -241,6 +249,21 @@ def dummy_pass_ends(placement_dir: Path) -> dict[int, list[float]]:
     return {engine: sorted(engine_ends) for engine, engine_ends in ends.items()}
 
 
+def forward_device_intervals(stage_records: Sequence[Sequence[Mapping]]) -> list[list[tuple[float, float]]]:
+    """Return each forward's (launch start, device end) per stage, in seconds of the perf_counter clock."""
+
+    intervals = []
+    for forwards in zip(*stage_records):
+        device_end = -math.inf
+        stages = []
+        for stage in forwards:
+            launch_start = max(stage["forward_context_entered"], device_end)
+            device_end = launch_start + stage["forward_device_ms"] * 1e-3
+            stages.append((launch_start, device_end))
+        intervals.append(stages)
+    return intervals
+
+
 def stage_overhead_terms(
     engine_records: Sequence[Mapping],
     stage_records: Sequence[Sequence[Mapping]],
@@ -248,8 +271,13 @@ def stage_overhead_terms(
     dp_allreduce_ms: float | None,
     engine_idle_edges_ms: Sequence[float] | None = None,
     dummy_ends: Sequence[float] = (),
+    peer_prompt_intervals: Sequence[Sequence[tuple[float, float]]] | None = None,
 ) -> list[StageStep]:
-    """Return each forward's row key and CPU-overhead terms."""
+    """Return each forward's row key and CPU-overhead terms.
+
+    ``peer_prompt_intervals[p]`` holds the device intervals of the other DP engines' stage-p forwards that hold
+    prefill tokens; a forward that overlaps one of them is left out.
+    """
 
     _require_probe_fields(engine_records, stage_records)
     scheduled = [record["num_scheduled_tokens"] for record in engine_records if record["num_scheduled_tokens"]]
@@ -260,6 +288,7 @@ def stage_overhead_terms(
                 f"match the engine's {len(scheduled)} steps that scheduled tokens"
             )
     identities = step_identities(engine_records)
+    intervals = forward_device_intervals(stage_records)
     last_stage = len(stage_records) - 1
     stage_steps = []
     previous_forward_end = -math.inf
@@ -280,7 +309,6 @@ def stage_overhead_terms(
                 engine_busy_until = max(engine_busy_until, dummy_ends[dummy_index - 1])
             idle_ms = max(0.0, (record["step_start"] - engine_busy_until) * 1e3)
             idle_edge = engine_idle_edges_ms[bisect.bisect_right(engine_idle_edges_ms, idle_ms) - 1]
-        device_end = -math.inf
         for stage_id, records in enumerate(stage_records):
             stage = records[n]
             if stage_id == 0:
@@ -295,8 +323,7 @@ def stage_overhead_terms(
             kv_load_wait = 0.0
             if stage["kv_load_start"] is not None:
                 kv_load_wait = (stage["kv_load_end"] - stage["kv_load_start"]) * 1e3
-            launch_start = max(stage["forward_context_entered"], device_end)
-            device_end = launch_start + stage["forward_device_ms"] * 1e-3
+            launch_start, device_end = intervals[n][stage_id]
             terms = {
                 "schedule": (record["schedule_end"] - record["step_start"]) * 1e3 if stage_id == 0 else 0.0,
                 "prepare_inputs_e2e": (stage["forward_context_entered"] - dispatch_start) * 1e3 - dp_wait - kv_load_wait,
@@ -316,7 +343,10 @@ def stage_overhead_terms(
                 family = MeasurementType.CUDA_EVENT
                 terms["forward_launch"] = (stage["forward_end"] - launch_start) * 1e3
                 terms["forward_drain"] = max(0.0, device_end - stage["forward_end"]) * 1e3
-            if n or engine_idle_edges_ms is None:
+            beside_peer_prompt = peer_prompt_intervals is not None and any(
+                start < device_end and end > launch_start for start, end in peer_prompt_intervals[stage_id]
+            )
+            if (n or engine_idle_edges_ms is None) and not beside_peer_prompt:
                 stage_steps.append(StageStep(stage_id, family, identity, terms, idle_edge))
         n += 1
     return stage_steps
@@ -345,14 +375,34 @@ def instance_stage_steps(
                 f"engine-idle buckets of a DP>1 instance need its dummy forwards; no dummy_pass record in "
                 f"{placement_dir}"
             )
-    return [
+    peer_prompt_intervals = [None] * len(engines)
+    if len(engines) > 1:
+        prompt_forwards = []
+        for engine_records, stage_logs in engines:
+            _require_probe_fields(engine_records, stage_logs)
+            prompt_forwards.append([
+                stages
+                for stages, identity in zip(forward_device_intervals(stage_logs), step_identities(engine_records))
+                if identity[1]
+            ])
+        peer_prompt_intervals = [
+            [[stages[p] for peer, forwards in enumerate(prompt_forwards) if peer != engine for stages in forwards]
+             for p in range(num_pipeline_stages)]
+            for engine in range(len(engines))
+        ]
+    stage_steps = [
         step
         for engine, (engine_records, stage_logs) in enumerate(engines)
         for step in stage_overhead_terms(
             engine_records, stage_logs, dp_allreduce_ms=dp_allreduce_ms,
             engine_idle_edges_ms=engine_idle_edges_ms, dummy_ends=dummy_ends.get(engine, ()),
+            peer_prompt_intervals=peer_prompt_intervals[engine],
         )
     ]
+    num_forwards = sum(len(records) for _, stage_logs in engines for records in stage_logs)
+    logger.info("%s: %d of %d forwards go to the rows.", [str(log) for log in engine_logs], len(stage_steps),
+                num_forwards)
+    return stage_steps
 
 
 def cpu_overhead_tables(

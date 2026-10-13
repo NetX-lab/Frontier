@@ -349,6 +349,12 @@ kernel-only file and publishes no `forward_launch` or `forward_drain`; every oth
 goes to the eager file. Each `--cpu_probe_logs` lists the engine logs of one serving
 instance, one per DP engine in DP rank order; a PP>1 engine adds `--num_pipeline_stages`.
 
+The DP engines of a MoE instance meet in every layer's expert-parallel all-to-all, so a
+forward that runs beside another engine's prompt lasts until that engine's device work ends.
+Frontier prices this wait between DP engines itself, from the lanes it simulates, so a forward
+whose device interval (launch start to device end) overlaps a forward of another DP engine at
+the same pipeline stage that holds prefill tokens is left out of the rows.
+
 With `--engine_idle_edges_ms 0 100 500`, rows are also keyed by `engine_idle_ms`, the
 largest edge at or below the engine's idle time before the step: from the latest
 `update_end` of its earlier steps, or the end of its latest DP dummy forward, to its

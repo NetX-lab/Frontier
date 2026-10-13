@@ -323,17 +323,17 @@ def _two_stage_step(step: int, start: float, scheduled: dict[str, int], *, stage
     return _engine_record(step, start, scheduled, sample_end, engine_loop="batch_queue"), stage0, stage1
 
 
-def _pipelined_batches(*, stage0_device_ms: float = 4.0):
+def _pipelined_batches(*, stage0_device_ms: float = 4.0, start: float = 10.0):
     # The second batch is submitted 0.2 ms after the first and waits for stage 0 to send the first.
     engine0, first0, first1 = _two_stage_step(
-        0, 10.0, {"a": 16}, stage0_execute_start=10.0002, stage1_execute_start=10.0010,
+        0, start, {"a": 16}, stage0_execute_start=start + 0.0002, stage1_execute_start=start + 0.0010,
         stage0_device_ms=stage0_device_ms,
     )
     engine1, second0, second1 = _two_stage_step(
-        1, 10.0002, {"b": 16}, stage0_execute_start=first0["send_end"] + 0.0001,
+        1, start + 0.0002, {"b": 16}, stage0_execute_start=first0["send_end"] + 0.0001,
         stage1_execute_start=first1["execute_return"] + 0.0001,
     )
-    engine = [engine0, engine1, _idle_engine_record(2, 10.5)]
+    engine = [engine0, engine1, _idle_engine_record(2, start + 0.5)]
     return engine, [[first0, second0], [first1, second1]]
 
 
@@ -472,8 +472,9 @@ def test_cli_reads_each_serving_instance_and_writes_one_csv_per_family(tmp_path)
 
 
 def test_cli_reads_dp_engines_with_their_stage_logs(tmp_path) -> None:
+    # Engine 1 runs its batches 1 s after engine 0's, beside none of them.
     for dp in (0, 1):
-        engine, stages = _pipelined_batches()
+        engine, stages = _pipelined_batches(start=10.0 + dp)
         for records in stages:
             for record in records:
                 record.update(dp_allreduce_start=record["forward_start"], dp_allreduce_end=record["forward_start"])
@@ -493,6 +494,28 @@ def test_cli_reads_dp_engines_with_their_stage_logs(tmp_path) -> None:
     assert eager["pipeline_stage_id"].tolist() == [0, 1]
     assert eager["num_steps"].tolist() == [4, 4]
     assert not kernel_file.exists()
+
+
+def test_dp_forwards_beside_another_engine_prompt_are_left_out(tmp_path) -> None:
+    # Engine 1's prompt runs on the device while engine 0 decodes; engine 0's prompt runs alone.
+    engine0 = [_single_stage_step(0, 10.0, {"a": 16}), _single_stage_step(1, 10.020, {"a": 1})]
+    engine1 = [_single_stage_step(0, 10.0201, {"b": 16})]
+    for dp, steps in enumerate((engine0, engine1)):
+        _write_engine(tmp_path / f"cpu_probe_dp{dp}.jsonl", [r for r, _ in steps], [[f for _, f in steps]])
+
+    main([
+        "--cpu_probe_logs", str(tmp_path / "cpu_probe_dp0.jsonl"), str(tmp_path / "cpu_probe_dp1.jsonl"),
+        "--model_name", "tiny", "--tensor_parallel_degree", "1",
+        "--profiling_precision", "BF16", "--scheduling_mode", "sync",
+        "--eager_output_file", str(tmp_path / "cpu_overheads.csv"),
+        "--kernel_only_output_file", str(tmp_path / "cpu_overheads_kernel_only.csv"),
+    ])
+
+    eager = validate_cpu_overhead_dataframe(pd.read_csv(tmp_path / "cpu_overheads.csv"))
+    columns = ["batch_size", "num_prefill_tokens", "num_decode_tokens"]
+    # Engine 0's decode is left out; engine 1's prompt overlaps a decode, not a prompt, and stays.
+    assert eager[columns].values.tolist() == [[1, 16, 0]]
+    assert eager["num_steps"].tolist() == [2]
 
 
 def test_validation_requires_both_forward_launch_columns() -> None:
