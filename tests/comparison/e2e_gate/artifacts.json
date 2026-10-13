@@ -2,8 +2,9 @@
  "frontier": {
   "repository": "https://github.com/NetX-lab/Frontier",
   "branch": "calibration/t43-combined",
-  "commit": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
-  "note": "every Frontier run and the producer of the current CPU-overhead tables ran at this commit; the k1d and k1e recipes name their own producer commit"
+  "commit": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
+  "cpu_overhead_producer_commit": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+  "note": "every Frontier run ran at this commit; the current CPU-overhead tables were built by the producer at cpu_overhead_producer_commit; the k1d and k1e recipes name their own producer commit"
  },
  "reference": {
   "repository": "https://github.com/fwyc0573/vLLM-BS.git",

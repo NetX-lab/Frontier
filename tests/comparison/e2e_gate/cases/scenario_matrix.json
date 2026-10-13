@@ -552,7 +552,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -768,7 +768,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -985,7 +985,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -1222,7 +1222,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -1378,9 +1378,9 @@
       "kinds": [
        "range"
       ],
-      "formal_batches_out_of_range": 5,
+      "formal_batches_out_of_range": 3,
       "formal_batches_sparse": 0,
-      "formal_time_ms_out_of_range": 467.355,
+      "formal_time_ms_out_of_range": 273.503,
       "formal_time_ms_sparse": 0.0
      }
     ],
@@ -1451,7 +1451,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -1690,7 +1690,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -1933,7 +1933,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -2174,7 +2174,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -2447,7 +2447,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -2720,7 +2720,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -3012,7 +3012,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -3284,7 +3284,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -3528,7 +3528,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -3774,7 +3774,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -4041,7 +4041,7 @@
    ],
    "frontier_runs": {
     "x2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -4225,9 +4225,9 @@
       "kinds": [
        "range"
       ],
-      "formal_batches_out_of_range": 1,
+      "formal_batches_out_of_range": 2,
       "formal_batches_sparse": 0,
-      "formal_time_ms_out_of_range": 29.42,
+      "formal_time_ms_out_of_range": 87.083,
       "formal_time_ms_sparse": 0.0
      }
     ],
@@ -4317,7 +4317,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -4608,7 +4608,7 @@
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -4899,7 +4899,7 @@
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -5190,7 +5190,7 @@
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -5481,7 +5481,7 @@
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -5859,7 +5859,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -6150,7 +6150,7 @@
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -6441,7 +6441,7 @@
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -6732,7 +6732,7 @@
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -7023,7 +7023,7 @@
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -7401,7 +7401,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -7692,7 +7692,7 @@
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -7983,7 +7983,7 @@
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -8274,7 +8274,7 @@
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -8565,7 +8565,7 @@
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -8858,8 +8858,20 @@
    },
    "frontier_runs_missing": [],
    "coverage": {
-    "class": "in_profile",
-    "gaps": [],
+    "class": "outside_profile",
+    "gaps": [
+     {
+      "run": "x2_qps3.5_drain_s5",
+      "model": "MONOLITHIC/event/cpu_overhead",
+      "kinds": [
+       "range"
+      ],
+      "formal_batches_out_of_range": 298,
+      "formal_batches_sparse": 0,
+      "formal_time_ms_out_of_range": 3241.696,
+      "formal_time_ms_sparse": 0.0
+     }
+    ],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
      "x2_qps3.5_drain_s1",
@@ -8943,7 +8955,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -9234,7 +9246,7 @@
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -9525,7 +9537,7 @@
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -9816,7 +9828,7 @@
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -10107,7 +10119,7 @@
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -10485,7 +10497,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -10776,7 +10788,7 @@
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -11067,7 +11079,7 @@
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -11358,7 +11370,7 @@
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -11649,7 +11661,7 @@
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -12027,7 +12039,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -12318,7 +12330,7 @@
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -12609,7 +12621,7 @@
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -12900,7 +12912,7 @@
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -13191,7 +13203,7 @@
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -13569,7 +13581,7 @@
    },
    "frontier_runs": {
     "x2_s1": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -13860,7 +13872,7 @@
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
     "x2_s2": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -14151,7 +14163,7 @@
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
     "x2_s3": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -14442,7 +14454,7 @@
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
     "x2_s4": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",
@@ -14733,7 +14745,7 @@
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
     "x2_s5": {
-     "frontier_revision": "fc94cbca7bb1cb5ff6db8a5fa812177b0b6b8f3d",
+     "frontier_revision": "5a8b86cbf7552c1fe8bb9bb3a76e2ffba71bb7ea",
      "command": [
       "{python}",
       "-m",

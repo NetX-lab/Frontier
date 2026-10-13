@@ -1,5 +1,5 @@
 {
- "description": "Harness readings of the 22 claimed cells at Frontier fc94cbc on the X2 tables (cloud PR review X2), with C4 against its round-robin ground truth (decision C4-ROUTING) and each PDD cell against all its admissible reference runs (decision PD-POOL); gate replay of a cell's normalized rows reproduces its entry.",
+ "description": "Harness readings of the 22 claimed cells at Frontier 5a8b86c (decision C4-DRAINFLOOR) on the X2 tables (cloud PR review X2), with C4 against its round-robin ground truth (decision C4-ROUTING) and each PDD and co-location single cell against all its admissible reference runs (decisions PD-POOL, POOL-COLOC); gate replay of a cell's normalized rows reproduces its entry.",
  "cells": [
   {
    "cell_id": "e2e_c1_dense_coloc/qps2",
@@ -18,23 +18,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.013293647004283609,
+     "relative_error": 0.009634330481453141,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.015079949719432278,
+     "relative_error": 0.015529026212424869,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.01429599100552917,
+     "relative_error": 0.014833276074061453,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0006831415660760862,
+     "relative_error": 0.0006855647608319368,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0006831415660761625,
+     "relative_error": 0.000685564760832013,
      "status": "PASS"
     }
    }
@@ -56,23 +56,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.016198060840269257,
+     "relative_error": 0.00686895734740225,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.0038702096162967917,
+     "relative_error": 0.009107468662302125,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.0038398252837278566,
+     "relative_error": 0.009148361359825996,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0014056141859563683,
+     "relative_error": 0.0015575463310520544,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0014056141859563887,
+     "relative_error": 0.0015575463310518725,
      "status": "PASS"
     }
    }
@@ -94,23 +94,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.03366748792849335,
+     "relative_error": 0.05386708881216464,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.013254687309761473,
+     "relative_error": 0.014794575587727392,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.015026437005202198,
+     "relative_error": 0.018133200757446608,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.010879080934701352,
+     "relative_error": 0.011790558201832451,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.01087908093470144,
+     "relative_error": 0.011790558201832557,
      "status": "PASS"
     }
    }
@@ -128,9 +128,9 @@
       "kinds": [
        "range"
       ],
-      "formal_batches_out_of_range": 5,
+      "formal_batches_out_of_range": 3,
       "formal_batches_sparse": 0,
-      "formal_time_ms_out_of_range": 467.355,
+      "formal_time_ms_out_of_range": 273.503,
       "formal_time_ms_sparse": 0.0
      }
     ],
@@ -144,23 +144,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.004498946044306855,
+     "relative_error": 0.0026255617906526998,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.023736659323395772,
+     "relative_error": 0.018611525867534045,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.022442046393349502,
+     "relative_error": 0.017769949848982593,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.005466583500041731,
+     "relative_error": 0.005007565071927271,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.005466583500041718,
+     "relative_error": 0.005007565071927132,
      "status": "PASS"
     }
    }
@@ -182,23 +182,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.06109044408032224,
+     "relative_error": 0.013659845671746568,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.008430529818420745,
+     "relative_error": 0.008428748422989747,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.004979531756547395,
+     "relative_error": 0.006220275374720736,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.0004872309465838049,
+     "relative_error": 0.0005217302715175508,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0004872309465837896,
+     "relative_error": 0.0005217302715174593,
      "status": "PASS"
     }
    },
@@ -235,23 +235,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.09140253556040591,
+     "relative_error": 0.02641763897187711,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.032588214952568154,
+     "relative_error": 0.03261728383125211,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.03433772205432853,
+     "relative_error": 0.03295609822840291,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.000392169505112571,
+     "relative_error": 0.0005213893995193056,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.0003921695051126216,
+     "relative_error": 0.0005213893995193225,
      "status": "PASS"
     }
    },
@@ -409,7 +409,7 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.0904018785973791,
+     "relative_error": 0.09012769628418797,
      "status": "PASS"
     },
     "tpot_ms": {
@@ -467,23 +467,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.24903703484051568,
+     "relative_error": 0.2374266895570588,
      "status": "FAIL"
     },
     "tpot_ms": {
-     "relative_error": 0.11069293139547919,
+     "relative_error": 0.10828214371285845,
      "status": "FAIL"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.12643456394964817,
+     "relative_error": 0.12360781134205635,
      "status": "FAIL"
     },
     "request_throughput_rps": {
-     "relative_error": 0.022789141887585664,
+     "relative_error": 0.022384249116481677,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.022789141887585795,
+     "relative_error": 0.022384249116481698,
      "status": "PASS"
     }
    },
@@ -520,28 +520,28 @@
      "x2_qps37_mixed_warm"
     ]
    },
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.13826371733488324,
-     "status": "FAIL"
+     "relative_error": 0.07264703971066341,
+     "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.05955351199902912,
+     "relative_error": 0.0599174675548544,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.0664737767364059,
+     "relative_error": 0.06495192795909331,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.005914116430547623,
+     "relative_error": 0.005598602355021855,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.005914116430547541,
+     "relative_error": 0.005598602355021965,
      "status": "PASS"
     }
    },
@@ -583,23 +583,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.01774861899518486,
+     "relative_error": 0.008272154874818537,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.05470282210544348,
+     "relative_error": 0.0553346578372994,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.054084556013038985,
+     "relative_error": 0.05454722448046979,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.005516627574840484,
+     "relative_error": 0.005530382918923445,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.005516627574840453,
+     "relative_error": 0.00553038291892335,
      "status": "PASS"
     }
    }
@@ -659,23 +659,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.03705434163447407,
+     "relative_error": 0.034525332186139596,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.005687949546893925,
+     "relative_error": 0.004737368388166422,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.006107257449087457,
+     "relative_error": 0.005135263279077526,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.005284197428312947,
+     "relative_error": 0.005432910802502883,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.005284197428312976,
+     "relative_error": 0.005432910802502868,
      "status": "PASS"
     }
    }
@@ -693,9 +693,9 @@
       "kinds": [
        "range"
       ],
-      "formal_batches_out_of_range": 1,
+      "formal_batches_out_of_range": 2,
       "formal_batches_sparse": 0,
-      "formal_time_ms_out_of_range": 29.42,
+      "formal_time_ms_out_of_range": 87.083,
       "formal_time_ms_sparse": 0.0
      }
     ],
@@ -709,23 +709,23 @@
    "token_count_mismatches": {},
    "gated": {
     "ttft_ms": {
-     "relative_error": 0.038033157336084165,
+     "relative_error": 0.008266739132398327,
      "status": "PASS"
     },
     "tpot_ms": {
-     "relative_error": 0.05075874553740936,
+     "relative_error": 0.05815096427776096,
      "status": "PASS"
     },
     "request_e2e_time_ms": {
-     "relative_error": 0.04816438600920724,
+     "relative_error": 0.05654550967847494,
      "status": "PASS"
     },
     "request_throughput_rps": {
-     "relative_error": 0.01016844787837495,
+     "relative_error": 0.010522813722014393,
      "status": "PASS"
     },
     "token_throughput_tps": {
-     "relative_error": 0.010168447878374957,
+     "relative_error": 0.01052281372201422,
      "status": "PASS"
     }
    }
@@ -751,13 +751,13 @@
    "token_count_mismatches": {},
    "gated": {
     "in_phase.tpot_ms": {
-     "relative_error": 0.056733786365817045,
+     "relative_error": 0.03971389117349593,
      "status": "PASS",
      "pairs_n": 500,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.08027238271854796,
+     "relative_error": 0.0016681813931743214,
      "status": "PASS",
      "pairs_n": 500,
      "requests_n": 100
@@ -776,19 +776,19 @@
      "anti_phase": 45
     },
     "frontier/x2_s1": {
-     "in_phase": 41
+     "in_phase": 42
     },
     "frontier/x2_s2": {
-     "in_phase": 41
+     "in_phase": 42
     },
     "frontier/x2_s3": {
-     "in_phase": 41
+     "in_phase": 42
     },
     "frontier/x2_s4": {
-     "in_phase": 41
+     "in_phase": 42
     },
     "frontier/x2_s5": {
-     "in_phase": 41
+     "in_phase": 42
     }
    },
    "vllm_window_share": {
@@ -806,11 +806,11 @@
     "split"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.12685658200768862,
-    "tpot_ms": 0.21872038815684744,
-    "request_e2e_time_ms": 0.21823661484413603,
-    "request_throughput_rps": 0.06609736447434547,
-    "token_throughput_tps": 0.06609736447434551
+    "ttft_ms": 0.052233683092617854,
+    "tpot_ms": 0.20462331045252002,
+    "request_e2e_time_ms": 0.20382030211535035,
+    "request_throughput_rps": 0.06418634735799333,
+    "token_throughput_tps": 0.06418634735799321
    }
   },
   {
@@ -833,23 +833,17 @@
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
-    "anti_phase.ttft_ms": {
-     "relative_error": 0.053968878790028915,
+    "in_phase.tpot_ms": {
+     "relative_error": 0.014976943906497285,
      "status": "PASS",
-     "pairs_n": 425,
-     "requests_n": 74
+     "pairs_n": 500,
+     "requests_n": 100
     },
-    "split.tpot_ms": {
-     "relative_error": 0.022191928057118247,
+    "in_phase.ttft_ms": {
+     "relative_error": 0.05309381690923317,
      "status": "PASS",
-     "pairs_n": 680,
-     "requests_n": 68
-    },
-    "split.ttft_ms": {
-     "relative_error": 0.02214372471973564,
-     "status": "PASS",
-     "pairs_n": 260,
-     "requests_n": 26
+     "pairs_n": 500,
+     "requests_n": 100
     }
    },
    "mode_outcome": "paired",
@@ -867,24 +861,19 @@
      "split": 17
     },
     "frontier/x2_s1": {
-     "anti_phase": 8,
-     "split": 17
+     "in_phase": 22
     },
     "frontier/x2_s2": {
-     "anti_phase": 8,
-     "split": 17
+     "in_phase": 22
     },
     "frontier/x2_s3": {
-     "anti_phase": 8,
-     "split": 17
+     "in_phase": 22
     },
     "frontier/x2_s4": {
-     "anti_phase": 8,
-     "split": 17
+     "in_phase": 22
     },
     "frontier/x2_s5": {
-     "anti_phase": 8,
-     "split": 17
+     "in_phase": 22
     }
    },
    "vllm_window_share": {
@@ -897,14 +886,14 @@
     "split"
    ],
    "reference_modes_without_gated_pairs": [
-    "in_phase"
+    "split"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.02186580343018078,
-    "tpot_ms": 0.0576706803486868,
-    "request_e2e_time_ms": 0.05723959465939636,
-    "request_throughput_rps": 0.036036358708773045,
-    "token_throughput_tps": 0.03603635870877309
+    "ttft_ms": 0.030839183252527363,
+    "tpot_ms": 0.18350764603022857,
+    "request_e2e_time_ms": 0.18268143363378836,
+    "request_throughput_rps": 0.10706856715025583,
+    "token_throughput_tps": 0.10706856715025583
    }
   },
   {
@@ -912,8 +901,20 @@
    "gate": "dp_pp_pairs",
    "routing_status": "MATCH",
    "coverage": {
-    "class": "in_profile",
-    "gaps": [],
+    "class": "outside_profile",
+    "gaps": [
+     {
+      "run": "x2_qps3.5_drain_s5",
+      "model": "MONOLITHIC/event/cpu_overhead",
+      "kinds": [
+       "range"
+      ],
+      "formal_batches_out_of_range": 298,
+      "formal_batches_sparse": 0,
+      "formal_time_ms_out_of_range": 3241.696,
+      "formal_time_ms_sparse": 0.0
+     }
+    ],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
      "x2_qps3.5_drain_s1",
@@ -923,21 +924,27 @@
      "x2_qps3.5_drain_s5"
     ]
    },
-   "verdict": "PASS",
+   "verdict": "FAIL",
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
-    "in_phase.tpot_ms": {
-     "relative_error": 0.0782389204800284,
+    "anti_phase.ttft_ms": {
+     "relative_error": 0.09750460997323626,
      "status": "PASS",
-     "pairs_n": 500,
+     "pairs_n": 290,
+     "requests_n": 29
+    },
+    "split.tpot_ms": {
+     "relative_error": 0.008080947452965209,
+     "status": "PASS",
+     "pairs_n": 1000,
      "requests_n": 100
     },
-    "in_phase.ttft_ms": {
-     "relative_error": 0.09528573154245679,
-     "status": "PASS",
-     "pairs_n": 500,
-     "requests_n": 100
+    "split.ttft_ms": {
+     "relative_error": 0.14146517747334406,
+     "status": "FAIL",
+     "pairs_n": 625,
+     "requests_n": 71
     }
    },
    "mode_outcome": "paired",
@@ -955,19 +962,28 @@
      "in_phase": 18
     },
     "frontier/x2_s1": {
-     "in_phase": 17
+     "anti_phase": 2,
+     "in_phase": 1,
+     "split": 17
     },
     "frontier/x2_s2": {
-     "in_phase": 17
+     "anti_phase": 2,
+     "in_phase": 1,
+     "split": 17
     },
     "frontier/x2_s3": {
-     "in_phase": 17
+     "anti_phase": 2,
+     "in_phase": 1,
+     "split": 17
     },
     "frontier/x2_s4": {
-     "in_phase": 17
+     "anti_phase": 2,
+     "in_phase": 1,
+     "split": 17
     },
     "frontier/x2_s5": {
-     "in_phase": 17
+     "anti_phase": 3,
+     "split": 17
     }
    },
    "vllm_window_share": {
@@ -980,14 +996,14 @@
     "split"
    ],
    "reference_modes_without_gated_pairs": [
-    "split"
+    "in_phase"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.14458082375772344,
-    "tpot_ms": 0.2090432513187145,
-    "request_e2e_time_ms": 0.20859926039270849,
-    "request_throughput_rps": 0.16883521555322376,
-    "token_throughput_tps": 0.1688352155532239
+    "ttft_ms": 0.16264673921279885,
+    "tpot_ms": 0.06229917099493405,
+    "request_e2e_time_ms": 0.0629807354436048,
+    "request_throughput_rps": 0.021910299809216573,
+    "token_throughput_tps": 0.02191029980921667
    }
   },
   {
@@ -1011,13 +1027,13 @@
    "token_count_mismatches": {},
    "gated": {
     "in_phase.tpot_ms": {
-     "relative_error": 0.018358049907439885,
+     "relative_error": 0.018358049907439687,
      "status": "PASS",
      "pairs_n": 1075,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.026877609062812908,
+     "relative_error": 0.027442818110634152,
      "status": "PASS",
      "pairs_n": 1085,
      "requests_n": 100
@@ -1067,11 +1083,11 @@
    ],
    "reference_modes_without_gated_pairs": [],
    "cell_metrics_reported": {
-    "ttft_ms": 0.025904170810384694,
-    "tpot_ms": 0.05688638662324097,
-    "request_e2e_time_ms": 0.0567308269819016,
-    "request_throughput_rps": 0.01503491236215385,
-    "token_throughput_tps": 0.01503491236215388
+    "ttft_ms": 0.02536435273264513,
+    "tpot_ms": 0.05688638662324116,
+    "request_e2e_time_ms": 0.05672801191873148,
+    "request_throughput_rps": 0.015035121925378606,
+    "token_throughput_tps": 0.0150351219253787
    }
   },
   {
@@ -1095,13 +1111,13 @@
    "token_count_mismatches": {},
    "gated": {
     "split.tpot_ms": {
-     "relative_error": 0.12021333471680387,
+     "relative_error": 0.12588178375730025,
      "status": "FAIL",
      "pairs_n": 500,
      "requests_n": 100
     },
     "split.ttft_ms": {
-     "relative_error": 0.16887845121027922,
+     "relative_error": 0.182416000864488,
      "status": "FAIL",
      "pairs_n": 450,
      "requests_n": 90
@@ -1125,11 +1141,11 @@
     },
     "frontier/x2_s2": {
      "anti_phase": 1,
-     "split": 21
+     "split": 22
     },
     "frontier/x2_s3": {
      "anti_phase": 1,
-     "split": 22
+     "split": 21
     },
     "frontier/x2_s4": {
      "anti_phase": 1,
@@ -1137,7 +1153,7 @@
      "split": 20
     },
     "frontier/x2_s5": {
-     "anti_phase": 1,
+     "anti_phase": 2,
      "split": 21
     }
    },
@@ -1153,11 +1169,11 @@
     "anti_phase"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.1488719380042789,
-    "tpot_ms": 0.04300841420674479,
-    "request_e2e_time_ms": 0.043482629492485485,
-    "request_throughput_rps": 0.0029264799929931257,
-    "token_throughput_tps": 0.00292647999299304
+    "ttft_ms": 0.1613134139729533,
+    "tpot_ms": 0.04828619466294203,
+    "request_e2e_time_ms": 0.04879293100425729,
+    "request_throughput_rps": 0.005036520562646702,
+    "token_throughput_tps": 0.005036520562646465
    }
   },
   {
@@ -1181,19 +1197,19 @@
    "token_count_mismatches": {},
    "gated": {
     "anti_phase.ttft_ms": {
-     "relative_error": 0.024527381468549013,
+     "relative_error": 0.02219226499095629,
      "status": "PASS",
      "pairs_n": 29,
      "requests_n": 29
     },
     "in_phase.tpot_ms": {
-     "relative_error": 0.08782141359808361,
+     "relative_error": 0.08532283856696643,
      "status": "PASS",
      "pairs_n": 400,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.01257885854126231,
+     "relative_error": 0.023339371220561067,
      "status": "PASS",
      "pairs_n": 516,
      "requests_n": 100
@@ -1213,19 +1229,19 @@
      "split": 13
     },
     "frontier/x2_s1": {
-     "in_phase": 14
+     "in_phase": 13
     },
     "frontier/x2_s2": {
      "anti_phase": 17
     },
     "frontier/x2_s3": {
-     "in_phase": 14
+     "in_phase": 13
     },
     "frontier/x2_s4": {
      "in_phase": 14
     },
     "frontier/x2_s5": {
-     "in_phase": 13
+     "in_phase": 14
     }
    },
    "vllm_window_share": {
@@ -1241,11 +1257,11 @@
     "split"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.03873078531567787,
-    "tpot_ms": 0.01384629478026075,
-    "request_e2e_time_ms": 0.013968430148906238,
-    "request_throughput_rps": 0.016222757341072074,
-    "token_throughput_tps": 0.016222757341072116
+    "ttft_ms": 0.05304729737859861,
+    "tpot_ms": 0.015755363524381717,
+    "request_e2e_time_ms": 0.01594182622496681,
+    "request_throughput_rps": 0.0172785878381208,
+    "token_throughput_tps": 0.01727858783812087
    }
   },
   {
@@ -1268,22 +1284,28 @@
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
-    "anti_phase.ttft_ms": {
-     "relative_error": 0.13935668194393216,
+    "anti_phase.tpot_ms": {
+     "relative_error": 0.11213144435826375,
      "status": "FAIL",
-     "pairs_n": 29,
-     "requests_n": 29
+     "pairs_n": 100,
+     "requests_n": 100
+    },
+    "anti_phase.ttft_ms": {
+     "relative_error": 0.02914032147271109,
+     "status": "PASS",
+     "pairs_n": 283,
+     "requests_n": 100
     },
     "in_phase.tpot_ms": {
-     "relative_error": 0.041582359944350764,
+     "relative_error": 0.04294378427241423,
      "status": "PASS",
-     "pairs_n": 200,
+     "pairs_n": 100,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.004471245154441755,
+     "relative_error": 0.08167113603239876,
      "status": "PASS",
-     "pairs_n": 322,
+     "pairs_n": 161,
      "requests_n": 100
     }
    },
@@ -1303,17 +1325,19 @@
      "in_phase": 10
     },
     "frontier/x2_s2": {
-     "in_phase": 10
+     "anti_phase": 15
     },
     "frontier/x2_s3": {
-     "anti_phase": 1,
-     "split": 12
+     "anti_phase": 2,
+     "split": 10
     },
     "frontier/x2_s4": {
-     "split": 12
+     "anti_phase": 2,
+     "split": 10
     },
     "frontier/x2_s5": {
-     "split": 13
+     "anti_phase": 2,
+     "split": 10
     }
    },
    "vllm_window_share": {
@@ -1327,11 +1351,11 @@
    ],
    "reference_modes_without_gated_pairs": [],
    "cell_metrics_reported": {
-    "ttft_ms": 0.044064475394997984,
-    "tpot_ms": 0.12749940287850475,
-    "request_e2e_time_ms": 0.1267110975192096,
-    "request_throughput_rps": 0.1034144013468794,
-    "token_throughput_tps": 0.10341440134687926
+    "ttft_ms": 0.010005242276939108,
+    "tpot_ms": 0.23811879742759715,
+    "request_e2e_time_ms": 0.2368817750374787,
+    "request_throughput_rps": 0.15548993180569456,
+    "token_throughput_tps": 0.15548993180569468
    }
   }
  ]
