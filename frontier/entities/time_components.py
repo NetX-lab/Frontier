@@ -643,11 +643,11 @@ class OverheadTime:
     pp_stage_boundary_residual_runtime_time: float = 0.0  # Active shared-domain PP boundary residual on consumer stage
     pp_stage_boundary_handoff_time: float = 0.0   # Diagnostic-only PP boundary overhead beyond wire cost
     # Host time to launch an eager forward step's kernels. It runs alongside the
-    # device stream, so it is outside every total; only the part the device
-    # stream cannot hide adds to the step (forward_launch_stall_time).
+    # device stream, so it is outside every total; with the drain below, it
+    # bounds the forward's end from below (forward_launch_stall_time).
     forward_launch_time: float = 0.0
-    # Device time after the last kernel launch of an eager forward step. It adds
-    # to the step only with a launch the device stream cannot hide.
+    # Device time after the last kernel launch of an eager forward step. The
+    # forward ends no earlier than the launch plus this drain.
     forward_drain_time: float = 0.0
 
     def forward_preparation_time(self) -> float:

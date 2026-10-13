@@ -335,8 +335,9 @@ every other host interval of a step, each once, on the stage that runs it:
   forward-context entry; an engine without a connector waits `0`.
 - The launch start is the later of `forward_context_entered` and the upstream stage's device
   end; a stage's device end is its launch start plus its forward's device time.
-- Frontier adds `forward_drain` to a forward only when its launch outlasts its predicted
-  device time: the forward then ends once the device has run the kernels launched last.
+- Frontier ends an eager forward no earlier than `forward_launch + forward_drain`, the
+  in-situ time to the device end; when the predicted device time is longer, the forward
+  takes the predicted device time.
 
 Forwards are grouped per stage by `(batch_size, num_prefill_tokens, num_decode_tokens)` and
 keyed by `pipeline_stage_id`. A request's tokens are prefill when they recompute tokens an

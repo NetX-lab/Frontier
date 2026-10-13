@@ -1490,16 +1490,16 @@ class ExecutionTime(BaseEntity):
         return self._overhead_time.forward_drain_time
 
     def forward_launch_stall_time(self, device_span: float) -> float:
-        """Launch time, in seconds, that a device stream of ``device_span`` seconds leaves exposed.
+        """Time, in seconds, by which an eager forward outlasts a device stream of ``device_span`` seconds.
 
         An eager step's host launches the forward's kernels while the device
-        runs them. When the launch is the slower stream, the forward ends once
-        the device has run the kernels launched last.
+        runs them, and the forward ends once the device has run the kernels
+        launched last. The CPU table measures both in situ: the launch, and the
+        drain from the last launch to the device end. The forward therefore
+        ends no earlier than launch plus drain, whichever stream is slower.
         """
         launch = self.forward_launch_time * 1e-3
-        if launch <= device_span:
-            return 0.0
-        return launch + self.forward_drain_time * 1e-3 - device_span
+        return max(0.0, launch + self.forward_drain_time * 1e-3 - device_span)
 
     @property
     def decode_draft_proposer_time(self) -> float:
