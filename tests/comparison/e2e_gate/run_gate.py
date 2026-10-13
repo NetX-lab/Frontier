@@ -6,7 +6,7 @@ Subcommands, by the evidence they need (README.md):
   gate        gate a cell from normalized request rows (shipped fixtures or `normalize` output)
   normalize   normalized request rows of a cell from raw vLLM and Frontier run directories
   frontier    trained Frontier replay: rerun a cell's recorded Frontier command on pinned inputs
-  cpu-table   CPU artifact replay: rebuild a case's published CPU-overhead CSVs (the current X2
+  cpu-table   CPU artifact replay: rebuild a case's published CPU-overhead CSVs (the current X3
               table, or the earlier k1d/k1e ones) from pinned probe logs
   admit       admission reading of one CPU-probe run (I-6, T43-C4PROBE or T43-ISOPREFILL)
 

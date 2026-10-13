@@ -1,5 +1,5 @@
 {
- "description": "Harness readings of the 22 claimed cells at Frontier 5a8b86c (decision C4-DRAINFLOOR) on the X2 tables (cloud PR review X2), with C4 against its round-robin ground truth (decision C4-ROUTING) and each PDD and co-location single cell against all its admissible reference runs (decisions PD-POOL, POOL-COLOC); gate replay of a cell's normalized rows reproduces its entry.",
+ "description": "Harness readings of the 22 claimed cells at Frontier c0abc05 on the X3 CPU-overhead tables (decision REMAINING-FAIL: the X2 tables without the DP forwards that ran beside another engine's prompt), with C4 against its round-robin ground truth (decision C4-ROUTING) and each PDD and co-location single cell against all its admissible reference runs (decisions PD-POOL, POOL-COLOC); gate replay of a cell's normalized rows reproduces its entry.",
  "cells": [
   {
    "cell_id": "e2e_c1_dense_coloc/qps2",
@@ -10,7 +10,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2"
+     "x3_qps2"
     ]
    },
    "verdict": "PASS",
@@ -48,7 +48,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps6.5"
+     "x3_qps6.5"
     ]
    },
    "verdict": "PASS",
@@ -86,7 +86,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps12.5"
+     "x3_qps12.5"
     ]
    },
    "verdict": "PASS",
@@ -123,7 +123,7 @@
     "class": "outside_profile",
     "gaps": [
      {
-      "run": "x2_qps6.5_mixed_warm",
+      "run": "x3_qps6.5_mixed_warm",
       "model": "MONOLITHIC/event/attn_prefill_mixed",
       "kinds": [
        "range"
@@ -136,7 +136,7 @@
     ],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps6.5_mixed_warm"
+     "x3_qps6.5_mixed_warm"
     ]
    },
    "verdict": "PASS",
@@ -174,7 +174,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2"
+     "x3_qps2"
     ]
    },
    "verdict": "PASS",
@@ -227,7 +227,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps8"
+     "x3_qps8"
     ]
    },
    "verdict": "PASS",
@@ -275,7 +275,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps37_p512"
+     "x3_qps37_p512"
     ]
    },
    "verdict": "PASS",
@@ -343,7 +343,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2"
+     "x3_qps2"
     ]
    },
    "verdict": "FAIL",
@@ -401,7 +401,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps37"
+     "x3_qps37"
     ]
    },
    "verdict": "PASS",
@@ -459,7 +459,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps75"
+     "x3_qps75"
     ]
    },
    "verdict": "FAIL",
@@ -517,7 +517,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps37_mixed_warm"
+     "x3_qps37_mixed_warm"
     ]
    },
    "verdict": "PASS",
@@ -575,7 +575,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2"
+     "x3_qps2"
     ]
    },
    "verdict": "PASS",
@@ -613,7 +613,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps1"
+     "x3_qps1"
     ]
    },
    "verdict": "PASS",
@@ -651,7 +651,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps5"
+     "x3_qps5"
     ]
    },
    "verdict": "PASS",
@@ -688,7 +688,7 @@
     "class": "outside_profile",
     "gaps": [
      {
-      "run": "x2_qps2_mixed_warm",
+      "run": "x3_qps2_mixed_warm",
       "model": "MONOLITHIC/event/attn_prefill_mixed",
       "kinds": [
        "range"
@@ -701,7 +701,7 @@
     ],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2_mixed_warm"
+     "x3_qps2_mixed_warm"
     ]
    },
    "verdict": "PASS",
@@ -739,11 +739,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps0.75_drain_s1",
-     "x2_qps0.75_drain_s2",
-     "x2_qps0.75_drain_s3",
-     "x2_qps0.75_drain_s4",
-     "x2_qps0.75_drain_s5"
+     "x3_qps0.75_drain_s1",
+     "x3_qps0.75_drain_s2",
+     "x3_qps0.75_drain_s3",
+     "x3_qps0.75_drain_s4",
+     "x3_qps0.75_drain_s5"
     ]
    },
    "verdict": "PASS",
@@ -751,13 +751,13 @@
    "token_count_mismatches": {},
    "gated": {
     "in_phase.tpot_ms": {
-     "relative_error": 0.03971389117349593,
+     "relative_error": 0.04602796867094884,
      "status": "PASS",
      "pairs_n": 500,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.0016681813931743214,
+     "relative_error": 0.032808294652261635,
      "status": "PASS",
      "pairs_n": 500,
      "requests_n": 100
@@ -775,20 +775,20 @@
     "vllm/c6-rr-h200-clean-qps0.75_drain-20261009c": {
      "anti_phase": 45
     },
-    "frontier/x2_s1": {
-     "in_phase": 42
+    "frontier/x3_s1": {
+     "in_phase": 41
     },
-    "frontier/x2_s2": {
-     "in_phase": 42
+    "frontier/x3_s2": {
+     "in_phase": 41
     },
-    "frontier/x2_s3": {
-     "in_phase": 42
+    "frontier/x3_s3": {
+     "in_phase": 41
     },
-    "frontier/x2_s4": {
-     "in_phase": 42
+    "frontier/x3_s4": {
+     "in_phase": 41
     },
-    "frontier/x2_s5": {
-     "in_phase": 42
+    "frontier/x3_s5": {
+     "in_phase": 41
     }
    },
    "vllm_window_share": {
@@ -806,11 +806,11 @@
     "split"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.052233683092617854,
-    "tpot_ms": 0.20462331045252002,
-    "request_e2e_time_ms": 0.20382030211535035,
-    "request_throughput_rps": 0.06418634735799333,
-    "token_throughput_tps": 0.06418634735799321
+    "ttft_ms": 0.08179654976837918,
+    "tpot_ms": 0.20985307480223822,
+    "request_e2e_time_ms": 0.2091784084601143,
+    "request_throughput_rps": 0.06450081962716318,
+    "token_throughput_tps": 0.06450081962716335
    }
   },
   {
@@ -822,11 +822,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2_drain_s1",
-     "x2_qps2_drain_s2",
-     "x2_qps2_drain_s3",
-     "x2_qps2_drain_s4",
-     "x2_qps2_drain_s5"
+     "x3_qps2_drain_s1",
+     "x3_qps2_drain_s2",
+     "x3_qps2_drain_s3",
+     "x3_qps2_drain_s4",
+     "x3_qps2_drain_s5"
     ]
    },
    "verdict": "PASS",
@@ -834,13 +834,13 @@
    "token_count_mismatches": {},
    "gated": {
     "in_phase.tpot_ms": {
-     "relative_error": 0.014976943906497285,
+     "relative_error": 0.021480686565033873,
      "status": "PASS",
      "pairs_n": 500,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.05309381690923317,
+     "relative_error": 0.022716704541792136,
      "status": "PASS",
      "pairs_n": 500,
      "requests_n": 100
@@ -860,19 +860,19 @@
      "anti_phase": 8,
      "split": 17
     },
-    "frontier/x2_s1": {
+    "frontier/x3_s1": {
      "in_phase": 22
     },
-    "frontier/x2_s2": {
+    "frontier/x3_s2": {
      "in_phase": 22
     },
-    "frontier/x2_s3": {
+    "frontier/x3_s3": {
      "in_phase": 22
     },
-    "frontier/x2_s4": {
+    "frontier/x3_s4": {
      "in_phase": 22
     },
-    "frontier/x2_s5": {
+    "frontier/x3_s5": {
      "in_phase": 22
     }
    },
@@ -889,11 +889,11 @@
     "split"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.030839183252527363,
-    "tpot_ms": 0.18350764603022857,
-    "request_e2e_time_ms": 0.18268143363378836,
-    "request_throughput_rps": 0.10706856715025583,
-    "token_throughput_tps": 0.10706856715025583
+    "ttft_ms": 0.10060750370774087,
+    "tpot_ms": 0.18889864283992983,
+    "request_e2e_time_ms": 0.1884209765824034,
+    "request_throughput_rps": 0.10809101253475169,
+    "token_throughput_tps": 0.1080910125347517
    }
   },
   {
@@ -901,48 +901,30 @@
    "gate": "dp_pp_pairs",
    "routing_status": "MATCH",
    "coverage": {
-    "class": "outside_profile",
-    "gaps": [
-     {
-      "run": "x2_qps3.5_drain_s5",
-      "model": "MONOLITHIC/event/cpu_overhead",
-      "kinds": [
-       "range"
-      ],
-      "formal_batches_out_of_range": 298,
-      "formal_batches_sparse": 0,
-      "formal_time_ms_out_of_range": 3241.696,
-      "formal_time_ms_sparse": 0.0
-     }
-    ],
+    "class": "in_profile",
+    "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps3.5_drain_s1",
-     "x2_qps3.5_drain_s2",
-     "x2_qps3.5_drain_s3",
-     "x2_qps3.5_drain_s4",
-     "x2_qps3.5_drain_s5"
+     "x3_qps3.5_drain_s1",
+     "x3_qps3.5_drain_s2",
+     "x3_qps3.5_drain_s3",
+     "x3_qps3.5_drain_s4",
+     "x3_qps3.5_drain_s5"
     ]
    },
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
-    "anti_phase.ttft_ms": {
-     "relative_error": 0.09750460997323626,
-     "status": "PASS",
-     "pairs_n": 290,
-     "requests_n": 29
-    },
     "split.tpot_ms": {
-     "relative_error": 0.008080947452965209,
+     "relative_error": 0.013345986411257203,
      "status": "PASS",
      "pairs_n": 1000,
      "requests_n": 100
     },
     "split.ttft_ms": {
-     "relative_error": 0.14146517747334406,
-     "status": "FAIL",
+     "relative_error": 0.035768234783804816,
+     "status": "PASS",
      "pairs_n": 625,
      "requests_n": 71
     }
@@ -961,29 +943,25 @@
     "vllm/c6-rr-h200-clean-qps3.5_drain-20261009c": {
      "in_phase": 18
     },
-    "frontier/x2_s1": {
+    "frontier/x3_s1": {
      "anti_phase": 2,
-     "in_phase": 1,
-     "split": 17
+     "split": 18
     },
-    "frontier/x2_s2": {
+    "frontier/x3_s2": {
      "anti_phase": 2,
-     "in_phase": 1,
-     "split": 17
+     "split": 18
     },
-    "frontier/x2_s3": {
+    "frontier/x3_s3": {
      "anti_phase": 2,
-     "in_phase": 1,
-     "split": 17
+     "split": 18
     },
-    "frontier/x2_s4": {
+    "frontier/x3_s4": {
      "anti_phase": 2,
-     "in_phase": 1,
-     "split": 17
+     "split": 18
     },
-    "frontier/x2_s5": {
-     "anti_phase": 3,
-     "split": 17
+    "frontier/x3_s5": {
+     "anti_phase": 2,
+     "split": 18
     }
    },
    "vllm_window_share": {
@@ -999,11 +977,11 @@
     "in_phase"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.16264673921279885,
-    "tpot_ms": 0.06229917099493405,
-    "request_e2e_time_ms": 0.0629807354436048,
-    "request_throughput_rps": 0.021910299809216573,
-    "token_throughput_tps": 0.02191029980921667
+    "ttft_ms": 0.04725781483746057,
+    "tpot_ms": 0.05666055914824367,
+    "request_e2e_time_ms": 0.05666230739701139,
+    "request_throughput_rps": 0.029921276149565596,
+    "token_throughput_tps": 0.029921276149565572
    }
   },
   {
@@ -1015,11 +993,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps2_s1",
-     "x2_qps2_s2",
-     "x2_qps2_s3",
-     "x2_qps2_s4",
-     "x2_qps2_s5"
+     "x3_qps2_s1",
+     "x3_qps2_s2",
+     "x3_qps2_s3",
+     "x3_qps2_s4",
+     "x3_qps2_s5"
     ]
    },
    "verdict": "PASS",
@@ -1027,15 +1005,15 @@
    "token_count_mismatches": {},
    "gated": {
     "in_phase.tpot_ms": {
-     "relative_error": 0.018358049907439687,
+     "relative_error": 0.018067748646907467,
      "status": "PASS",
-     "pairs_n": 1075,
+     "pairs_n": 1036,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.027442818110634152,
+     "relative_error": 0.01764346102815541,
      "status": "PASS",
-     "pairs_n": 1085,
+     "pairs_n": 1064,
      "requests_n": 100
     }
    },
@@ -1054,21 +1032,22 @@
      "in_phase": 37,
      "split": 26
     },
-    "frontier/x2_s1": {
-     "in_phase": 65
+    "frontier/x3_s1": {
+     "anti_phase": 9,
+     "in_phase": 57
     },
-    "frontier/x2_s2": {
-     "in_phase": 65
+    "frontier/x3_s2": {
+     "anti_phase": 9,
+     "in_phase": 57
     },
-    "frontier/x2_s3": {
+    "frontier/x3_s3": {
      "anti_phase": 6,
      "in_phase": 60
     },
-    "frontier/x2_s4": {
-     "anti_phase": 7,
-     "in_phase": 59
+    "frontier/x3_s4": {
+     "in_phase": 65
     },
-    "frontier/x2_s5": {
+    "frontier/x3_s5": {
      "anti_phase": 6,
      "in_phase": 60
     }
@@ -1083,11 +1062,11 @@
    ],
    "reference_modes_without_gated_pairs": [],
    "cell_metrics_reported": {
-    "ttft_ms": 0.02536435273264513,
-    "tpot_ms": 0.05688638662324116,
-    "request_e2e_time_ms": 0.05672801191873148,
-    "request_throughput_rps": 0.015035121925378606,
-    "token_throughput_tps": 0.0150351219253787
+    "ttft_ms": 0.0306595829922935,
+    "tpot_ms": 0.05191401831089332,
+    "request_e2e_time_ms": 0.05180921913071621,
+    "request_throughput_rps": 0.019879558116989077,
+    "token_throughput_tps": 0.019879558116989094
    }
   },
   {
@@ -1099,11 +1078,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps8_s1",
-     "x2_qps8_s2",
-     "x2_qps8_s3",
-     "x2_qps8_s4",
-     "x2_qps8_s5"
+     "x3_qps8_s1",
+     "x3_qps8_s2",
+     "x3_qps8_s3",
+     "x3_qps8_s4",
+     "x3_qps8_s5"
     ]
    },
    "verdict": "FAIL",
@@ -1111,13 +1090,13 @@
    "token_count_mismatches": {},
    "gated": {
     "split.tpot_ms": {
-     "relative_error": 0.12588178375730025,
+     "relative_error": 0.12301494047737793,
      "status": "FAIL",
      "pairs_n": 500,
      "requests_n": 100
     },
     "split.ttft_ms": {
-     "relative_error": 0.182416000864488,
+     "relative_error": 0.16790222539829228,
      "status": "FAIL",
      "pairs_n": 450,
      "requests_n": 90
@@ -1135,25 +1114,25 @@
     "vllm/c2p-rr-h200-clean-qps8-20261009c": {
      "anti_phase": 22
     },
-    "frontier/x2_s1": {
+    "frontier/x3_s1": {
      "anti_phase": 1,
      "split": 21
     },
-    "frontier/x2_s2": {
-     "anti_phase": 1,
-     "split": 22
-    },
-    "frontier/x2_s3": {
-     "anti_phase": 1,
-     "split": 21
-    },
-    "frontier/x2_s4": {
+    "frontier/x3_s2": {
      "anti_phase": 1,
      "in_phase": 1,
      "split": 20
     },
-    "frontier/x2_s5": {
-     "anti_phase": 2,
+    "frontier/x3_s3": {
+     "anti_phase": 1,
+     "split": 21
+    },
+    "frontier/x3_s4": {
+     "anti_phase": 1,
+     "split": 21
+    },
+    "frontier/x3_s5": {
+     "anti_phase": 1,
      "split": 21
     }
    },
@@ -1169,11 +1148,11 @@
     "anti_phase"
    ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.1613134139729533,
-    "tpot_ms": 0.04828619466294203,
-    "request_e2e_time_ms": 0.04879293100425729,
-    "request_throughput_rps": 0.005036520562646702,
-    "token_throughput_tps": 0.005036520562646465
+    "ttft_ms": 0.14808596027961057,
+    "tpot_ms": 0.04561693375477139,
+    "request_e2e_time_ms": 0.04607570528184888,
+    "request_throughput_rps": 0.0002853164235061594,
+    "token_throughput_tps": 0.0002853164235059653
    }
   },
   {
@@ -1185,34 +1164,46 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps17_s1",
-     "x2_qps17_s2",
-     "x2_qps17_s3",
-     "x2_qps17_s4",
-     "x2_qps17_s5"
+     "x3_qps17_s1",
+     "x3_qps17_s2",
+     "x3_qps17_s3",
+     "x3_qps17_s4",
+     "x3_qps17_s5"
     ]
    },
-   "verdict": "PASS",
+   "verdict": "FAIL",
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
     "anti_phase.ttft_ms": {
-     "relative_error": 0.02219226499095629,
+     "relative_error": 0.052893759526311,
      "status": "PASS",
      "pairs_n": 29,
      "requests_n": 29
     },
     "in_phase.tpot_ms": {
-     "relative_error": 0.08532283856696643,
+     "relative_error": 0.09229571960170106,
      "status": "PASS",
      "pairs_n": 400,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.023339371220561067,
+     "relative_error": 0.006315083409028405,
      "status": "PASS",
      "pairs_n": 516,
      "requests_n": 100
+    },
+    "split.tpot_ms": {
+     "relative_error": 0.14253634789918804,
+     "status": "FAIL",
+     "pairs_n": 200,
+     "requests_n": 100
+    },
+    "split.ttft_ms": {
+     "relative_error": 0.004902052886626908,
+     "status": "PASS",
+     "pairs_n": 142,
+     "requests_n": 71
     }
    },
    "mode_outcome": "paired",
@@ -1228,19 +1219,20 @@
      "in_phase": 2,
      "split": 13
     },
-    "frontier/x2_s1": {
-     "in_phase": 13
-    },
-    "frontier/x2_s2": {
-     "anti_phase": 17
-    },
-    "frontier/x2_s3": {
-     "in_phase": 13
-    },
-    "frontier/x2_s4": {
+    "frontier/x3_s1": {
      "in_phase": 14
     },
-    "frontier/x2_s5": {
+    "frontier/x3_s2": {
+     "anti_phase": 2,
+     "split": 14
+    },
+    "frontier/x3_s3": {
+     "in_phase": 14
+    },
+    "frontier/x3_s4": {
+     "in_phase": 14
+    },
+    "frontier/x3_s5": {
      "in_phase": 14
     }
    },
@@ -1253,15 +1245,13 @@
     "in_phase",
     "split"
    ],
-   "reference_modes_without_gated_pairs": [
-    "split"
-   ],
+   "reference_modes_without_gated_pairs": [],
    "cell_metrics_reported": {
-    "ttft_ms": 0.05304729737859861,
-    "tpot_ms": 0.015755363524381717,
-    "request_e2e_time_ms": 0.01594182622496681,
-    "request_throughput_rps": 0.0172785878381208,
-    "token_throughput_tps": 0.01727858783812087
+    "ttft_ms": 0.04391059871400676,
+    "tpot_ms": 0.03173477929598711,
+    "request_e2e_time_ms": 0.03179116350507006,
+    "request_throughput_rps": 0.021529921562932826,
+    "token_throughput_tps": 0.02152992156293284
    }
   },
   {
@@ -1273,37 +1263,25 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x2_qps34_s1",
-     "x2_qps34_s2",
-     "x2_qps34_s3",
-     "x2_qps34_s4",
-     "x2_qps34_s5"
+     "x3_qps34_s1",
+     "x3_qps34_s2",
+     "x3_qps34_s3",
+     "x3_qps34_s4",
+     "x3_qps34_s5"
     ]
    },
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "request_id_gaps": {},
    "token_count_mismatches": {},
    "gated": {
-    "anti_phase.tpot_ms": {
-     "relative_error": 0.11213144435826375,
-     "status": "FAIL",
-     "pairs_n": 100,
-     "requests_n": 100
-    },
-    "anti_phase.ttft_ms": {
-     "relative_error": 0.02914032147271109,
-     "status": "PASS",
-     "pairs_n": 283,
-     "requests_n": 100
-    },
     "in_phase.tpot_ms": {
-     "relative_error": 0.04294378427241423,
+     "relative_error": 0.04734136872445946,
      "status": "PASS",
      "pairs_n": 100,
      "requests_n": 100
     },
     "in_phase.ttft_ms": {
-     "relative_error": 0.08167113603239876,
+     "relative_error": 0.014570054487681249,
      "status": "PASS",
      "pairs_n": 161,
      "requests_n": 100
@@ -1321,23 +1299,20 @@
      "double_split": 6,
      "in_phase": 3
     },
-    "frontier/x2_s1": {
+    "frontier/x3_s1": {
      "in_phase": 10
     },
-    "frontier/x2_s2": {
-     "anti_phase": 15
+    "frontier/x3_s2": {
+     "split": 12
     },
-    "frontier/x2_s3": {
-     "anti_phase": 2,
-     "split": 10
+    "frontier/x3_s3": {
+     "split": 13
     },
-    "frontier/x2_s4": {
-     "anti_phase": 2,
-     "split": 10
+    "frontier/x3_s4": {
+     "split": 13
     },
-    "frontier/x2_s5": {
-     "anti_phase": 2,
-     "split": 10
+    "frontier/x3_s5": {
+     "split": 12
     }
    },
    "vllm_window_share": {
@@ -1349,13 +1324,15 @@
     "anti_phase",
     "in_phase"
    ],
-   "reference_modes_without_gated_pairs": [],
+   "reference_modes_without_gated_pairs": [
+    "anti_phase"
+   ],
    "cell_metrics_reported": {
-    "ttft_ms": 0.010005242276939108,
-    "tpot_ms": 0.23811879742759715,
-    "request_e2e_time_ms": 0.2368817750374787,
-    "request_throughput_rps": 0.15548993180569456,
-    "token_throughput_tps": 0.15548993180569468
+    "ttft_ms": 0.03951092076292528,
+    "tpot_ms": 0.18329249112138427,
+    "request_e2e_time_ms": 0.18219936743311044,
+    "request_throughput_rps": 0.1385998919788455,
+    "token_throughput_tps": 0.13859989197884556
    }
   }
  ]

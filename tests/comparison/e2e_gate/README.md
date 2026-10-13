@@ -142,7 +142,7 @@ If the identity, token or clock check fails, every metric is `INSUFFICIENT_EVIDE
 
 A case's CPU-overhead tables (`cpu_overheads.csv`, `cpu_overheads_kernel_only.csv`) come from
 the repository's producer, `python -m frontier.profiling.cpu_overhead.vllm_cpu_probe`.
-`artifacts.json` records, for the current X2 table and for the earlier k1d/k1e tables:
+`artifacts.json` records, for the current X3 table and for the earlier k1d/k1e tables:
 
 - the producer arguments, including `--engine_idle_edges_ms 0 100 500` and the pipeline-stage
   count;
