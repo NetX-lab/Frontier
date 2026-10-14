@@ -168,7 +168,7 @@ cache
 settings.json
 
 # Task memory and repair receipts are local-only; do not vendor them.
-task_memory/
+task_memory/*
 repairs/
 
 # Local linked worktrees used for isolated feature implementation.

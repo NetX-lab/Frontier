@@ -9,6 +9,13 @@ from predictor_cache_fixtures import (
 from frontier.types import ClusterType
 
 
+def _predictor_package_source() -> str:
+    return "".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted(Path("frontier/execution_time_predictor").glob("*.py"))
+    )
+
+
 class _MoEPredictor(CacheFixturePredictor):
     def _get_estimator(self):
         return None
@@ -77,9 +84,7 @@ def test_disaggregation_predictor_uses_shared_materializer_tie_break() -> None:
 
 
 def test_moe_layer_prediction_has_no_one_token_conservation_tolerance() -> None:
-    source = Path(
-        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py"
-    ).read_text(encoding="utf-8")
+    source = _predictor_package_source()
 
     assert "abs(total_allocated_tokens - expected_tokens) > 1" not in source
 
@@ -93,9 +98,7 @@ def test_decode_sync_collective_has_no_uniform_routing_fallback() -> None:
 
 
 def test_moe_predictor_has_one_routing_integerizer() -> None:
-    source = Path(
-        "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py"
-    ).read_text(encoding="utf-8")
+    source = _predictor_package_source()
 
     assert "def _build_proportional_per_expert_tokens" not in source
     assert "def _build_balanced_per_expert_tokens" not in source

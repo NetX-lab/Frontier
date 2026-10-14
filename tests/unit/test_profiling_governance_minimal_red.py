@@ -539,7 +539,7 @@ def test_selected_cache_identity_ignores_physical_layer_occurrence() -> None:
         expert_parallel_size=8,
     )
     serializer = _require_symbol(
-        "frontier.execution_time_predictor.shared_prediction_model_manager",
+        "frontier.execution_time_predictor.prediction_model_identity",
         "_serialize_selected_layer_cache_identity",
     )
     assert serializer(layer_zero) == serializer(layer_one)
@@ -553,7 +553,7 @@ def test_selected_cache_identity_respects_operator_ep_semantics() -> None:
     config = _step3_config()
     profile = config.get_model_architecture_profile()
     serializer = _require_symbol(
-        "frontier.execution_time_predictor.shared_prediction_model_manager",
+        "frontier.execution_time_predictor.prediction_model_identity",
         "_serialize_selected_layer_cache_identity",
     )
 
@@ -1176,7 +1176,7 @@ def test_standalone_moe_predictor_rejects_malformed_typed_metadata(
 ) -> None:
     """Independent MoE predictor training validates typed rows before filtering."""
 
-    import frontier.execution_time_predictor.sklearn_moe_execution_time_predictor as moe_module
+    import frontier.execution_time_predictor.moe_dataset_training as moe_module
     from frontier.operators.typed_contracts import serialize_typed_operator_contracts
 
     input_file = tmp_path / "malformed-standalone-moe.csv"
@@ -1378,7 +1378,7 @@ def test_dense_training_carries_selected_contract_to_loader_and_context(tmp_path
 def test_routed_and_shared_training_carry_distinct_contracts(tmp_path) -> None:
     """Routed and shared-expert training use their own typed domains."""
 
-    import frontier.execution_time_predictor.shared_prediction_model_manager as module
+    import frontier.execution_time_predictor.prediction_family_trainers as module
 
     linear_file = tmp_path / "linear.csv"
     moe_file = tmp_path / "moe.csv"

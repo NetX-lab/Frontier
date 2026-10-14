@@ -21,13 +21,14 @@ sys.path[:0] = [str(ROOT), str(ROOT / "tests/unit"), str(ROOT / "tests/performan
 
 
 def install_controls(patch, mode):
+    import frontier.execution_time_predictor.moe_routing_workload as routing_module
     import frontier.execution_time_predictor.sklearn_moe_execution_time_predictor as module
 
     cls = module.SklearnMoEExecutionTimePredictor
     counters = Counter()
     attention = cls._predict_attention_layer_time_with_query_cache
     workload = cls._materialize_layer_ep_workload
-    materialize = module.materialize_layer_ep_workload
+    materialize = routing_module.materialize_layer_ep_workload
 
     def attention_call(self, *, batch, layer_id, cluster_type, cache=None):
         counters["attention_queries"] += 1
@@ -54,7 +55,7 @@ def install_controls(patch, mode):
 
     patch.setattr(cls, "_predict_attention_layer_time_with_query_cache", attention_call)
     patch.setattr(cls, "_materialize_layer_ep_workload", workload_call)
-    patch.setattr(module, "materialize_layer_ep_workload", materialize_call)
+    patch.setattr(routing_module, "materialize_layer_ep_workload", materialize_call)
     return counters
 
 

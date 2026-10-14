@@ -7,14 +7,16 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+PREDICTOR_ROOT = REPO_ROOT / "frontier/execution_time_predictor"
+# Profiling helpers each predictor module may import; any module not listed
+# imports none.
 RUNTIME_IMPORTS = {
-    "frontier/execution_time_predictor/sklearn_execution_time_predictor.py": {
+    "sklearn_execution_time_predictor.py": {
         "frontier.profiling.cpu_overhead.schema",
         "frontier.profiling.cpu_overhead.validation",
         "frontier.profiling.other_overhead.validation",
     },
-    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": set(),
-    "frontier/execution_time_predictor/shared_prediction_model_manager.py": {
+    "profiling_dataframe_loaders.py": {
         "frontier.profiling.cpu_overhead.validation",
     },
 }
@@ -32,12 +34,13 @@ def _absolute_imports(path: Path) -> set[str]:
 
 
 def test_runtime_predictors_use_only_allowlisted_profiling_helpers() -> None:
-    for relative_path, expected in RUNTIME_IMPORTS.items():
-        imports = _absolute_imports(REPO_ROOT / relative_path)
+    for path in sorted(PREDICTOR_ROOT.glob("*.py")):
         profiling_imports = {
-            module for module in imports if module.startswith("frontier.profiling")
+            module
+            for module in _absolute_imports(path)
+            if module.startswith("frontier.profiling")
         }
-        assert profiling_imports == expected, relative_path
+        assert profiling_imports == RUNTIME_IMPORTS.get(path.name, set()), path.name
         assert not profiling_imports & {
             "frontier.profiling.attention.main",
             "frontier.profiling.collectives.main",
