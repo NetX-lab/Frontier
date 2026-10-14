@@ -128,7 +128,7 @@
     "anti_phase": 45
    }
   },
-  "frontier/x3_s1": {
+  "frontier/x4_s1": {
    "missing": [],
    "duplicates": [],
    "unclassified": [],
@@ -136,7 +136,7 @@
     "in_phase": 41
    }
   },
-  "frontier/x3_s2": {
+  "frontier/x4_s2": {
    "missing": [],
    "duplicates": [],
    "unclassified": [],
@@ -144,7 +144,7 @@
     "in_phase": 41
    }
   },
-  "frontier/x3_s3": {
+  "frontier/x4_s3": {
    "missing": [],
    "duplicates": [],
    "unclassified": [],
@@ -152,7 +152,7 @@
     "in_phase": 41
    }
   },
-  "frontier/x3_s4": {
+  "frontier/x4_s4": {
    "missing": [],
    "duplicates": [],
    "unclassified": [],
@@ -160,7 +160,7 @@
     "in_phase": 41
    }
   },
-  "frontier/x3_s5": {
+  "frontier/x4_s5": {
    "missing": [],
    "duplicates": [],
    "unclassified": [],

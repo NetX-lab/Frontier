@@ -1,5 +1,5 @@
 {
- "description": "The 22 claimed E2E gate cells of the H200 matrix and the cell it excludes (cloud PR review X3: the X2 inputs with the CPU-overhead tables rebuilt by decision REMAINING-FAIL).",
+ "description": "The 22 claimed E2E gate cells of the H200 matrix and the cell it excludes (cloud PR review X4: the X3 inputs with the PD prefill KV send correction of decision KV-SEND-CORRECTION in the C3 and C4 settings).",
  "platform": "H200, quota group step_main",
  "artifacts_root": "the calibration directory of task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate",
  "cases": {
@@ -76,7 +76,7 @@
     "sha256": "0ffc1b6e01c483fb1041903807e20eed90413d682cbc06aec4cbc0f81f7ab68d"
    },
    "frontier_settings": {
-    "path": "e2e_c1_dense_coloc/inputs/frontier_h200_x3.json",
+    "path": "e2e_c1_dense_coloc/inputs/frontier_h200_x4.json",
     "sha256": "e4d617264077448cac0adc095afd0c29c2da5a20cac0bc2881101a3bb2a9a043"
    }
   },
@@ -157,7 +157,8 @@
      "network_latency_ms": 0.6639829188985349,
      "enable_latency_hiding": false,
      "kv_cache_dtype_size_bytes": 2,
-     "kv_connector": "p2p_nccl"
+     "kv_connector": "p2p_nccl",
+     "kv_send_slowdown_per_layer_ms": 0.0721
     }
    },
    "measurement_families": "Decode-graph steps (pure decode batches, padded to the next capture size) read the KERNEL_ONLY tables attention_kernel_only.csv, linear_op_kernel_only.csv; prefill steps read the CUDA_EVENT tables. The runner names every path, so the checked-in default tables never load.",
@@ -170,8 +171,8 @@
     "sha256": "c9b5f4f4e947241d98882bc7d8c9957badb24e22f8bc2710c4b96d479a958122"
    },
    "frontier_settings": {
-    "path": "e2e_c3_dense_pdd/inputs/frontier_h200_x3.json",
-    "sha256": "512d71ad6336da9796d298668c0643814ca2d3e4e775ef36c03e320325aa537f"
+    "path": "e2e_c3_dense_pdd/inputs/frontier_h200_x4.json",
+    "sha256": "36d3ef9d951a96394d88cad76c3a166fe86c8f2e12aa04481a34b6db346438b5"
    }
   },
   "e2e_c4_moe_pdd": {
@@ -256,7 +257,8 @@
      "network_latency_ms": 0.1949479595770523,
      "enable_latency_hiding": false,
      "kv_cache_dtype_size_bytes": 2,
-     "kv_connector": "p2p_nccl"
+     "kv_connector": "p2p_nccl",
+     "kv_send_slowdown_per_layer_ms": 0.101
     }
    },
    "measurement_families": "Decode-graph steps (pure decode batches, padded to the next capture size) read the KERNEL_ONLY tables attention_kernel_only.csv, linear_op_kernel_only.csv, moe_kernel_only.csv; prefill steps read the CUDA_EVENT tables. The runner names every path, so the checked-in default tables never load.",
@@ -269,8 +271,8 @@
     "sha256": "94974d4795ba9510b620de449bf15b30dd38d75c05607a7bd84dfa7304018a93"
    },
    "frontier_settings": {
-    "path": "e2e_c4_moe_pdd/inputs/frontier_h200_x3.json",
-    "sha256": "933fa021676685a5807fd7708264bb55de478541738b836acdce928a548464bf"
+    "path": "e2e_c4_moe_pdd/inputs/frontier_h200_x4.json",
+    "sha256": "3892fa86bc68e6492ed0b65d2b54da2f9bbfb2aaa529710a5fa1f0889432b9fb"
    }
   },
   "e2e_c5_moe_coloc": {
@@ -351,7 +353,7 @@
     "sha256": "817bf971cdfd680326de1b0eeff23eaf4e296f7fa8aff1c36ad977705e4d5d6f"
    },
    "frontier_settings": {
-    "path": "e2e_c5_moe_coloc/inputs/frontier_h200_x3.json",
+    "path": "e2e_c5_moe_coloc/inputs/frontier_h200_x4.json",
     "sha256": "0fd04a3129b82e8a00ddfd5e741105e1602fb35c901d332ee7891cd815fb3c0e"
    }
   },
@@ -418,7 +420,7 @@
     "sha256": "a8d55d3fd629180098623cfc130d42134c0337cedd6690eb21bc521e6988c9f9"
    },
    "frontier_settings": {
-    "path": "e2e_c6_moe_coloc_ep4_tp2_dp2_pp2/inputs/frontier_h200_x3.json",
+    "path": "e2e_c6_moe_coloc_ep4_tp2_dp2_pp2/inputs/frontier_h200_x4.json",
     "sha256": "39b81c60f2d8bc796e6e0770b8d6f33e20935ff6aa0590ae230ca7c0e82a3240"
    }
   },
@@ -485,7 +487,7 @@
     "sha256": "980a30f99da17c08a719e3953f56a075a2354a653cd800c9560204cf2fde0ed4"
    },
    "frontier_settings": {
-    "path": "e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2/inputs/frontier_h200_x3.json",
+    "path": "e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2/inputs/frontier_h200_x4.json",
     "sha256": "aef665a98e4ed60a0da5874b065a404f28e5833a9c662869ae6622ebac153888"
    }
   }
@@ -551,8 +553,8 @@
     "c1-h200-clean-qps2-20261010a"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -704,7 +706,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2"
+     "x4_qps2"
     ]
    }
   },
@@ -767,8 +769,8 @@
     "c1-h200-clean-qps6.5-20261007a"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -920,7 +922,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps6.5"
+     "x4_qps6.5"
     ]
    }
   },
@@ -984,8 +986,8 @@
     "c1-h200-clean-qps12.5-20261010b"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -1137,7 +1139,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps12.5"
+     "x4_qps12.5"
     ]
    }
   },
@@ -1221,8 +1223,8 @@
     "c1-h200-clean-qps6.5_mixed_warm-20261010c"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -1373,7 +1375,7 @@
     "class": "outside_profile",
     "gaps": [
      {
-      "run": "x3_qps6.5_mixed_warm",
+      "run": "x4_qps6.5_mixed_warm",
       "model": "MONOLITHIC/event/attn_prefill_mixed",
       "kinds": [
        "range"
@@ -1386,7 +1388,7 @@
     ],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps6.5_mixed_warm"
+     "x4_qps6.5_mixed_warm"
     ]
    }
   },
@@ -1450,8 +1452,8 @@
     "c3-h200-clean-qps2-20261010a"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -1551,6 +1553,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.0721",
       "--random_forrest_execution_time_predictor_config_linear_op_input_file",
       "{artifacts}/e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
       "--random_forrest_execution_time_predictor_config_linear_op_kernel_only_input_file",
@@ -1626,7 +1630,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2"
+     "x4_qps2"
     ]
    }
   },
@@ -1689,8 +1693,8 @@
     "c3-h200-clean-qps8-20261007a"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -1790,6 +1794,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.0721",
       "--random_forrest_execution_time_predictor_config_linear_op_input_file",
       "{artifacts}/e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
       "--random_forrest_execution_time_predictor_config_linear_op_kernel_only_input_file",
@@ -1865,7 +1871,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps8"
+     "x4_qps8"
     ]
    }
   },
@@ -1932,8 +1938,8 @@
     "c3-h200-clean-qps37_p512-20261010c"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -2033,6 +2039,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.0721",
       "--random_forrest_execution_time_predictor_config_linear_op_input_file",
       "{artifacts}/e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
       "--random_forrest_execution_time_predictor_config_linear_op_kernel_only_input_file",
@@ -2108,7 +2116,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps37_p512"
+     "x4_qps37_p512"
     ]
    }
   },
@@ -2173,8 +2181,8 @@
     "c4-rr-h200-clean-qps2-20261012e"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -2290,6 +2298,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.101",
       "--replica_config_moe_routing_distribution_type",
       "balanced",
       "--replica_config_moe_routing_seed",
@@ -2381,7 +2391,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2"
+     "x4_qps2"
     ]
    }
   },
@@ -2446,8 +2456,8 @@
     "c4-rr-h200-clean-qps37-20261012f"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -2563,6 +2573,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.101",
       "--replica_config_moe_routing_distribution_type",
       "balanced",
       "--replica_config_moe_routing_seed",
@@ -2654,7 +2666,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps37"
+     "x4_qps37"
     ]
    }
   },
@@ -2719,8 +2731,8 @@
     "c4-rr-h200-clean-qps75-20261012g"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -2836,6 +2848,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.101",
       "--replica_config_moe_routing_distribution_type",
       "balanced",
       "--replica_config_moe_routing_seed",
@@ -2927,7 +2941,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps75"
+     "x4_qps75"
     ]
    }
   },
@@ -3011,8 +3025,8 @@
     "c4-rr-h200-clean-qps37_mixed_warm-20261012h"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -3128,6 +3142,8 @@
       "--no-analytical_kv_cache_transfer_config_enable_latency_hiding",
       "--analytical_kv_cache_transfer_config_kv_connector",
       "p2p_nccl",
+      "--analytical_kv_cache_transfer_config_kv_send_slowdown_per_layer_ms",
+      "0.101",
       "--replica_config_moe_routing_distribution_type",
       "balanced",
       "--replica_config_moe_routing_seed",
@@ -3219,7 +3235,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps37_mixed_warm"
+     "x4_qps37_mixed_warm"
     ]
    }
   },
@@ -3283,8 +3299,8 @@
     "c5-rr-h200-clean-qps2-20261010a"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -3464,7 +3480,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2"
+     "x4_qps2"
     ]
    }
   },
@@ -3527,8 +3543,8 @@
     "c5-rr-h200-clean-qps1-20261008a"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -3708,7 +3724,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps1"
+     "x4_qps1"
     ]
    }
   },
@@ -3773,8 +3789,8 @@
     "c5-rr-h200-clean-qps5-20261010b"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -3954,7 +3970,7 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps5"
+     "x4_qps5"
     ]
    }
   },
@@ -4040,8 +4056,8 @@
     "c5-rr-h200-clean-qps2_mixed_warm-20261010g"
    ],
    "frontier_runs": {
-    "x3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -4220,7 +4236,7 @@
     "class": "outside_profile",
     "gaps": [
      {
-      "run": "x3_qps2_mixed_warm",
+      "run": "x4_qps2_mixed_warm",
       "model": "MONOLITHIC/event/attn_prefill_mixed",
       "kinds": [
        "range"
@@ -4233,7 +4249,7 @@
     ],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2_mixed_warm"
+     "x4_qps2_mixed_warm"
     ]
    }
   },
@@ -4316,8 +4332,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -4607,8 +4623,8 @@
      "member_trace_sha256": "e34ab4e9b79287ebd3ea6be65c749f6a6d4b75b1612bc63bf64f8f765f6cfff8",
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -4898,8 +4914,8 @@
      "member_trace_sha256": "abf28f5b707c245fccd03d132c97c9954d1fac71ec8def4a10589bb98a12e15f",
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -5189,8 +5205,8 @@
      "member_trace_sha256": "46bc4d5efe51734226cfd16c89ba663dddb7ca8378a08e32d385d400867ec6c6",
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -5480,8 +5496,8 @@
      "member_trace_sha256": "9d4a12f99069f45d8b69d4317c8933a828a36fc247bab8c33665a6c45bb95c80",
      "base_trace_sha256": "1d59f21070c576dc5eaa145bec29afa55b8ed76bb789d9bc6aaff762fe7bd3a3"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -5778,11 +5794,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps0.75_drain_s1",
-     "x3_qps0.75_drain_s2",
-     "x3_qps0.75_drain_s3",
-     "x3_qps0.75_drain_s4",
-     "x3_qps0.75_drain_s5"
+     "x4_qps0.75_drain_s1",
+     "x4_qps0.75_drain_s2",
+     "x4_qps0.75_drain_s3",
+     "x4_qps0.75_drain_s4",
+     "x4_qps0.75_drain_s5"
     ]
    }
   },
@@ -5858,8 +5874,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -6149,8 +6165,8 @@
      "member_trace_sha256": "7f763deb6ac23a3ed95fbb379212ff49de65ddae8b8f0be1d339a86c53b7aacf",
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -6440,8 +6456,8 @@
      "member_trace_sha256": "adbb091c2335543f5b58a72f20462a062eafd3810550cced297f00f01c4ca8e3",
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -6731,8 +6747,8 @@
      "member_trace_sha256": "b2282f8701b4bf26e084504a00f63b68cce2f61d17f7ad912f7d1afbdfe5065f",
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -7022,8 +7038,8 @@
      "member_trace_sha256": "20c37b37090102595769ca4b0154e131a9029e89afacc7d05c35979c905bf119",
      "base_trace_sha256": "c5f9c97462e350cd6ab5e1d8d29ece96368bf3bb749ad629b36c095cb7a7a3c9"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -7320,11 +7336,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2_drain_s1",
-     "x3_qps2_drain_s2",
-     "x3_qps2_drain_s3",
-     "x3_qps2_drain_s4",
-     "x3_qps2_drain_s5"
+     "x4_qps2_drain_s1",
+     "x4_qps2_drain_s2",
+     "x4_qps2_drain_s3",
+     "x4_qps2_drain_s4",
+     "x4_qps2_drain_s5"
     ]
    }
   },
@@ -7400,8 +7416,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -7691,8 +7707,8 @@
      "member_trace_sha256": "6325482f60e4d87150bd6d6dc0838d31e0c94daa8ed246a86f91ad0e9fac9df4",
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -7982,8 +7998,8 @@
      "member_trace_sha256": "2a99754472b126683c3ca61b658d4681d4a5b2ef8f36ba54e7468f7e73143a75",
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -8273,8 +8289,8 @@
      "member_trace_sha256": "930b25cb7d64df10ffdff79b3eb3a51f73aefd5d2730debd90de5fed5537bd1a",
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -8564,8 +8580,8 @@
      "member_trace_sha256": "e81b070415418f30099859633138491ebf69eb627fddc2d1a34eae6506fe71ba",
      "base_trace_sha256": "7398d5329b3d92e69f901db551cc4d2b2b8c705be0f016b1a852e1645ee55695"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -8862,11 +8878,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps3.5_drain_s1",
-     "x3_qps3.5_drain_s2",
-     "x3_qps3.5_drain_s3",
-     "x3_qps3.5_drain_s4",
-     "x3_qps3.5_drain_s5"
+     "x4_qps3.5_drain_s1",
+     "x4_qps3.5_drain_s2",
+     "x4_qps3.5_drain_s3",
+     "x4_qps3.5_drain_s4",
+     "x4_qps3.5_drain_s5"
     ]
    }
   },
@@ -8942,8 +8958,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -9233,8 +9249,8 @@
      "member_trace_sha256": "4084f85653785177d6cfa1b8088cac1de904bb27dd431622112bd6dc41ee41df",
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -9524,8 +9540,8 @@
      "member_trace_sha256": "68e11c355a98fe042c3e9e43962eda7f69ef0ae7effcd7dbb98cb31bff697dd0",
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -9815,8 +9831,8 @@
      "member_trace_sha256": "1a6e4bbbb9814f501342fc88eb901d2893fd00b85313b3f58cd170456c291b4a",
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -10106,8 +10122,8 @@
      "member_trace_sha256": "3a4c7afee071fb47b5babada89cffee4bdf8f62f9e8ad6206bc69140f7b27ff5",
      "base_trace_sha256": "43b4e9781e312ea1fe44e76d8b5bfcd0f58633b1034040ecd7c8b9e24930e409"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -10404,11 +10420,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps2_s1",
-     "x3_qps2_s2",
-     "x3_qps2_s3",
-     "x3_qps2_s4",
-     "x3_qps2_s5"
+     "x4_qps2_s1",
+     "x4_qps2_s2",
+     "x4_qps2_s3",
+     "x4_qps2_s4",
+     "x4_qps2_s5"
     ]
    }
   },
@@ -10484,8 +10500,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -10775,8 +10791,8 @@
      "member_trace_sha256": "75c0a92a5c3ed8e4ae8d532d7d736fc83c3bda339ed97f95d30f858d12ef6bd4",
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -11066,8 +11082,8 @@
      "member_trace_sha256": "0c4dbf39ae9fb41df01581d834d9905c9e1d739ac9e8216c7501f1e8d173decd",
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -11357,8 +11373,8 @@
      "member_trace_sha256": "b1ef9f9bdb529b99146ea1b03b5bbeb5cb9a079aa82ee66bf81e5908de2e2776",
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -11648,8 +11664,8 @@
      "member_trace_sha256": "9a49d73f7a36edbaa9ebf3f679737eb80a3286ef49519db71fc825932121f07b",
      "base_trace_sha256": "8b8bdcbff60d941a40c98f439314f8a46f39d8a09638c0aa93e9206b8e661dee"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -11946,11 +11962,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps8_s1",
-     "x3_qps8_s2",
-     "x3_qps8_s3",
-     "x3_qps8_s4",
-     "x3_qps8_s5"
+     "x4_qps8_s1",
+     "x4_qps8_s2",
+     "x4_qps8_s3",
+     "x4_qps8_s4",
+     "x4_qps8_s5"
     ]
    }
   },
@@ -12026,8 +12042,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -12317,8 +12333,8 @@
      "member_trace_sha256": "1baef550b324fe70ca6fe7df4b8b3a280e072fa9f2a88e9efdc153ce3de4a43c",
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -12608,8 +12624,8 @@
      "member_trace_sha256": "9422841796dfa26ee318f8b516dad2d2f14fdc4b48bb5da204bdcf6a70a15694",
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -12899,8 +12915,8 @@
      "member_trace_sha256": "5340cdca716314091baf6a05e5c715cfd7284f59b0d3fc45860b7237a8af580b",
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -13190,8 +13206,8 @@
      "member_trace_sha256": "83669db5320e3006845dab5bc9a9f0b638b8aec572e401daaeb46cb8bcfaab89",
      "base_trace_sha256": "859b1aaa2a2066dd9d0e1a529126dd833febea4fea0dfe87570bff39ac8d4ec6"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -13488,11 +13504,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps17_s1",
-     "x3_qps17_s2",
-     "x3_qps17_s3",
-     "x3_qps17_s4",
-     "x3_qps17_s5"
+     "x4_qps17_s1",
+     "x4_qps17_s2",
+     "x4_qps17_s3",
+     "x4_qps17_s4",
+     "x4_qps17_s5"
     ]
    }
   },
@@ -13568,8 +13584,8 @@
     ]
    },
    "frontier_runs": {
-    "x3_s1": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s1": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -13859,8 +13875,8 @@
      "member_trace_sha256": "e5c9433927be08f79c2987f0924a6d604b2855661a1a4842814a7957d0fd0e08",
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
-    "x3_s2": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s2": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -14150,8 +14166,8 @@
      "member_trace_sha256": "6933469d444ebfef136495194547d953bd5649638ff3c98359d7e257e050bad2",
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
-    "x3_s3": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s3": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -14441,8 +14457,8 @@
      "member_trace_sha256": "0f9a5344ed2cc6426dc1f7d00cf0f98996bbd0140cf7d58f23278440e0c7f273",
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
-    "x3_s4": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s4": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -14732,8 +14748,8 @@
      "member_trace_sha256": "c769d612cd701d2ec2dea2e7df75c889f3e4ab056af740c7ec2bc6d5d1b2cece",
      "base_trace_sha256": "d95b8f282661a73ab7f29c7d5fd74980c882557f0c6359d2455732ab01f9a692"
     },
-    "x3_s5": {
-     "frontier_revision": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+    "x4_s5": {
+     "frontier_revision": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
      "command": [
       "{python}",
       "-m",
@@ -15030,11 +15046,11 @@
     "gaps": [],
     "source": "scenario_matrix/coverage_check.py (range and T42-GRID spacing rules, formal batches)",
     "checked_runs": [
-     "x3_qps34_s1",
-     "x3_qps34_s2",
-     "x3_qps34_s3",
-     "x3_qps34_s4",
-     "x3_qps34_s5"
+     "x4_qps34_s1",
+     "x4_qps34_s2",
+     "x4_qps34_s3",
+     "x4_qps34_s4",
+     "x4_qps34_s5"
     ]
    }
   }

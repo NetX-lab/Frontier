@@ -2,7 +2,7 @@
  "frontier": {
   "repository": "https://github.com/NetX-lab/Frontier",
   "branch": "calibration/t43-combined",
-  "commit": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
+  "commit": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
   "cpu_overhead_producer_commit": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
   "note": "every Frontier run ran at this commit; the current CPU-overhead tables were built by the producer at cpu_overhead_producer_commit; the k1d and k1e recipes name their own producer commit"
  },
@@ -3957,7 +3957,7 @@
  "cases": {
   "e2e_c1_dense_coloc": {
    "profiling_tables": {
-    "x3": {
+    "x4": {
      "set": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example",
      "files": {
       "attention.csv": {
@@ -4236,7 +4236,7 @@
     "k1e": null
    },
    "predictor_cache": {
-    "dir": "/data/ycfeng/tmp/e2e_gate/x3/r3/cache/e2e_c1_dense_coloc",
+    "dir": "/data/ycfeng/tmp/e2e_gate/kvsend/cache/e2e_c1_dense_coloc",
     "models": {
      "attn_decode_0f7540b2": {
       "training_predictions_sha256": "2285423341ac636c648219b1cde915fa19454cb1b97a6f49bed166c189bd203f",
@@ -4459,7 +4459,7 @@
   },
   "e2e_c3_dense_pdd": {
    "profiling_tables": {
-    "x3": {
+    "x4": {
      "set": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example",
      "files": {
       "attention.csv": {
@@ -4798,13 +4798,13 @@
     "k1e": null
    },
    "predictor_cache": {
-    "dir": "/data/ycfeng/tmp/e2e_gate/x3/r3/cache/e2e_c3_dense_pdd",
+    "dir": "/data/ycfeng/tmp/e2e_gate/kvsend/cache/e2e_c3_dense_pdd",
     "models": {}
    }
   },
   "e2e_c4_moe_pdd": {
    "profiling_tables": {
-    "x3": {
+    "x4": {
      "set": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261010b/Qwen3-30B-A3B-tiny",
      "files": {
       "attention.csv": {
@@ -5249,13 +5249,13 @@
     "k1e": null
    },
    "predictor_cache": {
-    "dir": "/data/ycfeng/tmp/e2e_gate/x3/r3/cache/e2e_c4_moe_pdd",
+    "dir": "/data/ycfeng/tmp/e2e_gate/kvsend/cache/e2e_c4_moe_pdd",
     "models": {}
    }
   },
   "e2e_c5_moe_coloc": {
    "profiling_tables": {
-    "x3": {
+    "x4": {
      "set": "e2e_profiling/tables/e2e-h200-t42-c5-20261010b/Qwen3-235B-A22B",
      "files": {
       "attention.csv": {
@@ -5590,7 +5590,7 @@
     "k1e": null
    },
    "predictor_cache": {
-    "dir": "/data/ycfeng/tmp/e2e_gate/x3/r3/cache/e2e_c5_moe_coloc",
+    "dir": "/data/ycfeng/tmp/e2e_gate/kvsend/cache/e2e_c5_moe_coloc",
     "models": {
      "attn_decode_1604b764": {
       "training_predictions_sha256": "0def040089da64c650af8fed0a0794a24dd032eca66d1aedbe942dd67ed95e5d",
@@ -5833,7 +5833,7 @@
   },
   "e2e_c6_moe_coloc_ep4_tp2_dp2_pp2": {
    "profiling_tables": {
-    "x3": {
+    "x4": {
      "set": "e2e_profiling/tables/e2e-h200-t42-c6-20261010b/Qwen3-235B-A22B",
      "files": {
       "attention.csv": {
@@ -7085,7 +7085,7 @@
     }
    },
    "predictor_cache": {
-    "dir": "/data/ycfeng/tmp/e2e_gate/x3/r3/cache/e2e_c6_moe_coloc_ep4_tp2_dp2_pp2",
+    "dir": "/data/ycfeng/tmp/e2e_gate/kvsend/cache/e2e_c6_moe_coloc_ep4_tp2_dp2_pp2",
     "models": {
      "attn_decode_1d7bab25": {
       "training_predictions_sha256": "af696ceb9916c9e20dbbd0e9053201dfc9c64169d0bea507409704ee2bafd9f9",
@@ -7308,7 +7308,7 @@
   },
   "e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2": {
    "profiling_tables": {
-    "x3": {
+    "x4": {
      "set": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261010b/Qwen3-30B-A3B-tiny",
      "files": {
       "attention.csv": {
@@ -8806,7 +8806,7 @@
     }
    },
    "predictor_cache": {
-    "dir": "/data/ycfeng/tmp/e2e_gate/x3/r3/cache/e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2",
+    "dir": "/data/ycfeng/tmp/e2e_gate/kvsend/cache/e2e_c2p_moe_coloc_ep2_tp1_dp2_pp2",
     "models": {
      "attn_decode_85b4ae45": {
       "training_predictions_sha256": "4f8a9c917201aed7d5fe0c3e78ac1139c1cec48c29d7b1565d481808f23a3b66",
