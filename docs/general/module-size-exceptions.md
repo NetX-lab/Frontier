@@ -12,7 +12,7 @@ covers the four modules that the calibration changes of PR 44
 
 | Module | Before | After | What PR 44 adds |
 | --- | ---: | ---: | --- |
-| `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` | 8,273 | 8,441 | Per-step measurement-family binding, stage-keyed CPU-overhead terms, the `forward_launch` and `forward_drain` host terms, the attention KV-cache extract term |
+| `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` | 8,273 | 8,464 | Per-step measurement-family binding, stage-keyed CPU-overhead terms, the `forward_launch` and `forward_drain` host terms, the attention KV-cache extract term, the measured KV-send slowdown term |
 | `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py` | 2,985 | 3,006 | Passes the pipeline stage and the new terms into its timing records; prices layers through the base predictor's kernel-gap wrapper and step binding |
 | `frontier/metrics/metrics_store.py` | 5,586 | 5,593 | Two fields in the stage batch component ledger |
 | `frontier/profiling/attention/main.py` | 2,157 | 2,161 | The memory filter counts KV blocks instead of tokens |
