@@ -10,6 +10,7 @@ from typing import List, Optional
 
 from frontier.attention.gdn.guards import validate_gdn_runtime_support
 from frontier.entities.batch import Request
+from frontier.errors import FrontierMemoryOOMError
 from frontier.kv_cache.base_kv_cache_manager import KVCacheAllocationResult
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
@@ -23,6 +24,31 @@ from frontier.types import ClusterType
 
 class KvBlockAllocation:
     """Token accounting, KV block allocation and preemption."""
+
+    def _check_request_fits_kv_pool(self, request: Request) -> None:
+        """Reject a request whose peak context needs more blocks than the pool.
+
+        vLLM refuses to start when its KV cache cannot hold max_model_len
+        tokens. Such a request would otherwise be preempted and admitted again
+        without end.
+        """
+        peak_context_tokens = request.num_prefill_tokens
+        if self._cluster_type != ClusterType.PREFILL:
+            # The last output token is sampled but never written to the cache.
+            peak_context_tokens += request.num_decode_tokens - 1
+        num_peak_blocks = ceil(peak_context_tokens / self._config.block_size)
+        if num_peak_blocks > self._config.num_blocks:
+            raise FrontierMemoryOOMError(
+                f"Request {request.id} needs {num_peak_blocks} KV blocks for its "
+                f"{peak_context_tokens}-token context, more than the replica's "
+                "KV cache holds.",
+                reason="request_exceeds_kv_cache",
+                details={
+                    "cluster_type": self._cluster_type.name,
+                    "total_blocks": int(self._config.num_blocks),
+                    "block_size": int(self._config.block_size),
+                },
+            )
 
     def _find_request_by_id(self, request_id: int) -> Optional[Request]:
         request_groups = [

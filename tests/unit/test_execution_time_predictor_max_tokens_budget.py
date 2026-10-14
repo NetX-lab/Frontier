@@ -414,6 +414,7 @@ def test_spec_verify_attention_prefill_uses_on_demand_prediction() -> None:
     )
     batch = SimpleNamespace(
         requests=[request],
+        request_is_decoding=[True],
         spec_decode_metadata=metadata,
     )
 
@@ -454,7 +455,7 @@ def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
         num_processed_decode_tokens=0,
         num_emitted_decode_tokens=1,
     )
-    batch = SimpleNamespace(requests=[request])
+    batch = SimpleNamespace(requests=[request], request_is_decoding=[True])
 
     assert predictor._get_batch_decode_attention_params(batch) == (1, 576)
 
@@ -468,7 +469,7 @@ def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
         num_emitted_decode_tokens=0,
     )
     assert predictor._get_batch_decode_attention_params(
-        SimpleNamespace(requests=[no_handoff_request])
+        SimpleNamespace(requests=[no_handoff_request], request_is_decoding=[True])
     ) == (1, 512)
 
 

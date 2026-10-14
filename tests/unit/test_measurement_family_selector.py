@@ -71,6 +71,7 @@ def _build_spec_request(request_id: int) -> SimpleNamespace:
         execution_epoch=0,
         execution_signature=(0, 0, 0),
         current_decode_token_index=0,
+        num_context_tokens=16,
         is_thinking_mode_enabled=False,
         thinking_home_cluster_type=None,
     )

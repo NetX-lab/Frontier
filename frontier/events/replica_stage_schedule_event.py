@@ -78,37 +78,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
 
         batch = stage_scheduler.pop_batch_if_not_busy()
-        # A row the pop removed as stale belongs to a request preempted while
-        # this step was in flight; vLLM still applies that step's sample.
-        requeue_events: List[BaseEvent] = []
-        stale_row_batches = stage_scheduler.consume_last_stale_row_batches()
-        if stale_row_batches:
-            from frontier.events.global_batch_end_event import (
-                thinking_round_requeue_event,
-            )
-
-            row_replica_scheduler = cluster_scheduler.get_replica_scheduler(
-                self._replica_id,
-                self._replica_local_id,
-            )
-            for stale_batch in stale_row_batches:
-                stopped_entries = stale_batch.apply_preempted_step_samples(
-                    self.time,
-                    self._cluster_type,
-                )
-                for index, request in stopped_entries:
-                    row_replica_scheduler.remove_stopped_waiting_request(
-                        request, self.time
-                    )
-                    requeue_event = thinking_round_requeue_event(
-                        self.time,
-                        request,
-                        stale_batch.thinking_round_start_times[index],
-                    )
-                    if requeue_event is not None:
-                        requeue_events.append(requeue_event)
-                    if request.completed:
-                        metrics_store._on_request_end(self.time, request)
         stale_drops = stage_scheduler.consume_last_stale_drops()
         stale_drop_count = len(stale_drops)
         replica_scheduler = None
@@ -125,7 +94,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     f"num_running_batches={replica_scheduler.num_running_batches}"
                 )
             for dropped_batch in stale_drops:
-                replica_scheduler.decrement_num_running_batches()
+                replica_scheduler.on_stale_batch_drop(dropped_batch)
                 cluster_scheduler.on_replica_batch_end(
                     self.time,
                     self._replica_id,
@@ -141,7 +110,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 stale_drop_count,
                 replica_scheduler.num_running_batches,
             )
-        return requeue_events + self._schedule_popped_batch(
+        return self._schedule_popped_batch(
             metrics_store,
             batch,
             stage_scheduler,
@@ -750,6 +719,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     model_execution_time,
                     batch.requests,
                     batch.num_tokens,
+                    batch.request_is_decoding,
                     cluster_type=self._cluster_type,
                     effective_total_tokens_compute=effective_tokens_compute,
                     effective_total_tokens_transfer=effective_tokens_transfer,

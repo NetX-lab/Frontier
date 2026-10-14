@@ -34,14 +34,15 @@ def complete_dense_layer(
     decode handler credits its own batch, but the prefill handler credits
     nothing, so a decoding request carried in a prefill-mode batch (chunked
     prefill mixes them) would miss this layer. Credit it here, once per
-    executed layer; a request still prefilling has no decode layer to credit.
+    executed layer; a request still prefilling or recomputing has no decode
+    layer to credit.
     """
     if phase == "prefill":
         advance_decode_layer(
             (
                 request
                 for request in collect_active_requests([batch])
-                if request.is_prefill_complete
+                if request.is_decoding
             ),
             scheduler._config.replica_config.model_config.num_layers,
         )

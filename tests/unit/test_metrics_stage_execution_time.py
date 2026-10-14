@@ -240,7 +240,7 @@ def test_residual_traces_preserve_owner_and_physical_layer_metadata(
         batch_id=73, replica_id=0, pipeline_stage=0,
         execution_time=execution_time.total_time, model_execution_time=execution_time.model_time,
         requests=[Request(arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=1)],
-        num_tokens=[8], cluster_type=ClusterType.MONOLITHIC,
+        num_tokens=[8], request_is_decoding=[False], cluster_type=ClusterType.MONOLITHIC,
     )
     batch.on_schedule(1.0)
 

@@ -17,6 +17,9 @@ class RequestRoundPlan:
 
 class PreemptedStep(NamedTuple):
     execution_signature: Tuple[int, int, int]
+    # The row that samples is the one whose context plus tokens reach this
+    # length, as vLLM samples only a row that completes the request's tokens.
+    sample_seq_len: int
     # Output tokens the step appends when its output arrives.
     num_sampled_tokens: int
     recompute: bool
@@ -1038,21 +1041,24 @@ class Request(BaseEntity):
         # prefill restarts its prompt. vLLM still appends the sample of a step
         # in flight when that step's output arrives: a decode step, or a chunk
         # that reaches the end of the prompt or of the recompute. The layers
-        # the step already ran no longer count.
-        if scheduler_num_computed_tokens is not None:
+        # the step already ran no longer count. A victim admitted again before
+        # an earlier preempted step's output arrives keeps that pending sample:
+        # its rows since then were sized without the sample, so none of them
+        # reaches the length that samples once the sample is appended.
+        if scheduler_num_computed_tokens is not None and self._preempted_step is None:
             if self.is_decoding:
+                sample_seq_len = self._num_processed_tokens + 1
                 step_samples = True
-            elif self._num_recomputed_tokens is not None:
-                step_samples = (
-                    scheduler_num_computed_tokens >= self._num_processed_tokens
-                )
             else:
-                step_samples = (
-                    scheduler_num_computed_tokens >= self._num_prefill_tokens
-                )
+                if self._num_recomputed_tokens is not None:
+                    sample_seq_len = self._num_processed_tokens
+                else:
+                    sample_seq_len = self._num_prefill_tokens
+                step_samples = scheduler_num_computed_tokens >= sample_seq_len
             if step_samples:
                 self._preempted_step = PreemptedStep(
                     execution_signature=self.execution_signature,
+                    sample_seq_len=sample_seq_len,
                     num_sampled_tokens=(
                         self._spec_last_committed_tokens
                         if self.is_decoding and self._spec_decode_enabled
@@ -1068,9 +1074,16 @@ class Request(BaseEntity):
         if self._is_prefill_complete and recompute:
             self._num_recomputed_tokens = 0
 
-    def was_preempted_from(self, execution_signature: Tuple[int, int, int]) -> bool:
+    def samples_preempted_step(
+        self, execution_signature: Tuple[int, int, int], row_seq_len: int
+    ) -> bool:
+        """Whether a row that ends at row_seq_len tokens carries the pending sample."""
         record = self._preempted_step
-        return record is not None and record.execution_signature == execution_signature
+        return (
+            record is not None
+            and record.execution_signature == execution_signature
+            and row_seq_len >= record.sample_seq_len
+        )
 
     @property
     def has_preempted_step(self) -> bool:
@@ -1087,16 +1100,26 @@ class Request(BaseEntity):
         )
 
     def on_preempted_step_end(self, time: float, cluster_type: ClusterType) -> None:
-        """Append the sample of the step this request was preempted from."""
+        """Append the sample of the step this request was preempted from.
+
+        It arrives with that step's output. A victim admitted again before then
+        keeps the tokens its resumed execution has already computed, which
+        become the start of the recompute of the appended sample.
+        """
         record = self._preempted_step
         self._preempted_step = None
+        resumed_tokens = self.num_context_tokens
         self._num_recomputed_tokens = None
         if self._is_prefill_complete:
             self.on_batch_end(time, record.num_sampled_tokens, cluster_type)
         else:
-            self.on_batch_end(time, self._num_prefill_tokens, cluster_type)
+            self.on_batch_end(
+                time,
+                self._num_prefill_tokens - self._num_processed_tokens,
+                cluster_type,
+            )
         if record.recompute and not self._completed:
-            self._num_recomputed_tokens = 0
+            self._num_recomputed_tokens = resumed_tokens
 
     def record_preemption(self, cluster_type: ClusterType, num_tokens_completed: int) -> None:
         """
