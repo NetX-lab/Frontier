@@ -1,0 +1,3 @@
+execution_mode,num_tensor_parallel_workers,kernel_gap_us,num_gaps,chain,gpu_name,driver_version,torch_version,cuda_version
+eager,1,1.3492653548512672,11640,decoder_layer:Qwen3-30B-A3B-tiny:tp1,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
+cuda_graph,1,0.41804964199111183,12710,vllm_decode_graphs:Qwen3-30B-A3B-tiny,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
