@@ -84,20 +84,6 @@ class BatchEndEvent(BaseEvent):
         first_request = batch.requests[0]
         return first_request.completed_layer_count
 
-    def _advance_batch_layer_completion(self, batch: "Batch") -> None:
-        """
-        Advance layer completion for all requests in the batch.
-
-        This method is called when a batch completes processing in decode-ffn cluster
-        and is about to transfer back to decode-attn cluster for the next layer.
-
-        Args:
-            batch: The batch to advance layer completion for
-        """
-        for request in batch.requests:
-            # Advance layer completion by 1 (attention + FFN = 1 complete layer)
-            request.advance_decode_layer(num_layers_completed=1)
-
     def to_dict(self):
         return {
             "time": self.time,

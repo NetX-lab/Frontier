@@ -33,6 +33,7 @@ from frontier.scheduler.replica_scheduler.vllm_v1_decode_attn_cohort import (
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
     IterationSchedulingPolicy,
+    priority_policy_key,
 )
 from frontier.scheduler.replica_scheduler.vllm_v1_kv_allocation import KvBlockAllocation
 from frontier.scheduler.replica_scheduler.vllm_v1_mtp_wait import (
@@ -122,6 +123,7 @@ class VLLMv1EngineReplicaScheduler(
         self._monolithic_pp_mtp_output_wait_followup_poll_pending = False
         self._monolithic_pp_waiting_admission_delay_iters: Dict[int, int] = {}
         self._active_batch_request_counts: Dict[int, int] = {}
+        self._preemption_followup_poll_pending = False
 
         # Configuration mapping from vLLM v1 parameters
         self._max_num_running_reqs = self._config.batch_size_cap
@@ -309,6 +311,32 @@ class VLLMv1EngineReplicaScheduler(
     def _is_request_active_in_batch(self, request: Request) -> bool:
         return self._get_active_batch_request_counts().get(request.id, 0) > 0
 
+    def _roll_back_rejected_drafts(self, batch: Batch) -> None:
+        """Take a speculative step's rejected drafts off the scheduler frontier.
+
+        vLLM advances num_computed_tokens by the scheduled width when it
+        schedules the step and, when the step's output arrives, subtracts the
+        scheduled tokens that produced no output (scheduler.py
+        update_from_output). The scheduled width is one token short of the
+        verify width on a MONOLITHIC target-embedded MTP request's first
+        decode step, so the rollback is taken against the scheduled width.
+        """
+        metadata = batch.spec_decode_metadata
+        if metadata is None:
+            return
+        rejected_by_request_id = {
+            request.id: scheduled - committed
+            for request, scheduled, committed in zip(
+                batch.requests,
+                batch.num_tokens,
+                metadata.committed_tokens_per_request,
+            )
+        }
+        for request in batch.current_execution_requests:
+            rejected = rejected_by_request_id[request.id]
+            if rejected:
+                self._scheduled_num_computed_tokens_by_request[request.id] -= rejected
+
     def complete_kv_transfer_for_requests(
         self, requests: Sequence[Request]
     ) -> None:
@@ -346,6 +374,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
         self._release_batch_requests_active(batch)
+        self._roll_back_rejected_drafts(batch)
 
         for request in batch.requests:
             self._refresh_target_embedded_mtp_prefill_boundary_state(batch, request)
@@ -377,6 +406,13 @@ class VLLMv1EngineReplicaScheduler(
                                 self._decode_attn_open_cohort_id = None
 
             if request.completed:
+                if any(request in queue for queue in self._waiting_queues()):
+                    # It stopped on the sample of the step it was preempted
+                    # from, and preemption already freed its KV.
+                    self.remove_stopped_waiting_request(
+                        request, batch.completed_at
+                    )
+                    continue
                 extra_release_iters = (
                     self._get_monolithic_pp_extra_terminal_release_iters()
                 )
@@ -480,6 +516,42 @@ class VLLMv1EngineReplicaScheduler(
                     f"[VLLMv1Engine] Request {request.id} continues, "
                     f"processed_tokens={request.num_processed_tokens}"
                 )
+
+    def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
+        # Preemption inserts a victim into `_request_queue`, or into
+        # `_waiting_requests` on DECODE and DECODE_ATTN. A later waiting-queue
+        # rebuild may move it into `_preempted_requests`.
+        return (self._request_queue, self._preempted_requests, self._waiting_requests)
+
+    def _update_preemption_followup_poll(self, preempted_requests: List[Request]) -> None:
+        # vLLM runs its next step right after a step that schedules nothing,
+        # unless it waits for a batch in flight (`EngineCore.run_busy_loop`,
+        # `step_with_batch_queue`). Frontier starts a pass on an arrival or a
+        # batch end, so with no batch in flight an empty pass has no successor.
+        # A preemption in that pass freed blocks for the requests still
+        # running, so their next step follows at once. Each such pass removes
+        # a request from running, which bounds the chain.
+        self._preemption_followup_poll_pending = bool(
+            preempted_requests
+            and self._running_requests
+            and self._num_running_batches == 0
+        )
+
+    def consume_preemption_followup_poll(self) -> bool:
+        pending = self._preemption_followup_poll_pending
+        self._preemption_followup_poll_pending = False
+        return pending
+
+    def remove_stopped_waiting_request(self, request: Request, time: float) -> None:
+        """Remove a preempted request that stopped on its in-flight sample.
+
+        vLLM removes such a request from waiting, so it never resumes.
+        """
+        for waiting_queue in self._waiting_queues():
+            if request in waiting_queue:
+                waiting_queue.remove(request)
+                break
+        request.on_leave_waiting_queue(time, self._cluster_type)
 
     def _schedule_running_requests(
         self, token_budget: int, preempted_requests: List[Request]
@@ -723,8 +795,7 @@ class VLLMv1EngineReplicaScheduler(
                 ),
             )
         elif self._scheduling_policy == "priority":
-            # Sort by priority (ascending) then arrival time (ascending)
-            return sorted(combined, key=lambda r: (r.priority, r.arrived_at))
+            return sorted(combined, key=priority_policy_key)
         else:
             # FCFS: maintain insertion order (preempted first)
             return combined
@@ -794,6 +865,12 @@ class VLLMv1EngineReplicaScheduler(
                 break
 
             request = waiting_queue[0]
+            if request.stops_on_preempted_step:
+                # vLLM would admit it again only to free it when the sample of
+                # the step it was preempted from arrives.
+                waiting_queue.popleft()
+                skipped_waiting_requests.append(request)
+                continue
             if self._should_defer_monolithic_pp_waiting_admission(request):
                 logger.debug(
                     "[VLLMv1Engine][MONOLITHIC] Phase 2: delaying req=%s "
@@ -818,7 +895,7 @@ class VLLMv1EngineReplicaScheduler(
             )
 
             # Calculate number of new tokens to process
-            if self._is_prefix_caching_enabled() and not request.is_prefill_complete:
+            if self._is_prefix_caching_enabled() and not request.is_decoding:
                 prefix_cache_admission = self._prepare_prefix_cache_admission(
                     request
                 )
@@ -876,7 +953,7 @@ class VLLMv1EngineReplicaScheduler(
             # budget are skipped for this iteration.
             if (
                 not self._enable_chunked_prefill
-                and not request.is_prefill_complete
+                and not request.is_decoding
                 and num_new_tokens > effective_token_budget
             ):
                 waiting_queue.popleft()
@@ -941,6 +1018,14 @@ class VLLMv1EngineReplicaScheduler(
                 self._current_schedule_time, self._cluster_type
             )
 
+            # A victim admitted before the step it was preempted from ends
+            # takes that step's sample here. vLLM appends it when the step's
+            # output arrives, before this admission's step can end, and sized
+            # this admission without it.
+            if request.has_preempted_step:
+                request.on_preempted_step_end(
+                    self._current_schedule_time, self._cluster_type
+                )
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)
@@ -1000,7 +1085,7 @@ class VLLMv1EngineReplicaScheduler(
             if self._scheduling_policy == "priority":
                 merged_requests = list(waiting_queue) + list(skipped_waiting_requests)
                 waiting_queue = deque(
-                    sorted(merged_requests, key=lambda r: (r.priority, r.arrived_at))
+                    sorted(merged_requests, key=priority_policy_key)
                 )
             else:
                 waiting_queue.extend(skipped_waiting_requests)
@@ -1209,6 +1294,7 @@ class VLLMv1EngineReplicaScheduler(
                 self._clear_monolithic_pp_mtp_output_wait()
                 self._monolithic_pp_mtp_output_wait_followup_poll_pending = True
             released += self._advance_monolithic_pp_terminal_release_boundary()
+            self._update_preemption_followup_poll(preempted_requests)
             self._emit_schedule_decision_event(
                 event="iteration_end",
                 decision_result=None,

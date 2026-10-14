@@ -7,7 +7,7 @@ from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 from frontier.events.global_schedule_event import GlobalScheduleEvent
 from frontier.events.cluster_schedule_event import ClusterScheduleEvent
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
-from frontier.events.batch_end_event import BatchEndEvent
+from frontier.events.legacy_batch_end_event import BatchEndEvent
 from frontier.events.prefill_sync_event import PrefillSyncEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent

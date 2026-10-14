@@ -96,6 +96,22 @@ class ReplicaScheduleEvent(BaseEvent):
         if not self._batches:
             logger.info(f"Replica scheduling completed: no batches formed for replica {self._replica_id}")
             if (
+                hasattr(replica_scheduler, "consume_preemption_followup_poll")
+                and replica_scheduler.consume_preemption_followup_poll()
+            ):
+                logger.info(
+                    "Replica scheduling completed: emitting one follow-up "
+                    "schedule poll after an empty pass that preempted"
+                )
+                return [
+                    ReplicaScheduleEvent(
+                        self.time,
+                        self._replica_id,
+                        self._cluster_type,
+                        self._replica_local_id,
+                    )
+                ]
+            if (
                 hasattr(
                     replica_scheduler,
                     "consume_monolithic_pp_terminal_release_followup_poll",

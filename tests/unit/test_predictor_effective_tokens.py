@@ -720,7 +720,10 @@ def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn
     requests = [
         SimpleNamespace(
             _is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
             num_processed_tokens=1000,
+            num_context_tokens=1000,
             num_processed_decode_tokens=0,
             num_emitted_decode_tokens=0,
         )
@@ -755,7 +758,10 @@ def test_sklearn_execution_time_predictor_applies_attn_decode_calibration_scale(
     requests = [
         SimpleNamespace(
             _is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
             num_processed_tokens=1000,
+            num_context_tokens=1000,
             num_processed_decode_tokens=0,
             num_emitted_decode_tokens=0,
         )
@@ -791,9 +797,12 @@ def test_sklearn_execution_time_predictor_applies_late_decode_only_attn_decode_s
     requests = [
         SimpleNamespace(
             _is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
             num_processed_decode_tokens=2,
             num_emitted_decode_tokens=2,
             num_processed_tokens=1000,
+            num_context_tokens=1000,
         )
         for _ in range(5)
     ]
@@ -827,9 +836,12 @@ def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scal
     requests = [
         SimpleNamespace(
             _is_prefill_complete=True,
+            is_decoding=True,
+            is_recomputing=False,
             num_processed_decode_tokens=1,
             num_emitted_decode_tokens=1,
             num_processed_tokens=1000,
+            num_context_tokens=1000,
         )
         for _ in range(5)
     ]

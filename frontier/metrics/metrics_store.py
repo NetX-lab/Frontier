@@ -3509,7 +3509,7 @@ class MetricsStore:
             )
 
         # determine if this was prefill or decode token
-        if not request.has_started_decode:
+        if not request.has_started_decode or request.is_recomputing:
             return
 
         self._token_metrics_time_distribution[

@@ -289,6 +289,9 @@ def _make_completion_scheduler(
         }
     }
     scheduler._scheduled_num_computed_tokens_by_request = {}
+    scheduler._request_queue = []
+    scheduler._preempted_requests = []
+    scheduler._waiting_requests = []
     return scheduler
 
 

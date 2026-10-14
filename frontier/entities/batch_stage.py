@@ -46,7 +46,7 @@ class BatchStage(BaseEntity):
             None
             if tokens_are_post_routing
             else [
-                int(token_count) if not request.is_prefill_complete else 0
+                int(token_count) if not request.is_decoding else 0
                 for request, token_count in zip(requests, num_tokens)
             ]
         )
