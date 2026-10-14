@@ -2852,7 +2852,7 @@ class MetricsStore:
         block_size = self._get_prefix_cache_block_size()
         if block_size is None or block_size <= 0:
             return
-        query_blocks = len(request.block_hash_ids or [])
+        query_blocks = len(request.prompt_block_hash_ids(block_size))
         hit_blocks = int(request.num_prefill_tokens_cached // block_size)
         self._request_metrics_histogram[
             RequestMetricsHistogram.REQUEST_CACHED_PREFILL_TOKENS

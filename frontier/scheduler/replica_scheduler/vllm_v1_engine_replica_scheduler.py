@@ -78,7 +78,7 @@ class VLLMv1EngineReplicaScheduler(
         _scheduling_policy: Scheduling policy ('fcfs' or 'priority')
         _enable_preemption: Whether preemption is enabled
         _watermark_blocks: Number of blocks to keep as watermark
-        _max_model_len: Maximum sequence length from model config
+        _max_model_len: Longest context (prompt plus output) a request may reach
     """
 
     def __init__(self, *args, **kwargs):
@@ -190,9 +190,12 @@ class VLLMv1EngineReplicaScheduler(
             self._config.watermark_blocks_fraction * self._config.num_blocks
         )
 
-        # Max model length from replica config
-        self._max_model_len = getattr(
-            self._request_generator_config, "max_tokens", 8192
+        # vLLM's max_model_len: set by --max-model-len, otherwise derived
+        # from the model config.
+        self._max_model_len = (
+            self._config.max_model_len
+            if self._config.max_model_len is not None
+            else self._replica_config.model_config.max_position_embeddings
         )
 
         # Speculative decoding runtime (Phase 1)
@@ -265,9 +268,6 @@ class VLLMv1EngineReplicaScheduler(
         self._prefix_cache_identity_event_seq = 0
         self._decode_attn_next_cohort_id = 0
         self._current_iteration_token_budget = 0
-        self._prefill_iteration_reserved_slots_remaining = 0
-        self._prefill_iteration_reserved_tokens_remaining = 0
-        self._decode_iteration_reserved_slots_remaining = 0
         self._kv_cache_manager: Optional[ReplicaKVCacheManager] = None
         if (
             bool(getattr(self._config, "enable_prefix_caching", False))
@@ -627,6 +627,9 @@ class VLLMv1EngineReplicaScheduler(
             if self._cluster_type == ClusterType.PREFILL
             else 0
         )
+        reserved_tokens_remaining = (
+            self._final_prefill_reserved_tokens if waiting_final_prefill_count > 0 else 0
+        )
 
         self._current_iteration_token_budget = token_budget
         req_index = 0
@@ -732,34 +735,30 @@ class VLLMv1EngineReplicaScheduler(
             # Calculate number of new tokens to process
             num_new_tokens = self._get_request_next_num_tokens(request)
 
-            # Apply max_model_len limit
+            # Keep draft tokens within max_model_len: vLLM computes at most
+            # max_model_len - 1 tokens so the token a step samples fits too
+            # (scheduler.py, running phase). The DECODE frontier is one token
+            # ahead of vLLM's num_computed_tokens: after the KV transfer vLLM's
+            # decode side leaves the last prompt token to compute
+            # (get_num_new_matched_tokens, or _update_waiting_for_remote_kv
+            # for async connectors), so there the frontier already leaves that
+            # token of room. The request itself fits (checked on arrival).
             scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
             max_allowed = self._max_model_len - scheduler_num_computed_tokens
+            if self._cluster_type != ClusterType.DECODE:
+                max_allowed -= 1
             num_new_tokens = min(num_new_tokens, max_allowed)
             num_new_tokens = self._apply_long_prefill_token_threshold(
                 request, num_new_tokens
             )
 
-            # Apply token budget limit
+            # Apply token budget limit; a hidden-round prefill leaves the
+            # reserved tokens to the waiting final-round requests.
             effective_token_budget = token_budget
-            if (
-                is_hidden_prefill_running_request
-                and waiting_final_prefill_count > 0
-                and self._prefill_iteration_reserved_tokens_remaining > 0
-            ):
-                effective_token_budget = max(
-                    token_budget
-                    - min(
-                        self._prefill_iteration_reserved_tokens_remaining,
-                        token_budget,
-                    ),
-                    0,
-                )
-                if effective_token_budget <= 0:
-                    req_index += 1
-                    continue
+            if is_hidden_prefill_running_request:
+                effective_token_budget = max(token_budget - reserved_tokens_remaining, 0)
             num_new_tokens = min(num_new_tokens, effective_token_budget)
 
             if num_new_tokens <= 0:
@@ -790,10 +789,8 @@ class VLLMv1EngineReplicaScheduler(
                 token_budget -= num_new_tokens
                 self._current_iteration_token_budget = token_budget
                 if is_final_prefill_running_request:
-                    self._prefill_iteration_reserved_tokens_remaining = max(
-                        self._prefill_iteration_reserved_tokens_remaining
-                        - num_new_tokens,
-                        0,
+                    reserved_tokens_remaining = max(
+                        reserved_tokens_remaining - num_new_tokens, 0
                     )
                 req_index += 1
 
@@ -905,15 +902,6 @@ class VLLMv1EngineReplicaScheduler(
         self._current_iteration_token_budget = token_budget
         while waiting_queue and token_budget > 0:
             self._current_iteration_token_budget = token_budget
-            final_waiting_count = (
-                self._count_final_fast_lane_requests(
-                    waiting_queue,
-                    final_predicate=self._is_final_prefill_fast_lane_request,
-                )
-                if fast_lane_prefill_enabled
-                else 0
-            )
-            has_final_waiting = final_waiting_count > 0
             # Check max concurrent requests limit
             if len(self._running_requests) >= self._max_num_running_reqs:
                 break
@@ -925,6 +913,14 @@ class VLLMv1EngineReplicaScheduler(
                 waiting_queue.popleft()
                 skipped_waiting_requests.append(request)
                 continue
+            if request.id in self._get_monolithic_pp_pending_terminal_release_iters():
+                # Its previous thinking round still waits for the terminal
+                # release that resets its scheduler frontier. Only SGLang
+                # reaches this: the vllm_v1 pass admits nothing while any
+                # release is pending.
+                waiting_queue.popleft()
+                skipped_waiting_requests.append(request)
+                continue
             if self._should_defer_monolithic_pp_waiting_admission(request):
                 logger.debug(
                     "[VLLMv1Engine][MONOLITHIC] Phase 2: delaying req=%s "
@@ -933,14 +929,6 @@ class VLLMv1EngineReplicaScheduler(
                 )
                 break
 
-            is_final_prefill_request = fast_lane_prefill_enabled and (
-                self._is_final_prefill_fast_lane_request(request)
-            )
-            is_hidden_prefill_request = (
-                fast_lane_prefill_enabled
-                and not request.is_prefill_complete
-                and not is_final_prefill_request
-            )
             computed_blocks = None
             prefix_cached_tokens = 0
             prefix_cache_admission: Optional[PrefixCacheAdmission] = None
@@ -960,66 +948,26 @@ class VLLMv1EngineReplicaScheduler(
                     prefix_cache_admission.effective_cached_tokens
                 )
                 num_new_tokens = int(prefix_cache_admission.num_new_tokens)
-                max_allowed = self._max_model_len - prefix_cached_tokens
             else:
                 num_new_tokens = self._get_request_next_num_tokens(request)
-                max_allowed = self._max_model_len - scheduler_num_computed_tokens
 
-            # Apply max_model_len limit
-            num_new_tokens = min(num_new_tokens, max_allowed)
             num_new_tokens = self._apply_long_prefill_token_threshold(
                 request, num_new_tokens
             )
-
-            effective_token_budget = token_budget
-            if (
-                is_hidden_prefill_request
-                and has_final_waiting
-                and self._prefill_iteration_reserved_slots_remaining > 0
-                and len(self._running_requests)
-                >= (
-                    self._max_num_running_reqs
-                    - self._prefill_iteration_reserved_slots_remaining
-                )
-            ):
-                waiting_queue.popleft()
-                skipped_waiting_requests.append(request)
-                continue
-            if (
-                is_hidden_prefill_request
-                and has_final_waiting
-                and self._prefill_iteration_reserved_tokens_remaining > 0
-            ):
-                effective_token_budget = max(
-                    token_budget
-                    - min(
-                        self._prefill_iteration_reserved_tokens_remaining,
-                        token_budget,
-                    ),
-                    0,
-                )
-                if effective_token_budget <= 0:
-                    waiting_queue.popleft()
-                    skipped_waiting_requests.append(request)
-                    continue
 
             # When chunked prefill is disabled, waiting prefills that exceed token
             # budget are skipped for this iteration.
             if (
                 not self._enable_chunked_prefill
                 and not request.is_decoding
-                and num_new_tokens > effective_token_budget
+                and num_new_tokens > token_budget
             ):
                 waiting_queue.popleft()
                 skipped_waiting_requests.append(request)
                 continue
 
             # Apply token budget limit after chunked-prefill guard
-            num_new_tokens = min(num_new_tokens, effective_token_budget)
-
-            if num_new_tokens <= 0:
-                waiting_queue.popleft()
-                continue
+            num_new_tokens = min(num_new_tokens, token_budget)
 
             # Try to allocate (no preemption for waiting requests in Phase 2)
             if not self._can_allocate_request(
@@ -1090,15 +1038,6 @@ class VLLMv1EngineReplicaScheduler(
             num_tokens_list.append(num_new_tokens)
             token_budget -= num_new_tokens
             self._current_iteration_token_budget = token_budget
-            if is_final_prefill_request:
-                self._prefill_iteration_reserved_slots_remaining = max(
-                    self._prefill_iteration_reserved_slots_remaining - 1,
-                    0,
-                )
-                self._prefill_iteration_reserved_tokens_remaining = max(
-                    self._prefill_iteration_reserved_tokens_remaining - num_new_tokens,
-                    0,
-                )
 
             # Flow validation: log WAITING request admission
             logger.info(
@@ -1129,8 +1068,8 @@ class VLLMv1EngineReplicaScheduler(
                     f"recompute_tokens={recompute_tokens}"
                 )
 
-        # vLLM parity for skipped waiting requests:
-        # prepend skipped queue back to waiting queue.
+        # vLLM (ea95f571) prepends the skipped requests to the waiting queue in
+        # the order they were skipped (scheduler.py:882-883, request_queue.py:102-105).
         if skipped_waiting_requests:
             if self._scheduling_policy == "priority":
                 merged_requests = list(waiting_queue) + list(skipped_waiting_requests)
@@ -1138,7 +1077,7 @@ class VLLMv1EngineReplicaScheduler(
                     sorted(merged_requests, key=priority_policy_key)
                 )
             else:
-                waiting_queue.extend(skipped_waiting_requests)
+                waiting_queue.extendleft(reversed(skipped_waiting_requests))
 
         self._set_waiting_queues_from_ordered_requests(list(waiting_queue))
 
@@ -1207,36 +1146,6 @@ class VLLMv1EngineReplicaScheduler(
         token_budget = self._max_num_scheduled_tokens
         available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
         waiting_count = len(self._request_queue) + len(self._preempted_requests)
-        waiting_final_prefill_count = self._count_final_fast_lane_requests(
-            self._preempted_requests + self._request_queue,
-            final_predicate=self._is_final_prefill_fast_lane_request,
-        )
-        self._prefill_iteration_reserved_slots_remaining = (
-            self._final_prefill_reserved_slots
-            if (
-                self._enable_final_running_request_reclaim
-                and waiting_final_prefill_count > 0
-            )
-            else 0
-        )
-        self._prefill_iteration_reserved_tokens_remaining = (
-            self._final_prefill_reserved_tokens
-            if (
-                self._enable_final_running_request_reclaim
-                and waiting_final_prefill_count > 0
-            )
-            else 0
-        )
-        waiting_final_prefill_count = self._count_final_fast_lane_requests(
-            self._preempted_requests + self._request_queue,
-            final_predicate=self._is_final_prefill_fast_lane_request,
-        )
-        self._prefill_iteration_reserved_slots_remaining = (
-            self._final_prefill_reserved_slots if waiting_final_prefill_count > 0 else 0
-        )
-        self._prefill_iteration_reserved_tokens_remaining = (
-            self._final_prefill_reserved_tokens if waiting_final_prefill_count > 0 else 0
-        )
 
         # Flow validation: log iteration start
         logger.info(
@@ -1474,6 +1383,28 @@ class VLLMv1EngineReplicaScheduler(
 
     # ========== Request Addition Override ==========
 
+    def _check_request_fits_max_model_len(self, request: Request) -> None:
+        """Reject a request that does not fit max_model_len, as vLLM's OpenAI server does.
+
+        Each thinking round reaches vLLM as a new request, so every round is
+        checked when it arrives.
+        """
+        num_prompt_tokens = request.num_prefill_tokens
+        num_output_tokens = request.num_decode_tokens
+        if (
+            num_prompt_tokens >= self._max_model_len
+            or num_prompt_tokens + num_output_tokens > self._max_model_len
+        ):
+            raise ValueError(
+                f"Request {request.id} (round index "
+                f"{request.current_thinking_round_index}) has {num_prompt_tokens} "
+                f"prompt and {num_output_tokens} output tokens, which do not fit "
+                f"max_model_len={self._max_model_len}: vLLM requires "
+                "prompt < max_model_len and prompt + output <= max_model_len. "
+                "Raise max_model_len (default: the model's max_position_embeddings) "
+                "or shorten the request."
+            )
+
     def add_request(self, request: Request) -> None:
         """
         Add a new request to the scheduler.
@@ -1491,6 +1422,7 @@ class VLLMv1EngineReplicaScheduler(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
 
+        self._check_request_fits_max_model_len(request)
         self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         self._maybe_promote_final_round_priority(request)

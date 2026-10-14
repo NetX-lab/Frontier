@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-27 | Documented the `max_model_len` arrival check of the `vllm_v1` schedulers. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-14 | Documented standard ROCm/GDN CLI selection and experimental SGLang boundaries. |
 
@@ -350,4 +351,5 @@ Common files include:
 | `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide and keep CSVs under `data/profiling/compute/<device>/<model>/`. |
+| A run stops with `ValueError: Request ... do not fit max_model_len=...`. | The `vllm_v1`, `sglang` and SJ2Q schedulers reject a request or thinking round whose prompt reaches `max_model_len`, or whose prompt plus output exceeds it, as vLLM's OpenAI server does; Frontier stops the run instead of failing one request. `max_model_len` defaults to the model's `max_position_embeddings`, not the workload's `max_tokens`. | Shorten the request or the thinking-round plan, or set `--<scheduler>_scheduler_config_max_model_len`, for example `--vllm_v1_scheduler_config_max_model_len` (vLLM `--max-model-len`). |
 | Plot export warns about `kaleido`. | PNG export is optional. | Keep `--no-metrics_config_store_plots` for smoke runs, or install `kaleido` if PNGs are needed. |

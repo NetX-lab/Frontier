@@ -197,7 +197,20 @@ class IterationSchedulingPolicy:
                 terminal_rows = recorded_terminal_rows
             else:
                 if getattr(request, "spec_method_is_target_embedded_mtp", False):
-                    planned_drafts = int(request.spec_next_planned_draft_tokens)
+                    # As in vLLM, drafts outside the admitted width (cut by
+                    # max_model_len or the token budget) are not verified.
+                    # The short first step verifies one token more than it
+                    # schedules.
+                    computed_tokens = (
+                        self._get_scheduler_num_computed_tokens(request)
+                        - scheduled_tokens_int
+                    )
+                    admitted_drafts = scheduled_tokens_int - 1
+                    if self._is_short_first_mtp_step(request, computed_tokens):
+                        admitted_drafts += 1
+                    planned_drafts = min(
+                        int(request.spec_next_planned_draft_tokens), admitted_drafts
+                    )
                 else:
                     planned_drafts = max(scheduled_tokens_int - 1, 0)
                 remaining_decode = request.remaining_decode_tokens
