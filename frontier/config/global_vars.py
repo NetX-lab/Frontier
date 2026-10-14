@@ -19,6 +19,7 @@ CUDAGRAPH_CAPTURE_SIZES: Optional[list[int]] = None
 DECODE_CUDA_GRAPH_MODE: str = "none"
 ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC: bool = False
 KV_CONNECTOR: str = "none"
+KV_SEND_SLOWDOWN_PER_LAYER_MS: float = 0.0
 QUANTIZATION_MANAGER = None
 
 # Global MoE model indicator - determined by model architecture, NOT parallelism config
@@ -95,6 +96,17 @@ def set_kv_connector(kv_connector: str) -> None:
 def get_kv_connector() -> str:
     """Get the vLLM KV connector of the PDD prefill instance."""
     return KV_CONNECTOR
+
+
+def set_kv_send_slowdown_per_layer_ms(kv_send_slowdown_per_layer_ms: float) -> None:
+    """Set the measured per-layer slowdown of a PDD prefill step that sends KV."""
+    global KV_SEND_SLOWDOWN_PER_LAYER_MS
+    KV_SEND_SLOWDOWN_PER_LAYER_MS = kv_send_slowdown_per_layer_ms
+
+
+def get_kv_send_slowdown_per_layer_ms() -> float:
+    """Get the measured per-layer slowdown of a PDD prefill step that sends KV."""
+    return KV_SEND_SLOWDOWN_PER_LAYER_MS
 
 
 def set_is_moe(is_moe: bool) -> None:
@@ -179,6 +191,7 @@ def reset_global_vars() -> None:
     """
     global SIMULATION_MODE, SYS_ARCH, USE_CUDA_GRAPH, CUDAGRAPH_CAPTURE_SIZES
     global DECODE_CUDA_GRAPH_MODE, ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC, KV_CONNECTOR
+    global KV_SEND_SLOWDOWN_PER_LAYER_MS
     global IS_MOE, _IS_MOE_INITIALIZED, QUANTIZATION_MANAGER
     SIMULATION_MODE = None
     SYS_ARCH = None
@@ -187,6 +200,7 @@ def reset_global_vars() -> None:
     DECODE_CUDA_GRAPH_MODE = "none"
     ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC = False
     KV_CONNECTOR = "none"
+    KV_SEND_SLOWDOWN_PER_LAYER_MS = 0.0
     IS_MOE = None
     _IS_MOE_INITIALIZED = False
     QUANTIZATION_MANAGER = None

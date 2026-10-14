@@ -389,6 +389,9 @@ class SimulationConfig(ABC):
         global_vars.set_global_vars(self.simulation_mode, self.sys_arch)
         self._validate_kv_connector()
         global_vars.set_kv_connector(self.kv_cache_transfer_config.kv_connector)
+        global_vars.set_kv_send_slowdown_per_layer_ms(
+            self.kv_cache_transfer_config.kv_send_slowdown_per_layer_ms
+        )
         self._validate_cuda_graph_config()
         self._validate_gdn_runtime_guards()
         global_vars.set_cuda_graph_config(

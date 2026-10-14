@@ -1323,7 +1323,7 @@ class ExecutionTime(BaseEntity):
 
     @property
     def attention_kv_cache_extract_execution_time(self) -> float:
-        """KV connector's gather of the prompts this step completes (one physical layer)."""
+        """KV connector's gather of the prompts this step completes and its send slowdown (one physical layer)."""
         return self._attention_time.attention_kv_cache_extract_execution_time
 
     @property

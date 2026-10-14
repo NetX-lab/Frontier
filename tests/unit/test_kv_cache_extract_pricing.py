@@ -30,6 +30,14 @@ def test_kv_connector_accepts_none_and_p2p_nccl_only():
         AnalyticalKVCacheTransferConfig(kv_connector="mooncake")
 
 
+def test_the_kv_send_slowdown_is_non_negative_and_needs_a_kv_connector():
+    assert AnalyticalKVCacheTransferConfig().kv_send_slowdown_per_layer_ms == 0.0
+    with pytest.raises(ValueError, match="kv_send_slowdown_per_layer_ms must be >= 0"):
+        AnalyticalKVCacheTransferConfig(kv_connector="p2p_nccl", kv_send_slowdown_per_layer_ms=-0.1)
+    with pytest.raises(ValueError, match="kv_connector is 'none'"):
+        AnalyticalKVCacheTransferConfig(kv_send_slowdown_per_layer_ms=0.1)
+
+
 def test_a_kv_connector_outside_pdd_fails_fast():
     with pytest.raises(ValueError, match="prices the KV extract of PDD prefill steps; sys_arch='co-location'"):
         SimulationConfig(
@@ -49,6 +57,7 @@ class _ExtractPricing(_Pricing):
     _get_attention_kv_cache_extract_execution_time = (
         SklearnExecutionTimePredictor._get_attention_kv_cache_extract_execution_time
     )
+    _get_kv_send_slowdown_time = SklearnExecutionTimePredictor._get_kv_send_slowdown_time
     _block_size = 16
     _attention_input_file = "attention_kernel_only.csv"
 
@@ -85,6 +94,18 @@ def test_each_prompt_the_step_completes_pays_one_extract_over_all_its_blocks():
     assert extract_time == pytest.approx(0.01 * (128 + 63))
     assert counts.operators == {EXTRACT: 2.0}
     assert pricing._kernel_count_scopes == ()
+
+
+def test_a_step_that_sends_kv_pays_the_send_slowdown_once_per_layer():
+    pricing = _ExtractPricing()
+    global_vars.set_kv_send_slowdown_per_layer_ms(0.07)
+    sending = SimpleNamespace(requests=[_request(2048), _request(512), _request(4096)], num_tokens=[2048, 512, 512])
+    chunk_only = SimpleNamespace(requests=[_request(4096, num_processed_tokens=1024)], num_tokens=[1024])
+
+    with pricing._counting_kernels() as counts:
+        assert pricing._get_kv_send_slowdown_time(sending) == 0.07
+    assert pricing._get_kv_send_slowdown_time(chunk_only) == 0.0
+    assert counts.operators == {}
 
 
 def test_an_attention_table_without_extract_rows_fails_fast():

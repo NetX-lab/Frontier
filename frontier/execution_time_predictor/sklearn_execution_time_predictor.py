@@ -6397,6 +6397,20 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 )
         return extract_time
 
+    def _get_kv_send_slowdown_time(self, batch: Batch) -> float:
+        """Measured slowdown of one layer of a step whose connector sends KV.
+
+        The connector sends each layer's KV of the prompts this step completes
+        while the layer's later operators run, which slows them. Frontier does
+        not model the send: kv_send_slowdown_per_layer_ms is a measured
+        correction, paid once per layer of a step however many prompts it sends.
+        """
+        sends_kv = any(
+            request.num_processed_tokens + num_tokens >= request.num_prefill_tokens
+            for request, num_tokens in zip(batch.requests, batch.num_tokens)
+        )
+        return global_vars.get_kv_send_slowdown_per_layer_ms() if sends_kv else 0.0
+
     def _get_attention_decode_execution_time(self, batch: Batch) -> float:
         (
             decode_batch_size,
@@ -7604,6 +7618,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             if prices_kv_cache_extract
             else 0.0
         )
+        kv_send_slowdown_time = (
+            self._get_kv_send_slowdown_time(batch) if prices_kv_cache_extract else 0.0
+        )
         attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
 
         # Architecture-profile attention extras are 0.0 when not declared by the profile.
@@ -7662,6 +7679,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 f"batch_id={batch.id}, layer_id={layer_id}, "
                 f"predicted_time_ms={attn_kv_cache_extract_time:.6f}"
             )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][ATTENTION][kv_send_slowdown] "
+                f"batch_id={batch.id}, layer_id={layer_id}, "
+                f"predicted_time_ms={kv_send_slowdown_time:.6f}"
+            )
         logger.info(
             f"[OP-TRACE][{cluster_name}][ATTENTION][attn_post_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_post_proj_time:.6f}"
@@ -7686,6 +7708,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             + attn_decode_time
             + attn_kv_cache_save_time
             + attn_kv_cache_extract_time
+            + kv_send_slowdown_time
             + attn_post_proj_time
             # Architecture-profile attention extras are 0.0 when absent.
             + attn_inter_norm_time
@@ -7703,7 +7726,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             attention_layer_post_proj_execution_time=attn_post_proj_time,
             attention_rope_execution_time=attn_rope_time,
             attention_kv_cache_save_execution_time=attn_kv_cache_save_time,
-            attention_kv_cache_extract_execution_time=attn_kv_cache_extract_time,
+            attention_kv_cache_extract_execution_time=attn_kv_cache_extract_time + kv_send_slowdown_time,
             attn_norm_time=attn_norm_time,
             # Architecture-profile attention extras are 0.0 when absent.
             attn_inter_norm_time=attn_inter_norm_time,

@@ -67,13 +67,24 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
             "(P2pNcclConnector), whose per-layer KV extract each prefill step pays."
         },
     )
+    kv_send_slowdown_per_layer_ms: float = field(
+        default=0.0,
+        metadata={
+            "help": "Measured correction, not a model of the send: device time (ms) added to each layer "
+            "of a PDD prefill step that completes a prompt, for the slowdown of the layer's later "
+            "operators while the kv_connector sends its KV. Requires a kv_connector; 0 disables it."
+        },
+    )
 
     def __post_init__(self) -> None:
         _require_positive(self.network_bandwidth_gbps, "network_bandwidth_gbps")
         _require_non_negative(self.network_latency_ms, "network_latency_ms")
         _require_positive(self.compression_ratio, "compression_ratio")
+        _require_non_negative(self.kv_send_slowdown_per_layer_ms, "kv_send_slowdown_per_layer_ms")
         if self.kv_connector not in KV_CONNECTORS:
             raise ValueError(f"kv_connector must be one of {list(KV_CONNECTORS)}, got {self.kv_connector!r}")
+        if self.kv_send_slowdown_per_layer_ms > 0 and self.kv_connector == "none":
+            raise ValueError("kv_send_slowdown_per_layer_ms corrects the KV send of a kv_connector; kv_connector is 'none'.")
 
 
 @dataclass
