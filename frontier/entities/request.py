@@ -2049,7 +2049,6 @@ class Request(BaseEntity):
         self._thinking_tool_wait_started_at = time
         self._pending_thinking_requeue = True
         self._completed = False
-        self._scheduled = False
         self._preempted = False
 
     def _reset_runtime_state_for_next_thinking_round(self) -> None:
