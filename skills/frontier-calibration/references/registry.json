@@ -1,0 +1,253 @@
+{
+  "schema_version": "frontier-calibration-v2",
+  "calls_semantics": "candidate dependency inventory; conditional execution is authoritative in references/call-graph.md and never bypasses the human review gate",
+  "routing_authority": "references/call-graph.md",
+  "lane_registry": [
+    {
+      "lane": "pp",
+      "classification": "pp_overhead",
+      "required_evidence": ["stage_pair", "boundary", "overlap_ms", "receiver_head_ms", "send_path_ms", "activation_bytes"],
+      "frontier_owner_field": "frontier_owner",
+      "receipt_path": "repairs/residual_pp_repair_receipt.json"
+    },
+    {
+      "lane": "collective",
+      "classification": "collective_communication",
+      "required_evidence": ["operation", "backend", "topology", "launch_ms", "wire_ms", "wait_ms", "overlap_scope", "comm_skip_scope"],
+      "frontier_owner_field": "frontier_owner",
+      "receipt_path": "repairs/residual_collective_repair_receipt.json"
+    },
+    {
+      "lane": "kv_or_m2n_transfer",
+      "classification": "kv_or_m2n_transfer",
+      "required_evidence": ["role", "layer", "connector", "transport", "bytes", "bandwidth", "queueing", "injection_scope"],
+      "frontier_owner_field": "frontier_owner",
+      "receipt_path": "repairs/residual_kv_or_m2n_transfer_repair_receipt.json"
+    }
+  ],
+  "entries": [
+    {
+      "name": "groundtruth-run-check",
+      "kind": "atomic",
+      "owner": "groundtruth-run-check",
+      "trigger": "A ground-truth case needs clean, warmup, and instrumentation preflight.",
+      "inputs": ["case manifest", "mode flags", "selected checkout"],
+      "outputs": ["analysis/run_check_status.<mode>.json", "analysis/run_check_summary.<mode>.md"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Run the declared preflight command and verify every mode predicate and output path."
+    },
+    {
+      "name": "groundtruth-run",
+      "kind": "atomic",
+      "owner": "groundtruth-run",
+      "trigger": "A passed run check permits an isolated instrumented-vLLM ground-truth run.",
+      "inputs": ["passed run-check artifact", "case manifest", "selected clean checkout"],
+      "outputs": ["runs/vllm-clean/*", "runs/vllm-instrumented/*", "runs/cpu/* when declared"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Check exit code, fresh artifacts, mode predicates, and the recorded checkout tuple."
+    },
+    {
+      "name": "simulator-run",
+      "kind": "atomic",
+      "owner": "simulator-run",
+      "trigger": "A frozen Frontier case is ready to run after semantic and mode checks.",
+      "inputs": ["passed semantic check", "case manifest", "request trace"],
+      "outputs": ["runs/frontier/*"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Run the declared Frontier command and verify exit code, fresh metrics, and traces."
+    },
+    {
+      "name": "semantic-alignment-check",
+      "kind": "atomic",
+      "owner": "semantic-alignment-check",
+      "trigger": "Frontier and vLLM values may look equal while their topology or runtime meaning differs.",
+      "inputs": ["user-approved settings", "Frontier config snapshot", "vLLM config snapshot", "checkout provenance"],
+      "outputs": ["analysis/semantic_alignment_table.csv", "analysis/semantic_alignment_summary.md", "analysis/semantic_alignment_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Evaluate every registry row with source anchors and an explicit next action."
+    },
+    {
+      "name": "semantic-alignment-repair",
+      "kind": "atomic",
+      "owner": "semantic-alignment-repair",
+      "trigger": "A reviewed semantic alignment table names a concrete setting mismatch.",
+      "inputs": ["complete semantic analysis", "human review PASS or explicit auto receipt", "case manifest"],
+      "outputs": ["repairs/semantic_alignment_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Record approval before the code change, run an isolated check, then obtain fresh semantic evidence."
+    },
+    {
+      "name": "e2e-metrics-gap",
+      "kind": "atomic",
+      "owner": "e2e-metrics-gap",
+      "trigger": "Clean Frontier and vLLM request artifacts need independent latency and throughput gates.",
+      "inputs": ["clean normalized request rows", "Frontier normalized request rows", "passed run checks"],
+      "outputs": ["analysis/e2e_metrics_table.csv", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Join each formal request once and calculate TTFT, TPOT, request E2E, request throughput, and token throughput."
+    },
+    {
+      "name": "dispatch-align-trace",
+      "kind": "atomic",
+      "owner": "dispatch-align-trace",
+      "trigger": "Online client dispatch timing causes a visible arrival skew in the simulator trace.",
+      "inputs": ["clean online dispatch observation", "formal request trace", "case manifest"],
+      "outputs": ["analysis/dispatch_aligned_trace.csv", "analysis/dispatch_alignment_manifest.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Verify ids, token counts, priorities, finite offsets, and unchanged request payload before simulator replay."
+    },
+    {
+      "name": "workflow-gap-analysis",
+      "kind": "atomic",
+      "owner": "workflow-gap-analysis",
+      "trigger": "Request batches or timing paths differ and action, event, or behavior control flow must be explained.",
+      "inputs": ["scheduler decisions", "Frontier event and TraceStore rows", "formal request set", "dispatch evidence when online"],
+      "outputs": ["analysis/workflow_gap_table.csv", "analysis/workflow_gap_summary.md", "analysis/workflow_gap_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Compare the first formal batch, all declared phases, available blocks, and workflow rows with source anchors."
+    },
+    {
+      "name": "workflow-repair",
+      "kind": "atomic",
+      "owner": "workflow-repair",
+      "trigger": "Reviewed workflow evidence identifies a reproducible Frontier control-flow difference.",
+      "inputs": ["complete workflow analysis", "human review PASS or explicit auto receipt", "case manifest"],
+      "outputs": ["repairs/workflow_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Apply the smallest Frontier code change, run isolated and clean checks, and refresh workflow evidence."
+    },
+    {
+      "name": "op-gap-analysis",
+      "kind": "atomic",
+      "owner": "op-gap-analysis",
+      "trigger": "Aligned scheduler batches and CUDA-op timings need a per-operator comparison.",
+      "inputs": ["raw scheduler, batch, and op traces", "formal request set", "profiling coverage"],
+      "outputs": ["analysis/op_trace_normalized.jsonl", "analysis/op_gap_table.csv", "analysis/op_gap_summary.md", "analysis/op_gap_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Normalize identity internally, require the first and three aligned batches, then calculate signed and absolute gaps."
+    },
+    {
+      "name": "op-supplement",
+      "kind": "atomic",
+      "owner": "op-supplement",
+      "trigger": "Operator analysis lacks a formal batch, phase, shape, or profiling row.",
+      "inputs": ["op gap status", "missing tuple list", "base profiling CSV", "profiling plan"],
+      "outputs": ["supplements/op_supplement_plan.yaml", "supplements/op_supplement_result.csv", "supplements/op_supplement_result.summary.json", "supplements/op_supplement_result.complete.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Use the existing lossless merge tool, retain every base row, and record every added or deduplicated row."
+    },
+    {
+      "name": "op-repair",
+      "kind": "atomic",
+      "owner": "op-repair",
+      "trigger": "Reviewed operator evidence proves a scoped predictor, mapping, or profiling-input correction.",
+      "inputs": ["complete op analysis", "human review PASS or explicit auto receipt", "case manifest"],
+      "outputs": ["repairs/op_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Apply one scoped Frontier change, run focused and isolated checks, then regenerate op and E2E evidence."
+    },
+    {
+      "name": "residual-lane-classification",
+      "kind": "atomic",
+      "owner": "residual-lane-classification",
+      "trigger": "A residual remains after metric, workflow, and operator checks and needs a source classification.",
+      "inputs": ["latest E2E status", "workflow and op status", "PP/collective/transfer traces"],
+      "outputs": ["analysis/residual_gap_table.csv", "analysis/residual_gap_summary.md", "analysis/residual_gap_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Classify PP, collective, KV/M2N, mixed, or unclear residuals with native scope and numeric evidence."
+    },
+    {
+      "name": "residual-repair",
+      "kind": "atomic",
+      "owner": "residual-repair",
+      "trigger": "Reviewed residual classification identifies a PP, collective, or KV/M2N correction.",
+      "inputs": ["complete residual analysis", "lane-specific evidence", "case manifest", "human review PASS or explicit auto receipt"],
+      "outputs": ["lane-specific repair receipt under repairs/"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Select one declared lane, apply the smallest Frontier code change, rerun diagnostics, and refresh residual and E2E evidence."
+    },
+    {
+      "name": "cpu-overhead-analysis",
+      "kind": "atomic",
+      "owner": "cpu-overhead-analysis",
+      "trigger": "Workflow and operator correction attempts are complete but a fresh clean E2E metric still exceeds ten percent.",
+      "inputs": ["completed workflow and op evidence", "fresh clean E2E status", "CPU component trace"],
+      "outputs": ["analysis/cpu_overhead_table.csv", "analysis/cpu_overhead_summary.md", "analysis/cpu_overhead_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Verify the shared CPU entry predicate and attribute host components without introducing an independent threshold."
+    },
+    {
+      "name": "cpu-overhead-supplement",
+      "kind": "atomic",
+      "owner": "cpu-overhead-supplement",
+      "trigger": "CPU analysis reports missing identity tuples, phases, or replay/profile rows.",
+      "inputs": ["CPU analysis status", "missing CPU tuple list", "base CPU CSV", "available replay/profile producer"],
+      "outputs": ["supplements/cpu_supplement_plan.yaml", "supplements/cpu_supplement_result.csv", "supplements/cpu_supplement_result.summary.json", "supplements/cpu_supplement_result.complete.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Retain every base row, label measured/replay/analytical rows, and return to CPU analysis."
+    },
+    {
+      "name": "cpu-overhead-repair",
+      "kind": "atomic",
+      "owner": "cpu-overhead-repair",
+      "trigger": "Reviewed CPU evidence proves a scoped Frontier host-side accounting correction.",
+      "inputs": ["complete CPU analysis", "human review PASS or explicit auto receipt", "case manifest"],
+      "outputs": ["repairs/cpu_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Apply one scoped Frontier code change, rerun CPU diagnostics and clean E2E, then refresh all applicable gates."
+    },
+    {
+      "name": "parity-run",
+      "kind": "composite",
+      "owner": "parity-run",
+      "trigger": "A user needs one reproducible simulator and ground-truth case.",
+      "inputs": ["case manifest", "user-approved settings", "request trace"],
+      "outputs": ["manifest.yaml", "runs/*", "mode run-check artifacts"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Call semantic-alignment-check, groundtruth-run-check, groundtruth-run, and simulator-run in order.",
+      "calls": ["semantic-alignment-check", "groundtruth-run-check", "groundtruth-run", "simulator-run"]
+    },
+    {
+      "name": "error-analysis",
+      "kind": "composite",
+      "owner": "error-analysis",
+      "trigger": "A completed case needs a read-only explanation of its numerical error source.",
+      "inputs": ["case manifest", "clean and diagnostic artifacts"],
+      "outputs": ["reports/error_analysis_summary.md", "linked atomic analysis artifacts"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Run E2E, semantic, workflow, operator, residual, and conditional CPU analysis by explicit predicates.",
+      "calls": ["e2e-metrics-gap", "semantic-alignment-check", "dispatch-align-trace", "workflow-gap-analysis", "op-gap-analysis", "op-supplement", "residual-lane-classification", "cpu-overhead-analysis"]
+    },
+    {
+      "name": "error-correction",
+      "kind": "composite",
+      "owner": "error-correction",
+      "trigger": "Reviewed analysis artifacts identify approved corrections that must be applied and rechecked.",
+      "inputs": ["completed analysis artifacts", "human review PASS or explicit auto receipt", "case manifest"],
+      "outputs": ["repairs/repair_plan.md", "repairs/rerun_gate_table.csv", "repairs/rerun_gate_summary.md", "domain repair receipts"],
+      "allows_code_change": false,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Run one approved domain code change at a time, obtain fresh analysis, and finish with the E2E gate.",
+      "calls": ["semantic-alignment-repair", "workflow-repair", "op-repair", "residual-repair", "cpu-overhead-repair", "parity-run", "e2e-metrics-gap"]
+    }
+  ]
+}
