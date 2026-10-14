@@ -1,11 +1,12 @@
 """Device idle time between the kernels of a kernel-only forward step.
 
 A kernel-only operator table times each operator's kernels and nothing between
-them. kernel_gap.csv (frontier.profiling.kernel_gap) holds, per execution mode,
-the mean device idle time before a kernel; a step priced from kernel-only
-tables pays it once per kernel it launches. Each kernel-only operator table
-records the kernels an operator launches in ``time_stats.<op>.kernel_count``,
-and a kernel-count model trained beside the operator's time model prices it.
+them. kernel_gap.csv (frontier.profiling.kernel_gap) holds, per execution mode
+and attention TP size, the mean device idle time before a kernel; a step priced
+from kernel-only tables pays it once per kernel it launches. Each kernel-only
+operator table records the kernels an operator launches in
+``time_stats.<op>.kernel_count``, and a kernel-count model trained beside the
+operator's time model prices it.
 """
 
 from __future__ import annotations
@@ -18,7 +19,12 @@ from typing import Any, Callable, Iterator, Sequence
 
 import pandas as pd
 
-from frontier.profiling.kernel_gap.schema import EXECUTION_MODE_COLUMN, EXECUTION_MODES, KERNEL_GAP_US_COLUMN
+from frontier.profiling.kernel_gap.schema import (
+    EXECUTION_MODE_COLUMN,
+    EXECUTION_MODES,
+    KERNEL_GAP_US_COLUMN,
+    TENSOR_PARALLEL_COLUMN,
+)
 from frontier.types import MeasurementType
 
 KERNEL_COUNT_STAT = "kernel_count"
@@ -32,16 +38,19 @@ def kernel_count_column(target_column: str) -> str | None:
     return f"time_stats.{parts[1]}.{KERNEL_COUNT_STAT}"
 
 
-def read_kernel_gap_ms(path: str) -> dict[str, float]:
-    """Mean device gap before a kernel, in milliseconds, by execution mode."""
+def read_kernel_gap_ms(path: str, tensor_parallel_size: int) -> dict[str, float]:
+    """Mean device gap before a kernel, in milliseconds, by execution mode, at one attention TP size."""
     table = pd.read_csv(path)
+    if TENSOR_PARALLEL_COLUMN not in table.columns:
+        raise ValueError(f"{path} has no {TENSOR_PARALLEL_COLUMN} column, the TP size each row was measured at")
+    table = table[table[TENSOR_PARALLEL_COLUMN] == tensor_parallel_size]
     gaps_ms = {}
     for mode in EXECUTION_MODES:
         gaps_us = table.loc[table[EXECUTION_MODE_COLUMN] == mode, KERNEL_GAP_US_COLUMN]
         if len(gaps_us) != 1 or not math.isfinite(gaps_us.iloc[0]) or gaps_us.iloc[0] < 0:
             raise ValueError(
                 f"{path} needs one finite, non-negative {KERNEL_GAP_US_COLUMN} row for "
-                f"{EXECUTION_MODE_COLUMN}={mode}"
+                f"{EXECUTION_MODE_COLUMN}={mode} and {TENSOR_PARALLEL_COLUMN}={tensor_parallel_size}"
             )
         gaps_ms[mode] = float(gaps_us.iloc[0]) * 1e-3
     return gaps_ms
@@ -61,7 +70,7 @@ def load_kernel_gap_ms(
     elif replica_config.speculative_decoding_config.enabled:
         unsupported = "speculative decoding"
     else:
-        return read_kernel_gap_ms(kernel_gap_input_file)
+        return read_kernel_gap_ms(kernel_gap_input_file, replica_config.attn_tensor_parallel_size)
     raise ValueError(
         f"{kernel_gap_input_file} prices the gap before every kernel of a kernel-only step, "
         f"which {unsupported} does not support; remove the file to price steps without it."

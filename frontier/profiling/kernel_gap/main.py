@@ -36,7 +36,9 @@ engine_args.json holds vllm.LLM keyword arguments other than the model, e.g.
 {"load_format": "dummy", "skip_tokenizer_init": true, "tensor_parallel_size": 8,
 "compilation_config": {"level": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}, "max_num_seqs": 64}.
 
-Output: <output_dir>/compute/<device>/<model>/kernel_gap.csv
+Output: <output_dir>/compute/<device>/<model>/kernel_gap.csv, one row per execution
+mode, each recording --num_tensor_parallel_workers, which must equal the engine's
+tensor_parallel_size. One model's table may hold the rows of several TP sizes.
 """
 
 from __future__ import annotations
@@ -54,7 +56,8 @@ from typing import Callable, Sequence
 import numpy as np
 import pandas as pd
 
-from frontier.profiling.kernel_gap.schema import EXECUTION_MODE_COLUMN, EXECUTION_MODES, KERNEL_GAP_US_COLUMN
+from frontier.profiling.kernel_gap.schema import (EXECUTION_MODE_COLUMN, EXECUTION_MODES, KERNEL_GAP_US_COLUMN,
+                                                TENSOR_PARALLEL_COLUMN)
 from frontier.profiling.utils import build_profiling_output_path
 
 # torch.cuda._sleep launches this kernel; it holds the stream and is not part of a chain.
@@ -278,6 +281,12 @@ def parse_args():
 
 def main() -> None:
     args = parse_args()
+    engine_args = json.loads(Path(args.vllm_engine_args).read_text())
+    # Both rows of the table record one TP size.
+    engine_tensor_parallel_size = engine_args.get("tensor_parallel_size", 1)
+    if engine_tensor_parallel_size != args.num_tensor_parallel_workers:
+        raise ValueError(f"--vllm_engine_args sets tensor_parallel_size={engine_tensor_parallel_size}, but "
+                         f"--num_tensor_parallel_workers is {args.num_tensor_parallel_workers}")
     import torch
 
     gaps = {mode: [] for mode in EXECUTION_MODES}
@@ -301,7 +310,6 @@ def main() -> None:
         # vLLM's workers start only when the device has the free memory the engine asks for.
         del chain_launch
         torch.cuda.empty_cache()
-        engine_args = json.loads(Path(args.vllm_engine_args).read_text())
         for trace_name, trace_gaps in vllm_decode_graph_gaps(args.model, engine_args, args.vllm_attention_backend,
                                                              args.vllm_prompt_tokens, work_dir).items():
             record("cuda_graph", {"trace": trace_name}, trace_gaps)
@@ -309,6 +317,7 @@ def main() -> None:
                "cuda_graph": f"vllm_decode_graphs:{args.model}"}
     rows = [{
         EXECUTION_MODE_COLUMN: mode,
+        TENSOR_PARALLEL_COLUMN: args.num_tensor_parallel_workers,
         KERNEL_GAP_US_COLUMN: float(np.mean(mode_gaps)),
         "num_gaps": len(mode_gaps),
         "chain": sources[mode],

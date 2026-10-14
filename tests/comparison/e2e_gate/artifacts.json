@@ -4,7 +4,7 @@
   "branch": "calibration/t43-combined",
   "commit": "222e4e27bd352c9500f053f8ff33a3daf2bc3567",
   "cpu_overhead_producer_commit": "c0abc0517c6e15caa1c40ec422a3bb0afd09db5b",
-  "note": "every Frontier run ran at this commit; the current CPU-overhead tables were built by the producer at cpu_overhead_producer_commit; the k1d and k1e recipes name their own producer commit"
+  "note": "every Frontier run ran at this commit; the current CPU-overhead tables were built by the producer at cpu_overhead_producer_commit; the k1d and k1e recipes name their own producer commit; the kernel_gap.csv files carry the num_tensor_parallel_workers column added after this commit, which this commit's loader ignores, so each prices as the run's input did"
  },
  "reference": {
   "repository": "https://github.com/fwyc0573/vLLM-BS.git",
@@ -3970,7 +3970,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/kernel_gap.csv",
-       "sha256": "ee1079ac39f5b57b4767e3bb426d7c90b812d85742366804f0c5935263042207"
+       "sha256": "6a64617eb833b8f92071d81271e99553a318b662547f91610ef5da06c994341c"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
@@ -3999,7 +3999,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/kernel_gap.csv",
-       "sha256": "ee1079ac39f5b57b4767e3bb426d7c90b812d85742366804f0c5935263042207"
+       "sha256": "6a64617eb833b8f92071d81271e99553a318b662547f91610ef5da06c994341c"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
@@ -4472,7 +4472,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/kernel_gap.csv",
-       "sha256": "ee1079ac39f5b57b4767e3bb426d7c90b812d85742366804f0c5935263042207"
+       "sha256": "6a64617eb833b8f92071d81271e99553a318b662547f91610ef5da06c994341c"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
@@ -4501,7 +4501,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/kernel_gap.csv",
-       "sha256": "ee1079ac39f5b57b4767e3bb426d7c90b812d85742366804f0c5935263042207"
+       "sha256": "6a64617eb833b8f92071d81271e99553a318b662547f91610ef5da06c994341c"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-dense-20261007a/llama2_7b_dense_example/linear_op.csv",
@@ -4817,7 +4817,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261010b/Qwen3-30B-A3B-tiny/kernel_gap.csv",
-       "sha256": "a6f8d4db74748d10c5c3fb3206b7df2c70921e3c5ddeb6d0f730351f9966429c"
+       "sha256": "e5c1fffd3bd198865d999f507a9b6dfaedae23b3fdce528b3915d3a6f2cc9331"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261010b/Qwen3-30B-A3B-tiny/linear_op.csv",
@@ -4854,7 +4854,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261007a/Qwen3-30B-A3B-tiny/kernel_gap.csv",
-       "sha256": "a6f8d4db74748d10c5c3fb3206b7df2c70921e3c5ddeb6d0f730351f9966429c"
+       "sha256": "e5c1fffd3bd198865d999f507a9b6dfaedae23b3fdce528b3915d3a6f2cc9331"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261007a/Qwen3-30B-A3B-tiny/linear_op.csv",
@@ -5268,7 +5268,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c5-20261010b/Qwen3-235B-A22B/kernel_gap.csv",
-       "sha256": "3b04476e3a46f90fb4e69db85ba61c3cac5bb8a6c303579bc314a0c7dd18b82c"
+       "sha256": "ccaba6d835a92deb52de01c81e7fce610c7e752d861b437d1196b7c6c17501dd"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c5-20261010b/Qwen3-235B-A22B/linear_op.csv",
@@ -5305,7 +5305,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c5-20261007a/Qwen3-235B-A22B/kernel_gap.csv",
-       "sha256": "3b04476e3a46f90fb4e69db85ba61c3cac5bb8a6c303579bc314a0c7dd18b82c"
+       "sha256": "ccaba6d835a92deb52de01c81e7fce610c7e752d861b437d1196b7c6c17501dd"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c5-20261007a/Qwen3-235B-A22B/linear_op.csv",
@@ -5846,7 +5846,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c6-20261010b/Qwen3-235B-A22B/kernel_gap.csv",
-       "sha256": "0977fb5816506ae02d56935c9b024e27a31a6a4c12cdca4f57d130137762fdc0"
+       "sha256": "43382bdcc0fe540ddb57fbe81dd40477c097bc1dc377a428c0a539cdf5ffec96"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c6-20261010b/Qwen3-235B-A22B/linear_op.csv",
@@ -5883,7 +5883,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c6-20261007a/Qwen3-235B-A22B/kernel_gap.csv",
-       "sha256": "0977fb5816506ae02d56935c9b024e27a31a6a4c12cdca4f57d130137762fdc0"
+       "sha256": "43382bdcc0fe540ddb57fbe81dd40477c097bc1dc377a428c0a539cdf5ffec96"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c6-20261007a/Qwen3-235B-A22B/linear_op.csv",
@@ -5920,7 +5920,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c6-20261007a/Qwen3-235B-A22B/kernel_gap.csv",
-       "sha256": "0977fb5816506ae02d56935c9b024e27a31a6a4c12cdca4f57d130137762fdc0"
+       "sha256": "43382bdcc0fe540ddb57fbe81dd40477c097bc1dc377a428c0a539cdf5ffec96"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-c6-20261007a/Qwen3-235B-A22B/linear_op.csv",
@@ -7321,7 +7321,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261010b/Qwen3-30B-A3B-tiny/kernel_gap.csv",
-       "sha256": "a6f8d4db74748d10c5c3fb3206b7df2c70921e3c5ddeb6d0f730351f9966429c"
+       "sha256": "e5c1fffd3bd198865d999f507a9b6dfaedae23b3fdce528b3915d3a6f2cc9331"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261010b/Qwen3-30B-A3B-tiny/linear_op.csv",
@@ -7358,7 +7358,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261007a/Qwen3-30B-A3B-tiny/kernel_gap.csv",
-       "sha256": "a6f8d4db74748d10c5c3fb3206b7df2c70921e3c5ddeb6d0f730351f9966429c"
+       "sha256": "e5c1fffd3bd198865d999f507a9b6dfaedae23b3fdce528b3915d3a6f2cc9331"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261007a/Qwen3-30B-A3B-tiny/linear_op.csv",
@@ -7395,7 +7395,7 @@
       },
       "kernel_gap.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261007a/Qwen3-30B-A3B-tiny/kernel_gap.csv",
-       "sha256": "a6f8d4db74748d10c5c3fb3206b7df2c70921e3c5ddeb6d0f730351f9966429c"
+       "sha256": "e5c1fffd3bd198865d999f507a9b6dfaedae23b3fdce528b3915d3a6f2cc9331"
       },
       "linear_op.csv": {
        "path": "e2e_profiling/tables/e2e-h200-t42-moe-tiny-20261007a/Qwen3-30B-A3B-tiny/linear_op.csv",
