@@ -1,0 +1,5 @@
+execution_mode,num_tensor_parallel_workers,kernel_gap_us,num_gaps,chain,gpu_name,driver_version,torch_version,cuda_version
+eager,8,1.2383669386423724,17080,decoder_layer:Qwen3-235B-A22B:tp8,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
+cuda_graph,8,0.4298726440535556,1374424,vllm_decode_graphs:Qwen3-235B-A22B,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
+eager,2,1.5268709884036062,17080,decoder_layer:Qwen3-235B-A22B:tp2,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
+cuda_graph,2,0.39961798218857697,779080,vllm_decode_graphs:Qwen3-235B-A22B:dp2:excluding_gaps_before_nccl,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
