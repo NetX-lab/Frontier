@@ -33,15 +33,18 @@ from tests.unit.test_stage_reporting_contract import _isolated_simulation_global
 GAP_MS = {"eager": 0.002, "cuda_graph": 0.0005}
 
 
-def _write_gap_table(path, rows):
-    pd.DataFrame(rows, columns=["execution_mode", "kernel_gap_us"]).to_csv(path, index=False)
+def _write_gap_table(path, rows, tensor_parallel_size=1):
+    table = pd.DataFrame(rows, columns=["execution_mode", "kernel_gap_us"])
+    table.insert(1, "num_tensor_parallel_workers", tensor_parallel_size)
+    table.to_csv(path, index=False)
     return str(path)
 
 
-def _replica(gdn_layers=0, spec_decode=False):
+def _replica(gdn_layers=0, spec_decode=False, tensor_parallel_size=1):
     return SimpleNamespace(
         model_config=SimpleNamespace(get_num_gdn_layers=lambda: gdn_layers),
         speculative_decoding_config=SimpleNamespace(enabled=spec_decode),
+        attn_tensor_parallel_size=tensor_parallel_size,
     )
 
 
@@ -53,12 +56,27 @@ def test_kernel_count_column_pairs_each_operator_time_column():
 
 def test_gap_table_reads_one_row_per_execution_mode(tmp_path):
     path = _write_gap_table(tmp_path / "kernel_gap.csv", [("eager", 2.0), ("cuda_graph", 0.5)])
-    assert read_kernel_gap_ms(path) == pytest.approx(GAP_MS)
+    assert read_kernel_gap_ms(path, 1) == pytest.approx(GAP_MS)
 
     for rows in ([("eager", 2.0)], [("eager", 2.0), ("cuda_graph", -0.5)],
                  [("eager", 2.0), ("eager", 2.1), ("cuda_graph", 0.5)]):
         with pytest.raises(ValueError, match="needs one finite, non-negative kernel_gap_us row"):
-            read_kernel_gap_ms(_write_gap_table(tmp_path / "bad.csv", rows))
+            read_kernel_gap_ms(_write_gap_table(tmp_path / "bad.csv", rows), 1)
+
+
+def test_gap_table_of_one_model_holds_each_tp_size_rows(tmp_path):
+    tp8 = pd.read_csv(_write_gap_table(tmp_path / "tp8.csv", [("eager", 1.2), ("cuda_graph", 0.4)], 8))
+    tp2 = pd.read_csv(_write_gap_table(tmp_path / "tp2.csv", [("eager", 1.5), ("cuda_graph", 0.3)], 2))
+    path = tmp_path / "kernel_gap.csv"
+    pd.concat([tp8, tp2]).to_csv(path, index=False)
+
+    assert read_kernel_gap_ms(str(path), 8) == pytest.approx({"eager": 0.0012, "cuda_graph": 0.0004})
+    assert read_kernel_gap_ms(str(path), 2) == pytest.approx({"eager": 0.0015, "cuda_graph": 0.0003})
+    with pytest.raises(ValueError, match="execution_mode=eager and num_tensor_parallel_workers=4"):
+        read_kernel_gap_ms(str(path), 4)
+    tp8.drop(columns=["num_tensor_parallel_workers"]).to_csv(tmp_path / "untyped.csv", index=False)
+    with pytest.raises(ValueError, match="has no num_tensor_parallel_workers column"):
+        read_kernel_gap_ms(str(tmp_path / "untyped.csv"), 8)
 
 
 def test_gap_is_active_only_with_the_table_outside_dummy_mode(tmp_path):
@@ -66,6 +84,8 @@ def test_gap_is_active_only_with_the_table_outside_dummy_mode(tmp_path):
     measured = SimpleNamespace(enable_dummy_mode=False)
 
     assert load_kernel_gap_ms(measured, path, _replica(), sys_arch="co-location") == pytest.approx(GAP_MS)
+    with pytest.raises(ValueError, match="num_tensor_parallel_workers=2"):
+        load_kernel_gap_ms(measured, path, _replica(tensor_parallel_size=2), sys_arch="co-location")
     assert load_kernel_gap_ms(SimpleNamespace(enable_dummy_mode=True), path, _replica(), sys_arch="co-location") is None
     assert load_kernel_gap_ms(measured, str(tmp_path / "absent.csv"), _replica(), sys_arch="co-location") is None
     for replica, sys_arch, unsupported in (

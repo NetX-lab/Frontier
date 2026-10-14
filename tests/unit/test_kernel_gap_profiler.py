@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import sys
+
 import pytest
 
-from frontier.profiling.kernel_gap.main import (chain_gaps_us, chain_kernels, graph_launch_chains, require_host_ahead,
-                                                split_chains)
+from frontier.profiling.kernel_gap.main import (chain_gaps_us, chain_kernels, graph_launch_chains, main,
+                                                require_host_ahead, split_chains)
 
 ADD_KERNEL = "vectorized_elementwise_kernel<add>"
 NORM_KERNEL = "fused_add_rms_norm_kernel"
@@ -95,3 +98,13 @@ def test_host_ahead_rejects_a_launch_that_returns_after_its_chain_started() -> N
 
     with pytest.raises(RuntimeError, match="host was not ahead"):
         require_host_ahead(events, split_chains(kernels, repeats=2))
+
+
+def test_main_rejects_engine_args_of_another_tp_size(tmp_path, monkeypatch) -> None:
+    engine_args = tmp_path / "engine_args.json"
+    engine_args.write_text(json.dumps({"tensor_parallel_size": 8}))
+    monkeypatch.setattr(sys, "argv", ["main", "--device", "h200", "--model", "Qwen3-235B-A22B",
+                                      "--num_tensor_parallel_workers", "2", "--vllm_engine_args", str(engine_args)])
+
+    with pytest.raises(ValueError, match="tensor_parallel_size=8, but --num_tensor_parallel_workers is 2"):
+        main()
