@@ -55,3 +55,23 @@ def initialize_replica_schedulers(
             registry=ReplicaSchedulerRegistry,
         )
     )
+    if scheduler._cluster_type in (
+        ClusterType.MONOLITHIC,
+        ClusterType.PREFILL,
+        ClusterType.DECODE,
+    ) and scheduler._replica_dp_size > 1:
+        from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
+            VLLMv1EngineReplicaScheduler,
+        )
+
+        # The other lanes' MoE layers wait for a lane without work; only the
+        # vLLM v1 engine loop supplies its dummy forwards.
+        if any(
+            lane._replica_is_moe and not isinstance(lane, VLLMv1EngineReplicaScheduler)
+            for lane in scheduler._replica_schedulers.values()
+        ):
+            raise ValueError(
+                f"{scheduler._cluster_type.name} MoE replicas with attn_dp > 1 "
+                "require a vLLM v1 engine replica scheduler, "
+                f"got '{scheduler._replica_scheduler_type}'"
+            )

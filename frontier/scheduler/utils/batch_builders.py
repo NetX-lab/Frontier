@@ -78,7 +78,11 @@ def build_virtual_global_batch(
     total_global_tokens: int,
     total_global_prefill_tokens: int,
 ) -> Batch:
-    """Create a predictor-only batch for one cross-DP token domain."""
+    """Create a predictor-only batch for one cross-DP token domain.
+
+    total_global_tokens is the domain's physical compute width, padding
+    included; the source lane batches keep the request tokens.
+    """
 
     if type(total_global_tokens) is not int or total_global_tokens < 0:
         raise ValueError("total_global_tokens must be a non-negative int")

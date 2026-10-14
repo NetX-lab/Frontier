@@ -22,10 +22,12 @@ before that point. That provenance is what qualifies the T2 slice (plan
 it routed the probe.
 
 Outputs in ``--output-dir``: ``placement.csv`` (one row per request),
-``engine_iterations.csv``, ``snapshots.csv``, ``chain.json`` (the same rows
-plus the coordinator receipts, with list-valued fields intact, for
-`compare_placement.py`), and
-``extraction_status.json`` with every completeness check.
+``engine_iterations.csv``, ``dummy_passes.csv`` (one row per DP dummy forward,
+joined to the iteration before it by ``(engine, wave, step)``),
+``snapshots.csv``, ``chain.json`` (the same rows plus the coordinator receipts,
+with list-valued fields intact, for `compare_placement.py`), and
+``extraction_status.json`` with every completeness check. The E2E request
+metrics columns are empty for a mode that does not write them.
 
 The request's `schedule()` ran in the interval `(previous_iteration_monotonic, admitted_monotonic]`.
 """
@@ -41,6 +43,7 @@ import re
 ENGINE_REQUEST_ID = re.compile(r"^cmpl-(?P<request_id>.+)-0$")
 ROLE_BY_KIND = {
     "engine_iteration": "engine",
+    "dummy_pass": "engine",
     "coordinator_receive": "coordinator",
     "coordinator_publish": "coordinator",
     "frontend_snapshot": "frontend",
@@ -112,10 +115,12 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
     coordinator = processes["coordinator"][0] if processes["coordinator"] else []
     frontend = processes["frontend"][0] if processes["frontend"] else []
 
-    iterations = sorted(
+    engine_records = sorted(
         (record for records in processes["engine"] for record in records),
         key=lambda record: (record["engine"], record["seq"]),
     )
+    iterations = [record for record in engine_records if record["kind"] == "engine_iteration"]
+    dummy_passes = [record for record in engine_records if record["kind"] == "dummy_pass"]
     iteration_by_seq = {(record["engine"], record["seq"]): record for record in iterations}
     previous_monotonic: dict[tuple[int, int], float | None] = {}
     last_monotonic: dict[int, float] = {}
@@ -188,10 +193,11 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
             problems.append(f"{request_id} routed from snapshot {record['snapshot']}, never applied")
 
     client = {record["request_id"]: record for record in read_jsonl(run_dir / "client_requests.jsonl")}
+    metrics_path = run_dir / "request_metrics.jsonl"
     metrics = {
         case_request_id(record["request_id"]): record
-        for record in read_jsonl(run_dir / "request_metrics.jsonl")
-    }
+        for record in read_jsonl(metrics_path)
+    } if metrics_path.exists() else {}
     placement = []
     for row in request_ids["rows"]:
         request_id = row["request_id"]
@@ -232,6 +238,7 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
         "num_engine_files": len(processes["engine"]),
         "num_engine_iterations": len(iterations),
         "num_published_iterations": sum(1 for record in iterations if record["published"]),
+        "num_dummy_passes": len(dummy_passes),
         "num_coordinator_receipts": len(receipts),
         "num_publications": len(publications),
         "num_frontend_snapshots": len(applied),
@@ -249,6 +256,7 @@ def extract(run_dir: Path, request_ids: dict) -> tuple[dict, dict]:
     chain = {
         "placement": placement,
         "engine_iterations": iterations,
+        "dummy_passes": dummy_passes,
         "coordinator_receipts": receipts,
         "snapshots": snapshots,
     }
@@ -275,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     write_csv(args.output_dir / "placement.csv", chain["placement"])
     write_csv(args.output_dir / "engine_iterations.csv", chain["engine_iterations"])
+    write_csv(args.output_dir / "dummy_passes.csv", chain["dummy_passes"])
     write_csv(args.output_dir / "snapshots.csv", chain["snapshots"])
     (args.output_dir / "chain.json").write_text(json.dumps(chain, indent=1))
     (args.output_dir / "extraction_status.json").write_text(json.dumps(status, indent=1))

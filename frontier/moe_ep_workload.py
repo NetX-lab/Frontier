@@ -339,6 +339,9 @@ class LayerEPWorkload:
         )
         object.__setattr__(self, "expert_to_ep", _freeze_map(ownership))
         object.__setattr__(self, "participant_ep_ids", participant_ep_ids)
+        domain_token_counts = tuple(
+            global_tokens[expert_id] for expert_id in range(total_expert_num)
+        )
         object.__setattr__(
             self,
             "_lane_descriptors",
@@ -348,6 +351,7 @@ class LayerEPWorkload:
                     moe_expert_parallel_size=moe_expert_parallel_size,
                     total_expert_num=total_expert_num,
                     per_expert_tokens=per_ep_tokens[ep_id],
+                    global_token_counts=domain_token_counts,
                     router_topk=router_topk,
                 )
                 for ep_id in participant_ep_ids
@@ -375,6 +379,10 @@ class EPLaneWorkload:
     total_expert_num: int
     owned_expert_ids: tuple[int, ...]
     local_token_counts: tuple[int, ...]
+    # Routed tokens of every expert of the EP domain, by global expert ID. Each
+    # rank's moe_align_block_size pads all of them (vLLM fused_moe with an
+    # expert map), so the grouped GEMM's padded row count is a domain count.
+    global_token_counts: tuple[int, ...]
     routed_token_count: int
     router_topk: int
 
@@ -414,6 +422,22 @@ class EPLaneWorkload:
             raise ValueError(
                 "local_token_counts must contain exact non-negative integers"
             )
+        global_token_counts = tuple(self.global_token_counts)
+        if len(global_token_counts) != self.total_expert_num:
+            raise ValueError(
+                "global_token_counts must have one entry per global expert: "
+                f"expected={self.total_expert_num}, got={len(global_token_counts)}"
+            )
+        if any(type(value) is not int or value < 0 for value in global_token_counts):
+            raise ValueError(
+                "global_token_counts must contain exact non-negative integers"
+            )
+        owned_slice = global_token_counts[owned_expert_ids[0]:owned_expert_ids[-1] + 1]
+        if owned_slice != local_token_counts:
+            raise ValueError(
+                "global_token_counts must agree with local_token_counts on the "
+                f"owned experts: global={owned_slice}, local={local_token_counts}"
+            )
         if type(self.routed_token_count) is not int or self.routed_token_count < 0:
             raise ValueError(
                 "routed_token_count must be an exact non-negative integer"
@@ -427,6 +451,7 @@ class EPLaneWorkload:
             raise ValueError("router_topk must be an exact positive integer")
         object.__setattr__(self, "owned_expert_ids", owned_expert_ids)
         object.__setattr__(self, "local_token_counts", local_token_counts)
+        object.__setattr__(self, "global_token_counts", global_token_counts)
 
     @property
     def local_expert_width(self) -> int:
@@ -458,6 +483,7 @@ def _build_lane_descriptor(
     moe_expert_parallel_size: int,
     total_expert_num: int,
     per_expert_tokens: Mapping[int, int],
+    global_token_counts: tuple[int, ...],
     router_topk: int,
 ) -> EPLaneWorkload:
     """Build one descriptor and densify its canonical local expert map."""
@@ -506,6 +532,7 @@ def _build_lane_descriptor(
         total_expert_num=total_expert_num,
         owned_expert_ids=owned_ids,
         local_token_counts=local_token_counts,
+        global_token_counts=global_token_counts,
         routed_token_count=sum(local_token_counts),
         router_topk=router_topk,
     )
@@ -556,12 +583,16 @@ def split_global_expert_tokens_into_lanes(
         }
         for ep_id in range(moe_expert_parallel_size)
     }
+    domain_token_counts = tuple(
+        global_per_expert_tokens[expert_id] for expert_id in range(total_expert_num)
+    )
     return tuple(
         _build_lane_descriptor(
             ep_id=ep_id,
             moe_expert_parallel_size=moe_expert_parallel_size,
             total_expert_num=total_expert_num,
             per_expert_tokens=per_ep[ep_id],
+            global_token_counts=domain_token_counts,
             router_topk=router_topk,
         )
         for ep_id in range(moe_expert_parallel_size)

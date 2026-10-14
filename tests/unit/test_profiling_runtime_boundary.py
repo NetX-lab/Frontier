@@ -19,6 +19,15 @@ RUNTIME_IMPORTS = {
     "profiling_dataframe_loaders.py": {
         "frontier.profiling.cpu_overhead.validation",
     },
+    "prediction_family_trainers.py": {
+        "frontier.profiling.cpu_overhead.validation",
+    },
+    "measurement_input_paths.py": {
+        "frontier.profiling.cpu_overhead.schema",
+    },
+    "kernel_gap.py": {
+        "frontier.profiling.kernel_gap.schema",
+    },
 }
 
 
@@ -45,6 +54,7 @@ def test_runtime_predictors_use_only_allowlisted_profiling_helpers() -> None:
             "frontier.profiling.attention.main",
             "frontier.profiling.collectives.main",
             "frontier.profiling.cpu_overhead.benchmark_runner",
+            "frontier.profiling.kernel_gap.main",
             "frontier.profiling.linear_op.main",
             "frontier.profiling.moe.main",
         }

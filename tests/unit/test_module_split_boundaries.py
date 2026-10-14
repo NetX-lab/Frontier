@@ -199,7 +199,7 @@ def test_sglang_still_reaches_the_extracted_decision_log_helper() -> None:
             "frontier.execution_time_predictor.shared_prediction_model_manager."
             "ExecutionTimePredictionModelManager",
             ["ExecutionTimePredictionModelManager", "PredictionFamilyTrainers",
-             "ProfilingDataFrameLoaders", "PredictionModelRegistry",
+             "KernelCountTraining", "ProfilingDataFrameLoaders", "PredictionModelRegistry",
              "LayerContractResolution"],
         ),
         (

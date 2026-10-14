@@ -10,7 +10,6 @@ from frontier.entities import Batch, Request
 from frontier.entities.batch import EPBatchGroup
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
-from frontier.events.prefill_sync_event import PrefillSyncEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
@@ -174,6 +173,7 @@ def _scheduler(
     batch._stage_admission_ticket = ticket
     batch._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch._prefill_stage_start_time = 0.0
+    batch._forward_launch_start_time = 0.0
     return scheduler, predictor, batch
 
 
@@ -304,6 +304,7 @@ def test_prefill_ep_wave_aggregates_attention_dp_lanes_once():
     batch_one.time = 0.0
     batch_one._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch_one._prefill_stage_start_time = 0.0
+    batch_one._forward_launch_start_time = 0.0
     ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
     assert context.try_acquire(ticket) is True
     batch_one._stage_admission_ticket = ticket
@@ -327,124 +328,6 @@ def test_prefill_ep_wave_aggregates_attention_dp_lanes_once():
     assert batch_one._prefill_ep_wave_workload.routing_token_count == 7
 
 
-def test_prefill_placeholder_stays_replaceable_until_idle_event_is_consumed():
-    scheduler, _predictor, batch_zero = _scheduler(lane_capacity=2)
-    scheduler._replica_dp_size = 2
-    context = scheduler._stage_execution_contexts[(0, 0)]
-    batch_zero._forward_cohort_id = 11
-    batch_zero._stage_owner_replica_local_id = 0
-
-    batch_one = Batch(
-        0,
-        [Request(arrived_at=0.0, num_prefill_tokens=3, num_decode_tokens=0)],
-        [3],
-        is_moe=True,
-    )
-    batch_one._forward_cohort_id = 11
-    batch_one.set_global_id(23)
-    batch_one.time = 0.0
-    batch_one._stage_owner_replica_local_id = 1
-    batch_one._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
-    batch_one._prefill_stage_start_time = 0.0
-    ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
-    assert context.try_acquire(ticket) is True
-    batch_one._stage_admission_ticket = ticket
-
-    empty_lane = lambda: SimpleNamespace(
-        get_replica_stage_scheduler=lambda _stage_id: SimpleNamespace(
-            is_busy=False,
-            is_empty=lambda: True,
-        )
-    )
-    scheduler._replica_schedulers = {(0, 1): empty_lane()}
-    first_events = scheduler.on_prefill_sync(
-        0.001,
-        0,
-        0,
-        batch_zero,
-        0,
-        "pre_moe",
-        4,
-        0.0,
-    )
-
-    assert len(first_events) == 1
-    assert isinstance(first_events[0], PrefillSyncEvent)
-    room = scheduler._sync_waiting_room[0][0][11][4]["pre_moe"]
-    assert room["batches"][0] is batch_zero
-    assert room["batches"][1].is_idle
-
-    second_events = scheduler.on_prefill_sync(
-        0.002,
-        0,
-        0,
-        batch_one,
-        1,
-        "pre_moe",
-        4,
-        0.0,
-    )
-
-    assert len(second_events) == 1
-    assert isinstance(second_events[0], PrefillSyncCollectiveEvent)
-    assert scheduler._sync_waiting_room[0][0][11][4]["pre_moe"] == {}
-    assert batch_zero._prefill_ep_wave_workload.routing_token_count == 7
-    assert batch_one._prefill_ep_wave_workload.routing_token_count == 7
-    assert first_events[0].handle_event(
-        SimpleNamespace(get_cluster_scheduler=lambda _cluster_type: scheduler),
-        SimpleNamespace(),
-    ) == []
-
-    context.release(batch_zero._stage_admission_ticket)
-    batch_zero.__dict__.pop("_stage_admission_ticket", None)
-    batch_one.__dict__.pop("_stage_admission_ticket", None)
-
-    late_batch = Batch(
-        0,
-        [Request(arrived_at=0.003, num_prefill_tokens=4, num_decode_tokens=0)],
-        [4],
-        is_moe=True,
-    )
-    late_batch._forward_cohort_id = 11
-    late_batch._stage_owner_replica_local_id = 1
-    late_batch._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
-    late_batch._prefill_stage_start_time = 0.003
-    late_ticket = context.enqueue_full_stage(
-        operation_id=("stage_batch", late_batch.id, late_batch.schedule_epoch)
-    )
-    assert context.try_acquire(late_ticket) is True
-    late_batch._stage_admission_ticket = late_ticket
-    scheduler._replica_schedulers[(0, 0)] = empty_lane()
-    late_events = scheduler.on_prefill_sync(
-        0.003,
-        0,
-        0,
-        late_batch,
-        1,
-        "pre_moe",
-        4,
-        0.0,
-    )
-    assert len(late_events) == 1
-    assert isinstance(late_events[0], PrefillSyncEvent)
-    assert late_batch._forward_cohort_id != 11
-    fresh_cohort_id = late_batch._forward_cohort_id
-    late_room = scheduler._sync_waiting_room[0][0][fresh_cohort_id][4][
-        "pre_moe"
-    ]
-    assert late_room["batches"][1] is late_batch
-    assert late_room["batches"][0].is_idle
-    late_collective_events = late_events[0].handle_event(
-        SimpleNamespace(get_cluster_scheduler=lambda _cluster_type: scheduler),
-        SimpleNamespace(ep_wave_reporting_enabled=False),
-    )
-    assert len(late_collective_events) == 1
-    assert isinstance(late_collective_events[0], PrefillSyncCollectiveEvent)
-    assert scheduler._sync_waiting_room[0][0][fresh_cohort_id][4][
-        "post_moe"
-    ]["batches"][1] is late_batch
-
-
 def test_prefill_dense_layer_emits_one_completion_per_attention_dp_owner():
     scheduler, predictor, batch_zero = _scheduler(lane_capacity=2)
     scheduler._replica_dp_size = 2
@@ -463,6 +346,7 @@ def test_prefill_dense_layer_emits_one_completion_per_attention_dp_owner():
     batch_one._stage_owner_replica_local_id = 1
     batch_one._prefill_model_execution_components_ms_by_stage = {0: [1.0]}
     batch_one._prefill_stage_start_time = 0.0
+    batch_one._forward_launch_start_time = 0.0
     ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
     assert context.try_acquire(ticket) is True
     batch_one._stage_admission_ticket = ticket
@@ -542,6 +426,7 @@ def test_shared_ep_lane_preserves_source_pre_routing_tokens_for_zero_lane() -> N
             total_expert_num=4,
             owned_expert_ids=(2, 3),
             local_token_counts=(0, 0),
+            global_token_counts=(0, 0, 0, 0),
             routed_token_count=0,
             router_topk=1,
         ),

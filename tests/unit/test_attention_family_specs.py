@@ -65,20 +65,24 @@ def test_dense_family_lists_exact_gqa_core_ops_in_vllm_order() -> None:
     assert family.memory_layout == AttentionMemoryLayout.DENSE_KV
     assert family.dense_compatible is True
     assert family.supported_variants == ("gqa", "mha", "mqa")
-    assert tuple(op.name for op in family.operators) == DENSE_CORE_OPS
+    # The P2P NCCL connector's KV extract follows the attention kernels.
+    assert tuple(op.name for op in family.operators) == (*DENSE_CORE_OPS, "attn_kv_cache_extract")
     assert tuple(op.role for op in family.operators) == (
         AttentionOperatorRole.CACHE_WRITE,
         AttentionOperatorRole.PREFILL_KERNEL,
         AttentionOperatorRole.DECODE_KERNEL,
+        AttentionOperatorRole.CACHE_EXTRACT,
     )
     assert tuple(op.execution_time_attr for op in family.operators) == (
         "attention_kv_cache_save_execution_time",
         "attention_prefill_execution_time",
         "attention_decode_execution_time",
+        "attention_kv_cache_extract_execution_time",
     )
-    assert all(op.profiling_target for op in family.operators)
-    assert all(op.predictor_target for op in family.operators)
-    assert all(op.e2e_trace_target for op in family.operators)
+    core_ops = family.operators[: len(DENSE_CORE_OPS)]
+    assert all(op.profiling_target for op in core_ops)
+    assert all(op.predictor_target for op in core_ops)
+    assert all(op.e2e_trace_target for op in core_ops)
     assert all(
         op.projection_ownership is ProjectionOwnership.NOT_PROJECTION
         for op in family.operators

@@ -25,7 +25,7 @@ def _reporting_case(*, tracing=True, operations=True, ledger=True, zero_work=Fal
         requests=[Request(arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=1)],
         num_tokens=[8], replica_id=0, ep_id=0, time=1.0,
         source_batch_ids=[73], cluster_type=ClusterType.MONOLITHIC, is_moe=True,
-        lane_workload=EPLaneWorkload(0, 1, 2, (0, 1), (4, 12), 16, 2),
+        lane_workload=EPLaneWorkload(0, 1, 2, (0, 1), (4, 12), (4, 12), 16, 2),
     )
     batch.moe_pre_routing_effective_total_tokens = 8
     times = {

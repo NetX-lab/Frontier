@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from frontier.profiling.utils import record_function_tracer as tracer_module
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
@@ -83,6 +85,46 @@ def test_record_function_tracer_stats_include_sample_count(tmp_path: Path) -> No
     assert stats["attn_prefill"]["count"] == 2
     assert stats["attn_prefill"]["min"] == 1.0
     assert stats["attn_prefill"]["max"] == 3.0
+    assert stats["attn_prefill"]["kernel_count"] == 1
+
+
+def _scope_with_kernels(start_us: int, first_correlation: int, num_kernels: int) -> list[dict]:
+    events = [{"cat": "user_annotation", "name": "vidur_attn_pre_proj", "ts": start_us, "dur": 100}]
+    for index in range(num_kernels):
+        correlation = first_correlation + index
+        events.append({"cat": "cuda_runtime", "ts": start_us + 10 + index, "dur": 0.5,
+                       "args": {"correlation": correlation}})
+        events.append({"cat": "kernel", "ts": start_us + 50 + index, "dur": 2,
+                       "args": {"correlation": correlation}})
+    return events
+
+
+def test_record_function_tracer_counts_kernels_per_call(tmp_path: Path) -> None:
+    trace_path = tmp_path / "trace.json"
+    trace_path.write_text(json.dumps({"traceEvents": [
+        *_scope_with_kernels(0, 1, 3),
+        *_scope_with_kernels(200, 10, 3),
+    ]}), encoding="utf-8")
+    tracer = RecordFunctionTracer(str(tmp_path))
+    tracer.trace_path = str(trace_path)
+
+    stats = tracer.get_operation_time_stats()
+
+    assert stats["attn_pre_proj"]["kernel_count"] == 3
+    assert stats["attn_pre_proj"]["count"] == 2
+
+
+def test_record_function_tracer_rejects_unequal_kernel_counts(tmp_path: Path) -> None:
+    trace_path = tmp_path / "trace.json"
+    trace_path.write_text(json.dumps({"traceEvents": [
+        *_scope_with_kernels(0, 1, 3),
+        *_scope_with_kernels(200, 10, 2),
+    ]}), encoding="utf-8")
+    tracer = RecordFunctionTracer(str(tmp_path))
+    tracer.trace_path = str(trace_path)
+
+    with pytest.raises(ValueError, match="different kernel counts"):
+        tracer.get_operation_time_stats()
 
 
 def test_record_function_tracer_primes_cuda_capture_before_measured_scopes(

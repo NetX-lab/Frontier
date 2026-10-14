@@ -345,11 +345,6 @@ class DecodeCudaGraphMetadata:
             return self.padded_total_tokens
         return self.original_total_tokens
 
-    def get_effective_decode_batch_size_for_attention(self) -> int:
-        if self.runtime_mode == "FULL":
-            return self.padded_decode_batch_size
-        return self.original_decode_batch_size
-
 
 @dataclass
 class SpecDecodeBatchMetadata:
@@ -519,6 +514,10 @@ class Batch(BaseEntity):
         self._scheduled = False
         self._completed = False
         self._schedule_epoch = 0
+        # Seconds the engine loop was idle before the iteration that formed this
+        # batch; the vLLM V1 engine scheduler sets it on the roles that run
+        # vLLM's engine loop.
+        self.engine_idle_time = 0.0
 
         # Time attribute for timing information preservation
         self._time = None
@@ -934,14 +933,6 @@ class Batch(BaseEntity):
         """
         return self.get_effective_total_tokens_for_compute(cluster_type)
 
-    def get_effective_decode_batch_size_for_attention(self) -> int:
-        if self.decode_cuda_graph_metadata is not None:
-            return (
-                self.decode_cuda_graph_metadata.get_effective_decode_batch_size_for_attention()
-            )
-
-        return sum(self._request_is_decoding)
-
     @property
     def is_moe(self) -> bool:
         return self._is_moe
@@ -1311,6 +1302,29 @@ class Batch(BaseEntity):
     def __repr__(self) -> str:
         return self.__str__()
 
+
+class DummyForwardBatch(Batch):
+    """One pipeline stage's part of vLLM's attention-DP dummy pass.
+
+    A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
+    ``_dummy_run(1)`` on every pipeline stage: one request slot with one token
+    and no attention metadata. Attention kernels and KV-cache writes are
+    skipped, while projections, norms and every MoE layer with its EP
+    collectives run. The forward carries no request.
+    """
+
+    def __init__(
+        self, replica_id: int, pipeline_stage_id: int, forward_index: int
+    ) -> None:
+        super().__init__(replica_id, requests=[], num_tokens=[1], is_moe=True)
+        self.pipeline_stage_id = pipeline_stage_id
+        # Position among the lane's forwards; each stage runs them in this order.
+        self.forward_index = forward_index
+        self.stage_start_time: Optional[float] = None
+
+    @property
+    def size(self) -> int:
+        return len(self._num_tokens)
 
 
 class EPBatchGroup(Batch):

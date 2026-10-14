@@ -17,6 +17,7 @@ class OperatorRole(Enum):
     """Semantic role of a physical operator."""
 
     CACHE_WRITE = "cache_write"
+    CACHE_EXTRACT = "cache_extract"
     PREFILL_KERNEL = "prefill_kernel"
     DECODE_KERNEL = "decode_kernel"
     PROJECTION = "projection"
@@ -179,6 +180,8 @@ class CommOperatorSpec(OperatorSpec):
     comm_domain_builder: CommStringBuilder | None = None
     apply_allreduce_launch_overhead_strip: bool = False
     zero_payload_policy: ZeroPayloadPolicy = ZeroPayloadPolicy.PREDICT
+    # Kernels one call launches; a kernel-only step pays the kernel gap before each.
+    kernel_count: int = 1
 
     _operator_label: ClassVar[str] = "CommOperator"
 
@@ -202,6 +205,11 @@ class CommOperatorSpec(OperatorSpec):
             raise ValueError(
                 f"CommOperator {self.name} zero_payload_policy must be "
                 f"ZeroPayloadPolicy, got {self.zero_payload_policy!r}"
+            )
+        if type(self.kernel_count) is not int or self.kernel_count < 1:
+            raise ValueError(
+                f"CommOperator {self.name} kernel_count must be a positive int, "
+                f"got {self.kernel_count!r}"
             )
 
     def build_payload_bytes(self, ctx: CommPayloadContext) -> int:

@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-10 | Documented the padded grouped-GEMM columns and the BLOCK_SIZE_M ranges the simulator requires. |
 | 2026-09-22 | Recorded the `moe_grouped_gemm` measurement scope and the limits of the backend identity columns. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-14 | Documented standard ROCm/GDN output contracts and the experimental SGLang boundary. |
@@ -254,6 +255,26 @@ source writes it, so it is not a live mechanism either.
 Re-profile rather than infer. If you need corrected `moe_grouped_gemm` timings
 from a `vllm>=0.10,<0.11` environment, re-run the producer; an existing row
 cannot be checked for completeness from its own metadata.
+
+#### Padded grouped-GEMM columns
+
+On the vLLM 0.10.x low-level path each `moe_grouped_gemm` row also records
+three kernel-config columns:
+
+- `time_stats.moe_grouped_gemm.block_size_m`: the BLOCK_SIZE_M that vLLM's
+  `try_get_optimal_moe_config` selects at the row's `num_tokens`.
+- `time_stats.moe_grouped_gemm.num_tokens_post_padded`: the routed tokens after
+  `moe_align_block_size` pads each expert to a multiple of that block.
+- `time_stats.moe_grouped_gemm.block_size_m_ranges`: a JSON list of
+  `[first_num_tokens, last_num_tokens, block_size_m]` ranges of the same lookup
+  from 1 token to the row's `num_tokens`.
+
+When the padded count is present, the grouped-GEMM model trains on the routed
+and padded token counts. At runtime the simulator pads each expert with the
+BLOCK_SIZE_M that the ranges give at the step's token count, because vLLM's
+default threshold and its tuned-config keys can change the block between two
+profiled rows. Training rejects a padded table without the ranges column;
+re-profile it.
 
 ### Standard GDN on ROCm
 

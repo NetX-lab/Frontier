@@ -25,7 +25,8 @@ def test_memory_filter_warns_when_explicit_kv_is_dropped_for_target():
     with pytest.warns(RuntimeWarning, match="explicit decode KV values.*511"):
         filtered, retained_explicit_kv = _filter_standard_attention_inputs_by_memory(
             inputs,
-            max_num_tokens=256,
+            max_num_blocks=16,
+            block_size=16,
             model="test-model",
             tensor_parallel_size=1,
             explicit_decode_kv_cache_sizes=[511],
@@ -41,14 +42,16 @@ def test_explicit_kv_coverage_allows_target_specific_subsets():
     with pytest.warns(RuntimeWarning):
         filtered_small, retained_small = _filter_standard_attention_inputs_by_memory(
             inputs,
-            max_num_tokens=256,
+            max_num_blocks=16,
+            block_size=16,
             model="small-model",
             tensor_parallel_size=1,
             explicit_decode_kv_cache_sizes=[511],
         )
     filtered_large, retained_large = _filter_standard_attention_inputs_by_memory(
         inputs,
-        max_num_tokens=512,
+        max_num_blocks=32,
+        block_size=16,
         model="large-model",
         tensor_parallel_size=1,
         explicit_decode_kv_cache_sizes=[511],

@@ -78,6 +78,13 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default="./data/profiling/compute/{DEVICE}/{MODEL}/moe_kernel_only.csv",
         metadata={"help": "Path to the kernel-only MoE profiling input file."},
     )
+    kernel_gap_input_file: str = field(
+        default="./data/profiling/compute/{DEVICE}/{MODEL}/kernel_gap.csv",
+        metadata={
+            "help": "Path to the mean device gap between kernels, per execution mode. "
+            "When the file exists, kernel-only steps pay it once per launched kernel."
+        },
+    )
     k_fold_cv_splits: int = field(
         default=10,
         metadata={"help": "Number of k fold cross validation splits."},

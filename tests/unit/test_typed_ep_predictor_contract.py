@@ -23,6 +23,7 @@ from frontier.moe_ep_workload import (
     materialize_layer_ep_workload,
     resolve_ep_lane_workload,
 )
+from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -50,7 +51,10 @@ class _CountingPredictor(_Predictor):
         self._supports_operation = lambda _operation: True
         self._predictions = {
             "moe_shuffling": {"_on_demand_prediction": True},
-            "moe_grouped_gemm": {"_on_demand_prediction": True},
+            "moe_grouped_gemm": {
+                "_on_demand_prediction": True,
+                "_feature_names": list(MOE_LOAD_IMBALANCE_FEATURES),
+            },
         }
         self._model_calls: list[tuple[str, dict[str, float]]] = []
         self._model_result = model_result
@@ -79,6 +83,7 @@ def _lane(
         total_expert_num=total_experts,
         owned_expert_ids=owned_ids,
         local_token_counts=counts,
+        global_token_counts=(0,) * (ep_id * width) + counts + (0,) * (total_experts - (ep_id + 1) * width),
         routed_token_count=sum(counts),
         router_topk=2,
     )
@@ -132,7 +137,11 @@ def test_predictor_reuses_immutable_layer_workload_for_same_semantics() -> None:
         0: {3: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
     }
     predictor._layer_workload_cache_capacity = 2
-    batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
+    batch = SimpleNamespace(
+        replica_id=0,
+        total_num_tokens=4,
+        get_effective_total_tokens_for_compute=lambda _cluster_type: 4,
+    )
 
     first = predictor._materialize_layer_ep_workload(
         batch, ClusterType.MONOLITHIC, 3
@@ -152,7 +161,14 @@ def test_predictor_layer_workload_cache_is_bounded() -> None:
     }
     predictor._layer_workload_cache_capacity = 2
 
-    batches = [SimpleNamespace(replica_id=0, total_num_tokens=tokens) for tokens in (4, 5, 6)]
+    batches = [
+        SimpleNamespace(
+            replica_id=0,
+            total_num_tokens=tokens,
+            get_effective_total_tokens_for_compute=lambda _cluster_type, tokens=tokens: tokens,
+        )
+        for tokens in (4, 5, 6)
+    ]
     first = predictor._materialize_layer_ep_workload(
         batches[0], ClusterType.MONOLITHIC, 3
     )

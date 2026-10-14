@@ -155,6 +155,7 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         self.num_total_tokens = 0
 
         self.slot_mapping = None
+        self.prefill_block_ids: List[torch.Tensor] = []
 
     def _raise_mla_not_implemented(self) -> None:
         raise NotImplementedError(
@@ -224,6 +225,7 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         self.contains_decode = False
 
         slot_mapping: List[int] = []
+        self.prefill_block_ids = []
 
         for seq_metadata in seq_metadata_list:
             if not seq_metadata.is_prompt:
@@ -244,6 +246,13 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
                 current_total_len + self.block_size - 1
             ) // self.block_size
             prefill_kv_page_indices.extend(seq_metadata.block_table[:num_blocks_in_use])
+            self.prefill_block_ids.append(
+                torch.tensor(
+                    seq_metadata.block_table[:num_blocks_in_use],
+                    dtype=torch.long,
+                    device="cuda",
+                )
+            )
             prefill_kv_page_indptr.append(
                 prefill_kv_page_indptr[-1] + num_blocks_in_use
             )
@@ -353,6 +362,7 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         """End forward pass and clean up Flashinfer state."""
         self.is_metadata_initialized = False
         self.slot_mapping = None
+        self.prefill_block_ids = []
 
     def forward(
         self,
@@ -436,6 +446,15 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
                     v_scale=self.v_scale_float,
                     out=output[self.num_prefill_tokens : self.num_total_tokens],
                 )
+
+        # A PDD prefill instance with vLLM's P2P NCCL connector gathers each
+        # request's KV blocks after the layer's attention
+        # (P2pNcclConnector.save_kv_layer: layer[block_ids] on the FlashInfer
+        # layout). The gather's output is sent to the decode instance and not
+        # used here.
+        for block_ids in self.prefill_block_ids:
+            with self.get_timer(OperationMetrics.ATTN_KV_CACHE_EXTRACT, layer_id):
+                kv_cache[block_ids]
 
         with self.get_timer(OperationMetrics.ATTN_OUTPUT_RESHAPE, layer_id):
             output = output.reshape(-1, self.num_q_heads * self.head_dim)

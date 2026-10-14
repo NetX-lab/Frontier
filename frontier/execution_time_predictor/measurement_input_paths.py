@@ -7,6 +7,12 @@ from dataclasses import dataclass
 from typing import Any
 from collections.abc import Mapping
 
+import pandas as pd
+
+from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS,
+    CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
+)
 from frontier.types import MeasurementType
 
 
@@ -143,11 +149,60 @@ def resolve_training_file_paths(
                             cpu_overhead_input_file=paths.cpu_overhead)
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             resolved["cpu_overhead_kernel_only_input_file"] = paths.cpu_overhead
-    for name in ("pp_stage_boundary", "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+    for name in ("pp_stage_boundary", "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active",
+                 "kernel_gap"):
         key = f"{name}_input_file"
         value = (overrides or {}).get(key, getattr(config, key, ""))
         resolved[key] = substitute_input_path(value, device=device, model=model, network_device=network_device)
     return resolved
+
+
+def uses_two_stream_eager_pricing(
+    config: Any, cpu_overhead_input_file: str, *, sys_arch: str, replica_config: Any,
+) -> bool:
+    """Whether eager forward steps are priced as the slower of two streams.
+
+    An eager step's host launches the forward's kernels while the device runs
+    them. When the eager CPU-overhead table carries forward_launch, the device
+    stream is priced from kernel-only operator tables, the host stream from
+    forward_launch, and the step pays the launch time the device cannot hide.
+    Each pipeline stage launches its own forward, so the replica's model and
+    attention TP degree need rows keyed by pipeline_stage_id for every stage of
+    the replica, stage 0 alone for a single-stage replica.
+    """
+    if config.enable_dummy_mode or config.skip_cpu_overhead_modeling:
+        return False
+    if not os.path.exists(cpu_overhead_input_file):
+        return False
+    columns = pd.read_csv(cpu_overhead_input_file, nrows=0).columns
+    if not any(column in columns for column in CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS):
+        return False
+    if sys_arch == "pd-af-disaggregation":
+        raise ValueError(
+            f"{cpu_overhead_input_file} carries forward_launch, but PD-AF does not "
+            "price eager steps in two streams; use a CPU-overhead table without it."
+        )
+    if CPU_OVERHEAD_PIPELINE_STAGE_COLUMN not in columns:
+        raise ValueError(
+            f"{cpu_overhead_input_file} carries forward_launch without {CPU_OVERHEAD_PIPELINE_STAGE_COLUMN}; "
+            "republish it from the CPU-probe logs with frontier.profiling.cpu_overhead.vllm_cpu_probe."
+        )
+    model_name = replica_config.model_config.get_name()
+    tensor_parallel_degree = replica_config.attn_tensor_parallel_size
+    num_pipeline_stages = replica_config.num_pipeline_stages
+    rows = pd.read_csv(
+        cpu_overhead_input_file,
+        usecols=["model_name", "tensor_parallel_degree", CPU_OVERHEAD_PIPELINE_STAGE_COLUMN],
+    )
+    rows = rows[(rows["model_name"] == model_name) & (rows["tensor_parallel_degree"] == tensor_parallel_degree)]
+    stages = set(rows[CPU_OVERHEAD_PIPELINE_STAGE_COLUMN])
+    if stages != set(range(num_pipeline_stages)):
+        raise ValueError(
+            f"{cpu_overhead_input_file} has rows for model_name={model_name!r}, "
+            f"tensor_parallel_degree={tensor_parallel_degree} at pipeline stages {sorted(stages)}; "
+            f"num_pipeline_stages={num_pipeline_stages} needs stages 0..{num_pipeline_stages - 1}."
+        )
+    return True
 
 
 def resolve_event_measurement_type(replica_config: Any) -> MeasurementType:

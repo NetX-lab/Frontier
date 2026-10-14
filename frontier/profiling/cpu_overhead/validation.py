@@ -9,9 +9,16 @@ import pandas as pd
 
 from frontier.logger import init_logger
 from frontier.profiling.cpu_overhead.schema import (
+    CPU_OVERHEAD_ENGINE_IDLE_COLUMN,
+    CPU_OVERHEAD_FORWARD_DRAIN_COLUMNS,
+    CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS,
     CPU_OVERHEAD_IDENTITY_COLUMNS,
     CPU_OVERHEAD_NUMERIC_COLUMNS,
+    CPU_OVERHEAD_OPTIONAL_TERMS,
+    CPU_OVERHEAD_PIPELINE_STAGE_COLUMN,
     CPU_OVERHEAD_REQUIRED_COLUMNS,
+    CPU_OVERHEAD_STEP_FEATURE_COLUMNS,
+    CPU_OVERHEAD_TERMS,
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
     DEFAULT_SCHEDULING_MODE,
@@ -19,6 +26,22 @@ from frontier.profiling.cpu_overhead.schema import (
 )
 
 logger = init_logger(__name__)
+
+
+def _key_columns(df: pd.DataFrame) -> list[str]:
+    return [column for column in (CPU_OVERHEAD_PIPELINE_STAGE_COLUMN, CPU_OVERHEAD_ENGINE_IDLE_COLUMN)
+            if column in df.columns]
+
+
+def cpu_overhead_feature_columns(df: pd.DataFrame) -> list[str]:
+    """Features of the CPU-overhead models trained from ``df``."""
+    return [*CPU_OVERHEAD_STEP_FEATURE_COLUMNS, *_key_columns(df)]
+
+
+def cpu_overhead_model_names(df: pd.DataFrame) -> list[str]:
+    """The terms ``df`` prices, one model each."""
+    return [term for term in CPU_OVERHEAD_TERMS
+            if term not in CPU_OVERHEAD_OPTIONAL_TERMS or f"{term}_median" in df.columns]
 
 
 def _default_warn_fn(message: str) -> None:
@@ -110,11 +133,37 @@ def validate_cpu_overhead_dataframe(
             f"Required columns: {list(CPU_OVERHEAD_REQUIRED_COLUMNS)}"
         )
 
-    numeric_frame = validated.loc[:, CPU_OVERHEAD_NUMERIC_COLUMNS].apply(
+    forward_launch_columns = [
+        column for column in CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS if column in validated.columns
+    ]
+    if forward_launch_columns and len(forward_launch_columns) != len(
+        CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS
+    ):
+        raise ValueError(
+            f"CPU overhead columns {list(CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS)} must appear "
+            f"together, got {forward_launch_columns}"
+        )
+    forward_drain_columns = [
+        column for column in CPU_OVERHEAD_FORWARD_DRAIN_COLUMNS if column in validated.columns
+    ]
+    if forward_drain_columns and (
+        len(forward_drain_columns) != len(CPU_OVERHEAD_FORWARD_DRAIN_COLUMNS) or not forward_launch_columns
+    ):
+        raise ValueError(
+            f"CPU overhead columns {list(CPU_OVERHEAD_FORWARD_DRAIN_COLUMNS)} must appear together "
+            f"and with {list(CPU_OVERHEAD_FORWARD_LAUNCH_COLUMNS)}, got {forward_drain_columns}"
+        )
+    key_columns = _key_columns(validated)
+    stage_columns = [column for column in key_columns if column == CPU_OVERHEAD_PIPELINE_STAGE_COLUMN]
+    numeric_columns = [
+        *CPU_OVERHEAD_NUMERIC_COLUMNS, *forward_launch_columns, *forward_drain_columns, *key_columns
+    ]
+
+    numeric_frame = validated.loc[:, numeric_columns].apply(
         pd.to_numeric, errors="coerce"
     )
     invalid_numeric_columns = [
-        column for column in CPU_OVERHEAD_NUMERIC_COLUMNS if numeric_frame[column].isna().any()
+        column for column in numeric_columns if numeric_frame[column].isna().any()
     ]
     if invalid_numeric_columns:
         raise ValueError(
@@ -125,7 +174,7 @@ def validate_cpu_overhead_dataframe(
     if not np.isfinite(numeric_frame.to_numpy(dtype=float)).all():
         raise ValueError("CPU overhead profiling dataframe contains non-finite numeric values.")
 
-    validated.loc[:, CPU_OVERHEAD_NUMERIC_COLUMNS] = numeric_frame
+    validated.loc[:, numeric_columns] = numeric_frame
 
     if (validated["batch_size"] <= 0).any():
         raise ValueError("batch_size must be positive for all CPU overhead rows.")
@@ -133,6 +182,11 @@ def validate_cpu_overhead_dataframe(
         raise ValueError(
             "tensor_parallel_degree must be positive for all CPU overhead rows."
         )
+
+    # A step's idle time takes the largest bucket edge at or below it, so the
+    # buckets must cover every idle time from 0.
+    if CPU_OVERHEAD_ENGINE_IDLE_COLUMN in key_columns and validated[CPU_OVERHEAD_ENGINE_IDLE_COLUMN].min() != 0:
+        raise ValueError(f"the lowest {CPU_OVERHEAD_ENGINE_IDLE_COLUMN} bucket edge must be 0.")
 
     if (validated["num_prefill_tokens"] < 0).any():
         raise ValueError("num_prefill_tokens must be non-negative for all CPU overhead rows.")
@@ -148,6 +202,7 @@ def validate_cpu_overhead_dataframe(
         "tensor_parallel_degree",
         "num_prefill_tokens",
         "num_decode_tokens",
+        *stage_columns,
     )
     for column in int_columns:
         if not (validated[column] == validated[column].astype(int)).all():
@@ -190,16 +245,13 @@ def validate_cpu_overhead_dataframe(
         )
     validated["profiling_precision"] = actual_precision
 
-    duplicate_rows = validated.duplicated(
-        subset=list(CPU_OVERHEAD_IDENTITY_COLUMNS), keep=False
-    )
+    identity_columns = [*CPU_OVERHEAD_IDENTITY_COLUMNS, *key_columns]
+    duplicate_rows = validated.duplicated(subset=identity_columns, keep=False)
     if duplicate_rows.any():
-        duplicated_entries = validated.loc[
-            duplicate_rows, list(CPU_OVERHEAD_IDENTITY_COLUMNS)
-        ].to_dict("records")
+        duplicated_entries = validated.loc[duplicate_rows, identity_columns].to_dict("records")
         raise ValueError(
             "Duplicate CPU overhead rows found for identity columns "
-            f"{CPU_OVERHEAD_IDENTITY_COLUMNS}: {duplicated_entries}"
+            f"{tuple(identity_columns)}: {duplicated_entries}"
         )
 
     return validated

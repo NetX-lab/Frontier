@@ -1,4 +1,9 @@
-from frontier.entities.batch import Batch, EPBatchGroup, SpecDecodeBatchMetadata
+from frontier.entities.batch import (
+    Batch,
+    DummyForwardBatch,
+    EPBatchGroup,
+    SpecDecodeBatchMetadata,
+)
 from frontier.entities.batch_stage import BatchStage
 from frontier.entities.cluster import Cluster
 from frontier.entities.execution_time import ExecutionTime
@@ -13,6 +18,7 @@ __all__ = [
     RequestRoundPlan,
     Replica,
     Batch,
+    DummyForwardBatch,
     EPBatchGroup,
     SpecDecodeBatchMetadata,
     Cluster,

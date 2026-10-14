@@ -49,6 +49,23 @@ def _latent_mla_runtime_head_size(config) -> int:
     )
 
 
+# vLLM's P2P NCCL connector gathers a request's KV blocks after each layer's
+# attention (P2pNcclConnector.save_kv_layer: layer[block_ids]) in the PDD prefill
+# step that completes its prompt. Only runs with that connector price it, and
+# attention tables profiled before it carry no column for it, so it is not a
+# profiling, predictor or E2E trace target of the family.
+DENSE_ATTENTION_KV_CACHE_EXTRACT = AttentionOperatorSpec(
+    name="attn_kv_cache_extract",
+    role=AttentionOperatorRole.CACHE_EXTRACT,
+    phases=(AttentionPhase.PREFILL,),
+    predictor_target=False,
+    profiling_target=False,
+    e2e_trace_target=False,
+    execution_time_attr="attention_kv_cache_extract_execution_time",
+    resource_class=ResourceClass.MEMORY,
+)
+
+
 DENSE_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="dense_attention",
     display_name="Dense-KV Attention",
@@ -75,6 +92,7 @@ DENSE_ATTENTION_FAMILY = AttentionFamilySpec(
             execution_time_attr="attention_decode_execution_time",
             resource_class=ResourceClass.COMP,
         ),
+        DENSE_ATTENTION_KV_CACHE_EXTRACT,
     ),
     memory_layout=AttentionMemoryLayout.DENSE_KV,
     dense_compatible=True,

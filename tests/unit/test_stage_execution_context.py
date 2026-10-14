@@ -791,6 +791,7 @@ def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
             total_expert_num=2,
             owned_expert_ids=(0,),
             local_token_counts=(1,),
+            global_token_counts=(1, 0),
             routed_token_count=1,
             router_topk=1,
         ),

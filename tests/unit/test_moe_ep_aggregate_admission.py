@@ -86,6 +86,7 @@ def _lane(*, ep_id: int = 0, routed_token_count: int = 4) -> EPLaneWorkload:
         total_expert_num=4,
         owned_expert_ids=(ep_id * 2, ep_id * 2 + 1),
         local_token_counts=counts,
+        global_token_counts=(0, 0) * ep_id + counts + (0, 0) * (1 - ep_id),
         routed_token_count=routed_token_count,
         router_topk=2,
     )
@@ -109,6 +110,7 @@ def _admission_lane(
         total_expert_num=total_expert_num,
         owned_expert_ids=tuple(range(local_width)),
         local_token_counts=local_token_counts,
+        global_token_counts=local_token_counts + (0,) * (total_expert_num - local_width),
         routed_token_count=routed_token_count,
         router_topk=router_topk,
     )

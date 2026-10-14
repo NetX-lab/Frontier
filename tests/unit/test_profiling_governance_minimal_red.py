@@ -18,6 +18,7 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
+from frontier.moe_load_imbalance import MOE_LOAD_IMBALANCE_FEATURES
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.types import ClusterType, MeasurementType
 
@@ -1252,7 +1253,7 @@ def test_moe_trainer_rejects_malformed_typed_metadata_before_scalar_filtering(
     row.update(
         {
             feature_name: 1.0
-            for feature_name in MoETrainer.LOAD_IMBALANCE_FEATURES
+            for feature_name in MOE_LOAD_IMBALANCE_FEATURES
             if feature_name not in row
         }
     )

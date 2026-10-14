@@ -427,7 +427,9 @@ def get_attention_input_combinations(
     )
 
     valid_input_combinations = []
-    for input_combination in input_combinations:
+    # The first chunk of chunk size L and the full prefill of length L are the
+    # same input; profile it once.
+    for input_combination in dict.fromkeys(input_combinations):
         prefill_chunk_size, kv_cache_size, batch_size, is_prefill = input_combination
 
         if is_prefill and profile_only_decode:

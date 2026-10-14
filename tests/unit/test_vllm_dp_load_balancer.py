@@ -475,11 +475,20 @@ def test_a_scheduler_without_a_serving_load_definition_says_which_one() -> None:
         ("two_replicas", dict(num_replicas=2), "one co-location Replica"),
         (
             "wrong_replica_scheduler",
+            dict(is_moe=False, attn_dp=1, moe_ep=1,
+                 replica_scheduler_config=SarathiSchedulerConfig(
+                     num_blocks=64, block_size=16, batch_size_cap=4,
+                     chunk_size=16,
+                 )),
+            "one co-location Replica",
+        ),
+        (
+            "moe_lanes_without_the_engine_loop",
             dict(replica_scheduler_config=SarathiSchedulerConfig(
                 num_blocks=64, block_size=16, batch_size_cap=4,
                 chunk_size=16,
             )),
-            "one co-location Replica",
+            "require a vLLM v1 engine replica scheduler",
         ),
         (
             "dense_multi_lane",

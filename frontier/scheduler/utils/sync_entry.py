@@ -5,41 +5,30 @@ from typing import Any
 from frontier.entities import Batch
 
 
-def _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
-    """Allow queued next-forward work to wait while the active group advances."""
-    if sibling_stage.is_busy:
-        return False
-    if sibling_stage.is_empty():
-        return True
-    return scheduler.get_stage_execution_context(replica_id, stage_id).forward_group_sealed
+def _wake_idle_engines(scheduler: Any, time: float, replica_id: int, sync_room: dict) -> list:
+    """Wake the engines of missing lanes that have nothing in flight.
 
-
-def _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, stage_id):
-    """Remove placeholders whose lanes have since joined this forward.
-
-    A placeholder is placed only for a lane whose stage is not busy. A stage
-    admits new work into a forward only before the forward is sealed, and opens
-    a new forward only once it is idle. A lane that is busy while this room is
-    open has therefore joined this forward, and its own batch will arrive here.
-    Counting its placeholder would dispatch the room without that batch.
+    vLLM starts a DP wave on every engine of the group once one engine has a
+    request, so an engine with no work of its own joins with a dummy forward.
+    An engine that is still busy reaches this room through its own forward.
     """
 
-    for lane_id, placed in list(sync_room["batches"].items()):
-        if placed.is_idle and scheduler._replica_schedulers[
-            (replica_id, lane_id)
-        ].get_replica_stage_scheduler(stage_id).is_busy:
-            del sync_room["batches"][lane_id]
-            del sync_room["arrival_times"][lane_id]
+    from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+
+    return [
+        ReplicaScheduleEvent(time, replica_id, scheduler._cluster_type, lane_id)
+        for lane_id in range(scheduler._replica_dp_size)
+        if lane_id not in sync_room["batches"]
+        and scheduler.get_replica_scheduler(replica_id, lane_id).engine_loop_idle
+    ]
 
 
-def _load_sync_event(mode: str):
-    if mode == "prefill":
-        from frontier.events.prefill_sync_event import PrefillSyncEvent
+def _launched_share(scheduler: Any, stage_id: int, layer_id: int) -> float:
+    """Share of the stage forward's launch done once the layer is launched."""
 
-        return PrefillSyncEvent
-    from frontier.events.decode_sync_event import DecodeSyncEvent
-
-    return DecodeSyncEvent
+    num_layers = scheduler._predictor._num_layers_per_pipeline_stage
+    first_layer_id, _ = scheduler.get_pipeline_stage_layer_bounds(stage_id, num_layers)
+    return (layer_id - first_layer_id + 1) / num_layers
 
 
 def enter_layer_sync(
@@ -59,10 +48,9 @@ def enter_layer_sync(
     """Admit one lane into its forward's pre_moe room, and dispatch when full.
 
     `mode` is the entering batch's own local phase. It selects the layer-path
-    check and the event class used to fill an idle lane. Every lane of the
-    cluster waits in its one room, and the cluster's sync kind selects the wave
-    handler, so on a monolithic cluster a cohort whose lanes disagree about
-    their phase still resolves to one forward.
+    check. Every lane of the cluster waits in its one room, and the cluster's
+    sync kind selects the wave handler, so on a monolithic cluster a cohort
+    whose lanes disagree about their phase still resolves to one forward.
     """
 
     del stage_execution_time
@@ -106,73 +94,40 @@ def enter_layer_sync(
         layer_id=layer_id,
         sync_stage=sync_stage,
     )
-    if step_id is None:
-        return []
     sync_room = waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
     # resolve_step retains this binding identity while step_id advances per layer.
-    provisional_id = batch._forward_cohort_provisional_id
-    sync_room.setdefault("provisional_cohort_id", provisional_id)
-    existing_batch = sync_room["batches"].get(lane_id)
-    if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
-        return []
+    sync_room.setdefault("provisional_cohort_id", batch._forward_cohort_provisional_id)
     sync_room["batches"][lane_id] = batch
     sync_room["arrival_times"][lane_id] = float(time)
-    _withdraw_idle_batches_of_joined_lanes(scheduler, sync_room, replica_id, stage_id)
 
     expected_lanes = scheduler._replica_dp_size
     if type(expected_lanes) is not int or expected_lanes <= 0:
         raise ValueError(
             f"{mode_name} attention-DP lane count must be positive, got {expected_lanes}"
         )
-    if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
-        idle_events = []
-        event_cls = _load_sync_event(mode)
-        replica_schedulers = scheduler._replica_schedulers
-        for missing_lane in range(expected_lanes):
-            if missing_lane in sync_room["batches"]:
-                continue
-            sibling = replica_schedulers.get((replica_id, missing_lane))
-            if sibling is None:
-                raise RuntimeError(
-                    "Missing Replica scheduler for expected attention-DP lane: "
-                    f"replica_id={replica_id}, replica_local_id={missing_lane}"
-                )
-            sibling_stage = sibling.get_replica_stage_scheduler(stage_id)
-            if not _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
-                continue
-            idle_batch = Batch(
-                replica_id=replica_id,
-                requests=[],
-                num_tokens=[],
-                is_idle=True,
-                is_moe=batch.is_moe,
-            )
-            idle_batch.set_global_id(expected_lanes * step_id + missing_lane)
-            idle_batch._forward_cohort_id = step_id
-            idle_batch._forward_cohort_provisional_id = provisional_id
-            idle_batch._stage_owner_replica_local_id = missing_lane
-            sync_room["batches"][missing_lane] = idle_batch
-            sync_room["arrival_times"][missing_lane] = float(time)
-            idle_events.append(
-                event_cls(
-                    time=float(time),
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    batch=idle_batch,
-                    replica_local_id=missing_lane,
-                    sync_stage=sync_stage,
-                    layer_id=layer_id,
-                    stage_execution_time=0.0,
-                    cluster_type=scheduler._cluster_type,
-                )
-            )
-        if idle_events:
-            return idle_events
-
-    if len(sync_room["batches"]) != expected_lanes:
-        return []
+    if len(sync_room["batches"]) < expected_lanes:
+        return _wake_idle_engines(scheduler, time, replica_id, sync_room)
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
+    # vLLM all-reduces the token count over the DP group as each stage forward
+    # starts, and an eager forward launches its kernels only after it. Every
+    # lane of this forward therefore launches from the latest lane's start.
+    launch_start_time = max(
+        lane_batch._forward_launch_start_time for lane_batch in step_batches.values()
+    )
+    for lane_batch in step_batches.values():
+        lane_batch._forward_launch_start_time = launch_start_time
+    if expected_lanes > 1:
+        # Each lane's host launches the stage's layers in order, so a lane's
+        # collective for this layer starts only once its launch reached the
+        # layer. With one lane no peer waits here, and the stage end already
+        # adds the launch time its device work did not hide.
+        sync_time = max(
+            sync_time,
+            launch_start_time
+            + _launched_share(scheduler, stage_id, layer_id)
+            * max(lane_batch._forward_launch_time for lane_batch in step_batches.values()),
+        )
     provisional_id = sync_room["provisional_cohort_id"]
     if type(provisional_id) is not int or provisional_id < 0:
         raise RuntimeError(

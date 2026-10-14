@@ -62,6 +62,7 @@ def _dispatch_batch(ep_id: int, global_id: int = 4) -> EPBatchGroup:
         total_expert_num=4,
         owned_expert_ids=(ep_id * 2, ep_id * 2 + 1),
         local_token_counts=(ep_id + 1, 0),
+        global_token_counts=(0, 0) * ep_id + (ep_id + 1, 0) + (0, 0) * (1 - ep_id),
         routed_token_count=ep_id + 1,
         router_topk=1,
     )

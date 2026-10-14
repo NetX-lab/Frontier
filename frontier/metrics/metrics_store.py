@@ -6,12 +6,13 @@ from typing import Dict, List, TYPE_CHECKING, Any, Optional
 import pandas as pd
 import plotly.express as px
 
-from frontier.config import SimulationConfig, ClusterConfig, get_quantization_manager
+from frontier.config import SimulationConfig, ClusterConfig, get_quantization_manager, global_vars
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.entities import Batch, BatchStage, ExecutionTime, Request, StageExecutionTime
 from frontier.logger import get_cluster_logger, init_logger
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     LATENT_MLA_ATTENTION_FAMILY,
     get_attention_family,
 )
@@ -4279,6 +4280,12 @@ class MetricsStore:
                 execution_time.mtp_terminal_overshoot_time
             ),
         }
+        if execution_time.has_kernel_gap:
+            component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
+        if global_vars.get_kv_connector() != "none":
+            component_ledger[DENSE_ATTENTION_KV_CACHE_EXTRACT.execution_time_attr] = _round_ledger_ms(
+                execution_time.attention_kv_cache_extract_execution_time
+            )
         return component_ledger
 
     def _build_frontier_stage_batch_diagnostic_component_ledger(

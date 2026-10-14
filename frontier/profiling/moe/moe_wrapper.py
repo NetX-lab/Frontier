@@ -831,7 +831,7 @@ class MoEWrapper:
 
         Args:
             num_tokens: Number of input tokens
-            load_distribution: Load distribution type for grouped_gemm (uniform/skewed/extremely_skewed)
+            load_distribution: Load distribution type for grouped_gemm (uniform/balanced/skewed/extremely_skewed)
             seed: Random seed for reproducibility
 
         Returns:

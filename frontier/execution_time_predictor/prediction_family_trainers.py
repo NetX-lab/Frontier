@@ -6,11 +6,14 @@ and CPU overhead.  Each selects the rows its family owns, builds the feature
 frame, and hands one model at a time to the shared fitting routine.
 """
 
+import functools
 import os
+import numpy as np
 import pandas as pd
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DENSE_ATTENTION_KV_CACHE_EXTRACT,
     LATENT_MLA_ATTENTION_FAMILY,
 )
 from frontier.attention.model_binding import resolve_runtime_attention_family
@@ -23,6 +26,12 @@ from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
 from frontier.attention.string_coercion import coerce_truthy_int
+from frontier.config import global_vars
+from frontier.execution_time_predictor.kernel_gap import KernelCountTraining
+from frontier.execution_time_predictor.moe_dataset_training import (
+    block_size_m_ranges,
+    select_moe_operator_features,
+)
 from frontier.execution_time_predictor.prediction_model_identity import (
     _add_layer_contract_to_training_context,
     _build_exact_feature_lookup,
@@ -47,6 +56,7 @@ from frontier.moe_gating_runtime import (
     has_prefill_hot_moe_gating_rows,
     should_enable_prefill_hot_moe_gating_contract,
 )
+from frontier.moe_load_imbalance import MOE_GROUPED_GEMM_PADDED_FEATURES
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
@@ -56,6 +66,7 @@ from frontier.operators.families import (
     SHARE_EXPERT_FAMILY,
     get_family_profiling_names,
 )
+from frontier.profiling.cpu_overhead.validation import cpu_overhead_feature_columns, cpu_overhead_model_names
 from frontier.spec_decode.runtime import is_target_embedded_mtp_enabled
 from frontier.types import ClusterType, MeasurementType
 from sklearn.base import BaseEstimator
@@ -66,7 +77,7 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = init_logger(__name__)
 
 
-class PredictionFamilyTrainers:
+class PredictionFamilyTrainers(KernelCountTraining):
     """Per-family model training for the execution-time predictor."""
 
     def _train_ffn_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config,
@@ -297,63 +308,12 @@ class PredictionFamilyTrainers:
                         "ANY" if moe_ep_key is None else moe_ep_key
                     )
 
-                    # Per-operation feature selection.
-                    if model_name == "moe_grouped_gemm":
-                        available_load_features = [
-                            f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                            if f in op_moe_df.columns
-                        ]
-                        has_load_imbalance_features = (
-                            len(available_load_features)
-                            == len(self.MOE_LOAD_IMBALANCE_FEATURES)
-                        )
-                        if 0 < len(available_load_features) < len(self.MOE_LOAD_IMBALANCE_FEATURES):
-                            missing_features = [
-                                f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                                if f not in op_moe_df.columns
-                            ]
-                            raise ValueError(
-                                f"Partial load imbalance features found ({len(available_load_features)}/"
-                                f"{len(self.MOE_LOAD_IMBALANCE_FEATURES)}) for {model_name} at TP={moe_tp_key}. "
-                                f"Missing: {missing_features}."
-                            )
-
-                        if has_load_imbalance_features:
-                            op_feature_cols = available_load_features
-                            logger.info(
-                                f"  {model_name}: Using load imbalance features "
-                                f"({len(op_feature_cols)} features, TP={moe_tp_key})"
-                            )
-                        else:
-                            op_feature_cols = ["num_tokens"]
-                            logger.info(
-                                f"  {model_name}: Load imbalance features not found; "
-                                f"using num_tokens only (TP={moe_tp_key})."
-                            )
-                    elif model_name == "moe_shuffling":
-                        available_load_features = [
-                            f for f in self.MOE_LOAD_IMBALANCE_FEATURES
-                            if f in op_moe_df.columns
-                        ]
-                        if len(available_load_features) == len(self.MOE_LOAD_IMBALANCE_FEATURES):
-                            op_feature_cols = available_load_features
-                            logger.info(
-                                f"  {model_name}: Using load imbalance features "
-                                f"({len(op_feature_cols)} features, TP={moe_tp_key})"
-                            )
-                        else:
-                            # For shuffling we allow partial/legacy datasets and fall back to
-                            # num_tokens-only training when the full load feature set is absent.
-                            op_feature_cols = ["num_tokens"]
-                            logger.info(
-                                f"  {model_name}: Full load imbalance features unavailable; "
-                                f"using num_tokens only (TP={moe_tp_key})."
-                            )
-                    else:
-                        op_feature_cols = ["num_tokens"]
-                        logger.info(
-                            f"  {model_name}: Using num_tokens only (1 feature, TP={moe_tp_key})"
-                        )
+                    op_moe_df, op_feature_cols = select_moe_operator_features(
+                        model_name, op_moe_df
+                    )
+                    logger.info(
+                        f"  {model_name}: features {op_feature_cols} (TP={moe_tp_key})"
+                    )
 
                     # Store feature_cols in training_context for this specific operation
                     op_training_context['feature_cols'] = op_feature_cols
@@ -371,6 +331,10 @@ class PredictionFamilyTrainers:
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
+                    if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+                        models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
+                            op_moe_df
+                        )
                     trained_model_signatures.add(model_signature)
                     logger.info(f"Trained {model_name} for {cluster_type} with features: {op_feature_cols}")
 
@@ -909,8 +873,15 @@ class PredictionFamilyTrainers:
         standard_df = attention_df[~attention_df["is_true_mixed_batch"]].copy()
         prefill_df = standard_df[~standard_df["is_decode"]].copy()
         decode_df = standard_df[standard_df["is_decode"]].copy()
-        standard_prefill_df = pd.DataFrame()
-        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT):
+        is_event = measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT)
+        if not is_event and measurement_type != MeasurementType.KERNEL_ONLY:
+            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
+        family_name = self._measurement_family_name(measurement_type)
+        # Event tables always profile prefill attention. Kernel-only tables
+        # profile it for two-stream eager pricing, whose eager steps take their
+        # device stream from kernel-only operator tables.
+        trains_prefill = is_event or not prefill_df.empty
+        if trains_prefill:
             if "prefill_chunk_size" not in prefill_df.columns:
                 raise ValueError(
                     "Missing required column 'prefill_chunk_size' in attention profiling data."
@@ -925,7 +896,8 @@ class PredictionFamilyTrainers:
             if prefill_model_signature not in trained_model_signatures:
                 if len(standard_prefill_df) == 0:
                     raise ValueError(
-                        "No standard prefill rows (prefill_chunk_size > 0) found in eager attention profiling data."
+                        "No standard prefill rows (prefill_chunk_size > 0) found in "
+                        f"{family_name} attention profiling data."
                     )
                 models[prefill_model_name] = self._train_single_model(
                     model_name=prefill_model_name,
@@ -936,13 +908,29 @@ class PredictionFamilyTrainers:
                     training_context=training_context,
                 )
                 trained_model_signatures.add(prefill_model_signature)
-                logger.info(f"Trained {prefill_model_name} for {cluster_type}")
+                logger.info(f"Trained {family_name} {prefill_model_name} for {cluster_type}")
 
-            decode_model_name = get_enabled_predictor_metric_name_by_role(
-                DENSE_ATTENTION_FAMILY,
-                AttentionOperatorRole.DECODE_KERNEL,
-            )
-            decode_model_signature = f"{decode_model_name}_{attention_signature}"
+            extract_model_signature = f"{DENSE_ATTENTION_KV_CACHE_EXTRACT.name}_{attention_signature}"
+            if (
+                global_vars.get_kv_connector() == "p2p_nccl"
+                and extract_model_signature not in trained_model_signatures
+            ):
+                models.update(
+                    self._train_kv_cache_extract_model(
+                        standard_prefill_df,
+                        replica_scheduler_config.block_size,
+                        execution_time_predictor_config,
+                        training_context,
+                    )
+                )
+                trained_model_signatures.add(extract_model_signature)
+
+        decode_model_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.DECODE_KERNEL,
+        )
+        decode_model_signature = f"{decode_model_name}_{attention_signature}"
+        if is_event:
             if decode_model_signature not in trained_model_signatures:
                 if len(decode_df) == 0:
                     logger.info(
@@ -980,12 +968,7 @@ class PredictionFamilyTrainers:
                         )
                         trained_model_signatures.add(decode_model_signature)
                         logger.info(f"Trained eager {decode_model_name} for {cluster_type}")
-        elif measurement_type == MeasurementType.KERNEL_ONLY:
-            decode_model_name = get_enabled_predictor_metric_name_by_role(
-                DENSE_ATTENTION_FAMILY,
-                AttentionOperatorRole.DECODE_KERNEL,
-            )
-            decode_model_signature = f"{decode_model_name}_{attention_signature}"
+        else:
             if decode_model_signature not in trained_model_signatures:
                 if len(decode_df) == 0:
                     raise ValueError(
@@ -1001,14 +984,12 @@ class PredictionFamilyTrainers:
                 )
                 trained_model_signatures.add(decode_model_signature)
                 logger.info(f"Trained {decode_model_name} for {cluster_type}")
-        else:
-            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
         # ========== Part 3: Mixed-batch prefill model (optional, high-dimensional) ==========
         # attn_prefill_mixed uses 12 features and requires on-demand prediction at runtime
         # Check if profiling data contains mixed-batch features
         mixed_batch_model_signature = f"attn_prefill_mixed_{attention_signature}"
-        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT) and mixed_batch_model_signature not in trained_model_signatures:
+        if trains_prefill and mixed_batch_model_signature not in trained_model_signatures:
             # Check for mixed-batch specific columns in the dataframe
             required_mixed_features = self.ATTN_PREFILL_MIXED_FEATURES
             has_mixed_batch_data = all(feat in prefill_df.columns for feat in required_mixed_features)
@@ -1040,7 +1021,7 @@ class PredictionFamilyTrainers:
                 logger.info(f"Skipping attn_prefill_mixed for {cluster_type} - missing features: {missing_features}")
 
         decode_in_mixed_signature = f"attn_decode_in_mixed_{attention_signature}"
-        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT) and decode_in_mixed_signature not in trained_model_signatures:
+        if decode_in_mixed_signature not in trained_model_signatures:
             required_decode_mixed_features = self.ATTN_DECODE_IN_MIXED_FEATURES
             has_decode_mixed_data = all(
                 feat in true_mixed_df.columns for feat in required_decode_mixed_features
@@ -1074,6 +1055,47 @@ class PredictionFamilyTrainers:
 
         trained_model_signatures.add(attention_signature)
         return models
+
+    def _train_kv_cache_extract_model(
+        self,
+        standard_prefill_df: pd.DataFrame,
+        block_size: int,
+        execution_time_predictor_config,
+        training_context: Dict[str, Any],
+    ) -> Dict[str, BaseEstimator]:
+        """Train the KV extract of one request's prompt blocks, when the table times it.
+
+        A one-request prefill row times the gather of all the blocks its
+        prompt occupies, the work P2pNcclConnector.save_kv_layer launches per
+        request and layer.
+        """
+        model_name = DENSE_ATTENTION_KV_CACHE_EXTRACT.name
+        target_col = f"time_stats.{model_name}.median"
+        if target_col not in standard_prefill_df.columns:
+            return {}
+        extract_df = standard_prefill_df[
+            (standard_prefill_df["batch_size"] == 1) & standard_prefill_df[target_col].notna()
+        ].copy()
+        if extract_df.empty:
+            return {}
+        extract_df["num_blocks"] = np.ceil(
+            (extract_df["kv_cache_size"] + extract_df["prefill_chunk_size"]) / block_size
+        )
+        model = self._train_single_model(
+            model_name=model_name,
+            df=extract_df,
+            feature_cols=["num_blocks"],
+            target_col=target_col,
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+        )
+        logger.info(
+            "Trained %s %s on %d one-request prefill rows",
+            self._measurement_family_name(self._active_measurement_type),
+            model_name,
+            len(extract_df),
+        )
+        return {model_name: model}
 
     @staticmethod
 
@@ -1370,6 +1392,7 @@ class PredictionFamilyTrainers:
             target_col="time_stats.send_recv.median",
             execution_time_predictor_config=execution_time_predictor_config,
             training_context=training_context,
+            count_kernels=False,
         )
 
         trained_model_signatures.add(pp_signature)
@@ -1415,7 +1438,8 @@ class PredictionFamilyTrainers:
             feature_cols=["num_tokens"],
             target_col="time_stats.all_reduce.median",
             execution_time_predictor_config=execution_time_predictor_config,
-            training_context=training_context
+            training_context=training_context,
+            count_kernels=False,
         )
         
         trained_model_signatures.add(tp_signature)
@@ -1456,25 +1480,14 @@ class PredictionFamilyTrainers:
             'input_file': cpu_overhead_input_file,
         }
 
-        model_names = [
-            "schedule",
-            "sampler_e2e",
-            "prepare_inputs_e2e",
-            "process_model_outputs",
-            "ray_comm_time",
-        ]
+        feature_cols = cpu_overhead_feature_columns(cpu_overhead_df)
 
-        for model_name in model_names:
+        for model_name in cpu_overhead_model_names(cpu_overhead_df):
             target_col = "ray_comm_time_mean" if model_name == "ray_comm_time" else f"{model_name}_median"
 
             model_signature = f"{model_name}_{cpu_signature}"
             if model_signature not in trained_model_signatures:
-                feature_cols = [
-                    "batch_size",
-                    "num_prefill_tokens",
-                    "num_decode_tokens",
-                ]
-                model = self._train_single_model(
+                models[model_name] = self._train_single_model(
                     model_name=model_name,
                     df=cpu_overhead_df,
                     feature_cols=feature_cols,
@@ -1483,13 +1496,6 @@ class PredictionFamilyTrainers:
                     training_context=training_context,
                     persist_exact_lookup=True,
                 )
-                if not hasattr(model, "_frontier_exact_lookup"):
-                    model._frontier_exact_lookup = _build_exact_feature_lookup(
-                        cpu_overhead_df,
-                        feature_cols,
-                        target_col,
-                    )
-                models[model_name] = model
                 trained_model_signatures.add(model_signature)
 
         trained_model_signatures.add(cpu_signature)
@@ -1505,12 +1511,50 @@ class PredictionFamilyTrainers:
         training_context: Optional[Dict[str, Any]] = None,
         persist_exact_lookup: bool = True,
         layer_contract: Optional[ResolvedLayerContract] = None,
+        count_kernels: bool = True,
     ) -> BaseEstimator:
-        """Train a single model with given data and configuration."""
+        """Train a single model and register it under the active measurement family.
+
+        A collective's model passes ``count_kernels=False``: a collective launches
+        the kernels of its operator spec, so it has no kernel-count model.
+        """
         layer_contract, training_context = _normalize_layer_contract_context(
             training_context,
             explicit_layer_contract=layer_contract,
         )
+        fit = functools.partial(
+            self._fit_single_model,
+            execution_time_predictor_config=execution_time_predictor_config,
+            training_context=training_context,
+            persist_exact_lookup=persist_exact_lookup,
+            layer_contract=layer_contract,
+        )
+        model, profiling_precision = fit(model_name, df, feature_cols, target_col)
+        self._store_model_precision(
+            model_name,
+            profiling_precision,
+            model,
+            **_layer_contract_kwargs(layer_contract),
+        )
+        if not count_kernels:
+            return model
+        return self._paired_with_kernel_count_model(
+            model, model_name, df, feature_cols, target_col,
+            train=lambda *count_model_args: fit(*count_model_args)[0],
+        )
+
+    def _fit_single_model(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols: List[str],
+        target_col: str,
+        execution_time_predictor_config,
+        training_context: Optional[Dict[str, Any]],
+        persist_exact_lookup: bool,
+        layer_contract: Optional[ResolvedLayerContract],
+    ) -> Tuple[BaseEstimator, str]:
+        """Load or fit one model; return it with its profiling precision."""
         if len(df) == 0:
             # 提供详细的错误信息，以便调试
             context_info = ""
@@ -1587,13 +1631,7 @@ class PredictionFamilyTrainers:
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            self._store_model_precision(
-                model_name,
-                profiling_precision,
-                cached_model,
-                **_layer_contract_kwargs(layer_contract),
-            )
-            return cached_model
+            return cached_model, profiling_precision
 
         # ============================================================
         # CACHE MISS: Model not found in cache
@@ -1657,24 +1695,24 @@ class PredictionFamilyTrainers:
         # ============================================================
 
         estimator, grid_search_params = self._create_estimator_and_params(execution_time_predictor_config)
-
-        cv = min(execution_time_predictor_config.k_fold_cv_splits, len(df)) if len(df) >= 2 else 2
-
-        grid_search = GridSearchCV(
-            estimator=estimator,
-            param_grid=grid_search_params,
-            scoring=self._get_scorer(),
-            cv=cv,
-            n_jobs=execution_time_predictor_config.num_training_job_threads,
-        )
-
         X, y = df[feature_cols], df[target_col]
-        grid_search.fit(X, y)
-        score = grid_search.score(X, y)
 
-        logger.info(f"✓ Trained model {model_name} with MAPE {-score}%")
-
-        best_estimator = grid_search.best_estimator_
+        if len(df) == 1:
+            # Cross-validation needs two rows, and every grid candidate fitted
+            # on one row predicts that row's value.
+            best_estimator = estimator.fit(X, y)
+            logger.info(f"✓ Trained model {model_name} on its single row")
+        else:
+            grid_search = GridSearchCV(
+                estimator=estimator,
+                param_grid=grid_search_params,
+                scoring=self._get_scorer(),
+                cv=min(execution_time_predictor_config.k_fold_cv_splits, len(df)),
+                n_jobs=execution_time_predictor_config.num_training_job_threads,
+            )
+            grid_search.fit(X, y)
+            logger.info(f"✓ Trained model {model_name} with MAPE {-grid_search.score(X, y)}%")
+            best_estimator = grid_search.best_estimator_
         # Persist feature metadata for runtime on-demand prediction (e.g., moe_grouped_gemm load imbalance mode).
         setattr(best_estimator, "_frontier_feature_names", list(feature_cols))
         setattr(best_estimator, "_frontier_target_col", target_col)
@@ -1691,10 +1729,4 @@ class PredictionFamilyTrainers:
             )
 
         self._store_model_in_cache(model_name, model_hash, best_estimator)
-        self._store_model_precision(
-            model_name,
-            profiling_precision,
-            best_estimator,
-            **_layer_contract_kwargs(layer_contract),
-        )
-        return best_estimator
+        return best_estimator, profiling_precision

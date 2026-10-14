@@ -16,6 +16,7 @@
 | 2026-09-24 | Scoped the round-robin placement description to its roles, including the PD-AF threshold waves, and described the random scheduler's lane rotation. |
 | 2026-09-25 | Listed the stale-drop and deferred-release load reports of the vLLM DP placement policy. |
 | 2026-10-09 | Corrected the vLLM V1 replica scheduler's class name to `VLLMv1EngineReplicaScheduler`, as registered in `ReplicaSchedulerRegistry`. |
+| 2026-10-10 | Linked the module size exception record for the modules above 2,000 lines that the calibration changes touch. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -761,6 +762,7 @@ Practical implication: Frontier intentionally uses a split interface (`param_mem
 - When a critical module exceeds 2,000 lines, first inspect the codebase and remove redundant, low-value, dead, or overly defensive code and functions.
 - When the module still exceeds 2,000 lines after that cleanup, document the concrete technical reason, affected behavior, and why the current boundary preserves correctness.
 - For any remaining module above 2,000 lines, perform a design analysis for a functional split into child modules under the appropriate package or `utils/`, then record the proposed boundaries and sequencing before implementation.
+- `docs/general/module-size-exceptions.md` records the cleanup, boundary reasons, and planned splits for the modules above 2,000 lines that the calibration changes touch.
 - Use solid, plain names that describe the component's ML-system responsibility directly.
 - Prefer established component terms such as `scheduler`, `replica`, `stage`, `expert_parallel`, `transfer`, `attention`, `diagnostics`, and `planner`.
 - Keep module and function names consistent with neighboring code and avoid obscure domain labels or names that imply a broader contract than the implementation provides.

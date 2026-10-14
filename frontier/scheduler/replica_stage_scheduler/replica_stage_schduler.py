@@ -3,7 +3,7 @@ import heapq
 import logging
 
 from frontier.entities import Batch, BatchStage, ExecutionTime, EPBatchGroup
-from frontier.entities.batch import DenseFFNBatchGroup
+from frontier.entities.batch import DenseFFNBatchGroup, DummyForwardBatch
 from frontier.execution_time_predictor import BaseExecutionTimePredictor
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     StageAdmissionTicket,
@@ -47,6 +47,7 @@ class ReplicaStageScheduler:
         self._insertion_counter = 0  # Monotonically increasing counter for FIFO tie-breaking
         self._is_busy = False
         self._last_stale_drops: list[Batch] = []
+        self._num_forwards_started = 0
 
     # gurantee only one batch is in current stage at a time;
     # other batches are in the self._batch_queue
@@ -329,6 +330,13 @@ class ReplicaStageScheduler:
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
                 continue
+            if (
+                isinstance(batch, DummyForwardBatch)
+                and batch.forward_index > self._num_forwards_started
+            ):
+                # vLLM queues a dummy forward behind the lane's earlier forwards
+                # on every rank; one that has not reached this stage holds it.
+                return None
             parent_acquired = False
             if not self._stage_execution_context.owns(admission_ticket):
                 if not self._stage_execution_context.try_acquire(admission_ticket):
@@ -375,6 +383,7 @@ class ReplicaStageScheduler:
                     self._stage_execution_context.bind_forward_group(admission_ticket)
                 )
             self._is_busy = True
+            self._num_forwards_started += 1
             return live_batch
         return None
 
@@ -480,8 +489,11 @@ class ReplicaStageScheduler:
             batch_stage.attach_runtime_identity(batch)
             return batch_stage, None
 
-        total_execution_time = execution_time.total_time
         model_execution_time = execution_time.model_time
+        total_execution_time = (
+            execution_time.total_time
+            + execution_time.forward_launch_stall_time(model_execution_time)
+        )
         batch_stage = BatchStage(
             batch.id,
             self._replica_id,

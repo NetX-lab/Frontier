@@ -314,7 +314,7 @@ def test_ep_lane_reporting_preserves_work_and_barrier_gaps(tmp_path):
         batch = EPBatchGroup(
             requests=[request], num_tokens=[8], replica_id=0, ep_id=ep_id, time=1.0,
             source_batch_ids=[73], cluster_type=ClusterType.MONOLITHIC, is_moe=True,
-            lane_workload=EPLaneWorkload(ep_id, 2, 2, (ep_id,), (4,), 4, 1),
+            lane_workload=EPLaneWorkload(ep_id, 2, 2, (ep_id,), (4,), (4, 4), 4, 1),
         )
         batch.moe_pre_routing_effective_total_tokens = 8
         layer = _layer(7, is_moe=True, schedule_time=999.0, op_times={
@@ -368,7 +368,7 @@ def test_ep_and_attention_share_source_batch_expansion_decision(tmp_path, wave_f
     lane = EPBatchGroup(
         requests=[request], num_tokens=[8], replica_id=0, ep_id=0, time=1.0,
         source_batch_ids=[73], cluster_type=ClusterType.MONOLITHIC, is_moe=True,
-        lane_workload=EPLaneWorkload(0, 1, 1, (0,), (8,), 8, 1),
+        lane_workload=EPLaneWorkload(0, 1, 1, (0,), (8,), (8,), 8, 1),
     )
     lane.moe_pre_routing_effective_total_tokens = 8
     layer = _layer(7, is_moe=True, op_times={

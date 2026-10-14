@@ -28,6 +28,7 @@ def test_ep_trace_helper_consumes_typed_lane_descriptor(caplog) -> None:
         total_expert_num=4,
         owned_expert_ids=(2, 3),
         local_token_counts=(0, 2),
+        global_token_counts=(0, 0, 0, 2),
         routed_token_count=2,
         router_topk=1,
     )

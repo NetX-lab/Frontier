@@ -59,6 +59,10 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
         pipeline_time = 2.0
         model_time = 15.0
         total_time = 20.0
+        forward_preparation_time = 0.0
+
+        def forward_launch_stall_time(self, device_span: float) -> float:
+            return 0.0
 
         def get_single_layer_attention_time(self) -> float:
             return 1.0
@@ -103,6 +107,7 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
         id=7,
         is_idle=False,
         _prefill_stage_start_time=0.0,
+        _forward_launch_start_time=0.0,
         _prefill_model_execution_components_ms_by_stage={0: [15.0]},
         schedule_epoch=0,
         request_execution_signatures=[],
@@ -150,6 +155,7 @@ def test_prefill_final_sync_releases_the_batch_owner_lane() -> None:
         is_idle=False,
         _stage_owner_replica_local_id=1,
         _prefill_stage_start_time=0.0,
+        _forward_launch_start_time=0.0,
         _prefill_model_execution_components_ms_by_stage={0: [1.0]},
         schedule_epoch=0,
         request_execution_signatures=[],
@@ -197,6 +203,11 @@ class _LayerExecutionTime:
             attention_ms + post_attention_ms + pipeline_ms
         ) * 1e-3
         self.total_time = self.model_time
+        self.forward_preparation_time = 0.0
+        self.forward_launch_time = 0.0
+
+    def forward_launch_stall_time(self, device_span: float) -> float:
+        return 0.0
 
     def get_single_layer_attention_time(self) -> float:
         return self._attention_ms
@@ -321,6 +332,7 @@ def test_prefill_final_sync_uses_component_ledger_without_timestamp_residue() ->
         id=8,
         is_idle=False,
         _prefill_stage_start_time=stage_start_time,
+        _forward_launch_start_time=stage_start_time,
         _prefill_model_execution_components_ms_by_stage={0: components_ms},
         schedule_epoch=0,
         request_execution_signatures=[],
@@ -376,6 +388,7 @@ def test_prefill_final_sync_fails_fast_without_component_ledger() -> None:
         id=9,
         is_idle=False,
         _prefill_stage_start_time=10.0,
+        _forward_launch_start_time=10.0,
         schedule_epoch=0,
         request_execution_signatures=[],
         request_mutation_signatures=[],
@@ -428,6 +441,7 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
         is_idle=False,
         total_num_tokens=8,
         _prefill_stage_start_time=stage_start_time,
+        _forward_launch_start_time=stage_start_time,
         _prefill_model_execution_components_ms_by_stage={0: [1.25, 2.5]},
         schedule_epoch=0,
         request_execution_signatures=[],
@@ -524,6 +538,7 @@ def test_prefill_pp2_stage_one_advances_with_global_layer_ids() -> None:
         is_idle=False,
         total_num_tokens=8,
         _prefill_stage_start_time=10.0,
+        _forward_launch_start_time=10.0,
         _prefill_model_execution_components_ms_by_stage={1: [1.25, 2.5]},
         schedule_epoch=0,
         request_execution_signatures=[],

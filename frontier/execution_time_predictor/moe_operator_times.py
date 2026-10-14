@@ -642,8 +642,8 @@ class MoeOperatorTimes:
         if isinstance(prediction_cache, dict) and prediction_cache.get(
             "_on_demand_prediction"
         ):
-            # On-demand prediction mode: model was trained with load imbalance features.
-            # We must provide the full feature set computed from per-expert token distribution.
+            # On-demand prediction mode: the model was trained on features of the
+            # per-expert token distribution.
             if lane_workload is None:
                 raise ValueError(
                     "moe_grouped_gemm is in load-imbalance (on-demand) mode and "
@@ -653,10 +653,7 @@ class MoeOperatorTimes:
             if lane_workload.routed_token_count == 0:
                 return 0.0
 
-            features = self._build_moe_load_imbalance_features(
-                lane_workload,
-                batch=batch,
-            )
+            features = self._build_grouped_gemm_features(lane_workload, batch=batch)
             return self._get_on_demand_prediction("moe_grouped_gemm", features)
 
         # Standard cache lookup mode (trained with num_tokens only)

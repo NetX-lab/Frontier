@@ -127,7 +127,6 @@ from frontier.scheduler.utils.collective_timing import (
     attention_delay_seconds,
     prepare_decode_final_timing,
     prepare_prefill_final_timing,
-    select_active_batch,
     validate_decode_layer_advance,
 )
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
@@ -915,7 +914,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         lane_id: int,
         layer_id: int,
         sync_stage: str,
-    ) -> int | None:
+    ) -> int:
         """Resolve one lane through the forward-sync state owner."""
 
         state = self._get_forward_sync_state()

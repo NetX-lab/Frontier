@@ -1138,3 +1138,25 @@ def test_execution_time_setter_operator_times_inputs_are_defensively_copied():
         "pipeline_parallel_send_recv",
         lambda execution_time: execution_time.pipeline_parallel_communication_time,
     )
+
+
+@pytest.mark.parametrize(
+    ("launch_ms", "drain_ms", "device_span", "expected"),
+    [
+        # Launch-bound: the forward ends a drain after its last launch.
+        (10.0, 2.0, 0.008, 0.004),
+        # Device-bound but shorter than launch plus drain: the in-situ drain still bounds the end.
+        (10.0, 2.0, 0.011, 0.001),
+        # Device-bound beyond launch plus drain: the device span is the forward.
+        (10.0, 2.0, 0.013, 0.0),
+        # No eager launch row (CUDA-graph replay or a table without the columns).
+        (0.0, 0.0, 0.005, 0.0),
+    ],
+)
+def test_forward_launch_stall_time_ends_the_forward_no_earlier_than_launch_plus_drain(
+    launch_ms, drain_ms, device_span, expected
+):
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(forward_launch_time=launch_ms, forward_drain_time=drain_ms)
+    )
+    assert execution_time.forward_launch_stall_time(device_span) == pytest.approx(expected)

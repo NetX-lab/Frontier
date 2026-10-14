@@ -24,6 +24,7 @@ def _lane_batch(*, ep_id: int, local_token_counts: tuple[int, int]) -> EPBatchGr
         total_expert_num=4,
         owned_expert_ids=(ep_id * 2, ep_id * 2 + 1),
         local_token_counts=local_token_counts,
+        global_token_counts=(0, 0) * ep_id + local_token_counts + (0, 0) * (1 - ep_id),
         routed_token_count=sum(local_token_counts),
         router_topk=2,
     )

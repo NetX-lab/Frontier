@@ -7,18 +7,23 @@
 #
 # Required environment:
 #   RUN_TAG        identifier of this run
+#   MODE           ground-truth mode of vllm_replay.py; device_timeline also
+#                  reduces rank 0's profiler trace to run/device_timeline.json
+#                  (forward_device_timeline.py) and archives the traces only
+#   REPLAY_TIMEOUT_S  wall-time limit of the replay, below the job's cap so
+#                  that a stopped replay is still published
 #   FRONTIER_TREE  Frontier worktree on the mounted workspace
 #   GROUNDTRUTH    vLLM-BS checkout on the mounted workspace
 #   CASE_DIR       calibration case directory on the mounted workspace; reads
-#                  inputs/, writes runs/groundtruth_clean/<RUN_TAG>/
+#                  inputs/, writes runs/groundtruth_<MODE>/<RUN_TAG>/
 #   ENGINE_CONFIG  engine settings file under CASE_DIR/inputs
 #   TRACE_DIR      trace directory (trace.csv, request_ids.json) under CASE_DIR/inputs
 #   ARCHIVE_DIR    cloud-volume directory for this run
 set -euo pipefail
 set +x
-: "${RUN_TAG:?}" "${FRONTIER_TREE:?}" "${GROUNDTRUTH:?}" "${CASE_DIR:?}" \
-  "${ENGINE_CONFIG:?}" "${TRACE_DIR:?}" "${ARCHIVE_DIR:?}"
-EVIDENCE_DIR="$CASE_DIR/runs/groundtruth_clean/$RUN_TAG"
+: "${RUN_TAG:?}" "${MODE:?}" "${REPLAY_TIMEOUT_S:?}" "${FRONTIER_TREE:?}" "${GROUNDTRUTH:?}" \
+  "${CASE_DIR:?}" "${ENGINE_CONFIG:?}" "${TRACE_DIR:?}" "${ARCHIVE_DIR:?}"
+EVIDENCE_DIR="$CASE_DIR/runs/groundtruth_$MODE/$RUN_TAG"
 # A run never writes over an earlier run's evidence.
 for target in "$EVIDENCE_DIR/run" "$ARCHIVE_DIR"; do
   if [ -e "$target" ]; then
@@ -40,6 +45,11 @@ WORK=/tmp/dp_placement_pp/$RUN_TAG
 mkdir -p "$WORK/run"
 export VLLM_CACHE_ROOT="$WORK/vllm_cache" HF_HOME="$WORK/hf" HF_HUB_OFFLINE=1 \
   TRANSFORMERS_OFFLINE=1 VLLM_NO_USAGE_STATS=1 DO_NOT_TRACK=1
+# The runs of one job share the Triton kernel cache, so an unmeasured warm run
+# compiles the eager kernel shapes before the measured runs (decision
+# T43-COMPILECACHE). vLLM redirects it only when it compiles the model with
+# torch.compile, which these eager-MoE cases do not.
+export TRITON_CACHE_DIR=/tmp/dp_placement_pp/triton_cache
 
 publish() {
   local target="$1"
@@ -82,20 +92,35 @@ export PYTHONPATH="$WORK/overlay"
 "$PY" -c 'import vllm, vllm.v1.frontier_trace as t; print("VLLM_IMPORT", vllm.__version__, vllm.__file__, t.__file__)' \
   | tee "$WORK/vllm_import.txt"
 
-if timeout 2400 "$PY" "$SCRIPT_DIR/vllm_replay.py" \
+if timeout "$REPLAY_TIMEOUT_S" "$PY" "$SCRIPT_DIR/vllm_replay.py" \
      --engine-config "$ENGINE_CONFIG" --trace-dir "$TRACE_DIR" \
-     --output-dir "$WORK/run" > "$WORK/run/replay.log" 2>&1; then
+     --output-dir "$WORK/run" --mode "$MODE" --torch-trace-dir "$WORK/torch_trace" \
+     > "$WORK/run/replay.log" 2>&1; then
   echo "REPLAY_PASS"
 else
   status=$?
   echo "REPLAY_FAIL exit=$status"
   tail -n 80 "$WORK/run/server.log" 2>/dev/null || true
 fi
+if [ "$status" -eq 0 ] && [ "$MODE" = device_timeline ]; then
+  if "$PY" "$FRONTIER_TREE/tests/comparison/calibration/forward_device_timeline.py" \
+       --trace-dir "$WORK/torch_trace" --output "$WORK/run/device_timeline.json" \
+       > "$WORK/run/device_timeline.log" 2>&1; then
+    echo "DEVICE_TIMELINE_PASS"
+  else
+    status=$?
+    echo "DEVICE_TIMELINE_FAIL exit=$status"
+    tail -n 20 "$WORK/run/device_timeline.log"
+  fi
+fi
 
 publish "$ARCHIVE_DIR"
+# The profiler traces are too large for the workspace evidence.
+if [ -d "$WORK/torch_trace" ]; then cp -r "$WORK/torch_trace" "$ARCHIVE_DIR/"; fi
 publish_evidence
 
 grep -h "REPLAY_DONE" "$WORK/run/replay.log" || tail -n 30 "$WORK/run/replay.log" || true
-wc -l "$WORK"/run/dp_placement/*.jsonl "$WORK/run/client_requests.jsonl" "$WORK/run/request_metrics.jsonl" 2>/dev/null || true
+ls -l "$WORK/torch_trace" 2>/dev/null || true
+wc -l "$WORK"/run/dp_placement/*.jsonl "$WORK"/run/*.jsonl 2>/dev/null || true
 echo "WORKER_STATUS=$status RUN_TAG=$RUN_TAG"
 exit "$status"

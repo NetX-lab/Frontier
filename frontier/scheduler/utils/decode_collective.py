@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from frontier.entities import Batch
+from frontier.entities import Batch, DummyForwardBatch
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import FULL_STAGE_WORLD
 from frontier.scheduler.utils.collective_timing import (
     attention_delay_seconds,
     prepare_decode_final_timing,
-    select_active_batch,
     advance_decode_layer,
 )
+from frontier.scheduler.utils.dp_dummy_forward import advance_dummy_forward
 from frontier.scheduler.utils.request_selection import collect_active_requests
 
 
@@ -70,13 +70,7 @@ def handle_decode_sync_collective(
         time, replica_id, stage_id, layer_id, sync_stage, batch_global_id,
         list(dp_batches),
     )
-    sample_batch = select_active_batch(dp_batches)
-    if sample_batch is None:
-        raise RuntimeError(
-            "DECODE collective completion requires a non-idle participant batch: "
-            f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
-            f"layer={layer_id}"
-        )
+    sample_batch = next(iter(dp_batches.values()))
     canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
     if direct_batch is None and not canonical_ep_wave:
         raise RuntimeError(
@@ -122,13 +116,14 @@ def handle_decode_sync_collective(
     if next_layer_id < stage_layer_end:
         events = []
         last_attention_time = None
-        for participant_id, batch in dp_batches.items():
-            if batch.is_idle:
-                logger.info(
-                    "[DECODE_SYNC][IDLE_SKIP] Skip next-layer pre_moe scheduling "
-                    "for idle batch %s (replica=%s, lane=%s, layer=%s)",
-                    batch.id, replica_id, participant_id, layer_id,
-                )
+        for batch in dp_batches.values():
+            if isinstance(batch, DummyForwardBatch):
+                events.extend(advance_dummy_forward(
+                    scheduler, time=time, replica_id=replica_id, stage_id=stage_id,
+                    dummy_forward=batch, next_layer_id=next_layer_id,
+                    stage_layer_end=stage_layer_end,
+                    owners_restored=restored_full_stage_owners,
+                ))
                 continue
             # Each lane's next attention is predicted from its own batch: its own
             # context lengths and token count, not a peer's.
@@ -161,20 +156,30 @@ def handle_decode_sync_collective(
 
     events = []
     last_completion_time = time
-    for participant_id, batch in dp_batches.items():
-        if batch.is_idle:
-            logger.info(
-                "[DECODE_SYNC][IDLE_SKIP] Skip final stage-end for idle batch %s "
-                "(replica=%s, lane=%s, layer=%s)",
-                batch.id, replica_id, participant_id, layer_id,
-            )
+    for batch in dp_batches.values():
+        if isinstance(batch, DummyForwardBatch):
+            events.extend(advance_dummy_forward(
+                scheduler, time=time, replica_id=replica_id, stage_id=stage_id,
+                dummy_forward=batch, next_layer_id=next_layer_id,
+                stage_layer_end=stage_layer_end,
+                owners_restored=restored_full_stage_owners,
+            ))
             continue
         full_execution = predictor.predict_stage_execution_time(
             batch, stage_id, scheduler._cluster_type,
             num_layers=num_layers, layer_id=stage_layer_end - num_layers,
             include_ffn=False,
         )
-        final_timing = prepare_decode_final_timing(full_execution)
+        original_start = getattr(batch, "_decode_stage_start_time", None)
+        if original_start is None:
+            raise RuntimeError(
+                "DECODE collective completion requires _decode_stage_start_time: "
+                f"batch={batch.id}, replica={replica_id}, stage={stage_id}, "
+                f"layer={layer_id}"
+            )
+        final_timing = prepare_decode_final_timing(
+            full_execution, time - batch._forward_launch_start_time
+        )
         last_completion_time = time + final_timing.total_time
         scheduler._record_mtp_terminal_completion_delay(
             batch, final_timing.mtp_terminal_overshoot_time
@@ -186,13 +191,6 @@ def handle_decode_sync_collective(
         batch_stage, _ = stage_scheduler.predict_and_create_stage(
             batch, skip_get_execution_time=True
         )
-        original_start = getattr(batch, "_decode_stage_start_time", None)
-        if original_start is None:
-            raise RuntimeError(
-                "DECODE collective completion requires _decode_stage_start_time: "
-                f"batch={batch.id}, replica={replica_id}, stage={stage_id}, "
-                f"layer={layer_id}"
-            )
         batch_stage.on_schedule(original_start)
         actual_execution = time + final_timing.total_time - original_start
         batch_stage.override_execution_time(actual_execution)

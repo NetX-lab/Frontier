@@ -116,14 +116,22 @@ def _admissions_while_the_engine_blocks(run: dict) -> list[dict]:
     pipeline, blocks on the oldest in-flight batch, and a request that arrives
     meanwhile waits for the next iteration. So a lane with a batch in flight
     admits only in the pass of a previous admission or at the end of its oldest
-    batch; an idle lane admits at any time. Iterations take no host time here,
-    as in Frontier.
+    batch; an idle lane admits at any time. A DP engine's host also runs an
+    iteration when it leaves the finish-sync all-reduce that follows every
+    32nd iteration of a wave (`DPEngineCoreProc._has_global_unfinished_reqs`).
+    Iterations take no host time here, as in Frontier.
     """
 
+    releases_before: dict[int, list[dict]] = defaultdict(list)
+    for release in run["dp_sync_releases"]:
+        releases_before[release["position"]].append(release)
     in_flight: dict[int, list[int]] = defaultdict(list)
     last_iteration: dict[int, float] = {}
     blocked = []
-    for record in run["records"]:
+    for position, record in enumerate(run["records"]):
+        for release in releases_before[position]:
+            for lane in release["lanes"]:
+                last_iteration[lane] = release["time"]
         if record["kind"] == "stage0":
             continue
         lane, time = record["lane"], record["time"]
@@ -449,29 +457,38 @@ def test_schedule_time_reports_decide_a_probe_that_completion_reports_cannot(
     assert probe["completion_reporting_control"]["engine"] == 1
 
 
-def test_a_lane_joining_after_its_placeholder_completes_the_forward(tmp_path):
-    """Issue W9-04 on the policy's four-lane MoE shape, under both policies.
+def test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward(
+    tmp_path,
+):
+    """Issue W9-04's four-lane MoE shape, under both policies.
 
     Lane 0 waits in the first MoE room of forward 0 while lane 1 is still in
-    attention, so the room places placeholders for the idle lanes 2 and 3.
-    Request 2 then reaches lane 2, which joins forward 0 because it is not yet
-    sealed. The room used to count lane 2's stale placeholder and dispatch when
-    lane 1 arrived. Lane 2's own batch then opened a room that its busy peers
-    never enter, and both runs stalled with no request complete.
+    attention, so the room wakes the idle engines of lanes 2 and 3, and each
+    joins forward 0 with a dummy forward. Request 2 then reaches lane 2. vLLM's
+    busy loop schedules it only once `execute_dummy_batch` returns, so its
+    batch starts the lane's next forward.
     """
 
     evidence = _run_child(tmp_path, "moe_dp4_late_join")
 
     for run in evidence.values():
         assert run["placements"] == [0, 1, 2]
-        first_groups = {}
-        for record in run["records"]:
-            if record["kind"] == "stage0":
-                first_groups.setdefault(record["lane"], record["group"])
-        # The race is reached: lane 2 joined forward 0, and the placeholder it
-        # had been given there was withdrawn.
-        assert first_groups == {0: 0, 1: 0, 2: 0}
-        assert run["withdrawn_placeholder_lanes"] == [2]
+        stage0 = [record for record in run["records"] if record["kind"] == "stage0"]
+        first_starts = {}
+        for record in stage0:
+            first_starts.setdefault(record["lane"], (record["group"], record["dummy"]))
+        assert first_starts == {
+            0: (0, False),
+            1: (0, False),
+            2: (0, True),
+            3: (0, True),
+        }
+        lane_two_groups = [
+            record["group"]
+            for record in stage0
+            if record["lane"] == 2 and not record["dummy"]
+        ]
+        assert lane_two_groups[0] > 0
         _assert_run_conserves_work(run)
 
 
@@ -567,6 +584,7 @@ def _config(
     analytical_backend: bool = False,
     dummy_execution_time_ms: float | None = None,
     num_blocks: int = 128,
+    thinking_depth: int = 1,
 ):
     from frontier.cc_backend.cc_backend_config import AnalyticalCCBackendConfig
     from frontier.config import (
@@ -657,6 +675,8 @@ def _config(
         sys_arch="co-location",
         enable_parallel_clusters=False,
         decode_cuda_graph_mode="none",
+        enable_thinking_mode=thinking_depth > 1,
+        thinking_depth=thinking_depth,
         cluster_config=cluster,
         metrics_config=MetricsConfig(
             output_dir=str(root / "metrics"),
@@ -681,7 +701,6 @@ def run_case(
     policy_name: str,
     completion_reporting_control: bool = False,
     build_config=None,
-    observe_placeholder_withdrawal: bool = False,
     **shape,
 ):
     """Run one configuration and return what only the event loop can show.
@@ -701,7 +720,9 @@ def run_case(
         RoundRobinClusterSchedulerConfig,
         VllmLoadBalancingClusterSchedulerConfig,
     )
+    from frontier.entities import DummyForwardBatch
     from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+    from frontier.events.global_batch_end_event import GlobalBatchEndEvent
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
     )
@@ -709,12 +730,13 @@ def run_case(
         VllmLoadBalancingClusterScheduler,
     )
     from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (  # noqa: E501
+        VLLM_DP_SYNC_INTERVAL,
         VLLMv1EngineReplicaScheduler,
     )
     from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
         ReplicaStageScheduler,
     )
-    from frontier.scheduler.utils import sync_entry
+    from frontier.scheduler.utils import ep_wave_inputs
     from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
     from frontier.scheduler.utils.vllm_dp_load_balancer import VllmDPLoadBalancer
     from frontier.simulator import Simulator
@@ -734,7 +756,21 @@ def run_case(
     records: list[dict] = []
     reports: list[list] = []
     selections: list[dict] = []
-    withdrawn_placeholder_lanes: list[int] = []
+    # Dummy passes, engine iterations held by one, and dummy forward ends.
+    engine_loop: list[dict] = []
+    # Lane count of each MoE wave whose every lane ran a dummy forward.
+    all_dummy_waves: list[int] = []
+    # Each DP finish sync that released its lanes, before the record at `position`.
+    dp_sync_releases: list[dict] = []
+    # Batches that ended while their engine waited in the DP finish sync, with
+    # their rows' state then, and every applied output with its rows' state
+    # before and after the application.
+    held_outputs: list[dict] = []
+    applied_outputs: list[dict] = []
+    # Each schedule call of a busy-loop iteration, with the outputs it found
+    # held and the requests then holding KV blocks.
+    iteration_schedules: list[dict] = []
+    schedule_time: list[float] = []
     stale_drops: list[dict] = []
 
     original_cluster_schedule = ClusterScheduleEvent.handle_event
@@ -742,6 +778,13 @@ def run_case(
     original_select = VllmDPLoadBalancer.select
     original_stage_pop = ReplicaStageScheduler.pop_batch_if_not_busy
     original_consume = ReplicaStageScheduler.consume_last_stale_drops
+    original_engine_schedule = VLLMv1EngineReplicaScheduler.on_schedule
+    original_dummy_forward_end = VLLMv1EngineReplicaScheduler.on_dummy_forward_end
+    original_end_iteration = VLLMv1EngineReplicaScheduler._end_iteration
+    original_schedule_iteration = VLLMv1EngineReplicaScheduler._schedule_iteration
+    original_global_batch_end = GlobalBatchEndEvent.handle_event
+    original_apply_output = GlobalBatchEndEvent._apply_output
+    original_wave_inputs = ep_wave_inputs.prepare_ep_wave_inputs
 
     def observed_cluster_schedule(self, scheduler, metrics_store):
         cluster_schedule_times.append(float(self.time))
@@ -799,9 +842,140 @@ def run_case(
                     "group": batch._forward_cohort_provisional_id
                     if self._is_moe
                     else None,
+                    "dummy": isinstance(batch, DummyForwardBatch),
                 }
             )
         return batch
+
+    def observed_engine_schedule(self, time):
+        parts_in_flight = self._dummy_forwards_in_flight
+        after_empty_pass = self._dummy_pass_due
+        lane_has_requests = self.has_unfinished_requests
+        schedule_time[:] = [float(time)]
+        batches = original_engine_schedule(self, time)
+        if parts_in_flight:
+            engine_loop.append(
+                {
+                    "kind": "held",
+                    "lane": self._replica_local_id,
+                    "returned": len(batches),
+                }
+            )
+        elif any(isinstance(batch, DummyForwardBatch) for batch in batches):
+            engine_loop.append(
+                {
+                    "kind": "dummy_pass",
+                    "lane": self._replica_local_id,
+                    "after_empty_pass": after_empty_pass,
+                    "lane_has_requests": lane_has_requests,
+                }
+            )
+        return batches
+
+    def observed_dummy_forward_end(self, time):
+        pass_ended = original_dummy_forward_end(self, time)
+        engine_loop.append(
+            {
+                "kind": "dummy_end",
+                "lane": self._replica_local_id,
+                "pass_ended": pass_ended,
+            }
+        )
+        return pass_ended
+
+    def observed_end_iteration(self):
+        waits = original_end_iteration(self)
+        # The sync released its lanes when this lane, the last to join, does
+        # not wait. A wave the sync ended restarts its count at zero.
+        if not waits and self._dp_wave_steps % VLLM_DP_SYNC_INTERVAL == 0:
+            dp_sync_releases.append(
+                {
+                    "time": schedule_time[0],
+                    "lanes": [self._replica_local_id, *self._dp_sync_released_lane_ids],
+                    "position": len(records),
+                    "forward_counts": [
+                        lane._batch_creation_counter for lane in self._dp_group()
+                    ],
+                }
+            )
+        return waits
+
+    def row_states(lane, batch, metrics_store):
+        return {
+            request.id: {
+                "completed": request.completed,
+                "processed_tokens": request.num_processed_tokens,
+                "running": request in lane._running_requests,
+                "allocated": lane._allocation_map.get(request.id),
+                "completion_recorded": request.id
+                in metrics_store._completed_request_ids,
+                "tool_wait": request.pending_thinking_requeue,
+            }
+            for request in batch.requests
+        }
+
+    def observed_global_batch_end(self, scheduler, metrics_store):
+        lane = scheduler.get_cluster_scheduler(self._cluster_type).get_replica_scheduler(
+            self._replica_id, self._replica_local_id
+        )
+        before = row_states(lane, self._batch, metrics_store)
+        num_held = len(lane._unpopped_outputs)
+        events = original_global_batch_end(self, scheduler, metrics_store)
+        if len(lane._unpopped_outputs) > num_held:
+            held_outputs.append(
+                {
+                    "batch": self._batch.id,
+                    "lane": self._replica_local_id,
+                    "ended_at": float(self.time),
+                    "rows": before,
+                    "rows_after_hold": row_states(lane, self._batch, metrics_store),
+                    "schedules_before": len(iteration_schedules),
+                }
+            )
+        return events
+
+    def observed_apply_output(
+        self, time, *, cluster_scheduler, replica_scheduler, metrics_store
+    ):
+        before = row_states(replica_scheduler, self._batch, metrics_store)
+        events = original_apply_output(
+            self,
+            time,
+            cluster_scheduler=cluster_scheduler,
+            replica_scheduler=replica_scheduler,
+            metrics_store=metrics_store,
+        )
+        applied_outputs.append(
+            {
+                "batch": self._batch.id,
+                "lane": self._replica_local_id,
+                "ended_at": float(self.time),
+                "applied_at": float(time),
+                "before": before,
+                "after": row_states(replica_scheduler, self._batch, metrics_store),
+                "thinking_requeues": len(events),
+                "schedules_before": len(iteration_schedules),
+            }
+        )
+        return events
+
+    def observed_schedule_iteration(self, time):
+        iteration_schedules.append(
+            {
+                "lane": self._replica_local_id,
+                "time": float(time),
+                "held": len(self._unpopped_outputs),
+                "kv_holders": sorted(self._allocation_map),
+            }
+        )
+        return original_schedule_iteration(self, time)
+
+    def observed_wave_inputs(**kwargs):
+        inputs = original_wave_inputs(**kwargs)
+        lane_batches = inputs.source_batches.values()
+        if all(isinstance(batch, DummyForwardBatch) for batch in lane_batches):
+            all_dummy_waves.append(len(lane_batches))
+        return inputs
 
     def observed_consume(self):
         dropped = original_consume(self)
@@ -879,23 +1053,21 @@ def run_case(
         patch.setattr(VllmDPLoadBalancer, "select", observed_select)
         patch.setattr(ReplicaStageScheduler, "pop_batch_if_not_busy", observed_stage_pop)
         patch.setattr(ReplicaStageScheduler, "consume_last_stale_drops", observed_consume)
-        if observe_placeholder_withdrawal:
-            original_withdraw = sync_entry._withdraw_idle_batches_of_joined_lanes
-
-            def observed_withdraw(scheduler, sync_room, replica_id, stage_id):
-                placed = {
-                    lane
-                    for lane, batch in sync_room["batches"].items()
-                    if batch.is_idle
-                }
-                original_withdraw(scheduler, sync_room, replica_id, stage_id)
-                withdrawn_placeholder_lanes.extend(
-                    sorted(placed - set(sync_room["batches"]))
-                )
-
-            patch.setattr(
-                sync_entry, "_withdraw_idle_batches_of_joined_lanes", observed_withdraw
-            )
+        patch.setattr(VLLMv1EngineReplicaScheduler, "on_schedule", observed_engine_schedule)
+        patch.setattr(
+            VLLMv1EngineReplicaScheduler,
+            "on_dummy_forward_end",
+            observed_dummy_forward_end,
+        )
+        patch.setattr(VLLMv1EngineReplicaScheduler, "_end_iteration", observed_end_iteration)
+        patch.setattr(GlobalBatchEndEvent, "handle_event", observed_global_batch_end)
+        patch.setattr(GlobalBatchEndEvent, "_apply_output", observed_apply_output)
+        patch.setattr(
+            VLLMv1EngineReplicaScheduler,
+            "_schedule_iteration",
+            observed_schedule_iteration,
+        )
+        patch.setattr(ep_wave_inputs, "prepare_ep_wave_inputs", observed_wave_inputs)
         # Both the inert base seam and the policy's override have to be
         # wrapped for routing: patching only the base would silently observe
         # nothing on the very policy under test.
@@ -967,7 +1139,23 @@ def run_case(
         "placement_request_ids": placement_request_ids,
         "records": records,
         "selections": selections,
-        "withdrawn_placeholder_lanes": withdrawn_placeholder_lanes,
+        "engine_loop": engine_loop,
+        "all_dummy_waves": all_dummy_waves,
+        "dp_sync_releases": dp_sync_releases,
+        "held_outputs": held_outputs,
+        "applied_outputs": applied_outputs,
+        "iteration_schedules": iteration_schedules,
+        "dp_wave_states": [
+            {
+                "running": lane._dp_wave_running,
+                "steps": lane._dp_wave_steps,
+                "waits": lane._waits_at_dp_sync,
+                "unpopped": len(lane._unpopped_outputs),
+            }
+            for lane in lanes
+        ],
+        "lane_forward_counts": [lane._batch_creation_counter for lane in lanes],
+        "dummy_forwards_in_flight": [lane._dummy_forwards_in_flight for lane in lanes],
         "stale_drops": stale_drops,
         "num_preemptions": sum(
             request.get_total_preemption_count() for request in requests
@@ -1098,7 +1286,7 @@ CASES = {
     ),
     "moe_dp4_late_join": dict(
         is_moe=True, attn_dp=4, moe_ep=4, trace="late_join",
-        dummy_execution_time_ms=1.0, observe_placeholder_withdrawal=True,
+        dummy_execution_time_ms=1.0,
     ),
     "moe_dp2_pp4": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
@@ -1111,6 +1299,11 @@ CASES = {
     "moe_dp2_pp4_kv_pressure": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
         analytical_backend=True, num_blocks=8, trace="kv_pressure",
+    ),
+    "moe_dp2_pp4_kv_pressure_thinking": dict(
+        is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=4, num_layers=4,
+        analytical_backend=True, num_blocks=8, trace="kv_pressure",
+        thinking_depth=2,
     ),
     "moe_dp2_pp2_release": dict(
         is_moe=True, attn_dp=2, moe_ep=2, num_pipeline_stages=2, num_layers=4,

@@ -1,6 +1,7 @@
 """CPU boundary tests for fused MoE event timing; no native kernels execute."""
 
 from contextlib import nullcontext
+import json
 import math
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -116,7 +117,8 @@ def test_device_events_reach_legacy_low_level_kernel(event_runtime, monkeypatch)
     monkeypatch.setattr(kernel, "VLLM_API_VERSION", "0.10.x")
     monkeypatch.setattr(kernel, "get_config_dtype_str", lambda dtype, **flags: "float16", raising=False)
     monkeypatch.setattr(kernel, "try_get_optimal_moe_config", lambda **kwargs: {"BLOCK_SIZE_M": 16}, raising=False)
-    monkeypatch.setattr(kernel, "moe_align_block_size", lambda *args, **kwargs: (None, None, None), raising=False)
+    monkeypatch.setattr(kernel, "moe_align_block_size",
+                        lambda *args, **kwargs: (None, None, torch.tensor([32])), raising=False)
     iteration = Mock()
     monkeypatch.setattr(kernel, "_run_fused_moe_iteration", iteration)
 
@@ -124,6 +126,28 @@ def test_device_events_reach_legacy_low_level_kernel(event_runtime, monkeypatch)
 
     assert iteration.call_count == 3
     assert result["mean"] == pytest.approx(2.5)
+    assert result["block_size_m"] == 16
+    assert result["num_tokens_post_padded"] == 32
+    assert json.loads(result["block_size_m_ranges"]) == [[1, 2, 16]]
+
+
+def test_block_size_ranges_follow_the_kernel_config_at_every_token_count(monkeypatch):
+    calls = []
+
+    def nearest_tuned_key(*, w1_shape, w2_shape, top_k, dtype, M, block_shape):
+        calls.append((w1_shape, w2_shape, top_k, dtype, block_shape))
+        tuned = {64: 16, 256: 64}
+        return {"BLOCK_SIZE_M": tuned[min(tuned, key=lambda key: abs(key - M))]}
+
+    monkeypatch.setattr(kernel, "try_get_optimal_moe_config", nearest_tuned_key, raising=False)
+
+    ranges = kernel.block_size_m_ranges(
+        w1_shape=(128, 1536, 2048), w2_shape=(128, 2048, 768),
+        top_k=8, dtype="fp8_w8a8", block_shape=[128, 128], max_tokens=300,
+    )
+
+    assert ranges == [[1, 160, 16], [161, 300, 64]]
+    assert calls == [((128, 1536, 2048), (128, 2048, 768), 8, "fp8_w8a8", [128, 128])] * 300
 
 
 @pytest.mark.parametrize("steps", [0, -1, True, 1.5])

@@ -133,6 +133,7 @@ def test_dense_manifest_appends_memory_and_ffn_after_attention() -> None:
         "attn_kv_cache_save",
         "attn_prefill",
         "attn_decode",
+        "attn_kv_cache_extract",
         "input_layernorm",
         "post_attention_layernorm",
         "add_attn_residual",
