@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pressure checks for the documentation-only Frontier calibration v2 staging."""
+"""Structural checks for the frontier-calibration skill: catalog, routes, contract, paths, wording."""
 
 from __future__ import annotations
 
@@ -51,7 +51,20 @@ REQUIRED_REFERENCES = {
     "tool-boundaries.md",
 }
 EXPECTED_GROUNDTRUTH_BRANCH = "feature/frontier-comparison-instrumentation"
-HELPER_DIGEST_FIELDS = ("bytes", "sha256")
+# The checked-in skill stays host-neutral; host bindings live in the untracked
+# site.local.md (skills/README.md).
+HOST_SPECIFIC_PATTERNS = (
+    r"/data/",
+    r"/mnt/",
+    r"/home/",
+    r"(?i)stepmind",
+    r"(?i)charged[ _]group",
+    r"step_main",
+    r"codesign",
+    r"i-fengyicheng",
+    r"ycfeng",
+)
+REPOSITORY_PATH = re.compile(r"(?:`|\")((?:tests|frontier|docs|skills|data|examples)/[^`\"\s]*)")
 
 
 def fail(message: str) -> None:
@@ -240,7 +253,7 @@ def run(root: Path) -> None:
     }
     for name in repair_names:
         text = flat(read_text(entry_doc(root, name))).lower()
-        for phrase in ("human review", "case_init.auto_recycle", "auto receipt", "code-change marker"):
+        for phrase in ("human review", "code-change marker", "regression set", "decision id", "repair-approval.md"):
             if phrase not in text:
                 fail(f"repair entry {name} lacks explicit approval phrase: {phrase}")
         if "fresh" not in text:
@@ -295,8 +308,8 @@ def run(root: Path) -> None:
     ):
         if field not in contract:
             fail(f"contract lacks ground-truth provenance field: {field}")
-    if "$grill-me" not in contract:
-        fail("contract must route missing semantic decisions through $grill-me")
+    if "decision ID" not in contract or "verbatim" not in contract:
+        fail("contract must record each decision with an ID and the user's verbatim answer")
     if "requesting_user" not in contract or "reviewer_identity" not in contract:
         fail("contract must bind human review to the requesting user or named delegate")
 
@@ -325,9 +338,6 @@ def run(root: Path) -> None:
         fail("residual-repair registry input must include the case manifest")
 
     tool_boundaries = flat(read_text(reference_dir / "tool-boundaries.md"))
-    for field in HELPER_DIGEST_FIELDS:
-        if field not in tool_boundaries:
-            fail(f"tool boundary table lacks helper digest field: {field}")
     if "hash mismatch" not in tool_boundaries.lower():
         fail("tool boundary contract must fail on helper hash mismatch")
 
@@ -337,6 +347,47 @@ def run(root: Path) -> None:
     ]
     if runtime_files:
         fail(f"v2 contains an unapproved runtime helper: {runtime_files[0]}")
+
+    skill_doc = read_text(root / "SKILL.md")
+    description = re.search(r"^description:\s*(.+)$", skill_doc, re.MULTILINE)
+    if not description or not description.group(1).startswith("Use when"):
+        fail("SKILL.md description must start with 'Use when'")
+    for path in sorted(reference_dir.iterdir()):
+        if f"references/{path.name}" not in skill_doc:
+            fail(f"SKILL.md does not point to references/{path.name}")
+    if "site.local.md" not in skill_doc:
+        fail("SKILL.md must point to the host bindings in site.local.md")
+
+    tracked = [
+        path for path in root.rglob("*")
+        if path.is_file()
+        and "tests" not in path.relative_to(root).parts
+        and "__pycache__" not in path.parts
+        and path.name != "site.local.md"
+    ]
+    readme = root.parent / "README.md"
+    if readme.is_file():
+        tracked.append(readme)
+    for path in tracked:
+        text = path.read_text(encoding="utf-8")
+        for pattern in HOST_SPECIFIC_PATTERNS:
+            match = re.search(pattern, text)
+            if match:
+                fail(f"host-specific text {match.group(0)!r} in {path}; move it to site.local.md")
+        if path.name != "migration.md" and re.search(r"auto_recycle|auto receipt", text):
+            fail(f"retired automatic approval wording in {path}")
+
+    repo = root.parent.parent
+    if not (repo / "frontier").is_dir():
+        fail(f"skill must live at skills/<name>/ in a Frontier checkout: {root}")
+    for path in tracked:
+        for match in REPOSITORY_PATH.finditer(path.read_text(encoding="utf-8")):
+            cited = match.group(1).split("::")[0]
+            cited = re.sub(r":\d+$", "", cited)
+            if any(mark in cited for mark in "<>*{}$"):
+                continue
+            if not (repo / cited).exists():
+                fail(f"{path.relative_to(repo)} cites a repository path that does not exist: {cited}")
 
     print("v2_pressure=PASS")
 

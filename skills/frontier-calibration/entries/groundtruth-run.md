@@ -1,22 +1,29 @@
 # Ground-Truth Run
 
-**When to use:** Use when a passed run check permits an isolated instrumented-vLLM ground-truth execution.
+**When to use:** Use when a passed preflight permits a vLLM-BS ground-truth run in one declared mode.
 
-Read `../references/contract.md` and `../references/tool-boundaries.md`. Require
-the matching `groundtruth-run-check` result for the selected mode and the exact
-manifest-bound checkout tuple. The selected checkout must remain on
-`feature/frontier-comparison-instrumentation` with ref
-`refs/heads/feature/frontier-comparison-instrumentation`; record the remote URL
-and tip, commit, tree status, diff artifact, dirty-patch SHA-256, and overlay
-patch state. Run clean ground truth first, then only the instrumented or CPU mode
-explicitly declared by the case.
+Read `../references/contract.md` (Ground-Truth Checkout, Run Modes),
+`../references/tool-boundaries.md`, and `../references/pitfalls.md`
+(Ground-Truth Collection). Require the passed preflight of the same run tag.
 
-Before launch, write `runs/<mode>/run_manifest.json` with the exact command,
-working directory, declared environment, revision, visible devices, case id,
-generation, and expected artifacts. After launch, retain stdout/stderr, exit
-code, source paths, fresh-file checks, and mode status. Reject a missing artifact,
-non-finite value, stale target, wrong mode predicate, or abnormal exit.
+Use the repository workers: `tests/comparison/dp_placement_pp/run_vllm_worker.sh`
+with `vllm_replay.py` for co-location and DP x PP cells, and
+`tests/comparison/calibration/run_pd_worker.sh` with `pd_replay.py`,
+`pd_proxy.py`, and `pd_metrics.py` for PDD cells. The engine file selects the
+model, layout, scheduler limits, graph mode, attention backend, and routing
+(`moe_uniform_routing` for MoE references). The worker writes evidence to
+`runs/groundtruth_<mode>/<run_tag>/`.
 
-Use clean output only for the E2E gate. Use instrumented output only for
-workflow/operator/residual diagnosis. Use CPU output only after the CPU entry
-predicate. This entry never changes Frontier or vLLM source.
+Submit GPU jobs through the operator's platform rules: the user's standing
+authorization covers jobs already planned in the current tickets, and any new
+job shape, resource size, or hardware needs a question first. Group the cell's
+clean run with the runs that feed tables or analysis in one job, chained in
+order (warm pass, clean, then the diagnostic modes), and keep the launcher
+alive until the worker's terminal status.
+
+After the run, retain the launcher receipt, stdout and stderr, exit code, node
+identity, and output hashes, then hand every run tag to the post-run
+`groundtruth-run-check`. Clean output serves only the E2E gate; each diagnostic
+mode serves only its analysis. This entry changes no Frontier or vLLM source. A new
+probe, a fork fix, or a harness change needs its own decision and lands as a new
+ground-truth or harness commit, which starts a new run generation.

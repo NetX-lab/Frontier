@@ -251,3 +251,6 @@ tests/debug/e2e-level/monolith_mode/output/
 worktrees/
 worktreess/
 .omx/
+
+# Per-host bindings of the agent skills under skills/ (skills/README.md).
+skills/*/site.local.md

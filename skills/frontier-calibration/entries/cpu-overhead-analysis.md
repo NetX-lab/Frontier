@@ -1,20 +1,32 @@
 # CPU Overhead Analysis
 
-**When to use:** Use when workflow and operator correction attempts are complete but a fresh clean E2E metric still exceeds ten percent.
+**When to use:** Use when the error budget attributes part of a failing gated metric to host time.
 
-Read `../references/contract.md` and `../references/evidence-tiers.md`. Do not
-enter this entry for a passing E2E case. Require complete workflow and operator
-analysis with `status=PASS` and `correction_state` equal to `complete` or
-`not_applicable`, a new clean E2E
-generation, and at least one applicable relative error greater than `0.10`.
+Read `../references/contract.md` (Error-Source Classes),
+`../references/evidence-tiers.md`, and `../references/pitfalls.md` (Admission
+and Tables). Do not enter for a passing E2E cell. Require the error budget, a
+fresh clean E2E status, CPU-probe runs admitted by the rules of
+`cpu-overhead-supplement`, and the CPU-overhead tables and settings the gated
+Frontier label used.
 
-Use the CPU identity tuple from the Frontier schema and separate measured,
-vLLM-replay, and analytical sources. Attribute scheduler, preparation,
-communication, sampler, process, and bookkeeping components without introducing
-an independent CPU threshold. Keep clean E2E and operator instrumentation out
-of the CPU run.
+Read host time from the probe's engine and per-stage records (one file per DP
+engine and PP stage) through the terms of the repository producer
+(`frontier/profiling/cpu_overhead/vllm_cpu_probe.py`, defined in
+`frontier/profiling/README.md`, "From vLLM CPU-probe logs"): `schedule`,
+`prepare_inputs_e2e`, `forward_launch`, `forward_drain`, `sampler_e2e`, and
+`process_model_outputs`, keyed by step shape, pipeline stage, and engine-idle
+bucket. The DP, PP, and KV-load waits are Frontier's own simulated intervals,
+not table terms. Compare per step class against the Frontier label's host
+terms, and report the host share of the step period. A FULL CUDA Graph step
+publishes kernel-only rows only, and a forward that overlaps another DP
+engine's prefill leaves the table.
 
-Write `analysis/cpu_overhead_table.csv`, summary, and status. Treat the current
-CPU producer identity, row-count, freshness, and bundle-publication watch items
-as non-normative until their own analysis receives a human `PASS`. This entry is
-read-only and never changes code.
+Classify each part: a missing or misordered host term in Frontier's step
+composition is `simulation_logic` (route to `cpu-overhead-repair` under its
+predicate); a table that the admitted runs no longer represent is
+`measurement_input` (route to `cpu-overhead-supplement`, which needs the user's
+approval); a slow probe host is `reference_instability`. Introduce no
+independent CPU threshold.
+
+Write `analysis/cpu_overhead_table.csv`, summary, and status. This entry is
+read-only and never changes code or tables.

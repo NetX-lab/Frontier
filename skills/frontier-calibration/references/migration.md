@@ -1,42 +1,33 @@
-# v2 Enablement and Restore Map
+# v2 Entry Map and History
 
-v2 is now the active Frontier calibration skill family. The current default
-skills directory is `/data/ycfeng/codex-home/skills/frontier-calibration/`.
-The previous skill family and its recovery copy are stored outside codex-home
-under `/data/ycfeng/frontier-calibration-old-20260831/`.
-
-## Current Default Entry Map
-
-The directory `/data/ycfeng/codex-home/skills/frontier-calibration/` now
-contains the active v2 entries:
+## Entry Map
 
 | Entry | Role |
 | --- | --- |
-| `groundtruth-run-check` | ground-truth preflight atomic |
+| `groundtruth-run-check` | ground-truth preflight and post-run check atomic |
 | `groundtruth-run` | ground-truth execution atomic |
 | `simulator-run` | simulator execution atomic |
-| `semantic-alignment-check` | parameter-semantics analysis atomic |
-| `semantic-alignment-repair` | reviewed parameter repair atomic |
-| `e2e-metrics-gap` | request-level metric comparison atomic |
-| `dispatch-align-trace` | online dispatch trace atomic |
+| `semantic-alignment-check` | settings, mapping, and routing analysis atomic |
+| `semantic-alignment-repair` | decided setting or mapping repair atomic |
+| `e2e-metrics-gap` | request-level gate atomic |
+| `dispatch-align-trace` | dispatch and route-delay trace atomic |
 | `workflow-gap-analysis` | workflow analysis atomic |
-| `workflow-repair` | reviewed workflow repair atomic |
+| `workflow-repair` | decided workflow repair atomic |
 | `op-gap-analysis` | operator analysis atomic; includes trace normalization |
-| `op-supplement` | operator data supplement atomic |
-| `op-repair` | reviewed operator repair atomic |
+| `op-supplement` | profiling table supplement atomic |
+| `op-repair` | decided operator repair atomic |
 | `residual-lane-classification` | read-only residual classifier atomic |
 | `residual-repair` | residual repair atomic selected by lane |
-| `cpu-overhead-analysis` | conditional CPU analysis atomic |
-| `cpu-overhead-supplement` | CPU data supplement atomic |
-| `cpu-overhead-repair` | reviewed CPU repair atomic |
-| `parity-run` | run orchestration composite |
-| `error-analysis` | read-only analysis composite |
-| `error-correction` | reviewed repair orchestration composite |
+| `cpu-overhead-analysis` | host-time analysis atomic |
+| `cpu-overhead-supplement` | CPU-overhead table supplement atomic |
+| `cpu-overhead-repair` | decided host-side pricing repair atomic |
+| `parity-run` | case setup and collection composite |
+| `error-analysis` | read-only analysis composite; includes the error budget |
+| `error-correction` | decided repair and republication composite |
 
-## Compatibility Paths
+## Compatibility Aliases
 
-These compatibility aliases are archived with the old version and remain
-explicit-only. New work uses the v2 entry names above:
+These v1 names are explicit-only aliases. New work uses the v2 names:
 
 | Alias | v2 route |
 | --- | --- |
@@ -49,61 +40,24 @@ explicit-only. New work uses the v2 entry names above:
 | `collective-overhead-repair` | `residual-repair` with `collective` lane |
 | `transfer-overhead-repair` | `residual-repair` with `kv_or_m2n_transfer` lane |
 
-The historical `op-trace-normalize` entry is folded into `op-gap-analysis` as
-an internal phase. Its normalized stream remains an intermediate evidence file,
-not a separately discoverable v2 entry.
+The historical `op-trace-normalize` entry is an internal phase of
+`op-gap-analysis`; its normalized stream stays an intermediate evidence file.
 
-The old active directory is archived at
-`/data/ycfeng/frontier-calibration-old-20260831/current-default/frontier-calibration/`.
-The seven old top-level entries are under
-`/data/ycfeng/frontier-calibration-old-20260831/legacy-entries/`, and the dated
-recovery copy is under
-`/data/ycfeng/frontier-calibration-old-20260831/dated-backup/frontier-calibration/`
-with its existing `manifest.tsv`. The seven historical names remain recoverable:
-`frontier-vllm-v1-error-analysis`,
-`colocation-ttft-per-op-schedule-vs-vllm-v1`,
-`online-mode-analysis-comparison`, `vllm-v1-cpu-overhead-measurement`,
-`frontier-profiling`, `parallel-config-alignment-verifier`, and
-`dispatch-aligned-trace`.
+## History
 
-The dated `manifest.tsv` is an immutable migration-time snapshot. Its recorded
-backup paths describe the location before the dated backup directory moved and
-are not active discovery paths. The current locations and the manifest
-SHA-256 are recorded in
-`/data/ycfeng/stepfun-performance-optimization/Frontier/task_memory/task_2026-08-29-frontier-calibration-skills/old-version-archive-path-map-2026-08-31.md`.
-Use that map when checking the moved snapshot; keep the manifest bytes
-unchanged.
+| Date | Change |
+| --- | --- |
+| 2026-08-31 | v2 replaced the v1 skill family as the user-level default. |
+| 2026-09-24 | The archived v1 helper scripts were retired; entries that bound them had no runnable helper. |
+| 2026-09-26 | Profiling merge and operator gap moved to new repository tools under `tests/comparison/calibration/`. |
+| 2026-10-14 | PR 44 merged the gate harness (`tests/comparison/e2e_gate/`), the ground-truth harnesses, the CPU-probe producer, and the kernel-gap profiler. |
+| 2026-10-15 | The skill moved into the repository at `skills/frontier-calibration/` and was revised against the practice of the E2E accuracy gate: repository tools, run modes, gate kinds, error budget, error-source classes, and decision records in place of automatic receipts. |
 
-## Enablement Record
+## Default Path Switch and Rollback
 
-The v2 enablement performed on 2026-08-31 used the following ordered actions:
-
-1. Validate the v2 registry, all v2 entrypoints, pressure rules, and destination
-   paths before changing discovery.
-2. Move the old default directory, seven old top-level entries, and dated
-   recovery copy to `/data/ycfeng/frontier-calibration-old-20260831/`.
-3. Move the v2 directory to
-   `/data/ycfeng/codex-home/skills/frontier-calibration/`.
-4. Re-run the validator and pressure checks through the current default path and
-   verify that no old Frontier entry remains directly under codex-home/skills.
-
-The operation changed skill discovery only. It did not modify Frontier or vLLM
-source and did not delete any old directory.
-
-## Default-Path Switch and Rollback
-
-The phrase `default path switch` in the validation contract means one concrete
-action: changing the default discovery path from the old skill family to the
-v2 directory. That switch was completed on 2026-08-31 and is recorded above.
-The word `rollback` means restoring the archived old directory as the default
-and moving the current v2 directory to a separate recovery path. Both
-operations are path moves, require a new explicit approval, and must be
-followed by the same validator and pressure checks.
-
-## Restore the Old Version
-
-Restoring the old version would move the current v2 directory to a dated
-recovery path, move the archived `current-default/frontier-calibration` back to
-`/data/ycfeng/codex-home/skills/frontier-calibration/`, and then re-run the old
-validator and alias checks. That action changes the default discovery path and
-requires a separate explicit approval. No restore action is currently planned.
+Agents discover the skill through a link from their skill directory to
+`skills/frontier-calibration/` in a Frontier checkout (`skills/README.md`). A
+default path switch changes that link's target. A rollback restores an earlier
+revision with `git checkout <commit> -- skills/frontier-calibration` or points
+the link at a checkout of that commit. Both need the user's approval and a
+rerun of `skills/frontier-calibration/tests/pressure_scenarios.py`.

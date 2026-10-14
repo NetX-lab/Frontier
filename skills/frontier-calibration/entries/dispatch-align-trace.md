@@ -1,20 +1,28 @@
 # Dispatch Align Trace
 
-**When to use:** Use when online client dispatch timing causes a visible skew between vLLM and the Frontier arrival trace.
+**When to use:** Use when client dispatch or frontend routing delay changes which requests a DP lane or step sees, as in DP x PP cells and online cases with visible dispatch skew.
 
-Read `../references/contract.md` and `../references/tool-boundaries.md`. Use only
-for an online multi-request case whose evidence shows client visibility skew.
-Run the existing clean observation with at least three warmups and capture
-formal IDs, token counts, priorities, intended arrivals, finite non-negative
-dispatch offsets, and dispatch lag.
+Read `../references/contract.md`, `../references/tool-boundaries.md`, and
+`../references/pitfalls.md` (Ground-Truth Collection). Frontier replays the
+cell trace's intended arrivals; vLLM sees each request only after the client
+dispatches it and the frontend routes it to a DP engine. When that delay
+decides lane placement or step membership, Frontier needs the measured delays.
 
-Invoke the existing dispatch helpers by the exact paths in
-`../references/tool-boundaries.md`; do not infer a relative `scripts/` path.
-Rewrite only the
-declared `arrived_at` field and write
-`analysis/dispatch_aligned_trace.csv` plus
-`analysis/dispatch_alignment_manifest.json`. Re-read and compare IDs, tokens,
-priorities, counts, and payload fields before `simulator-run` consumes the trace.
-Reject duplicate IDs, invalid offsets, missing priorities, uniform arrivals for
-a staggered study, or changed request content. This entry changes a data trace,
-not Frontier or vLLM code, and it never closes the E2E gate.
+Take the delays from the cell's passing clean runs: the interval from client
+dispatch to the frontend's route of each formal request. Delays above the
+API-server stall bound are stalls that Frontier does not model; leave them out
+of the pool and record the bound. For each ensemble member, draw one delay per
+request from the pool with a recorded seed (the published DP x PP cells use
+seeds 1-5) and add it to that request's `arrived_at`. Generate the base trace
+with `tests/comparison/dp_placement_pp/make_trace.py` when the cell has none.
+
+Write `analysis/dispatch_aligned_trace.csv` per member and
+`analysis/dispatch_alignment_manifest.json` with the pool source runs, the
+bound, the seeds, and each member trace's SHA-256; the scenario matrix records
+the same hashes and `run_gate.py frontier` checks them. Re-read each member
+trace and compare ids, token counts, priorities, and payload with the base
+trace. Reject a duplicate id, a negative or non-finite delay, or a changed
+request.
+
+This entry changes a data trace only. It never closes the E2E gate, and a
+replay heartbeat or harness change belongs to `groundtruth-run`.

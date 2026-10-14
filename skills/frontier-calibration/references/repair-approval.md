@@ -1,47 +1,66 @@
 # Code-Change Approval
 
-This reference is read by every repair entry. It describes permission and order;
-the domain skill supplies the domain-specific evidence and validation command.
+Every repair entry reads this file. It owns permission and order; the repair
+entry owns the domain evidence and its focused checks.
 
 ## Required Order
 
 ```text
-complete analysis with status PASS
--> human review decision PASS
-   or immutable case_init.auto_recycle=true plus complete auto receipt
--> record code-change intent and change_marker
--> apply one scoped Frontier code change
--> isolated rerun
+complete analysis with status PASS and correction_state=pending
+-> proposal to the user: evidence, options, cost, recommended option first
+-> the user's decision, recorded with a decision ID (contract.md, Decisions and Approval)
+-> design note and approval when the change touches a core module
+-> ticket and change_marker naming the decision ID and approved scope
+-> one scoped Frontier commit
+-> focused tests and the regression set
+-> rerun the affected cells
 -> fresh analysis
 ```
 
-The next code change needs a new analysis timestamp and a new approval receipt.
-An analysis result, supplement result, run status, or post-change result never
-authorizes itself.
+The next code change needs a new analysis and a new decision. An analysis
+result, supplement result, run status, or post-change result never authorizes
+itself.
 
-## Human Review
+## Review Record
 
-The receipt names the case, exact analysis artifact and timestamp, the immutable
-`requesting_user`, `reviewer_identity`, decision, review time, and approved
-scope. `reviewer_identity` must equal the requesting user or a delegate named in
-`case_init` before the review. The reviewer is external to the repair entry. A
-missing, stale, contradictory, unbound, or self-issued receipt returns
+The user is the reviewer. The record is the user's verbatim answer in the
+task's `requirements.md` under its decision ID, together with
+`repairs/human_review_receipt_<ticket>_<date>.json` naming the case, the
+analysis artifact and its timestamp, `requesting_user`, `reviewer_identity`,
+the decision ID, and the approved scope. `reviewer_identity` is the requesting
+user or a delegate the user named in `requirements.md` before the review. The
+repair entry writes the receipt only after the user has answered; a receipt
+without a recorded answer, or one that predates the analysis it cites, returns
 `PENDING_HUMAN_REVIEW`.
 
-## Automatic Exception
+## Scope Limits
 
-The only automatic path uses a case initialized with `auto_recycle: true`. The
-repair entry writes a complete auto receipt before the first code change, binds
-it to the immutable case initialization and analysis timestamp, and records the
-automation principal and scope. A later change to the manifest does not enable
-automatic repair.
+A decision covers the scope it names. Ask again before going past it: another
+module or domain, a shared interface or config schema, a gate-rule change, or
+more than 5 files or 500 changed lines. Add a configuration field only when the
+analysis measured its fidelity effect; a field whose default leaves every
+existing run unchanged and whose effect is below 0.5% of a gate metric stays
+out.
+
+## Regression Set
+
+Run before the commit and record each result in the result receipt:
+
+- unit tests: the failed set equals the baseline's failed set;
+- `tests/e2e/refactor_fidelity/run_matrix.py` against the pre-change commit:
+  identical, or every difference explained by the change;
+- cells the change does not apply to (for example, `attn_dp = 1` cells for a DP
+  change): byte-identical Frontier metrics;
+- public examples unchanged unless the change targets them;
+- the size and naming gates of the repository `AGENTS.md`.
 
 ## Result Receipt
 
-After the isolated rerun, write the domain result receipt with the exact changed
-files, code-change marker, commands, before/after values, validation status, and
-authorizing receipt. A result with validation other than `PASS` keeps the case
-open and does not authorize another change.
+After the rerun, write the domain result receipt with the changed files, the
+commit, the `change_marker`, the commands, before and after values (absolute
+and relative), the regression results, the validation status, and the decision
+ID. A result other than `PASS` keeps the case open and authorizes nothing.
 
-Repairs target Frontier. The ground-truth scheduler and inference semantics stay
-unchanged unless the case explicitly declares an experiment knob.
+Repairs target Frontier. A `groundtruth_defect` is fixed in the ground truth
+by its own decision, as a new ground-truth commit and run generation; Frontier
+never models it.

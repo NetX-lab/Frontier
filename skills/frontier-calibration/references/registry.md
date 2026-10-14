@@ -1,33 +1,32 @@
 # v2 Registry
 
-Read `registry.json` as the fixed entry catalog and candidate dependency
-inventory. It contains 17 atomics and 3 composites. Every entry has one owner, a
-trigger, input paths, fixed output paths, a direct code-change permission, stop
-statuses, and a validation command. The `calls` array on a composite lists
-possible dependencies; it is not an unconditional execution order.
+`registry.json` is the fixed entry catalog and candidate dependency inventory:
+17 atomics and 3 composites. Every entry has one owner, a trigger, inputs, fixed
+output paths, a direct code-change permission, stop statuses, and a validation
+summary. The `calls` array of a composite lists possible dependencies; it is
+not an execution order.
 
-Use `call-graph.md` as the authoritative execution route for
-predicates, conditional branches, stops, return edges, and one-domain-at-a-time
-ordering. A `calls` entry never bypasses the analysis-before-code-change or
-human review gate.
+`call-graph.md` is the authoritative route: predicates, branches, stops, return
+edges, and one-domain-at-a-time ordering. A `calls` entry never bypasses the
+analysis-before-code-change rule or the human review gate in
+`repair-approval.md`. A status of `PASS` describes evidence validity; it never
+grants code-change permission.
 
-The v2 reductions are deliberate:
+Deliberate reductions:
 
-- `op-trace-normalize` is an internal phase of `op-gap-analysis`;
-- PP, collective, and KV/M2N repairs share `residual-repair` with a lane
+- `op-trace-normalize` is an internal phase of `op-gap-analysis`, and the error
+  budget is an internal phase of `error-analysis`;
+- PP, collective, and KV/M2N repairs share `residual-repair` through the lane
   registry;
-- semantic, workflow, operator, and CPU repairs remain separate owners;
-- operator and CPU supplements remain separate owners and share only the
-  lossless merge mechanism;
-- compatibility aliases remain outside this registry;
-- composites retain separate start, read-only analysis, and code-change goals.
+- semantic, workflow, operator, and CPU repairs keep separate owners;
+- operator and CPU supplements keep separate owners and separate producers;
+- compatibility aliases stay outside this registry (`migration.md`).
 
 The top-level `lane_registry` is the only classification source for residual
-repair. It maps the analysis label (`classification`) to the repair lane,
-required evidence fields, the analysis-provided `frontier_owner`, and a
-lane-specific receipt path. `mixed` and `still_unclear` are classifier outcomes
-without a repair lane and therefore stop before any code change.
+repair. It maps the analysis label (`classification`) to the repair lane, the
+required evidence fields, the analysis-provided `frontier_owner`, and the
+lane-specific receipt path. `mixed` and `still_unclear` have no repair lane and
+stop before any code change.
 
-An entry may call another entry only through the dependency graph in
-`call-graph.md`. A status of `PASS` describes evidence validity; it never grants
-code-change permission by itself.
+Output paths are relative to the case directory, except Frontier runs, which go
+under `$FRONTIER_TMP_ROOT`.
