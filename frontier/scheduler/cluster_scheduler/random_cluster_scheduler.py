@@ -10,6 +10,13 @@ from frontier.types import ClusterType
 
 
 class RandomClusterScheduler(BaseClusterScheduler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # The next attention-DP lane of each Replica, by Replica index. It
+        # persists across calls because online arrivals are scheduled one
+        # request per call.
+        self._next_dp_lane = [0] * self._num_replicas
+
     def schedule(self) -> List[Tuple[int, Optional[int], Request]]:
         """
         Schedule requests with the release-supported monolithic random strategy.
@@ -35,11 +42,10 @@ class RandomClusterScheduler(BaseClusterScheduler):
         # DECODE_ATTN remains a full-stage role and is handled separately.
         request_mapping = []
         for replica_idx, requests in enumerate(replica_requests):
-            if not requests:
-                continue
             replica_id = replica_ids[replica_idx]
-            for local_idx, request in enumerate(requests):
-                dp_id = local_idx % self._replica_dp_size
+            for request in requests:
+                dp_id = self._next_dp_lane[replica_idx]
+                self._next_dp_lane[replica_idx] = (dp_id + 1) % self._replica_dp_size
                 request_mapping.append((replica_id, dp_id, request))
 
         return request_mapping

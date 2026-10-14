@@ -19,6 +19,7 @@ def _request(request_id: int) -> SimpleNamespace:
         priority=0,
         arrived_at=float(request_id),
         completed=False,
+        is_prefill_complete=True,
         completed_layer_count=0,
         af_roundtrip_inflight=False,
         current_decode_token_index=1,
@@ -211,20 +212,22 @@ def test_pdd_decode_preemption_preserves_transferred_prompt_and_decode_progress(
     assert scheduler._num_allocated_blocks == 0
 
 
-def test_monolithic_preemption_keeps_restart_reset_contract() -> None:
-    """MONOLITHIC preemption still restarts request-level computation."""
+def test_monolithic_preemption_restarts_a_victim_still_in_prefill() -> None:
+    """A MONOLITHIC victim with no output yet restarts its prompt."""
 
     scheduler = _decode_attn_scheduler()
     scheduler._cluster_type = ClusterType.MONOLITHIC
-    victim = _request(0)
-    victim._num_processed_tokens = 17
+    victim = Request(arrived_at=0.0, num_prefill_tokens=32, num_decode_tokens=4)
+    victim._num_processed_tokens = 16
+    victim._scheduled = True
     scheduler._running_requests[:] = [victim]
     scheduler._allocation_map[victim.id] = 1
     scheduler._num_allocated_blocks = 1
 
     scheduler._preempt_request(victim, [])
 
-    assert victim._num_processed_tokens == 0
+    assert victim.num_processed_tokens == 0
+    assert victim.is_prefill_complete is False
 
 
 def test_decode_attn_admission_records_handoff_waiting_time() -> None:

@@ -22,6 +22,7 @@ from frontier.scheduler.replica_scheduler.vllm_v1_decision_log import (
     _log_frontier_vllm_v1_schedule_decision,
     schedule_decision_logging_enabled,
 )
+from frontier.scheduler.request_load import RequestLoad
 from frontier.spec_decode import compute_iteration_outcome, get_planned_draft_tokens
 from frontier.types import ClusterType
 
@@ -529,6 +530,20 @@ class IterationSchedulingPolicy:
             return len(self._waiting_requests)
         return len(self._request_queue) + len(self._preempted_requests)
 
+    def get_request_load(self) -> RequestLoad:
+        """Report this lane's populations from the one waiting definition.
+
+        Running counts every admitted request, including one that is admitted
+        but not scheduled in the current iteration. Waiting reuses the
+        decision-log accessor above so a load balancer and the decision log can
+        never disagree about what is waiting.
+        """
+
+        return RequestLoad(
+            self._get_num_waiting_reqs_for_decision_log(),
+            len(self._running_requests),
+        )
+
     def _apply_long_prefill_token_threshold(
         self, request: Request, num_new_tokens: int
     ) -> int:
@@ -558,6 +573,7 @@ class IterationSchedulingPolicy:
             available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
+        request_load = self.get_request_load()
         payload: Dict[str, Any] = {
             "event": event,
             "source": "frontier",
@@ -569,8 +585,8 @@ class IterationSchedulingPolicy:
             "token_budget": int(token_budget),
             "available_blocks": int(available_blocks),
             "num_tokens": int(num_tokens),
-            "num_running_reqs": len(self._running_requests),
-            "num_waiting_reqs": self._get_num_waiting_reqs_for_decision_log(),
+            "num_running_reqs": request_load.running,
+            "num_waiting_reqs": request_load.waiting,
             "max_num_running_reqs": int(self._max_num_running_reqs),
             "max_num_scheduled_tokens": int(self._max_num_scheduled_tokens),
             "batch_request_ids": [str(req_id) for req_id in (batch_request_ids or [])],

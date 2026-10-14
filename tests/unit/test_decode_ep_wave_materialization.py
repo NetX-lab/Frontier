@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import io
 from types import SimpleNamespace
 
@@ -14,6 +13,7 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -179,17 +179,7 @@ def _scheduler(
     )
     scheduler._predictor = predictor
     scheduler._forward_sync_state = ForwardSyncState()
-    scheduler._decode_sync_waiting_room = defaultdict(
-        lambda: defaultdict(
-            lambda: defaultdict(
-                lambda: defaultdict(
-                    lambda: defaultdict(
-                        lambda: {"batches": {}, "arrival_times": {}}
-                    )
-                )
-            )
-        )
-    )
+    initialize_sync_waiting_rooms(scheduler)
     request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=4)
     request._is_prefill_complete = True
     batch = Batch(0, [request], [4], is_moe=True)
@@ -236,7 +226,7 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(monkeypatc
     assert not hasattr(batch, "_decode_ep_wave_post_moe_comm_time_s")
     assert batch._stage_admission_ticket.scope == EP_WAVE
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
-    room = scheduler._decode_sync_waiting_room[0][0][7][2]["post_moe"]
+    room = scheduler._sync_waiting_room[0][0][7][2]["post_moe"]
     assert room["batches"] == {0: batch}
     captured = log_stream.getvalue().splitlines()
     workload_lines = [line for line in captured if "[EP-WORKLOAD]" in line]
@@ -344,7 +334,7 @@ def test_decode_placeholder_stays_replaceable_until_idle_event_is_consumed():
 
     assert len(first_events) == 1
     assert isinstance(first_events[0], DecodeSyncEvent)
-    room = scheduler._decode_sync_waiting_room[0][0][17][2]["pre_moe"]
+    room = scheduler._sync_waiting_room[0][0][17][2]["pre_moe"]
     assert room["batches"][0] is batch_zero
     assert room["batches"][1].is_idle
 
@@ -361,7 +351,7 @@ def test_decode_placeholder_stays_replaceable_until_idle_event_is_consumed():
 
     assert len(second_events) == 1
     assert isinstance(second_events[0], DecodeSyncCollectiveEvent)
-    assert scheduler._decode_sync_waiting_room[0][0][17][2]["pre_moe"] == {}
+    assert scheduler._sync_waiting_room[0][0][17][2]["pre_moe"] == {}
     assert batch_zero._decode_ep_wave_lane_times_ms == (4.0, 7.0)
     assert batch_one._decode_ep_wave_lane_times_ms == (4.0, 7.0)
     assert first_events[0].handle_event(
@@ -402,7 +392,7 @@ def test_decode_placeholder_stays_replaceable_until_idle_event_is_consumed():
     assert isinstance(late_events[0], DecodeSyncEvent)
     assert late_batch._forward_cohort_id != 17
     fresh_cohort_id = late_batch._forward_cohort_id
-    late_room = scheduler._decode_sync_waiting_room[0][0][fresh_cohort_id][2][
+    late_room = scheduler._sync_waiting_room[0][0][fresh_cohort_id][2][
         "pre_moe"
     ]
     assert late_room["batches"][1] is late_batch
@@ -413,7 +403,7 @@ def test_decode_placeholder_stays_replaceable_until_idle_event_is_consumed():
     )
     assert len(late_collective_events) == 1
     assert isinstance(late_collective_events[0], DecodeSyncCollectiveEvent)
-    assert scheduler._decode_sync_waiting_room[0][0][fresh_cohort_id][2][
+    assert scheduler._sync_waiting_room[0][0][fresh_cohort_id][2][
         "post_moe"
     ]["batches"][1] is late_batch
 

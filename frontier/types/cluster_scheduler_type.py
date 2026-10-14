@@ -7,3 +7,4 @@ class ClusterSchedulerType(BaseIntEnum):
     LOR = 2
     STICKY_ROUND_ROBIN = 3
     STICKY_LOR = 4
+    VLLM_LOAD_BALANCING = 5

@@ -25,8 +25,16 @@ def handle_prefill_sync_collective(
     metrics_store: Any,
     *,
     direct_batch: Optional[Batch] = None,
+    owners_restored: Optional[bool] = None,
 ):
-    """Handle completion of a canonical layer-local PREFILL EP wave."""
+    """Handle completion of a canonical layer-local PREFILL EP wave.
+
+    `owners_restored` carries the result of a full-stage restoration the caller
+    already performed for a wider cohort. A shared monolithic forward restores
+    once for all its lanes and then enters this helper per source, so restoring
+    again here would hand out a second ticket for the same lane. `None` keeps
+    the standalone behavior: this call owns the restoration.
+    """
 
     # Event modules import scheduler registries, so load them after the
     # scheduler package has finished initialization.
@@ -47,7 +55,7 @@ def handle_prefill_sync_collective(
         }
         participant_batches = sync_wait_room["batches"]
     else:
-        replica_rooms = scheduler._prefill_sync_waiting_room.get(replica_id)
+        replica_rooms = scheduler._sync_waiting_room.get(replica_id)
         stage_rooms = replica_rooms.get(stage_id) if replica_rooms is not None else None
         step_rooms = stage_rooms.get(batch_global_id) if stage_rooms is not None else None
         layer_rooms = step_rooms.get(layer_id) if step_rooms is not None else None
@@ -77,45 +85,27 @@ def handle_prefill_sync_collective(
             f"layer={layer_id}"
         )
 
-    execution_time = scheduler._predictor.predict_stage_execution_time(
-        sample_batch,
-        stage_id,
-        cluster_type=scheduler._cluster_type,
-        num_layers=1,
-        layer_id=layer_id,
-        include_ffn=False,
-    )
-
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
     stage_layer_start, stage_layer_end = scheduler.get_pipeline_stage_layer_bounds(
         stage_id,
         num_layers,
     )
     next_layer_id = layer_id + 1
-    restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
-        source_batches=participant_batches,
-        replica_id=replica_id,
-        stage_id=stage_id,
-        layer_id=next_layer_id,
-        cohort_id=batch_global_id,
-        operation_kind=(
-            "attention" if next_layer_id < stage_layer_end else "final"
-        ),
-    )
+    if owners_restored is None:
+        restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
+            source_batches=participant_batches,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            layer_id=next_layer_id,
+            cohort_id=batch_global_id,
+            operation_kind=(
+                "attention" if next_layer_id < stage_layer_end else "final"
+            ),
+        )
+    else:
+        restored_full_stage_owners = owners_restored
 
     if layer_id < stage_layer_end - 1:
-        next_layer_execution_time = scheduler._predictor.predict_stage_execution_time(
-            sample_batch,
-            stage_id,
-            cluster_type=scheduler._cluster_type,
-            num_layers=1,
-            layer_id=next_layer_id,
-            include_ffn=False,
-        )
-        attention_time_ms = next_layer_execution_time.get_single_layer_attention_scope_time()
-        attention_time = attention_delay_seconds(next_layer_execution_time)
-        total_time_to_next_sync = attention_time
-
         for replica_local_id, batch in participant_batches.items():
             if batch.is_idle:
                 logger.info(
@@ -124,6 +114,20 @@ def handle_prefill_sync_collective(
                     f"layer={layer_id})"
                 )
                 continue
+            # Each lane continues on its own inputs: its own context lengths and
+            # its own token count give its own next-attention time. Borrowing one
+            # lane's prediction for the others is what made a mixed cohort
+            # advance on a batch it does not contain.
+            next_layer_execution_time = scheduler._predictor.predict_stage_execution_time(
+                batch,
+                stage_id,
+                cluster_type=scheduler._cluster_type,
+                num_layers=1,
+                layer_id=next_layer_id,
+                include_ffn=False,
+            )
+            attention_time_ms = next_layer_execution_time.get_single_layer_attention_scope_time()
+            total_time_to_next_sync = attention_delay_seconds(next_layer_execution_time)
             component_ledger = getattr(
                 batch,
                 "_prefill_model_execution_components_ms_by_stage",
@@ -185,7 +189,14 @@ def handle_prefill_sync_collective(
                 replica_id, stage_identity, stage_id
             )
             is_last_stage = stage_scheduler.is_last_stage
-            pipeline_time = execution_time.pipeline_time * 1e-3
+            execution_time = scheduler._predictor.predict_stage_execution_time(
+                batch,
+                stage_id,
+                cluster_type=scheduler._cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+                include_ffn=False,
+            )
             if not hasattr(batch, "_prefill_stage_start_time"):
                 raise ValueError(
                     "missing PREFILL stage start time: "

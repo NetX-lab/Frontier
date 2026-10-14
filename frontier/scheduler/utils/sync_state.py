@@ -6,6 +6,18 @@ from typing import Any
 from frontier.types import ClusterType
 
 
+#: Synchronization kind of each cluster role whose lanes step MoE layers
+#: together. A monolithic Replica runs prefill and decode on the same lanes, so
+#: one forward may hold a prefill batch on one lane and a decode batch on
+#: another: its lanes synchronize as one "forward". A disaggregated role runs
+#: one phase.
+SYNC_KIND_BY_CLUSTER_TYPE = {
+    ClusterType.MONOLITHIC: "forward",
+    ClusterType.PREFILL: "prefill",
+    ClusterType.DECODE: "decode",
+}
+
+
 def _new_sync_waiting_room():
     return defaultdict(
         lambda: defaultdict(
@@ -19,26 +31,16 @@ def _new_sync_waiting_room():
 
 
 def initialize_sync_waiting_rooms(scheduler: Any) -> None:
-    """Initialize layer-sync rooms for PREFILL, MONOLITHIC, or DECODE."""
-    cluster_type = scheduler._cluster_type
+    """Give a layer-synchronizing cluster its waiting room and its sync kind.
+
+    Every lane of the cluster waits in `_sync_waiting_room`, whatever its local
+    phase: two lanes of one monolithic forward that wait in different rooms
+    never reach the expected lane count. `_sync_kind` selects the wave and
+    completion handlers. A dense model has no MoE layer to synchronize and gets
+    no room.
+    """
     model_config = scheduler._config.replica_config.model_config
-    model_is_moe = model_config is not None and model_config.is_moe
-
-    if cluster_type in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
-        if model_is_moe:
-            scheduler._prefill_sync_waiting_room = _new_sync_waiting_room()
-            scheduler._decode_sync_waiting_room = (
-                _new_sync_waiting_room()
-                if cluster_type is ClusterType.MONOLITHIC
-                else None
-            )
-        else:
-            scheduler._prefill_sync_waiting_room = None
-            scheduler._decode_sync_waiting_room = None
-        return
-
-    if cluster_type is ClusterType.DECODE:
-        scheduler._prefill_sync_waiting_room = None
-        scheduler._decode_sync_waiting_room = (
-            _new_sync_waiting_room() if model_is_moe else None
-        )
+    scheduler._sync_kind = SYNC_KIND_BY_CLUSTER_TYPE[scheduler._cluster_type]
+    scheduler._sync_waiting_room = (
+        _new_sync_waiting_room() if model_config.is_moe else None
+    )

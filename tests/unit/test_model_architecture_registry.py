@@ -29,6 +29,7 @@ from frontier.model_architectures import (
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.types import ActivationType, ClusterType, NormType
+from tests.frontier_sources import iter_frontier_sources
 
 
 class _LogRecordCollector(logging.Handler):
@@ -572,7 +573,7 @@ def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
     }
     observed_call_counts: dict[tuple[str, str, str], int] = {}
 
-    for path in (repo_root / "frontier").rglob("*.py"):
+    for path in iter_frontier_sources(repo_root):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         function_aliases: set[str] = set()
         module_aliases: set[str] = set()

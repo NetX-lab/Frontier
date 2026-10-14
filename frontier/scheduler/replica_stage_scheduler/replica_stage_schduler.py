@@ -46,7 +46,7 @@ class ReplicaStageScheduler:
         self._batch_queue = []  # Priority queue: list of (global_id, insertion_counter, schedule_epoch, batch)
         self._insertion_counter = 0  # Monotonically increasing counter for FIFO tie-breaking
         self._is_busy = False
-        self._last_stale_drop_count = 0
+        self._last_stale_drops: list[Batch] = []
 
     # gurantee only one batch is in current stage at a time;
     # other batches are in the self._batch_queue
@@ -189,10 +189,10 @@ class ReplicaStageScheduler:
     def on_stage_end(self) -> None:
         self._is_busy = False
 
-    def consume_last_stale_drop_count(self) -> int:
-        count = self._last_stale_drop_count
-        self._last_stale_drop_count = 0
-        return count
+    def consume_last_stale_drops(self) -> list[Batch]:
+        dropped = self._last_stale_drops
+        self._last_stale_drops = []
+        return dropped
 
     def _materialize_runtime_live_batch(self, batch: Batch) -> Optional[Batch]:
         live_indices = [
@@ -250,15 +250,15 @@ class ReplicaStageScheduler:
 
     def _drop_queued_lanes_for_ticket(
         self, admission_ticket: StageAdmissionTicket
-    ) -> int:
+    ) -> list[Batch]:
         """Drop every queued sibling that belongs to one invalid EP wave."""
 
         retained = []
-        dropped = 0
+        dropped: list[Batch] = []
         for queue_item in self._batch_queue:
             queued_batch = queue_item[3]
             if getattr(queued_batch, "_stage_admission_ticket", None) == admission_ticket:
-                dropped += 1
+                dropped.append(queued_batch)
                 queued_batch.__dict__.pop("_stage_admission_ticket", None)
             else:
                 retained.append(queue_item)
@@ -294,7 +294,7 @@ class ReplicaStageScheduler:
         Returns:
             The batch with smallest global_id, or None if cannot pop
         """
-        self._last_stale_drop_count = 0
+        self._last_stale_drops = []
         if self._is_busy or not self._batch_queue:
             return None
         while self._batch_queue:
@@ -310,8 +310,8 @@ class ReplicaStageScheduler:
             if self._stage_execution_context.is_cancelled(admission_ticket):
                 heapq.heappop(self._batch_queue)
                 batch.__dict__.pop("_stage_admission_ticket", None)
-                self._last_stale_drop_count += 1
-                self._last_stale_drop_count += (
+                self._last_stale_drops.append(batch)
+                self._last_stale_drops.extend(
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
                 continue
@@ -319,10 +319,10 @@ class ReplicaStageScheduler:
                 heapq.heappop(self._batch_queue)
                 self._discard_stale_ticket(admission_ticket)
                 batch.__dict__.pop("_stage_admission_ticket", None)
-                self._last_stale_drop_count += (
+                self._last_stale_drops.append(batch)
+                self._last_stale_drops.extend(
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
-                self._last_stale_drop_count += 1
                 continue
             parent_acquired = False
             if not self._stage_execution_context.owns(admission_ticket):
@@ -339,10 +339,10 @@ class ReplicaStageScheduler:
                 elif context.is_queued(admission_ticket):
                     context.cancel(admission_ticket)
                 batch.__dict__.pop("_stage_admission_ticket", None)
-                self._last_stale_drop_count += (
+                self._last_stale_drops.append(batch)
+                self._last_stale_drops.extend(
                     self._drop_queued_lanes_for_ticket(admission_ticket)
                 )
-                self._last_stale_drop_count += 1
                 continue
             if (
                 self._is_moe
