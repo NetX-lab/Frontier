@@ -1,0 +1,3 @@
+execution_mode,num_tensor_parallel_workers,kernel_gap_us,num_gaps,chain,gpu_name,driver_version,torch_version,cuda_version
+eager,1,1.7461116946121147,8840,decoder_layer:llama2_7b_dense_example:tp1,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
+cuda_graph,1,0.3941703261301454,30142,vllm_decode_graphs:llama2_7b_dense_example,NVIDIA H200,570.124.06,2.8.0+cu128,12.8
