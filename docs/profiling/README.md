@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-15 | Updated the release version to `pre-release-v0.4`. |
 | 2026-10-14 | Documented the measurement methods and their output files, the kernel-gap and CPU-overhead producers, the full input taxonomy, and the checked-in H200 tables. |
 | 2026-10-10 | Documented the padded grouped-GEMM columns and the BLOCK_SIZE_M ranges the simulator requires. |
 | 2026-09-22 | Recorded the `moe_grouped_gemm` measurement scope and the limits of the backend identity columns. |
@@ -12,7 +13,7 @@
 
 ## Scope
 
-This guide covers the user-facing profiling workflow for `pre-release-v0.3`.
+This guide covers the user-facing profiling workflow for `pre-release-v0.4`.
 
 Public examples live here:
 

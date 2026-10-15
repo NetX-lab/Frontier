@@ -673,7 +673,7 @@ class AstraSimAnalyticalCCBackend(BaseCCBackend):
         self._validate_data_size(data_size_bytes)
         self._validate_num_devices(num_devices, "broadcast")
         raise NotImplementedError(
-            "broadcast is not implemented in ASTRA-Sim analytical path for Frontier v0.3"
+            "broadcast is not implemented in ASTRA-Sim analytical path for Frontier v0.4"
         )
 
     def predict_send_recv(

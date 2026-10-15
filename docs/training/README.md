@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-15 | Updated the release version to `pre-release-v0.4`. |
 | 2026-10-14 | Documented the full input layout (kernel-only, kernel-gap and CPU-overhead tables), the E2E-only inputs, the GDN manifest requirement, and replaced the broken `mlp` alias with `linear_op`. |
 | 2026-09-17 | Documented the temporary GDN mixed-batch prefill approximation in co-location. |
 | 2026-09-14 | Documented the standard CPU-safe GDN training and artifact-loading path. |
@@ -11,7 +12,7 @@
 
 ## Scope
 
-This guide explains the role of `frontier.training` in the `pre-release-v0.3`
+This guide explains the role of `frontier.training` in the `pre-release-v0.4`
 repository.
 
 Training converts profiling CSVs into cached execution-time predictor models. The E2E simulator uses those predictors when dummy mode is disabled.

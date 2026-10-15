@@ -7,7 +7,7 @@
 <h4>A Discrete-Event Simulator for Modern LLM Serving</h4>
 
 [![docs](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](./docs)
-[![version](https://img.shields.io/badge/release-pre--v0.3-green)](#latest-news-)
+[![version](https://img.shields.io/badge/release-pre--v0.4-green)](#latest-news-)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![arxiv](https://img.shields.io/badge/arXiv-2605.21312-b31b1b.svg)](https://arxiv.org/abs/2605.21312)
 

@@ -14,20 +14,20 @@ DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR = (
 PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
     "Error: pd-disaggregation public release support requires "
     "--no-enable_parallel_clusters. Parallel PDD is excluded from "
-    "pre-release-v0.3 because post-ISSUE-022 five-pair MoE-64 measurements "
+    "pre-release-v0.4 because post-ISSUE-022 five-pair MoE-64 measurements "
     "were slower than sequential: Simulator.run() by 35.29% and shell E2E "
     "by 24.81% (paired medians). The implementation remains available only "
     "to internal correctness tests."
 )
 
 PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
-    "Error: pd-af-disaggregation v0.3 requires "
+    "Error: pd-af-disaggregation v0.4 requires "
     "--no-enable_parallel_clusters. Parallel cluster processing for "
     "pd-af-disaggregation is deferred in this release."
 )
 
 PD_AF_PREFIX_CACHING_RELEASE_ERROR = (
-    "Prefix caching is excluded for pd-af-disaggregation in v0.3. "
+    "Prefix caching is excluded for pd-af-disaggregation in v0.4. "
     "Disable replica_scheduler_config.enable_prefix_caching."
 )
 
@@ -37,7 +37,7 @@ AICONFIGURATOR_BACKEND_RELEASE_ERROR = (
 )
 
 PD_AF_TRACE_REPLAY_DEFERRED_ERROR = (
-    "Error: pd-af-disaggregation v0.3 trace-replay is deferred. "
+    "Error: pd-af-disaggregation v0.4 trace-replay is deferred. "
     "The configured trace-driven fields are public stubs only and are not "
     "implemented in this release."
 )

@@ -26,7 +26,7 @@ DEFERRED_TRACE_FIELDS = (
     "decode_attn_steady_state_snapshot_path",
     "decode_attn_steady_state_measurement_report_path",
 )
-DEFERRED_ERROR_MARKER = "pd-af-disaggregation v0.3 trace-replay is deferred"
+DEFERRED_ERROR_MARKER = "pd-af-disaggregation v0.4 trace-replay is deferred"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 

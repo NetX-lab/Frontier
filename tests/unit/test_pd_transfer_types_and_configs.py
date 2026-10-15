@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
     "Error: pd-disaggregation public release support requires "
     "--no-enable_parallel_clusters. Parallel PDD is excluded from "
-    "pre-release-v0.3 because post-ISSUE-022 five-pair MoE-64 measurements "
+    "pre-release-v0.4 because post-ISSUE-022 five-pair MoE-64 measurements "
     "were slower than sequential: Simulator.run() by 35.29% and shell E2E "
     "by 24.81% (paired medians). The implementation remains available only "
     "to internal correctness tests."
@@ -94,7 +94,7 @@ def test_parallel_cluster_cli_help_states_public_release_boundary() -> None:
     help_text = field.metadata["help"]
 
     assert "internal correctness tests" in help_text
-    assert "pre-release-v0.3" in help_text
+    assert "pre-release-v0.4" in help_text
     assert "pd-disaggregation" in help_text
     assert "pd-af-disaggregation" in help_text
     assert "--no-enable_parallel_clusters" in help_text

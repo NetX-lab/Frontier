@@ -4,7 +4,7 @@ This directory contains runnable examples for the release-supported Frontier sim
 
 ## Release Scope
 
-`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
+`pre-release-v0.4` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
 
 The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
 
@@ -161,7 +161,7 @@ Three sequential roles model prefill, decode attention, and decode FFN/MoE. The 
 - EP topology checks fail fast before simulator startup
 - Dense, MoE, EP=2, and global CUDA Graph recipes in offline and online modes
 - PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`.
-- PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+- PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.4`.
 
 ## Key Configuration Options
 

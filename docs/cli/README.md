@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-15 | Updated the release version to `pre-release-v0.4`. |
 | 2026-10-14 | Documented `attn_dp`, the device fields, the cluster scheduler choice, and the kernel-only, kernel-gap and CPU-overhead inputs; updated the profiling taxonomy. |
 | 2026-09-27 | Documented the `max_model_len` arrival check of the `vllm_v1` schedulers. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
@@ -11,9 +12,9 @@
 
 ## Scope
 
-This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
+This guide covers the public CLI surface for the `pre-release-v0.4` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
 
-PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.4`.
 
 Why parallel cluster processing is not a release path:
 
@@ -406,7 +407,7 @@ Common files include:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
+| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the v0.4 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
 | `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide, keep CSVs in the taxonomy above, and check that `--replica_config_device` and `--replica_config_network_device` name the data directories. |

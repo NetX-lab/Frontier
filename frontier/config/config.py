@@ -267,7 +267,7 @@ class SimulationConfig(ABC):
         metadata={
             "help": (
                 "Enable parallel cluster processing for internal correctness tests. "
-                "pre-release-v0.3 public pd-disaggregation and "
+                "pre-release-v0.4 public pd-disaggregation and "
                 "pd-af-disaggregation runs require "
                 "--no-enable_parallel_clusters."
             )

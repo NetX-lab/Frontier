@@ -40,7 +40,7 @@ def test_examples_readme_documents_current_release_thinking_mode_entrypoint() ->
     assert "examples/architecture/pd-disaggregation/thinking_mode_basic.sh" not in readme_text
     assert "examples/architecture/pdd/offline/thinking_mode_basic.sh" in readme_text
     assert (
-        "`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** "
+        "`pre-release-v0.4` includes sequential **PDD / `pd-disaggregation`** "
         "and **PD-AF / `pd-af-disaggregation`** examples"
         in readme_text
     )

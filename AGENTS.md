@@ -1,6 +1,6 @@
 # Frontier: LLM Inference Simulator (Co-location + PDD + PD-AF Release)
 
-## Release Status: `pre-release-v0.3`
+## Release Status: `pre-release-v0.4`
 
 ## Modification History
 
@@ -18,13 +18,14 @@
 | 2026-10-09 | Corrected the vLLM V1 replica scheduler's class name to `VLLMv1EngineReplicaScheduler`, as registered in `ReplicaSchedulerRegistry`. |
 | 2026-10-10 | Linked the module size exception record for the modules above 2,000 lines that the calibration changes touch. |
 | 2026-10-14 | Updated the docs against the code: parallel-cluster context, the Docker smoke test, the examples tree and PDD table, the full profiling input taxonomy and H200 data, the test layout and starting checks, and the documentation links. |
+| 2026-10-15 | Updated the release version to `pre-release-v0.4`. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
 - Direct CLI/config construction defaults to `astra_sim_analytical`; pass `--cc_backend_config_type analytical` to match the public examples.
 - `collective_sim` is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
 
-Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
+Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.4` branch supports the **co-location** architecture, sequential **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
 
 PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
 
@@ -115,7 +116,7 @@ Important runtime constraints:
 - `sglang` is available only for `co-location` / `MONOLITHIC`.
 - `decode_cuda_graph_mode` is intended for `co-location` and `pd-disaggregation`.
 - PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`.
-- PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+- PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.4`.
 - When speculative decoding is enabled, Frontier currently requires `decode_cuda_graph_mode='none'` unless the diagnostic opt-in is explicitly enabled.
 
 ## Repository Layout
@@ -839,7 +840,7 @@ The PD-AF parity harness (`tests/e2e/pd_af_parity/`) and `tests/integration/test
 
 ## License
 
-Frontier `pre-release-v0.3` is released under the MIT License. See `LICENSE` for the full text.
+Frontier `pre-release-v0.4` is released under the MIT License. See `LICENSE` for the full text.
 
 ## Other Documentation
 

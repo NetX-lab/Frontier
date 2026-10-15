@@ -2,7 +2,7 @@
 
 ## Overview
 
-This roadmap starts from the current `pre-release-v0.3` surface: co-location,
+This roadmap starts from the current `pre-release-v0.4` surface: co-location,
 sequential PDD / `pd-disaggregation`, and sequential PD-AF /
 `pd-af-disaggregation`. It organizes remaining work into three horizons:
 
@@ -34,7 +34,7 @@ Goal: make the current three-architecture release predictable to configure,
 profile, simulate, and compare.
 
 - **Sequential release hardening.** Keep co-location, PDD, and PD-AF examples,
-  CLI contracts, profiling inputs, and metrics output aligned as the v0.3
+  CLI contracts, profiling inputs, and metrics output aligned as the v0.4
   release stabilizes.
 - **Parallel PDD performance.** Preserve internal correctness coverage while
   investigating the measured coordination overhead. Public PDD remains

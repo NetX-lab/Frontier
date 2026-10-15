@@ -4,7 +4,7 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 ## Release Scope
 
-`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD uses `PREFILL` plus unified `DECODE`; PD-AF uses `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` with KV and M2N transfers. PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
+`pre-release-v0.4` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD uses `PREFILL` plus unified `DECODE`; PD-AF uses `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` with KV and M2N transfers. PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
 
 The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
 
@@ -82,7 +82,7 @@ All PD-AF scripts use these release-supported defaults unless overridden from th
 
 The EP recipe validates expert-domain equality and expert-count bounds before launching the simulator. A successful smoke run must emit `request_metrics.csv`, `system_metrics.json`, positive KV/M2N transfer metrics, and one completed row per generated request.
 
-PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`. These scripts default to dummy prediction for one-click structural checks; dummy-mode evidence is not trained numerical parity.
+PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.4`. These scripts default to dummy prediction for one-click structural checks; dummy-mode evidence is not trained numerical parity.
 
 ## Thinking Mode v1
 
@@ -105,7 +105,7 @@ Under PDD, one user request can produce multiple prefill-to-decode KV handoffs. 
 # This does not consume profiling CSV datasets because it forces dummy execution-time prediction.
 bash examples/architecture/run_dummy_smoke_matrix.sh
 
-# Full PDD suite for pre-release-v0.3.
+# Full PDD suite for pre-release-v0.4.
 bash examples/architecture/pdd/run_all.sh
 
 # PDD offline cases.
@@ -122,7 +122,7 @@ bash examples/architecture/pdd/online/thinking_mode_basic_online.sh
 bash examples/architecture/pdd/online/moe_spec_dec_online.sh
 bash examples/architecture/pdd/online/moe_prefix_caching_online.sh
 
-# Full PD-AF suite for pre-release-v0.3.
+# Full PD-AF suite for pre-release-v0.4.
 bash examples/architecture/pd-af-disagg/run_all.sh
 
 # PD-AF offline cases.

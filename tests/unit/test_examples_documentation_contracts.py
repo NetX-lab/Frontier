@@ -93,7 +93,7 @@ def test_public_docs_list_the_complete_pdaf_v03_surface_and_boundaries() -> None
         "examples/README.md",
         "examples/architecture/README.md",
     ):
-        assert "pre-release-v0.3" in docs[relative], relative
+        assert "pre-release-v0.4" in docs[relative], relative
 
     for relative, text in docs.items():
         assert "pd-af-disaggregation" in text, relative
@@ -104,7 +104,7 @@ def test_public_docs_list_the_complete_pdaf_v03_surface_and_boundaries() -> None
     ) in combined
     assert (
         "PD-AF does not support Thinking Mode, Speculative Decoding / MTP, "
-        "or Prefix Caching in `pre-release-v0.3`."
+        "or Prefix Caching in `pre-release-v0.4`."
     ) in combined
     assert "dummy-mode evidence is not trained numerical parity" in combined
 
