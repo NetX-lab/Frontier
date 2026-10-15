@@ -254,3 +254,6 @@ worktreess/
 
 /outputs/
 /logs/
+
+# Per-host bindings of the agent skills under skills/ (skills/README.md).
+skills/*/site.local.md

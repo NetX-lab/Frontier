@@ -1,0 +1,253 @@
+{
+  "schema_version": "frontier-calibration-v2",
+  "calls_semantics": "candidate dependency inventory; conditional execution is authoritative in references/call-graph.md and never bypasses the human review gate",
+  "routing_authority": "references/call-graph.md",
+  "lane_registry": [
+    {
+      "lane": "pp",
+      "classification": "pp_overhead",
+      "required_evidence": ["stage_pair", "boundary", "overlap_ms", "receiver_head_ms", "send_path_ms", "activation_bytes"],
+      "frontier_owner_field": "frontier_owner",
+      "receipt_path": "repairs/residual_pp_repair_receipt.json"
+    },
+    {
+      "lane": "collective",
+      "classification": "collective_communication",
+      "required_evidence": ["operation", "backend", "topology", "launch_ms", "wire_ms", "wait_ms", "overlap_scope", "comm_skip_scope"],
+      "frontier_owner_field": "frontier_owner",
+      "receipt_path": "repairs/residual_collective_repair_receipt.json"
+    },
+    {
+      "lane": "kv_or_m2n_transfer",
+      "classification": "kv_or_m2n_transfer",
+      "required_evidence": ["role", "layer", "connector", "transport", "bytes", "bandwidth", "queueing", "injection_scope"],
+      "frontier_owner_field": "frontier_owner",
+      "receipt_path": "repairs/residual_kv_or_m2n_transfer_repair_receipt.json"
+    }
+  ],
+  "entries": [
+    {
+      "name": "groundtruth-run-check",
+      "kind": "atomic",
+      "owner": "groundtruth-run-check",
+      "trigger": "A ground-truth run needs its preflight before launch or its evidence check after the run.",
+      "inputs": ["case manifest", "run manifest", "engine file of the mode", "selected ground-truth checkout", "run directory after the run"],
+      "outputs": ["analysis/run_check_status.groundtruth_<mode>.json", "analysis/run_check_summary.groundtruth_<mode>.md"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Before launch, verify the checkout tuple, mode predicate, inputs, and fresh paths; after the run, verify every check of the run and record PASS only when all pass."
+    },
+    {
+      "name": "groundtruth-run",
+      "kind": "atomic",
+      "owner": "groundtruth-run",
+      "trigger": "A passed preflight permits a vLLM-BS ground-truth run in one declared mode.",
+      "inputs": ["passed preflight", "case manifest", "engine file", "cell trace", "selected clean checkout"],
+      "outputs": ["runs/groundtruth_<mode>/<run_tag>/run_manifest.json", "runs/groundtruth_<mode>/<run_tag>/run/*", "launcher receipt"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Write the run manifest before launch, keep the launcher alive to the terminal status, then hand every run tag to the post-run check."
+    },
+    {
+      "name": "simulator-run",
+      "kind": "atomic",
+      "owner": "simulator-run",
+      "trigger": "A frozen Frontier case and cell are ready to run after the semantic check.",
+      "inputs": ["passed semantic check", "case manifest", "Frontier settings file of the current generation", "cell trace", "KV block count of the cell's clean run"],
+      "outputs": ["$FRONTIER_TMP_ROOT/<task>/<case_id>/<label>/run_manifest.json", "$FRONTIER_TMP_ROOT/<task>/<case_id>/<label>/metrics/*"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Run one non-dummy command with an explicit settings file into a fresh label directory and verify the exit code, the log, and every declared metric."
+    },
+    {
+      "name": "semantic-alignment-check",
+      "kind": "atomic",
+      "owner": "semantic-alignment-check",
+      "trigger": "Frontier and vLLM values may look equal while their topology, scheduling, routing, or metric meaning differs.",
+      "inputs": ["case manifest", "engine file", "Frontier settings file and effective settings", "checkout provenance", "routing records for MoE"],
+      "outputs": ["analysis/semantic_alignment_table.csv", "analysis/semantic_alignment_summary.md", "analysis/semantic_alignment_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Evaluate every setting row and the MoE routing audit with source anchors, a status, and an explicit next action."
+    },
+    {
+      "name": "semantic-alignment-repair",
+      "kind": "atomic",
+      "owner": "semantic-alignment-repair",
+      "trigger": "A decided semantic alignment table names a concrete Frontier setting or mapping mismatch.",
+      "inputs": ["complete semantic analysis", "recorded user decision", "case manifest"],
+      "outputs": ["repairs/semantic_alignment_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Record the decision before the code change, run the regression set, then obtain fresh semantic evidence."
+    },
+    {
+      "name": "e2e-metrics-gap",
+      "kind": "atomic",
+      "owner": "e2e-metrics-gap",
+      "trigger": "Clean Frontier and vLLM request rows need the five independent E2E metric decisions for a cell.",
+      "inputs": ["passed clean run checks", "Frontier label run", "cell entry in the scenario matrix", "routing status"],
+      "outputs": ["analysis/e2e_gap_<label>/sample.json", "analysis/e2e_gap_<label>/reading.json", "analysis/e2e_metrics_summary.md", "analysis/e2e_metrics_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Normalize the rows, apply the cell's gate kind over every admissible reference run, and report absolute values beside each relative error."
+    },
+    {
+      "name": "dispatch-align-trace",
+      "kind": "atomic",
+      "owner": "dispatch-align-trace",
+      "trigger": "Client dispatch or frontend routing delay changes which requests a DP lane or step sees.",
+      "inputs": ["passing clean runs with dispatch and route stamps", "cell trace", "case manifest"],
+      "outputs": ["<Frontier run dir>/trace.csv per ensemble member", "route_delay record in the run receipt and the scenario matrix"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Draw member delays from the measured pool with recorded seeds, change only arrival times, and verify ids, token counts, and trace hashes."
+    },
+    {
+      "name": "workflow-gap-analysis",
+      "kind": "atomic",
+      "owner": "workflow-gap-analysis",
+      "trigger": "Request queueing, step membership, batch formation, or DP x PP lane behavior differs and the control flow must be explained.",
+      "inputs": ["schedule_timing run", "placement extraction", "Frontier stage and event traces", "formal request set", "error budget"],
+      "outputs": ["analysis/workflow_gap_table.csv", "analysis/workflow_gap_summary.md", "analysis/workflow_gap_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Compare the first formal batch, all declared phases, step classes per request, and lane modes with source anchors."
+    },
+    {
+      "name": "workflow-repair",
+      "kind": "atomic",
+      "owner": "workflow-repair",
+      "trigger": "A decided workflow analysis identifies a reproducible Frontier control-flow difference.",
+      "inputs": ["complete workflow analysis", "recorded user decision", "case manifest"],
+      "outputs": ["repairs/workflow_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Apply the smallest Frontier control-flow change, run the regression set and the affected cells, and refresh workflow evidence."
+    },
+    {
+      "name": "op-gap-analysis",
+      "kind": "atomic",
+      "owner": "op-gap-analysis",
+      "trigger": "Matched step classes differ in device price and need a per-operator or per-kernel comparison.",
+      "inputs": ["clean, op_timing, and kernel_timing runs of one trace", "device timeline when available", "Frontier op trace", "profiling coverage"],
+      "outputs": ["analysis/op_trace_normalized.jsonl", "analysis/op_gap/*", "analysis/op_gap_summary.md", "analysis/op_gap_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Normalize identity internally, require the first and three aligned batches, separate measurement cost, then calculate signed and absolute gaps."
+    },
+    {
+      "name": "op-supplement",
+      "kind": "atomic",
+      "owner": "op-supplement",
+      "trigger": "Operator analysis or coverage lacks a phase, shape, grid point, kernel gap, or device generation.",
+      "inputs": ["op gap status or coverage gaps", "missing tuple list", "base table set", "profiling plan"],
+      "outputs": ["e2e_profiling/profiling_plan_<purpose>.json", "e2e_profiling/tables/<table set>/<model>/*.csv", "e2e_profiling/tables/<table set>/<model>/merge_receipt.json", "e2e_profiling/tables/<table set>/<model>/COMPLETE"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Run the plan, merge losslessly into a new table set, and verify hashes and the completion marker before any Frontier run uses it."
+    },
+    {
+      "name": "op-repair",
+      "kind": "atomic",
+      "owner": "op-repair",
+      "trigger": "A decided operator analysis proves a scoped predictor, mapping, or pricing correction.",
+      "inputs": ["complete op analysis", "recorded user decision", "case manifest"],
+      "outputs": ["repairs/op_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Apply one scoped Frontier change, run the regression set and the affected cells, then regenerate op and E2E evidence."
+    },
+    {
+      "name": "residual-lane-classification",
+      "kind": "atomic",
+      "owner": "residual-lane-classification",
+      "trigger": "The error budget leaves a part in PP, collective, KV transfer, or M2N transfer time that needs a source classification.",
+      "inputs": ["latest E2E status", "error budget", "workflow and op status", "PP, collective, and transfer evidence"],
+      "outputs": ["analysis/residual_gap_table.csv", "analysis/residual_gap_summary.md", "analysis/residual_gap_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Classify PP, collective, KV/M2N, mixed, or unclear residuals with native scope and numeric evidence."
+    },
+    {
+      "name": "residual-repair",
+      "kind": "atomic",
+      "owner": "residual-repair",
+      "trigger": "A decided residual classification identifies a PP, collective, or KV/M2N correction.",
+      "inputs": ["complete residual analysis", "lane-specific evidence", "case manifest", "recorded user decision"],
+      "outputs": ["lane-specific repair receipt under repairs/"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Select one declared lane, apply the smallest Frontier change, run the regression set, and refresh residual and E2E evidence."
+    },
+    {
+      "name": "cpu-overhead-analysis",
+      "kind": "atomic",
+      "owner": "cpu-overhead-analysis",
+      "trigger": "The error budget attributes part of a failing gated metric to host time.",
+      "inputs": ["error budget", "fresh clean E2E status", "admitted CPU-probe runs", "Frontier CPU-overhead settings"],
+      "outputs": ["analysis/cpu_overhead_table.csv", "analysis/cpu_overhead_summary.md", "analysis/cpu_overhead_status.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Attribute host phases per step class from admitted probe runs and classify each part without an independent CPU threshold."
+    },
+    {
+      "name": "cpu-overhead-supplement",
+      "kind": "atomic",
+      "owner": "cpu-overhead-supplement",
+      "trigger": "CPU analysis reports missing or unadmitted host rows and the user approved the measurement work.",
+      "inputs": ["CPU analysis status", "missing CPU tuple list", "CPU-probe runs with their paired clean runs", "producer arguments"],
+      "outputs": ["inputs/cpu_overhead_<generation>/cpu_overheads.csv", "inputs/cpu_overhead_<generation>/cpu_overheads_kernel_only.csv", "inputs/cpu_overhead_<generation>/provenance.json"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
+      "validation": "Admit each probe run by its rule, produce the tables with the repository producer, record input and output hashes, and return to CPU analysis."
+    },
+    {
+      "name": "cpu-overhead-repair",
+      "kind": "atomic",
+      "owner": "cpu-overhead-repair",
+      "trigger": "A decided CPU analysis proves a scoped Frontier host-side pricing correction.",
+      "inputs": ["complete CPU analysis", "recorded user decision", "case manifest"],
+      "outputs": ["repairs/cpu_repair_receipt.json"],
+      "allows_code_change": true,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Apply one scoped Frontier change, run the regression set and clean E2E, then refresh all applicable gates."
+    },
+    {
+      "name": "parity-run",
+      "kind": "composite",
+      "owner": "parity-run",
+      "trigger": "A user needs a reproducible Frontier and vLLM-BS case, or new cells, collected with aligned semantics.",
+      "inputs": ["user-approved settings", "workload", "case manifest"],
+      "outputs": ["manifest.yaml", "case_init.md", "runs/groundtruth_<mode>/*", "Frontier label runs", "run checks"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Call the semantic check, the ground-truth preflight, runs and post-run checks, then the simulator runs, in call-graph order.",
+      "calls": ["semantic-alignment-check", "groundtruth-run-check", "groundtruth-run", "dispatch-align-trace", "simulator-run"]
+    },
+    {
+      "name": "error-analysis",
+      "kind": "composite",
+      "owner": "error-analysis",
+      "trigger": "A completed case needs a read-only explanation of its numerical error source.",
+      "inputs": ["case manifest", "clean and diagnostic artifacts"],
+      "outputs": ["analysis/error_budget/*", "reports/error_analysis_summary.md", "linked atomic analysis artifacts"],
+      "allows_code_change": false,
+      "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE", "BLOCKED"],
+      "validation": "Run the E2E gate, the semantic check, the error budget, and the analyses the budget selects, then classify every attributed part.",
+      "calls": ["e2e-metrics-gap", "semantic-alignment-check", "dispatch-align-trace", "workflow-gap-analysis", "op-gap-analysis", "op-supplement", "residual-lane-classification", "cpu-overhead-analysis"]
+    },
+    {
+      "name": "error-correction",
+      "kind": "composite",
+      "owner": "error-correction",
+      "trigger": "Decided analysis artifacts identify corrections that must be applied, rechecked, and republished.",
+      "inputs": ["completed analysis artifacts", "recorded user decisions", "case manifest"],
+      "outputs": ["repairs/repair_plan.md", "repairs/rerun_gate_table.csv", "repairs/rerun_gate_summary.md", "domain repair receipts", "republished readings"],
+      "allows_code_change": false,
+      "stop_status": ["PENDING_HUMAN_REVIEW", "FAIL", "BLOCKED"],
+      "validation": "Run one decided domain change at a time, obtain fresh analysis, finish with the E2E gate, and republish the readings.",
+      "calls": ["semantic-alignment-repair", "workflow-repair", "op-repair", "residual-repair", "cpu-overhead-repair", "parity-run", "e2e-metrics-gap"]
+    }
+  ]
+}
