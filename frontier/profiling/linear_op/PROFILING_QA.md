@@ -3,6 +3,8 @@
 **Date**: December 8, 2025  
 **Module**: `frontier/profiling/linear_op`  
 **Purpose**: Verify profiling behavior and implementation details
+**Last checked against the code**: 2026-10-14. Frontier code is cited by
+symbol; vLLM code is cited by its path inside the vLLM source tree (vLLM 0.10.x).
 
 ---
 
@@ -16,12 +18,13 @@
 **A**: **(B) Single layer**
 
 ### Evidence
-- **File**: `frontier/profiling/linear_op/linear_op_impl.py`, lines 201-213
+- **File**: `frontier/profiling/linear_op/linear_op_impl.py`, `GPTModel.__init__`
   - `GPTModel` creates **ONE `GPTBlock` instance**
   
-- **File**: `frontier/profiling/linear_op/linear_op_impl.py`, lines 215-227
+- **File**: `frontier/profiling/linear_op/linear_op_impl.py`, `GPTModel.forward`
   - Forward loop repeats the same single `GPTBlock` `num_repeat_steps` times
-  - Default: 20 iterations for RECORD_FUNCTION, 1 for other methods
+  - `LinearOpWrapper` passes `ACTIVE_STEPS` (20) for RECORD_FUNCTION and 1 for
+    other methods (`frontier/profiling/linear_op/linear_op_wrapper.py`)
   - Purpose: Averaging measurements, not profiling multiple layers
 
 ### Code Snippet
@@ -48,11 +51,14 @@ class GPTModel(torch.nn.Module):
 **A**: **(B) GPU time only** (for RECORD_FUNCTION method)
 
 ### Evidence
-- **File**: `frontier/profiling/utils/record_function_tracer.py`, lines 63-92
+- **File**: `frontier/profiling/utils/record_function_tracer.py`,
+  `RecordFunctionTracer.get_operation_time_stats`
   - Only `cuda_time` is extracted and recorded
   - CPU activities captured but filtered out
   
-- **Extraction Logic**: Only `cuda_runtime` and `cuda_driver` events are summed
+- **Extraction Logic**: For each `vidur_*` user annotation, the tracer finds
+  the `cuda_runtime` and `cuda_driver` launch events and sums the durations of
+  their correlated GPU `kernel` events
   
 ### Code Snippet
 ```python
@@ -71,12 +77,16 @@ def get_operation_time_stats(self, debug=False):
 ```
 
 ### Alternative Methods
-| Method | Timing Source |
-|--------|---------------|
-| RECORD_FUNCTION | GPU (CUDA kernel) time |
-| CUDA_EVENT | GPU time (`torch.cuda.Event`) |
-| KINETO | GPU (`cuda_time_total`) |
-| PERF_COUNTER | Wall-clock time (CPU + GPU) with `torch.cuda.synchronize()` |
+| Method | Timing Source | Training CSV |
+|--------|---------------|--------------|
+| RECORD_FUNCTION | GPU (CUDA kernel) time | `linear_op_kernel_only.csv` (`KERNEL_ONLY`) |
+| CUDA_EVENT | GPU time (`torch.cuda.Event`) | `linear_op.csv` (`CUDA_EVENT`) |
+| DEVICE_EVENT | GPU time from device events (ROCm) | `linear_op_device_event.csv` (`DEVICE_EVENT`) |
+| KINETO | GPU (`cuda_time_total`) | Not exportable |
+| PERF_COUNTER | Wall-clock time (CPU + GPU) with `torch.cuda.synchronize()` | Not exportable |
+
+`--profile_method` accepts only the exportable methods (`cuda_event`,
+`device_event`, `record_function`, and the aliases `cuda` and `kernel_only`).
 
 ---
 
@@ -87,19 +97,23 @@ def get_operation_time_stats(self, debug=False):
 **A**: **Yes, (A) Inside the function itself**
 
 ### Evidence
-- **File**: `sota-infer-engine/vllm/vllm/model_executor/models/llama.py`, lines 319-327
+- **File**: vLLM `vllm/model_executor/models/llama.py`, `LlamaDecoderLayer.forward`
   - Residual passed as parameter to `input_layernorm`
   
-- **File**: `sota-infer-engine/vllm/vllm/model_executor/layers/layernorm.py`, lines 211-223
+- **File**: vLLM `vllm/model_executor/layers/layernorm.py`, `RMSNorm.forward_cuda`
   - Calls `fused_add_rms_norm` when residual is provided
   - Both operations performed in single CUDA kernel
 
+The Frontier profiler measures the same kernel:
+`frontier/profiling/common/layers/layernorm.py::RMSNorm` wraps vLLM's `RMSNorm`
+and calls it with the residual when one is passed.
+
 ### Code Snippet
 ```python
-# Caller (llama.py:325)
+# Caller (llama.py, LlamaDecoderLayer.forward)
 hidden_states, residual = self.input_layernorm(hidden_states, residual)
 
-# Implementation (layernorm.py:211-223)
+# Implementation (layernorm.py, RMSNorm.forward_cuda)
 def forward_cuda(self, x: torch.Tensor, residual: Optional[torch.Tensor] = None):
     add_residual = residual is not None
     if add_residual:
@@ -130,19 +144,19 @@ def fused_add_rms_norm(x: torch.Tensor, residual: torch.Tensor, weight: torch.Te
 
 ### Evidence Trace
 
-**Step 1: Initialization** (`llama.py`, lines 308-309)
+**Step 1: Initialization** (vLLM `llama.py`, `LlamaDecoderLayer.__init__`)
 ```python
 self.input_layernorm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 ```
 
-**Step 2: Class Definition** (`sota-infer-engine/vllm/vllm/model_executor/layers/layernorm.py`, lines 128-167)
+**Step 2: Class Definition** (vLLM `vllm/model_executor/layers/layernorm.py`, `RMSNorm`)
 ```python
 @CustomOp.register("rms_norm")
 class RMSNorm(CustomOp):
     """Uses vLLM custom CUDA operations, not PyTorch native."""
 ```
 
-**Step 3: CUDA Forward Method** (`layernorm.py`, lines 211-223)
+**Step 3: CUDA Forward Method** (vLLM `layernorm.py`, `RMSNorm.forward_cuda`)
 ```python
 def forward_cuda(self, x: torch.Tensor, residual: Optional[torch.Tensor] = None):
     if add_residual:
@@ -151,7 +165,7 @@ def forward_cuda(self, x: torch.Tensor, residual: Optional[torch.Tensor] = None)
         return rms_norm(x, self.weight.data, self.variance_epsilon)
 ```
 
-**Step 4: Custom Kernel Invocation** (`layernorm.py`, lines 21-29)
+**Step 4: Custom Kernel Invocation** (vLLM `layernorm.py`, `rms_norm`)
 ```python
 def rms_norm(x: torch.Tensor, weight: torch.Tensor, variance_epsilon: float):
     from vllm import _custom_ops as ops
@@ -171,10 +185,10 @@ def rms_norm(x: torch.Tensor, weight: torch.Tensor, variance_epsilon: float):
 
 | Question | Answer | Key File & Lines |
 |----------|--------|------------------|
-| Q1: Granularity | Single layer | `linear_op_impl.py:201-227` |
-| Q2: CPU vs GPU | GPU only | `record_function_tracer.py:63-92` |
-| Q3: Fused Residual | Yes (inside) | `layernorm.py:211-223` |
-| Q4: Native vs Custom | Custom kernel | `layernorm.py:21-29` |
+| Q1: Granularity | Single layer | `linear_op_impl.py::GPTModel` |
+| Q2: CPU vs GPU | GPU only | `record_function_tracer.py::RecordFunctionTracer.get_operation_time_stats` |
+| Q3: Fused Residual | Yes (inside) | vLLM `layernorm.py::RMSNorm.forward_cuda` |
+| Q4: Native vs Custom | Custom kernel | vLLM `layernorm.py::rms_norm` |
 
 ---
 

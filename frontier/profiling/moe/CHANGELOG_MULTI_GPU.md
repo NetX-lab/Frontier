@@ -1,3 +1,5 @@
+> **Historical record**: This document records the non-Ray multi-GPU change made on 2025-12-03. Line numbers, paths, and commands may not match the current code. See [README.md](./README.md) for current usage.
+
 # Non-Ray Multi-GPU Support Changelog
 
 **Date**: 2025-12-03

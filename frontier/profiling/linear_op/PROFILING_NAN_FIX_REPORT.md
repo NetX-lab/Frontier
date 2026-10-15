@@ -1,3 +1,5 @@
+> **Historical record**: This report records a past fix for NaN values in linear-op profiling output. Line numbers, paths, and commands may not match the current code. See [README.md](./README.md) for current usage.
+
 # Linear Op Profiling NaN 值问题修复报告
 
 ## 1. 问题描述

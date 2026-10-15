@@ -1,13 +1,16 @@
 # MoE Profiling Module
 
-**Version**: 2.4 (Updated 2026-06-06)
+**Version**: 2.4 (Updated 2026-10-14)
 
 This module profiles routed-expert compute for the Frontier LLM inference
 simulator. Shared-expert FFN projections remain in the `linear_op` module.
 
-Use `--disable_ray` for the supported local profiling path. The Ray path is
-currently incompatible with the checked-in grpcio/Ray versions; see
-[Troubleshooting](#troubleshooting).
+Use `--disable_ray` for the supported local profiling path. The Ray path
+failed with grpcio 1.67.1 and Ray 2.52.1, and `environment_profiling.yml` does
+not pin Ray; see [Troubleshooting](#troubleshooting).
+
+For a dry-run of the public wrapper, which needs no GPU, run
+`bash examples/profiling/profile_moe.sh --dry-run`.
 
 ---
 
@@ -30,7 +33,7 @@ currently incompatible with the checked-in grpcio/Ray versions; see
 
 ### Purpose
 
-The MoE profiling module generates timing data for Mixture-of-Experts operations, which is used by Vidur's execution time predictor to simulate MoE model inference performance.
+The MoE profiling module generates timing data for Mixture-of-Experts operations. Frontier's execution time predictor trains on this data to simulate MoE model inference performance.
 
 ### Key Features
 
@@ -43,7 +46,9 @@ The MoE profiling module generates timing data for Mixture-of-Experts operations
 > - `record_function -> KERNEL_ONLY`
 > - `cuda_event -> CUDA_EVENT`
 > - pass `--profile_method cuda_event` for simulator-default `moe.csv` datasets
-> - pass `--profile_method record_function` for kernel-only `moe_kernel_only.csv` datasets
+> - pass `--profile_method record_function` (the default) for kernel-only `moe_kernel_only.csv` datasets
+> - on ROCm, pass `--profile_method device_event`; it writes `moe_device_event.csv`
+> - `cuda` and `kernel_only` are accepted aliases of `cuda_event` and `record_function`
 > - legacy CSVs must be migrated to add explicit `measurement_type` before training
 >
 > **Uniform-routing contract**
@@ -58,9 +63,33 @@ The MoE profiling module generates timing data for Mixture-of-Experts operations
 
 ### Supported Models
 
+`--models` takes model names resolved by `ModelConfig.from_model_name`: a
+registered model name or the file name of a config JSON under
+`data/config/models/`. The model must be a MoE model. The default list is:
+
 - `mixtral_8x7b_moe`: Mixtral 8x7B (8 experts, topk=2)
-- `qwen2_moe_57b_a14b`: Qwen2-MoE 57B (64 experts, topk=8)
-- Custom configurations via command-line arguments
+- `qwen2_moe_example`: Qwen2-MoE example (60 experts, topk=4)
+
+Other checked-in MoE configs include `Qwen3-30B-A3B-tiny`,
+`Phi-tiny-MoE-instruct`, and `Qwen3-235B-A22B`. To profile a
+custom MoE shape, add a HuggingFace-style config JSON under
+`data/config/models/` and pass its file name without `.json`.
+
+### Row Count
+
+Each model's CSV has one row per profiled case:
+
+```text
+rows = token points x TP sizes x EP sizes x cases per (TP, EP, tokens) point
+```
+
+- Token points come from `--max_tokens` (35 points for 256, 131 for 1024,
+  259 for 4096), `--extra_num_tokens`, or `--num_tokens_list`.
+- TP sizes default to `1 2 4 8`.
+- EP sizes default to every divisor of the model's `num_experts`.
+- Cases per point are `len(--load_distributions) x --num_samples_per_distribution`
+  (default 1 x 3 = 3). With `--disable_load_imbalance`, there is one case per
+  point.
 
 ---
 
@@ -69,10 +98,12 @@ The MoE profiling module generates timing data for Mixture-of-Experts operations
 ### Basic Single-GPU Profiling
 
 ```bash
-# Profile Mixtral 8x7B with default settings
+# Profile Mixtral 8x7B at TP=1 and EP=1
 python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --num_gpus 1 \
+    --num_tensor_parallel_workers 1 \
+    --expert_parallel_sizes 1 \
     --max_tokens 256 \
     --device a100 \
     --disable_ray \
@@ -82,13 +113,14 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- CSV file: `data/profiling/compute/a100/mixtral_8x7b_moe/moe.csv`
-- Profiling time: ~2-3 minutes
-- Results: ~35 profiling data points
+- CSV file you produce: `data/profiling/compute/a100/mixtral_8x7b_moe/moe.csv`
+- Rows: 105 (35 token points x 3 samples of the `uniform` distribution)
 
-**Note**: The `--device` parameter is **required** and specifies the device SKU (e.g., `a100`, `h100`, `a40`).
+**Note**: The `--device` parameter is **required**. It is the device label used
+in the output path (e.g., `a100`, `h100`, `a40`).
 
-**⚠️ Important**: Always use `--disable_ray` flag. Ray mode is currently broken due to grpcio incompatibility.
+**⚠️ Important**: Always use the `--disable_ray` flag. Ray mode failed with
+grpcio 1.67.1 and Ray 2.52.1.
 
 ### Multi-GPU Profiling
 
@@ -107,8 +139,10 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Results: Faster profiling with parallel GPU execution
-- Note: Each GPU processes different profiling tasks concurrently
+- Each GPU processes different profiling tasks concurrently.
+- Rows: 6,288. This command keeps the default TP sizes (`1 2 4 8`) and EP
+  sizes (every divisor of 8: `1 2 4 8`), so it profiles 131 token points x 4 TP
+  sizes x 4 EP sizes x 3 samples.
 
 ### Multi-EP Grid-Search Profiling
 
@@ -117,6 +151,7 @@ python -m frontier.profiling.moe.main \
 python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --num_gpus 1 \
+    --num_tensor_parallel_workers 1 \
     --expert_parallel_sizes 1 2 4 \
     --max_tokens 256 \
     --device a100 \
@@ -127,7 +162,7 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Results: ~105 profiling data points (35 per EP size)
+- Rows: 315 (35 token points x 3 EP sizes x 3 samples)
 - EP=1: 8 experts per device
 - EP=2: 4 experts per device
 - EP=4: 2 experts per device
@@ -153,16 +188,24 @@ python -m frontier.profiling.moe.main \
 
 ### Hybrid Operator Approach
 
-**Frontier profiling layers** (for main computation):
+Load-imbalance profiling is enabled by default, and it selects the vLLM path:
+
+- Expert computation uses vLLM's fused MoE kernel
+  (`moe_grouped_gemm_backend=vllm_fused`, or `vllm_aiter_mxfp4` for MXFP4).
+- Gating uses vLLM `ReplicatedLinear` and vLLM `fused_topk` (or `uniform_topk`).
+
+`--disable_load_imbalance` selects the Frontier per-expert loop
+(`moe_grouped_gemm_backend=frontier_loop`):
+
 - `ColumnParallelLinear`: Expert up projection
 - `RowParallelLinear`: Expert down projection
 - `SiluAndMul`: Custom CUDA kernel for SwiGLU activation
+- Gating uses PyTorch `nn.Linear` and `torch.topk`. This path supports only
+  `--routing_runtime_path standard_fused_topk` and rejects FP8 or MXFP4
+  grouped GEMM.
 
-**Lightweight gating operators**:
-- vLLM `ReplicatedLinear` is used when the fused vLLM path is available.
-- Native PyTorch `nn.Linear` is used only when vLLM fused gating is disabled.
-
-**Rationale**: Balances performance optimization with profiling simplicity.
+**Rationale**: The vLLM path matches the runtime kernels; the loop path keeps a
+simple reference implementation.
 
 ## Operations Profiled
 
@@ -174,8 +217,8 @@ operations/scopes:
 **What it does**: Computes routing scores for all experts and selects top-K experts per token.
 
 **Implementation**: vLLM `ReplicatedLinear` (hidden_dim -> num_experts) by
-default, with native PyTorch `nn.Linear` as the explicit fallback when the
-fused vLLM path is disabled.
+default, with native PyTorch `nn.Linear` when `--disable_load_imbalance`
+disables the vLLM path.
 
 **Profiling parameters**:
 - `num_tokens`: Number of input tokens
@@ -217,9 +260,8 @@ local gather steps.
 
 **What it does**: Executes complete expert FFN computation for the routed tokens.
 
-**Implementation**: Composite operation using Frontier profiling layers. An
-optional vLLM fused-kernel path can be selected when the profiling environment
-provides it.
+**Implementation**: vLLM's fused MoE kernel by default. With
+`--disable_load_imbalance`, a per-expert loop over Frontier profiling layers.
 
 **Profiling parameters**:
 - `num_tokens`: Number of input tokens
@@ -227,7 +269,8 @@ provides it.
 - `expert_parallel_size`: Expert parallelism size
 - `expert_hidden_dim`: Expert FFN hidden dimension
 - `hidden_dim`: Model hidden dimension
-- `use_gated`: Whether to use gated FFN (SwiGLU)
+- `use_gated`: Whether the model uses a gated FFN (SwiGLU); taken from the
+  model config's `use_gated_mlp`
 - `num_tensor_parallel_workers`: Requested TP grid value recorded in the row
 
 **Typical timing**: Main MoE computation bottleneck.
@@ -251,22 +294,29 @@ match the simulator runtime path:
 - `gating_runtime_context`
 - `gating_runtime_context_impl`
 - `model_architecture_profile`: File-level architecture identity.
-- `typed_operator_contracts`: Per-row operator ownership and TP/EP contract
-  when generated by the current profiler.
+- `typed_operator_contracts`: A JSON mapping keyed by operator name, written on
+  each row by the current profiler. Each entry records the operator's owner and
+  its TP/EP contract.
+- `moe_grouped_gemm_backend`: `vllm_fused`, `vllm_aiter_mxfp4`, or
+  `frontier_loop`.
+- `moe_quantization_mode`: `bf16`, `fp8`, or `mxfp4`.
 
 ---
 
 ## Parameter Reference
 
-### Required Parameters
+All flags are defined in `frontier/profiling/moe/main.py::parse_args`.
 
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `--models` | str (list) | MoE model names to profile | `mixtral_8x7b_moe` |
-| `--num_gpus` | int | Number of GPUs to use (see Execution Modes) | `1`, `8` |
-| `--max_tokens` | int | Maximum number of tokens to profile | `256`, `1024` |
-| `--output_dir` | str | Root output directory; the CLI appends `compute/<device>/<model_name>/` | `data/profiling` |
-| `--device` | str | Target device SKU | `a100`, `h100`, `a800` |
+### Core Parameters
+
+`--device` is the only required flag.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--device` | str | required | Device label used in the output path (e.g., `a100`, `h100`, `a800`) |
+| `--models` | str (list) | `mixtral_8x7b_moe qwen2_moe_example` | MoE model names to profile |
+| `--max_tokens` | int | `4096` | Largest token count in the default token grid |
+| `--output_dir` | str | `data/profiling` | Root output directory; the CLI appends `compute/<device>/<model_name>/` |
 
 ### Execution Mode Parameters
 
@@ -279,49 +329,70 @@ match the simulator runtime path:
 
 | Mode | Condition | Description |
 |------|-----------|-------------|
-| Ray Mode | `--disable_ray` not set | Uses Ray actors (⚠️ currently broken due to grpcio incompatibility) |
-| Multi-GPU | `--disable_ray` + `--num_gpus > 1` | Uses `ProcessPoolExecutor` with multiple GPUs |
+| Ray Mode | `--disable_ray` not set | Uses Ray actors (⚠️ failed with grpcio 1.67.1 and Ray 2.52.1) |
+| Multi-GPU | `--disable_ray` + `--num_gpus > 1` | Uses one `ProcessPoolExecutor` (spawn context) per GPU |
 | Single-GPU | `--disable_ray` + `--num_gpus = 1` | Sequential execution on single GPU |
 
-**⚠️ Important**: Ray mode is currently not functional due to grpcio 1.67.1 incompatibility with Ray 2.52.1. Always use `--disable_ray`.
+**⚠️ Important**: Ray mode failed with grpcio 1.67.1 and Ray 2.52.1. Always use `--disable_ray`.
 
-### Optional Parameters
+### Profiling Grid Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `--num_tensor_parallel_workers` | int (list) | `[1]` | TP sizes to profile (e.g., `1 2 4 8`) |
-| `--expert_parallel_sizes` | int (list) | `[1]` | EP sizes to profile (e.g., `1 2 4`) |
-| `--profile_method` | str | `record_function` | Profiling method. `record_function -> KERNEL_ONLY`; `cuda_event -> CUDA_EVENT` |
+| `--num_tensor_parallel_workers` | int (list) | `1 2 4 8` | Routed-expert TP sizes to profile |
+| `--expert_parallel_sizes` | int (list) | every divisor of `num_experts` | EP sizes to profile; each must divide `num_experts` |
+| `--extra_num_tokens` | int (list) | none | Extra token counts added to the `--max_tokens` grid |
+| `--num_tokens_list` | int (list) | none | Exact token counts; replaces the grid and cannot be combined with `--extra_num_tokens` |
+| `--profile_method` | str | `record_function` | `record_function -> KERNEL_ONLY`; `cuda_event -> CUDA_EVENT`; `device_event -> DEVICE_EVENT` (ROCm) |
 
-### Model-Specific Parameters (Auto-Configured)
+### Load-Imbalance Parameters
 
-When using `--models`, these parameters are automatically set from the model config:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--enable_load_imbalance` | flag | enabled | Profile sampled expert loads with the vLLM fused kernel |
+| `--disable_load_imbalance` | flag | - | Use the Frontier per-expert loop and one uniform case per point |
+| `--load_distributions` | str (list) | `uniform` | Any of `uniform`, `balanced`, `skewed`, `extremely_skewed` |
+| `--num_samples_per_distribution` | int | `3` | Random samples per distribution |
 
-| Parameter | Description | Mixtral 8x7B | Qwen2-MoE 57B |
-|-----------|-------------|--------------|---------------|
-| `num_experts` | Total number of experts | 8 | 64 |
-| `router_topk` | Experts selected per token | 2 | 8 |
-| `hidden_dim` | Model hidden dimension | 4096 | 5120 |
-| `expert_hidden_dim` | Expert FFN hidden dim | 14336 | 13824 |
+See [LOAD_IMBALANCE_GUIDE.md](./LOAD_IMBALANCE_GUIDE.md).
+
+### Routing and Precision Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--routing_runtime_path` | str | `standard_fused_topk` | `standard_fused_topk` or `uniform_topk` |
+| `--gating_runtime_context` | str | `standalone_legacy` | `standalone_legacy` or `prefill_hot` |
+| `--precision` / `--dtype` | str | model config dtype | Must match the model config dtype |
+| `--use_fp8` | flag | model config | Must match the model config quantization |
+| `--block_shape` | 2 ints | model config | Must match the model config `weight_block_size` |
+| `--per_channel_quant` | flag | off | Per-channel instead of per-tensor FP8 scales |
+| `--yes`, `-y` | flag | off | Skip the interactive confirmation |
+| `--disable_replicated` | flag | off | Deprecated; has no effect for MoE profiling |
+
+### Model-Specific Values
+
+These values come from the model config. The CLI has no flags to override
+them; to profile another shape, add a model config JSON as described in
+[Supported Models](#supported-models).
+
+| Value | Description | `mixtral_8x7b_moe` | `qwen2_moe_example` |
+|-------|-------------|--------------------|---------------------|
+| `num_experts` | Total number of experts | 8 | 60 |
+| `router_topk` | Experts selected per token | 2 | 4 |
+| `hidden_dim` | Model hidden dimension | 4096 | 2048 |
+| `expert_hidden_dim` | Expert FFN hidden dim (`moe_intermediate_size`) | 14336 | 1408 |
 | `use_gated` | Use gated FFN (SwiGLU) | True | True |
-
-### Advanced Parameters (Rarely Used)
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `--num_experts` | int | - | Override model's num_experts |
-| `--router_topk` | int | - | Override model's router_topk |
-| `--hidden_dim` | int | - | Override model's hidden_dim |
-| `--expert_hidden_dim` | int | - | Override model's expert_hidden_dim |
-| `--use_gated` | bool | True | Override model's use_gated |
 
 ---
 
 ## Usage Examples
 
-**⚠️ Note**: All examples use `--disable_ray` flag because Ray mode is currently broken.
+**⚠️ Note**: All examples use the `--disable_ray` flag because Ray mode failed
+with grpcio 1.67.1 and Ray 2.52.1. Row counts follow the
+[Row Count](#row-count) formula with the default 3 load-imbalance samples per
+point. All CSV paths below are files that you produce.
 
-### Example 1: Single GPU, Single EP Configuration
+### Example 1: Single GPU, Single TP and EP Configuration
 
 **Use case**: Quick profiling for development/testing
 
@@ -329,6 +400,8 @@ When using `--models`, these parameters are automatically set from the model con
 python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --num_gpus 1 \
+    --num_tensor_parallel_workers 1 \
+    --expert_parallel_sizes 1 \
     --max_tokens 256 \
     --device a100 \
     --disable_ray \
@@ -338,8 +411,7 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Profiling time: ~2 minutes
-- Results: ~35 data points
+- Rows: 105 (35 token points x 3 samples)
 - CSV file: `data/profiling/compute/a100/mixtral_8x7b_moe/moe.csv`
 
 ### Example 2: Multi-EP Grid-Search (Recommended)
@@ -350,6 +422,7 @@ python -m frontier.profiling.moe.main \
 python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --num_gpus 1 \
+    --num_tensor_parallel_workers 1 \
     --expert_parallel_sizes 1 2 4 \
     --max_tokens 256 \
     --device a100 \
@@ -360,8 +433,7 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Profiling time: ~6 minutes
-- Results: ~105 data points (35 per EP size)
+- Rows: 315 (35 token points x 3 EP sizes x 3 samples)
 - Configurations:
   - EP=1: 8 experts per device
   - EP=2: 4 experts per device
@@ -377,6 +449,7 @@ python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --num_gpus 8 \
     --num_tensor_parallel_workers 1 2 4 8 \
+    --expert_parallel_sizes 1 \
     --max_tokens 1024 \
     --device a100 \
     --disable_ray \
@@ -386,9 +459,8 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Profiling time: ~15 minutes
-- Results: ~140 data points (35 per TP size)
-- Requires: 8 GPUs
+- Rows: 1,572 (131 token points x 4 TP sizes x 3 samples)
+- Requires: 8 visible GPUs
 
 ### Example 4: Full Grid-Search (TP × EP)
 
@@ -410,8 +482,7 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Profiling time: ~30 minutes
-- Results: ~420 data points (3 TP × 4 EP × 35 token sizes)
+- Rows: 4,716 (131 token points x 3 TP sizes x 4 EP sizes x 3 samples)
 - Configurations: 12 (TP, EP) combinations
 
 ### Example 5: Multiple Models
@@ -420,8 +491,9 @@ python -m frontier.profiling.moe.main \
 
 ```bash
 python -m frontier.profiling.moe.main \
-    --models mixtral_8x7b_moe qwen2_moe_57b_a14b \
+    --models mixtral_8x7b_moe qwen2_moe_example \
     --num_gpus 1 \
+    --num_tensor_parallel_workers 1 \
     --expert_parallel_sizes 1 2 4 \
     --max_tokens 256 \
     --device a100 \
@@ -432,22 +504,27 @@ python -m frontier.profiling.moe.main \
 
 **Expected output**:
 
-- Profiling time: ~12 minutes
-- Results: ~210 data points (105 per model)
-- Separate CSV files for each model
+- Rows: 315 per model (35 token points x 3 EP sizes x 3 samples)
+- One CSV file per model; every EP size must divide each model's `num_experts`
+  (8 and 60 here)
 
 ### Example 6: Custom Model Configuration
 
 **Use case**: Profile a custom MoE model not in the predefined list
 
+The CLI has no flags for `num_experts`, `router_topk`, `hidden_dim`,
+`expert_hidden_dim`, or `use_gated`. Write a HuggingFace-style config JSON, for
+example `data/config/models/my_moe.json`, with `num_experts`,
+`num_experts_per_tok`, `hidden_size`, `moe_intermediate_size`, and `hidden_act`
+(`silu` selects the gated FFN), plus the fields every config needs
+(`num_hidden_layers`, `num_attention_heads`, `num_key_value_heads`,
+`max_position_embeddings`, `vocab_size`). Then pass its file name:
+
 ```bash
 python -m frontier.profiling.moe.main \
+    --models my_moe \
     --num_gpus 1 \
-    --num_experts 16 \
-    --router_topk 4 \
-    --hidden_dim 8192 \
-    --expert_hidden_dim 28672 \
-    --use_gated True \
+    --num_tensor_parallel_workers 1 \
     --expert_parallel_sizes 1 2 4 \
     --max_tokens 256 \
     --disable_ray \
@@ -456,7 +533,8 @@ python -m frontier.profiling.moe.main \
     --output_dir data/profiling
 ```
 
-**Note**: When using custom parameters, `--models` is not required.
+Use an existing MoE config under `data/config/models/` as the template; the
+loader fails fast when a required field is missing.
 
 ---
 
@@ -468,11 +546,15 @@ python -m frontier.profiling.moe.main \
 data/profiling/
 └── compute/
     └── {device}/                      # Device SKU (e.g., a100, h100, rtx_pro_6000)
-        ├── moe_config.yaml            # Profiling configuration
+        ├── moe_config.yaml            # Arguments of the last run and resolved EP sizes
         └── {model_name}/              # Model name (e.g., mixtral_8x7b_moe)
-            ├── moe.csv                # CUDA-event profiling results
-            └── moe_kernel_only.csv    # Kernel-only profiling results
+            ├── moe.csv                # --profile_method cuda_event
+            ├── moe_kernel_only.csv    # --profile_method record_function (default)
+            └── moe_device_event.csv   # --profile_method device_event (ROCm)
 ```
+
+One run writes one CSV per model, selected by `--profile_method`. The profiler
+also creates `<output_dir>/profiler_traces/`.
 
 Canonical CSV path schema:
 `data/profiling/compute/<device>/<model_name>/<op_name>.csv`. Pass
@@ -496,6 +578,7 @@ data/profiling/compute/a100/
 
 - `<model_name>/moe.csv`: CUDA-event profiling results.
 - `<model_name>/moe_kernel_only.csv`: kernel-only profiling results.
+- `<model_name>/moe_device_event.csv`: ROCm device-event profiling results.
 
 #### Timing Statistics
 
@@ -525,14 +608,30 @@ For each operation (`moe_gating_linear`, `moe_gating_routing_topk`,
 - `expert_hidden_dim`: Expert FFN hidden dimension
 - `use_gated`: Whether using gated FFN (True/False)
 - `num_tensor_parallel_workers`: Tensor parallelism size
-- `measurement_type`: `CUDA_EVENT` or `KERNEL_ONLY`
+- `measurement_type`: `CUDA_EVENT`, `KERNEL_ONLY`, or `DEVICE_EVENT`
+- `profiling_precision`, `model_arch`, `model_architecture_profile`,
+  `quant_signature`: File-level metadata
+- `typed_operator_contracts`, `moe_grouped_gemm_backend`,
+  `moe_quantization_mode`: See [Runtime Metadata Columns](#4-runtime-metadata-columns)
+
+#### Load-Imbalance Columns
+
+Every row also carries the grouped-GEMM load features from
+`frontier/moe_load_imbalance.py::MoELoadImbalanceInput.to_features_dict`:
+`total_routed_tokens`, `model_expansion_ratio`, `tokens_per_expert_avg`,
+`tokens_to_experts_ratio`, `expert_utilization`, `min_load_ratio`,
+`load_imbalance_cv`, `max_load_ratio`, `load_entropy`, `load_gini_coefficient`,
+`load_distribution`, and `seed`. The vLLM fused-kernel path also writes
+`time_stats.moe_grouped_gemm.block_size_m`,
+`time_stats.moe_grouped_gemm.num_tokens_post_padded`, and
+`time_stats.moe_grouped_gemm.block_size_m_ranges`.
 
 ### Sample CSV Data
 
 ```csv
 time_stats.moe_gating_linear.mean,time_stats.moe_gating_routing_topk.mean,time_stats.moe_shuffling.mean,time_stats.moe_grouped_gemm.mean,...,num_tokens,num_experts,num_experts_per_device,expert_parallel_size,routing_runtime_path,routing_assignment_policy,routing_weight_policy,routing_uses_router_logits,gating_runtime_context,gating_runtime_context_impl,router_topk,hidden_dim,expert_hidden_dim,use_gated,num_tensor_parallel_workers,measurement_type
-0.027,0.010,0.067,2.220,...,256,8,8,1,standard_fused_topk,logit_topk,router_softmax,True,standalone_legacy,linear_plus_routing,2,4096,14336,True,1,CUDA_EVENT
-0.026,0.005,0.050,0.552,...,256,8,2,4,uniform_topk,round_robin_uniform,uniform,False,prefill_hot,linear_only,2,4096,14336,True,1,CUDA_EVENT
+0.027,0.010,0.067,2.220,...,256,8,8,1,standard_fused_topk,logit_topk,softmax_renorm,True,standalone_legacy,none,2,4096,14336,True,1,CUDA_EVENT
+0.026,0.005,0.050,0.552,...,256,8,2,4,uniform_topk,round_robin_uniform,uniform_1_over_topk,False,prefill_hot,ffn_like_prefix_20x,2,4096,14336,True,1,CUDA_EVENT
 ```
 
 ### Interpreting Results
@@ -554,7 +653,7 @@ for ep_size in [1, 2, 4]:
     print(f"EP={ep_size}: Avg grouped_gemm time = {avg_time:.3f} ms")
 ```
 
-**Expected output**:
+**Example output** (values depend on the hardware and token grid):
 ```
 EP=1: Avg grouped_gemm time = 1.544 ms
 EP=2: Avg grouped_gemm time = 0.864 ms  (44% reduction)
@@ -596,7 +695,7 @@ for tp_size in [1, 2, 4, 8]:
 python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --device a100 \
-    --disable_ray \  # Required!
+    --disable_ray \
     --output_dir data/profiling
 ```
 
@@ -631,18 +730,7 @@ dependency.
 3. Check GPU memory: `nvidia-smi`
 4. Check Ray logs for detailed error messages
 
-#### Issue 4: `AttributeError: type object 'MetricsStore' has no attribute '_instance'`
-
-**Cause**: This error should not occur in the current version (fixed via monkey patching).
-
-**Solution**: Ensure you're using the latest version of the code. If the error persists:
-
-```bash
-# Verify monkey patching is present in moe_wrapper.py
-rg -n "CudaTimer|Timer" frontier/profiling/moe/moe_wrapper.py
-```
-
-#### Issue 5: CSV file is empty or has fewer results than expected
+#### Issue 4: CSV file is empty or has fewer results than expected
 
 **Cause**: Profiling may have failed silently for some configurations.
 
@@ -653,28 +741,30 @@ rg -n "CudaTimer|Timer" frontier/profiling/moe/moe_wrapper.py
 
    ```python
    import pandas as pd
-   df = pd.read_csv("moe.csv")
+   df = pd.read_csv("data/profiling/compute/<device>/<model_name>/moe.csv")
    print(df.groupby(['num_tensor_parallel_workers', 'expert_parallel_size']).size())
    ```
 
-3. Re-run profiling with verbose logging
+3. Re-run the missing (TP, EP) combinations and check the terminal output for
+   the first error
 
-#### Issue 6: Profiling is very slow
+#### Issue 5: Profiling is very slow
 
 **Cause**: Large `--max_tokens` or many (TP, EP) combinations.
 
 **Solution**:
 
 1. Reduce `--max_tokens` for faster profiling (256 is usually sufficient)
-2. Profile fewer configurations initially
-3. Keep the default `--profile_method record_function` for kernel-only / decode-graph training data
+2. Pass explicit `--num_tensor_parallel_workers` and `--expert_parallel_sizes`;
+   the defaults profile every TP size in `1 2 4 8` and every EP divisor
+3. Reduce `--num_samples_per_distribution`
 4. Use multi-GPU mode: `--num_gpus 4 --disable_ray`
 
 ### Performance Tips
 
 1. **Start small**: Use `--max_tokens 256` for initial testing
 2. **Grid-search wisely**: Profile EP first (single GPU), then add TP (multi-GPU)
-3. **Use model presets**: `--models mixtral_8x7b_moe` is easier than manual parameters
+3. **Use model configs**: shapes come from `--models`; add a config JSON for a new shape
 4. **Monitor GPU memory**: Use `nvidia-smi` to ensure no OOM issues
 5. **Choose the measurement family intentionally**: default `record_function` writes `KERNEL_ONLY`; pass `--profile_method cuda_event` when collecting eager / `CUDA_EVENT` data
 
@@ -688,18 +778,18 @@ rg -n "CudaTimer|Timer" frontier/profiling/moe/moe_wrapper.py
   `RowParallelLinear`) where the operation requires them.
 - Both support TP scaling profiling
 - Both generate CSV files with timing statistics
-- Both use Ray for parallel profiling
+- Both support Ray and `--disable_ray` multiprocessing
 
 ### Differences
 
 | Aspect | Linear Op Profiling | MoE Profiling |
 |--------|---------------|---------------|
-| **Operations** | Attention, FFN, LayerNorm | Gating, Shuffling, Expert FFN |
-| **Parallelism** | TP only | TP + EP |
-| **Key Parameter** | `num_layers` | `num_experts`, `router_topk` |
-| **Gating Network** | N/A | vLLM `ReplicatedLinear` by default; native PyTorch fallback when fused gating is disabled |
-| **Expert Computation** | N/A | Frontier profiling layers; optional vLLM fused kernels |
-| **CSV Output** | Separate files per operation | Single consolidated file |
+| **Operations** | Attention projections, RoPE, LayerNorm, residual add, dense and shared-expert FFN | Gating, Shuffling, Routed-expert FFN |
+| **Parallelism** | TP only (`--attn_tp`, `--ffn_tp`, `--moe_tp` domains) | TP + EP |
+| **Key Parameter** | `num_tokens` | `num_tokens`, `num_experts`, `router_topk` |
+| **Gating Network** | N/A | vLLM `ReplicatedLinear` by default; PyTorch `nn.Linear` with `--disable_load_imbalance` |
+| **Expert Computation** | N/A | vLLM fused MoE kernel by default; Frontier per-expert loop with `--disable_load_imbalance` |
+| **CSV Output** | One `linear_op.csv` per model | One `moe.csv` per model |
 | **EP Support** | N/A | ✅ Grid-search across EP sizes |
 
 ### When to Use Which
@@ -710,6 +800,10 @@ rg -n "CudaTimer|Timer" frontier/profiling/moe/moe_wrapper.py
 ---
 
 ## Recent Updates
+
+The entries below are a change history. Model names, test paths, and flags in
+them may not match the current code; the sections above describe the current
+CLI.
 
 ### Version 2.3 (2026-03-13)
 
@@ -825,85 +919,81 @@ See `CHANGELOG_MULTI_GPU.md` for detailed implementation notes.
 
 ## Testing
 
-### Integration Test
-
-**Recommended**: Run the comprehensive integration test to validate the installation:
-
-```bash
-bash tests/test_moe_profiling_refactor.sh
-```
-
-**What it tests**:
-- Python environment and dependencies
-- EP parameter support (TP=1,2 × EP=1,2,4)
-- CSV output format and columns
-- EP calculation correctness
-- Routed-expert profiling layer functionality
-
-**Expected output**:
-- ✅ All 7 validation steps pass
-- ✅ 210 profiling results generated
-- ✅ CSV file with all required columns
-- ✅ All timing data valid
-
-**Duration**: ~2-3 minutes
-
 ### Unit Tests
 
+These tests run on CPU in the minimal simulator environment:
+
 ```bash
-# Run MoE-specific unit tests (if available)
-python -m pytest tests/profiling/test_moe*.py -v
+python -m pytest -q \
+    tests/unit/test_moe_profiling_output_metadata.py \
+    tests/unit/test_moe_routing_runtime.py \
+    tests/unit/test_moe_ep_sampling_domain.py
 ```
 
-### Manual Smoke Test
+Tests such as `tests/unit/test_moe_load_distribution_contract.py` and
+`tests/unit/test_moe_gating_constructor_boundary.py` import `torch` and need
+the profiling environment.
 
-**Quick validation** (30 seconds):
+### Dry Run
+
+```bash
+bash examples/profiling/profile_moe.sh --dry-run
+```
+
+The dry run prints the resolved command and output path without a GPU.
+
+### Manual Smoke Test
 
 ```bash
 python -m frontier.profiling.moe.main \
     --models mixtral_8x7b_moe \
     --num_gpus 1 \
+    --num_tensor_parallel_workers 1 \
+    --expert_parallel_sizes 1 \
     --max_tokens 64 \
     --device a100 \
+    --disable_ray \
+    --profile_method cuda_event \
     --output_dir /tmp/moe_test
 ```
 
-**Expected**: CSV file generated with ~10 rows, no errors.
+**Expected**: `/tmp/moe_test/compute/a100/mixtral_8x7b_moe/moe.csv` with 33 rows
+(11 token points x 3 samples) and no errors.
 
 ---
 
-## Integration with Vidur Simulator
+## Integration with the Frontier Simulator
 
 ### Execution Time Predictor
 
-The generated CSV files are consumed by `vidur/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+The generated CSV files are consumed by
+`frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+`RandomForrestExecutionTimePredictor` and `LinearRegressionExecutionTimePredictor`
+select `SklearnMoEExecutionTimePredictor` when the replica's model config is a
+MoE model and the run is co-location (disaggregated runs use
+`SklearnDisaggregationExecutionTimePredictor`, which extends it).
 
 **Workflow**:
 
-1. **Load Profiling Data**: CSV files are loaded during predictor initialization
-2. **Filter by Configuration**: Data is filtered based on model config (num_experts, router_topk, etc.)
+1. **Load Profiling Data**: The simulator reads
+   `--random_forrest_execution_time_predictor_config_moe_input_file`
+   (default `./data/profiling/compute/{DEVICE}/{MODEL}/moe.csv`) or
+   `--random_forrest_execution_time_predictor_config_moe_kernel_only_input_file`
+   (default `./data/profiling/compute/{DEVICE}/{MODEL}/moe_kernel_only.csv`).
+2. **Filter by Configuration**: Rows are filtered by the model config
+   (num_experts, router_topk, etc.) and the runtime routing and gating context.
 3. **Train ML Models**: sklearn models (RandomForest/LinearRegression) are trained on the data
 4. **Generate Prediction Caches**: Fast lookup tables for simulation
 
-**Example**:
-```python
-from frontier.execution_time_predictor import SklearnMoEExecutionTimePredictor
-
-predictor = SklearnMoEExecutionTimePredictor(
-    model_config=model_config,
-    replica_config=replica_config,
-)
-
-# Predict execution time for a batch
-execution_time = predictor.get_execution_time(
-    batch=batch,
-    replica_id=0,
-)
-```
+`examples/profiling/smoke_simulator_moe_csv.sh` runs the simulator on
+checked-in `linear_op.csv`, `attention.csv`, and `moe.csv` files with dummy
+mode disabled.
 
 ### Model Manager
 
-The `ExecutionTimePredictionModelManager` handles centralized model training:
+`ExecutionTimePredictionModelManager`
+(`frontier/execution_time_predictor/shared_prediction_model_manager.py`)
+handles centralized model training:
 
 - Trains models once and caches to disk
 - Reuses cached models across multiple simulations
@@ -930,7 +1020,6 @@ The `ExecutionTimePredictionModelManager` handles centralized model training:
 **Per-GPU memory usage** (approximate):
 
 - Mixtral 8x7B: ~8-12 GB (depends on max_tokens)
-- Qwen2-MoE 57B: ~20-30 GB (larger model)
 
 **Tip**: Use `nvidia-smi` to monitor GPU memory during profiling.
 
@@ -951,30 +1040,32 @@ The `ExecutionTimePredictionModelManager` handles centralized model training:
    - EP=4 with 16 total experts
 3. **Hardware Efficiency**: Can profile on single GPU and reuse data for multi-GPU EP configurations
 
-**Validation**: Integration test confirms EP scaling behavior matches expectations (64% reduction in grouped GEMM time from EP=1 to EP=4).
+**Observation**: The version 2.0 measurements showed a 64% reduction in mean grouped GEMM time from EP=1 to EP=4.
 
 ### Why TP is a Compute Parameter
 
 **Tensor Parallelism (TP)** is fundamentally different from EP:
 
 - TP **changes computation patterns** (matrix sharding, different GEMM dimensions)
-- TP **affects per-device computation time** (communication overhead, smaller matrices)
-- TP **requires multi-GPU profiling** to capture communication costs
+- TP **affects per-device computation time** (smaller matrices)
+- Each profiling task runs on one GPU with the TP-sharded shapes. The expert
+  layers do not run the TP reduction (`reduce_results=False`); Frontier's
+  communication backend models collectives separately.
 
 **Therefore**: TP must be profiled separately for each TP size.
 
 ### Hybrid Operator Approach
 
-**Design Decision**: Use vLLM `ReplicatedLinear` for gating when the fused vLLM
-path is available, fall back to native PyTorch `nn.Linear` only when that path
-is disabled, and use the checked-in Frontier profiling layers for expert FFNs
-with an optional vLLM fused-kernel path.
+**Design Decision**: By default, use vLLM `ReplicatedLinear` and vLLM routing
+for gating and vLLM's fused MoE kernel for expert FFNs. With
+`--disable_load_imbalance`, use PyTorch `nn.Linear` for gating and the
+checked-in Frontier profiling layers for expert FFNs.
 
 **Rationale**:
 
 1. **Gating Network**: Small operation (hidden_dim → num_experts), doesn't benefit from TP
 2. **Expert FFNs**: Large operations (hidden_dim → expert_hidden_dim), benefit from optimized CUDA kernels
 3. **Profiling Simplicity**: Avoids needing distributed initialization for single-GPU profiling
-4. **Performance**: Main expert computation uses the optimized profiling layers
+4. **Performance**: The default expert computation uses the same fused kernel as vLLM
 
 **Trade-off**: Gating network not TP-parallelized, but this is acceptable since it's a small operation (~0.026 ms).

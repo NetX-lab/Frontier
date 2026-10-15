@@ -16,6 +16,18 @@ sequential PDD / `pd-disaggregation`, and sequential PD-AF /
 Items within a horizon are not strictly ordered. Scope and timing may shift as
 the release stabilizes and community feedback arrives.
 
+## Recently completed
+
+- **AMD and GDN basics (PR 33).** MI355X ROCm profiling with `DEVICE_EVENT`
+  timing, standard GDN profiling and training, and experimental SGLang
+  primitive replay under `frontier/profiling/experimental/sglang/`.
+- **Accuracy gate against vLLM (PR 44).** `tests/comparison/e2e_gate/` checks
+  Frontier's request-level metrics against vLLM measurements on the H200
+  scenario matrix.
+- **H200 profiling data (PR 46).** Operator, kernel-only, kernel-gap, and
+  CPU-overhead tables under `data/profiling/compute/h200/` and
+  `data/profiling/cpu_overhead/h200_dgx/`.
+
 ## Near-term
 
 Goal: make the current three-architecture release predictable to configure,
@@ -41,7 +53,9 @@ repeatable what-if studies.
 
 - **Expanded model support.** Add calibrated support for additional
   state-of-the-art model families, including DeepSeek, Kimi, and MiniMax,
-  covering their attention, MoE, and runtime characteristics.
+  covering their attention, MoE, and runtime characteristics. The checked-in
+  `data/config/models/deepseek-v3.json` does not load yet: its block-wise FP8
+  settings fail the quantization check. No DeepSeek profiles are checked in.
 - **Faster disaggregated simulation.** Optimize the simulation workflow for
   disaggregated architectures to reduce wall-clock time per run, so large
   design-space sweeps over PDD and PD-AF configurations become practical.

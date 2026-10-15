@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-14 | Stated that MI355X profiles are outputs of your own runs, that the simulator smokes use the CUDA tables, and how a ROCm device selects the device-event tables. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-17 | Clarified native mixed-phase rejection versus the temporary simulator approximation. |
 | 2026-09-14 | Added the standard MI355X profiling path and the experimental SGLang boundary. |
@@ -22,10 +23,13 @@ worker.
 
 ## Environment
 
-Use the profiling environment and keep the repository on the shared workspace:
+`environment_profiling.yml` installs CUDA builds of PyTorch and vLLM, so it
+does not run on MI355X. Use an environment with ROCm builds of PyTorch and
+vLLM, keep the repository on the shared workspace, and install it from the
+repository root:
 
 ```bash
-conda activate frontier-profiling
+# Inside an environment with ROCm builds of PyTorch and vLLM:
 python -m pip install -e ".[test]"
 export PYTHONPATH=$PWD
 export WANDB_DISABLED=true
@@ -51,6 +55,10 @@ data/profiling/compute/<device>/<model>/
 ├── moe_device_event.csv
 └── gdn.csv
 ```
+
+The repository ships no MI355X profiles: `data/profiling/compute/mi355x/` is
+created by the producer runs below, and every MI355X path on this page is an
+output of those runs.
 
 Collect generic operators with the release wrappers:
 
@@ -114,8 +122,9 @@ python -m frontier.profiling.gdn.main \
   --output-dir data/profiling-tp1
 ```
 
-The TP8 output is
-`data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv`.
+The TP8 run writes
+`data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv`; the
+TP1 run writes the same relative path under `data/profiling-tp1/`.
 Each row records the phase (`prefill` or `decode`), physical batch features,
 GDN state/layout identity, runtime backend, rank aggregation, and component
 timings. A one-token continuation remains a prefill input. Native profiling and
@@ -127,7 +136,8 @@ execution or timing accuracy. See the [GDN prediction limitation](../training/RE
 
 ## Validation and training handoff
 
-Before training, inspect the output directory and validate its metadata:
+Before training, check the precision metadata of every CSV in the output
+directory:
 
 ```bash
 bash examples/profiling/smoke_metadata.sh \
@@ -140,14 +150,25 @@ identity used by the producer. `GDNTrainer` writes six task estimators and a
 manifest containing a SHA-256 fingerprint of `gdn.csv`. The simulator rejects
 the cache if the configured CSV bytes later change.
 
-Run the non-dummy simulator smoke only after the required CSVs are present:
+The non-dummy simulator smokes check that profiling CSVs load and drive the
+simulator:
 
 ```bash
 bash examples/profiling/smoke_simulator_dense_csv.sh \
-  --metrics-output-dir outputs/mi355x-dense
+  --metrics-output-dir outputs/profiling-smoke-dense
 bash examples/profiling/smoke_simulator_moe_csv.sh \
-  --metrics-output-dir outputs/mi355x-moe
+  --metrics-output-dir outputs/profiling-smoke-moe
 ```
+
+These wrappers do not read MI355X tables. They default to the checked-in
+`rtx_pro_6000` profiles, pass the `linear_op.csv` and `attention.csv` names
+(plus `moe.csv` in the MoE smoke), and leave `--replica_config_device` at its `a100` default, so the simulator
+uses the `CUDA_EVENT` family. To simulate with MI355X tables, run
+`python -m frontier.main` with `--replica_config_device mi355x`. A ROCm device
+selects the `DEVICE_EVENT` family, and the predictor then reads
+`linear_op_device_event.csv`, `attention_device_event.csv` and
+`moe_device_event.csv`: it appends `_device_event` to the configured
+`linear_op_input_file`, `atten_input_file` and `moe_input_file` paths.
 
 These checks establish CSV loading and simulator control flow. They do not
 replace measured GPU validation of the producer kernels.
@@ -174,7 +195,7 @@ Its output is collective evidence and is not a compute predictor CSV.
 
 ## Current evidence boundary
 
-The current execution worktree has no AMD/MI355X worker. CPU checks cover
+Frontier's checks of this path ran without an AMD/MI355X worker. CPU checks cover
 argument parsing, lazy imports, planning, metadata, schema validation, and
 artifact identity. Actual HIP/ROCm event capture, vLLM GDN execution,
 AITER/MXFP4 MoE execution, RCCL collectives, and SGLang graph replay remain

@@ -1,3 +1,5 @@
+> **Historical record**: This report records the Llama 3.x RoPE scaling fix made on 2025-12-08. Line numbers, paths, and commands may not match the current code. See [README.md](./README.md) for current usage.
+
 # Llama 3.x RoPE Scaling Support - Problem & Solution Report
 
 **Date**: December 8, 2025  

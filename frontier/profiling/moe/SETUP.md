@@ -5,189 +5,125 @@
 | Date       | Summary of Changes |
 |------------|--------------------|
 | 2026-03-13 | Align setup/troubleshooting notes with measurement-aware profiling contract |
+| 2026-10-14 | Replace the sarathi-serve setup, removed validation script, nonexistent CLI flags, and stale test paths with the current profiling environment, public wrapper, and model-config workflow |
 
 ## Prerequisites
 
 ### 1. Environment Setup
 
-The MoE profiling module requires the dedicated Frontier profiling environment or an existing environment that already provides vLLM and FlashInfer. Use `environment_profiling.yml` for a reproducible setup:
+The MoE profiling entrypoint requires `torch`, `vllm`, and `triton`. It checks
+them at startup and fails with an error that names the missing packages. Use
+the dedicated Frontier profiling environment from the repository root:
 
-1. **Clone sarathi-serve repository**:
-   ```bash
-   git clone https://github.com/microsoft/sarathi-serve.git
-   cd sarathi-serve
-   git checkout vidur-test  # Use the vidur-test branch
-   ```
+```bash
+conda env create -f environment_profiling.yml
+conda activate frontier-profiling
+python -m pip install -e ".[test]"
+export PYTHONPATH=$PWD
+```
 
-2. **Create and activate virtual environment**:
-   ```bash
-   cd sarathi-serve
-   python -m venv env
-   source env/bin/activate  # On Linux/Mac
-   # or
-   env\Scripts\activate  # On Windows
-   ```
-
-3. **Install sarathi-serve**:
-   ```bash
-   pip install -e .
-   ```
-
-4. **Install vidur in the same environment**:
-   ```bash
-   cd /path/to/vidur
-   pip install -e .
-   ```
+An existing environment that already provides a compatible vLLM
+(`environment_profiling.yml` pins `vllm>=0.10,<0.11`) also works; run the
+commands from the repository root with `PYTHONPATH` pointing at it.
 
 ### 2. Hardware Requirements
 
 - **Minimum**: 1 GPU with 8GB+ memory (for small-scale testing)
 - **Recommended**: 1-8 GPUs with 40GB+ memory each (for full profiling)
-- CUDA-capable GPU (tested on A100, A800, H100)
+- CUDA-capable GPU (tested on A100, A800, H100). On ROCm, pass
+  `--profile_method device_event`.
 
 ### 3. Verify Installation
 
-Run the validation script to check if everything is set up correctly:
-
 ```bash
-python scripts/validate_moe_profiling.py
-```
-
-Expected output:
-```
-============================================================
-MoE Profiling Module Validation
-============================================================
-Testing imports...
-  ✓ moe_impl imports successful
-  ✓ moe_wrapper imports successful
-  ✓ moe_input imports successful
-  ✓ main imports successful
-
-Testing module structure...
-  ✓ MoEGatingNetwork is nn.Module
-  ✓ MoEGatingNetwork has forward method
-  ✓ MoEWrapper has all required profiling methods
-
-Testing config generation...
-  ✓ Config generated successfully
-    - num_tokens_list: 127 values
-    - num_experts_per_device_list: [8, 4, 2, 1]
-    - tensor_parallel_size_list: [1, 2, 4, 8]
-
-Testing CUDA availability...
-  ✓ CUDA is available
-    - Device: NVIDIA A100-SXM4-80GB
-    - Memory: 80.00 GB
-
-Testing module instantiation...
-  ✓ MoEGatingNetwork instantiated successfully
-  ✓ MoETokenShuffler instantiated successfully
-  ✓ MoEGroupedGEMM instantiated successfully
-
-============================================================
-✓ All validation tests passed!
-============================================================
+python -c "import torch, vllm, triton; print('profiling dependencies available')"
+python -c "from frontier.profiling.moe.moe_vllm_kernel import check_vllm_available; print('vLLM fused MoE kernel available:', check_vllm_available())"
+python -m frontier.profiling.moe.main --help
 ```
 
 ## Quick Start
 
-### 1. Small-Scale Test (Recommended First)
-
-Run a small-scale test to verify correctness:
+### 1. Dry Run (Recommended First)
 
 ```bash
-bash frontier/profiling/example/test_profiling_moe.sh --dry-run
+bash examples/profiling/profile_moe.sh --dry-run
 ```
 
-This will:
-- Profile with minimal parameters (num_experts=4, max_tokens=64)
-- Use single GPU without Ray
-- Generate CSV files under `data/profiling/compute/<device>/<model_name>/`
+The dry run needs no GPU. It prints the resolved command and output path:
 
-Expected output:
 ```
-==========================================
-MoE Profiling Small-Scale Test
-==========================================
-
-Configuration:
-  Output root: data/profiling
-  Number of GPUs: 1
-  Number of experts: 4
-  Router top-K: 2
-  Hidden dimension: 512
-  Expert hidden dimension: 1024
-  Max tokens: 64
-  Profile method: record_function
-
-=== Profiling MoE Gating ===
-Profiling MoE operations: 100%|████████████| 66/66 [00:15<00:00,  4.23it/s]
-
-=== Profiling MoE Shuffling ===
+Output taxonomy: data/profiling/compute/<device>/<model>/moe[<measurement suffix>].csv
+Resolved output: <repo>/data/profiling/compute/rtx_pro_6000/Qwen3-30B-A3B-tiny/moe.csv
+Model: Qwen3-30B-A3B-tiny
+Device: rtx_pro_6000
+TP sizes: 1
+EP sizes: 1
+Profile method: cuda_event
+Dry run: true
 ...
-
-=== Profiling MoE Grouped GEMM ===
-...
-
-==========================================
-Profiling Complete!
-==========================================
-
-Output files:
--rw-r--r-- 1 user group 12345 Jan 01 12:00 moe.csv
--rw-r--r-- 1 user group 12345 Jan 01 12:00 moe_kernel_only.csv
--rw-r--r-- 1 user group 12345 Jan 01 12:00 moe_config.yaml
+Dry run completed; no profiling command was executed.
 ```
+
+The wrapper defaults are `--max_tokens 16`, TP=1, EP=1, `cuda_event`,
+`--routing_runtime_path uniform_topk`, and
+`--gating_runtime_context prefill_hot`. Override them with `--model`,
+`--device`, `--max-tokens`, `--tp-sizes`, `--ep-sizes`, `--profile-method`,
+`--routing-runtime-path`, `--gating-runtime-context`, and `--output-root`.
 
 ### 2. Full Profiling
 
-For production use, run full profiling with realistic parameters:
+For production use, run full profiling with realistic parameters. Model shapes
+(`num_experts`, `router_topk`, hidden sizes) come from the model config; the
+CLI has no flags to override them.
 
 ```bash
 python -m frontier.profiling.moe.main \
+    --models mixtral_8x7b_moe \
     --num_gpus 1 \
-    --num_experts 8 \
-    --router_topk 2 \
-    --hidden_dim 4096 \
-    --expert_hidden_dim 11008 \
     --max_tokens 4096 \
     --num_tensor_parallel_workers 1 2 4 8 \
+    --expert_parallel_sizes 1 2 4 8 \
     --device a100 \
+    --profile_method cuda_event \
     --output_dir data/profiling \
     --disable_ray
 ```
 
-**Note**: For multi-GPU profiling, remove `--disable_ray` and set `--num_gpus` to the desired number.
+To profile a custom MoE shape, add a config JSON under `data/config/models/`
+and pass its file name to `--models`; see
+[README.md](./README.md#supported-models).
+
+**Note**: For multi-GPU profiling, keep `--disable_ray` and set `--num_gpus`
+to the number of visible GPUs; each GPU runs its own worker process.
 
 ## Troubleshooting
 
-### Issue 1: `ModuleNotFoundError: No module named 'sarathi'`
+### Issue 1: `ImportError: Moe profiling requires missing dependencies: ...`
 
-**Solution**: Make sure you're using the sarathi-serve virtual environment:
-```bash
-source /path/to/sarathi-serve/env/bin/activate
-cd /path/to/vidur
-python -m frontier.profiling.moe.main --help
-```
+**Solution**: Activate the profiling environment from
+[Environment Setup](#1-environment-setup). The minimal `environment.yml`
+intentionally excludes `torch`, `vllm`, and `triton`.
 
 ### Issue 2: CUDA Out of Memory
 
-**Solution**: Reduce profiling parameters:
+**Solution**: Reduce the profiling grid, or profile a smaller model config:
+
 ```bash
 python -m frontier.profiling.moe.main \
+    --models Qwen3-30B-A3B-tiny \
     --num_gpus 1 \
-    --num_experts 4 \
     --max_tokens 512 \
-    --hidden_dim 2048 \
-    --expert_hidden_dim 5504 \
+    --num_tensor_parallel_workers 1 \
+    --expert_parallel_sizes 1 \
     --device a100 \
     --disable_ray
 ```
 
 ### Issue 3: Ray initialization fails
 
-**Solution**: Use `--disable_ray` for single-GPU profiling:
+**Solution**: Use `--disable_ray`. The Ray path failed with grpcio 1.67.1 and
+Ray 2.52.1:
+
 ```bash
 python -m frontier.profiling.moe.main \
     --num_gpus 1 \
@@ -199,18 +135,22 @@ python -m frontier.profiling.moe.main \
 ### Issue 4: Profiling is very slow
 
 **Possible causes**:
-1. **Large parameter space**: Reduce `--max_tokens` or limit `--num_tensor_parallel_workers`
-2. **Single GPU**: Use multiple GPUs with Ray for parallel profiling
-3. **Profile method**: keep default `--profile_method record_function` for kernel-only data, or use `--profile_method cuda_event` for eager-family data
+1. **Large parameter space**: The defaults profile TP sizes `1 2 4 8`, every EP
+   divisor of `num_experts`, and 3 load-imbalance samples per point. Reduce
+   `--max_tokens`, pass explicit `--num_tensor_parallel_workers` and
+   `--expert_parallel_sizes`, or lower `--num_samples_per_distribution`.
+2. **Single GPU**: Use more GPUs with `--num_gpus N --disable_ray`.
+3. **Profile method**: keep the default `--profile_method record_function` for kernel-only data, or use `--profile_method cuda_event` for eager-family data.
 
 **Solution**:
 ```bash
-# Use multiple GPUs with Ray
+# Use 4 GPUs in non-Ray multiprocessing mode
 python -m frontier.profiling.moe.main \
     --num_gpus 4 \
     --max_tokens 2048 \
     --num_tensor_parallel_workers 1 2 \
     --device a100 \
+    --disable_ray \
     ...
 ```
 
@@ -222,12 +162,14 @@ After profiling completes, validate the output:
 
 ```bash
 ls -lh data/profiling/compute/<device>/<model_name>/
+ls -lh data/profiling/compute/<device>/moe_config.yaml
 ```
 
-Expected files:
-- `moe.csv`
-- `moe_kernel_only.csv` when `--profile_method record_function` is used
-- `moe_config.yaml`
+Expected files (one CSV per run, selected by `--profile_method`):
+- `moe.csv` when `--profile_method cuda_event` is used
+- `moe_kernel_only.csv` when `--profile_method record_function` (the default) is used
+- `moe_device_event.csv` when `--profile_method device_event` is used
+- `moe_config.yaml` one level up, in `data/profiling/compute/<device>/`
 
 ### 2. Inspect CSV Content
 
@@ -235,11 +177,12 @@ Expected files:
 head -n 5 data/profiling/compute/a100/<model_name>/moe.csv
 ```
 
-Expected columns:
+Expected columns include (abridged; see [README.md](./README.md#csv-file-format)
+for the full list):
 ```
 time_stats.moe_gating_linear.median,time_stats.moe_gating_routing_topk.median,time_stats.moe_shuffling.median,time_stats.moe_grouped_gemm.median,num_tokens,num_experts,num_experts_per_device,expert_parallel_size,routing_runtime_path,routing_assignment_policy,routing_weight_policy,routing_uses_router_logits,gating_runtime_context,gating_runtime_context_impl,router_topk,hidden_dim,expert_hidden_dim,use_gated,num_tensor_parallel_workers,measurement_type
-0.1234,0.0100,0.0670,2.2200,8,8,8,1,standard_fused_topk,logit_topk,router_softmax,True,standalone_legacy,linear_plus_routing,2,4096,14336,True,1,CUDA_EVENT
-0.2345,0.0050,0.0660,2.1450,16,8,8,1,uniform_topk,round_robin_uniform,uniform,False,prefill_hot,linear_only,2,4096,14336,True,1,CUDA_EVENT
+0.1234,0.0100,0.0670,2.2200,8,8,8,1,standard_fused_topk,logit_topk,softmax_renorm,True,standalone_legacy,none,2,4096,14336,True,1,CUDA_EVENT
+0.2345,0.0050,0.0660,2.1450,16,8,8,1,uniform_topk,round_robin_uniform,uniform_1_over_topk,False,prefill_hot,ffn_like_prefix_20x,2,4096,14336,True,1,CUDA_EVENT
 ...
 ```
 
@@ -262,30 +205,34 @@ print("✓ Timing values are valid")
 
 After successful profiling:
 
-1. **Copy profiling data to data directory**:
+1. **Use the profiling data in place**:
    ```bash
    # The profiler writes canonical files directly when --output_dir data/profiling is used:
    # data/profiling/compute/<device>/<model_name>/moe.csv
    # data/profiling/compute/<device>/<model_name>/moe_kernel_only.csv
    ```
 
-2. **Test integration with model manager**:
+2. **Run the CSV-driven simulator smoke** (checked-in tiny profiles, dummy mode
+   disabled):
    ```bash
-   python tests/profiling/test_model_manager_integration.py
+   bash examples/profiling/smoke_simulator_moe_csv.sh
    ```
+   Pass `--device`, `--model`, and `--moe-csv` (plus `--linear-op-csv` and
+   `--attention-csv`) to run it on your own files.
 
-3. **Run simulator with MoE profiling data**:
+3. **Run the simulator with MoE profiling data**: `--replica_config_device`
+   and `--replica_config_model_name` select
+   `./data/profiling/compute/{DEVICE}/{MODEL}/moe.csv`. The expert count and
+   router top-k come from the model config.
    ```bash
    python -m frontier.main \
-       --replica_config_model_name "Qwen/Qwen1.5-MoE-A2.7B" \
-       --replica_config_total_expert_num 8 \
-       --replica_config_router_topk 2 \
+       --replica_config_model_name mixtral_8x7b_moe \
+       --replica_config_device a100 \
        ...
    ```
 
 ## Reference
 
-- Main documentation: `vidur/profiling/moe/README.md`
-- Profiling guide: `docs/profiling.md`
-- Sarathi-serve repository: https://github.com/microsoft/sarathi-serve
-
+- Main documentation: `frontier/profiling/moe/README.md`
+- Profiling guide: `docs/profiling/README.md`
+- Public profiling wrappers: `examples/profiling/README.md`

@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-14 | Documented `attn_dp`, the device fields, the cluster scheduler choice, and the kernel-only, kernel-gap and CPU-overhead inputs; updated the profiling taxonomy. |
 | 2026-09-27 | Documented the `max_model_len` arrival check of the `vllm_v1` schedulers. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-14 | Documented standard ROCm/GDN CLI selection and experimental SGLang boundaries. |
@@ -14,11 +15,13 @@ This guide covers the public CLI surface for the `pre-release-v0.3` branch. The 
 
 PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
 
+Why parallel cluster processing is not a release path:
+
 The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
 
-Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+Parallel processing was also measured slower than sequential processing on a MoE model with 64 experts. Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
 
-With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
+The reason is structural. With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
 
 Use the examples first. They set the required flags, disable optional services, and write metrics to a predictable location.
 
@@ -57,18 +60,37 @@ Use `--cc_backend_config_type analytical` to match the release examples. Use `--
 ## Profiling producers and runtime boundaries
 
 The standard profiling taxonomy is shared by CLI loading, on-demand training,
-and simulator E2E checks:
+and simulator E2E checks. These are the default predictor input paths;
+`<device>` comes from `--replica_config_device`, `<network_device>` from
+`--replica_config_network_device`, and `<model>` from the model name:
 
 ```text
-data/profiling/compute/<device>/<model>/
-├── linear_op.csv
-├── attention.csv
-├── moe.csv
-└── gdn.csv
+data/profiling/
+├── compute/<device>/<model>/
+│   ├── linear_op.csv               # CUDA-event tables
+│   ├── attention.csv
+│   ├── moe.csv
+│   ├── gdn.csv
+│   ├── linear_op_kernel_only.csv   # kernel-only (record_function) tables
+│   ├── attention_kernel_only.csv
+│   ├── moe_kernel_only.csv
+│   └── kernel_gap.csv              # mean device gap between kernels
+├── cpu_overhead/<network_device>/<model>/
+│   ├── cpu_overheads.csv
+│   └── cpu_overheads_kernel_only.csv
+├── network/<network_device>/
+│   ├── all_reduce.csv
+│   └── send_recv.csv
+└── other_overhead/<device>/<model>/
 ```
 
-CUDA producers use `CUDA_EVENT`. Standard ROCm producers use
-`DEVICE_EVENT`, and the two measurement families are kept separate. For a
+The checked-in H200 tables under `data/profiling/compute/h200/` and
+`data/profiling/cpu_overhead/h200_dgx/` follow this layout for
+`llama2_7b_dense_example`, `Qwen3-30B-A3B-tiny`, and `Qwen3-235B-A22B`.
+
+CUDA producers use `CUDA_EVENT` (`<op>.csv`) or `KERNEL_ONLY`
+(`<op>_kernel_only.csv`). Standard ROCm producers use `DEVICE_EVENT`
+(`<op>_device_event.csv`), and the measurement families are kept separate. For a
 Qwen3.5 GDN model, invoke the dedicated producer with `device_event`:
 
 ```bash
@@ -84,6 +106,8 @@ torchrun --standalone --nproc-per-node=8 \
 
 This writes
 `data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv`.
+The repository does not ship MI355X profiles; this file is the output of
+your own run.
 The standard trainer and simulator discover this canonical file through
 `gdn_input_file`; they do not discover experimental trace or replay outputs.
 Generic linear, attention, and MoE wrappers use the same platform rule, for
@@ -244,8 +268,12 @@ PD-AF uses `--cluster_config_prefill_*`, `--cluster_config_decode_attn_*`,
 | Option | Use |
 |--------|-----|
 | `--replica_config_model_name` | Model name used to resolve model config and output taxonomy. |
+| `--replica_config_device` | Compute device name, for example `h200` or `mi355x`. Fills `{DEVICE}` in the default compute input paths. Default: `a100`. |
+| `--replica_config_network_device` | Network device name, for example `h200_dgx`. Fills `{NETWORK_DEVICE}` in the CPU-overhead and network input paths. Default: `a100_pairwise_nvlink`. |
 | `--cluster_config_num_replicas` | Number of monolithic replicas. |
+| `--cluster_scheduler_config_type` | How a cluster assigns requests to replicas and DP lanes: `round_robin` (default), `random`, `lor`, `sticky_round_robin`, `sticky_lor`, or `vllm_load_balancing`. |
 | `--replica_config_attn_tensor_parallel_size` | Attention tensor parallel size. |
+| `--replica_config_attn_dp` | Attention data-parallel lanes owned by one Replica. Default: `1`. |
 | `--replica_config_num_pipeline_stages` | Pipeline parallel stages. |
 | `--replica_config_moe_tensor_parallel_size` | MoE tensor parallel size. |
 | `--replica_config_moe_expert_parallel_size` | MoE expert parallel size. |
@@ -253,9 +281,16 @@ PD-AF uses `--cluster_config_prefill_*`, `--cluster_config_decode_attn_*`,
 | `--replica_config_router_topk` | Number of routed experts per token. |
 | `--replica_config_moe_routing_distribution_type` | MoE expert-load distribution: `balanced`, `random`, `skewed`, or `zipf`. |
 
-Attention data parallelism is fixed internally to `1` in Frontier's shared
-domains. Use cluster-level `num_replicas` for serving capacity and
-`moe_expert_parallel_size` for Replica-local EP lanes.
+One Replica models one complete serving pod. `attn_dp` sets how many
+independent request owners (vLLM DP engines) the pod has; each request belongs
+to one `(replica_id, dp_id)` lane. Use cluster-level `num_replicas` for more
+pods, and `moe_expert_parallel_size` for expert placement and the EP
+collective, which spans the TP x DP ranks of the pod. Limits:
+
+- Dense models require `attn_dp=1` in the PDD `PREFILL` and `DECODE` roles.
+- The PD-AF `DECODE_ATTN` role always requires `attn_dp=1`.
+- `vllm_load_balancing` supports one `co-location` replica with the `vllm_v1`
+  replica scheduler, and either a MoE model or `attn_dp=1`.
 
 For Step3 co-location, `PREFILL`, and unified `DECODE`, shared-expert linear
 work uses `attn_tensor_parallel_size`; routed-expert compute uses
@@ -310,9 +345,33 @@ Use trace replay when you need shared-prefix or known-arrival behavior.
 | `--random_forrest_execution_time_predictor_config_linear_op_input_file` | Path to `linear_op.csv`. |
 | `--random_forrest_execution_time_predictor_config_atten_input_file` | Path to `attention.csv`. |
 | `--random_forrest_execution_time_predictor_config_moe_input_file` | Path to `moe.csv`. Required for MoE non-dummy runs. |
-| `--random_forrest_execution_time_predictor_config_skip_cpu_overhead_modeling` | Skip CPU overhead predictor modeling for lightweight CSV smoke runs. |
+| `--random_forrest_execution_time_predictor_config_{linear_op,atten,moe}_kernel_only_input_file` | Paths to the kernel-only tables (`*_kernel_only.csv`). |
+| `--random_forrest_execution_time_predictor_config_kernel_gap_input_file` | Path to `kernel_gap.csv`. When the file exists, kernel-only steps pay the measured gap once per launched kernel. |
+| `--random_forrest_execution_time_predictor_config_cpu_overhead_input_file` | Path to `cpu_overheads.csv`. |
+| `--random_forrest_execution_time_predictor_config_cpu_overhead_kernel_only_input_file` | Path to `cpu_overheads_kernel_only.csv`. |
+| `--random_forrest_execution_time_predictor_config_skip_cpu_overhead_modeling` | Skip CPU-overhead modeling. Default: on. Pass `--no-random_forrest_execution_time_predictor_config_skip_cpu_overhead_modeling` to price host-side time from the CPU-overhead tables. |
+
+All path flags default to the taxonomy shown above, so a run on checked-in data
+only needs `--replica_config_device`, `--replica_config_network_device`, and
+the model name.
 
 When dummy mode is disabled, Frontier checks the predictor cache. If a needed model is missing, it trains from the configured CSVs and writes the trained estimator into the cache directory.
+
+Rules that decide which tables a non-dummy run reads:
+
+- CUDA Graph decode steps and the PD-AF decode roles are priced from the
+  kernel-only tables. Eager steps are priced from the CUDA-event tables.
+- With CPU-overhead modeling on, and when the eager CPU table has
+  `forward_launch` columns, each eager step is priced as the slower of two
+  streams: the device stream from the kernel-only tables, and the host stream
+  from the `forward_launch` and `forward_drain` columns. This needs `pipeline_stage_id` rows for every pipeline stage and is rejected
+  under PD-AF.
+- `kernel_gap.csv` needs one `eager` and one `cuda_graph` row whose
+  `num_tensor_parallel_workers` equals the attention TP size. While the file
+  exists, runs with PD-AF, GDN layers, or speculative decoding stop with an
+  error.
+- On a ROCm device such as `mi355x`, the predictor reads the
+  `<op>_device_event.csv` tables instead.
 
 ### Metrics output
 
@@ -350,6 +409,6 @@ Common files include:
 | Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
 | `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
-| Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide and keep CSVs under `data/profiling/compute/<device>/<model>/`. |
+| Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide, keep CSVs in the taxonomy above, and check that `--replica_config_device` and `--replica_config_network_device` name the data directories. |
 | A run stops with `ValueError: Request ... do not fit max_model_len=...`. | The `vllm_v1`, `sglang` and SJ2Q schedulers reject a request or thinking round whose prompt reaches `max_model_len`, or whose prompt plus output exceeds it, as vLLM's OpenAI server does; Frontier stops the run instead of failing one request. `max_model_len` defaults to the model's `max_position_embeddings`, not the workload's `max_tokens`. | Shorten the request or the thinking-round plan, or set `--<scheduler>_scheduler_config_max_model_len`, for example `--vllm_v1_scheduler_config_max_model_len` (vLLM `--max-model-len`). |
 | Plot export warns about `kaleido`. | PNG export is optional. | Keep `--no-metrics_config_store_plots` for smoke runs, or install `kaleido` if PNGs are needed. |
