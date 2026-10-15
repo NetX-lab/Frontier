@@ -2,27 +2,30 @@
 
 **When to use:** Use when client dispatch or frontend routing delay changes which requests a DP lane or step sees, as in DP x PP cells and online cases with visible dispatch skew.
 
-Read `../references/contract.md`, `../references/tool-boundaries.md`, and
-`../references/pitfalls.md` (Ground-Truth Collection). Frontier replays the
-cell trace's intended arrivals; vLLM sees each request only after the client
-dispatches it and the frontend routes it to a DP engine. When that delay
-decides lane placement or step membership, Frontier needs the measured delays.
+Read `../references/contract.md`, `../references/tool-boundaries.md` (Case-Local
+Tools), and `../references/pitfalls.md` (Ground-Truth Collection). Frontier
+replays the cell trace's intended arrivals; vLLM sees each request only after
+the client dispatches it and the frontend routes it to a DP engine. When that
+delay decides lane placement or step membership, each Frontier run replays a
+trace delayed by measured delays.
 
-Take the delays from the cell's passing clean runs: the interval from client
+Measure the pool from the cell's passing clean runs: the interval from client
 dispatch to the frontend's route of each formal request. Delays above the
-API-server stall bound are stalls that Frontier does not model; leave them out
-of the pool and record the bound. For each ensemble member, draw one delay per
-request from the pool with a recorded seed (the published DP x PP cells use
-seeds 1-5) and add it to that request's `arrived_at`. Generate the base trace
-with `tests/comparison/dp_placement_pp/make_trace.py` when the cell has none.
+API-server stall bound (`stall_ms`) are stalls that Frontier does not model and
+stay out of the pool. Each Frontier ensemble member draws one delay per request
+from the pool with its own seed (the published DP x PP cells use seeds 1-5) and
+adds it to that request's `arrived_at`; every other trace field stays as it
+was. The case runner does the draw (`--route-delay-seed`) and writes the
+member trace as `trace.csv` in that Frontier run directory.
 
-Write `analysis/dispatch_aligned_trace.csv` per member and
-`analysis/dispatch_alignment_manifest.json` with the pool source runs, the
-bound, the seeds, and each member trace's SHA-256; the scenario matrix records
-the same hashes and `run_gate.py frontier` checks them. Re-read each member
-trace and compare ids, token counts, priorities, and payload with the base
-trace. Reject a duplicate id, a negative or non-finite delay, or a changed
-request.
+Record the draw in the run receipt and, for a published cell, in the scenario
+matrix entry of that Frontier run: `route_delay` (`seed`, `groundtruth_runs`,
+`samples`, `stalled_samples`, `stall_ms`, `measured_ms`), the drawn
+`route_delay_ms`, and `member_trace_sha256`. `run_gate.py frontier` rebuilds the
+member trace from these and fails when its SHA-256 differs. Before the run,
+compare the member trace with the base trace: the same ids, token counts, and
+order. Reject a duplicate id, a negative or non-finite delay, or any change
+other than `arrived_at`.
 
 This entry changes a data trace only. It never closes the E2E gate, and a
 replay heartbeat or harness change belongs to `groundtruth-run`.

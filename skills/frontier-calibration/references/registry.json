@@ -97,8 +97,8 @@
       "kind": "atomic",
       "owner": "dispatch-align-trace",
       "trigger": "Client dispatch or frontend routing delay changes which requests a DP lane or step sees.",
-      "inputs": ["clean run dispatch and route stamps", "cell trace", "case manifest"],
-      "outputs": ["analysis/dispatch_aligned_trace.csv", "analysis/dispatch_alignment_manifest.json"],
+      "inputs": ["passing clean runs with dispatch and route stamps", "cell trace", "case manifest"],
+      "outputs": ["<Frontier run dir>/trace.csv per ensemble member", "route_delay record in the run receipt and the scenario matrix"],
       "allows_code_change": false,
       "stop_status": ["FAIL", "INSUFFICIENT_EVIDENCE"],
       "validation": "Draw member delays from the measured pool with recorded seeds, change only arrival times, and verify ids, token counts, and trace hashes."

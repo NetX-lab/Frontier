@@ -36,7 +36,8 @@ follow `docs/profiling/README.md` and `frontier/profiling/README.md`.
 
 Some steps have no repository tool yet: the ground-truth run check, the case
 manifest writer, the case runner that turns the engine file and a Frontier
-settings file into a `frontier.main` command, the GPU job launcher, the coverage
+settings file into a `frontier.main` command (and, for a DP x PP ensemble
+member, draws its route delays), the GPU job launcher, the coverage
 check, the routing audit, and the error budget. The task keeps them in its
 artifacts bundle. A case-local tool:
 
