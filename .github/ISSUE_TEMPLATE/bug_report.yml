@@ -1,0 +1,39 @@
+name: Bug report
+description: Report an error or unexpected behavior in Frontier.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/NetX-lab/Frontier/issues) first.
+        Include the smallest example you can share. If you are unsure whether this is a bug, a usage question is also welcome.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe what went wrong and which part of Frontier is affected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the command and relevant configuration. If a complete reproduction is unavailable, describe the known conditions and what is missing.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Explain what you expected and what happened. For numerical discrepancies, include values, units, and the comparison source if available.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Version and environment (optional)
+      description: Include the Frontier commit or release, Python version, operating system, and relevant dependencies. Include GPU details only for GPU-related problems.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs and supporting material (optional)
+      description: Paste relevant errors or attach a small output/configuration example. Remove credentials and private information.

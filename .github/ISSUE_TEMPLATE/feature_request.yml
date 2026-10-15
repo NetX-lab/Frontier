@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a capability or improvement for Frontier.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/NetX-lab/Frontier/issues) before opening a request.
+        Describe the need before proposing an implementation.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What are you trying to accomplish, and what prevents you from doing it today?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Desired behavior
+      description: Describe what Frontier should do and what a useful result would look like.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Alternatives and additional context (optional)
+      description: Include workarounds, example workloads, references, or other approaches you considered.

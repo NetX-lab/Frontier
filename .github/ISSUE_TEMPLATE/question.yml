@@ -1,0 +1,30 @@
+name: Usage question
+description: Ask about running, configuring, or understanding Frontier.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [existing issues](https://github.com/NetX-lab/Frontier/issues) and the relevant guide:
+        [CLI](https://github.com/NetX-lab/Frontier/blob/main/docs/cli/README.md),
+        [profiling](https://github.com/NetX-lab/Frontier/blob/main/docs/profiling/README.md), or
+        [predictor training](https://github.com/NetX-lab/Frontier/blob/main/docs/training/README.md).
+        Questions are welcome here even when you are unsure whether the behavior is a bug.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to understand or accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and what you have tried
+      description: Describe your use case and any steps or documentation you have tried. For a conceptual question, explain the part you find unclear.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Commands, configuration, and output (optional)
+      description: Include relevant commands, settings, output, and version information if they help explain the question. Remove credentials and private information.
