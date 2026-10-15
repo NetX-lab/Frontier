@@ -17,7 +17,7 @@ The runtime profiler is intentionally **single-rank**:
 
 Implication:
 
-- The profiling workflow can be extended to large logical deployments such as `pp * tp * dp = 128` **without requiring a physical 128-GPU cluster** for the measurement step.
+- The profiling workflow can be applied to large logical deployments such as `pp * tp * dp = 128` **without requiring a physical 128-GPU cluster** for the measurement step.
 - What still matters is that the measured rank is representative of the target hardware/runtime path (for example A800 + target TP/PP sharding semantics).
 
 ## Memory Breakdown Formula
@@ -74,7 +74,7 @@ effective planner overhead so that planner-side subtraction matches measured
 1. **Setup** — Initialize model-parallel state, build `_FullStructureGPTModel` (mirrors vLLM's `LlamaForCausalLM` layer structure), load dummy weights to GPU.
 2. **Weights Measurement** — Either use the input `weights_memory_bytes` directly (`param_counter` mode) or measure the actual model-load memory delta (`runtime_model_load` mode).
 3. **NCCL Buffer Allocation** — Estimate NCCL overhead via `estimate_nccl_non_torch_bytes()`, then allocate an explicit non-torch buffer via `cudaMalloc` (class `_CudaNonTorchAllocation`) to simulate NCCL memory pressure.
-4. **Profile Run** — Enter `memory_profiling()` context manager, allocate a torch peak padding buffer (96–112 MiB), execute `model(input_ids, positions)` forward pass, synchronize CUDA.
+4. **Profile Run** — Enter `memory_profiling()` context manager, allocate a torch peak padding buffer (96 MiB, or 112 MiB when the model name contains `qwen`), execute `model(input_ids, positions)` forward pass, synchronize CUDA.
 5. **Result Calculation** — Extract `NonKVMemoryBreakdown` from before/after memory snapshots, compute `overhead_bytes = non_kv_cache_memory - weights_memory`.
 6. **Cleanup** — Free non-torch allocation, delete model and tensors, empty CUDA cache, destroy model-parallel state.
 
@@ -96,24 +96,24 @@ Defaults are calibrated for A800 TP=8 (645 MiB empirical floor). Returns 0 for T
 ## Integration Path
 
 ```text
-CLI Config (num_blocks_mode, enable_runtime_profiling, non_kv_cache_overhead_bytes)
+CLI Config (num_blocks_mode, enable_runtime_non_kv_cache_overhead_profiling, non_kv_cache_overhead_bytes)
   │
   ▼
-BaseReplicaScheduler.__init__()          [base_replica_scheduler.py:87-186]
+BaseReplicaScheduler.__init__()          [frontier/scheduler/replica_scheduler/base_replica_scheduler.py]
   │  if enable_runtime_non_kv_cache_overhead_profiling:
   ▼
-estimate_non_kv_cache_profile()          [runtime_estimator.py:733-806]
+estimate_non_kv_cache_profile()          [runtime_estimator.py]
   │  → loads model, allocates NCCL buffers, runs forward pass
   │  → returns RuntimeNonKVProfileResult with overhead_bytes
   ▼
 config.non_kv_cache_overhead_bytes = effective_overhead_bytes
   │
   ▼
-MemoryPlanner.get_num_blocks()           [memory_planner.py:100-146]
+MemoryPlanner.get_num_blocks()           [frontier/scheduler/utils/memory_planner.py]
   │  available_kv = total_memory × gpu_utilization - param_memory - overhead
   │  num_blocks = available_kv / page_size / num_layers
   ▼
-VllmV1EngineReplicaScheduler            [vllm_v1_engine_replica_scheduler.py]
+VLLMv1EngineReplicaScheduler            [vllm_v1_engine_replica_scheduler.py, vllm_v1_kv_allocation.py]
   │  _can_allocate_request: available_blocks >= watermark?
   │  _schedule_waiting_requests: admission control based on num_blocks
 ```
@@ -193,11 +193,16 @@ Notes:
 - Set `use_analytical_param_memory=True` to keep analytical ParamCounter
   semantics.
 
-`memory_planner_profiled` requires either `enable_runtime_non_kv_cache_overhead_profiling=True` (auto-profile) or a manually specified `non_kv_cache_overhead_bytes` value.
+In `memory_planner_profiled` mode, the overhead comes from runtime profiling when
+`enable_runtime_non_kv_cache_overhead_profiling=True`; otherwise the configured
+`non_kv_cache_overhead_bytes` is used as is, and its default `0` gives the same block count as
+`memory_planner`. Runtime profiling with any other `num_blocks_mode` fails with an error, and
+`explicit` mode requires `num_blocks > 0`.
 
 ## Configuration Parameters
 
-Key CLI flags (prefixed with `--vllm_v1_scheduler_config_`):
+Key CLI flags of the `vllm_v1` replica scheduler (prefixed with `--vllm_v1_scheduler_config_`; the
+`sglang` scheduler has the same fields under `--sglang_scheduler_config_`):
 
 | Parameter | Default | Description |
 | --------- | ------- | ----------- |
@@ -208,7 +213,10 @@ Key CLI flags (prefixed with `--vllm_v1_scheduler_config_`):
 | `runtime_weights_memory_source` | `param_counter` | `param_counter` or `runtime_model_load` |
 | `use_analytical_param_memory` | `False` | In profiled mode, force planner to use analytical ParamCounter param memory |
 
-NCCL buffer estimation is configured via `NCCLBufferEstimationConfig` fields passed through the scheduler. The `NCCL_BUFFSIZE` environment variable can override the per-channel buffer size.
+NCCL buffer estimation is configured via `NCCLBufferEstimationConfig` fields that the scheduler
+fills from its `nccl_buffer_*` config fields (for example
+`--vllm_v1_scheduler_config_nccl_buffer_comm_base_overhead_bytes`). The `NCCL_BUFFSIZE`
+environment variable can override the per-channel buffer size.
 
 ## Usage Example
 

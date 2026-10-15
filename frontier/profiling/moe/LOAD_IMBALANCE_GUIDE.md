@@ -42,8 +42,10 @@ We support load imbalance profiling through:
 
 1. **Fused Kernel Profiling** (default as of v2.0):
    - Uses vLLM `fused_moe_kernel` for accurate load imbalance capture
-   - Automatically enabled if vLLM is available
-   - Gracefully falls back to per-expert loop if vLLM not installed
+   - Enabled by default (`--enable_load_imbalance`); `--disable_load_imbalance`
+     selects the Frontier per-expert loop instead
+   - Requires vLLM; the entrypoint fails at startup when `torch`, `vllm`, or
+     `triton` is missing
    - Recommended for production-grade accuracy
 
 2. **Load Distribution Generator**: Simulates different load distributions
@@ -52,7 +54,8 @@ We support load imbalance profiling through:
    - `skewed`: Skewed distribution (some experts more popular)
    - `extremely_skewed`: Extremely skewed (80-20 rule)
 
-3. **Load Imbalance Features**: 15 features to describe load distribution
+3. **Load Imbalance Features**: 14 features to describe load distribution
+   (`MOE_LOAD_IMBALANCE_FEATURES` in `frontier/moe_load_imbalance.py`)
    - Core features (4): `total_routed_tokens`, `num_experts_per_device`, `hidden_dim`, `expert_hidden_dim`
    - Config features (2): `router_topk`, `model_expansion_ratio`
    - Workload features (2): `tokens_per_expert_avg`, `tokens_to_experts_ratio`
@@ -65,15 +68,16 @@ We support load imbalance profiling through:
 
 ### 1. Check Dependencies
 
-```bash
-cd /data/rlhfsim/dev-vidur
+Run from the repository root in the profiling environment
+(`conda env create -f environment_profiling.yml`):
 
+```bash
 # Check if vLLM is available
 python -c "from frontier.profiling.moe.moe_vllm_kernel import check_vllm_available; print('vLLM available:', check_vllm_available())"
-
-# If output is False, install vLLM
-pip install vllm
 ```
+
+If the output is `False`, use the profiling environment, which pins
+`vllm>=0.10,<0.11`.
 
 ### 2. Run Load Imbalance Profiling
 
@@ -83,24 +87,31 @@ python -m frontier.profiling.moe.main \
     --device a100 \
     --models "mixtral_8x7b_moe" \
     --num_gpus 8 \
+    --disable_ray \
+    --profile_method cuda_event \
     --enable_load_imbalance \
     --load_distributions uniform skewed extremely_skewed \
     --num_samples_per_distribution 3 \
     --output_dir ./moe_profiling_imbalance
 
-# Output: ./moe_profiling_imbalance/a100/mixtral_8x7b_moe/moe.csv
+# Output: ./moe_profiling_imbalance/compute/a100/mixtral_8x7b_moe/moe.csv
 ```
+
+Without `--profile_method cuda_event`, the default `record_function` writes
+`moe_kernel_only.csv` instead. Without explicit `--num_tensor_parallel_workers`
+and `--expert_parallel_sizes`, the run profiles TP sizes `1 2 4 8` and every
+EP divisor of `num_experts`.
 
 ### 3. View Results
 
 ```bash
 # View generated CSV
-head -n 5 ./moe_profiling_imbalance/a100/mixtral_8x7b_moe/moe.csv
+head -n 5 ./moe_profiling_imbalance/compute/a100/mixtral_8x7b_moe/moe.csv
 
 # Analyze with Python
 python -c "
 import pandas as pd
-df = pd.read_csv('./moe_profiling_imbalance/a100/mixtral_8x7b_moe/moe.csv')
+df = pd.read_csv('./moe_profiling_imbalance/compute/a100/mixtral_8x7b_moe/moe.csv')
 print('Columns:', df.columns.tolist()[:10])
 print('Shape:', df.shape)
 print('Load distributions:', df['load_distribution'].unique())
@@ -118,39 +129,47 @@ print('Load distributions:', df['load_distribution'].unique())
 python -m frontier.profiling.moe.main \
     --device a100 \
     --models "mixtral_8x7b_moe" \
+    --disable_ray \
+    --disable_load_imbalance \
     --output_dir ./moe_profiling
 
 # Features:
 # - Uses original per-expert loop implementation
+# - Gating uses PyTorch nn.Linear and torch.topk, so only
+#   --routing_runtime_path standard_fused_topk is supported
 # - Fast profiling
-# - Only generates uniform distribution data
-# - Backward compatible, same behavior as before
+# - One case per point, labeled load_distribution=uniform
 ```
+
+Load-imbalance profiling is on by default, so omitting
+`--enable_load_imbalance` does not select this mode; pass
+`--disable_load_imbalance`.
 
 ### 2. Load Imbalance Profiling (Default as of v2.0) ⭐
 
 ```bash
-# Fused kernels are now used by default (if vLLM available)
+# Fused kernels are used by default
 python -m frontier.profiling.moe.main \
     --device a100 \
     --models "mixtral_8x7b_moe" \
+    --disable_ray \
     --enable_load_imbalance \
     --load_distributions uniform skewed extremely_skewed \
     --num_samples_per_distribution 5 \
     --output_dir ./moe_profiling_imbalance
 
 # Features:
-# - Uses vLLM fused_moe_kernel by default (auto-detects vLLM availability)
+# - Uses vLLM fused_moe_kernel by default
 # - Accurately captures load imbalance performance impact
 # - Generates multiple distributions × samples
 # - Recommended for training high-precision prediction models
 
 # Parameter explanation:
-# --enable_load_imbalance: Enable load imbalance profiling (required)
-# --load_distributions: Distribution types to test (multiple allowed)
+# --enable_load_imbalance: Enable load imbalance profiling (default: on)
+# --load_distributions: Distribution types to test (default: uniform)
 # --num_samples_per_distribution: Random samples per distribution (default: 3)
 
-# Total test cases generated:
+# Test cases per (TP, EP) combination:
 # token_counts × distributions × samples
 # Example: 100 tokens × 3 distributions × 5 samples = 1500 test cases
 ```
@@ -162,50 +181,69 @@ python -m frontier.profiling.moe.main \
 | Implementation | Per-expert loop | vLLM fused_moe_kernel |
 | Speed | Fast | Medium |
 | Accuracy | Cannot reflect load imbalance | Accurately captures performance impact |
-| Dependencies | None | Requires vLLM and raises a clear error if missing |
+| Dependencies | Entrypoint still requires torch, vllm, and triton | Requires vLLM and raises a clear error if missing |
 | Use Case | Quick testing, vLLM unavailable | Production profiling (recommended) |
 
 ---
 
 ## Load Distribution Types
 
+`frontier/profiling/moe/load_distribution.py::generate_expert_routing` builds
+each sample's routing (`topk_ids`, `topk_weights`). The example counts below
+are illustrations for 8 experts; their CV, Gini, and entropy values follow the
+formulas in `frontier/moe_load_imbalance.py`.
+
 ### Uniform Distribution
 
+**Generator**: Each token ranks the experts by random scores and takes the top
+`top_k`, so every expert has equal selection probability.
+
 **Characteristics**:
-- Each expert has equal selection probability
 - Load distribution is nearly uniform
 - CV ≈ 0, Gini ≈ 0
 
 **Example**:
 ```
 Expert token counts: [250, 252, 248, 251, 249, 250, 250, 250]
-CV: 0.005, Gini: 0.002, Entropy: 2.998
+CV: 0.004, Gini: 0.002, Entropy: 3.000
 ```
+
+### Balanced Distribution
+
+**Generator**: The round-robin assignment of the `uniform_topk` routing path.
+Every expert receives the same number of tokens, up to one token. It covers the
+queries of the simulator's `balanced` routing.
 
 ### Skewed Distribution
 
+**Generator**: Expert `i` (0-based) is drawn with probability proportional to
+`(i + 1) ** 0.5`, without replacement within a token, so higher expert IDs are
+more popular (power law).
+
 **Characteristics**:
-- Some experts are more popular (power law distribution)
+- Some experts are more popular
 - Moderate load imbalance
-- CV ≈ 0.2-0.4, Gini ≈ 0.1-0.2
 
 **Example**:
 ```
 Expert token counts: [180, 220, 280, 310, 290, 260, 240, 220]
-CV: 0.185, Gini: 0.089, Entropy: 2.912
+CV: 0.161, Gini: 0.091, Entropy: 2.981
 ```
 
 ### Extremely Skewed Distribution
 
+**Generator**: 80% of tokens route within a popular subset of
+`min(num_experts, max(top_k, min(num_experts // 4, 8)))` experts; the other 20%
+route over all experts.
+
 **Characteristics**:
-- 80% of tokens use only a few experts
+- Most tokens use only a few experts
 - Severe load imbalance
-- CV ≈ 0.5-1.0, Gini ≈ 0.3-0.5
 
 **Example**:
 ```
 Expert token counts: [450, 480, 420, 380, 120, 80, 50, 20]
-CV: 0.682, Gini: 0.312, Entropy: 2.456
+CV: 0.745, Gini: 0.406, Entropy: 2.535
 ```
 
 ---
@@ -232,8 +270,8 @@ CV: 0.682, Gini: 0.312, Entropy: 2.456
 
 | Feature | Description | Example Value |
 |---------|-------------|---------------|
-| `tokens_per_expert_avg` | Average tokens per expert | 128.0 |
-| `tokens_to_experts_ratio` | total_tokens / num_experts | 128.0 |
+| `tokens_per_expert_avg` | Average routed tokens per local expert | 128.0 |
+| `tokens_to_experts_ratio` | total_routed_tokens / num_experts_per_device | 128.0 |
 
 ### 4️⃣ Load Features (4) ⭐
 
@@ -241,7 +279,7 @@ CV: 0.682, Gini: 0.312, Entropy: 2.456
 |---------|-------------|-------|---------------|
 | `expert_utilization` | Proportion of experts with load | [0, 1] | 0.875 |
 | `min_load_ratio` | Min load / average load | [0, ∞) | 0.15 |
-| `load_imbalance_cv` | Coefficient of Variation | [0, ∞) | 0.682 |
+| `load_imbalance_cv` | Coefficient of Variation | [0, ∞) | 0.745 |
 | `max_load_ratio` | Max load / average load | [1, ∞) | 3.75 |
 
 **Feature Explanation**:
@@ -252,8 +290,8 @@ CV: 0.682, Gini: 0.312, Entropy: 2.456
 
 | Feature | Description | Range | Example Value |
 |---------|-------------|-------|---------------|
-| `load_entropy` | Entropy of load distribution | [0, log₂(n)] | 2.456 |
-| `load_gini_coefficient` | Gini coefficient | [0, 1] | 0.312 |
+| `load_entropy` | Entropy of load distribution | [0, log₂(n)] | 2.535 |
+| `load_gini_coefficient` | Gini coefficient | [0, 1) | 0.406 |
 
 **Feature Explanation**:
 - **Entropy**: Higher values indicate more uniform distribution, max value is log₂(num_experts)
@@ -265,9 +303,11 @@ CV: 0.682, Gini: 0.312, Entropy: 2.456
 
 ### CSV File Structure
 
-With load imbalance enabled, the generated `moe.csv` contains:
+Every generated MoE CSV contains these column groups; with
+`--disable_load_imbalance`, the load columns describe one uniform case per
+point:
 
-#### 1. Time Statistics Columns (15)
+#### 1. Time Statistics Columns (20)
 
 ```
 time_stats.moe_gating_linear.min/max/mean/median/std
@@ -276,7 +316,7 @@ time_stats.moe_shuffling.min/max/mean/median/std
 time_stats.moe_grouped_gemm.min/max/mean/median/std
 ```
 
-#### 2. Basic Configuration Columns (9)
+#### 2. Basic Configuration Columns (16)
 
 ```
 num_tokens, num_experts, num_experts_per_device, expert_parallel_size,
@@ -286,15 +326,25 @@ router_topk, hidden_dim, expert_hidden_dim, use_gated, num_tensor_parallel_worke
 measurement_type
 ```
 
-#### 3. Load Imbalance Feature Columns (15)
+#### 3. Load Imbalance Columns (12)
+
+The columns that `to_features_dict` adds beyond the configuration columns:
 
 ```
-total_routed_tokens, load_distribution, load_imbalance_cv, load_gini_coefficient,
-expert_utilization, min_load_ratio, max_load_ratio, load_entropy,
-model_expansion_ratio, tokens_per_expert_avg, tokens_to_experts_ratio, ...
+total_routed_tokens, model_expansion_ratio, tokens_per_expert_avg,
+tokens_to_experts_ratio, expert_utilization, min_load_ratio, load_imbalance_cv,
+max_load_ratio, load_entropy, load_gini_coefficient, load_distribution, seed
 ```
 
-**Total**: ~39 columns
+#### 4. Other Columns
+
+`moe_grouped_gemm_backend`, `moe_quantization_mode`, `typed_operator_contracts`,
+`profiling_precision`, `model_arch`, `model_architecture_profile`, and
+`quant_signature`. The vLLM fused-kernel path also writes
+`time_stats.moe_grouped_gemm.block_size_m`,
+`time_stats.moe_grouped_gemm.num_tokens_post_padded`, and
+`time_stats.moe_grouped_gemm.block_size_m_ranges`. See
+[README.md](./README.md#csv-file-format).
 
 ---
 
@@ -307,7 +357,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load data
-df = pd.read_csv('./moe_profiling_imbalance/a100/mixtral_8x7b_moe/moe.csv')
+df = pd.read_csv('./moe_profiling_imbalance/compute/a100/mixtral_8x7b_moe/moe.csv')
 
 # Group by load_distribution, calculate average execution time
 grouped = df.groupby('load_distribution')['time_stats.moe_grouped_gemm.median'].agg(['mean', 'std'])
@@ -378,10 +428,12 @@ print(f"CV: {stats['cv']:.3f}")
 print(f"Gini: {stats['gini']:.3f}")
 ```
 
+`generate_expert_routing` allocates tensors on CUDA when it is available.
+
 ### Using MoELoadImbalanceInput
 
 ```python
-from frontier.profiling.moe.moe_input import MoELoadImbalanceInput
+from frontier.moe_load_imbalance import MoELoadImbalanceInput
 
 # Create input (auto-generates uniform distribution)
 load_input = MoELoadImbalanceInput(
@@ -392,9 +444,9 @@ load_input = MoELoadImbalanceInput(
     router_topk=2,
 )
 
-# Get all features
+# Get the 14 features plus load_distribution and seed
 features = load_input.to_features_dict()
-print(f"Total features: {len(features)}")
+print(f"Total keys: {len(features)}")
 print(f"CV: {features['load_imbalance_cv']:.3f}")
 print(f"Gini: {features['load_gini_coefficient']:.3f}")
 ```
@@ -405,12 +457,10 @@ print(f"Gini: {features['load_gini_coefficient']:.3f}")
 
 ### Issue 1: `vLLM not available` Error
 
-**Solution**:
-```bash
-# Install vLLM
-pip install vllm
+**Solution**: Use the profiling environment (`environment_profiling.yml` pins
+`vllm>=0.10,<0.11`), then verify:
 
-# Verify installation
+```bash
 python -c "import vllm; print('vLLM version:', vllm.__version__)"
 ```
 
@@ -426,7 +476,7 @@ python -c "import vllm; print('vLLM version:', vllm.__version__)"
 **Solutions**:
 1. Test only some distributions: `--load_distributions uniform skewed`
 2. Reduce sample count: `--num_samples_per_distribution 2`
-3. Use standard mode (fast but inaccurate): omit `--enable_load_imbalance`
+3. Use standard mode (fast but inaccurate): pass `--disable_load_imbalance`
 
 ### Issue 4: CSV Missing Columns
 
@@ -437,7 +487,8 @@ df = pd.read_csv('moe.csv')
 print('load_distribution' in df.columns)  # Should be True
 ```
 
-**Solution**: Ensure `--enable_load_imbalance` parameter is used
+**Solution**: The current profiler writes the load columns on every row. A CSV
+without them was produced by an older profiler; re-profile it.
 
 ---
 
@@ -453,7 +504,6 @@ print('load_distribution' in df.columns)  # Should be True
 
 **A**: Depends on model size
 - Mixtral 8x7B: ~16GB per GPU
-- Qwen2-MoE 57B: ~40GB per GPU
 
 **Recommendation**: Use A100 (40GB/80GB) or H100 (80GB)
 
@@ -491,13 +541,14 @@ print('load_distribution' in df.columns)  # Should be True
 
 - [MoE Profiling Basic Guide](./README.md)
 - [Environment Setup Guide](./SETUP.md)
-- [Training and Technical Documentation](./TRAINING_AND_TECHNICAL.md)
+- [Predictor Training Guide](../../../docs/training/README.md)
 
 ---
 
 **Version**: v2.0
-**Last Updated**: 2026-01-16
+**Last Updated**: 2026-10-14
 
 **Changelog**:
+- 2026-10-14: Corrected commands, output paths, defaults, feature counts, and example statistics to match the current code
 - v2.0 (2026-01-16): Fused kernels require vLLM and raise a clear error when unavailable
 - v1.0 (2025-11-24): Initial load imbalance profiling support

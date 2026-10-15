@@ -13,8 +13,16 @@ This directory contains independent profiling scripts for the three operator fam
 Release users should run `examples/profiling/profile_linear_op.sh`,
 `examples/profiling/profile_attention_chunked_prefill.sh`, and
 `examples/profiling/profile_moe.sh`. The scripts documented below are retained
-as legacy/internal references and may depend on internal test helpers that are
-not included in this checkout.
+as legacy/internal references for the profiler arguments they assemble. They do
+not run as-is: each script runs `source tests/common/device_validation.sh`
+under `set -e`, and that helper is not in this repository, so the script stops
+at that line (see [Fail-Fast Device Validation](#2-fail-fast-device-validation)).
+
+The directory also holds `test_pd_af_profiling.sh`, a legacy script that
+profiles the `PREFILL`, `DECODE_ATTN` and `DECODE_FFN` roles of a PD-AF
+deployment (`--prefill-device`, `--decode-attn-device`, `--decode-ffn-device`,
+`--attn-tp-sizes`, `--moe-tp-sizes`, `--moe-ep-sizes`). It sources the same
+missing helper.
 
 The scripts profile model architecture components rather than deployment topology. Each run records data for one hardware label and writes canonical CSV files under `data/profiling/compute/<device>/<model>/`.
 
@@ -28,7 +36,7 @@ To collect data for multiple hardware types, run the same script once per device
 
 - `--profile-method cuda_event` -> `measurement_type=CUDA_EVENT` and primary CSV names such as `linear_op.csv`, `attention.csv`, or `moe.csv`.
 - `--profile-method record_function` -> `measurement_type=KERNEL_ONLY` and method-specific CSV names such as `linear_op_kernel_only.csv`, `attention_kernel_only.csv`, or `moe_kernel_only.csv`.
-- Current examples default to `cuda_event` because simulator-ready datasets use CUDA-event timing by default.
+- The scripts default to `cuda_event` because simulator-ready datasets use CUDA-event timing by default.
 
 ## Available Scripts
 
@@ -69,7 +77,7 @@ Profiles linear-complexity operators such as MLP, LayerNorm, and projection laye
 - `--tp-sizes`: Tensor parallel sizes.
 - `--max-tokens`: Maximum token count to sample.
 - `--profile-method`: `cuda_event` for CUDA_EVENT timing or `record_function` for KERNEL_ONLY timing.
-- `--is-moe`: Mark the model as MoE when the script is used only for shared dense linear components.
+- `--is-moe` (alias `--skip-dense-mlp`): skip the dense MLP operators of a MoE model, whose experts the MoE profiler covers.
 
 **Example usage:**
 
@@ -198,11 +206,12 @@ Each script owns the dimensions relevant to one operator family:
 
 ### 2. Fail-Fast Device Validation
 
-The legacy scripts were designed to source an internal
-`tests/common/device_validation.sh` helper. That helper is not part of this
-checkout, so use the release wrappers for executable commands and their
-argument validation. A device mismatch must remain an error rather than a
-warning so profiling data cannot be stored under the wrong hardware directory.
+The legacy scripts source an internal `tests/common/device_validation.sh`
+helper and call its `validate_device` function on the `--device` label. That helper
+is not in this repository, so the scripts stop at the `source` line; use the
+release wrappers for executable commands and their argument validation. A
+device mismatch must remain an error rather than a warning so profiling data
+cannot be stored under the wrong hardware directory.
 
 ### 3. User-Controlled GPU and CUDA Architecture Selection
 
@@ -224,11 +233,11 @@ Training scripts consume the canonical CSV paths through the same `measurement_t
 - CUDA_EVENT datasets: pass `--measurement_type CUDA_EVENT`.
 - KERNEL_ONLY datasets: pass `--measurement_type KERNEL_ONLY`.
 
-Use the training examples in `frontier/training/example/` after profiling data has been collected.
+Use the training scripts in `frontier/training/example/` (for example `train_moe_models.sh`) or `python -m frontier.training.cli` after profiling data has been collected.
 
 ### Qwen3 MoE uniform top-k training example
 
-The generated RTX PRO 6000 Qwen3 MoE profiling rows use `routing_runtime_path=uniform_topk`; prefill-hot rows require `gating_runtime_context=prefill_hot` during training:
+When MoE rows were profiled with `--routing-runtime-path uniform_topk`, train with the same routing path; prefill-hot rows require `gating_runtime_context=prefill_hot` during training. The checked-in `data/profiling/compute/rtx_pro_6000/Qwen3-30B-A3B-tiny/moe.csv` holds such rows:
 
 ```bash
 bash frontier/training/example/train_moe_models.sh \
@@ -250,4 +259,4 @@ All scripts require a Frontier-compatible profiling environment:
 - Required packages: torch, pandas, tqdm, pyyaml, vLLM, and FlashInfer.
 - FlashInfer attention profiling requires a working CUDA compiler (`nvcc`) for JIT compilation.
 
-If you already have a working environment with vLLM and FlashInfer, you can use it directly by setting `PYTHON_BIN`. Otherwise create the dedicated environment documented in the top-level `README.md` through `environment_profiling.yml`.
+If you already have a working environment with vLLM and FlashInfer, you can use it directly by setting `PYTHON_BIN`. Otherwise create the dedicated environment from `environment_profiling.yml` (see the top-level `README.md`).

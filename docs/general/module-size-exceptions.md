@@ -4,7 +4,9 @@ AGENTS.md keeps each Python source file at or below 2,000 lines as a soft
 limit. A critical module above the limit needs a cleanup pass, a concrete
 reason for its current boundary, and a planned functional split. This record
 covers the four modules that the calibration changes of PR 44
-(`calibration/t43-combined`) touch while they are above the limit.
+(`calibration/t43-combined`) touch while they are above the limit. They are
+also the only Python files under `frontier/` above 2,000 lines on `main` at
+`7039060` (the merge of PR 47), where each still has its "After" line count.
 
 ## Inventory
 
@@ -82,5 +84,7 @@ subclass-facing method names as delegates until their callers move.
    GPU worker tasks to `frontier/profiling/attention/cli.py` and
    `frontier/profiling/attention/workers.py`. Independent of the other steps.
 
-Steps 1 and 2 follow PR 44's merge, so the split does not mix with the
-calibration review. Steps 3 and 4 can run at any time.
+Steps 1 and 2 were scheduled after PR 44's merge, so the split would not mix
+with the calibration review. PR 44 is merged (`9a650fb`), but no step has
+started: the target modules named above do not exist yet. Steps 3 and 4 can
+run at any time.

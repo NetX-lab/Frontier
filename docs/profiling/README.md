@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-10-14 | Documented the measurement methods and their output files, the kernel-gap and CPU-overhead producers, the full input taxonomy, and the checked-in H200 tables. |
 | 2026-10-10 | Documented the padded grouped-GEMM columns and the BLOCK_SIZE_M ranges the simulator requires. |
 | 2026-09-22 | Recorded the `moe_grouped_gemm` measurement scope and the limits of the backend identity columns. |
 | 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
@@ -44,17 +45,52 @@ Dry-run commands do not launch GPU kernels. They check command construction, pat
 
 ## Output Taxonomy
 
-All release-facing profiling examples write compute profiles under:
+All release-facing profiling examples write compute profiles under
+`data/profiling/compute/<device>/<model>/`. The simulator's default predictor
+inputs use the full layout below; `<device>` and `<network_device>` are the
+simulator's `--replica_config_device` and `--replica_config_network_device`:
 
 ```text
-data/profiling/compute/<device>/<model>/
-├── linear_op.csv
-├── attention.csv
-├── moe.csv
-└── gdn.csv
+data/profiling/
+├── compute/<device>/<model>/
+│   ├── linear_op.csv, attention.csv, moe.csv    # CUDA_EVENT
+│   ├── linear_op_kernel_only.csv, attention_kernel_only.csv, moe_kernel_only.csv
+│   ├── gdn.csv
+│   └── kernel_gap.csv
+├── cpu_overhead/<network_device>/<model>/
+│   ├── cpu_overheads.csv
+│   └── cpu_overheads_kernel_only.csv
+├── network/<network_device>/
+│   ├── all_reduce.csv
+│   └── send_recv.csv
+└── other_overhead/<device>/<model>/
 ```
 
 Keep this layout when adding new datasets. The E2E simulator and training code use these paths to locate profiling data.
+
+Checked-in H200 tables follow this layout for `llama2_7b_dense_example`,
+`Qwen3-30B-A3B-tiny`, and `Qwen3-235B-A22B` under
+`data/profiling/compute/h200/` and `data/profiling/cpu_overhead/h200_dgx/`.
+They come from the profiling runs of the vLLM accuracy gate in
+`tests/comparison/e2e_gate/`.
+
+### Measurement methods
+
+`--profile-method` (wrappers) or `--profile_method` (operator CLIs) selects
+how kernels are timed. Each method writes its own file, and rows of different
+methods are never mixed:
+
+| Method | Measurement type | Output file | Platform |
+|--------|------------------|-------------|----------|
+| `cuda_event` (alias `cuda`) | `CUDA_EVENT` | `<op>.csv` | CUDA |
+| `record_function` (alias `kernel_only`) | `KERNEL_ONLY` | `<op>_kernel_only.csv` | CUDA |
+| `device_event` | `DEVICE_EVENT` | `<op>_device_event.csv` | ROCm |
+
+`CUDA_EVENT` rows time a whole operator step on the stream. `KERNEL_ONLY`
+rows sum the device time of the operator's kernels and also record a
+`kernel_count`. The simulator prices eager steps from the `CUDA_EVENT` tables,
+and CUDA Graph decode steps and the PD-AF decode roles from the kernel-only
+tables. ROCm rejects `cuda_event`, and CUDA rejects `device_event`.
 
 ## Operator Coverage
 
@@ -64,6 +100,8 @@ Keep this layout when adding new datasets. The E2E simulator and training code u
 | `attention` | `examples/profiling/profile_attention_chunked_prefill.sh` | `attention.csv` | Attention prefill/decode timing. The public recipe profiles prefill with Chunked Prefill settings. |
 | `moe` | `examples/profiling/profile_moe.sh` | `moe.csv` | Routed-expert gating, routing, shuffling, and grouped GEMM paths. |
 | `gdn` | `python -m frontier.profiling.gdn.main` | `gdn.csv` | Standard vLLM Qwen3.5 GDN phases measured with ROCm `DEVICE_EVENT`. |
+| kernel gap | `python -m frontier.profiling.kernel_gap.main` | `kernel_gap.csv` | Mean device idle time between kernels, for eager launches and CUDA Graph replays. |
+| CPU overhead | `python -m frontier.profiling.cpu_overhead.vllm_cpu_probe` | `cpu_overheads.csv`, `cpu_overheads_kernel_only.csv` | Host-side time of each engine step, built from the CPU-probe logs of an instrumented vLLM run. |
 
 ## Dry-Run Validation
 
@@ -294,7 +332,8 @@ torchrun --standalone --nproc-per-node=8 \
   --output-dir data/profiling
 ```
 
-The resulting file is:
+The run writes the following file. The repository does not ship MI355X
+profiles:
 
 ```text
 data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv
@@ -329,8 +368,57 @@ automatically consumed by `GDNTrainer`. Graph replay and trace timing are
 therefore separate from standard `DEVICE_EVENT` evidence.
 
 Actual SGLang, AITER, MXFP4, RCCL, and ROCm kernel execution requires an
-MI355X host. The current CPU-only environment can run import, plan, schema,
-and metadata checks only: **SKIP: AMD/MI355X hardware unavailable**.
+MI355X host. On a CPU-only host you can run import, plan, schema, and metadata
+checks only: **SKIP: AMD/MI355X hardware unavailable**.
+
+### Kernel gap
+
+A kernel-only table prices the device time of kernels but not the idle time
+between them. `kernel_gap.csv` adds that idle time: one row per execution mode
+(`eager` and `cuda_graph`), each holding the mean gap before a kernel.
+
+```bash
+python -m frontier.profiling.kernel_gap.main \
+  --device h800 \
+  --model Qwen3-235B-A22B \
+  --num_tensor_parallel_workers 8 \
+  --num_tokens 16 2048 \
+  --vllm_engine_args engine_args.json \
+  --vllm_attention_backend FLASHINFER \
+  --output_dir data/profiling
+```
+
+`engine_args.json` holds the deployment's `vllm.LLM` keyword arguments other
+than the model. The CUDA Graph gap is measured on that engine's own decode
+graphs, because the gap inside a replay depends on the process that replays it.
+`--num_tensor_parallel_workers` is written to each row and must equal the
+engine's `tensor_parallel_size`.
+
+The simulator reads the row whose `num_tensor_parallel_workers` equals the
+replica's attention TP size, and each kernel-only step pays the gap once per
+launched kernel. While the file exists, runs with PD-AF, GDN layers, or
+speculative decoding stop with an error; remove the file to price those runs
+without it.
+
+### CPU overhead
+
+CPU-overhead tables price the host work of an engine step: scheduling, input
+preparation, sampling, output processing, and the forward launch. They are
+built from the CPU-probe logs of Frontier's instrumented vLLM:
+
+```bash
+python -m frontier.profiling.cpu_overhead.vllm_cpu_probe --help
+```
+
+The simulator skips CPU-overhead modeling by default. Pass
+`--no-random_forrest_execution_time_predictor_config_skip_cpu_overhead_modeling`
+to use the tables. When the eager table has `forward_launch` columns, each
+eager step is priced as the slower of two streams: the device stream from the
+kernel-only tables, and the host stream from the `forward_launch` and
+`forward_drain` columns. This needs `pipeline_stage_id` rows for every
+pipeline stage and is rejected under PD-AF. See the "CPU Overhead Profiling"
+section of `frontier/profiling/README.md` for the log format, the interval
+definitions, and the CSV columns.
 
 ## Metadata Check
 
@@ -398,7 +486,7 @@ bash examples/profiling/smoke_simulator_moe_csv.sh \
 | `MODEL` / `--model` | Model name used in output taxonomy. |
 | `DEVICE` / `--device` | Device name used in output taxonomy. |
 | `DATA_DIR_BASE` / `--output-root` | Profiling output root. Defaults to `data/profiling`. |
-| `PROFILE_METHOD` / `--profile-method` | Measurement family. Public CUDA wrappers default to `cuda_event`; standard ROCm GDN uses `device_event`. |
+| `PROFILE_METHOD` / `--profile-method` | Measurement method (see "Measurement methods"). Public CUDA wrappers default to `cuda_event`; use `record_function` for kernel-only tables; ROCm uses `device_event`. |
 | `TP_SIZES` / `--tp-sizes` | Tensor parallel sizes to profile. |
 | `PP_SIZES` / `--pp-sizes` | Pipeline parallel sizes for attention profiling. |
 | `EP_SIZES` / `--ep-sizes` | Expert parallel sizes for MoE profiling. |

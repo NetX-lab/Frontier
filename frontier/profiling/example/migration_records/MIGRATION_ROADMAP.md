@@ -1,3 +1,5 @@
+> **Historical record.** This file documents the migration of the profiling module off its Sarathi dependency. Its paths and commands may not match the current code; see [frontier/profiling/README.md](../../README.md) for current usage.
+
 # Frontier Profiling Module: Migration Roadmap
 
 ## Modification History

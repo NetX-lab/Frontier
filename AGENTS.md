@@ -17,6 +17,7 @@
 | 2026-09-25 | Listed the stale-drop and deferred-release load reports of the vLLM DP placement policy. |
 | 2026-10-09 | Corrected the vLLM V1 replica scheduler's class name to `VLLMv1EngineReplicaScheduler`, as registered in `ReplicaSchedulerRegistry`. |
 | 2026-10-10 | Linked the module size exception record for the modules above 2,000 lines that the calibration changes touch. |
+| 2026-10-14 | Updated the docs against the code: parallel-cluster context, the Docker smoke test, the examples tree and PDD table, the full profiling input taxonomy and H200 data, the test layout and starting checks, and the documentation links. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -27,11 +28,13 @@ Frontier is a modular **discrete-event simulator (DES)** for large language mode
 
 PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
 
+Why parallel cluster processing is not a release path:
+
 The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
 
-Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+Parallel processing was also measured slower than sequential processing on a MoE model with 64 experts. Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
 
-With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
+The reason is structural. With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
 
 Other unsupported experimental surfaces still fail fast with explicit configuration errors.
 
@@ -148,7 +151,7 @@ Entry points:
 
 ## User Guides
 
-Use this README for the project overview and installation path. Use the focused guides below when running a workflow:
+Use this guide for the project overview and installation path. Use the focused guides below when running a workflow:
 
 | Guide                      | Use                                                                                                                           |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -156,6 +159,7 @@ Use this README for the project overview and installation path. Use the focused 
 | `docs/profiling/README.md` | Public profiling wrappers, typed operator metadata, Chunked Prefill attention profiling, output taxonomy, and simulator CSV smokes.    |
 | `docs/training/README.md`  | Standalone predictor training, typed E2E admission, cache management, and on-demand predictor training behavior.                       |
 | `docs/roadmap/README.md`   | Current release-hardening priorities and longer-term modeling work.                                                                    |
+| `docs/profiling/ROCM_MI355X.md` | ROCm / MI355X profiling runbook, including standard GDN profiling.                                                               |
 
 The release examples remain under `examples/`. The `docs/` guides explain how to adapt those examples into custom commands without starting from the full dataclass-generated CLI surface.
 
@@ -287,7 +291,7 @@ docker run --rm --gpus all \
       exit 1
     fi
     "$FRONTIER_DOCKER_PYTHON" -c "import pytest"
-    "$FRONTIER_DOCKER_PYTHON" -m pytest tests/unit/test_open_source_release_arch_guard.py -q -p no:cacheprovider
+    "$FRONTIER_DOCKER_PYTHON" -m pytest tests/unit/test_examples_pdd_scripts.py -q -p no:cacheprovider
   '
 ```
 
@@ -369,6 +373,7 @@ examples/
 │   └── prefix_cache_shared_session_trace.csv
 ├── architecture/
 │   ├── README.md
+│   ├── run_dummy_smoke_matrix.sh
 │   ├── pdd/
 │   │   ├── run_all.sh
 │   │   ├── dense_model_basic.sh
@@ -385,19 +390,19 @@ examples/
 │   │       ├── moe_spec_dec_online.sh
 │   │       └── moe_prefix_caching_online.sh
 │   ├── co-location/
-│       ├── run_all.sh
-│       ├── offline/
-│       │   ├── dense_model_basic.sh
-│       │   ├── moe_model_basic.sh
-│       │   ├── thinking_mode_basic.sh
-│       │   ├── moe_spec_dec.sh
-│       │   └── moe_prefix_caching.sh
-│       └── online/
-│           ├── dense_model_basic_online.sh
-│           ├── moe_model_basic_online.sh
-│           ├── thinking_mode_basic_online.sh
-│           ├── moe_spec_dec_online.sh
-│           └── moe_prefix_caching_online.sh
+│   │   ├── run_all.sh
+│   │   ├── offline/
+│   │   │   ├── dense_model_basic.sh
+│   │   │   ├── moe_model_basic.sh
+│   │   │   ├── thinking_mode_basic.sh
+│   │   │   ├── moe_spec_dec.sh
+│   │   │   └── moe_prefix_caching.sh
+│   │   └── online/
+│   │       ├── dense_model_basic_online.sh
+│   │       ├── moe_model_basic_online.sh
+│   │       ├── thinking_mode_basic_online.sh
+│   │       ├── moe_spec_dec_online.sh
+│   │       └── moe_prefix_caching_online.sh
 │   └── pd-af-disagg/
 │       ├── run_all.sh
 │       ├── offline/
@@ -434,6 +439,11 @@ PDD recipes:
 | `examples/architecture/pdd/offline/moe_prefix_caching.sh`     | Offline MoE PDD Prefix Caching recipe    | Prefix Caching enabled against `examples/fixtures/prefix_cache_shared_session_trace.csv`                       |
 | `examples/architecture/pdd/online/dense_model_basic_online.sh` | Online dense PDD baseline                | Mirrors the dense offline case with `--simulation_mode online`                                                 |
 | `examples/architecture/pdd/online/moe_model_basic_online.sh`  | Online MoE PDD baseline                  | Mirrors the MoE offline case with `--simulation_mode online`                                                   |
+| `examples/architecture/pdd/online/thinking_mode_basic_online.sh` | Online Thinking Mode PDD smoke        | Mirrors the Thinking Mode offline case with `--simulation_mode online`                                         |
+| `examples/architecture/pdd/online/moe_spec_dec_online.sh`     | Online MoE PDD Speculative Decoding/MTP  | Mirrors the speculative decoding offline case with `--simulation_mode online`                                  |
+| `examples/architecture/pdd/online/moe_prefix_caching_online.sh` | Online MoE PDD Prefix Caching recipe   | Replays the same prefix-cache fixture with `--simulation_mode online`                                          |
+
+`examples/architecture/pdd/dense_model_basic.sh` is a top-level shortcut to the offline dense PDD case. `examples/architecture/run_dummy_smoke_matrix.sh` runs the smallest dense and MoE cases of all three architectures, offline and online, in dummy predictor mode; `CASE_FILTER=co-location/online` selects a subset.
 
 Co-location recipes:
 
@@ -727,14 +737,28 @@ The top-level examples cover `linear_op`, `attention`, and `moe` operator classe
 
 The linear-op and MoE profilers resolve operator ownership and TP domains from the model architecture profile. Their outputs preserve the file-level profile identity and per-operator typed contracts. The E2E predictor manager validates those identities before training or lookup, keeping replicated, attention, dense/shared FFN, and routed MoE semantics distinct even when they use the same numeric TP column.
 
-All release-facing profiling examples use the canonical taxonomy:
+All release-facing profiling examples use the canonical taxonomy. The simulator's default predictor inputs follow the full layout below; `<device>` and `<network_device>` come from `--replica_config_device` and `--replica_config_network_device`:
 
 ```text
-data/profiling/compute/<device>/<model>/
-├── linear_op.csv
-├── attention.csv
-└── moe.csv
+data/profiling/
+├── compute/<device>/<model>/
+│   ├── linear_op.csv, attention.csv, moe.csv    # CUDA_EVENT
+│   ├── linear_op_kernel_only.csv, attention_kernel_only.csv, moe_kernel_only.csv
+│   ├── gdn.csv
+│   └── kernel_gap.csv
+├── cpu_overhead/<network_device>/<model>/
+│   ├── cpu_overheads.csv
+│   └── cpu_overheads_kernel_only.csv
+├── network/<network_device>/
+│   ├── all_reduce.csv
+│   └── send_recv.csv
+└── other_overhead/<device>/<model>/
 ```
+
+- `record_function` profiling writes the `*_kernel_only.csv` tables, which price CUDA Graph decode steps and the PD-AF decode roles. ROCm profiling writes `*_device_event.csv` tables instead.
+- `frontier.profiling.kernel_gap.main` writes `kernel_gap.csv`, the mean device idle time between kernels. While the file exists, kernel-only steps pay it once per kernel, and PD-AF, GDN, and speculative-decoding runs stop with an error.
+- `frontier.profiling.cpu_overhead.vllm_cpu_probe` builds the CPU-overhead tables from the CPU-probe logs of an instrumented vLLM run. CPU-overhead modeling is off by default (`skip_cpu_overhead_modeling=True`).
+- Checked-in H200 tables cover `llama2_7b_dense_example`, `Qwen3-30B-A3B-tiny`, and `Qwen3-235B-A22B` under `data/profiling/compute/h200/` and `data/profiling/cpu_overhead/h200_dgx/`. `tests/comparison/e2e_gate/` compares Frontier with vLLM on these models.
 
 Lightweight profiling planning, schema, metadata, migration, and validation modules can be imported from the minimal environment. Real GPU profiling entry points require additional packages such as `torch`, and explicit `collective_sim` runs may require optional backend build dependencies.
 
@@ -777,18 +801,21 @@ Any new feature, refactor, or module adjustment must pass these gates before del
 
 ## Tests
 
-The repo contains a large set of scripts in `tests/`. For this release branch, start with PDD, co-location, and release-guard coverage:
+The `tests/` directory is organized as:
 
-- `comm_backend_tests/`: Tests for Communication Cost (CC) backends.
-- `integration/`: workflow-level tests for CUDA graph, prefix cache, and spec decode where applicable to co-location.
-- `debug/`: runnable end-to-end smoke and development scripts.
-- `comparison/` and `analysis/`: Frontier vs vLLM validation and RCA tooling; some historical files cover guarded architectures and should be treated as non-release references.
+- `unit/`: fast pytest checks of configs, schedulers, predictors, profiling schemas, release guards, and documentation contracts.
+- `integration/`: workflow-level runtime tests: scheduler admission and preemption, vLLM DP placement, pipeline lanes, speculative decoding, GDN, and the PD-AF lifecycle observer.
+- `e2e/`: end-to-end harnesses, including the PD-AF parity harness and the MoE-EP matrices.
+- `comparison/`: Frontier vs vLLM validation. `comparison/e2e_gate/` is the accuracy gate: it compares Frontier's request-level metrics with recorded vLLM results on the H200 scenario matrix. Some other folders are historical RCA references.
+- `analysis/`: attention-variant analyses (MHA, MQA, MLA).
+- `performance/`: simulator wall-time and MoE-EP performance measurements.
+- `fixtures/`: shared test inputs.
 
 Start with:
 
-- `pytest tests/unit/test_pdd_public_surface_docs.py tests/unit/test_examples_pdd_scripts.py -q`
-- `bash tests/debug/e2e-level/monolith_mode/scripts/test_dense_tp2_pp2_dummy.sh`
-- `bash tests/debug/e2e-level/monolith_mode/scripts/test_moe_tp2_ep2_pp2_dummy.sh`
+- `pytest tests/unit/test_pdd_public_surface_docs.py tests/unit/test_examples_pdd_scripts.py tests/e2e/test_colocation_examples_layout.py -q`
+- `bash examples/architecture/run_dummy_smoke_matrix.sh`
+- `pytest tests/unit/test_e2e_gate.py -q`
 
 ### Scratch root for heavyweight harnesses
 
@@ -824,4 +851,6 @@ These checked-in docs are useful follow-up references:
 - `docs/roadmap/README.md` - current release-hardening and longer-term modeling priorities
 - `examples/README.md` - runnable example catalog
 - `frontier/profiling/README.md` - profiling workflow details
-- `tests/comparison/README.md` - Frontier vs vLLM comparison workflow
+- `docs/profiling/ROCM_MI355X.md` - ROCm / MI355X profiling runbook
+- `docs/general/module-size-exceptions.md` - modules above 2,000 lines, their boundary reasons, and planned splits
+- `tests/comparison/e2e_gate/README.md` - Frontier vs vLLM accuracy gate
