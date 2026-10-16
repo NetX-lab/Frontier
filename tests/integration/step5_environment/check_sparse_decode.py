@@ -225,11 +225,18 @@ def main():
     parser.add_argument('--task-root', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     args = parser.parse_args()
+    args.task_root = args.task_root.resolve()
+    args.output_dir = args.output_dir.resolve()
     reference = load(args.task_root/'native_g1_joint/check_joint.py')
+    assert args.task_root == reference.TASK
     reference.inputs()
-    config = json.loads((args.task_root/'reference_inputs/config.json').read_text())['text_config']
-    preparation = json.loads((args.task_root/'g1_preparation.json').read_text())
+    collector = load(args.task_root/'native_g1/run_g1_cases.py')
+    preparation, manifest, _ = collector.verify_inputs(args.task_root/'g1_preparation.json')
     source = args.task_root/'native_source_export/observed/vllm/models/step5/nvidia/ops/sparse_decode_attention.py'
+    source_record = next(row for row in manifest['files'] if row['relative_path'] == 'vllm/models/step5/nvidia/ops/sparse_decode_attention.py')
+    assert collector.sha256_file(source) == source_record['source_sha256']
+    assert source.stat().st_size == source_record['source_size_bytes']
+    config = json.loads((args.task_root/'reference_inputs/config.json').read_text())['text_config']
     matrix = cases(config, preparation, source)
     if args.mode == 'submit':
         import os
@@ -267,7 +274,6 @@ def main():
             assert not np.array_equal(fault_output(case, 0, fault), output), fault
         print('SPARSE_DECODE_SELF_TEST PASS 26 cases, 208 rejected mutations, 7 distinguishable math faults')
         return
-    collector = load(args.task_root/'native_g1/run_g1_cases.py')
     if args.mode == 'check':
         summary = json.loads((args.output_dir/'summary.json').read_text())
         assert summary['cases'] == matrix and summary['worker_sha256'] == collector.sha256_file(Path(__file__))
