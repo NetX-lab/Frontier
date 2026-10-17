@@ -11,19 +11,91 @@ import tempfile
 import traceback
 from pathlib import Path
 
-from native_dummy_initialization import inspect_model
-from probe_nixl_read import SYSFS_INFINIBAND, gid_table, roce_v2_ipv4_ports
-from probe_runtime_inventory import primary_ipv4, read_text, sha256, wait_for, weight_candidates, write_json
-
 
 def identity(value):
     cls = value if isinstance(value, type) else type(value)
     return cls.__module__ + "." + cls.__name__
 
 
+def cutlass_state(module):
+    """Read selected consumer metadata without rewriting or validating device output."""
+    import torch
+    method = module.quant_method
+    backend = method.fp8_backend.name
+    if backend != "FLASHINFER_CUTLASS":
+        return {"status": "unverified", "backend": backend}
+    quant, moe = method.moe_quant_config, method.moe
+    experts = method.moe_kernel.fused_experts
+
+    def layout(tensor):
+        return {"dtype": str(tensor.dtype), "shape": list(tensor.shape),
+                "device": str(tensor.device), "stride": list(tensor.stride()),
+                "contiguous": tensor.is_contiguous(), "offset": tensor.storage_offset()}
+
+    weights = {"w13": module.w13_weight, "w2": module.w2_weight}
+    scales = {"w1": getattr(module, "w13_" + method.weight_scale_name),
+              "w2": getattr(module, "w2_" + method.weight_scale_name)}
+    aliases = {key: {"quant_object": getattr(quant, key + "_scale") is scale,
+        "expert_object": getattr(experts, key + "_scale") is scale,
+        "quant_storage": getattr(quant, key + "_scale").untyped_storage().data_ptr() == scale.untyped_storage().data_ptr(),
+        "expert_storage": getattr(experts, key + "_scale").untyped_storage().data_ptr() == scale.untyped_storage().data_ptr()}
+        for key, scale in scales.items()}
+    block = module.weight_block_size
+    e, h, i = moe.num_local_experts, moe.hidden_dim, moe.intermediate_size_per_partition
+    expected = {"w13": [e, moe.w13_num_shards * i, h], "w2": [e, h, i]}
+    grids = {key: [shape[0], (shape[1] + block[0] - 1) // block[0],
+                           (shape[2] + block[1] - 1) // block[1]]
+             for key, shape in expected.items()}
+    checks = {
+        "quant_config_alias": experts.quant_config is quant,
+        "moe_config_aliases": method.moe is module.moe_config and experts.moe_config is moe,
+        "scale_aliases": all(all(row.values()) for row in aliases.values()),
+        "block_domain": quant.block_shape == block == method.weight_block_size and
+            method.block_quant and quant.is_block_quantized,
+        "weight_layout": all(t.dtype == torch.float8_e4m3fn and
+            list(t.shape) == expected[key] for key, t in weights.items()),
+        "scale_layout": all(t.dtype == torch.float32 and list(t.shape) == grids[key] and
+            t.device == weights[key].device for key, t in
+            (("w13", scales["w1"]), ("w2", scales["w2"]))),
+        "activation_config": quant.quant_dtype == torch.float8_e4m3fn and
+            quant.weight_quant_dtype == torch.float8_e4m3fn and quant.use_fp8_w8a8 and
+            experts.expects_unquantized_inputs and experts.use_deepseek_fp8_block_scale,
+        "input_scales_absent": all(value is None for value in
+            (module.w13_input_scale, module.w2_input_scale, quant.a1_scale, quant.a2_scale,
+             experts.a1_scale, experts.a2_scale)),
+        "expert_dimensions": experts.num_experts == e and experts.out_dtype == moe.in_dtype,
+    }
+    return {"backend": backend, "status": "observed; apply remains unverified",
+        "quant_config_alias": experts.quant_config is quant, "scale_aliases": aliases,
+        "weights": {key: layout(t) for key, t in weights.items()},
+        "scales": {key: layout(t) for key, t in scales.items()},
+        "block_shape": block, "quant_block_shape": quant.block_shape,
+        "dimensions": {"local_experts": e, "hidden": h, "intermediate": i},
+        "in_dtype": str(moe.in_dtype), "out_dtype": str(experts.out_dtype),
+        "activation": str(moe.activation), "has_bias": moe.has_bias,
+        "expert_parallel": {key: getattr(experts, key) for key in
+            ("tp_rank", "tp_size", "ep_rank", "ep_size", "use_dp")},
+        "quant_flags": {key: getattr(quant, key) for key in
+            ("is_block_quantized", "use_fp8_w8a8", "per_act_token_quant", "per_out_ch_quant")},
+        "quant_dtype": str(quant.quant_dtype), "weight_quant_dtype": str(quant.weight_quant_dtype),
+        "consumer_flags": {key: getattr(experts, key) for key in
+            ("expects_unquantized_inputs", "use_deepseek_fp8_block_scale")},
+        "input_scale_present": {key: getattr(owner, field) is not None for key, owner, field in
+            (("layer_w13", module, "w13_input_scale"), ("layer_w2", module, "w2_input_scale"),
+             ("quant_a1", quant, "a1_scale"), ("quant_a2", quant, "a2_scale"),
+             ("expert_a1", experts, "a1_scale"), ("expert_a2", experts, "a2_scale"))},
+        "auxiliary_present": {key: getattr(experts, key) is not None for key in
+            ("gemm1_alpha", "gemm1_beta", "gemm1_clamp_limit", "w1_bias", "w2_bias")},
+        "structural_checks": checks,
+        "activation_call": "unverified; constructor state is not apply arguments",
+        "scale_domain": "unverified here; match recorded extrema to pinned consumer",
+        "w31_content_order": "unverified; metadata does not establish tensor ordering"}
+
+
 class FullModelInventory:
     def full_model_inventory(self):
         import torch
+        from native_dummy_initialization import inspect_model
         from vllm.distributed import get_world_group, get_tp_group, get_dp_group, get_ep_group
         from vllm.v1.worker.workspace import current_workspace_manager
         runner, config = self.model_runner, self.vllm_config
@@ -43,6 +115,14 @@ class FullModelInventory:
             "block_shape": method.moe_quant_config.block_shape, "scale_validity": "unverified"}
             for name, module in self.get_model().named_modules()
             if (method := getattr(module, "quant_method", None)) is not None and type(method).__name__ == "Fp8MoEMethod"}
+        result["cutlass_state"] = {}
+        for name, module in self.get_model().named_modules():
+            method = getattr(module, "quant_method", None)
+            if method is not None and type(method).__name__ == "Fp8MoEMethod":
+                try:
+                    result["cutlass_state"][name] = cutlass_state(module)
+                except Exception:
+                    result["cutlass_state"][name] = {"error": traceback.format_exc()}
         result["cache"] = dataclasses.asdict(runner.kv_cache_config)
         result["attention_groups"] = [{"layers": g.layer_names, "backend": identity(g.backend),
             "builders": [identity(b) for b in g.metadata_builders]} for groups in runner.attn_groups for g in groups]
@@ -85,6 +165,8 @@ def routing_rows(array, prompt_tokens, output_tokens, hf):
 
 def run(config):
     import numpy as np
+    from probe_nixl_read import SYSFS_INFINIBAND, gid_table, roce_v2_ipv4_ports
+    from probe_runtime_inventory import primary_ipv4, read_text, sha256, wait_for, weight_candidates, write_json
     root = Path(config["output_dir"])
     if not root.is_relative_to(Path("/mnt/codesign-exp/ycfeng")):
         raise ValueError("Output must remain in the personal cloud directory")
