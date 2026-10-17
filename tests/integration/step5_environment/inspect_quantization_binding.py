@@ -10,7 +10,7 @@ import shlex
 import sys
 import time
 
-CLOUD = Path('/mnt/codesign-exp/ycfeng/step5-preview/quantization_binding_20261017_01')
+CLOUD = Path('/mnt/codesign-exp/ycfeng/step5-preview/quantization_binding_20261017_02')
 MANIFESTS = {
     'native_numerical_sources/observed': 'ed759479073708213e7c307023e411c52b4c3869a43e830b66ea350694cb26ea',
     'native_precision_dispatch_sources/observed_generation2': '8c51e63de178192bb941ef7ab60408d1105c86901b9ac03460280a877e14fea4',
