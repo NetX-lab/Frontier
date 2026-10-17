@@ -61,4 +61,4 @@ def test_evidence_write_failure_does_not_change_native_outcome(monkeypatch, tmp_
         assert caught.value is failure
     else:
         module.execute(module.TASK, tmp_path, launcher)
-    assert len(calls) == 1
+    assert len(calls) == 1 and calls[0]['skip_tokenizer_init'] is False

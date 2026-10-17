@@ -40,7 +40,8 @@ def test_duplicate_paths_validate_the_value_used_by_collector(monkeypatch, tmp_p
         module.main()
 
 
-def test_source_set_reaches_worker_without_loading_sdk(monkeypatch):
+@pytest.mark.parametrize('source_set', ['mrv2', 'frontend'])
+def test_source_set_reaches_worker_without_loading_sdk(monkeypatch, source_set):
     spec = importlib.util.spec_from_file_location('role_sources', SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -60,7 +61,7 @@ def test_source_set_reaches_worker_without_loading_sdk(monkeypatch):
     monkeypatch.setenv('STEPMIND_BACKEND', 'rjob')
     monkeypatch.setattr(sys, 'argv', [str(SCRIPT), 'submit', '--task-root', str(TASK),
                                     '--output-dir', str(TASK/'native_role_sources/not_written'),
-                                    '--source-set', 'mrv2'])
+                                    '--source-set', source_set])
     module.main()
-    assert ' run --source-set mrv2 --task-root ' in seen['command']
+    assert f' run --source-set {source_set} --task-root ' in seen['command']
     assert seen['charged_group'] == 'codesign'

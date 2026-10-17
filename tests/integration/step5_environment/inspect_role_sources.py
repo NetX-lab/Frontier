@@ -45,7 +45,14 @@ MRV2_SOURCES = {
     'vllm/model_executor/models/step_vl.py': 'Actual resident outer tower parameter construction only.',
     'vllm/multimodal/registry.py': 'Native text-only request versus resident wrapper policy.',
 }
-SOURCE_SETS = {'role': SOURCES, 'mrv2': MRV2_SOURCES}
+FRONTEND_SOURCES = {
+    'vllm/renderers/registry.py': 'Actual native renderer selection before EngineCore initialization.',
+    'vllm/renderers/base.py': 'Native processor construction and tokenizer requirement.',
+    'vllm/renderers/hf.py': 'Native renderer initialization and original tokenizer handling.',
+    'vllm/multimodal/processing/processor.py': 'Actual native rejection and processor input prerequisite.',
+    'vllm/model_executor/models/step3_vl.py': 'Inherited native frontend assets required for text serving, not multimodal implementation.',
+}
+SOURCE_SETS = {'role': SOURCES, 'mrv2': MRV2_SOURCES, 'frontend': FRONTEND_SOURCES}
 
 
 def main():

@@ -15,11 +15,12 @@ import traceback
 
 WORKTREE = Path(__file__).resolve().parents[3]
 TASK = WORKTREE/'task_memory/task_2026-10-15_step5_preview_h800'
-CLOUD = Path('/mnt/codesign-exp/ycfeng/step5-preview/role_capacity_20261017_01')
+CLOUD = Path('/mnt/codesign-exp/ycfeng/step5-preview/role_capacity_20261017_02')
 SECONDS = 2400
 SOURCE_MANIFESTS = {
     'native_role_sources/observed': 'cce94cb50e4354a38a47168bbf1bd14762c11aa1bed31d90e2dd62d956eb6251',
     'native_role_sources/observed_generation2': 'ea6cfa0a89d78b1fcdbf71c4996c67197c7021439e7f4cdb76bdcbd1295904bb',
+    'native_role_sources/observed_generation3': '7eb68a074ee402c6cb6d20cec338b40cb6f8caf379cd519f21e77769963fb077',
     'native_source_export/observed': '4bcd69c5838bc9a52576e0fd518b47852d97181627127b4ea5fefa41903fdc46',
     'native_runtime_sources/observed': 'a4c4722e16f0da3d4968f06b8ffde9cc978e834fc28b865da329de9487b82308',
     'native_precision_sources/observed': '651f041ffff31f6d0b120edf35f31f600872f9d94beb2b9bc74812711eb2334f',
@@ -68,7 +69,7 @@ def execute(task, output, launcher):
     os.environ['STEP5_CAPACITY_TASK'] = str(task)
     os.environ['STEP5_CAPACITY_OUTPUT'] = str(CLOUD)
     os.environ['STEP5_CAPACITY_OBSERVER_SHA'] = hashlib.sha256(observer.read_bytes()).hexdigest()
-    kwargs = dict(model=str(task/'reference_inputs'), load_format='dummy', skip_tokenizer_init=True,
+    kwargs = dict(model=str(task/'reference_inputs'), load_format='dummy', skip_tokenizer_init=False,
         tensor_parallel_size=8, data_parallel_size=1, pipeline_parallel_size=1,
         max_model_len=8192, max_num_batched_tokens=512, max_num_seqs=1,
         enable_chunked_prefill=True, enable_prefix_caching=False, speculative_config=None,
@@ -138,7 +139,7 @@ def main():
             try:
                 row['processes'] = resources.process_tree(os.getpid())
                 row['cgroup'] = resources.cgroup_memory()
-                gpu = subprocess.run(['nvidia-smi', '--query-gpu=uuid,memory.used,memory.total',
+                gpu = subprocess.run(['nvidia-smi', '--query-gpu=name,uuid,memory.used,memory.total',
                     '--format=csv,noheader,nounits'], capture_output=True, text=True, timeout=10)
                 row['physical_gpu'] = dict(exit_code=gpu.returncode, stdout=gpu.stdout, stderr=gpu.stderr)
             except Exception:
