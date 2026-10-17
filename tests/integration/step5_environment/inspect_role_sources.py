@@ -52,7 +52,13 @@ FRONTEND_SOURCES = {
     'vllm/multimodal/processing/processor.py': 'Actual native rejection and processor input prerequisite.',
     'vllm/model_executor/models/step3_vl.py': 'Inherited native frontend assets required for text serving, not multimodal implementation.',
 }
-SOURCE_SETS = {'role': SOURCES, 'mrv2': MRV2_SOURCES, 'frontend': FRONTEND_SOURCES}
+NATIVE_LAUNCH_SOURCES = {
+    'vllm/v1/engine/utils.py': 'Native EngineCore launch, headless peer and rendezvous lifecycle before any TP16 capacity proposal.',
+    'vllm/entrypoints/cli/serve.py': 'Actual native multi-node headless entrypoint and shutdown ownership.',
+    'vllm/entrypoints/openai/api_server.py': 'Native frontend/engine startup configuration propagation for multi-node execution.',
+}
+SOURCE_SETS = {'role': SOURCES, 'mrv2': MRV2_SOURCES, 'frontend': FRONTEND_SOURCES,
+               'native_launch': NATIVE_LAUNCH_SOURCES}
 
 
 def main():
