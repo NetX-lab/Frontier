@@ -23,7 +23,8 @@ def driver():
 def test_invalid_case_mode_fails_before_task_loading(monkeypatch, mode, case):
     module = driver()
     monkeypatch.setattr(module, 'load', lambda p: pytest.fail('No task loading before argument admission'))
-    argv = [str(SCRIPT), mode, '--task-root', str(module.TASK), '--output-dir', str(module.TASK/'unused_ffn_output')]
+    argv = [str(SCRIPT), mode, '--task-root', str(module.TASK), '--output-dir', str(module.TASK/'unused_ffn_output'),
+            '--tensor-copy-bytes', '8388608']
     if case: argv += ['--case', case]
     monkeypatch.setattr(sys, 'argv', argv)
     with pytest.raises(SystemExit): module.main()
@@ -34,7 +35,7 @@ def test_actual_mount_checked_before_task_loading(monkeypatch):
     monkeypatch.setattr(module.os.path, 'ismount', lambda p: False)
     monkeypatch.setattr(module, 'load', lambda p: pytest.fail('Missing mount must fail first'))
     monkeypatch.setattr(sys, 'argv', [str(SCRIPT), 'run', '--task-root', str(module.TASK),
-                                    '--output-dir', str(module.TASK/'unused_ffn_output')])
+                                    '--output-dir', str(module.TASK/'unused_ffn_output'), '--tensor-copy-bytes', '8388608'])
     with pytest.raises(AssertionError): module.main()
 
 
@@ -53,9 +54,10 @@ def test_submit_preserves_one_gpu_locked_launcher(monkeypatch):
     monkeypatch.setenv('STEPMIND_BACKEND', 'rjob')
     monkeypatch.setattr(module.os, 'chdir', lambda p: None)
     monkeypatch.setattr(sys, 'argv', [str(SCRIPT), 'submit', '--task-root', str(module.TASK),
-                                    '--output-dir', str(module.TASK/'unused_ffn_output')])
+                                    '--output-dir', str(module.TASK/'unused_ffn_output'), '--tensor-copy-bytes', '8388608'])
     module.main()
     assert seen['resources']['gpu'] == 1 and seen['charged_group'] == 'codesign'
+    assert '--tensor-copy-bytes 8388608' in seen['command']
     assert 'timeout 2400 ' in seen['command'] and 'VLLM_ENABLE_CUDA_COMPATIBILITY=1' in seen['command']
 
 

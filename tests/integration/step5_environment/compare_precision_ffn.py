@@ -29,6 +29,73 @@ def tensor(record, cloud):
     return value
 
 
+def raw_tensor_sha256(value, chunk_bytes):
+    """Hash logical C-order dtype bytes with CPU copies limited to one row chunk."""
+    if chunk_bytes <= 0:
+        raise ValueError('A positive tensor-copy byte budget is required')
+    if sys.byteorder != 'little':
+        raise ValueError('Native tensor attestation requires the recorded little-endian host')
+    value = value.detach()
+    if value.numel() == 0:
+        return hashlib.sha256().hexdigest()
+    row_elements = math.prod(value.shape[1:]) if value.ndim else 1
+    row_bytes = row_elements * value.element_size()
+    if row_bytes > chunk_bytes:
+        raise ValueError('The tensor-copy budget cannot hold one logical row')
+    rows_per_chunk = chunk_bytes // row_bytes
+    digest = hashlib.sha256()
+    rows = value if value.ndim else value.reshape(1)
+    for start in range(0, rows.shape[0], rows_per_chunk):
+        # A one-element view counts as contiguous with its original stride; force standard strides.
+        cpu = rows[start:start+rows_per_chunk].to('cpu', memory_format=torch.contiguous_format, copy=True)
+        digest.update(memoryview(cpu.reshape(-1).view(torch.uint8).numpy()))
+        del cpu
+    return digest.hexdigest()
+
+
+def weight_attestation(module, chunk_bytes, expert_count):
+    """Read current parameters and buffers; no weights or storage padding are saved."""
+    records = []
+    for kind, values in (('parameter', module.named_parameters()), ('buffer', module.named_buffers())):
+        for name, value in values:
+            pieces = value.unbind(0) if value.ndim == 3 and value.shape[0] == expert_count else (value,)
+            for index, piece in enumerate(pieces):
+                records.append(dict(name=name, kind=kind, expert=index if len(pieces) == expert_count else None,
+                    shape=list(piece.shape), stride=list(piece.stride()), dtype=str(piece.dtype),
+                    full_shape=list(value.shape), full_stride=list(value.stride()),
+                    storage_offset=piece.storage_offset(), logical_bytes=piece.numel()*piece.element_size(),
+                    raw_sha256=raw_tensor_sha256(piece, chunk_bytes)))
+    return dict(scope='current_weights_after_last_measured_root_not_continuous_content_monitoring',
+                producer_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                hash_order='logical_C_order_dtype_bytes', byte_order=sys.byteorder,
+                chunk_bytes=chunk_bytes, tensors=records)
+
+
+def compare_weight_attestation(snapshot, records, cloud):
+    """Require complete logical tensor identity, separately from serialized layout."""
+    if snapshot['hash_order'] != 'logical_C_order_dtype_bytes' or snapshot['byte_order'] != sys.byteorder:
+        raise ValueError('Incompatible tensor hash interpretation')
+    def keyed(values):
+        result = {}
+        for row in values:
+            key = (row['name'], row['expert'])
+            if key in result:
+                raise ValueError('Duplicate tensor identity')
+            result[key] = row
+        return result
+    current, historical = keyed(snapshot['tensors']), keyed(records)
+    if current.keys() != historical.keys():
+        raise ValueError('Current and historical tensor inventories differ')
+    for key, observed in current.items():
+        record = historical[key]
+        value = tensor(record, cloud)
+        assert observed['shape'] == record['shape'] and observed['dtype'] == record['dtype'], key
+        assert observed['logical_bytes'] == value.numel()*value.element_size(), key
+        assert observed['raw_sha256'] == raw_tensor_sha256(value, snapshot['chunk_bytes']), key
+    return dict(status='PASS_CURRENT_WEIGHT_BYTES_NOT_MEASUREMENT_ADMISSION', tensors=len(current),
+                layout_scope='Native and serialized strides remain separate observations')
+
+
 def errors(actual, expected):
     actual, expected = actual.double(), expected.double()
     delta = (actual-expected).abs()

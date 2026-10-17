@@ -38,9 +38,22 @@ def linear_dispatch(module):
     return result
 
 
-def measure(task, output, native, construct, case, *, warmups, repeats):
+def moe_dispatch(method):
+    """Read the resolved modular kernel; activation quantization mode stays unobserved."""
+    kernel = method.moe_kernel
+    experts = kernel.fused_experts
+    return dict(kernel=type(kernel.impl).__name__, prepare_finalize=type(kernel.prepare_finalize).__name__,
+                fused_experts=type(experts).__name__, activation=str(experts.moe_config.activation),
+                activation_config=repr(experts.activation_config), quant_dtype=str(experts.quant_dtype),
+                weight_quant_dtype=str(experts.weight_quant_dtype), block_shape=experts.block_shape,
+                per_act_token_quant=experts.per_act_token_quant, per_out_ch_quant=experts.per_out_ch_quant)
+
+
+def measure(task, output, native, construct, case, *, warmups, repeats, tensor_copy_bytes=None):
     if warmups < 1 or repeats < 2:
         raise ValueError('Positive warmups and at least two measured repeats required')
+    if tensor_copy_bytes is None or tensor_copy_bytes <= 0:
+        raise ValueError('A positive tensor-copy byte budget is required')
     plan = json.loads((task/'local_scope_sampling_01.json').read_text())
     admit(plan, task)
     selected = samples(plan, case)
@@ -52,7 +65,10 @@ def measure(task, output, native, construct, case, *, warmups, repeats):
     from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
     from vllm.models.step5.nvidia.model import Step5DecoderLayer
     from vllm.distributed.parallel_state import get_world_group, get_tp_group, get_dp_group, get_pp_group, get_ep_group
-    validate_topology(native, [get_world_group(), get_tp_group(), get_dp_group(), get_pp_group(), get_ep_group()])
+    groups = dict(world=get_world_group(), tp=get_tp_group(), dp=get_dp_group(), pp=get_pp_group(), ep=get_ep_group())
+    validate_topology(native, groups.values())
+    groups = {name: dict(world_size=group.world_size, rank=group.rank,
+                         backend=torch.distributed.get_backend(group.device_group)) for name, group in groups.items()}
     module = construct(torch, case, native)
     record_metadata_for_reloading(module)
     DummyModelLoader(native.load_config).load_weights(module, native.model_config)
@@ -91,6 +107,8 @@ def measure(task, output, native, construct, case, *, warmups, repeats):
                 backend = str(getattr(method, 'fp8_backend', getattr(method, 'unquantized_backend', None)))
                 expected = next(s['backend'] for s in plan['scopes'] if s['id'] == scope)
                 assert backend+'/'+method.moe_kernel.fused_experts.__class__.__name__ == expected
+                dispatch = dict(root='Step5DecoderLayer._forward_ffn', branches='Step5MoE.forward',
+                                kernel=moe_dispatch(method))
             else:
                 backend = type(module.gate_up_proj.quant_method).__name__
                 dispatch = linear_dispatch(module)
@@ -108,9 +126,9 @@ def measure(task, output, native, construct, case, *, warmups, repeats):
                     launches.append((time.perf_counter_ns()-start)/1e6)
             stats = tracer.get_operation_time_stats()[scope]
             assert stats['count'] == repeats
-        row = dict(scope=scope, sample=sample, backend=backend,
-                   dispatch=dispatch if case == 'dense' else dict(root='Step5DecoderLayer._forward_ffn',
-                        branches='Step5MoE.forward', combine_dtype=str(y.dtype)), eager=stats,
+        if case != 'dense':
+            dispatch['combine_dtype'] = str(y.dtype)
+        row = dict(scope=scope, sample=sample, backend=backend, groups=groups, dispatch=dispatch, eager=stats,
                    host_profiled_root_launch_ms=launches, trace=tracer.trace_path,
                    content=str(cell/'content.pt'), charges=1,
                    graph_status='unmeasured', content_status='finite_only_FP64_comparison_pending',
@@ -118,4 +136,12 @@ def measure(task, output, native, construct, case, *, warmups, repeats):
         rows.append(row)
         with (cell/'observation.json').open('x') as stream:
             json.dump(row, stream, indent=2, default=float); stream.write('\n')
+    from compare_precision_ffn import weight_attestation
+    from check_role_capacity import diagnostic, save
+    def attest():
+        torch.cuda.synchronize()
+        snapshot = weight_attestation(module, tensor_copy_bytes, native.model_config.hf_config.moe_num_experts)
+        snapshot['time_ns'] = time.time_ns()
+        save(output/'weight_attestation.json', snapshot)
+    diagnostic(attest)
     return rows

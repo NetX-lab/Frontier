@@ -14,7 +14,7 @@ from check_role_capacity import load, validate, save, diagnostic, TASK, WORKTREE
 from check_precision_ffn import CASES, SOURCE_BATCHES, construct
 from local_ffn_measurement import measure
 
-CLOUD = Path('/mnt/codesign-exp/ycfeng/step5-preview/local_ffn_20261017_01')
+CLOUD = Path('/mnt/codesign-exp/ycfeng/step5-preview/local_ffn_20261017_02')
 FFN_CASES = CASES[:3]
 WARMUPS, REPEATS, SECONDS = 3, 5, 2400
 
@@ -24,7 +24,7 @@ def nic_counters():
     return {str(path): int(path.read_text()) for path in paths}
 
 
-def execute(task, output, case):
+def execute(task, output, case, tensor_copy_bytes):
     collector = load(task/'native_g1/run_g1_cases.py')
     _, manifest, _ = collector.verify_inputs(task/'g1_preparation.json')
     files = list(manifest['files'])
@@ -63,10 +63,12 @@ def execute(task, output, case):
             distributed_init_method='file:///tmp/step5_local_ffn_'+case, backend='nccl')
         initialize_model_parallel(1, 1); init_workspace_manager(torch.device('cuda'))
         save(output/'invocation.json', dict(case=case, warmups=WARMUPS, repeats=REPEATS,
+            tensor_copy_bytes=tensor_copy_bytes,
             mode='native_rank_local_not_full_role', plan_sha256=collector.sha256_file(task/'local_scope_sampling_01.json'),
             consumer_sha256=collector.sha256_file(Path(__file__).with_name('local_ffn_measurement.py'))))
         before = nic_counters()
-        rows = measure(task, CLOUD/case, native, construct, case, warmups=WARMUPS, repeats=REPEATS)
+        rows = measure(task, CLOUD/case, native, construct, case, warmups=WARMUPS, repeats=REPEATS,
+                       tensor_copy_bytes=tensor_copy_bytes)
         after = nic_counters()
         save(output/'measurements.json', dict(rows=rows, nic_before=before, nic_after=after,
             nic_scope='RDMA port counters in 4-byte words; node-wide activity and missing counters preclude exclusive NIC claim'))
@@ -78,8 +80,11 @@ def main():
     parser.add_argument('--task-root', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--case', choices=FFN_CASES)
+    parser.add_argument('--tensor-copy-bytes', type=int, required=True)
     args = parser.parse_args(); task, output = args.task_root.resolve(), args.output_dir.resolve()
     validate(task, output)
+    if args.tensor_copy_bytes <= 0:
+        parser.error('--tensor-copy-bytes must be positive')
     if args.mode == 'child' and args.case is None:
         parser.error('child requires --case')
     if args.mode != 'child' and args.case is not None:
@@ -91,7 +96,8 @@ def main():
         assert os.environ['STEPMIND_BACKEND'] == 'rjob'
         from steptron.exp.base_exp import ResourceConfig
         from steptron.utils.stepmind import spawn_tasks
-        argv = ['python3', '-B', str(Path(__file__).resolve()), 'run', '--task-root', str(task), '--output-dir', str(output)]
+        argv = ['python3', '-B', str(Path(__file__).resolve()), 'run', '--task-root', str(task), '--output-dir', str(output),
+                '--tensor-copy-bytes', str(args.tensor_copy_bytes)]
         command = ('export VLLM_ENABLE_CUDA_COMPATIBILITY=1 LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat:$LD_LIBRARY_PATH '
             'HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; exec '+shlex.join(argv))
         os.chdir(WORKTREE); os.environ['EXP_ID'] = 'step5-local-ffn'
@@ -100,7 +106,7 @@ def main():
         print('JOB_ID', workers.rjob.meta.name, 'FINAL_STATUS', workers.poll(), flush=True)
         return
     if args.mode == 'child':
-        execute(task, output, args.case)
+        execute(task, output, args.case, args.tensor_copy_bytes)
         return
     assert not CLOUD.exists(), 'Cloud generation must be new'
     CLOUD.mkdir(parents=True, exist_ok=False); output.mkdir(parents=True, exist_ok=False)
@@ -108,7 +114,7 @@ def main():
     statuses = []
     for case in FFN_CASES:
         argv = [sys.executable, '-B', str(Path(__file__).resolve()), 'child', '--task-root', str(task),
-                '--output-dir', str(output/case), '--case', case]
+                '--output-dir', str(output/case), '--case', case, '--tensor-copy-bytes', str(args.tensor_copy_bytes)]
         with (output/(case+'.stdout')).open('xb') as out, (output/(case+'.stderr')).open('xb') as err:
             child = subprocess.Popen(argv, stdout=out, stderr=err)
             while True:

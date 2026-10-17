@@ -53,6 +53,20 @@ def test_both_dense_dispatches_are_recorded():
     assert all(row['gemm'].endswith('gemm') for row in result.values())
 
 
+def test_routed_kernel_identity_is_read_from_resolved_instances():
+    Impl, PrepareFinalize, Experts = (type(n, (), {}) for n in ('FusedMoEKernelModularImpl',
+        'MoEPrepareAndFinalizeNoDPEPModular', 'TritonExperts'))
+    experts = Experts()
+    experts.__dict__.update(moe_config=SimpleNamespace(activation='SWIGLUSTEP'), activation_config='clamp_limit=7.0',
+        quant_dtype='torch.float8_e4m3fn', weight_quant_dtype='torch.float8_e4m3fn', block_shape=[128, 128],
+        per_act_token_quant=False, per_out_ch_quant=False)
+    kernel = SimpleNamespace(impl=Impl(), prepare_finalize=PrepareFinalize(), fused_experts=experts)
+    result = module.moe_dispatch(SimpleNamespace(moe_kernel=kernel))
+    assert (result['kernel'], result['prepare_finalize'], result['fused_experts']) == (
+        'FusedMoEKernelModularImpl', 'MoEPrepareAndFinalizeNoDPEPModular', 'TritonExperts')
+    assert result['activation'] == 'SWIGLUSTEP' and result['block_shape'] == [128, 128]
+
+
 def test_native_ffn_method_owns_combine():
     source = TASK/'native_source_export/observed/vllm/models/step5/nvidia/model.py'
     cls = next(node for node in ast.parse(source.read_text()).body
