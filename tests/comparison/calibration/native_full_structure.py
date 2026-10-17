@@ -92,8 +92,103 @@ def cutlass_state(module):
         "w31_content_order": "unverified; metadata does not establish tensor ordering"}
 
 
+class CutlassCallInventory:
+    """Retain selected callable host facts without reading device contents."""
+    def __init__(self, limits):
+        if any(type(limits[k]) is not int or limits[k] <= 0
+               for k in ('records', 'bytes')):
+            raise ValueError('Call inventory limits must be positive integers')
+        self.limits, self.rows, self.used = limits, [], 0
+        self.dropped, self.errors, self.installed, self.rank = 0, 0, False, None
+        self.snapshot()
+
+    def install(self, namespace, layers, rank):
+        import weakref
+        self.rank = rank
+        sources = [(name, weakref.ref(a), weakref.ref(b)) for name, a, b in layers]
+        original = namespace.flashinfer_cutlass_fused_moe
+
+        def metadata(tensor):
+            if tensor is None:
+                return None
+            return dict(shape=list(tensor.shape), dtype=str(tensor.dtype),
+                device=str(tensor.device), stride=list(tensor.stride()),
+                offset=tensor.storage_offset(), object_id=id(tensor),
+                storage_address=tensor.untyped_storage().data_ptr())
+
+        def observed(*args, **kwargs):
+            if len(self.rows) >= self.limits['records']:
+                self.dropped += 1
+                return original(*args, **kwargs)
+            row = None
+            try:
+                scales = kwargs['quant_scales']
+                layer = next((name for name, a, b in sources if len(scales) == 2
+                    and a() is scales[0] and b() is scales[1]), None)
+                row = dict(rank=rank, layer=layer,
+                    tensors={k: metadata(kwargs[k]) for k in
+                    ('input', 'output', 'fc1_expert_weights', 'fc2_expert_weights',
+                     'token_selected_experts', 'token_final_scales')},
+                    quant_scales=[metadata(t) for t in scales],
+                    input_sf=metadata(kwargs['input_sf']),
+                    scalars={k: kwargs[k] for k in ('tp_size', 'tp_rank', 'ep_size',
+                        'ep_rank', 'use_deepseek_fp8_block_scale',
+                        'use_mxfp8_act_scaling', 'use_w4_group_scaling')},
+                    output_dtype=str(kwargs['output_dtype']),
+                    activation_type=str(kwargs['activation_type']),
+                    device_completion='unobserved')
+            except Exception:
+                self.errors += 1
+            try:
+                returned = original(*args, **kwargs)
+            except BaseException as error:
+                self.admit(row, 'native_exception', type(error).__name__)
+                raise
+            self.admit(row, 'host_return', None)
+            return returned
+
+        namespace.flashinfer_cutlass_fused_moe = observed
+        self.installed = True
+
+    def admit(self, row, outcome, error):
+        if row is None:
+            return
+        try:
+            row.update(native_outcome=outcome, native_error=error)
+            encoded = json.dumps(row, separators=(',', ':'))
+            size = len(encoded.encode())
+            if (len(self.rows) >= self.limits['records']
+                    or self.used + size > self.limits['bytes']):
+                self.dropped += 1
+                return
+            self.rows.append(encoded)
+            self.used += size
+        except Exception:
+            self.errors += 1
+
+    def snapshot(self):
+        while True:
+            payload = json.dumps(dict(rank=self.rank,
+                records=[json.loads(row) for row in self.rows],
+                retained_bytes=self.used, dropped=self.dropped, errors=self.errors,
+                installed=self.installed, run_verified=False,
+                coverage='Python-visible calls; prior capture and replay unobserved'),
+                separators=(',', ':'))
+            if len(payload.encode()) <= self.limits['bytes']:
+                return payload
+            if not self.rows:
+                raise ValueError('Call inventory byte limit cannot hold host footer')
+            self.used -= len(self.rows.pop().encode())
+            self.dropped += 1
+
+
 class FullModelInventory:
     def full_model_inventory(self):
+        limits = os.environ.get('FRONTIER_CUTLASS_CALL_LIMITS')
+        if limits is not None:
+            if hasattr(self, '_cutlass_calls'):
+                return self._cutlass_calls.snapshot()
+            self._cutlass_calls = CutlassCallInventory(json.loads(limits))
         import torch
         from native_dummy_initialization import inspect_model
         from vllm.distributed import get_world_group, get_tp_group, get_dp_group, get_ep_group
@@ -141,6 +236,21 @@ class FullModelInventory:
             result["initialization"] = inspect_model(self.get_model(), config)
         except Exception:
             result["initialization_error"] = traceback.format_exc()
+        if limits is not None:
+            try:
+                layers = [(name, method.moe_kernel.fused_experts.w1_scale,
+                    method.moe_kernel.fused_experts.w2_scale)
+                    for name, module in self.get_model().named_modules()
+                    if (method := getattr(module, 'quant_method', None)) is not None
+                    and type(method).__name__ == 'Fp8MoEMethod'
+                    and method.fp8_backend.name == 'FLASHINFER_CUTLASS']
+                key = ('vllm.model_executor.layers.fused_moe.experts.'
+                       'flashinfer_cutlass_moe')
+                self._cutlass_calls.install(sys.modules[key], layers,
+                    result['groups']['world'])
+            except Exception:
+                self._cutlass_calls.errors += 1
+            result['cutlass_calls'] = json.loads(self._cutlass_calls.snapshot())
         return json.dumps(result, default=str)
 
 
@@ -216,6 +326,10 @@ def run(config):
         model = Path(config["llm"]["model"])
         if {p.name: sha256(p) for p in model.iterdir()} != config["model_hashes"]:
             raise RuntimeError("Metadata allowlist/hash mismatch")
+        if 'cutlass_call_limits' in config:
+            CutlassCallInventory(config['cutlass_call_limits'])
+            os.environ['FRONTIER_CUTLASS_CALL_LIMITS'] = json.dumps(
+                config['cutlass_call_limits'])
         stage("full_initialization")
         llm = LLM(**config["llm"], worker_extension_cls="native_full_structure.FullModelInventory")
         stage("inventory")
@@ -242,6 +356,12 @@ def run(config):
                 except Exception:
                     result["observation_errors"].append(traceback.format_exc())
             result["responses"].append(row)
+        if 'cutlass_call_limits' in config:
+            try:
+                result['cutlass_calls'] = [json.loads(row) for row in
+                    llm.collective_rpc('full_model_inventory')]
+            except Exception:
+                result['observation_errors'].append(traceback.format_exc())
         result["checks"] = {"prompt_counts": [r["prompt_tokens"] for r in result["responses"]] == config["prompt_lengths"][rank],
             "decode_counts": all(len(r["token_ids"]) == config["decode_tokens"] for r in result["responses"]),
             "finite_logprobs": all(r["logprobs_finite"] for r in result["responses"])}
