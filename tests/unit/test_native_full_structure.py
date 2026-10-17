@@ -90,7 +90,8 @@ def test_cutlass_call_failures_limits_and_retrieval(monkeypatch):
         observer = CutlassCallInventory({'records': 1, 'bytes': byte_limit})
         namespace = SimpleNamespace(flashinfer_cutlass_fused_moe=native)
         observer.install(namespace,
-            [('layer.3', *arguments['quant_scales'])], {'rank': 0})
+            [('layer.3', *arguments['quant_scales'])], {'rank': 0},
+            {'layer.3': 'owned'})
         supplied = dict(arguments)
         if fault == 'metadata':
             supplied['input'] = object()
@@ -124,6 +125,112 @@ def test_cutlass_call_failures_limits_and_retrieval(monkeypatch):
                 'native_exception' if fault == 'native' else 'host_return')
     with pytest.raises(ValueError):
         CutlassCallInventory({'records': 1, 'bytes': 1})
+
+
+def test_cutlass_calls_retain_owned_existing_host_context(monkeypatch):
+    import json
+    import sys
+    from tests.comparison.calibration.native_full_structure import CutlassCallInventory
+    module = routed_module()
+    arguments = dict(input=torch.ones(3, 128), output=torch.empty(3, 128),
+        fc1_expert_weights=module.w13_weight, fc2_expert_weights=module.w2_weight,
+        quant_scales=[module.w13_weight_scale_inv, module.w2_weight_scale_inv],
+        token_selected_experts=torch.zeros(3, 2, dtype=torch.int32),
+        token_final_scales=torch.ones(3, 2), input_sf=None, tp_size=1, tp_rank=0,
+        ep_size=1, ep_rank=0, activation_type='Swiglu', output_dtype=torch.bfloat16,
+        use_deepseek_fp8_block_scale=True, use_mxfp8_act_scaling=False,
+        use_w4_group_scaling=False)
+    selected = SimpleNamespace(num_reqs=2, num_actual_tokens=11, num_decodes=1,
+        num_prefills=1, num_decode_tokens=3, prefill_max_seq_len=384)
+    context = SimpleNamespace(attn_metadata={'unrelated': object(), 'owned': selected},
+        dp_metadata=SimpleNamespace(local_sizes=[5, 6]),
+        cudagraph_runtime_mode=SimpleNamespace(name='PIECEWISE'),
+        batch_descriptor=SimpleNamespace(num_tokens=16, num_reqs=2, uniform=False,
+            has_lora=False, num_active_loras=0))
+    monkeypatch.setitem(sys.modules, 'vllm.forward_context',
+        SimpleNamespace(_forward_context=context))
+    observer = CutlassCallInventory({'records': 4, 'bytes': 16384})
+    namespace = SimpleNamespace(flashinfer_cutlass_fused_moe=lambda **kw: module)
+    observer.install(namespace, [('layer.3', *arguments['quant_scales'])],
+        {'rank': 0, 'world_size': 16}, {'layer.3': 'owned'})
+    assert namespace.flashinfer_cutlass_fused_moe(**arguments) is module
+    row = json.loads(observer.snapshot())['records'][0]['forward_context']
+    assert row['attention_layer'] == 'owned'
+    assert row['attention'] == dict(num_reqs=2, num_actual_tokens=11, num_decodes=1,
+        num_prefills=1, num_decode_tokens=3, prefill_max_seq_len=384)
+    assert row['dp_local_sizes'] == [5, 6] and row['graph_mode'] == 'PIECEWISE'
+    assert row['batch_descriptor']['num_tokens'] == 16
+    assert context.dp_metadata.local_sizes == [5, 6]
+    for raw, sizes in [(None, None), ([{'owned': selected}], [5, 6]),
+                       ({'owned': selected}, torch.ones(2)),
+                       ({'owned': selected}, [1] * 17)]:
+        context.attn_metadata, context.dp_metadata.local_sizes = raw, sizes
+        observer = CutlassCallInventory({'records': 1, 'bytes': 8192})
+        namespace = SimpleNamespace(flashinfer_cutlass_fused_moe=lambda **kw: module)
+        observer.install(namespace, [('layer.3', *arguments['quant_scales'])],
+            {'rank': 0, 'world_size': 16}, {'layer.3': 'owned'})
+        assert namespace.flashinfer_cutlass_fused_moe(**arguments) is module
+        report = json.loads(observer.snapshot())
+        facts = report['records'][0]['forward_context']
+        assert facts['attention_status'] == (
+            'observed' if type(raw) is dict else 'unavailable')
+        assert facts['dp_local_sizes'] == (
+            'unsupported' if sizes is not None and not isinstance(sizes, list)
+            or isinstance(sizes, list) and len(sizes) > 16 else sizes)
+        assert report['errors'] == 0
+    selected.num_actual_tokens = torch.ones(1)
+    context.dp_metadata.local_sizes = None
+    observer = CutlassCallInventory({'records': 1, 'bytes': 8192})
+    namespace = SimpleNamespace(flashinfer_cutlass_fused_moe=lambda **kw: module)
+    observer.install(namespace, [('layer.3', *arguments['quant_scales'])],
+        {'rank': 0, 'world_size': 16}, {'layer.3': 'owned'})
+    assert namespace.flashinfer_cutlass_fused_moe(**arguments) is module
+    facts = json.loads(observer.snapshot())['records'][0]['forward_context']
+    assert facts['attention']['num_actual_tokens'] == 'unsupported'
+    assert torch.equal(selected.num_actual_tokens, torch.ones(1))
+    context.attn_metadata = {'owned': object()}
+    observer = CutlassCallInventory({'records': 1, 'bytes': 8192})
+    namespace = SimpleNamespace(flashinfer_cutlass_fused_moe=lambda **kw: module)
+    observer.install(namespace, [('layer.3', *arguments['quant_scales'])],
+        {'rank': 0, 'world_size': 16}, {'layer.3': 'owned'})
+    assert namespace.flashinfer_cutlass_fused_moe(**arguments) is module
+    report = json.loads(observer.snapshot())
+    assert report['errors'] == 1
+    assert report['records'][0]['forward_context'] == {'status': 'error'}
+
+
+def test_cutlass_inventory_missing_attention_does_not_disable_calls():
+    import ast
+    import inspect
+    import json
+    from tests.comparison.calibration.native_full_structure import (
+        CutlassCallInventory, FullModelInventory)
+    native = ast.parse(inspect.getsource(FullModelInventory))
+    body = native.body[0].body[0].body[-2].body[0].body
+    start = next(i for i, node in enumerate(body) if isinstance(node, ast.Assign)
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id == 'owned_attention')
+    selected = routed_module()
+    decoder_type = type('DeepseekV2DecoderLayer', (), {})
+    missing, owned = decoder_type(), decoder_type()
+    for decoder in (missing, owned):
+        decoder.mlp = SimpleNamespace(experts=SimpleNamespace(routed_experts=selected))
+    missing.self_attn = SimpleNamespace()
+    owned.self_attn = SimpleNamespace(mla_attn=SimpleNamespace(
+        mla_attn=SimpleNamespace(layer_name='actual.attention')))
+    for decoders in ([missing], [missing, owned]):
+        model = SimpleNamespace(modules=lambda: decoders,
+            named_modules=lambda: [('selected', selected)])
+        scope = {'self': SimpleNamespace(get_model=lambda: model)}
+        block = ast.Module(body=body[start:-1], type_ignores=[])
+        exec(compile(block, '<native-inventory-association>', 'exec'), scope)
+        assert scope['attention_layers'] == (
+            {} if len(decoders) == 1 else {'selected': 'actual.attention'})
+        namespace = SimpleNamespace(flashinfer_cutlass_fused_moe=lambda **kw: selected)
+        observer = CutlassCallInventory({'records': 1, 'bytes': 8192})
+        observer.install(namespace, [], {'rank': 0, 'world_size': 16},
+            scope['attention_layers'])
+        assert json.loads(observer.snapshot())['installed'] is True
 
 
 def test_other_backends_remain_unverified_without_cutlass_consumer_reads():

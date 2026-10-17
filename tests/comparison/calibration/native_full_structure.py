@@ -102,7 +102,7 @@ class CutlassCallInventory:
         self.dropped, self.errors, self.installed, self.rank = 0, 0, False, None
         self.snapshot()
 
-    def install(self, namespace, layers, rank):
+    def install(self, namespace, layers, rank, attention_layers=None):
         import weakref
         self.rank = rank
         sources = [(name, weakref.ref(a), weakref.ref(b)) for name, a, b in layers]
@@ -115,6 +115,36 @@ class CutlassCallInventory:
                 device=str(tensor.device), stride=list(tensor.stride()),
                 offset=tensor.storage_offset(), object_id=id(tensor),
                 storage_address=tensor.untyped_storage().data_ptr())
+
+        def context_metadata(layer):
+            module = sys.modules.get('vllm.forward_context')
+            ctx = None if module is None else vars(module).get('_forward_context')
+            if ctx is None:
+                return {'status': 'unavailable'}
+            fields = vars(ctx)
+            key = attention_layers.get(layer)
+            raw = fields['attn_metadata']
+            attention = raw.get(key) if type(raw) is dict and key is not None else None
+
+            def scalars(obj, names):
+                values = {} if obj is None else vars(obj)
+                return {k: v if type(v) in (int, bool) or v is None else 'unsupported'
+                        for k in names for v in [values.get(k)]}
+
+            dp = fields['dp_metadata']
+            sizes = None if dp is None else vars(dp)['local_sizes']
+            if sizes is not None:
+                sizes = (list(sizes) if type(sizes) is list
+                    and len(sizes) <= rank['world_size']
+                    and all(type(n) is int for n in sizes) else 'unsupported')
+            return dict(attention_layer=key,
+                attention_status='observed' if attention is not None else 'unavailable',
+                attention=scalars(attention, ('num_reqs', 'num_actual_tokens',
+                    'num_decodes', 'num_prefills', 'num_decode_tokens',
+                    'prefill_max_seq_len')),
+                dp_local_sizes=sizes, graph_mode=fields['cudagraph_runtime_mode'].name,
+                batch_descriptor=scalars(fields['batch_descriptor'], ('num_tokens',
+                    'num_reqs', 'uniform', 'has_lora', 'num_active_loras')))
 
         def observed(*args, **kwargs):
             if len(self.rows) >= self.limits['records']:
@@ -137,6 +167,12 @@ class CutlassCallInventory:
                     output_dtype=str(kwargs['output_dtype']),
                     activation_type=str(kwargs['activation_type']),
                     device_completion='unobserved')
+                if attention_layers is not None:
+                    try:
+                        row['forward_context'] = context_metadata(layer)
+                    except Exception:
+                        self.errors += 1
+                        row['forward_context'] = {'status': 'error'}
             except Exception:
                 self.errors += 1
             try:
@@ -246,8 +282,18 @@ class FullModelInventory:
                     and method.fp8_backend.name == 'FLASHINFER_CUTLASS']
                 key = ('vllm.model_executor.layers.fused_moe.experts.'
                        'flashinfer_cutlass_moe')
+                owned_attention = []
+                for decoder in self.get_model().modules():
+                    if type(decoder).__name__ == 'DeepseekV2DecoderLayer':
+                        if (hasattr(decoder.mlp, 'experts')
+                                and hasattr(decoder.self_attn, 'mla_attn')):
+                            owned_attention.append((decoder.mlp.experts.routed_experts,
+                                decoder.self_attn.mla_attn.mla_attn.layer_name))
+                attention_layers = {name: key
+                    for name, module in self.get_model().named_modules()
+                    for owner, key in owned_attention if owner is module}
                 self._cutlass_calls.install(sys.modules[key], layers,
-                    result['groups']['world'])
+                    result['groups']['world'], attention_layers)
             except Exception:
                 self._cutlass_calls.errors += 1
             result['cutlass_calls'] = json.loads(self._cutlass_calls.snapshot())
