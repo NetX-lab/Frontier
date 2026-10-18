@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
+
+if TYPE_CHECKING:
+    from frontier.attention.memory import AttentionKVCacheCapacity
 
 from frontier.operators.spec import (
     OperatorFamilySpec,
@@ -26,6 +29,7 @@ class AttentionMemoryLayout(Enum):
     LATENT_MLA = "latent_mla"
     FROZEN_DSA = "frozen_dsa"
     FIXED_STATE = "fixed_state"
+    COMPRESSED_KV = "compressed_kv"
 
 
 @dataclass(frozen=True)
@@ -86,6 +90,9 @@ class AttentionFamilySpec(OperatorFamilySpec):
     runtime_num_kv_heads_resolver: Callable[[Any], int] | None = None
     runtime_head_size_resolver: Callable[[Any], int] | None = None
     runtime_meta_contract: AttentionRuntimeMetaContract | None = None
+    kv_cache_capacity_resolver: (
+        Callable[[Any, int], AttentionKVCacheCapacity] | None
+    ) = None
 
     _family_label: ClassVar[str] = "Attention family"
 
@@ -130,6 +137,7 @@ class AttentionFamilySpec(OperatorFamilySpec):
             )
 
     def resolve_runtime_num_kv_heads(self, config: Any) -> int:
+        self.require_enabled_for_execution()
         if self.runtime_num_kv_heads_resolver is None:
             raise ValueError(
                 f"Attention family {self.family_id} does not declare a "
@@ -144,6 +152,7 @@ class AttentionFamilySpec(OperatorFamilySpec):
         return value
 
     def resolve_runtime_head_size(self, config: Any) -> int:
+        self.require_enabled_for_execution()
         if self.runtime_head_size_resolver is None:
             raise ValueError(
                 f"Attention family {self.family_id} does not declare a "

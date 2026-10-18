@@ -1,8 +1,90 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from frontier.attention.ops import AttentionFamilySpec
+
+
+@dataclass(frozen=True)
+class AttentionKVCacheComponent:
+    """One resident cache component with equal-size pages for its owners."""
+
+    component_id: str
+    owner_layer_ids: tuple[int, ...]
+    page_size_bytes: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.component_id, str) or not self.component_id:
+            raise ValueError("component_id must be a non-empty string")
+        if type(self.page_size_bytes) is not int or self.page_size_bytes <= 0:
+            raise ValueError("page_size_bytes must be a positive int")
+        owners = tuple(self.owner_layer_ids)
+        if not owners or any(type(owner) is not int or owner < 0 for owner in owners):
+            raise ValueError("owner_layer_ids must contain non-negative ints")
+        if len(set(owners)) != len(owners):
+            raise ValueError("duplicate owner in cache component")
+        object.__setattr__(self, "owner_layer_ids", owners)
+
+
+@dataclass(frozen=True)
+class AttentionKVCacheCapacity:
+    """Resident bytes for one common logical block across cache components."""
+
+    family_id: str
+    block_size: int
+    num_layers: int
+    components: tuple[AttentionKVCacheComponent, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.family_id, str) or not self.family_id:
+            raise ValueError("family_id must be a non-empty string")
+        for name in ("block_size", "num_layers"):
+            value = getattr(self, name)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive int")
+        components = tuple(self.components)
+        if not components:
+            raise ValueError("components must be non-empty")
+        owners = set()
+        for component in components:
+            if not isinstance(component, AttentionKVCacheComponent):
+                raise ValueError("components must contain cache components")
+            for owner in component.owner_layer_ids:
+                if owner >= self.num_layers:
+                    raise ValueError("cache owner is outside the backbone layer range")
+                identity = (owner, component.component_id)
+                if identity in owners:
+                    raise ValueError("duplicate cache component for a layer owner")
+                owners.add(identity)
+        object.__setattr__(self, "components", components)
+
+    @property
+    def resident_bytes_per_common_block(self) -> int:
+        return sum(
+            component.page_size_bytes * len(component.owner_layer_ids)
+            for component in self.components
+        )
+
+
+def get_attention_kv_cache_capacity(
+    family: AttentionFamilySpec, config: Any, *, block_size: int
+) -> AttentionKVCacheCapacity:
+    """Resolve static resident capacity independently of execution admission."""
+    if type(block_size) is not int or block_size <= 0:
+        raise ValueError("block_size must be a positive int")
+    if family.kv_cache_capacity_resolver is None:
+        raise NotImplementedError(
+            f"Attention family {family.family_id!r} has no component capacity resolver"
+        )
+    capacity = family.kv_cache_capacity_resolver(config, block_size)
+    if capacity.family_id != family.family_id or capacity.block_size != block_size:
+        raise ValueError(
+            "cache capacity does not match the requested family/block size"
+        )
+    if capacity.num_layers != config.num_layers:
+        raise ValueError("cache capacity does not match the model backbone layer count")
+    return capacity
 
 
 @dataclass(frozen=True)

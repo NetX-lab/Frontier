@@ -10,6 +10,7 @@ from frontier.config import (
 from frontier.entities import Batch, ExecutionTime, StageExecutionTime
 from frontier.types import ClusterType
 from frontier.logger import init_logger
+from frontier.attention.families import get_attention_family
 
 if TYPE_CHECKING:
     from frontier.entities.time_components import AttentionTime, MLPTime, MoETime
@@ -30,6 +31,12 @@ class BaseExecutionTimePredictor(ABC):
         self._config = predictor_config
         self._replica_config = replica_config
         self._model_config = replica_config.model_config
+
+        family_ids = {
+            spec.family_id for spec in self._model_config.get_layer_attention_specs()
+        }
+        for family_id in sorted(family_ids):
+            get_attention_family(family_id).require_enabled_for_execution()
 
         # get configs
         self._replica_scheduler_provider = str(replica_scheduler_config.get_type())

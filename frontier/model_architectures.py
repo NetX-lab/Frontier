@@ -313,12 +313,14 @@ def _shared_layer_contract_active(profile: "ModelArchitectureProfile", config: A
     return bool(supports()) if callable(supports) else profile.supports_share_expert(config)
 
 
-def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
+def _default_layer_contracts(
+    tensor_parallel_mode: TensorParallelMode = TensorParallelMode.FFN_TP,
+) -> tuple[LayerContractSpec, ...]:
     return (
         LayerContractSpec(
             LayerKind.DENSE,
             LayerDimensionSource.DENSE,
-            TensorParallelMode.FFN_TP,
+            tensor_parallel_mode,
             operator_family_ids=("ffn",),
             activation_predicate=_dense_layer_contract_active,
         ),
@@ -333,7 +335,7 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
         LayerContractSpec(
             LayerKind.SHARED,
             LayerDimensionSource.SHARED,
-            TensorParallelMode.FFN_TP,
+            tensor_parallel_mode,
             operator_family_ids=("share_expert",),
             base_layer_kinds=(LayerKind.ROUTED,),
             activation_predicate=_shared_layer_contract_active,
@@ -643,6 +645,55 @@ class ModelArchitectureProfile:
                 _requires_qwen3_5_hybrid_gdn_contract(),
             ),
             match=match or _matches_qwen3_5_moe,
+        )
+
+    @classmethod
+    def glm_moe_dsa(cls) -> "ModelArchitectureProfile":
+        """GLM sparse-MLA backbone identity; DSA execution stays guarded."""
+
+        return cls(
+            profile_id="glm_moe_dsa",
+            display_name="GLM MoE DSA",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            experimental=True,
+            runtime_limitations=(
+                "DSA operator timing and multi-component cache are unsupported",
+            ),
+            match=lambda config: (
+                _normalized_attr(config, "model_type") == "glm_moe_dsa"
+            ),
+            layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
+        )
+
+    @classmethod
+    def deepseek_v4(cls) -> "ModelArchitectureProfile":
+        """Original V4 backbone identity with unsupported execution explicit."""
+
+        return cls(
+            profile_id="deepseek_v4",
+            display_name="DeepSeek-V4",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            experimental=True,
+            runtime_limitations=(
+                "compressed attention, mHC and mixed precision are unsupported",
+                "shared FFN sequence-parallel replication is not represented",
+            ),
+            match=lambda config: (
+                _normalized_attr(config, "model_type") == "deepseek_v4"
+            ),
+            # The non-sequence-parallel projection contract is metadata only.
+            # Native SP replicates shared weights; execution remains disabled.
+            layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
         )
 
     def validate_structural_requirements(self, config: Any) -> None:
@@ -1216,6 +1267,8 @@ for _profile in (
     ModelArchitectureProfile.step3_text(),
     ModelArchitectureProfile.step2_mini(),
     ModelArchitectureProfile.qwen3_5_moe(),
+    ModelArchitectureProfile.glm_moe_dsa(),
+    ModelArchitectureProfile.deepseek_v4(),
     ModelArchitectureProfile.generic(),
 ):
     MODEL_ARCHITECTURE_REGISTRY.register(_profile)

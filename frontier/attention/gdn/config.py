@@ -41,6 +41,7 @@ class LayerAttentionSpec:
     global_layer_id: int
     family_id: str
     variant_id: str
+    index_producer_layer_id: int | None = None
 
     def __post_init__(self) -> None:
         if type(self.global_layer_id) is not int or self.global_layer_id < 0:
@@ -52,6 +53,11 @@ class LayerAttentionSpec:
             raise ValueError("family_id must be a non-empty string")
         if not isinstance(self.variant_id, str) or not self.variant_id:
             raise ValueError("variant_id must be a non-empty string")
+        producer = self.index_producer_layer_id
+        if producer is not None and (
+            type(producer) is not int or not 0 <= producer <= self.global_layer_id
+        ):
+            raise ValueError("index producer must be a preceding or current layer")
 
     @property
     def is_gdn(self) -> bool:
