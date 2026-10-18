@@ -792,6 +792,8 @@ class MetricsStore:
                 key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
                 if key not in aggregate_ops:
                     aggregate_ops[key] = [0.0, []]
+                if duration_ms <= 0:
+                    return
                 aggregate_ops[key][0] += duration_ms
                 aggregate_ops[key][1].append(layer_id)
 
