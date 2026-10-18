@@ -49,6 +49,72 @@ def _latent_mla_runtime_head_size(config) -> int:
     )
 
 
+def _dsa_kv_cache_capacity(config, block_size: int):
+    from frontier.attention.memory import (
+        AttentionKVCacheCapacity,
+        AttentionKVCacheComponent,
+    )
+    from frontier.config.precision_type import PrecisionType
+
+    if block_size != 64:
+        raise NotImplementedError(
+            "DSA indexer capacity currently requires the CUDA kernel block size 64"
+        )
+    dimensions = {}
+    for name in ("kv_lora_rank", "qk_rope_head_dim", "index_head_dim"):
+        value = getattr(config, name, None)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"DSA cache capacity requires positive int {name}")
+        dimensions[name] = value
+
+    # Native Indexer packs FP8 K and one FP32 scale per 128 values.
+    quant_block_size = 128
+    index_head_dim = dimensions["index_head_dim"]
+    if index_head_dim % quant_block_size:
+        raise NotImplementedError(
+            "DSA indexer capacity requires complete 128-element quantization blocks"
+        )
+    specs = tuple(config.get_layer_attention_specs())
+    if tuple(spec.global_layer_id for spec in specs) != tuple(range(config.num_layers)):
+        raise ValueError("DSA cache capacity requires every backbone layer in order")
+    full_index_layers = []
+    producer = None
+    for spec in specs:
+        if spec.family_id != "dsa_attention":
+            raise ValueError("DSA cache capacity requires a DSA backbone")
+        if spec.variant_id == "full_index":
+            producer = spec.global_layer_id
+            full_index_layers.append(producer)
+        elif spec.variant_id != "shared_index":
+            raise ValueError("DSA cache capacity requires full/shared index bindings")
+        if producer is None or spec.index_producer_layer_id != producer:
+            raise ValueError("DSA cache capacity has an invalid index producer binding")
+
+    cache_precision = PrecisionType.from_torch_dtype(config.torch_dtype)
+    main_width = dimensions["kv_lora_rank"] + dimensions["qk_rope_head_dim"]
+    main_page_bytes = int(block_size * main_width * cache_precision.bytes_per_element)
+    index_bytes_per_token = index_head_dim + (
+        index_head_dim // quant_block_size * int(PrecisionType.FP32.bytes_per_element)
+    )
+    return AttentionKVCacheCapacity(
+        family_id="dsa_attention",
+        block_size=block_size,
+        num_layers=config.num_layers,
+        components=(
+            AttentionKVCacheComponent(
+                component_id="main_mla",
+                owner_layer_ids=tuple(spec.global_layer_id for spec in specs),
+                page_size_bytes=main_page_bytes,
+            ),
+            AttentionKVCacheComponent(
+                component_id="indexer_k_and_scale",
+                owner_layer_ids=tuple(full_index_layers),
+                page_size_bytes=block_size * index_bytes_per_token,
+            ),
+        ),
+    )
+
+
 # vLLM's P2P NCCL connector gathers a request's KV blocks after each layer's
 # attention (P2pNcclConnector.save_kv_layer: layer[block_ids]) in the PDD prefill
 # step that completes its prompt. Only runs with that connector price it, and
@@ -222,7 +288,7 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
 DSA_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="dsa_attention",
     display_name="Frozen DSA Attention",
-    supported_variants=("dsa",),
+    supported_variants=("dsa", "full_index", "shared_index"),
     operators=(),
     memory_layout=AttentionMemoryLayout.FROZEN_DSA,
     dense_compatible=False,
@@ -233,6 +299,7 @@ DSA_ATTENTION_FAMILY = AttentionFamilySpec(
         "DSA attention is frozen until a real vLLM/FlashInfer truth backend "
         "and Frontier mapping are approved."
     ),
+    kv_cache_capacity_resolver=_dsa_kv_cache_capacity,
 )
 
 
@@ -313,6 +380,22 @@ GATED_DELTA_NET_ATTENTION_FAMILY = AttentionFamilySpec(
     ),
 )
 
+DEEPSEEK_V4_ATTENTION_FAMILY = AttentionFamilySpec(
+    family_id="deepseek_v4_attention",
+    display_name="DeepSeek-V4 Compressed Attention",
+    supported_variants=("uncompressed", "csa", "hca"),
+    operators=(),
+    memory_layout=AttentionMemoryLayout.COMPRESSED_KV,
+    dense_compatible=False,
+    requires_runtime_kv_helpers=True,
+    execution_enabled=False,
+    disabled_reason=(
+        "DeepSeek-V4 execution requires compressed cache, compressor, indexer, "
+        "mHC and mixed-precision operator coverage."
+    ),
+)
+
+
 # Short aliases make the family discoverable without creating a second
 # registry entry or a second semantic identity.
 GDN_ATTENTION_FAMILY = GATED_DELTA_NET_ATTENTION_FAMILY
@@ -325,6 +408,7 @@ for _family in (
     LATENT_MLA_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
 ):
     _ATTENTION_OPERATOR_REGISTRY.register(_family)
 

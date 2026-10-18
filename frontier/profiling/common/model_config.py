@@ -21,6 +21,7 @@ from frontier.config.model_config import (
     _infer_share_expert_dim_from_hf_config,
     _infer_use_qk_norm_from_hf_config,
 )
+from frontier.config.utils import dataclass_to_dict
 from frontier.model_architectures import get_model_architecture_profile
 from frontier.profiling.common.parallel_config import ParallelConfig
 from frontier.types import ActivationType, NormType
@@ -73,6 +74,24 @@ class ModelConfig:
         qk_rope_head_dim: Optional[int] = None,
         qk_head_dim: Optional[int] = None,
         v_head_dim: Optional[int] = None,
+        index_topk: Optional[int] = None,
+        index_n_heads: Optional[int] = None,
+        index_head_dim: Optional[int] = None,
+        index_topk_freq: Optional[int] = None,
+        index_topk_pattern: Optional[str] = None,
+        index_skip_topk_offset: Optional[int] = None,
+        indexer_rope_interleave: Optional[bool] = None,
+        compress_ratios: Optional[tuple[int, ...] | list[int]] = None,
+        sliding_window: Optional[int] = None,
+        num_hash_layers: Optional[int] = None,
+        hc_mult: Optional[int] = None,
+        hc_sinkhorn_iters: Optional[int] = None,
+        hc_eps: Optional[float] = None,
+        o_groups: Optional[int] = None,
+        o_lora_rank: Optional[int] = None,
+        compress_rope_theta: Optional[float] = None,
+        swiglu_limit: Optional[float] = None,
+        expert_dtype: Optional[str] = None,
         layer_types: Optional[tuple[str, ...] | list[str]] = None,
         full_attention_interval: Optional[int] = None,
         linear_conv_kernel_dim: Optional[int] = None,
@@ -165,6 +184,26 @@ class ModelConfig:
         self.qk_rope_head_dim = qk_rope_head_dim
         self.qk_head_dim = qk_head_dim
         self.v_head_dim = v_head_dim
+        self.index_topk = index_topk
+        self.index_n_heads = index_n_heads
+        self.index_head_dim = index_head_dim
+        self.index_topk_freq = index_topk_freq
+        self.index_topk_pattern = index_topk_pattern
+        self.index_skip_topk_offset = index_skip_topk_offset
+        self.indexer_rope_interleave = indexer_rope_interleave
+        self.compress_ratios = (
+            tuple(compress_ratios) if compress_ratios is not None else None
+        )
+        self.sliding_window = sliding_window
+        self.num_hash_layers = num_hash_layers
+        self.hc_mult = hc_mult
+        self.hc_sinkhorn_iters = hc_sinkhorn_iters
+        self.hc_eps = hc_eps
+        self.o_groups = o_groups
+        self.o_lora_rank = o_lora_rank
+        self.compress_rope_theta = compress_rope_theta
+        self.swiglu_limit = swiglu_limit
+        self.expert_dtype = expert_dtype
         self.layer_types = (
             tuple(str(value) for value in layer_types)
             if layer_types is not None
@@ -328,8 +367,7 @@ class ModelConfig:
 
     def get_qk_head_dim(self) -> int:
         """Return the full QK head dimension."""
-        family = self.get_attention_family()
-        if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
+        if self.use_mla:
             if self.qk_head_dim is None:
                 raise ValueError("MLA qk_head_dim is not configured")
             return self.qk_head_dim
@@ -647,6 +685,19 @@ class ModelConfig:
             "qk_rope_head_dim": self.qk_rope_head_dim,
             "qk_head_dim": self.qk_head_dim,
             "v_head_dim": self.v_head_dim,
+            **{
+                name: getattr(self, name)
+                for name in (
+                    "index_topk", "index_n_heads", "index_head_dim",
+                    "index_topk_freq", "index_topk_pattern", "index_skip_topk_offset",
+                    "indexer_rope_interleave",
+                    "compress_ratios", "sliding_window", "num_hash_layers",
+                    "hc_mult", "hc_sinkhorn_iters", "hc_eps", "o_groups",
+                    "o_lora_rank", "compress_rope_theta", "swiglu_limit",
+                    "expert_dtype",
+                )
+                if getattr(self, name) is not None
+            },
             "layer_types": list(self.layer_types) if self.layer_types is not None else None,
             "full_attention_interval": self.full_attention_interval,
             "linear_conv_kernel_dim": self.linear_conv_kernel_dim,
@@ -656,7 +707,10 @@ class ModelConfig:
             "linear_num_value_heads": self.linear_num_value_heads,
             "gdn_output_gate_type": self.gdn_output_gate_type,
             # Quantization config
-            "quantization_config": asdict(self.quantization_config) if self.quantization_config else None,
+            "quantization_config": (
+                dataclass_to_dict(self.quantization_config)
+                if self.quantization_config else None
+            ),
             # LM head weight sharing
             "tie_word_embeddings": self.tie_word_embeddings,
         }
