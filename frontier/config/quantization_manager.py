@@ -9,13 +9,18 @@ from typing import Dict, Optional, Set, Any, List
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     iter_execution_enabled_families,
 )
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.precision_type import PrecisionType, PrecisionMismatchInfo
 from frontier.logger import init_logger
-from frontier.operators.families import MOE_FAMILY, SHARE_EXPERT_FAMILY
+from frontier.operators.families import (
+    DEEPSEEK_V4_MHC_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+)
 from frontier.operators.spec import OperatorFamilySpec
 from frontier.types import ClusterType
 
@@ -76,6 +81,11 @@ class QuantizationManager:
     _GDN_OPERATION_NAMES = frozenset(
         operator.name for operator in GATED_DELTA_NET_ATTENTION_FAMILY.profiling_ops()
     )
+    _DSV4_OPERATION_NAMES = frozenset(
+        operator.precision_name()
+        for family in (DEEPSEEK_V4_ATTENTION_FAMILY, DEEPSEEK_V4_MHC_FAMILY)
+        for operator in family.operators
+    )
 
     def __new__(cls) -> "QuantizationManager":
         with cls._instance_lock:
@@ -105,6 +115,7 @@ class QuantizationManager:
             self._config: Dict[str, Any] = {}
             self._precision_mismatches: Set[PrecisionMismatchInfo] = set()
             self._active_gdn_operations = False
+            self._operation_source_inventory: Dict[str, Dict[str, Any]] = {}
 
             self._load_registry()
             self._initialized = True
@@ -118,6 +129,7 @@ class QuantizationManager:
                 "attn_post_proj",
                 "attn_rope",
                 *_attention_compute_operations(),
+                *sorted(self._DSV4_OPERATION_NAMES),
                 "attn_wq_proj",
                 "mlp_up_proj",
                 "mlp_down_proj",
@@ -172,6 +184,7 @@ class QuantizationManager:
             self._cluster_overrides = {}
             self._precision_mismatches = set()
             self._active_gdn_operations = False
+            self._operation_source_inventory = {}
             self._warned_mismatches = set()
             self._warned_approximations = set()
             self._config = {}
@@ -183,6 +196,12 @@ class QuantizationManager:
         if model_config is None:
             raise ValueError("Model config is required for quantization setup.")
         with self._lock:
+            get_profile = getattr(model_config, "get_model_architecture_profile", None)
+            is_deepseek_v4 = bool(
+                get_profile is not None and get_profile().profile_id == "deepseek_v4"
+            )
+            if is_deepseek_v4:
+                self._validate_deepseek_v4_precision(model_config)
             # The registry contains every execution family so lookups remain
             # valid for model-specific profiling, but emitted metadata must
             # describe the configured model.  In particular, dense runs must
@@ -201,6 +220,7 @@ class QuantizationManager:
             self._operation_data_sources = {}
             self._operation_approximation_factors = {}
             self._operation_profiling_precision = {}
+            self._operation_source_inventory = {}
             self._cluster_overrides = {}
             self._precision_mismatches = set()
             self._warned_mismatches = set()
@@ -258,6 +278,9 @@ class QuantizationManager:
                 "quantization_config": quantization_config,
                 "quant_signature": model_config.get_quant_signature(),
             }
+            if is_deepseek_v4:
+                self._config["expert_dtype"] = model_config.expert_dtype
+                self._configure_deepseek_v4_operations(model_config)
 
             logger.info(
                 "Quantization configured from model config: model=%s default=%s quant_method=%s",
@@ -265,6 +288,218 @@ class QuantizationManager:
                 self._default_precision.name,
                 quant_config.quant_method if quant_config is not None else None,
             )
+
+    @staticmethod
+    def _validate_deepseek_v4_precision(model_config: BaseModelConfig) -> None:
+        quant = model_config.quantization_config
+        if (
+            model_config.get_default_precision() is not PrecisionType.BF16
+            or model_config.expert_dtype != "fp4"
+            or quant is None
+            or quant.quant_method != "fp8"
+            or not quant.is_checkpoint_fp8_serialized
+            or quant.activation_scheme != "dynamic"
+            or quant.weight_block_size != (128, 128)
+            or quant.scale_fmt != "ue8m0"
+            or quant.ignored_layers
+            or quant.quantized_operations is not None
+        ):
+            raise ValueError(
+                "DeepSeek-V4 source precision inventory requires BF16 activations, "
+                "FP8 dynamic base/shared weights with UE8M0 scales and 128x128 "
+                "blocks, and FP4 routed experts; precision overrides are unsupported."
+            )
+
+    def _configure_deepseek_v4_operations(self, model_config: BaseModelConfig) -> None:
+        """Describe constructor/source tensor contracts without enabling execution."""
+        inventory: Dict[str, Dict[str, Any]] = {}
+
+        def add(
+            names: tuple[str, ...],
+            configured_precision: Optional[PrecisionType],
+            *,
+            source_scope: str,
+            **tensor_metadata: Any,
+        ) -> None:
+            for name in names:
+                inventory[name] = {
+                    "precision_source": "model_config_and_vllm_source",
+                    "source_inventory_only": True,
+                    "source_scope": source_scope,
+                    "precision_basis": (
+                        "weight dtype" if "weight_dtype" in tensor_metadata
+                        else "input activation dtype"
+                    ),
+                    **tensor_metadata,
+                }
+                if configured_precision is not None:
+                    self._operation_precisions[name] = configured_precision
+                self._operation_precision_sources[name] = "model_config_and_vllm_source"
+                self._operation_data_sources[name] = "model_config_and_vllm_source"
+
+        add(
+            (
+                "dsv4_fused_qkv_projection", "dsv4_q_projection",
+                "dsv4_output_projection", "dsv4_index_query_projection",
+                "share_expert_up_proj", "share_expert_down_proj",
+            ),
+            PrecisionType.FP8,
+            source_scope="vllm/models/deepseek_v4: FP8 base/shared projections",
+            weight_dtype="float8_e4m3fn", activation_dtype="bfloat16",
+            output_dtype="bfloat16", quantization_format="fp8_e4m3",
+            weight_block_size=list(model_config.quantization_config.weight_block_size),
+            scale_dtype=model_config.quantization_config.scale_fmt,
+        )
+        add(
+            ("dsv4_grouped_output_projection",), PrecisionType.FP8,
+            source_scope="vllm/models/deepseek_v4: grouped wo_a projection",
+            weight_dtype="float8_e4m3fn", activation_dtype="float8_e4m3fn",
+            output_dtype="bfloat16", quantization_format="fp8_e4m3",
+            weight_block_size=list(model_config.quantization_config.weight_block_size),
+            scale_dtype=model_config.quantization_config.scale_fmt,
+            runtime_scale_dtype="float32",
+            runtime_scale_condition="SM90 grouped einsum source branch",
+        )
+        add(
+            ("moe_grouped_gemm",), PrecisionType.FP4,
+            source_scope="vllm/models/deepseek_v4: MXFP4 routed experts",
+            precision_basis="decoded quantized weight format",
+            weight_dtype="uint8", quantized_value_dtype="float4_e2m1",
+            activation_dtype="bfloat16",
+            output_dtype="bfloat16", quantization_format="mxfp4_e2m1",
+            weight_block_size=[1, 32], packed_values_per_byte=2,
+            scale_dtype="ue8m0", scale_storage_dtype="uint8",
+        )
+        add(
+            ("dsv4_compressor_projection", "dsv4_index_compressor_projection"),
+            PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4/compressor.py: torch.mm",
+            weight_dtype="bfloat16", activation_dtype="bfloat16",
+            output_dtype="float32", accumulation_dtype="float32",
+        )
+        add(
+            ("moe_gating", "moe_gating_linear"), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: GateLinear",
+            weight_dtype="bfloat16", activation_dtype="bfloat16",
+            output_dtype="float32",
+        )
+        add(
+            ("dsv4_index_weights_projection",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4/attention.py: weights_proj",
+            weight_dtype="bfloat16", activation_dtype="bfloat16",
+            output_dtype="bfloat16",
+        )
+        add(
+            ("dsv4_fused_qkv_rmsnorm", "dsv4_final_norm"), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: RMSNorm tensor contracts",
+            weight_dtype="bfloat16", activation_dtype="bfloat16",
+            output_dtype="bfloat16",
+        )
+        add(
+            ("dsv4_fused_q_kv_prepare",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: fused Q/KV preparation",
+            precision_basis="input activation dtype",
+            activation_dtype="bfloat16", output_dtype="mixed",
+            output_tensor_dtypes={"query": "bfloat16", "kv_cache": "uint8"},
+        )
+        add(
+            ("dsv4_sparse_attention",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: sparse attention tensor contracts",
+            activation_dtype="bfloat16", output_dtype="bfloat16",
+            cache_dtype="uint8", attention_sink_dtype="float32",
+        )
+        add(
+            ("dsv4_output_inv_rope_quant",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: fused inverse RoPE/FP8 quantization",
+            activation_dtype="bfloat16", output_dtype="float8_e4m3fn",
+            output_scale_dtype="float32",
+        )
+        add(
+            (
+                "dsv4_compressor_save_partial_states",
+                "dsv4_index_compressor_save_partial_states",
+            ),
+            PrecisionType.FP32,
+            source_scope="vllm/models/deepseek_v4: save_partial_states",
+            activation_dtype="float32", output_dtype="float32", state_dtype="float32",
+        )
+        add(
+            (
+                "dsv4_compressor_fused_compress_store",
+                "dsv4_index_compressor_fused_compress_store",
+            ),
+            PrecisionType.FP32,
+            source_scope="vllm/models/deepseek_v4: fused compression/quantization/cache",
+            precision_basis="input projection/state dtype",
+            activation_dtype="float32", norm_weight_dtype="bfloat16",
+            ape_dtype="float32", accumulation_dtype="float32", output_dtype="uint8",
+        )
+        add(
+            ("dsv4_index_fused_query_prepare",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: fused index query preparation",
+            precision_basis="input activation dtype",
+            activation_dtype="bfloat16", output_dtype="mixed",
+            output_tensor_dtypes={"query": "float8_e4m3fn", "weights": "float32"},
+            query_scale_tensor=False,
+        )
+        add(
+            ("dsv4_index_scores",), PrecisionType.FP8,
+            source_scope="vllm/models/deepseek_v4: index FP8 score computation",
+            activation_dtype="float8_e4m3fn", output_dtype="float32", cache_dtype="uint8",
+        )
+        add(
+            ("dsv4_index_topk",), PrecisionType.FP32,
+            source_scope="vllm/models/deepseek_v4: routing/index score selection",
+            precision_basis="input score dtype", activation_dtype="float32",
+            output_dtype="int32",
+        )
+        add(
+            ("moe_gating_routing_topk",), PrecisionType.FP32,
+            source_scope="vllm/models/deepseek_v4: expert routing selection",
+            precision_basis="input score dtype", activation_dtype="float32",
+            output_dtype="mixed",
+            output_tensor_dtypes={"expert_ids": "int32", "expert_weights": "float32"},
+        )
+        add(
+            ("dsv4_index_short_context_fill",), None,
+            source_scope="vllm/models/deepseek_v4: short-context top-k fill",
+            precision="INT32", precision_basis="output_dtype", output_dtype="int32",
+        )
+        add(
+            ("moe_shuffling", "share_expert_act"), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: expert activation tensors",
+            activation_dtype="bfloat16", output_dtype="bfloat16",
+        )
+        add(
+            ("dsv4_embedding",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4/nvidia/model.py: model endpoints",
+            weight_dtype="bfloat16", output_dtype="bfloat16",
+        )
+        add(
+            ("dsv4_lm_head",), PrecisionType.BF16,
+            source_scope="vllm/model_executor/layers/logits_processor.py: _apply_head",
+            weight_dtype="bfloat16", activation_dtype="bfloat16",
+            output_dtype="source_scope_dependent", default_output_dtype="bfloat16",
+            output_dtype_condition=(
+                "Native head_dtype override is not represented in this source inventory"
+            ),
+        )
+        add(
+            (
+                "dsv4_mhc_first_pre", "dsv4_mhc_ffn_post_attn_pre",
+                "dsv4_mhc_attn_post_ffn_pre", "dsv4_mhc_head",
+            ),
+            PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4/nvidia/model.py: mHC functions",
+            activation_dtype="bfloat16", output_dtype="bfloat16",
+            function_weight_dtype="float32", state_dtype="float32",
+        )
+        add(
+            ("dsv4_mhc_final_post",), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4/nvidia/model.py: final mHC post",
+            activation_dtype="bfloat16", output_dtype="bfloat16", state_dtype="float32",
+        )
+        self._operation_source_inventory = inventory
 
     def _resolve_config_path(self, config_path: Optional[str]) -> Optional[str]:
         if config_path:
@@ -488,17 +723,26 @@ class QuantizationManager:
         metadata = []
         compute_ops = self._supported_operations.get("compute_operations", [])
         for op_name in sorted(compute_ops):
+            if self._operation_source_inventory:
+                if op_name not in self._operation_source_inventory:
+                    continue
+            elif op_name in self._DSV4_OPERATION_NAMES:
+                continue
             if op_name in self._GDN_OPERATION_NAMES and not self._active_gdn_operations:
                 continue
-            precision = self.get_precision(op_name)
+            source_inventory = self._operation_source_inventory.get(op_name, {})
+            precision_name = source_inventory.get("precision")
+            if precision_name is None:
+                precision_name = self.get_precision(op_name).name
             data_source = self._operation_data_sources.get(op_name, "profiling")
             approx_factor = self._operation_approximation_factors.get(op_name)
             metadata.append(
                 {
                     "operation": op_name,
-                    "precision": precision.name,
+                    "precision": precision_name,
                     "data_source": data_source,
                     "approximation_factor": approx_factor,
+                    **source_inventory,
                 }
             )
         return metadata
@@ -528,6 +772,13 @@ class QuantizationManager:
             )
 
         with self._lock:
+            if self._operation_source_inventory.get(operation_name, {}).get(
+                "precision"
+            ) == "INT32":
+                raise ValueError(
+                    f"Operation '{operation_name}' has an integer-only source tensor "
+                    "contract; floating/quantized PrecisionType lookup is unsupported."
+                )
             if cluster_type is not None and cluster_type in self._cluster_overrides:
                 cluster_ops = self._cluster_overrides[cluster_type]
                 if operation_name in cluster_ops:

@@ -24,11 +24,14 @@ def _require_nonnegative_int(value: int, *, field: str) -> int:
 
 
 class BlockPool:
-    def __init__(self, num_gpu_blocks: int, enable_caching: bool):
+    def __init__(self, num_gpu_blocks: int, enable_caching: bool, reserved_blocks: int = 0):
         self.num_gpu_blocks = int(num_gpu_blocks)
         self.enable_caching = bool(enable_caching)
+        self.reserved_blocks = _require_nonnegative_int(reserved_blocks, field="reserved_blocks")
+        if self.reserved_blocks and self.reserved_blocks >= self.num_gpu_blocks:
+            raise ValueError("The block pool must have at least one allocatable block.")
         self.blocks = [KVCacheBlock(idx) for idx in range(self.num_gpu_blocks)]
-        self.free_block_queue = FreeKVCacheBlockQueue(self.blocks)
+        self.free_block_queue = FreeKVCacheBlockQueue(self.blocks[self.reserved_blocks:])
         self.cached_block_hash_to_block: dict[Hashable, dict[int, KVCacheBlock]] = (
             defaultdict(dict)
         )
@@ -45,12 +48,13 @@ class BlockPool:
         return int(self.free_block_queue.num_free_blocks)
 
     def get_num_used_blocks(self) -> int:
-        return int(self.num_gpu_blocks - self.get_num_free_blocks())
+        return int(self.num_gpu_blocks - self.reserved_blocks - self.get_num_free_blocks())
 
     def get_usage(self) -> float:
-        if self.num_gpu_blocks <= 0:
+        allocatable_blocks = self.num_gpu_blocks - self.reserved_blocks
+        if allocatable_blocks <= 0:
             return 0.0
-        return self.get_num_used_blocks() / self.num_gpu_blocks
+        return self.get_num_used_blocks() / allocatable_blocks
 
     def _maybe_evict_cached_block(
         self, block: KVCacheBlock

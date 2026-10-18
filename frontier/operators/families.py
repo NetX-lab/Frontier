@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import cache
 
 from frontier.attention.families import (
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     DENSE_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -325,6 +326,52 @@ MEMORY_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.REPLICATED,
         ),
+    ),
+)
+
+
+DEEPSEEK_V4_MHC_FAMILY = OperatorFamilySpec(
+    family_id="deepseek_v4_mhc",
+    display_name="DeepSeek-V4 mHC and Model Endpoints",
+    supported_variants=("first", "middle", "last", "first_last"),
+    execution_enabled=False,
+    disabled_reason="DeepSeek-V4 mHC and endpoint scopes are source inventory only",
+    # Fused pre/post scopes own the layer norms and residual mixing. Generic
+    # MEMORY_FAMILY norm/add scopes would count that work a second time.
+    operators=tuple(
+        OperatorSpec(
+            name=name,
+            role=role,
+            phases=_ALL_PHASES,
+            predictor_target=False,
+            profiling_target=False,
+            e2e_trace_target=False,
+            resource_class=resource,
+            tp_mode=tp_mode,
+            projection_ownership=(
+                ProjectionOwnership.OUTSIDE_ATTENTION
+                if role is OperatorRole.PROJECTION
+                else ProjectionOwnership.NOT_PROJECTION
+            ),
+        )
+        for name, role, resource, tp_mode in (
+            ("dsv4_embedding", OperatorRole.EMBEDDING, ResourceClass.MEMORY,
+             TensorParallelMode.ATTENTION_TP),
+            ("dsv4_mhc_first_pre", OperatorRole.NORMALIZATION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_ffn_post_attn_pre", OperatorRole.NORMALIZATION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_attn_post_ffn_pre", OperatorRole.NORMALIZATION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_final_post", OperatorRole.RESIDUAL, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_head", OperatorRole.PROJECTION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_final_norm", OperatorRole.NORMALIZATION, ResourceClass.MEMORY,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_lm_head", OperatorRole.PROJECTION, ResourceClass.COMP,
+             TensorParallelMode.ATTENTION_TP),
+        )
     ),
 )
 
@@ -654,6 +701,8 @@ for _family in (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
+    DEEPSEEK_V4_MHC_FAMILY,
     STEP5_ATTENTION_FAMILY,
     MEMORY_FAMILY,
     FFN_FAMILY,

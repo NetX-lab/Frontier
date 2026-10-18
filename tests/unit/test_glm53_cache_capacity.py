@@ -40,22 +40,62 @@ def _capacity(model, block_size=64):
     )
 
 
-def _planner(model, pp_size=1):
+def _planner(model, pp_size=1, *, role=ClusterType.MONOLITHIC, ep=16):
     replica_config = ReplicaConfig(
         model_name="zai-org/GLM-5.3",
+        cluster_prefix=None if role is ClusterType.MONOLITHIC else role.name.lower(),
         num_pipeline_stages=pp_size,
         attn_tensor_parallel_size=8,
+        attn_dp=ep // 8,
         moe_tensor_parallel_size=1,
-        moe_expert_parallel_size=16,
+        moe_expert_parallel_size=ep,
     )
     assert replica_config.model_config == model
     replica = Replica(
         replica_config,
         SyntheticRequestGeneratorConfig(),
-        ClusterType.MONOLITHIC,
+        role,
     )
-    planner = MemoryPlanner(replica_config, replica, ClusterType.MONOLITHIC)
+    planner = MemoryPlanner(replica_config, replica, role)
     return planner
+
+
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+def test_unified_role_planner_uses_full_source_weights_and_common_cache_blocks(
+    model, monkeypatch, role,
+):
+    """P32 and D32 each retain the full model and full-history component owners."""
+
+    planner = _planner(model, role=role, ep=32)
+    assert planner._replica.cluster_type is role
+    assert planner._replica_config.cluster_prefix == role.name.lower()
+    assert planner._replica_config.world_size == 32
+    assert planner.get_parameter_memory_per_device_bytes() == 27_021_524_352
+    capacity = planner._get_component_kv_cache_capacity(64)
+    assert capacity.resident_bytes_per_common_block == 5_928_192
+    assert capacity.components[0].owner_layer_ids == tuple(range(78))
+    assert len(capacity.components[1].owner_layer_ids) == 21
+    # Keep the source weight estimate real; choose an explicit synthetic budget.
+    requested_bytes = 32 * 1024**3
+    available_bytes = 100 * 5_928_192 + 5_928_191
+    overhead = requested_bytes - 27_021_524_352 - available_bytes
+    assert overhead > 0
+    monkeypatch.setattr(planner._replica._device_config, "total_memory_gb", 32)
+    assert planner.get_num_blocks(
+        block_size=64,
+        gpu_memory_utilization=1,
+        non_kv_cache_overhead_bytes=overhead,
+    ) == 100
+    with pytest.raises(FrontierMemoryOOMError) as raised:
+        planner.get_num_blocks(
+            block_size=64,
+            gpu_memory_utilization=1,
+            non_kv_cache_overhead_bytes=requested_bytes - 27_021_524_352 - 5_928_191,
+        )
+    assert raised.value.details["cluster_type"] == role.name
+    assert raised.value.details["parameter_memory_per_device_bytes"] == 27_021_524_352
+    assert raised.value.details["resident_bytes_per_common_block"] == 5_928_192
+    assert raised.value.details["num_cache_component_owners"] == 99
 
 
 def test_glm_capacity_accounts_for_all_main_and_only_full_index_owners(model):
@@ -146,7 +186,7 @@ def test_glm_planner_rejects_less_than_one_common_block_with_component_details(
 
 
 def test_component_planner_rejects_pp_and_blockless_legacy_request_estimator(model):
-    with pytest.raises(NotImplementedError, match="num_pipeline_stages=1"):
+    with pytest.raises(NotImplementedError, match="num_pipeline_stages=1|DSA parameter estimates require PP1"):
         _planner(model, pp_size=2).get_num_blocks(block_size=64)
     planner = _planner(model)
     with pytest.raises(NotImplementedError, match="no cache block size"):
@@ -158,7 +198,7 @@ def test_component_planner_rejects_pp_and_blockless_legacy_request_estimator(mod
 
 
 def test_no_compressed_deepseek_capacity_is_guessed(model):
-    with pytest.raises(NotImplementedError, match="no component capacity resolver"):
+    with pytest.raises(NotImplementedError, match="explicit runtime cache selection"):
         get_attention_kv_cache_capacity(
             DEEPSEEK_V4_ATTENTION_FAMILY, model, block_size=64
         )

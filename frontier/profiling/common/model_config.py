@@ -125,11 +125,15 @@ class ModelConfig:
         # Quantization config for metadata tracking
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
-        tie_word_embeddings: bool = True,
+        tie_word_embeddings: Optional[bool] = True,
         # Typed FFN widths. Keep the legacy scalar for compatibility while
         # preserving dense and routed domains independently.
         dense_mlp_hidden_dim: Optional[int] = None,
         routed_mlp_hidden_dim: Optional[int] = None,
+        topk_method: Optional[str] = None,
+        scoring_func: Optional[str] = None,
+        norm_topk_prob: Optional[bool] = None,
+        routed_scaling_factor: Optional[float] = None,
     ):
         self.name = name
         self.num_layers = num_layers
@@ -213,6 +217,10 @@ class ModelConfig:
         self.index_topk_pattern = index_topk_pattern
         self.index_skip_topk_offset = index_skip_topk_offset
         self.indexer_rope_interleave = indexer_rope_interleave
+        self.topk_method = topk_method
+        self.scoring_func = scoring_func
+        self.norm_topk_prob = norm_topk_prob
+        self.routed_scaling_factor = routed_scaling_factor
         self.compress_ratios = (
             tuple(compress_ratios) if compress_ratios is not None else None
         )
@@ -281,7 +289,9 @@ class ModelConfig:
         self.quantization_config = quantization_config
 
         # Whether lm_head shares weights with embed_tokens
-        self.tie_word_embeddings = bool(tie_word_embeddings)
+        self.tie_word_embeddings = (
+            True if tie_word_embeddings is None else bool(tie_word_embeddings)
+        )
 
         if self.use_mla and self.use_mfa:
             raise ValueError("use_mla and use_mfa are mutually exclusive")
@@ -716,6 +726,8 @@ class ModelConfig:
                     "index_topk", "index_n_heads", "index_head_dim",
                     "index_topk_freq", "index_topk_pattern", "index_skip_topk_offset",
                     "indexer_rope_interleave",
+                    "topk_method", "scoring_func", "norm_topk_prob",
+                    "routed_scaling_factor",
                     "compress_ratios", "sliding_window", "num_hash_layers",
                     "hc_mult", "hc_sinkhorn_iters", "hc_eps", "o_groups",
                     "o_lora_rank", "compress_rope_theta", "swiglu_limit",

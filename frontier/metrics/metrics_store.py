@@ -791,6 +791,8 @@ class MetricsStore:
                 key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
                 if key not in aggregate_ops:
                     aggregate_ops[key] = [0.0, []]
+                if duration_ms <= 0:
+                    return
                 aggregate_ops[key][0] += duration_ms
                 aggregate_ops[key][1].append(layer_id)
 
@@ -2628,6 +2630,28 @@ class MetricsStore:
                 )
                 mlp_memory_bytes = 2 * num_mlp_params_per_device
 
+                attention_parameters = num_attention_params_per_layer * (
+                    cluster_config.replica_config.model_config.num_layers
+                    // cluster_config.replica_config.num_pipeline_stages
+                )
+                source_weight_estimate = param_counter.uses_source_parameter_storage
+                if source_weight_estimate:
+                    # Source coefficients and packed storage have different owners.
+                    # Preserve the historical report calculation for existing models.
+                    attention_parameters = (
+                        param_counter.get_num_attention_parameters_per_device()
+                    )
+                    model_weight_memory_bytes = (
+                        param_counter.get_parameter_memory_per_device_bytes()
+                    )
+                    model_weight_memory_gb = model_weight_memory_bytes / (1024**3)
+                    attention_memory_bytes = (
+                        param_counter.get_attention_parameter_memory_per_device_bytes()
+                    )
+                    mlp_memory_bytes = (
+                        param_counter.get_mlp_parameter_memory_per_device_bytes()
+                    )
+
                 # Calculate memory utilization percentage
                 total_device_memory_gb = (
                     cluster_config.replica_config.device_config.total_memory_gb
@@ -2676,13 +2700,7 @@ class MetricsStore:
                     "total_memory_gb": float(model_weight_memory_gb),
                     "memory_utilization_percent": float(memory_utilization_percent),
                     "breakdown": {
-                        "attention_parameters": int(
-                            num_attention_params_per_layer
-                            * (
-                                cluster_config.replica_config.model_config.num_layers
-                                // cluster_config.replica_config.num_pipeline_stages
-                            )
-                        ),
+                        "attention_parameters": int(attention_parameters),
                         "attention_memory_bytes": int(attention_memory_bytes),
                         "attention_memory_gb": float(
                             attention_memory_bytes / (1024**3)
@@ -2704,6 +2722,32 @@ class MetricsStore:
                     },
                 }
 
+                if source_weight_estimate:
+                    cluster_memory_info["memory_accounting"] = (
+                        "source-defined weight storage estimate; native allocation unverified"
+                    )
+                    conditional_mhc_bytes = (
+                        param_counter.get_conditional_mhc_broadcast_memory_bytes()
+                    )
+                    if conditional_mhc_bytes > 0:
+                        cluster_memory_info["conditional_mhc_broadcast_memory_bytes"] = (
+                            conditional_mhc_bytes
+                        )
+                        cluster_memory_info["conditional_mhc_broadcast_native_verified"] = False
+                    cluster_memory_info["breakdown"].update(
+                        {
+                            "other_parameters": int(
+                                num_params_per_device
+                                - attention_parameters
+                                - num_mlp_params_per_device
+                            ),
+                            "other_memory_bytes": int(
+                                model_weight_memory_bytes
+                                - attention_memory_bytes
+                                - mlp_memory_bytes
+                            ),
+                        }
+                    )
                 model_weight_memory[cluster_type.name] = cluster_memory_info
 
                 # Add cluster configuration to system architecture info

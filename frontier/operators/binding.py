@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from frontier.operators.spec import (
     OperatorFamilySpec,
@@ -258,89 +258,173 @@ def _get_model_architecture_profile(config):
     return get_model_architecture_profile(config)
 
 
-def build_operator_manifest(config) -> OperatorManifest:
-    """Build the operator manifest for a model config."""
+def _deepseek_v4_layer_manifest(config, layer) -> OperatorManifest:
+    """Select reachable source scopes, without admitting runtime execution."""
 
-    from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
+    from frontier.attention.families import (
+        DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT,
+        get_attention_family,
+    )
     from frontier.operators.families import (
-        FFN_FAMILY,
-        MEMORY_FAMILY,
+        DEEPSEEK_V4_MHC_FAMILY,
         MOE_FAMILY,
         SHARE_EXPERT_FAMILY,
+    )
+
+    attention_family = get_attention_family(layer.family_id)
+    attention_operators = DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT[layer.variant_id]
+    first = layer.global_layer_id == 0
+    last = layer.global_layer_id == config.num_layers - 1
+    mhc_names = {"dsv4_mhc_attn_post_ffn_pre"}
+    if first:
+        mhc_names.update(("dsv4_embedding", "dsv4_mhc_first_pre"))
+    else:
+        mhc_names.add("dsv4_mhc_ffn_post_attn_pre")
+    if last:
+        mhc_names.update((
+            "dsv4_mhc_final_post", "dsv4_mhc_head", "dsv4_final_norm", "dsv4_lm_head",
+        ))
+    mhc_variant = "first_last" if first and last else (
+        "first" if first else "last" if last else "middle"
+    )
+    reason = "DeepSeek-V4 layer scopes are source inventory; runtime execution is disabled"
+    bindings = [
+        FamilyBinding(
+            family_id=attention_family.family_id,
+            variant_id=layer.variant_id,
+            family=replace(attention_family, operators=attention_operators),
+            frozen=True,
+            reason=reason,
+        ),
+        FamilyBinding(
+            family_id=DEEPSEEK_V4_MHC_FAMILY.family_id,
+            variant_id=mhc_variant,
+            family=replace(
+                DEEPSEEK_V4_MHC_FAMILY,
+                operators=tuple(
+                    operator for operator in DEEPSEEK_V4_MHC_FAMILY.operators
+                    if operator.name in mhc_names
+                ),
+            ),
+            frozen=True,
+            reason=reason,
+        ),
+    ]
+    # Preserve the shared family identities, but do not expose their generic
+    # producer/predictor targets through this inventory-only model binding.
+    for family, variant in (
+        (MOE_FAMILY, "hash" if layer.global_layer_id < config.num_hash_layers else "score"),
+        (SHARE_EXPERT_FAMILY, "shared_dense"),
+    ):
+        bindings.append(FamilyBinding(
+            family_id=family.family_id,
+            variant_id=variant,
+            family=replace(
+                family,
+                supported_variants=(variant,),
+                operators=tuple(
+                    replace(operator, predictor_target=False, profiling_target=False,
+                            e2e_trace_target=False, execution_time_attr=None)
+                    for operator in family.operators
+                ),
+                profiling_order=(),
+            ),
+            frozen=True,
+            reason=reason,
+        ))
+    return OperatorManifest(family_bindings=tuple(bindings))
+
+
+def build_operator_manifest(config, *, global_layer_id: int | None = None) -> OperatorManifest:
+    """Build the complete model inventory or one global layer's reachable scopes."""
+    from frontier.attention.families import get_attention_family
+    from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
+    from frontier.operators.families import (
+        FFN_FAMILY, MEMORY_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY, get_operator_family,
     )
 
     architecture_profile = _get_model_architecture_profile(config)
     architecture_profile.validate_structural_requirements(config)
     get_specs = getattr(config, "get_layer_attention_specs", None)
     bindings = []
-    if callable(get_specs):
-        from frontier.attention.families import get_attention_family
-
+    contracts = ()
+    if global_layer_id is not None:
+        layer = bind_layer_attention(config, global_layer_id)
+        if layer.family_id == "deepseek_v4_attention":
+            return _deepseek_v4_layer_manifest(config, layer)
+        specs = (layer,)
+        layer_kind = architecture_profile.resolve_layer_contract(
+            config, layer_id=global_layer_id,
+        ).layer_kind
+        contracts = tuple(
+            contract for contract in architecture_profile.iter_active_layer_contracts(config)
+            if layer_kind in contract.base_layer_kinds
+        )
+    elif callable(get_specs):
         specs = tuple(get_specs())
         if tuple(spec.global_layer_id for spec in specs) != tuple(range(config.num_layers)):
             raise ValueError("Operator manifest requires every backbone layer in order")
-        seen = set()
-        for spec in specs:
-            identity = (spec.family_id, spec.variant_id)
-            if bind_layer_attention(config, spec.global_layer_id) != spec:
-                raise ValueError("Operator manifest disagrees with the model-owned layer binding")
-            if identity in seen:
-                continue
-            family = get_attention_family(spec.family_id)
-            if spec.variant_id not in family.supported_variants:
-                raise ValueError(f"Unknown attention variant {spec.variant_id!r} for {spec.family_id!r}")
-            bindings.append(FamilyBinding(
-                family_id=spec.family_id, variant_id=spec.variant_id, family=family,
-                frozen=not family.execution_enabled,
-                reason="Resolved from the model-owned layer attention bindings",
-            ))
-            seen.add(identity)
+        # V4 source scopes require a layer to select routing and mHC endpoints.
+        if any(spec.family_id == "deepseek_v4_attention" for spec in specs):
+            raise ValueError("DeepSeek-V4 operator scopes require an explicit global layer id")
+        contracts = tuple(architecture_profile.iter_active_layer_contracts(config))
     else:
-        attention_binding = bind_attention_family(config)
+        specs = ()
+        contracts = tuple(architecture_profile.iter_active_layer_contracts(config))
+        attention = bind_attention_family(config)
         bindings.append(FamilyBinding(
-            family_id=attention_binding.family_id,
-            variant_id=attention_binding.variant_id,
-            family=attention_binding.family,
-            frozen=attention_binding.frozen,
-            reason=attention_binding.reason,
+            family_id=attention.family_id, variant_id=attention.variant_id,
+            family=attention.family, frozen=attention.frozen, reason=attention.reason,
         ))
+
+    seen = set()
+    for spec in specs:
+        if bind_layer_attention(config, spec.global_layer_id) != spec:
+            raise ValueError("Operator manifest disagrees with the model-owned layer binding")
+        identity = (spec.family_id, spec.variant_id)
+        if identity in seen:
+            continue
+        family = get_attention_family(spec.family_id)
+        if spec.variant_id not in family.supported_variants:
+            raise ValueError(f"Unknown attention variant {spec.variant_id!r} for {spec.family_id!r}")
+        bindings.append(FamilyBinding(
+            family_id=spec.family_id, variant_id=spec.variant_id, family=family,
+            frozen=not family.execution_enabled,
+            reason="Resolved from the model-owned layer attention bindings",
+        ))
+        seen.add(identity)
     bindings.append(FamilyBinding(
         family_id=MEMORY_FAMILY.family_id, variant_id="replicated", family=MEMORY_FAMILY,
     ))
-    if architecture_profile._is_mixed_model(config):
+
+    layer_is_moe = bool(getattr(config, "is_moe", False))
+    if global_layer_id is not None and layer_is_moe:
+        from frontier.model_architectures import parse_moe_layer_ids
+        layer_is_moe = global_layer_id in parse_moe_layer_ids(
+            config.moe_layers_enum, config.num_layers,
+        )
+    elif architecture_profile._is_mixed_model(config):
         bindings.append(FamilyBinding(
             family_id=FFN_FAMILY.family_id, variant_id="dense", family=FFN_FAMILY,
         ))
-    if bool(getattr(config, "is_moe", False)):
-        bindings.append(
-            FamilyBinding(
-                family_id=MOE_FAMILY.family_id,
-                variant_id="routed",
-                family=MOE_FAMILY,
-            )
-        )
+    if layer_is_moe:
+        bindings.append(FamilyBinding(
+            family_id=MOE_FAMILY.family_id, variant_id="routed", family=MOE_FAMILY,
+        ))
         if not hasattr(config, "supports_share_expert"):
             raise TypeError("MoE operator manifests require config.supports_share_expert()")
         if config.supports_share_expert():
-            bindings.append(
-                FamilyBinding(
-                    family_id=SHARE_EXPERT_FAMILY.family_id,
-                    variant_id="shared_dense",
-                    family=SHARE_EXPERT_FAMILY,
-                )
-            )
+            bindings.append(FamilyBinding(
+                family_id=SHARE_EXPERT_FAMILY.family_id,
+                variant_id="shared_dense", family=SHARE_EXPERT_FAMILY,
+            ))
     else:
-        bindings.append(
-            FamilyBinding(
-                family_id=FFN_FAMILY.family_id,
-                variant_id="dense",
-                family=FFN_FAMILY,
-            )
-        )
-    from frontier.operators.families import get_operator_family
+        bindings.append(FamilyBinding(
+            family_id=FFN_FAMILY.family_id, variant_id="dense", family=FFN_FAMILY,
+        ))
 
     present = {binding.family_id for binding in bindings}
-    for contract in architecture_profile.iter_active_layer_contracts(config):
+    for contract in contracts:
         for family_id in contract.operator_family_ids:
             if family_id in present:
                 continue
@@ -353,6 +437,4 @@ def build_operator_manifest(config) -> OperatorManifest:
                 reason="Declared by the model-owned layer contract",
             ))
             present.add(family_id)
-    return OperatorManifest(
-        family_bindings=tuple(bindings)
-    )
+    return OperatorManifest(family_bindings=tuple(bindings))

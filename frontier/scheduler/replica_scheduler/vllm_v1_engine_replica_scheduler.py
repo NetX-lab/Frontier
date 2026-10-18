@@ -304,7 +304,44 @@ class VLLMv1EngineReplicaScheduler(
         self._decode_attn_next_cohort_id = 0
         self._current_iteration_token_budget = 0
         self._kv_cache_manager: Optional[ReplicaKVCacheManager] = None
-        if (
+        grouped_capacity = (
+            self._kv_cache_capacity
+            if self._kv_cache_capacity is not None
+            and self._kv_cache_capacity.is_grouped
+            else None
+        )
+        if grouped_capacity is not None:
+            if self._cluster_type != ClusterType.MONOLITHIC:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation initially supports MONOLITHIC only"
+                )
+            if int(self._replica_config.num_pipeline_stages) != 1:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation initially supports pipeline parallel size 1"
+                )
+            if bool(getattr(self._config, "enable_prefix_caching", False)):
+                raise NotImplementedError(
+                    "Grouped KV cache allocation does not support prefix caching"
+                )
+            if self._spec_decode_enabled:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation does not support speculative decoding or MTP"
+                )
+            if int(getattr(self._config, "num_preallocate_tokens", 0)) != 0:
+                raise NotImplementedError(
+                    "Grouped KV cache allocation does not support block preallocation"
+                )
+            self._kv_cache_manager = ReplicaKVCacheManager(
+                block_size=int(self._config.block_size),
+                num_gpu_blocks=int(self._config.num_blocks),
+                enable_caching=False,
+                caching_hash_algo=str(
+                    getattr(self._config, "prefix_caching_hash_algo", "builtin")
+                ),
+                num_preallocate_tokens=0,
+                cache_capacity=grouped_capacity,
+            )
+        elif (
             bool(getattr(self._config, "enable_prefix_caching", False))
             and self._cluster_type in (ClusterType.MONOLITHIC, ClusterType.PREFILL)
         ):
@@ -1009,9 +1046,7 @@ class VLLMv1EngineReplicaScheduler(
                     f"num_new_tokens={num_new_tokens}, "
                     f"blocks_allocated={self._allocation_map.get(request.id, 0)}"
                 )
-                available_blocks_running = int(
-                    self._config.num_blocks - self._num_allocated_blocks
-                )
+                available_blocks_running = self._get_available_kv_blocks()
                 self._emit_schedule_decision_event(
                     event="decision",
                     decision_result="RUNNING_SCHEDULED",
@@ -1186,7 +1221,7 @@ class VLLMv1EngineReplicaScheduler(
                 scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             ):
                 # Flow validation: log memory pressure for waiting queue admission
-                available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+                available_blocks = self._get_available_kv_blocks()
                 logger.info(
                     f"[MEMORY_PRESSURE] trigger=waiting_allocation_failed, "
                     f"requesting_req={request.id}, "
@@ -1255,9 +1290,7 @@ class VLLMv1EngineReplicaScheduler(
                 f"running_count={len(self._running_requests)}, "
                 f"token_budget_remaining={token_budget}"
             )
-            available_blocks_admission = int(
-                self._config.num_blocks - self._num_allocated_blocks
-            )
+            available_blocks_admission = self._get_available_kv_blocks()
             self._emit_schedule_decision_event(
                 event="decision",
                 decision_result="ADMISSION",
@@ -1356,7 +1389,7 @@ class VLLMv1EngineReplicaScheduler(
         waiting_tokens: List[int] = []
         released = self._materialize_monolithic_pp_terminal_release_before_iteration_start()
         token_budget = self._max_num_scheduled_tokens
-        available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+        available_blocks = self._get_available_kv_blocks()
         waiting_count = len(self._request_queue) + len(self._preempted_requests)
 
         # Flow validation: log iteration start
@@ -1377,7 +1410,12 @@ class VLLMv1EngineReplicaScheduler(
         )
 
         # Flow validation: log memory state
-        total_blocks = int(self._config.num_blocks)
+        reserved_blocks = int(
+            self._kv_cache_manager.block_pool.reserved_blocks
+            if self._is_grouped_kv_allocation()
+            else 0
+        )
+        total_blocks = int(self._config.num_blocks) - reserved_blocks
         allocated_blocks = int(self._num_allocated_blocks)
         usage_ratio = allocated_blocks / total_blocks if total_blocks > 0 else 0.0
         watermark = self._watermark_blocks
@@ -1385,6 +1423,7 @@ class VLLMv1EngineReplicaScheduler(
             f"[MEMORY_STATE] total_blocks={total_blocks}, "
             f"allocated_blocks={allocated_blocks}, "
             f"free_blocks={available_blocks}, "
+            f"reserved_blocks={reserved_blocks}, "
             f"usage_ratio={usage_ratio:.4f}, "
             f"watermark_blocks={watermark}"
         )
@@ -1396,9 +1435,7 @@ class VLLMv1EngineReplicaScheduler(
                 request_id=None,
                 token_budget=token_budget,
                 num_tokens=0,
-                available_blocks=int(
-                    self._config.num_blocks - self._num_allocated_blocks
-                ),
+                available_blocks=self._get_available_kv_blocks(),
                 batch_request_ids=[],
                 request_num_tokens=[],
                 batch_size=0,
@@ -1420,7 +1457,7 @@ class VLLMv1EngineReplicaScheduler(
         all_num_tokens.extend(running_tokens)
 
         # Flow validation: log Phase 1 end
-        available_blocks_p1 = int(self._config.num_blocks - self._num_allocated_blocks)
+        available_blocks_p1 = self._get_available_kv_blocks()
         logger.info(
             f"[PHASE1_END] scheduled_count={len(running_scheduled)}, "
             f"preempted_count={len(preempted_requests)}, "
@@ -1445,9 +1482,7 @@ class VLLMv1EngineReplicaScheduler(
             all_num_tokens.extend(waiting_tokens)
 
             # Flow validation: log Phase 2 end
-            available_blocks_p2 = int(
-                self._config.num_blocks - self._num_allocated_blocks
-            )
+            available_blocks_p2 = self._get_available_kv_blocks()
             logger.info(
                 f"[PHASE2_END] admitted_count={len(waiting_scheduled)}, "
                 f"token_budget_remaining={token_budget}, "
@@ -1472,7 +1507,7 @@ class VLLMv1EngineReplicaScheduler(
                 request_id=None,
                 token_budget=token_budget,
                 num_tokens=0,
-                available_blocks=int(self._config.num_blocks - self._num_allocated_blocks),
+                available_blocks=self._get_available_kv_blocks(),
                 batch_request_ids=[],
                 request_num_tokens=[],
                 batch_size=0,
@@ -1516,7 +1551,7 @@ class VLLMv1EngineReplicaScheduler(
             request_id=None,
             token_budget=token_budget,
             num_tokens=total_tokens,
-            available_blocks=int(self._config.num_blocks - self._num_allocated_blocks),
+            available_blocks=self._get_available_kv_blocks(),
             batch_request_ids=[request.id for request in ordered_scheduled_requests],
             request_num_tokens=ordered_num_tokens,
             batch_size=batch_size,

@@ -72,6 +72,12 @@ class BaseReplicaScheduler(ABC):
             # reserves enough fixed state before any KV admission occurs.
             max_num_seqs=self._admitted_request_capacity,
         )
+        # Resolve the immutable cache layout once for both explicit and
+        # planner-derived block counts.  The V1 scheduler consumes this exact
+        # object when the model uses grouped cache allocation.
+        self._kv_cache_capacity = memory_planner._get_component_kv_cache_capacity(
+            int(self._config.block_size)
+        )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")
         if num_blocks_mode not in {
@@ -265,6 +271,14 @@ class BaseReplicaScheduler(ABC):
         scheduler_type = (
             self._config.get_type() if hasattr(self._config, "get_type") else None
         )
+        if (
+            self._kv_cache_capacity is not None
+            and self._kv_cache_capacity.is_grouped
+            and scheduler_type != ReplicaSchedulerType.VLLM_V1
+        ):
+            raise NotImplementedError(
+                "Grouped KV cache allocation initially requires the vllm_v1 scheduler"
+            )
         if scheduler_type in {
             ReplicaSchedulerType.VLLM_V1,
             ReplicaSchedulerType.SGLANG,
@@ -275,8 +289,16 @@ class BaseReplicaScheduler(ABC):
             watermark_blocks = int(
                 self._config.watermark_blocks_fraction * self._config.num_blocks
             )
+            reserved_blocks = int(
+                self._kv_cache_capacity.reserved_blocks
+                if self._kv_cache_capacity is not None
+                and self._kv_cache_capacity.is_grouped
+                else 0
+            )
             minimum_chunk_blocks = 1
-            minimum_required_total_blocks = watermark_blocks + minimum_chunk_blocks
+            minimum_required_total_blocks = (
+                reserved_blocks + watermark_blocks + minimum_chunk_blocks
+            )
             if int(self._config.num_blocks) < minimum_required_total_blocks:
                 raise FrontierMemoryOOMError(
                     "Derived KV cache budget cannot admit even a single block-sized chunk under the current watermark policy.",
@@ -289,6 +311,7 @@ class BaseReplicaScheduler(ABC):
                         ),
                         "total_blocks": int(self._config.num_blocks),
                         "watermark_blocks": watermark_blocks,
+                        "reserved_blocks": reserved_blocks,
                         "minimum_chunk_blocks": minimum_chunk_blocks,
                         "minimum_required_total_blocks": minimum_required_total_blocks,
                         "block_size": int(self._config.block_size),
@@ -546,6 +569,12 @@ class BaseReplicaScheduler(ABC):
             return (
                 self._activation_bytes_allocated * 100
             ) / self._activation_memory_capacity_bytes
+        kv_cache_manager = getattr(self, "_kv_cache_manager", None)
+        if (
+            kv_cache_manager is not None
+            and kv_cache_manager.cache_capacity is not None
+        ):
+            return kv_cache_manager.usage * 100
         return (self._num_allocated_blocks * 100) / self._config.num_blocks
 
     @property

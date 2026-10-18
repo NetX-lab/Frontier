@@ -330,6 +330,9 @@ def build_profiling_plan(
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
 ) -> Dict[str, object]:
+    architecture_profile = get_model_architecture_profile(model_config)
+    # Producer admission is separate from attention execution.
+    architecture_profile.attention_linear_ops.require_enabled_for_profiling()
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tp_size must be a positive int, got {tp_size!r}")
     attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
@@ -366,11 +369,6 @@ def build_profiling_plan(
         ffn_sharded_enabled = tp_size in ffn_tp_set
 
     padded_n_embd = model_config.embedding_dim
-    architecture_profile = get_model_architecture_profile(model_config)
-    # Producer admission is separate from attention execution: independent
-    # FFN planning for another frozen attention family remains available.
-    architecture_profile.attention_linear_ops.require_enabled_for_profiling()
-
     typed_layer_contracts = _typed_layer_contracts(
         model_config,
         profile=architecture_profile,

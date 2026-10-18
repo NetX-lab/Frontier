@@ -541,8 +541,19 @@ class BaseModelConfig(BaseFixedConfig):
     indexer_rope_interleave: Optional[bool] = field(
         default=None, metadata={"omit_if_none": True}
     )
+    tie_word_embeddings: Optional[bool] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
+    topk_method: Optional[str] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
 
     # Compressed attention, routing, and mHC metadata from the native model.
+    scoring_func: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+    norm_topk_prob: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    routed_scaling_factor: Optional[float] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
     compress_ratios: Optional[Tuple[int, ...]] = field(
         default=None, metadata={"omit_if_none": True}
     )
@@ -570,7 +581,6 @@ class BaseModelConfig(BaseFixedConfig):
     yarn_only_types: Optional[Tuple[str, ...]] = field(default=None, metadata={"omit_if_none": True})
     use_rope_layers: Optional[Tuple[bool, ...]] = field(default=None, metadata={"omit_if_none": True})
     swa_num_attention_heads: Optional[int] = field(default=None, metadata={"omit_if_none": True})
-    tie_word_embeddings: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
     num_nextn_predict_layers: Optional[int] = field(default=None, metadata={"omit_if_none": True})
     mtp_layer_types: Optional[Tuple[str, ...]] = field(default=None, metadata={"omit_if_none": True})
     layer_rope_thetas: Optional[Tuple[float, ...]] = field(default=None, metadata={"omit_if_none": True})
@@ -1151,6 +1161,26 @@ class BaseModelConfig(BaseFixedConfig):
             index_topk_pattern=cfg.get("index_topk_pattern"),
             index_skip_topk_offset=cfg.get("index_skip_topk_offset"),
             indexer_rope_interleave=cfg.get("indexer_rope_interleave"),
+            tie_word_embeddings=(
+                cfg.get("tie_word_embeddings")
+                if cfg.get("index_topk") is not None or model_type_lower == "step5"
+                else None
+            ),
+            topk_method=(
+                cfg.get("topk_method")
+                if cfg.get("index_topk") is not None
+                else None
+            ),
+            scoring_func=(
+                cfg.get("scoring_func") if cfg.get("compress_ratios") is not None else None
+            ),
+            norm_topk_prob=(
+                cfg.get("norm_topk_prob") if cfg.get("compress_ratios") is not None else None
+            ),
+            routed_scaling_factor=(
+                cfg.get("routed_scaling_factor")
+                if cfg.get("compress_ratios") is not None else None
+            ),
             compress_ratios=cfg.get("compress_ratios"),
             sliding_window=(
                 cfg.get("sliding_window")
@@ -1170,7 +1200,7 @@ class BaseModelConfig(BaseFixedConfig):
                 field_name: cfg.get(field_name) if model_type_lower == "step5" else None
                 for field_name in (
                     "sparse_config", "attention_other_setting", "att_impl_type",
-                    "yarn_only_types", "use_rope_layers", "swa_num_attention_heads", "tie_word_embeddings",
+                    "yarn_only_types", "use_rope_layers", "swa_num_attention_heads",
                     "num_nextn_predict_layers", "mtp_layer_types", "layer_rope_thetas",
                     "partial_rotary_factors", "swiglu_limits", "swiglu_limits_shared",
                     "rms_norm_eps", "norm_dtype", "fp32_residual_connection",

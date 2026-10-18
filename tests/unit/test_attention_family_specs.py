@@ -121,16 +121,20 @@ def test_mla_family_lists_exact_physical_ops_and_projection_ownership() -> None:
     )
 
 
-def test_dsa_family_is_measured_frozen_with_explicit_structural_operators() -> None:
+def test_dsa_family_keeps_measured_execution_frozen_and_declares_structural_scopes() -> None:
     family = DSA_ATTENTION_FAMILY
 
     assert family.family_id == "dsa_attention"
     assert family.dsa_frozen is True
     assert family.execution_enabled is False
     assert family.structural_execution_enabled is True
-    assert tuple(operator.name for operator in family.operators) == (
+    assert tuple(op.name for op in family.operators) == (
         "attn_dsa_indexer", "attn_dsa_mla",
     )
+    assert tuple(op.execution_time_attr for op in family.operators) == (
+        "attn_dsa_indexer_time", "attn_dsa_mla_time",
+    )
+    assert family.kv_cache_capacity_resolver is not None
     family.require_enabled_for_execution(structural=True)
     with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
         family.require_enabled_for_execution()
