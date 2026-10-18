@@ -218,12 +218,12 @@ def main() -> None:
     cpu_table.add_argument("--output-dir", type=Path, required=True)
     cpu_table.set_defaults(run=command_cpu_table)
 
-    admit = commands.add_parser("admit", help="admission reading of a CPU-probe run")
+    admit = commands.add_parser("admit", help="CPU-probe or raw observer admission")
     admit.add_argument("--rule", choices=sorted(admission.RULES), required=True)
     admit.add_argument("--probe", type=Path, required=True)
     admit.add_argument("--reference", type=Path, action="append", required=True,
-                       help="clean run (client_e2e: one; send_span: the job's clean runs of the cell) "
-                            "or, for isolated_prefill, every CPU-probe run of the job, the probe included")
+                       help="CPU rules: clean runs or isolated_prefill probe cohort; "
+                            "observer_host: one expected.json")
     admit.set_defaults(run=command_admit)
 
     args = parser.parse_args()
