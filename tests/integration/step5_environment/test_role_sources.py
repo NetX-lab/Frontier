@@ -40,7 +40,7 @@ def test_duplicate_paths_validate_the_value_used_by_collector(monkeypatch, tmp_p
         module.main()
 
 
-@pytest.mark.parametrize('source_set', ['mrv2', 'frontend', 'native_launch'])
+@pytest.mark.parametrize('source_set', ['mrv2', 'frontend', 'native_launch', 'request'])
 def test_source_set_reaches_worker_without_loading_sdk(monkeypatch, source_set):
     spec = importlib.util.spec_from_file_location('role_sources', SCRIPT)
     module = importlib.util.module_from_spec(spec)

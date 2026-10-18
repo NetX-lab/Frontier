@@ -57,8 +57,28 @@ NATIVE_LAUNCH_SOURCES = {
     'vllm/entrypoints/cli/serve.py': 'Actual native multi-node headless entrypoint and shutdown ownership.',
     'vllm/entrypoints/openai/api_server.py': 'Native frontend/engine startup configuration propagation for multi-node execution.',
 }
+REQUEST_SOURCES = {
+    'vllm/v1/worker/gpu/dp_utils.py': 'Actual MRv2 graph descriptor and DP dispatch selection.',
+    'vllm/v1/worker/gpu/async_utils.py': 'Native sampled-output readiness and materialization ownership.',
+    'vllm/v1/outputs.py': 'Native asynchronous runner output contract.',
+    'vllm/config/profiler.py': 'Supported native profiler configuration and activity controls.',
+    'vllm/profiler/wrapper.py': 'Native profiler factory, iteration bounds and trace flush contract.',
+    'vllm/entrypoints/common/offline.py': 'Normal public generation and completion input path.',
+    'vllm/inputs/__init__.py': 'Public token-ID prompt types and validation exports.',
+    'vllm/renderers/inputs/preprocess.py': 'Native prompt normalization before rendering.',
+    'vllm/renderers/params.py': 'Native post-tokenization and truncation parameters.',
+    'vllm/v1/engine/input_processor.py': 'Actual token validation and resolved sampling inputs.',
+    'vllm/v1/engine/output_processor.py': 'Native token completion and finish-reason ownership.',
+    'vllm/outputs.py': 'Public request and completion output contracts.',
+    'vllm/compilation/breakable_cudagraph.py': 'Native PIECEWISE capture, eager breaks and replay ownership.',
+    'vllm/compilation/counter.py': 'Actual capture counters without invented replay statistics.',
+    'vllm/compilation/cuda_graph.py': 'Native CUDA graph wrapper entry and replay identity.',
+    'vllm/v1/worker/gpu/sample/sampler.py': 'Actual pre-mask logits and native sampling execution.',
+    'vllm/v1/worker/gpu/sample/output.py': 'Sampled GPU token result and readiness fields.',
+    'vllm/model_executor/warmup/step5_dsa_warmup.py': 'Actual scored-prefill warmup threshold and chunk constraints.',
+}
 SOURCE_SETS = {'role': SOURCES, 'mrv2': MRV2_SOURCES, 'frontend': FRONTEND_SOURCES,
-               'native_launch': NATIVE_LAUNCH_SOURCES}
+               'native_launch': NATIVE_LAUNCH_SOURCES, 'request': REQUEST_SOURCES}
 
 
 def main():
