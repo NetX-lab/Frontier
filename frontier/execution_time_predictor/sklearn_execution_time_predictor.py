@@ -7490,8 +7490,6 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
     def _predict_dsa_dummy_attention_time(self, layer_id: int) -> AttentionTime:
         """Represent source scopes using configured synthetic durations only."""
-        from frontier.entities.time_components import AttentionOperatorTimes
-
         spec = bind_layer_attention(self._model_config, layer_id)
         if spec.family_id != DSA_ATTENTION_FAMILY.family_id or spec.variant_id not in (
             "full_index", "shared_index",
@@ -7511,6 +7509,34 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 "attn_dsa_mla": base_time,
             }),
         )
+
+    def _predict_dsv4_dummy_attention_time(
+        self, batch: Batch, layer_id: int, cluster_type: ClusterType, *,
+        execution_mode: str, has_attention_metadata: bool,
+        prefix_caching: bool, decode_context_parallel_size: int,
+        prefill_context_parallel_size: int,
+    ) -> AttentionOperatorTimes:
+        """Price selected eager source components without admitting V4 serving.
+
+        Each source component call receives the configured synthetic duration.
+        Their sum does not model native auxiliary-stream critical-path latency.
+        """
+        if not self._enable_dummy_mode:
+            raise NotImplementedError("V4 component costs require synthetic dummy timing")
+        from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
+
+        workload = build_deepseek_v4_attention_workload(
+            self._model_config, self._replica_config, batch, layer_id,
+            cluster_type=cluster_type, execution_mode=execution_mode,
+            has_attention_metadata=has_attention_metadata,
+            prefix_caching=prefix_caching,
+            decode_context_parallel_size=decode_context_parallel_size,
+            prefill_context_parallel_size=prefill_context_parallel_size,
+        )
+        return AttentionOperatorTimes({
+            name: self._dummy_execution_time * len(calls)
+            for name, calls in workload["operators"].items()
+        })
 
     def _predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
@@ -7532,15 +7558,6 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 f"Idle batch detected (batch_id={batch.id}), skipping attention computation"
             )
             raise ValueError("Idle batch detected, skipping attention computation")
-            # return AttentionTime(
-            #     attention_prefill_execution_time=0.0,
-            #     attention_decode_execution_time=0.0,
-            #     attention_layer_pre_proj_execution_time=0.0,
-            #     attention_layer_post_proj_execution_time=0.0,
-            #     attention_rope_execution_time=0.0,
-            #     attention_kv_cache_save_execution_time=0.0,
-            #     attn_norm_time=0.0,
-            # )
 
         self._log_architecture_attention_shape(batch)
 
