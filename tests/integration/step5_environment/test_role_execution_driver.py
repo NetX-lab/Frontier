@@ -139,6 +139,7 @@ def startup_fixture(config, tmp_path):
     for node in nodes:
         node.update(generation=config['generation'], observer_sha256=config['observer_sha256'],
                     workload_deadline=2010, local_output=str(tmp_path/'native_output'),
+                    observer_output=str(tmp_path/'native_output/workers'),
                     endpoint=dict(address='10.4.5.6', port=19540))
     nodes[0].update(boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                     pid_namespace=os.readlink('/proc/self/ns/pid'))
@@ -1287,3 +1288,244 @@ def test_completed_public_id_must_match_the_original_retained_admission(config, 
     original = json.loads((Path(nodes[0]['local_output'])/'request_A_admission.json').read_text())
     assert original['records'][0]['public_request_id'] == '0'
     assert not (Path(nodes[0]['local_output'])/'native_failure.json').exists()
+
+
+def device_request_case():
+    """Shape/content records for fault testing only; never a native reference."""
+    request = dict(name='A', prompt_token_ids=[31, 32, 33, 34])
+    completed = dict(generated_token_ids=[41, 42])
+    sampling = dict(n=1, seed=None, max_tokens=2, min_tokens=2)
+    association = dict(internal_request_id='native-full-A', public_request_id='public-A')
+    steps = []
+    for index, (start, tokens) in enumerate([(0, [31, 32, 33, 34]), (4, [41])]):
+        n = len(tokens)
+        steps.append(dict(index=index, status='OBSERVED_DIAGNOSTIC_DEVICE_WITNESS_NOT_G2',
+            completion='OWNED_COPY_EVENT_QUERY_READY_AFTER_NATIVE_GENERATE',
+            finite_elements_observed=n*3, finite_elements_expected=n*3,
+            native_async_output_consumed_by_observer=False,
+            model_input_ids_none=True, model_inputs_embeds_none=False, padding_mask_used=True,
+            slot_groups=[['layer.0']],
+            prepared_cpu_batch=dict(req_ids=['native-full-A'], num_reqs=1, num_reqs_after_padding=1,
+                num_tokens=n, num_tokens_after_padding=n, query_start_loc_np=[0, n],
+                num_computed_tokens_np=[start], num_computed_prefill_tokens_np=[min(start, 4)], prefill_len_np=[4]),
+            values=dict(input_ids=tokens, positions=list(range(start, start+n)),
+                final_positions=list(range(start, start+n)), query_start_loc=[0, n], seq_lens=[start+n],
+                idx_mapping=[2], request_state=[2], is_padding=[False]*n, slot_mapping_0=list(range(n)),
+                hidden_states=dict(shape=[1, 3], sha256='cpu-shape-only'),
+                inputs_embeds=dict(shape=[1, 3], sha256='cpu-shape-only'))))
+    observed = dict(status='OBSERVED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2', collection_stopped=False,
+        errors=[], drained_steps=2, collected_steps=2, native_async_output_consumed_by_observer=False,
+        registered_requests=[dict(name='A', internal_request_id='native-full-A', persistent_index=2,
+                                 prompt_token_ids=request['prompt_token_ids'], resolved_sampling_fields=sampling)],
+        steps=steps)
+    return SimpleNamespace(rows=[dict(rank=rank, device_observation=copy.deepcopy(observed)) for rank in range(16)],
+        request=request, completed=completed, sampling=sampling, association=association)
+
+
+def test_diagnostic_device_join_uses_full_native_ids_and_conserves_every_valid_token():
+    case = device_request_case()
+    result = caller.device_request_rows(case.rows, None, case.association, case.request,
+                                         case.completed, case.sampling)
+    assert result['status'] == 'OBSERVED_DIAGNOSTIC_FRONTEND_WORKER_DEVICE_ASSOCIATION_NOT_G2'
+    assert result['workers'] == [dict(rank=rank, steps=2, valid_tokens=5) for rank in range(16)]
+    assert result['native_async_output_consumed_by_observer'] is False
+    assert result['clean_performance'] == result['G2'] == result['global_step_causality'] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('fault', ['rank', 'duplicate_rank', 'missing_observer', 'stopped', 'status',
+    'undrained', 'native_async_consumed', 'internal_id', 'prompt', 'sampling', 'missing_registration',
+    'missing_step', 'duplicate_step', 'query', 'positions', 'final_positions', 'seq_lens', 'input_token',
+    'padding', 'persistent_index', 'request_state', 'no_model_inputs', 'finite_count', 'completion',
+    'hidden_shape', 'embed_shape', 'cpu_frontier', 'decode_token'])
+def test_device_request_missing_or_inconsistent_evidence_never_becomes_G2(fault):
+    case = device_request_case()
+    worker = case.rows[0]
+    observed = worker['device_observation']
+    step = observed['steps'][0]
+    registration = observed['registered_requests'][0]
+    if fault == 'rank':
+        case.rows.pop()
+    elif fault == 'duplicate_rank':
+        case.rows[-1]['rank'] = 0
+    elif fault == 'missing_observer':
+        del worker['device_observation']
+    elif fault == 'stopped':
+        observed['collection_stopped'] = True
+    elif fault == 'status':
+        observed['status'] = 'UNVERIFIED'
+    elif fault == 'undrained':
+        observed['drained_steps'] = 1
+    elif fault == 'native_async_consumed':
+        observed['native_async_output_consumed_by_observer'] = True
+    elif fault == 'internal_id':
+        registration['internal_request_id'] = 'different-same-tail-A'
+    elif fault == 'prompt':
+        registration['prompt_token_ids'][-1] = 999
+    elif fault == 'sampling':
+        registration['resolved_sampling_fields']['seed'] = 0
+    elif fault == 'missing_registration':
+        observed['registered_requests'].clear()
+    elif fault == 'missing_step':
+        observed['steps'].pop()
+    elif fault == 'duplicate_step':
+        observed['steps'].append(copy.deepcopy(observed['steps'][-1]))
+    elif fault == 'query':
+        step['values']['query_start_loc'] = [0, 3]
+    elif fault in ('positions', 'final_positions'):
+        step['values'][fault][-1] += 1
+    elif fault == 'seq_lens':
+        step['values']['seq_lens'] = [5]
+    elif fault == 'input_token':
+        step['values']['input_ids'][-1] = 999
+    elif fault == 'padding':
+        step['values']['is_padding'][0] = True
+    elif fault == 'persistent_index':
+        step['values']['idx_mapping'] = [1]
+    elif fault == 'request_state':
+        step['values']['request_state'] = [2, 0]
+    elif fault == 'no_model_inputs':
+        step['model_inputs_embeds_none'] = True
+    elif fault == 'finite_count':
+        step['finite_elements_observed'] -= 1
+    elif fault == 'completion':
+        step['completion'] = 'SUBMITTED_ONLY'
+    elif fault == 'hidden_shape':
+        step['values']['hidden_states']['shape'][0] = 2
+    elif fault == 'embed_shape':
+        step['values']['inputs_embeds']['shape'] = [2, 3]
+    elif fault == 'cpu_frontier':
+        step['prepared_cpu_batch']['num_computed_tokens_np'] = [1]
+    elif fault == 'decode_token':
+        observed['steps'][1]['values']['input_ids'] = [42]
+    with pytest.raises((ValueError, KeyError)):
+        caller.device_request_rows(case.rows, None, case.association, case.request, case.completed, case.sampling)
+
+
+def test_device_preparation_ranks_and_sources_match_original_capacity_identity(config, tmp_path):
+    _, initial = startup_fixture(config, tmp_path)
+    preparation = dict(limits=dict(steps=34, scan_rows=64, witness_rows=1, owned_bytes=1024**2, rpc_bytes=1024**2),
+                       requests=[], sampling_fields={})
+    rows = [dict(rank=row['rank'], local_rank=row['local_rank'], pid=row['pid'],
+        worker_identity={field: row[field] for field in caller.IDENTITY_FIELDS},
+        source=dict(caller.observation.SOURCE), preparation=copy.deepcopy(preparation),
+        status='PREPARED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2',
+        device_observation=dict(status='PREPARED_NOT_EXECUTED', collected_steps=0, owned_bytes=512,
+                                clean_performance='UNVERIFIED', G2='UNVERIFIED')) for row in initial]
+    assert caller.device_preparation_rows(rows, initial, preparation, config)['ranks'] == 16
+    rows[0]['worker_identity']['generation'] += '-different'
+    with pytest.raises(ValueError, match='different worker'):
+        caller.device_preparation_rows(rows, initial, preparation, config)
+
+
+def test_preparation_rpc_failure_keeps_original_native_generation_and_terminal(config, tmp_path):
+    config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1, owned_bytes=4*1024**2, rpc_bytes=4*1024**2)
+    def configure(llm):
+        original_rpc = llm.collective_rpc
+        def rpc(method, timeout, args=()):
+            if method == 'prepare_device_observation':
+                llm.events.append(('rpc', method, timeout))
+                assert len(args) == 1 and len(args[0]['requests']) == 2
+                return [dict(rank=rank, status='UNVERIFIED') for rank in range(16)]
+            return original_rpc(method, timeout)
+        llm.collective_rpc = rpc
+    llm, nodes, events = run_leader(config, tmp_path, configure=configure)
+    receipt = json.loads((Path(nodes[0]['local_output'])/'request_evidence.json').read_text())
+    assert receipt['completed_requests'] == ['A', 'B'] and receipt['native_generation_returns'] == ['A', 'B']
+    assert receipt['evidence_verdict'] == 'UNVERIFIED' and receipt['result'] == 'FAIL'
+    assert not receipt['device_associations']
+    assert len([row for row in events if row[0] == 'generate']) == 2
+    assert not (Path(nodes[0]['local_output'])/'native_failure.json').exists()
+
+
+@pytest.mark.parametrize('rank', [0, 1])
+def test_node_finalization_includes_owned_device_reservations_before_archive(
+        config, tmp_path, monkeypatch, rank):
+    config['record_bytes'] = 64*1024
+    config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
+                                      owned_bytes=4096, rpc_bytes=4096)
+    def prepare_output(node):
+        local, records = Path(node['local_output']), Path(node['observer_output'])
+        for identity in records.glob('worker_*.json'):
+            worker = json.loads(identity.read_text())
+            payload = dict(kind='device_observation_reservation', rank=worker['rank'],
+                local_rank=worker['local_rank'], pid=worker['pid'], worker_identity=worker,
+                source=copy.deepcopy(caller.observation.SOURCE),
+                status='RESERVED_BEFORE_ALLOCATION', owned_bytes=4096)
+            path = records/f"device_reservation_rank_{worker['rank']}_pid_{worker['pid']}.json"
+            path.write_text(json.dumps(payload))
+        used = caller.non_cache_bytes(local)
+        assert used < config['record_bytes']-1024
+        with (local/'native.stdout').open('ab') as stream:
+            stream.write(b'x'*(config['record_bytes']-used-1024))
+        assert caller.non_cache_bytes(local) < config['record_bytes']
+    status, node, child, _, clock = native_node_attempt(config, tmp_path, monkeypatch,
+        rank=rank, prepare_output=prepare_output)
+    budget = status['evidence_finalization']['record_budget']
+    assert budget['owned_device_bytes'] == 8*4096
+    assert budget['required_bytes'] > config['record_bytes']
+    assert budget['verdict'] == 'UNVERIFIED' and status['result'] == 'FAIL'
+    assert status['raw_exit_code'] == (0 if rank == 0 else -15)
+    assert child.signals == ([] if rank == 0 else [15])
+    assert not (Path(config['archive_root'])/f'node_{rank}').exists()
+    assert clock() <= 2500
+
+
+def test_caller_receipt_write_counts_resident_device_allocations(config, tmp_path):
+    nodes, _ = startup_fixture(config, tmp_path)
+    node = nodes[0]
+    node['observer_output'] = str(Path(node['local_output'])/'workers')
+    config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
+                                      owned_bytes=4096, rpc_bytes=4096)
+    worker = dict(rank=0, local_rank=0, pid=123, generation=config['generation'], node_rank=0)
+    records = Path(node['observer_output'])
+    (records/'worker_0_123.json').write_text(json.dumps(worker))
+    (records/'device_reservation_rank_0_pid_123.json').write_text(json.dumps(dict(
+        kind='device_observation_reservation', rank=0, local_rank=0, pid=123,
+        worker_identity=worker, source=copy.deepcopy(caller.observation.SOURCE),
+        status='RESERVED_BEFORE_ALLOCATION', owned_bytes=4096)))
+    config['record_bytes'] = caller.non_cache_bytes(node['local_output'])+2048
+    with pytest.raises(ValueError, match='record budget'):
+        caller.retain(config, node, 'over_reserved.json', dict(status='TEST_ONLY'), clock=lambda: 10)
+    assert not (Path(node['local_output'])/'over_reserved.json').exists()
+
+
+@pytest.mark.parametrize('fault', ['missing', 'identity', 'source', 'duplicate_rank', 'negative_bytes'])
+def test_final_device_reservation_gaps_cannot_pass_budget(config, tmp_path, monkeypatch, fault):
+    config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
+                                      owned_bytes=4096, rpc_bytes=4096)
+    def prepare_output(node):
+        records = Path(node['observer_output'])
+        for index, identity in enumerate(sorted(records.glob('worker_*.json'))):
+            worker = json.loads(identity.read_text())
+            if fault == 'missing' and index == 0:
+                continue
+            payload = dict(kind='device_observation_reservation', rank=worker['rank'],
+                local_rank=worker['local_rank'], pid=worker['pid'], worker_identity=worker,
+                source=copy.deepcopy(caller.observation.SOURCE),
+                status='RESERVED_BEFORE_ALLOCATION', owned_bytes=4096)
+            path = records/f"device_reservation_rank_{worker['rank']}_pid_{worker['pid']}.json"
+            if index == 0:
+                if fault == 'identity':
+                    payload['worker_identity'] = dict(worker, generation='different-generation')
+                elif fault == 'source':
+                    payload['source']['observer_sha256'] = '0'*64
+                elif fault == 'negative_bytes':
+                    payload['owned_bytes'] = -1
+                elif fault == 'duplicate_rank':
+                    (records/f"device_reservation_rank_{worker['rank']}_pid_{worker['pid']+1}.json").write_text(json.dumps(payload))
+            path.write_text(json.dumps(payload))
+    status, node, child, _, _ = native_node_attempt(config, tmp_path, monkeypatch,
+                                                   prepare_output=prepare_output)
+    budget = status['evidence_finalization']['record_budget']
+    assert budget['owned_device_bytes'] is None and budget['verdict'] == 'UNVERIFIED'
+    assert status['result'] == 'FAIL' and status['raw_exit_code'] == 0
+    assert child.signals == [] and not (Path(config['archive_root'])/'node_0').exists()
+
+
+@pytest.mark.parametrize('rpc_bytes', [1, 2, 3, 4])
+def test_preflight_rejects_unencodable_rpc_cap(config, rpc_bytes):
+    config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
+                                      owned_bytes=8*1024**2, rpc_bytes=rpc_bytes)
+    with pytest.raises(ValueError, match='encode a JSON response'):
+        caller.preflight(config)
+    assert not Path(config['marker_root']).exists()

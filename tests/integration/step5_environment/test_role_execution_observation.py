@@ -525,7 +525,7 @@ def test_exhausted_worker_budget_stops_model_observation_without_stopping_native
     node['record_bytes'] = 8
     output[1].write_text(json.dumps(node))
     worker, calls, _ = make_worker(output)
-    observed = SimpleNamespace(last_record=None, stopped=False,
+    observed = SimpleNamespace(last_record=None, stopped=False, device=None,
         summary=lambda: {'collection_stopped': observed.stopped, 'native_compatibility': 'UNVERIFIED'})
     worker.model_runner._model_input_observation = observed
     worker.execute_model(scheduler())
@@ -557,8 +557,53 @@ def test_model_observer_setup_error_is_visible_without_changing_cpu_or_capacity_
 
 def test_prior_model_record_cannot_be_attributed_to_a_new_native_invocation(output):
     worker, calls, _ = make_worker(output)
-    observed = SimpleNamespace(last_record={'lifecycle': 'capture', 'events': ['earlier']}, stopped=False)
+    observed = SimpleNamespace(last_record={'lifecycle': 'capture', 'events': ['earlier']}, stopped=False, device=None)
     worker.model_runner._model_input_observation = observed
     worker.execute_model(scheduler())
     assert len(calls) == 1 and observed.last_record is None
     assert 'source_pinned_model_observation' not in rows(worker, output)[0]
+
+
+@pytest.mark.parametrize('failed_drain', [False, True])
+def test_complete_device_rpc_response_respects_cap_including_error_payload(output, failed_drain):
+    worker, calls, _ = make_worker(output)
+    worker.execute_model(scheduler())
+    class Device:
+        owned_bytes = 0
+        limits = SimpleNamespace(rpc_bytes=256)
+        stopped = False
+        def summary(self):
+            return dict(status='UNVERIFIED' if self.stopped else 'OBSERVED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2')
+        def drain(self, record):
+            if failed_drain:
+                raise ValueError('Long diagnostic: '+'x'*8192)
+            return self.summary()
+        def error(self, kind, failure):
+            self.stopped = True
+    device = Device()
+    worker.model_runner._model_input_observation = SimpleNamespace(
+        device=device, stopped=False, summary=lambda: dict(status='CPU_METADATA_ONLY'))
+    worker._request_observation.device_rpc_bytes = device.limits.rpc_bytes
+    result = worker.request_snapshot()
+    assert len((json.dumps(result, allow_nan=False, separators=(',', ':'))+'\n').encode()) <= 256
+    assert result['status'] == 'UNVERIFIED'
+    assert worker._request_observation.collection_stopped
+    assert device.stopped
+    assert len(calls) == 1 and worker._capacity_evidence_errors == []
+
+
+def test_failed_preparation_reply_is_bounded_and_records_zero_allocation(output, monkeypatch):
+    worker, _, _ = make_worker(output)
+    worker.execute_model(scheduler())
+    worker.model_runner._model_input_observation = SimpleNamespace(device=None, sites=None, limits=None)
+    def fail(*args, **kwargs):
+        raise ValueError('Preparation failure: '+'x'*8192)
+    monkeypatch.setattr(observation.model_observation, 'DeviceObservation', fail)
+    preparation = dict(limits=dict(steps=1, scan_rows=1, witness_rows=1, owned_bytes=4096, rpc_bytes=512),
+                       requests=[], sampling_fields={})
+    result = observation.prepare_device_observation(worker, preparation)
+    assert result['status'] == 'UNVERIFIED'
+    assert len((json.dumps(result, allow_nan=False, separators=(',', ':'))+'\n').encode()) <= 512
+    assert worker._request_observation.device_owned_bytes == 0
+    reservation = output[0]/f'device_reservation_rank_{worker.rank}_pid_{os.getpid()}.json'
+    assert json.loads(reservation.read_text())['owned_bytes'] == 0

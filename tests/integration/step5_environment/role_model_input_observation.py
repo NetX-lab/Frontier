@@ -1,10 +1,10 @@
 """Source-pinned MRv2 metadata observations; device execution remains unqualified.
 
 The scoped hooks read native frames and actual replay callees. They never replace
-runner, graph, sampler, or capture functions. All records are CPU metadata, even
-when a hook is delivered during native GPU capture. Hook delivery, compilation
-compatibility, device contents, finite values, and completion require a later
-separately frozen native request run.
+runner, graph, sampler, or capture functions. Capture records are CPU metadata only. Separately prepared diagnostic device
+witnesses use owned destinations outside capture and are read only after the
+native request returns. Native compatibility and complete G2 qualification
+require separately frozen runtime evidence.
 """
 from dataclasses import dataclass, field
 import copy
@@ -322,6 +322,8 @@ class ObservationSites:
     tensor_type: type
     graph_type: type
     intermediate_type: type | None = None
+    torch: object | None = None
+    padding_mask_used: bool | None = None
 
     @classmethod
     def bind(cls, native, worker_factory, *, pins=SOURCE_PINS, lines=SOURCE_LINES):
@@ -330,6 +332,8 @@ class ObservationSites:
             'worker': (worker_factory, ('Worker', '_make_model_runner'), 'worker'),
             'execute': (native.runner.GPUModelRunner.execute_model,
                         ('GPUModelRunner', 'execute_model'), 'runner'),
+            'add_requests': (native.runner.GPUModelRunner.add_requests,
+                             ('GPUModelRunner', 'add_requests'), 'runner'),
             'capture': (native.runner.GPUModelRunner.capture_model,
                         ('GPUModelRunner', 'capture_model'), 'runner'),
             'timing': (native.timing.StepTimingCollector.forward_start,
@@ -374,7 +378,8 @@ class ObservationSites:
             if any(lines[anchor] not in executable for anchor in anchors):
                 raise ValueError('Pinned statement is absent from loaded code: '+name)
         return cls(codes, dict(lines), sources, native.tensor_type, native.graph_type,
-                   getattr(native, 'intermediate_type', None))
+                   getattr(native, 'intermediate_type', None), getattr(native, 'torch', None),
+                   getattr(native, 'padding_mask_used', None))
 
 
 def installed_sites(worker, worker_factory):
@@ -388,7 +393,9 @@ def installed_sites(worker, worker_factory):
         ('breakable', 'vllm.compilation.breakable_cudagraph'),
         ('timing', 'vllm.v1.worker.gpu.async_utils'),
     )})
-    native.tensor_type = native.runner.torch.Tensor
+    native.torch = native.runner.torch
+    native.padding_mask_used = native.runner.envs.VLLM_MOE_SKIP_PADDING
+    native.tensor_type = native.torch.Tensor
     native.graph_type = native.runner.torch.cuda.CUDAGraph
     native.intermediate_type = native.runner.IntermediateTensors
     return native.runner.GPUModelRunner, ObservationSites.bind(native, worker_factory)
@@ -460,6 +467,330 @@ def request_frontiers(batch):
     return rows
 
 
+@dataclass(frozen=True)
+class DeviceObservationLimits:
+    """A diagnostic allocation within the existing rank evidence allowance."""
+    steps: int
+    scan_rows: int
+    witness_rows: int
+    owned_bytes: int
+    rpc_bytes: int
+
+    def __post_init__(self):
+        if any(type(value) is not int or value <= 0 for value in vars(self).values()):
+            raise ValueError('Device observation limits must be positive integers')
+        if self.rpc_bytes < len((json.dumps(None, separators=(',', ':'))+'\n').encode('utf-8')):
+            raise ValueError('RPC byte cap must encode a JSON response')
+
+
+class DeviceObservation:
+    """Own snapshots before native buffer reuse; never wait in an execution hook.
+
+    Preparation allocates every destination and reduction scratch outside capture.
+    Copies and reductions run on the original execution stream. The existing
+    post-generate worker RPC may read a destination only after its event is ready.
+    Native AsyncOutput and its original consumption remain separate owners.
+    """
+    def __init__(self, runner, sites, limits, requests, sampling_fields, rank_remaining,
+                 *, metadata_limits=ObservationLimits(), reserve=None):
+        self.runner, self.sites, self.limits = runner, sites, limits
+        self.torch, self.cpu_limits = sites.torch, metadata_limits
+        self.padding_mask_used = sites.padding_mask_used
+        if type(self.padding_mask_used) is not bool:
+            raise ValueError('Actual native padding-mask policy is required')
+        self.requests, self.sampling = copy.deepcopy(requests), copy.deepcopy(sampling_fields)
+        self.entries, self.registered, self.errors = [], {}, []
+        self.stopped, self.drained = False, 0
+        if self.torch is None:
+            raise ValueError('The installed runner Torch API is required for device witnesses')
+        if self.torch.cuda.is_current_stream_capturing():
+            raise ValueError('Device witness preparation must be outside CUDA capture')
+        if (runner.use_pp or runner.pcp_manager is not None or runner.num_speculative_steps or
+                not runner.is_first_pp_rank or not runner.is_last_pp_rank):
+            raise ValueError('Device witnesses require the approved PP1, PCP-off, speculation-off scope')
+        if not requests or len(requests) > metadata_limits.tracked_entries:
+            raise ValueError('Device preparation requires bounded explicit request manifests')
+        self.max_tokens, self.max_reqs = runner.max_num_tokens, runner.max_num_reqs
+        self.width = runner.model_config.hf_text_config.hidden_size
+        self.groups = [list(group.layer_names) for group in runner.kv_cache_config.kv_cache_groups]
+        self.layers = [name for group in self.groups for name in group]
+        if (len(self.layers) != len(set(self.layers)) or not self.groups or any(not group for group in self.groups) or
+                limits.witness_rows != 1 or limits.scan_rows > self.max_tokens or
+                limits.steps > self.cpu_limits.tracked_entries):
+            raise ValueError('Device witness layout exceeds its supported observation scope')
+        if any(type(value) is not int or value <= 0 for value in (self.max_tokens, self.max_reqs, self.width)):
+            raise ValueError('Actual native request, token and hidden dimensions are required')
+        self.stream = runner.main_stream
+        self.hidden_dtype = (self.torch.float32 if runner.model_config.hf_text_config.fp32_residual_connection
+                             else runner.model_config.dtype)
+        self.embed_dtype = runner.model_config.dtype
+        self.chunks = (self.max_tokens+limits.scan_rows-1)//limits.scan_rows
+        self.layout = dict(
+            input_ids=((self.max_tokens,), self.torch.int32),
+            positions=((self.max_tokens,), self.torch.int64),
+            is_padding=((self.max_tokens,), self.torch.bool),
+            query_start_loc=((self.max_reqs+1,), self.torch.int32),
+            seq_lens=((self.max_reqs,), self.torch.int32),
+            idx_mapping=((self.max_reqs,), self.torch.int64),
+            request_state=((self.max_reqs,), self.torch.int64),
+            final_input_ids=((self.max_tokens,), self.torch.int32),
+            final_positions=((self.max_tokens,), self.torch.int64),
+            inputs_embeds=((self.max_reqs, self.width), self.embed_dtype),
+            hidden_states=((self.max_reqs, self.width), self.hidden_dtype),
+            finite_counts=((self.chunks,), self.torch.int64))
+        for index in range(len(self.groups)):
+            self.layout['slot_mapping_'+str(index)] = ((self.max_tokens,), self.torch.int64)
+        def size(dtype):
+            return self.torch.finfo(dtype).bits//8 if dtype.is_floating_point else {
+                self.torch.int32: 4, self.torch.int64: 8, self.torch.bool: 1}[dtype]
+        self.host_bytes = limits.steps*sum(
+            self.elements(shape)*size(dtype) for shape, dtype in self.layout.values())
+        self.device_bytes = limits.scan_rows*self.width*(size(self.hidden_dtype)+size(self.torch.bool)) + limits.steps*self.chunks*size(self.torch.int64)
+        self.owned_bytes = self.host_bytes+self.device_bytes
+        if self.owned_bytes > min(limits.owned_bytes, rank_remaining):
+            raise ValueError('Owned diagnostic destinations exceed the remaining rank allowance')
+        if reserve is not None:
+            reserve(self.owned_bytes)
+        self.destinations = [{name: self.torch.empty(shape, dtype=dtype, device='cpu', pin_memory=True)
+                              for name, (shape, dtype) in self.layout.items()} for _ in range(limits.steps)]
+        self.absolute = self.torch.empty((limits.scan_rows, self.width), dtype=self.hidden_dtype,
+                                         device=runner.device)
+        self.finite = self.torch.empty((limits.scan_rows, self.width), dtype=self.torch.bool,
+                                       device=runner.device)
+        self.counts = self.torch.empty((limits.steps, self.chunks), dtype=self.torch.int64,
+                                       device=runner.device)
+        self.events = [self.torch.cuda.Event(enable_timing=False) for _ in range(limits.steps)]
+        for event in self.events:
+            event.record(self.stream)
+        self.check_stream()
+
+    @staticmethod
+    def elements(shape):
+        result = 1
+        for dim in shape:
+            result *= dim
+        return result
+
+    def error(self, kind, failure):
+        self.stopped = True
+        if not self.errors:
+            self.errors.append(dict(kind=kind, error_type=class_name(failure), error=str(failure)))
+
+    def check_stream(self):
+        actual = self.torch.cuda.current_stream(self.runner.device)
+        if (actual.cuda_stream != self.stream.cuda_stream or actual.device != self.stream.device or
+                self.torch.cuda.is_current_stream_capturing()):
+            raise ValueError('Device witnesses require the original execution stream outside capture')
+
+    def registrations(self, scheduler):
+        if self.stopped:
+            return
+        try:
+            for request in scheduler.scheduled_new_reqs:
+                internal = request.req_id
+                if internal in self.registered:
+                    raise ValueError('Duplicate original worker request registration')
+                prompt = list(request.prefill_token_ids)
+                expected = [row for row in self.requests if row['prompt_token_ids'] == prompt]
+                if len(expected) != 1 or request.prompt_len != len(prompt) or request.num_computed_tokens != 0:
+                    raise ValueError('Worker registration does not identify an approved fresh text request')
+                index = self.runner.req_states.req_id_to_index[internal]
+                if (self.runner.req_states.index_to_req_id[index] != internal or
+                        int(self.runner.req_states.prompt_len.np[index]) != len(prompt) or
+                        int(self.runner.req_states.prefill_len.np[index]) != len(prompt)):
+                    raise ValueError('Original worker registration and persistent request state disagree')
+                resolved = {name: copy.deepcopy(getattr(request.sampling_params, name)) for name in self.sampling}
+                if resolved != self.sampling:
+                    raise ValueError('Worker resolved sampling differs from original frontend submission')
+                self.registered[internal] = dict(internal_request_id=internal, name=expected[0]['name'],
+                    prompt_token_ids=prompt, resolved_sampling_fields=resolved, persistent_index=index,
+                    native_request_object_id=id(request), registration_owner_id=id(self.runner.req_states))
+        except BaseException as failure:
+            self.error('worker_request_registration', failure)
+
+    def copy_tensor(self, entry, name, tensor, rows):
+        if not isinstance(tensor, self.sites.tensor_type) or tensor.device != self.runner.device:
+            raise ValueError('Device witness is not a tensor on the actual worker device: '+name)
+        destination = self.destinations[entry['index']][name]
+        shape = (rows, *destination.shape[1:])
+        if tuple(tensor.shape) != shape or tensor.dtype != destination.dtype:
+            raise ValueError('Actual device witness shape/dtype differs from its prepared destination: '+name)
+        metadata = Metadata(self.sites, self.cpu_limits).value(tensor)
+        destination[:rows].copy_(tensor, non_blocking=True)
+        entry['tensors'][name] = dict(rows=rows, source=metadata)
+
+    def inputs(self, values, batch, invocation, input_id, *, descriptor=None):
+        if self.stopped:
+            return None
+        try:
+            self.check_stream()
+            if len(self.entries) >= self.limits.steps:
+                raise ValueError('Device witness step capacity exhausted; collection cannot wait or reuse a slot')
+            frontiers = request_frontiers(batch)
+            for row in frontiers:
+                internal, index = row['req_id'], row['idx_mapping_np']
+                registered = self.registered.get(internal)
+                if (registered is None or registered['persistent_index'] != index or
+                        self.runner.req_states.req_id_to_index.get(internal) != index or
+                        self.runner.req_states.index_to_req_id.get(index) != internal):
+                    raise ValueError('Final native batch has no complete original request registration')
+            n, r = batch['num_tokens_after_padding'], batch['num_reqs_after_padding']
+            if (not 0 < batch['num_tokens'] <= n <= self.max_tokens or
+                    not 0 < batch['num_reqs'] <= r <= self.max_reqs):
+                raise ValueError('Actual valid/padded batch dimensions exceed prepared destinations')
+            actual = values['input_batch']
+            entry = dict(index=len(self.entries), invocation=invocation, input_observation=input_id,
+                native_input_batch_id=id(actual), status='SUBMITTED_NOT_COMPLETED',
+                descriptor=copy.deepcopy(descriptor), padding_mask_used=self.padding_mask_used,
+                slot_groups=copy.deepcopy(self.groups),
+                prepared_cpu_batch=copy.deepcopy(batch), tensors={},
+                stream=dict(cuda_stream=self.stream.cuda_stream, device=str(self.stream.device)),
+                device_operations='diagnostic_copies_and_finite_reductions_not_clean_timing')
+            self.entries.append(entry)
+            for name, rows in (('input_ids', n), ('positions', n), ('is_padding', n),
+                               ('query_start_loc', r+1), ('seq_lens', r), ('idx_mapping', batch['num_reqs'])):
+                self.copy_tensor(entry, name, getattr(actual, name), rows)
+            self.copy_tensor(entry, 'request_state', self.runner.model_state.request_state[:r], r)
+            model_inputs = values['model_inputs']
+            if model_inputs['intermediate_tensors'] is not None:
+                raise ValueError('The approved PP1 witness cannot contain intermediate tensors')
+            self.copy_tensor(entry, 'final_positions', model_inputs['positions'], n)
+            entry['model_input_ids_none'] = model_inputs['input_ids'] is None
+            entry['model_inputs_embeds_none'] = model_inputs['inputs_embeds'] is None
+            if model_inputs['input_ids'] is not None:
+                self.copy_tensor(entry, 'final_input_ids', model_inputs['input_ids'], n)
+            if model_inputs['inputs_embeds'] is not None:
+                embed = model_inputs['inputs_embeds']
+                if tuple(embed.shape) != (n, self.width):
+                    raise ValueError('Final model embeddings do not cover the actual padded batch')
+                self.copy_rows(entry, 'inputs_embeds', embed, frontiers)
+            if entry['model_input_ids_none'] and entry['model_inputs_embeds_none']:
+                raise ValueError('Finalized text model has neither tokens nor embeddings')
+            slots = values['slot_mappings_by_layer']
+            if type(slots) is not dict or set(slots) != set(self.layers):
+                raise ValueError('Actual per-layer slot bindings differ from native KV groups')
+            for index, layers in enumerate(self.groups):
+                first = slots[layers[0]]
+                descriptor = Metadata(self.sites, self.cpu_limits).value(first)
+                if any(Metadata(self.sites, self.cpu_limits).value(slots[name]) != descriptor for name in layers):
+                    raise ValueError('Native group layer slot bindings do not share the same device view')
+                self.copy_tensor(entry, 'slot_mapping_'+str(index), first, n)
+            entry['request_frontiers'] = frontiers
+            return entry['index']
+        except BaseException as failure:
+            self.error('finalized_device_inputs', failure)
+            return None
+
+    def copy_rows(self, entry, name, tensor, frontiers):
+        destination = self.destinations[entry['index']][name]
+        if tensor.device != self.runner.device or tensor.dtype != destination.dtype:
+            raise ValueError('Actual witness row device/dtype differs from its prepared destination: '+name)
+        source = Metadata(self.sites, self.cpu_limits).value(tensor)
+        positions = [row['query_end']-1 for row in frontiers]
+        if any(position < 0 or position >= entry['prepared_cpu_batch']['num_tokens'] for position in positions):
+            raise ValueError('Witness rows must belong to valid native request queries')
+        for index, position in enumerate(positions):
+            destination[index:index+1].copy_(tensor[position:position+1], non_blocking=True)
+        entry['tensors'][name] = dict(rows=len(positions), source=source, valid_query_rows=positions)
+
+    def output(self, index, native_error, observer_errors, *, events=()):
+        entry = self.entries[index]
+        if native_error is not None or observer_errors or self.stopped:
+            entry['status'] = 'UNVERIFIED_NATIVE_OR_OBSERVER_ERROR'
+            self.stopped = True
+            return
+        with self.torch.inference_mode():
+            self.check_stream()
+            state = self.runner.execute_model_state
+            if state is None or id(state.input_batch) != entry['native_input_batch_id']:
+                raise ValueError('Original post-execution state no longer owns the prepared input batch')
+            hidden = state.hidden_states
+            n = entry['prepared_cpu_batch']['num_tokens_after_padding']
+            if not isinstance(hidden, self.sites.tensor_type) or tuple(hidden.shape) != (n, self.width):
+                raise ValueError('Actual hidden output does not cover the prepared native batch')
+            self.copy_rows(entry, 'hidden_states', hidden, entry['request_frontiers'])
+            valid = entry['prepared_cpu_batch']['num_tokens']
+            chunks = (valid+self.limits.scan_rows-1)//self.limits.scan_rows
+            for chunk in range(chunks):
+                start = chunk*self.limits.scan_rows
+                rows = min(self.limits.scan_rows, valid-start)
+                self.torch.abs(hidden[start:start+rows], out=self.absolute[:rows])
+                self.torch.lt(self.absolute[:rows], float('inf'), out=self.finite[:rows])
+                self.torch.sum(self.finite[:rows], dim=(0, 1), dtype=self.torch.int64,
+                               out=self.counts[index:index+1, chunk:chunk+1].view(()))
+            self.destinations[index]['finite_counts'][:chunks].copy_(self.counts[index, :chunks], non_blocking=True)
+            entry['tensors']['finite_counts'] = dict(rows=chunks)
+            entry['finite_elements_expected'] = valid*self.width
+            self.events[index].record(self.stream)
+        entry['status'] = 'COMPLETION_EVENT_RECORDED_NOT_QUERIED'
+        entry['native_async_output_consumed_by_observer'] = False
+        entry['native_replay_events'] = copy.deepcopy([row for row in events if row['kind'] in
+            ('replay_attempt', 'replay_outcome', 'graph_lifecycle_clear')])
+
+    def drain(self, record):
+        """Query readiness once after generate; no event/device synchronization or polling."""
+        if self.stopped:
+            raise ValueError('Device witness collection is unverified')
+        pending = self.entries[self.drained:]
+        if not pending:
+            raise ValueError('Post-generate device drain has no new execution witnesses')
+        rows, compact = [], []
+        for entry in pending:
+            index = entry['index']
+            if entry['status'] != 'COMPLETION_EVENT_RECORDED_NOT_QUERIED' or not self.events[index].query():
+                raise ValueError('Diagnostic completion event is not ready at the post-generate RPC')
+            row = copy.deepcopy(entry)
+            values = {}
+            for name, descriptor in row['tensors'].items():
+                tensor = self.destinations[index][name][:descriptor['rows']]
+                if name in ('hidden_states', 'inputs_embeds'):
+                    raw = tensor.view(self.torch.uint8).numpy().tobytes()
+                    values[name] = dict(shape=list(tensor.shape), dtype=str(tensor.dtype),
+                                        raw_hex=raw.hex(), sha256=hashlib.sha256(raw).hexdigest())
+                else:
+                    values[name] = tensor.numpy().tolist()
+            row['values'] = values
+            row['finite_elements_observed'] = sum(values['finite_counts'])
+            row['status'] = ('OBSERVED_DIAGNOSTIC_DEVICE_WITNESS_NOT_G2' if
+                row['finite_elements_observed'] == row['finite_elements_expected'] else
+                'UNVERIFIED_NONFINITE_VALID_HIDDEN_OUTPUT')
+            row['completion'] = 'OWNED_COPY_EVENT_QUERY_READY_AFTER_NATIVE_GENERATE'
+            row['padding_finite'] = 'NOT_SCANNED_NOT_VALID_TOKEN_WORK'
+            rows.append(row)
+            small = copy.deepcopy(row)
+            for name in ('hidden_states', 'inputs_embeds'):
+                if name in small['values']:
+                    del small['values'][name]['raw_hex']
+            compact.append(small)
+        previous = self.entries[:self.drained]
+        summary = self.summary(steps=previous+compact, drained=len(self.entries))
+        if len((json.dumps(summary, allow_nan=False, separators=(',', ':'))+'\n').encode('utf-8')) > self.limits.rpc_bytes:
+            raise ValueError('Device witness summary exceeds the configured RPC byte cap')
+        record(dict(scope='diagnostic_device_witness_not_G2', rows=rows,
+                    registered_requests=list(self.registered.values()),
+                    native_async_output_consumed_by_observer=False))
+        for entry, small in zip(pending, compact):
+            entry.clear()
+            entry.update(small)
+        self.drained = len(self.entries)
+        return summary
+
+    def summary(self, *, steps=None, drained=None):
+        rows = self.entries if steps is None else steps
+        drained = self.drained if drained is None else drained
+        return dict(scope='diagnostic_device_witness_not_G2',
+            status='UNVERIFIED' if self.stopped or self.errors or any(
+                row['status'].startswith('UNVERIFIED') for row in rows) else
+                'OBSERVED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2' if drained else 'PREPARED_NOT_EXECUTED',
+            owned_bytes=self.owned_bytes, host_bytes=self.host_bytes, device_bytes=self.device_bytes,
+            limits=vars(self.limits), collected_steps=len(self.entries), drained_steps=drained,
+            collection_stopped=self.stopped, errors=copy.deepcopy(self.errors),
+            registered_requests=copy.deepcopy(list(self.registered.values())),
+            steps=copy.deepcopy(rows[:drained]),
+            source_status='LOADED_CODE_MATCHES_PINNED_SOURCE',
+            native_async_output_consumed_by_observer=False, clean_performance='UNVERIFIED', G2='UNVERIFIED')
+
+
 @dataclass
 class ModelInputObservation:
     sites: ObservationSites
@@ -474,6 +805,7 @@ class ModelInputObservation:
     identities: dict = field(default_factory=dict)
     identity_serial: int = 0
     stopped: bool = False
+    device: object | None = None
 
     def continuity(self, owner, entry, graph, selection_key, path, *, captured=False):
         key = (path, id(owner), json.dumps(selection_key, sort_keys=True, allow_nan=False))
@@ -513,6 +845,7 @@ class ObservationScope:
         self.runner, self.state, self.kind = runner, state, kind
         self.sites, self.events, self.used = state.sites, [], 0
         self.input_id, self.frontiers = None, None
+        self.device_step = None
         self.pending, self.local_hooks, self.errors = {}, {}, []
         self.active, self.stopped, self.installed = False, False, False
         self.opcodes = {}
@@ -559,6 +892,9 @@ class ObservationScope:
             return
         self.input_id = row['event']
         row['input_observation'] = self.input_id
+        if self.state.device is not None and not values['dummy_run']:
+            self.device_step = self.state.device.inputs(values, batch, self.state.invocations, self.input_id,
+                                                        descriptor=row['descriptor'])
 
     def selection(self, parent, graph, path):
         values, metadata = parent.f_locals, self.metadata()
@@ -674,14 +1010,19 @@ class ObservationScope:
                     if frame.f_locals['self'] is self.runner.cudagraph_manager:
                         self.capture_inputs(frame, 'capture_forward')
             elif event == 'return':
-                if self.kind == 'capture' and frame.f_code is codes['create_capture']:
-                    if frame.f_locals['self'] is self.runner.cudagraph_manager and arg is not None:
-                        self.capture_inputs(frame, 'capture_inputs_prepared')
                 key = ('python', id(frame))
-                if key in self.pending:
+                registration = (self.state.device is not None and frame.f_code is codes['add_requests'] and
+                                frame.f_locals.get('self') is self.runner)
+                if registration or key in self.pending:
                     opcodes = self.opcodes.setdefault(frame.f_code, {
                         instruction.offset: instruction.opname for instruction in dis.get_instructions(frame.f_code)})
                     returned = opcodes.get(frame.f_lasti) in ('RETURN_VALUE', 'RETURN_CONST')
+                if registration and returned:
+                    self.state.device.registrations(frame.f_locals['scheduler_output'])
+                if self.kind == 'capture' and frame.f_code is codes['create_capture']:
+                    if frame.f_locals['self'] is self.runner.cudagraph_manager and arg is not None:
+                        self.capture_inputs(frame, 'capture_inputs_prepared')
+                if key in self.pending:
                     error = self.pending[key]['exception']
                     self.finish_replay(key, 'returned_submission_not_completion' if returned else
                                        'raised' if error else 'UNVERIFIED_RETURN_OR_EXCEPTION',
@@ -823,6 +1164,12 @@ class ObservationScope:
                     self.restore()
         except BaseException as failure:
             self.error('hook_restoration', failure)
+        if self.state.device is not None and self.device_step is not None:
+            try:
+                self.state.device.output(self.device_step, exc_type, self.errors, events=self.events)
+            except BaseException as failure:
+                self.state.device.error('post_execution_device_witness', failure)
+                self.error('post_execution_device_witness', failure)
         for pending in self.pending.values():
             pending['row']['outcome'] = 'UNVERIFIED_MISSING_REPLAY_RETURN'
         inputs = [row for row in self.events if row['kind'] == 'finalized_model_inputs']
@@ -860,6 +1207,7 @@ class ObservationScope:
                       native_error_type=exc_type.__module__+'.'+exc_type.__qualname__ if exc_type else None,
                       native_compatibility='UNVERIFIED', evidence_status=dict(UNMEASURED),
                       source_status='LOADED_CODE_MATCHES_PINNED_SOURCE',
+                      device_step=self.device_step,
                       sources=self.sites.sources, hook_delivery='UNVERIFIED' if self.errors else
                       'OBSERVED_CALLBACKS' if self.events else 'NOT_OBSERVED')
         self.state.last_record = record

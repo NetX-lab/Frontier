@@ -89,6 +89,10 @@ def preflight(config, *, new_generation=True):
     if config['rpc_seconds'] > 60 or config['archive_reserve_seconds'] != 300 or \
             config['record_bytes'] > 512*1024**2 or config['archive_bytes'] > 4*1024**3:
         raise ValueError('Preserve the 60s RPC, 300s reserve, 512MiB records and 4GiB archive ceilings')
+    if 'device_observation' in config:
+        limits = model_observation.DeviceObservationLimits(**config['device_observation'])
+        if max(limits.owned_bytes, limits.rpc_bytes) > config['record_bytes']//8:
+            raise ValueError('Device destinations share the original rank record allowance')
     archive = Path(config['archive_root'])
     cloud = Path('/mnt/codesign-exp/ycfeng/step5-preview')
     if archive == cloud or not archive.is_relative_to(cloud):
@@ -135,6 +139,12 @@ def non_cache_bytes(local):
                if path.is_file() and 'cache' not in path.relative_to(local).parts)
 
 
+def owned_device_bytes(config, node, *, require_complete=False):
+    if 'device_observation' not in config:
+        return 0
+    return observation.device_reservation_bytes(node['observer_output'], require_complete=require_complete)
+
+
 def retain(config, node, filename, value, *, clock=time.monotonic):
     """Charge detached caller receipts to the existing node allowance before each write."""
     local = Path(node['local_output'])
@@ -142,7 +152,7 @@ def retain(config, node, filename, value, *, clock=time.monotonic):
     if clock() >= node['workload_deadline']:
         raise TimeoutError('Request evidence exceeded the original workload deadline')
     used = non_cache_bytes(local)
-    if used+len(encoded) > config['record_bytes']:
+    if used+len(encoded)+owned_device_bytes(config, node) > config['record_bytes']:
         raise ValueError('Node aggregate evidence exceeds the original record budget')
     capacity.save(local/filename, value)
     return str(local/filename)
@@ -226,6 +236,108 @@ def request_metadata(rows, initial, previous, config):
                 public_request_join='UNMEASURED', device_inputs='UNMEASURED')
 
 
+def device_preparation_rows(rows, initial, preparation, config):
+    """Bind every prepared diagnostic allocation to the original worker identities."""
+    if len(rows) != len(initial) or {row.get('rank') for row in rows} != {row['rank'] for row in initial}:
+        raise ValueError('Every original worker must return its own device preparation result')
+    baseline = {row['rank']: row for row in initial}
+    for row in rows:
+        before = baseline[row['rank']]
+        if (row['status'] != 'PREPARED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2' or
+                row['preparation'] != preparation or
+                any(row['worker_identity'][field] != before[field] for field in IDENTITY_FIELDS) or
+                any(row[field] != before[field] for field in ('rank', 'local_rank', 'pid')) or
+                any(row['source'][key] != config[config_key] for key, config_key in (
+                    ('observer_sha256', 'request_observer_sha256'),
+                    ('capacity_observer_sha256', 'observer_sha256'),
+                    ('model_input_observer_sha256', 'model_input_observer_sha256')))):
+            raise ValueError('Device preparation is absent, unverified or from a different worker/source')
+        observed = row['device_observation']
+        if (observed['status'] != 'PREPARED_NOT_EXECUTED' or observed['collected_steps'] or
+                observed['owned_bytes'] > preparation['limits']['owned_bytes'] or
+                observed['clean_performance'] != 'UNVERIFIED' or observed['G2'] != 'UNVERIFIED'):
+            raise ValueError('Prepared allocation cannot establish native device execution or G2')
+    return dict(status='PREPARED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2', ranks=len(rows))
+
+
+def device_request_rows(rows, previous, association, request, completed, sampling_fields):
+    """Reconcile full internal IDs and actual device ranges for one returned request."""
+    if association is None:
+        raise ValueError('Device evidence requires the retained original frontend association')
+    if len(rows) != 16 or {row.get('rank') for row in rows} != set(range(16)):
+        raise ValueError('All sixteen original workers are required for device evidence')
+    internal = association['internal_request_id']
+    prior = {row['rank']: row.get('device_observation', {}).get('drained_steps', 0)
+             for row in previous} if previous is not None else {}
+    expected_tokens = list(request['prompt_token_ids'])+list(completed['generated_token_ids'][:-1])
+    counts = []
+    for worker in rows:
+        observed = worker.get('device_observation')
+        if (observed is None or observed['status'] != 'OBSERVED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2' or
+                observed['collection_stopped'] or observed['errors'] or
+                observed['drained_steps'] != observed['collected_steps'] or
+                observed['native_async_output_consumed_by_observer']):
+            raise ValueError('A worker has incomplete diagnostic device/completion evidence')
+        registered = [row for row in observed['registered_requests'] if row['internal_request_id'] == internal]
+        if (len(registered) != 1 or registered[0]['prompt_token_ids'] != request['prompt_token_ids'] or
+                registered[0]['resolved_sampling_fields'] != sampling_fields or
+                registered[0]['name'] != request['name']):
+            raise ValueError('Original frontend and worker registration IDs, prompt or sampling disagree')
+        steps = observed['steps'][prior.get(worker['rank'], 0):]
+        if not steps or any(row['prepared_cpu_batch']['req_ids'] != [internal] for row in steps):
+            raise ValueError('Device steps do not belong exclusively to the original complete request ID')
+        cursor = 0
+        for step in steps:
+            if (step['status'] != 'OBSERVED_DIAGNOSTIC_DEVICE_WITNESS_NOT_G2' or
+                    step['completion'] != 'OWNED_COPY_EVENT_QUERY_READY_AFTER_NATIVE_GENERATE' or
+                    step['finite_elements_observed'] != step['finite_elements_expected'] or
+                    step['native_async_output_consumed_by_observer']):
+                raise ValueError('Native valid hidden finite/completion witness is unverified')
+            batch, values = step['prepared_cpu_batch'], step['values']
+            valid, padded = batch['num_tokens'], batch['num_tokens_after_padding']
+            if (batch['num_reqs'] != 1 or batch['query_start_loc_np'][:2] != [0, valid] or
+                    values['query_start_loc'][:2] != [0, valid] or
+                    values['positions'][:valid] != list(range(cursor, cursor+valid)) or
+                    values['final_positions'][:valid] != values['positions'][:valid] or
+                    values['seq_lens'][0] != cursor+valid or
+                    values['input_ids'][:valid] != expected_tokens[cursor:cursor+valid] or
+                    (step['padding_mask_used'] and any(values['is_padding'][:valid])) or
+                    values['idx_mapping'] != [registered[0]['persistent_index']] or
+                    values['request_state'][0] != registered[0]['persistent_index'] or
+                    any(value != -1 for value in values['request_state'][1:])):
+                raise ValueError('Actual device token/position/request ranges do not conserve native request work')
+            groups = step['slot_groups']
+            if not groups or any(not group for group in groups):
+                raise ValueError('Native layer slot groups are absent')
+            for index in range(len(groups)):
+                slots = values['slot_mapping_'+str(index)]
+                if len(slots) != padded or any(type(slot) is not int or slot < 0 for slot in slots[:valid]):
+                    raise ValueError('Valid native token slot bindings are missing or padded')
+            if not step['model_input_ids_none'] and values['final_input_ids'][:valid] != values['input_ids'][:valid]:
+                raise ValueError('Finalized model token input differs from the observed prepared token content')
+            if step['model_input_ids_none'] and step['model_inputs_embeds_none']:
+                raise ValueError('Finalized model has no observed token or embedding input')
+            hidden = values['hidden_states']
+            if hidden['shape'][0] != 1 or step['finite_elements_expected'] != valid*hidden['shape'][1]:
+                raise ValueError('Finite reduction does not cover every valid hidden element')
+            if not step['model_inputs_embeds_none'] and values['inputs_embeds']['shape'] != hidden['shape']:
+                raise ValueError('Finalized embedding witness does not cover the valid native request row')
+            if (len(values['input_ids']) != padded or len(values['final_positions']) != padded or
+                    batch['num_computed_tokens_np'] != [cursor] or
+                    batch['num_computed_prefill_tokens_np'] != [min(cursor, len(request['prompt_token_ids']))] or
+                    batch['prefill_len_np'] != [len(request['prompt_token_ids'])]):
+                raise ValueError('Device witnesses and original CPU frontiers disagree in the approved scope')
+            cursor += valid
+        if cursor != len(expected_tokens):
+            raise ValueError('Device witnesses omit or duplicate useful prompt/decode token work')
+        counts.append(dict(rank=worker['rank'], steps=len(steps), valid_tokens=cursor))
+    return dict(status='OBSERVED_DIAGNOSTIC_FRONTEND_WORKER_DEVICE_ASSOCIATION_NOT_G2',
+        name=request['name'], public_request_id=association['public_request_id'], internal_request_id=internal,
+        workers=counts, native_async_output_consumed_by_observer=False,
+        global_step_causality='UNVERIFIED', physical_scope_census='UNVERIFIED', clean_performance='UNVERIFIED',
+        precision_and_exclusion_binding='UNVERIFIED', G2='UNVERIFIED')
+
+
 def compare_capacity(initial, final):
     for row in final:
         before = next(item for item in initial if item['rank'] == row['rank'])
@@ -286,6 +398,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
     kwargs = engine_kwargs(config, node)
     receipt = dict(scope=REQUEST_SCOPE, status='UNVERIFIED', generation=config['generation'],
         native_generation_returns=[], completed_requests=[], requests=[], frontend_associations=[],
+        device_associations=[],
         evidence_status=dict(UNMEASURED), evidence_verdict='PASS', evidence_errors=[],
         result='PASS', return_code=0, reasons=[], request_manifest=inputs['manifest'],
         request_manifest_sha256=inputs['manifest_sha256'],
@@ -352,6 +465,17 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
         initial_census = census(initial, 'all_rank_snapshots.json', 'all_rank_census.json')
         admission_sites = evidence('bind original frontend admission', lambda: bind_admission(llm.llm_engine))
         identity = evidence('read frontend process identity', lambda: identify_frontend(config, node))
+        preparation = None
+        if 'device_observation' in config:
+            preparation = dict(limits=copy.deepcopy(config['device_observation']),
+                requests=copy.deepcopy(inputs['requests']), sampling_fields=copy.deepcopy(sampling_fields))
+            phase = 'deadline_before_device_preparation_rpc'
+            timeout = min(remaining(), config['rpc_seconds'])
+            phase = 'native_device_preparation_rpc'
+            prepared = llm.collective_rpc('prepare_device_observation', args=(preparation,), timeout=timeout)
+            record('device_preparation.json', dict(workers=prepared))
+            evidence('validate all-worker device preparation',
+                lambda: device_preparation_rows(prepared, initial, preparation, config))
         previous = None
         for request in inputs['requests']:
             name = request['name']
@@ -384,7 +508,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
                         record('request_'+name+'_admission.json', admission_record)
             receipt['native_generation_returns'].append(name)
             detached = evidence('detach public output '+name, lambda: public_output(outputs))
-            checked = None
+            checked, association = None, None
             if detached is not None:
                 record('request_'+name+'_outputs.json', dict(name=name, outputs=detached))
                 checked = evidence('validate public output '+name,
@@ -401,8 +525,13 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
             phase = 'native_request_'+name+'_rpc'
             rows = llm.collective_rpc('request_snapshot', timeout=timeout)
             if record('request_'+name+'_snapshots.json', dict(workers=rows)) is not None:
-                evidence('validate request '+name+' CPU metadata',
+                metadata = evidence('validate request '+name+' CPU metadata',
                          lambda: request_metadata(rows, initial, previous, config))
+                if preparation is not None and metadata is not None and checked is not None:
+                    device = evidence('validate request '+name+' device witnesses', lambda: device_request_rows(
+                        rows, previous, association, request, checked, sampling_fields))
+                    if device is not None:
+                        receipt['device_associations'].append(device)
             previous = rows
             if checked is None:
                 break
@@ -440,7 +569,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
             submitted_sampling_fields=sampling_fields, config=config, sources=sources)
         deadline = phase.startswith('deadline_before_')
         native = phase in ('native_initialization', 'native_sampling_constructor',
-            'native_generate_A', 'native_generate_B', 'native_initial_capacity_rpc',
+            'native_generate_A', 'native_generate_B', 'native_initial_capacity_rpc', 'native_device_preparation_rpc',
             'native_request_A_rpc', 'native_request_B_rpc', 'native_final_capacity_rpc')
         receipt.update(status='BLOCKED_ON_RUNTIME' if native else
                        'UNVERIFIED_WORKLOAD_DEADLINE' if deadline else 'UNVERIFIED',
@@ -483,15 +612,22 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
                 final_result_retained=False)
             metadata_bytes = len((json.dumps(pending, indent=2, default=str)+'\n').encode('utf-8'))
             used = non_cache_bytes(local)
+            try:
+                owned = owned_device_bytes(config, node, require_complete=True)
+            except BaseException as failure:
+                return dict(verdict='UNVERIFIED', record_budget=dict(node_rank=node['node_rank'],
+                    record_bytes=config['record_bytes'], observed_bytes=used, owned_device_bytes=None,
+                    finalization_metadata_bytes=metadata_bytes, verdict='UNVERIFIED', error=repr(failure)))
             budget = dict(node_rank=node['node_rank'], record_bytes=config['record_bytes'],
-                observed_bytes=used, finalization_metadata_bytes=metadata_bytes,
-                required_bytes=used+metadata_bytes, scope='aggregate_non_cache_files_before_archive',
-                verdict='PASS' if used+metadata_bytes <= config['record_bytes'] else 'UNVERIFIED')
+                observed_bytes=used, owned_device_bytes=owned, finalization_metadata_bytes=metadata_bytes,
+                required_bytes=used+metadata_bytes+owned,
+                scope='aggregate_non_cache_files_and_reserved_tensor_storage_before_archive',
+                verdict='PASS' if used+metadata_bytes+owned <= config['record_bytes'] else 'UNVERIFIED')
             if budget['verdict'] != 'PASS':
                 return dict(verdict='UNVERIFIED', record_budget=budget)
             archive = original_finalize(status)
             budget['retained_bytes'] = archive['retained_bytes']
-            if archive['retained_bytes'] > config['record_bytes']:
+            if archive['retained_bytes']+owned > config['record_bytes']:
                 budget['verdict'] = 'UNVERIFIED'
             return dict(archive, verdict='UNVERIFIED' if budget['verdict'] != 'PASS' else archive['verdict'],
                         record_budget=budget)

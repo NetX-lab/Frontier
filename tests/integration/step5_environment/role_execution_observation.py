@@ -49,6 +49,9 @@ class RequestObservation:
     record_file: str | None = None
     rank_bytes_at_last_write: int | None = None
     rank_limit: int | None = None
+    device_rpc_bytes: int | None = None
+    device_owned_bytes: int = 0
+    device_reservation_file: str | None = None
 
 
 def class_name(value):
@@ -92,6 +95,88 @@ def batch_snapshot(batch):
     return row
 
 
+def rank_record_bytes(output, rank):
+    prefixes = (f'rank_{rank}_pid_', f'request_rank_{rank}_pid_',
+                f'worker_{rank}_', f'device_reservation_rank_{rank}_pid_')
+    return sum(path.stat().st_size for path in output.iterdir()
+               if path.is_file() and path.name.startswith(prefixes))
+
+
+def reserve_device_bytes(worker, owned_bytes):
+    """Retain a conservative tensor reservation before the first allocation."""
+    state = worker._request_observation
+    output, record_bytes = capacity.observation_output()
+    pid = os.getpid()
+    path = output/f'device_reservation_rank_{worker.rank}_pid_{pid}.json'
+    value = dict(kind='device_observation_reservation', rank=worker.rank,
+        local_rank=worker.local_rank, pid=pid,
+        worker_identity=dict(getattr(worker, '_capacity_identity', {})), source=dict(SOURCE),
+        status='RESERVED_BEFORE_ALLOCATION' if owned_bytes else 'NOT_ALLOCATED_PREPARATION_FAILED',
+        owned_bytes=owned_bytes, allocation_scope='prepared_tensor_storage_bytes')
+    encoded = (json.dumps(value, allow_nan=False, separators=(',', ':'))+'\n').encode('utf-8')
+    if rank_record_bytes(output, worker.rank)+len(encoded)+owned_bytes > record_bytes//8:
+        raise ValueError('Rank aggregate device reservation exceeds record budget')
+    with path.open('xb') as stream:
+        stream.write(encoded)
+    state.device_owned_bytes = owned_bytes
+    state.device_reservation_file = str(path)
+
+
+def device_reservation_bytes(output, *, require_complete=False):
+    """Read the same worker-owned reservations for caller and node finalization."""
+    output = Path(output)
+    seen, used = set(), 0
+    for path in output.glob('device_reservation_rank_*_pid_*.json'):
+        row = json.loads(path.read_text())
+        rank, local, pid, owned = (row[name] for name in ('rank', 'local_rank', 'pid', 'owned_bytes'))
+        if (any(type(value) is not int for value in (rank, local, pid, owned)) or
+                rank < 0 or not 0 <= local < 8 or pid <= 0 or owned < 0 or rank in seen or
+                path.name != f'device_reservation_rank_{rank}_pid_{pid}.json' or
+                row['kind'] != 'device_observation_reservation' or row['source'] != SOURCE or
+                row['status'] not in ('RESERVED_BEFORE_ALLOCATION', 'NOT_ALLOCATED_PREPARATION_FAILED')):
+            raise ValueError('Device reservation identity, source or byte count is unverified')
+        identity = json.loads((output/f'worker_{rank}_{pid}.json').read_text())
+        if identity != row['worker_identity'] or any(identity[name] != row[name] for name in ('rank', 'local_rank', 'pid')):
+            raise ValueError('Device reservation differs from its original worker identity')
+        if row['status'] == 'NOT_ALLOCATED_PREPARATION_FAILED' and owned != 0:
+            raise ValueError('Failed preparation without allocation must reserve zero bytes')
+        seen.add(rank)
+        used += owned
+    if require_complete:
+        workers = [json.loads(path.read_text()) for path in output.glob('worker_*.json')]
+        if len(workers) != 8 or seen != {row['rank'] for row in workers}:
+            raise ValueError('Final device reservations do not cover all eight node workers')
+    return used
+
+
+def device_response(worker, state, result, observed=None):
+    """Cap the complete JSON response; native wire serialization is not measured."""
+    cap = state.device_rpc_bytes
+    if cap is None and observed is not None and observed.device is not None:
+        cap = state.device_rpc_bytes = observed.device.limits.rpc_bytes
+    if cap is None:
+        return result
+    try:
+        encoded = (json.dumps(result, allow_nan=False, separators=(',', ':'))+'\n').encode('utf-8')
+        if len(encoded) > cap:
+            raise ValueError('Complete device observation RPC response exceeds its JSON byte cap')
+        return result
+    except BaseException as failure:
+        observer_failure(state, 'device_rpc_response', failure, stop=True)
+        if observed is not None:
+            observed.stopped = True
+            if observed.device is not None:
+                observed.device.error('device_rpc_response', failure)
+    compact = dict(status='UNVERIFIED', rank=worker.rank, collection_stopped=True,
+                   error_kind='device_rpc_response', cap_scope='complete_worker_json_response')
+    if len((json.dumps(compact, separators=(',', ':'))+'\n').encode('utf-8')) <= cap:
+        return compact
+    compact = dict(status='UNVERIFIED')
+    if len((json.dumps(compact, separators=(',', ':'))+'\n').encode('utf-8')) <= cap:
+        return compact
+    return None
+
+
 def write_record(worker, payload):
     """Share the original rank allowance and exclusively create a new request JSONL."""
     if 'STEP5_CAPACITY_NODE_FILE' not in os.environ:
@@ -100,12 +185,10 @@ def write_record(worker, payload):
     state = worker._request_observation
     pid = os.getpid()
     path = output/f'request_rank_{worker.rank}_pid_{pid}.jsonl'
-    files = (output/f'rank_{worker.rank}_pid_{pid}.jsonl',
-             output/f'worker_{worker.rank}_{pid}.json', path)
-    used = sum(p.stat().st_size for p in files if p.exists())
+    used = rank_record_bytes(output, worker.rank)
     encoded = payload.encode('utf-8')
     rank_limit = record_bytes//8
-    if used+len(encoded) > rank_limit:
+    if used+len(encoded)+state.device_owned_bytes > rank_limit:
         raise ValueError('Rank aggregate evidence exceeds record budget')
     # First write cannot append to an earlier session's evidence. No retry on failure.
     with path.open('xb' if state.record_file is None else 'ab') as stream:
@@ -168,8 +251,50 @@ def record_invocation(worker, state, scheduler, scheduler_error, native_error, r
         state.last_batch_counts = {name: row['prepared_batch'][name] for name in BATCH_COUNT_FIELDS}
 
 
-def request_snapshot(worker):
-    """Return bounded counters and last statuses, not arrays, history or capacity verdicts."""
+def prepare_device_observation(worker, preparation):
+    """Allocate diagnostic destinations through the existing native worker RPC."""
+    state = getattr(worker, '_request_observation', None)
+    if state is None:
+        state = worker._request_observation = RequestObservation()
+    observed = None
+    try:
+        limits = model_observation.DeviceObservationLimits(**preparation['limits'])
+        if state.device_rpc_bytes is None:
+            state.device_rpc_bytes = limits.rpc_bytes
+        runner = worker.model_runner
+        observed = runner._model_input_observation
+        if observed.device is not None or state.device_reservation_file is not None:
+            raise ValueError('Device observation may be prepared only once per native resident runner')
+        if state.collection_stopped:
+            raise ValueError('Worker evidence collection is already stopped')
+        output, record_bytes = capacity.observation_output()
+        used = rank_record_bytes(output, worker.rank)
+        candidate = model_observation.DeviceObservation(runner, observed.sites, limits,
+            preparation['requests'], preparation['sampling_fields'], record_bytes//8-used,
+            metadata_limits=observed.limits, reserve=lambda owned: reserve_device_bytes(worker, owned))
+        observed.device = candidate
+        result = dict(rank=worker.rank, local_rank=worker.local_rank, pid=os.getpid(),
+            worker_identity=dict(getattr(worker, '_capacity_identity', {})),
+            status='PREPARED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2', source=dict(SOURCE),
+            preparation=copy.deepcopy(preparation), device_observation=candidate.summary())
+    except BaseException as failure:
+        observer_failure(state, 'device_preparation', failure, stop=True)
+        if observed is not None:
+            observed.stopped = True
+            if observed.device is not None:
+                observed.device.error('device_preparation', failure)
+        if state.device_reservation_file is None:
+            try:
+                reserve_device_bytes(worker, 0)
+            except BaseException as reservation_error:
+                observer_failure(state, 'device_reservation', reservation_error, stop=True)
+        result = dict(rank=worker.rank, status='UNVERIFIED', source=dict(SOURCE),
+            error_type=class_name(failure), error=str(failure), owned_bytes=state.device_owned_bytes)
+    return device_response(worker, state, result, observed)
+
+
+def request_snapshot(worker, record=write_record):
+    """Return CPU counters and drain prepared diagnostic snapshots after generate."""
     state = getattr(worker, '_request_observation', None)
     if state is None:
         state = RequestObservation()
@@ -194,11 +319,30 @@ def request_snapshot(worker):
     observed = getattr(runner, '_model_input_observation', None)
     if observed is not None:
         result['source_pinned_model_observation'] = observed.summary()
+        if observed.device is not None:
+            try:
+                def retain_device(row):
+                    payload = json.dumps(dict(pid=os.getpid(), rank=worker.rank, local_rank=worker.local_rank,
+                        worker_identity=dict(getattr(worker, '_capacity_identity', {})),
+                        source=dict(SOURCE), **row), allow_nan=False, separators=(',', ':'))+'\n'
+                    record(worker, payload)
+                    state.records_written += 1
+                result['device_observation'] = observed.device.drain(retain_device)
+                result['request_metadata']['records_written'] = state.records_written
+                result['request_metadata']['rank_bytes_at_last_write'] = state.rank_bytes_at_last_write
+                result['request_metadata']['rank_limit'] = state.rank_limit
+            except BaseException as failure:
+                observed.device.error('post_generate_device_drain', failure)
+                observer_failure(state, 'device_drain', failure, stop=True)
+                result['device_observation'] = observed.device.summary()
+                result['status'] = 'UNVERIFIED'
+                result['request_metadata']['collection_stopped'] = state.collection_stopped
+                result['errors']['observer'] = dict(state.observer_error)
     if hasattr(worker, '_runner_observer_error'):
         result['runner_observer_error'] = copy.deepcopy(worker._runner_observer_error)
     if runner is not None and hasattr(runner, '_model_input_observation_error'):
         result['model_input_observer_error'] = copy.deepcopy(runner._model_input_observation_error)
-    return result
+    return device_response(worker, state, result, observed)
 
 
 def observed_worker(base, record=write_record, *, prepare_runner=model_observation.installed_sites):
@@ -255,7 +399,9 @@ def observed_worker(base, record=write_record, *, prepare_runner=model_observati
                 except BaseException as failure:
                     observer_failure(state, 'runner_collection_stop', failure, stop=True)
 
-    methods = dict(execute_model=execute_model, request_snapshot=request_snapshot)
+    methods = dict(execute_model=execute_model,
+                   request_snapshot=lambda self: request_snapshot(self, record),
+                   prepare_device_observation=prepare_device_observation)
     if hasattr(base, '_make_model_runner'):
         native_factory = base._make_model_runner
 

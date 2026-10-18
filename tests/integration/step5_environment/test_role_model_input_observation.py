@@ -209,8 +209,11 @@ class GPUModelRunner:
         self.last_model_args = args
         self.last_model_kwargs = kwargs
         return self.result
+    def add_requests(self, scheduler_output):
+        return None
     def execute_model(self, scheduler_output, *, dummy_run=False):
         self.execution_calls += 1
+        self.add_requests(scheduler_output)
         input_batch = self.input_batch
         batch_desc = self.vllm_config.desc
         model_inputs = dict(self.model_state)
@@ -930,3 +933,431 @@ def test_model_observation_summary_cannot_mutate_retained_status_or_errors(nativ
     assert again['last_scope']['observation_status']['kwargs_metadata'] == 'UNVERIFIED_UNSUPPORTED_VALUE_TYPE'
     assert again['last_scope']['observer_errors'] == []
     assert record(observed)['status'] == 'UNVERIFIED'
+
+
+class DeviceCpuTensor:
+    """CPU fault model queues operations so host reads cannot race owned copies."""
+    def __init__(self, values, api, dtype, device, *, pinned=False):
+        self.values, self.api, self.dtype, self.device = values, api, dtype, device
+        self.pinned = pinned
+
+    @property
+    def shape(self):
+        return self.values.shape
+
+    def stride(self):
+        return tuple(value//self.values.itemsize for value in self.values.strides)
+
+    def storage_offset(self):
+        return 0
+
+    def data_ptr(self):
+        return self.values.__array_interface__['data'][0]
+
+    def untyped_storage(self):
+        return SimpleNamespace(data_ptr=self.data_ptr, nbytes=lambda: self.values.nbytes)
+
+    def __getitem__(self, key):
+        return DeviceCpuTensor(self.values[key], self.api, self.dtype, self.device, pinned=self.pinned)
+
+    def copy_(self, source, *, non_blocking):
+        assert non_blocking is True
+        if self.device == 'cpu':
+            assert self.pinned
+        self.api.queued.append(lambda: np.copyto(self.values, source.values))
+        self.api.operations.append(('copy', self.device, tuple(self.shape), self.api.stream.cuda_stream))
+        return self
+
+    def view(self, shape):
+        if shape is self.api.uint8:
+            return DeviceCpuTensor(self.values.view(np.uint8), self.api, self.api.uint8, self.device)
+        return DeviceCpuTensor(self.values.reshape(shape), self.api, self.dtype, self.device, pinned=self.pinned)
+
+    def numpy(self):
+        assert self.api.host_reads_allowed, 'Host contents are unavailable before post-generate drain'
+        assert self.device == 'cpu'
+        return self.values
+
+    def __getattr__(self, name):
+        if name in ('cpu', 'item', 'tolist', 'synchronize'):
+            raise AssertionError('No device host read, synchronization or recomputation is allowed')
+        raise AttributeError(name)
+
+
+class DeviceCpuApi:
+    def __init__(self):
+        from contextlib import nullcontext
+        self.nullcontext = nullcontext
+        self.queued, self.operations, self.events = [], [], []
+        self.capturing, self.host_reads_allowed, self.complete_count = False, False, 0
+        self.stream = SimpleNamespace(cuda_stream=71, device='cuda:0')
+        self.float32 = SimpleNamespace(is_floating_point=True, name='float32')
+        self.bfloat16 = SimpleNamespace(is_floating_point=True, name='bfloat16')
+        self.int32, self.int64, self.bool, self.uint8 = [DeviceCpuDtype(name) for name in
+                                                      ('int32', 'int64', 'bool', 'uint8')]
+        self.cuda = SimpleNamespace(is_current_stream_capturing=lambda: self.capturing,
+                                    current_stream=lambda device: self.stream, Event=self.event)
+        self.fail_copy, self.fail_event = False, False
+
+    def inference_mode(self):
+        return self.nullcontext()
+
+    def finfo(self, dtype):
+        return SimpleNamespace(bits=16 if dtype is self.bfloat16 else 32)
+
+    def empty(self, shape, *, dtype, device, pin_memory=False):
+        assert not self.capturing
+        self.operations.append(('allocate', device, tuple(shape)))
+        kind = ('float32' if dtype is self.float32 else 'uint16' if dtype is self.bfloat16 else dtype.name)
+        return DeviceCpuTensor(np.zeros(shape, dtype=kind), self, dtype, device, pinned=pin_memory)
+
+    def abs(self, tensor, *, out):
+        self.queued.append(lambda: np.abs(tensor.values, out=out.values))
+        self.operations.append(('abs', tuple(tensor.shape)))
+
+    def lt(self, tensor, value, *, out):
+        self.queued.append(lambda: np.less(tensor.values, value, out=out.values))
+        self.operations.append(('finite', tuple(tensor.shape)))
+
+    def sum(self, tensor, *, dim, dtype, out):
+        assert dim == (0, 1) and dtype is self.int64
+        self.queued.append(lambda: np.copyto(out.values, np.sum(tensor.values, dtype=np.int64)))
+        self.operations.append(('sum', tuple(tensor.shape)))
+
+    def event(self, *, enable_timing):
+        assert not enable_timing
+        api = self
+        class Event:
+            def record(self, stream):
+                if api.fail_event:
+                    raise ValueError('injected event record failure')
+                assert stream is api.stream and not api.capturing
+                self.ready_at = len(api.queued)
+                api.operations.append(('event', stream.cuda_stream, self.ready_at))
+            def query(self):
+                api.operations.append(('query',))
+                return self.ready_at <= api.complete_count
+            def synchronize(self):
+                raise AssertionError('Observer may not wait or synchronize')
+        result = Event()
+        self.events.append(result)
+        return result
+
+    def complete(self):
+        for operation in self.queued[self.complete_count:]:
+            operation()
+        self.complete_count = len(self.queued)
+        self.host_reads_allowed = True
+
+
+class DeviceCpuDtype:
+    is_floating_point = False
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return 'torch.'+self.name
+
+
+@pytest.fixture
+def device_case():
+    api = DeviceCpuApi()
+    tokens = [31, 32, 33, 34]
+    state = SimpleNamespace(req_id_to_index={'full-internal-A': 2}, index_to_req_id={2: 'full-internal-A'},
+        prompt_len=SimpleNamespace(np=np.array([0, 0, 4])), prefill_len=SimpleNamespace(np=np.array([0, 0, 4])))
+    runner = SimpleNamespace(device='cuda:0', main_stream=api.stream, use_pp=False, pcp_manager=None,
+        num_speculative_steps=0, is_first_pp_rank=True, is_last_pp_rank=True, max_num_tokens=8, max_num_reqs=2,
+        model_config=SimpleNamespace(hf_text_config=SimpleNamespace(hidden_size=3, fp32_residual_connection=True),
+                                     dtype=api.bfloat16), req_states=state,
+        kv_cache_config=SimpleNamespace(kv_cache_groups=[SimpleNamespace(layer_names=['layer.0', 'layer.1'])]))
+    cpu = dict(num_reqs=1, num_reqs_after_padding=2, num_tokens=4, num_tokens_after_padding=8,
+        req_ids=['full-internal-A'], idx_mapping_np=[2], num_scheduled_tokens=[4],
+        query_start_loc_np=[0, 4, 4], num_computed_tokens_np=[0], prefill_len_np=[4],
+        num_computed_prefill_tokens_np=[0], is_prefilling_np=[True], prefill_runs_as_decode_np=None)
+    def tensor(values, dtype):
+        result = api.empty(np.array(values).shape, dtype=dtype, device='cuda:0')
+        result.values[...] = values
+        return result
+    batch = SimpleNamespace(input_ids=tensor(tokens+[91]*4, api.int32),
+        positions=tensor(list(range(8)), api.int64), is_padding=tensor([False]*4+[True]*4, api.bool),
+        query_start_loc=tensor([0, 4, 4], api.int32), seq_lens=tensor([4, 0], api.int32),
+        idx_mapping=tensor([2], api.int64))
+    runner.model_state = SimpleNamespace(request_state=tensor([2, -1], api.int64))
+    embed = tensor(np.arange(24).reshape(8, 3), api.bfloat16)
+    slots = tensor(list(range(8)), api.int64)
+    hidden = tensor(np.arange(24).reshape(8, 3), api.float32)
+    hidden.values[4:] = np.nan
+    runner.execute_model_state = SimpleNamespace(input_batch=batch, hidden_states=hidden)
+    sites = SimpleNamespace(torch=api, tensor_type=DeviceCpuTensor, intermediate_type=None, padding_mask_used=True)
+    limits = observation.DeviceObservationLimits(steps=3, scan_rows=2, witness_rows=1, owned_bytes=65536, rpc_bytes=65536)
+    requests = [dict(name='A', prompt_token_ids=tokens), dict(name='B', prompt_token_ids=[31, 32, 33, 35])]
+    observed = observation.DeviceObservation(runner, sites, limits, requests,
+        dict(n=1, max_tokens=2, min_tokens=2, seed=None), 65536)
+    req = SimpleNamespace(req_id='full-internal-A', prefill_token_ids=tokens, prompt_len=4,
+        num_computed_tokens=0, sampling_params=SimpleNamespace(n=1, max_tokens=2, min_tokens=2, seed=None))
+    observed.registrations(SimpleNamespace(scheduled_new_reqs=[req]))
+    values = dict(input_batch=batch, model_inputs=dict(input_ids=None, positions=batch.positions,
+        inputs_embeds=embed, intermediate_tensors=None), slot_mappings_by_layer={'layer.0': slots, 'layer.1': slots})
+    return SimpleNamespace(api=api, observed=observed, runner=runner, cpu=cpu, values=values,
+                           hidden=hidden, embed=embed, req=req, tensor=tensor)
+
+
+def test_device_destinations_are_owned_and_complete_before_native_source_reuse(device_case):
+    case = device_case
+    index = case.observed.inputs(case.values, case.cpu, 1, 1)
+    case.observed.output(index, None, [])
+    assert index == 0 and not case.api.host_reads_allowed
+    assert not any(row[0] == 'query' for row in case.api.operations)
+    with pytest.raises(ValueError, match='not ready'):
+        case.observed.drain(lambda row: pytest.fail('Unready data must not be published'))
+    case.api.complete()
+    case.hidden.values[:] = -99
+    case.values['input_batch'].input_ids.values[:] = 77
+    records = []
+    result = case.observed.drain(records.append)
+    row = records[0]['rows'][0]
+    assert row['values']['input_ids'][:4] == [31, 32, 33, 34]
+    assert row['values']['hidden_states']['raw_hex'] == np.array([[9, 10, 11]], dtype=np.float32).tobytes().hex()
+    assert row['finite_elements_observed'] == row['finite_elements_expected'] == 12
+    assert row['padding_finite'] == 'NOT_SCANNED_NOT_VALID_TOKEN_WORK'
+    assert result['drained_steps'] == 1 and result['clean_performance'] == result['G2'] == 'UNVERIFIED'
+    assert 'raw_hex' not in result['steps'][0]['values']['hidden_states']
+    assert result['native_async_output_consumed_by_observer'] is False
+
+
+@pytest.mark.parametrize('fault', ['id', 'index', 'prompt', 'sampling', 'duplicate'])
+def test_worker_registration_has_complete_native_identity_and_sampling(device_case, fault):
+    case = device_case
+    case.observed.registered.clear()
+    if fault == 'id':
+        case.runner.req_states.index_to_req_id[2] = 'different-same-suffix-A'
+    elif fault == 'index':
+        case.runner.req_states.req_id_to_index.clear()
+    elif fault == 'prompt':
+        case.req.prefill_token_ids = [31, 32, 33, 999]
+    elif fault == 'sampling':
+        case.req.sampling_params.seed = 0
+    reqs = [case.req, case.req] if fault == 'duplicate' else [case.req]
+    case.observed.registrations(SimpleNamespace(scheduled_new_reqs=reqs))
+    assert case.observed.stopped and case.observed.errors
+
+
+@pytest.mark.parametrize('fault', ['stream', 'capture', 'capacity', 'index', 'missing_slots',
+                                  'slot_view', 'positions', 'embedding_shape', 'no_input'])
+def test_final_device_input_failures_stop_only_observation(device_case, fault):
+    case = device_case
+    if fault == 'stream':
+        case.api.stream = SimpleNamespace(cuda_stream=72, device='cuda:0')
+    elif fault == 'capture':
+        case.api.capturing = True
+    elif fault == 'capacity':
+        case.observed.entries = [{}]*case.observed.limits.steps
+    elif fault == 'index':
+        case.runner.req_states.req_id_to_index['full-internal-A'] = 1
+    elif fault == 'missing_slots':
+        del case.values['slot_mappings_by_layer']['layer.1']
+    elif fault == 'slot_view':
+        case.values['slot_mappings_by_layer']['layer.1'] = case.tensor([0]*8, case.api.int64)
+    elif fault == 'positions':
+        case.values['model_inputs']['positions'] = case.tensor([0]*4, case.api.int64)
+    elif fault == 'embedding_shape':
+        case.values['model_inputs']['inputs_embeds'] = case.tensor([[0]*3]*4, case.api.bfloat16)
+    elif fault == 'no_input':
+        case.values['model_inputs']['inputs_embeds'] = None
+    assert case.observed.inputs(case.values, case.cpu, 1, 1) is None
+    assert case.observed.stopped and case.observed.errors
+    assert not any(row[0] == 'query' for row in case.api.operations)
+
+
+@pytest.mark.parametrize('fault', ['native', 'observer', 'missing_state', 'hidden_shape', 'hidden_dtype', 'event'])
+def test_output_failure_never_materializes_native_async_output_or_waits(device_case, fault):
+    case = device_case
+    index = case.observed.inputs(case.values, case.cpu, 1, 1)
+    native_error, errors = None, []
+    if fault == 'native':
+        native_error = RuntimeError
+    elif fault == 'observer':
+        errors = [dict(kind='trace_failure')]
+    elif fault == 'missing_state':
+        case.runner.execute_model_state = None
+    elif fault == 'hidden_shape':
+        case.runner.execute_model_state.hidden_states = case.tensor([[0]*3]*4, case.api.float32)
+    elif fault == 'hidden_dtype':
+        case.runner.execute_model_state.hidden_states = case.tensor([[0]*3]*8, case.api.bfloat16)
+    elif fault == 'event':
+        case.api.fail_event = True
+    if fault in ('native', 'observer'):
+        case.observed.output(index, native_error, errors)
+        assert case.observed.entries[index]['status'] == 'UNVERIFIED_NATIVE_OR_OBSERVER_ERROR'
+    else:
+        with pytest.raises((ValueError, AttributeError)):
+            case.observed.output(index, native_error, errors)
+    assert not any(row[0] == 'query' for row in case.api.operations)
+
+
+def test_finite_scan_covers_every_valid_hidden_element_and_preserves_nonfinite_evidence(device_case):
+    case = device_case
+    case.hidden.values[1, 1] = np.inf
+    index = case.observed.inputs(case.values, case.cpu, 1, 1)
+    case.observed.output(index, None, [])
+    case.api.complete()
+    records = []
+    result = case.observed.drain(records.append)
+    assert records[0]['rows'][0]['finite_elements_observed'] == 11
+    assert result['status'] == 'UNVERIFIED'
+    assert not case.observed.stopped
+
+
+def test_device_drain_storage_failure_does_not_reuse_owned_destinations(device_case):
+    case = device_case
+    index = case.observed.inputs(case.values, case.cpu, 1, 1)
+    case.observed.output(index, None, [])
+    case.api.complete()
+    def fail(row):
+        raise OSError('injected exclusive-write failure')
+    with pytest.raises(OSError, match='exclusive-write'):
+        case.observed.drain(fail)
+    assert case.observed.drained == 0 and case.observed.entries[0]['index'] == 0
+
+
+def test_device_preparation_rejects_capture_and_actual_aggregate_allocation_overflow(device_case):
+    case = device_case
+    args = (case.runner, case.observed.sites, case.observed.limits, case.observed.requests,
+            case.observed.sampling)
+    with pytest.raises(ValueError, match='remaining rank'):
+        observation.DeviceObservation(*args, 1)
+    case.api.capturing = True
+    with pytest.raises(ValueError, match='outside CUDA capture'):
+        observation.DeviceObservation(*args, 65536)
+
+
+def test_device_rpc_cap_is_checked_before_publication_or_drain_acceptance(device_case):
+    case = device_case
+    index = case.observed.inputs(case.values, case.cpu, 1, 1)
+    case.observed.output(index, None, [])
+    case.api.complete()
+    case.observed.limits = replace(case.observed.limits, rpc_bytes=5)
+    with pytest.raises(ValueError, match='RPC byte cap'):
+        case.observed.drain(lambda row: pytest.fail('Over-cap RPC evidence cannot be published'))
+    assert case.observed.drained == 0
+
+
+def test_second_request_reuses_native_index_but_keeps_distinct_owned_device_snapshots(device_case):
+    case = device_case
+    index = case.observed.inputs(case.values, case.cpu, 1, 1)
+    case.observed.output(index, None, [])
+    case.api.complete()
+    records = []
+    first = case.observed.drain(records.append)
+    case.api.host_reads_allowed = False
+    case.runner.req_states.req_id_to_index = {'full-internal-B': 2}
+    case.runner.req_states.index_to_req_id = {2: 'full-internal-B'}
+    case.req.req_id = 'full-internal-B'
+    case.req.prefill_token_ids = [31, 32, 33, 35]
+    case.observed.registrations(SimpleNamespace(scheduled_new_reqs=[case.req]))
+    case.cpu['req_ids'] = ['full-internal-B']
+    case.values['input_batch'].input_ids.values[3] = 35
+    case.hidden.values[:4] = 101
+    index = case.observed.inputs(case.values, case.cpu, 2, 1)
+    case.observed.output(index, None, [])
+    case.api.complete()
+    second = case.observed.drain(records.append)
+    assert second['drained_steps'] == 2 and len(second['registered_requests']) == 2
+    assert first['steps'][0]['values']['input_ids'][3] == 34
+    assert second['steps'][0]['values']['input_ids'][3] == 34
+    assert second['steps'][1]['values']['input_ids'][3] == 35
+    assert second['steps'][1]['values']['idx_mapping'] == second['steps'][0]['values']['idx_mapping'] == [2]
+    assert records[0]['rows'][0]['values']['hidden_states']['sha256'] != records[1]['rows'][0]['values']['hidden_states']['sha256']
+
+
+def test_device_observation_callbacks_compose_existing_native_runner_without_sample_override(native, monkeypatch):
+    observed, _, _ = runner(native)
+    calls = []
+    class Device:
+        def registrations(self, scheduler):
+            calls.append(('registration', scheduler))
+        def inputs(self, values, batch, invocation, input_id, *, descriptor):
+            calls.append(('inputs', invocation, input_id, descriptor['cg_mode']))
+            return 0
+        def output(self, index, native_error, errors, *, events):
+            calls.append(('output', index, native_error, list(errors)))
+        def error(self, kind, failure):
+            calls.append(('error', kind, failure))
+    observed.execute_model(work())
+    observed._model_input_observation.device = Device()
+    observed.execute_model(work())
+    assert [row[0] for row in calls] == ['registration', 'inputs', 'output']
+    assert calls[1][1:3] == (2, 1) and calls[1][3] == 'FULL'
+    assert calls[2][1:] == (0, None, [])
+    assert type(observed).sample_tokens is native.module.GPUModelRunner.sample_tokens
+    assert observed.execution_calls == 2
+
+
+
+def test_absolute_scan_scratch_matches_the_observed_hidden_dtype(device_case):
+    case = device_case
+    case.runner.model_config.hf_text_config.fp32_residual_connection = False
+    observed = observation.DeviceObservation(case.runner, case.observed.sites, case.observed.limits,
+        case.observed.requests, case.observed.sampling, 65536)
+    assert observed.absolute.dtype is case.api.bfloat16
+    assert observed.absolute.dtype is observed.hidden_dtype
+
+
+@pytest.mark.parametrize('fault', ['allocation', 'event'])
+def test_failed_device_allocation_keeps_preallocation_reservation(device_case, tmp_path, monkeypatch, fault):
+    case = device_case
+    output = tmp_path/'workers'; output.mkdir()
+    node = tmp_path/'node.json'
+    node.write_text(json.dumps(dict(observer_output=str(output), record_bytes=8*65536)))
+    monkeypatch.setenv('STEP5_CAPACITY_NODE_FILE', str(node))
+    observed = SimpleNamespace(device=None, sites=case.observed.sites, limits=case.observed.cpu_limits,
+                               stopped=False)
+    case.runner._model_input_observation = observed
+    worker = SimpleNamespace(rank=0, local_rank=0, model_runner=case.runner,
+        _capacity_identity=dict(rank=0, local_rank=0, pid=os.getpid()))
+    allocations, original_empty = [], case.api.empty
+    def allocate(*args, **kwargs):
+        reservation = output/f'device_reservation_rank_0_pid_{os.getpid()}.json'
+        assert json.loads(reservation.read_text())['owned_bytes'] == case.observed.owned_bytes
+        allocations.append(args)
+        if fault == 'allocation' and len(allocations) == 2:
+            raise MemoryError('Injected partial allocation failure')
+        return original_empty(*args, **kwargs)
+    monkeypatch.setattr(case.api, 'empty', allocate)
+    case.api.fail_event = fault == 'event'
+    preparation = dict(limits=vars(case.observed.limits), requests=case.observed.requests,
+                       sampling_fields=case.observed.sampling)
+    result = execution.prepare_device_observation(worker, preparation)
+    assert result['status'] == 'UNVERIFIED'
+    assert worker._request_observation.device_owned_bytes == case.observed.owned_bytes
+    assert worker._request_observation.collection_stopped and observed.stopped
+    assert observed.device is None and len(allocations) >= 2
+    assert len((json.dumps(result, allow_nan=False, separators=(',', ':'))+'\n').encode()) <= case.observed.limits.rpc_bytes
+
+
+@pytest.mark.parametrize('rpc_bytes', [5, 8])
+def test_prepared_device_response_is_capped_after_allocation(device_case, tmp_path, monkeypatch, rpc_bytes):
+    case = device_case
+    output = tmp_path/'workers'; output.mkdir()
+    node = tmp_path/'node.json'
+    node.write_text(json.dumps(dict(observer_output=str(output), record_bytes=8*65536)))
+    monkeypatch.setenv('STEP5_CAPACITY_NODE_FILE', str(node))
+    observed = SimpleNamespace(device=None, sites=case.observed.sites, limits=case.observed.cpu_limits,
+                               stopped=False)
+    case.runner._model_input_observation = observed
+    worker = SimpleNamespace(rank=0, local_rank=0, model_runner=case.runner,
+        _capacity_identity=dict(rank=0, local_rank=0, pid=os.getpid()))
+    limits = dict(vars(case.observed.limits), rpc_bytes=rpc_bytes)
+    result = execution.prepare_device_observation(worker, dict(limits=limits,
+        requests=case.observed.requests, sampling_fields=case.observed.sampling))
+    assert result is None
+    assert len((json.dumps(result)+'\n').encode()) <= limits['rpc_bytes']
+    assert observed.device is not None and observed.device.stopped
+    assert observed.stopped and worker._request_observation.collection_stopped
+    assert worker._request_observation.device_owned_bytes == observed.device.owned_bytes
+
+
+@pytest.mark.parametrize('rpc_bytes', [1, 2, 3, 4])
+def test_device_limits_reject_unencodable_rpc_cap(rpc_bytes):
+    with pytest.raises(ValueError, match='encode a JSON response'):
+        observation.DeviceObservationLimits(steps=1, scan_rows=1, witness_rows=1,
+                                            owned_bytes=4096, rpc_bytes=rpc_bytes)
