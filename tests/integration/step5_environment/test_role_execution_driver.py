@@ -90,6 +90,16 @@ def retained_methods(relative, owner, names, namespace):
     return {name: namespace[name] for name in names}
 
 
+def original_cpu_method(relative, owner, name, namespace, defaults=()):
+    """Load the pinned original code object with injected CPU globals, without importing its module."""
+    from types import FunctionType
+    path = caller.capacity.TASK/relative
+    compiled = compile(path.read_bytes(), str(path), 'exec', dont_inherit=True,
+                       optimize=sys.flags.optimize)
+    code = caller.model_observation.nested_code(compiled, owner, name)
+    return FunctionType(code, dict(__name__=__name__, **namespace), name, defaults)
+
+
 class CpuSampling:
     """Native argument validation body with no native package or sampling kernels."""
     def __init__(self, **kwargs):
@@ -130,11 +140,15 @@ def startup_fixture(config, tmp_path):
         node.update(generation=config['generation'], observer_sha256=config['observer_sha256'],
                     workload_deadline=2010, local_output=str(tmp_path/'native_output'),
                     endpoint=dict(address='10.4.5.6', port=19540))
+    nodes[0].update(boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+                    pid_namespace=os.readlink('/proc/self/ns/pid'))
     rows = [copy.deepcopy(dict(fixture['common_worker_fields'],
         parallel_config=fixture['nodes'][row['node_rank']]['worker_parallel_config'], **row))
         for row in fixture['workers']]
     for row in rows:
-        row.update(generation=config['generation'], observer_sha256=config['observer_sha256'])
+        node = nodes[row['node_rank']]
+        row.update(generation=config['generation'], observer_sha256=config['observer_sha256'],
+                   boot_id=node['boot_id'], pid_namespace=node['pid_namespace'])
     root = tmp_path/'markers'; root.mkdir()
     config['marker_root'] = str(root)
     local = Path(nodes[0]['local_output']); local.mkdir()
@@ -144,19 +158,76 @@ def startup_fixture(config, tmp_path):
     return nodes, rows
 
 
+class CpuCoreRequest:
+    def __init__(self, request_id, tokens, params):
+        self.request_id, self.external_req_id = request_id, None
+        self.prompt_token_ids = list(tokens)
+        self.sampling_params, self.pooling_params = params, None
+        self.prompt_embeds, self.resumable = None, False
+
+    @property
+    def params(self):
+        return self.sampling_params
+
+
+class CpuRequestState:
+    @staticmethod
+    def from_new_request(*, request, parent_req, request_index, **kwargs):
+        from types import SimpleNamespace
+        params = request.sampling_params
+        return SimpleNamespace(request_id=request.request_id, external_req_id=request.external_req_id,
+            prompt_token_ids=request.prompt_token_ids, prompt_embeds=request.prompt_embeds,
+            parent_req=parent_req, request_index=request_index, max_tokens_param=params.max_tokens,
+            n=params.n, top_p=params.top_p, temperature=params.temperature)
+
+
+class CpuOutputProcessor:
+    def __init__(self):
+        from collections import defaultdict
+        self.request_states, self.external_req_ids, self.parent_requests = {}, defaultdict(list), {}
+        self.tokenizer, self.log_stats, self.stream_interval, self.admission_stats = None, False, 1, None
+
+    def _update_streaming_request_state(self, state, request, prompt):
+        self.updated_state = state
+
+
+for name, defaults in [('add_request', (None, 0, None)), ('_update_admission_stats', ()),
+                       ('_finish_request', ())]:
+    setattr(CpuOutputProcessor, name, original_cpu_method(
+        'native_role_sources/observed_generation5/vllm/v1/engine/output_processor.py',
+        'OutputProcessor', name, dict(RequestState=CpuRequestState), defaults))
+
+
 class CpuEngine:
     def __init__(self, llm):
+        from types import SimpleNamespace
         self.llm, self.active, self.steps, self.output = llm, False, [], None
+        self.output_processor = CpuOutputProcessor()
+        self.input_processor = SimpleNamespace(assign_request_id=original_cpu_method(
+            'native_role_sources/observed_generation5/vllm/v1/engine/input_processor.py',
+            'InputProcessor', 'assign_request_id', dict(envs=SimpleNamespace(
+                VLLM_DISABLE_REQUEST_ID_RANDOMIZATION=False), random_uuid=lambda: 'cpu-'+str(len(llm.generated)))))
+        self.input_processor.resolve_watermarking = lambda params: None
+        self.input_processor.apply_watermarking = lambda params, resolved: None
+        self.engine_core = SimpleNamespace(add_request=self.dispatch)
 
     def add(self, prompts, params):
         assert not self.active, 'B cannot overlap A'
         assert len(prompts) == 1 and set(prompts[0]) == {'prompt_token_ids'}
         tokens = prompts[0]['prompt_token_ids']
         self.llm.events.append(('generate', list(tokens), copy.deepcopy(vars(params))))
+        request = CpuCoreRequest(str(len(self.llm.generated)), tokens, copy.deepcopy(params))
+        self.add_request(request.request_id, request, params)
+
+    def dispatch(self, request):
+        # This replaces only the actual EngineCore/device boundary in the CPU fixture.
+        state = self.output_processor.request_states[request.request_id]
+        assert state.external_req_id == request.external_req_id
+        self.current_request = request
         self.active = True
         self.steps = [512]*8+[9]+[1]*8
         self.computed = 0
-        self.output = CpuRequestOutput(str(len(self.llm.generated)), tokens, [67]*9)
+        self.output = CpuRequestOutput(request.external_req_id, request.prompt_token_ids, [67]*9)
         self.llm.generated.append(self.output)
 
     def has_unfinished_requests(self):
@@ -166,7 +237,7 @@ class CpuEngine:
         from types import SimpleNamespace
         import numpy as np
         count = self.steps.pop(0)
-        request_id = self.output.request_id
+        request_id = self.current_request.request_id
         work = SimpleNamespace(total_num_scheduled_tokens=count, num_scheduled_tokens={request_id: count})
         prefilling = self.computed < 4105
         for worker in self.llm.workers:
@@ -183,7 +254,17 @@ class CpuEngine:
             worker.sample_tokens(None)
         self.computed += count
         self.active = bool(self.steps)
+        if not self.active:
+            self.output_processor._finish_request(self.output_processor.request_states[request_id])
         return [] if self.active else [self.output]
+
+
+from types import SimpleNamespace
+CpuEngine.add_request = original_cpu_method(
+    'native_role_sources/observed/vllm/v1/engine/llm_engine.py', 'LLMEngine', 'add_request',
+    dict(EngineCoreRequest=CpuCoreRequest, SamplingParams=CpuSampling,
+         logger=SimpleNamespace(warning_once=lambda message: None)),
+    (None, None, None, None, 0, None, None, None))
 
 
 class CpuLLM:
@@ -282,6 +363,27 @@ def test_real_generate_body_composes_current_worker_and_separate_capacity_receip
     assert receipt['terminal_publication'] == 'UNMEASURED'
     assert receipt['terminal_marker'] == str(Path(config['marker_root'])/'node_0_workload_terminal.json')
     assert set(receipt['evidence_status'].values()) == {'UNMEASURED'}
+    assert receipt['sampling_observation_scope'] == 'original_frontend_resolved_fields_device_consumption_unmeasured'
+    assert len(receipt['frontend_associations']) == 2
+    for request, joined in zip(llm.generated, receipt['frontend_associations']):
+        assert joined['public_request_id'] == request.request_id
+        assert joined['internal_request_id'] != request.request_id
+        assert joined['worker_request_join'] == joined['device_consumption'] == 'UNMEASURED'
+    assert not llm.llm_engine.output_processor.request_states
+    assert not llm.llm_engine.output_processor.external_req_ids
+    for name in ('A', 'B'):
+        admitted = json.loads((local/f'request_{name}_admission.json').read_text())
+        assert admitted['status'] == 'OBSERVED_FRONTEND_ADMISSION_ONLY_NOT_G2'
+        assert admitted['source_status'] == 'LOADED_CODE_MATCHES_PINNED_SOURCE'
+        row = admitted['records'][0]
+        assert row['native_registration_outcome'] == 'returned'
+        assert row['engine_core_submission'] == 'ORIGINAL_ENGINE_RETURNED_ID'
+        assert row['resolved_matches_submitted'] and row['resolved_is_submitted'] is False
+        assert row['resolved_sampling_fields'] == receipt['submitted_sampling_fields']
+        assert row['context']['name'] == name
+        assert row['context']['manifest_sha256'] == config['request_manifest_sha256']
+        assert row['frontend_identity']['pid'] == os.getpid()
+        assert row['registration_line'] == 642 and row['engine_registration_line'] == 297
     after_a = json.loads((local/'request_A_snapshots.json').read_text())
     assert len(after_a['workers']) == 16
     assert after_a['workers'][0]['request_metadata']['invocations'] == 17
@@ -982,3 +1084,206 @@ def test_both_node_record_budgets_include_logs_and_finalization_metadata_before_
         assert not archive.exists()
         assert not (Path(node['local_output'])/'pre_completion_status.json').exists()
     assert clock() <= 2500
+
+
+@pytest.fixture
+def admission_case():
+    """Use original pinned CPU method bodies and explicit request context."""
+    from types import SimpleNamespace
+    from uuid import uuid4
+    parent = SimpleNamespace(generated=[])
+    engine = CpuEngine(parent)
+    params = CpuSampling(**dict(caller.LENGTH_FIELDS))
+    tokens = [0, 67, 67, 68]
+    request = CpuCoreRequest('public-original', tokens, copy.deepcopy(params))
+    fields = {name: copy.deepcopy(getattr(params, name))
+              for name in (*caller.POLICY_FIELDS, *caller.LENGTH_FIELDS)}
+    identity = dict(pid=os.getpid(), generation='cpu-admission', boot_id='fixture',
+                    start_time=1, pid_namespace='fixture', node_rank=0)
+    context = dict(name='A', manifest='/cpu-manifest/'+str(uuid4()), manifest_sha256='explicit-fixture',
+                   prompt_sha256=caller.token_hash(tokens), prompt_token_ids=tokens)
+    sites = caller.model_observation.AdmissionSites.bind(engine)
+    scope = caller.model_observation.AdmissionScope(engine, sites, context, params, fields, identity)
+    return SimpleNamespace(engine=engine, request=request, params=params, fields=fields,
+                           context=context, identity=identity, sites=sites, scope=scope)
+
+
+def test_original_registration_is_observed_before_enginecore_dispatch_and_retained_after_removal(admission_case):
+    case = admission_case
+    original = case.engine.engine_core.add_request
+    dispatches = []
+    def dispatch(request):
+        assert case.scope.records[0]['internal_request_id'] == request.request_id
+        assert case.scope.records[0]['native_registration_outcome'] == 'returned'
+        dispatches.append(request)
+        original(request)
+    case.engine.engine_core.add_request = dispatch
+    with case.scope:
+        internal = case.engine.add_request(case.request.request_id, case.request, case.params)
+        case.engine.output_processor._finish_request(case.engine.output_processor.request_states[internal])
+    assert dispatches == [case.request]
+    assert not case.engine.output_processor.external_req_ids
+    assert case.scope.record['status'] == 'OBSERVED_FRONTEND_ADMISSION_ONLY_NOT_G2'
+    row = case.scope.record['records'][0]
+    assert row['public_request_id'] == 'public-original' and row['internal_request_id'] == internal
+    assert row['resolved_sampling_id'] == id(case.request.sampling_params)
+    case.request.prompt_token_ids[-1] = 1
+    case.request.sampling_params.temperature = 0.125
+    assert row['prompt_token_ids'][-1] == 68 and row['resolved_sampling_fields']['temperature'] == 1.0
+
+
+@pytest.mark.parametrize('fault', ['no_engine_call', 'duplicate', 'stream_update', 'mapping',
+                                  'changed_prompt', 'changed_sampling', 'wrong_parent', 'budget', 'removed_hook'])
+def test_original_admission_faults_preserve_native_return_and_remain_unverified(admission_case, fault):
+    case = admission_case
+    if fault == 'stream_update':
+        request = case.request
+        request.request_id = 'public-original-cpu-0'
+        case.engine.input_processor.assign_request_id = lambda request: setattr(request, 'external_req_id', 'public-original')
+        state = CpuRequestState.from_new_request(request=request, parent_req=None, request_index=0)
+        state.external_req_id = 'public-original'
+        case.engine.output_processor.request_states[request.request_id] = state
+    elif fault == 'mapping':
+        case.engine.output_processor.external_req_ids['public-original'] = ['other-internal']
+    elif fault == 'changed_prompt':
+        case.request.prompt_token_ids[-1] = 67
+    elif fault == 'changed_sampling':
+        case.request.sampling_params.temperature = 0.125
+    elif fault == 'budget':
+        case.scope.limits = caller.model_observation.ObservationLimits(scope_bytes=128)
+    before = sys.getprofile()
+    with case.scope:
+        if fault == 'wrong_parent':
+            case.request.external_req_id = 'public-original'
+            returned = case.engine.output_processor.add_request(case.request, None)
+            assert returned is None
+        elif fault != 'no_engine_call':
+            returned = case.engine.add_request(case.request.request_id, case.request, case.params)
+            assert returned == case.request.request_id
+            if fault == 'duplicate':
+                other = CpuCoreRequest('public-second', case.context['prompt_token_ids'], copy.deepcopy(case.params))
+                assert case.engine.add_request(other.request_id, other, case.params) == other.request_id
+        if fault == 'removed_hook':
+            sys.setprofile(None)
+    assert sys.getprofile() is before
+    assert case.scope.record['status'] == 'UNVERIFIED'
+    assert case.scope.record['observer_errors']
+    if fault == 'budget':
+        encoded = (json.dumps(case.scope.record, indent=2, allow_nan=False)+'\n').encode('utf-8')
+        assert len(encoded) <= case.scope.limits.scope_bytes
+    else:
+        assert case.scope.record['device_operations_added'] is False
+    if fault == 'stream_update':
+        assert case.engine.output_processor.updated_state is not None
+    if fault == 'changed_sampling':
+        row = case.scope.record['records'][0]
+        assert row['resolved_sampling_fields']['temperature'] == 0.125
+        assert row['submitted_sampling_fields']['temperature'] == 1.0
+
+
+def test_native_admission_exception_identity_and_original_partial_association_are_preserved(admission_case):
+    case = admission_case
+    failure = RuntimeError('exact native dispatch failure')
+    def fail(request):
+        raise failure
+    case.engine.engine_core.add_request = fail
+    before = sys.getprofile()
+    with pytest.raises(RuntimeError) as caught:
+        with case.scope:
+            case.engine.add_request(case.request.request_id, case.request, case.params)
+    assert caught.value is failure and sys.getprofile() is before
+    row = case.scope.record['records'][0]
+    assert row['native_registration_outcome'] == 'returned'
+    assert row['engine_core_submission'] == 'UNVERIFIED'
+    assert case.scope.record['native_outcome'] == 'raised'
+    assert case.scope.record['status'] == 'UNVERIFIED'
+
+
+def test_existing_frontend_profile_and_trace_hooks_are_composed_and_restored(admission_case):
+    case = admission_case
+    before_profile, before_trace = sys.getprofile(), sys.gettrace()
+    calls, traced = [], []
+    def profile(frame, event, arg):
+        if frame.f_code is case.sites.codes['registration']:
+            calls.append(event)
+    def trace(frame, event, arg):
+        if frame.f_code is case.sites.codes['registration']:
+            traced.append(event)
+        return trace
+    try:
+        sys.setprofile(profile); sys.settrace(trace)
+        scope = caller.model_observation.AdmissionScope(case.engine, case.sites, case.context,
+            case.params, case.fields, case.identity)
+        with scope:
+            case.engine.add_request(case.request.request_id, case.request, case.params)
+        assert sys.getprofile() is profile and sys.gettrace() is trace
+        assert scope.record['status'] == 'OBSERVED_FRONTEND_ADMISSION_ONLY_NOT_G2'
+        assert 'call' in calls and 'return' in calls and 'line' in traced
+    finally:
+        sys.setprofile(before_profile); sys.settrace(before_trace)
+
+
+@pytest.mark.parametrize('fault', ['binding', 'identity', 'scope_setup', 'storage', 'missing_record',
+                                  'finalization', 'tiny_budget'])
+def test_frontend_observer_failures_do_not_prevent_native_generation_or_claim_G2(config, tmp_path, monkeypatch, fault):
+    nodes, rows = startup_fixture(config, tmp_path)
+    llm = CpuLLM(rows, [])
+    kwargs = {}
+    def failure(*args, **kwargs):
+        raise OSError('faulted frontend '+fault)
+    if fault == 'binding':
+        kwargs['bind_admission'] = failure
+    elif fault == 'identity':
+        kwargs['identify_frontend'] = failure
+    elif fault == 'scope_setup':
+        monkeypatch.setattr(caller.model_observation, 'AdmissionScope', failure)
+    elif fault in ('missing_record', 'finalization'):
+        original_exit = caller.model_observation.AdmissionScope.__exit__
+        def exit(scope, *args):
+            returned = original_exit(scope, *args)
+            if fault == 'finalization':
+                failure()
+            scope.record = None
+            return returned
+        monkeypatch.setattr(caller.model_observation.AdmissionScope, '__exit__', exit)
+    elif fault == 'tiny_budget':
+        original_scope = caller.model_observation.AdmissionScope
+        def scope(*args, **kwargs):
+            return original_scope(*args, limits=caller.model_observation.ObservationLimits(scope_bytes=1), **kwargs)
+        monkeypatch.setattr(caller.model_observation, 'AdmissionScope', scope)
+    else:
+        original = caller.capacity.save
+        def save(path, value):
+            if path.name.endswith('_admission.json'):
+                failure()
+            return original(path, value)
+        monkeypatch.setattr(caller.capacity, 'save', save)
+    assert caller.execute_leader(config, nodes[0], {}, llm_factory=lambda **kwargs: llm,
+        sampling_factory=CpuSampling, verify=lambda *args: None, clock=lambda: 10, **kwargs) is llm
+    receipt = json.loads((Path(nodes[0]['local_output'])/'request_evidence.json').read_text())
+    assert receipt['completed_requests'] == ['A', 'B']
+    assert receipt['status'] == 'UNVERIFIED' and receipt['evidence_verdict'] == 'UNVERIFIED'
+    assert not (Path(nodes[0]['local_output'])/'native_failure.json').exists()
+    assert set(receipt['evidence_status'].values()) == {'UNMEASURED'}
+    assert json.loads((Path(config['marker_root'])/'node_0_workload_terminal.json').read_text())['result'] == 'FAIL'
+    if fault in ('missing_record', 'finalization', 'tiny_budget'):
+        assert receipt['frontend_associations'] == []
+        assert not (Path(nodes[0]['local_output'])/'request_A_admission.json').exists()
+        assert not (Path(nodes[0]['local_output'])/'request_B_admission.json').exists()
+
+
+def test_completed_public_id_must_match_the_original_retained_admission(config, tmp_path):
+    def configure(llm):
+        original = llm.generate
+        def generate(*args, **kwargs):
+            outputs = original(*args, **kwargs)
+            outputs[0].request_id = 'public-id-from-some-other-request'
+            return outputs
+        llm.generate = generate
+    llm, nodes, _ = run_leader(config, tmp_path, configure=configure)
+    receipt = json.loads((Path(nodes[0]['local_output'])/'request_evidence.json').read_text())
+    assert receipt['completed_requests'] == ['A', 'B'] and receipt['frontend_associations'] == []
+    assert receipt['status'] == 'UNVERIFIED'
+    original = json.loads((Path(nodes[0]['local_output'])/'request_A_admission.json').read_text())
+    assert original['records'][0]['public_request_id'] == '0'
+    assert not (Path(nodes[0]['local_output'])/'native_failure.json').exists()

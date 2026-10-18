@@ -15,6 +15,7 @@ import inspect
 import json
 from pathlib import Path
 import sys
+import threading
 from types import CodeType, SimpleNamespace
 import weakref
 
@@ -98,6 +99,219 @@ class ObservationLimits:
     def __post_init__(self):
         if any(type(value) is not int or value <= 0 for value in vars(self).values()):
             raise ValueError('Observation limits must be positive integers')
+
+
+FRONTEND_SOURCE_PINS = dict(
+    engine='b3a9df98e2f0f1cd29fcbb7b079c292f680902a9b578d0d1002015a9a7d6cf15',
+    output='98919ecea8e40d70fb08e13ae69ece4b9a7ad7ede56169aeb3b45b76dd87208f')
+FRONTEND_SOURCE_LINES = dict(registration=297, registered_stats=642)
+
+
+@dataclass
+class AdmissionSites:
+    codes: dict
+    lines: dict
+    sources: dict
+
+    @classmethod
+    def bind(cls, engine, *, pins=FRONTEND_SOURCE_PINS, lines=FRONTEND_SOURCE_LINES):
+        """Bind original frontend methods on the actual resident engine and processor."""
+        sources = {}
+        processor = engine.output_processor
+        codes = dict(engine=bind_code(engine.add_request, ('LLMEngine', 'add_request'),
+                                      pins['engine'], sources),
+                     registration=bind_code(processor.add_request, ('OutputProcessor', 'add_request'),
+                                            pins['output'], sources),
+                     stats=bind_code(processor._update_admission_stats,
+                                     ('OutputProcessor', '_update_admission_stats'),
+                                     pins['output'], sources))
+        for name, line in (('engine', 'registration'), ('registration', 'registered_stats')):
+            if lines[line] not in {number for _, number in dis.findlinestarts(codes[name])}:
+                raise ValueError('Pinned frontend statement is absent: '+line)
+        return cls(codes, dict(lines), sources)
+
+
+class AdmissionScope:
+    """Detach one original n=1 text registration before native EngineCore dispatch.
+
+    This scope observes Python call boundaries only. It preserves the native
+    generate path and existing profile hook, and performs no device operation,
+    evidence write, or synchronization while native code executes.
+    """
+    def __init__(self, engine, sites, context, submitted, sampling_fields, identity,
+                 *, limits=ObservationLimits()):
+        self.engine, self.sites = engine, sites
+        self.processor = engine.output_processor
+        self.context, self.submitted = copy.deepcopy(context), submitted
+        self.sampling_fields, self.identity = copy.deepcopy(sampling_fields), dict(identity)
+        self.limits, self.records, self.errors = limits, [], []
+        self.engine_frame, self.registration_frame, self.pending = None, None, None
+        self.engine_calls, self.registration_calls = 0, 0
+        self.active, self.installed, self.stopped = False, False, False
+        self.previous_profile = sys.getprofile()
+        self.profile_hook = self.profile
+        self.opcodes = {code: {instruction.offset: instruction.opname
+                             for instruction in dis.get_instructions(code)}
+                        for code in sites.codes.values()}
+        self.record = None
+
+    def error(self, kind, failure):
+        self.stopped = True
+        if not self.errors:
+            self.errors.append(dict(kind=kind, error_type=class_name(failure), error=str(failure)))
+
+    def returned(self, frame):
+        return self.opcodes[frame.f_code].get(frame.f_lasti) in ('RETURN_VALUE', 'RETURN_CONST')
+
+    def registered(self, frame):
+        values = frame.f_locals
+        request, state = values['request'], values['req_state']
+        params = request.sampling_params
+        if self.pending is not None:
+            raise ValueError('Duplicate native registration boundary')
+        if (values['parent_req'] is not None or values['request_index'] != 0 or
+                request.prompt_embeds is not None or request.pooling_params is not None or
+                request.resumable or params is None or params.n != 1):
+            raise ValueError('Admission observation supports one non-streaming text completion only')
+        internal, external = request.request_id, request.external_req_id
+        if any(type(value) is not str or not value for value in (internal, external)):
+            raise ValueError('Both original native request IDs are required')
+        if (self.processor.request_states.get(internal) is not state or
+                state.request_id != internal or state.external_req_id != external or
+                state.parent_req is not None or state.request_index != 0):
+            raise ValueError('Original registered request and RequestState identities disagree')
+        mapping = list(self.processor.external_req_ids[external])
+        if mapping != [internal]:
+            raise ValueError('Original n=1 external/internal mapping is absent or ambiguous')
+        tokens = list(request.prompt_token_ids)
+        if (tokens != self.context['prompt_token_ids'] or
+                list(state.prompt_token_ids) != tokens or state.prompt_embeds is not None):
+            raise ValueError('Original registered text prompt differs from the active manifest')
+        resolved = {name: copy.deepcopy(getattr(params, name)) for name in self.sampling_fields}
+        parent = frame.f_back
+        if (parent.f_locals['request'] is not request or parent.f_locals['params'] is not params or
+                parent.f_locals['request_id'] != external):
+            raise ValueError('Original LLMEngine request and resolved parameters disagree')
+        row = dict(kind='native_frontend_registration', native_registration_outcome='PENDING_RETURN',
+            engine_core_submission='UNMEASURED', public_request_id=external, internal_request_id=internal,
+            external_internal_mapping=mapping, prompt_token_ids=tokens,
+            resolved_sampling_fields=resolved, submitted_sampling_fields=copy.deepcopy(self.sampling_fields),
+            resolved_matches_submitted=resolved == self.sampling_fields,
+            request_object_id=id(request), request_state_id=id(state), processor_id=id(self.processor),
+            engine_id=id(self.engine), resolved_sampling_id=id(params), submitted_sampling_id=id(self.submitted),
+            resolved_is_submitted=params is self.submitted,
+            state=dict(request_id=state.request_id, external_req_id=state.external_req_id,
+                       parent_req=None, request_index=state.request_index, max_tokens=state.max_tokens_param,
+                       n=state.n, temperature=state.temperature, top_p=state.top_p),
+            context={name: copy.deepcopy(value) for name, value in self.context.items()
+                     if name != 'prompt_token_ids'}, frontend_identity=dict(self.identity),
+            thread_id=threading.get_ident(), registration_line=frame.f_lineno,
+            engine_registration_line=parent.f_lineno, device_operations_added=False)
+        if len((json.dumps(row, indent=2, allow_nan=False)+'\n').encode('utf-8')) > self.limits.scope_bytes:
+            raise ValueError('Frontend admission exceeds the CPU observation byte limit')
+        self.pending = row
+
+    def profile(self, frame, event, arg):
+        if self.previous_profile is not None:
+            self.previous_profile(frame, event, arg)
+        if not self.active or self.stopped:
+            return
+        try:
+            codes = self.sites.codes
+            if event == 'call' and frame.f_code is codes['engine'] and frame.f_locals['self'] is self.engine:
+                self.engine_calls += 1
+                if self.engine_calls != 1:
+                    raise ValueError('Exactly one original engine admission is required per generate call')
+                self.engine_frame = frame
+            elif (event == 'call' and frame.f_code is codes['registration'] and
+                    frame.f_locals['self'] is self.processor):
+                self.registration_calls += 1
+                parent = frame.f_back
+                if (self.registration_calls != 1 or parent is not self.engine_frame or
+                        parent.f_code is not codes['engine'] or
+                        parent.f_lineno != self.sites.lines['registration']):
+                    raise ValueError('Registration must be owned by the original n=1 engine admission')
+                self.registration_frame = frame
+                request = frame.f_locals['request']
+                if self.processor.request_states.get(request.request_id) is not None:
+                    raise ValueError('Existing native RequestState is a streaming update, not new admission')
+            elif event == 'call' and frame.f_code is codes['stats'] and frame.f_locals['self'] is self.processor:
+                parent = frame.f_back
+                if (parent is self.registration_frame and
+                        parent.f_lineno == self.sites.lines['registered_stats']):
+                    self.registered(parent)
+            elif event == 'return' and frame is self.registration_frame:
+                if self.pending is None:
+                    raise ValueError('Original successful registration boundary was not observed')
+                self.pending['native_registration_outcome'] = ('returned' if self.returned(frame)
+                                                               else 'raised_or_interrupted')
+                self.records.append(self.pending)
+                self.pending = self.registration_frame = None
+            elif event == 'return' and frame is self.engine_frame:
+                if len(self.records) != 1:
+                    raise ValueError('Original engine admission has no unique registered request')
+                row = self.records[0]
+                row['engine_returned_internal_id'] = arg if self.returned(frame) else None
+                row['engine_core_submission'] = ('ORIGINAL_ENGINE_RETURNED_ID' if
+                    self.returned(frame) and arg == row['internal_request_id'] else 'UNVERIFIED')
+                self.engine_frame = None
+        except BaseException as failure:
+            self.error('frontend_callback', failure)
+
+    def __enter__(self):
+        if self.previous_profile is not None and not callable(self.previous_profile):
+            self.error('profile_compatibility', TypeError('Prior profile hook cannot be composed'))
+            return self
+        try:
+            self.active = True
+            sys.setprofile(self.profile_hook)
+            self.installed = True
+        except BaseException as failure:
+            self.error('profile_installation', failure)
+            self.active = False
+            try:
+                sys.setprofile(self.previous_profile)
+            except BaseException as restore_failure:
+                self.error('profile_restoration', restore_failure)
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.active = False
+        try:
+            if self.installed:
+                try:
+                    if sys.getprofile() is not self.profile_hook:
+                        raise RuntimeError('Native execution replaced the scoped frontend hook')
+                finally:
+                    sys.setprofile(self.previous_profile)
+        except BaseException as failure:
+            self.error('profile_restoration', failure)
+        if (self.engine_calls != 1 or self.registration_calls != 1 or len(self.records) != 1 or
+                self.pending is not None or self.engine_frame is not None or
+                self.registration_frame is not None):
+            self.error('admission_delivery', ValueError('Original frontend admission is missing or incomplete'))
+        if self.records and (self.records[0]['native_registration_outcome'] != 'returned' or
+                self.records[0]['engine_core_submission'] != 'ORIGINAL_ENGINE_RETURNED_ID'):
+            self.error('admission_return', ValueError('Original native admission did not complete'))
+        if self.records and not self.records[0]['resolved_matches_submitted']:
+            self.error('resolved_sampling', ValueError('Original resolved sampling fields changed'))
+        self.record = dict(scope='source_pinned_frontend_admission_only_not_G2',
+            status='UNVERIFIED' if self.errors or exc_type is not None else 'OBSERVED_FRONTEND_ADMISSION_ONLY_NOT_G2',
+            records=self.records, observer_errors=list(self.errors),
+            native_outcome='raised' if exc_type is not None else 'returned',
+            native_error_type=exc_type.__module__+'.'+exc_type.__qualname__ if exc_type else None,
+            source_status='LOADED_CODE_MATCHES_PINNED_SOURCE', sources=self.sites.sources,
+            observer_scope='current_frontend_thread_call_boundaries_only',
+            native_compatibility='UNVERIFIED', device_operations_added=False,
+            evidence_status=dict(device_content='UNMEASURED', gpu_completion='UNMEASURED', G2='UNMEASURED'))
+        if len((json.dumps(self.record, indent=2, allow_nan=False)+'\n').encode('utf-8')) > self.limits.scope_bytes:
+            self.error('admission_byte_limit', ValueError('Final frontend record exceeds the CPU byte limit'))
+            self.record = dict(status='UNVERIFIED', records=[],
+                               observer_errors=[dict(kind='admission_byte_limit')])
+            if len((json.dumps(self.record, indent=2)+'\n').encode('utf-8')) > self.limits.scope_bytes:
+                self.record = None
+        self.engine_frame = self.registration_frame = self.pending = None
+        return False
 
 
 @dataclass

@@ -13,6 +13,7 @@ import traceback
 
 import check_role_tp16 as capacity
 import role_execution_observation as observation
+import role_model_input_observation as model_observation
 
 GEN5_MANIFEST_SHA = '68b9233b16b59832a0061fe2ecf75cc4e8f95b22c2600cf29ddc7ecfd6540137'
 POLICY_FIELDS = ('repetition_penalty', 'presence_penalty', 'frequency_penalty',
@@ -234,9 +235,47 @@ def compare_capacity(initial, final):
     return True
 
 
+def frontend_identity(config, node):
+    """Read the actual caller process in the original supervisor's PID namespace."""
+    stat = Path('/proc/self/stat').read_text()
+    pid = os.getpid()
+    if int(stat.split(' ', 1)[0]) != pid:
+        raise ValueError('Frontend /proc identity does not match os.getpid()')
+    boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    namespace = os.readlink('/proc/self/ns/pid')
+    if (boot, namespace) != (node['boot_id'], node['pid_namespace']):
+        raise ValueError('Frontend and original supervisor identity namespaces differ')
+    return dict(pid=pid, start_time=int(stat.rsplit(')', 1)[1].split()[19]),
+                parent_pid=os.getppid(), boot_id=boot, pid_namespace=namespace,
+                generation=config['generation'], node_rank=node['node_rank'],
+                caller_sha256=capacity.sha256(Path(__file__)),
+                observer_sha256=capacity.sha256(Path(model_observation.__file__)))
+
+
+def validate_admission(record, completed, request, inputs, identity):
+    """Join public completion to a retained original admission, never an ID suffix."""
+    if record is None or record['status'] != 'OBSERVED_FRONTEND_ADMISSION_ONLY_NOT_G2' or len(record['records']) != 1:
+        raise ValueError('Original frontend admission is unverified')
+    row = record['records'][0]
+    if (row['public_request_id'] != completed['public_request_id'] or
+            row['prompt_token_ids'] != request['prompt_token_ids'] or
+            row['context'] != dict(name=request['name'], manifest=inputs['manifest'],
+                                   manifest_sha256=inputs['manifest_sha256'],
+                                   prompt_sha256=request['prompt_sha256']) or
+            row['frontend_identity'] != identity):
+        raise ValueError('Completed public output differs from its original frontend admission')
+    return dict(status='OBSERVED_ORIGINAL_FRONTEND_PUBLIC_INTERNAL_ASSOCIATION_NOT_G2',
+                name=request['name'], public_request_id=row['public_request_id'],
+                internal_request_id=row['internal_request_id'],
+                resolved_sampling_fields=copy.deepcopy(row['resolved_sampling_fields']),
+                worker_request_join='UNMEASURED', device_consumption='UNMEASURED')
+
+
 def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=None,
                    verify=capacity.installed_sources, clock=time.monotonic,
-                   publish=capacity.publish_terminal):
+                   publish=capacity.publish_terminal,
+                   bind_admission=model_observation.AdmissionSites.bind,
+                   identify_frontend=frontend_identity):
     """Run normal sequential generation and retain capacity and request evidence separately."""
     if node['node_rank'] != 0:
         raise ValueError('Only node0 owns native requests')
@@ -246,7 +285,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
     inputs = request_inputs(config)
     kwargs = engine_kwargs(config, node)
     receipt = dict(scope=REQUEST_SCOPE, status='UNVERIFIED', generation=config['generation'],
-        native_generation_returns=[], completed_requests=[], requests=[],
+        native_generation_returns=[], completed_requests=[], requests=[], frontend_associations=[],
         evidence_status=dict(UNMEASURED), evidence_verdict='PASS', evidence_errors=[],
         result='PASS', return_code=0, reasons=[], request_manifest=inputs['manifest'],
         request_manifest_sha256=inputs['manifest_sha256'],
@@ -311,14 +350,38 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
         phase = 'native_initial_capacity_rpc'
         initial = llm.collective_rpc('capacity_snapshot', timeout=timeout)
         initial_census = census(initial, 'all_rank_snapshots.json', 'all_rank_census.json')
+        admission_sites = evidence('bind original frontend admission', lambda: bind_admission(llm.llm_engine))
+        identity = evidence('read frontend process identity', lambda: identify_frontend(config, node))
         previous = None
         for request in inputs['requests']:
             name = request['name']
             phase = 'deadline_before_generate_'+name
             remaining()
+            context = dict(name=name, manifest=inputs['manifest'],
+                           manifest_sha256=inputs['manifest_sha256'],
+                           prompt_sha256=request['prompt_sha256'],
+                           prompt_token_ids=request['prompt_token_ids'])
+            scope = (evidence('prepare frontend admission '+name, lambda: model_observation.AdmissionScope(
+                llm.llm_engine, admission_sites, context, params, sampling_fields, identity))
+                if admission_sites is not None and identity is not None else None)
+            if scope is not None:
+                evidence('install frontend admission '+name, scope.__enter__)
+            admission_record = None
             phase = 'native_generate_'+name
-            outputs = llm.generate([dict(prompt_token_ids=list(request['prompt_token_ids']))],
-                                   sampling_params=params, use_tqdm=False)
+            try:
+                outputs = llm.generate([dict(prompt_token_ids=list(request['prompt_token_ids']))],
+                                       sampling_params=params, use_tqdm=False)
+            finally:
+                native_exception = sys.exc_info()
+                if scope is not None:
+                    def finalize_admission():
+                        scope.__exit__(*native_exception)
+                        if scope.record is None:
+                            raise ValueError('Original frontend admission has no retained record')
+                        return scope.record
+                    admission_record = evidence('finalize frontend admission '+name, finalize_admission)
+                    if admission_record is not None:
+                        record('request_'+name+'_admission.json', admission_record)
             receipt['native_generation_returns'].append(name)
             detached = evidence('detach public output '+name, lambda: public_output(outputs))
             checked = None
@@ -329,6 +392,10 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
                 if checked is not None:
                     receipt['completed_requests'].append(name)
                     receipt['requests'].append(checked)
+                    association = evidence('validate frontend admission '+name, lambda: validate_admission(
+                        admission_record, checked, request, inputs, identity))
+                    if association is not None:
+                        receipt['frontend_associations'].append(association)
             phase = 'deadline_before_request_'+name+'_rpc'
             timeout = min(remaining(), config['rpc_seconds'])
             phase = 'native_request_'+name+'_rpc'
@@ -346,6 +413,8 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
         final_census = census(final, 'final_all_rank_snapshots.json', 'final_all_rank_census.json')
         if initial_census is not None and final_census is not None:
             evidence('compare initial/final capacity identities', lambda: compare_capacity(initial, final))
+        receipt['sampling_observation_scope'] = ('original_frontend_resolved_fields_device_consumption_unmeasured'
+            if len(receipt['frontend_associations']) == 2 else 'caller_parameters_only_engine_clones_unobserved')
         if receipt['completed_requests'] == ['A', 'B'] and receipt['result'] == 'PASS':
             receipt['status'] = 'COMPLETED_PUBLIC_OUTPUTS_ONLY_NOT_G2'
         else:
