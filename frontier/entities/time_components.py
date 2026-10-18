@@ -22,7 +22,7 @@ from frontier.operators.families import (
 def _attention_operator_execution_time_attrs() -> dict[str, str]:
     return {
         operator.name: operator.execution_time_attr
-        for family in iter_execution_enabled_families()
+        for family in iter_execution_enabled_families(include_structural=True)
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
     }
@@ -74,7 +74,7 @@ def _communication_operator_execution_time_attrs() -> dict[str, str]:
 def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ...]:
     operator_attrs: dict[str, str] = {}
     for family in (
-        *tuple(iter_execution_enabled_families()),
+        *tuple(iter_execution_enabled_families(include_structural=True)),
         MEMORY_FAMILY,
         FFN_FAMILY,
         MOE_FAMILY,
@@ -429,6 +429,11 @@ class AttentionTime:
     kernel_count: float = 0.0
     operator_times: AttentionOperatorTimes | None = None
 
+    # Inclusive native sparse-indexer and MLA scopes; their children are not
+    # additional physical charges in the same attention family.
+    attn_dsa_indexer_time: float = 0.0
+    attn_dsa_mla_time: float = 0.0
+
     def total_time(self) -> float:
         """Calculate total attention time for this layer."""
         legacy_total_time = (
@@ -445,6 +450,8 @@ class AttentionTime:
             + self.attn_mla_decode_q_latent_proj_time
             + self.attn_mla_decode_time
             + self.attn_mla_v_up_proj_time
+            + self.attn_dsa_indexer_time
+            + self.attn_dsa_mla_time
             + self.attn_norm_time
             # Step2Mini-specific operations (0.0 for non-Step2Mini models)
             + self.attn_inter_norm_time

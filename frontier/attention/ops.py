@@ -84,6 +84,7 @@ class AttentionFamilySpec(OperatorFamilySpec):
     requires_runtime_kv_helpers: bool
     disjoint_model_projection_attrs: tuple[str, ...] = ()
     dsa_frozen: bool = False
+    structural_execution_enabled: bool = False
     kv_factor: int | None = None
     required_profiling_feature_columns: tuple[str, ...] = ()
     imported_predictor_excluded_feature_columns: tuple[str, ...] = ()
@@ -98,10 +99,16 @@ class AttentionFamilySpec(OperatorFamilySpec):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if self.dsa_frozen and self.operators:
+        if self.dsa_frozen and self.operators and not self.structural_execution_enabled:
             raise ValueError("Frozen DSA family must not enable operator targets")
         if self.dsa_frozen and self.execution_enabled:
             raise ValueError("Frozen DSA family must not be execution enabled")
+        if self.structural_execution_enabled and (
+            not self.operators or self.kv_cache_capacity_resolver is None
+        ):
+            raise ValueError(
+                "Structural attention execution requires operators and a cache capacity resolver"
+            )
         projection_attrs = list(self.disjoint_model_projection_attrs)
         duplicate_projection_attrs = sorted(
             {
@@ -166,7 +173,9 @@ class AttentionFamilySpec(OperatorFamilySpec):
             )
         return value
 
-    def require_enabled_for_execution(self) -> None:
+    def require_enabled_for_execution(self, *, structural: bool = False) -> None:
+        if structural and self.structural_execution_enabled:
+            return
         if self.dsa_frozen:
             raise NotImplementedError(
                 "DSA attention is frozen until a real vLLM/FlashInfer truth "

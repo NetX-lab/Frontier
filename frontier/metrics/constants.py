@@ -20,6 +20,8 @@ class OperationMetrics(enum.Enum):
     ATTN_MLA_DECODE_Q_LATENT_PROJ = "attn_mla_decode_q_latent_proj"
     ATTN_MLA_DECODE = "attn_mla_decode"
     ATTN_MLA_V_UP_PROJ = "attn_mla_v_up_proj"
+    ATTN_DSA_INDEXER = "attn_dsa_indexer"
+    ATTN_DSA_MLA = "attn_dsa_mla"
     GDN_INPUT_PROJECTIONS = "gdn_input_projections"
     GDN_CORE_PREFILL = "gdn_core_prefill"
     GDN_CORE_DECODE = "gdn_core_decode"

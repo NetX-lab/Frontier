@@ -155,10 +155,10 @@ def test_execution_time_operator_mapping_is_cached_but_not_mutably_shared(
     original_iter_families = time_components.iter_execution_enabled_families
     iter_families_calls = 0
 
-    def counted_iter_families():
+    def counted_iter_families(**kwargs):
         nonlocal iter_families_calls
         iter_families_calls += 1
-        return original_iter_families()
+        return original_iter_families(**kwargs)
 
     monkeypatch.setattr(
         time_components,

@@ -28,8 +28,11 @@ MODEL_NAME = "zai-org/GLM-5.3"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.parametrize("model_name", [MODEL_NAME, "deepseek-ai/DeepSeek-V4-Flash"])
-@pytest.mark.parametrize("dummy_mode", [True, False])
+@pytest.mark.parametrize(("model_name", "dummy_mode"), [
+    (MODEL_NAME, False),
+    ("deepseek-ai/DeepSeek-V4-Flash", True),
+    ("deepseek-ai/DeepSeek-V4-Flash", False),
+])
 def test_predictor_initialization_rejects_frozen_model_before_mode_dispatch(
     monkeypatch: pytest.MonkeyPatch, model_name: str, dummy_mode: bool,
 ) -> None:

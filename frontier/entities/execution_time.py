@@ -132,6 +132,8 @@ class ExecutionTime(BaseEntity):
         global_layer_id: int | None = None,
         attention_family_id: str | None = None,
         attention_variant_id: str | None = None,
+        attn_dsa_indexer_time: float = 0.0,
+        attn_dsa_mla_time: float = 0.0,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
@@ -321,6 +323,12 @@ class ExecutionTime(BaseEntity):
             "attn_mla_v_up_proj_time",
             attn_mla_v_up_proj_time,
         )
+        attn_dsa_indexer_time = read_op_time_attr(
+            "attn_dsa_indexer_time", attn_dsa_indexer_time
+        )
+        attn_dsa_mla_time = read_op_time_attr(
+            "attn_dsa_mla_time", attn_dsa_mla_time
+        )
         expert_parallel_alltoall_time = read_op_time_attr(
             "expert_parallel_alltoall_time",
             0.0,
@@ -357,6 +365,8 @@ class ExecutionTime(BaseEntity):
             attn_mla_decode_q_latent_proj_time=attn_mla_decode_q_latent_proj_time,
             attn_mla_decode_time=attn_mla_decode_time,
             attn_mla_v_up_proj_time=attn_mla_v_up_proj_time,
+            attn_dsa_indexer_time=attn_dsa_indexer_time,
+            attn_dsa_mla_time=attn_dsa_mla_time,
             attn_norm_time=attn_norm_time,
             operator_times=attention_operator_times,
         )
@@ -1388,6 +1398,20 @@ class ExecutionTime(BaseEntity):
         return self._time_attr_value(
             "attn_mla_v_up_proj_time",
             self._attention_time.attn_mla_v_up_proj_time,
+        )
+
+    @property
+    def attn_dsa_indexer_time(self) -> float:
+        """Inclusive sparse-indexer time for one physical layer."""
+        return self._time_attr_value(
+            "attn_dsa_indexer_time", self._attention_time.attn_dsa_indexer_time
+        )
+
+    @property
+    def attn_dsa_mla_time(self) -> float:
+        """Inclusive sparse MLA time for one physical layer."""
+        return self._time_attr_value(
+            "attn_dsa_mla_time", self._attention_time.attn_dsa_mla_time
         )
 
     @property

@@ -51,6 +51,8 @@ _PER_LAYER_PUBLIC_NAMES = frozenset(
         "attn_mla_decode_q_latent_proj_time",
         "attn_mla_decode_time",
         "attn_mla_v_up_proj_time",
+        "attn_dsa_indexer_time",
+        "attn_dsa_mla_time",
         "attn_norm_time",
         "dp_input_allreduce_time",
         "dp_output_allreduce_time",

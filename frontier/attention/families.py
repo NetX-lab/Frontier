@@ -287,19 +287,41 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
 
 DSA_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="dsa_attention",
-    display_name="Frozen DSA Attention",
+    display_name="DSA Attention",
     supported_variants=("dsa", "full_index", "shared_index"),
-    operators=(),
+    operators=(
+        AttentionOperatorSpec(
+            name="attn_dsa_indexer",
+            role=AttentionOperatorRole.INDEXING,
+            phases=_ALL_PHASES,
+            execution_time_attr="attn_dsa_indexer_time",
+            resource_class=ResourceClass.COMP,
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="attn_dsa_mla",
+            role=AttentionOperatorRole.ATTENTION,
+            phases=_ALL_PHASES,
+            execution_time_attr="attn_dsa_mla_time",
+            resource_class=ResourceClass.COMP,
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+    ),
     memory_layout=AttentionMemoryLayout.FROZEN_DSA,
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
     dsa_frozen=True,
+    structural_execution_enabled=True,
     execution_enabled=False,
     disabled_reason=(
         "DSA attention is frozen until a real vLLM/FlashInfer truth backend "
         "and Frontier mapping are approved."
     ),
     kv_cache_capacity_resolver=_dsa_kv_cache_capacity,
+    disjoint_model_projection_attrs=(
+        "attention_layer_pre_proj_execution_time",
+        "attention_layer_post_proj_execution_time",
+    ),
 )
 
 
@@ -432,7 +454,9 @@ def iter_attention_families() -> tuple[AttentionFamilySpec, ...]:
     )
 
 
-def iter_execution_enabled_families() -> tuple[AttentionFamilySpec, ...]:
+def iter_execution_enabled_families(
+    *, include_structural: bool = False,
+) -> tuple[AttentionFamilySpec, ...]:
     """Catalog families that participate in execution/profiling/training.
 
     Single source of truth for family execution state: catalog consumers
@@ -440,5 +464,7 @@ def iter_execution_enabled_families() -> tuple[AttentionFamilySpec, ...]:
     """
     return tuple(
         cast(AttentionFamilySpec, family)
-        for family in _ATTENTION_OPERATOR_REGISTRY.iter_execution_enabled_families()
+        for family in _ATTENTION_OPERATOR_REGISTRY.iter_families()
+        if family.execution_enabled
+        or (include_structural and family.structural_execution_enabled)
     )
