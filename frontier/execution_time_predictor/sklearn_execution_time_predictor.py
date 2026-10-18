@@ -6274,6 +6274,18 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 comm_domain=comm_domain,
             )
 
+        if operator.collective_alias == "reduce_scatter":
+            if num_devices is None:
+                raise ValueError(
+                    f"CommOperator {operator.name} requires num_devices for reduce_scatter"
+                )
+            return self.predict_reduce_scatter_time(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=ctx.cluster_type,
+                comm_domain=comm_domain,
+            )
+
         if operator.collective_alias == "alltoall":
             if num_devices is None:
                 raise ValueError(
@@ -8005,6 +8017,36 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             f"  1. Configure a CC Backend (e.g., --cc_backend vidur or --cc_backend analytical)\n"
             f"  2. Enable dummy mode explicitly (--enable_dummy_mode)\n"
             f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
+        )
+
+    def predict_reduce_scatter_time(
+        self,
+        data_size_bytes: int,
+        num_devices: int,
+        cluster_type: ClusterType,
+        comm_domain: Optional[str] = None,
+    ) -> float:
+        """Price reduce-scatter using each rank's full input size in bytes."""
+
+        if self._cc_backend is not None:
+            return self._cc_backend.predict_reduce_scatter(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=cluster_type,
+                comm_domain=comm_domain,
+            )
+        if self._enable_dummy_mode:
+            logger.info(
+                "[CC-FALLBACK] predict_reduce_scatter_time: CC Backend not available, "
+                "falling back to dummy mode value=%s ms",
+                self._dummy_execution_time,
+            )
+            return self._dummy_execution_time
+        raise RuntimeError(
+            "CC Backend is required for reduce-scatter communication prediction "
+            "but was not provided. Configure a CC Backend or enable dummy mode "
+            f"explicitly. Current state: cc_backend=None, "
+            f"enable_dummy_mode={self._enable_dummy_mode}"
         )
 
     def predict_alltoall_time(
