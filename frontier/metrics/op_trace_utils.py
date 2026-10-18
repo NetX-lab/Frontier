@@ -9,10 +9,14 @@ from frontier.attention.families import (
     DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
 )
-from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.memory import (
+    get_attention_kv_cache_capacity,
+    get_attention_runtime_kv_layout,
+)
 from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import get_quantization_manager
+from frontier.config import global_vars
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_size,
@@ -800,6 +804,116 @@ def build_kv_cache_transfer_meta(
     # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Mirrors the
     # analytical transfer predictor so capacity and transfer agree on the same MLA cache.
     family = bind_attention_family(model_config).family
+    if global_vars.get_kv_connector() == "nixl" and family is DSA_ATTENTION_FAMILY:
+        block_size = 64
+        capacity = get_attention_kv_cache_capacity(
+            family,
+            model_config,
+            block_size=block_size,
+        )
+        if capacity.is_grouped:
+            raise ValueError("GLM structural NIXL tracing requires common cache blocks")
+        bytes_per_block = capacity.resident_bytes_per_common_block
+        if (
+            type(transfer_size_bytes) is not int
+            or transfer_size_bytes <= 0
+            or transfer_size_bytes % bytes_per_block
+        ):
+            raise ValueError(
+                "GLM structural NIXL transfer bytes must contain complete common blocks"
+            )
+        source_prompt_common_blocks = transfer_size_bytes // bytes_per_block
+        expected_prompt_blocks = sum(
+            (request.num_prefill_tokens + block_size - 1) // block_size
+            for request in batch.requests
+        )
+        if source_prompt_common_blocks != expected_prompt_blocks:
+            raise ValueError(
+                "GLM structural NIXL trace bytes do not match source prompt pages"
+            )
+
+        components = {component.component_id: component for component in capacity.components}
+        main = components["main_mla"]
+        indexer = components["indexer_k_and_scale"]
+        main_width = int(model_config.kv_lora_rank) + int(model_config.qk_rope_head_dim)
+        index_width = int(model_config.index_head_dim)
+        main_precision = PrecisionType.from_torch_dtype(model_config.torch_dtype)
+        tensor_shape = {
+            "main_mla": [
+                source_prompt_common_blocks,
+                len(main.owner_layer_ids),
+                block_size,
+                main_width,
+            ],
+            "indexer_k": [
+                source_prompt_common_blocks,
+                len(indexer.owner_layer_ids),
+                block_size,
+                index_width,
+            ],
+            "indexer_scale": [
+                source_prompt_common_blocks,
+                len(indexer.owner_layer_ids),
+                block_size,
+                index_width // 128,
+            ],
+        }
+        tensor_size_bytes = {
+            "main_mla": (
+                source_prompt_common_blocks
+                * len(main.owner_layer_ids)
+                * main.page_size_bytes
+            ),
+            "indexer_k": _elements_from_shape(tensor_shape["indexer_k"]),
+            "indexer_scale": (
+                _elements_from_shape(tensor_shape["indexer_scale"])
+                * int(PrecisionType.FP32.bytes_per_element)
+            ),
+        }
+        if sum(tensor_size_bytes.values()) != transfer_size_bytes:
+            raise ValueError("GLM structural NIXL component bytes do not conserve payload")
+
+        total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
+        return {
+            "precision_op": "kv_cache_transfer",
+            "dtype": "MIXED",
+            "dtype_bytes": None,
+            "tensor_dtypes": {
+                "main_mla": main_precision.name,
+                "indexer_k": PrecisionType.FP8.name,
+                "indexer_scale": PrecisionType.FP32.name,
+            },
+            "tensor_shape": tensor_shape,
+            "tensor_size_bytes": tensor_size_bytes,
+            "transfer_size_bytes": transfer_size_bytes,
+            "total_tokens": total_tokens,
+            "num_layers": num_layers,
+            "num_heads": None,
+            "num_q_heads": num_q_heads,
+            "num_kv_heads": None,
+            "head_dim": None,
+            "payload_kind": "structural_whole_prompt_pages_per_worker_lane",
+            "byte_scope": "per_worker_lane_resident_pages",
+            "block_size": block_size,
+            "source_prompt_common_blocks": source_prompt_common_blocks,
+            "cache_components": [
+                {
+                    "component_id": component.component_id,
+                    "owner_layer_ids": list(component.owner_layer_ids),
+                    "page_size_bytes": component.page_size_bytes,
+                    "page_count": (
+                        source_prompt_common_blocks * len(component.owner_layer_ids)
+                    ),
+                    "resident_bytes": (
+                        source_prompt_common_blocks
+                        * len(component.owner_layer_ids)
+                        * component.page_size_bytes
+                    ),
+                }
+                for component in capacity.components
+            ],
+            "native_wire_bytes_known": False,
+        }
     layout = get_attention_runtime_kv_layout(
         family,
         runtime_num_kv_heads_per_worker=model_config.get_runtime_num_kv_heads(),

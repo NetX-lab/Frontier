@@ -92,6 +92,149 @@ class KvBlockAllocation:
                 },
             )
 
+    def get_kv_transfer_source_prompt_common_blocks(self, request: Request) -> int:
+        """Return source-backed prompt pages while PREFILL retains ownership."""
+        if self._cluster_type != ClusterType.PREFILL:
+            raise RuntimeError("KV transfer source ownership requires PREFILL")
+        if request.id not in self._pending_kv_transfer_requests:
+            raise RuntimeError(
+                f"Request {request.id} is not pending PREFILL KV transfer"
+            )
+        prompt_blocks = ceil(request.num_prefill_tokens / self._config.block_size)
+        allocated_blocks = int(self._allocation_map.get(request.id, 0))
+        if allocated_blocks < prompt_blocks:
+            raise RuntimeError(
+                f"PREFILL request {request.id} owns {allocated_blocks} blocks but "
+                f"its prompt requires {prompt_blocks}"
+            )
+        return prompt_blocks
+
+    def validate_kv_transfer_source_release(self, request: Request) -> None:
+        """Preflight P ownership before any transfer-end mutation or metric."""
+        self.get_kv_transfer_source_prompt_common_blocks(request)
+        if request.id not in self._kv_transfer_start_claimed_request_ids:
+            raise RuntimeError(
+                f"Request {request.id} has no active NIXL transfer start claim"
+            )
+
+    def claim_kv_transfer_start(self, request: Request) -> None:
+        """Claim one P-owned request before target placement and reservation."""
+        self.get_kv_transfer_source_prompt_common_blocks(request)
+        if request.id in self._kv_transfer_start_claimed_request_ids:
+            raise RuntimeError(
+                f"Duplicate NIXL transfer start for request {request.id}"
+            )
+        self._kv_transfer_start_claimed_request_ids.add(request.id)
+
+    def abandon_kv_transfer_start_claim(self, request: Request) -> None:
+        """Release a start claim when target reservation setup fails."""
+        if request.id not in self._kv_transfer_start_claimed_request_ids:
+            raise RuntimeError(
+                f"Request {request.id} has no NIXL transfer start claim"
+            )
+        self._kv_transfer_start_claimed_request_ids.remove(request.id)
+
+    def validate_kv_transfer_target_scope(self, request: Request) -> None:
+        """Reject unsupported structural NIXL targets without mutating state."""
+        if self._cluster_type != ClusterType.DECODE:
+            raise RuntimeError("KV transfer target reservation requires DECODE")
+        capacity = getattr(self, "_kv_cache_capacity", None)
+        if (
+            capacity is None
+            or capacity.family_id != "dsa_attention"
+            or capacity.is_grouped
+            or capacity.block_size != 64
+        ):
+            raise NotImplementedError(
+                "NIXL target reservation currently supports GLM DSA block64 only"
+            )
+        if int(self._replica_config.num_pipeline_stages) != 1:
+            raise NotImplementedError("GLM NIXL target reservation supports PP1 only")
+        if self._is_prefix_caching_enabled():
+            raise NotImplementedError("GLM NIXL target reservation excludes prefix caching")
+        if getattr(self, "_spec_decode_enabled", False):
+            raise NotImplementedError(
+                "GLM NIXL target reservation excludes speculative decoding and MTP"
+            )
+        self._check_request_fits_max_model_len(request)
+        self._check_request_fits_kv_pool(request)
+
+    def reserve_kv_transfer_target(self, request: Request) -> Optional[int]:
+        """Reserve the existing DECODE allocation before structural NIXL READ."""
+        self.validate_kv_transfer_target_scope(request)
+        receiving = self._kv_transfer_receiving_request_ids
+        ready = self._kv_transfer_ready_request_ids
+        if request.id in receiving or request.id in ready:
+            raise RuntimeError(
+                f"Request {request.id} already owns a NIXL target reservation"
+            )
+        if request.id in self._allocation_map:
+            raise RuntimeError(
+                f"Request {request.id} already has a DECODE allocation"
+            )
+        self._check_request_fits_kv_pool(request)
+        if not self._can_allocate_request(request, 1):
+            return None
+        self._allocate_request(request, 1)
+        reserved_blocks = int(self._allocation_map.get(request.id, 0))
+        prompt_blocks = ceil(request.num_prefill_tokens / self._config.block_size)
+        if reserved_blocks < prompt_blocks:
+            self._free_request_resources_by_id(request.id)
+            raise RuntimeError(
+                "DECODE reservation does not cover every source prompt block"
+            )
+        receiving.add(request.id)
+        return reserved_blocks
+
+    def mark_kv_transfer_target_ready(self, request: Request) -> None:
+        """Move a reserved request from receiving to D-ready exactly once."""
+        if request.id not in self._kv_transfer_receiving_request_ids:
+            raise RuntimeError(
+                f"Request {request.id} has no receiving NIXL reservation"
+            )
+        if request.id not in self._allocation_map:
+            raise RuntimeError(
+                f"Request {request.id} lost its DECODE reservation before readiness"
+            )
+        self._kv_transfer_receiving_request_ids.remove(request.id)
+        self._kv_transfer_ready_request_ids.add(request.id)
+
+    def validate_kv_transfer_target_completion(
+        self, request: Request, expected_reserved_blocks: int
+    ) -> None:
+        """Preflight one receiving D reservation without changing its state."""
+        if request.id not in self._kv_transfer_receiving_request_ids:
+            raise RuntimeError(
+                f"Request {request.id} has no receiving NIXL reservation"
+            )
+        if request.id not in self._allocation_map:
+            raise RuntimeError(
+                f"Request {request.id} lost its DECODE reservation before completion"
+            )
+        actual_reserved_blocks = int(self._allocation_map[request.id])
+        if actual_reserved_blocks != expected_reserved_blocks:
+            raise RuntimeError(
+                f"Request {request.id} DECODE reservation changed from "
+                f"{expected_reserved_blocks} to {actual_reserved_blocks} blocks"
+            )
+        self._check_request_fits_max_model_len(request)
+        self._check_request_fits_kv_pool(request)
+
+    def consume_kv_transfer_target_ready(self, request: Request) -> None:
+        """Consume D-ready ownership when the request enters its selected lane."""
+        if request.id not in self._kv_transfer_ready_request_ids:
+            raise RuntimeError(f"Request {request.id} is not D-ready")
+        self._kv_transfer_ready_request_ids.remove(request.id)
+
+    def abort_kv_transfer_target_reservation(self, request: Request) -> None:
+        """Roll back a reservation if structural payload construction fails."""
+        if request.id not in self._kv_transfer_receiving_request_ids:
+            raise RuntimeError(
+                f"Request {request.id} has no receiving reservation to abort"
+            )
+        self._kv_transfer_receiving_request_ids.remove(request.id)
+        self._free_request_resources_by_id(request.id)
+
     def _find_request_by_id(self, request_id: int) -> Optional[Request]:
         request_groups = [
             getattr(self, "_running_requests", []),

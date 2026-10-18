@@ -116,6 +116,11 @@ class VLLMv1EngineReplicaScheduler(
         self._waiting_requests: List[Request] = []
         # Requests waiting for prefill-side KV transfer completion.
         self._pending_kv_transfer_requests: set[int] = set()
+        self._kv_transfer_start_claimed_request_ids: set[int] = set()
+        # NIXL starts blocked by one selected DECODE lane's real KV capacity.
+        self._pending_kv_transfer_start_events: List = []
+        self._kv_transfer_receiving_request_ids: set[int] = set()
+        self._kv_transfer_ready_request_ids: set[int] = set()
         self._scheduled_num_computed_tokens_by_request: Dict[int, int] = {}
         self._monolithic_pp_pending_terminal_release_iters: Dict[int, int] = {}
         self._monolithic_pp_waiting_sensitive_release_extensions: set[int] = set()
@@ -441,10 +446,13 @@ class VLLMv1EngineReplicaScheduler(
                     f"source_replica={self._replica_id}, "
                     f"source_dp={self._replica_local_id}"
                 )
-
+        for request in requests:
             if request.id in self._allocation_map:
                 self._free_request_resources(request)
             self._pending_kv_transfer_requests.discard(request.id)
+            getattr(
+                self, "_kv_transfer_start_claimed_request_ids", set()
+            ).discard(request.id)
 
     def on_schedule(self, time: float = 0.0) -> List[Batch]:
         # vLLM runs iterations until its batch queue is full or an iteration
@@ -809,6 +817,37 @@ class VLLMv1EngineReplicaScheduler(
                     f"[VLLMv1Engine] Request {request.id} continues, "
                     f"processed_tokens={request.num_processed_tokens}"
                 )
+
+        if self._cluster_type == ClusterType.DECODE:
+            self._retry_pending_kv_transfer_starts(batch.completed_at)
+
+    def defer_kv_transfer_start(self, event) -> None:
+        """Retain one capacity-blocked NIXL start on its selected D lane."""
+        request_id = event.get_request_id()
+        if any(
+            pending.get_request_id() == request_id
+            for pending in self._pending_kv_transfer_start_events
+        ):
+            raise RuntimeError(
+                f"Duplicate pending NIXL transfer start for request {request_id}"
+            )
+        self._pending_kv_transfer_start_events.append(event)
+
+    def has_pending_kv_transfer_starts(self) -> bool:
+        """Return whether this lane already has an older blocked NIXL start."""
+        return bool(self._pending_kv_transfer_start_events)
+
+    def _retry_pending_kv_transfer_starts(self, time: float) -> None:
+        """Reserve FIFO blocked starts after this D output releases capacity."""
+        ready_events = []
+        while self._pending_kv_transfer_start_events:
+            event = self._pending_kv_transfer_start_events[0]
+            if not event.try_reserve_target(self):
+                break
+            self._pending_kv_transfer_start_events.pop(0)
+            event.set_capacity_retry_time(time)
+            ready_events.append(event)
+        self._popped_output_events.extend(ready_events)
 
     def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
         # Preemption inserts a victim into `_request_queue`, or into

@@ -29,6 +29,12 @@ class KVCacheTransferInfo:
     target_replica_id: Optional[int] = None
     target_replica_local_id: Optional[int] = None
     target_batch_stage_id: Optional[int] = None
+    kv_connector: str = "none"
+    payload_kind: Optional[str] = None
+    source_prompt_common_blocks: Optional[int] = None
+    target_reserved_common_blocks: Optional[int] = None
+    target_ready_time: Optional[float] = None
+    source_release_time: Optional[float] = None
 
     def __post_init__(self) -> None:
         if (
@@ -49,6 +55,22 @@ class KVCacheTransferInfo:
             )
         if self.transfer_end_time is None:
             self.transfer_end_time = self.transfer_start_time + (self.transfer_time_ms * 1e-3)
+        if self.kv_connector == "nixl":
+            if self.payload_kind != "structural_whole_prompt_pages_per_worker_lane":
+                raise ValueError("NIXL transfer requires the structural payload label")
+            if (
+                type(self.source_prompt_common_blocks) is not int
+                or self.source_prompt_common_blocks <= 0
+            ):
+                raise ValueError("NIXL transfer requires source prompt common blocks")
+            if (
+                type(self.target_reserved_common_blocks) is not int
+                or self.target_reserved_common_blocks
+                < self.source_prompt_common_blocks
+            ):
+                raise ValueError("NIXL target reservation does not cover its payload")
+            if self.target_replica_id is None:
+                raise ValueError("NIXL transfer requires a selected target replica")
 
     @property
     def is_completed(self) -> bool:
@@ -61,7 +83,7 @@ class KVCacheTransferInfo:
         return self.kv_cache_size_bytes
 
     def to_dict(self) -> dict:
-        return {
+        payload = {
             "batch_id": self.batch.id,
             "batch_global_id": self.batch.global_id,
             "source_cluster_type": self.source_cluster_type.name,
@@ -83,3 +105,15 @@ class KVCacheTransferInfo:
             "transfer_protocol": self.transfer_protocol,
             "transfer_requests": self.transfer_requests,
         }
+        if self.kv_connector == "nixl":
+            payload.update(
+                {
+                    "kv_connector": self.kv_connector,
+                    "payload_kind": self.payload_kind,
+                    "source_prompt_common_blocks": self.source_prompt_common_blocks,
+                    "target_reserved_common_blocks": self.target_reserved_common_blocks,
+                    "target_ready_time": self.target_ready_time,
+                    "source_release_time": self.source_release_time,
+                }
+            )
+        return payload

@@ -26,6 +26,57 @@ class KVCacheTransferEndEvent(BaseEvent):
         scheduler: "BaseGlobalScheduler",
         metrics_store: "MetricsStore",
     ) -> List[BaseEvent]:
+        batch = self._transfer_info.batch
+        target_cluster_scheduler = scheduler.get_cluster_scheduler(
+            self._transfer_info.target_cluster_type
+        )
+        source_replica_scheduler = None
+        target_replica_scheduler = None
+        is_structural_nixl = (
+            getattr(self._transfer_info, "kv_connector", "none") == "nixl"
+        )
+        if is_structural_nixl:
+            if len(batch.requests) != 1:
+                raise RuntimeError("NIXL transfer end requires one request")
+            request = batch.requests[0]
+            target_replica_scheduler = target_cluster_scheduler.get_replica_scheduler(
+                self._transfer_info.target_replica_id,
+                self._transfer_info.target_replica_local_id,
+            )
+            target_replica_scheduler.validate_kv_transfer_target_completion(
+                request,
+                self._transfer_info.target_reserved_common_blocks,
+            )
+            source_cluster_scheduler = scheduler.get_cluster_scheduler(
+                self._transfer_info.source_cluster_type
+            )
+            source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
+                self._transfer_info.source_replica_id,
+                self._transfer_info.source_replica_local_id,
+            )
+            source_blocks = (
+                source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(
+                    request
+                )
+            )
+            if source_blocks != self._transfer_info.source_prompt_common_blocks:
+                raise RuntimeError(
+                    f"Request {request.id} PREFILL ownership changed from "
+                    f"{self._transfer_info.source_prompt_common_blocks} to "
+                    f"{source_blocks} prompt blocks"
+                )
+            source_capacity = source_replica_scheduler._kv_cache_capacity
+            expected_payload_bytes = (
+                source_blocks * source_capacity.resident_bytes_per_common_block
+            )
+            if self._transfer_info.kv_cache_size_bytes != expected_payload_bytes:
+                raise RuntimeError(
+                    f"Request {request.id} NIXL payload changed from "
+                    f"{expected_payload_bytes} to "
+                    f"{self._transfer_info.kv_cache_size_bytes} bytes"
+                )
+            source_replica_scheduler.validate_kv_transfer_source_release(request)
+
         transfer_duration_s = self.time - self._transfer_info.transfer_start_time
         transfer_duration_ms = transfer_duration_s * 1e3
         metrics_store.on_kv_cache_transfer_end(
@@ -36,30 +87,45 @@ class KVCacheTransferEndEvent(BaseEvent):
             self._transfer_info,
         )
 
-        batch = self._transfer_info.batch
         for request in batch.requests:
             request.on_kv_cache_transfer_complete(self.time, transfer_duration_s)
 
-        target_cluster_scheduler = scheduler.get_cluster_scheduler(
-            self._transfer_info.target_cluster_type
-        )
-        arrival_events = target_cluster_scheduler.on_kv_cache_arrival(
-            self.time,
-            self._transfer_info.batch,
-            self._transfer_info,
-        )
+        if is_structural_nixl:
+            from frontier.logger import get_cluster_logger
+            from frontier.scheduler.utils.kv_arrival import (
+                handle_reserved_decode_arrival,
+            )
+
+            arrival_events = handle_reserved_decode_arrival(
+                target_replica_scheduler,
+                self.time,
+                batch,
+                self._transfer_info,
+                get_cluster_logger(__name__, ClusterType.DECODE.name),
+            )
+        else:
+            arrival_events = target_cluster_scheduler.on_kv_cache_arrival(
+                self.time,
+                batch,
+                self._transfer_info,
+            )
 
         if self._transfer_info.source_cluster_type == ClusterType.PREFILL:
             from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
-            source_cluster_scheduler = scheduler.get_cluster_scheduler(
-                self._transfer_info.source_cluster_type
-            )
-            source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
-                self._transfer_info.source_replica_id,
-                self._transfer_info.source_replica_local_id,
-            )
+            if source_replica_scheduler is None:
+                source_cluster_scheduler = scheduler.get_cluster_scheduler(
+                    self._transfer_info.source_cluster_type
+                )
+                source_replica_scheduler = (
+                    source_cluster_scheduler.get_replica_scheduler(
+                        self._transfer_info.source_replica_id,
+                        self._transfer_info.source_replica_local_id,
+                    )
+                )
             source_replica_scheduler.complete_kv_transfer_for_requests(batch.requests)
+            if is_structural_nixl:
+                self._transfer_info.source_release_time = self.time
 
             memory_usage_percent = source_replica_scheduler.memory_usage_percent
             metrics_store.on_replica_schedule(
@@ -90,7 +156,7 @@ class KVCacheTransferEndEvent(BaseEvent):
         return self._transfer_info.target_cluster_type
 
     def to_dict(self) -> dict:
-        return {
+        payload = {
             "time": self.time,
             "event_type": self.event_type.name,
             "batch_id": self._transfer_info.batch.id,
@@ -103,3 +169,17 @@ class KVCacheTransferEndEvent(BaseEvent):
             "transfer_start_time": self._transfer_info.transfer_start_time,
             "transfer_end_time": self._transfer_info.transfer_end_time,
         }
+        if getattr(self._transfer_info, "kv_connector", "none") == "nixl":
+            payload.update(
+                {
+                    "kv_connector": self._transfer_info.kv_connector,
+                    "target_replica_id": self._transfer_info.target_replica_id,
+                    "target_replica_local_id": self._transfer_info.target_replica_local_id,
+                    "payload_kind": self._transfer_info.payload_kind,
+                    "source_prompt_common_blocks": self._transfer_info.source_prompt_common_blocks,
+                    "target_reserved_common_blocks": self._transfer_info.target_reserved_common_blocks,
+                    "target_ready_time": self._transfer_info.target_ready_time,
+                    "source_release_time": self._transfer_info.source_release_time,
+                }
+            )
+        return payload
