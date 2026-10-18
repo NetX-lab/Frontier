@@ -1,0 +1,220 @@
+"""Observe prepared MRv2 CPU request metadata without qualifying execution."""
+from dataclasses import dataclass, field
+import hashlib
+import json
+import os
+from pathlib import Path
+import time
+import traceback
+
+import numpy as np
+
+import role_capacity_observation as capacity
+
+
+CPU_ARRAY_FIELDS = (
+    'idx_mapping_np', 'num_scheduled_tokens', 'query_start_loc_np',
+    'num_computed_tokens_np', 'prefill_len_np', 'num_computed_prefill_tokens_np',
+    'is_prefilling_np', 'prefill_runs_as_decode_np',
+)
+BATCH_COUNT_FIELDS = ('num_reqs', 'num_reqs_after_padding', 'num_tokens',
+                      'num_tokens_after_padding')
+UNMEASURED = dict.fromkeys((
+    'model_input_arguments', 'device_inputs', 'content', 'finite', 'gpu_completion',
+    'graph_replay', 'physical_scope_census', 'precision_and_exclusion_binding', 'G2',
+), 'UNMEASURED')
+# These identify the observer files read here, not installed native source or execution.
+SOURCE = dict(observer_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+              capacity_observer_sha256=hashlib.sha256(Path(capacity.__file__).read_bytes()).hexdigest(),
+              native_source_status='UNVERIFIED')
+
+
+@dataclass
+class RequestObservation:
+    invocations: int = 0
+    records_written: int = 0
+    metadata_snapshots: int = 0
+    native_failures: int = 0
+    collection_stopped: bool = False
+    unverified: bool = False
+    last_invocation: dict = field(default_factory=dict)
+    last_batch_counts: dict = field(default_factory=dict)
+    observer_error: dict | None = None
+    native_error: dict | None = None
+    record_file: str | None = None
+    rank_bytes_at_last_write: int | None = None
+    rank_limit: int | None = None
+
+
+def class_name(value):
+    return type(value).__module__+'.'+type(value).__qualname__
+
+
+def observer_failure(state, kind, failure, *, stop=False):
+    """Keep one compact error in RPC state and report the complete diagnostic locally."""
+    state.unverified = True
+    state.collection_stopped |= stop
+    state.observer_error = dict(invocation=state.invocations, kind=kind,
+                                error_type=class_name(failure))
+    try:
+        capacity.report_error(json.dumps(dict(
+            request_metadata_status='UNVERIFIED', **state.observer_error,
+            observer_error=traceback.format_exc())))
+    except BaseException:
+        pass
+
+
+def scheduler_snapshot(args, kwargs):
+    scheduler = args[0] if args else kwargs['scheduler_output']
+    return dict(total_num_scheduled_tokens=int(scheduler.total_num_scheduled_tokens),
+                num_scheduled_tokens=[dict(req_id=req_id, count=int(count))
+                    for req_id, count in scheduler.num_scheduled_tokens.items()])
+
+
+def batch_snapshot(batch):
+    """Copy only retained InputBatch CPU fields; never read prepared device buffers."""
+    row = {name: int(getattr(batch, name)) for name in BATCH_COUNT_FIELDS}
+    row['req_ids'] = list(batch.req_ids)
+    for name in CPU_ARRAY_FIELDS:
+        value = getattr(batch, name)
+        if value is None and name == 'prefill_runs_as_decode_np':
+            # Native leaves this unset for no-prefill and some PCP prefill paths.
+            row[name] = None
+        else:
+            if not isinstance(value, np.ndarray):
+                raise TypeError(name+' must be a CPU numpy array')
+            row[name] = value.copy().tolist()
+    return row
+
+
+def write_record(worker, payload):
+    """Share the original rank allowance and exclusively create a new request JSONL."""
+    if 'STEP5_CAPACITY_NODE_FILE' not in os.environ:
+        raise ValueError('Request records require a worker-local node observer output')
+    output, record_bytes = capacity.observation_output()
+    state = worker._request_observation
+    pid = os.getpid()
+    path = output/f'request_rank_{worker.rank}_pid_{pid}.jsonl'
+    files = (output/f'rank_{worker.rank}_pid_{pid}.jsonl',
+             output/f'worker_{worker.rank}_{pid}.json', path)
+    used = sum(p.stat().st_size for p in files if p.exists())
+    encoded = payload.encode('utf-8')
+    rank_limit = record_bytes//8
+    if used+len(encoded) > rank_limit:
+        raise ValueError('Rank aggregate evidence exceeds record budget')
+    # First write cannot append to an earlier session's evidence. No retry on failure.
+    with path.open('xb' if state.record_file is None else 'ab') as stream:
+        stream.write(encoded)
+    state.record_file = str(path)
+    state.rank_bytes_at_last_write = used+len(encoded)
+    state.rank_limit = rank_limit
+
+
+def record_invocation(worker, state, scheduler, scheduler_error, native_error, record):
+    """Serialize before return/sampling so no CPU array or request-list aliases survive."""
+    row = dict(scope='cpu_request_metadata_only_not_G2', invocation=state.invocations,
+               time_ns=time.time_ns(), pid=os.getpid(), rank=worker.rank,
+               local_rank=worker.local_rank,
+               worker_identity=dict(getattr(worker, '_capacity_identity', {})),
+               source=dict(SOURCE), scheduler=scheduler,
+               native_outcome='raised' if native_error is not None else 'returned',
+               native_error=native_error, runner=None, prepared_batch=None,
+               prepared_batch_status='UNVERIFIED', evidence_status=dict(UNMEASURED),
+               cpu_frontier_semantics='optimistic_upper_bounds_not_device_progress')
+    try:
+        runner = getattr(worker, 'model_runner', None)
+        row['runner'] = class_name(runner) if runner is not None else None
+        if native_error is not None:
+            row['prepared_batch_status'] = 'NOT_OBSERVED_NATIVE_ERROR'
+        elif scheduler_error is not None:
+            row['observer_error'] = scheduler_error
+        elif scheduler['total_num_scheduled_tokens'] == 0:
+            row['prepared_batch_status'] = 'NOT_OBSERVED_ZERO_WORK'
+        elif scheduler['total_num_scheduled_tokens'] > 0:
+            native_state = getattr(runner, 'execute_model_state', None)
+            if native_state is None:
+                raise ValueError('Positive scheduler work has no observable MRv2 execute_model_state')
+            row['prepared_batch'] = batch_snapshot(native_state.input_batch)
+            row['prepared_batch_status'] = 'OBSERVED_CPU_METADATA'
+        else:
+            raise ValueError('Negative scheduler work cannot establish a prepared batch')
+    except BaseException as failure:
+        row['observer_error'] = traceback.format_exc()
+        observer_failure(state, 'prepared_batch', failure)
+    state.last_invocation = {name: row[name] for name in
+        ('invocation', 'native_outcome', 'prepared_batch_status', 'runner')}
+    try:
+        # JSON text is an immutable, detached snapshot even for an injected recorder.
+        payload = json.dumps(row, ensure_ascii=False, allow_nan=False, separators=(',', ':'))+'\n'
+        record(worker, payload)
+    except BaseException as failure:
+        observer_failure(state, 'record', failure, stop=True)
+        return
+    state.records_written += 1
+    if row['prepared_batch_status'] == 'OBSERVED_CPU_METADATA':
+        state.metadata_snapshots += 1
+        state.last_batch_counts = {name: row['prepared_batch'][name] for name in BATCH_COUNT_FIELDS}
+
+
+def request_snapshot(worker):
+    """Return bounded counters and last statuses, not arrays, history or capacity verdicts."""
+    state = getattr(worker, '_request_observation', None)
+    if state is None:
+        state = RequestObservation()
+    status = ('UNVERIFIED' if state.unverified or state.native_failures else
+              'OBSERVED_CPU_METADATA_ONLY_NOT_G2' if state.metadata_snapshots else 'UNMEASURED')
+    return dict(scope='cpu_request_metadata_only_not_G2', status=status,
+                pid=os.getpid(), rank=worker.rank, local_rank=worker.local_rank,
+                worker_identity=dict(getattr(worker, '_capacity_identity', {})), source=dict(SOURCE),
+                request_metadata=dict(invocations=state.invocations,
+                    records_written=state.records_written, metadata_snapshots=state.metadata_snapshots,
+                    collection_stopped=state.collection_stopped,
+                    last_invocation=dict(state.last_invocation),
+                    last_batch_counts=dict(state.last_batch_counts),
+                    record_file=state.record_file,
+                    rank_bytes_at_last_write=state.rank_bytes_at_last_write, rank_limit=state.rank_limit),
+                errors=dict(observer=dict(state.observer_error) if state.observer_error else None,
+                            native=dict(state.native_error) if state.native_error else None,
+                            native_failures=state.native_failures),
+                evidence_status=dict(UNMEASURED))
+
+
+def observed_worker(base, record=write_record):
+    """Compose unchanged capacity observations and override only inherited execute_model."""
+    capacity_worker = capacity.observed_worker(base)
+    original = capacity_worker.execute_model
+
+    def execute_model(self, *args, **kwargs):
+        state = getattr(self, '_request_observation', None)
+        if state is None:
+            state = self._request_observation = RequestObservation()
+        state.invocations += 1
+        scheduler, scheduler_error = None, None
+        if not state.collection_stopped:
+            try:
+                scheduler = scheduler_snapshot(args, kwargs)
+            except BaseException as failure:
+                scheduler_error = traceback.format_exc()
+                observer_failure(state, 'scheduler', failure)
+        try:
+            result = original(self, *args, **kwargs)
+        except BaseException as failure:
+            state.native_failures += 1
+            state.native_error = dict(invocation=state.invocations, error_type=class_name(failure))
+            state.last_invocation = dict(invocation=state.invocations, native_outcome='raised')
+            if not state.collection_stopped:
+                try:
+                    record_invocation(self, state, scheduler, scheduler_error, traceback.format_exc(), record)
+                except BaseException as observer_error:
+                    observer_failure(state, 'record', observer_error, stop=True)
+            raise
+        state.last_invocation = dict(invocation=state.invocations, native_outcome='returned')
+        if not state.collection_stopped:
+            try:
+                record_invocation(self, state, scheduler, scheduler_error, None, record)
+            except BaseException as failure:
+                observer_failure(state, 'record', failure, stop=True)
+        return result
+
+    return type('RequestObservedWorker', (capacity_worker,),
+                dict(execute_model=execute_model, request_snapshot=request_snapshot))
