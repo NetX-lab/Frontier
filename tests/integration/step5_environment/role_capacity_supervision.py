@@ -2,6 +2,7 @@
 import csv
 import ipaddress
 import json
+import math
 import os
 from pathlib import Path
 import signal
@@ -243,8 +244,16 @@ def completion_exchange(root, generation, node, status, deadline, *, clock=time.
 
 def supervise(root, generation, env, engine_settings, argv, workers, gpu_uuids, *,
               clock=time.monotonic, sleep=time.sleep, popen=subprocess.Popen, run=subprocess.run,
-              boot_path=Path('/proc/sys/kernel/random/boot_id'), proc_root=Path('/proc'), socket_factory=socket.socket):
-    started = clock(); end = started+SECONDS
+              boot_path=Path('/proc/sys/kernel/random/boot_id'), proc_root=Path('/proc'), socket_factory=socket.socket,
+              worker_inventory=None, finalize_evidence=None, deadline=None, completion_deadline=None):
+    started = clock(); end = started+SECONDS if deadline is None else deadline
+    if isinstance(end, bool) or not isinstance(end, (int, float)) or not math.isfinite(end) or \
+            end <= started+SHUTDOWN_SECONDS+RESIDUAL_SECONDS or end > started+SECONDS:
+        raise ValueError('Supervisor deadline must preserve cleanup within the approved ceiling')
+    completion_end = end if completion_deadline is None else completion_deadline
+    if isinstance(completion_end, bool) or not isinstance(completion_end, (int, float)) or \
+            not math.isfinite(completion_end) or completion_end < end or completion_end > started+SECONDS:
+        raise ValueError('Completion deadline must remain within the approved absolute ceiling')
     workload_end, shutdown_end = end-SHUTDOWN_SECONDS-RESIDUAL_SECONDS, end-RESIDUAL_SECONDS
     if len(gpu_uuids) != 8 or len(set(gpu_uuids)) != 8:
         raise ValueError('Exactly eight allocated GPU UUIDs required')
@@ -373,9 +382,43 @@ def supervise(root, generation, env, engine_settings, argv, workers, gpu_uuids, 
             break
         sleep(min(1, deadline-clock()))
     status['cleanup_start_time_ns'] = int(clock()*1e9)
+    if worker_inventory is not None:
+        def capture_workers():
+            snapshot = worker_inventory()
+            known = snapshot['workers']
+            safe_pairs = []
+            if not isinstance(known, list):
+                raise ValueError('Worker inventory requires real pid/start_time pairs')
+            for pair in known:
+                if not isinstance(pair, (list, tuple)) or len(pair) != 2 or type(pair[0]) is not int or \
+                        pair[0] <= 0 or type(pair[1]) is not int or pair[1] < 0:
+                    continue
+                safe_pairs.append(tuple(pair))
+            # Preserve every valid observed pair even if another record is malformed.
+            workers[:] = list(dict.fromkeys(tuple(pair) for pair in list(workers)+safe_pairs))
+            if len(safe_pairs) != len(known):
+                raise ValueError('Worker inventory requires real pid/start_time pairs')
+            if len({pair[0] for pair in known}) != len(known):
+                raise ValueError('Duplicate worker pid/start_time pairs')
+            if len({pair[0] for pair in workers}) != len(workers):
+                raise ValueError('Conflicting worker start_time for one PID')
+            status['worker_inventory'] = snapshot
+            if snapshot['complete'] is not True or snapshot['errors'] or len(workers) != 8:
+                raise ValueError('Supported native worker inventory incomplete or unverified')
+        evidence(status, 'capture supported worker inventory', capture_workers)
     status['residual'] = verify_residual(workers, gpu_uuids, min(clock()+RESIDUAL_SECONDS, end),
         proc_root=proc_root, clock=clock, sleep=sleep, run=run, native_started=child is not None)
     status['cleanup_end_time_ns'] = int(clock()*1e9); status['timeouts']['residual'] = status['residual']['timeout']
     if status['residual']['verdict'] == 'UNVERIFIED': status['evidence_verdict'] = 'UNVERIFIED'
     if status['residual']['verdict'] != 'PASS': fail('residual '+status['residual']['verdict'])
-    return completion_exchange(root, generation, node, status, end, clock=clock, sleep=sleep)
+    if finalize_evidence is not None:
+        def finalize():
+            receipt = finalize_evidence(status)
+            if not isinstance(receipt, dict) or receipt.get('verdict') not in ('PASS', 'UNVERIFIED'):
+                raise ValueError('Evidence finalization requires an explicit PASS or UNVERIFIED receipt')
+            status['evidence_finalization'] = receipt
+            if receipt['verdict'] != 'PASS':
+                status['evidence_verdict'] = 'UNVERIFIED'
+                fail('evidence finalization UNVERIFIED')
+        evidence(status, 'finalize evidence', finalize)
+    return completion_exchange(root, generation, node, status, completion_end, clock=clock, sleep=sleep)

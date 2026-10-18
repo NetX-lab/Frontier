@@ -8,7 +8,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-PATH = ROOT/'role_capacity_supervision.py'
+import os
+PATH = Path(os.environ.get('STEP5_TP16_TEST_SOURCE_ROOT', ROOT))/'role_capacity_supervision.py'
 spec = importlib.util.spec_from_file_location('capacity_supervision', PATH)
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 
@@ -565,3 +566,164 @@ def test_marker_wait_rejects_late_visible_completion(root):
         clock.now = 6; finish(root, 1, clock)
     with pytest.raises(TimeoutError):
         module.wait_marker(root, 'g1', 1, 'completion', 5, clock=clock, sleep=late, expected_pid=1001)
+
+
+@pytest.mark.parametrize('case', ['complete', 'partial', 'fault', 'malformed', 'duplicate', 'native_failure'])
+def test_supported_inventory_callback_precedes_residual_and_completion(root, monkeypatch, case):
+    from types import SimpleNamespace
+    clock = Clock(); child = Child(clock, code=9 if case == 'native_failure' else 0)
+    for rank in (0, 1): identity(root, rank)
+    prepared(root, 1)
+    clock.events.append((2, lambda: workload_terminal(root, clock)))
+    clock.events.append((4, lambda: finish(root, 1, clock)))
+    known = [(99, 10)]; observed = []
+    def inventory():
+        observed.append('inventory')
+        assert not (root/'node_0_completion.json').exists()
+        if case == 'fault': raise OSError('FAKE inventory I/O fault')
+        pairs = [(100+i, 10+i) for i in range(7)]
+        if case == 'partial': pairs = pairs[:2]
+        if case == 'malformed': pairs = [(100, None)]
+        if case == 'duplicate': pairs = [(100, 10), (100, 11)]
+        return dict(workers=pairs, complete=case != 'partial', rows=[], errors=[])
+    original = module.verify_residual
+    def residual(workers, *args, **kwargs):
+        observed.append(('residual', list(workers)))
+        assert known[0] == (99, 10) and not (root/'node_0_completion.json').exists()
+        return original(workers, *args, **kwargs)
+    monkeypatch.setattr(module, 'verify_residual', residual)
+    row = module.supervise(root, 'g1', environment(0), {'tp': 16}, ['FAKE'], known,
+        [f'GPU-{i}' for i in range(8)], clock=clock, sleep=clock.sleep,
+        boot_path=root/'boot_0', proc_root=root/'proc', popen=lambda argv: child,
+        run=lambda *a, **k: SimpleNamespace(returncode=0, stdout='', stderr=''),
+        socket_factory=lambda *a: Socket([]), worker_inventory=inventory)
+    assert observed[0] == 'inventory' and observed[1][0] == 'residual'
+    assert (99, 10) in observed[1][1] and row['residual']['verdict'] == 'PASS'
+    marker = module.read_marker(root, 'g1', 0, 'completion')
+    bad = case not in ('complete', 'native_failure')
+    assert row['return_code'] == int(case != 'complete')
+    assert marker['result'] == ('PASS' if case == 'complete' else 'FAIL')
+    assert marker['final_status']['evidence_verdict'] == ('UNVERIFIED' if bad else 'PASS')
+    assert row['raw_exit_code'] == (9 if case == 'native_failure' else 0)
+    if case == 'partial': assert len(observed[1][1]) == 3
+    if case == 'native_failure': assert 'native exit 9' in row['reasons']
+    assert child.signals == [] and clock() == 4
+
+
+def test_inventory_callback_unserializable_fault_still_retains_raw_failure_and_completion(root):
+    from types import SimpleNamespace
+    clock = Clock(); child = Child(clock, code=9)
+    for rank in (0, 1): identity(root, rank)
+    prepared(root, 1)
+    clock.events.append((2, lambda: workload_terminal(root, clock)))
+    clock.events.append((4, lambda: finish(root, 1, clock)))
+    def inventory():
+        return dict(workers=object(), complete=False, rows=[], errors=['fake fault'])
+    row = module.supervise(root, 'g1', environment(0), {'tp': 16}, ['FAKE'], [(99, 10)],
+        [f'GPU-{i}' for i in range(8)], clock=clock, sleep=clock.sleep,
+        boot_path=root/'boot_0', proc_root=root/'proc', popen=lambda argv: child,
+        run=lambda *a, **k: SimpleNamespace(returncode=0, stdout='', stderr=''),
+        socket_factory=lambda *a: Socket([]), worker_inventory=inventory)
+    marker = module.read_marker(root, 'g1', 0, 'completion')
+    assert row['raw_exit_code'] == 9 and row['evidence_verdict'] == 'UNVERIFIED'
+    assert row['residual']['workers'][0]['pid'] == 99 and marker['result'] == 'FAIL'
+    assert clock() == 4
+
+
+def test_malformed_inventory_preserves_every_known_valid_worker_pair(root, monkeypatch):
+    from types import SimpleNamespace
+    clock = Clock(); child = Child(clock)
+    for rank in (0, 1): identity(root, rank)
+    prepared(root, 1)
+    clock.events.append((2, lambda: workload_terminal(root, clock)))
+    clock.events.append((4, lambda: finish(root, 1, clock)))
+    row = module.supervise(root, 'g1', environment(0), {'tp': 16}, ['FAKE'], [(99, 10)],
+        [f'GPU-{i}' for i in range(8)], clock=clock, sleep=clock.sleep,
+        boot_path=root/'boot_0', proc_root=root/'proc', popen=lambda argv: child,
+        run=lambda *a, **k: SimpleNamespace(returncode=0, stdout='', stderr=''),
+        socket_factory=lambda *a: Socket([]), worker_inventory=lambda: dict(
+            workers=[(100, 11), (101, None)], complete=False, rows=[], errors=[]))
+    assert {item['pid'] for item in row['residual']['workers']} == {99, 100}
+    assert row['return_code'] == 1 and row['evidence_verdict'] == 'UNVERIFIED'
+    assert module.read_marker(root, 'g1', 0, 'completion')['result'] == 'FAIL'
+
+
+@pytest.mark.parametrize('verdict', ['PASS', 'UNVERIFIED', 'exception'])
+@pytest.mark.parametrize('native_code', [0, 9])
+def test_review_finalization_runs_after_residual_before_any_durable_pass(root, monkeypatch, verdict, native_code):
+    from types import SimpleNamespace
+    clock = Clock(); child = Child(clock, code=native_code)
+    for rank in (0, 1): identity(root, rank)
+    prepared(root, 1)
+    clock.events.append((2, lambda: workload_terminal(root, clock)))
+    clock.events.append((4, lambda: finish(root, 1, clock)))
+    observed = []
+    def finalize(status):
+        observed.append('finalize')
+        assert status['cleanup_end_time_ns'] is not None and status['residual']['verdict'] == 'PASS'
+        assert not (root/'node_0_completion.json').exists() and not (root/'node_0/status.json').exists()
+        assert status['raw_exit_code'] == native_code
+        if verdict == 'exception': raise OSError('FAKE finalization I/O failure')
+        return dict(verdict=verdict, retained_files=['fake.raw'], retained_bytes=10)
+    row = module.supervise(root, 'g1', environment(0), {'tp': 16}, ['FAKE'], [(99, 10)],
+        [f'GPU-{i}' for i in range(8)], clock=clock, sleep=clock.sleep,
+        boot_path=root/'boot_0', proc_root=root/'proc', popen=lambda argv: child,
+        run=lambda *a, **k: SimpleNamespace(returncode=0, stdout='', stderr=''),
+        socket_factory=lambda *a: Socket([]), finalize_evidence=finalize)
+    marker = module.read_marker(root, 'g1', 0, 'completion')
+    durable = json.loads((root/'node_0/status.json').read_text())
+    assert observed == ['finalize'] and row['raw_exit_code'] == native_code
+    expected = 'PASS' if verdict == 'PASS' and native_code == 0 else 'FAIL'
+    assert marker['result'] == durable['result'] == row['result'] == expected
+    assert row['evidence_verdict'] == ('PASS' if verdict == 'PASS' else 'UNVERIFIED')
+    if verdict != 'exception': assert marker['final_status']['evidence_finalization']['verdict'] == verdict
+
+
+@pytest.fixture(autouse=True)
+def forbid_real_supervision_operations(monkeypatch):
+    import builtins
+    def forbidden(*args, **kwargs):
+        pytest.fail('Fake supervisor test attempted a real child, command, socket, signal or native import')
+    monkeypatch.setattr(module.subprocess, 'Popen', forbidden)
+    monkeypatch.setattr(module.subprocess, 'run', forbidden)
+    monkeypatch.setattr(module.socket, 'socket', forbidden)
+    monkeypatch.setattr(module.os, 'kill', forbidden)
+    original_import = builtins.__import__
+    def fake_only_import(name, *args, **kwargs):
+        if name.split('.')[0] in ('torch', 'vllm', 'steptron', 'stepmind'):
+            forbidden()
+        return original_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, '__import__', fake_only_import)
+
+
+@pytest.mark.parametrize('receipt', [None, {}, dict(verdict='maybe')])
+def test_review_finalization_requires_explicit_receipt_not_success_fallback(root, receipt):
+    from types import SimpleNamespace
+    clock = Clock()
+    for rank in (0, 1): identity(root, rank)
+    prepared(root, 1, engine_settings={}); workload_terminal(root, clock)
+    clock.events.append((4, lambda: finish(root, 1, clock)))
+    row = module.supervise(root, 'g1', environment(0), {}, ['FAKE'], [(99, 10)],
+        [f'GPU-{i}' for i in range(8)], clock=clock, sleep=clock.sleep,
+        boot_path=root/'boot_0', proc_root=root/'proc', popen=lambda *a: Child(clock),
+        run=lambda *a, **k: SimpleNamespace(returncode=0, stdout='', stderr=''),
+        socket_factory=lambda *a: Socket([]), finalize_evidence=lambda status: receipt)
+    assert row['raw_exit_code'] == 0 and row['result'] == 'FAIL' and row['evidence_verdict'] == 'UNVERIFIED'
+    assert module.read_marker(root, 'g1', 0, 'completion')['result'] == 'FAIL'
+
+
+@pytest.mark.parametrize('completion_deadline', [True, float('nan'), float('inf'), 2099, 2401])
+def test_review_completion_deadline_never_restarts_the_approved_budget(root, completion_deadline):
+    clock = Clock()
+    with pytest.raises(ValueError, match='Completion deadline'):
+        module.supervise(root, 'g1', environment(0), {}, [], [], [f'GPU-{i}' for i in range(8)],
+                         clock=clock, deadline=2100, completion_deadline=completion_deadline)
+    assert list(root.iterdir()) == []
+
+
+@pytest.mark.parametrize('deadline', [True, float('nan'), float('inf'), 90, 2401])
+def test_review_supervisor_deadline_cannot_expand_or_remove_cleanup_reserve(root, deadline):
+    clock = Clock()
+    with pytest.raises(ValueError, match='deadline'):
+        module.supervise(root, 'g1', environment(0), {}, [], [], [f'GPU-{i}' for i in range(8)],
+                         clock=clock, deadline=deadline)
