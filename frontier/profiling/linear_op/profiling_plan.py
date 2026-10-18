@@ -330,7 +330,8 @@ def build_profiling_plan(
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
 ) -> Dict[str, object]:
-    if get_model_architecture_profile(model_config).profile_id == "deepseek_v4":
+    architecture_profile = get_model_architecture_profile(model_config)
+    if architecture_profile.profile_id == "deepseek_v4":
         raise NotImplementedError(
             "DeepSeek-V4 generic linear profiling cannot represent fused scopes, "
             "grouped output projection, mHC, and mixed-precision routed experts"
@@ -383,7 +384,6 @@ def build_profiling_plan(
         ffn_sharded_enabled = tp_size in ffn_tp_set
 
     padded_n_embd = model_config.embedding_dim
-    architecture_profile = get_model_architecture_profile(model_config)
     typed_layer_contracts = _typed_layer_contracts(
         model_config,
         profile=architecture_profile,
