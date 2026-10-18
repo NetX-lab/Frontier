@@ -77,6 +77,18 @@ class SklearnMoEExecutionTimePredictor(
     # long-lived predictor must not retain an unbounded request history.
     _LAYER_WORKLOAD_CACHE_CAPACITY = 256
 
+    def _predict_dsv4_dummy_source_execution(
+        self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
+    ) -> dict:
+        """Query partial source-rank components without admitting V4 serving."""
+        if not self._enable_dummy_mode:
+            raise NotImplementedError("V4 source components require synthetic dummy timing")
+        from frontier.execution_time_predictor.deepseek_v4 import predict_source_execution
+
+        return predict_source_execution(
+            self, batch, layer_id, tp_rank, **source_context,
+        )
+
 
     @staticmethod
 
