@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Mapping, Sequence
 
-from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.model_binding import resolve_attention_head_partition, resolve_runtime_attention_family
 from frontier.operators.families import (
     FFN_FAMILY,
     MEMORY_FAMILY,
@@ -357,28 +357,20 @@ def build_profiling_plan(
                 skip_reasons.append(
                     f"num_q_heads={model_config.num_q_heads} not divisible by TP={tp_size}"
                 )
-            if model_config.num_kv_heads <= 0:
+            try:
+                resolve_attention_head_partition(model_config.num_kv_heads, tp_size)
+            except ValueError as error:
                 attn_sharded_enabled = False
-                skip_reasons.append(
-                    f"num_kv_heads must be positive, got {model_config.num_kv_heads}"
-                )
-            elif model_config.num_kv_heads >= tp_size:
-                if model_config.num_kv_heads % tp_size != 0:
-                    attn_sharded_enabled = False
-                    skip_reasons.append(
-                        f"num_kv_heads={model_config.num_kv_heads} not divisible by TP={tp_size}"
-                    )
-            else:
-                if tp_size % model_config.num_kv_heads != 0:
-                    attn_sharded_enabled = False
-                    skip_reasons.append(
-                        f"TP={tp_size} must be divisible by num_kv_heads={model_config.num_kv_heads} for KV-head replication"
-                    )
+                skip_reasons.append(str(error))
 
         ffn_sharded_enabled = tp_size in ffn_tp_set
 
     padded_n_embd = model_config.embedding_dim
     architecture_profile = get_model_architecture_profile(model_config)
+    # Producer admission is separate from attention execution: independent
+    # FFN planning for another frozen attention family remains available.
+    architecture_profile.attention_linear_ops.require_enabled_for_profiling()
+
     typed_layer_contracts = _typed_layer_contracts(
         model_config,
         profile=architecture_profile,

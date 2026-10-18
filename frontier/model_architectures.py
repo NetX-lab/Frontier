@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Callable, Iterable, Literal, cast
 
@@ -350,8 +350,14 @@ class AttentionLinearOpProfile:
     sharded_impl: AttentionLinearOpImplementation
     sharded_ops: tuple[str, ...]
     replicated_ops: tuple[str, ...] = ()
+    profiling_enabled: bool = True
+    disabled_reason: str = ""
 
     def __post_init__(self) -> None:
+        if type(self.profiling_enabled) is not bool:
+            raise ValueError("linear attention profiling_enabled must be bool")
+        if not self.profiling_enabled and not self.disabled_reason:
+            raise ValueError("disabled linear attention profiling requires a reason")
         if not self.sharded_ops:
             raise ValueError("linear attention profile must declare sharded_ops")
         if len(set(self.sharded_ops)) != len(self.sharded_ops):
@@ -363,6 +369,10 @@ class AttentionLinearOpProfile:
                 "linear attention replicated_ops contains duplicates: "
                 f"{self.replicated_ops}"
             )
+
+    def require_enabled_for_profiling(self) -> None:
+        if not self.profiling_enabled:
+            raise NotImplementedError(self.disabled_reason)
 
     def has_replicated_pre_projection(self, enabled_ops: set[str] | None) -> bool:
         """Return whether a replicated-only attention pre-projection path is needed."""
@@ -645,6 +655,39 @@ class ModelArchitectureProfile:
                 _requires_qwen3_5_hybrid_gdn_contract(),
             ),
             match=match or _matches_qwen3_5_moe,
+        )
+
+    @classmethod
+    def step5(cls) -> "ModelArchitectureProfile":
+        """Step text backbone; native timing and serving qualification stay explicit."""
+        return cls(
+            profile_id="step5",
+            display_name="Step-5 text sparse GQA",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("step5_qkv_projection", "step5_attention_prepare", "step5_output_projection"),
+                profiling_enabled=False,
+                disabled_reason="Step native projection/norm/FFN producer is not qualified",
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            experimental=True,
+            runtime_limitations=(
+                "Step attention timing and complete request execution remain unqualified",
+                "PD summary/tail transfer and graph replay remain unqualified",
+                "MTP and multimodal execution are unsupported",
+            ),
+            structural_requirements=(StructuralRequirement(
+                name="step5_text_configuration",
+                predicate=_valid_step5_text_configuration,
+                message=lambda _profile, _config: "Step text configuration is incomplete or unsupported",
+            ),),
+            match=lambda config: _normalized_attr(config, "model_type") == "step5",
+            layer_contracts=tuple(
+                replace(contract, operator_family_ids=("share_expert", "step5_ffn"))
+                if contract.layer_kind is LayerKind.SHARED else contract
+                for contract in _default_layer_contracts(TensorParallelMode.ATTENTION_TP)
+            ),
         )
 
     @classmethod
@@ -1095,6 +1138,13 @@ def _requires_step3_mfa_attention_contract() -> StructuralRequirement:
     )
 
 
+def _valid_step5_text_configuration(config: Any) -> bool:
+    from frontier.attention.step5 import validate_step5_config
+
+    validate_step5_config(config)
+    return True
+
+
 def _normalized_attr(config: Any, attr_name: str) -> str:
     return str(getattr(config, attr_name, None) or "").lower()
 
@@ -1265,6 +1315,7 @@ class ModelArchitectureRegistry:
 MODEL_ARCHITECTURE_REGISTRY = ModelArchitectureRegistry()
 for _profile in (
     ModelArchitectureProfile.step3_text(),
+    ModelArchitectureProfile.step5(),
     ModelArchitectureProfile.step2_mini(),
     ModelArchitectureProfile.qwen3_5_moe(),
     ModelArchitectureProfile.glm_moe_dsa(),

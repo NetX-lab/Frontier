@@ -149,6 +149,43 @@ class QuantizationConfig:
         signature_str = "|".join(parts)
         return signature_str
 
+    def resolve_module_precision(
+        self, module_prefix: str, model_precision: PrecisionType, *,
+        packed_modules: Tuple[str, ...] = (), routed_experts: bool = False,
+        module_prefix_renames: Tuple[Tuple[str, str], ...] = (),
+    ) -> PrecisionType:
+        """Resolve exact native module exclusions, including packed projections.
+
+        This describes storage/compute precision, without choosing a measured
+        backend or estimating latency. A packed projection cannot mix schemes.
+        """
+        if not isinstance(module_prefix, str) or not module_prefix:
+            raise ValueError("module_prefix must be a non-empty string")
+        if not isinstance(model_precision, PrecisionType):
+            raise ValueError("model_precision must be a PrecisionType")
+        if any(not isinstance(value, str) or not value for value in self.ignored_layers):
+            raise ValueError("quantization exclusions must contain non-empty exact prefixes")
+        if self.quant_method is None:
+            return model_precision
+        ignored = set(self.ignored_layers)
+        for source, target in module_prefix_renames:
+            if not isinstance(source, str) or not source or not isinstance(target, str) or not target:
+                raise ValueError("module_prefix_renames requires non-empty source and target strings")
+            ignored = {name.replace(source, target, 1) for name in ignored}
+        skipped = module_prefix in ignored
+        if not skipped and packed_modules:
+            parent, separator, _ = module_prefix.rpartition(".")
+            if not separator or any(not isinstance(name, str) or not name or "." in name for name in packed_modules):
+                raise ValueError("packed_modules requires local projection names and a qualified prefix")
+            shard_skips = {f"{parent}.{name}" in ignored for name in packed_modules}
+            if len(shard_skips) != 1:
+                raise ValueError(f"Packed module {module_prefix} has mixed quantization exclusions")
+            skipped = shard_skips.pop()
+        elif not skipped and routed_experts:
+            # Native exact expert matching checks the module within weight names.
+            skipped = any(module_prefix in name for name in ignored if "experts" in name)
+        return model_precision if skipped else PrecisionType.from_string(self.quant_method)
+
     def get_quant_signature_hash(self) -> str:
         """Generate a short hash of the quant_signature for cache keys."""
         sig = self.get_quant_signature()
@@ -264,6 +301,12 @@ def _infer_attn_output_gate_from_hf_config(cfg: Dict[str, Any]) -> bool:
     if explicit_value is not None:
         return bool(explicit_value)
 
+    if "use_head_wise_attn_gate" in cfg:
+        value = cfg["use_head_wise_attn_gate"]
+        if type(value) is not bool:
+            raise ValueError("use_head_wise_attn_gate must be bool")
+        return value
+
     model_type = str(cfg.get("model_type", "")).lower()
     if model_type == "qwen3_next":
         return True
@@ -303,6 +346,126 @@ def _infer_share_expert_dim_from_hf_config(
     if share_expert_dim <= 0:
         return None
     return share_expert_dim
+
+
+def _normalize_hf_text_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Resolve the supported text backbone while retaining outer precision policy."""
+    if "text_config" in cfg:
+        text = cfg["text_config"]
+        if (
+            cfg.get("model_type") != "step5_vl"
+            or not isinstance(text, dict)
+            or text.get("model_type") != "step5"
+            or "text_config" in text
+        ):
+            raise ValueError("Unsupported nested text_config; expected step5_vl/step5")
+        normalized = dict(text)
+        if "quantization_config" in cfg:
+            if (
+                "quantization_config" in text
+                and text["quantization_config"] != cfg["quantization_config"]
+            ):
+                raise ValueError("Conflicting outer and text quantization_config")
+            normalized["quantization_config"] = cfg["quantization_config"]
+        return _normalize_step5_text_config(normalized)
+    if cfg.get("model_type") == "step5":
+        return _normalize_step5_text_config(dict(cfg))
+    return cfg
+
+
+def _normalize_step5_text_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Map native Step text metadata into the existing model configuration fields."""
+    aliases = {
+        "num_key_value_heads": "num_attention_groups",
+        "num_experts": "moe_num_experts",
+        "num_experts_per_tok": "moe_top_k",
+    }
+    for target, source in aliases.items():
+        value = cfg.get(source)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"Step text configuration requires positive int {source}")
+        if target in cfg and cfg[target] != value:
+            raise ValueError(f"Conflicting Step fields {target} and {source}")
+        cfg[target] = value
+    if type(cfg.get("norm_expert_weight")) is not bool:
+        raise ValueError("Step norm_expert_weight must be bool")
+    if cfg.get("use_moe") is not True:
+        raise NotImplementedError("Step text representation requires use_moe=true")
+    if cfg.get("att_impl_type") != "GQA":
+        raise NotImplementedError("Step text representation requires att_impl_type='GQA'")
+    if cfg.get("hidden_act", "silu") != "silu":
+        raise ValueError("Native Step text FFN construction uses hidden_act='silu'")
+    cfg["hidden_act"] = "silu"
+    for name in (
+        "num_hidden_layers", "num_attention_heads", "hidden_size", "head_dim",
+        "sliding_window", "intermediate_size", "moe_intermediate_size", "share_expert_dim",
+        "vocab_size", "max_position_embeddings",
+    ):
+        if type(cfg.get(name)) is not int or cfg[name] <= 0:
+            raise ValueError(f"Step text configuration requires positive int {name}")
+    num_layers = cfg["num_hidden_layers"]
+    mtp_layers = cfg.get("num_nextn_predict_layers")
+    if type(mtp_layers) is not int or mtp_layers < 0:
+        raise ValueError("num_nextn_predict_layers must be a non-negative int")
+    total_layers = num_layers + mtp_layers
+    schedule = cfg.get("layer_types_with_mtp", cfg.get("layer_types"))
+    if not isinstance(schedule, (list, tuple)) or len(schedule) != total_layers:
+        raise ValueError("Step layer_types must cover the declared backbone and MTP layers")
+    if "layer_types_with_mtp" in cfg and tuple(cfg.get("layer_types", ())) != tuple(schedule[:num_layers]):
+        raise ValueError("layer_types must match the backbone prefix of layer_types_with_mtp")
+    cfg["layer_types"] = tuple(schedule[:num_layers])
+    cfg["mtp_layer_types"] = tuple(schedule[num_layers:])
+    arrays = {
+        "rope_theta": "layer_rope_thetas",
+        "partial_rotary_factors": "partial_rotary_factors",
+        "swiglu_limits": "swiglu_limits",
+        "swiglu_limits_shared": "swiglu_limits_shared",
+    }
+    for source, target in arrays.items():
+        values = cfg.get(source)
+        if not isinstance(values, (list, tuple)) or len(values) != total_layers:
+            raise ValueError(f"Step {source} must cover the declared backbone and MTP layers")
+        cfg[target] = tuple(values)
+    # A scalar cannot stand in for Step's per-layer rotary frequencies.
+    cfg["rope_theta"] = None
+    if not isinstance(cfg.get("moe_layers_enum"), str) or not cfg["moe_layers_enum"].strip():
+        raise ValueError("Step requires an explicit moe_layers_enum")
+    moe_layers = cfg.get("moe_layer_list")
+    if not isinstance(moe_layers, (list, tuple)) or any(type(value) is not int for value in moe_layers):
+        raise ValueError("moe_layer_list must contain integer backbone layer IDs")
+    from frontier.model_architectures import parse_moe_layer_ids
+
+    declared_moe = parse_moe_layer_ids(cfg.get("moe_layers_enum"), num_layers)
+    if len(set(moe_layers)) != len(moe_layers) or tuple(sorted(moe_layers)) != declared_moe:
+        raise ValueError("moe_layer_list and moe_layers_enum must describe the same backbone layers")
+    cfg["moe_layers_enum"] = ",".join(map(str, declared_moe))
+    if cfg.get("moe_router_activation", "sigmoid") != "sigmoid":
+        raise NotImplementedError("Native Step router representation requires sigmoid scores")
+    cfg["moe_router_activation"] = "sigmoid"
+    cfg["zero_centered"] = cfg.get("zero_centered", True)
+    if "use_qk_norm" in cfg and cfg["use_qk_norm"] is not True:
+        raise ValueError("Step native attention requires use_qk_norm=true")
+    cfg["use_qk_norm"] = True
+    from frontier.attention.step5 import step5_fused_add_norm_capability
+
+    fused_add_norm = step5_fused_add_norm_capability(
+        cfg["hidden_size"], cfg.get("fp32_residual_connection"),
+    )
+    if "uses_fused_add_norm" in cfg and cfg["uses_fused_add_norm"] is not fused_add_norm:
+        raise ValueError("Step uses_fused_add_norm disagrees with the native residual/norm path")
+    cfg["uses_fused_add_norm"] = fused_add_norm
+    cfg["tie_word_embeddings"] = cfg.get("tie_word_embeddings", False)
+    cfg["yarn_only_types"] = tuple(cfg.get("yarn_only_types") or ())
+    use_rope = cfg.get("use_rope_layers")
+    if use_rope is None or use_rope == [] or use_rope == ():
+        cfg["use_rope_layers"] = (True,) * total_layers
+    elif not isinstance(use_rope, (tuple, list)) or len(use_rope) != total_layers or any(
+        type(value) is not bool for value in use_rope
+    ):
+        raise ValueError("Step use_rope_layers must cover every backbone and MTP layer")
+    else:
+        cfg["use_rope_layers"] = tuple(use_rope)
+    return cfg
 
 
 @dataclass
@@ -400,6 +563,29 @@ class BaseModelConfig(BaseFixedConfig):
     swiglu_limit: Optional[float] = field(default=None, metadata={"omit_if_none": True})
     expert_dtype: Optional[str] = field(default=None, metadata={"omit_if_none": True})
 
+    # Step text-only metadata; the existing layer binding remains the identity owner.
+    sparse_config: Optional[Dict[str, Any]] = field(default=None, metadata={"omit_if_none": True})
+    attention_other_setting: Optional[Dict[str, Any]] = field(default=None, metadata={"omit_if_none": True})
+    att_impl_type: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+    yarn_only_types: Optional[Tuple[str, ...]] = field(default=None, metadata={"omit_if_none": True})
+    use_rope_layers: Optional[Tuple[bool, ...]] = field(default=None, metadata={"omit_if_none": True})
+    swa_num_attention_heads: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    tie_word_embeddings: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    num_nextn_predict_layers: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    mtp_layer_types: Optional[Tuple[str, ...]] = field(default=None, metadata={"omit_if_none": True})
+    layer_rope_thetas: Optional[Tuple[float, ...]] = field(default=None, metadata={"omit_if_none": True})
+    partial_rotary_factors: Optional[Tuple[float, ...]] = field(default=None, metadata={"omit_if_none": True})
+    swiglu_limits: Optional[Tuple[float, ...]] = field(default=None, metadata={"omit_if_none": True})
+    swiglu_limits_shared: Optional[Tuple[float, ...]] = field(default=None, metadata={"omit_if_none": True})
+    rms_norm_eps: Optional[float] = field(default=None, metadata={"omit_if_none": True})
+    norm_dtype: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+    fp32_residual_connection: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    need_fp32_gate: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    use_moe_router_bias: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    moe_router_activation: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+    moe_router_scaling_factor: Optional[float] = field(default=None, metadata={"omit_if_none": True})
+    zero_centered: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+
     # Qwen3.5 hybrid sequence-mixer topology.  These fields are interpreted
     # only by the explicitly registered qwen3_5_moe profile.
     layer_types: Optional[Tuple[str, ...]] = None
@@ -448,6 +634,13 @@ class BaseModelConfig(BaseFixedConfig):
             self.architectures = tuple(str(value) for value in self.architectures)
         if self.layer_types is not None:
             self.layer_types = tuple(str(value) for value in self.layer_types)
+        for name in (
+            "mtp_layer_types", "layer_rope_thetas", "partial_rotary_factors",
+            "swiglu_limits", "swiglu_limits_shared", "yarn_only_types", "use_rope_layers",
+        ):
+            value = getattr(self, name)
+            if value is not None:
+                setattr(self, name, tuple(value))
         if self.compress_ratios is not None:
             self.compress_ratios = tuple(self.compress_ratios)
         if self.full_attention_interval is not None:
@@ -726,7 +919,7 @@ class BaseModelConfig(BaseFixedConfig):
         if not os.path.exists(file_path):
             raise ValueError(f"[BaseModelConfig] Unknown model '{name}' and no JSON found at {file_path}")
         with open(file_path, "r", encoding="utf-8") as f:
-            cfg = json.load(f)
+            cfg = _normalize_hf_text_config(json.load(f))
 
         num_experts = cfg.get("num_experts", cfg.get("n_routed_experts", 0))
         if type(num_experts) is not int or num_experts < 0:
@@ -961,7 +1154,7 @@ class BaseModelConfig(BaseFixedConfig):
             compress_ratios=cfg.get("compress_ratios"),
             sliding_window=(
                 cfg.get("sliding_window")
-                if cfg.get("compress_ratios") is not None
+                if cfg.get("compress_ratios") is not None or model_type_lower == "step5"
                 else None
             ),
             num_hash_layers=cfg.get("num_hash_layers"),
@@ -973,6 +1166,18 @@ class BaseModelConfig(BaseFixedConfig):
             compress_rope_theta=cfg.get("compress_rope_theta"),
             swiglu_limit=cfg.get("swiglu_limit"),
             expert_dtype=cfg.get("expert_dtype"),
+            **{
+                field_name: cfg.get(field_name) if model_type_lower == "step5" else None
+                for field_name in (
+                    "sparse_config", "attention_other_setting", "att_impl_type",
+                    "yarn_only_types", "use_rope_layers", "swa_num_attention_heads", "tie_word_embeddings",
+                    "num_nextn_predict_layers", "mtp_layer_types", "layer_rope_thetas",
+                    "partial_rotary_factors", "swiglu_limits", "swiglu_limits_shared",
+                    "rms_norm_eps", "norm_dtype", "fp32_residual_connection",
+                    "need_fp32_gate", "use_moe_router_bias", "moe_router_activation",
+                    "moe_router_scaling_factor", "zero_centered",
+                )
+            },
             layer_types=layer_types,
             full_attention_interval=optional_int("full_attention_interval"),
             linear_conv_kernel_dim=optional_int("linear_conv_kernel_dim"),

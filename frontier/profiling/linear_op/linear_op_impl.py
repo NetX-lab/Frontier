@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from frontier.attention.model_binding import resolve_attention_head_partition
 from frontier.profiling.common.layers.activation import SiluAndMul
 from frontier.profiling.common.layers.layernorm import GemmaRMSNorm, RMSNorm
 from frontier.profiling.common.layers.rotary_embedding import get_rope
@@ -29,28 +30,6 @@ from frontier.model_architectures import (
 )
 
 REUSE_MEMORY = True
-
-
-def _resolve_num_kv_heads_per_worker(num_kv_heads: int, world_size: int) -> int:
-    if num_kv_heads <= 0:
-        raise ValueError(f"num_kv_heads must be positive, got {num_kv_heads}")
-    if world_size <= 0:
-        raise ValueError(f"world_size must be positive, got {world_size}")
-
-    if num_kv_heads >= world_size:
-        if num_kv_heads % world_size != 0:
-            raise ValueError(
-                "KV heads must be divisible by world_size when KV heads are partitioned. "
-                f"num_kv_heads={num_kv_heads}, world_size={world_size}"
-            )
-        return num_kv_heads // world_size
-
-    if world_size % num_kv_heads != 0:
-        raise ValueError(
-            "KV head replication requires world_size to be divisible by num_kv_heads. "
-            f"num_kv_heads={num_kv_heads}, world_size={world_size}"
-        )
-    return 1
 
 
 def _supports_share_expert(config: ModelConfig) -> bool:
@@ -142,9 +121,9 @@ class Step2MiniCausalSelfAttention(torch.nn.Module):
         # Get head_dim from config if available, otherwise compute from embedding_dim
         self.head_dim = config.get_head_dim()
         self.num_q_heads_per_worker = config.num_q_heads // world_size
-        self.num_kv_heads_per_worker = _resolve_num_kv_heads_per_worker(
+        self.num_kv_heads_per_worker = resolve_attention_head_partition(
             config.num_kv_heads, world_size
-        )
+        )[0]
 
         # Step2Mini uses share_q_dim for Q dimension if specified
         # q_size is the dimension of Q after QKV split, before inter_norm and wq
@@ -262,9 +241,9 @@ class Step3TextCausalSelfAttention(torch.nn.Module):
 
         self.head_dim = config.get_head_dim()
         self.num_q_heads_per_worker = config.num_q_heads // world_size
-        self.num_kv_heads_per_worker = _resolve_num_kv_heads_per_worker(
+        self.num_kv_heads_per_worker = resolve_attention_head_partition(
             config.num_kv_heads, world_size
-        )
+        )[0]
 
         if config.share_q_dim is not None:
             self.q_size = config.share_q_dim
@@ -409,9 +388,9 @@ class CausalSelfAttention(torch.nn.Module):
         # Use config.get_head_dim() to prioritize explicit head_dim from JSON config
         self.head_dim = config.get_head_dim()
         self.num_q_heads_per_worker = config.num_q_heads // world_size
-        self.num_kv_heads_per_worker = _resolve_num_kv_heads_per_worker(
+        self.num_kv_heads_per_worker = resolve_attention_head_partition(
             config.num_kv_heads, world_size
-        )
+        )[0]
 
         self.q_size = self.num_q_heads_per_worker * self.head_dim
         self.kv_size = self.num_kv_heads_per_worker * self.head_dim
@@ -701,6 +680,7 @@ def build_linear_op_attention_module(
     """Build the linear-op profiling attention module from architecture profile."""
 
     attention_linear_ops = get_model_architecture_profile(config).attention_linear_ops
+    attention_linear_ops.require_enabled_for_profiling()
 
     if attn_sharded_enabled:
         if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP3_TEXT:

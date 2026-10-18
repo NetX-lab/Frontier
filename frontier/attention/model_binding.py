@@ -110,6 +110,21 @@ def _validate_mfa_fields(config: Any) -> None:
         raise ValueError(f"MFA attention binding requires fields: {missing}")
 
 
+def resolve_attention_head_partition(
+    total_heads: int, tensor_parallel_size: int, *, name: str = "KV heads",
+) -> tuple[int, int]:
+    """Return local heads and replication for the shared attention TP contract."""
+    if type(total_heads) is not int or total_heads <= 0:
+        raise ValueError(f"{name} must be a positive int, got {total_heads!r}")
+    if type(tensor_parallel_size) is not int or tensor_parallel_size <= 0:
+        raise ValueError("tensor_parallel_size must be a positive int")
+    if total_heads >= tensor_parallel_size and total_heads % tensor_parallel_size == 0:
+        return total_heads // tensor_parallel_size, 1
+    if total_heads < tensor_parallel_size and tensor_parallel_size % total_heads == 0:
+        return 1, tensor_parallel_size // total_heads
+    raise ValueError(f"{name} and tensor_parallel_size must divide one another")
+
+
 def _dense_variant_from_heads(num_q_heads: int, num_kv_heads: int) -> str:
     reason = f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
     if num_q_heads <= 0 or num_kv_heads <= 0:
@@ -144,6 +159,12 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
             "call bind_layer_attention(config, global_layer_id)"
         )
 
+    if _model_type(config) == "step5":
+        raise ValueError(
+            "Step attention requires an explicit global layer id; "
+            "call bind_layer_attention(config, global_layer_id)"
+        )
+
     if _get_attr(config, "compress_ratios") is not None:
         variants = {spec.variant_id for spec in config.get_layer_attention_specs()}
         if len(variants) > 1:
@@ -157,6 +178,14 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
 
 def _bind_homogeneous_attention_family(config: Any) -> AttentionFamilyBinding:
     """Classify homogeneous topology without consulting layer resolution."""
+    if _model_type(config) == "step5":
+        from frontier.attention.step5 import validate_step5_config
+
+        validate_step5_config(config)
+        return AttentionFamilyBinding(
+            family_id="step5_attention", variant_id="sparse_gqa", frozen=True,
+            reason="Step per-layer SWA/sparse GQA shares raw KV layout; execution is unqualified",
+        )
     if (
         _model_type(config) == "deepseek_v4"
         or _get_attr(config, "compress_ratios") is not None
@@ -293,6 +322,14 @@ def resolve_attention_topology(
     num_layers = config.num_layers
     if type(num_layers) is not int or num_layers <= 0:
         raise ValueError("config must declare a positive num_layers")
+    if _model_type(config) == "step5":
+        from frontier.attention.step5 import STEP5_ATTENTION_VARIANTS, validate_step5_config
+
+        validate_step5_config(config)
+        return tuple(
+            LayerAttentionSpec(layer_id, "step5_attention", STEP5_ATTENTION_VARIANTS[layer_type])
+            for layer_id, layer_type in enumerate(config.layer_types)
+        ), None
     binding = _bind_homogeneous_attention_family(config)
     if binding.family_id == "deepseek_v4_attention":
         ratios = _get_attr(config, "compress_ratios")

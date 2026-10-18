@@ -241,11 +241,11 @@ class OperatorManifest:
         return tuple(binding.family for binding in self.family_bindings)
 
     def operators(self) -> tuple[OperatorSpec, ...]:
-        return tuple(
+        return tuple(dict.fromkeys(
             operator
             for binding in self.family_bindings
             for operator in binding.family.operators
-        )
+        ))
 
 
 def _get_model_architecture_profile(config):
@@ -261,7 +261,7 @@ def _get_model_architecture_profile(config):
 def build_operator_manifest(config) -> OperatorManifest:
     """Build the operator manifest for a model config."""
 
-    from frontier.attention.model_binding import bind_attention_family
+    from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
     from frontier.operators.families import (
         FFN_FAMILY,
         MEMORY_FAMILY,
@@ -271,21 +271,46 @@ def build_operator_manifest(config) -> OperatorManifest:
 
     architecture_profile = _get_model_architecture_profile(config)
     architecture_profile.validate_structural_requirements(config)
-    attention_binding = bind_attention_family(config)
-    bindings = [
-        FamilyBinding(
+    get_specs = getattr(config, "get_layer_attention_specs", None)
+    bindings = []
+    if callable(get_specs):
+        from frontier.attention.families import get_attention_family
+
+        specs = tuple(get_specs())
+        if tuple(spec.global_layer_id for spec in specs) != tuple(range(config.num_layers)):
+            raise ValueError("Operator manifest requires every backbone layer in order")
+        seen = set()
+        for spec in specs:
+            identity = (spec.family_id, spec.variant_id)
+            if bind_layer_attention(config, spec.global_layer_id) != spec:
+                raise ValueError("Operator manifest disagrees with the model-owned layer binding")
+            if identity in seen:
+                continue
+            family = get_attention_family(spec.family_id)
+            if spec.variant_id not in family.supported_variants:
+                raise ValueError(f"Unknown attention variant {spec.variant_id!r} for {spec.family_id!r}")
+            bindings.append(FamilyBinding(
+                family_id=spec.family_id, variant_id=spec.variant_id, family=family,
+                frozen=not family.execution_enabled,
+                reason="Resolved from the model-owned layer attention bindings",
+            ))
+            seen.add(identity)
+    else:
+        attention_binding = bind_attention_family(config)
+        bindings.append(FamilyBinding(
             family_id=attention_binding.family_id,
             variant_id=attention_binding.variant_id,
             family=attention_binding.family,
             frozen=attention_binding.frozen,
             reason=attention_binding.reason,
-        ),
-        FamilyBinding(
-            family_id=MEMORY_FAMILY.family_id,
-            variant_id="replicated",
-            family=MEMORY_FAMILY,
-        ),
-    ]
+        ))
+    bindings.append(FamilyBinding(
+        family_id=MEMORY_FAMILY.family_id, variant_id="replicated", family=MEMORY_FAMILY,
+    ))
+    if architecture_profile._is_mixed_model(config):
+        bindings.append(FamilyBinding(
+            family_id=FFN_FAMILY.family_id, variant_id="dense", family=FFN_FAMILY,
+        ))
     if bool(getattr(config, "is_moe", False)):
         bindings.append(
             FamilyBinding(
@@ -312,6 +337,22 @@ def build_operator_manifest(config) -> OperatorManifest:
                 family=FFN_FAMILY,
             )
         )
+    from frontier.operators.families import get_operator_family
+
+    present = {binding.family_id for binding in bindings}
+    for contract in architecture_profile.iter_active_layer_contracts(config):
+        for family_id in contract.operator_family_ids:
+            if family_id in present:
+                continue
+            family = get_operator_family(family_id)
+            if len(family.supported_variants) != 1:
+                raise ValueError(f"Layer family {family_id!r} requires an explicit variant binding")
+            bindings.append(FamilyBinding(
+                family_id=family_id, variant_id=family.supported_variants[0], family=family,
+                frozen=not family.execution_enabled,
+                reason="Declared by the model-owned layer contract",
+            ))
+            present.add(family_id)
     return OperatorManifest(
         family_bindings=tuple(bindings)
     )

@@ -6,6 +6,7 @@ from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
 )
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_mode,
@@ -246,6 +247,24 @@ SHARE_EXPERT_FAMILY = OperatorFamilySpec(
             calibration_key="share_expert_down_proj",
         ),
     ),
+)
+
+
+STEP5_FFN_FAMILY = OperatorFamilySpec(
+    family_id="step5_ffn",
+    display_name="Step FFN branch merge",
+    supported_variants=("fp32_branch_merge",),
+    execution_enabled=False,
+    disabled_reason="Step FFN branch merge timing is not qualified",
+    resource_class=ResourceClass.MEMORY,
+    operators=(OperatorSpec(
+        name="step5_ffn_merge",
+        role=OperatorRole.RESIDUAL,
+        phases=_ALL_PHASES,
+        execution_time_attr="step5_ffn_merge_time",
+        resource_class=ResourceClass.MEMORY,
+        tp_mode=TensorParallelMode.REPLICATED,
+    ),),
 )
 
 
@@ -635,10 +654,12 @@ for _family in (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
     MEMORY_FAMILY,
     FFN_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
+    STEP5_FFN_FAMILY,
     COMM_FAMILY,
     KV_TRANSFER_FAMILY,
 ):

@@ -188,5 +188,11 @@ def test_dsv4_whole_model_manifest_cannot_hide_compressed_layers(
     for config in (model, ProfilingModelConfig.from_model_name(MODEL_NAME)):
         with pytest.raises(ValueError, match="explicit global layer id"):
             bind_attention_family(config)
-        with pytest.raises(ValueError, match="explicit global layer id"):
-            build_operator_manifest(config)
+        manifest = build_operator_manifest(config)
+        bindings = [binding for binding in manifest.family_bindings
+                    if binding.family_id == "deepseek_v4_attention"]
+        assert [binding.variant_id for binding in bindings] == ["uncompressed", "csa", "hca"]
+        assert all(binding.frozen for binding in bindings)
+        for binding in bindings:
+            with pytest.raises(NotImplementedError, match="(frozen|DeepSeek-V4)"):
+                binding.require_enabled_for_execution()

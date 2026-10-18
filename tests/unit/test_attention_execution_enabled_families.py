@@ -11,6 +11,7 @@ from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DEEPSEEK_V4_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     iter_attention_families,
     iter_execution_enabled_families,
@@ -37,6 +38,7 @@ def test_iter_execution_enabled_families_is_order_preserving_subset() -> None:
     enabled_ids = [family.family_id for family in iter_execution_enabled_families()]
     unsupported = {
         DSA_ATTENTION_FAMILY.family_id, DEEPSEEK_V4_ATTENTION_FAMILY.family_id,
+        STEP5_ATTENTION_FAMILY.family_id,
     }
     assert enabled_ids == [
         family_id for family_id in full_ids if family_id not in unsupported
@@ -66,7 +68,7 @@ def test_quantization_registry_attention_ops_match_execution_enabled_helper() ->
         frozen_ops = {
             operator.name
             for family in iter_attention_families()
-            if family.dsa_frozen
+            if not family.execution_enabled
             for operator in family.profiling_ops()
         }
         assert frozen_ops.isdisjoint(compute_ops)

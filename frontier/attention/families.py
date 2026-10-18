@@ -12,7 +12,7 @@ from frontier.attention.ops import (
     AttentionRuntimeMetaContract,
     ProjectionOwnership,
 )
-from frontier.operators.spec import ResourceClass
+from frontier.operators.spec import ResourceClass, TensorParallelMode
 
 
 _PREFILL_MIXED = (AttentionPhase.PREFILL, AttentionPhase.MIXED)
@@ -402,6 +402,87 @@ GATED_DELTA_NET_ATTENTION_FAMILY = AttentionFamilySpec(
     ),
 )
 
+STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
+    family_id="step5_attention",
+    display_name="Step text SWA and sparse GQA",
+    supported_variants=("swa", "sparse_gqa"),
+    operators=(
+        AttentionOperatorSpec(
+            name="step5_qkv_projection", role=AttentionOperatorRole.PROJECTION,
+            phases=_ALL_PHASES, execution_time_attr="step5_qkv_projection_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="step5_attention_prepare", role=AttentionOperatorRole.NORMALIZATION,
+            phases=_ALL_PHASES, execution_time_attr="step5_attention_prepare_time",
+            resource_class=ResourceClass.MEMORY, tp_mode=TensorParallelMode.ATTENTION_TP,
+        ),
+        AttentionOperatorSpec(
+            name="step5_indexer_weights", role=AttentionOperatorRole.PROJECTION,
+            phases=_ALL_PHASES, execution_time_attr="step5_indexer_weights_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="step5_indexer_prepare", role=AttentionOperatorRole.NORMALIZATION,
+            phases=_ALL_PHASES, execution_time_attr="step5_indexer_prepare_time",
+            resource_class=ResourceClass.MEMORY, tp_mode=TensorParallelMode.ATTENTION_TP,
+        ),
+        AttentionOperatorSpec(
+            name="step5_sparse_attention", role=AttentionOperatorRole.ATTENTION,
+            phases=_ALL_PHASES, execution_time_attr="step5_sparse_attention_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+        ),
+        AttentionOperatorSpec(
+            name="step5_swa_attention", role=AttentionOperatorRole.ATTENTION,
+            phases=_ALL_PHASES, execution_time_attr="step5_swa_attention_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+        ),
+        AttentionOperatorSpec(
+            name="step5_gate_projection", role=AttentionOperatorRole.PROJECTION,
+            phases=_ALL_PHASES, execution_time_attr="step5_gate_projection_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="step5_headwise_gate", role=AttentionOperatorRole.ACTIVATION,
+            phases=_ALL_PHASES, execution_time_attr="step5_headwise_gate_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+        ),
+        AttentionOperatorSpec(
+            name="step5_output_projection", role=AttentionOperatorRole.PROJECTION,
+            phases=_ALL_PHASES, execution_time_attr="step5_output_projection_time",
+            resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+    ),
+    memory_layout=AttentionMemoryLayout.DENSE_KV,
+    dense_compatible=False,
+    requires_runtime_kv_helpers=False,
+    kv_factor=2,
+    runtime_num_kv_heads_resolver=_dense_runtime_num_kv_heads,
+    runtime_head_size_resolver=_dense_runtime_head_size,
+    execution_enabled=False,
+    disabled_reason=(
+        "Step attention requires complete physical-scope timing, mixed cache allocation, "
+        "per-layer precision and serving qualification before execution admission."
+    ),
+    required_profiling_feature_columns=(
+        "measurement_type", "attention_backend", "model_architecture_profile",
+        "attention_variant", "global_layer_id", "quant_signature", "model_dtype",
+        "norm_dtype", "residual_dtype", "runtime_stack_signature", "device",
+        "num_tensor_parallel_workers", "n_q_head", "n_kv_head", "head_size",
+        "local_q_heads", "local_kv_heads", "kv_replication", "local_provider_groups",
+        "provider_replication", "local_index_q_heads", "local_index_k_heads",
+        "index_k_replication", "proxy_dim", "region_block_size", "topk_regions",
+        "sliding_window", "rope_theta", "rotary_dim", "block_size", "cache_dtype",
+        "batch_size", "batch_num_tokens", "batch_num_prefill_tokens", "batch_num_decode_tokens",
+        "physical_scope", "fusion", "graph_mode", "valid_tokens", "padded_tokens",
+    ),
+)
+
+
 DEEPSEEK_V4_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="deepseek_v4_attention",
     display_name="DeepSeek-V4 Compressed Attention",
@@ -431,6 +512,7 @@ for _family in (
     DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     DEEPSEEK_V4_ATTENTION_FAMILY,
+    STEP5_ATTENTION_FAMILY,
 ):
     _ATTENTION_OPERATOR_REGISTRY.register(_family)
 

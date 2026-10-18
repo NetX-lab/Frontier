@@ -571,7 +571,8 @@ class ParamCounter:
         return params
 
     def _get_mtp_lm_head_params(self, proposer_model_config) -> int:
-        if getattr(proposer_model_config, "tie_word_embeddings", True):
+        # Unspecified metadata preserves the existing tied-head accounting.
+        if getattr(proposer_model_config, "tie_word_embeddings", True) is not False:
             return 0
         return (
             int(proposer_model_config.vocab_size)
