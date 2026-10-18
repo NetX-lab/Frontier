@@ -7,6 +7,12 @@ calibration decisions Q4 and Q5: a prefill instance on the first visible GPU and
 a decode instance on the second, each a ``vllm serve`` of the engine file, joined
 by P2pNcclConnector with ``send_type`` PUT_ASYNC, with pd_proxy.py in front.
 
+The explicit v0.28 adapter prepares local PP1 NIXL pull roles and forwards P's
+native response metadata through that same proxy. It retains declared observer
+inputs and terminal diagnostics without applying the legacy PUT checks or metric
+join. This adapter does not provide multi-node launch orchestration or establish
+native READ/device/D-ready completion. The remaining description is legacy.
+
 The connector addresses are static. Each instance binds its ZMQ socket on
 ``127.0.0.1:<kv_port>``, and the proxy writes both addresses into every proxied
 request id, so the connector's proxy discovery (``proxy_ip``/``proxy_port``)
@@ -47,6 +53,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -60,7 +67,7 @@ from pd_metrics import engine_request_id, write_pd_rows  # noqa: E402
 from pd_proxy import proxied_request_id  # noqa: E402
 from vllm_replay import (  # noqa: E402
     MODES, REPO_ROOT, kv_cache_tokens, replay, server_command, server_env, stop_server,
-    wait_until_ready, write_model_dir,
+    wait_until_ready, write_model_dir, runtime_version, local_model_config, observer_evidence,
 )
 
 ROLES = ("prefill", "decode")
@@ -83,7 +90,25 @@ CONNECTOR_FAULTS = {
 
 
 def kv_transfer_config(engine: dict, role: str, http_port: int) -> dict:
-    kv = engine["kv_transfer"]
+    if role not in ROLES:
+        raise ValueError(f"Unsupported P/D role: {role!r}")
+    version = runtime_version(engine)
+    kv = engine.get("kv_transfer") if version == "0.28.0" else engine["kv_transfer"]
+    if version == "0.28.0":
+        fields = {"kv_buffer_device", "side_channel_host", "prefill_side_channel_port",
+                  "decode_side_channel_port"}
+        if (type(kv) is not dict or set(kv) != fields or kv["kv_buffer_device"] != "cuda"
+                or kv["side_channel_host"] != "127.0.0.1"
+                or engine["pipeline_parallel_size"] != 1):
+            raise ValueError("v0.28 pull requires explicit local PP1 CUDA NIXL configuration")
+        ports = [kv[f"{name}_side_channel_port"] for name in ROLES]
+        dp = engine["data_parallel_size"]
+        if (type(dp) is not int or dp <= 0
+                or any(type(port) is not int or not 0 < port <= 65536 - dp for port in ports)
+                or abs(ports[0] - ports[1]) < dp):
+            raise ValueError("NIXL side-channel port windows must be valid and disjoint for DP lanes")
+        return {"kv_connector": "NixlConnector", "kv_role": KV_ROLES[role],
+                "kv_buffer_device": "cuda", "kv_load_failure_policy": "fail"}
     return {
         "kv_connector": "P2pNcclConnector",
         "kv_role": KV_ROLES[role],
@@ -101,11 +126,24 @@ def kv_transfer_config(engine: dict, role: str, http_port: int) -> dict:
     }
 
 
-def instance_devices(inherited: dict) -> dict[str, str]:
+def instance_devices(inherited: dict, *, engine: dict | None = None) -> dict[str, str]:
     """Prefill takes the first visible GPU, decode the second."""
 
     # Without CUDA_VISIBLE_DEVICES, CUDA numbers the visible GPUs from 0.
     visible = inherited.get("CUDA_VISIBLE_DEVICES")
+    if engine is not None and runtime_version(engine) == "0.28.0":
+        roles = engine.get("role_devices")
+        count = engine["tensor_parallel_size"] * engine["data_parallel_size"]
+        if (type(roles) is not dict or set(roles) != set(ROLES)
+                or engine["pipeline_parallel_size"] != 1
+                or any(type(values) is not list or len(values) != count
+                       or any(type(value) is not str or not value or "," in value for value in values)
+                       for values in roles.values())):
+            raise ValueError("v0.28 requires explicit PP1 per-role devices matching TP * DP")
+        selected = roles["prefill"] + roles["decode"]
+        if len(set(selected)) != len(selected) or (visible and not set(selected) <= set(visible.split(","))):
+            raise ValueError("P/D devices must be disjoint and included in CUDA_VISIBLE_DEVICES")
+        return {role: ",".join(roles[role]) for role in ROLES}
     devices = visible.split(",") if visible else ["0", "1"]
     if len(devices) < 2:
         raise SystemExit(f"1P1D needs two GPUs, CUDA_VISIBLE_DEVICES={visible!r}")
@@ -113,10 +151,20 @@ def instance_devices(inherited: dict) -> dict[str, str]:
 
 
 def instance_env(mode: str, engine: dict, role_dir: Path, inherited: dict,
-                 device: str) -> tuple[dict, dict]:
+                 device: str, *, observer: dict | None = None,
+                 role: str | None = None) -> tuple[dict, dict]:
     """Return one instance's environment and the variables the harness set in it."""
 
-    env, set_env = server_env(mode, engine, role_dir, inherited)
+    env, set_env = server_env(mode, engine, role_dir, inherited, observer=observer)
+    if runtime_version(engine) == "0.28.0":
+        kv_transfer_config(engine, role, 0)
+        if observer is not None and observer["role"] != role.upper():
+            raise ValueError("Observer role conflicts with P/D instance role")
+        kv = engine["kv_transfer"]
+        role_env = {"CUDA_VISIBLE_DEVICES": device,
+                    "VLLM_NIXL_SIDE_CHANNEL_HOST": kv["side_channel_host"],
+                    "VLLM_NIXL_SIDE_CHANNEL_PORT": str(kv[f"{role}_side_channel_port"])}
+        return env | role_env, set_env | role_env
     role_env = {
         "CUDA_VISIBLE_DEVICES": device,
         "VLLM_FRONTIER_KV_TRANSFER_LOG_PATH": str(role_dir / "kv_transfer.jsonl"),
@@ -142,7 +190,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--engine-config", type=Path, required=True)
     parser.add_argument("--trace-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--mode", choices=MODES, required=True)
+    parser.add_argument("--mode", choices=(*MODES, "light"), required=True)
+    parser.add_argument("--observer-config", type=Path,
+                        help="v0.28: explicit JSON object with prefill/decode recorder inputs")
+    parser.add_argument("--model-dir", type=Path,
+                        help="v0.28: existing local GLM metadata directory")
     parser.add_argument("--proxy-port", type=int, default=8000)
     parser.add_argument("--prefill-port", type=int, default=8100)
     parser.add_argument("--decode-port", type=int, default=8200)
@@ -153,33 +205,77 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     engine = json.loads(args.engine_config.read_text())
-    missing = [name for name in KV_TRANSFER_FIELDS if name not in engine.get("kv_transfer", {})]
-    if missing:
-        raise SystemExit(f"{args.engine_config}: kv_transfer lacks {missing}")
+    version = runtime_version(engine)
+    observers = json.loads(args.observer_config.read_text()) if args.observer_config else None
+    if version == "0.28.0":
+        if args.model_dir is None:
+            parser.error("v0.28 requires --model-dir with local GLM metadata")
+        model_dir = args.model_dir
+        model_config = local_model_config(model_dir)
+        if observers is not None and (type(observers) is not dict or set(observers) != set(ROLES)
+                                      or any(type(value) is not dict for value in observers.values())):
+            raise ValueError("PD observer JSON must contain exactly prefill/decode inputs")
+        if observers is not None and observers["prefill"].get("run_id") != observers["decode"].get("run_id"):
+            raise ValueError("PD observers require one run identity")
+    else:
+        if args.model_dir is not None or observers is not None:
+            parser.error("Explicit metadata/observer inputs require the v0.28 adapter")
+        missing = [name for name in KV_TRANSFER_FIELDS if name not in engine.get("kv_transfer", {})]
+        if missing:
+            raise SystemExit(f"{args.engine_config}: kv_transfer lacks {missing}")
     rows = json.loads((args.trace_dir / "request_ids.json").read_text())["rows"]
-    kv_addresses = {role: f"{KV_IP}:{engine['kv_transfer'][f'{role}_kv_port']}" for role in ROLES}
+    kv_addresses = ({role: f"{KV_IP}:{engine['kv_transfer'][f'{role}_kv_port']}" for role in ROLES}
+                    if version == "0.10.2" else {})
     # Every trace id must survive the connector's address parsing before a GPU is used.
     proxied = {
         row["request_id"]: proxied_request_id(row["request_id"], kv_addresses["prefill"],
                                               kv_addresses["decode"])
         for row in rows
-    }
+    } if version == "0.10.2" else {}
     output_dir = args.output_dir
-    output_dir.mkdir(parents=True, exist_ok=True)
-    model_config = write_model_dir(
-        REPO_ROOT / "data/config/models" / f"{engine['model_name']}.json",
-        output_dir / "model",
-    )
-    devices = instance_devices(dict(os.environ))
+    devices = instance_devices(dict(os.environ), engine=engine)
     ports = {"prefill": args.prefill_port, "decode": args.decode_port}
+    if len({args.proxy_port, *ports.values()}) != 3:
+        raise ValueError("Proxy and P/D HTTP ports must be distinct")
+    if version == "0.10.2":
+        output_dir.mkdir(parents=True, exist_ok=True)
+        model_dir = output_dir / "model"
+        model_config = write_model_dir(
+            REPO_ROOT / "data/config/models" / f"{engine['model_name']}.json", model_dir,
+        )
+    plans = {}
+    for role in ROLES:
+        env, changed = instance_env(args.mode, engine, output_dir / role, dict(os.environ), devices[role],
+                                    observer=None if observers is None else observers[role], role=role)
+        command = server_command(engine, model_dir, ports[role]) + [
+            "--kv-transfer-config", json.dumps(kv_transfer_config(engine, role, ports[role])),
+        ]
+        plans[role] = (env, changed, command)
+    if version == "0.28.0":
+        if observers is not None:
+            prefill_dir, decode_dir = (Path(observers[role]["output_dir"]).resolve() for role in ROLES)
+            if prefill_dir.is_relative_to(decode_dir) or decode_dir.is_relative_to(prefill_dir):
+                raise ValueError("PD observers require disjoint output directories")
+        http_ports = [args.proxy_port, *ports.values()]
+        kv = engine["kv_transfer"]
+        dp = engine["data_parallel_size"]
+        if (any(not 0 < port < 65536 for port in http_ports)
+                or any(kv[f"{role}_side_channel_port"] <= port
+                       < kv[f"{role}_side_channel_port"] + dp
+                       for role in ROLES for port in http_ports)):
+            raise ValueError("HTTP ports must be valid and outside both NIXL side-channel windows")
+    output_dir.mkdir(parents=True, exist_ok=True)
     proxy_command = [
         sys.executable, str(HARNESS_DIR / "pd_proxy.py"), "--port", str(args.proxy_port),
         "--prefill-url", f"http://127.0.0.1:{ports['prefill']}",
         "--decode-url", f"http://127.0.0.1:{ports['decode']}",
-        "--prefill-kv-address", kv_addresses["prefill"],
-        "--decode-kv-address", kv_addresses["decode"],
         "--log-path", str(output_dir / "proxy_requests.jsonl"),
     ]
+    if version == "0.10.2":
+        proxy_command += ["--prefill-kv-address", kv_addresses["prefill"],
+                          "--decode-kv-address", kv_addresses["decode"]]
+    else:
+        proxy_command += ["--vllm-version", version]
     summary: dict = {
         "mode": args.mode,
         "engine_config": engine,
@@ -189,24 +285,26 @@ def main(argv: list[str] | None = None) -> int:
         "proxy_command": proxy_command,
         "instances": {},
     }
+    if version == "0.28.0":
+        summary.update(vllm_version=version, qualification_verified=False,
+                       model_config_sha256=hashlib.sha256((model_dir / "config.json").read_bytes()).hexdigest())
+    for role, (env, set_env, command) in plans.items():
+        summary["instances"][role] = {
+            "server_command": command,
+            "server_env_set": set_env,
+            "server_env_removed": sorted(
+                name for name in os.environ if name not in env or name in set_env
+            ),
+        }
     processes: dict[str, subprocess.Popen] = {}
+    records = []
     with contextlib.ExitStack() as logs:
         try:
             launched = time.monotonic()
             for role in ROLES:
                 role_dir = output_dir / role
                 role_dir.mkdir()
-                env, set_env = instance_env(args.mode, engine, role_dir, dict(os.environ), devices[role])
-                command = server_command(engine, output_dir / "model", ports[role]) + [
-                    "--kv-transfer-config", json.dumps(kv_transfer_config(engine, role, ports[role])),
-                ]
-                summary["instances"][role] = {
-                    "server_command": command,
-                    "server_env_set": set_env,
-                    "server_env_removed": sorted(
-                        name for name in os.environ if name not in env or name in set_env
-                    ),
-                }
+                env, set_env, command = plans[role]
                 server_log = logs.enter_context((role_dir / "server.log").open("w"))
                 processes[role] = subprocess.Popen(
                     command, env=env, stdout=server_log, stderr=subprocess.STDOUT
@@ -220,17 +318,27 @@ def main(argv: list[str] | None = None) -> int:
             )
             wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
             clock, records = asyncio.run(replay(
-                rows, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s
+                rows, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
+                vllm_version=version,
             ))
             summary.update(clock)
             time.sleep(args.drain_s)
+        except BaseException as error:
+            summary["error"] = {"type": type(error).__name__, "message": str(error)}
+            raise
         finally:
             summary["process_stop"] = {
                 name: stop_server(processes[name], args.stop_timeout_s) for name in reversed(processes)
             }
+            if version == "0.28.0":
+                for role in ROLES:
+                    summary["instances"].setdefault(role, {})["observer_evidence"] = observer_evidence(
+                        engine, None if observers is None else observers[role])
+            (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
 
-    for record in records:
-        record["engine_request_id"] = engine_request_id(proxied[record["request_id"]])
+    if version == "0.10.2":
+        for record in records:
+            record["engine_request_id"] = engine_request_id(proxied[record["request_id"]])
     records.sort(key=lambda record: record["dispatch_monotonic"])
     (output_dir / "client_requests.jsonl").write_text(
         "".join(json.dumps(record) + "\n" for record in records)
@@ -238,6 +346,17 @@ def main(argv: list[str] | None = None) -> int:
     failed = [record["request_id"] for record in records if record["http_status"] != 200]
     summary["num_requests"] = len(records)
     summary["failed_request_ids"] = failed
+    if version == "0.28.0":
+        summary["native_transfer_verification"] = {
+            "status": "UNVERIFIED", "expected_protocol": "NixlConnector pull READ",
+            "native_done": "unobserved", "device_completion": "unobserved",
+            "decode_readiness": "unobserved", "metric_normalization": "not_applied",
+        }
+        summary["status"] = 4 if failed else 0
+        (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
+        print("REPLAY_DONE", json.dumps({"status": summary["status"], "requests": len(records),
+                                         "qualification_verified": False}))
+        return summary["status"]
     for role in ROLES:
         server_log = output_dir / role / "server.log"
         summary["instances"][role]["kv_cache_tokens_by_engine"] = kv_cache_tokens(server_log)
