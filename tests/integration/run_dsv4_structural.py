@@ -35,9 +35,11 @@ def read_jsonl(path):
 
 
 SOURCE_FILES = (
+    "data/config/models/deepseek-ai__DeepSeek-V4-Flash.json",
     "frontier/attention/deepseek_v4.py", "frontier/attention/families.py",
     "frontier/config/quantization_manager.py", "frontier/entities/execution_time.py",
     "frontier/entities/stage_execution_time.py", "frontier/entities/time_components.py",
+    "frontier/entities/request.py",
     "frontier/execution_time_predictor/deepseek_v4.py",
     "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
     "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
@@ -45,6 +47,8 @@ SOURCE_FILES = (
     "frontier/metrics/metrics_store.py", "frontier/metrics/op_trace_utils.py",
     "frontier/operators/families.py",
     "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+    "frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py",
+    "frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py",
     "frontier/scheduler/utils/ep_wave.py", "frontier/scheduler/utils/expert_parallel.py",
     "frontier/scheduler/utils/layer_workload.py",
     "tests/integration/run_dsv4_structural.py",
@@ -56,7 +60,71 @@ def source_identity():
             for path in SOURCE_FILES}
 
 
-def validate_artifacts(run_dir, dp):
+def validate_attention_boundary(operators, *, query, context, layer):
+    """Check source logical calls; this does not witness physical cache contents.
+
+    vLLM 2cf0a691: attention.py:908-930 selects eager CSA fill from the
+    batch maximum; compressor.py:48-58,374-396 saves state before the HCA
+    boundary branch. This driver deliberately schedules one request per batch.
+    """
+    config = json.loads((REPO / "data/config/models/deepseek-ai__DeepSeek-V4-Flash.json").read_text())
+    ratio = config["compress_ratios"][layer]
+    sequence = context + query
+    history = sequence // ratio if ratio > 1 else 0
+    writes = history - context // ratio if ratio > 1 else 0
+
+    def check(name, **expected):
+        require(name in operators, f"missing boundary scope: {name}")
+        calls = [call for call in operators[name]
+                 if call.get("global_layer_id", layer) == layer]
+        require(len(calls) == 1, f"duplicate boundary call: {name}")
+        for field, value in expected.items():
+            actual = json.loads(json.dumps(calls[0].get(field)))
+            require(actual == json.loads(json.dumps(value)),
+                    f"boundary shape mismatch: layer={layer} context={context} query={query} {name}.{field}")
+
+    hidden, head = config["hidden_size"], config["head_dim"]
+    check("dsv4_fused_qkv_projection", input_shape=(query, hidden),
+          output_shape=(query, config["q_lora_rank"] + head))
+    check("dsv4_fused_q_kv_prepare", output_shape=(query, 64, head),
+          kv_cache_write_rows=query)
+    check("dsv4_sparse_attention", input_shape=(query, 64, head),
+          compression_ratio=ratio, compressed_history_rows=(history,),
+          swa_logical_window_span_rows=(query + min(context, config["sliding_window"] - 1),),
+          query_intervals=((context, sequence),))
+    store = ratio > 1 and (ratio != 128 or writes > 0)
+    require(("dsv4_compressor_fused_compress_store" in operators) == store,
+            "wrong boundary scope: dsv4_compressor_fused_compress_store")
+    if ratio > 1:
+        width = 4 * head if ratio == 4 else 2 * head
+        check("dsv4_compressor_projection", output_shape=(query, width))
+        check("dsv4_compressor_save_partial_states", input_shape=(query, width),
+              state_width=width, kv_shape=(query, width // 2), score_shape=(query, width // 2))
+        if store:
+            check("dsv4_compressor_fused_compress_store", new_compressed_rows=(writes,))
+    if ratio == 4:
+        index_dim = config["index_head_dim"]
+        check("dsv4_index_weights_projection", output_shape=(query, config["index_n_heads"]))
+        check("dsv4_index_compressor_projection", output_shape=(query, 4 * index_dim))
+        check("dsv4_index_compressor_save_partial_states", state_width=4 * index_dim)
+        check("dsv4_index_compressor_fused_compress_store", new_compressed_rows=(writes,))
+        short = history <= config["index_topk"]
+        for name in ("dsv4_index_query_projection", "dsv4_index_fused_query_prepare",
+                     "dsv4_index_scores", "dsv4_index_topk"):
+            require((name in operators) == (not short), f"wrong CSA threshold scope: {name}")
+        require(("dsv4_index_short_context_fill" in operators) == short, "wrong CSA fill branch")
+        if short:
+            check("dsv4_index_short_context_fill", output_shape=(query, config["index_topk"]))
+        else:
+            shape = (query, config["index_n_heads"], index_dim)
+            check("dsv4_index_query_projection", output_shape=shape)
+            check("dsv4_index_fused_query_prepare", input_shape=shape, output_shape=shape)
+            check("dsv4_index_scores", compressed_history_rows=(history,))
+            check("dsv4_index_topk", output_shape=(query, config["index_topk"]),
+                  compressed_history_rows=(history,))
+
+
+def validate_artifacts(run_dir, dp, *, prefill_tokens=17, chunk_size=16, decode_tokens=2):
     system = json.loads((run_dir / "system_metrics.json").read_text())
     metadata = system["simulation_metadata"]
     require(metadata["total_requests"] == metadata["completed_requests"] == dp,
@@ -64,14 +132,22 @@ def validate_artifacts(run_dir, dp):
     with (run_dir / "request_metrics.csv").open(newline="") as stream:
         requests = list(csv.DictReader(stream))
     require(len(requests) == dp, "request metrics coverage differs from input")
-    require({int(r["request_num_prefill_tokens"]) for r in requests} == {17}, "wrong prompts")
-    require({int(r["request_num_decode_tokens"]) for r in requests} == {2}, "wrong decode length")
+    require({int(r["request_num_prefill_tokens"]) for r in requests} == {prefill_tokens}, "wrong prompts")
+    require({int(r["request_num_decode_tokens"]) for r in requests} == {decode_tokens}, "wrong decode length")
     request_ids = {str(row["Request Id"]) for row in requests}
     stage_rows = list(read_jsonl(run_dir / "frontier_stage_batch_ledger.jsonl"))
     stage_by_batch = {row["batch_id"]: row for row in stage_rows}
     stage_ops = defaultdict(Counter)
     phase_ops = defaultdict(Counter)
     attention_layers = defaultdict(dict)
+    attention_calls = defaultdict(dict)
+    stage_inputs = {}
+    processed = Counter()
+    for row in sorted(stage_rows, key=lambda value: value["stage_start_ts"]):
+        require(len(row["request_ids"]) == 1, "boundary driver requires one source request per batch")
+        request_id = row["request_ids"][0]
+        stage_inputs[row["batch_id"]] = (row["request_num_tokens"][0], processed[request_id])
+        processed[request_id] += row["request_num_tokens"][0]
     counts = Counter()
     aliases = {"attn_pre_proj", "attn_post_proj", "attn_prefill", "attn_decode",
                "attn_rope", "attn_kv_cache_save", "add_attn_residual", "add_ffn_residual",
@@ -91,6 +167,11 @@ def validate_artifacts(run_dir, dp):
             require(set(meta["request_ids"]) <= request_ids, "virtual destination identities credited as requests")
         elif row["batch_id"] in stage_by_batch:
             stage_ops[row["batch_id"]][name] += row["duration_ms"]
+            if "source_tensor_calls" in meta:
+                for layer in meta.get("global_layer_ids", [row["layer_id"]]):
+                    calls = attention_calls[(row["batch_id"], layer)]
+                    require(name not in calls, f"physical attention scope counted twice: {name}")
+                    calls[name] = meta["source_tensor_calls"]
             if name == "dsv4_sparse_attention":
                 layers = meta.get("global_layer_ids", [row["layer_id"]])
                 for layer in layers:
@@ -114,6 +195,10 @@ def validate_artifacts(run_dir, dp):
         require(set(attention_layers[row["batch_id"]]) == set(range(43)), "stage lacks43physicalattentionlayers")
         require(Counter(attention_layers[row["batch_id"]].values()) ==
                 {"uncompressed": 2, "csa": 21, "hca": 20}, "wrong43-layer variants")
+        query, context = stage_inputs[row["batch_id"]]
+        for layer in range(43):
+            validate_attention_boundary(attention_calls[(row["batch_id"], layer)],
+                                        query=query, context=context, layer=layer)
         require(abs(components["dsv4_mhc_first_pre"] - 0.01) < 1e-9, "first mHC counted incorrectly")
         require(abs(components["dsv4_mhc_ffn_post_attn_pre"] - 0.42) < 1e-9, "cross-layer mHC counted incorrectly")
         for name in cpu_names:
@@ -124,9 +209,12 @@ def validate_artifacts(run_dir, dp):
         for request_id, tokens in zip(row["request_ids"], row["request_num_tokens"]):
             scheduled[request_id].append((row["stage_start_ts"], tokens))
     require(set(scheduled) == request_ids, "stage/request identity coverage differs")
+    prefill_schedule = [min(chunk_size, prefill_tokens - offset)
+                        for offset in range(0, prefill_tokens, chunk_size)]
+    expected_schedule = prefill_schedule + [1] * (decode_tokens - 1)
     for values in scheduled.values():
-        require([tokens for _, tokens in sorted(values)] == [16, 1, 1],
-                "expected16+1chunkedprefill then one decode forward for2sampled tokens")
+        require([tokens for _, tokens in sorted(values)] == expected_schedule,
+                f"wrong chunked-prefill/decode schedule: expected {expected_schedule}")
     waves = defaultdict(list)
     max_phase_error = 0.0
     for row in read_jsonl(run_dir / "frontier_ep_wave_lane_ledger.jsonl"):
@@ -169,11 +257,20 @@ def validate_artifacts(run_dir, dp):
                 "synthetic destination assignments do not conserve physical source rows")
     require(counts["real_ep_lanes"] > 0 and counts["idle_ep_lanes"] > 0, "real/idle scope not exercised")
     return {**counts, "stage_rows": len(stage_rows), "ep_waves": len(waves),
+            "attention_boundaries": [{"query": q, "context": c, "sequence": q + c}
+                                     for q, c in sorted(set(stage_inputs.values()), key=lambda value: value[1])],
+            "physical_cache_retirement": "UNKNOWN; logical source writes and existing grouped allocation only",
+            "idle_attention_trace_coverage": "existing request-free path emits no request/stage attention trace",
             "max_stage_conservation_error_ms": max_stage_error,
             "max_phase_conservation_error_ms": max_phase_error}
 
 
-def command(case, output_root, dp):
+def command(case, output_root, dp, *, prefill_tokens=17, chunk_size=16,
+            decode_tokens=2, num_blocks=256):
+    require(all(type(value) is int and value > 0
+                for value in (prefill_tokens, chunk_size, decode_tokens, num_blocks)),
+            "workload token and block counts must be positive integers")
+    max_model_len = max(256, prefill_tokens + decode_tokens)
     return [sys.executable, "-m", "frontier.main",
         "--simulation_mode", case, "--sys_arch", "co-location",
         "--log_level", "warning", "--decode_cuda_graph_mode", "none",
@@ -193,17 +290,17 @@ def command(case, output_root, dp):
         "--replica_scheduler_config_type", "vllm_v1",
         "--vllm_v1_scheduler_config_batch_size_cap", "1",
         "--vllm_v1_scheduler_config_block_size", "256",
-        "--vllm_v1_scheduler_config_num_blocks", "256",
+        "--vllm_v1_scheduler_config_num_blocks", str(num_blocks),
         "--vllm_v1_scheduler_config_num_blocks_mode", "explicit",
-        "--vllm_v1_scheduler_config_max_model_len", "256",
-        "--vllm_v1_scheduler_config_max_tokens_in_batch", "16",
-        "--vllm_v1_scheduler_config_long_prefill_token_threshold", "16",
+        "--vllm_v1_scheduler_config_max_model_len", str(max_model_len),
+        "--vllm_v1_scheduler_config_max_tokens_in_batch", str(chunk_size),
+        "--vllm_v1_scheduler_config_long_prefill_token_threshold", str(chunk_size),
         "--vllm_v1_scheduler_config_enable_chunked_prefill",
         "--random_forrest_execution_time_predictor_config_enable_dummy_mode",
         "--random_forrest_execution_time_predictor_config_dummy_execution_time_ms", "0.01",
         "--request_generator_config_type", "trace_replay",
         "--trace_request_generator_config_trace_file", str(output_root / "requests.csv"),
-        "--trace_request_generator_config_max_tokens", "256", "--seed", "42",
+        "--trace_request_generator_config_max_tokens", str(max_model_len), "--seed", "42",
         "--metrics_config_output_dir", str(output_root / "metrics"),
         "--metrics_config_cache_dir", str(output_root / "cache"),
         "--metrics_config_run_id", f"dsv4_structural_{case}",
@@ -217,7 +314,8 @@ def command(case, output_root, dp):
         "--no-metrics_config_write_json_trace"]
 
 
-def run_case(case, output_root, dp):
+def run_case(case, output_root, dp, *, prefill_tokens=17, chunk_size=16,
+             decode_tokens=2, num_blocks=256):
     root = output_root / case
     root.mkdir(parents=True, exist_ok=False)
     with (root / "requests.csv").open("w", newline="") as stream:
@@ -225,9 +323,10 @@ def run_case(case, output_root, dp):
             "arrived_at", "num_prefill_tokens", "num_decode_tokens"))
         writer.writeheader()
         for _ in range(dp):
-            writer.writerow(dict(arrived_at=0.0, num_prefill_tokens=17,
-                                 num_decode_tokens=2))
-    argv = command(case, root, dp)
+            writer.writerow(dict(arrived_at=0.0, num_prefill_tokens=prefill_tokens,
+                                 num_decode_tokens=decode_tokens))
+    workload = dict(prefill_tokens=prefill_tokens, chunk_size=chunk_size, decode_tokens=decode_tokens)
+    argv = command(case, root, dp, **workload, num_blocks=num_blocks)
     (root / "command.json").write_text(json.dumps(argv, indent=2) + "\n")
     before = source_identity()
     with (root / "run.log").open("w") as stream:
@@ -245,9 +344,9 @@ def run_case(case, output_root, dp):
     runs = list((root / "metrics").rglob("config.json"))
     require(len(runs) == 1, "one metrics run is required")
     run_dir = runs[0].parent
-    validation = validate_artifacts(run_dir, dp)
+    validation = validate_artifacts(run_dir, dp, **workload)
     return {"case": case, "logical_gpus": dp * 8, "run_dir": str(run_dir),
-            "requests_completed": dp, **validation,
+            "requests_completed": dp, "workload": workload, "num_blocks": num_blocks, **validation,
             "evidence_level": "CPU dummy structural; native assignments and latency UNKNOWN"}
 
 
@@ -256,9 +355,16 @@ def main():
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--dp", type=int, choices=(2, 4), default=4)
     parser.add_argument("--case", choices=("offline", "online", "both"), default="both")
+    parser.add_argument("--prefill-tokens", type=int, default=17)
+    parser.add_argument("--chunk-size", type=int, default=16)
+    parser.add_argument("--decode-tokens", type=int, default=2)
+    parser.add_argument("--num-blocks", type=int, default=256)
     args = parser.parse_args()
     cases = ("offline", "online") if args.case == "both" else (args.case,)
-    results = [run_case(case, args.output_root, args.dp) for case in cases]
+    workload = dict(prefill_tokens=args.prefill_tokens, chunk_size=args.chunk_size,
+                    decode_tokens=args.decode_tokens)
+    results = [run_case(case, args.output_root, args.dp, **workload,
+                        num_blocks=args.num_blocks) for case in cases]
     (args.output_root / "report.json").write_text(json.dumps(results, indent=2) + "\n")
     print(json.dumps(results, indent=2))
 

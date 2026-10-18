@@ -11,6 +11,98 @@ from frontier.moe_ep_workload import (
 from test_dsv4_source_execution import predictor, source_batch
 
 
+def test_structural_driver_accepts_boundary_workload_inputs(tmp_path):
+    import runpy
+    from pathlib import Path
+
+    driver = runpy.run_path(str(Path(__file__).resolve().parents[1] /
+                               "integration/run_dsv4_structural.py"))
+    argv = driver["command"](
+        "online", tmp_path, 2, prefill_tokens=2051, chunk_size=2050,
+        decode_tokens=3, num_blocks=1024,
+    )
+    assert argv[argv.index("--vllm_v1_scheduler_config_max_model_len") + 1] == "2054"
+    assert argv[argv.index("--vllm_v1_scheduler_config_max_tokens_in_batch") + 1] == "2050"
+    assert argv[argv.index("--vllm_v1_scheduler_config_long_prefill_token_threshold") + 1] == "2050"
+    assert argv[argv.index("--trace_request_generator_config_max_tokens") + 1] == "2054"
+    assert argv[argv.index("--vllm_v1_scheduler_config_num_blocks") + 1] == "1024"
+
+
+def test_structural_driver_preserves_default_workload_and_capacity(tmp_path):
+    import runpy
+    from pathlib import Path
+
+    driver = runpy.run_path(str(Path(__file__).resolve().parents[1] /
+                               "integration/run_dsv4_structural.py"))
+    argv = driver["command"]("offline", tmp_path, 4)
+    for option, value in (
+        ("--vllm_v1_scheduler_config_max_model_len", "256"),
+        ("--vllm_v1_scheduler_config_num_blocks", "256"),
+        ("--vllm_v1_scheduler_config_max_tokens_in_batch", "16"),
+        ("--vllm_v1_scheduler_config_long_prefill_token_threshold", "16"),
+        ("--trace_request_generator_config_max_tokens", "256"),
+    ):
+        assert argv[argv.index(option) + 1] == value
+
+
+@pytest.mark.parametrize("field,value", [
+    ("prefill_tokens", 0), ("chunk_size", -1), ("decode_tokens", True),
+    ("num_blocks", 0), ("num_blocks", -1), ("num_blocks", True),
+])
+def test_structural_driver_rejects_invalid_workload_inputs(tmp_path, field, value):
+    import runpy
+    from pathlib import Path
+
+    driver = runpy.run_path(str(Path(__file__).resolve().parents[1] /
+                               "integration/run_dsv4_structural.py"))
+    with pytest.raises(ValueError, match="positive integers"):
+        driver["command"]("offline", tmp_path, 2, **{field: value})
+
+
+def test_structural_boundary_validator_rejects_missing_store_and_wrong_write_rows():
+    import copy
+    import runpy
+    from pathlib import Path
+    from types import SimpleNamespace
+    from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.entities import Batch, Request
+
+    driver = runpy.run_path(str(Path(__file__).resolve().parents[1] /
+                               "integration/run_dsv4_structural.py"))
+    validate = driver["validate_attention_boundary"]
+    model = BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash")
+    replica = SimpleNamespace(
+        num_pipeline_stages=1, attn_tensor_parallel_size=8, attn_dp=2,
+        attention_backend="FLASHMLA_SPARSE_DSV4",
+        speculative_decoding_config=SimpleNamespace(enabled=False),
+    )
+    batch = Batch(0, [Request(0.0, 128, 3)], [1], num_context_tokens=[127],
+                  request_is_decoding=[False], is_moe=True)
+    calls = build_deepseek_v4_attention_workload(
+        model, replica, batch, 3, cluster_type=ClusterType.MONOLITHIC,
+        execution_mode="eager", has_attention_metadata=True, prefix_caching=False,
+        decode_context_parallel_size=1, prefill_context_parallel_size=1,
+    )["operators"]
+    validate(calls, query=1, context=127, layer=3)
+    missing = dict(calls)
+    del missing["dsv4_compressor_fused_compress_store"]
+    with pytest.raises(ValueError, match="compressor_fused_compress_store"):
+        validate(missing, query=1, context=127, layer=3)
+    incorrect = copy.deepcopy(calls)
+    incorrect["dsv4_compressor_fused_compress_store"][0]["new_compressed_rows"] = (0,)
+    with pytest.raises(ValueError, match="new_compressed_rows"):
+        validate(incorrect, query=1, context=127, layer=3)
+    aggregated = {name: ({**entries[0], "global_layer_id": 3},
+                         {**entries[0], "global_layer_id": 5, "input_shape": (-1,)})
+                  for name, entries in calls.items()}
+    validate(aggregated, query=1, context=127, layer=3)
+    duplicate = dict(aggregated)
+    duplicate["dsv4_fused_qkv_projection"] = (aggregated["dsv4_fused_qkv_projection"][0],) * 2
+    with pytest.raises(ValueError, match="duplicate boundary call"):
+        validate(duplicate, query=1, context=127, layer=3)
+
+
 def test_actual_dummy_constructor_preserves_integer_only_precision(tmp_path):
     from frontier.config import (
         MetricsConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig,

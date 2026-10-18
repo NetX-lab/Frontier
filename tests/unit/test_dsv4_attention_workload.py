@@ -124,6 +124,47 @@ def test_hca_any_crossing_launches_full_batch_but_records_individual_writes(mode
     assert call["new_compressed_rows"] == (0, 1)
 
 
+@pytest.mark.parametrize("context,query,history,writes,span,store", [
+    (0, 127, 0, 0, 127, False),
+    (127, 1, 1, 1, 128, True),
+    (128, 1, 1, 0, 128, False),
+    (129, 1, 1, 0, 128, False),
+])
+def test_hca_chunk_and_decode_boundary_journey(
+    model, replica, context, query, history, writes, span, store,
+):
+    result = workload(model, replica, source_batch([query], [context], [context >= 128]), 3)
+    operators = result["operators"]
+    assert result["new_compressed_rows"] == (writes,)
+    assert operators["dsv4_sparse_attention"][0]["compressed_history_rows"] == (history,)
+    assert operators["dsv4_sparse_attention"][0]["swa_logical_window_span_rows"] == (span,)
+    assert operators["dsv4_compressor_save_partial_states"][0]["state_width"] == 1024
+    assert ("dsv4_compressor_fused_compress_store" in operators) is store
+
+
+@pytest.mark.parametrize("context,query,history,writes,short", [
+    (0, 2050, 512, 512, True),
+    (2050, 1, 512, 0, True),
+    (2051, 1, 513, 1, False),
+    (2052, 1, 513, 0, False),
+])
+def test_csa_prefill_to_decode_threshold_journey(
+    model, replica, context, query, history, writes, short,
+):
+    result = workload(model, replica, source_batch([query], [context], [context >= 2051]), 2)
+    operators = result["operators"]
+    assert result["new_compressed_rows"] == (writes,)
+    assert operators["dsv4_sparse_attention"][0]["compressed_history_rows"] == (history,)
+    assert operators["dsv4_index_compressor_save_partial_states"][0]["state_width"] == 512
+    assert operators["dsv4_index_compressor_fused_compress_store"][0]["new_compressed_rows"] == (writes,)
+    assert ("dsv4_index_short_context_fill" in operators) is short
+    if short:
+        assert operators["dsv4_index_short_context_fill"][0]["output_shape"] == (query, 512)
+    else:
+        assert operators["dsv4_index_query_projection"][0]["output_shape"] == (query, 64, 128)
+        assert operators["dsv4_index_scores"][0]["compressed_history_rows"] == (513,)
+
+
 def test_kernel_partition_uses_query_threshold_and_preserves_unsorted_snapshot(model, replica):
     batch = source_batch([17, 1, 1], [120, 0, 127], [False, False, True])
     result = workload(model, replica, batch, 3)

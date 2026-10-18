@@ -367,7 +367,7 @@ class VLLMv1EngineReplicaScheduler(
         # chunk scheduled while the request's previous chunk is in flight
         # attends to tokens the Request counts only when that chunk ends.
         num_context_tokens = [
-            request.num_context_tokens
+            self._get_settled_kv_progress(request)
             if request.is_decoding
             else self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
             for request, scheduled_tokens in zip(requests, num_tokens)
