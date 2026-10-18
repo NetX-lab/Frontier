@@ -25,6 +25,36 @@ from frontier.types import ClusterType
 class KvBlockAllocation:
     """Token accounting, KV block allocation and preemption."""
 
+    def _get_available_kv_blocks(self) -> int:
+        if self._is_grouped_kv_allocation():
+            return int(self._kv_cache_manager.block_pool.get_num_free_blocks())
+        return int(self._config.num_blocks - self._num_allocated_blocks)
+
+    def _get_settled_kv_progress(self, request: Request) -> int:
+        """Return completed KV progress without optimistic scheduler state."""
+        if request.is_recomputing:
+            return int(request.num_context_tokens)
+        processed_tokens = int(request.num_processed_tokens)
+        if (
+            self._cluster_type == ClusterType.MONOLITHIC
+            and request.is_prefill_complete
+            and processed_tokens > int(request.num_prefill_tokens)
+        ):
+            return max(int(request.num_prefill_tokens), processed_tokens - 1)
+        return processed_tokens
+
+    def _get_grouped_admission_blocks(self, request: Request) -> int:
+        peak_context_tokens = int(request.num_prefill_tokens)
+        if self._cluster_type != ClusterType.PREFILL:
+            peak_context_tokens += int(request.num_decode_tokens) - 1
+        return int(
+            self._kv_cache_manager.get_num_admission_blocks(
+                peak_context_tokens,
+                max_model_len=int(self._max_model_len),
+                max_in_flight_tokens=int(self._config.max_tokens_in_batch),
+            )
+        )
+
     def _check_request_fits_kv_pool(self, request: Request) -> None:
         """Reject a request whose peak context needs more blocks than the pool.
 
@@ -36,8 +66,17 @@ class KvBlockAllocation:
         if self._cluster_type != ClusterType.PREFILL:
             # The last output token is sampled but never written to the cache.
             peak_context_tokens += request.num_decode_tokens - 1
-        num_peak_blocks = ceil(peak_context_tokens / self._config.block_size)
-        if num_peak_blocks > self._config.num_blocks:
+        if self._is_grouped_kv_allocation():
+            num_peak_blocks = self._get_grouped_admission_blocks(request)
+            reserved_blocks = int(self._kv_cache_manager.block_pool.reserved_blocks)
+            usable_blocks = int(self._config.num_blocks) - reserved_blocks
+            fits = num_peak_blocks + self._watermark_blocks <= usable_blocks
+        else:
+            num_peak_blocks = ceil(peak_context_tokens / self._config.block_size)
+            reserved_blocks = 0
+            usable_blocks = int(self._config.num_blocks)
+            fits = num_peak_blocks <= usable_blocks
+        if not fits:
             raise FrontierMemoryOOMError(
                 f"Request {request.id} needs {num_peak_blocks} KV blocks for its "
                 f"{peak_context_tokens}-token context, more than the replica's "
@@ -46,6 +85,9 @@ class KvBlockAllocation:
                 details={
                     "cluster_type": self._cluster_type.name,
                     "total_blocks": int(self._config.num_blocks),
+                    "reserved_blocks": reserved_blocks,
+                    "allocatable_blocks": usable_blocks,
+                    "watermark_blocks": int(self._watermark_blocks),
                     "block_size": int(self._config.block_size),
                 },
             )
@@ -83,7 +125,7 @@ class KvBlockAllocation:
             request.id,
             None,
         )
-        if self._is_prefix_caching_enabled():
+        if self._kv_cache_manager_owns_allocation():
             assert self._kv_cache_manager is not None
             self._kv_cache_manager.free(request)
             self._allocation_map.pop(request.id, None)
@@ -102,7 +144,12 @@ class KvBlockAllocation:
         if request is not None:
             self._free_request_resources(request)
             return
-        self.free(request_id)
+        if self._kv_cache_manager_owns_allocation():
+            self._kv_cache_manager.free_request_id(request_id)
+            self._allocation_map.pop(request_id, None)
+            self._sync_prefix_cache_allocation_state()
+        else:
+            self.free(request_id)
         # Completion/cancellation callbacks may arrive after the request has
         # left every scheduler queue.  Release an orphaned ownership token as
         # part of the same idempotent cleanup boundary so a slot cannot leak.
@@ -294,6 +341,41 @@ class KvBlockAllocation:
             and not gdn_slot_manager.has_available_slot
         ):
             return False
+        if self._is_grouped_kv_allocation():
+            assert self._kv_cache_manager is not None
+            if new_computed_blocks:
+                raise ValueError(
+                    "grouped cache allocation does not accept computed prefix blocks"
+                )
+            if self._is_request_active_in_batch(request):
+                return False
+            if request.id in self._allocation_map:
+                self._kv_cache_manager.reclaim_skipped_blocks(
+                    request,
+                    settled_num_computed_tokens=self._get_settled_kv_progress(request),
+                )
+                self._sync_prefix_cache_allocation_state(request)
+            frontier = (
+                self._get_scheduler_num_computed_tokens(request)
+                if scheduler_num_computed_tokens is None
+                else int(scheduler_num_computed_tokens)
+            )
+            if request.id not in self._allocation_map:
+                admission_blocks = self._get_grouped_admission_blocks(request)
+                admission_fits = (
+                    self._get_available_kv_blocks() - admission_blocks
+                    >= self._watermark_blocks
+                )
+                return admission_fits and self._kv_cache_manager.can_allocate_slots(
+                    request,
+                    num_new_tokens,
+                    scheduler_num_computed_tokens=frontier,
+                )
+            return self._kv_cache_manager.can_allocate_slots(
+                request,
+                num_new_tokens,
+                scheduler_num_computed_tokens=frontier,
+            )
         if self._is_prefix_caching_enabled():
             assert self._kv_cache_manager is not None
             return self._kv_cache_manager.can_allocate_slots(
@@ -366,6 +448,51 @@ class KvBlockAllocation:
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
+        if self._is_grouped_kv_allocation():
+            assert self._kv_cache_manager is not None
+            if new_computed_blocks or prefix_cache_admission is not None:
+                raise ValueError(
+                    "grouped cache allocation does not accept prefix-cache inputs"
+                )
+            if self._is_request_active_in_batch(request):
+                raise RuntimeError(
+                    "grouped cache allocation allows one in-flight batch per PP1 lane"
+                )
+            frontier = (
+                self._get_scheduler_num_computed_tokens(request)
+                if scheduler_num_computed_tokens is None
+                else int(scheduler_num_computed_tokens)
+            )
+            allocation = self._kv_cache_manager.allocate_slots(
+                request,
+                num_new_tokens,
+                scheduler_num_computed_tokens=frontier,
+            )
+            if allocation is None:
+                raise ValueError(
+                    f"Failed to allocate grouped KV blocks for request {request.id}"
+                )
+            self._sync_prefix_cache_allocation_state(request)
+            self._emit_schedule_decision_event(
+                event="grouped_cache_allocation",
+                decision_result=None,
+                request_id=request.id,
+                token_budget=int(self._current_iteration_token_budget),
+                num_tokens=int(num_new_tokens),
+                available_blocks=self._get_available_kv_blocks(),
+                extra_fields={
+                    "grouped_cache_schema_version": 1,
+                    "group_new_block_ids": {
+                        group_id: [int(block_id) for block_id in block_ids]
+                        for group_id, block_ids in allocation.group_new_block_ids
+                    },
+                    "zero_required_block_ids": [
+                        int(block_id)
+                        for block_id in allocation.zero_required_block_ids
+                    ],
+                },
+            )
+            return allocation
         if self._is_prefix_caching_enabled():
             assert self._kv_cache_manager is not None
             computed_blocks = list(new_computed_blocks or [])
@@ -600,7 +727,7 @@ class KvBlockAllocation:
             f"policy={self._scheduling_policy}, "
             f"freed_blocks={freed_blocks}"
         )
-        available_blocks_preempt = int(self._config.num_blocks - self._num_allocated_blocks)
+        available_blocks_preempt = self._get_available_kv_blocks()
         self._emit_schedule_decision_event(
             event="decision",
             decision_result="PREEMPTED",
@@ -680,7 +807,7 @@ class KvBlockAllocation:
                 return False
 
             # Flow validation: log memory pressure
-            available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+            available_blocks = self._get_available_kv_blocks()
             logger.info(
                 f"[MEMORY_PRESSURE] trigger=allocation_failed, "
                 f"requesting_req={request.id}, "
