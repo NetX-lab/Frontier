@@ -571,6 +571,10 @@ _DEEPSEEK_V4_COMMON_OPERATORS = _deepseek_v4_attention_scopes((
      TensorParallelMode.ATTENTION_TP, ResourceClass.MEMORY),
     ("dsv4_sparse_attention", AttentionOperatorRole.ATTENTION,
      TensorParallelMode.ATTENTION_TP, ResourceClass.COMP),
+    ("dsv4_query_padding", AttentionOperatorRole.POSITION_ENCODING,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.MEMORY),
+    ("dsv4_attention_output_zero", AttentionOperatorRole.ATTENTION,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.MEMORY),
     ("dsv4_output_inv_rope_quant", AttentionOperatorRole.POSITION_ENCODING,
      TensorParallelMode.ATTENTION_TP, ResourceClass.MEMORY),
     ("dsv4_grouped_output_projection", AttentionOperatorRole.PROJECTION,
@@ -631,6 +635,7 @@ DEEPSEEK_V4_ATTENTION_FAMILY = AttentionFamilySpec(
     memory_layout=AttentionMemoryLayout.COMPRESSED_KV,
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
+    structural_execution_enabled=True,
     execution_enabled=False,
     kv_cache_capacity_resolver=_deepseek_v4_kv_cache_capacity,
     disabled_reason=(

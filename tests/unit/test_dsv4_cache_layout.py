@@ -58,9 +58,9 @@ def _planner(replica_config):
     )
 
 
-def _predictor(replica_config, tmp_path):
+def _predictor(replica_config, tmp_path, *, dummy_mode=True):
     return RandomForrestExecutionTimePredictor(
-        RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=True),
+        RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=dummy_mode),
         replica_config, VllmV1SchedulerConfig(block_size=256),
         MetricsConfig(cache_dir=str(tmp_path / "cache"), output_dir=str(tmp_path / "outputs")),
     )
@@ -158,21 +158,15 @@ def test_predictor_and_planner_use_the_same_resolved_selection(replica_config, t
     monkeypatch.setattr(predictor_module, "get_attention_kv_cache_capacity", collect)
     monkeypatch.setattr(planner_module, "get_attention_kv_cache_capacity", collect)
     _planner(replica_config)._get_component_kv_cache_capacity(256)
-    with pytest.raises(NotImplementedError, match="compressed cache, compressor"):
-        _predictor(replica_config, tmp_path)
-    assert len(calls) == 1  # Real execution guard runs before capacity inputs.
-    monkeypatch.setattr(AttentionFamilySpec, "require_enabled_for_execution", lambda *args, **kwargs: None)
-
-    def stop_after_capacity(_self):
-        raise RuntimeError("unit boundary: capacity resolved; execution not tested")
-
-    monkeypatch.setattr(predictor_module.BaseExecutionTimePredictor, "_validate_dummy_mode_config", stop_after_capacity)
-    with pytest.raises(RuntimeError, match="unit boundary"):
-        _predictor(replica_config, tmp_path)
+    predictor = _predictor(replica_config, tmp_path)
+    assert predictor._enable_dummy_mode is True
     assert len(calls) == 2
     assert calls[0] == calls[1]
+    with pytest.raises(NotImplementedError, match="compressed cache, compressor"):
+        _predictor(replica_config, tmp_path, dummy_mode=False)
+    assert len(calls) == 2  # Measured execution is rejected before capacity resolution.
     assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is False
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     assert not (tmp_path / "cache").exists()
 
 

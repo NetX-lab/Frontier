@@ -358,7 +358,7 @@ def test_dsv4_sp_source_collectives_reach_cc_with_exact_uneven_payloads(
     assert ctx.batch.get_effective_total_tokens_rounded(ClusterType.MONOLITHIC) == tokens
 
 
-def test_dsv4_sp_collectives_remain_source_contracts_without_execution_admission() -> None:
+def test_dsv4_sp_structured_timings_preserve_measured_and_profiling_guards() -> None:
     from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
 
     for name, _, _ in _DSV4_SP_SCOPES:
@@ -368,9 +368,18 @@ def test_dsv4_sp_collectives_remain_source_contracts_without_execution_admission
         assert not operator.e2e_trace_target
         assert operator.execution_time_attr is None
         assert operator.comm_group == "attn_tp"
-        with pytest.raises(ValueError, match="Unsupported"):
-            CommunicationOperatorTimes({name: 1.0})
+        timings = CommunicationOperatorTimes({name: 1.0})
+        assert timings.get_required_time(name) == timings.total_time() == 1.0
+        assert timings.legacy_covered_time(CommunicationTime()) == 0.0
+        with pytest.raises(ValueError, match="Negative communication"):
+            CommunicationOperatorTimes({name: -1.0})
+    with pytest.raises(ValueError, match="Unsupported"):
+        CommunicationOperatorTimes({"unregistered_dsv4_collective": 1.0})
+    DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution(structural=True)
+    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
+        DEEPSEEK_V4_ATTENTION_FAMILY.require_enabled_for_execution()
     assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
 
 
 def test_dsv4_sp_uses_each_dp_source_batch_without_aggregating_rows() -> None:

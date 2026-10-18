@@ -26,7 +26,10 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
     for record in phases.lane_records:
         batch = record.batch
         layer = record.execution_time.layer_execution_times[0]
-        request_ids = [str(request.id) for request in batch.requests]
+        destination_request_ids = [str(request.id) for request in batch.requests]
+        source_rows = getattr(layer, "_dsv4_source_rows", None)
+        request_ids = (source_rows["source_request_ids"] if source_rows is not None
+                       else destination_request_ids)
         expand = trace_enabled and store._should_expand_layers(
             cluster_type, request_ids, batch_ids=tuple(batch.source_batch_ids)
         )
@@ -37,6 +40,9 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
             "attention_variant_id": layer.attention_variant_id,
             "request_ids": request_ids, "source_batch_ids": list(batch.source_batch_ids),
         }
+        if source_rows is not None:
+            common.update(source_rows)
+            common["synthetic_destination_request_ids"] = destination_request_ids
         if trace_enabled:
             total_tokens = sum(batch.num_tokens)
         ledger_phases = {} if ledger_enabled else None
@@ -57,6 +63,8 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 routed = phase == "routed_compute"
                 tokens = (batch.lane_workload.routed_token_count if routed
                           else batch.get_effective_total_tokens_for_compute(cluster_type))
+                if source_rows is not None and not routed:
+                    tokens = source_rows["physical_local_rows"]
                 context = OpTraceContext(
                     cluster_type, replica.model_config, replica,
                     total_tokens, tokens, tokens, tokens, routed,
@@ -68,8 +76,13 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 if operation_enabled:
                     store._push_metric(OperationMetrics(name), batch.id, duration, cluster_type)
                 if trace_enabled:
+                    workload_meta = {}
+                    if source_rows is not None:
+                        from frontier.execution_time_predictor.deepseek_v4 import operator_workload_metadata
+
+                        workload_meta = operator_workload_metadata(layer, name)
                     meta = {
-                        **compute_op_trace_meta(name, kind, context), **common,
+                        **compute_op_trace_meta(name, kind, context), **common, **workload_meta,
                         "phase": phase, "phase_start_time_s": start,
                         "wave_start_time_s": time,
                         "wave_end_time_s": plan.timing.wave_end_time_s,

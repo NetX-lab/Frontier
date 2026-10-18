@@ -122,6 +122,12 @@ def _iter_family_execution_times(
 
 def _iter_layer_attention_times(execution_time: ExecutionTime, *, skip_zero: bool = True):
     """Project model and family operators without duplicating owned projections."""
+    if execution_time.attention_family_id == "deepseek_v4_attention":
+        from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
+
+        yield from ((name, value) for _, name, value in timing_operator_times(execution_time, "attention")
+                    if value or not skip_zero)
+        return
     family = get_attention_family(execution_time.attention_family_id)
     family_attrs = {operator.execution_time_attr for operator in family.e2e_trace_ops()}
     model_ops = (
@@ -792,11 +798,19 @@ class MetricsStore:
             def collect_stage_op(op_type, op_name, duration_ms, layer_id, metadata):
                 key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
                 if key not in aggregate_ops:
-                    aggregate_ops[key] = [0.0, []]
+                    aggregate_ops[key] = [0.0, [], {}]
                 if duration_ms <= 0:
                     return
                 aggregate_ops[key][0] += duration_ms
                 aggregate_ops[key][1].append(layer_id)
+                if metadata["attention_family_id"] == "deepseek_v4_attention":
+                    physical_meta = aggregate_ops[key][2]
+                    physical_meta.update({name: value for name, value in metadata.items()
+                                          if name not in {"layer_idx", "global_layer_id", "source_tensor_calls"}})
+                    physical_meta.setdefault("source_tensor_calls", []).extend(
+                        {"global_layer_id": layer_id, **call}
+                        for call in metadata.get("source_tensor_calls", ())
+                    )
 
             self._emit_stage_layer_traces(
                 emit if should_expand_layers else collect_stage_op,
@@ -810,8 +824,9 @@ class MetricsStore:
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
             )
             if not should_expand_layers:
-                for (family_id, variant_id, op_type, op_name), (duration_ms, layer_ids) in aggregate_ops.items():
+                for (family_id, variant_id, op_type, op_name), (duration_ms, layer_ids, physical_meta) in aggregate_ops.items():
                     emit(op_type, op_name, duration_ms, -1, {
+                        **physical_meta,
                         "attention_family_id": family_id,
                         "attention_variant_id": variant_id,
                         "global_layer_ids": layer_ids,
@@ -1121,6 +1136,22 @@ class MetricsStore:
 
             def emit_layer(op_type: str, op_name: str, duration_ms: float) -> None:
                 emit(op_type, op_name, duration_ms, layer.global_layer_id, layer_meta)
+
+            if family_id == "deepseek_v4_attention":
+                from frontier.execution_time_predictor.deepseek_v4 import (
+                    operator_workload_metadata, timing_operator_times,
+                )
+
+                layer_meta.update(getattr(layer, "_dsv4_source_rows", {}))
+                phases = ("attention",) if skip_ffn_attn_norm_residual else (
+                    "attention", "pre_dispatch", "dispatch", "routed_compute", "combine", "post_combine",
+                )
+                for phase in phases:
+                    for kind, name, duration_ms in timing_operator_times(layer, phase):
+                        emit(kind, name, duration_ms, layer.global_layer_id, {
+                            **layer_meta, **operator_workload_metadata(layer, name),
+                        })
+                continue
 
             for op_name, duration_ms in _iter_memory_execution_times(
                 layer,
@@ -4203,6 +4234,12 @@ class MetricsStore:
         self,
         execution_time: ExecutionTime,
     ) -> dict[str, float]:
+        if (isinstance(execution_time, StageExecutionTime)
+                and set(execution_time.attention_family_ids) == {"deepseek_v4_attention"}
+                or getattr(execution_time, "attention_family_id", None) == "deepseek_v4_attention"):
+            from frontier.execution_time_predictor.deepseek_v4 import component_ledger
+
+            return {name: _round_ledger_ms(value) for name, value in component_ledger(execution_time).items()}
         if isinstance(execution_time, StageExecutionTime):
             owner_only_names = execution_time.stage_owned_fields
             component_ledger: dict[str, float] = {}

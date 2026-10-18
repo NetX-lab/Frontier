@@ -89,6 +89,18 @@ class SklearnMoEExecutionTimePredictor(
             self, batch, layer_id, tp_rank, **source_context,
         )
 
+    def _predict_dsv4_dummy_structural_execution(
+        self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
+    ) -> ExecutionTime:
+        """Query explicit synthetic V4 timing without enabling measured serving."""
+        if not self._enable_dummy_mode:
+            raise NotImplementedError("V4 structural execution requires synthetic dummy timing")
+        from frontier.execution_time_predictor.deepseek_v4 import predict_structural_execution
+
+        return predict_structural_execution(
+            self, batch, layer_id, tp_rank, **source_context,
+        )
+
 
     @staticmethod
 
@@ -1319,6 +1331,19 @@ class SklearnMoEExecutionTimePredictor(
             raise ValueError(
                 "Post-attention-only prediction requires a MoE layer; "
                 f"layer_id={layer_id} is dense"
+            )
+
+        if bind_layer_attention(self._model_config, layer_id).family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+
+            if include_ffn:
+                raise ValueError(
+                    "V4 serving FFN requires the source-qualified synthetic EP wave"
+                )
+            return self._predict_dsv4_dummy_structural_execution(
+                batch, layer_id, 0, include_attention=True, include_ffn=False,
+                include_stage_owned=include_stage_owned,
+                **serving_context(self, batch, layer_id),
             )
 
         # Every routed public call crosses the typed-lane admission boundary

@@ -765,17 +765,28 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
         supported_ops = quant_manager.get_supported_operations()
+        source_precisions = {
+            row["operation"]: row["precision"]
+            for row in quant_manager.get_operation_precision_metadata()
+        }
+        non_floating_ops = {
+            name for name, precision in source_precisions.items()
+            if precision not in PrecisionType.__members__
+        }
         op_precision = {}
         for op_name in (
             supported_ops["compute_operations"]
             + supported_ops["communication_operations"]
         ):
-            op_precision[op_name] = quant_manager.get_precision(
-                op_name, self._cluster_type
-            ).name
+            op_precision[op_name] = (
+                source_precisions[op_name] if op_name in non_floating_ops
+                else quant_manager.get_precision(op_name, self._cluster_type).name
+            )
 
         op_speedups = {}
         for op_name in supported_ops["compute_operations"]:
+            if op_name in non_floating_ops:
+                continue
             speedup = quant_manager.get_compute_speedup_factor(
                 op_name, self._cluster_type
             )
@@ -7523,9 +7534,16 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         """
         if not self._enable_dummy_mode:
             raise NotImplementedError("V4 component costs require synthetic dummy timing")
-        from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
+        from frontier.attention.deepseek_v4 import (
+            build_deepseek_v4_attention_workload,
+            build_deepseek_v4_dummy_attention_workload,
+        )
+        from frontier.entities.batch import DummyForwardBatch
 
-        workload = build_deepseek_v4_attention_workload(
+        builder = (build_deepseek_v4_dummy_attention_workload
+                   if isinstance(batch, DummyForwardBatch)
+                   else build_deepseek_v4_attention_workload)
+        workload = builder(
             self._model_config, self._replica_config, batch, layer_id,
             cluster_type=cluster_type, execution_mode=execution_mode,
             has_attention_metadata=has_attention_metadata,
@@ -7533,10 +7551,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             decode_context_parallel_size=decode_context_parallel_size,
             prefill_context_parallel_size=prefill_context_parallel_size,
         )
-        return AttentionOperatorTimes({
+        timing = AttentionOperatorTimes({
             name: self._dummy_execution_time * len(calls)
             for name, calls in workload["operators"].items()
         })
+        timing._dsv4_workloads = workload["operators"]
+        return timing
 
     def _predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
@@ -7564,6 +7584,19 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
         attention_family.require_enabled_for_execution(structural=self._enable_dummy_mode)
+        if attention_family.family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+
+            context = serving_context(self, batch, layer_id)
+            components = self._predict_dsv4_dummy_attention_time(
+                batch, layer_id, cluster_type, **{
+                    name: context[name] for name in (
+                        "execution_mode", "has_attention_metadata", "prefix_caching",
+                        "decode_context_parallel_size", "prefill_context_parallel_size",
+                    )
+                },
+            )
+            return AttentionTime(operator_times=components)
         prices_kv_cache_extract = (
             cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
         )

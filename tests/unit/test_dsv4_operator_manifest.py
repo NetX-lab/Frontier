@@ -20,6 +20,7 @@ BASE_ATTENTION = {
     "dsv4_q_projection", "dsv4_fused_q_kv_prepare", "dsv4_sparse_attention",
     "dsv4_output_inv_rope_quant", "dsv4_grouped_output_projection",
     "dsv4_output_projection",
+    "dsv4_query_padding", "dsv4_attention_output_zero",
 }
 COMPRESSOR = {
     "dsv4_compressor_projection", "dsv4_compressor_save_partial_states",
@@ -87,6 +88,7 @@ def test_43_layer_inventory_counts_mhc_and_endpoints_once(model):
     assert counts["dsv4_compressor_projection"] == 41
     assert counts["dsv4_index_query_projection"] == 21
     assert counts["dsv4_index_short_context_fill"] == 21
+    assert counts["dsv4_query_padding"] == counts["dsv4_attention_output_zero"] == 43
     assert not {"input_layernorm", "post_attention_layernorm", "add_attn_residual",
                 "add_ffn_residual", "emb"}.intersection(counts)
     routes = Counter(m.family_bindings[2].variant_id for m in manifests)

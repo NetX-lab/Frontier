@@ -294,15 +294,15 @@ def test_dimensions_follow_config_and_weights_remain_replicated(predictor):
     assert predictor._cc_backend.calls[1][1]["data_size_bytes"] == 98304
 
 
-def test_component_does_not_admit_normal_serving_or_training(predictor):
+def test_structural_admission_keeps_normal_execution_and_training_closed(predictor):
     batch = source_batch()
     predictor._enable_dummy_mode = False
     with pytest.raises(NotImplementedError, match="synthetic"):
         component(predictor, batch)
     predictor._enable_dummy_mode = True
-    with pytest.raises(NotImplementedError, match="not enabled"):
-        predictor.predict_attention_layer_time(batch, 0, ClusterType.MONOLITHIC)
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is False
+    result = predictor.predict_attention_layer_time(batch, 0, ClusterType.MONOLITHIC)
+    assert "dsv4_sparse_attention" in result.operator_times.op_times
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     for family in (DEEPSEEK_V4_ATTENTION_FAMILY, DEEPSEEK_V4_MHC_FAMILY):
         assert family.execution_enabled is False
         assert all(not op.predictor_target and not op.profiling_target

@@ -487,6 +487,22 @@ def _dsv4_sp_final_mhc_allgather_bytes(ctx: CommPayloadContext) -> int:
     return local_hidden_bytes * streams
 
 
+def _dsv4_ep_weights_bytes(ctx: CommPayloadContext) -> int:
+    local_hidden_bytes = _dsv4_sp_local_hidden_bytes(ctx)
+    local_rows = local_hidden_bytes // (ctx.model_config.embedding_dim * 2)
+    return local_rows * ctx.replica_config.router_topk * 4
+
+
+def _dsv4_ep_output_bytes(ctx: CommPayloadContext) -> int:
+    lane = _resolve_lane_workload(ctx)
+    if lane is None:
+        raise ValueError("V4 EP reduce-scatter requires a destination lane workload")
+    # Every rank reduces a complete [sum(source SP rows), hidden] tensor;
+    # destination expert assignments do not define its row dimension.
+    rows = sum(lane.global_token_counts) // lane.router_topk
+    return rows * ctx.model_config.embedding_dim * 2
+
+
 def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
     lane_workload = _resolve_lane_workload(ctx)
     if lane_workload is None:
@@ -732,6 +748,31 @@ COMM_FAMILY = OperatorFamilySpec(
                     _dsv4_sp_final_mhc_allgather_bytes,
                 ),
             )
+        ),
+        *(
+            CommOperatorSpec(
+                name=name, role=OperatorRole.COMMUNICATION, phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM, resource_class=ResourceClass.COMM,
+                predictor_target=False, profiling_target=False, e2e_trace_target=False,
+                precision_op=alias, tp_mode=TensorParallelMode.MOE_TP,
+                collective_alias=alias, comm_group="moe_ep", comm_domain="MOE_EP",
+                payload_builder=builder, num_devices_builder=_moe_ep_devices,
+            )
+            for name, alias, builder in (
+                ("dsv4_ep_activation_allgather", "allgather", _dsv4_sp_local_hidden_bytes),
+                ("dsv4_ep_weights_allgather", "allgather", _dsv4_ep_weights_bytes),
+                ("dsv4_ep_ids_allgather", "allgather", _dsv4_ep_weights_bytes),
+                ("dsv4_ep_output_reduce_scatter", "reduce_scatter", _dsv4_ep_output_bytes),
+            )
+        ),
+        *(
+            OperatorSpec(
+                name=name, role=OperatorRole.COMMUNICATION, phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM, resource_class=ResourceClass.COMM,
+                predictor_target=False, profiling_target=False, e2e_trace_target=False,
+                tp_mode=TensorParallelMode.ATTENTION_TP,
+            )
+            for name in ("dsv4_embedding_allreduce", "dsv4_logits_gather")
         ),
     ),
 )

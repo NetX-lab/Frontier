@@ -490,6 +490,11 @@ class QuantizationManager:
             activation_dtype="bfloat16", output_dtype="bfloat16",
         )
         add(
+            ("dsv4_query_padding", "dsv4_attention_output_zero"), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: explicit no-metadata DP idle forward",
+            activation_dtype="bfloat16", output_dtype="bfloat16",
+        )
+        add(
             ("dsv4_embedding",), PrecisionType.BF16,
             source_scope="vllm/models/deepseek_v4/nvidia/model.py: model endpoints",
             weight_dtype="bfloat16", output_dtype="bfloat16",

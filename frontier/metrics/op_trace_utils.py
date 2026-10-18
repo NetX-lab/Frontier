@@ -276,6 +276,11 @@ def compute_op_trace_meta(
     op_type: str,
     ctx: OpTraceContext,
 ) -> Dict[str, Any]:
+    if (hasattr(ctx.model_config, "get_model_architecture_profile")
+            and ctx.model_config.get_model_architecture_profile().profile_id == "deepseek_v4"):
+        from frontier.execution_time_predictor.deepseek_v4 import operator_trace_metadata
+
+        return operator_trace_metadata(op_name, op_type, ctx)
     precision_op = map_trace_op_to_precision_op(op_name)
     if op_name in ("attn_dsa_indexer", "attn_dsa_mla"):
         precision = PrecisionType.from_torch_dtype(ctx.model_config.torch_dtype)

@@ -281,18 +281,19 @@ def test_synthetic_consumer_prices_only_selected_component_calls(
     assert result.total_time() == total
 
 
-def test_component_requires_dummy_mode_and_normal_prediction_stays_closed(model, replica):
+def test_component_requires_dummy_mode_and_measured_prediction_stays_closed(model, replica):
     predictor = component_predictor(model, replica)
     batch = source_batch([1], [127], [True])
     predictor._enable_dummy_mode = False
     with pytest.raises(NotImplementedError, match="synthetic"):
         component_cost(predictor, batch, 3)
-    for dummy in (False, True):
-        predictor._enable_dummy_mode = dummy
-        with pytest.raises(NotImplementedError, match="not enabled"):
-            predictor.predict_attention_layer_time(batch, 3, ClusterType.MONOLITHIC)
+    with pytest.raises(NotImplementedError, match="not enabled"):
+        predictor.predict_attention_layer_time(batch, 3, ClusterType.MONOLITHIC)
+    predictor._enable_dummy_mode = True
+    result = predictor.predict_attention_layer_time(batch, 3, ClusterType.MONOLITHIC)
+    assert "dsv4_sparse_attention" in result.operator_times.op_times
     assert DEEPSEEK_V4_ATTENTION_FAMILY.execution_enabled is False
-    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is False
+    assert DEEPSEEK_V4_ATTENTION_FAMILY.structural_execution_enabled is True
     assert all(not op.predictor_target and not op.profiling_target
                and not op.e2e_trace_target for op in DEEPSEEK_V4_ATTENTION_FAMILY.operators)
 
