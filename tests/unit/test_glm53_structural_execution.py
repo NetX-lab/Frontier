@@ -1,12 +1,15 @@
 """Exercise GLM source contracts with synthetic costs through the real factory.
 
-These CPU tests use TP8/MoE-TP8/EP1. They establish ordered predictor accounting,
-not 64-GPU execution, parameter-memory accuracy, or native timing fidelity.
+Predictor tests use TP8/MoE-TP8/EP1 to establish ordered cost accounting.
+The metrics writer test uses TP8/DP8/MoE-TP1/EP64 and checks source-defined
+parameter storage estimates. Neither proves native allocation, 64-GPU execution
+or measured timing fidelity.
 """
 
 from __future__ import annotations
 
 from dataclasses import replace
+import json
 from pathlib import Path
 
 import pytest
@@ -286,3 +289,50 @@ def test_real_metrics_initializer_limits_dsa_catalogs_to_dsa_models(
         catalog = catalogs[ClusterType.MONOLITHIC]
         assert set(catalog) == expected_catalog
         assert all(series._save_plots for series in catalog.values())
+
+
+def test_real_metrics_writer_preserves_glm_parameter_and_storage_ownership(
+    predictor_inputs, tmp_path,
+):
+    replica = ReplicaConfig(
+        model_name="zai-org/GLM-5.3", device="h800", network_device="h800_dgx",
+        attn_tensor_parallel_size=8, attn_dp=8,
+        moe_tensor_parallel_size=1, moe_expert_parallel_size=64,
+    )
+    cluster = ClusterConfig(
+        replica_config=replica,
+        replica_scheduler_config=predictor_inputs["replica_scheduler_config"],
+        execution_time_predictor_config=predictor_inputs["predictor_config"],
+    )
+    output_dir = tmp_path / "metrics"
+    output_dir.mkdir()
+    config = SimulationConfig(
+        cluster_config=cluster,
+        metrics_config=MetricsConfig(
+            output_dir=str(output_dir), write_metrics=True, store_plots=False,
+        ),
+    )
+    store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster})
+    store._write_system_metrics()
+    report = json.loads(
+        (Path(config.metrics_config.output_dir) / "system_metrics.json").read_text()
+    )
+    memory = report["model_weight_memory"]["MONOLITHIC"]
+    assert "error" not in memory
+    assert memory["total_parameters"] == 15_026_562_048
+    assert memory["total_memory_bytes"] == 15_694_138_752
+    assert memory["memory_accounting"] == (
+        "source-defined weight storage estimate; native allocation unverified"
+    )
+    breakdown = memory["breakdown"]
+    assert breakdown["attention_parameters"] == 2_906_267_904
+    assert breakdown["attention_memory_bytes"] == 3_214_089_984
+    assert breakdown["ffn_parameters"] == 11_881_433_856
+    assert breakdown["ffn_memory_bytes"] == 12_002_328_192
+    assert breakdown["other_parameters"] == 238_860_288
+    assert breakdown["other_memory_bytes"] == 477_720_576
+    assert memory["total_memory_bytes"] == sum(
+        breakdown[key] for key in (
+            "attention_memory_bytes", "ffn_memory_bytes", "other_memory_bytes",
+        )
+    )

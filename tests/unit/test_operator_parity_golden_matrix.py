@@ -6,6 +6,7 @@ from pathlib import Path
 
 from tests.e2e.operator_parity.run_golden_matrix import (
     GOLDEN_MATRIX_EXPECTED_CASES,
+    GoldenParallelism,
     OP_TRACES_CSV,
     REQUEST_METRICS_CSV,
     WORKLOAD_PROFILES,
@@ -276,6 +277,17 @@ def test_step_moe_pinned_parallelism_is_memory_feasible_for_h800() -> None:
     assert parameter_memory < requested_memory
     assert parameter_memory == 41829122048
     assert requested_memory == 77309411328
+
+
+def test_memory_guard_uses_glm_source_storage_instead_of_two_byte_parameter_count() -> None:
+    memory = parameter_memory_per_device_bytes(
+        model_name="zai-org/GLM-5.3", device="h800",
+        parallelism=GoldenParallelism(
+            attn_tensor_parallel_size=8, attn_dp=8,
+            moe_tensor_parallel_size=1, moe_expert_parallel_size=64,
+        ),
+    )
+    assert memory == 15_694_138_752
 
 
 def test_normalize_op_traces_jsonl_to_csv_writes_stable_ragged_trace_csv(

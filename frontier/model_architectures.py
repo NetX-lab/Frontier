@@ -662,7 +662,7 @@ class ModelArchitectureProfile:
             counts_share_expert_param_memory=True,
             experimental=True,
             runtime_limitations=(
-                "DSA operator timing and multi-component cache are unsupported",
+                "DSA measured timing and native parameter-storage qualification are unsupported",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "glm_moe_dsa"

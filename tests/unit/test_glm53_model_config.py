@@ -212,6 +212,25 @@ def test_absent_index_metadata_preserves_existing_model_serialization(
     assert profiling["share_q_dim"] is None
 
 
+@pytest.mark.parametrize("model_name", [
+    "meta-llama/Llama-2-7b-hf", "microsoft/phi-2", "Qwen/Qwen3-4B",
+])
+def test_unknown_embedding_tying_preserves_legacy_profiling_default(model_name: str) -> None:
+    model = BaseModelConfig.create_from_name(model_name)
+    assert model.tie_word_embeddings is None
+    assert "tie_word_embeddings" not in dataclass_to_dict(model)
+    assert ProfilingModelConfig.from_model_name(model_name).tie_word_embeddings is True
+
+
+def test_explicit_untied_glm_metadata_survives_profiling_roundtrip(model: BaseModelConfig) -> None:
+    assert model.tie_word_embeddings is False
+    assert model.topk_method == "noaux_tc"
+    profiling = ProfilingModelConfig.from_model_name(MODEL_NAME)
+    assert profiling.tie_word_embeddings is False
+    assert profiling.topk_method == "noaux_tc"
+    assert profiling.to_dict()["topk_method"] == "noaux_tc"
+
+
 def test_explicit_online_fp8_does_not_waive_block_serialization_guard() -> None:
     with pytest.raises(ValueError, match="is_checkpoint_fp8_serialized=True"):
         QuantizationConfig.from_dict({
