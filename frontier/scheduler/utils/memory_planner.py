@@ -246,7 +246,8 @@ class MemoryPlanner:
           num_blocks = floor(available_kv_cache_memory / common_block_bytes)
 
         Additive component layouts sum owner pages in one common logical block.
-        Grouped layouts use their maximum packed group stride. Their returned
+        Grouped layouts use their maximum packed group stride after reserving
+        fixed bytes for the configured request-slot bound. Their returned
         count includes declared reserved slab IDs. Homogeneous layouts retain
         page_size * num_layers.
 
@@ -275,6 +276,12 @@ class MemoryPlanner:
             }
             if capacity.is_grouped:
                 cache_details["reserved_blocks"] = capacity.reserved_blocks
+        fixed_cache_bytes = 0
+        if capacity is not None and capacity.fixed_bytes_per_request_slot:
+            if self._max_num_seqs is None:
+                raise ValueError("MemoryPlanner requires max_num_seqs for fixed cache scratch")
+            fixed_cache_bytes = capacity.fixed_bytes_per_request_slot * self._max_num_seqs
+            cache_details["fixed_cache_reservation_bytes"] = fixed_cache_bytes
         gdn_state_reservation_bytes = self._get_gdn_state_reservation_bytes()
         if common_block_bytes == 0 and gdn_state_reservation_bytes == 0:
             return 0
@@ -305,6 +312,7 @@ class MemoryPlanner:
             - parameter_memory_per_device
             - overhead_bytes
             - gdn_state_reservation_bytes
+            - fixed_cache_bytes
         )
         if available_kv_cache_memory <= 0:
             self._raise_memory_oom(

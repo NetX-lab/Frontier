@@ -23,7 +23,10 @@ from frontier.entities.time_components import (
     OverheadTime,
     ResidualTime,
 )
-from frontier.operators.families import get_comm_operator
+from frontier.operators.families import STEP5_FFN_FAMILY, get_comm_operator
+
+
+_MOE_BRANCH_MERGE_OPERATORS = STEP5_FFN_FAMILY.e2e_trace_ops()
 
 
 # Each operator has one physical EP phase and one existing public scalar source.
@@ -381,6 +384,7 @@ class ExecutionTime(BaseEntity):
                 share_expert_up_proj_time=share_expert_up_proj_time,
                 share_expert_down_proj_time=share_expert_down_proj_time,
                 share_expert_act_time=share_expert_act_time,
+                step5_ffn_merge_time=read_op_time_attr("step5_ffn_merge_time", 0.0),
                 operator_times=moe_operator_times,
             )
         else:
@@ -404,6 +408,7 @@ class ExecutionTime(BaseEntity):
             attn_tensor_parallel_allreduce_time=attn_tensor_parallel_allreduce_time,
             moe_tensor_parallel_allreduce_time=moe_tensor_parallel_allreduce_time,
             tensor_parallel_allreduce_time=legacy_tensor_parallel_allreduce_time,
+            embedding_allreduce_time=read_op_time_attr("embedding_allreduce_time", 0.0),
             tensor_parallel_allgather_time=tensor_parallel_allgather_time,
             share_expert_tensor_parallel_allreduce_time=share_expert_tensor_parallel_allreduce_time,
             dp_input_allreduce_time=dp_input_allreduce_time,
@@ -936,8 +941,21 @@ class ExecutionTime(BaseEntity):
         if phase in ("dispatch", "combine"):
             name = f"expert_parallel_alltoall_{phase}"
             return (("COMM", name, self._get_required_moe_ep_phase_time(name)),)
-        return tuple((kind, name, float(getattr(self, attr)))
-                     for kind, name, attr in _MOE_PHASE_COMPONENTS[phase])
+        operators = tuple((kind, name, float(getattr(self, attr)))
+                          for kind, name, attr in _MOE_PHASE_COMPONENTS[phase])
+        merge_operators = tuple(
+            ("COMPUTE", operator.name, float(self._op_times[operator.name]))
+            for operator in _MOE_BRANCH_MERGE_OPERATORS
+            if operator.name in self._op_times
+        )
+        if merge_operators:
+            # The ordinary Step DP1 path sums branches in FP32 before one TP reduction.
+            reduction = ("COMM", "moe_tensor_parallel_allreduce", self.mlp_all_reduce_time)
+            if phase == "routed_compute":
+                operators = tuple(op for op in operators if op[1] != reduction[1])
+            elif phase == "post_combine":
+                operators = operators[:-1] + merge_operators + (reduction,) + operators[-1:]
+        return operators
 
     def _moe_phase_time(self, phase: str) -> float:
         return (
@@ -1454,6 +1472,26 @@ class ExecutionTime(BaseEntity):
         return self._overhead_time.schedule_time
 
     @property
+    def embedding_time(self) -> float:
+        """Input embedding work owned once by a stage."""
+        return self._time_attr_value("embedding_time", 0.0)
+
+    @property
+    def input_cast_time(self) -> float:
+        """Input hidden-state cast owned once by a stage."""
+        return self._time_attr_value("input_cast_time", 0.0)
+
+    @property
+    def final_residual_time(self) -> float:
+        """Standalone residual add after the last physical layer."""
+        return self._time_attr_value("final_residual_time", 0.0)
+
+    @property
+    def embedding_allreduce_time(self) -> float:
+        """Vocabulary-sharded embedding reduction owned once by a stage."""
+        return self._time_attr_value("embedding_allreduce_time", 0.0)
+
+    @property
     def sampler_e2e_time(self) -> float:
         """Sampler end-to-end time (not scaled by layers)."""
         return self._overhead_time.sampler_e2e_time
@@ -1653,6 +1691,11 @@ class ExecutionTime(BaseEntity):
         return 0.0
 
     @property
+    def step5_ffn_merge_time(self) -> float:
+        """Return the independent routed/shared branch sum, in milliseconds."""
+        return self._time_attr_value("step5_ffn_merge_time", 0.0)
+
+    @property
     def share_expert_time(self) -> float:
         """Total shared expert time (one physical layer)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
@@ -1685,6 +1728,10 @@ class ExecutionTime(BaseEntity):
         # Add pipeline parallel communication (not scaled by layers)
         pipeline_stage_execution_time = (
             total_computation_time
+            + self.embedding_time
+            + self.embedding_allreduce_time
+            + self.input_cast_time
+            + self.final_residual_time
             + self.pipeline_parallel_communication_time
             + self._decode_draft_proposer_time
             + self._mtp_terminal_overshoot_time

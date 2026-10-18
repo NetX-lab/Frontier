@@ -1,6 +1,7 @@
 import json
 import os
 from functools import reduce
+from dataclasses import replace
 from typing import Dict, List, TYPE_CHECKING, Any, Optional
 
 import pandas as pd
@@ -9,6 +10,7 @@ import plotly.express as px
 from frontier.config import SimulationConfig, ClusterConfig, get_quantization_manager, global_vars
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.entities import Batch, BatchStage, ExecutionTime, Request, StageExecutionTime
+from frontier.entities.time_components import canonical_operator_execution_time_attrs
 from frontier.logger import get_cluster_logger, init_logger
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
@@ -24,6 +26,7 @@ from frontier.operators.families import (
     MEMORY_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
+    STEP5_FFN_FAMILY,
 )
 from frontier.operators.spec import OperatorFamilySpec
 
@@ -144,6 +147,14 @@ def _iter_layer_attention_times(execution_time: ExecutionTime, *, skip_zero: boo
         value = float(getattr(execution_time, public_attr))
         if value or not skip_zero:
             yield name, value
+
+
+def _iter_ffn_merge_times(execution_time: ExecutionTime):
+    return tuple(
+        (operator.name, float(execution_time.op_times[operator.name]))
+        for operator in STEP5_FFN_FAMILY.e2e_trace_ops()
+        if operator.name in execution_time.op_times
+    )
 
 
 def _iter_memory_execution_times(
@@ -536,6 +547,28 @@ class MetricsStore:
             tokens_are_post_routing=batch_stage.tokens_are_post_routing,
         )
 
+    def _get_step5_layer_metadata(self, replica_config, global_layer_id):
+        """Share source-bound layer geometry between stage and EP wave traces."""
+        from frontier.attention.step5 import describe_step5_layer
+
+        metadata_by_context = getattr(self, "_step5_layer_metadata", None)
+        if metadata_by_context is None:
+            metadata_by_context = self._step5_layer_metadata = {}
+        model_config = replica_config.model_config
+        context_key = (
+            id(model_config), replica_config.attn_tensor_parallel_size,
+            replica_config.moe_tensor_parallel_size, replica_config.moe_expert_parallel_size,
+        )
+        layer_metadata = metadata_by_context.setdefault(context_key, {})
+        if global_layer_id not in layer_metadata:
+            layer_metadata[global_layer_id] = describe_step5_layer(
+                model_config, global_layer_id,
+                attention_tp_size=replica_config.attn_tensor_parallel_size,
+                moe_tp_size=replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=replica_config.moe_expert_parallel_size,
+            )
+        return layer_metadata[global_layer_id]
+
     def _emit_op_level_traces(
         self,
         time: float,
@@ -577,6 +610,7 @@ class MetricsStore:
         )
 
         trace_context = self._build_op_trace_context(batch_stage, cluster_type)
+        source_layer_scoped = getattr(trace_context.model_config, "model_type", None) == "step5"
         parallel_context = build_parallel_context(trace_context)
         cluster_config = self._cluster_configs.get(cluster_type)
         model_name = (
@@ -644,7 +678,21 @@ class MetricsStore:
             if resolved_meta is not None:
                 trace_meta = resolved_meta.copy()
             elif op_type in ("COMPUTE", "COMM"):
-                trace_meta = compute_op_trace_meta(op_name, op_type, trace_context)
+                global_layer_id = layer_id if layer_id >= 0 else None
+                if global_layer_id is None and extra_meta:
+                    global_layer_id = extra_meta.get("global_layer_id")
+                    if global_layer_id is None and extra_meta.get("global_layer_ids"):
+                        global_layer_id = extra_meta["global_layer_ids"][0]
+                op_context = trace_context
+                if source_layer_scoped:
+                    op_context = replace(
+                        trace_context, global_layer_id=global_layer_id,
+                        attention_operator_names=tuple((extra_meta or {}).get("attention_operator_names", ())),
+                        layer_metadata=self._get_step5_layer_metadata(
+                            trace_context.replica_config, global_layer_id,
+                        ),
+                    )
+                trace_meta = compute_op_trace_meta(op_name, op_type, op_context)
             else:
                 trace_meta = {}
             if extra_meta:
@@ -728,12 +776,29 @@ class MetricsStore:
                     resolved_meta=wait_meta,
                 )
 
+        def emit_stage_operator(name: str, duration_ms: float) -> None:
+            if not duration_ms:
+                return
+            from frontier.attention.step5 import describe_step5_stage_operator_tensors
+
+            metadata = describe_step5_stage_operator_tensors(
+                trace_context.model_config, name,
+                physical_rows=trace_context.effective_tokens_compute,
+                attention_tp_size=trace_context.attn_tp,
+            )
+            emit("COMM" if name == "embedding_tensor_parallel_allreduce" else "COMPUTE",
+                 name, duration_ms, resolved_meta=metadata)
+
         # =====================================================================
         # Emit Overhead (CPU) Operations - Before Model Execution
         # These are NOT per-layer, always emit as aggregated
         # =====================================================================
         emit("OVERHEAD", "schedule", execution_time.schedule_time)
         emit("OVERHEAD", "prepare_inputs_e2e", execution_time.prepare_inputs_e2e_time)
+        if source_layer_scoped:
+            emit_stage_operator("emb", execution_time.embedding_time)
+            emit_stage_operator("embedding_tensor_parallel_allreduce", execution_time.embedding_allreduce_time)
+            emit_stage_operator("input_cast", execution_time.input_cast_time)
         emit(
             "OVERHEAD",
             "pp_receiver_head_runtime",
@@ -788,9 +853,10 @@ class MetricsStore:
             aggregate_ops = {}
 
             def collect_stage_op(op_type, op_name, duration_ms, layer_id, metadata):
-                key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
+                key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name,
+                       layer_id if source_layer_scoped else None)
                 if key not in aggregate_ops:
-                    aggregate_ops[key] = [0.0, []]
+                    aggregate_ops[key] = [0.0, [], metadata if source_layer_scoped else {}]
                 if duration_ms <= 0:
                     return
                 aggregate_ops[key][0] += duration_ms
@@ -808,8 +874,9 @@ class MetricsStore:
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
             )
             if not should_expand_layers:
-                for (family_id, variant_id, op_type, op_name), (duration_ms, layer_ids) in aggregate_ops.items():
+                for (family_id, variant_id, op_type, op_name, _), (duration_ms, layer_ids, metadata) in aggregate_ops.items():
                     emit(op_type, op_name, duration_ms, -1, {
+                        **metadata,
                         "attention_family_id": family_id,
                         "attention_variant_id": variant_id,
                         "global_layer_ids": layer_ids,
@@ -843,6 +910,8 @@ class MetricsStore:
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
             )
 
+        if source_layer_scoped:
+            emit_stage_operator("final_residual", execution_time.final_residual_time)
         emit_related_collective_wait_traces()
 
         # =====================================================================
@@ -864,7 +933,16 @@ class MetricsStore:
         # Emit Overhead (CPU) Operations - After Model Execution
         # These are NOT per-layer, always emit as aggregated
         # =====================================================================
-        emit("OVERHEAD", "sampler_e2e", execution_time.sampler_e2e_time)
+        sampler_metadata = None
+        if source_layer_scoped and execution_time.final_residual_time:
+            from frontier.attention.step5 import describe_step5_sampler_scope
+
+            sampler_metadata = describe_step5_sampler_scope(
+                trace_context.model_config, actual_requests=len(batch_stage.requests),
+                attention_tp_size=trace_context.attn_tp,
+            )
+        emit("OVERHEAD", "sampler_e2e", execution_time.sampler_e2e_time,
+             resolved_meta=sampler_metadata)
         emit(
             "OVERHEAD",
             "process_model_outputs",
@@ -1117,6 +1195,11 @@ class MetricsStore:
                 "attention_variant_id": layer.attention_variant_id,
             }
 
+            if get_attention_family(family_id).structural_execution_enabled and layer.attention_operator_times:
+                layer_meta["attention_operator_names"] = [
+                    name for name, value in layer.attention_operator_times.op_times.items() if value > 0
+                ]
+
             def emit_layer(op_type: str, op_name: str, duration_ms: float) -> None:
                 emit(op_type, op_name, duration_ms, layer.global_layer_id, layer_meta)
 
@@ -1194,6 +1277,8 @@ class MetricsStore:
                         "expert_parallel_allreduce",
                         layer.expert_parallel_communication_time,
                     )
+                for op_name, duration_ms in _iter_ffn_merge_times(layer):
+                    emit_layer("COMPUTE", op_name, duration_ms)
                 if moe_tp_enabled:
                     emit_layer(
                         "COMM",
@@ -1577,6 +1662,9 @@ class MetricsStore:
             if family.structural_execution_enabled and family.family_id not in family_ids
             for operator in family.e2e_trace_ops()
         }
+        if "step5_attention" not in family_ids:
+            absent_structural_ops.update(operator.name for operator in STEP5_FFN_FAMILY.e2e_trace_ops())
+            absent_structural_ops.update(("emb", "input_cast", "final_residual", "embedding_tensor_parallel_allreduce"))
         operation_metrics = tuple(
             metric for metric in OperationMetrics
             if metric.value not in absent_structural_ops
@@ -3790,6 +3878,12 @@ class MetricsStore:
     ) -> None:
         """Push operation metrics from each real layer exactly once."""
 
+        for name in ("emb", "input_cast", "final_residual", "embedding_tensor_parallel_allreduce"):
+            if name in stage_execution_time.stage_execution_time.op_times:
+                self._push_metric(
+                    OperationMetrics(name), batch_id,
+                    stage_execution_time.stage_execution_time.op_times[name], cluster_type,
+                )
         for layer in stage_execution_time.layer_execution_times:
             def push(metric: OperationMetrics, value: float) -> None:
                 self._push_metric(metric, batch_id, value, cluster_type)
@@ -3844,6 +3938,8 @@ class MetricsStore:
                     OperationMetrics.SHARE_EXPERT_TENSOR_PARALLEL_ALLREDUCE,
                     layer.share_expert_tensor_parallel_allreduce_time,
                 )
+                for op_name, metric_value in _iter_ffn_merge_times(layer):
+                    push(OperationMetrics(op_name), metric_value)
             else:
                 push(OperationMetrics.MLP_UP_PROJ, layer.mlp_layer_up_proj_execution_time)
                 push(OperationMetrics.MLP_ACTIVATION, layer.mlp_layer_act_execution_time)
@@ -4196,7 +4292,10 @@ class MetricsStore:
         execution_time: ExecutionTime,
     ) -> dict[str, float]:
         if isinstance(execution_time, StageExecutionTime):
-            owner_only_names = execution_time.stage_owned_fields
+            owner_only_names = execution_time.stage_owned_fields | {
+                name for name, attribute in canonical_operator_execution_time_attrs().items()
+                if attribute in execution_time.stage_owned_fields
+            }
             component_ledger: dict[str, float] = {}
             for layer in execution_time.layer_execution_times:
                 layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
@@ -4345,6 +4444,12 @@ class MetricsStore:
                 execution_time.mtp_terminal_overshoot_time
             ),
         }
+        for op_name, duration_ms in _iter_ffn_merge_times(execution_time):
+            component_ledger[op_name] = _round_ledger_ms(duration_ms)
+        attributes = canonical_operator_execution_time_attrs()
+        for name, value in execution_time.op_times.items():
+            if attributes[name] in StageExecutionTime.stage_owned_fields:
+                component_ledger[name] = _round_ledger_ms(value)
         if execution_time.has_kernel_gap:
             component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
         if global_vars.get_kv_connector() != "none":

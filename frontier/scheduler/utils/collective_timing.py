@@ -87,7 +87,8 @@ def prepare_prefill_final_timing(
             f"elapsed_stage_wall_time={elapsed_stage_wall_time}"
         )
 
-    explicit_model_time = math.fsum(component_times_ms) * 1e-3
+    final_residual_time = execution_time.final_residual_time * 1e-3
+    explicit_model_time = math.fsum(component_times_ms) * 1e-3 + final_residual_time
     pipeline_time = execution_time.pipeline_time * 1e-3
     cpu_overhead = execution_time.total_time - execution_time.model_time
     if cpu_overhead < 0:
@@ -100,9 +101,9 @@ def prepare_prefill_final_timing(
     # The forward's preparation ran before its first layer.
     cpu_overhead = max(cpu_overhead - execution_time.forward_preparation_time * 1e-3, 0.0)
     forward_launch_stall_time = execution_time.forward_launch_stall_time(
-        sync_time - launch_start_time + pipeline_time
+        sync_time - launch_start_time + final_residual_time + pipeline_time
     )
-    total_time = pipeline_time + cpu_overhead + forward_launch_stall_time
+    total_time = final_residual_time + pipeline_time + cpu_overhead + forward_launch_stall_time
     return PrefillFinalTiming(
         pipeline_time=pipeline_time,
         cpu_overhead=cpu_overhead,
@@ -125,6 +126,7 @@ def prepare_decode_final_timing(
     """
 
     pipeline_time = execution_time.pipeline_time * 1e-3
+    final_residual_time = execution_time.final_residual_time * 1e-3
     # The forward's preparation ran before its first layer.
     cpu_overhead = max(
         execution_time.total_time
@@ -133,7 +135,7 @@ def prepare_decode_final_timing(
         0.0,
     )
     forward_launch_stall_time = execution_time.forward_launch_stall_time(
-        launched_device_span + pipeline_time
+        launched_device_span + final_residual_time + pipeline_time
     )
     draft_proposer_time = execution_time.decode_draft_proposer_time * 1e-3
     mtp_terminal_overshoot_time = (
@@ -146,6 +148,6 @@ def prepare_decode_final_timing(
         draft_proposer_time=draft_proposer_time,
         mtp_terminal_overshoot_time=mtp_terminal_overshoot_time,
         total_time=(
-            pipeline_time + cpu_overhead + forward_launch_stall_time + draft_proposer_time
+            final_residual_time + pipeline_time + cpu_overhead + forward_launch_stall_time + draft_proposer_time
         ),
     )

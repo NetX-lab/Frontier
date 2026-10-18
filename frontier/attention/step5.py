@@ -45,6 +45,76 @@ STEP5_SPARSE_OPTIONS = {
 }
 
 
+def describe_step5_stage_operator_tensors(
+    config: Any, operator_name: str, *, physical_rows: int, attention_tp_size: int,
+) -> dict[str, Any]:
+    """Describe once-only model work from the ordinary text forward source."""
+    rows = _positive_int(physical_rows, "physical_rows")
+    tp = _positive_int(attention_tp_size, "attention_tp_size")
+    hidden = _positive_int(config.embedding_dim, "embedding_dim")
+    precision = PrecisionType.from_torch_dtype(config.torch_dtype)
+    residual = PrecisionType.FP32 if config.fp32_residual_connection else precision
+    if operator_name == "emb":
+        vocabulary = _positive_int(config.vocab_size, "vocab_size")
+        if vocabulary % tp:
+            raise ValueError("Step stage embedding requires even vocabulary shards")
+        tensors = {"input_ids": [rows], "weight": [vocabulary // tp, hidden],
+                   "output": [rows, hidden]}
+        dtypes = {"input_ids": "INT32", "weight": precision.name, "output": precision.name}
+    elif operator_name == "input_cast":
+        tensors = {"input": [rows, hidden], "output": [rows, hidden]}
+        dtypes = {"input": precision.name, "output": residual.name}
+    elif operator_name == "final_residual":
+        tensors = {"input": [rows, hidden], "residual": [rows, hidden], "output": [rows, hidden]}
+        dtypes = {"input": precision.name, "residual": residual.name, "output": residual.name}
+    elif operator_name == "embedding_tensor_parallel_allreduce":
+        elements = rows * hidden
+        return {
+            "precision_op": "emb", "dtype": precision.name,
+            "dtype_bytes": precision.bytes_per_element,
+            "tensor_shape": {"data": [rows, hidden]}, "tensor_dtype": {"data": precision.name},
+            "element_count": elements, "base_size_bytes": elements * precision.bytes_per_element,
+            "data_size_bytes": int(elements * precision.bytes_per_element),
+            "evidence_kind": "source_structural_metadata", "scope": "stage",
+        }
+    else:
+        raise ValueError(f"Unknown Step stage operator {operator_name}")
+    element_bytes = {precision.name: precision.bytes_per_element,
+                     residual.name: residual.bytes_per_element, "INT32": 4}
+    return {
+        "tensor_shape": tensors, "tensor_dtype": dtypes,
+        "tensor_size_bytes": {
+            name: int(math.prod(shape) * element_bytes[dtypes[name]])
+            for name, shape in tensors.items()
+        },
+        "precision_op": operator_name, "dtype": precision.name,
+        "dtype_bytes": precision.bytes_per_element,
+        "evidence_kind": "source_structural_metadata", "scope": "stage",
+    }
+
+
+def describe_step5_sampler_scope(config: Any, *, actual_requests: int, attention_tp_size: int):
+    """Preserve logits and sampling inside the existing inclusive time owner."""
+    requests = _positive_int(actual_requests, "actual_requests")
+    tp = _positive_int(attention_tp_size, "attention_tp_size")
+    precision = PrecisionType.from_torch_dtype(config.torch_dtype)
+    covered = ["select_hidden_states"]
+    if config.fp32_residual_connection:
+        covered.append("logits_input_cast")
+    covered += ["final_norm", "lm_head_linear"]
+    if tp > 1:
+        covered.append("logits_gather")
+    covered.append("sampling")
+    return {
+        "scope": "stage", "evidence_kind": "source_structural_metadata",
+        "time_ownership": "inclusive_sampler_e2e", "covered_scopes": covered,
+        "logits_rows": requests, "model_precision": precision.name,
+        "norm_weight_precision": PrecisionType.from_torch_dtype(config.norm_dtype).name,
+        "tensor_shape": {"selected_hidden": [requests, config.embedding_dim],
+                         "local_logits": [requests, config.vocab_size // tp]},
+    }
+
+
 def _positive_int(value: Any, name: str) -> int:
     if type(value) is not int or value <= 0:
         raise ValueError(f"Step {name} must be a positive int")
@@ -353,6 +423,7 @@ class Step5LayerMetadata:
     router_renormalize: bool
     router_scaling_factor: float | None
     fused_qkv_gate: bool
+    input_norm_precision: PrecisionType
 
     def attention_scopes(
         self, workload: Step5AttentionWorkload,
@@ -601,6 +672,13 @@ def describe_step5_layer(
         router_renormalize=routed and config.norm_expert_weight,
         router_scaling_factor=float(config.moe_router_scaling_factor) if routed else None,
         fused_qkv_gate=fused_qkv_gate,
+        input_norm_precision=(
+            PrecisionType.FP32
+            if config.fp32_residual_connection and (
+                global_layer_id == 0 or global_layer_id - 1 in config.get_moe_layer_ids()
+            )
+            else model_precision
+        ),
     )
 
 
@@ -702,3 +780,149 @@ class Step5AttentionWorkload:
             block_size_tokens, block_table_columns, max_model_len_tokens,
             config.sparse_config["region_block_size"], config.sparse_config["topk"], graph_mode,
         )
+
+
+def describe_step5_operator_tensors(
+    metadata: Step5LayerMetadata, operator_name: str, *, tokens: int,
+    routed_tokens: int, router_topk: int, attention_operator_names: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    """Describe ordinary physical scope boundaries, not measured native tensors.
+
+    Packed projections retain their per-rank weights. Fused expert internals
+    are shapes inside one owner rather than extra separately charged work.
+    """
+    geometry = metadata.geometry
+    hidden = metadata.projections[0].rank_weight_shape[-1]
+    model_precision = metadata.model_precision
+    shapes: dict[str, list[int]] = {}
+    precisions: dict[str, PrecisionType | str] = {}
+    internal_shapes: dict[str, list[int]] = {}
+    internal_precisions: dict[str, PrecisionType | str] = {}
+    projections = tuple(p for p in metadata.projections if p.operator_name == operator_name)
+
+    def tensor(name: str, shape: list[int], precision=model_precision):
+        shapes[name] = shape
+        precisions[name] = precision
+
+    def internal(name: str, shape: list[int], precision=model_precision):
+        internal_shapes[name] = shape
+        internal_precisions[name] = precision
+
+    def qkv():
+        tensor("q", [tokens, geometry.local_q_heads, geometry.head_dim])
+        tensor("k", [tokens, geometry.local_kv_heads, geometry.head_dim])
+        tensor("v", [tokens, geometry.local_kv_heads, geometry.head_dim])
+        tensor("positions", [tokens], "INT64")
+
+    def indexer():
+        tensor("index_q", [tokens, geometry.local_index_q_heads, geometry.proxy_dim])
+        tensor("index_k", [tokens, geometry.local_index_k_heads, geometry.proxy_dim])
+        tensor("index_z", [tokens, geometry.local_index_k_heads, geometry.proxy_dim])
+        tensor("weights", [tokens, geometry.local_index_q_heads])
+        internal("quantized_index_q", [tokens, geometry.local_index_q_heads, geometry.proxy_dim],
+                 metadata.indexer_query_precision)
+        internal("scaled_weights", [tokens, geometry.local_index_q_heads],
+                 metadata.indexer_weight_precision)
+
+    if projections:
+        if operator_name == "moe_grouped_gemm":
+            tensor("input", [tokens, hidden])
+            tensor("output", [tokens, hidden])
+            local_width = projections[0].rank_weight_shape[1] // 2
+            internal("gate_up", [tokens, router_topk, 2 * local_width])
+            internal("activation", [routed_tokens, local_width])
+            internal("down", [tokens, router_topk, hidden])
+        else:
+            projection = projections[0]
+            tensor("input", [tokens, projection.rank_weight_shape[1]], projection.input_precision)
+            tensor("output", [tokens, projection.rank_weight_shape[0]], projection.output_precision)
+    elif operator_name in ("input_layernorm", "post_attention_layernorm"):
+        tensor("input", [tokens, hidden], metadata.input_norm_precision if operator_name == "input_layernorm"
+               else model_precision)
+        if metadata.uses_fused_add_norm and (operator_name == "post_attention_layernorm"
+                                            or metadata.attention_spec.global_layer_id > 0):
+            tensor("residual", [tokens, hidden], metadata.residual_precision)
+            tensor("residual_output", [tokens, hidden], metadata.residual_precision)
+        tensor("output", [tokens, hidden])
+        internal("norm_weight", [hidden], metadata.norm_precision)
+    elif operator_name == "step5_attention_prepare":
+        qkv()
+        if metadata.attention_spec.variant_id == "sparse_gqa" and "step5_indexer_prepare" not in attention_operator_names:
+            indexer()
+    elif operator_name == "step5_indexer_prepare":
+        if metadata.attention_spec.variant_id != "sparse_gqa":
+            raise ValueError("Step indexer scope requires a sparse layer")
+        indexer()
+    elif operator_name in ("step5_sparse_attention", "step5_swa_attention"):
+        qkv()
+        tensor("output", [tokens, geometry.local_q_heads, geometry.head_dim])
+        if metadata.attention_spec.variant_id == "sparse_gqa":
+            internal("index_query", [tokens, geometry.local_index_q_heads, geometry.proxy_dim],
+                     metadata.indexer_query_precision)
+            internal("selector_weights", [tokens, geometry.local_index_q_heads],
+                     metadata.indexer_weight_precision)
+    elif operator_name == "step5_headwise_gate":
+        tensor("input", [tokens, geometry.local_q_heads, geometry.head_dim])
+        tensor("gate", [tokens, geometry.local_q_heads])
+        tensor("output", [tokens, geometry.local_q_heads, geometry.head_dim])
+    elif operator_name == "step5_ffn_merge":
+        merge = metadata.ffn_merge
+        if merge is None:
+            raise ValueError("Step branch merge requires a routed/shared FFN layer")
+        tensor("routed", [tokens, merge.hidden_dim], merge.input_precisions[0])
+        tensor("shared", [tokens, merge.hidden_dim], merge.input_precisions[1])
+        tensor("output", [tokens, merge.hidden_dim], merge.output_precision)
+    elif operator_name in ("mlp_act", "share_expert_act"):
+        up_name = "mlp_up_proj" if operator_name == "mlp_act" else "share_expert_up_proj"
+        up = next(p for p in metadata.projections if p.operator_name == up_name)
+        tensor("input", [tokens, up.rank_weight_shape[0]])
+        tensor("output", [tokens, up.rank_weight_shape[0] // 2])
+    elif operator_name == "moe_gating_routing_topk":
+        router = next(p for p in metadata.projections if p.operator_name == "moe_gating_linear")
+        tensor("input", [tokens, router.rank_weight_shape[0]], metadata.router_precision)
+        tensor("expert_ids", [tokens, router_topk], "INT32")
+        tensor("expert_weights", [tokens, router_topk], metadata.router_precision)
+    elif operator_name == "moe_shuffling":
+        tensor("expert_ids", [tokens, router_topk], "INT32")
+    else:
+        raise ValueError(f"Unsupported Step physical operator for trace metadata: {operator_name}")
+
+    def precision_name(value):
+        return value.name if isinstance(value, PrecisionType) else value
+
+    def tensor_bytes(shape, precision):
+        element_bytes = precision.bytes_per_element if isinstance(precision, PrecisionType) else {
+            "INT64": 8, "INT32": 4,
+        }[precision]
+        return int(math.prod(shape) * element_bytes)
+
+    result = {
+        "precision_op": operator_name, "dtype": model_precision.name,
+        "dtype_bytes": model_precision.bytes_per_element,
+        "tensor_shape": shapes,
+        "tensor_dtype": {name: precision_name(precisions[name]) for name in shapes},
+        "tensor_size_bytes": {name: tensor_bytes(shape, precisions[name]) for name, shape in shapes.items()},
+        "source_geometry": {
+            "global_layer_id": metadata.attention_spec.global_layer_id,
+            "head_dim": geometry.head_dim, "local_q_heads": geometry.local_q_heads,
+            "local_kv_heads": geometry.local_kv_heads, "kv_replication": geometry.kv_replication,
+        },
+        "evidence_kind": "source_structural_metadata",
+    }
+    if operator_name == "moe_grouped_gemm":
+        result["covered_scopes"] = ["gate_up_gemm", "swiglu", "down_gemm", "topk_reduce"]
+    elif operator_name == "moe_shuffling":
+        result["covered_scopes"] = ["expert_assignment_alignment"]
+        result["alignment_outputs"] = ["sorted_token_ids", "expert_ids", "num_tokens_post_padded"]
+        result["alignment_output_shapes"] = "unresolved native dispatch and alignment padding"
+        result["sorted_token_ids_nullable"] = True
+    if projections:
+        result["projection_modules"] = [
+            {"module_prefix": p.module_prefix, "weight_shape": list(p.rank_weight_shape),
+             "weight_dtype": p.weight_precision.name, "input_dtype": p.input_precision.name,
+             "output_dtype": p.output_precision.name} for p in projections
+        ]
+    if internal_shapes:
+        result["internal_tensor_shape"] = internal_shapes
+        result["internal_tensor_dtype"] = {name: precision_name(internal_precisions[name]) for name in internal_shapes}
+    return result

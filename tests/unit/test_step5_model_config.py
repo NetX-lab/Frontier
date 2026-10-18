@@ -547,19 +547,25 @@ def test_operator_manifest_inventories_both_step_variants_and_mixed_ffn(
 
 
 @pytest.mark.parametrize("dummy_mode", [False, True])
-def test_step_predictor_is_guarded_before_measured_or_dummy_initialization(
+def test_step_predictor_rejects_measured_mode_and_unadmitted_structural_layout(
     model: BaseModelConfig, monkeypatch: pytest.MonkeyPatch, dummy_mode: bool,
 ) -> None:
+    from frontier.config import MetricsConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig, VllmV1SchedulerConfig
+    from frontier.types import ClusterType
+
     monkeypatch.setattr(global_vars, "SYS_ARCH", "co-location")
-    with pytest.raises(NotImplementedError, match="Step attention"):
+    replica = ReplicaConfig(
+        model_name=MODEL_NAME, device="h800", network_device="h800_dgx",
+        attn_tensor_parallel_size=8, attn_dp=4, moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=32, attention_backend="STEP5_DSA", kv_cache_dtype="auto",
+    )
+    replica.model_config = model
+    expected_error = "MONOLITHIC/vllm_v1/PP1" if dummy_mode else "Step attention"
+    with pytest.raises(NotImplementedError, match=expected_error):
         RandomForrestExecutionTimePredictor(
-            predictor_config=SimpleNamespace(enable_dummy_mode=dummy_mode),
-            replica_config=SimpleNamespace(
-                model_config=model, router_topk=8,
-                moe_tensor_parallel_size=1, moe_expert_parallel_size=32,
-            ),
-            replica_scheduler_config=SimpleNamespace(),
-            metrics_config=SimpleNamespace(),
+            predictor_config=RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=dummy_mode),
+            replica_config=replica, replica_scheduler_config=VllmV1SchedulerConfig(block_size=64),
+            metrics_config=MetricsConfig(), cluster_type=ClusterType.MONOLITHIC,
         )
 
 
@@ -568,10 +574,10 @@ def test_step_generic_profiler_and_attention_execution_remain_guarded(
 ) -> None:
     family = get_attention_family("step5_attention")
     assert family.execution_enabled is False
-    assert family.structural_execution_enabled is False
-    for structural in (False, True):
-        with pytest.raises(NotImplementedError, match="Step attention"):
-            family.require_enabled_for_execution(structural=structural)
+    assert family.structural_execution_enabled is True
+    with pytest.raises(NotImplementedError, match="Step attention"):
+        family.require_enabled_for_execution()
+    family.require_enabled_for_execution(structural=True)
     for config in (model, profiling):
         with pytest.raises(ValueError, match="explicit global layer id"):
             bind_attention_family(config)

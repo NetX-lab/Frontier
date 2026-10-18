@@ -13,6 +13,9 @@ from frontier.entities.batch import Request
 from frontier.errors import FrontierMemoryOOMError
 from frontier.kv_cache.base_kv_cache_manager import KVCacheAllocationResult
 from frontier.logger import get_cluster_logger
+from frontier.scheduler.replica_scheduler.vllm_v1_decision_log import (
+    schedule_decision_logging_enabled,
+)
 from frontier.scheduler.replica_scheduler.vllm_v1_iteration_policy import (
     priority_policy_key,
 )
@@ -29,6 +32,50 @@ class KvBlockAllocation:
         if self._is_grouped_kv_allocation():
             return int(self._kv_cache_manager.block_pool.get_num_free_blocks())
         return int(self._config.num_blocks - self._num_allocated_blocks)
+
+    def _get_grouped_cache_state(self, request: Request) -> dict:
+        """Describe existing pool ownership without changing request state."""
+        cache = self._kv_cache_manager
+        capacity = cache.cache_capacity
+        pool = cache.block_pool
+        groups = cache.get_group_block_ids(request.id)
+        block_ids = {block_id for table in groups.values() for block_id in table if block_id is not None}
+        fixed_bytes = capacity.fixed_bytes_per_request_slot
+        fixed_reservation = fixed_bytes * self._admitted_request_capacity if fixed_bytes else 0
+        return {
+            "group_block_ids": groups,
+            "block_ref_counts": {str(block_id): pool.blocks[block_id].ref_cnt for block_id in sorted(block_ids)},
+            "has_grouped_allocation": cache.has_grouped_allocation(request.id),
+            "request_allocated_blocks": int(self._allocation_map.get(request.id, 0)),
+            "scheduler_allocated_blocks": int(self._num_allocated_blocks),
+            "pool_num_blocks": int(cache.num_gpu_blocks),
+            "pool_used_blocks": int(cache.num_used_blocks),
+            "pool_free_blocks": int(pool.get_num_free_blocks()),
+            "pool_reserved_blocks": int(pool.reserved_blocks),
+            "physical_block_size_bytes": int(capacity.physical_block_size_bytes),
+            "fixed_cache_reservation_bytes": int(fixed_reservation),
+            "settled_num_computed_tokens": self._get_settled_kv_progress(request),
+            "scheduled_num_computed_tokens": self._get_explicit_scheduler_num_computed_tokens(request),
+            "reclamation_num_computed_tokens": cache._settled_tokens.get(request.id),
+            "num_processed_tokens": int(request.num_processed_tokens),
+            "num_emitted_decode_tokens": int(request.num_emitted_decode_tokens),
+            "completed": bool(request.completed),
+        }
+
+    def _emit_grouped_cache_batch_event(self, event: str, request: Request, batch) -> None:
+        """Join completion and release diagnostics to the actual batch end."""
+        if not schedule_decision_logging_enabled() or not self._is_grouped_kv_allocation():
+            return
+        self._emit_schedule_decision_event(
+            event=event, decision_result=None, request_id=request.id,
+            token_budget=int(self._current_iteration_token_budget), num_tokens=0,
+            event_time=batch.completed_at,
+            extra_fields={
+                "grouped_cache_schema_version": 1, "batch_id": batch.id,
+                "evidence_kind": "source_structural_state",
+                "grouped_cache_state": self._get_grouped_cache_state(request),
+            },
+        )
 
     def _get_settled_kv_progress(self, request: Request) -> int:
         """Return completed KV progress without optimistic scheduler state."""
@@ -477,6 +524,9 @@ class KvBlockAllocation:
                         int(block_id)
                         for block_id in allocation.zero_required_block_ids
                     ],
+                    **({"evidence_kind": "source_structural_state",
+                        "grouped_cache_state": self._get_grouped_cache_state(request)}
+                       if schedule_decision_logging_enabled() else {}),
                 },
             )
             return allocation

@@ -80,6 +80,17 @@ class BaseReplicaScheduler(ABC):
         )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")
+        if self._kv_cache_capacity is not None and self._kv_cache_capacity.fixed_bytes_per_request_slot:
+            if (
+                num_blocks_mode != "memory_planner"
+                or self._config.num_blocks
+                or getattr(self._config, "enable_runtime_non_kv_cache_overhead_profiling", False)
+                or getattr(self._config, "non_kv_cache_overhead_bytes", 0)
+            ):
+                raise NotImplementedError(
+                    "Fixed cache scratch requires automatic memory_planner blocks "
+                    "and source accounting without profiled overhead"
+                )
         if num_blocks_mode not in {
             "memory_planner",
             "memory_planner_profiled",

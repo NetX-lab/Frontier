@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from predictor_cache_fixtures import predictor_fixture_config
-from frontier.attention.families import DSA_ATTENTION_FAMILY
+from frontier.attention.families import DSA_ATTENTION_FAMILY, STEP5_ATTENTION_FAMILY
 from frontier.attention.trace_mapping import get_attention_trace_op_times
 from frontier.config import (
     BaseModelConfig,
@@ -38,6 +38,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 )
 from frontier.metrics.constants import OperationMetrics
 from frontier.metrics.metrics_store import MetricsStore
+from frontier.operators.families import STEP5_FFN_FAMILY
 from frontier.types import ClusterType
 
 
@@ -281,7 +282,17 @@ def test_real_metrics_initializer_limits_dsa_catalogs_to_dsa_models(
     )
     store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster})
     dsa_metrics = {OperationMetrics.ATTN_DSA_INDEXER, OperationMetrics.ATTN_DSA_MLA}
-    expected_catalog = set(OperationMetrics)
+    step5_metrics = {
+        OperationMetrics(operator.name)
+        for family in (STEP5_ATTENTION_FAMILY, STEP5_FFN_FAMILY)
+        for operator in family.e2e_trace_ops()
+    } | {
+        OperationMetrics.EMBEDDING,
+        OperationMetrics.EMBEDDING_TENSOR_PARALLEL_ALLREDUCE,
+        OperationMetrics.INPUT_CAST,
+        OperationMetrics.FINAL_RESIDUAL,
+    }
+    expected_catalog = set(OperationMetrics) - step5_metrics
     if not includes_dsa:
         expected_catalog -= dsa_metrics
 

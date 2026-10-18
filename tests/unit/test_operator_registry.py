@@ -169,6 +169,8 @@ def test_build_operator_manifest_returns_wave_b_dense_families() -> None:
         "add_attn_residual",
         "add_ffn_residual",
         "emb",
+        "input_cast",
+        "final_residual",
         "mlp_up_proj",
         "mlp_act",
         "mlp_down_proj",

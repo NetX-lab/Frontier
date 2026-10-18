@@ -37,8 +37,11 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
             "attention_variant_id": layer.attention_variant_id,
             "request_ids": request_ids, "source_batch_ids": list(batch.source_batch_ids),
         }
+        layer_metadata = None
         if trace_enabled:
             total_tokens = sum(batch.num_tokens)
+            if getattr(replica.model_config, "model_type", None) == "step5":
+                layer_metadata = store._get_step5_layer_metadata(replica, layer.global_layer_id)
         ledger_phases = {} if ledger_enabled else None
         for phase, start in starts.items():
             operators = layer.moe_phase_operator_times(phase)
@@ -60,6 +63,8 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 context = OpTraceContext(
                     cluster_type, replica.model_config, replica,
                     total_tokens, tokens, tokens, tokens, routed,
+                    global_layer_id=layer.global_layer_id, layer_metadata=layer_metadata,
+                    pre_routing_tokens=batch.get_effective_total_tokens_for_compute(cluster_type),
                 )
                 parallel_context = build_parallel_context(context)
             for kind, name, duration in operators:

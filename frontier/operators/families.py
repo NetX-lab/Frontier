@@ -321,10 +321,25 @@ MEMORY_FAMILY = OperatorFamilySpec(
             phases=_ALL_PHASES,
             trace_kind=TraceKind.COMPUTE,
             predictor_target=False,
-            e2e_trace_target=False,
-            execution_time_attr=None,
+            execution_time_attr="embedding_time",
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.REPLICATED,
+        ),
+        *(
+            OperatorSpec(
+                name=name,
+                role=role,
+                phases=_ALL_PHASES,
+                predictor_target=False,
+                profiling_target=False,
+                execution_time_attr=attribute,
+                resource_class=ResourceClass.MEMORY,
+                tp_mode=TensorParallelMode.REPLICATED,
+            )
+            for name, role, attribute in (
+                ("input_cast", OperatorRole.RESHAPE, "input_cast_time"),
+                ("final_residual", OperatorRole.RESIDUAL, "final_residual_time"),
+            )
         ),
     ),
 )
@@ -640,6 +655,23 @@ COMM_FAMILY = OperatorFamilySpec(
             comm_domain="EP",
             payload_builder=_expert_parallel_payload_bytes,
             num_devices_builder=_moe_ep_devices,
+        ),
+        CommOperatorSpec(
+            name="embedding_tensor_parallel_allreduce",
+            role=OperatorRole.COMMUNICATION,
+            phases=_ALL_PHASES,
+            trace_kind=TraceKind.COMM,
+            predictor_target=False,
+            profiling_target=False,
+            resource_class=ResourceClass.COMM,
+            execution_time_attr="embedding_allreduce_time",
+            precision_op="emb",
+            collective_alias="allreduce",
+            comm_group="attn_tp",
+            comm_domain="ATTN_TP",
+            payload_builder=_tp_allreduce_payload_bytes,
+            num_devices_builder=_attn_tp_devices,
+            zero_payload_policy=ZeroPayloadPolicy.EXACT_NOOP,
         ),
         CommOperatorSpec(
             name="pipeline_parallel_send_recv",

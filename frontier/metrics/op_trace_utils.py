@@ -39,6 +39,10 @@ class OpTraceContext:
     effective_tokens_transfer: int
     effective_tokens_rounded: int
     tokens_are_post_routing: bool
+    global_layer_id: int | None = None
+    attention_operator_names: tuple[str, ...] = ()
+    layer_metadata: Any = None
+    pre_routing_tokens: int | None = None
 
     @property
     def hidden_size(self) -> int:
@@ -272,6 +276,51 @@ def compute_op_trace_meta(
     op_type: str,
     ctx: OpTraceContext,
 ) -> Dict[str, Any]:
+    if op_type in ("COMPUTE", "COMM") and getattr(ctx.model_config, "model_type", None) == "step5":
+        from frontier.attention.step5 import describe_step5_layer, describe_step5_operator_tensors
+
+        if ctx.global_layer_id is None:
+            raise ValueError("Step trace metadata requires the actual global_layer_id")
+        metadata = ctx.layer_metadata or describe_step5_layer(
+            ctx.model_config, ctx.global_layer_id, attention_tp_size=ctx.attn_tp,
+            moe_tp_size=ctx.moe_tp, expert_parallel_size=ctx.moe_ep,
+        )
+        if metadata.attention_spec.global_layer_id != ctx.global_layer_id:
+            raise ValueError("Step trace metadata differs from the actual layer identity")
+        if op_type == "COMM":
+            if op_name not in (
+                "attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce",
+                "moe_tensor_parallel_allreduce",
+            ):
+                raise NotImplementedError(f"Step initial structural trace has no communication scope {op_name}")
+            precision = metadata.model_precision
+            if op_name == "moe_tensor_parallel_allreduce":
+                if metadata.ffn_merge is None:
+                    raise ValueError("Step routed reduction requires the layer's branch merge")
+                precision = metadata.ffn_merge.output_precision
+            elif op_name == "mlp_tensor_parallel_allreduce" and metadata.ffn_merge is not None:
+                raise ValueError("Step dense reduction requires a dense FFN layer")
+            elements = ctx.effective_tokens_compute * ctx.hidden_size
+            return {
+                "precision_op": map_trace_op_to_precision_op(op_name),
+                "dtype": precision.name, "dtype_bytes": precision.bytes_per_element,
+                "tensor_shape": {"data": [ctx.effective_tokens_compute, ctx.hidden_size]},
+                "tensor_dtype": {"data": precision.name}, "element_count": elements,
+                "base_size_bytes": elements * 2,
+                "data_size_bytes": int(elements * precision.bytes_per_element),
+                "source_geometry": {"global_layer_id": ctx.global_layer_id},
+                "evidence_kind": "source_structural_metadata",
+            }
+        tokens = ctx.effective_tokens_compute
+        if ctx.tokens_are_post_routing:
+            if type(ctx.pre_routing_tokens) is not int or ctx.pre_routing_tokens <= 0:
+                raise ValueError("Step routed trace requires explicit pre-routing physical rows")
+            tokens = ctx.pre_routing_tokens
+        return describe_step5_operator_tensors(
+            metadata, op_name, tokens=tokens,
+            routed_tokens=_get_routed_tokens(ctx.effective_tokens_compute, ctx),
+            router_topk=ctx.router_topk, attention_operator_names=ctx.attention_operator_names,
+        )
     precision_op = map_trace_op_to_precision_op(op_name)
     if op_name in ("attn_dsa_indexer", "attn_dsa_mla"):
         precision = PrecisionType.from_torch_dtype(ctx.model_config.torch_dtype)

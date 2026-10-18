@@ -23,6 +23,7 @@ from frontier.entities.time_components import (
     MLPTime,
     MoEOperatorTimes,
     MoETime,
+    canonical_operator_execution_time_attrs,
 )
 
 
@@ -69,6 +70,7 @@ _PER_LAYER_PUBLIC_NAMES = frozenset(
         "share_expert_down_proj_time",
         "share_expert_act_time",
         "share_expert_time",
+        "step5_ffn_merge_time",
     }
 )
 
@@ -90,6 +92,10 @@ _STAGE_ONLY_PUBLIC_NAMES = frozenset(
         "decode_draft_proposer_time",
         "mtp_terminal_overshoot_time",
         "forward_launch_time",
+        "embedding_time",
+        "embedding_allreduce_time",
+        "input_cast_time",
+        "final_residual_time",
     }
 )
 
@@ -167,6 +173,7 @@ class StageExecutionTime:
         stage = cls(layers, stage_execution_time=source)
         stage._model_time_ms_cache = (
             source.get_single_layer_block_time() * num_layers
+            + stage._model_stage_time_ms()
             + stage._owner_value("pipeline_parallel_communication_time")
             + stage._owner_value("decode_draft_proposer_time")
             + stage._owner_value("mtp_terminal_overshoot_time")
@@ -265,13 +272,13 @@ class StageExecutionTime:
                 layer.communication_operator_times
                 for layer in self._layer_execution_times
             ),
-            exclude=frozenset({"pipeline_parallel_send_recv"}),
+            exclude=frozenset({"pipeline_parallel_send_recv", "embedding_tensor_parallel_allreduce"}),
         )
         owner = self._stage_execution_time.communication_operator_times
         if owner is not None:
-            pipeline_name = "pipeline_parallel_send_recv"
-            if pipeline_name in owner.op_times:
-                values[pipeline_name] = float(owner.op_times[pipeline_name])
+            for name in ("pipeline_parallel_send_recv", "embedding_tensor_parallel_allreduce"):
+                if name in owner.op_times:
+                    values[name] = float(owner.op_times[name])
         return CommunicationOperatorTimes(values) if values else None
 
     @property
@@ -286,6 +293,10 @@ class StageExecutionTime:
             if operator_times is None:
                 continue
             for name, value in operator_times.op_times.items():
+                values[name] = float(value)
+        attributes = canonical_operator_execution_time_attrs()
+        for name, value in self._stage_execution_time.op_times.items():
+            if attributes[name] in self.stage_owned_fields:
                 values[name] = float(value)
         return MappingProxyType(values)
 
@@ -326,6 +337,7 @@ class StageExecutionTime:
         component.pipeline_parallel_send_recv_time = self._owner_value(
             "pipeline_parallel_communication_time"
         )
+        component.embedding_allreduce_time = self._owner_value("embedding_allreduce_time")
         component.operator_times = self.communication_operator_times
         return component
 
@@ -339,6 +351,15 @@ class StageExecutionTime:
         )
         return component
 
+    def _model_stage_time_ms(self) -> float:
+        """Model work outside transformer layers, owned once by this stage."""
+        return math.fsum((
+            self._owner_value("embedding_time"),
+            self._owner_value("embedding_allreduce_time"),
+            self._owner_value("input_cast_time"),
+            self._owner_value("final_residual_time"),
+        ))
+
     @property
     def model_time_ms(self) -> float:
         if self._model_time_ms_cache is not None:
@@ -349,6 +370,7 @@ class StageExecutionTime:
         )
         value = (
             block_time_ms
+            + self._model_stage_time_ms()
             + self._owner_value("pipeline_parallel_communication_time")
             + self._owner_value("decode_draft_proposer_time")
             + self._owner_value("mtp_terminal_overshoot_time")
@@ -394,7 +416,13 @@ class StageExecutionTime:
         return self._first_layer().get_single_layer_attention_time()
 
     def get_single_layer_attention_scope_time(self) -> float:
-        return self._first_layer().get_single_layer_attention_scope_time()
+        """Device work before this layer's FFN, including any model-input work."""
+        return math.fsum((
+            self._first_layer().get_single_layer_attention_scope_time(),
+            self.embedding_time,
+            self.embedding_allreduce_time,
+            self.input_cast_time,
+        ))
 
     def get_single_layer_moe_comp_time(self) -> float:
         return self._first_layer().get_single_layer_moe_comp_time()

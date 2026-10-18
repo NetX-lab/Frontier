@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from math import ceil
 from typing import Any
 
-from frontier.attention.memory import AttentionKVCacheComponent, AttentionRuntimeKVLayout
+from frontier.attention.memory import (
+    AttentionKVCacheCapacity,
+    AttentionKVCacheComponent,
+    AttentionKVCacheGroup,
+    AttentionKVCacheSelection,
+    AttentionRuntimeKVLayout,
+)
 from frontier.attention.step5 import (
     resolve_step5_attention_geometry,
     resolve_step5_model_precision,
@@ -197,4 +204,83 @@ def describe_step5_kv_cache(
         counts.append(pages)
     return Step5KVCacheDescription(
         config.num_layers, tensor_parallel_size, tuple(components), tuple(counts), summary_page_bytes,
+    )
+
+
+def resolve_step5_kv_cache_capacity(
+    config: Any, block_size: int, selection: AttentionKVCacheSelection | None,
+) -> AttentionKVCacheCapacity:
+    """Bind equal raw Hopper pages and one sparse sidecar to the existing pool.
+
+    Native Step selects STEP5_FLASH_ATTN for SWA and STEP5_DSA for sparse
+    layers. Both inherit the 16-token kernel granularity at head size 192.
+    Equal unpadded raw pages retain the primary span during page unification;
+    their final span and scheduler LCM are therefore equal in this scope.
+    This source-derived binding is not native allocation or capacity evidence.
+    """
+    if not isinstance(selection, AttentionKVCacheSelection):
+        raise NotImplementedError("Step cache requires explicit runtime cache selection")
+    if selection.gpu_platform != "cuda" or selection.device not in ("h800", "h200"):
+        raise NotImplementedError("Step structural cache binding requires H800 or H200 Hopper")
+    if selection.attention_backend != "STEP5_DSA":
+        raise NotImplementedError("Step cache requires the native STEP5_DSA/STEP5_FLASH_ATTN pair")
+    if selection.decode_context_parallel_size != 1:
+        raise NotImplementedError("Step cache binding requires decode context parallel size 1")
+    if selection.indexer_kv_cache_dtype is not None:
+        raise NotImplementedError("Step summary E4M3 storage has no configurable indexer cache dtype")
+    if block_size % 16:
+        raise NotImplementedError("Step Hopper kernel pages require a multiple of 16 tokens")
+    if selection.kv_cache_dtype not in ("auto", "bfloat16", "fp8", "fp8_e4m3"):
+        raise NotImplementedError("Step cache requires explicit native BF16 or E4M3 cache format")
+    description = describe_step5_kv_cache(
+        config, tensor_parallel_size=selection.attention_tensor_parallel_size,
+        block_size=block_size, sparse_pages=1, sliding_pages=1, max_num_seqs=1,
+        cache_dtype=selection.kv_cache_dtype,
+    )
+    swa, sparse, summary, tail, scratch = description.components
+    if swa.page_size_bytes != sparse.page_size_bytes:
+        raise NotImplementedError("Step one-pool binding requires equal unpadded raw pages")
+    # With this fixed head geometry neither FA4 head512 nor head256 exceptions apply.
+    for layer_id in range(config.num_layers):
+        geometry = resolve_step5_attention_geometry(
+            config, layer_id, tensor_parallel_size=selection.attention_tensor_parallel_size,
+        )
+        if geometry.head_dim != 192:
+            raise NotImplementedError("Step Hopper page binding requires head dimension 192")
+    cache_precision = "fp8" if selection.kv_cache_dtype.startswith("fp8") else "bf16"
+    components = (
+        replace(swa, stored_rows=block_size, precision=cache_precision,
+                content_size_bytes=swa.page_size_bytes),
+        replace(sparse, stored_rows=block_size, precision=cache_precision,
+                content_size_bytes=sparse.page_size_bytes),
+        replace(summary, stored_rows=block_size // config.sparse_config["region_block_size"],
+                compression_ratio=config.sparse_config["region_block_size"], precision="fp8",
+                content_size_bytes=summary.page_size_bytes),
+        replace(tail, stored_rows=1, compression_ratio=block_size, precision="fp32/int64",
+                content_size_bytes=tail.page_size_bytes),
+    )
+    group_size = min(len(swa.owner_layer_ids), len(sparse.owner_layer_ids))
+    if len(swa.owner_layer_ids) % group_size or len(sparse.owner_layer_ids) != group_size:
+        raise NotImplementedError("Step one-pool binding requires complete equal-size raw groups")
+    swa_group_count = ceil(len(swa.owner_layer_ids) / group_size)
+    groups = tuple(
+        AttentionKVCacheGroup(
+            group_id=f"swa_{index}", logical_block_size=block_size,
+            component_owners=tuple((swa.component_id, layer) for layer in swa.owner_layer_ids[index::swa_group_count]),
+            retention="sliding_window", window_tokens=config.sliding_window,
+        )
+        for index in range(swa_group_count)
+    ) + (AttentionKVCacheGroup(
+        group_id="sparse", logical_block_size=block_size,
+        component_owners=tuple(
+            (component.component_id, layer)
+            for component in components[1:] for layer in sparse.owner_layer_ids
+        ),
+    ),)
+    # All raw group views begin at byte zero of the same backing allocation.
+    # The sparse group's sidepages grow with N; scratch grows only with max_num_seqs.
+    return AttentionKVCacheCapacity(
+        family_id="step5_attention", block_size=block_size, num_layers=config.num_layers,
+        components=components, groups=groups, reserved_blocks=1,
+        fixed_bytes_per_request_slot=len(scratch.owner_layer_ids) * scratch.page_size_bytes,
     )

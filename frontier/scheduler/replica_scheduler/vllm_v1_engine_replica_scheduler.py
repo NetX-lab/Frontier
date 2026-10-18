@@ -670,6 +670,7 @@ class VLLMv1EngineReplicaScheduler(
         self._roll_back_rejected_drafts(batch)
 
         for request in batch.requests:
+            self._emit_grouped_cache_batch_event("grouped_cache_batch_end", request, batch)
             self._refresh_target_embedded_mtp_prefill_boundary_state(batch, request)
             if self._cluster_type == ClusterType.DECODE_ATTN:
                 decode_attn_cohort_id = getattr(
@@ -729,6 +730,7 @@ class VLLMv1EngineReplicaScheduler(
                 self._scheduled_num_computed_tokens_by_request.pop(request.id, None)
                 if request in self._running_requests:
                     self._running_requests.remove(request)
+                self._emit_grouped_cache_batch_event("grouped_cache_release", request, batch)
                 logger.debug(
                     f"[VLLMv1Engine] Request {request.id} completed, "
                     f"freed resources, running_reqs={len(self._running_requests)}"

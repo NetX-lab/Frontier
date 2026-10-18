@@ -98,6 +98,8 @@ def _request(
         num_context_tokens=processed,
         is_recomputing=False,
         is_prefill_complete=prefill_complete,
+        num_emitted_decode_tokens=max(0, processed - prefill),
+        completed=False,
     )
 
 

@@ -17,13 +17,14 @@ class AttentionKVCacheSelection:
     kv_cache_dtype: str | None
     indexer_kv_cache_dtype: str | None
     decode_context_parallel_size: int = 1
+    attention_tensor_parallel_size: int = 1
 
     def __post_init__(self) -> None:
         for name in ("device", "gpu_platform"):
             value = getattr(self, name)
             if not isinstance(value, str) or not value:
                 raise ValueError(f"{name} must be a non-empty string")
-        for name in ("block_size", "decode_context_parallel_size"):
+        for name in ("block_size", "decode_context_parallel_size", "attention_tensor_parallel_size"):
             value = getattr(self, name)
             if type(value) is not int or value <= 0:
                 raise ValueError(f"{name} must be a positive int")
@@ -43,6 +44,7 @@ class AttentionKVCacheSelection:
             # Frontier has no context-parallel execution domain. Its current
             # parallel contract is DCP1, independently of attention TP/DP.
             decode_context_parallel_size=1,
+            attention_tensor_parallel_size=replica_config.attn_tensor_parallel_size,
         )
 
 
@@ -134,6 +136,7 @@ class AttentionKVCacheCapacity:
     groups: tuple[AttentionKVCacheGroup, ...] = ()
     reserved_blocks: int = 0
     zero_new_blocks: bool = False
+    fixed_bytes_per_request_slot: int = 0
 
     def __post_init__(self) -> None:
         if not isinstance(self.family_id, str) or not self.family_id:
@@ -198,6 +201,8 @@ class AttentionKVCacheCapacity:
             raise ValueError("cache groups must partition every component owner")
         if type(self.reserved_blocks) is not int or self.reserved_blocks < 0:
             raise ValueError("reserved_blocks must be a non-negative int")
+        if type(self.fixed_bytes_per_request_slot) is not int or self.fixed_bytes_per_request_slot < 0:
+            raise ValueError("fixed_bytes_per_request_slot must be a non-negative int")
         if type(self.zero_new_blocks) is not bool:
             raise ValueError("zero_new_blocks must be a bool")
         if not groups and (self.reserved_blocks or self.zero_new_blocks):

@@ -146,7 +146,7 @@ def get_attention_trace_op_times(
     skip_zero: bool = True,
     allow_structural: bool = False,
 ) -> tuple[tuple[AttentionOperatorSpec, float], ...]:
-    """Return family-ordered E2E trace timings for attention physical ops."""
+    """Return physical timings in family order or explicit structural scope order."""
     family.require_enabled_for_execution(structural=allow_structural)
     if per_layer_count is not None and per_layer_count <= 0:
         raise ValueError(f"per_layer_count must be positive: {per_layer_count}")
@@ -190,8 +190,18 @@ def get_attention_trace_op_times(
             for operator in family.e2e_trace_ops()
         )
     )
+    operators = family.e2e_trace_ops()
+    if family.structural_execution_enabled and execution_time.attention_operator_times is not None:
+        by_name = {operator.name: operator for operator in operators}
+        names = tuple(execution_time.attention_operator_times.op_times)
+        unknown = set(names) - by_name.keys()
+        if unknown:
+            raise ValueError(f"Unexpected attention timing for {family.family_id}: {sorted(unknown)}")
+        operators = tuple(by_name[name] for name in names) + tuple(
+            operator for operator in operators if operator.name not in names
+        )
     op_times: list[tuple[AttentionOperatorSpec, float]] = []
-    for operator in family.e2e_trace_ops():
+    for operator in operators:
         duration_ms = _get_attention_operator_time(
             execution_time,
             operator,

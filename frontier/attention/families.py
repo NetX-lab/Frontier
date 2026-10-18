@@ -534,9 +534,18 @@ GATED_DELTA_NET_ATTENTION_FAMILY = AttentionFamilySpec(
     ),
 )
 
+
+def _step5_kv_cache_capacity(config, block_size: int, selection=None):
+    from frontier.attention.step5_memory import resolve_step5_kv_cache_capacity
+
+    return resolve_step5_kv_cache_capacity(config, block_size, selection)
+
+
 STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="step5_attention",
     display_name="Step text SWA and sparse GQA",
+    structural_execution_enabled=True,
+    kv_cache_capacity_resolver=_step5_kv_cache_capacity,
     supported_variants=("swa", "sparse_gqa"),
     operators=(
         AttentionOperatorSpec(

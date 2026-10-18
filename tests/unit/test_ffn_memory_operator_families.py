@@ -89,13 +89,17 @@ def test_memory_family_declares_compute_folded_memory_ops() -> None:
         "add_attn_residual",
         "add_ffn_residual",
         "emb",
+        "input_cast",
+        "final_residual",
     ]
     assert [operator.execution_time_attr for operator in MEMORY_FAMILY.operators] == [
         "attn_norm_time",
         "mlp_norm_time",
         "add_attn_residual_time",
         "add_ffn_residual_time",
-        None,
+        "embedding_time",
+        "input_cast_time",
+        "final_residual_time",
     ]
     assert [operator.precision_name() for operator in MEMORY_FAMILY.operators] == [
         "input_layernorm",
@@ -103,13 +107,17 @@ def test_memory_family_declares_compute_folded_memory_ops() -> None:
         "add",
         "add",
         "emb",
+        "input_cast",
+        "final_residual",
     ]
     assert [operator.e2e_trace_target for operator in MEMORY_FAMILY.operators] == [
         True,
         True,
         True,
         True,
-        False,
+        True,
+        True,
+        True,
     ]
     assert all(operator.trace_kind is TraceKind.COMPUTE for operator in MEMORY_FAMILY.operators)
     assert [operator.role for operator in MEMORY_FAMILY.operators] == [
@@ -118,6 +126,8 @@ def test_memory_family_declares_compute_folded_memory_ops() -> None:
         OperatorRole.RESIDUAL,
         OperatorRole.RESIDUAL,
         OperatorRole.EMBEDDING,
+        OperatorRole.RESHAPE,
+        OperatorRole.RESIDUAL,
     ]
 
 
@@ -139,6 +149,8 @@ def test_dense_manifest_appends_memory_and_ffn_after_attention() -> None:
         "add_attn_residual",
         "add_ffn_residual",
         "emb",
+        "input_cast",
+        "final_residual",
         "mlp_up_proj",
         "mlp_act",
         "mlp_down_proj",

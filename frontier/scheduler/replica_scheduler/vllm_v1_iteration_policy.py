@@ -589,6 +589,7 @@ class IterationSchedulingPolicy:
         batch_size: int = 0,
         batch_num_tokens: int = 0,
         extra_fields: Optional[Dict[str, Any]] = None,
+        event_time: Optional[float] = None,
     ) -> None:
         if not schedule_decision_logging_enabled():
             return
@@ -619,7 +620,7 @@ class IterationSchedulingPolicy:
             "batch_num_tokens": int(batch_num_tokens),
             "timestamp": time.time(),
             "timestamp_semantics": "wall_clock_epoch_seconds",
-            "simulation_time": float(self._current_schedule_time),
+            "simulation_time": float(self._current_schedule_time if event_time is None else event_time),
             "simulation_time_semantics": "frontier_event_time_seconds",
         }
         if self._is_prefix_caching_enabled():

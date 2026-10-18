@@ -3,7 +3,7 @@ from collections import OrderedDict
 from dataclasses import replace
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY
+from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY, STEP5_ATTENTION_FAMILY
 from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
@@ -14,6 +14,7 @@ from frontier.entities.time_components import (
     AttentionTime,
     CommunicationOperatorTimes,
     MLPOperatorTimes,
+    MoEOperatorTimes,
     MoETime,
 )
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
@@ -146,12 +147,13 @@ class SklearnMoEExecutionTimePredictor(
         if not include_ffn and include_moe is True:
             raise ValueError("include_moe cannot be true when include_ffn is false")
         base_time = self._dummy_execution_time
-        dsa_attention = None
-        if include_attention and (
-            bind_layer_attention(self._model_config, layer_id).family_id
-            == DSA_ATTENTION_FAMILY.family_id
-        ):
-            dsa_attention = self._predict_dsa_dummy_attention_time(layer_id)
+        physical_attention = None
+        attention_family_id = bind_layer_attention(self._model_config, layer_id).family_id
+        step5_layer = attention_family_id == STEP5_ATTENTION_FAMILY.family_id
+        if include_attention and attention_family_id == DSA_ATTENTION_FAMILY.family_id:
+            physical_attention = self._predict_dsa_dummy_attention_time(layer_id)
+        elif include_attention and step5_layer:
+            physical_attention = self._predict_step5_dummy_attention_time(batch, layer_id)
         model_is_moe = bool(getattr(self._model_config, "is_moe", False))
         is_moe = include_ffn and (
             model_is_moe if include_moe is None else include_moe
@@ -227,6 +229,8 @@ class SklearnMoEExecutionTimePredictor(
             add_ffn_residual_time = base_time
             add_time = 0.0
 
+        if step5_layer and self._model_config.uses_fused_add_norm:
+            add_time = add_attn_residual_time = add_ffn_residual_time = 0.0
         share_expert_time = base_time if share_expert_enabled else 0.0
         pp_stage_boundary_handoff_time = (
             base_time
@@ -235,11 +239,20 @@ class SklearnMoEExecutionTimePredictor(
         )
 
         if is_moe:
+            moe_communication_operator_times = {
+                "expert_parallel_alltoall_dispatch": expert_parallel_phase_time,
+                "expert_parallel_alltoall_combine": expert_parallel_phase_time,
+            }
+            if step5_layer:
+                if include_attention:
+                    moe_communication_operator_times["attn_tensor_parallel_allreduce"] = (
+                        attn_tp_allreduce_time
+                    )
+                moe_communication_operator_times["moe_tensor_parallel_allreduce"] = (
+                    ffn_tp_allreduce_time
+                )
             communication_operator_times = CommunicationOperatorTimes(
-                {
-                    "expert_parallel_alltoall_dispatch": expert_parallel_phase_time,
-                    "expert_parallel_alltoall_combine": expert_parallel_phase_time,
-                }
+                moe_communication_operator_times
             )
             mlp_operator_times = None
             moe_operator_times = _build_moe_operator_times(
@@ -287,23 +300,27 @@ class SklearnMoEExecutionTimePredictor(
             mlp_operator_times = None
             moe_operator_times = None
 
+        if step5_layer and is_moe:
+            moe_operator_times = MoEOperatorTimes({
+                **moe_operator_times.op_times, "step5_ffn_merge": base_time,
+            })
         return ExecutionTime(
             num_layers_per_pipeline_stage=1,
-            attention_rope_execution_time=(base_time if include_attention else 0.0),
+            attention_rope_execution_time=(base_time if include_attention and not step5_layer else 0.0),
             attention_kv_cache_save_execution_time=(
-                base_time if include_attention and dsa_attention is None else 0.0
+                base_time if include_attention and physical_attention is None else 0.0
             ),
             attention_decode_execution_time=(
-                base_time if include_attention and dsa_attention is None else 0.0
+                base_time if include_attention and physical_attention is None else 0.0
             ),
             attention_prefill_execution_time=(
-                base_time if include_attention and dsa_attention is None else 0.0
+                base_time if include_attention and physical_attention is None else 0.0
             ),
             attention_layer_pre_proj_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and not step5_layer else 0.0
             ),
             attention_layer_post_proj_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and not step5_layer else 0.0
             ),
             attn_norm_time=base_time if include_attention else 0.0,
             mlp_norm_time=base_time if include_ffn else 0.0,
@@ -313,7 +330,7 @@ class SklearnMoEExecutionTimePredictor(
             tensor_parallel_communication_time=attn_tp_allreduce_time,
             attn_tensor_parallel_allreduce_time=attn_tp_allreduce_time,
             moe_tensor_parallel_allreduce_time=ffn_tp_allreduce_time,
-            pipeline_parallel_communication_time=base_time if include_stage_owned else 0.0,
+            pipeline_parallel_communication_time=(base_time if include_stage_owned and not step5_layer else 0.0),
             expert_parallel_communication_time=expert_parallel_comm_time,
             moe_gating_time=base_time if is_moe else 0.0,
             moe_shuffling_time=(
@@ -347,7 +364,7 @@ class SklearnMoEExecutionTimePredictor(
             mlp_operator_times=mlp_operator_times,
             moe_operator_times=moe_operator_times,
             attention_operator_times=(
-                dsa_attention.operator_times if dsa_attention is not None else None
+                physical_attention.operator_times if physical_attention is not None else None
             ),
         )
 
@@ -1252,6 +1269,31 @@ class SklearnMoEExecutionTimePredictor(
             )
             for offset in range(num_layers)
         ]
+        if (
+            self._enable_dummy_mode
+            and self._model_config.get_layer_attention_spec(layer_id).family_id
+            == STEP5_ATTENTION_FAMILY.family_id
+        ):
+            if not include_attention:
+                # EP wave work starts after the attention and model-input scopes.
+                return self._assemble_stage(layers, first_layer_id=layer_id)
+            owner = layers[0].as_single_layer(
+                global_layer_id=layer_id,
+                attention_family_id=STEP5_ATTENTION_FAMILY.family_id,
+                attention_variant_id=self._model_config.get_layer_attention_spec(layer_id).variant_id,
+            )
+            times = {}
+            if layer_id == 0:
+                times["emb"] = self._dummy_execution_time
+                if self._replica_config.attn_tensor_parallel_size > 1:
+                    times["embedding_tensor_parallel_allreduce"] = self._dummy_execution_time
+                if self._model_config.fp32_residual_connection:
+                    times["input_cast"] = self._dummy_execution_time
+            if layer_id + num_layers == self._model_config.num_layers:
+                times["final_residual"] = self._dummy_execution_time
+            owner._replace_operator_time_values(times)
+            stage = self._assemble_stage(layers, first_layer_id=layer_id)
+            return StageExecutionTime(stage.layer_execution_times, stage_execution_time=owner)
         return self._assemble_stage(layers, first_layer_id=layer_id)
 
     def _predict_moe_layer_execution_time(

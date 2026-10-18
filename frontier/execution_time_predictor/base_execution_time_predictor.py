@@ -53,6 +53,25 @@ class BaseExecutionTimePredictor(ABC):
                     ),
                 )
 
+        if "step5_attention" in family_ids:
+            from frontier.types import ReplicaSchedulerType
+
+            if (
+                replica_config.num_pipeline_stages != 1
+                or getattr(self, "_cluster_type", None) != ClusterType.MONOLITHIC
+                or replica_scheduler_config.get_type() != ReplicaSchedulerType.VLLM_V1
+                or replica_scheduler_config.enable_prefix_caching
+                or replica_config.speculative_decoding_config.enabled
+                or replica_config.attn_dp != 1
+                or replica_config.moe_expert_parallel_size != 1
+                or replica_config.moe_tensor_parallel_size != replica_config.attn_tensor_parallel_size
+            ):
+                raise NotImplementedError(
+                    "Step structural execution requires MONOLITHIC/vllm_v1/PP1, "
+                    "DP1/EP1 with equal attention and MoE TP, prefix and MTP off"
+                )
+            self._step5_max_model_len = replica_scheduler_config.max_model_len
+
         # get configs
         self._replica_scheduler_provider = str(replica_scheduler_config.get_type())
         self._block_size = replica_scheduler_config.block_size

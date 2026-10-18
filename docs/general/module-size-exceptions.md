@@ -88,3 +88,34 @@ Steps 1 and 2 were scheduled after PR 44's merge, so the split would not mix
 with the calibration review. PR 44 is merged (`9a650fb`), but no step has
 started: the target modules named above do not exist yet. Steps 3 and 4 can
 run at any time.
+
+
+## Step controlled request path on `feat/step5-preview`
+
+The Step structural slice extends two modules covered above. Counts use baseline
+`1bde1999af07a41651bb025d92e95bf14ad9e1ca` and the current source on
+2026-10-19.
+
+| Module | Baseline | Current | Added responsibility |
+| --- | ---: | ---: | --- |
+| `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` | 8,491 | 8,536 | Select existing Step attention scopes for the actual phase, context, graph policy and padded rows in controlled timing mode |
+| `frontier/metrics/metrics_store.py` | 5,658 | 5,763 | Preserve source layer/tensor identity and the existing stage and EP-wave cost owners; include model input and terminal scopes once |
+
+The cleanup inspection found no dead copy of the new Step pricing or ledger
+paths. Layer geometry uses the existing metadata caches in the predictor and
+metrics store; stage and EP-wave traces share the store cache instead of
+rebuilding each layer for every operator. FFN merge trace enumeration uses the
+existing operator-family contract. The new once-only scopes use the existing
+operator-to-time attribute map rather than a second timing registry. No second
+scheduler, event path or model graph is introduced.
+
+Step pricing reads the predictor's resolved batch, block, parallel and dummy
+policy state and returns the existing attention component. Moving this small
+extension alone would split that state from all adjacent family pricing. The
+metrics changes extend the store's existing trace emitter, catalogs and stage
+component ledger; a separate Step ledger would create two cost owners. The
+functional split above remains the appropriate later sequence: measurement
+binding moves with its pricing state, and the stage ledger moves with its
+consumers. This capability does not require that core refactor. Any such future
+refactor follows the task's material-architecture approval policy and must
+preserve legacy numeric/intermediate fidelity and the same operator ownership.

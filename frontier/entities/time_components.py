@@ -7,6 +7,7 @@ to form complete ExecutionTime objects for different cluster types.
 
 from dataclasses import dataclass, field
 from functools import cache
+from types import MappingProxyType
 from typing import Mapping
 
 from frontier.attention.families import iter_execution_enabled_families
@@ -16,20 +17,23 @@ from frontier.operators.families import (
     MEMORY_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
+    STEP5_FFN_FAMILY,
 )
 
 
-def _attention_operator_execution_time_attrs() -> dict[str, str]:
-    return {
+@cache
+def _attention_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
         operator.name: operator.execution_time_attr
         for family in iter_execution_enabled_families(include_structural=True)
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
-    }
+    })
 
 
-def _mlp_operator_execution_time_attrs() -> dict[str, str]:
-    return {
+@cache
+def _mlp_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
         operator.name: operator.execution_time_attr
         for family in (MEMORY_FAMILY, FFN_FAMILY)
         for operator in family.e2e_trace_ops()
@@ -40,13 +44,14 @@ def _mlp_operator_execution_time_attrs() -> dict[str, str]:
             "mlp_layer_act_execution_time",
             "mlp_layer_down_proj_execution_time",
         }
-    }
+    })
 
 
-def _moe_operator_execution_time_attrs() -> dict[str, str]:
-    return {
+@cache
+def _moe_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
         operator.name: operator.execution_time_attr
-        for family in (MEMORY_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY)
+        for family in (MEMORY_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY, STEP5_FFN_FAMILY)
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr
         in {
@@ -58,20 +63,22 @@ def _moe_operator_execution_time_attrs() -> dict[str, str]:
             "share_expert_up_proj_time",
             "share_expert_act_time",
             "share_expert_down_proj_time",
+            "step5_ffn_merge_time",
         }
-    }
-
-
-def _communication_operator_execution_time_attrs() -> dict[str, str]:
-    return {
-        operator.name: operator.execution_time_attr
-        for operator in COMM_FAMILY.e2e_trace_ops()
-        if operator.execution_time_attr is not None
-    }
+    })
 
 
 @cache
-def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ...]:
+def _communication_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
+        operator.name: operator.execution_time_attr
+        for operator in COMM_FAMILY.e2e_trace_ops()
+        if operator.execution_time_attr is not None
+    })
+
+
+@cache
+def _canonical_operator_execution_time_attrs() -> Mapping[str, str]:
     operator_attrs: dict[str, str] = {}
     for family in (
         *tuple(iter_execution_enabled_families(include_structural=True)),
@@ -79,6 +86,7 @@ def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ..
         FFN_FAMILY,
         MOE_FAMILY,
         SHARE_EXPERT_FAMILY,
+        STEP5_FFN_FAMILY,
         COMM_FAMILY,
     ):
         for operator in family.e2e_trace_ops():
@@ -89,19 +97,19 @@ def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ..
                     f"Duplicate ExecutionTime operator timing key: {operator.name}"
                 )
             operator_attrs[operator.name] = operator.execution_time_attr
-    return tuple(operator_attrs.items())
+    return MappingProxyType(operator_attrs)
 
 
 def canonical_operator_execution_time_attrs() -> dict[str, str]:
     """Return the canonical op_id -> ExecutionTime attribute mapping."""
 
-    return dict(_canonical_operator_execution_time_attr_items())
+    return dict(_canonical_operator_execution_time_attrs())
 
 
 def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, float]:
     """Validate and return op timings in canonical operator order."""
 
-    operator_attrs = canonical_operator_execution_time_attrs()
+    operator_attrs = _canonical_operator_execution_time_attrs()
     normalized_by_name: dict[str, float] = {}
     for op_name, time_ms in op_times.items():
         normalized_op_name = str(op_name)
@@ -128,7 +136,7 @@ def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, flo
 def execution_op_time_values_by_attr(op_times: Mapping[str, float]) -> dict[str, float]:
     """Aggregate canonical op timings by the legacy ExecutionTime attribute they replace."""
 
-    operator_attrs = canonical_operator_execution_time_attrs()
+    operator_attrs = _canonical_operator_execution_time_attrs()
     attr_values: dict[str, float] = {}
     for op_name, time_ms in normalize_execution_op_times(op_times).items():
         attr_name = operator_attrs[op_name]
@@ -283,7 +291,7 @@ class AttentionOperatorTimes:
         attention_operator_attrs = _attention_operator_execution_time_attrs()
         for op_name in self.op_times:
             attr_name = attention_operator_attrs.get(op_name)
-            if attr_name is not None:
+            if attr_name is not None and hasattr(attention_time, attr_name):
                 covered_time_ms += float(getattr(attention_time, attr_name))
         return covered_time_ms
 
@@ -526,6 +534,7 @@ class MoETime:
     share_expert_up_proj_time: float = 0.0    # Shared expert up projection
     share_expert_down_proj_time: float = 0.0  # Shared expert down projection
     share_expert_act_time: float = 0.0        # Shared expert activation
+    step5_ffn_merge_time: float = 0.0         # Routed/shared BF16 branches summed into FP32
     operator_times: MoEOperatorTimes | None = None
 
     @property
@@ -550,6 +559,7 @@ class MoETime:
             + self.share_expert_up_proj_time
             + self.share_expert_down_proj_time
             + self.share_expert_act_time
+            + self.step5_ffn_merge_time
         )
         if self.operator_times is None:
             return legacy_total_time
@@ -571,6 +581,7 @@ class CommunicationTime:
     # Tensor parallelism (TP)
     attn_tensor_parallel_allreduce_time: float = 0.0  # TP all-reduce for attention output
     moe_tensor_parallel_allreduce_time: float = 0.0  # TP all-reduce for MLP/MoE output
+    embedding_allreduce_time: float = 0.0  # Stage-owned vocabulary embedding reduction
     # Legacy fallback: used when attn/moe fields are not populated
     tensor_parallel_allreduce_time: float = 0.0  # TP all-reduce for attention/MLP output
     tensor_parallel_allgather_time: float = 0.0  # TP all-gather for FFN input (Step3)
@@ -615,6 +626,7 @@ class CommunicationTime:
             tp_allreduce_time = self.tensor_parallel_allreduce_time
         legacy_total_time = (
             tp_allreduce_time
+            + self.embedding_allreduce_time
             + self.tensor_parallel_allgather_time
             + self.share_expert_tensor_parallel_allreduce_time
             + self.dp_input_allreduce_time

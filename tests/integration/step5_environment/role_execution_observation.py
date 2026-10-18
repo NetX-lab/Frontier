@@ -1,5 +1,6 @@
 """Observe prepared MRv2 CPU request metadata without qualifying execution."""
 from dataclasses import dataclass, field
+import copy
 import hashlib
 import json
 import os
@@ -10,6 +11,7 @@ import traceback
 import numpy as np
 
 import role_capacity_observation as capacity
+import role_model_input_observation as model_observation
 
 
 CPU_ARRAY_FIELDS = (
@@ -26,6 +28,8 @@ UNMEASURED = dict.fromkeys((
 # These identify the observer files read here, not installed native source or execution.
 SOURCE = dict(observer_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
               capacity_observer_sha256=hashlib.sha256(Path(capacity.__file__).read_bytes()).hexdigest(),
+              model_input_observer_sha256=hashlib.sha256(
+                  Path(model_observation.__file__).read_bytes()).hexdigest(),
               native_source_status='UNVERIFIED')
 
 
@@ -35,6 +39,7 @@ class RequestObservation:
     records_written: int = 0
     metadata_snapshots: int = 0
     native_failures: int = 0
+    capture_metadata_records: int = 0
     collection_stopped: bool = False
     unverified: bool = False
     last_invocation: dict = field(default_factory=dict)
@@ -141,6 +146,13 @@ def record_invocation(worker, state, scheduler, scheduler_error, native_error, r
     except BaseException as failure:
         row['observer_error'] = traceback.format_exc()
         observer_failure(state, 'prepared_batch', failure)
+    observed = getattr(runner, '_model_input_observation', None)
+    if observed is not None and observed.last_record is not None:
+        row['source_pinned_model_observation'] = observed.last_record
+    if hasattr(worker, '_runner_observer_error'):
+        row['runner_observer_error'] = dict(worker._runner_observer_error)
+    if runner is not None and hasattr(runner, '_model_input_observation_error'):
+        row['model_input_observer_error'] = copy.deepcopy(runner._model_input_observation_error)
     state.last_invocation = {name: row[name] for name in
         ('invocation', 'native_outcome', 'prepared_batch_status', 'runner')}
     try:
@@ -163,11 +175,12 @@ def request_snapshot(worker):
         state = RequestObservation()
     status = ('UNVERIFIED' if state.unverified or state.native_failures else
               'OBSERVED_CPU_METADATA_ONLY_NOT_G2' if state.metadata_snapshots else 'UNMEASURED')
-    return dict(scope='cpu_request_metadata_only_not_G2', status=status,
+    result = dict(scope='cpu_request_metadata_only_not_G2', status=status,
                 pid=os.getpid(), rank=worker.rank, local_rank=worker.local_rank,
                 worker_identity=dict(getattr(worker, '_capacity_identity', {})), source=dict(SOURCE),
                 request_metadata=dict(invocations=state.invocations,
                     records_written=state.records_written, metadata_snapshots=state.metadata_snapshots,
+                    capture_metadata_records=state.capture_metadata_records,
                     collection_stopped=state.collection_stopped,
                     last_invocation=dict(state.last_invocation),
                     last_batch_counts=dict(state.last_batch_counts),
@@ -177,10 +190,19 @@ def request_snapshot(worker):
                             native=dict(state.native_error) if state.native_error else None,
                             native_failures=state.native_failures),
                 evidence_status=dict(UNMEASURED))
+    runner = getattr(worker, 'model_runner', None)
+    observed = getattr(runner, '_model_input_observation', None)
+    if observed is not None:
+        result['source_pinned_model_observation'] = observed.summary()
+    if hasattr(worker, '_runner_observer_error'):
+        result['runner_observer_error'] = copy.deepcopy(worker._runner_observer_error)
+    if runner is not None and hasattr(runner, '_model_input_observation_error'):
+        result['model_input_observer_error'] = copy.deepcopy(runner._model_input_observation_error)
+    return result
 
 
-def observed_worker(base, record=write_record):
-    """Compose unchanged capacity observations and override only inherited execute_model."""
+def observed_worker(base, record=write_record, *, prepare_runner=model_observation.installed_sites):
+    """Compose capacity records, one native execution and the supported MRv2 factory seam."""
     capacity_worker = capacity.observed_worker(base)
     original = capacity_worker.execute_model
 
@@ -197,24 +219,78 @@ def observed_worker(base, record=write_record):
                 scheduler_error = traceback.format_exc()
                 observer_failure(state, 'scheduler', failure)
         try:
-            result = original(self, *args, **kwargs)
+            runner = getattr(self, 'model_runner', None)
+            observed = getattr(runner, '_model_input_observation', None)
+            if observed is not None:
+                observed.last_record = None
         except BaseException as failure:
-            state.native_failures += 1
-            state.native_error = dict(invocation=state.invocations, error_type=class_name(failure))
-            state.last_invocation = dict(invocation=state.invocations, native_outcome='raised')
+            observer_failure(state, 'runner_observation_state', failure)
+        try:
+            try:
+                result = original(self, *args, **kwargs)
+            except BaseException as failure:
+                state.native_failures += 1
+                state.native_error = dict(invocation=state.invocations, error_type=class_name(failure))
+                state.last_invocation = dict(invocation=state.invocations, native_outcome='raised')
+                if not state.collection_stopped:
+                    try:
+                        record_invocation(self, state, scheduler, scheduler_error, traceback.format_exc(), record)
+                    except BaseException as observer_error:
+                        observer_failure(state, 'record', observer_error, stop=True)
+                raise
+            state.last_invocation = dict(invocation=state.invocations, native_outcome='returned')
             if not state.collection_stopped:
                 try:
-                    record_invocation(self, state, scheduler, scheduler_error, traceback.format_exc(), record)
-                except BaseException as observer_error:
-                    observer_failure(state, 'record', observer_error, stop=True)
-            raise
-        state.last_invocation = dict(invocation=state.invocations, native_outcome='returned')
-        if not state.collection_stopped:
-            try:
-                record_invocation(self, state, scheduler, scheduler_error, None, record)
-            except BaseException as failure:
-                observer_failure(state, 'record', failure, stop=True)
-        return result
+                    record_invocation(self, state, scheduler, scheduler_error, None, record)
+                except BaseException as failure:
+                    observer_failure(state, 'record', failure, stop=True)
+            return result
+        finally:
+            if state.collection_stopped:
+                try:
+                    runner = getattr(self, 'model_runner', None)
+                    observed = getattr(runner, '_model_input_observation', None)
+                    if observed is not None:
+                        observed.stopped = True
+                except BaseException as failure:
+                    observer_failure(state, 'runner_collection_stop', failure, stop=True)
 
-    return type('RequestObservedWorker', (capacity_worker,),
-                dict(execute_model=execute_model, request_snapshot=request_snapshot))
+    methods = dict(execute_model=execute_model, request_snapshot=request_snapshot)
+    if hasattr(base, '_make_model_runner'):
+        native_factory = base._make_model_runner
+
+        def make_model_runner(self):
+            def capture_record(row):
+                state = getattr(self, '_request_observation', None)
+                if state is None:
+                    state = self._request_observation = RequestObservation()
+                if state.collection_stopped:
+                    raise ValueError('Worker evidence collection has already stopped')
+                payload = json.dumps(dict(scope='capture_cpu_metadata_only_not_G2',
+                    pid=os.getpid(), rank=self.rank, local_rank=self.local_rank,
+                    worker_identity=dict(getattr(self, '_capacity_identity', {})),
+                    source=dict(SOURCE), source_pinned_model_observation=row,
+                    evidence_status=dict(UNMEASURED)), allow_nan=False, separators=(',', ':'))+'\n'
+                try:
+                    record(self, payload)
+                except BaseException as failure:
+                    observer_failure(state, 'capture_record', failure, stop=True)
+                    raise
+                state.records_written += 1
+                state.capture_metadata_records += 1
+
+            try:
+                runner_type, sites = prepare_runner(self, native_factory)
+                observed_type = model_observation.observed_runner(
+                    runner_type, sites, batch_snapshot, capture_record)
+            except BaseException as failure:
+                self._runner_observer_error = dict(status='UNVERIFIED',
+                    error_type=class_name(failure), error=str(failure),
+                    native_compatibility='UNVERIFIED', evidence_status=dict(UNMEASURED))
+                # Preserve the actual native branch on unavailable source/observer compatibility.
+                return native_factory(self)
+            # A native constructor failure is never retried through the factory.
+            return observed_type(self.vllm_config, self.device)
+
+        methods['_make_model_runner'] = make_model_runner
+    return type('RequestObservedWorker', (capacity_worker,), methods)

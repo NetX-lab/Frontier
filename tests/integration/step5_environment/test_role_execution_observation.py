@@ -517,3 +517,48 @@ def test_selected_metadata_fields_exist_in_exact_retained_input_batch_class():
     assert 'None' in ast.unparse(optional.annotation)
     for name in set(observation.CPU_ARRAY_FIELDS)-{'prefill_runs_as_decode_np'}:
         assert 'np.ndarray' == ast.unparse(declarations[name].annotation)
+
+
+
+def test_exhausted_worker_budget_stops_model_observation_without_stopping_native(output):
+    node = json.loads(output[1].read_text())
+    node['record_bytes'] = 8
+    output[1].write_text(json.dumps(node))
+    worker, calls, _ = make_worker(output)
+    observed = SimpleNamespace(last_record=None, stopped=False,
+        summary=lambda: {'collection_stopped': observed.stopped, 'native_compatibility': 'UNVERIFIED'})
+    worker.model_runner._model_input_observation = observed
+    worker.execute_model(scheduler())
+    assert worker._request_observation.collection_stopped is True
+    assert observed.stopped is True
+    assert worker.execute_model(scheduler()) is None
+    assert len(calls) == 2
+    assert worker.request_snapshot()['source_pinned_model_observation']['collection_stopped'] is True
+    assert worker.request_snapshot()['evidence_status']['G2'] == 'UNMEASURED'
+
+
+def test_model_observer_setup_error_is_visible_without_changing_cpu_or_capacity_labels(output):
+    worker, calls, _ = make_worker(output)
+    error = dict(status='UNVERIFIED', kind='observer_setup', error_type='builtins.ValueError',
+                 native_compatibility='UNVERIFIED', evidence_status={'G2': 'UNMEASURED'})
+    worker.model_runner._model_input_observation_error = error
+    worker.execute_model(scheduler())
+    assert len(calls) == 1
+    row = rows(worker, output)[0]
+    assert row['prepared_batch_status'] == 'OBSERVED_CPU_METADATA'
+    assert row['model_input_observer_error'] == error
+    summary = worker.request_snapshot()
+    assert summary['status'] == 'OBSERVED_CPU_METADATA_ONLY_NOT_G2'
+    assert summary['model_input_observer_error'] == error
+    summary['model_input_observer_error']['evidence_status']['G2'] = 'changed'
+    assert worker.request_snapshot()['model_input_observer_error']['evidence_status']['G2'] == 'UNMEASURED'
+    assert worker._capacity_evidence_errors == []
+
+
+def test_prior_model_record_cannot_be_attributed_to_a_new_native_invocation(output):
+    worker, calls, _ = make_worker(output)
+    observed = SimpleNamespace(last_record={'lifecycle': 'capture', 'events': ['earlier']}, stopped=False)
+    worker.model_runner._model_input_observation = observed
+    worker.execute_model(scheduler())
+    assert len(calls) == 1 and observed.last_record is None
+    assert 'source_pinned_model_observation' not in rows(worker, output)[0]
