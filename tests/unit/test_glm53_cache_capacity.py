@@ -146,7 +146,7 @@ def test_glm_planner_rejects_less_than_one_common_block_with_component_details(
 
 
 def test_component_planner_rejects_pp_and_blockless_legacy_request_estimator(model):
-    with pytest.raises(NotImplementedError, match="num_pipeline_stages=1"):
+    with pytest.raises(NotImplementedError, match="num_pipeline_stages=1|DSA parameter estimates require PP1"):
         _planner(model, pp_size=2).get_num_blocks(block_size=64)
     planner = _planner(model)
     with pytest.raises(NotImplementedError, match="no cache block size"):
@@ -158,7 +158,7 @@ def test_component_planner_rejects_pp_and_blockless_legacy_request_estimator(mod
 
 
 def test_no_compressed_deepseek_capacity_is_guessed(model):
-    with pytest.raises(NotImplementedError, match="no component capacity resolver"):
+    with pytest.raises(NotImplementedError, match="explicit runtime cache selection"):
         get_attention_kv_cache_capacity(
             DEEPSEEK_V4_ATTENTION_FAMILY, model, block_size=64
         )

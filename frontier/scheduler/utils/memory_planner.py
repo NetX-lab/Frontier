@@ -2,9 +2,11 @@ from typing import Optional
 
 from frontier.attention.memory import (
     AttentionKVCacheCapacity,
+    AttentionKVCacheSelection,
     get_attention_kv_cache_capacity,
     get_attention_runtime_kv_layout,
 )
+from frontier.attention.families import get_attention_family
 from frontier.config import ReplicaConfig
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities.replica import Replica
@@ -130,7 +132,20 @@ class MemoryPlanner:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return None
         model_config = self._replica_config.model_config
-        family = model_config.get_attention_family()
+        family_ids = {
+            spec.family_id for spec in model_config.get_layer_attention_specs()
+        }
+        if len(family_ids) != 1:
+            if any(
+                get_attention_family(family_id).kv_cache_capacity_resolver is not None
+                for family_id in family_ids
+            ):
+                raise NotImplementedError(
+                    "Mixed attention families with component cache capacity are unsupported"
+                )
+            # Hybrid GDN models retain their existing per-layer accounting.
+            return None
+        family = get_attention_family(next(iter(family_ids)))
         if family.kv_cache_capacity_resolver is None:
             return None
         if self._replica_config.num_pipeline_stages != 1:
@@ -139,7 +154,10 @@ class MemoryPlanner:
                 "per-stage resident capacity is not represented."
             )
         return get_attention_kv_cache_capacity(
-            family, model_config, block_size=block_size
+            family, model_config, block_size=block_size,
+            selection=AttentionKVCacheSelection.from_replica(
+                self._replica_config, block_size=block_size,
+            ),
         )
 
     def get_parameter_memory_per_device_bytes(self) -> int:
@@ -151,8 +169,14 @@ class MemoryPlanner:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
 
-        family = self._replica_config.model_config.get_attention_family()
-        if family.kv_cache_capacity_resolver is not None:
+        family_ids = {
+            spec.family_id
+            for spec in self._replica_config.model_config.get_layer_attention_specs()
+        }
+        if any(
+            get_attention_family(family_id).kv_cache_capacity_resolver is not None
+            for family_id in family_ids
+        ):
             raise NotImplementedError(
                 "The legacy per-request memory estimator has no cache block size "
                 "for component capacity; use get_num_blocks(block_size=...)."
@@ -221,8 +245,10 @@ class MemoryPlanner:
           available_kv_cache_memory = requested_memory - non_kv_cache_memory
           num_blocks = floor(available_kv_cache_memory / common_block_bytes)
 
-        Component layouts sum the pages of all resident owners in one common
-        logical block. Homogeneous layouts retain page_size * num_layers.
+        Additive component layouts sum owner pages in one common logical block.
+        Grouped layouts use their maximum packed group stride. Their returned
+        count includes declared reserved slab IDs. Homogeneous layouts retain
+        page_size * num_layers.
 
         Frontier approximates non_kv_cache_memory with parameter memory
         plus an optional calibrated overhead term.
@@ -234,15 +260,21 @@ class MemoryPlanner:
             common_block_bytes = page_size * num_full_attention_layers
             cache_details = {"page_size_bytes": int(page_size)}
         else:
-            common_block_bytes = capacity.resident_bytes_per_common_block
+            common_block_bytes = capacity.physical_block_size_bytes
+            size_key = (
+                "physical_block_size_bytes"
+                if capacity.is_grouped else "resident_bytes_per_common_block"
+            )
             cache_details = {
-                "resident_bytes_per_common_block": common_block_bytes,
+                size_key: common_block_bytes,
                 "num_cache_components": len(capacity.components),
                 "num_cache_component_owners": sum(
                     len(component.owner_layer_ids)
                     for component in capacity.components
                 ),
             }
+            if capacity.is_grouped:
+                cache_details["reserved_blocks"] = capacity.reserved_blocks
         gdn_state_reservation_bytes = self._get_gdn_state_reservation_bytes()
         if common_block_bytes == 0 and gdn_state_reservation_bytes == 0:
             return 0
@@ -296,10 +328,14 @@ class MemoryPlanner:
         num_blocks = int(available_kv_cache_memory // common_block_bytes)
         num_blocks = max(num_blocks, 0)
 
-        if num_blocks <= 0:
+        if num_blocks <= (capacity.reserved_blocks if capacity is not None else 0):
             self._raise_memory_oom(
                 reason="insufficient_kv_cache_budget",
-                message="Not enough KV cache budget to allocate even one block.",
+                message=(
+                    "Not enough KV cache budget to allocate a block after pool reservations."
+                    if capacity is not None and capacity.is_grouped
+                    else "Not enough KV cache budget to allocate even one block."
+                ),
                 details={
                     "requested_memory_bytes": requested_memory,
                     "parameter_memory_per_device_bytes": parameter_memory_per_device,

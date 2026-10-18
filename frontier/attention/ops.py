@@ -5,7 +5,10 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 if TYPE_CHECKING:
-    from frontier.attention.memory import AttentionKVCacheCapacity
+    from frontier.attention.memory import (
+        AttentionKVCacheCapacity,
+        AttentionKVCacheSelection,
+    )
 
 from frontier.operators.spec import (
     OperatorFamilySpec,
@@ -92,7 +95,9 @@ class AttentionFamilySpec(OperatorFamilySpec):
     runtime_head_size_resolver: Callable[[Any], int] | None = None
     runtime_meta_contract: AttentionRuntimeMetaContract | None = None
     kv_cache_capacity_resolver: (
-        Callable[[Any, int], AttentionKVCacheCapacity] | None
+        Callable[
+            [Any, int, AttentionKVCacheSelection | None], AttentionKVCacheCapacity
+        ] | None
     ) = None
 
     _family_label: ClassVar[str] = "Attention family"

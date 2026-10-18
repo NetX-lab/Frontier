@@ -49,7 +49,7 @@ def _latent_mla_runtime_head_size(config) -> int:
     )
 
 
-def _dsa_kv_cache_capacity(config, block_size: int):
+def _dsa_kv_cache_capacity(config, block_size: int, selection=None):
     from frontier.attention.memory import (
         AttentionKVCacheCapacity,
         AttentionKVCacheComponent,
@@ -112,6 +112,138 @@ def _dsa_kv_cache_capacity(config, block_size: int):
                 page_size_bytes=block_size * index_bytes_per_token,
             ),
         ),
+    )
+
+
+def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
+    """Pinned FlashMLA packed pages, independent of execution admission."""
+    from frontier.attention.memory import (
+        AttentionKVCacheCapacity,
+        AttentionKVCacheComponent,
+        AttentionKVCacheGroup,
+        AttentionKVCacheSelection,
+    )
+    from frontier.types import DeviceSKUType
+
+    if not isinstance(selection, AttentionKVCacheSelection):
+        raise NotImplementedError("DeepSeek-V4 cache requires explicit runtime cache selection")
+    if selection.device != str(DeviceSKUType.H800) or selection.gpu_platform != "cuda":
+        raise NotImplementedError("DeepSeek-V4 grouped cache currently requires H800/SM90 CUDA")
+    if selection.attention_backend != "FLASHMLA_SPARSE_DSV4":
+        raise NotImplementedError("DeepSeek-V4 cache requires FLASHMLA_SPARSE_DSV4")
+    # vLLM DeepseekV4SparseMLABackend publishes fp8 as an alias of this
+    # UE8M0-paged format. No automatic or alternate backend selection is made.
+    main_dtype = {"fp8": "fp8_ds_mla"}.get(selection.kv_cache_dtype, selection.kv_cache_dtype)
+    if main_dtype != "fp8_ds_mla":
+        raise NotImplementedError("DeepSeek-V4 cache requires explicit fp8/fp8_ds_mla main KV dtype")
+    if selection.indexer_kv_cache_dtype != "fp8":
+        raise NotImplementedError("DeepSeek-V4 H800 indexer cache requires fp8, not the SM100 mxfp4 path")
+    if block_size != 256 or selection.decode_context_parallel_size != 1:
+        raise NotImplementedError("DeepSeek-V4 FlashMLA cache requires block_size=256 and DCP1")
+
+    specs = tuple(config.get_layer_attention_specs())
+    if tuple(spec.global_layer_id for spec in specs) != tuple(range(config.num_layers)):
+        raise ValueError("DeepSeek-V4 cache requires every backbone layer in order")
+    if any(spec.family_id != "deepseek_v4_attention" for spec in specs):
+        raise ValueError("DeepSeek-V4 cache requires compressed-attention layer bindings")
+    if any(spec.variant_id not in {"uncompressed", "csa", "hca"} for spec in specs):
+        raise ValueError("DeepSeek-V4 cache has an invalid compression schedule")
+    csa = tuple(spec.global_layer_id for spec in specs if spec.variant_id == "csa")
+    hca = tuple(spec.global_layer_id for spec in specs if spec.variant_id == "hca")
+    all_layers = tuple(spec.global_layer_id for spec in specs)
+    if not csa or not hca:
+        raise NotImplementedError("DeepSeek-V4 packed layout requires both CSA and HCA owners")
+    head_dim = config.get_head_dim()
+    dimensions = {}
+    for name in ("qk_rope_head_dim", "index_head_dim", "sliding_window"):
+        value = getattr(config, name, None)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"DeepSeek-V4 cache requires positive int {name}")
+        dimensions[name] = value
+    rope_dim = dimensions["qk_rope_head_dim"]
+    index_dim = dimensions["index_head_dim"]
+    window = dimensions["sliding_window"]
+    # This backend publishes a fixed 448B NoPE / 128B BF16 RoPE / 8B scale
+    # format. Reject unsupported geometry rather than generalize its kernel.
+    if head_dim != 512 or rope_dim != 64:
+        raise NotImplementedError("DeepSeek-V4 FlashMLA requires head_dim=512 and rope_dim=64")
+    if index_dim <= 0 or index_dim % 128 or window <= 0:
+        raise ValueError("DeepSeek-V4 cache requires positive 128-aligned index_head_dim and sliding_window")
+    if config.torch_dtype != "bfloat16":
+        raise NotImplementedError("DeepSeek-V4 FlashMLA model dtype must be bfloat16")
+
+    alignment = 576  # Pinned fp8_ds_mla backend page alignment.
+    main_row_bytes = (head_dim - rope_dim) + 2 * rope_dim + 8
+    index_row_bytes = index_dim + index_dim // 128 * 4
+    components = []
+
+    def component(component_id, owners, logical_block, ratio, row_bytes, precision):
+        rows = logical_block // ratio
+        content = rows * row_bytes
+        value = AttentionKVCacheComponent(
+            component_id=component_id, owner_layer_ids=owners,
+            page_size_bytes=(content + alignment - 1) // alignment * alignment,
+            stored_rows=rows, compression_ratio=ratio, precision=precision,
+            content_size_bytes=content,
+        )
+        components.append(value)
+        return tuple((component_id, layer_id) for layer_id in owners)
+
+    full = (
+        *component("main_csa", csa, block_size, 4, main_row_bytes, main_dtype),
+        *component("main_hca", hca, block_size, 128, main_row_bytes, main_dtype),
+        *component("indexer_csa", csa, block_size, 4, index_row_bytes, "fp8_fp32_scale"),
+    )
+    swa = component("swa", all_layers, 64, 1, main_row_bytes, main_dtype)
+    csa_state = (
+        *component("main_csa_state", csa, 4, 1, 2 * 2 * head_dim * 4, "float32"),
+        *component("indexer_csa_state", csa, 4, 1, 2 * 2 * index_dim * 4, "float32"),
+    )
+    hca_state = component("main_hca_state", hca, 8, 1, 2 * head_dim * 4, "float32")
+
+    # Native grouping minimizes tuple padding with a larger-size tie break.
+    # Counts are source component multiplicities, not padded/fake layer IDs.
+    by_identity = {
+        (item.component_id, owner): item
+        for item in components for owner in item.owner_layer_ids
+    }
+
+    def tuples_by_page_size(owners):
+        by_size = {}
+        for owner in owners:
+            size = by_identity[owner].page_size_bytes
+            by_size.setdefault(size, []).append(owner)
+        return tuple(tuple(value) for value in by_size.values())
+
+    domains = (full, swa, csa_state, hca_state)
+    tuple_counts = tuple(max(map(len, tuples_by_page_size(owners))) for owners in domains)
+    lower_bound = tuple_counts[0]
+    tuple_size = min(
+        range(lower_bound, max(tuple_counts) + 1),
+        key=lambda size: (sum((-count) % size for count in tuple_counts), -size),
+    )
+    groups = [AttentionKVCacheGroup("compressed", block_size, full)]
+    for name, owners, logical_block, group_window in (
+        ("swa", swa, 64, window),
+        ("csa_state", csa_state, 4, 2 * 4),
+        ("hca_state", hca_state, 8, 128),
+    ):
+        rows_by_size = tuples_by_page_size(owners)
+        if len({len(row) for row in rows_by_size}) != 1:
+            raise NotImplementedError("DeepSeek-V4 sliding tuple page classes must have equal owner counts")
+        owner_tuples = tuple(zip(*rows_by_size))
+        count = (len(owner_tuples) + tuple_size - 1) // tuple_size
+        for index in range(count):
+            slices = tuple(pair for row in owner_tuples[index::count] for pair in row)
+            groups.append(AttentionKVCacheGroup(
+                group_id=f"{name}_{index}", logical_block_size=logical_block,
+                component_owners=slices, retention="sliding_window",
+                window_tokens=group_window, extra_retained_tokens=0,
+            ))
+    return AttentionKVCacheCapacity(
+        family_id="deepseek_v4_attention", block_size=block_size,
+        num_layers=config.num_layers, components=tuple(components),
+        groups=tuple(groups), reserved_blocks=1, zero_new_blocks=True,
     )
 
 
@@ -411,6 +543,7 @@ DEEPSEEK_V4_ATTENTION_FAMILY = AttentionFamilySpec(
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
     execution_enabled=False,
+    kv_cache_capacity_resolver=_deepseek_v4_kv_cache_capacity,
     disabled_reason=(
         "DeepSeek-V4 execution requires compressed cache, compressor, indexer, "
         "mHC and mixed-precision operator coverage."
