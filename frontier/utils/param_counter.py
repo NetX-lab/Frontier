@@ -371,10 +371,13 @@ class ParamCounter:
         model = self._model_config
         if (
             self._replica_config.num_pipeline_stages != 1
-            or self._cluster_type is not ClusterType.MONOLITHIC
+            or self._cluster_type not in (
+                ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+            )
         ):
             raise NotImplementedError(
-                "DSA parameter estimates require PP1 MONOLITHIC ownership"
+                "DSA parameter estimates require PP1 full-model ownership "
+                "(MONOLITHIC, PREFILL or DECODE)"
             )
         if self._get_moe_tp_size() != 1:
             raise NotImplementedError("DSA parameter estimates require MoE TP1")

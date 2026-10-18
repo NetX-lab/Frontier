@@ -11,26 +11,36 @@ from frontier.types import ClusterType
 from frontier.utils.param_counter import ParamCounter
 
 
-def _replica(*, ep: int = 16, tp: int = 8) -> ReplicaConfig:
+FULL_MODEL_ROLES = (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
+
+
+def _replica(
+    *, ep: int = 16, tp: int = 8, role: ClusterType = ClusterType.MONOLITHIC,
+) -> ReplicaConfig:
     return ReplicaConfig(
         model_name="zai-org/GLM-5.3", device="h800",
+        cluster_prefix=None if role is ClusterType.MONOLITHIC else role.name.lower(),
         attn_tensor_parallel_size=tp, attn_dp=ep // tp,
         moe_tensor_parallel_size=1, moe_expert_parallel_size=ep,
         num_pipeline_stages=1,
     )
 
 
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
 @pytest.mark.parametrize(("ep", "mlp_elements", "mlp_bytes", "elements", "memory"), [
     (16, 45_855_296_256, 45_984_484_992, 49_000_424_448, 49_676_295_552),
     (32, 23_206_054_656, 23_329_713_792, 26_351_182_848, 27_021_524_352),
     (64, 11_881_433_856, 12_002_328_192, 15_026_562_048, 15_694_138_752),
 ])
 def test_original_source_inventory_distinguishes_parameters_from_storage(
-    ep: int, mlp_elements: int, mlp_bytes: int, elements: int, memory: int,
+    role: ClusterType, ep: int, mlp_elements: int, mlp_bytes: int,
+    elements: int, memory: int,
 ) -> None:
     """Pinned 78-layer counts include all resident experts, scales and one KV-B backing."""
 
-    counter = ParamCounter(_replica(ep=ep))
+    replica = _replica(ep=ep, role=role)
+    assert replica.world_size == ep
+    counter = ParamCounter(replica, role)
     assert counter.get_num_attention_parameters_per_device() == 2_906_267_904
     assert counter.get_attention_parameter_memory_per_device_bytes() == 3_214_089_984
     assert counter.get_num_mlp_parameters_per_device() == mlp_elements
@@ -42,6 +52,34 @@ def test_original_source_inventory_distinguishes_parameters_from_storage(
     assert memory - 3_214_089_984 - mlp_bytes == 2 * other_elements
     assert counter.get_resident_attention_stage_id() == 0
     assert counter.get_num_mtp_parameters_per_device() == 0
+
+
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+def test_unified_roles_retain_the_full_backbone_and_both_vocabulary_endpoints(
+    role: ClusterType,
+) -> None:
+    replica = _replica(ep=32, role=role)
+    counter = ParamCounter(replica, role)
+    monolithic = ParamCounter(_replica(ep=32))
+    model = replica.model_config
+    assert model.num_layers == 78
+    assert [layer for layer in range(78) if not model.is_moe_layer(layer)] == [0, 1, 2]
+    assert sum(model.is_moe_layer(layer) for layer in range(78)) == 75
+    assert counter.get_attention_stage_layer_counts() == ((0, 78),)
+    for layer_id in range(78):
+        assert counter.get_num_attention_params_per_layer(layer_id) == (
+            monolithic.get_num_attention_params_per_layer(layer_id)
+        )
+        assert counter.get_num_mlp_params_per_layer(layer_id) == (
+            monolithic.get_num_mlp_params_per_layer(layer_id)
+        )
+    # Three dense layers and75 routed-plus-shared layers stay on each role.
+    assert counter.get_num_mlp_params_per_layer(0) == 28_311_552
+    assert counter.get_num_mlp_params_per_layer(3) == 308_281_600
+    backbone_elements = sum(counter.get_num_parameters_per_layer(layer) for layer in range(78))
+    endpoints_and_final_norm = 2 * 154_880 * 6_144 // 8 + 6_144
+    assert counter.get_num_parameters_per_device() - backbone_elements == endpoints_and_final_norm
+    assert counter.get_parameter_memory_per_device_bytes() == 27_021_524_352
 
 
 def test_full_and_shared_index_layers_have_distinct_parameter_owners() -> None:
@@ -190,6 +228,7 @@ def test_unrepresented_or_mixed_precision_exclusions_fail_explicitly(
         ParamCounter(replica).get_parameter_memory_per_device_bytes()
 
 
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
 @pytest.mark.parametrize(("changes", "message"), [
     ({"torch_dtype": "float16"}, "BF16 model dtype"),
     ({"tie_word_embeddings": True}, "untied embeddings"),
@@ -199,13 +238,16 @@ def test_unrepresented_or_mixed_precision_exclusions_fail_explicitly(
     ({"q_lora_rank": None}, "q_lora_rank"),
     ({"vocab_size": 154881}, "unpadded vocabulary"),
 ])
-def test_unrepresented_model_contracts_fail_explicitly(changes: dict, message: str) -> None:
-    replica = _replica()
+def test_unrepresented_model_contracts_fail_explicitly(
+    role: ClusterType, changes: dict, message: str,
+) -> None:
+    replica = _replica(role=role)
     replica.model_config = replace(replica.model_config, **changes)
     with pytest.raises((ValueError, NotImplementedError), match=message):
-        ParamCounter(replica).get_parameter_memory_per_device_bytes()
+        ParamCounter(replica, role).get_parameter_memory_per_device_bytes()
 
 
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
 @pytest.mark.parametrize(("changes", "message"), [
     ({"quant_method": "fp4", "weight_block_size": None}, "serialized dynamic block FP8"),
     ({"weight_block_size": None}, "128x128"),
@@ -213,40 +255,47 @@ def test_unrepresented_model_contracts_fail_explicitly(changes: dict, message: s
     ({"scale_fmt": "ue8m0"}, "initial FP32 scales"),
     ({"quantized_operations": ["mlp_up_proj"]}, "native operation selection"),
 ])
-def test_unrepresented_quantization_contracts_fail_explicitly(changes: dict, message: str) -> None:
-    replica = _replica()
+def test_unrepresented_quantization_contracts_fail_explicitly(
+    role: ClusterType, changes: dict, message: str,
+) -> None:
+    replica = _replica(role=role)
     model = replica.model_config
     replica.model_config = replace(
         model, quantization_config=replace(model.quantization_config, **changes),
     )
     with pytest.raises(NotImplementedError, match=message):
-        ParamCounter(replica)
+        ParamCounter(replica, role)
 
 
-@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
-                                  ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN])
+@pytest.mark.parametrize(
+    "role", [ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN, ClusterType.TRANS],
+)
 def test_unrepresented_role_ownership_is_rejected(role: ClusterType) -> None:
-    with pytest.raises(NotImplementedError, match="PP1 MONOLITHIC"):
+    with pytest.raises(NotImplementedError, match="PP1 full-model ownership"):
         ParamCounter(_replica(), role)
 
 
-def test_unrepresented_pipeline_moe_tp_and_mtp_are_rejected() -> None:
-    replica = _replica()
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
+def test_unrepresented_pipeline_moe_tp_and_mtp_are_rejected(role: ClusterType) -> None:
+    replica = _replica(role=role)
     replica.num_pipeline_stages = 2
-    with pytest.raises(NotImplementedError, match="PP1 MONOLITHIC"):
-        ParamCounter(replica)
+    with pytest.raises(NotImplementedError, match="PP1 full-model ownership"):
+        ParamCounter(replica, role)
     replica.num_pipeline_stages = 1
     replica.moe_tensor_parallel_size = 2
     with pytest.raises(NotImplementedError, match="MoE TP1"):
-        ParamCounter(replica)
+        ParamCounter(replica, role)
     replica.moe_tensor_parallel_size = 1
     replica.speculative_decoding_config.enabled = True
     with pytest.raises(NotImplementedError, match="exclude speculative"):
-        ParamCounter(replica)
+        ParamCounter(replica, role)
 
 
-def test_replicated_shared_experts_need_a_separate_sp_contract(monkeypatch: pytest.MonkeyPatch) -> None:
-    replica = _replica()
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
+def test_replicated_shared_experts_need_a_separate_sp_contract(
+    role: ClusterType, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    replica = _replica(role=role)
     model = replica.model_config
     profile = model.get_model_architecture_profile()
     contracts = tuple(
@@ -258,20 +307,23 @@ def test_replicated_shared_experts_need_a_separate_sp_contract(monkeypatch: pyte
         profile, layer_contracts=contracts,
     ))
     with pytest.raises(NotImplementedError, match="non-SP typed FFN ownership"):
-        ParamCounter(replica).get_parameter_memory_per_device_bytes()
+        ParamCounter(replica, role).get_parameter_memory_per_device_bytes()
 
 
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
 @pytest.mark.parametrize(("changes", "message"), [
     ({"q_lora_rank": 2050}, "output partitions"),
     ({"v_head_dim": 257}, "row-parallel O input"),
     ({"routed_mlp_hidden_dim": 2050}, "local FFN width"),
     ({"num_experts": 255}, "divisible"),
 ])
-def test_incompatible_native_shard_geometry_is_rejected(changes: dict, message: str) -> None:
-    replica = _replica()
+def test_incompatible_native_shard_geometry_is_rejected(
+    role: ClusterType, changes: dict, message: str,
+) -> None:
+    replica = _replica(role=role)
     replica.model_config = replace(replica.model_config, **changes)
     with pytest.raises(ValueError, match=message):
-        ParamCounter(replica).get_parameter_memory_per_device_bytes()
+        ParamCounter(replica, role).get_parameter_memory_per_device_bytes()
 
 
 def test_existing_mla_count_and_legacy_ffn_byte_policy_are_preserved() -> None:
