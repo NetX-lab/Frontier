@@ -9,6 +9,7 @@ import os
 import pandas as pd
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_column_by_role,
@@ -311,6 +312,9 @@ class ProfilingDataFrameLoaders:
             FileNotFoundError: If the input file does not exist
             ValueError: If no data matches filtering criteria
         """
+        resolve_runtime_attention_family(
+            replica_config.model_config
+        ).require_enabled_for_execution()
         # Check file existence
         if not os.path.exists(file_path):
             raise FileNotFoundError(

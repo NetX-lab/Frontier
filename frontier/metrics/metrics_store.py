@@ -15,6 +15,7 @@ from frontier.attention.families import (
     DENSE_ATTENTION_KV_CACHE_EXTRACT,
     LATENT_MLA_ATTENTION_FAMILY,
     get_attention_family,
+    iter_attention_families,
 )
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.trace_mapping import get_attention_trace_op_times
@@ -131,7 +132,10 @@ def _iter_layer_attention_times(execution_time: ExecutionTime, *, skip_zero: boo
             value = float(getattr(execution_time, public_attr))
             if value or not skip_zero:
                 yield name, value
-    for operator, value in get_attention_trace_op_times(execution_time, family, skip_zero=skip_zero):
+    for operator, value in get_attention_trace_op_times(
+        execution_time, family, skip_zero=skip_zero,
+        allow_structural=family.structural_execution_enabled,
+    ):
         name = (_DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE.get(operator.role, operator.name)
                 if family.dense_compatible else operator.name)
         yield name, value
@@ -1561,13 +1565,27 @@ class MetricsStore:
         }
 
         # Operation metrics
+        family_ids = {
+            spec.family_id
+            for spec in cluster_config.replica_config.model_config.get_layer_attention_specs()
+        }
+        absent_structural_ops = {
+            operator.name
+            for family in iter_attention_families()
+            if family.structural_execution_enabled and family.family_id not in family_ids
+            for operator in family.e2e_trace_ops()
+        }
+        operation_metrics = tuple(
+            metric for metric in OperationMetrics
+            if metric.value not in absent_structural_ops
+        )
         self._operation_metrics[cluster_type] = {
             metric_name: CDFSketch(
                 metric_name.value,
                 self._config.save_table_to_wandb,
                 self._config.store_plots,
             )
-            for metric_name in OperationMetrics
+            for metric_name in operation_metrics
         }
         self._operation_metrics_per_batch[cluster_type] = {
             metric_name: DataSeries(
@@ -1577,7 +1595,7 @@ class MetricsStore:
                 self._config.save_table_to_wandb,
                 self._config.store_plots,
             )
-            for metric_name in OperationMetrics
+            for metric_name in operation_metrics
         }
         self._cpu_operation_metrics[cluster_type] = {
             metric_name: CDFSketch(
@@ -4146,7 +4164,10 @@ class MetricsStore:
                     "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
                     "attention_layer_post_proj_execution_time": "attention_post_proj_time",
                 }
-                for operator, duration_ms in get_attention_trace_op_times(layer, family, skip_zero=False):
+                for operator, duration_ms in get_attention_trace_op_times(
+                    layer, family, skip_zero=False,
+                    allow_structural=family.structural_execution_enabled,
+                ):
                     legacy_name = _ATTENTION_LEDGER_FIELD_BY_OPERATOR.get(operator.name)
                     if legacy_name is None:
                         old_name = component_public_names.get(operator.execution_time_attr, operator.execution_time_attr)

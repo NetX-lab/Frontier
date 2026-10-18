@@ -47,7 +47,7 @@ def test_iter_execution_enabled_families_is_order_preserving_subset() -> None:
 
 def test_quantization_registry_attention_ops_match_execution_enabled_helper() -> None:
     """The default quant registry's attention ops are exactly the execution-enabled
-    families' profiling ops; the frozen family (no operators) never contributes."""
+    families' profiling ops; structural-only targets do not contribute."""
     from frontier.config.quantization_manager import QuantizationManager
 
     QuantizationManager.reset()
@@ -62,13 +62,13 @@ def test_quantization_registry_attention_ops_match_execution_enabled_helper() ->
         assert expected_attention_ops.issubset(compute_ops)
         for op_name in expected_attention_ops:
             assert manager.is_compute_operation(op_name)
-        # The frozen family carries no operators, so it can leak none.
+        # Structural targets stay outside the measured precision registry.
         frozen_ops = {
             operator.name
             for family in iter_attention_families()
             if family.dsa_frozen
             for operator in family.profiling_ops()
         }
-        assert frozen_ops == set()
+        assert frozen_ops.isdisjoint(compute_ops)
     finally:
         QuantizationManager.reset()

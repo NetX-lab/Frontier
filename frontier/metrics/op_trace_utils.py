@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
 )
 from frontier.attention.memory import get_attention_runtime_kv_layout
@@ -272,7 +273,10 @@ def compute_op_trace_meta(
     ctx: OpTraceContext,
 ) -> Dict[str, Any]:
     precision_op = map_trace_op_to_precision_op(op_name)
-    precision = _precision_for_op(op_name, ctx.cluster_type)
+    if op_name in ("attn_dsa_indexer", "attn_dsa_mla"):
+        precision = PrecisionType.from_torch_dtype(ctx.model_config.torch_dtype)
+    else:
+        precision = _precision_for_op(op_name, ctx.cluster_type)
     dtype_bytes = precision.bytes_per_element
 
     tokens = ctx.effective_tokens_rounded
@@ -376,6 +380,50 @@ def compute_op_trace_meta(
 
     tensor_shape: Dict[str, Any] = {}
     tensor_size_bytes: Dict[str, int] = {}
+    tensor_dtype: Dict[str, str] = {}
+    tensor_dtype_bytes: Dict[str, float] = {}
+    internal_tensor_shape: Dict[str, Any] = {}
+    internal_tensor_dtype: Dict[str, str] = {}
+
+    def _is_dsa_attention() -> bool:
+        index_topk = getattr(ctx.model_config, "index_topk", None)
+        return (
+            type(index_topk) is int
+            and index_topk > 0
+            and bind_attention_family(ctx.model_config).family.family_id
+            == DSA_ATTENTION_FAMILY.family_id
+        )
+
+    def _dsa_dimension(name: str) -> int:
+        value = getattr(ctx.model_config, name, None)
+        if type(value) is not int or value <= 0:
+            raise ValueError(f"DSA trace metadata requires positive int {name}")
+        return value
+
+    def _dsa_attention_dimensions() -> tuple[int, int, int, int, int, int]:
+        if not _is_dsa_attention():
+            raise ValueError("DSA trace metadata requires an index-attention binding")
+        _validate_divisible(ctx.num_q_heads, ctx.attn_tp, "num_q_heads")
+        q_lora_rank = _dsa_dimension("q_lora_rank")
+        kv_lora_rank = _dsa_dimension("kv_lora_rank")
+        rope_dim = _dsa_dimension("qk_rope_head_dim")
+        qk_dim = _dsa_dimension("qk_nope_head_dim") + rope_dim
+        v_dim = _dsa_dimension("v_head_dim")
+        return (
+            ctx.num_q_heads // ctx.attn_tp,
+            q_lora_rank,
+            kv_lora_rank,
+            rope_dim,
+            qk_dim,
+            v_dim,
+        )
+
+    def _set_dsa_activation_precision() -> None:
+        nonlocal precision, dtype_bytes
+        # These inclusive wrapper boundaries carry model activations. Their
+        # mixed-precision children are priced inside the measured parent scope.
+        precision = PrecisionType.from_torch_dtype(ctx.model_config.torch_dtype)
+        dtype_bytes = precision.bytes_per_element
 
     def _memory_family_tensor_shape(operator: OperatorSpec) -> Dict[str, Any]:
         if operator.role is OperatorRole.NORMALIZATION:
@@ -420,6 +468,63 @@ def compute_op_trace_meta(
             tensor_shape = _memory_family_tensor_shape(memory_operator)
         elif ffn_operator is not None:
             tensor_shape = _ffn_family_tensor_shape(ffn_operator)
+        elif op_name == "attn_dsa_indexer":
+            _, q_lora_rank, _, _, _, _ = _dsa_attention_dimensions()
+            index_heads = _dsa_dimension("index_n_heads")
+            index_dim = _dsa_dimension("index_head_dim")
+            tensor_shape = {
+                "hidden_states": [tokens, hidden_size],
+                "qr": [tokens, q_lora_rank],
+                "positions": [tokens],
+            }
+            tensor_dtype["positions"] = "INT64"
+            tensor_dtype_bytes["positions"] = 8
+            # Indexer uses replicated projections. These are internal shapes,
+            # not additional timed operators or the full shared-buffer extent.
+            internal_tensor_shape = {
+                "index_q_before_quant": [tokens, index_heads, index_dim],
+                "index_k_before_quant": [tokens, index_dim],
+                "selected_indices_active": [tokens, _dsa_dimension("index_topk")],
+            }
+            internal_tensor_dtype = {
+                "index_q_before_quant": precision.name,
+                "index_k_before_quant": precision.name,
+                "selected_indices_active": "INT32",
+            }
+        elif op_name == "attn_dsa_mla":
+            q_heads, _, kv_rank, rope_dim, qk_dim, v_dim = _dsa_attention_dimensions()
+            tensor_shape = {
+                "q": [tokens, q_heads, qk_dim],
+                "kv_c_normed": [tokens, kv_rank],
+                "k_pe": [tokens, 1, rope_dim],
+                "output": [tokens, q_heads * v_dim],
+            }
+        elif op_name == "attn_pre_proj" and _is_dsa_attention():
+            q_heads, q_rank, kv_rank, rope_dim, qk_dim, _ = _dsa_attention_dimensions()
+            _set_dsa_activation_precision()
+            tensor_shape = {
+                "input": [tokens, hidden_size],
+                "q_c": [tokens, q_rank],
+                "kv_c_normed": [tokens, kv_rank],
+                "q": [tokens, q_heads, qk_dim],
+                "k_pe": [tokens, 1, rope_dim],
+            }
+        elif op_name == "attn_rope" and _is_dsa_attention():
+            q_heads, _, _, rope_dim, _, _ = _dsa_attention_dimensions()
+            _set_dsa_activation_precision()
+            tensor_shape = {
+                "q": [tokens, q_heads, rope_dim],
+                "k": [tokens, 1, rope_dim],
+                "q_out": [tokens, q_heads, rope_dim],
+                "k_out": [tokens, 1, rope_dim],
+            }
+        elif op_name == "attn_post_proj" and _is_dsa_attention():
+            q_heads, _, _, _, _, v_dim = _dsa_attention_dimensions()
+            _set_dsa_activation_precision()
+            tensor_shape = {
+                "input": [tokens, q_heads * v_dim],
+                "output": [tokens, hidden_size],
+            }
         elif op_name == "attn_pre_proj":
             head_dim, q_heads_per_tp, kv_heads_per_tp, _ = _get_attention_meta()
             qkv_out_dim_per_tp = (q_heads_per_tp + 2 * kv_heads_per_tp) * head_dim
@@ -622,15 +727,25 @@ def compute_op_trace_meta(
 
         for key, shape in tensor_shape.items():
             elements = _elements_from_shape(shape)
-            tensor_size_bytes[key] = _bytes_for_elements(elements, dtype_bytes)
+            tensor_size_bytes[key] = _bytes_for_elements(
+                elements, tensor_dtype_bytes.get(key, dtype_bytes)
+            )
 
-        return {
+        result = {
             "precision_op": precision_op,
             "dtype": precision.name,
             "dtype_bytes": dtype_bytes,
             "tensor_shape": tensor_shape,
             "tensor_size_bytes": tensor_size_bytes,
         }
+        if tensor_dtype:
+            result["tensor_dtype"] = {
+                key: tensor_dtype.get(key, precision.name) for key in tensor_shape
+            }
+        if internal_tensor_shape:
+            result["internal_tensor_shape"] = internal_tensor_shape
+            result["internal_tensor_dtype"] = internal_tensor_dtype
+        return result
 
     if op_type == "COMM":
         if op_name in (

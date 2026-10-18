@@ -617,6 +617,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
         tp_size = replica_config.attn_tensor_parallel_size
 
         model_config = replica_config.model_config
+        if model_config is not None:
+            resolve_runtime_attention_family(model_config).require_enabled_for_execution()
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
         architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
         attention_signature = (

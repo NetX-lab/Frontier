@@ -32,6 +32,7 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY,
     DENSE_ATTENTION_KV_CACHE_EXTRACT,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     get_attention_family,
@@ -7475,6 +7476,30 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         self._record_attention_kernels(attention_time.kernel_count)
         return attention_time
 
+    def _predict_dsa_dummy_attention_time(self, layer_id: int) -> AttentionTime:
+        """Represent source scopes using configured synthetic durations only."""
+        from frontier.entities.time_components import AttentionOperatorTimes
+
+        spec = bind_layer_attention(self._model_config, layer_id)
+        if spec.family_id != DSA_ATTENTION_FAMILY.family_id or spec.variant_id not in (
+            "full_index", "shared_index",
+        ):
+            raise ValueError("DSA structural timing requires full/shared index bindings")
+        base_time = self._dummy_execution_time
+        return AttentionTime(
+            # The outer preparation bundle owns Q/KV-A, Q-B and Q/KV norms.
+            attention_layer_pre_proj_execution_time=base_time,
+            attention_layer_post_proj_execution_time=base_time,
+            attention_rope_execution_time=base_time,
+            attn_norm_time=base_time,
+            operator_times=AttentionOperatorTimes({
+                "attn_dsa_indexer": (
+                    base_time if spec.index_producer_layer_id == layer_id else 0.0
+                ),
+                "attn_dsa_mla": base_time,
+            }),
+        )
+
     def _predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
@@ -7509,7 +7534,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
-        attention_family.require_enabled_for_execution()
+        attention_family.require_enabled_for_execution(structural=self._enable_dummy_mode)
         prices_kv_cache_extract = (
             cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
         )
@@ -7536,6 +7561,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
         if self._enable_dummy_mode:
+            if attention_family.family_id == DSA_ATTENTION_FAMILY.family_id:
+                return self._predict_dsa_dummy_attention_time(layer_id)
             base_time = self._dummy_execution_time
             return AttentionTime(
                 attention_prefill_execution_time=base_time,

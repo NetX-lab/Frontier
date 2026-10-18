@@ -3,7 +3,8 @@ from collections import OrderedDict
 from dataclasses import replace
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY
+from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -133,6 +134,7 @@ class SklearnMoEExecutionTimePredictor(
         include_moe: Optional[bool] = None,
         lane_workload: Optional[EPLaneWorkload] = None,
         include_stage_owned: bool = True,
+        layer_id: int = 0,
     ) -> ExecutionTime:
         """Return fixed dummy ExecutionTime object with MoE-aware fields."""
         if type(include_attention) is not bool:
@@ -144,6 +146,12 @@ class SklearnMoEExecutionTimePredictor(
         if not include_ffn and include_moe is True:
             raise ValueError("include_moe cannot be true when include_ffn is false")
         base_time = self._dummy_execution_time
+        dsa_attention = None
+        if include_attention and (
+            bind_layer_attention(self._model_config, layer_id).family_id
+            == DSA_ATTENTION_FAMILY.family_id
+        ):
+            dsa_attention = self._predict_dsa_dummy_attention_time(layer_id)
         model_is_moe = bool(getattr(self._model_config, "is_moe", False))
         is_moe = include_ffn and (
             model_is_moe if include_moe is None else include_moe
@@ -283,11 +291,13 @@ class SklearnMoEExecutionTimePredictor(
             num_layers_per_pipeline_stage=1,
             attention_rope_execution_time=(base_time if include_attention else 0.0),
             attention_kv_cache_save_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and dsa_attention is None else 0.0
             ),
-            attention_decode_execution_time=(base_time if include_attention else 0.0),
+            attention_decode_execution_time=(
+                base_time if include_attention and dsa_attention is None else 0.0
+            ),
             attention_prefill_execution_time=(
-                base_time if include_attention else 0.0
+                base_time if include_attention and dsa_attention is None else 0.0
             ),
             attention_layer_pre_proj_execution_time=(
                 base_time if include_attention else 0.0
@@ -336,6 +346,9 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times=communication_operator_times,
             mlp_operator_times=mlp_operator_times,
             moe_operator_times=moe_operator_times,
+            attention_operator_times=(
+                dsa_attention.operator_times if dsa_attention is not None else None
+            ),
         )
 
     def __init__(
@@ -1311,6 +1324,7 @@ class SklearnMoEExecutionTimePredictor(
                 include_ffn=include_ffn,
                 include_moe=include_moe_for_layer,
                 include_stage_owned=include_stage_owned,
+                layer_id=layer_id,
             )
             return dummy_execution_time
 

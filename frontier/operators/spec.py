@@ -20,6 +20,8 @@ class OperatorRole(Enum):
     CACHE_EXTRACT = "cache_extract"
     PREFILL_KERNEL = "prefill_kernel"
     DECODE_KERNEL = "decode_kernel"
+    INDEXING = "indexing"
+    ATTENTION = "attention"
     PROJECTION = "projection"
     ACTIVATION = "activation"
     NORMALIZATION = "normalization"
