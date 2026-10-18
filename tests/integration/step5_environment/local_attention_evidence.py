@@ -309,4 +309,3 @@ def measure_samples(torch, output, native, kind, selected, plan, module, spec, s
             stream.write(payload)
         rows.append(row)
     return rows
-
