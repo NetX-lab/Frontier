@@ -330,6 +330,11 @@ def build_profiling_plan(
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
 ) -> Dict[str, object]:
+    if get_model_architecture_profile(model_config).profile_id == "deepseek_v4":
+        raise NotImplementedError(
+            "DeepSeek-V4 generic linear profiling cannot represent fused scopes, "
+            "grouped output projection, mHC, and mixed-precision routed experts"
+        )
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tp_size must be a positive int, got {tp_size!r}")
     attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")

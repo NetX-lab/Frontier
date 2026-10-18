@@ -12,7 +12,7 @@ from frontier.attention.ops import (
     AttentionRuntimeMetaContract,
     ProjectionOwnership,
 )
-from frontier.operators.spec import ResourceClass
+from frontier.operators.spec import ResourceClass, TensorParallelMode
 
 
 _PREFILL_MIXED = (AttentionPhase.PREFILL, AttentionPhase.MIXED)
@@ -534,11 +534,100 @@ GATED_DELTA_NET_ATTENTION_FAMILY = AttentionFamilySpec(
     ),
 )
 
+def _deepseek_v4_attention_scopes(
+    scopes: tuple[
+        tuple[str, AttentionOperatorRole, TensorParallelMode, ResourceClass], ...
+    ],
+) -> tuple[AttentionOperatorSpec, ...]:
+    return tuple(
+        AttentionOperatorSpec(
+            name=name,
+            role=role,
+            phases=_ALL_PHASES,
+            predictor_target=False,
+            profiling_target=False,
+            e2e_trace_target=False,
+            resource_class=resource,
+            tp_mode=tp_mode,
+            projection_ownership=(
+                ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE
+                if role is AttentionOperatorRole.PROJECTION
+                else ProjectionOwnership.NOT_PROJECTION
+            ),
+        )
+        for name, role, tp_mode, resource in scopes
+    )
+
+
+_DEEPSEEK_V4_COMMON_OPERATORS = _deepseek_v4_attention_scopes((
+    ("dsv4_fused_qkv_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_fused_qkv_rmsnorm", AttentionOperatorRole.NORMALIZATION,
+     TensorParallelMode.REPLICATED, ResourceClass.MEMORY),
+    ("dsv4_q_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.COMP),
+    # One native call owns Q norm/RoPE/padding and KV RoPE/quant/insert.
+    ("dsv4_fused_q_kv_prepare", AttentionOperatorRole.CACHE_WRITE,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.MEMORY),
+    ("dsv4_sparse_attention", AttentionOperatorRole.ATTENTION,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.COMP),
+    ("dsv4_output_inv_rope_quant", AttentionOperatorRole.POSITION_ENCODING,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.MEMORY),
+    ("dsv4_grouped_output_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.COMP),
+    ("dsv4_output_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.ATTENTION_TP, ResourceClass.COMP),
+))
+
+
+_DEEPSEEK_V4_COMPRESSOR_OPERATORS = _deepseek_v4_attention_scopes((
+    ("dsv4_compressor_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_compressor_save_partial_states", AttentionOperatorRole.CACHE_WRITE,
+     TensorParallelMode.REPLICATED, ResourceClass.MEMORY),
+    ("dsv4_compressor_fused_compress_store", AttentionOperatorRole.CACHE_WRITE,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+))
+
+
+_DEEPSEEK_V4_INDEXER_OPERATORS = _deepseek_v4_attention_scopes((
+    ("dsv4_index_weights_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_index_compressor_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_index_compressor_save_partial_states", AttentionOperatorRole.CACHE_WRITE,
+     TensorParallelMode.REPLICATED, ResourceClass.MEMORY),
+    ("dsv4_index_compressor_fused_compress_store", AttentionOperatorRole.CACHE_WRITE,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_index_query_projection", AttentionOperatorRole.PROJECTION,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_index_fused_query_prepare", AttentionOperatorRole.POSITION_ENCODING,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_index_scores", AttentionOperatorRole.INDEXING,
+     TensorParallelMode.REPLICATED, ResourceClass.COMP),
+    ("dsv4_index_topk", AttentionOperatorRole.INDEXING,
+     TensorParallelMode.REPLICATED, ResourceClass.MEMORY),
+    ("dsv4_index_short_context_fill", AttentionOperatorRole.INDEXING,
+     TensorParallelMode.REPLICATED, ResourceClass.MEMORY),
+))
+
+
+DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT = {
+    "uncompressed": _DEEPSEEK_V4_COMMON_OPERATORS,
+    "hca": (*_DEEPSEEK_V4_COMMON_OPERATORS, *_DEEPSEEK_V4_COMPRESSOR_OPERATORS),
+    "csa": (*_DEEPSEEK_V4_COMMON_OPERATORS, *_DEEPSEEK_V4_COMPRESSOR_OPERATORS,
+            *_DEEPSEEK_V4_INDEXER_OPERATORS),
+}
+
+
 DEEPSEEK_V4_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="deepseek_v4_attention",
     display_name="DeepSeek-V4 Compressed Attention",
     supported_variants=("uncompressed", "csa", "hca"),
-    operators=(),
+    # Reachable physical scopes in the pinned CUDA path, not an execution
+    # schedule. CSA short-context fill replaces scoring/top-k; HCA compression
+    # and store can skip a non-boundary decode step after projection/state save.
+    operators=DEEPSEEK_V4_ATTENTION_OPERATORS_BY_VARIANT["csa"],
     memory_layout=AttentionMemoryLayout.COMPRESSED_KV,
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
