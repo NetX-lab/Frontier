@@ -14,6 +14,7 @@ from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DENSE_ATTENTION_KV_CACHE_EXTRACT,
     DSA_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     get_attention_family,
     iter_attention_families,
@@ -2636,11 +2637,14 @@ class MetricsStore:
                     // cluster_config.replica_config.num_pipeline_stages
                 )
                 source_weight_estimate = any(
-                    spec.family_id == DSA_ATTENTION_FAMILY.family_id
+                    spec.family_id in (
+                        DSA_ATTENTION_FAMILY.family_id,
+                        DEEPSEEK_V4_ATTENTION_FAMILY.family_id,
+                    )
                     for spec in cluster_config.replica_config.model_config.get_layer_attention_specs()
                 )
                 if source_weight_estimate:
-                    # DSA learned elements and resident storage have different owners.
+                    # Source coefficients and packed storage have different owners.
                     # Preserve the historical report calculation for existing models.
                     attention_parameters = (
                         param_counter.get_num_attention_parameters_per_device()
@@ -2730,6 +2734,14 @@ class MetricsStore:
                     cluster_memory_info["memory_accounting"] = (
                         "source-defined weight storage estimate; native allocation unverified"
                     )
+                    if any(
+                        spec.family_id == DEEPSEEK_V4_ATTENTION_FAMILY.family_id
+                        for spec in cluster_config.replica_config.model_config.get_layer_attention_specs()
+                    ):
+                        cluster_memory_info["conditional_mhc_broadcast_memory_bytes"] = (
+                            param_counter.get_conditional_mhc_broadcast_memory_bytes()
+                        )
+                        cluster_memory_info["conditional_mhc_broadcast_native_verified"] = False
                     cluster_memory_info["breakdown"].update(
                         {
                             "other_parameters": int(

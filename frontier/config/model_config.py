@@ -386,6 +386,11 @@ class BaseModelConfig(BaseFixedConfig):
     )
 
     # Compressed attention, routing, and mHC metadata from the native model.
+    scoring_func: Optional[str] = field(default=None, metadata={"omit_if_none": True})
+    norm_topk_prob: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
+    routed_scaling_factor: Optional[float] = field(
+        default=None, metadata={"omit_if_none": True}
+    )
     compress_ratios: Optional[Tuple[int, ...]] = field(
         default=None, metadata={"omit_if_none": True}
     )
@@ -973,6 +978,16 @@ class BaseModelConfig(BaseFixedConfig):
                 cfg.get("topk_method")
                 if cfg.get("index_topk") is not None
                 else None
+            ),
+            scoring_func=(
+                cfg.get("scoring_func") if cfg.get("compress_ratios") is not None else None
+            ),
+            norm_topk_prob=(
+                cfg.get("norm_topk_prob") if cfg.get("compress_ratios") is not None else None
+            ),
+            routed_scaling_factor=(
+                cfg.get("routed_scaling_factor")
+                if cfg.get("compress_ratios") is not None else None
             ),
             compress_ratios=cfg.get("compress_ratios"),
             sliding_window=(

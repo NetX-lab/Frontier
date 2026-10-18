@@ -424,6 +424,7 @@ class ModelArchitectureProfile:
     share_expert_tensor_parallel_allreduce_op: str | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
+    replicate_shared_expert_in_sequence_parallel: bool = False
     experimental: bool = False
     runtime_limitations: tuple[str, ...] = ()
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -683,10 +684,11 @@ class ModelArchitectureProfile:
             ),
             expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             counts_share_expert_param_memory=True,
+            replicate_shared_expert_in_sequence_parallel=True,
             experimental=True,
             runtime_limitations=(
                 "compressed attention, mHC and mixed precision are unsupported",
-                "shared FFN sequence-parallel replication is not represented",
+                "shared FFN sequence-parallel token/collective execution is unsupported",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "deepseek_v4"
@@ -760,6 +762,8 @@ class ModelArchitectureProfile:
         operator_name: str | None = None,
         attention_tp_size: int | None = None,
         attn_tp_size: int | None = None,
+        attention_dp_size: int | None = None,
+        num_pipeline_stages: int | None = None,
         moe_tp_size: int | None = None,
         ffn_tp_size: int | None = None,
         tensor_parallel_size: int | None = None,
@@ -773,6 +777,8 @@ class ModelArchitectureProfile:
         for name, value in (
             ("attention_tp_size", attention_tp_size),
             ("attn_tp_size", attn_tp_size),
+            ("attention_dp_size", attention_dp_size),
+            ("num_pipeline_stages", num_pipeline_stages),
             ("moe_tp_size", moe_tp_size),
             ("ffn_tp_size", ffn_tp_size),
             ("tensor_parallel_size", tensor_parallel_size),
@@ -864,20 +870,30 @@ class ModelArchitectureProfile:
                 f"{spec.layer_kind.value} layer contract is inactive for profile {self.profile_id!r}"
             )
         width = spec.resolve_width(config, mixed_model=mixed_model)
-        if spec.tensor_parallel_mode is TensorParallelMode.REPLICATED:
+        tp_mode = spec.tensor_parallel_mode
+        if (
+            self.replicate_shared_expert_in_sequence_parallel
+            and selected_kind is LayerKind.SHARED
+            and num_pipeline_stages == 1
+            and attention_tp_size is not None and attention_tp_size > 1
+            and attention_dp_size is not None and attention_dp_size > 1
+            and expert_parallel_size is not None and expert_parallel_size > 1
+        ):
+            tp_mode = TensorParallelMode.REPLICATED
+        if tp_mode is TensorParallelMode.REPLICATED:
             selected_tp = 1
-        elif spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+        elif tp_mode is TensorParallelMode.ATTENTION_TP:
             selected_tp = attention_tp_size
-        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+        elif tp_mode is TensorParallelMode.MOE_TP:
             selected_tp = moe_tp_size
-        elif spec.tensor_parallel_mode is TensorParallelMode.FFN_TP:
+        elif tp_mode is TensorParallelMode.FFN_TP:
             selected_tp = ffn_tp_size if ffn_tp_size is not None else attention_tp_size
         else:
-            raise ValueError(f"Unsupported tensor parallel mode: {spec.tensor_parallel_mode!r}")
+            raise ValueError(f"Unsupported tensor parallel mode: {tp_mode!r}")
         if tensor_parallel_size is not None and selected_tp is not None and tensor_parallel_size != selected_tp:
             raise ValueError("tensor_parallel_size conflicts with the selected domain TP")
         selected_tp = tensor_parallel_size if tensor_parallel_size is not None else selected_tp
-        if selected_tp is not None and spec.tensor_parallel_mode is not TensorParallelMode.REPLICATED:
+        if selected_tp is not None and tp_mode is not TensorParallelMode.REPLICATED:
             if width % selected_tp != 0:
                 raise ValueError(
                     f"{selected_kind.value} width {width} must be divisible by TP={selected_tp}"
@@ -908,7 +924,7 @@ class ModelArchitectureProfile:
             layer_kind=selected_kind,
             dimension_source=spec.dimension_source,
             effective_ffn_width=width,
-            tensor_parallel_mode=spec.tensor_parallel_mode,
+            tensor_parallel_mode=tp_mode,
             expert_parallel_mode=spec.expert_parallel_mode,
             tensor_parallel_size=selected_tp,
             expert_parallel_size=expert_parallel_size,

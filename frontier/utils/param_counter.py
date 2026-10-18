@@ -28,12 +28,20 @@ class ParamCounter:
         self._replica_config = replica_config
         self._model_config = replica_config.model_config
         self._cluster_type = cluster_type or ClusterType.MONOLITHIC
+        get_specs = getattr(self._model_config, "get_layer_attention_specs", None)
+        specs = tuple(get_specs()) if callable(get_specs) else ()
+        self._uses_v4_parameter_contract = any(
+            spec.family_id == "deepseek_v4_attention" for spec in specs
+        )
         get_family = getattr(self._model_config, "get_attention_family", None)
         self._uses_dsa_parameter_contract = (
-            callable(get_family) and get_family().family_id == "dsa_attention"
+            not self._uses_v4_parameter_contract
+            and callable(get_family) and get_family().family_id == "dsa_attention"
         )
         if self._uses_dsa_parameter_contract:
             self._validate_dsa_parameter_contract()
+        if self._uses_v4_parameter_contract:
+            self._validate_v4_parameter_contract()
 
         # Validate configuration based on cluster type
         if self._cluster_type != ClusterType.DECODE_FFN:
@@ -48,7 +56,10 @@ class ParamCounter:
                     f"Tensor parallelism configuration error: num_q_heads ({self._model_config.num_q_heads}) "
                     f"must be evenly divisible by attn_tensor_parallel_size ({self._replica_config.attn_tensor_parallel_size})"
                 )
-                if not self._uses_dsa_parameter_contract:
+                if not (
+                    self._uses_dsa_parameter_contract
+                    or self._uses_v4_parameter_contract
+                ):
                     assert (
                         self._model_config.embedding_dim % self._replica_config.attn_tensor_parallel_size
                         == 0
@@ -567,9 +578,234 @@ class ParamCounter:
         norms = (2 * model.num_layers + 1) * model.embedding_dim
         return endpoints + norms
 
+    def _validate_v4_parameter_contract(self) -> None:
+        """Limit V4 constructor estimates to the represented H800 SP contract."""
+
+        model = self._model_config
+        replica = self._replica_config
+        if (
+            self._cluster_type is not ClusterType.MONOLITHIC
+            or replica.num_pipeline_stages != 1
+            or getattr(replica, "device", None) != "h800"
+        ):
+            raise NotImplementedError("V4 parameter estimates require H800 PP1 MONOLITHIC")
+        for name in (
+            "attn_tensor_parallel_size", "attn_dp", "moe_tensor_parallel_size",
+            "moe_expert_parallel_size",
+        ):
+            value = getattr(replica, name, None)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"V4 {name} must be a positive int")
+        if (
+            replica.attn_tensor_parallel_size != 8 or replica.attn_dp not in (2, 4)
+            or replica.moe_tensor_parallel_size != 1
+            or replica.moe_expert_parallel_size
+            != replica.attn_tensor_parallel_size * replica.attn_dp
+        ):
+            raise NotImplementedError("V4 parameter estimates require TP8 DP2/4 SP with expert TP1")
+        speculative = getattr(replica, "speculative_decoding_config", None)
+        if speculative is not None and speculative.enabled:
+            raise NotImplementedError("V4 parameter estimates exclude speculative decoding")
+        if (
+            model.tie_word_embeddings is not False
+            or PrecisionType.from_torch_dtype(model.torch_dtype) is not PrecisionType.BF16
+            or model.expert_dtype != "fp4" or model.topk_method != "noaux_tc"
+            or model.use_bias or model.use_qkv_bias or not model.use_gated_mlp
+            or model.activation is not ActivationType.SILU
+            or model.norm is not NormType.RMS_NORM
+        ):
+            raise NotImplementedError("V4 parameter estimates require the BF16/FP8/MXFP4 source contract")
+        for name in (
+            "num_layers", "embedding_dim", "num_q_heads", "head_dim", "q_lora_rank",
+            "o_groups", "o_lora_rank", "index_n_heads", "index_head_dim",
+            "routed_mlp_hidden_dim", "share_expert_dim", "num_experts",
+            "num_experts_per_tok", "vocab_size", "hc_mult",
+        ):
+            value = getattr(model, name, None)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"V4 parameter dimension {name} must be a positive int")
+        if (
+            type(model.num_hash_layers) is not int
+            or not 0 <= model.num_hash_layers <= model.num_layers
+        ):
+            raise ValueError("V4 num_hash_layers must be within the backbone layer count")
+        tp = self._get_attn_tp_size()
+        if (
+            model.num_q_heads % tp or model.o_groups % tp
+            or (model.num_q_heads * model.head_dim) % model.o_groups
+            or model.num_experts % self._get_ep_size()
+            or model.num_experts_per_tok > model.num_experts
+        ):
+            raise ValueError("V4 parameter dimensions do not divide their TP/EP ownership")
+        if any(
+            dimension % 256
+            for dimension in (model.embedding_dim, model.routed_mlp_hidden_dim)
+        ):
+            raise NotImplementedError("V4 expert dimensions require unrounded CUDA alignment")
+        if model.vocab_size % tp:
+            raise NotImplementedError("V4 logical endpoint counts require even vocabulary shards")
+        quant = model.quantization_config
+        if (
+            quant is None or quant.quant_method != "fp8"
+            or not quant.is_checkpoint_fp8_serialized
+            or quant.activation_scheme != "dynamic" or quant.scale_fmt != "ue8m0"
+            or quant.weight_block_size != (128, 128) or quant.ignored_layers
+            or quant.quantized_operations is not None
+        ):
+            raise NotImplementedError("V4 parameter estimates require native FP8 UE8M0 block scales")
+        block_n, block_k = quant.weight_block_size
+        local_q_width = model.num_q_heads // tp * model.head_dim
+        local_o_rank = model.o_groups // tp * model.o_lora_rank
+        fp8_axes = (
+            ("q_lora_rank output", model.q_lora_rank, block_n),
+            ("local Q output", local_q_width, block_n),
+            ("local output rank N", local_o_rank, block_n),
+            ("local output rank K", local_o_rank, block_k),
+            ("shared expert merged width", model.share_expert_dim, block_n),
+            ("shared expert down input", model.share_expert_dim, block_k),
+        )
+        for axis_name, dimension, block in fp8_axes:
+            if dimension % block:
+                raise ValueError(
+                    f"V4 FP8 {axis_name} ({dimension}) must align to block {block}"
+                )
+        specs = model.get_layer_attention_specs()
+        if tuple(spec.global_layer_id for spec in specs) != tuple(range(model.num_layers)):
+            raise ValueError("V4 parameter estimates require every backbone layer in order")
+        variants = {0: "uncompressed", 4: "csa", 128: "hca"}
+        for spec, ratio in zip(specs, model.compress_ratios):
+            if (
+                spec.family_id != "deepseek_v4_attention"
+                or spec.variant_id != variants.get(ratio)
+            ):
+                raise ValueError("V4 parameter estimates require canonical compression bindings")
+        if model.get_moe_layer_ids() != list(range(model.num_layers)):
+            raise NotImplementedError("V4 parameter estimates require all backbone FFNs routed/shared")
+
+    def _v4_fp8_linear_totals(self, output_dim: int, input_dim: int) -> tuple[int, int]:
+        """Count FP8 coefficients and initial one-byte UE8M0 block scales."""
+
+        block_n, block_k = self._model_config.quantization_config.weight_block_size
+        elements = output_dim * input_dim
+        scales = ceil(output_dim / block_n) * ceil(input_dim / block_k)
+        return elements, elements + scales
+
+    def _get_v4_compressor_totals(self, width: int, ratio: int) -> tuple[int, int]:
+        overlap = 1 + (ratio == 4)
+        projection = 2 * overlap * width * self._model_config.embedding_dim
+        ape = ratio * overlap * width
+        norm = width
+        return projection + ape + norm, 2 * (projection + norm) + 4 * ape
+
+    def _get_v4_attention_layer_totals(self, layer_id: int) -> tuple[int, int]:
+        model = self._model_config
+        attention = model.get_layer_attention_spec(layer_id)
+        tp = self._get_attn_tp_size()
+        hidden, width = model.embedding_dim, model.head_dim
+        heads = model.num_q_heads // tp
+        padded_heads = 64 if heads <= 64 else 128
+        if heads > 128:
+            raise NotImplementedError("V4 FlashMLA source sink supports at most 128 local heads")
+        matrices = (
+            self._v4_fp8_linear_totals(model.q_lora_rank + width, hidden),
+            self._v4_fp8_linear_totals(heads * width, model.q_lora_rank),
+            self._v4_fp8_linear_totals(
+                model.o_groups * model.o_lora_rank // tp,
+                model.num_q_heads * width // model.o_groups,
+            ),
+            self._v4_fp8_linear_totals(hidden, model.o_groups * model.o_lora_rank // tp),
+        )
+        norms = model.q_lora_rank + width
+        elements = sum(count for count, _ in matrices) + norms + heads
+        storage = sum(memory for _, memory in matrices) + 2 * norms + 4 * padded_heads
+        if attention.variant_id in ("csa", "hca"):
+            ratio = model.compress_ratios[layer_id]
+            count, memory = self._get_v4_compressor_totals(width, ratio)
+            elements += count
+            storage += memory
+        if attention.variant_id == "csa":
+            query = self._v4_fp8_linear_totals(
+                model.index_n_heads * model.index_head_dim, model.q_lora_rank
+            )
+            index_weights = model.index_n_heads * hidden
+            compressor = self._get_v4_compressor_totals(model.index_head_dim, ratio)
+            elements += query[0] + index_weights + compressor[0]
+            storage += query[1] + 2 * index_weights + compressor[1]
+        return elements, storage
+
+    def _get_v4_mlp_layer_totals(self, layer_id: int) -> tuple[int, int]:
+        model = self._model_config
+        model.get_layer_attention_spec(layer_id)
+        profile = model.get_model_architecture_profile()
+        contract_args = dict(
+            layer_id=layer_id, attention_tp_size=self._get_attn_tp_size(),
+            moe_tp_size=self._get_moe_tp_size(), expert_parallel_size=self._get_ep_size(),
+            attention_dp_size=self._replica_config.attn_dp,
+            num_pipeline_stages=self._replica_config.num_pipeline_stages,
+        )
+        routed = profile.resolve_layer_contract(model, layer_kind=LayerKind.ROUTED, **contract_args)
+        shared = profile.resolve_layer_contract(model, layer_kind=LayerKind.SHARED, **contract_args)
+        if (
+            routed.tensor_parallel_mode is not TensorParallelMode.MOE_TP
+            or routed.tensor_parallel_size != 1
+            or shared.tensor_parallel_mode is not TensorParallelMode.REPLICATED
+            or shared.tensor_parallel_size != 1
+        ):
+            raise NotImplementedError("V4 source storage requires routed TP1 and replicated SP shared weights")
+        local_experts = model.num_experts // routed.expert_parallel_size
+        routed_elements = local_experts * 3 * model.embedding_dim * routed.effective_ffn_width
+        # MXFP4 stores two coefficients per byte and one UE8M0 scale per 32.
+        routed_bytes = routed_elements // 2 + routed_elements // 32
+        shared_up = self._v4_fp8_linear_totals(
+            2 * shared.effective_ffn_width, model.embedding_dim
+        )
+        shared_down = self._v4_fp8_linear_totals(
+            model.embedding_dim, shared.effective_ffn_width
+        )
+        gate = model.num_experts * model.embedding_dim
+        elements = routed_elements + shared_up[0] + shared_down[0] + gate
+        storage = routed_bytes + shared_up[1] + shared_down[1] + 2 * gate
+        if layer_id < model.num_hash_layers:
+            storage += 4 * model.vocab_size * model.num_experts_per_tok
+        else:
+            elements += model.num_experts
+            storage += 4 * model.num_experts
+        return elements, storage
+
+    def _get_v4_mhc_layer_elements(self) -> int:
+        model = self._model_config
+        mixture = (2 + model.hc_mult) * model.hc_mult
+        return 2 * (mixture * model.hc_mult * model.embedding_dim + mixture + 3)
+
+    def _get_v4_other_totals(self) -> tuple[int, int]:
+        model = self._model_config
+        tp = self._get_attn_tp_size()
+        endpoints = 2 * model.vocab_size * model.embedding_dim // tp
+        padded_vocab = ceil(model.vocab_size / 64) * 64
+        endpoint_storage = 4 * padded_vocab * model.embedding_dim // tp
+        norms = (2 * model.num_layers + 1) * model.embedding_dim
+        mhc = model.num_layers * self._get_v4_mhc_layer_elements()
+        mhc_head = model.hc_mult**2 * model.embedding_dim + model.hc_mult + 1
+        return endpoints + norms + mhc + mhc_head, endpoint_storage + 2 * norms + 4 * (mhc + mhc_head)
+
+    def get_conditional_mhc_broadcast_memory_bytes(self) -> int:
+        """Return source-required derived storage; presence is native-unverified.
+
+        This storage is excluded from constructor bytes and coefficient counts.
+        The first-layer finalizer must actually run before it exists natively.
+        """
+
+        if not self._uses_v4_parameter_contract:
+            return 0
+        model = self._model_config
+        mixture = (2 + model.hc_mult) * model.hc_mult
+        return 4 * mixture * model.embedding_dim
+
     def get_num_attention_params_per_layer(self, layer_id: int = 0) -> int:
         """Return learned elements; DSA defaults to canonical layer0's full indexer."""
 
+        if self._uses_v4_parameter_contract:
+            return self._get_v4_attention_layer_totals(layer_id)[0]
         if self._uses_dsa_parameter_contract:
             return self._get_dsa_attention_layer_totals(layer_id)[0]
         if self._cluster_type == ClusterType.DECODE_FFN:
@@ -625,6 +861,13 @@ class ParamCounter:
     def _get_attention_stage_totals(self) -> tuple[tuple[int, int], ...]:
         """Return ``(parameter elements, parameter bytes)`` per PP stage."""
 
+        if self._uses_v4_parameter_contract:
+            layer_totals = tuple(
+                self._get_v4_attention_layer_totals(layer_id)
+                for layer_id in self._get_pipeline_stage_layer_ids(0)
+            )
+            return ((sum(count for count, _ in layer_totals),
+                     sum(memory for _, memory in layer_totals)),)
         if self._uses_dsa_parameter_contract:
             layer_totals = tuple(
                 self._get_dsa_attention_layer_totals(layer_id)
@@ -711,6 +954,8 @@ class ParamCounter:
         return 2 * (num_parameters - local_value_heads) + 4 * local_value_heads
 
     def get_num_mlp_params_per_layer(self, layer_id: int = 0) -> int:
+        if self._uses_v4_parameter_contract:
+            return self._get_v4_mlp_layer_totals(layer_id)[0]
         if self._uses_dsa_parameter_contract:
             return self._get_dsa_mlp_layer_totals(layer_id)[0]
         # For DECODE_ATTN cluster, there are no MLP parameters.
@@ -727,6 +972,13 @@ class ParamCounter:
         return self._get_routed_moe_params_per_layer(tensor_parallel_size)
 
     def get_num_parameters_per_layer(self, layer_id: int = 0) -> int:
+        if self._uses_v4_parameter_contract:
+            return (
+                self.get_num_attention_params_per_layer(layer_id)
+                + self.get_num_mlp_params_per_layer(layer_id)
+                + 2 * self._model_config.embedding_dim
+                + self._get_v4_mhc_layer_elements()
+            )
         if self._uses_dsa_parameter_contract:
             return (
                 self.get_num_attention_params_per_layer(layer_id)
@@ -739,6 +991,12 @@ class ParamCounter:
         )
 
     def get_num_parameters_per_device(self) -> int:
+        if self._uses_v4_parameter_contract:
+            return (
+                self.get_num_attention_parameters_per_device()
+                + self.get_num_mlp_parameters_per_device()
+                + self._get_v4_other_totals()[0]
+            )
         if self._uses_dsa_parameter_contract:
             return (
                 self.get_num_attention_parameters_per_device()
@@ -754,6 +1012,11 @@ class ParamCounter:
         )
 
     def get_num_mlp_parameters_per_device(self) -> int:
+        if self._uses_v4_parameter_contract:
+            return sum(
+                self._get_v4_mlp_layer_totals(layer_id)[0]
+                for layer_id in self._get_pipeline_stage_layer_ids(0)
+            )
         if self._uses_dsa_parameter_contract:
             return sum(
                 self._get_dsa_mlp_layer_totals(layer_id)[0]
@@ -795,8 +1058,13 @@ class ParamCounter:
         )
 
     def get_mlp_parameter_memory_per_device_bytes(self) -> int:
-        """Return source-defined DSA FFN bytes or the legacy two-byte estimate."""
+        """Return source-defined V4/DSA FFN bytes or the legacy estimate."""
 
+        if self._uses_v4_parameter_contract:
+            return sum(
+                self._get_v4_mlp_layer_totals(layer_id)[1]
+                for layer_id in self._get_pipeline_stage_layer_ids(0)
+            )
         if self._uses_dsa_parameter_contract:
             return sum(
                 self._get_dsa_mlp_layer_totals(layer_id)[1]
@@ -805,13 +1073,22 @@ class ParamCounter:
         return 2 * self.get_num_mlp_parameters_per_device()
 
     def get_parameter_memory_per_device_bytes(self) -> int:
-        """Return DSA source estimates or the accepted legacy D57 policy.
+        """Return source estimates or the accepted legacy D57 policy.
 
         DSA bytes include initial FP32 scales and one derived BF16 KV-B backing.
         Final backend padding/scale layouts and native unique storage remain
         unqualified; these source estimates do not establish runtime fit.
+        V4 returns source-declared constructor bytes, including UE8M0 scales
+        and integer auxiliaries, excluding conditional mHC broadcast storage.
+        V4 native unique resident storage remains unverified.
         """
 
+        if self._uses_v4_parameter_contract:
+            return (
+                self.get_attention_parameter_memory_per_device_bytes()
+                + self.get_mlp_parameter_memory_per_device_bytes()
+                + self._get_v4_other_totals()[1]
+            )
         if self._uses_dsa_parameter_contract:
             return (
                 self.get_attention_parameter_memory_per_device_bytes()

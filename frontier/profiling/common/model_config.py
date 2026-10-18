@@ -109,6 +109,9 @@ class ModelConfig:
         dense_mlp_hidden_dim: Optional[int] = None,
         routed_mlp_hidden_dim: Optional[int] = None,
         topk_method: Optional[str] = None,
+        scoring_func: Optional[str] = None,
+        norm_topk_prob: Optional[bool] = None,
+        routed_scaling_factor: Optional[float] = None,
     ):
         self.name = name
         self.num_layers = num_layers
@@ -193,6 +196,9 @@ class ModelConfig:
         self.index_skip_topk_offset = index_skip_topk_offset
         self.indexer_rope_interleave = indexer_rope_interleave
         self.topk_method = topk_method
+        self.scoring_func = scoring_func
+        self.norm_topk_prob = norm_topk_prob
+        self.routed_scaling_factor = routed_scaling_factor
         self.compress_ratios = (
             tuple(compress_ratios) if compress_ratios is not None else None
         )
@@ -695,7 +701,8 @@ class ModelConfig:
                     "index_topk", "index_n_heads", "index_head_dim",
                     "index_topk_freq", "index_topk_pattern", "index_skip_topk_offset",
                     "indexer_rope_interleave",
-                    "topk_method",
+                    "topk_method", "scoring_func", "norm_topk_prob",
+                    "routed_scaling_factor",
                     "compress_ratios", "sliding_window", "num_hash_layers",
                     "hc_mult", "hc_sinkhorn_iters", "hc_eps", "o_groups",
                     "o_lora_rank", "compress_rope_theta", "swiglu_limit",

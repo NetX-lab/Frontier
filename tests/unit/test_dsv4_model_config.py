@@ -15,6 +15,7 @@ from frontier.attention.model_binding import bind_attention_family, bind_layer_a
 from frontier.config.model_config import BaseModelConfig
 from frontier.model_architectures import LayerKind, get_model_architecture_profile
 from frontier.operators.binding import build_operator_manifest
+from frontier.operators.spec import TensorParallelMode
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 
 
@@ -102,6 +103,9 @@ def test_original_dsv4_preserves_dimensions_and_model_specific_metadata(
     assert model.o_lora_rank == 1024
     assert model.compress_rope_theta == 160000
     assert model.swiglu_limit == 10.0
+    assert model.scoring_func == "sqrtsoftplus"
+    assert model.norm_topk_prob is True
+    assert model.routed_scaling_factor == 1.5
 
 
 def test_original_dsv4_keeps_fp8_base_and_fp4_expert_precision_distinct(
@@ -129,6 +133,7 @@ def test_dsv4_profiling_and_serialization_preserve_the_runtime_contract(
         "hc_sinkhorn_iters", "hc_eps", "o_groups", "o_lora_rank",
         "compress_rope_theta", "swiglu_limit", "expert_dtype", "index_topk",
         "index_n_heads", "index_head_dim", "q_lora_rank", "qk_rope_head_dim",
+        "scoring_func", "norm_topk_prob", "routed_scaling_factor",
     )
     for config in (profiling, restored):
         assert config.get_model_architecture_profile().profile_id == "deepseek_v4"
@@ -190,3 +195,37 @@ def test_dsv4_whole_model_manifest_cannot_hide_compressed_layers(
             bind_attention_family(config)
         with pytest.raises(ValueError, match="explicit global layer id"):
             build_operator_manifest(config)
+
+
+@pytest.mark.parametrize(
+    ("tp", "dp", "pp", "ep", "expected_mode", "expected_tp"),
+    [
+        (8, 2, 1, 16, TensorParallelMode.REPLICATED, 1),
+        (8, 4, 1, 32, TensorParallelMode.REPLICATED, 1),
+        (8, 1, 1, 8, TensorParallelMode.ATTENTION_TP, 8),
+        (8, 2, 2, 16, TensorParallelMode.ATTENTION_TP, 8),
+        (8, 2, 1, 1, TensorParallelMode.ATTENTION_TP, 8),
+        (1, 2, 1, 2, TensorParallelMode.ATTENTION_TP, 1),
+    ],
+)
+def test_dsv4_shared_weight_contract_follows_source_sp_topology(
+    model, tp, dp, pp, ep, expected_mode, expected_tp,
+) -> None:
+    contract = model.get_model_architecture_profile().resolve_layer_contract(
+        model, layer_id=0, layer_kind=LayerKind.SHARED,
+        attention_tp_size=tp, attention_dp_size=dp,
+        num_pipeline_stages=pp, expert_parallel_size=ep,
+    )
+    assert contract.tensor_parallel_mode is expected_mode
+    assert contract.tensor_parallel_size == expected_tp
+    assert contract.effective_ffn_width == 2048
+
+
+def test_new_routing_metadata_is_absent_for_legacy_model() -> None:
+    from frontier.config.utils import dataclass_to_dict
+
+    model = BaseModelConfig.create_from_name("step-moe-noquant")
+    serialized = dataclass_to_dict(model)
+    for name in ("scoring_func", "norm_topk_prob", "routed_scaling_factor"):
+        assert getattr(model, name) is None
+        assert name not in serialized
