@@ -295,6 +295,76 @@ def test_actual_gpu_mapping_allows_cuda_visible_device_permutation(config, tmp_p
     assert caller.all_rank_census(rows, node_rows, caller.expected_census())['ranks'] == 16
 
 
+def capacity03_census():
+    path = HERE.parents[1]/'fixtures/step5_environment/tp16_capacity03_uuid_census.json'
+    fixture = json.loads(path.read_text())
+    rows = [copy.deepcopy(dict(fixture['common_worker_fields'],
+        parallel_config=fixture['nodes'][row['node_rank']]['worker_parallel_config'], **row))
+        for row in fixture['workers']]
+    return fixture, rows, copy.deepcopy(fixture['nodes'])
+
+
+@pytest.mark.parametrize('representation', ['bare', 'prefixed', 'mixed'])
+def test_actual_capacity03_uuid_representations_preserve_raw_metadata(representation):
+    fixture, rows, node_rows = capacity03_census()
+    for row in rows:
+        if representation == 'prefixed' or representation == 'mixed' and row['rank'] % 2:
+            row['gpu_uuid'] = 'GPU-'+row['gpu_uuid']
+    before = copy.deepcopy((rows, node_rows))
+    for node in node_rows:
+        physical = [node['gpu_uuids'].index('GPU-'+row['gpu_uuid'].removeprefix('GPU-'))
+                    for row in rows if row['node_rank'] == node['node_rank']]
+        assert physical == fixture['physical_visibility_order'][node['node_rank']]
+    result = caller.all_rank_census(rows, node_rows, caller.expected_census())
+    assert result['ranks'] == 16 and result['status'].endswith('not_G2')
+    assert set(result['remaining_g2'].values()) == {'UNMEASURED'}
+    assert (rows, node_rows) == before
+
+
+@pytest.mark.parametrize('fault', ['missing_rank', 'duplicate_uuid', 'foreign_uuid', 'local_rank',
+    'boot', 'namespace', 'pid', 'start', 'parent', 'parent_start', 'reduced_layer',
+    'reduced_expert', 'phase', 'tp', 'ep', 'dtype', 'resource'])
+def test_actual_capacity03_census_rejects_physical_binding_and_model_faults(fault):
+    fixture, rows, node_rows = capacity03_census()
+    if fault == 'missing_rank': rows.pop()
+    elif fault == 'duplicate_uuid': rows[0]['gpu_uuid'] = 'GPU-'+rows[1]['gpu_uuid']
+    elif fault == 'foreign_uuid': rows[0]['gpu_uuid'] = node_rows[1]['gpu_uuids'][0]
+    elif fault == 'local_rank': rows[0]['local_rank'] = 1
+    elif fault == 'boot': rows[0]['boot_id'] = node_rows[1]['boot_id']
+    elif fault == 'namespace': rows[0]['pid_namespace'] = node_rows[1]['pid_namespace']
+    elif fault == 'pid': rows[0]['pid'] = node_rows[0]['pid']
+    elif fault == 'start': rows[0]['start_time'] = None
+    elif fault == 'parent': rows[0]['parent_pid'] = rows[1]['parent_pid']+1
+    elif fault == 'parent_start': rows[0]['parent_start_time'] = None
+    elif fault == 'reduced_layer':
+        key = next(name for name in rows[0]['module_classes'] if name.endswith('.Step5DecoderLayer'))
+        rows[0]['module_classes'][key] -= 1
+    elif fault == 'reduced_expert': rows[0]['routed_experts'][0]['count'] -= 1
+    elif fault == 'phase': rows[0]['completed_stages'].pop()
+    elif fault == 'tp': rows[0]['parallel_config']['tensor_parallel_size'] = 8
+    elif fault == 'ep': rows[0]['parallel_config']['enable_expert_parallel'] = True
+    elif fault == 'dtype': rows[0]['configuration']['model_dtype'] = 'torch.float16'
+    elif fault == 'resource': rows[0]['resource_evidence_errors'].append('missing lifecycle')
+    with pytest.raises(ValueError):
+        caller.all_rank_census(rows, node_rows, caller.expected_census())
+
+
+@pytest.mark.parametrize('scope', ['within_node', 'across_nodes'])
+def test_actual_capacity03_allocation_uuid_aliases_are_one_physical_device(scope):
+    fixture, rows, node_rows = capacity03_census()
+    for row in rows:
+        row['gpu_uuid'] = 'GPU-'+row['gpu_uuid']
+    target = node_rows[0] if scope == 'within_node' else node_rows[1]
+    original = target['gpu_uuids'][1]
+    alias = node_rows[0]['gpu_uuids'][0].removeprefix('GPU-')
+    target['gpu_uuids'][1] = alias
+    for row in rows:
+        if row['node_rank'] == target['node_rank'] and row['gpu_uuid'] == original:
+            row['gpu_uuid'] = alias
+    with pytest.raises(ValueError, match='unique allocated GPU'):
+        caller.all_rank_census(rows, node_rows, caller.expected_census())
+
+
 def test_finite_local_deadline_is_not_a_remote_marker_clock(config, tmp_path):
     node_rows = nodes(config, tmp_path); node = node_rows[0]
     node['workload_deadline'] = 5

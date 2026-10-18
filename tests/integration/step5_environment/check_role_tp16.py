@@ -245,8 +245,9 @@ def all_rank_census(rows, nodes, expected):
         raise ValueError('All sixteen native worker census records are required')
     if nodes[0]['boot_id'] == nodes[1]['boot_id']:
         raise ValueError('Two different physical node boots are required')
-    if len(set(nodes[0]['gpu_uuids']+nodes[1]['gpu_uuids'])) != 16:
-        raise ValueError('Sixteen unique allocated GPU UUIDs required')
+    allocated = [{uuid.removeprefix('GPU-') for uuid in node['gpu_uuids']} for node in nodes]
+    if any(len(uuids) != 8 for uuids in allocated) or len(allocated[0] | allocated[1]) != 16:
+        raise ValueError('Eight per node and sixteen total unique allocated GPU UUIDs required')
     seen = set()
     for row in rows:
         node = nodes[row['rank']//8]
@@ -266,10 +267,11 @@ def all_rank_census(rows, nodes, expected):
                 if item['node_rank'] == node['node_rank']}) != 1:
             raise ValueError('Each node requires one native local worker parent')
         local = row['rank'] % 8
-        uuids = [row['gpu_uuid'] for row in rows if row['node_rank'] == node['node_rank']]
-        if set(uuids) != set(node['gpu_uuids']) or len(uuids) != 8:
+        uuids = [item['gpu_uuid'].removeprefix('GPU-') for item in rows
+                 if item['node_rank'] == node['node_rank']]
+        if set(uuids) != allocated[row['rank']//8] or len(uuids) != 8:
             raise ValueError('Actual worker GPU UUIDs must cover the allocated eight devices')
-        if row['local_rank'] != local or row['gpu_uuid'] not in node['gpu_uuids']:
+        if row['local_rank'] != local or row['gpu_uuid'].removeprefix('GPU-') not in allocated[row['rank']//8]:
             raise ValueError('All-rank actual GPU UUID mapping mismatch')
         if row['status'] != 'metadata_only_not_G2' or set(row['completed_stages']) != set(observation.STAGES) or \
                 row['resource_evidence_errors']:
