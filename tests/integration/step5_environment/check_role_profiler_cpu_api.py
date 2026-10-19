@@ -1,6 +1,7 @@
 """Verify the original Torch wrapper and capped trace export without using GPUs."""
 import argparse
 import ctypes
+import fcntl
 import hashlib
 import json
 import os
@@ -31,11 +32,17 @@ def main():
             observation.SOURCE_PINS['wrapper'][1], report['sources'])
     model.bind_code(torch.cuda.CUDAGraph.raw_cuda_graph_exec, ('CUDAGraph', 'raw_cuda_graph_exec'),
         observation.SOURCE_PINS['torch_graphs'][1], report['sources'])
-    for label, cap in (('complete', 262144), ('capped', 31)):
+    read_fd, write_fd = os.pipe()
+    try:
+        report['pipe_capacity_bytes'] = fcntl.fcntl(read_fd, fcntl.F_GETPIPE_SZ)
+    finally:
+        os.close(read_fd)
+        os.close(write_fd)
+    for label, cap in (('complete', 8*1024*1024), ('capped', 31)):
         records = output/label
         records.mkdir()
         node = output/(label+'_node.json')
-        node.write_text(json.dumps(dict(observer_output=str(records), record_bytes=8*1024*1024)))
+        node.write_text(json.dumps(dict(observer_output=str(records), record_bytes=512*1024*1024)))
         os.environ['STEP5_CAPACITY_NODE_FILE'] = str(node)
         identity = dict(rank=0, local_rank=0, pid=os.getpid(), start_time=1, parent_pid=os.getppid(),
             parent_start_time=1, generation='locked-cpu-api-'+label, node_rank=0, boot_id='cpu-api',
@@ -69,8 +76,10 @@ def main():
             assert original.is_running and original._active
             assert observed.current['native_start'] == 'ORIGINAL_PROFILER_RUNNING'
             lifecycle = 'capture' if window == 'capture' else 'execute'
-            with observed.annotate(observation.annotation_name(lifecycle, 1, 1, 'call')):
-                torch.ones(2)+1
+            count = 1200 if label == 'complete' else 1
+            for index in range(count):
+                with observed.annotate(observation.annotation_name(lifecycle, 1, index, 'call')):
+                    torch.ones(2)+1
             original.step()
             original.stop()
             observed.after_stop()
@@ -81,7 +90,9 @@ def main():
         if label == 'complete':
             assert not summary['errors']
             assert all(row['status'] == 'COMPLETE_DIAGNOSTIC_WINDOW_NOT_G2' for row in summary['windows'])
-            assert all(row['trace']['annotations'] == 1 for row in summary['windows'])
+            assert all(row['trace']['annotations'] == 1200 for row in summary['windows'])
+            assert all(row['trace']['bytes_seen'] > report['pipe_capacity_bytes']
+                       for row in summary['windows'])
             assert all(row['native_stop'] == 'ORIGINAL_PROFILER_STOPPED_AND_TRACE_COMPLETE'
                        for row in summary['windows'])
         else:

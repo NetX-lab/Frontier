@@ -1260,7 +1260,8 @@ class ObservationScope:
             scheduler = values['scheduler_output']
             row['scheduler'] = dict(total_num_scheduled_tokens=scheduler.total_num_scheduled_tokens,
                 finished_req_ids=sorted(scheduler.finished_req_ids),
-                preempted_req_ids=sorted(scheduler.preempted_req_ids))
+                preempted_req_ids=(None if scheduler.preempted_req_ids is None else
+                                   sorted(scheduler.preempted_req_ids)))
             if name == 'request_add' and not returned:
                 row['scheduler']['new_requests'] = [dict(req_id=req.req_id, prompt_len=req.prompt_len,
                     num_computed_tokens=req.num_computed_tokens, block_ids=req.block_ids)

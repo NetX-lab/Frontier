@@ -7,6 +7,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
+import subprocess
 import sys
 import threading
 import time
@@ -23,6 +25,43 @@ import check_role_execution as caller
 import role_execution_observation as execution
 import role_model_input_observation as model
 import role_profiler_observation as observation
+
+
+CPU_READER_POPEN = subprocess.Popen
+CPU_READER_KILL = os.kill
+CPU_READER_EXIT_PROGRAM = ('import runpy,sys;from pathlib import Path;'
+    'sys.path.insert(0,str(Path(sys.argv[1]).parent));'
+    'sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name="__main__");'
+    'raise SystemExit(3)')
+
+
+@pytest.fixture(autouse=True)
+def cpu_trace_reader(cpu_only, monkeypatch):
+    """Allow only the isolated descriptor reader; native/platform children stay forbidden."""
+    guarded_spawn, guarded_kill = subprocess.Popen, os.kill
+    readers = set()
+
+    def spawn(command, **kwargs):
+        prefix = [sys.executable, '-B', '-S', str(Path(observation.__file__).resolve())]
+        exit_prefix = [sys.executable, '-B', '-S', '-c', CPU_READER_EXIT_PROGRAM]
+        reader_command = command[:3]+command[5:] if command[:5] == exit_prefix else command
+        if (reader_command[:4] != prefix or len(reader_command) != 8 or
+                set(kwargs) != {'pass_fds', 'stdin', 'stdout', 'stderr'} or
+                tuple(map(int, reader_command[4:6])) != kwargs['pass_fds'] or
+                kwargs['stdin'] != subprocess.DEVNULL or
+                kwargs['stdout'] != subprocess.PIPE or kwargs['stderr'] != subprocess.PIPE):
+            return guarded_spawn(command, **kwargs)
+        reader = CPU_READER_POPEN(command, **kwargs)
+        readers.add(reader.pid)
+        return reader
+
+    def kill(pid, sig):
+        if pid not in readers or sig != signal.SIGKILL:
+            return guarded_kill(pid, sig)
+        return CPU_READER_KILL(pid, sig)
+
+    monkeypatch.setattr(subprocess, 'Popen', spawn)
+    monkeypatch.setattr(os, 'kill', kill)
 
 
 class NativeExporter:
@@ -78,9 +117,11 @@ def test_native_export_exception_remains_unverified_after_reader_completion(tmp_
 
 @pytest.mark.parametrize('fault', ['write', 'short_write', 'clock', 'read'])
 def test_reader_failures_do_not_leave_native_exporter_blocked(tmp_path, monkeypatch, fault):
+    """Inject faults at the exact drain function run by the fresh interpreter."""
     path = tmp_path/'trace.json'
-    original_open, original_read = Path.open, os.read
-    reader_clock_failed = threading.Event()
+    pipe = path.with_name(path.name+'.native.tmp')
+    original_read = os.read
+    clock_failed = threading.Event()
 
     class Sink:
         def __init__(self, stream):
@@ -92,45 +133,117 @@ def test_reader_failures_do_not_leave_native_exporter_blocked(tmp_path, monkeypa
         def close(self):
             self.stream.close()
 
-    def open_file(current, *args, **kwargs):
-        stream = original_open(current, *args, **kwargs)
-        return Sink(stream) if current == path and args == ('xb',) and fault in ('write', 'short_write') else stream
-
     def read(fd, count):
-        if threading.current_thread().name == 'step5-native-trace-export' and fault == 'read':
+        if threading.current_thread().name == 'trace-drain-test' and fault == 'read':
             raise OSError('original trace read failure')
         return original_read(fd, count)
 
     def clock():
-        if fault == 'clock' and threading.current_thread().name == 'step5-native-trace-export':
-            reader_clock_failed.set()
+        if fault == 'clock':
+            clock_failed.set()
             raise RuntimeError('original trace clock failure')
         return time.monotonic()
 
-    monkeypatch.setattr(Path, 'open', open_file)
     monkeypatch.setattr(os, 'read', read)
-    exporter = NativeExporter(b'x'*262144)
+    os.mkfifo(pipe, 0o600)
+    descriptor = os.open(pipe, os.O_RDONLY | os.O_NONBLOCK)
+    keeper = os.open(pipe, os.O_WRONLY | os.O_NONBLOCK)
+    os.set_blocking(descriptor, True)
+    stream = path.open('xb')
+    sink = Sink(stream) if fault in ('write', 'short_write') else stream
+    result = {}
     started = time.monotonic()
-    result = observation.export_trace(exporter, path, 4096, started+3, clock=clock)
-    assert time.monotonic()-started < 3
-    assert result['status'] == 'UNVERIFIED' and result['error'] is not None
-    assert result['reader_complete'] and path.stat().st_size <= 4096
-    assert len(exporter.calls) == 1 and list(tmp_path.iterdir()) == [path]
+    reader = threading.Thread(target=lambda: result.update(observation.drain_trace(
+        descriptor, sink, 4096, started+3, clock=clock)), name='trace-drain-test', daemon=True)
+    reader.start()
+    exporter = NativeExporter(b'x'*262144)
+    try:
+        exporter.export_chrome_trace(str(path.with_name(path.name+'.native')))
+    except BrokenPipeError:
+        assert fault == 'read'
+    finally:
+        os.close(keeper)
+    reader.join(timeout=max(0, started+3-time.monotonic()))
+    assert not reader.is_alive() and time.monotonic()-started < 3
+    assert result['error'] is not None and path.stat().st_size <= 4096
+    assert len(exporter.calls) == 1
     if fault == 'clock':
-        assert reader_clock_failed.is_set()
+        assert clock_failed.is_set()
 
 
 def test_deadline_exhaustion_stops_retention_and_continues_native_drain(tmp_path):
-    current = [1.0]
-    exporter = NativeExporter(b'x'*262144, before=lambda: current.__setitem__(0, 10.0))
     path = tmp_path/'trace.json'
-    result = observation.export_trace(exporter, path, 31, 5.0, clock=lambda: current[0])
+    pipe = path.with_name(path.name+'.native.tmp')
+    os.mkfifo(pipe, 0o600)
+    descriptor = os.open(pipe, os.O_RDONLY | os.O_NONBLOCK)
+    keeper = os.open(pipe, os.O_WRONLY | os.O_NONBLOCK)
+    os.set_blocking(descriptor, True)
+    sink, result = path.open('xb'), {}
+    reader = threading.Thread(target=lambda: result.update(observation.drain_trace(
+        descriptor, sink, 31, 5.0, clock=lambda: 10.0)), daemon=True)
+    reader.start()
+    exporter = NativeExporter(b'x'*262144)
+    exporter.export_chrome_trace(str(path.with_name(path.name+'.native')))
+    os.close(keeper)
+    reader.join(timeout=1)
+    assert not reader.is_alive() and result['deadline_exceeded'] and result['error'] is None
+    assert result['bytes_seen'] == 262144 and result['retained_bytes'] == path.stat().st_size == 0
+
+
+def test_parent_deadline_exhaustion_after_export_is_unverified_and_reaps_reader(tmp_path):
+    current = [time.monotonic()]
+    deadline = current[0]+5
+    exporter = NativeExporter(b'x'*262144, before=lambda: current.__setitem__(0, deadline+1))
+    path = tmp_path/'trace.json'
+    result = observation.export_trace(exporter, path, 31, deadline, clock=lambda: current[0])
     assert result['status'] == 'UNVERIFIED' and result['deadline_exceeded']
-    assert path.stat().st_size <= 31
-    for thread in threading.enumerate():
-        if thread.name == 'step5-native-trace-export':
-            thread.join(timeout=1)
+    assert path.stat().st_size <= 31 and list(tmp_path.iterdir()) == [path]
+    assert not Path(f'/proc/{result["reader_pid"]}').exists()
+
+
+
+@pytest.mark.parametrize('fault', ['spawn', 'readiness', 'startup_deadline'])
+def test_reader_startup_failures_preserve_output_and_never_call_native_exporter(
+        tmp_path, monkeypatch, fault):
+    path = tmp_path/'trace.json'
+    exporter = NativeExporter(b'x'*262144)
+    current = [time.monotonic()]
+    deadline = current[0]+5
+    original_spawn = observation.subprocess.Popen
+    processes = []
+
+    def spawn(command, **kwargs):
+        if fault == 'spawn':
+            raise OSError('original fresh reader spawn failure')
+        process = original_spawn(command, **kwargs)
+        processes.append(process)
+        if fault == 'startup_deadline':
+            current[0] = deadline+1
+        return process
+
+    monkeypatch.setattr(observation.subprocess, 'Popen', spawn)
+    if fault == 'readiness':
+        monkeypatch.setattr(observation.select, 'select', lambda *args: ([], [], []))
+    with pytest.raises((OSError, RuntimeError, TimeoutError)):
+        observation.export_trace(exporter, path, 4096, deadline, clock=lambda: current[0])
+    assert exporter.calls == [] and path.stat().st_size == 0
     assert list(tmp_path.iterdir()) == [path]
+    assert all(process.poll() is not None for process in processes)
+
+
+def test_cleanup_keeps_replacement_artifact_with_different_fifo_identity(tmp_path):
+    path = tmp_path/'trace.json'
+    native = path.with_name(path.name+'.native')
+
+    class ReplacedExporter(NativeExporter):
+        def export_chrome_trace(self, target):
+            super().export_chrome_trace(target)
+            native.rename(path.with_name('original_fifo'))
+            native.write_bytes(b'replacement artifact')
+
+    result = observation.export_trace(ReplacedExporter(b'actual trace'), path, 4096, time.monotonic()+5)
+    assert result['status'] == 'EXPORTED_WITHIN_BYTE_AND_DEADLINE_LIMITS'
+    assert path.read_bytes() == b'actual trace' and native.read_bytes() == b'replacement artifact'
 
 
 @pytest.mark.parametrize('existing', ['output', 'native', 'pipe'])
@@ -204,6 +317,90 @@ def test_original_windows_trace_completion_and_single_reservation(output):
     assert len(list(output[0].glob('profile_rank_*.json'))) == 2
     records = [json.loads(line) for line in Path(worker._request_observation.record_file).read_text().splitlines()]
     assert len(records) == 2 and all(row['window']['handler_calls'] == 1 for row in records)
+
+
+@pytest.mark.parametrize('fault', ['poll', 'kill', 'communicate'])
+def test_reader_cleanup_errors_preserve_native_failure_and_finalize_reservation(output, monkeypatch, fault):
+    failure = RuntimeError('original native exporter failure before reader cleanup')
+    worker, observed, wrapper = profiler_case(output, exporter=NativeExporter(trace_payload(), failure=failure))
+    original_spawn = observation.subprocess.Popen
+    processes = []
+
+    class CleanupFailure:
+        def __init__(self, child):
+            self.child, self.communications, self.polls = child, 0, 0
+        def __getattr__(self, name):
+            return getattr(self.child, name)
+        def communicate(self, *args, **kwargs):
+            self.communications += 1
+            if self.communications == 1:
+                raise subprocess.TimeoutExpired(self.child.args, 0)
+            result = self.child.communicate(*args, **kwargs)
+            if fault == 'communicate':
+                raise OSError('injected reader cleanup communicate failure')
+            return result
+        def poll(self):
+            self.polls += 1
+            if self.polls == 1:
+                if fault == 'poll':
+                    raise OSError('injected reader cleanup poll failure')
+                if fault == 'kill':
+                    return None
+            return self.child.poll()
+        def kill(self):
+            if fault == 'kill':
+                raise OSError('injected reader cleanup kill failure')
+            return self.child.kill()
+
+    def spawn(command, **kwargs):
+        child = original_spawn(command, **kwargs)
+        processes.append(child)
+        return CleanupFailure(child)
+
+    monkeypatch.setattr(observation.subprocess, 'Popen', spawn)
+    start_window(observed, wrapper, 'capture')
+    stop_window(observed, wrapper)
+    trace = observed.windows[0]['trace']
+    assert trace is not None and repr(failure) in trace['error']
+    assert any('injected reader cleanup '+fault in error for error in trace['cleanup_errors'])
+    assert trace['reader_reaped'] and all(child.poll() is not None for child in processes)
+    assert not any(path.is_fifo() for path in output[0].iterdir())
+    assert observed.windows[0]['status'] == 'UNVERIFIED' and worker._request_observation.unverified
+    assert worker._request_observation.profiler_reserved_bytes == execution.device_reservation_bytes(output[0]) == 0
+
+
+@pytest.mark.parametrize('fault', ['deadline', 'exit'])
+def test_failed_reader_releases_reservation_after_confirmed_reap(output, monkeypatch, fault):
+    worker, observed, wrapper = profiler_case(output)
+    original_spawn = observation.subprocess.Popen
+    processes = []
+    current = [time.monotonic()]
+    observed.clock = lambda: current[0]
+    observed.deadline = current[0]+5
+    if fault == 'deadline':
+        wrapper.profiler.before = lambda: current.__setitem__(0, observed.deadline+1)
+
+    def spawn(command, **kwargs):
+        if fault == 'exit':
+            # Execute only the same CPU descriptor reader, then fail its exit status.
+            child = original_spawn([command[0], '-B', '-S', '-c', CPU_READER_EXIT_PROGRAM,
+                                    *command[3:]], **kwargs)
+        else:
+            child = original_spawn(command, **kwargs)
+        processes.append(child)
+        return child
+
+    monkeypatch.setattr(observation.subprocess, 'Popen', spawn)
+    start_window(observed, wrapper, 'capture')
+    stop_window(observed, wrapper)
+    trace = observed.windows[0]['trace']
+    assert trace is not None and trace['status'] == 'UNVERIFIED'
+    assert not trace['reader_complete'] and trace['reader_reaped']
+    assert all(child.poll() is not None for child in processes)
+    if fault == 'exit':
+        assert trace['reader_exit_code'] == 3
+    assert worker._request_observation.profiler_reserved_bytes == execution.device_reservation_bytes(output[0]) == 0
+    assert observed.windows[0]['status'] == 'UNVERIFIED' and observed.summary()['G2'] == 'UNVERIFIED'
 
 
 @pytest.mark.parametrize('fault', ['missing_handler', 'duplicate_handler', 'malformed_json', 'event_limit',

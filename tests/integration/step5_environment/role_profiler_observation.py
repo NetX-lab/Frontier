@@ -9,7 +9,8 @@ import math
 import os
 from pathlib import Path
 import select
-import threading
+import subprocess
+import sys
 import time
 
 import role_model_input_observation as model_observation
@@ -56,13 +57,48 @@ def annotation_name(lifecycle, sequence, event, kind):
     return f'{ANNOTATION_PREFIX}{lifecycle}:{sequence}:{event}:{kind}'
 
 
-def export_trace(profiler, path, byte_limit, deadline, *, clock=time.monotonic):
-    """Drain the original exporter on its calling thread into one capped file.
+def drain_trace(fifo, sink, byte_limit, deadline, *, clock=time.monotonic):
+    """Consume a native FIFO; retention failures must still let its writer finish."""
+    result = dict(bytes_seen=0, retained_bytes=0, error=None, deadline_exceeded=False)
+    try:
+        while True:
+            # Keep the read endpoint until the exporter opens its writer, even
+            # when a read failure is injected at the first available byte.
+            select.select([fifo], [], [])
+            chunk = os.read(fifo, 65536)
+            if not chunk:
+                break
+            result['bytes_seen'] += len(chunk)
+            if result['error'] is None:
+                try:
+                    result['deadline_exceeded'] |= clock() >= deadline
+                    remaining = byte_limit-result['retained_bytes']
+                    if not result['deadline_exceeded'] and remaining > 0:
+                        kept = chunk[:remaining]
+                        count = sink.write(kept)
+                        if count != len(kept):
+                            raise OSError('Trace output did not retain the complete write')
+                        result['retained_bytes'] += count
+                except BaseException as failure:
+                    result['error'] = repr(failure)
+    except BaseException as failure:
+        result['error'] = repr(failure)
+    finally:
+        for close in (sink.close, lambda: os.close(fifo)):
+            try:
+                close()
+            except BaseException as failure:
+                result['error'] = result['error'] or repr(failure)
+    return result
 
-    The reader owns its descriptor, output and cleanup after thread start. A
-    failed clock or output write disables retention while the FIFO still drains.
-    Native export cannot be interrupted safely; the existing supervisor owns the
-    absolute deadline, and a late or unfinished export never earns completion.
+
+def export_trace(profiler, path, byte_limit, deadline, *, clock=time.monotonic):
+    """Run the native exporter on its calling thread with a fresh CPU FIFO reader.
+
+    Kineto can hold the GIL throughout export. A Python thread cannot drain a
+    trace larger than the pipe, so the reader execs a separate interpreter with
+    only its FIFO and output descriptors. No CUDA state or profiler is passed.
+    Native export remains supervised by the original absolute workload deadline.
     """
     if type(byte_limit) is not int or byte_limit <= 0 or not math.isfinite(deadline):
         raise ValueError('Trace export needs a positive byte limit and finite absolute deadline')
@@ -74,10 +110,10 @@ def export_trace(profiler, path, byte_limit, deadline, *, clock=time.monotonic):
     if native_path.exists() or native_path.is_symlink():
         raise FileExistsError('Native trace export must not overwrite an existing artifact')
     started = clock()
-    finished = threading.Event()
     result = dict(status='UNVERIFIED', path=str(path), bytes_seen=0, retained_bytes=0,
                   byte_limit=byte_limit, error=None, deadline_exceeded=False,
-                  started=started, deadline=deadline)
+                  started=started, deadline=deadline, reader_complete=False, reader_reaped=False,
+                  cleanup_errors=[])
     stream = path.open('xb')
     descriptor, keeper, reader, pipe_identity = None, None, None, None
 
@@ -90,101 +126,108 @@ def export_trace(profiler, path, byte_limit, deadline, *, clock=time.monotonic):
             if (identity.st_dev, identity.st_ino) == pipe_identity:
                 candidate.unlink()
 
-    def drain(fifo, sink):
+    def remaining_time():
         try:
-            while True:
-                # Wait for bytes or EOF so a read failure cannot close the only
-                # read endpoint before the original exporter opens its writer.
-                select.select([fifo], [], [])
-                chunk = os.read(fifo, 65536)
-                if chunk:
-                    result['bytes_seen'] += len(chunk)
-                    if result['error'] is None:
-                        try:
-                            result['deadline_exceeded'] |= clock() >= deadline
-                            remaining = byte_limit-result['retained_bytes']
-                            if not result['deadline_exceeded'] and remaining > 0:
-                                kept = chunk[:remaining]
-                                count = sink.write(kept)
-                                if count != len(kept):
-                                    raise OSError('Trace output did not retain the complete write')
-                                result['retained_bytes'] += count
-                        except BaseException as failure:
-                            result['error'] = repr(failure)
-                else:
-                    if not finished.is_set():
-                        result['error'] = result['error'] or 'Native trace pipe closed before exporter completion'
-                    break
+            return max(0.0, deadline-clock())
         except BaseException as failure:
-            result['error'] = repr(failure)
-        finally:
-            for close in (sink.close, lambda: os.close(fifo)):
-                try:
-                    close()
-                except BaseException as failure:
-                    result['error'] = result['error'] or repr(failure)
-            if finished.is_set():
-                try:
-                    cleanup_pipe()
-                except BaseException as failure:
-                    result['error'] = result['error'] or repr(failure)
+            result['error'] = result['error'] or repr(failure)
+            return 0.0
 
     try:
         os.mkfifo(pipe, 0o600)
         identity = pipe.lstat()
         pipe_identity = (identity.st_dev, identity.st_ino)
-        # The caller holds only a writer to prevent early EOF. The reader owns
-        # the sole read endpoint, so its failure cannot leave the exporter blocked.
         descriptor = os.open(pipe, os.O_RDONLY | os.O_NONBLOCK)
+        # This writer prevents EOF until the original exporter returns. The
+        # caller releases its read endpoint before export so reader failure
+        # cannot leave a blocked writer with an unused read endpoint.
         keeper = os.open(pipe, os.O_WRONLY | os.O_NONBLOCK)
         os.set_blocking(descriptor, True)
-        reader = threading.Thread(target=drain, args=(descriptor, stream),
-                                  name='step5-native-trace-export', daemon=True)
-        reader.start()
+        reader = subprocess.Popen([sys.executable, '-B', '-S', str(Path(__file__).resolve()),
+            str(descriptor), str(stream.fileno()), str(byte_limit), str(deadline)],
+            pass_fds=(descriptor, stream.fileno()), stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result['reader_pid'] = reader.pid
+        ready, _, _ = select.select([reader.stdout], [], [], remaining_time())
+        if not ready or os.read(reader.stdout.fileno(), 6) != b'READY\n':
+            raise RuntimeError('Fresh trace reader did not acknowledge its owned descriptors')
+        os.close(descriptor)
+        descriptor = None
+        stream.close()
+        if clock() >= deadline:
+            raise TimeoutError('Fresh trace reader startup exhausted the original workload deadline')
         try:
             # The locked Kineto exporter writes <path>.tmp before renaming it.
             profiler.export_chrome_trace(str(native_path))
         except BaseException as failure:
             result['error'] = result['error'] or repr(failure)
         finally:
-            finished.set()
             os.close(keeper)
             keeper = None
         try:
-            wait = max(0.0, deadline-clock())
+            stdout, stderr = reader.communicate(timeout=remaining_time())
+            result['reader_exit_code'] = reader.returncode
+            if reader.returncode != 0 or stderr:
+                raise RuntimeError('Fresh trace reader failed: '+stderr.decode(errors='replace'))
+            drained = json.loads(stdout)
+            result['bytes_seen'] = drained['bytes_seen']
+            result['retained_bytes'] = drained['retained_bytes']
+            result['deadline_exceeded'] |= drained['deadline_exceeded']
+            result['error'] = result['error'] or drained['error']
+            result['reader_complete'] = True
         except BaseException as failure:
             result['error'] = result['error'] or repr(failure)
-            wait = 0.0
-        reader.join(timeout=wait)
-        result['reader_complete'] = not reader.is_alive()
-        if result['reader_complete']:
+    finally:
+        try:
+            stream.close()
+        except BaseException as failure:
+            result['error'] = result['error'] or repr(failure)
+        for endpoint in (descriptor, keeper):
+            if endpoint is not None:
+                try:
+                    os.close(endpoint)
+                except BaseException as failure:
+                    result['error'] = result['error'] or repr(failure)
+        if reader is not None:
+            killed = False
+            try:
+                if reader.poll() is None:
+                    reader.kill()
+                    killed = True
+            except BaseException as failure:
+                result['cleanup_errors'].append(repr(failure))
+            try:
+                reader.communicate(timeout=None if killed else remaining_time())
+            except BaseException as failure:
+                result['cleanup_errors'].append(repr(failure))
+            try:
+                result['reader_exit_code'] = reader.poll()
+                result['reader_reaped'] = result['reader_exit_code'] is not None
+            except BaseException as failure:
+                result['cleanup_errors'].append(repr(failure))
+            for stream in (reader.stdout, reader.stderr):
+                try:
+                    stream.close()
+                except BaseException as failure:
+                    result['cleanup_errors'].append(repr(failure))
+        if pipe_identity is not None:
             try:
                 cleanup_pipe()
             except BaseException as failure:
-                result['error'] = result['error'] or repr(failure)
-        if reader.is_alive():
-            result['error'] = result['error'] or 'Trace reader exceeded the original deadline'
-        try:
-            result['finished'] = clock()
-            result['deadline_exceeded'] |= result['finished'] >= deadline
-            result['seconds'] = result['finished']-started
-            if (result['reader_complete'] and result['error'] is None and
-                    not result['deadline_exceeded'] and 0 < result['bytes_seen'] <= byte_limit and
-                    result['bytes_seen'] == result['retained_bytes'] == path.stat().st_size):
-                result['status'] = 'EXPORTED_WITHIN_BYTE_AND_DEADLINE_LIMITS'
-        except BaseException as failure:
-            result['error'] = result['error'] or repr(failure)
-        return dict(result)
-
-    finally:
-        if keeper is not None:
-            os.close(keeper)
-        if reader is None or reader.ident is None:
-            stream.close()
-            if descriptor is not None:
-                os.close(descriptor)
-            if pipe_identity is not None:
-                cleanup_pipe()
+                result['cleanup_errors'].append(repr(failure))
+        if result['cleanup_errors']:
+            result['error'] = result['error'] or result['cleanup_errors'][0]
+    try:
+        result['finished'] = clock()
+        result['deadline_exceeded'] |= result['finished'] >= deadline
+        result['seconds'] = result['finished']-started
+        if (result['reader_complete'] and result['reader_reaped'] and result['error'] is None and
+                not result['deadline_exceeded'] and 0 < result['bytes_seen'] <= byte_limit and
+                result['bytes_seen'] == result['retained_bytes'] == path.stat().st_size):
+            result['status'] = 'EXPORTED_WITHIN_BYTE_AND_DEADLINE_LIMITS'
+    except BaseException as failure:
+        result['error'] = result['error'] or repr(failure)
+    return result
 
 
 def correlate_capture_nodes(capture, stored, kernels):
@@ -589,7 +632,7 @@ class NativeProfilerObservation:
                 # the remaining allowance; its bytes are never charged twice.
                 trace = window['trace']
                 remaining = (self.limits.trace_bytes
-                    if trace is not None and not trace.get('reader_complete', False) else 0)
+                    if trace is not None and not trace.get('reader_reaped', False) else 0)
                 try:
                     from role_execution_observation import reserve_device_bytes
                     reserve_device_bytes(self.worker, self.state.device_owned_bytes,
@@ -712,3 +755,11 @@ def create_observation(worker, state, record):
     observed.bind_graph_api()
     observed.bind_profiler(worker.profiler_config)
     return observed
+
+
+if __name__ == '__main__':
+    fifo, output, limit, deadline = sys.argv[1:]
+    sink = os.fdopen(int(output), 'wb', buffering=0)
+    os.write(sys.stdout.fileno(), b'READY\n')
+    drained = drain_trace(int(fifo), sink, int(limit), float(deadline))
+    print(json.dumps(drained, allow_nan=False), flush=True)

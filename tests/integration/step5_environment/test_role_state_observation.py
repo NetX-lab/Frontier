@@ -16,7 +16,7 @@ import pytest
 
 from test_role_model_input_observation import (DeviceCpuApi, DeviceCpuTensor, TASK, device_case, fake_only,
     native, observation, runner, events, record, work)
-from test_role_execution_driver import retained_methods
+from test_role_execution_driver import original_cpu_method, retained_methods
 import role_capacity_observation as capacity
 import role_execution_observation as execution
 import role_state_observation as state_observation
@@ -327,6 +327,29 @@ def test_zero_work_still_records_native_removal_and_absence_of_device_completion
     assert calls[-1]['lifecycle_after']['request_indices'] == []
     assert calls[0]['arguments']['lifecycle']['scheduler']['total_num_scheduled_tokens'] == 0
     assert all(row['outcome'] == 'RETURNED_CPU_CALL_NOT_GPU_COMPLETION' for row in calls)
+
+
+@pytest.mark.parametrize('preempted', [None, set(), {'ended'}])
+def test_native_optional_preemption_keeps_lifecycle_observation(lifecycle, preempted):
+    """Run the pinned native finish method with its actual optional preemption semantics."""
+    case = lifecycle
+    method = original_cpu_method(
+        'native_role_sources/observed_generation2/vllm/v1/worker/gpu/model_runner.py',
+        'GPUModelRunner', 'finish_requests', {})
+    case.owner.finish_requests = MethodType(method, case.owner)
+    case.owner.pooling_runner = None
+    case.native.sites.codes['census_request_finish'] = method.__code__
+    case.native.sites.census_names[id(method.__code__)] = 'request_finish'
+    case.owner.req_states.req_id_to_index['ended'] = 2
+    case.scheduler.finished_req_ids = set()
+    case.scheduler.preempted_req_ids = preempted
+    observed_lifecycle(case, lambda: case.owner.finish_requests(case.scheduler))
+    assert not case.scope.errors and not case.scope.stopped
+    row = next(row for row in case.scope.events if row['site'] == 'request_finish')
+    assert row['outcome'] == 'RETURNED_CPU_CALL_NOT_GPU_COMPLETION'
+    expected = None if preempted is None else sorted(preempted)
+    assert row['arguments']['lifecycle']['scheduler']['preempted_req_ids'] == expected
+    assert case.owner.req_states.req_id_to_index == ({} if preempted else {'ended': 2})
 
 
 def test_replacement_of_profiling_table_rebinds_new_owner_without_rewriting_old_record(lifecycle):
