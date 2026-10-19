@@ -18,7 +18,10 @@ import sys
 
 REPO = Path(__file__).resolve().parents[2]
 CASES = ("offline", "online")
-PROMPT_TOKENS = (128, 65, 65, 65, 64)
+# A D reservation holds ceil(prompt / 64) of the lane's three blocks. The tail
+# needs two, and the earlier request on its lane leaves one, so the tail waits
+# for that request to finish.
+PROMPT_TOKENS = (128, 65, 65, 65, 65)
 REQUEST_COUNT = len(PROMPT_TOKENS)
 DECODE_TOKENS = 3
 PAGE_BYTES_PER_WORKER_LANE = 5_928_192
