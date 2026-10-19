@@ -778,6 +778,29 @@ COMM_FAMILY = OperatorFamilySpec(
 )
 
 
+KV_CACHE_FAMILY = OperatorFamilySpec(
+    family_id="kv_cache",
+    display_name="KV Cache Initialization",
+    supported_variants=("block_zero",),
+    resource_class=ResourceClass.MEMORY,
+    execution_enabled=False,
+    disabled_reason="KV cache initialization has structural dummy timing only",
+    operators=(
+        OperatorSpec(
+            name="kv_cache_block_zero",
+            role=OperatorRole.CACHE_WRITE,
+            phases=_ALL_PHASES,
+            trace_kind=TraceKind.COMPUTE,
+            predictor_target=False,
+            profiling_target=False,
+            e2e_trace_target=False,
+            resource_class=ResourceClass.MEMORY,
+            tp_mode=TensorParallelMode.REPLICATED,
+        ),
+    ),
+)
+
+
 KV_TRANSFER_FAMILY = OperatorFamilySpec(
     family_id="kv_transfer",
     display_name="KV Cache Transfer",
@@ -827,6 +850,7 @@ for _family in (
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
     COMM_FAMILY,
+    KV_CACHE_FAMILY,
     KV_TRANSFER_FAMILY,
 ):
     OPERATOR_REGISTRY.register(_family)

@@ -9,9 +9,11 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
-from frontier.config import ReplicaConfig
+from frontier.config import ReplicaConfig, SyntheticRequestGeneratorConfig
+from frontier.entities.replica import Replica
 from frontier.model_architectures import LayerKind
 from frontier.operators.spec import TensorParallelMode
+from frontier.scheduler.utils.memory_planner import MemoryPlanner
 from frontier.types import ClusterType
 from frontier.utils.param_counter import ParamCounter
 
@@ -61,7 +63,7 @@ def _logical_oracle(raw, ep):
 
 
 @pytest.mark.parametrize(("ep", "memory"), [
-    (16, 12_393_714_140), (32, 7_794_659_804),
+    (16, 12_393_714_140), (32, 7_794_659_804), (64, 5_495_132_636),
 ])
 def test_source_constructor_oracle_and_logical_coefficients_are_separate(ep, memory):
     counter = ParamCounter(_replica(ep))
@@ -156,6 +158,32 @@ def test_unrepresented_topologies_are_explicitly_rejected(attribute, value):
         ParamCounter(replica)
 
 
+def test_dp8_real_replica_and_memory_planner_use_ep64_source_storage():
+    replica_config = _replica(64)
+    replica_config.network_device = "h800_dgx"
+    replica_config.attention_backend = "FLASHMLA_SPARSE_DSV4"
+    replica_config.kv_cache_dtype = "fp8"
+    replica_config.indexer_kv_cache_dtype = "fp8"
+    replica = Replica(
+        replica_config,
+        SyntheticRequestGeneratorConfig(),
+        ClusterType.MONOLITHIC,
+    )
+
+    assert replica_config.world_size == 64
+    assert replica_config.local_expert_num == 4
+    assert replica.local_num_experts == 4
+    assert replica.num_attn_tensor_parallel_workers == 8
+    assert replica.num_moe_expert_parallel_size == 64
+    planner = MemoryPlanner(replica_config, replica, ClusterType.MONOLITHIC)
+    assert planner.get_num_blocks(block_size=256, gpu_memory_utilization=0.9) == 71_653
+
+
+def test_dp16_parameter_storage_remains_unrepresented():
+    with pytest.raises(NotImplementedError, match="DP2/4/8"):
+        ParamCounter(_replica(128))
+
+
 @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_FFN])
 def test_v4_source_inventory_does_not_enable_pd_ownership(role):
     with pytest.raises(NotImplementedError, match="MONOLITHIC"):
@@ -227,7 +255,7 @@ def test_non_v4_conditional_mhc_accessor_preserves_existing_models():
 
 
 @pytest.mark.parametrize(("ep", "expected_bytes"), [
-    (16, 12_393_714_140), (32, 7_794_659_804),
+    (16, 12_393_714_140), (32, 7_794_659_804), (64, 5_495_132_636),
 ])
 def test_real_metrics_export_keeps_packed_bytes_and_conditional_storage_separate(
     ep, expected_bytes, tmp_path,
@@ -255,6 +283,10 @@ def test_real_metrics_export_keeps_packed_bytes_and_conditional_storage_separate
     )
     parts = memory["breakdown"]
     assert parts["attention_memory_bytes"] == 1_612_866_432
+    if ep == 64:
+        assert memory["device_info"]["expert_parallel_size"] == 64
+        assert parts["ffn_memory_bytes"] == 3_481_250_304
+        assert parts["other_memory_bytes"] == 401_015_900
     assert expected_bytes == sum(parts[k] for k in (
         "attention_memory_bytes", "ffn_memory_bytes", "other_memory_bytes",
     ))

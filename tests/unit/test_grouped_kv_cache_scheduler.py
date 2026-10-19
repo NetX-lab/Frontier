@@ -122,6 +122,7 @@ def _scheduler(*, blocks: int = 400, watermark: int = 3):
     scheduler._allocation_map = {}
     scheduler._num_allocated_blocks = 0
     scheduler._scheduled_num_computed_tokens_by_request = {}
+    scheduler._pending_cache_zero_block_ids = {}
     scheduler._active_batch_request_counts = {}
     scheduler._gdn_state_slot_manager = None
     scheduler._current_iteration_token_budget = 64
@@ -298,7 +299,7 @@ class _ClusterScheduler:
         assert batch.scheduled_at == time
 
 
-def _v4_schedulers(*, blocks=200, chunk=64):
+def _v4_schedulers(*, blocks=200, chunk=64, policy="fcfs", enable_preemption=True):
     replica_config = ReplicaConfig(
         model_name="deepseek-ai/DeepSeek-V4-Flash",
         device="h800",
@@ -319,6 +320,8 @@ def _v4_schedulers(*, blocks=200, chunk=64):
             replica_config=replica_config,
             replica_scheduler_config=VllmV1SchedulerConfig(
                 num_blocks=blocks,
+                scheduling_policy=policy,
+                enable_preemption=enable_preemption,
                 num_blocks_mode="explicit",
                 block_size=256,
                 max_tokens_in_batch=chunk,

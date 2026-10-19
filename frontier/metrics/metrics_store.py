@@ -1610,6 +1610,8 @@ class MetricsStore:
             if family.structural_execution_enabled and family.family_id not in family_ids
             for operator in family.e2e_trace_ops()
         }
+        if DEEPSEEK_V4_ATTENTION_FAMILY.family_id not in family_ids:
+            absent_structural_ops.add(OperationMetrics.KV_CACHE_BLOCK_ZERO.value)
         operation_metrics = tuple(
             metric for metric in OperationMetrics
             if metric.value not in absent_structural_ops

@@ -45,6 +45,47 @@ def test_structural_driver_preserves_default_workload_and_capacity(tmp_path):
         assert argv[argv.index(option) + 1] == value
 
 
+def test_structural_driver_admits_only_evidenced_dp8_scope(tmp_path, monkeypatch):
+    import json
+    import runpy
+    import sys
+    from pathlib import Path
+
+    driver = runpy.run_path(str(Path(__file__).resolve().parents[1] /
+                               "integration/run_dsv4_structural.py"))
+    captured = []
+
+    def capture(case, output_root, dp, **workload):
+        argv = driver["command"](case, output_root, dp, **workload)
+        captured.append((case, dp, argv))
+        return {"case": case, "logical_gpus": dp * 8}
+
+    driver["main"].__globals__["run_case"] = capture
+    output = tmp_path / "dp8"
+    output.mkdir()
+    monkeypatch.setattr(sys, "argv", [
+        "run_dsv4_structural.py", "--output-root", str(output),
+        "--dp", "8", "--case", "offline",
+    ])
+
+    driver["main"]()
+
+    case, dp, argv = captured.pop()
+    assert (case, dp) == ("offline", 8)
+    assert argv[argv.index("--replica_config_attn_dp") + 1] == "8"
+    assert argv[argv.index("--replica_config_moe_expert_parallel_size") + 1] == "64"
+    assert argv[argv.index("--metrics_config_num_requests_to_trace_per_layer") + 1] == "8"
+    assert json.loads((output / "report.json").read_text()) == [
+        {"case": "offline", "logical_gpus": 64},
+    ]
+
+    monkeypatch.setattr(sys, "argv", [
+        "run_dsv4_structural.py", "--output-root", str(output), "--dp", "16",
+    ])
+    with pytest.raises(SystemExit):
+        driver["main"]()
+
+
 @pytest.mark.parametrize("field,value", [
     ("prefill_tokens", 0), ("chunk_size", -1), ("decode_tokens", True),
     ("num_blocks", 0), ("num_blocks", -1), ("num_blocks", True),

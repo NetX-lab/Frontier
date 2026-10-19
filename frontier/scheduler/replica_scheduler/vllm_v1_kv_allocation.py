@@ -616,6 +616,11 @@ class KvBlockAllocation:
                     f"Failed to allocate grouped KV blocks for request {request.id}"
                 )
             self._sync_prefix_cache_allocation_state(request)
+            if allocation.zero_required_block_ids:
+                # Match the native manager drain: retain assignments even if
+                # later preempted, in group order, without ID deduplication.
+                for group_id, block_ids in allocation.group_new_block_ids:
+                    self._pending_cache_zero_block_ids.setdefault(group_id, []).extend(block_ids)
             self._emit_schedule_decision_event(
                 event="grouped_cache_allocation",
                 decision_result=None,
@@ -625,6 +630,8 @@ class KvBlockAllocation:
                 available_blocks=self._get_available_kv_blocks(),
                 extra_fields={
                     "grouped_cache_schema_version": 1,
+                    "replica_id": self._replica_id,
+                    "replica_local_id": self._replica_local_id,
                     "group_new_block_ids": {
                         group_id: [int(block_id) for block_id in block_ids]
                         for group_id, block_ids in allocation.group_new_block_ids

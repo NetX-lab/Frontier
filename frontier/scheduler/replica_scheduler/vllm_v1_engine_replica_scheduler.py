@@ -23,7 +23,7 @@ from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
-from frontier.entities.batch import Batch, DummyForwardBatch, Request
+from frontier.entities.batch import Batch, DummyForwardBatch, KVCacheBlockZeroing, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -122,6 +122,7 @@ class VLLMv1EngineReplicaScheduler(
         self._kv_transfer_receiving_request_ids: set[int] = set()
         self._kv_transfer_ready_request_ids: set[int] = set()
         self._scheduled_num_computed_tokens_by_request: Dict[int, int] = {}
+        self._pending_cache_zero_block_ids: Dict[str, List[int]] = {}
         self._monolithic_pp_pending_terminal_release_iters: Dict[int, int] = {}
         self._monolithic_pp_waiting_sensitive_release_extensions: set[int] = set()
         self._monolithic_pp_terminal_release_followup_poll_pending = False
@@ -373,6 +374,27 @@ class VLLMv1EngineReplicaScheduler(
             for request, scheduled_tokens in zip(requests, num_tokens)
         ]
         batch = super()._create_batch(requests, num_tokens, num_context_tokens)
+        if self._is_grouped_kv_allocation():
+            block_ids = tuple(
+                block_id for group in self._kv_cache_capacity.groups
+                for block_id in self._pending_cache_zero_block_ids.get(group.group_id, ())
+            )
+            if block_ids:
+                batch.cache_block_zeroing = KVCacheBlockZeroing(
+                    block_ids, self._kv_cache_capacity.physical_block_size_bytes,
+                )
+            self._emit_schedule_decision_event(
+                event="grouped_cache_batch", decision_result=None, request_id=None,
+                token_budget=int(self._current_iteration_token_budget),
+                num_tokens=sum(num_tokens),
+                extra_fields={
+                    "batch_id": batch.id, "replica_id": self._replica_id,
+                    "replica_local_id": self._replica_local_id,
+                    "zero_required_block_ids": list(block_ids),
+                    "physical_block_size_bytes": self._kv_cache_capacity.physical_block_size_bytes,
+                },
+            )
+            self._pending_cache_zero_block_ids.clear()
         metadata = self._build_decode_cuda_graph_metadata(batch)
         if metadata is not None:
             batch.decode_cuda_graph_metadata = metadata

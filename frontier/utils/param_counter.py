@@ -600,12 +600,12 @@ class ParamCounter:
             if type(value) is not int or value <= 0:
                 raise ValueError(f"V4 {name} must be a positive int")
         if (
-            replica.attn_tensor_parallel_size != 8 or replica.attn_dp not in (2, 4)
+            replica.attn_tensor_parallel_size != 8 or replica.attn_dp not in (2, 4, 8)
             or replica.moe_tensor_parallel_size != 1
             or replica.moe_expert_parallel_size
             != replica.attn_tensor_parallel_size * replica.attn_dp
         ):
-            raise NotImplementedError("V4 parameter estimates require TP8 DP2/4 SP with expert TP1")
+            raise NotImplementedError("V4 parameter estimates require TP8 DP2/4/8 SP with expert TP1")
         speculative = getattr(replica, "speculative_decoding_config", None)
         if speculative is not None and speculative.enabled:
             raise NotImplementedError("V4 parameter estimates exclude speculative decoding")

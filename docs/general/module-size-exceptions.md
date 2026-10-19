@@ -88,3 +88,26 @@ Steps 1 and 2 were scheduled after PR 44's merge, so the split would not mix
 with the calibration review. PR 44 is merged (`9a650fb`), but no step has
 started: the target modules named above do not exist yet. Steps 3 and 4 can
 run at any time.
+
+## Scoped V4 cache-zero metric admission, 2026-10-19
+
+At `b5120e6`, `frontier/metrics/metrics_store.py` has 5,703 lines. The
+cache-zero change adds two lines to the existing operation-metric admission
+filter, bringing it to 5,705 lines. The corresponding enum entry is required
+by actual structural execution; excluding that entry for models without the
+V4 structural attention family preserves their existing output files instead
+of creating an empty cache-zero table.
+
+The cleanup inspection found this filter already owns the exclusion of absent
+structural operations. Extending it avoids a second metrics owner or an
+additional model classifier. Cache allocation metadata and timing remain in
+their existing scheduler, Batch and V4 predictor modules; no cache algorithm
+or new ledger responsibility is added to the metrics store. Moving unrelated
+ledger code during this correction would expand the regression surface
+without improving cache-zero representation.
+
+The functional split remains step 3 above, as a separate movement-only change.
+This exception covers only the two-line filter extension, with focused metric
+checks and the unchanged 77-case artifact and predictor-cache filename
+comparison required before acceptance. It does not authorize further growth
+of the metrics store or claim that the planned split has been performed.

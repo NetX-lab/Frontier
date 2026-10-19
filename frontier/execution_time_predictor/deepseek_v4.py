@@ -23,6 +23,7 @@ def timing_operator_times(execution_time, phase):
 
     names_by_phase = {
         "attention": (
+            "kv_cache_block_zero",
             "dsv4_embedding", "dsv4_embedding_allreduce",
             "dsv4_mhc_first_pre", "dsv4_mhc_ffn_post_attn_pre",
             "dsv4_sp_attention_allgather",
@@ -263,6 +264,20 @@ def predict_structural_execution(
     times = dict(source["component_times"])
     workloads = dict(source["workloads"])
     base = predictor._dummy_execution_time
+    zeroing = batch.cache_block_zeroing
+    if include_attention and layer_id == 0 and zeroing is not None:
+        times["kv_cache_block_zero"] = base
+        workloads["kv_cache_block_zero"] = {
+            "block_ids": zeroing.block_ids,
+            "block_assignment_count": len(zeroing.block_ids),
+            "unique_block_count": len(set(zeroing.block_ids)),
+            "physical_block_size_bytes": zeroing.physical_block_size_bytes,
+            "physical_reservation_extent_bytes": zeroing.physical_reservation_extent_bytes,
+            "extent_scope": "distinct physical slab reservations; not native zeroed segments or store traffic",
+            "execution_scope": "one before-forward invocation per physical worker and scheduler step",
+            "native_store_traffic_bytes": "UNKNOWN", "native_h2d_cost": "UNKNOWN",
+            "cost_source": "one synthetic dummy duration; no byte or layer scaling",
+        }
     if include_attention and layer_id == 0:
         # The embedding scope now excludes its separately owned reduction.
         times["dsv4_embedding_allreduce"] = base
@@ -397,6 +412,13 @@ def operator_trace_metadata(op_name, op_type, context):
         }
     if op_type != "COMPUTE":
         raise ValueError(f"Unsupported V4 trace kind: {op_type}")
+    if op_name == "kv_cache_block_zero":
+        return {
+            "source_scope": "vllm 2cf0a6915ce544dc493a0990f2ea38d81601128a: KVBlockZeroer",
+            "execution_boundary": "before forward; structural serial ordering",
+            "cache_storage_precision": "mixed cache views; byte initialization has no compute dtype",
+            "cost_source": "one synthetic dummy duration; native segment, store and H2D costs unqualified",
+        }
     inventory = {row["operation"]: row for row in
                  get_quantization_manager().get_operation_precision_metadata()}
     if op_name not in inventory:

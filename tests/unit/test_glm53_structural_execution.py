@@ -281,7 +281,7 @@ def test_real_metrics_initializer_limits_dsa_catalogs_to_dsa_models(
     )
     store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster})
     dsa_metrics = {OperationMetrics.ATTN_DSA_INDEXER, OperationMetrics.ATTN_DSA_MLA}
-    expected_catalog = set(OperationMetrics)
+    expected_catalog = set(OperationMetrics) - {OperationMetrics.KV_CACHE_BLOCK_ZERO}
     if not includes_dsa:
         expected_catalog -= dsa_metrics
 

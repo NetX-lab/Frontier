@@ -37,9 +37,12 @@ def read_jsonl(path):
 SOURCE_FILES = (
     "data/config/models/deepseek-ai__DeepSeek-V4-Flash.json",
     "frontier/attention/deepseek_v4.py", "frontier/attention/families.py",
+    "frontier/attention/memory.py", "frontier/kv_cache/base_kv_cache_manager.py",
+    "frontier/kv_cache/kv_cache_block_pool.py", "frontier/scheduler/utils/memory_planner.py",
     "frontier/config/quantization_manager.py", "frontier/entities/execution_time.py",
     "frontier/entities/stage_execution_time.py", "frontier/entities/time_components.py",
     "frontier/entities/request.py",
+    "frontier/entities/batch.py", "frontier/utils/param_counter.py",
     "frontier/execution_time_predictor/deepseek_v4.py",
     "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
     "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
@@ -124,7 +127,105 @@ def validate_attention_boundary(operators, *, query, context, layer):
                   compressed_history_rows=(history,))
 
 
-def validate_artifacts(run_dir, dp, *, prefill_tokens=17, chunk_size=16, decode_tokens=2):
+def validate_cache_zeroing(decisions, stages, traces, *, group_ids,
+                          physical_block_size_bytes, dummy_execution_time_ms):
+    """Reconcile allocation occurrences, batch handoff and structural worker work.
+
+    Group order comes from the canonical capacity. Repeated assignments survive;
+    distinct slab reservation extent does not describe native store traffic.
+    """
+    pending = {}
+    handed_steps = set()
+    handoffs = {}
+    for row in decisions:
+        if row["event"] not in {"grouped_cache_allocation", "grouped_cache_batch"}:
+            continue
+        key = tuple(row[field] for field in (
+            "cluster_type", "replica_id", "replica_local_id", "iteration_id"))
+        require(key not in handed_steps, "allocation or handoff repeated after step drain")
+        groups = pending.setdefault(key, {group: [] for group in group_ids})
+        if row["event"] == "grouped_cache_allocation":
+            new = row["group_new_block_ids"]
+            require(set(new) == set(group_ids), "allocation groups differ from canonical layout")
+            raw = [block for group in group_ids for block in new[group]]
+            require(all(type(block) is int and block > 0 for block in raw),
+                    "allocation includes null or invalid physical block IDs")
+            require(raw == row["zero_required_block_ids"], "allocation zero assignments differ")
+            for group in group_ids:
+                groups[group].extend(new[group])
+            continue
+        ids = [block for group in group_ids for block in groups[group]]
+        require(ids == row["zero_required_block_ids"], "batch zero IDs differ from allocation stream")
+        require(row["physical_block_size_bytes"] == physical_block_size_bytes,
+                "batch physical stride differs from canonical capacity")
+        require(row["batch_id"] not in handoffs, "batch has duplicate cache handoffs")
+        handoffs[row["batch_id"]] = row
+        handed_steps.add(key)
+        pending.pop(key)
+    require(not pending, "allocation step has no cache batch handoff")
+    stage_by_batch = {row["batch_id"]: row for row in stages}
+    require(set(stage_by_batch) == set(handoffs), "stage/cache batch identity coverage differs")
+    zeros = defaultdict(list)
+    embeddings = defaultdict(list)
+    for row in traces:
+        if row.get("name") == "kv_cache_block_zero":
+            require(row["batch_id"] in stage_by_batch, "idle or orphan cache zero trace")
+            require("phase" not in row.get("meta", {}), "cache zero duplicated in EP phase")
+            zeros[row["batch_id"]].append(row)
+        elif row.get("name") == "dsv4_embedding" and "phase" not in row.get("meta", {}):
+            embeddings[row["batch_id"]].append(row)
+    counts = Counter()
+    for batch_id, row in handoffs.items():
+        stage = stage_by_batch[batch_id]
+        require(all(stage[field] == row[field] for field in (
+            "cluster_type", "replica_id", "replica_local_id")), "stage/cache lane identity differs")
+        ids = row["zero_required_block_ids"]
+        require(len(zeros[batch_id]) == bool(ids), "cache zero must occur once only for nonempty IDs")
+        if not ids:
+            continue
+        zero, = zeros[batch_id]
+        require(zero["type"] == "COMPUTE" and
+                zero.get("meta", {}).get("global_layer_ids", [zero["layer_id"]]) == [0],
+                "cache zero must use the before-forward anchor")
+        require(abs(zero["duration_ms"] - dummy_execution_time_ms) < 1e-9,
+                "cache zero duration must be one synthetic invocation")
+        require(len(embeddings[batch_id]) == 1, "cache zero has no unique embedding boundary")
+        embedding, = embeddings[batch_id]
+        require(zero["ts_start"] + zero["duration_ms"] / 1000 <= embedding["ts_start"] + 1e-12,
+                "cache zero must finish before embedding")
+        meta = zero["meta"]
+        require("synthetic" in meta["cost_source"], "cache zero cost has no synthetic provenance")
+        require(len(meta["source_tensor_calls"]) == 1, "cache zero workload counted more than once")
+        call, = meta["source_tensor_calls"]
+        extent = len(set(ids)) * physical_block_size_bytes
+        expected = dict(block_ids=ids, block_assignment_count=len(ids),
+                        unique_block_count=len(set(ids)),
+                        physical_block_size_bytes=physical_block_size_bytes,
+                        physical_reservation_extent_bytes=extent,
+                        native_store_traffic_bytes="UNKNOWN", native_h2d_cost="UNKNOWN")
+        require(all(call.get(field) == value for field, value in expected.items()),
+                "cache zero trace workload differs from raw assignments or canonical extent")
+        counts["cache_zero_invocations"] += 1
+        counts["cache_zero_block_assignments"] += len(ids)
+        counts["cache_zero_reservation_extent_bytes"] += extent
+    return {**counts, "cache_zero_scope":
+            "one per physical worker per nonempty step; distinct reservation extent is not native store traffic"}
+
+
+def validate_artifacts(run_dir, dp, *, decision_path, prefill_tokens=17,
+                       chunk_size=16, decode_tokens=2):
+    from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
+    from frontier.attention.memory import AttentionKVCacheSelection, get_attention_kv_cache_capacity
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.types import DeviceSKUType
+
+    capacity = get_attention_kv_cache_capacity(
+        DEEPSEEK_V4_ATTENTION_FAMILY,
+        BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash"), block_size=256,
+        selection=AttentionKVCacheSelection(
+            device=str(DeviceSKUType.H800), gpu_platform="cuda", block_size=256,
+            attention_backend="FLASHMLA_SPARSE_DSV4", kv_cache_dtype="fp8",
+            indexer_kv_cache_dtype="fp8"))
     system = json.loads((run_dir / "system_metrics.json").read_text())
     metadata = system["simulation_metadata"]
     require(metadata["total_requests"] == metadata["completed_requests"] == dp,
@@ -136,6 +237,13 @@ def validate_artifacts(run_dir, dp, *, prefill_tokens=17, chunk_size=16, decode_
     require({int(r["request_num_decode_tokens"]) for r in requests} == {decode_tokens}, "wrong decode length")
     request_ids = {str(row["Request Id"]) for row in requests}
     stage_rows = list(read_jsonl(run_dir / "frontier_stage_batch_ledger.jsonl"))
+    cache_traces = (row for row in read_jsonl(run_dir / "op_traces.jsonl")
+                    if row.get("name") in {"kv_cache_block_zero", "dsv4_embedding"})
+    cache_zero = validate_cache_zeroing(
+        read_jsonl(decision_path), stage_rows, cache_traces,
+        group_ids=tuple(group.group_id for group in capacity.groups),
+        physical_block_size_bytes=capacity.physical_block_size_bytes,
+        dummy_execution_time_ms=0.01)
     stage_by_batch = {row["batch_id"]: row for row in stage_rows}
     stage_ops = defaultdict(Counter)
     phase_ops = defaultdict(Counter)
@@ -256,7 +364,7 @@ def validate_artifacts(run_dir, dp, *, prefill_tokens=17, chunk_size=16, decode_
         require(sum(row["synthetic_destination_assignments"] for row in rows) == physical * 6,
                 "synthetic destination assignments do not conserve physical source rows")
     require(counts["real_ep_lanes"] > 0 and counts["idle_ep_lanes"] > 0, "real/idle scope not exercised")
-    return {**counts, "stage_rows": len(stage_rows), "ep_waves": len(waves),
+    return {**counts, **cache_zero, "stage_rows": len(stage_rows), "ep_waves": len(waves),
             "attention_boundaries": [{"query": q, "context": c, "sequence": q + c}
                                      for q, c in sorted(set(stage_inputs.values()), key=lambda value: value[1])],
             "physical_cache_retirement": "UNKNOWN; logical source writes and existing grouped allocation only",
@@ -329,9 +437,11 @@ def run_case(case, output_root, dp, *, prefill_tokens=17, chunk_size=16,
     argv = command(case, root, dp, **workload, num_blocks=num_blocks)
     (root / "command.json").write_text(json.dumps(argv, indent=2) + "\n")
     before = source_identity()
+    decision_path = root / "schedule_decisions.jsonl"
     with (root / "run.log").open("w") as stream:
         completed = subprocess.run(argv, cwd=REPO, stdout=stream, stderr=subprocess.STDOUT,
-            env={**os.environ, "PYTHONPATH": str(REPO), "PYTHONDONTWRITEBYTECODE": "1"},
+            env={**os.environ, "PYTHONPATH": str(REPO), "PYTHONDONTWRITEBYTECODE": "1",
+                 "FRONTIER_VLLM_V1_SCHED_DECISION_LOG_PATH": str(decision_path)},
             timeout=900)
     (root / "source_identity.json").write_text(json.dumps({
         "head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
@@ -344,7 +454,7 @@ def run_case(case, output_root, dp, *, prefill_tokens=17, chunk_size=16,
     runs = list((root / "metrics").rglob("config.json"))
     require(len(runs) == 1, "one metrics run is required")
     run_dir = runs[0].parent
-    validation = validate_artifacts(run_dir, dp, **workload)
+    validation = validate_artifacts(run_dir, dp, decision_path=decision_path, **workload)
     return {"case": case, "logical_gpus": dp * 8, "run_dir": str(run_dir),
             "requests_completed": dp, "workload": workload, "num_blocks": num_blocks, **validation,
             "evidence_level": "CPU dummy structural; native assignments and latency UNKNOWN"}
@@ -353,7 +463,7 @@ def run_case(case, output_root, dp, *, prefill_tokens=17, chunk_size=16,
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, required=True)
-    parser.add_argument("--dp", type=int, choices=(2, 4), default=4)
+    parser.add_argument("--dp", type=int, choices=(2, 4, 8), default=4)
     parser.add_argument("--case", choices=("offline", "online", "both"), default="both")
     parser.add_argument("--prefill-tokens", type=int, default=17)
     parser.add_argument("--chunk-size", type=int, default=16)
