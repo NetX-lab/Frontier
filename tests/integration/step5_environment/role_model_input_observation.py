@@ -717,7 +717,7 @@ class DeviceObservation:
     Native AsyncOutput and its original consumption remain separate owners.
     """
     def __init__(self, runner, sites, limits, requests, sampling_fields, rank_remaining,
-                 *, metadata_limits=ObservationLimits(), reserve=None):
+                 *, metadata_limits=ObservationLimits(), reserve=None, deadline=None):
         self.runner, self.sites, self.limits = runner, sites, limits
         self.torch, self.cpu_limits = sites.torch, metadata_limits
         self.padding_mask_used = sites.padding_mask_used
@@ -789,6 +789,7 @@ class DeviceObservation:
             return dtype_bytes(self.torch, dtype)
         self.state = StateObservation(runner, sites, limits, metadata_limits,
             lambda value: Metadata(sites, metadata_limits).value(value), limits.scan_rows*self.width)
+        self.state.check_resident_readiness(deadline)
         self.layout.update(self.state.step_layout)
         self.host_bytes = limits.steps*sum(
             self.elements(shape)*size(dtype) for name, (shape, dtype) in self.layout.items()
@@ -811,6 +812,9 @@ class DeviceObservation:
         self.counts = self.torch.empty((limits.steps, self.chunks), dtype=self.torch.int64,
                                        device=runner.device)
         self.state.allocate(self.absolute, self.finite)
+        with self.torch.inference_mode():
+            self.check_stream()
+            self.state.submit_resident(deadline)
         self.events = [self.torch.cuda.Event(enable_timing=False) for _ in range(limits.steps)]
         for event in self.events:
             event.record(self.stream)
@@ -986,7 +990,7 @@ class DeviceObservation:
             entry['tensors']['finite_counts'] = dict(rows=chunks)
             entry['finite_elements_expected'] = valid*self.width
             self.state.scan(entry, self.destinations[index])
-            self.state.scan_scales(entry)
+            self.state.attach_resident(entry)
             self.events[index].record(self.stream)
         entry['status'] = 'COMPLETION_EVENT_RECORDED_NOT_QUERIED'
         entry['native_async_output_consumed_by_observer'] = False

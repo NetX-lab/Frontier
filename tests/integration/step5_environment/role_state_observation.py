@@ -1,4 +1,4 @@
-"""Owned cache-range and resident-scale witnesses within the native device observer.
+"""Owned cache-range and resident tensor witnesses within the native device observer.
 
 This child supplies layouts and ordered operations to DeviceObservation. It has
 no writer, transport, synchronization, reservation, or native execution entry.
@@ -7,6 +7,11 @@ against actual device inputs before any content witness can be qualified.
 """
 import copy
 import hashlib
+from itertools import product
+import math
+import time
+
+from role_capacity_observation import module_tensors, storage_record
 
 
 STATE_FIELDS = ('raw', 'closed_summary', 'partial_summary', 'live_tail')
@@ -45,8 +50,53 @@ def tensor_bytes(torch, tensor):
     return elements*dtype_bytes(torch, tensor.dtype)
 
 
+def parameter_view_key(metadata):
+    """Identical registered views share a scan; overlapping views remain separate."""
+    return (metadata['storage'], metadata['storage_offset'], metadata['dtype'],
+            tuple(metadata['shape']), tuple(metadata['stride']))
+
+
+def parameter_chunk_layout(metadata, scratch_elements):
+    shape, strides = metadata['shape'], metadata['stride']
+    elements, contiguous, stride = math.prod(shape), True, 1
+    for extent, actual in zip(reversed(shape), reversed(strides)):
+        if extent > 1 and actual != stride:
+            contiguous = False
+        stride *= extent
+    if not elements or contiguous:
+        return dict(elements=elements, chunks=(elements+scratch_elements-1)//scratch_elements,
+                    axis=None, rows=scratch_elements)
+    if elements <= scratch_elements:
+        return dict(elements=elements, chunks=1, axis=len(shape), rows=1)
+    trailing = 1
+    for axis in range(len(shape)-1, -1, -1):
+        if trailing*shape[axis] > scratch_elements:
+            rows = scratch_elements//trailing
+            return dict(elements=elements, axis=axis, rows=rows,
+                chunks=math.prod(shape[:axis])*((shape[axis]+rows-1)//rows))
+        trailing *= shape[axis]
+    raise ValueError('Noncontiguous resident parameter has no bounded chunk layout')
+
+
+def parameter_chunks(tensor, layout):
+    """Yield basic-index views; never flatten a noncontiguous resident allocation."""
+    if not layout['elements']:
+        return
+    axis, rows = layout['axis'], layout['rows']
+    if axis is None:
+        flat = tensor.view(-1)
+        for start in range(0, layout['elements'], rows):
+            yield flat[start:start+rows]
+    elif axis == len(tensor.shape):
+        yield tensor
+    else:
+        for prefix in product(*(range(extent) for extent in tensor.shape[:axis])):
+            for start in range(0, tensor.shape[axis], rows):
+                yield tensor[prefix+(slice(start, start+rows),)]
+
+
 class StateObservation:
-    """Inspect the explicitly bound packed KV and inverse-scale owners only."""
+    """Inspect registered resident tensors and explicitly bound packed KV owners."""
     def __init__(self, runner, sites, limits, metadata_limits, describe, scratch_elements):
         self.runner, self.sites, self.torch = runner, sites, sites.torch
         self.limits, self.describe = limits, describe
@@ -54,6 +104,10 @@ class StateObservation:
         self.owners, self.scales, self.gaps, self.assignments = [], [], [], {}
         self.step_layout, self.once_layout, self.device_layout = {}, {}, {}
         self.scale_submitted, self.summary_count = False, 0
+        self.parameters, self.parameter_gaps, self.parameter_registrations = [], [], []
+        self.parameter_submitted, self.resident_attached = False, False
+        self.resident_preparation = {}
+        self.prepare_parameters(metadata_limits)
         context = getattr(getattr(runner, 'compilation_config', None), 'static_forward_context', None)
         if context is None:
             self.gaps.append(dict(reason='UNVERIFIED_NATIVE_CACHE_CONTEXT_UNAVAILABLE'))
@@ -174,7 +228,7 @@ class StateObservation:
         if self.scales:
             chunks = sum(row['chunks'] for row in self.scales)
             samples = sum(row['width']*dtype_bytes(self.torch, row['tensor'].dtype) for row in self.scales)
-            self.once_layout = dict(scale_counts=((chunks, len(SCALE_COUNTS)), self.torch.int64),
+            self.once_layout.update(scale_counts=((chunks, len(SCALE_COUNTS)), self.torch.int64),
                 scale_extrema=((chunks, 2), self.torch.float32), scale_samples=((samples,), self.torch.uint8))
             self.device_layout.update(scale_counts=self.once_layout['scale_counts'],
                                       scale_extrema=self.once_layout['scale_extrema'])
@@ -182,6 +236,164 @@ class StateObservation:
             self.gaps.append(dict(reason='UNVERIFIED_RESIDENT_INVERSE_SCALE_BINDINGS_UNAVAILABLE'))
         if self.owners or self.scales:
             self.device_layout['state_absolute'] = ((scratch_elements,), self.torch.float32)
+
+    def prepare_parameters(self, metadata_limits):
+        """Reuse the resident inventory's actual registrations before any allocation."""
+        self.parameter_model = getattr(self.runner, 'model', None)
+        if self.parameter_model is None:
+            self.parameter_gaps.append(dict(reason='UNVERIFIED_RESIDENT_MODEL_UNAVAILABLE'))
+            return
+        views, storages, sample_bytes = {}, {}, 0
+        supported = (self.torch.bfloat16, self.torch.float16, self.torch.float32, self.torch.float8_e4m3fn)
+        for module_index, (path, module) in enumerate(self.parameter_model.named_modules()):
+            if module_index >= metadata_limits.tracked_entries:
+                raise ValueError('Resident modules exceed the existing entry cap')
+            for name, kind, local, tensor, persistent in module_tensors(path, module, self.sites.tensor_type):
+                if len(self.parameter_registrations) >= metadata_limits.tracked_entries:
+                    raise ValueError('Resident tensor registrations exceed the existing entry cap')
+                metadata = storage_record(name, kind, tensor, storages, persistent=persistent)
+                registration = (path, module, kind, local, tensor, persistent, metadata)
+                self.parameter_registrations.append(registration)
+                if tensor.device != self.runner.device or tensor.dtype not in supported:
+                    self.parameter_gaps.append(dict(metadata, reason='UNVERIFIED_RESIDENT_NUMERIC_INTERPRETATION_OR_DEVICE'))
+                    continue
+                key = parameter_view_key(metadata)
+                if key in views:
+                    views[key]['aliases'].append(metadata)
+                    continue
+                layout = parameter_chunk_layout(metadata, self.scratch_elements)
+                size = dtype_bytes(self.torch, tensor.dtype)
+                offset = (sample_bytes+size-1)//size*size
+                count = size if layout['elements'] else 0
+                view = dict(tensor=tensor, metadata=metadata, aliases=[metadata], layout=layout,
+                    sample_offset=offset, sample_bytes=count)
+                sample_bytes = offset+count
+                views[key] = view
+                self.parameters.append(view)
+        self.parameter_storage_bytes = sum(storages.values())
+        if not self.parameter_registrations:
+            self.parameter_gaps.append(dict(reason='UNVERIFIED_NO_REGISTERED_RESIDENT_TENSORS'))
+        if self.parameters:
+            self.once_layout.update(parameter_counts=((len(self.parameters),), self.torch.int64),
+                                    parameter_samples=((sample_bytes,), self.torch.uint8))
+            self.device_layout.update(parameter_counts=self.once_layout['parameter_counts'],
+                parameter_samples=self.once_layout['parameter_samples'], parameter_count_scratch=((), self.torch.int64),
+                state_absolute=((self.scratch_elements,), self.torch.float32))
+
+    @staticmethod
+    def check_deadline(deadline):
+        if time.monotonic() >= deadline:
+            raise TimeoutError('Resident content observation exceeded the original workload deadline')
+
+    def check_parameters(self):
+        if self.runner.model is not self.parameter_model:
+            raise ValueError('Resident native model changed after content preparation')
+        index = 0
+        for path, module in self.parameter_model.named_modules():
+            for name, kind, local, tensor, persistent in module_tensors(path, module, self.sites.tensor_type):
+                if index >= len(self.parameter_registrations):
+                    raise ValueError('Resident native tensor registration changed after preparation')
+                expected = self.parameter_registrations[index]
+                if (path != expected[0] or module is not expected[1] or kind != expected[2] or
+                        local != expected[3] or tensor is not expected[4] or persistent != expected[5]):
+                    raise ValueError('Resident native tensor registration changed after preparation')
+                if storage_record(name, kind, tensor, {}, persistent=persistent) != expected[6]:
+                    raise ValueError('Resident native tensor view changed after content preparation')
+                index += 1
+        if index != len(self.parameter_registrations):
+            raise ValueError('Resident native tensor registration changed after preparation')
+
+    def scan_parameters(self, entry, deadline):
+        if not self.parameters:
+            return
+        ranges = []
+        # Existing scale reductions already cover these exact resident tensor views.
+        scale_ranges = {parameter_view_key(storage_record('', 'parameter', scale['tensor'], {})): selected
+                        for scale, selected in zip(self.scales, entry.get('resident_scale_scan', []))}
+        for index, view in enumerate(self.parameters):
+            self.check_deadline(deadline)
+            tensor, layout = view['tensor'], view['layout']
+            counter = self.device['parameter_counts'][index:index+1].view(())
+            counter.zero_()
+            selected = scale_ranges.get(parameter_view_key(view['metadata']))
+            scanned, chunks = 0, 0
+            if selected is not None:
+                first, end = selected['first_chunk'], selected['first_chunk']+selected['chunks']
+                self.torch.sum(self.device['scale_counts'][first:end, 0], dim=(0,), dtype=self.torch.int64, out=counter)
+                scanned, chunks = selected['elements'], selected['chunks']
+            else:
+                for source in parameter_chunks(tensor, layout):
+                    self.check_deadline(deadline)
+                    finite_count(self.torch, source, self.device['state_absolute'], self.device['state_finite'],
+                                 self.device['parameter_count_scratch'])
+                    self.torch.add(counter, self.device['parameter_count_scratch'], out=counter)
+                    scanned += math.prod(source.shape)
+                    chunks += 1
+            if scanned != layout['elements'] or (selected is None and chunks != layout['chunks']):
+                raise ValueError('Resident parameter scan does not cover its prepared complete view')
+            if view['sample_bytes']:
+                offset, count = view['sample_offset'], view['sample_bytes']
+                destination = self.device['parameter_samples'][offset:offset+count].view(tensor.dtype)
+                source = tensor[tuple(slice(0, 1) for _ in tensor.shape)].view(1)
+                destination.copy_(source, non_blocking=True)
+            ranges.append(dict(view['metadata'], aliases=copy.deepcopy(view['aliases']), view_index=index,
+                elements=scanned, chunks=chunks, finite_source='EXISTING_RESIDENT_SCALE_REDUCTION' if selected else
+                    'COMPLETE_REGISTERED_TENSOR_VIEW', sample_offset=view['sample_offset'], sample_bytes=view['sample_bytes'],
+                sampled_indices=[0]*len(tensor.shape), sample_policy='FIRST_LOGICAL_ELEMENT_NOT_FULL_RAW_RETENTION'))
+        self.once['parameter_counts'].copy_(self.device['parameter_counts'], non_blocking=True)
+        self.once['parameter_samples'].copy_(self.device['parameter_samples'], non_blocking=True)
+        entry['resident_parameter_scan'] = ranges
+        self.parameter_submitted = True
+
+    def check_resident_readiness(self, deadline):
+        if self.parameters or self.scales:
+            if type(deadline) not in (int, float) or not math.isfinite(deadline):
+                raise ValueError('Resident content observation requires the original finite workload deadline')
+            self.check_deadline(deadline)
+
+    def submit_resident(self, deadline):
+        """Enqueue outside capture and before the native request profiler window."""
+        if self.resident_preparation:
+            raise ValueError('Resident content observation may be submitted only once per preparation')
+        self.check_resident_readiness(deadline)
+        if not self.parameters and not self.scales:
+            return
+        if self.parameter_model is not None:
+            self.check_parameters()
+        self.resident_preparation = dict(boundary='EXISTING_DEVICE_PREPARATION_BEFORE_NATIVE_REQUESTS',
+            started=time.monotonic(), deadline=deadline, completion='UNQUERIED_UNTIL_POST_GENERATE')
+        self.scan_scales(self.resident_preparation, deadline=deadline)
+        self.scan_parameters(self.resident_preparation, deadline)
+        self.resident_preparation['enqueue_finished'] = time.monotonic()
+        self.check_deadline(deadline)
+
+    def attach_resident(self, entry):
+        if self.resident_attached or not self.resident_preparation:
+            return
+        entry['resident_preparation'] = {key: value for key, value in self.resident_preparation.items()
+                                        if key not in ('resident_scale_scan', 'resident_parameter_scan')}
+        for key in ('resident_scale_scan', 'resident_parameter_scan'):
+            if key in self.resident_preparation:
+                entry[key] = self.resident_preparation[key]
+        self.resident_attached = True
+
+    def drain_parameters(self, entry):
+        rows = []
+        if 'resident_parameter_scan' in entry:
+            counts = self.once['parameter_counts'].numpy().tolist()
+            for selected in entry['resident_parameter_scan']:
+                count = counts[selected['view_index']]
+                sample = self.raw_sample(self.once['parameter_samples'], selected['sample_offset'],
+                    selected['sample_bytes'], [1] if selected['elements'] else [0], selected['dtype']) if selected['sample_bytes'] else None
+                rows.append(dict(selected, finite_elements=count, sample=sample,
+                    status='OBSERVED_COMPLETE_FINITE_REGISTERED_VIEW_NOT_CONSUMPTION_PROOF' if count == selected['elements'] else
+                           'UNVERIFIED_NONFINITE_RESIDENT_TENSOR'))
+        return dict(status='UNVERIFIED' if self.parameter_gaps or any(row['status'].startswith('UNVERIFIED') for row in rows) else
+                'OBSERVED_REGISTERED_RESIDENT_FINITE_CENSUS_AT_PREPARATION_ONLY' if rows else
+                'PREVIOUS_PREPARATION_WITNESS_NOT_RESCANNED' if self.parameter_submitted else 'UNMEASURED',
+            rows=rows, gaps=copy.deepcopy(self.parameter_gaps), registered_tensors=len(self.parameter_registrations),
+            unique_tensor_views=len(self.parameters), unique_registered_storage_bytes=getattr(self, 'parameter_storage_bytes', 0),
+            continuous_mutation_or_execution_consumption='UNMEASURED')
 
     def byte_count(self, layout):
         total = 0
@@ -209,6 +421,11 @@ class StateObservation:
         return dict(status='CANDIDATE_RANGES_AND_RESIDENT_SCALES_NOT_NATIVE_QUALIFICATION',
             owners=[dict(owner['metadata'], family=owner['family']) for owner in self.owners],
             resident_scales=[scale['metadata'] for scale in self.scales], gaps=copy.deepcopy(self.gaps),
+            resident_parameters=dict(registered_tensors=len(self.parameter_registrations),
+                unique_tensor_views=len(self.parameters), elements=sum(row['layout']['elements'] for row in self.parameters),
+                planned_chunks=sum(row['layout']['chunks'] for row in self.parameters),
+                unique_registered_storage_bytes=getattr(self, 'parameter_storage_bytes', 0),
+                gaps=copy.deepcopy(self.parameter_gaps), status='PREPARATION_CONTENT_NOT_NATIVE_QUALIFICATION'),
             transient_activation_scales='UNMEASURED_FULL_REPLAY_BYPASSES_PYTHON',
             raw_writer_and_physical_kernel_completion='UNMEASURED',
             unclassified_allocator_history='UNMEASURED')
@@ -387,7 +604,7 @@ class StateObservation:
         entry['state_coverage'] = coverage
         entry['state_content_status'] = 'SUBMITTED_CANDIDATE_RANGES_NOT_COMPLETED_OR_WRITE_PROOF'
 
-    def scan_scales(self, entry):
+    def scan_scales(self, entry, *, deadline):
         if self.scale_submitted or not self.scales:
             return
         offset, sample_offset, ranges = 0, 0, []
@@ -397,6 +614,7 @@ class StateObservation:
                 raise ValueError('Resident scale owner changed after content preparation')
             first = offset
             for start in range(0, tensor.shape[0], scale['rows']):
+                self.check_deadline(deadline)
                 source = tensor[start:start+scale['rows']]
                 values = self.device['state_absolute'][:tensor_bytes(self.torch, source)//4].view(tuple(source.shape))
                 mask = self.device['state_finite'][:tensor_bytes(self.torch, source)//4].view(tuple(source.shape))
@@ -501,12 +719,15 @@ class StateObservation:
                 scale_rows.append(dict(selected, observed=observed, **bounds, sample=sample,
                     status='OBSERVED_FINITE_RESIDENT_SCALE_NOT_TRANSIENT_OR_CONSUMPTION_PROOF' if
                         observed['finite'] == selected['elements'] else 'UNVERIFIED_NONFINITE_RESIDENT_SCALE'))
+        parameters = self.drain_parameters(entry)
         return dict(status='UNVERIFIED' if self.gaps or not rows or not all(matched) or
+                    parameters['status'] == 'UNVERIFIED' or
                     any(row['status'].startswith('UNVERIFIED') for row in rows+scale_rows) else
                     'OBSERVED_APPLICABLE_CONTENT_ONLY_NOT_NATIVE_WRITE_OR_PHYSICAL_QUALIFICATION',
             rows=rows, samples=samples, resident_scales=scale_rows, gaps=copy.deepcopy(self.gaps),
             completion='OWNED_COPY_EVENT_QUERY_READY_AFTER_NATIVE_GENERATE',
-            full_resident_parameter_finite_census='UNMEASURED', transient_activation_scales='UNMEASURED',
+            full_resident_parameter_finite_census=parameters['status'], resident_parameters=parameters,
+            transient_activation_scales='UNMEASURED',
             raw_writer_and_capture_to_replay_physical_join='UNMEASURED')
 
     @staticmethod
@@ -516,4 +737,7 @@ class StateObservation:
             row.pop('raw_hex', None)
         for row in result['resident_scales']:
             row['sample'].pop('raw_hex', None)
+        for row in result['resident_parameters']['rows']:
+            if row['sample'] is not None:
+                row['sample'].pop('raw_hex', None)
         return result

@@ -154,6 +154,15 @@ def storage_record(name, kind, value, storages, *, persistent=None):
                 storage_bytes=size, storage_offset=value.storage_offset(), persistent=persistent)
 
 
+def module_tensors(name, module, tensor_type):
+    """Enumerate actual registered resident tensors for metadata and content observers."""
+    for kind, values in (('parameter', module._parameters), ('buffer', module._buffers)):
+        for local, value in values.items():
+            if isinstance(value, tensor_type):
+                yield name+'.'+local, kind, local, value, (
+                    kind == 'parameter' or local not in module._non_persistent_buffers_set)
+
+
 def inventory(runner, torch):
     """Metadata only: no state_dict, content copies, GPU checks or extra kernels."""
     model = getattr(runner, 'model', None)
@@ -174,12 +183,8 @@ def inventory(runner, torch):
             parallel = module.moe_config.moe_parallel_config
             record['moe_parallel'] = {n: getattr(parallel, n) for n in ('tp_size', 'ep_size', 'use_ep')}
         modules.append(record)
-        for kind, values in (('parameter', module._parameters), ('buffer', module._buffers)):
-            for local, value in values.items():
-                if not isinstance(value, torch.Tensor):
-                    continue
-                tensors.append(storage_record(name+'.'+local, kind, value, storages,
-                    persistent=kind == 'parameter' or local not in module._non_persistent_buffers_set))
+        for path, kind, _, value, persistent in module_tensors(name, module, torch.Tensor):
+            tensors.append(storage_record(path, kind, value, storages, persistent=persistent))
     return dict(status='metadata_only_not_finite_or_content_qualification', modules=modules,
                 tensors=tensors, unique_storage_bytes=sum(storages.values()), unique_storages=storages)
 

@@ -338,7 +338,8 @@ def prepare_device_observation(worker, preparation):
         candidate = model_observation.DeviceObservation(runner, observed.sites, limits,
             preparation['requests'], preparation['sampling_fields'],
             record_bytes//8-used-pending_profiler_bytes(state),
-            metadata_limits=observed.limits, reserve=lambda owned: reserve_device_bytes(worker, owned))
+            metadata_limits=observed.limits, reserve=lambda owned: reserve_device_bytes(worker, owned),
+            deadline=json.loads(Path(os.environ['STEP5_CAPACITY_NODE_FILE']).read_text()).get('workload_deadline'))
         observed.device = candidate
         result = dict(rank=worker.rank, local_rank=worker.local_rank, pid=os.getpid(),
             worker_identity=dict(getattr(worker, '_capacity_identity', {})),

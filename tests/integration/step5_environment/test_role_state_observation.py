@@ -5,6 +5,7 @@ from dataclasses import replace
 import dis
 import hashlib
 import json
+import time
 from pathlib import Path
 import sys
 from types import MethodType, ModuleType, SimpleNamespace
@@ -17,6 +18,7 @@ from test_role_model_input_observation import (DeviceCpuApi, DeviceCpuTensor, TA
     native, observation, runner, events, record, work)
 from test_role_execution_driver import retained_methods
 import role_capacity_observation as capacity
+import role_execution_observation as execution
 import role_state_observation as state_observation
 
 
@@ -363,9 +365,11 @@ class StateCpuTensor(DeviceCpuTensor):
     def view(self, shape):
         if shape is self.api.uint8:
             values, dtype = self.values.view(np.uint8), self.api.uint8
-        elif shape is self.api.float8_e4m3fn:
+        elif shape in (self.api.float32, self.api.bfloat16, self.api.float16, self.api.float8_e4m3fn):
             assert self.dtype is self.api.uint8
-            values, dtype = self.values, self.api.float8_e4m3fn
+            kind = {self.api.float32: np.float32, self.api.bfloat16: np.uint16,
+                    self.api.float16: np.float16, self.api.float8_e4m3fn: np.uint8}[shape]
+            values, dtype = self.values.view(kind), shape
         else:
             values, dtype = self.values.reshape((shape,) if type(shape) is int else shape), self.dtype
         return StateCpuTensor(values, self.api, dtype, self.device, pinned=self.pinned)
@@ -384,7 +388,8 @@ class StateCpuTensor(DeviceCpuTensor):
         assert non_blocking is True
         if self.device == 'cpu':
             assert self.pinned
-        self.api.queued.append(lambda: np.copyto(self.values, source.numerical()))
+        self.api.queued.append(lambda: np.copyto(self.values,
+            source.values if self.dtype is source.dtype else source.numerical()))
         self.api.operations.append(('copy', self.device, tuple(self.shape), self.api.stream.cuda_stream))
         return self
 
@@ -396,8 +401,15 @@ class StateCpuTensor(DeviceCpuTensor):
 
 
 class StateCpuApi(DeviceCpuApi):
+    def finfo(self, dtype):
+        return SimpleNamespace(bits={self.bfloat16: 16, self.float16: 16,
+                                     self.float32: 32, self.float8_e4m3fn: 8}[dtype])
+
     def empty(self, shape, *, dtype, device, pin_memory=False):
-        result = super().empty(shape, dtype=dtype, device=device, pin_memory=pin_memory)
+        if dtype is self.float8_e4m3fn:
+            result = super().empty(shape, dtype=self.uint8, device=device, pin_memory=pin_memory)
+        else:
+            result = super().empty(shape, dtype=dtype, device=device, pin_memory=pin_memory)
         return StateCpuTensor(result.values, self, dtype, device, pinned=pin_memory)
 
     def abs(self, tensor, *, out):
@@ -475,10 +487,15 @@ def content_case(device_case, monkeypatch):
     routed.w2_weight_scale_inv = tensor(np.arange(12).reshape(3, 4), api.float32)[:, ::2]
     binding = dict(module_path='actual.layer.moe.experts', layer_id=7, sites=['routed_modular'])
     sites.census_owners[id(routed)] = weakref.ref(routed), binding
+    routed._parameters = {name: getattr(routed, name) for name in state_observation.SCALE_PARAMETERS}
+    routed._buffers, routed._non_persistent_buffers_set = {}, set()
+    model = SimpleNamespace(_parameters={}, _buffers={}, _non_persistent_buffers_set=set())
+    model.named_modules = lambda: [('', model), (binding['module_path'], routed)]
+    case.runner.model = model
     limits = replace(case.observed.limits, scan_rows=8)
     reservations = []
     case.observed = observation.DeviceObservation(case.runner, sites, limits, case.observed.requests,
-        case.observed.sampling, 65536, reserve=reservations.append)
+        case.observed.sampling, 65536, reserve=reservations.append, deadline=time.monotonic()+60)
     case.observed.registrations(SimpleNamespace(scheduled_new_reqs=[case.req]))
     case.observed.state.assignments[case.req.req_id] = [[2]]
     case.raw, case.summary, case.routed, case.reservations = raw, summary, routed, reservations
@@ -539,6 +556,7 @@ def test_actual_content_or_device_join_fault_is_retained_without_changing_native
     elif fault == 'slot':
         case.slots.values[0] = 31
     else:
+        # Inject before the fixture executes the already queued preparation reads.
         case.routed.w13_weight_scale_inv.values[0, 1] = np.inf
     _, content = finish_content(case)
     assert content['status'] == 'UNVERIFIED'
@@ -601,7 +619,8 @@ def test_changed_native_cache_storage_and_byte_exhaustion_stop_only_evidence(con
     allocations, reservations = len(case.api.operations), []
     with pytest.raises(ValueError, match='remaining rank'):
         observation.DeviceObservation(case.runner, case.observed.sites, replace(case.observed.limits, owned_bytes=1),
-            case.observed.requests, case.observed.sampling, 65536, reserve=reservations.append)
+            case.observed.requests, case.observed.sampling, 65536, reserve=reservations.append,
+            deadline=time.monotonic()+60)
     assert len(case.api.operations) == allocations and reservations == []
     index = case.observed.inputs(case.values, case.cpu, 1, 1)
     case.context['layer.0'].kv_cache = case.tensor(case.raw.values.copy(), case.api.float32)
@@ -716,3 +735,295 @@ def test_enlarged_native_state_destination_bytes_match_all_actual_allocations(co
     assert case.observed.owned_bytes == unique_bytes(host+device)
     assert case.observed.state.device['state_absolute'].data_ptr() == case.observed.absolute.data_ptr()
     assert case.observed.state.device['state_finite'].data_ptr() == case.observed.finite.data_ptr()
+
+
+def resident_case(case, parameters, buffers=None, *, limits=None, deadline=None, reserve=None):
+    """Prepare actual fixture registrations through the same resident/device observer."""
+    model = SimpleNamespace(_parameters=parameters, _buffers=buffers or {},
+        _non_persistent_buffers_set={'temporary'})
+    model.named_modules = lambda: [('', model)]
+    case.runner.model = model
+    sites = SimpleNamespace(torch=case.api, tensor_type=StateCpuTensor, intermediate_type=None,
+                            padding_mask_used=True, census_owners={})
+    current = observation.DeviceObservation(case.runner, sites, limits or case.observed.limits,
+        case.observed.requests, case.observed.sampling, 65536, reserve=reserve,
+        deadline=deadline if deadline is not None else time.monotonic()+60)
+    current.registrations(SimpleNamespace(scheduled_new_reqs=[case.req]))
+    current.state.assignments[case.req.req_id] = [[2]]
+    case.observed = current
+    return model
+
+
+def test_registered_parameter_aliases_and_overlapping_views_have_complete_finite_coverage(content_case):
+    case = content_case
+    weight = case.tensor(np.arange(60).reshape(5, 12), case.api.float32)
+    alias, transpose, strided = weight[:], weight[:, ::2], weight[:, ::2]
+    # Aliases of one exact view are deduplicated; overlapping layouts are independently scanned.
+    resident_case(case, {'weight': weight, 'alias': alias, 'strided': strided, 'strided_alias': transpose})
+    result, content = finish_content(case)
+    census = content['resident_parameters']
+    assert census['registered_tensors'] == 4 and census['unique_tensor_views'] == 2
+    assert census['unique_registered_storage_bytes'] == weight.values.nbytes
+    assert [row['elements'] for row in census['rows']] == [60, 30]
+    assert [row['finite_elements'] for row in census['rows']] == [60, 30]
+    assert [len(row['aliases']) for row in census['rows']] == [2, 2]
+    assert census['status'] == 'OBSERVED_REGISTERED_RESIDENT_FINITE_CENSUS_AT_PREPARATION_ONLY'
+    assert all(row['finite_source'] == 'COMPLETE_REGISTERED_TENSOR_VIEW' for row in census['rows'])
+    assert all(row['sample']['raw_hex'] == np.array([0], np.float32).tobytes().hex() for row in census['rows'])
+    assert all('raw_hex' not in row['sample'] for row in result['steps'][0]['state_content']['resident_parameters']['rows'])
+    assert result['G2'] == 'UNVERIFIED'
+
+
+def test_resident_scalar_empty_buffer_and_fp8_bytes_preserve_their_numeric_meaning(content_case):
+    case = content_case
+    scalar = case.tensor(7, case.api.float32)
+    fp8 = case.tensor([56, 127, 255, 184], case.api.uint8).view(case.api.float8_e4m3fn)
+    empty = case.tensor(np.empty((2, 0, 3)), case.api.float32)
+    resident_case(case, {'scalar': scalar, 'fp8': fp8}, {'temporary': empty})
+    _, content = finish_content(case)
+    rows = content['resident_parameters']['rows']
+    assert [row['elements'] for row in rows] == [1, 4, 0]
+    assert [row['finite_elements'] for row in rows] == [1, 2, 0]
+    assert rows[0]['shape'] == [] and rows[0]['sample']['raw_hex'] == np.array([7], np.float32).tobytes().hex()
+    assert rows[1]['sample']['raw_hex'] == '38'
+    assert rows[1]['status'] == 'UNVERIFIED_NONFINITE_RESIDENT_TENSOR'
+    assert rows[2]['chunks'] == 0 and rows[2]['sample'] is None and rows[2]['persistent'] is False
+    assert content['full_resident_parameter_finite_census'] == content['status'] == 'UNVERIFIED'
+    assert not case.observed.stopped
+
+
+@pytest.mark.parametrize('dtype', ['float32', 'float16', 'bfloat16', 'float8_e4m3fn'])
+def test_first_resident_sample_preserves_source_bytes_with_mixed_dtype_alignment(content_case, dtype):
+    case = content_case
+    first = case.tensor([56], case.api.uint8).view(case.api.float8_e4m3fn)
+    value = case.tensor([3, 4], getattr(case.api, dtype))
+    if dtype == 'float8_e4m3fn':
+        value.values[:] = [56, 64]
+    resident_case(case, {'first': first, 'value': value})
+    _, content = finish_content(case)
+    row = content['resident_parameters']['rows'][1]
+    assert row['sample_offset'] % row['sample_bytes'] == 0
+    assert row['sample']['raw_hex'] == value.values[:1].tobytes().hex()
+    assert row['finite_elements'] == 2
+
+
+@pytest.mark.parametrize('shape,strides', [((5, 7), (1, 5)), ((3, 5, 7), (35, 1, 5)),
+                                          ((1, 5, 7), (1, 14, 2)), ((97,), (2,))])
+def test_noncontiguous_parameter_chunks_cover_each_logical_element_without_allocations(content_case, shape, strides):
+    case = content_case
+    size = sum((n-1)*stride for n, stride in zip(shape, strides))+1
+    storage = np.arange(size, dtype=np.float32)
+    array = np.lib.stride_tricks.as_strided(storage, shape=shape, strides=tuple(s*4 for s in strides))
+    value = StateCpuTensor(array, case.api, case.api.float32, case.runner.device)
+    resident_case(case, {'value': value})
+    prepared = case.observed.state.parameters[0]
+    before = len(case.api.operations)
+    chunks = list(state_observation.parameter_chunks(value, prepared['layout']))
+    assert len(case.api.operations) == before
+    assert len(chunks) == prepared['layout']['chunks']
+    assert all(chunk.values.size <= case.observed.limits.scan_rows*case.observed.width for chunk in chunks)
+    assert np.concatenate([chunk.values.reshape(-1) for chunk in chunks]).tolist() == value.values.reshape(-1).tolist()
+    _, content = finish_content(case)
+    row = content['resident_parameters']['rows'][0]
+    assert row['finite_elements'] == row['elements'] == value.values.size
+
+
+def test_opaque_integer_parameter_storage_is_never_promoted_to_fp8_finite_qualification(content_case):
+    case = content_case
+    opaque = case.tensor([127, 255], case.api.uint8)
+    weight = case.tensor([1, 2], case.api.float32)
+    resident_case(case, {'weight': weight, 'opaque': opaque})
+    _, content = finish_content(case)
+    census = content['resident_parameters']
+    assert census['registered_tensors'] == 2 and census['unique_tensor_views'] == 1
+    assert census['status'] == 'UNVERIFIED' and content['status'] == 'UNVERIFIED'
+    assert census['gaps'][0]['dtype'] == 'torch.uint8'
+    assert census['gaps'][0]['reason'] == 'UNVERIFIED_RESIDENT_NUMERIC_INTERPRETATION_OR_DEVICE'
+
+
+def test_resident_inverse_scale_counts_are_reused_without_a_duplicate_complete_scan(content_case):
+    case = content_case
+    _, content = finish_content(case)
+    rows = content['resident_parameters']['rows']
+    assert len(rows) == 2 and all(row['finite_source'] == 'EXISTING_RESIDENT_SCALE_REDUCTION' for row in rows)
+    assert [row['finite_elements'] for row in rows] == [6, 6]
+    assert [row['finite_elements'] for row in rows] == [row['observed']['finite'] for row in content['resident_scales']]
+    assert not any(row[0] == 'add' for row in case.api.operations[:next(i for i, row in enumerate(case.api.operations)
+                                                                             if row[0] == 'event')])
+
+
+def test_resident_scan_is_submitted_only_at_preparation_and_detached_before_storage_reuse(content_case):
+    case = content_case
+    weight = case.tensor([1, 2, 3, 4], case.api.float32)
+    resident_case(case, {'weight': weight})
+    preparation = case.observed.state.resident_preparation
+    assert preparation['started'] <= preparation['enqueue_finished'] < preparation['deadline']
+    assert 'query' not in [row[0] for row in case.api.operations]
+    case.api.complete()
+    weight.values[:] = np.nan
+    _, content = finish_content(case)
+    row = content['resident_parameters']['rows'][0]
+    assert row['finite_elements'] == 4 and row['sample']['raw_hex'] == np.array([1], np.float32).tobytes().hex()
+    case.observed.registrations(SimpleNamespace(scheduled_new_reqs=[]))
+    second = case.observed.inputs(case.values, case.cpu, 2, 2)
+    case.observed.output(second, None, [])
+    case.api.complete()
+    records = []
+    result = case.observed.drain(records.append)
+    later = records[0]['rows'][0]['state_content']['resident_parameters']
+    assert later['status'] == 'PREVIOUS_PREPARATION_WITNESS_NOT_RESCANNED' and not later['rows']
+    assert result['G2'] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('deadline', [None, float('nan'), float('inf'), -1])
+def test_resident_missing_or_expired_deadline_is_rejected_before_reservation(content_case, deadline):
+    case = content_case
+    reservations, before = [], len(case.api.operations)
+    with pytest.raises((ValueError, TimeoutError), match='deadline'):
+        observation.DeviceObservation(case.runner, case.observed.sites, case.observed.limits,
+            case.observed.requests, case.observed.sampling, 65536, reserve=reservations.append, deadline=deadline)
+    assert reservations == [] and len(case.api.operations) == before
+
+
+@pytest.mark.parametrize('fault', ['model', 'module', 'tensor', 'added', 'removed', 'shape', 'persistent',
+                                 'alias_shape', 'alias_storage', 'alias_dtype'])
+def test_resident_owner_census_rejects_replacement_before_complete_scans(content_case, fault, monkeypatch):
+    case = content_case
+    weight = case.tensor(np.arange(30), case.api.float32)
+    alias = weight[:]
+    resident_case(case, {'weight': weight, 'alias': alias}, {'temporary': weight[:2]})
+    current, model = case.observed.state, case.runner.model
+    if fault == 'model':
+        case.runner.model = SimpleNamespace()
+    elif fault == 'module':
+        model.named_modules = lambda: [('', SimpleNamespace(_parameters=model._parameters,
+            _buffers=model._buffers, _non_persistent_buffers_set={'temporary'}))]
+    elif fault == 'tensor':
+        model._parameters['weight'] = case.tensor(np.arange(30), case.api.float32)
+    elif fault == 'added':
+        model._parameters['added'] = weight
+    elif fault == 'removed':
+        del model._parameters['weight']
+    elif fault == 'shape':
+        weight.values = weight.values.reshape(5, 6)
+    elif fault == 'alias_shape':
+        alias.values = alias.values.reshape(5, 6)
+    elif fault == 'alias_storage':
+        alias.values = alias.values.copy()
+    elif fault == 'alias_dtype':
+        alias.dtype = case.api.float8_e4m3fn
+    else:
+        model._non_persistent_buffers_set.clear()
+    before = len(case.api.operations)
+    with pytest.raises(ValueError, match='changed after'):
+        current.check_parameters()
+    assert len(case.api.operations) == before
+
+
+def test_complete_resident_scan_deadline_expiry_stops_enqueues_without_host_wait(content_case, monkeypatch):
+    case = content_case
+    weight = case.tensor(np.arange(60), case.api.float32)
+    calls = []
+    def clock():
+        calls.append(None)
+        return 1 if len(calls) < 6 else 100
+    monkeypatch.setattr(state_observation.time, 'monotonic', clock)
+    before = len(case.api.operations)
+    with pytest.raises(TimeoutError, match='original workload deadline'):
+        resident_case(case, {'weight': weight}, deadline=10)
+    assert any(row[0] == 'add' for row in case.api.operations[before:])
+    assert not any(row[0] in ('query', 'synchronize') for row in case.api.operations[before:])
+
+
+def test_parameter_destinations_and_samples_are_charged_to_single_existing_reservation(content_case):
+    case = content_case
+    reservations, before = [], len(case.api.operations)
+    current = observation.DeviceObservation(case.runner, case.observed.sites, case.observed.limits,
+        case.observed.requests, case.observed.sampling, 65536, deadline=time.monotonic()+60,
+        reserve=reservations.append)
+    assert reservations == [current.owned_bytes]
+    host = [value for row in current.destinations for value in row.values()] + list(current.state.once.values())
+    device = [current.absolute, current.finite, current.counts, *current.state.device.values()]
+    def unique(values):
+        return sum({value.untyped_storage().data_ptr(): value.untyped_storage().nbytes() for value in values}.values())
+    assert unique(host) == current.host_bytes and unique(device) == current.device_bytes
+    assert unique(host+device) == current.owned_bytes
+    assert not any(row[0] in ('query', 'synchronize') for row in case.api.operations[before:])
+
+
+def test_repeated_resident_submission_cannot_overwrite_preparation_witness(content_case):
+    case = content_case
+    current = case.observed.state
+    witness = copy.deepcopy(current.resident_preparation)
+    before = len(case.api.operations)
+    with pytest.raises(ValueError, match='only once'):
+        current.submit_resident(time.monotonic()+60)
+    assert current.resident_preparation == witness
+    assert len(case.api.operations) == before
+
+
+def worker_preparation(case, tmp_path, monkeypatch, deadline, *, result=None, failure=None):
+    from test_role_execution_observation import make_worker
+    records = tmp_path/'records'
+    records.mkdir()
+    node = tmp_path/'node.json'
+    node.write_text(json.dumps(dict(observer_output=str(records), record_bytes=8*65536,
+                                   workload_deadline=deadline)))
+    monkeypatch.setenv('STEP5_CAPACITY_NODE_FILE', str(node))
+    worker, calls, _ = make_worker((records, node), result=result, failure=failure)
+    worker.model_runner = case.runner
+    observed = SimpleNamespace(device=None, sites=case.observed.sites,
+        limits=case.observed.cpu_limits, stopped=False, last_record=None)
+    case.runner._model_input_observation = observed
+    preparation = dict(limits=vars(case.observed.limits), requests=case.observed.requests,
+                       sampling_fields=case.observed.sampling)
+    return worker, calls, observed, preparation
+
+
+def test_worker_resident_preparation_uses_original_node_workload_deadline(content_case, tmp_path, monkeypatch):
+    case = content_case
+    deadline = time.monotonic()+60
+    worker, _, observed, preparation = worker_preparation(case, tmp_path, monkeypatch, deadline)
+    result = execution.prepare_device_observation(worker, preparation)
+    assert result['status'] == 'PREPARED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2'
+    assert observed.device.state.resident_preparation['deadline'] == deadline
+    assert result['preparation'] == preparation
+    assert worker._request_observation.device_owned_bytes == observed.device.owned_bytes
+    assert not worker._request_observation.collection_stopped
+
+
+@pytest.mark.parametrize('fault', ['missing_deadline', 'expired_deadline', 'scan_failure'])
+@pytest.mark.parametrize('native_failure', [False, True])
+def test_resident_preparation_failure_preserves_original_native_result_or_exception(
+        content_case, tmp_path, monkeypatch, fault, native_failure):
+    from test_role_execution_observation import scheduler
+    case = content_case
+    deadline = None if fault == 'missing_deadline' else -1 if fault == 'expired_deadline' else time.monotonic()+60
+    sentinel = SystemExit('Original native failure') if native_failure else object()
+    worker, calls, observed, preparation = worker_preparation(case, tmp_path, monkeypatch, deadline,
+        result=None if native_failure else sentinel, failure=sentinel if native_failure else None)
+    if fault == 'scan_failure':
+        def fail_scan(self, entry, original_deadline):
+            assert original_deadline == deadline
+            raise KeyboardInterrupt('Injected resident enqueue failure')
+        monkeypatch.setattr(state_observation.StateObservation, 'scan_parameters', fail_scan)
+    before = len(case.api.operations)
+    result = execution.prepare_device_observation(worker, preparation)
+    state = worker._request_observation
+    assert result['status'] == 'UNVERIFIED'
+    assert result['error_type'].endswith('KeyboardInterrupt' if fault == 'scan_failure' else
+                                        'TimeoutError' if fault == 'expired_deadline' else 'ValueError')
+    assert observed.device is None and observed.stopped and state.collection_stopped
+    if fault == 'scan_failure':
+        assert state.device_owned_bytes > 0
+    else:
+        assert state.device_owned_bytes == 0 and len(case.api.operations) == before
+    assert not any(row[0] in ('query', 'synchronize') for row in case.api.operations[before:])
+    work = scheduler()
+    if native_failure:
+        with pytest.raises(SystemExit) as caught:
+            worker.execute_model(work)
+        assert caught.value is sentinel and state.native_failures == 1
+    else:
+        assert worker.execute_model(work) is sentinel and state.native_failures == 0
+    assert len(calls) == 1 and calls[0] == ((work,), {})
