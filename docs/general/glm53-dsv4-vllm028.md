@@ -113,10 +113,15 @@ new inputs (80 tests and 17 actual-body CPU cases). The separate pressure run
 passes business and terminal checks: eight client HTTP 200 responses, 16 P/D
 upstream HTTP 200 responses, 7,552 prompt tokens and 640 output tokens. All four
 native parents and containers exit 0 without restarts; platform completion is
-October 19 at 16:07:17 UTC and launcher exit 0 follows at 16:07:18 UTC. Actual
-same-lane cache refusal/release/re-admission and post-shutdown observer
-qualification remain open. This result does not change the historical
-functional transfer-observation FAIL.
+October 19 at 16:07:17 UTC and launcher exit 0 follows at 16:07:18 UTC.
+
+Post-stop review passes 355 scoped checks, including five same-lane
+refusal/release/re-admission chains across 422 allocation refusals and 64 complete
+NIXL handle prepare/submit/DONE/release chains. All 40 trace files have no sequence
+gaps, parser errors or reported drops. This verifies the observed host lifecycle;
+all 40 footers still report `run_verified=false`, and missing-parent records and
+unknown receive-report source status remain. Full observer qualification stays
+open. The new result preserves the historical functional FAIL.
 
 Other open boundaries remain material:
 
