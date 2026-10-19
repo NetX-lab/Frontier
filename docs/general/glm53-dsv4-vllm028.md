@@ -69,8 +69,8 @@ alone without its separately pinned runtime, instrumentation and inputs.
 | `2da11c8` | GLM structural PDD: 1,124 focused tests; offline and online full-model runs each complete 5 requests and 5 transfers. Actual D-lane capacity waiting, completion, transfer-byte accounting and release are checked by the [structural P/D driver](../../tests/integration/run_glm53_structural_pd.py). |
 | `dc7f382` | V4 structural execution: 1,230 tests across 62 isolated modules; full-model offline and online runs each complete 4 requests over 32 logical devices with stage/phase conservation. See the [structural driver](../../tests/integration/run_dsv4_structural.py) and [execution tests](../../tests/unit/test_dsv4_structural_execution.py). |
 | `88c030f` | V4 cache-zero/DP8 slice: 1,292 tests across 64 isolated modules; full-model DP8 offline and online each complete 8 requests over 64 logical devices. [Cache-zero tests](../../tests/unit/test_dsv4_cache_zero_execution.py) check allocation/Batch/trace ownership; [lifecycle tests](../../tests/unit/test_grouped_kv_cache_scheduler.py) check release and reuse. |
-| `563dfff` | Explicit DP policy: 163 focused checks and three DES cases. A clean candidate passed the unchanged 77-case fidelity comparison against clean baseline `bfa82de`; two separately reproduced inherited placement tests remain failures. See [balancer tests](../../tests/unit/test_vllm_dp_load_balancer.py). |
-| `8d479ef` | Queue admission: independent focused result 135 PASS / 7 FAIL. All seven failure IDs and normalized exception headings reproduce on clean parent `da13911`. A clean candidate separately passes the unchanged 77-case fidelity comparison, including artifact and cache-filename agreement. See [queue/overlap integration checks](../../tests/integration/test_vllm_v1_pp_prefill_chunk_overlap.py). |
+| `563dfff` | Explicit DP policy: 163 focused checks and three DES cases. A clean candidate passed the unchanged 77-case fidelity comparison against clean baseline `bfa82de`; two placement tests failed there. Only `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` also fails on `bfa82de`; the in-flight preemption-key test failed because of branch commit `3e6a421` and passes after the in-flight decode sample correction recorded below. See [balancer tests](../../tests/unit/test_vllm_dp_load_balancer.py). |
+| `8d479ef` | Queue admission: independent focused result 135 PASS / 7 FAIL. All seven failure IDs and normalized exception headings reproduce on clean parent `da13911`. Correction (2026-10-20): `da13911` already contains branch commit `3e6a421`, whose settled decode context shortened MONOLITHIC decode rows by one token while the in-flight sample still expected the old row length. The seven decode-preemption failures came from that commit, not from before this branch, and pass after the in-flight decode sample correction. A clean candidate separately passes the unchanged 77-case fidelity comparison, including artifact and cache-filename agreement. See [queue/overlap integration checks](../../tests/integration/test_vllm_v1_pp_prefill_chunk_overlap.py). |
 | `9069538` | Native deployment/coordination source: 156 root tests and independent review accepted. This result covers preparation and lifecycle handling, not native workload qualification. See [worker tests](../../tests/unit/test_native_pd_worker.py) and [P/D harness tests](../../tests/unit/test_calibration_pd_harness.py). |
 | `89290df`, `6c3acc0` | Complete observer bootstrap and per-role cache override accepted separately: 63 bootstrap tests with dependency-combination/fault checks; 132 pressure-harness tests with 45 frozen baseline/candidate checks. |
 
@@ -140,8 +140,11 @@ Other open boundaries remain material:
   insufficient for numeric publication.
 - Complete full-model observation, P/D qualification, 64-H800 P32+D32/DP4
   qualification, trained artifacts and formal calibration/holdout gates remain
-  open. The seven inherited PP failures and two inherited placement failures are
-  unresolved; their reproduction is not a waiver.
+  open. One placement failure,
+  `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward`,
+  is inherited from `bfa82de` and remains unresolved; its reproduction is not a
+  waiver. The seven decode-preemption failures and the second placement failure
+  came from branch commit `3e6a421` and are fixed.
 
 ## Review and continuation
 
