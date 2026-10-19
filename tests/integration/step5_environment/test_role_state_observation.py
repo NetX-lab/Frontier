@@ -184,6 +184,8 @@ def test_known_storage_reuses_physical_identity_and_keeps_unknown_resources_expl
     assert result['graph_pool_handle'] == [17, 29]
     assert any(row['reason'] == 'UNCLASSIFIED_NATIVE_STORAGE_OWNER' for row in result['gaps'])
     assert result['referenced_live_bytes'] == result['allocator_peaks'] == 'UNMEASURED'
+    assert result['allocator_occupancy']['status'] == 'UNVERIFIED'
+    assert result['allocator_occupancy']['allocation_membership'] == 'UNMEASURED'
     assert not case.api.host_reads_allowed
 
 

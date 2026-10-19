@@ -143,12 +143,20 @@ def write_record(worker, phase, boundary, error=None):
                                      observer_error=failure)))
 
 
-def storage_record(name, kind, value, storages, *, persistent=None):
-    """Use the same physical storage identity for resident and known-state views."""
+def register_storage(value, storages):
+    """Deduplicate storage references and reject contradictory alias metadata."""
     storage = value.untyped_storage()
     key = f'{value.device}:{storage.data_ptr()}'
     size = storage.nbytes()
+    if key in storages and storages[key] != size:
+        raise ValueError('Aliased storage metadata has inconsistent sizes')
     storages[key] = size
+    return key, size
+
+
+def storage_record(name, kind, value, storages, *, persistent=None):
+    """Use the same physical storage identity for resident and known-state views."""
+    key, size = register_storage(value, storages)
     return dict(name=name, kind=kind, shape=list(value.shape), dtype=str(value.dtype),
                 device=str(value.device), stride=list(value.stride()), storage=key,
                 storage_bytes=size, storage_offset=value.storage_offset(), persistent=persistent)
@@ -187,6 +195,85 @@ def inventory(runner, torch):
             tensors.append(storage_record(path, kind, value, storages, persistent=persistent))
     return dict(status='metadata_only_not_finite_or_content_qualification', modules=modules,
                 tensors=tensors, unique_storage_bytes=sum(storages.values()), unique_storages=storages)
+
+
+def allocator_observation(runner, torch, known_storages, limit):
+    """Read native totals and registered references without claiming allocation ownership."""
+    row = dict(status='UNVERIFIED', device=str(getattr(runner, 'device', None)),
+        storage_aliases_are_not_additive=True,
+        allocation_membership='UNMEASURED', allocation_history='UNMEASURED',
+        peaks='SINCE_LAST_NATIVE_RESET_NOT_THIS_SCOPE',
+        global_memory='DEVICE_WIDE_NOT_PROCESS_EXCLUSIVE',
+        sampling='SEQUENTIAL_HOST_READS_NOT_ATOMIC_OR_GPU_COMPLETION',
+        observer_allocations='INCLUDED_IN_NATIVE_TOTALS_NOT_SUBTRACTED', errors=[])
+    try:
+        row['observation_started_ns'] = time.monotonic_ns()
+        if not torch.cuda.is_initialized():
+            raise ValueError('CUDA must already be initialized by the native worker')
+        if torch.cuda.is_current_stream_capturing():
+            raise ValueError('Allocator observations are skipped during native CUDA capture')
+        device = str(runner.device)
+        if not device.startswith('cuda:') or not device[5:].isdigit():
+            raise ValueError('Allocator observation requires the explicit native CUDA device')
+        row['backend'] = torch.cuda.memory.get_allocator_backend()
+        stats = torch.cuda.memory_stats(runner.device)
+        families = ('allocated_bytes', 'reserved_bytes', 'active_bytes',
+                    'requested_bytes', 'inactive_split_bytes')
+        keys = tuple(f'{family}.all.{metric}' for family in families for metric in ('current', 'peak'))
+        row['statistics'] = {key: stats[key] for key in keys if key in stats}
+        if any(type(value) is not int or value < 0 for value in row['statistics'].values()):
+            raise ValueError('Native allocator statistics must be nonnegative integers')
+        missing = [key for key in keys if key not in stats]
+        if missing:
+            row['errors'].append(dict(reason='MISSING_NATIVE_ALLOCATOR_STATISTICS', keys=missing))
+        free, total = torch.cuda.mem_get_info(runner.device)
+        if any(type(value) is not int or value < 0 for value in (free, total)) or not 0 <= free <= total or not total:
+            raise ValueError('Native device memory totals are invalid')
+        row['global_free_bytes'], row['global_total_bytes'] = free, total
+        row['global_used_bytes'] = total-free
+        storages = dict(known_storages)
+        model = getattr(runner, 'model', None)
+        entries = 0
+        if model is None:
+            row['errors'].append(dict(reason='REGISTERED_RESIDENT_MODEL_UNAVAILABLE'))
+        else:
+            for module_index, (name, module) in enumerate(model.named_modules()):
+                if module_index >= limit:
+                    raise ValueError('Resident modules exceed the existing entry cap')
+                for _, _, _, value, _ in module_tensors(name, module, torch.Tensor):
+                    if entries >= limit:
+                        raise ValueError('Resident tensor references exceed the existing entry cap')
+                    entries += 1
+                    register_storage(value, storages)
+        if any(type(size) is not int or size < 0 for size in storages.values()):
+            raise ValueError('Referenced storage sizes must be nonnegative integers')
+        current = {key: size for key, size in storages.items() if key.startswith(device+':')}
+        row['known_cuda_storage_bytes'] = sum(current.values())
+        row['known_cuda_storages'] = len(current)
+        row['other_device_storage_bytes'] = sum(size for key, size in storages.items() if key not in current)
+        if row['backend'] != 'native':
+            row['errors'].append(dict(reason='ALLOCATOR_STATISTICS_SEMANTICS_UNVERIFIED_FOR_BACKEND'))
+        elif not missing:
+            allocated = stats['allocated_bytes.all.current']
+            reserved = stats['reserved_bytes.all.current']
+            row['allocated_minus_known_cuda_storage_bytes'] = allocated-row['known_cuda_storage_bytes']
+            row['reserved_minus_allocated_bytes'] = reserved-allocated
+            if (allocated > reserved or any(stats[f'{family}.all.peak'] < stats[f'{family}.all.current']
+                                           for family in families)):
+                row['errors'].append(dict(reason='INCONSISTENT_NATIVE_ALLOCATOR_TOTALS'))
+            if row['allocated_minus_known_cuda_storage_bytes'] < 0:
+                row['errors'].append(dict(reason='REFERENCED_STORAGES_EXCEED_ALLOCATOR_TOTAL_MEMBERSHIP_UNMEASURED'))
+        if not row['errors']:
+            row['status'] = 'OBSERVED_NATIVE_TOTALS_AND_STORAGE_REFERENCES_NOT_ALLOCATION_CENSUS'
+    except BaseException as failure:
+        row['errors'].append(dict(reason='ALLOCATOR_OBSERVATION_FAILED',
+            error_type=type(failure).__module__+'.'+type(failure).__qualname__, error=str(failure)))
+    try:
+        row['observation_finished_ns'] = time.monotonic_ns()
+    except BaseException as failure:
+        row['status'] = 'UNVERIFIED'
+        row['errors'].append(dict(reason='ALLOCATOR_CLOCK_FAILED', error=str(failure)))
+    return row
 
 
 def known_state_inventory(runner, torch, limit):
@@ -289,7 +376,8 @@ def known_state_inventory(runner, torch, limit):
         tensors=tensors, unique_storages=storages, unique_storage_bytes=sum(storages.values()),
         kv_groups=groups, graph_pool_handle=list(pool) if pool is not None else None,
         gaps=gaps, referenced_live_bytes='UNMEASURED', unclassified_allocator_bytes='UNMEASURED',
-        allocator_peaks='UNMEASURED', storage_aliases_are_not_additive=True)
+        allocator_peaks='UNMEASURED', storage_aliases_are_not_additive=True,
+        allocator_occupancy=allocator_observation(runner, torch, storages, limit))
 
 
 def capacity_snapshot(worker):
