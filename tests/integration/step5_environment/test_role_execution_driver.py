@@ -466,16 +466,19 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
 
     def socket_factory(*args):
         if not (Path(config['marker_root'])/f'node_{1-rank}_prepared.json').exists():
+            engine_settings = dict(engine=config['engine'], tp=16, dp=1, pp=1, ep=False,
+                nnodes=2, workload=config['workload'], request_sources=dict(
+                    caller_sha256=config['request_caller_sha256'],
+                    observer_sha256=config['request_observer_sha256'],
+                    model_input_observer_sha256=config['model_input_observer_sha256'],
+                    state_observer_sha256=config['state_observer_sha256'],
+                    profiler_observer_sha256=config['profiler_observer_sha256']),
+                request_manifest_sha256=config['request_manifest_sha256'])
+            if 'physical_observation' in config:
+                engine_settings['physical_observation'] = copy.deepcopy(config['physical_observation'])
             caller.capacity.supervision.publish_marker(Path(config['marker_root']), config['generation'],
                 peer, 'prepared', 'PASS', 'CPU peer', clock=clock, endpoint=node['endpoint'],
-                engine_settings=dict(engine=config['engine'], tp=16, dp=1, pp=1, ep=False,
-                    nnodes=2, workload=config['workload'], request_sources=dict(
-                        caller_sha256=config['request_caller_sha256'],
-                        observer_sha256=config['request_observer_sha256'],
-                        model_input_observer_sha256=config['model_input_observer_sha256'],
-                        state_observer_sha256=config['state_observer_sha256'],
-                        profiler_observer_sha256=config['profiler_observer_sha256']),
-                    request_manifest_sha256=config['request_manifest_sha256']))
+                engine_settings=engine_settings)
         return Connection()
 
     def query(argv, **kwargs):
@@ -534,6 +537,40 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
     status = caller.run_node(config, {}, tmp_path/'request_config.json', env=env,
         run=query, popen=popen, supervise=supervise, proc_root=tmp_path/'cpu_proc', deadline=2500)
     return status, node, child, events, clock
+
+
+@pytest.mark.parametrize('rank', [0, 1])
+@pytest.mark.parametrize('gpu_type,charged_group', [('H800', 'codesign'), ('H200', 'step_main')])
+def test_physical_node_metadata_is_created_before_native_supervision(
+        config, tmp_path, monkeypatch, rank, gpu_type, charged_group):
+    config['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
+    config['physical_observation'] = dict(trace_bytes=8*1024**2, trace_events=250000)
+    writes = []
+    original_save = caller.capacity.save
+
+    def save_once(path, value):
+        if path.name in ('node.json', f'node_{rank}_inventory.json'):
+            writes.append((str(path), copy.deepcopy(value)))
+        return original_save(path, value)
+
+    monkeypatch.setattr(caller.capacity, 'save', save_once)
+    monkeypatch.setattr(caller, 'owned_device_bytes', lambda *args, **kwargs: 0)
+    status, node, child, events, clock = native_node_attempt(config, tmp_path, monkeypatch, rank=rank)
+    assert status['return_code'] == 0 and status['worker_inventory']['complete']
+    assert len(writes) == len({path for path, _ in writes}) == 2
+    for _, value in writes:
+        assert value['physical_observation'] == config['physical_observation']
+        assert value['profiler_observer_sha256'] == config['profiler_observer_sha256']
+    shared = json.loads((Path(config['marker_root'])/f'node_{rank}_inventory.json').read_text())
+    archived = json.loads((Path(config['archive_root'])/f'node_{rank}/node.json').read_text())
+    assert shared == archived == node
+    assert node['physical_observation'] == config['physical_observation']
+    assert node['profiler_observer_sha256'] == config['profiler_observer_sha256']
+    assert status['engine_settings']['physical_observation'] == config['physical_observation']
+    child_env = next(row[2] for row in events if row[0] == 'popen')
+    assert json.loads(child_env['STEP5_PHYSICAL_OBSERVATION']) == config['physical_observation']
+    assert child_env['STEP5_PROFILER_OBSERVER_SHA'] == config['profiler_observer_sha256']
+    assert node['workload_deadline'] == 2110 and clock() <= 2500
 
 
 @pytest.mark.parametrize('rank', [0, 1])

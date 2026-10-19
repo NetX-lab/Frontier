@@ -848,27 +848,21 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
                STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
                STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256'],
                STEP5_PROFILER_OBSERVER_SHA=config['profiler_observer_sha256'])
+    if 'physical_observation' in config:
+        env['STEP5_PHYSICAL_OBSERVATION'] = json.dumps(config['physical_observation'], separators=(',', ':'))
 
     def request_supervision(root, generation, passed_env, engine, argv, *args, **kwargs):
         argv = list(argv)
         argv[2] = str(Path(__file__).resolve())
-        if 'physical_observation' in config:
-            passed_env = dict(passed_env,
-                STEP5_PHYSICAL_OBSERVATION=json.dumps(config['physical_observation'], separators=(',', ':')),
-                STEP5_PROFILER_OBSERVER_SHA=config['profiler_observer_sha256'])
         engine = dict(engine, request_sources=dict(caller_sha256=config['request_caller_sha256'],
             observer_sha256=config['request_observer_sha256'],
             model_input_observer_sha256=config['model_input_observer_sha256'],
             state_observer_sha256=config['state_observer_sha256'],
             profiler_observer_sha256=config['profiler_observer_sha256']),
             request_manifest_sha256=config['request_manifest_sha256'])
-        node = json.loads(Path(passed_env['STEP5_CAPACITY_NODE_FILE']).read_text())
         if 'physical_observation' in config:
-            node.update(physical_observation=copy.deepcopy(config['physical_observation']),
-                profiler_observer_sha256=config['profiler_observer_sha256'])
-            capacity.save(Path(passed_env['STEP5_CAPACITY_NODE_FILE']), node)
-            capacity.save(Path(root)/f"node_{node['node_rank']}_inventory.json", node)
             engine['physical_observation'] = copy.deepcopy(config['physical_observation'])
+        node = json.loads(Path(passed_env['STEP5_CAPACITY_NODE_FILE']).read_text())
         original_finalize = kwargs['finalize_evidence']
 
         def finalize_request_records(status):

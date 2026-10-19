@@ -119,8 +119,12 @@ def node_record(config, env, *, proc_root=Path('/proc'), identify=supervision.no
         raise ValueError('MASTER_PORT is required; no guessed rendezvous default')
     node = identify(env, proc_root/'sys/kernel/random/boot_id')
     pid_namespace = os.readlink(proc_root/'self/ns/pid')
-    return dict(node, generation=config['generation'], pid_namespace=pid_namespace,
-                observer_sha256=config['observer_sha256'], resources=dict(config['resources']))
+    record = dict(node, generation=config['generation'], pid_namespace=pid_namespace,
+                  observer_sha256=config['observer_sha256'], resources=dict(config['resources']))
+    if 'physical_observation' in config:
+        record.update(physical_observation=dict(config['physical_observation']),
+                      profiler_observer_sha256=config['profiler_observer_sha256'])
+    return record
 
 
 def engine_kwargs(config, node):
