@@ -40,6 +40,11 @@ def _capacity(model, block_size=64):
     )
 
 
+# EP32 source weights: TP-sharded total 27,021,524,352 plus the vLLM
+# sequence-parallel shared-expert copy, 75 * (37,748,736 + 9,216) * 7 / 8.
+EP32_PARAMETER_BYTES = 29_499_389_952
+
+
 def _planner(model, pp_size=1, *, role=ClusterType.MONOLITHIC, ep=16):
     replica_config = ReplicaConfig(
         model_name="zai-org/GLM-5.3",
@@ -70,7 +75,7 @@ def test_unified_role_planner_uses_full_source_weights_and_common_cache_blocks(
     assert planner._replica.cluster_type is role
     assert planner._replica_config.cluster_prefix == role.name.lower()
     assert planner._replica_config.world_size == 32
-    assert planner.get_parameter_memory_per_device_bytes() == 27_021_524_352
+    assert planner.get_parameter_memory_per_device_bytes() == EP32_PARAMETER_BYTES
     capacity = planner._get_component_kv_cache_capacity(64)
     assert capacity.resident_bytes_per_common_block == 5_928_192
     assert capacity.components[0].owner_layer_ids == tuple(range(78))
@@ -78,7 +83,7 @@ def test_unified_role_planner_uses_full_source_weights_and_common_cache_blocks(
     # Keep the source weight estimate real; choose an explicit synthetic budget.
     requested_bytes = 32 * 1024**3
     available_bytes = 100 * 5_928_192 + 5_928_191
-    overhead = requested_bytes - 27_021_524_352 - available_bytes
+    overhead = requested_bytes - EP32_PARAMETER_BYTES - available_bytes
     assert overhead > 0
     monkeypatch.setattr(planner._replica._device_config, "total_memory_gb", 32)
     assert planner.get_num_blocks(
@@ -90,10 +95,10 @@ def test_unified_role_planner_uses_full_source_weights_and_common_cache_blocks(
         planner.get_num_blocks(
             block_size=64,
             gpu_memory_utilization=1,
-            non_kv_cache_overhead_bytes=requested_bytes - 27_021_524_352 - 5_928_191,
+            non_kv_cache_overhead_bytes=requested_bytes - EP32_PARAMETER_BYTES - 5_928_191,
         )
     assert raised.value.details["cluster_type"] == role.name
-    assert raised.value.details["parameter_memory_per_device_bytes"] == 27_021_524_352
+    assert raised.value.details["parameter_memory_per_device_bytes"] == EP32_PARAMETER_BYTES
     assert raised.value.details["resident_bytes_per_common_block"] == 5_928_192
     assert raised.value.details["num_cache_component_owners"] == 99
 

@@ -13,6 +13,14 @@ from frontier.utils.param_counter import ParamCounter
 
 FULL_MODEL_ROLES = (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
 
+# vLLM v0.28 sequence-parallel MoE (EP, TP8, DP>1) keeps one full shared-expert
+# copy per rank: 6144 x 4096 gate/up plus 2048 x 6144 down FP8 coefficients
+# (37,748,736) and (32 x 48 + 48 x 16) FP32 block scales (9,216 bytes). The TP8
+# shard held 1/8 of both, so each of the 75 MoE layers adds 7/8 of them.
+SP_SHARED_ELEMENTS = 75 * 37_748_736 * 7 // 8  # 2,477,260,800
+SP_SHARED_BYTES = 75 * (37_748_736 + 9_216) * 7 // 8  # 2,477,865,600
+SP_SHARED_LAYER_ELEMENTS = 37_748_736 * 7 // 8  # 33,030,144
+
 
 def _replica(
     *, ep: int = 16, tp: int = 8, role: ClusterType = ClusterType.MONOLITHIC,
@@ -28,9 +36,13 @@ def _replica(
 
 @pytest.mark.parametrize("role", FULL_MODEL_ROLES)
 @pytest.mark.parametrize(("ep", "mlp_elements", "mlp_bytes", "elements", "memory"), [
-    (16, 45_855_296_256, 45_984_484_992, 49_000_424_448, 49_676_295_552),
-    (32, 23_206_054_656, 23_329_713_792, 26_351_182_848, 27_021_524_352),
-    (64, 11_881_433_856, 12_002_328_192, 15_026_562_048, 15_694_138_752),
+    # TP-sharded shared-expert totals plus the sequence-parallel replication.
+    (16, 45_855_296_256 + SP_SHARED_ELEMENTS, 45_984_484_992 + SP_SHARED_BYTES,
+     49_000_424_448 + SP_SHARED_ELEMENTS, 49_676_295_552 + SP_SHARED_BYTES),
+    (32, 23_206_054_656 + SP_SHARED_ELEMENTS, 23_329_713_792 + SP_SHARED_BYTES,
+     26_351_182_848 + SP_SHARED_ELEMENTS, 27_021_524_352 + SP_SHARED_BYTES),
+    (64, 11_881_433_856 + SP_SHARED_ELEMENTS, 12_002_328_192 + SP_SHARED_BYTES,
+     15_026_562_048 + SP_SHARED_ELEMENTS, 15_694_138_752 + SP_SHARED_BYTES),
 ])
 def test_original_source_inventory_distinguishes_parameters_from_storage(
     role: ClusterType, ep: int, mlp_elements: int, mlp_bytes: int,
@@ -54,6 +66,14 @@ def test_original_source_inventory_distinguishes_parameters_from_storage(
     assert counter.get_num_mtp_parameters_per_device() == 0
 
 
+def test_tp8_dp2_ep16_storage_is_within_one_percent_of_native_model_load() -> None:
+    """Native TP8/DP2/EP16 leaders logged a 48.83 GiB model-load memory delta."""
+
+    memory = ParamCounter(_replica(ep=16)).get_parameter_memory_per_device_bytes()
+    assert memory == 52_154_161_152  # 48.572 GiB.
+    assert abs(memory / 1024**3 - 48.83) / 48.83 < 0.01
+
+
 @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
 def test_unified_roles_retain_the_full_backbone_and_both_vocabulary_endpoints(
     role: ClusterType,
@@ -75,11 +95,11 @@ def test_unified_roles_retain_the_full_backbone_and_both_vocabulary_endpoints(
         )
     # Three dense layers and75 routed-plus-shared layers stay on each role.
     assert counter.get_num_mlp_params_per_layer(0) == 28_311_552
-    assert counter.get_num_mlp_params_per_layer(3) == 308_281_600
+    assert counter.get_num_mlp_params_per_layer(3) == 308_281_600 + SP_SHARED_LAYER_ELEMENTS
     backbone_elements = sum(counter.get_num_parameters_per_layer(layer) for layer in range(78))
     endpoints_and_final_norm = 2 * 154_880 * 6_144 // 8 + 6_144
     assert counter.get_num_parameters_per_device() - backbone_elements == endpoints_and_final_norm
-    assert counter.get_parameter_memory_per_device_bytes() == 27_021_524_352
+    assert counter.get_parameter_memory_per_device_bytes() == 27_021_524_352 + SP_SHARED_BYTES
 
 
 def test_full_and_shared_index_layers_have_distinct_parameter_owners() -> None:
@@ -93,7 +113,7 @@ def test_full_and_shared_index_layers_have_distinct_parameter_owners() -> None:
         assert counter.get_num_attention_params_per_layer(layer_id) == expected
     assert counter.get_num_attention_params_per_layer() == 44_108_544
     assert counter.get_num_mlp_params_per_layer(0) == 28_311_552
-    assert counter.get_num_mlp_params_per_layer(3) == 610_271_488
+    assert counter.get_num_mlp_params_per_layer(3) == 610_271_488 + SP_SHARED_LAYER_ELEMENTS
     assert counter.get_num_parameters_per_layer(0) == 44_108_544 + 28_311_552 + 12_288
     with pytest.raises(ValueError, match="out of range"):
         counter.get_num_attention_params_per_layer(78)
@@ -121,7 +141,7 @@ def test_index_topk_changes_work_but_not_resident_weight_counts() -> None:
     replica.model_config = replace(replica.model_config, index_topk=1024, num_experts_per_tok=4)
     counter = ParamCounter(replica)
     assert counter.get_parameter_memory_per_device_bytes() == original
-    assert counter.get_num_parameters_per_device() == 49_000_424_448
+    assert counter.get_num_parameters_per_device() == 49_000_424_448 + SP_SHARED_ELEMENTS
 
 
 def test_geometry_valid_tp4_uses_larger_shards_without_dividing_replicated_indexers() -> None:
@@ -130,8 +150,13 @@ def test_geometry_valid_tp4_uses_larger_shards_without_dividing_replicated_index
     counter = ParamCounter(_replica(tp=4))
     assert counter.get_num_attention_parameters_per_device() == 4_358_021_376
     assert counter.get_attention_parameter_memory_per_device_bytes() == 4_952_459_136
-    assert counter.get_num_parameters_per_device() == 51_128_902_656
-    assert counter.get_parameter_memory_per_device_bytes() == 52_329_392_256
+    # TP4/DP4 is also sequence-parallel; the TP4 shared shard held 1/4 of a copy.
+    assert counter.get_num_parameters_per_device() == (
+        51_128_902_656 + 75 * 37_748_736 * 3 // 4
+    )
+    assert counter.get_parameter_memory_per_device_bytes() == (
+        52_329_392_256 + 75 * (37_748_736 + 9_216) * 3 // 4
+    )
 
 
 def test_geometry_is_derived_from_config_and_typed_ffn_widths() -> None:
@@ -147,9 +172,13 @@ def test_geometry_is_derived_from_config_and_typed_ffn_widths() -> None:
     # Main learned11,797,760 / bytes12,850,560; full indexer2,687,232 / bytes3,277,824.
     assert counter.get_num_attention_parameters_per_device() == 976_657_152
     assert counter.get_attention_parameter_memory_per_device_bytes() == 1_071_177_984
-    assert counter.get_num_mlp_parameters_per_device() == 15_333_870_336
-    assert counter.get_num_parameters_per_device() == 16_445_388_288
-    assert counter.get_parameter_memory_per_device_bytes() == 16_757_195_136
+    # One replicated shared expert: 4096 x 2048 + 1024 x 4096 FP8 coefficients and
+    # (16 x 32 + 32 x 8) FP32 scales; the former TP8 shard held 1/8 of them.
+    shared_elements = 75 * 12_582_912 * 7 // 8
+    shared_bytes = 75 * (12_582_912 + 3_072) * 7 // 8
+    assert counter.get_num_mlp_parameters_per_device() == 15_333_870_336 + shared_elements
+    assert counter.get_num_parameters_per_device() == 16_445_388_288 + shared_elements
+    assert counter.get_parameter_memory_per_device_bytes() == 16_757_195_136 + shared_bytes
 
 
 def test_mla_hidden_width_does_not_impose_dense_attention_head_divisibility() -> None:
@@ -182,9 +211,11 @@ def test_exact_uniform_fused_exclusions_select_one_bf16_projection(
     ])
     replica.model_config = replace(model, quantization_config=quant)
     counter = ParamCounter(replica)
-    assert counter.get_num_parameters_per_device() == 49_000_424_448
+    assert counter.get_num_parameters_per_device() == 49_000_424_448 + SP_SHARED_ELEMENTS
     # Replace one16,121,856-byte FP8 A +4032-byte scales by BF16 A, once.
-    assert counter.get_parameter_memory_per_device_bytes() == 49_676_295_552 + 16_117_824
+    assert counter.get_parameter_memory_per_device_bytes() == (
+        49_676_295_552 + SP_SHARED_BYTES + 16_117_824
+    )
 
 
 def test_exclusions_use_exact_module_names_instead_of_leaf_or_parent_matching() -> None:
@@ -195,7 +226,9 @@ def test_exclusions_use_exact_module_names_instead_of_leaf_or_parent_matching() 
         "q_b_proj", "model.layers.0.self_attn", "model.layers.0.self_attn.q_b_proj.weight",
     ])
     replica.model_config = replace(model, quantization_config=quant)
-    assert ParamCounter(replica).get_parameter_memory_per_device_bytes() == 49_676_295_552
+    assert ParamCounter(replica).get_parameter_memory_per_device_bytes() == (
+        49_676_295_552 + SP_SHARED_BYTES
+    )
 
 
 def test_empty_exclusions_keep_native_embedding_head_and_norms_in_bf16() -> None:
@@ -206,8 +239,8 @@ def test_empty_exclusions_keep_native_embedding_head_and_norms_in_bf16() -> None
     )
     # Native FP8 methods do not quantize VocabParallelEmbedding/ParallelLMHead.
     counter = ParamCounter(replica)
-    assert counter.get_num_parameters_per_device() == 49_000_424_448
-    assert counter.get_parameter_memory_per_device_bytes() == 49_676_295_552
+    assert counter.get_num_parameters_per_device() == 49_000_424_448 + SP_SHARED_ELEMENTS
+    assert counter.get_parameter_memory_per_device_bytes() == 49_676_295_552 + SP_SHARED_BYTES
 
 
 @pytest.mark.parametrize(("excluded", "exception", "message"), [
@@ -292,21 +325,42 @@ def test_unrepresented_pipeline_moe_tp_and_mtp_are_rejected(role: ClusterType) -
 
 
 @pytest.mark.parametrize("role", FULL_MODEL_ROLES)
-def test_replicated_shared_experts_need_a_separate_sp_contract(
+@pytest.mark.parametrize(("ep", "shared_mode"), [
+    (8, TensorParallelMode.ATTENTION_TP),  # DP1 is not sequence-parallel MoE.
+    (16, TensorParallelMode.REPLICATED),
+    (64, TensorParallelMode.REPLICATED),
+])
+def test_shared_experts_replicate_only_under_sequence_parallel_moe(
+    role: ClusterType, ep: int, shared_mode: TensorParallelMode,
+) -> None:
+    counter = ParamCounter(_replica(ep=ep, role=role), role)
+    shared = counter._resolve_ffn_layer_contract(3, LayerKind.SHARED)
+    assert shared.tensor_parallel_mode is shared_mode
+    shared_elements = 37_748_736 // shared.tensor_parallel_size
+    routed_elements = 256 // ep * 37_748_736
+    router_elements = 6_144 * 256 + 256
+    assert counter.get_num_mlp_params_per_layer(3) == (
+        routed_elements + shared_elements + router_elements
+    )
+
+
+@pytest.mark.parametrize("role", FULL_MODEL_ROLES)
+def test_unrepresented_shared_expert_ownership_fails_explicitly(
     role: ClusterType, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    replica = _replica(role=role)
+    # DP1 keeps the declared contract instead of the sequence-parallel copy.
+    replica = _replica(ep=8, role=role)
     model = replica.model_config
     profile = model.get_model_architecture_profile()
     contracts = tuple(
-        replace(contract, tensor_parallel_mode=TensorParallelMode.REPLICATED)
+        replace(contract, tensor_parallel_mode=TensorParallelMode.MOE_TP)
         if contract.layer_kind is LayerKind.SHARED else contract
         for contract in profile.layer_contracts
     )
     monkeypatch.setattr(model, "get_model_architecture_profile", lambda: replace(
         profile, layer_contracts=contracts,
     ))
-    with pytest.raises(NotImplementedError, match="non-SP typed FFN ownership"):
+    with pytest.raises(NotImplementedError, match="shared FFN ownership only"):
         ParamCounter(replica, role).get_parameter_memory_per_device_bytes()
 
 

@@ -661,9 +661,14 @@ class ModelArchitectureProfile:
             ),
             expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             counts_share_expert_param_memory=True,
+            # vLLM v0.28 builds DeepseekV2MoE shared experts with disable_tp
+            # under sequence-parallel MoE (EP, TP>1, DP>1).
+            replicate_shared_expert_in_sequence_parallel=True,
             experimental=True,
             runtime_limitations=(
                 "DSA measured timing and native parameter-storage qualification are unsupported",
+                "shared FFN timing keeps the TP-sharded shape; sequence-parallel "
+                "token sharding and collectives are not modeled",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "glm_moe_dsa"

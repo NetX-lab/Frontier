@@ -524,25 +524,36 @@ class ParamCounter:
             storage += query_bytes + 2 * bf16_elements
         return elements, storage
 
+    def _resolve_ffn_layer_contract(self, layer_id: int, layer_kind: LayerKind):
+        """Resolve FFN ownership, including sequence-parallel shared replication."""
+
+        model = self._model_config
+        return model.get_model_architecture_profile().resolve_layer_contract(
+            model, layer_id=layer_id, layer_kind=layer_kind,
+            attention_tp_size=self._get_attn_tp_size(),
+            moe_tp_size=self._get_moe_tp_size(), expert_parallel_size=self._get_ep_size(),
+            attention_dp_size=self._replica_config.attn_dp,
+            num_pipeline_stages=self._replica_config.num_pipeline_stages,
+        )
+
     def _get_dsa_mlp_layer_totals(self, layer_id: int) -> tuple[int, int]:
         model = self._model_config
         model.get_layer_attention_spec(layer_id)
-        profile = model.get_model_architecture_profile()
         routed = model.is_moe_layer(layer_id)
         kinds = (LayerKind.ROUTED, LayerKind.SHARED) if routed else (LayerKind.DENSE,)
+        supported_modes = {
+            LayerKind.ROUTED: (TensorParallelMode.MOE_TP,),
+            LayerKind.SHARED: (TensorParallelMode.ATTENTION_TP, TensorParallelMode.REPLICATED),
+            LayerKind.DENSE: (TensorParallelMode.ATTENTION_TP,),
+        }
         elements = storage = 0
         for kind in kinds:
-            contract = profile.resolve_layer_contract(
-                model, layer_id=layer_id, layer_kind=kind,
-                attention_tp_size=self._get_attn_tp_size(),
-                moe_tp_size=self._get_moe_tp_size(), expert_parallel_size=self._get_ep_size(),
-            )
-            expected_mode = (
-                TensorParallelMode.MOE_TP if kind is LayerKind.ROUTED
-                else TensorParallelMode.ATTENTION_TP
-            )
-            if contract.tensor_parallel_mode is not expected_mode:
-                raise NotImplementedError("DSA parameter estimates support non-SP typed FFN ownership only")
+            contract = self._resolve_ffn_layer_contract(layer_id, kind)
+            if contract.tensor_parallel_mode not in supported_modes[kind]:
+                raise NotImplementedError(
+                    "DSA parameter estimates support routed MoE-TP, dense attention-TP and "
+                    "attention-TP or sequence-parallel replicated shared FFN ownership only"
+                )
             tp = contract.tensor_parallel_size
             width = contract.effective_ffn_width // tp
             block_n, block_k = model.quantization_config.weight_block_size
@@ -739,15 +750,8 @@ class ParamCounter:
     def _get_v4_mlp_layer_totals(self, layer_id: int) -> tuple[int, int]:
         model = self._model_config
         model.get_layer_attention_spec(layer_id)
-        profile = model.get_model_architecture_profile()
-        contract_args = dict(
-            layer_id=layer_id, attention_tp_size=self._get_attn_tp_size(),
-            moe_tp_size=self._get_moe_tp_size(), expert_parallel_size=self._get_ep_size(),
-            attention_dp_size=self._replica_config.attn_dp,
-            num_pipeline_stages=self._replica_config.num_pipeline_stages,
-        )
-        routed = profile.resolve_layer_contract(model, layer_kind=LayerKind.ROUTED, **contract_args)
-        shared = profile.resolve_layer_contract(model, layer_kind=LayerKind.SHARED, **contract_args)
+        routed = self._resolve_ffn_layer_contract(layer_id, LayerKind.ROUTED)
+        shared = self._resolve_ffn_layer_contract(layer_id, LayerKind.SHARED)
         if (
             routed.tensor_parallel_mode is not TensorParallelMode.MOE_TP
             or routed.tensor_parallel_size != 1

@@ -65,11 +65,12 @@ STAGE_COSTS = {
                     "pp_stage_boundary_residual_runtime_time"), 0),
 }
 # Independent source oracle also exercised in test_glm53_parameter_memory.py.
-WEIGHT_BYTES = 15_694_138_752
-PARAMETERS = 15_026_562_048
+# TP8/DP8/EP64 keeps one full shared expert per rank (sequence-parallel MoE).
+WEIGHT_BYTES = 18_172_004_352
+PARAMETERS = 17_503_822_848
 WEIGHT_PARTS = {
     "attention_memory_bytes": 3_214_089_984,
-    "ffn_memory_bytes": 12_002_328_192,
+    "ffn_memory_bytes": 14_480_193_792,
     "other_memory_bytes": 477_720_576,
 }
 LIMITS = [
