@@ -335,6 +335,10 @@ CENSUS_SOURCES = {
     'worker_utils': ('vllm.v1.worker.utils', '64e8f82545c63cd9026e30731d3460f420e623dfafc4ba0e3b63035c96b2856c'),
     'workspace': ('vllm.v1.worker.workspace', '681c99f19bac3d8c445c887113e61c75754c9ae615530abfe5014e7b7b47ef10'),
     'prepare_no_dp_ep': ('vllm.model_executor.layers.fused_moe.prepare_finalize.no_dp_ep', '263c30ea61e756d389dfbb25927feb3c0fde5936001f1f00215bd15913af0b98'),
+    'custom_ops': ('vllm._custom_ops', '227228be660fcddf83c62ec5f7be35792cd13b1e0fd2e79d65b55711f6ea5426'),
+    'moe_utils': ('vllm.model_executor.layers.fused_moe.utils', 'ce9c78663327bd124ed0528c571e138d6f42496b358fa93bd08492a1a6a4f0cf'),
+    'attention_update': ('vllm.model_executor.layers.attention.attention', '8b4a068636aa427f3185463afbfcff1d1bd82bad80a3356b80f800701af85a92'),
+    'qkv_indexer': ('vllm.models.step5.nvidia.ops.qkv_indexer_norm_rope', '77a7ff97b94bbf312bbcfeb757974eb7fb7e2fe55155bcd67d74ff817c7f7854'),
 }
 # source, original code owner, observed arguments, resident owner attributes
 CENSUS_CALLS = {
@@ -360,6 +364,11 @@ CENSUS_CALLS = {
     'triton_gemm': ('triton_dispatch', ('invoke_fused_moe_triton_kernel',), ('A', 'B', 'C', 'A_scale', 'B_scale', 'topk_weights', 'sorted_token_ids', 'expert_ids', 'num_tokens_post_padded', 'top_k', 'config', 'compute_type', 'use_fp8_w8a8', 'block_shape'), ()),
     'prepare_no_dp_ep': ('prepare_no_dp_ep', ('MoEPrepareAndFinalizeNoDPEPModular', 'prepare'), ('a1', 'topk_weights', 'topk_ids', 'expert_map', 'quant_config', 'defer_input_quant'), ()),
     'prepare_quantize': ('prepare_no_dp_ep', ('_quantize_input',), ('a1', 'quant_config', 'defer_input_quant'), ()),
+    'kv_fused': ('custom_ops', ('fused_qknorm_rope_cache',), ('qkv', 'positions', 'slot_mapping', 'key_cache', 'value_cache', 'num_q_heads', 'num_kv_heads', 'head_dim', 'rotary_dim', 'kv_cache_dtype', 'k_scale', 'v_scale'), ()),
+    'kv_sparse_fused': ('qkv_indexer', ('qkv_indexer_norm_rope',), ('query', 'key', 'weights', 'positions', 'main_inputs', 'decode_z', 'decode_slots'), ()),
+    'kv_update': ('attention_update', ('unified_kv_cache_update',), ('key', 'value', 'layer_name'), ()),
+    'moe_quantize': ('moe_utils', ('moe_kernel_quantize_input',), ('A', 'A_scale', 'quant_dtype', 'per_act_token_quant', 'block_shape', 'is_scale_swizzled', 'quantization_emulation'), ()),
+    'silu_quantize': ('custom_ops', ('silu_and_mul_per_block_quant',), ('input', 'group_size', 'quant_dtype', 'scale_ub', 'is_scale_transposed'), ()),
     'request_finish': ('runner', ('GPUModelRunner', 'finish_requests'), (), ()),
     'request_remove': ('runner', ('GPUModelRunner', '_remove_request'), ('req_id',), ()),
     'request_add': ('runner', ('GPUModelRunner', 'add_requests'), (), ()),
@@ -1291,7 +1300,7 @@ class ObservationScope:
             arguments = {}
             for key in CENSUS_CALLS[name][2]:
                 value = frame.f_locals[key]
-                if value is not None and key in ('compute_type', 'out_dtype'):
+                if value is not None and key in ('compute_type', 'out_dtype', 'quant_dtype'):
                     value = str(value)
                 arguments[key] = metadata.value(value)
             if name in CENSUS_REQUEST_SITES:

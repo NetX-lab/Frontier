@@ -28,6 +28,8 @@ CENSUS_SOURCE_ROOTS = {
     'block_table': 'native_state_20261019_01/native_sources',
     'workspace': 'native_workspace_sources/observed',
     'prepare_no_dp_ep': 'native_state_20261019_01/native_sources',
+    'custom_ops': 'native_numerical_sources/observed',
+    'moe_utils': 'native_numerical_sources/observed',
 }
 POLICY_FIELDS = ('repetition_penalty', 'presence_penalty', 'frequency_penalty',
                  'temperature', 'top_k', 'top_p', 'min_p', 'seed')
