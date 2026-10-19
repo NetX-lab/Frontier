@@ -86,6 +86,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -127,6 +128,8 @@ V028_SOURCE = "2cf0a6915ce544dc493a0990f2ea38d81601128a"
 V028_IMAGE = ("hub.i.basemind.com/vllm-openai/vllm-openai@sha256:"
               "2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
+V028_NODE_FIELDS = ("data_parallel_size_local", "data_parallel_address", "data_parallel_rpc_port",
+                    "data_parallel_start_rank", "headless")
 
 
 def runtime_version(engine: dict) -> str:
@@ -156,6 +159,34 @@ def runtime_version(engine: dict) -> str:
                      "enable_prefix_caching"):
             if type(engine.get(name)) is not bool:
                 raise ValueError(f"{name} must be boolean")
+        if any(name in engine for name in V028_NODE_FIELDS):
+            if (engine.get("data_parallel_rank") is not None or engine.get("data_parallel_hybrid_lb")
+                    or engine.get("data_parallel_external_lb")):
+                raise ValueError("Native DP node replay supports internal load balancing only")
+            if any(name not in engine for name in V028_NODE_FIELDS[:3]):
+                raise ValueError("Native DP nodes require explicit local size, head address and RPC port")
+            local, dp = engine["data_parallel_size_local"], engine["data_parallel_size"]
+            headless = engine.get("headless", False)
+            start = engine.get("data_parallel_start_rank")
+            rpc_port = engine["data_parallel_rpc_port"]
+            if (engine["pipeline_parallel_size"] != 1 or type(local) is not int
+                    or not 0 < local < dp or type(headless) is not bool
+                    or type(rpc_port) is not int or not 0 < rpc_port < 65536):
+                raise ValueError("Native DP nodes require PP1, valid local size, headless flag and RPC port")
+            if headless:
+                if type(start) is not int or start <= 0 or start + local > dp:
+                    raise ValueError("Headless nodes require a valid nonzero native DP start rank")
+            elif "data_parallel_start_rank" in engine:
+                raise ValueError("An internal-DP API head must omit data_parallel_start_rank")
+            for name in ("data_parallel_address", "host"):
+                value = engine.get(name, "127.0.0.1")
+                if type(value) is not str:
+                    raise ValueError(f"{name} requires an explicit IPv4 address")
+                address = ipaddress.IPv4Address(value)
+                if (address.is_multicast
+                        or name == "data_parallel_address" and (address.is_loopback or address.is_unspecified)
+                        or name == "host" and not headless and address.is_loopback):
+                    raise ValueError(f"{name} must permit inter-node communication")
     return version
 
 
@@ -266,10 +297,13 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     version = runtime_version(engine)
     if version == "0.28.0":
         local_model_config(model_dir)
+        if engine.get("data_parallel_rpc_port") == port and not engine.get("headless"):
+            raise ValueError("HTTP and DP RPC ports must be distinct")
     command = [
         sys.executable, "-m", "vllm.entrypoints.cli.main", "serve", str(model_dir),
         "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "127.0.0.1", "--port", str(port),
+        "--host", engine.get("host", "127.0.0.1") if version == "0.28.0" else "127.0.0.1",
+        "--port", str(port),
         "--load-format", engine["load_format"],
         "--dtype", engine["dtype"],
         "--tensor-parallel-size", str(engine["tensor_parallel_size"]),
@@ -296,13 +330,16 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
         command += ["--compilation-config", json.dumps(engine["compilation_config"])]
     if version == "0.28.0":
         for name in ("attention_backend", "quantization", "shutdown_timeout",
-                     "distributed_executor_backend"):
+                     "distributed_executor_backend", "data_parallel_size_local",
+                     "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port"):
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
         if "async_scheduling" in engine:
             if type(engine["async_scheduling"]) is not bool:
                 raise ValueError("async_scheduling must be boolean")
             command += ["--async-scheduling" if engine["async_scheduling"] else "--no-async-scheduling"]
+        if engine.get("headless"):
+            command.append("--headless")
     return command
 
 
@@ -351,13 +388,14 @@ def observer_evidence(engine: dict, observer: dict | None) -> dict:
     }
 
 
-def wait_until_ready(server: subprocess.Popen, port: int, timeout_s: float) -> float:
+def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: float, *,
+                     host: str = "127.0.0.1") -> float:
     started = time.monotonic()
     while time.monotonic() - started < timeout_s:
-        if server.poll() is not None:
+        if server is not None and server.poll() is not None:
             raise RuntimeError(f"vllm serve exited with {server.returncode} during startup")
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=2) as response:
+            with urllib.request.urlopen(f"http://{host}:{port}/health", timeout=2) as response:
                 if response.status == 200:
                     return time.monotonic() - started
         except OSError:

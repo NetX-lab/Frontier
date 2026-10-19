@@ -7,11 +7,12 @@ calibration decisions Q4 and Q5: a prefill instance on the first visible GPU and
 a decode instance on the second, each a ``vllm serve`` of the engine file, joined
 by P2pNcclConnector with ``send_type`` PUT_ASYNC, with pd_proxy.py in front.
 
-The explicit v0.28 adapter prepares local PP1 NIXL pull roles and forwards P's
+The explicit v0.28 adapter prepares PP1 NIXL pull roles and forwards P's
 native response metadata through that same proxy. It retains declared observer
 inputs and terminal diagnostics without applying the legacy PUT checks or metric
-join. This adapter does not provide multi-node launch orchestration or establish
-native READ/device/D-ready completion. The remaining description is legacy.
+join. With explicit external P/D endpoints, it owns only the proxy and client;
+the worker coordinator owns native multi-node startup and drain. This adapter
+does not establish native READ/device/D-ready completion. The remaining description is legacy.
 
 The connector addresses are static. Each instance binds its ZMQ socket on
 ``127.0.0.1:<kv_port>``, and the proxy writes both addresses into every proxied
@@ -54,12 +55,14 @@ import argparse
 import asyncio
 import contextlib
 import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import time
+from urllib.parse import urlsplit
 
 HARNESS_DIR = Path(__file__).resolve().parent
 sys.path[:0] = [str(HARNESS_DIR), str(HARNESS_DIR.parent / "dp_placement_pp")]
@@ -98,15 +101,23 @@ def kv_transfer_config(engine: dict, role: str, http_port: int) -> dict:
         fields = {"kv_buffer_device", "side_channel_host", "prefill_side_channel_port",
                   "decode_side_channel_port"}
         if (type(kv) is not dict or set(kv) != fields or kv["kv_buffer_device"] != "cuda"
-                or kv["side_channel_host"] != "127.0.0.1"
+                or type(kv["side_channel_host"]) is not str
                 or engine["pipeline_parallel_size"] != 1):
-            raise ValueError("v0.28 pull requires explicit local PP1 CUDA NIXL configuration")
+            raise ValueError("v0.28 pull requires explicit PP1 CUDA NIXL configuration")
+        address = ipaddress.IPv4Address(kv["side_channel_host"])
+        if (address.is_multicast or address.is_unspecified
+                or "data_parallel_size_local" in engine and address.is_loopback):
+            raise ValueError("NIXL side-channel host requires a reachable IPv4 address")
         ports = [kv[f"{name}_side_channel_port"] for name in ROLES]
         dp = engine["data_parallel_size"]
         if (type(dp) is not int or dp <= 0
                 or any(type(port) is not int or not 0 < port <= 65536 - dp for port in ports)
                 or abs(ports[0] - ports[1]) < dp):
             raise ValueError("NIXL side-channel port windows must be valid and disjoint for DP lanes")
+        service_ports = [http_port] + ([engine["data_parallel_rpc_port"]]
+                                      if "data_parallel_rpc_port" in engine else [])
+        if any(start <= port < start + dp for start in ports for port in service_ports):
+            raise ValueError("HTTP and DP RPC ports must be outside NIXL side-channel windows")
         return {"kv_connector": "NixlConnector", "kv_role": KV_ROLES[role],
                 "kv_buffer_device": "cuda", "kv_load_failure_policy": "fail"}
     return {
@@ -126,24 +137,30 @@ def kv_transfer_config(engine: dict, role: str, http_port: int) -> dict:
     }
 
 
-def instance_devices(inherited: dict, *, engine: dict | None = None) -> dict[str, str]:
-    """Prefill takes the first visible GPU, decode the second."""
+def instance_devices(inherited: dict, *, engine: dict | None = None,
+                     role: str | None = None) -> dict[str, str]:
+    """Select explicit local devices, or the legacy first GPU of each role."""
 
     # Without CUDA_VISIBLE_DEVICES, CUDA numbers the visible GPUs from 0.
     visible = inherited.get("CUDA_VISIBLE_DEVICES")
     if engine is not None and runtime_version(engine) == "0.28.0":
         roles = engine.get("role_devices")
-        count = engine["tensor_parallel_size"] * engine["data_parallel_size"]
-        if (type(roles) is not dict or set(roles) != set(ROLES)
+        selected_roles = (role,) if role is not None else ROLES
+        if any(name not in ROLES for name in selected_roles):
+            raise ValueError(f"Unsupported P/D role: {role!r}")
+        dp = (engine.get("data_parallel_size_local", engine["data_parallel_size"])
+              if role else engine["data_parallel_size"])
+        count = engine["tensor_parallel_size"] * dp
+        if (type(roles) is not dict or set(roles) != set(selected_roles)
                 or engine["pipeline_parallel_size"] != 1
                 or any(type(values) is not list or len(values) != count
                        or any(type(value) is not str or not value or "," in value for value in values)
                        for values in roles.values())):
-            raise ValueError("v0.28 requires explicit PP1 per-role devices matching TP * DP")
-        selected = roles["prefill"] + roles["decode"]
+            raise ValueError("v0.28 requires explicit PP1 per-role devices matching TP * local DP")
+        selected = [device for name in selected_roles for device in roles[name]]
         if len(set(selected)) != len(selected) or (visible and not set(selected) <= set(visible.split(","))):
             raise ValueError("P/D devices must be disjoint and included in CUDA_VISIBLE_DEVICES")
-        return {role: ",".join(roles[role]) for role in ROLES}
+        return {name: ",".join(roles[name]) for name in selected_roles}
     devices = visible.split(",") if visible else ["0", "1"]
     if len(devices) < 2:
         raise SystemExit(f"1P1D needs two GPUs, CUDA_VISIBLE_DEVICES={visible!r}")
@@ -198,6 +215,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--proxy-port", type=int, default=8000)
     parser.add_argument("--prefill-port", type=int, default=8100)
     parser.add_argument("--decode-port", type=int, default=8200)
+    parser.add_argument("--prefill-url", help="v0.28: externally managed prefill HTTP endpoint")
+    parser.add_argument("--decode-url", help="v0.28: externally managed decode HTTP endpoint")
     parser.add_argument("--startup-timeout-s", type=float, default=900.0)
     parser.add_argument("--origin-lead-s", type=float, default=1.0)
     parser.add_argument("--drain-s", type=float, default=3.0)
@@ -206,6 +225,29 @@ def main(argv: list[str] | None = None) -> int:
 
     engine = json.loads(args.engine_config.read_text())
     version = runtime_version(engine)
+    external = args.prefill_url is not None or args.decode_url is not None
+    if external and (version != "0.28.0" or args.prefill_url is None or args.decode_url is None):
+        raise ValueError("External P/D endpoints require v0.28 and both --prefill-url and --decode-url")
+    if external:
+        urls = {role: getattr(args, f"{role}_url").rstrip("/") for role in ROLES}
+        for url in urls.values():
+            endpoint = urlsplit(url)
+            if (endpoint.scheme != "http" or not endpoint.hostname or not endpoint.port
+                    or endpoint.username is not None or endpoint.password is not None
+                    or endpoint.path or endpoint.query or endpoint.fragment):
+                raise ValueError("External endpoints require explicit http://IPv4:port origins")
+            address = ipaddress.IPv4Address(endpoint.hostname)
+            if (address.is_unspecified or address.is_multicast
+                    or address.is_loopback and endpoint.port == args.proxy_port):
+                raise ValueError("External endpoints must be reachable and distinct from the local proxy")
+        if urls["prefill"] == urls["decode"]:
+            raise ValueError("External P/D endpoints must be distinct")
+    else:
+        if version == "0.28.0" and "data_parallel_size_local" in engine:
+            raise ValueError("Native DP node partitions require externally managed P/D endpoints")
+        host = engine.get("host", "127.0.0.1") if version == "0.28.0" else "127.0.0.1"
+        host = "127.0.0.1" if host == "0.0.0.0" else host
+        urls = {role: f"http://{host}:{getattr(args, f'{role}_port')}" for role in ROLES}
     observers = json.loads(args.observer_config.read_text()) if args.observer_config else None
     if version == "0.28.0":
         if args.model_dir is None:
@@ -233,9 +275,9 @@ def main(argv: list[str] | None = None) -> int:
         for row in rows
     } if version == "0.10.2" else {}
     output_dir = args.output_dir
-    devices = instance_devices(dict(os.environ), engine=engine)
+    devices = {} if external else instance_devices(dict(os.environ), engine=engine)
     ports = {"prefill": args.prefill_port, "decode": args.decode_port}
-    if len({args.proxy_port, *ports.values()}) != 3:
+    if not external and len({args.proxy_port, *ports.values()}) != 3:
         raise ValueError("Proxy and P/D HTTP ports must be distinct")
     if version == "0.10.2":
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -245,6 +287,12 @@ def main(argv: list[str] | None = None) -> int:
         )
     plans = {}
     for role in ROLES:
+        if external:
+            server_env(args.mode, engine, output_dir / role, dict(os.environ),
+                       observer=None if observers is None else observers[role])
+            if observers is not None and observers[role]["role"] != role.upper():
+                raise ValueError("Observer role conflicts with P/D instance role")
+            continue
         env, changed = instance_env(args.mode, engine, output_dir / role, dict(os.environ), devices[role],
                                     observer=None if observers is None else observers[role], role=role)
         command = server_command(engine, model_dir, ports[role]) + [
@@ -256,19 +304,22 @@ def main(argv: list[str] | None = None) -> int:
             prefill_dir, decode_dir = (Path(observers[role]["output_dir"]).resolve() for role in ROLES)
             if prefill_dir.is_relative_to(decode_dir) or decode_dir.is_relative_to(prefill_dir):
                 raise ValueError("PD observers require disjoint output directories")
-        http_ports = [args.proxy_port, *ports.values()]
-        kv = engine["kv_transfer"]
-        dp = engine["data_parallel_size"]
-        if (any(not 0 < port < 65536 for port in http_ports)
-                or any(kv[f"{role}_side_channel_port"] <= port
-                       < kv[f"{role}_side_channel_port"] + dp
-                       for role in ROLES for port in http_ports)):
-            raise ValueError("HTTP ports must be valid and outside both NIXL side-channel windows")
+        if not 0 < args.proxy_port < 65536:
+            raise ValueError("Proxy port must be valid")
+        if not external:
+            http_ports = [args.proxy_port, *ports.values()]
+            kv = engine["kv_transfer"]
+            dp = engine["data_parallel_size"]
+            if (any(not 0 < port < 65536 for port in http_ports)
+                    or any(kv[f"{role}_side_channel_port"] <= port
+                           < kv[f"{role}_side_channel_port"] + dp
+                           for role in ROLES for port in http_ports)):
+                raise ValueError("HTTP ports must be valid and outside both NIXL side-channel windows")
     output_dir.mkdir(parents=True, exist_ok=True)
     proxy_command = [
         sys.executable, str(HARNESS_DIR / "pd_proxy.py"), "--port", str(args.proxy_port),
-        "--prefill-url", f"http://127.0.0.1:{ports['prefill']}",
-        "--decode-url", f"http://127.0.0.1:{ports['decode']}",
+        "--prefill-url", urls["prefill"],
+        "--decode-url", urls["decode"],
         "--log-path", str(output_dir / "proxy_requests.jsonl"),
     ]
     if version == "0.10.2":
@@ -288,6 +339,9 @@ def main(argv: list[str] | None = None) -> int:
     if version == "0.28.0":
         summary.update(vllm_version=version, qualification_verified=False,
                        model_config_sha256=hashlib.sha256((model_dir / "config.json").read_bytes()).hexdigest())
+    if external:
+        summary["instances"] = {role: {"http_url": urls[role], "lifecycle_owner": "external"}
+                                for role in ROLES}
     for role, (env, set_env, command) in plans.items():
         summary["instances"][role] = {
             "server_command": command,
@@ -301,7 +355,7 @@ def main(argv: list[str] | None = None) -> int:
     with contextlib.ExitStack() as logs:
         try:
             launched = time.monotonic()
-            for role in ROLES:
+            for role in plans:
                 role_dir = output_dir / role
                 role_dir.mkdir()
                 env, set_env, command = plans[role]
@@ -310,8 +364,16 @@ def main(argv: list[str] | None = None) -> int:
                     command, env=env, stdout=server_log, stderr=subprocess.STDOUT
                 )
             for role in ROLES:
-                wait_until_ready(processes[role], ports[role], args.startup_timeout_s)
-                summary["instances"][role]["ready_after_launch_s"] = time.monotonic() - launched
+                endpoint = urlsplit(urls[role])
+                if external or endpoint.hostname != "127.0.0.1":
+                    health_wait_s = wait_until_ready(
+                        processes.get(role), endpoint.port, args.startup_timeout_s, host=endpoint.hostname)
+                else:
+                    wait_until_ready(processes[role], ports[role], args.startup_timeout_s)
+                if external:
+                    summary["instances"][role]["health_wait_s"] = health_wait_s
+                else:
+                    summary["instances"][role]["ready_after_launch_s"] = time.monotonic() - launched
             proxy_log = logs.enter_context((output_dir / "proxy.log").open("w"))
             processes["proxy"] = subprocess.Popen(
                 proxy_command, stdout=proxy_log, stderr=subprocess.STDOUT

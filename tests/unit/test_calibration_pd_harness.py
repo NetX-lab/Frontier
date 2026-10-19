@@ -60,6 +60,40 @@ def test_v028_pd_selects_pull_roles_explicit_devices_and_distinct_side_channels(
     assert "VLLM_FRONTIER_KV_TRANSFER_LOG_PATH" not in env
 
 
+@pytest.mark.parametrize("role", ["prefill", "decode"])
+def test_v028_pd_node_uses_its_local_lane_and_reachable_side_channel(role):
+    engine = nixl_engine() | {
+        "host": "192.0.2.10", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+        "role_devices": {role: [str(i) for i in range(8)]},
+    }
+    engine["kv_transfer"]["side_channel_host"] = "192.0.2.10"
+    inherited = {"CUDA_VISIBLE_DEVICES": "0,1,2,3,4,5,6,7", "NCCL_IB_HCA": "platform-value"}
+    devices = instance_devices(inherited, engine=engine, role=role)
+    assert devices == {role: "0,1,2,3,4,5,6,7"}
+    env, changed = instance_env("light", engine, Path("/run") / role, inherited,
+                                devices[role], observer=native_observer(role.upper()), role=role)
+    assert env["NCCL_IB_HCA"] == "platform-value"
+    assert changed["VLLM_NIXL_SIDE_CHANNEL_HOST"] == "192.0.2.10"
+    assert changed["VLLM_NIXL_SIDE_CHANNEL_PORT"] == ("5557" if role == "prefill" else "5657")
+    assert json.loads(env["VLLM_FRONTIER_OBSERVER"])["expected_ranks"] == list(range(16))
+
+
+@pytest.mark.parametrize("fault", ["loopback", "unspecified", "multicast", "rpc_window", "http_window"])
+def test_v028_pd_node_rejects_unusable_side_channels(fault):
+    engine = nixl_engine() | {
+        "host": "192.0.2.10", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    }
+    engine["kv_transfer"]["side_channel_host"] = {
+        "loopback": "127.0.0.1", "unspecified": "0.0.0.0", "multicast": "224.0.0.1",
+    }.get(fault, "192.0.2.10")
+    if fault == "rpc_window":
+        engine["data_parallel_rpc_port"] = 5558
+    with pytest.raises(ValueError):
+        kv_transfer_config(engine, "prefill", 5558 if fault == "http_window" else 8100)
+
+
 @pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
 def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
     from aiohttp import web
@@ -273,6 +307,151 @@ def test_v028_pd_main_retains_plans_and_terminal_state_without_legacy_admission(
         assert "--prefill-kv-address" not in launched[2][1]
     else:
         assert summary["error"]["message"] == f"fixture {failure.split('_')[0]} spawn failed"
+
+
+@pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+def test_v028_external_pd_replays_http_without_owning_native_servers(
+    tmp_path, monkeypatch, decode_status, health_status,
+):
+    import socket
+    import threading
+    import urllib.request
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    received, launched = [], []
+    params = {
+        "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+        "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+        "remote_host": "192.0.2.10", "remote_port": 5557, "remote_block_ids": [[7, 9]],
+    }
+
+    class Endpoint(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def do_GET(self):
+            assert self.path == "/health"
+            self.send_response(health_status)
+            self.end_headers()
+
+        def do_POST(self):
+            body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            received.append((self.server.role, self.headers["X-Request-Id"], body))
+            status = 200 if self.server.role == "prefill" else decode_status
+            payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
+                       {"choices": [{"text": "native response", "finish_reason": "length"}],
+                        "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode())
+
+    servers, threads = [], []
+    try:
+        urls = []
+        for role in ("prefill", "decode"):
+            server = ThreadingHTTPServer(("127.0.0.1", 0), Endpoint)
+            server.role = role
+            servers.append(server)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            threads.append(thread)
+            urls.append(f"http://127.0.0.1:{server.server_port}")
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            proxy_port = listener.getsockname()[1]
+        engine = nixl_engine()
+        del engine["role_devices"]
+        argv, output = native_replay_inputs(tmp_path, engine)
+        argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
+                 "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
+                 "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
+        popen = pd_replay.subprocess.Popen
+
+        def spawn(command, **kwargs):
+            assert command[1].endswith("/pd_proxy.py")
+            process = popen(command, **kwargs)
+            launched.append(process)
+            return process
+
+        monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+        if health_status == 200:
+            assert pd_replay.main(argv) == (0 if decode_status == 200 else 4)
+        else:
+            with pytest.raises(RuntimeError, match="not ready"):
+                pd_replay.main(argv)
+        summary = json.loads((output / "replay_summary.json").read_text())
+        assert set(summary["process_stop"]) == ({"proxy"} if health_status == 200 else set())
+        assert summary["devices"] == {}
+        assert len(launched) == (1 if health_status == 200 else 0)
+        assert all(process.poll() == 0 for process in launched)
+        assert summary["qualification_verified"] is False
+        for role, url in zip(("prefill", "decode"), urls):
+            assert summary["instances"][role]["lifecycle_owner"] == "external"
+            assert summary["instances"][role]["http_url"] == url
+            assert "server_command" not in summary["instances"][role]
+            assert "ready_after_launch_s" not in summary["instances"][role]
+            if health_status == 200:
+                with urllib.request.urlopen(url + "/health") as response:
+                    assert response.status == 200
+            else:
+                with pytest.raises(urllib.error.HTTPError) as error:
+                    urllib.request.urlopen(url + "/health")
+                assert error.value.code == 503
+                error.value.close()
+        assert all(thread.is_alive() for thread in threads)
+        if health_status != 200:
+            assert received == [] and summary["error"]["type"] == "RuntimeError"
+            return
+        assert [(role, request) for role, request, body in received] == [
+            ("prefill", "request-7"), ("decode", "request-7")]
+        assert received[1][2]["kv_transfer_params"] == params
+        assert received[1][2]["max_tokens"] == 3
+        client = json.loads((output / "client_requests.jsonl").read_text())
+        assert client["http_status"] == decode_status
+    finally:
+        for server in servers:
+            server.shutdown()
+            server.server_close()
+        for thread in threads:
+            thread.join(timeout=2)
+
+
+@pytest.mark.parametrize("prefill,decode", [
+    ("http://192.0.2.10:8100", None), (None, "http://192.0.2.12:8200"),
+    ("https://192.0.2.10:8100", "http://192.0.2.12:8200"),
+    ("http://user:secret@192.0.2.10:8100", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:8100/path", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:8100?query=1", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:65536", "http://192.0.2.12:8200"),
+    ("http://0.0.0.0:8100", "http://192.0.2.12:8200"),
+    ("http://127.0.0.1:8000", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:8100", "http://192.0.2.10:8100"),
+])
+def test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch(tmp_path, monkeypatch, prefill, decode):
+    argv, output = native_replay_inputs(tmp_path, nixl_engine())
+    for role, url in (("prefill", prefill), ("decode", decode)):
+        if url is not None:
+            argv += [f"--{role}-url", url]
+    launches = []
+    monkeypatch.setattr(pd_replay.subprocess, "Popen", lambda *args, **kwargs: launches.append(True))
+    with pytest.raises(ValueError):
+        pd_replay.main(argv)
+    assert launches == [] and not output.exists()
+
+
+def test_v028_local_pair_rejects_an_unmanaged_partial_dp_deployment(tmp_path, monkeypatch):
+    engine = nixl_engine() | {
+        "host": "192.0.2.10", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    }
+    argv, output = native_replay_inputs(tmp_path, engine)
+    launches = []
+    monkeypatch.setattr(pd_replay.subprocess, "Popen", lambda *args, **kwargs: launches.append(True))
+    with pytest.raises(ValueError, match="externally managed"):
+        pd_replay.main(argv)
+    assert launches == [] and not output.exists()
 
 
 @pytest.mark.parametrize("client_request_id", ["g3-p000", "g3-batch-w15", "7-1", "a_b"])

@@ -92,6 +92,58 @@ def test_v028_command_uses_local_dummy_metadata_and_native_attention_args(tmp_pa
         server_command(engine, tmp_path / "absent", 8100)
 
 
+@pytest.mark.parametrize("headless", [False, True])
+def test_v028_command_preserves_internal_dp_head_and_secondary_node(tmp_path, headless):
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {
+        "host": "0.0.0.0", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    }
+    if headless:
+        engine.update(headless=True, data_parallel_start_rank=1)
+    command = server_command(engine, tmp_path, 8100)
+    for flag, value in {
+        "--host": "0.0.0.0", "--tensor-parallel-size": "8",
+        "--data-parallel-size": "2", "--data-parallel-size-local": "1",
+        "--data-parallel-address": "192.0.2.10", "--data-parallel-rpc-port": "24461",
+    }.items():
+        assert command[command.index(flag) + 1] == value
+    assert ("--headless" in command) is headless
+    if headless:
+        assert command[command.index("--data-parallel-start-rank") + 1] == "1"
+    else:
+        assert "--data-parallel-start-rank" not in command
+    assert "--data-parallel-rank" not in command
+    assert "--data-parallel-hybrid-lb" not in command
+    assert "--data-parallel-external-lb" not in command
+
+
+@pytest.mark.parametrize("changes", [
+    {"data_parallel_start_rank": 0}, {"headless": True},
+    {"data_parallel_size_local": 0}, {"data_parallel_size_local": 3},
+    {"data_parallel_size_local": True}, {"data_parallel_address": "127.0.0.1"},
+    {"data_parallel_address": "0.0.0.0"}, {"data_parallel_address": "224.0.0.1"},
+    {"data_parallel_address": None}, {"data_parallel_rpc_port": 65536},
+    {"data_parallel_rpc_port": 8100}, {"host": "127.0.0.1"}, {"host": "not-an-ip"},
+    {"headless": "true"}, {"headless": True, "data_parallel_start_rank": 2},
+    {"headless": True, "data_parallel_start_rank": -1}, {"pipeline_parallel_size": 2},
+    {"data_parallel_rank": 0}, {"data_parallel_hybrid_lb": True},
+    {"data_parallel_external_lb": True},
+])
+def test_v028_rejects_invalid_or_external_dp_node_options(tmp_path, changes):
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {
+        "host": "0.0.0.0", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    } | changes
+    with pytest.raises(ValueError):
+        server_command(engine, tmp_path, 8100)
+
+
 @pytest.mark.parametrize("fault", ["version", "source", "image", "mode", "no_observer",
                                   "clean_light", "capacity", "ranks", "role", "output",
                                   "observer_source", "startup", "routing", "weights",
