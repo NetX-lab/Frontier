@@ -607,3 +607,15 @@ def test_failed_preparation_reply_is_bounded_and_records_zero_allocation(output,
     assert worker._request_observation.device_owned_bytes == 0
     reservation = output[0]/f'device_reservation_rank_{worker.rank}_pid_{os.getpid()}.json'
     assert json.loads(reservation.read_text())['owned_bytes'] == 0
+
+
+def test_state_child_source_identity_is_in_existing_worker_record_and_rpc(output):
+    import hashlib
+    digest = hashlib.sha256(Path(observation.state_observation.__file__).read_bytes()).hexdigest()
+    assert observation.SOURCE['state_observer_sha256'] == digest
+    worker, _, _ = make_worker(output)
+    worker.execute_model(scheduler())
+    record_path = next(output[0].glob('request_rank_*'))
+    row = json.loads(record_path.read_text())
+    assert row['source']['state_observer_sha256'] == digest
+    assert worker.request_snapshot()['source']['state_observer_sha256'] == digest

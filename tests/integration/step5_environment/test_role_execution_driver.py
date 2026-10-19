@@ -56,6 +56,7 @@ def config(tmp_path):
         request_caller_sha256=capacity.sha256(HERE/'check_role_execution.py'),
         request_observer_sha256=capacity.sha256(HERE/'role_execution_observation.py'),
         model_input_observer_sha256=capacity.sha256(HERE/'role_model_input_observation.py'),
+        state_observer_sha256=capacity.sha256(HERE/'role_state_observation.py'),
         request_manifest=str(capacity.TASK/'request_input_candidate_20261018_01.json'),
         request_manifest_sha256=capacity.sha256(capacity.TASK/'request_input_candidate_20261018_01.json'))
 
@@ -72,6 +73,8 @@ def test_preflight_preserves_capacity_contract_and_binds_request_sources(config)
     assert receipt['request_inputs']['native_input_acceptance'] == 'UNMEASURED'
     assert receipt['sources']['vllm/compilation/cuda_graph.py'] == (
         '6e34824d2e62cd3bbd2eaee615ebfae3db542ce2d6be9b14d1b012398087fe2e')
+    for module, digest in caller.model_observation.CENSUS_SOURCES.values():
+        assert receipt['sources'][module.replace('.', '/')+'.py'] == digest
     assert not Path(config['marker_root']).exists()
     with pytest.raises(ValueError, match='capacity/census only'):
         caller.capacity.preflight(config)
@@ -466,7 +469,8 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
                     nnodes=2, workload=config['workload'], request_sources=dict(
                         caller_sha256=config['request_caller_sha256'],
                         observer_sha256=config['request_observer_sha256'],
-                        model_input_observer_sha256=config['model_input_observer_sha256']),
+                        model_input_observer_sha256=config['model_input_observer_sha256'],
+                        state_observer_sha256=config['state_observer_sha256']),
                     request_manifest_sha256=config['request_manifest_sha256']))
         return Connection()
 
@@ -494,6 +498,7 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
         assert passed_env['STEP5_REQUEST_CALLER_SHA'] == config['request_caller_sha256']
         assert passed_env['STEP5_REQUEST_OBSERVER_SHA'] == config['request_observer_sha256']
         assert passed_env['STEP5_MODEL_INPUT_OBSERVER_SHA'] == config['model_input_observer_sha256']
+        assert passed_env['STEP5_STATE_OBSERVER_SHA'] == config['state_observer_sha256']
         actual_node = json.loads(Path(passed_env['STEP5_CAPACITY_NODE_FILE']).read_text())
         node.update(actual_node)
         assert actual_node['observer_sha256'] == original_config['observer_sha256']
@@ -952,7 +957,8 @@ def test_request_node_preserves_original_archive_failure_verdict(config, tmp_pat
 
 
 @pytest.mark.parametrize('key', ['request_manifest', 'request_manifest_sha256', 'request_caller_sha256',
-                                 'request_observer_sha256', 'model_input_observer_sha256', 'rpc_seconds'])
+                                 'request_observer_sha256', 'model_input_observer_sha256',
+                                 'state_observer_sha256', 'rpc_seconds'])
 def test_preflight_reports_missing_required_inputs_without_native_dispatch(config, key):
     config.pop(key)
     with pytest.raises(ValueError, match=key+' must be explicitly configured'):
@@ -960,7 +966,7 @@ def test_preflight_reports_missing_required_inputs_without_native_dispatch(confi
 
 
 @pytest.mark.parametrize('key', ['request_caller_sha256', 'request_observer_sha256',
-                                 'model_input_observer_sha256'])
+                                 'model_input_observer_sha256', 'state_observer_sha256'])
 def test_request_source_mismatch_is_rejected_by_real_preflight(config, key):
     config[key] = 'unreviewed source bytes'
     with pytest.raises(ValueError, match='Request source identity mismatch'):
@@ -988,7 +994,8 @@ def test_lazy_request_worker_rejects_unbound_environment_before_native_import(co
         STEP5_CAPACITY_NODE_FILE=str(node), STEP5_CAPACITY_OBSERVER_SHA=config['observer_sha256'],
         STEP5_REQUEST_CALLER_SHA=config['request_caller_sha256'],
         STEP5_REQUEST_OBSERVER_SHA=config['request_observer_sha256'],
-        STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256']).items():
+        STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
+        STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256']).items():
         monkeypatch.setenv(name, value)
     if fault == 'missing_hash':
         monkeypatch.delenv('STEP5_REQUEST_OBSERVER_SHA')
@@ -1529,3 +1536,75 @@ def test_preflight_rejects_unencodable_rpc_cap(config, rpc_bytes):
     with pytest.raises(ValueError, match='encode a JSON response'):
         caller.preflight(config)
     assert not Path(config['marker_root']).exists()
+
+
+@pytest.mark.parametrize('fault', ['missing_hash', 'wrong_hash'])
+def test_state_child_source_is_required_before_lazy_native_worker_import(config, tmp_path, monkeypatch, fault):
+    records = tmp_path/'state-worker-records'
+    records.mkdir()
+    node = tmp_path/'state-worker-node.json'
+    node.write_text(json.dumps(dict(observer_output=str(records), record_bytes=config['record_bytes'])))
+    environment = dict(STEP5_CAPACITY_TASK=config['task_root'], STEP5_CAPACITY_NODE_FILE=str(node),
+        STEP5_CAPACITY_OBSERVER_SHA=config['observer_sha256'], STEP5_REQUEST_CALLER_SHA=config['request_caller_sha256'],
+        STEP5_REQUEST_OBSERVER_SHA=config['request_observer_sha256'],
+        STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
+        STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256'])
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+    if fault == 'missing_hash':
+        monkeypatch.delenv('STEP5_STATE_OBSERVER_SHA')
+        message = 'STEP5_STATE_OBSERVER_SHA must be explicitly configured'
+    else:
+        monkeypatch.setenv('STEP5_STATE_OBSERVER_SHA', 'unfrozen-state-child')
+        message = 'Request worker source identity mismatch: role_state_observation.py'
+    with pytest.raises(ValueError, match=message):
+        getattr(caller, 'RequestWorker')
+    assert not list(records.iterdir())
+
+
+def test_prepared_device_rpc_rejects_a_different_state_child_source(config, tmp_path):
+    _, initial = startup_fixture(config, tmp_path)
+    preparation = dict(limits=dict(steps=34, scan_rows=64, witness_rows=1, owned_bytes=1024**2, rpc_bytes=1024**2),
+                       requests=[], sampling_fields={})
+    rows = [dict(rank=row['rank'], local_rank=row['local_rank'], pid=row['pid'],
+        worker_identity={field: row[field] for field in caller.IDENTITY_FIELDS},
+        source=dict(caller.observation.SOURCE), preparation=copy.deepcopy(preparation),
+        status='PREPARED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2',
+        device_observation=dict(status='PREPARED_NOT_EXECUTED', collected_steps=0, owned_bytes=512,
+                                clean_performance='UNVERIFIED', G2='UNVERIFIED')) for row in initial]
+    rows[0]['source']['state_observer_sha256'] = '0'*64
+    with pytest.raises(ValueError, match='different worker/source'):
+        caller.device_preparation_rows(rows, initial, preparation, config)
+
+
+@pytest.mark.parametrize('key', caller.CENSUS_SOURCE_ROOTS)
+def test_preflight_rejects_changed_retained_census_body(config, monkeypatch, key):
+    module, _ = caller.model_observation.CENSUS_SOURCES[key]
+    body = caller.capacity.TASK/caller.CENSUS_SOURCE_ROOTS[key]/(module.replace('.', '/')+'.py')
+    original_hash = caller.capacity.sha256
+    monkeypatch.setattr(caller.capacity, 'sha256',
+        lambda path: '0'*64 if Path(path) == body else original_hash(path))
+    with pytest.raises(ValueError, match='Retained census source body mismatch'):
+        caller.preflight(config)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'conflicting'])
+def test_preflight_requires_existing_census_sources_to_match_the_observer(config, monkeypatch, fault):
+    module, _ = caller.model_observation.CENSUS_SOURCES['model']
+    name = module.replace('.', '/')+'.py'
+    if fault == 'missing':
+        original_sources = caller.model_observation.CENSUS_SOURCES
+        monkeypatch.setattr(caller.model_observation, 'CENSUS_SOURCES',
+            dict(original_sources, model=('vllm.absent_census_source', original_sources['model'][1])))
+    else:
+        original_preflight = caller.capacity.preflight
+
+        def conflicting(*args, **kwargs):
+            result = original_preflight(*args, **kwargs)
+            result['sources'][name] = '0'*64
+            return result
+
+        monkeypatch.setattr(caller.capacity, 'preflight', conflicting)
+    with pytest.raises(ValueError, match=('Missing retained census source identity' if fault == 'missing'
+                                         else 'Conflicting native census source identity')):
+        caller.preflight(config)

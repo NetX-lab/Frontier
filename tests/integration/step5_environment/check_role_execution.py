@@ -16,6 +16,17 @@ import role_execution_observation as observation
 import role_model_input_observation as model_observation
 
 GEN5_MANIFEST_SHA = '68b9233b16b59832a0061fe2ecf75cc4e8f95b22c2600cf29ddc7ecfd6540137'
+# Only census bodies absent from the immutable capacity/request ledgers need
+# these existing retained roots; their identities remain in CENSUS_SOURCES.
+CENSUS_SOURCE_ROOTS = {
+    'unquantized': 'native_ffn_execution_sources/observed',
+    'modular': 'native_workspace_sources/observed',
+    'triton_experts': 'native_ffn_execution_sources/observed',
+    'triton_dispatch': 'native_execution_sources/observed',
+    'block_table': 'native_state_20261019_01/native_sources',
+    'workspace': 'native_workspace_sources/observed',
+    'prepare_no_dp_ep': 'native_state_20261019_01/native_sources',
+}
 POLICY_FIELDS = ('repetition_penalty', 'presence_penalty', 'frequency_penalty',
                  'temperature', 'top_k', 'top_p', 'min_p', 'seed')
 LENGTH_FIELDS = dict(n=1, max_tokens=9, min_tokens=9, ignore_eos=True, stop=[], stop_token_ids=[])
@@ -80,7 +91,8 @@ def preflight(config, *, new_generation=True):
                 'engine', 'rpc_seconds', 'record_bytes', 'archive_bytes', 'archive_reserve_seconds',
                 'marker_root', 'worker_local_root', 'archive_root', 'native_cli', 'caller_sha256',
                 'observer_sha256', 'supervisor_sha256', 'request_manifest', 'request_manifest_sha256',
-                'request_caller_sha256', 'request_observer_sha256', 'model_input_observer_sha256'):
+                'request_caller_sha256', 'request_observer_sha256', 'model_input_observer_sha256',
+                'state_observer_sha256'):
         if key not in config:
             raise ValueError(key+' must be explicitly configured')
     original = copy.deepcopy(config)
@@ -101,7 +113,8 @@ def preflight(config, *, new_generation=True):
         raise ValueError('Request archive generation must be new')
     for filename, key in (('check_role_execution.py', 'request_caller_sha256'),
                           ('role_execution_observation.py', 'request_observer_sha256'),
-                          ('role_model_input_observation.py', 'model_input_observer_sha256')):
+                          ('role_model_input_observation.py', 'model_input_observer_sha256'),
+                          ('role_state_observation.py', 'state_observer_sha256')):
         if capacity.sha256(Path(__file__).with_name(filename)) != config[key]:
             raise ValueError('Request source identity mismatch: '+filename)
     path = capacity.TASK/'native_role_sources/observed_generation5/source_manifest.json'
@@ -114,6 +127,17 @@ def preflight(config, *, new_generation=True):
             raise ValueError('Retained request source body mismatch: '+name)
         if name in sources and sources[name] != digest:
             raise ValueError('Conflicting native request source identity: '+name)
+        sources[name] = digest
+    for key, (module, digest) in model_observation.CENSUS_SOURCES.items():
+        name = module.replace('.', '/')+'.py'
+        if key in CENSUS_SOURCE_ROOTS:
+            body = capacity.TASK/CENSUS_SOURCE_ROOTS[key]/name
+            if capacity.sha256(body) != digest:
+                raise ValueError('Retained census source body mismatch: '+name)
+        elif name not in sources:
+            raise ValueError('Missing retained census source identity: '+name)
+        if name in sources and sources[name] != digest:
+            raise ValueError('Conflicting native census source identity: '+name)
         sources[name] = digest
     return dict(scope='inert_request_preparation_not_native_qualification',
         capacity_preflight=retained, sources=sources, request_inputs=request_inputs(config),
@@ -214,7 +238,8 @@ def request_metadata(rows, initial, previous, config):
                 any(row['source'][key] != config[config_key] for key, config_key in (
                     ('observer_sha256', 'request_observer_sha256'),
                     ('capacity_observer_sha256', 'observer_sha256'),
-                    ('model_input_observer_sha256', 'model_input_observer_sha256')))):
+                    ('model_input_observer_sha256', 'model_input_observer_sha256'),
+                    ('state_observer_sha256', 'state_observer_sha256')))):
             raise ValueError('Request metadata or observer source is unverified')
         if (row.get('runner_observer_error') is not None or
                 row.get('model_input_observer_error') is not None):
@@ -250,7 +275,8 @@ def device_preparation_rows(rows, initial, preparation, config):
                 any(row['source'][key] != config[config_key] for key, config_key in (
                     ('observer_sha256', 'request_observer_sha256'),
                     ('capacity_observer_sha256', 'observer_sha256'),
-                    ('model_input_observer_sha256', 'model_input_observer_sha256')))):
+                    ('model_input_observer_sha256', 'model_input_observer_sha256'),
+                    ('state_observer_sha256', 'state_observer_sha256')))):
             raise ValueError('Device preparation is absent, unverified or from a different worker/source')
         observed = row['device_observation']
         if (observed['status'] != 'PREPARED_NOT_EXECUTED' or observed['collected_steps'] or
@@ -592,14 +618,16 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
     env = dict(os.environ if env is None else env)
     env.update(STEP5_REQUEST_CALLER_SHA=config['request_caller_sha256'],
                STEP5_REQUEST_OBSERVER_SHA=config['request_observer_sha256'],
-               STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'])
+               STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
+               STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256'])
 
     def request_supervision(root, generation, passed_env, engine, argv, *args, **kwargs):
         argv = list(argv)
         argv[2] = str(Path(__file__).resolve())
         engine = dict(engine, request_sources=dict(caller_sha256=config['request_caller_sha256'],
             observer_sha256=config['request_observer_sha256'],
-            model_input_observer_sha256=config['model_input_observer_sha256']),
+            model_input_observer_sha256=config['model_input_observer_sha256'],
+            state_observer_sha256=config['state_observer_sha256']),
             request_manifest_sha256=config['request_manifest_sha256'])
         node = json.loads(Path(passed_env['STEP5_CAPACITY_NODE_FILE']).read_text())
         original_finalize = kwargs['finalize_evidence']
@@ -644,7 +672,7 @@ def __getattr__(name):
         raise AttributeError(name)
     for variable in ('STEP5_CAPACITY_TASK', 'STEP5_CAPACITY_NODE_FILE',
                      'STEP5_REQUEST_CALLER_SHA', 'STEP5_REQUEST_OBSERVER_SHA',
-                     'STEP5_MODEL_INPUT_OBSERVER_SHA', 'STEP5_CAPACITY_OBSERVER_SHA'):
+                     'STEP5_MODEL_INPUT_OBSERVER_SHA', 'STEP5_STATE_OBSERVER_SHA', 'STEP5_CAPACITY_OBSERVER_SHA'):
         if variable not in os.environ:
             raise ValueError(variable+' must be explicitly configured')
     if Path(os.environ['STEP5_CAPACITY_TASK']).resolve() != capacity.TASK:
@@ -652,6 +680,7 @@ def __getattr__(name):
     for filename, variable in (('check_role_execution.py', 'STEP5_REQUEST_CALLER_SHA'),
         ('role_execution_observation.py', 'STEP5_REQUEST_OBSERVER_SHA'),
         ('role_model_input_observation.py', 'STEP5_MODEL_INPUT_OBSERVER_SHA'),
+        ('role_state_observation.py', 'STEP5_STATE_OBSERVER_SHA'),
         ('role_capacity_observation.py', 'STEP5_CAPACITY_OBSERVER_SHA')):
         if capacity.sha256(Path(__file__).with_name(filename)) != os.environ[variable]:
             raise ValueError('Request worker source identity mismatch: '+filename)

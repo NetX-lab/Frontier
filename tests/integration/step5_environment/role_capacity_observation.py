@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import time
 import traceback
@@ -136,6 +137,17 @@ def write_record(worker, phase, boundary, error=None):
                                      observer_error=failure)))
 
 
+def storage_record(name, kind, value, storages, *, persistent=None):
+    """Use the same physical storage identity for resident and known-state views."""
+    storage = value.untyped_storage()
+    key = f'{value.device}:{storage.data_ptr()}'
+    size = storage.nbytes()
+    storages[key] = size
+    return dict(name=name, kind=kind, shape=list(value.shape), dtype=str(value.dtype),
+                device=str(value.device), stride=list(value.stride()), storage=key,
+                storage_bytes=size, storage_offset=value.storage_offset(), persistent=persistent)
+
+
 def inventory(runner, torch):
     """Metadata only: no state_dict, content copies, GPU checks or extra kernels."""
     model = getattr(runner, 'model', None)
@@ -160,15 +172,113 @@ def inventory(runner, torch):
             for local, value in values.items():
                 if not isinstance(value, torch.Tensor):
                     continue
-                storage = value.untyped_storage()
-                key = f'{value.device}:{storage.data_ptr()}'
-                storages[key] = storage.nbytes()
-                tensors.append(dict(name=name+'.'+local, kind=kind, shape=list(value.shape),
-                    dtype=str(value.dtype), device=str(value.device), stride=list(value.stride()),
-                    storage=key, storage_bytes=storage.nbytes(), storage_offset=value.storage_offset(),
+                tensors.append(storage_record(name+'.'+local, kind, value, storages,
                     persistent=kind == 'parameter' or local not in module._non_persistent_buffers_set))
     return dict(status='metadata_only_not_finite_or_content_qualification', modules=modules,
                 tensors=tensors, unique_storage_bytes=sum(storages.values()), unique_storages=storages)
+
+
+def known_state_inventory(runner, torch, limit):
+    """Inspect named existing owners; never traverse arbitrary native resources or allocate."""
+    if torch is None:
+        return dict(status='UNVERIFIED_ACTUAL_TORCH_UNAVAILABLE', tensors=[], unique_storages={},
+                    unique_storage_bytes=0, gaps=['actual Tensor type unavailable'])
+    tensors, storages, gaps, groups = [], {}, [], []
+    entries = 0
+
+    def claim_entry():
+        nonlocal entries
+        if entries >= limit:
+            raise ValueError('Known-state inventory exceeds the existing entry cap')
+        entries += 1
+
+    def add(name, value, kind):
+        if value is None:
+            return
+        claim_entry()
+        if isinstance(value, torch.Tensor):
+            tensors.append(storage_record(name, kind, value, storages))
+        elif value is not None:
+            gaps.append(dict(name=name, type=type(value).__module__+'.'+type(value).__qualname__,
+                             reason='UNCLASSIFIED_NATIVE_STORAGE_OWNER'))
+
+    def fields(path, owner, names, kind):
+        for name in names:
+            if hasattr(owner, name):
+                add(path+'.'+name, getattr(owner, name), kind)
+
+    config = getattr(runner, 'kv_cache_config', None)
+    context = getattr(getattr(runner, 'compilation_config', None), 'static_forward_context', None)
+    if config is None or context is None:
+        claim_entry()
+        gaps.append(dict(name='runner.kv_cache_config/static_forward_context', reason='NATIVE_OWNER_UNAVAILABLE'))
+    else:
+        for index, group in enumerate(config.kv_cache_groups):
+            claim_entry()
+            spec = group.kv_cache_spec
+            specs = getattr(spec, 'kv_cache_specs', None)
+            rows = []
+            for name in group.layer_names:
+                claim_entry()
+                layer_spec = specs[name] if specs is not None else spec
+                rows.append(dict(layer=name, spec_type=type(layer_spec).__name__,
+                    block_size=layer_spec.block_size, sliding_window=getattr(layer_spec, 'sliding_window', None),
+                    dtype=str(getattr(layer_spec, 'dtype', None)),
+                    kernel_block_size=runner.kernel_block_sizes[index]))
+                layer = context.get(name)
+                if layer is None:
+                    claim_entry()
+                    gaps.append(dict(name=name, reason='KV_LAYER_NOT_IN_FORWARD_CONTEXT'))
+                    continue
+                fields('forward_context.'+name, layer, ('kv_cache', '_k_scale', '_v_scale'), 'kv_layer_view')
+            groups.append(dict(group_id=index, layers=rows))
+        for name, layer in context.items():
+            cache = getattr(layer, '_cache', None)
+            if cache is None or not hasattr(layer, 'main_layer_name'):
+                continue
+            fields('forward_context.'+name+'._cache', cache,
+                ('_mean', 'mean', 'numerator', 'denominator', 'maximum', 'last_slot',
+                 'request_journal_values', 'request_journal_last', 'request_journal_tag'), 'sparse_side_storage')
+            fields('forward_context.'+name, layer, ('kv_cache',), 'sparse_transfer_alias')
+            adapter = getattr(getattr(layer, '_target_impl', None), 'adapter', None)
+            if adapter is not None:
+                fields('forward_context.'+name+'._target_impl.adapter', adapter, ('_workspace',), 'sparse_workspace')
+
+    for index, value in enumerate(getattr(runner, 'kv_caches', ())):
+        add('runner.kv_caches.'+str(index), value, 'kv_allocation_alias')
+    fields('runner.model_state', getattr(runner, 'model_state', None), ('request_state',), 'model_request_state')
+    tables = getattr(runner, 'block_tables', None)
+    if tables is not None:
+        for index, value in enumerate(tables.input_block_tables):
+            add('runner.block_tables.input_block_tables.'+str(index), value, 'batch_block_table')
+        for index, owner in enumerate(tables.block_tables):
+            fields('runner.block_tables.block_tables.'+str(index), owner, ('gpu',), 'persistent_block_table')
+        fields('runner.block_tables.num_blocks', tables.num_blocks, ('cpu', 'gpu'), 'block_counts')
+        fields('runner.block_tables', tables,
+            ('slot_mappings', 'dcp_sharded', 'block_table_ptrs', 'block_table_strides',
+             'block_sizes_tensor', 'slot_mapping_enabled', 'input_block_table_ptrs'), 'block_table_layout')
+    workspace = sys.modules.get('vllm.v1.worker.workspace')
+    manager = getattr(workspace, '_manager', None)
+    if manager is not None:
+        for slot, value in enumerate(manager._current_workspaces):
+            add('workspace._manager._current_workspaces.'+str(slot), value, 'shared_workspace')
+        for slot, resources in enumerate(manager._persistent_resources):
+            for index, (key, value) in enumerate(resources.items()):
+                path = f'workspace._manager._persistent_resources.{slot}.{index}'
+                add(path, value, 'persistent_workspace_resource')
+                if tensors and tensors[-1]['name'] == path:
+                    tensors[-1]['resource_key_type'] = type(key).__module__+'.'+type(key).__qualname__
+    graph = getattr(runner, 'cudagraph_manager', None)
+    pool = getattr(graph, 'pool', None)
+    if pool is not None and (type(pool) is not tuple or any(type(part) is not int for part in pool)):
+        claim_entry()
+        gaps.append(dict(name='runner.cudagraph_manager.pool', reason='UNCLASSIFIED_GRAPH_POOL_HANDLE'))
+        pool = None
+    return dict(status='KNOWN_OWNER_METADATA_ONLY_NOT_COMPLETE_ALLOCATION_OR_CONTENT_CENSUS',
+        tensors=tensors, unique_storages=storages, unique_storage_bytes=sum(storages.values()),
+        kv_groups=groups, graph_pool_handle=list(pool) if pool is not None else None,
+        gaps=gaps, referenced_live_bytes='UNMEASURED', unclassified_allocator_bytes='UNMEASURED',
+        allocator_peaks='UNMEASURED', storage_aliases_are_not_additive=True)
 
 
 def capacity_snapshot(worker):

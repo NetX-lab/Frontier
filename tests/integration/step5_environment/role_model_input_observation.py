@@ -328,6 +328,13 @@ CENSUS_SOURCES = {
     'modular': ('vllm.model_executor.layers.fused_moe.modular_kernel', '82a5d100f42d3df3d20baea4a86e5147d4d5c17e3775ed7b5a1ce4bfb433fe0a'),
     'triton_experts': ('vllm.model_executor.layers.fused_moe.experts.triton_moe', 'ee6b83b108a0460e6308e35447434165d0778a053aa39f0c6c8ed7f36a3ddbab'),
     'triton_dispatch': ('vllm.model_executor.layers.fused_moe.fused_moe', '21860340e4b409b01666e2ba0f0edae66b0f97b859756b174b573bab895cfaf7'),
+    'runner': ('vllm.v1.worker.gpu.model_runner', SOURCE_PINS['runner']),
+    'request_state': ('vllm.v1.worker.gpu.states', '5ca84b57d4f4233ba4013ed42f44b7917cdd7a14b6ea4dabf4ba8de5c9d5f4d6'),
+    'block_table': ('vllm.v1.worker.gpu.block_table', '822b65f3d7bd4cad47693c101ba5134923876b9c81d5a609afd6bca6dee38ba8'),
+    'summary': ('vllm.models.step5.nvidia.sparse_summary_cache', '35d41f0d11d1407f688dd1d0000a73e84195e49e5da9cefb7fde1fb762411047'),
+    'worker_utils': ('vllm.v1.worker.utils', '64e8f82545c63cd9026e30731d3460f420e623dfafc4ba0e3b63035c96b2856c'),
+    'workspace': ('vllm.v1.worker.workspace', '681c99f19bac3d8c445c887113e61c75754c9ae615530abfe5014e7b7b47ef10'),
+    'prepare_no_dp_ep': ('vllm.model_executor.layers.fused_moe.prepare_finalize.no_dp_ep', '263c30ea61e756d389dfbb25927feb3c0fde5936001f1f00215bd15913af0b98'),
 }
 # source, original code owner, observed arguments, resident owner attributes
 CENSUS_CALLS = {
@@ -351,7 +358,31 @@ CENSUS_CALLS = {
     'moe_prepare': ('modular', ('FusedMoEKernelModularImpl', '_prepare'), ('hidden_states', 'topk_weights', 'topk_ids', 'expert_map'), ('is_dp_ep',)),
     'triton_experts': ('triton_experts', ('TritonExperts', 'apply'), ('hidden_states', 'w1', 'w2', 'a1q_scale', 'a2_scale', 'topk_ids', 'topk_weights'), ('quant_dtype', 'block_shape', 'w1_scale', 'w2_scale', 'a1_scale', 'a2_scale', 'per_act_token_quant', 'quantization_emulation')),
     'triton_gemm': ('triton_dispatch', ('invoke_fused_moe_triton_kernel',), ('A', 'B', 'C', 'A_scale', 'B_scale', 'topk_weights', 'sorted_token_ids', 'expert_ids', 'num_tokens_post_padded', 'top_k', 'config', 'compute_type', 'use_fp8_w8a8', 'block_shape'), ()),
+    'prepare_no_dp_ep': ('prepare_no_dp_ep', ('MoEPrepareAndFinalizeNoDPEPModular', 'prepare'), ('a1', 'topk_weights', 'topk_ids', 'expert_map', 'quant_config', 'defer_input_quant'), ()),
+    'prepare_quantize': ('prepare_no_dp_ep', ('_quantize_input',), ('a1', 'quant_config', 'defer_input_quant'), ()),
+    'request_finish': ('runner', ('GPUModelRunner', 'finish_requests'), (), ()),
+    'request_remove': ('runner', ('GPUModelRunner', '_remove_request'), ('req_id',), ()),
+    'request_add': ('runner', ('GPUModelRunner', 'add_requests'), (), ()),
+    'request_update': ('runner', ('GPUModelRunner', 'update_requests'), (), ()),
+    'request_state_add': ('request_state', ('RequestState', 'add_request'), ('req_id', 'prompt_len', 'num_computed_tokens', 'max_tokens'), ()),
+    'request_state_remove': ('request_state', ('RequestState', 'remove_request'), ('req_id',), ()),
+    'block_append': ('block_table', ('BlockTables', 'append_block_ids'), ('req_index', 'new_block_ids', 'overwrite'), ('block_sizes', 'redirect_writes_to_null_block')),
+    'block_apply': ('block_table', ('BlockTables', 'apply_staged_writes'), (), ()),
+    'block_gather': ('block_table', ('BlockTables', 'gather_block_tables'), ('idx_mapping', 'num_reqs_padded'), ()),
+    'kv_zero': ('worker_utils', ('KVBlockZeroer', 'zero_block_ids'), ('block_ids', 'block_ids_by_group'), ()),
+    'kv_raw_copy': ('worker_utils', ('copy_kv_cache_blocks_inplace',), ('kv_caches', 'num_blocks', 'kv_cache_block_copies'), ()),
+    'kv_side_copy': ('worker_utils', ('copy_kv_cache_side_storage_blocks',), ('kv_cache_block_copies_by_group', 'num_blocks'), ()),
+    'summary_zero': ('summary', ('Step5SparseSummaryCacheLayer', 'zero_kv_cache_side_storage'), ('block_ids',), ('main_layer_name',)),
+    'summary_release': ('summary', ('Step5SparseSummaryCacheLayer', 'release_kv_cache_side_storage'), ('block_ids',), ('main_layer_name',)),
+    'summary_runtime_reset': ('summary', ('Step5SparseSummaryCacheLayer', 'reset_kv_cache_side_storage_runtime_state'), (), ('main_layer_name',)),
+    'summary_copy': ('summary', ('Step5SparseSummaryCacheLayer', 'copy_kv_cache_side_storage'), ('block_copies', 'num_blocks'), ('main_layer_name',)),
+    'summary_reset': ('summary', ('Step5SparseSummaryCache', 'reset'), ('block_ids', 'clear_mean'), ('pages', 'block_size', 'request_journal_width')),
+    'summary_cache_copy': ('summary', ('Step5SparseSummaryCache', 'copy'), ('copies',), ()),
+    'workspace_views': ('workspace', ('WorkspaceManager', 'get_simultaneous'), (), ('_locked', '_num_ubatches', '_num_lanes')),
 }
+CENSUS_REQUEST_SITES = frozenset((
+    'request_finish', 'request_remove', 'request_add', 'request_update',
+    'request_state_add', 'request_state_remove', 'block_append', 'block_apply', 'block_gather'))
 CENSUS_LAYER_LINE = 2139
 
 
@@ -468,30 +499,19 @@ class ObservationSites:
                     self.codes['census_'+name] = nested_code(self.codes['census_triton_experts'], nested)
                 except BaseException as failure:
                     gaps.append(dict(site=name, reason='UNVERIFIED_NESTED_DISPATCH_OWNER', error=str(failure)))
-        def matching_sites(owner):
-            names = []
-            for name, (_, code_owner, _, _) in CENSUS_CALLS.items():
-                if len(code_owner) != 2:
-                    continue
-                method = inspect.getattr_static(type(owner), code_owner[-1], None)
-                original = inspect.unwrap(method) if method is not None else None
-                code = self.codes.get('census_'+name)
-                if code is not None and getattr(original, '__code__', None) is code:
-                    names.append(name)
-            return names
         for path, module in model.named_modules():
             modules.append((path, module))
-            if 'layer' in matching_sites(module):
+            if 'layer' in self.matching_census_sites(module):
                 layer = getattr(module, 'layer_idx')
                 if len(layers) >= limits.tracked_entries:
                     raise ValueError('Resident layer bindings exceed the existing entry cap')
                 if type(layer) is not int:
                     raise ValueError('Resident layer index must be an integer')
                 layers.append(dict(path=path, layer_id=layer))
-        objects = list(modules)
+        objects = list(modules)+[('runner', runner)]
         # These are existing constructed owners, not allocation/configuration factories.
         for path, module in modules:
-            if 'routed_modular' not in matching_sites(module):
+            if 'routed_modular' not in self.matching_census_sites(module):
                 continue
             method = module.quant_method
             objects.append((path+'.quant_method', method))
@@ -502,30 +522,15 @@ class ObservationSites:
                                 (path+'.quant_method.moe_kernel.prepare_finalize', kernel.prepare_finalize)))
         rows = []
         for path, owner in objects:
-            names = matching_sites(owner)
+            names = self.matching_census_sites(owner)
             if not names:
                 continue
-            metadata = Metadata(self, limits)
-            attributes = {}
-            for name in names:
-                for attr in CENSUS_CALLS[name][3]:
-                    if attr in attributes or not hasattr(owner, attr):
-                        continue
-                    value = getattr(owner, attr)
-                    if value is not None and (attr.endswith('dtype') or attr.endswith('backend')):
-                        value = str(value)
-                    attributes[attr] = metadata.value(value)
             matching = [layer for layer in layers if path == layer['path'] or path.startswith(layer['path']+'.')]
             layer = max(matching, key=lambda item: len(item['path']))['layer_id'] if matching else None
-            row = dict(owner_id=id(owner), module_path=path, cls=class_name(owner), layer_id=layer,
-                       sites=list(names), attributes=attributes, metadata_complete=metadata.complete)
             if len(rows) >= limits.tracked_entries:
                 raise ValueError('Resident native owner bindings exceed the existing entry cap')
+            row = self.bind_census_owner(path, owner, names, layer, limits, gaps)
             rows.append(row)
-            try:
-                self.census_owners[id(owner)] = (weakref.ref(owner), row)
-            except TypeError:
-                gaps.append(dict(owner=path, reason='NATIVE_OWNER_WEAK_REFERENCE_UNAVAILABLE'))
         if len({row['layer_id'] for row in layers}) != len(layers):
             gaps.append(dict(site='layer', reason='DUPLICATE_RESIDENT_LAYER_IDS'))
         self.census_inventory = dict(status='LOADED_CPU_BINDINGS_NOT_EXECUTION_QUALIFICATION',
@@ -534,6 +539,71 @@ class ObservationSites:
                    first_line=self.codes['census_'+name].co_firstlineno)
                    for name, (source, owner, _, _) in CENSUS_CALLS.items() if 'census_'+name in self.codes},
             device_content='UNMEASURED', physical_replay='UNMEASURED')
+
+
+    def matching_census_sites(self, owner):
+        names = []
+        for name, (_, code_owner, _, _) in CENSUS_CALLS.items():
+            if len(code_owner) != 2:
+                continue
+            method = inspect.getattr_static(type(owner), code_owner[-1], None)
+            original = inspect.unwrap(method) if method is not None else None
+            code = self.codes.get('census_'+name)
+            if code is not None and getattr(original, '__code__', None) is code:
+                names.append(name)
+        return names
+
+    def bind_census_owner(self, path, owner, names, layer, limits, gaps):
+        metadata, attributes = Metadata(self, limits), {}
+        for name in names:
+            for attr in CENSUS_CALLS[name][3]:
+                if attr in attributes or not hasattr(owner, attr):
+                    continue
+                value = getattr(owner, attr)
+                if value is not None and (attr.endswith('dtype') or attr.endswith('backend')):
+                    value = str(value)
+                attributes[attr] = metadata.value(value)
+        row = dict(owner_id=id(owner), module_path=path, cls=class_name(owner), layer_id=layer,
+                   sites=list(names), attributes=attributes, metadata_complete=metadata.complete)
+        try:
+            self.census_owners[id(owner)] = (weakref.ref(owner), row)
+        except TypeError:
+            gaps.append(dict(owner=path, reason='NATIVE_OWNER_WEAK_REFERENCE_UNAVAILABLE'))
+        return row
+
+    def refresh_state_bindings(self, runner, limits):
+        """Observe native replacement of profiling owners; preserve old records."""
+        objects = [('runner.'+attr, getattr(runner, attr, None), None)
+                   for attr in ('block_tables', 'req_states', 'kv_block_zeroer')]
+        workspace = sys.modules.get(CENSUS_SOURCES['workspace'][0])
+        objects.append(('workspace._manager', getattr(workspace, '_manager', None), None))
+        for reference, row in list(self.census_owners.values()):
+            layer = reference()
+            if layer is not None and 'summary_zero' in row['sites']:
+                objects.append((row['module_path']+'._cache', getattr(layer, '_cache', None), row['layer_id']))
+        rows, gaps = [], []
+        for path, owner, layer in objects:
+            previous = [(key, binding) for key, binding in self.census_owners.items()
+                        if binding[1]['module_path'] == path]
+            if previous and previous[0][1][0]() is owner:
+                continue
+            for key, _ in previous:
+                del self.census_owners[key]
+            if owner is None:
+                if previous:
+                    rows.append(dict(module_path=path, previous_owner_id=previous[0][0],
+                                     status='NATIVE_STATE_OWNER_NO_LONGER_PRESENT'))
+                continue
+            names = self.matching_census_sites(owner)
+            if not names:
+                gaps.append(dict(owner=path, reason='UNVERIFIED_NATIVE_STATE_OWNER_CODE'))
+                continue
+            if len(self.census_owners) >= limits.tracked_entries:
+                raise ValueError('Known native owner bindings exceed the existing entry cap')
+            row = self.bind_census_owner(path, owner, names, layer, limits, gaps)
+            rows.append(dict(row, previous_owner_id=previous[0][0] if previous else None,
+                             status='OBSERVED_NATIVE_STATE_OWNER_BINDING_NOT_LIFETIME_PROOF'))
+        return rows, gaps
 
 
 def installed_sites(worker, worker_factory):
@@ -680,6 +750,23 @@ class DeviceObservation:
                              else runner.model_config.dtype)
         self.embed_dtype = runner.model_config.dtype
         self.chunks = (self.max_tokens+limits.scan_rows-1)//limits.scan_rows
+        tables = runner.block_tables
+        if (tables.cp_size != 1 or tables.cp_rank != 0 or
+                len(tables.input_block_tables) != len(self.groups) or
+                len(tables.block_sizes) != len(self.groups)):
+            raise ValueError('Actual native block tables do not match the approved non-CP KV groups')
+        self.block_sizes, self.table_layouts = list(tables.block_sizes), []
+        for table, block_size in zip(tables.input_block_tables, self.block_sizes):
+            if (not isinstance(table, sites.tensor_type) or table.device != runner.device or
+                    table.dtype != self.torch.int32 or len(table.shape) != 2 or
+                    table.shape[0] != self.max_reqs or table.shape[1] <= 0 or
+                    type(block_size) is not int or block_size <= 0):
+                raise ValueError('Actual resident block-table dimensions/dtype are required')
+            self.table_layouts.append(Metadata(sites, self.cpu_limits).value(table))
+        if (tuple(tables.num_blocks.gpu.shape) != (len(self.groups), self.max_reqs) or
+                tables.num_blocks.gpu.dtype != self.torch.int32 or
+                tables.num_blocks.gpu.device != runner.device):
+            raise ValueError('Actual native persistent-index block counts have an unsupported layout')
         self.layout = dict(
             input_ids=((self.max_tokens,), self.torch.int32),
             positions=((self.max_tokens,), self.torch.int64),
@@ -692,15 +779,24 @@ class DeviceObservation:
             final_positions=((self.max_tokens,), self.torch.int64),
             inputs_embeds=((self.max_reqs, self.width), self.embed_dtype),
             hidden_states=((self.max_reqs, self.width), self.hidden_dtype),
-            finite_counts=((self.chunks,), self.torch.int64))
+            finite_counts=((self.chunks,), self.torch.int64),
+            block_counts=((len(self.groups), self.max_reqs), self.torch.int32))
         for index in range(len(self.groups)):
             self.layout['slot_mapping_'+str(index)] = ((self.max_tokens,), self.torch.int64)
+            self.layout['block_table_'+str(index)] = (tuple(self.table_layouts[index]['shape']), self.torch.int32)
+        from role_state_observation import StateObservation, dtype_bytes
         def size(dtype):
-            return self.torch.finfo(dtype).bits//8 if dtype.is_floating_point else {
-                self.torch.int32: 4, self.torch.int64: 8, self.torch.bool: 1}[dtype]
+            return dtype_bytes(self.torch, dtype)
+        self.state = StateObservation(runner, sites, limits, metadata_limits,
+            lambda value: Metadata(sites, metadata_limits).value(value), limits.scan_rows*self.width)
+        self.layout.update(self.state.step_layout)
         self.host_bytes = limits.steps*sum(
-            self.elements(shape)*size(dtype) for shape, dtype in self.layout.values())
+            self.elements(shape)*size(dtype) for name, (shape, dtype) in self.layout.items()
+            if name not in self.state.step_layout)
+        self.host_bytes += limits.steps*self.state.byte_count(self.state.step_layout)+self.state.byte_count(self.state.once_layout)
         self.device_bytes = limits.scan_rows*self.width*(size(self.hidden_dtype)+size(self.torch.bool)) + limits.steps*self.chunks*size(self.torch.int64)
+        self.device_bytes += self.state.byte_count({name: layout for name, layout in self.state.device_layout.items()
+            if name != 'state_absolute' or self.hidden_dtype != self.torch.float32})
         self.owned_bytes = self.host_bytes+self.device_bytes
         if self.owned_bytes > min(limits.owned_bytes, rank_remaining):
             raise ValueError('Owned diagnostic destinations exceed the remaining rank allowance')
@@ -714,6 +810,7 @@ class DeviceObservation:
                                        device=runner.device)
         self.counts = self.torch.empty((limits.steps, self.chunks), dtype=self.torch.int64,
                                        device=runner.device)
+        self.state.allocate(self.absolute, self.finite)
         self.events = [self.torch.cuda.Event(enable_timing=False) for _ in range(limits.steps)]
         for event in self.events:
             event.record(self.stream)
@@ -830,7 +927,20 @@ class DeviceObservation:
                 if any(Metadata(self.sites, self.cpu_limits).value(slots[name]) != descriptor for name in layers):
                     raise ValueError('Native group layer slot bindings do not share the same device view')
                 self.copy_tensor(entry, 'slot_mapping_'+str(index), first, n)
+            tables = values['block_tables']
+            if type(tables) is not tuple or len(tables) != len(self.groups):
+                raise ValueError('Finalized native block tables do not cover every KV group')
+            for index, table in enumerate(tables):
+                layout = Metadata(self.sites, self.cpu_limits).value(table)
+                expected = dict(self.table_layouts[index], shape=[r, self.table_layouts[index]['shape'][1]])
+                if layout != expected:
+                    raise ValueError('Finalized block-table view differs from the prepared resident owner')
+                self.copy_tensor(entry, 'block_table_'+str(index), table, r)
+            self.copy_tensor(entry, 'block_counts', self.runner.block_tables.num_blocks.gpu, len(self.groups))
+            entry['block_sizes'] = list(self.block_sizes)
+            entry['block_table_semantics'] = 'BATCH_ROWS; ACTIVE_COUNT_BY_PERSISTENT_INDEX; SUFFIX_NOT_OWNERSHIP'
             entry['request_frontiers'] = frontiers
+            self.state.select(entry)
             return entry['index']
         except BaseException as failure:
             self.error('finalized_device_inputs', failure)
@@ -866,16 +976,17 @@ class DeviceObservation:
             self.copy_rows(entry, 'hidden_states', hidden, entry['request_frontiers'])
             valid = entry['prepared_cpu_batch']['num_tokens']
             chunks = (valid+self.limits.scan_rows-1)//self.limits.scan_rows
+            from role_state_observation import finite_count
             for chunk in range(chunks):
                 start = chunk*self.limits.scan_rows
                 rows = min(self.limits.scan_rows, valid-start)
-                self.torch.abs(hidden[start:start+rows], out=self.absolute[:rows])
-                self.torch.lt(self.absolute[:rows], float('inf'), out=self.finite[:rows])
-                self.torch.sum(self.finite[:rows], dim=(0, 1), dtype=self.torch.int64,
-                               out=self.counts[index:index+1, chunk:chunk+1].view(()))
+                finite_count(self.torch, hidden[start:start+rows], self.absolute, self.finite,
+                             self.counts[index:index+1, chunk:chunk+1].view(()))
             self.destinations[index]['finite_counts'][:chunks].copy_(self.counts[index, :chunks], non_blocking=True)
             entry['tensors']['finite_counts'] = dict(rows=chunks)
             entry['finite_elements_expected'] = valid*self.width
+            self.state.scan(entry, self.destinations[index])
+            self.state.scan_scales(entry)
             self.events[index].record(self.stream)
         entry['status'] = 'COMPLETION_EVENT_RECORDED_NOT_QUERIED'
         entry['native_async_output_consumed_by_observer'] = False
@@ -905,6 +1016,8 @@ class DeviceObservation:
                 else:
                     values[name] = tensor.numpy().tolist()
             row['values'] = values
+            row['state_content'] = self.state.drain(row, self.destinations[index], values)
+            row['state_content_status'] = row['state_content']['status']
             row['finite_elements_observed'] = sum(values['finite_counts'])
             row['status'] = ('OBSERVED_DIAGNOSTIC_DEVICE_WITNESS_NOT_G2' if
                 row['finite_elements_observed'] == row['finite_elements_expected'] else
@@ -916,6 +1029,7 @@ class DeviceObservation:
             for name in ('hidden_states', 'inputs_embeds'):
                 if name in small['values']:
                     del small['values'][name]['raw_hex']
+            small['state_content'] = self.state.compact(row['state_content'])
             compact.append(small)
         previous = self.entries[:self.drained]
         summary = self.summary(steps=previous+compact, drained=len(self.entries))
@@ -938,6 +1052,7 @@ class DeviceObservation:
                 row['status'].startswith('UNVERIFIED') for row in rows) else
                 'OBSERVED_DIAGNOSTIC_DEVICE_WITNESSES_NOT_G2' if drained else 'PREPARED_NOT_EXECUTED',
             owned_bytes=self.owned_bytes, host_bytes=self.host_bytes, device_bytes=self.device_bytes,
+            state_inventory=self.state.inventory(),
             limits=vars(self.limits), collected_steps=len(self.entries), drained_steps=drained,
             collection_stopped=self.stopped, errors=copy.deepcopy(self.errors),
             registered_requests=copy.deepcopy(list(self.registered.values())),
@@ -1092,6 +1207,35 @@ class ObservationScope:
             parent = parent.f_back
         return None
 
+    def lifecycle_metadata(self, name, frame, *, returned=False):
+        values, row = frame.f_locals, {}
+        if name in ('request_finish', 'request_add', 'request_update'):
+            scheduler = values['scheduler_output']
+            row['scheduler'] = dict(total_num_scheduled_tokens=scheduler.total_num_scheduled_tokens,
+                finished_req_ids=sorted(scheduler.finished_req_ids),
+                preempted_req_ids=sorted(scheduler.preempted_req_ids))
+            if name == 'request_add' and not returned:
+                row['scheduler']['new_requests'] = [dict(req_id=req.req_id, prompt_len=req.prompt_len,
+                    num_computed_tokens=req.num_computed_tokens, block_ids=req.block_ids)
+                    for req in scheduler.scheduled_new_reqs]
+            if name == 'request_update' and not returned:
+                reqs = scheduler.scheduled_cached_reqs
+                if not len(reqs.req_ids) == len(reqs.num_computed_tokens) == len(reqs.new_block_ids):
+                    raise ValueError('Cached request/block assignments have incomplete CPU associations')
+                row['scheduler']['cached_requests'] = [dict(req_id=req, num_computed_tokens=computed,
+                    new_block_ids=blocks) for req, computed, blocks in
+                    zip(reqs.req_ids, reqs.num_computed_tokens, reqs.new_block_ids)]
+                for attr in ('new_block_ids_to_zero', 'new_block_ids_to_zero_by_group',
+                             'kv_cache_block_copies', 'kv_cache_block_copies_by_group'):
+                    row['scheduler'][attr] = getattr(scheduler, attr)
+        if name in CENSUS_REQUEST_SITES:
+            req_states = self.runner.req_states
+            row['request_indices'] = [dict(req_id=req, persistent_index=index)
+                for req, index in sorted(req_states.req_id_to_index.items())]
+            row['block_counts_cpu'] = self.runner.block_tables.num_blocks.np.copy().tolist()
+            row['ownership_semantics'] = 'OBSERVED_CPU_MAPPING_ONLY; NO_ALLOCATION_EPOCH_OR_WRITE_PROOF'
+        return self.metadata().value(row)
+
     def native_call(self, frame, event, arg):
         name = self.sites.census_names.get(id(frame.f_code))
         if name is None or frame.f_code is not self.sites.codes['census_'+name]:
@@ -1111,6 +1255,8 @@ class ObservationScope:
                 if value is not None and key in ('compute_type', 'out_dtype'):
                     value = str(value)
                 arguments[key] = metadata.value(value)
+            if name in CENSUS_REQUEST_SITES:
+                arguments['lifecycle'] = self.lifecycle_metadata(name, frame)
             caller = frame.f_back.f_code if frame.f_back is not None else None
             gemm = next((key.upper() for key in ('gemm1', 'gemm2')
                 if caller is self.sites.codes.get('census_'+key)), 'UNVERIFIED_NATIVE_CALLER') if name == 'triton_gemm' else None
@@ -1136,6 +1282,10 @@ class ObservationScope:
                         'UNVERIFIED_NATIVE_UNWIND', return_line=frame.f_lineno,
                         result=metadata.value(arg) if returned else None,
                         return_metadata_complete=metadata.complete)
+            if returned and name in CENSUS_REQUEST_SITES:
+                self.update(row, lifecycle_after=self.lifecycle_metadata(name, frame, returned=True))
+                if self.state.device is not None and name in ('request_state_remove', 'block_append'):
+                    self.state.device.state.assignment(row)
 
     def call_summary(self):
         calls = [row for row in self.events if row['kind'] == 'native_call']
@@ -1171,6 +1321,9 @@ class ObservationScope:
                         valid_ranges='prepared_cpu_batch_not_device_content')
         if row is None:
             return
+        from role_capacity_observation import known_state_inventory
+        self.emit('known_state_storage', frontiers=False,
+                  **known_state_inventory(self.runner, self.sites.torch, self.state.limits.tracked_entries))
         self.input_id = row['event']
         row['input_observation'] = self.input_id
         if self.state.device is not None and not values['dummy_run']:
@@ -1434,6 +1587,10 @@ class ObservationScope:
                     self.state.census_inventory_record = dict(lifecycle=self.kind,
                         sequence=self.state.captures if self.kind == 'capture' else self.state.invocations,
                         event=row['event'])
+            state_rows, state_gaps = self.sites.refresh_state_bindings(self.runner, self.state.limits)
+            if state_rows or state_gaps:
+                self.emit('resident_state_bindings', frontiers=False, owners=state_rows, gaps=state_gaps,
+                          device_completion='UNMEASURED', lifetime='OBSERVED_BINDING_BOUNDARIES_ONLY')
             sys.setprofile(self.profile_hook)
             sys.settrace(self.trace_hook)
             self.installed = self.active = True
@@ -1475,6 +1632,13 @@ class ObservationScope:
                 self.error('post_execution_device_witness', failure)
         for pending in self.pending.values():
             pending['row']['outcome'] = 'UNVERIFIED_MISSING_REPLAY_RETURN'
+        if self.kind == 'execute' and not self.stopped:
+            try:
+                from role_capacity_observation import known_state_inventory
+                self.emit('known_state_storage_after', frontiers=False,
+                    **known_state_inventory(self.runner, self.sites.torch, self.state.limits.tracked_entries))
+            except BaseException as failure:
+                self.error('known_state_storage_after', failure)
         inputs = [row for row in self.events if row['kind'] == 'finalized_model_inputs']
         attempts = [row for row in self.events if row['kind'] == 'replay_attempt']
         captures = [row for row in self.events if row['kind'] == 'capture_entry_stored']

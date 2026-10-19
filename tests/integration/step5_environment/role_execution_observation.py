@@ -12,6 +12,7 @@ import numpy as np
 
 import role_capacity_observation as capacity
 import role_model_input_observation as model_observation
+import role_state_observation as state_observation
 
 
 CPU_ARRAY_FIELDS = (
@@ -30,6 +31,7 @@ SOURCE = dict(observer_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdig
               capacity_observer_sha256=hashlib.sha256(Path(capacity.__file__).read_bytes()).hexdigest(),
               model_input_observer_sha256=hashlib.sha256(
                   Path(model_observation.__file__).read_bytes()).hexdigest(),
+              state_observer_sha256=hashlib.sha256(Path(state_observation.__file__).read_bytes()).hexdigest(),
               native_source_status='UNVERIFIED')
 
 

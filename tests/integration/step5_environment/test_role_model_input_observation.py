@@ -956,14 +956,22 @@ class DeviceCpuTensor:
     def stride(self):
         return tuple(value//self.values.itemsize for value in self.values.strides)
 
+    def storage_array(self):
+        value = self.values
+        while isinstance(value.base, np.ndarray):
+            value = value.base
+        return value
+
     def storage_offset(self):
-        return 0
+        return (self.data_ptr()-self.storage_array().__array_interface__['data'][0])//self.values.itemsize
 
     def data_ptr(self):
         return self.values.__array_interface__['data'][0]
 
     def untyped_storage(self):
-        return SimpleNamespace(data_ptr=self.data_ptr, nbytes=lambda: self.values.nbytes)
+        storage = self.storage_array()
+        return SimpleNamespace(data_ptr=lambda: storage.__array_interface__['data'][0],
+                               nbytes=lambda: storage.nbytes)
 
     def __getitem__(self, key):
         return DeviceCpuTensor(self.values[key], self.api, self.dtype, self.device, pinned=self.pinned)
@@ -977,6 +985,8 @@ class DeviceCpuTensor:
         return self
 
     def view(self, shape):
+        if type(shape) is int:
+            shape = (shape,)
         if shape is self.api.uint8:
             return DeviceCpuTensor(self.values.view(np.uint8), self.api, self.api.uint8, self.device)
         return DeviceCpuTensor(self.values.reshape(shape), self.api, self.dtype, self.device, pinned=self.pinned)
@@ -999,8 +1009,10 @@ class DeviceCpuApi:
         self.queued, self.operations, self.events = [], [], []
         self.capturing, self.host_reads_allowed, self.complete_count = False, False, 0
         self.stream = SimpleNamespace(cuda_stream=71, device='cuda:0')
-        self.float32 = SimpleNamespace(is_floating_point=True, name='float32')
-        self.bfloat16 = SimpleNamespace(is_floating_point=True, name='bfloat16')
+        self.float32 = DeviceCpuDtype('float32', floating=True)
+        self.bfloat16 = DeviceCpuDtype('bfloat16', floating=True)
+        self.float16 = DeviceCpuDtype('float16', floating=True)
+        self.float8_e4m3fn = DeviceCpuDtype('float8_e4m3fn', floating=True)
         self.int32, self.int64, self.bool, self.uint8 = [DeviceCpuDtype(name) for name in
                                                       ('int32', 'int64', 'bool', 'uint8')]
         self.cuda = SimpleNamespace(is_current_stream_capturing=lambda: self.capturing,
@@ -1028,7 +1040,7 @@ class DeviceCpuApi:
         self.operations.append(('finite', tuple(tensor.shape)))
 
     def sum(self, tensor, *, dim, dtype, out):
-        assert dim == (0, 1) and dtype is self.int64
+        assert dim == tuple(range(len(tensor.shape))) and dtype is self.int64
         self.queued.append(lambda: np.copyto(out.values, np.sum(tensor.values, dtype=np.int64)))
         self.operations.append(('sum', tuple(tensor.shape)))
 
@@ -1060,8 +1072,8 @@ class DeviceCpuApi:
 
 class DeviceCpuDtype:
     is_floating_point = False
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, name, *, floating=False):
+        self.name, self.is_floating_point = name, floating
     def __str__(self):
         return 'torch.'+self.name
 
@@ -1073,7 +1085,7 @@ def device_case():
     state = SimpleNamespace(req_id_to_index={'full-internal-A': 2}, index_to_req_id={2: 'full-internal-A'},
         prompt_len=SimpleNamespace(np=np.array([0, 0, 4])), prefill_len=SimpleNamespace(np=np.array([0, 0, 4])))
     runner = SimpleNamespace(device='cuda:0', main_stream=api.stream, use_pp=False, pcp_manager=None,
-        num_speculative_steps=0, is_first_pp_rank=True, is_last_pp_rank=True, max_num_tokens=8, max_num_reqs=2,
+        num_speculative_steps=0, is_first_pp_rank=True, is_last_pp_rank=True, max_num_tokens=8, max_num_reqs=3,
         model_config=SimpleNamespace(hf_text_config=SimpleNamespace(hidden_size=3, fp32_residual_connection=True),
                                      dtype=api.bfloat16), req_states=state,
         kv_cache_config=SimpleNamespace(kv_cache_groups=[SimpleNamespace(layer_names=['layer.0', 'layer.1'])]))
@@ -1090,6 +1102,10 @@ def device_case():
         query_start_loc=tensor([0, 4, 4], api.int32), seq_lens=tensor([4, 0], api.int32),
         idx_mapping=tensor([2], api.int64))
     runner.model_state = SimpleNamespace(request_state=tensor([2, -1], api.int64))
+    table = tensor([[0, 7, 8], [0, 0, 0], [0, 0, 0]], api.int32)
+    counts = tensor([[0, 0, 1]], api.int32)
+    runner.block_tables = SimpleNamespace(cp_size=1, cp_rank=0, block_sizes=[4],
+        input_block_tables=[table], num_blocks=SimpleNamespace(gpu=counts, np=counts.values))
     embed = tensor(np.arange(24).reshape(8, 3), api.bfloat16)
     slots = tensor(list(range(8)), api.int64)
     hidden = tensor(np.arange(24).reshape(8, 3), api.float32)
@@ -1104,7 +1120,8 @@ def device_case():
         num_computed_tokens=0, sampling_params=SimpleNamespace(n=1, max_tokens=2, min_tokens=2, seed=None))
     observed.registrations(SimpleNamespace(scheduled_new_reqs=[req]))
     values = dict(input_batch=batch, model_inputs=dict(input_ids=None, positions=batch.positions,
-        inputs_embeds=embed, intermediate_tensors=None), slot_mappings_by_layer={'layer.0': slots, 'layer.1': slots})
+        inputs_embeds=embed, intermediate_tensors=None), slot_mappings_by_layer={'layer.0': slots, 'layer.1': slots},
+        block_tables=(table[:2],))
     return SimpleNamespace(api=api, observed=observed, runner=runner, cpu=cpu, values=values,
                            hidden=hidden, embed=embed, req=req, tensor=tensor)
 
