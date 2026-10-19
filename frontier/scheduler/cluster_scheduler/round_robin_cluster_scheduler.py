@@ -420,22 +420,6 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         self._request_counter += 1
         return replica_id, replica_local_id
 
-    def validate_kv_transfer_target_scope(self, source_capacity, request: Request) -> None:
-        """Validate every selectable NIXL lane before advancing placement."""
-        if self._cluster_type != ClusterType.DECODE:
-            raise ValueError("NIXL transfer target validation requires DECODE")
-        replica_ids = list(self._cluster.replicas.keys())
-        if not replica_ids:
-            raise ValueError("DECODE cluster has no replicas")
-        for replica_id in replica_ids:
-            for replica_local_id in range(self._replica_dp_size):
-                lane = self.get_replica_scheduler(replica_id, replica_local_id)
-                lane.validate_kv_transfer_target_scope(request)
-                if lane._kv_cache_capacity != source_capacity:
-                    raise ValueError(
-                        "PREFILL and DECODE GLM cache capacities must match"
-                    )
-
     def _schedule_lane_round_robin(self) -> List[Tuple[int, int, Request]]:
         """Place queued requests on Replica-local DP lanes in arrival order.
 

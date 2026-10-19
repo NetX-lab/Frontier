@@ -142,32 +142,18 @@ class KVCacheTransferStartEvent(BaseEvent):
             target_cluster_scheduler = scheduler.get_cluster_scheduler(
                 self._target_cluster_type
             )
-            validate_targets = getattr(
-                target_cluster_scheduler,
-                "validate_kv_transfer_target_scope",
-                None,
+            target_cluster_scheduler.validate_kv_transfer_target_scope(
+                source_capacity, request
             )
-            if not callable(validate_targets):
-                raise NotImplementedError(
-                    "NIXL structural PD requires RoundRobin target validation"
-                )
-            validate_targets(source_capacity, request)
             if not self._source_claimed:
                 source_replica_scheduler.claim_kv_transfer_start(request)
                 self._source_claimed = True
 
             if self._target_replica_id is None:
-                selector = getattr(
-                    target_cluster_scheduler, "select_kv_transfer_target", None
-                )
-                if not callable(selector):
-                    raise NotImplementedError(
-                        "NIXL structural PD requires existing RoundRobin target selection"
-                    )
                 (
                     self._target_replica_id,
                     self._target_replica_local_id,
-                ) = selector()
+                ) = target_cluster_scheduler.select_kv_transfer_target()
             target_replica_scheduler = target_cluster_scheduler.get_replica_scheduler(
                 self._target_replica_id,
                 self._target_replica_local_id,

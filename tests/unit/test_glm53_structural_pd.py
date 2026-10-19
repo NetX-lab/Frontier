@@ -20,6 +20,9 @@ from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
     AnalyticalKVCacheTransferPredictor,
 )
 from frontier.metrics.op_trace_utils import build_kv_cache_transfer_meta
+from frontier.scheduler.cluster_scheduler.lor_cluster_scheduler import (
+    LORClusterScheduler,
+)
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
@@ -131,8 +134,8 @@ def _source_cluster(lane, replica_config, predictor):
     )
 
 
-def _target_cluster(lane):
-    scheduler = object.__new__(RoundRobinClusterScheduler)
+def _target_cluster(lane, policy=RoundRobinClusterScheduler):
+    scheduler = object.__new__(policy)
     scheduler._cluster_type = ClusterType.DECODE
     scheduler._cluster = SimpleNamespace(replicas={lane._replica_id: lane._replica})
     scheduler._replica_dp_size = 1
@@ -246,6 +249,22 @@ def test_structural_start_rejects_source_prefix_before_side_effects() -> None:
     assert target._allocation_map == {}
     assert scheduler._clusters[ClusterType.DECODE]._request_counter == 0
     assert metrics.starts == []
+
+
+def test_decode_policy_without_target_selection_fails_as_configuration_error() -> None:
+    source, target, scheduler, _ = _harness()
+    lor_target = _target_cluster(target, policy=LORClusterScheduler)
+    scheduler._clusters[ClusterType.DECODE] = lor_target
+    request = _request_owned_by_prefill(source, 64)
+
+    # Lane validation belongs to every DECODE policy; selection does not.
+    lor_target.validate_kv_transfer_target_scope(
+        source._kv_cache_capacity, request
+    )
+    with pytest.raises(ValueError, match="LORClusterScheduler does not"):
+        _start_event(request, source).handle_event(scheduler, _Metrics())
+
+    assert target._allocation_map == {}
 
 
 def test_failed_payload_rolls_back_the_reserved_decode_frontier(monkeypatch) -> None:
