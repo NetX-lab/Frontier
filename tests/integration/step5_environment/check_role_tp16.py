@@ -19,6 +19,7 @@ from check_role_capacity import SOURCE_MANIFESTS, TASK, diagnostic, save
 
 GEN4_MANIFEST_SHA = 'f12f6630c92450f5b1b3bb8207503546d438df88720f17810aa166f899ea01d7'
 VERSION = '0.1.dev22912+g8224bb82f'
+GPU_GROUPS = {'H800': 'codesign', 'H200': 'step_main'}
 REMAINING_G2 = ('prefill', 'subsequent_chunks', 'decode', 'changed_input_all_rank_graph_replay',
                 'finite_content', 'precision_and_exclusion_binding', 'full_physical_scope_census')
 
@@ -34,9 +35,11 @@ def preflight(config, *, new_generation=True):
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', config['generation']):
         raise ValueError('Generation must be a nonempty path component')
     resources = config['resources']
-    if resources != dict(nodes=2, gpu_per_node=8, cpu_per_node=32, memory_mi_per_node=128000,
-                         worker_seconds=2400, gpu_type='H800', charged_group='codesign'):
-        raise ValueError('Only the approved two-node H800 capacity resources are supported')
+    gpu_type = resources.get('gpu_type')
+    if gpu_type not in GPU_GROUPS or resources != dict(
+            nodes=2, gpu_per_node=8, cpu_per_node=32, memory_mi_per_node=128000,
+            worker_seconds=2400, gpu_type=gpu_type, charged_group=GPU_GROUPS[gpu_type]):
+        raise ValueError('Only the approved two-node GPU and quota-group pairs are supported')
     expected_image = ('a.z01.normandyfunc.com/docker-public/vllm/vllm-openai'
         '@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20')
     if config['image'] != expected_image or config['vllm_version'] != VERSION:
@@ -117,7 +120,7 @@ def node_record(config, env, *, proc_root=Path('/proc'), identify=supervision.no
     node = identify(env, proc_root/'sys/kernel/random/boot_id')
     pid_namespace = os.readlink(proc_root/'self/ns/pid')
     return dict(node, generation=config['generation'], pid_namespace=pid_namespace,
-                observer_sha256=config['observer_sha256'])
+                observer_sha256=config['observer_sha256'], resources=dict(config['resources']))
 
 
 def engine_kwargs(config, node):
@@ -141,20 +144,22 @@ def headless_argv(config, node):
         for key in flags for part in ('--'+key.replace('_', '-'), str(kwargs[key]))]
 
 
-def gpu_inventory(run=subprocess.run):
+def gpu_inventory(resources, run=subprocess.run):
     argv = ['nvidia-smi', '--query-gpu=index,uuid,name', '--format=csv,noheader,nounits']
     result = run(argv, capture_output=True, text=True, timeout=10)
     if result.returncode != 0:
         raise ValueError('Allocated GPU inventory query failed: '+result.stderr)
     rows = []
+    expected_name = 'NVIDIA ' + resources['gpu_type']
     for line in result.stdout.splitlines():
         index, uuid, name = [value.strip() for value in line.split(',')]
-        if name != 'NVIDIA H800' or not uuid.startswith('GPU-'):
-            raise ValueError('Eight physical H800 GPU UUIDs are required')
+        if name != expected_name or not uuid.startswith('GPU-'):
+            raise ValueError('Allocated GPU name or UUID differs from the configured hardware')
         rows.append((int(index), uuid))
     rows.sort()
-    if [row[0] for row in rows] != list(range(8)) or len({row[1] for row in rows}) != 8:
-        raise ValueError('Exactly eight unique allocated GPU indices and UUIDs required')
+    count = resources['gpu_per_node']
+    if [row[0] for row in rows] != list(range(count)) or len({row[1] for row in rows}) != count:
+        raise ValueError('Allocated GPU count, indices or unique UUIDs differ from the configured resources')
     return [row[1] for row in rows]
 
 
@@ -426,7 +431,7 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
     local = Path(config['worker_local_root'])/f'node_{rank}'
     local.mkdir(parents=True, exist_ok=False)
     records = local/'workers'; records.mkdir()
-    node.update(gpu_uuids=gpu_inventory(run), local_output=str(local), observer_output=str(records),
+    node.update(gpu_uuids=gpu_inventory(config['resources'], run), local_output=str(local), observer_output=str(records),
                 record_bytes=config['record_bytes'])
     node['cache_root'] = str(local/'cache')
     Path(node['cache_root']).mkdir()

@@ -62,7 +62,9 @@ def config(tmp_path):
         request_manifest_sha256=capacity.sha256(capacity.TASK/'request_input_candidate_20261018_01.json'))
 
 
-def test_preflight_preserves_capacity_contract_and_binds_request_sources(config):
+@pytest.mark.parametrize('gpu_type,charged_group', [('H800', 'codesign'), ('H200', 'step_main')])
+def test_preflight_preserves_capacity_contract_and_binds_request_sources(config, gpu_type, charged_group):
+    config['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
     original = copy.deepcopy(config)
     receipt = caller.preflight(config)
     assert config == original
@@ -479,7 +481,7 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
     def query(argv, **kwargs):
         if '--query-gpu=index,uuid,name' in argv:
             return SimpleNamespace(returncode=0, stdout=''.join(
-                f'{i}, GPU-cpu-node-{rank}-device-{i}, NVIDIA H800\n' for i in range(8)), stderr='')
+                f"{i}, GPU-cpu-node-{rank}-device-{i}, NVIDIA {config['resources']['gpu_type']}\n" for i in range(8)), stderr='')
         assert argv == caller.capacity.supervision.COMPUTE_QUERY
         return SimpleNamespace(returncode=0, stdout='', stderr='')
 
@@ -535,8 +537,12 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
 
 
 @pytest.mark.parametrize('rank', [0, 1])
-def test_real_node_lifecycle_retains_request_argv_pins_and_capacity_labels(config, tmp_path, monkeypatch, rank):
+@pytest.mark.parametrize('gpu_type,charged_group', [('H800', 'codesign'), ('H200', 'step_main')])
+def test_real_node_lifecycle_retains_request_argv_pins_and_capacity_labels(
+        config, tmp_path, monkeypatch, rank, gpu_type, charged_group):
+    config['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
     status, node, child, events, clock = native_node_attempt(config, tmp_path, monkeypatch, rank=rank)
+    assert node['resources'] == config['resources']
     assert status['return_code'] == 0 and status['scope'] == 'capacity_only_not_G2'
     assert status['native_argv'][2] == str(HERE/'check_role_execution.py')
     assert status['engine_settings']['workload']['stage'] == 'native_requests'

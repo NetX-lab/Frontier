@@ -266,16 +266,57 @@ def test_import_is_inert_without_real_children_or_gpu_queries():
     assert not any(name.split('.')[0] in ('torch', 'vllm', 'steptron', 'stepmind') for name in set(sys.modules)-before)
 
 
-def test_gpu_uuid_inventory_uses_only_explicit_fake_query():
+@pytest.mark.parametrize('gpu_type,charged_group', [('H800', 'codesign'), ('H200', 'step_main')])
+def test_gpu_uuid_inventory_uses_only_explicit_fake_query(config, gpu_type, charged_group):
+    config['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
     calls = []
     def run(argv, **kwargs):
         calls.append((argv, kwargs))
         return SimpleNamespace(returncode=0, stderr='',
-            stdout=''.join(f'{i}, GPU-{i}, NVIDIA H800\n' for i in reversed(range(8))))
-    assert caller.gpu_inventory(run) == [f'GPU-{i}' for i in range(8)]
+            stdout=''.join(f'{i}, GPU-{i}, NVIDIA {gpu_type}\n' for i in reversed(range(8))))
+    assert caller.gpu_inventory(config['resources'], run) == [f'GPU-{i}' for i in range(8)]
     assert calls[0][1]['timeout'] == 10
-    with pytest.raises(ValueError): caller.gpu_inventory(lambda *a, **k: SimpleNamespace(returncode=1, stderr='fake error'))
+    with pytest.raises(ValueError):
+        caller.gpu_inventory(config['resources'], lambda *a, **k: SimpleNamespace(returncode=1, stderr='fake error'))
 
+
+
+@pytest.mark.parametrize('gpu_type,charged_group', [('H800', 'codesign'), ('H200', 'step_main')])
+def test_preflight_accepts_only_authorized_hardware_pair_without_changing_native_work(config, gpu_type, charged_group):
+    config['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
+    original = copy.deepcopy(config)
+    result = caller.preflight(config)
+    assert result['resources'] == original['resources'] and config == original
+    assert caller.engine_kwargs(config, {'node_rank': 0, 'endpoint': {'address': '10.1.2.3', 'port': 6000}})['load_format'] == 'dummy'
+
+
+@pytest.mark.parametrize('gpu_type,charged_group', [('H200', 'codesign'), ('H800', 'step_main'), ('B200', 'step_main')])
+def test_preflight_rejects_wrong_hardware_quota_pairs(config, gpu_type, charged_group):
+    config['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
+    with pytest.raises(ValueError, match='GPU and quota-group'):
+        caller.preflight(config)
+
+
+@pytest.mark.parametrize('fault', ['wrong_type', 'mixed_type', 'missing', 'duplicate_uuid', 'duplicate_index', 'invalid_uuid'])
+@pytest.mark.parametrize('gpu_type', ['H800', 'H200'])
+def test_gpu_inventory_rejects_mismatched_actual_hardware(config, gpu_type, fault):
+    config['resources']['gpu_type'] = gpu_type
+    rows = [[i, f'GPU-{i}', f'NVIDIA {gpu_type}'] for i in range(8)]
+    if fault in ('wrong_type', 'mixed_type'):
+        for row in rows if fault == 'wrong_type' else rows[:1]:
+            row[2] = 'NVIDIA H200' if gpu_type == 'H800' else 'NVIDIA H800'
+    elif fault == 'missing':
+        rows.pop()
+    elif fault == 'duplicate_uuid':
+        rows[1][1] = rows[0][1]
+    elif fault == 'duplicate_index':
+        rows[1][0] = rows[0][0]
+    else:
+        rows[0][1] = 'not-a-physical-gpu'
+    def run(*args, **kwargs):
+        return SimpleNamespace(returncode=0, stderr='', stdout=''.join(', '.join(map(str, row))+'\n' for row in rows))
+    with pytest.raises(ValueError, match='Allocated GPU'):
+        caller.gpu_inventory(config['resources'], run)
 
 def test_partial_inventory_retains_other_valid_live_workers(config, tmp_path):
     node = nodes(config, tmp_path)[0]; output = tmp_path/'workers'; output.mkdir()
