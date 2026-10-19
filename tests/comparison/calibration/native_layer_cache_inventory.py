@@ -595,7 +595,7 @@ def compare_cache(case: ModelCase, checks: Checks, ranks: list[dict], capacity,
                    f"cudagraph_memory_estimate={sorted({s['cudagraph_memory_estimate'] for s in scalars})}",
                    "memory.native_scalars")
     checks.note(case.key, "cache", "Frontier MemoryPlanner.get_num_blocks uses one device value",
-                "no per-worker minimum; vLLM takes min over workers (kv_cache_utils.py:2082)",
+                "no per-worker minimum; vLLM takes min over workers (kv_cache_utils.py:2216-2221)",
                 "memory_planner.py:234-328")
 
     # Requested memory: Frontier SKU total versus the native per-node device total.
