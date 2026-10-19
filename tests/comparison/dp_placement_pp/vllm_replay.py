@@ -295,7 +295,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     if "compilation_config" in engine:
         command += ["--compilation-config", json.dumps(engine["compilation_config"])]
     if version == "0.28.0":
-        for name in ("attention_backend", "quantization"):
+        for name in ("attention_backend", "quantization", "shutdown_timeout",
+                     "distributed_executor_backend"):
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
         if "async_scheduling" in engine:
