@@ -171,10 +171,17 @@ def pending_trace_bytes(output, rank, pid, reserved, label):
     return max(0, reserved-retained)
 
 
+class PendingTraceReservation(ValueError):
+    """Verified worker reservations whose native trace finalization is unfinished."""
+    def __init__(self, reservation_bytes):
+        super().__init__('Final native trace reservation remains pending; completion is unverified')
+        self.reservation_bytes = reservation_bytes
+
+
 def device_reservation_bytes(output, *, require_complete=False):
     """Read the same tensor/trace reservations for caller and node finalization."""
     output = Path(output)
-    seen, used = set(), 0
+    seen, used, pending_trace = set(), 0, False
     for path in output.glob('device_reservation_rank_*_pid_*.json'):
         row = json.loads(path.read_text())
         rank, local, pid, owned = (row[name] for name in ('rank', 'local_rank', 'pid', 'owned_bytes'))
@@ -193,14 +200,15 @@ def device_reservation_bytes(output, *, require_complete=False):
         if 'profiler_bytes' in row and (row['profiler_label'] not in profiler_observation.WINDOWS or
                 type(row['device_prepared']) is not bool):
             raise ValueError('Native trace reservation has no original diagnostic window')
-        if require_complete and trace:
-            raise ValueError('Final native trace reservation remains pending; completion is unverified')
+        pending_trace |= bool(trace)
         seen.add(rank)
         used += owned+pending_trace_bytes(output, rank, pid, trace, row.get('profiler_label'))
     if require_complete:
         workers = [json.loads(path.read_text()) for path in output.glob('worker_*.json')]
         if len(workers) != 8 or seen != {row['rank'] for row in workers}:
             raise ValueError('Final device reservations do not cover all eight node workers')
+        if pending_trace:
+            raise PendingTraceReservation(used)
     return used
 
 

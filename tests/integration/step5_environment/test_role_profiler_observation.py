@@ -245,8 +245,19 @@ def test_partial_trace_does_not_double_charge_rank_and_node_reservation(output):
     assert execution.device_reservation_bytes(output[0]) == 128+8192-1024
     with pytest.raises(ValueError, match='only once'):
         execution.reserve_device_bytes(worker, 128)
-    with pytest.raises(ValueError, match='remains pending'):
+    with pytest.raises(ValueError, match='all eight node workers'):
         execution.device_reservation_bytes(output[0], require_complete=True)
+    for rank in range(1, 8):
+        identity = dict(worker._capacity_identity, rank=rank, local_rank=rank, pid=os.getpid()+rank)
+        (output[0]/f"worker_{rank}_{identity['pid']}.json").write_text(json.dumps(identity))
+        reservation = dict(kind='device_observation_reservation', rank=rank, local_rank=rank,
+            pid=identity['pid'], worker_identity=identity, source=dict(execution.SOURCE),
+            status='NOT_ALLOCATED_PREPARATION_FAILED', owned_bytes=0)
+        path = output[0]/f"device_reservation_rank_{rank}_pid_{identity['pid']}.json"
+        path.write_text(json.dumps(reservation))
+    with pytest.raises(execution.PendingTraceReservation, match='remains pending') as failure:
+        execution.device_reservation_bytes(output[0], require_complete=True)
+    assert failure.value.reservation_bytes == 128+8192-1024
 
 
 def test_reservation_update_is_atomic_and_preserves_old_record_on_write_failure(output, monkeypatch):

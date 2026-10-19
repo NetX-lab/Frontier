@@ -1492,11 +1492,14 @@ def test_preparation_rpc_failure_keeps_original_native_generation_and_terminal(c
 
 
 @pytest.mark.parametrize('rank', [0, 1])
+@pytest.mark.parametrize('pending_trace', [False, True])
 def test_node_finalization_includes_owned_device_reservations_before_archive(
-        config, tmp_path, monkeypatch, rank):
+        config, tmp_path, monkeypatch, rank, pending_trace):
     config['record_bytes'] = 64*1024
     config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
                                       owned_bytes=4096, rpc_bytes=4096)
+    if pending_trace:
+        config['physical_observation'] = dict(trace_bytes=8192, trace_events=250000)
     def prepare_output(node):
         local, records = Path(node['local_output']), Path(node['observer_output'])
         for identity in records.glob('worker_*.json'):
@@ -1505,6 +1508,8 @@ def test_node_finalization_includes_owned_device_reservations_before_archive(
                 local_rank=worker['local_rank'], pid=worker['pid'], worker_identity=worker,
                 source=copy.deepcopy(caller.observation.SOURCE),
                 status='RESERVED_BEFORE_ALLOCATION', owned_bytes=4096)
+            if pending_trace:
+                payload.update(profiler_bytes=8192, profiler_label='capture', device_prepared=False)
             path = records/f"device_reservation_rank_{worker['rank']}_pid_{worker['pid']}.json"
             path.write_text(json.dumps(payload))
         used = caller.non_cache_bytes(local)
@@ -1515,7 +1520,7 @@ def test_node_finalization_includes_owned_device_reservations_before_archive(
     status, node, child, _, clock = native_node_attempt(config, tmp_path, monkeypatch,
         rank=rank, prepare_output=prepare_output)
     budget = status['evidence_finalization']['record_budget']
-    assert budget['owned_device_bytes'] == 8*4096
+    assert budget['owned_device_bytes'] == 8*(4096+(8192 if pending_trace else 0))
     assert budget['required_bytes'] > config['record_bytes']
     assert budget['verdict'] == 'UNVERIFIED' and status['result'] == 'FAIL'
     assert status['raw_exit_code'] == (0 if rank == 0 else -15)
@@ -1543,10 +1548,63 @@ def test_caller_receipt_write_counts_resident_device_allocations(config, tmp_pat
     assert not (Path(node['local_output'])/'over_reserved.json').exists()
 
 
-@pytest.mark.parametrize('fault', ['missing', 'identity', 'source', 'duplicate_rank', 'negative_bytes'])
-def test_final_device_reservation_gaps_cannot_pass_budget(config, tmp_path, monkeypatch, fault):
+@pytest.mark.parametrize('rank', [0, 1])
+@pytest.mark.parametrize('trace_bytes', [0, 1024])
+def test_pending_native_trace_preserves_failed_child_records_within_budget(
+        config, tmp_path, monkeypatch, rank, trace_bytes):
+    config['record_bytes'] = 256*1024
     config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
                                       owned_bytes=4096, rpc_bytes=4096)
+    config['physical_observation'] = dict(trace_bytes=8192, trace_events=250000)
+
+    def prepare_output(node):
+        records = Path(node['observer_output'])
+        for identity in records.glob('worker_*.json'):
+            worker = json.loads(identity.read_text())
+            payload = dict(kind='device_observation_reservation', rank=worker['rank'],
+                local_rank=worker['local_rank'], pid=worker['pid'], worker_identity=worker,
+                source=copy.deepcopy(caller.observation.SOURCE),
+                status='RESERVED_BEFORE_ALLOCATION', owned_bytes=4096,
+                profiler_bytes=8192, profiler_label='capture', device_prepared=False,
+                allocation_scope='prepared_tensor_storage_and_pending_native_trace_bytes')
+            path = records/f"device_reservation_rank_{worker['rank']}_pid_{worker['pid']}.json"
+            path.write_text(json.dumps(payload))
+            if trace_bytes:
+                trace = records/f"profile_rank_{worker['rank']}_pid_{worker['pid']}_capture.json"
+                trace.write_bytes(b'x'*trace_bytes)
+
+    status, node, child, _, clock = native_node_attempt(config, tmp_path, monkeypatch,
+        rank=rank, raw_code=1, prepare_output=prepare_output)
+    archive = Path(config['archive_root'])/f'node_{rank}'
+    assert archive.exists()
+    assert (archive/'native.stdout').read_bytes() == b'CPU native child stdout\xff\n'
+    assert (archive/'native.stderr').read_bytes() == b'CPU native child stderr\xfe\n'
+    manifest = json.loads((archive/'archive_manifest.json').read_text())
+    assert manifest['scope'] == 'captured_bytes_only_not_final_status_or_G2'
+    assert len(list((archive/'workers').glob('worker_*.json'))) == 8
+    assert len(list((archive/'workers').glob('device_reservation_rank_*_pid_*.json'))) == 8
+    finalization = status['evidence_finalization']
+    budget = finalization['record_budget']
+    assert budget['owned_device_bytes'] == 8*(4096+8192-trace_bytes)
+    assert budget['required_bytes'] <= config['record_bytes']
+    assert budget['verdict'] == finalization['verdict'] == 'UNVERIFIED'
+    assert 'remains pending' in budget['error']
+    assert status['result'] == 'FAIL' and status['return_code'] == 1
+    assert status['evidence_verdict'] == 'UNVERIFIED'
+    assert status['raw_exit_code'] == (1 if rank == 0 else -15)
+    assert child.signals == ([] if rank == 0 else [15])
+    completion = json.loads((Path(config['marker_root'])/f'node_{rank}_completion.json').read_text())
+    assert completion['result'] == 'FAIL'
+    assert clock() <= 2500
+
+
+@pytest.mark.parametrize('fault', ['missing', 'identity', 'source', 'duplicate_rank', 'negative_bytes'])
+@pytest.mark.parametrize('pending_trace', [False, True])
+def test_final_device_reservation_gaps_cannot_pass_budget(config, tmp_path, monkeypatch, fault, pending_trace):
+    config['device_observation'] = dict(steps=34, scan_rows=64, witness_rows=1,
+                                      owned_bytes=4096, rpc_bytes=4096)
+    if pending_trace:
+        config['physical_observation'] = dict(trace_bytes=8192, trace_events=250000)
     def prepare_output(node):
         records = Path(node['observer_output'])
         for index, identity in enumerate(sorted(records.glob('worker_*.json'))):
@@ -1557,6 +1615,8 @@ def test_final_device_reservation_gaps_cannot_pass_budget(config, tmp_path, monk
                 local_rank=worker['local_rank'], pid=worker['pid'], worker_identity=worker,
                 source=copy.deepcopy(caller.observation.SOURCE),
                 status='RESERVED_BEFORE_ALLOCATION', owned_bytes=4096)
+            if pending_trace:
+                payload.update(profiler_bytes=8192, profiler_label='capture', device_prepared=False)
             path = records/f"device_reservation_rank_{worker['rank']}_pid_{worker['pid']}.json"
             if index == 0:
                 if fault == 'identity':

@@ -873,8 +873,12 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
                 final_result_retained=False)
             metadata_bytes = len((json.dumps(pending, indent=2, default=str)+'\n').encode('utf-8'))
             used = non_cache_bytes(local)
+            completion_error = None
             try:
                 owned = owned_device_bytes(config, node, require_complete=True)
+            except observation.PendingTraceReservation as failure:
+                owned = failure.reservation_bytes
+                completion_error = repr(failure)
             except BaseException as failure:
                 return dict(verdict='UNVERIFIED', record_budget=dict(node_rank=node['node_rank'],
                     record_bytes=config['record_bytes'], observed_bytes=used, owned_device_bytes=None,
@@ -886,6 +890,9 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
                 verdict='PASS' if used+metadata_bytes+owned <= config['record_bytes'] else 'UNVERIFIED')
             if budget['verdict'] != 'PASS':
                 return dict(verdict='UNVERIFIED', record_budget=budget)
+            if completion_error is not None:
+                # Preserve failed diagnostics within budget without qualifying the unfinished trace.
+                budget.update(verdict='UNVERIFIED', error=completion_error)
             archive = original_finalize(status)
             budget['retained_bytes'] = archive['retained_bytes']
             if archive['retained_bytes']+owned > config['record_bytes']:
