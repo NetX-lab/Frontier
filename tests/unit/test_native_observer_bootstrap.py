@@ -97,3 +97,41 @@ def test_bootstrap_validates_before_writes_and_launch(inputs, monkeypatch, fault
     assert all(digest(package / name) == row['sha256']
                for name, row in overlay['files'].items())
     assert all(digest(Path(path)) == value for path, value in binaries.items())
+
+
+@pytest.mark.parametrize('fault', ['normal', 'base', 'source', 'model_pin', 'unapproved'])
+def test_v4_repair_requires_exact_source_and_original_base_before_writes(inputs, fault):
+    package, staged, config, overlay, observer = inputs
+    name = 'models/deepseek_v4/nvidia/model.py'
+    target, source = package / name, staged / 'v4_model.py'
+    target.parent.mkdir(parents=True)
+    target.write_text('# Original V4 model\n')
+    source.write_text('# Reviewed V4 post-load repair\n')
+    overlay['files'][name] = dict(source=str(source), sha256=digest(source),
+                                 base_sha256=digest(target))
+    config['expected_source_hashes'] = {'vllm/' + name: digest(source)}
+    if fault == 'base':
+        target.write_text('# Other V4 source\n')
+    elif fault == 'source':
+        source.write_text('# Unreviewed change\n')
+    elif fault == 'model_pin':
+        config['expected_source_hashes']['vllm/' + name] = '0' * 64
+    elif fault == 'unapproved':
+        overlay['files']['model_executor/model_loader/dummy_loader.py'] = overlay['files'][name]
+    for filename, value in dict(overlay=overlay, observer=observer, config=config).items():
+        (staged / f'{filename}.json').write_text(json.dumps(value))
+    before = {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}
+    calls = []
+    if fault != 'normal':
+        with pytest.raises((ValueError, OSError, KeyError)):
+            bootstrap(staged / 'config.json', package=package,
+                      launch=lambda *args: calls.append(args))
+        assert before == {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}
+        assert calls == []
+    else:
+        bootstrap(staged / 'config.json', package=package,
+                  launch=lambda *args: calls.append(args))
+        assert len(calls) == 1
+        assert digest(target) == config['expected_source_hashes']['vllm/' + name]
+        assert all(digest(package / path) == row['sha256']
+                   for path, row in overlay['files'].items())
