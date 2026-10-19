@@ -299,7 +299,10 @@ class _ClusterScheduler:
         assert batch.scheduled_at == time
 
 
-def _v4_schedulers(*, blocks=200, chunk=64, policy="fcfs", enable_preemption=True):
+def _v4_schedulers(
+    *, blocks=200, chunk=64, policy="fcfs", enable_preemption=True,
+    max_concurrent_batches=None,
+):
     replica_config = ReplicaConfig(
         model_name="deepseek-ai/DeepSeek-V4-Flash",
         device="h800",
@@ -319,6 +322,7 @@ def _v4_schedulers(*, blocks=200, chunk=64, policy="fcfs", enable_preemption=Tru
         cluster.lanes.append(VLLMv1EngineReplicaScheduler(
             replica_config=replica_config,
             replica_scheduler_config=VllmV1SchedulerConfig(
+                max_concurrent_batches=max_concurrent_batches,
                 num_blocks=blocks,
                 scheduling_policy=policy,
                 enable_preemption=enable_preemption,
@@ -338,6 +342,11 @@ def _v4_schedulers(*, blocks=200, chunk=64, policy="fcfs", enable_preemption=Tru
             replica_local_id=lane,
         ))
     return cluster.lanes
+
+
+def test_explicit_queue_capacity_preserves_grouped_single_flight_guard():
+    with pytest.raises(NotImplementedError, match="Explicit queue capacity requires"):
+        _v4_schedulers(max_concurrent_batches=2)
 
 
 def test_real_v4_scheduler_reuses_planner_layout_with_reserved_pool() -> None:

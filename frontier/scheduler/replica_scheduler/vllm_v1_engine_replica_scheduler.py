@@ -363,6 +363,24 @@ class VLLMv1EngineReplicaScheduler(
                 ),
             )
 
+        requested_capacity = getattr(self._config, "max_concurrent_batches", None)
+        if requested_capacity is not None:
+            if (
+                type(self) is not VLLMv1EngineReplicaScheduler
+                or self._cluster_type != ClusterType.MONOLITHIC
+                or self._num_stages != 1
+                or self._replica_config.attn_dp != 1
+                or self._is_grouped_kv_allocation()
+                or self._is_prefix_caching_enabled()
+                or self._spec_decode_enabled
+                or model_has_gdn(self._replica_config.model_config)
+            ):
+                raise NotImplementedError(
+                    "Explicit queue capacity requires ordinary-cache VLLM V1 "
+                    "MONOLITHIC PP1/DP1 without prefix caching, speculation or GDN"
+                )
+            self._max_concurrent_batches = requested_capacity
+
     def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
         # The scheduler frontier already counts this batch's tokens. A prompt
         # chunk scheduled while the request's previous chunk is in flight
@@ -531,7 +549,7 @@ class VLLMv1EngineReplicaScheduler(
                 self._popped_output_events.extend(apply_output(time))
                 if not formed:
                     return batches + self._issue_dummy_pass()
-            elif not formed or self._num_running_batches == self._num_stages:
+            elif not formed or self._num_running_batches == self._max_concurrent_batches:
                 if self._in_flight_batch_ids:
                     self._blocking_batch_id = self._in_flight_batch_ids[0]
                     self._dummy_pass_due = not formed
@@ -989,16 +1007,16 @@ class VLLMv1EngineReplicaScheduler(
             # vLLM skips an in-flight request only once every prompt token is
             # scheduled; the next chunk goes out while the previous one is in
             # flight (scheduler.py, the num_new_tokens == 0 branch).
-            active_in_pp_batch = (
+            active_in_batch_queue = (
                 self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE}
-                and self._num_stages > 1
+                and self._max_concurrent_batches > 1
                 and self._is_request_active_in_batch(request)
                 and (
                     request.is_decoding
                     or self._get_request_next_num_tokens(request) == 0
                 )
             )
-            if active_in_pp_batch:
+            if active_in_batch_queue:
                 if self._cluster_type == ClusterType.MONOLITHIC:
                     reserved_tokens = (
                         self._get_monolithic_pp_mtp_visible_budget_reservation_tokens(
@@ -1017,7 +1035,7 @@ class VLLMv1EngineReplicaScheduler(
                         )
                 logger.debug(
                     "[VLLMv1Engine][%s] Phase 1: skipping req=%s "
-                    "(already active in a PP batch)",
+                    "(already active in the batch queue)",
                     self._cluster_type.name,
                     request.id,
                 )

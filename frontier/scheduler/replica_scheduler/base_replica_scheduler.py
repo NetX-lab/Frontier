@@ -49,6 +49,7 @@ class BaseReplicaScheduler(ABC):
         self._replica = replica
         self._replica_is_moe = replica.is_moe
         self._num_stages = replica.num_pipeline_stages
+        self._max_concurrent_batches = self._num_stages
         self._predictor = predictor
         self._cluster_type = cluster_type
         self._replica_local_id = replica_local_id
@@ -944,7 +945,7 @@ class BaseReplicaScheduler(ABC):
             # and different from the DP synchronization which happens at MoE layers
             scheduled_request_ids = set()
             self._continuation_request_ids = scheduled_request_ids
-            while self._num_running_batches < self._num_stages:
+            while self._num_running_batches < self._max_concurrent_batches:
                 batch = self._get_next_batch(is_micro_batch=False)
                 if not batch:
                     break
@@ -1097,8 +1098,8 @@ class BaseReplicaScheduler(ABC):
 
             self._num_running_batches += len(scheduled_batches)
         else:
-            # For prefill and monolithic clusters: use original logic based on pipeline stages
-            while self._num_running_batches < self._num_stages:
+            # Prefill and monolithic admission use the engine queue capacity.
+            while self._num_running_batches < self._max_concurrent_batches:
                 batch = self._get_next_batch(is_micro_batch=False)
                 if not batch:
                     break
