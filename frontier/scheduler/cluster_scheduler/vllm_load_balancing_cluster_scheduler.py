@@ -52,7 +52,10 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
                 )
         self._serving_replica_id = next(iter(self._cluster.replicas))
         self._num_pipeline_stages = self._config.replica_config.num_pipeline_stages
-        self._load_balancer = VllmDPLoadBalancer(self._replica_dp_size)
+        self._load_balancer = VllmDPLoadBalancer(
+            self._replica_dp_size,
+            policy_version=self._config.cluster_scheduler_config.policy_version,
+        )
         self._last_admitted_key = [-1] * self._replica_dp_size
         self._held_key: list[int | None] = [None] * self._replica_dp_size
 
@@ -66,7 +69,11 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
 
         self.sort_requests()
         mapping = [
-            (self._serving_replica_id, self._load_balancer.select(time), request)
+            (
+                self._serving_replica_id,
+                self._load_balancer.select(time, request_id=request.id),
+                request,
+            )
             for request in self._request_queue
         ]
         self._request_queue.clear()
@@ -120,6 +127,13 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         """
 
         lane_id = self._lane_index(replica_local_id)
+        if batch is not None and batch.completed:
+            # A preempted in-flight sample can finish a request whose execution
+            # signature is now stale. Stale-drop callbacks apply no output and
+            # leave batch.completed false; they must not release ownership.
+            self._load_balancer.finish_requests(
+                request.id for request in batch.requests if request.completed
+            )
         key = self._held_key[lane_id]
         if key is None:
             key = self._next_report_key(replica_id, lane_id)

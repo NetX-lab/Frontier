@@ -19,6 +19,7 @@ latency realism, and both runs see the same durations.
 from __future__ import annotations
 
 from collections import defaultdict
+from functools import partial
 import json
 import os
 from pathlib import Path
@@ -536,6 +537,25 @@ def test_a_deferred_terminal_release_is_reported(tmp_path):
         _assert_run_conserves_work(run)
 
 
+@pytest.mark.parametrize(
+    "case", ["v028_moe_dp2_online", "v028_moe_dp2_pp4_kv_pressure", "v028_moe_dp2_pp4_release"]
+)
+def test_v028_request_ownership_follows_terminal_output_in_the_event_loop(tmp_path, case):
+    run = _run_child(tmp_path, case)["vllm_load_balancing"]
+    _assert_run_conserves_work(run)
+    assert run["routing_times"] == run["cluster_schedule_times"]
+    assert run["final_request_owners"] == {}
+    assert run["final_engine_inflight"] == [0, 0]
+    released = [request_id for row in run["ownership"] for request_id in row["released_ids"]]
+    assert sorted(released) == sorted(run["placement_request_ids"])
+    assert len(released) == len(set(released))
+    assert all(row["source"] == "completion" for row in run["ownership"] if row["released_ids"])
+    if "kv_pressure" in case:
+        assert run["num_preemptions"] > 0
+    if "release" in case:
+        assert any(row["source"] == "terminal_release" for row in run["ownership"])
+
+
 # ---------------------------------------------------------------------------
 # Child process
 # ---------------------------------------------------------------------------
@@ -699,6 +719,7 @@ def run_case(
     root: Path,
     *,
     policy_name: str,
+    policy_version: str = "v0.10.2",
     completion_reporting_control: bool = False,
     build_config=None,
     **shape,
@@ -743,7 +764,9 @@ def run_case(
     from frontier.types import ClusterType
 
     policy = {
-        "vllm_load_balancing": VllmLoadBalancingClusterSchedulerConfig,
+        "vllm_load_balancing": partial(
+            VllmLoadBalancingClusterSchedulerConfig, policy_version=policy_version
+        ),
         "round_robin": RoundRobinClusterSchedulerConfig,
     }[policy_name]
 
@@ -772,6 +795,7 @@ def run_case(
     iteration_schedules: list[dict] = []
     schedule_time: list[float] = []
     stale_drops: list[dict] = []
+    ownership: list[dict] = []
 
     original_cluster_schedule = ClusterScheduleEvent.handle_event
     original_report = VllmDPLoadBalancer.report
@@ -820,12 +844,12 @@ def run_case(
         reports.append([step, list(load)])
         return original_report(self, time, engine, step, load)
 
-    def observed_select(self, time):
+    def observed_select(self, time, request_id=None):
         # Applying the passed deadlines first changes nothing: `select` does
         # the same before choosing. It exposes the snapshot the choice reads.
         self._advance(time)
         snapshot = [list(load) for load in self.frontend_counts]
-        engine = original_select(self, time)
+        engine = original_select(self, time, request_id=request_id)
         selections.append({"time": float(time), "snapshot": snapshot, "engine": engine})
         return engine
 
@@ -992,6 +1016,7 @@ def run_case(
     def observing_seam(kind, original):
         def observed(self, time, replica_id, replica_local_id, batch):
             before = len(reports)
+            owners_before = set(self._load_balancer.request_owners)
             result = original(self, time, replica_id, replica_local_id, batch)
             made = reports[before:]
             assert len(made) <= 1, made
@@ -1005,6 +1030,11 @@ def run_case(
                 source = "completion"
             else:
                 source = "stale_drop"
+            if policy_version == "v0.28.0":
+                ownership.append({
+                    "source": source,
+                    "released_ids": sorted(owners_before - set(self._load_balancer.request_owners)),
+                })
             records.append(
                 {
                     "kind": kind,
@@ -1157,6 +1187,15 @@ def run_case(
         "lane_forward_counts": [lane._batch_creation_counter for lane in lanes],
         "dummy_forwards_in_flight": [lane._dummy_forwards_in_flight for lane in lanes],
         "stale_drops": stale_drops,
+        "ownership": ownership,
+        "final_request_owners": (
+            None if policy_name == "round_robin"
+            else dict(cluster_scheduler._load_balancer.request_owners)
+        ),
+        "final_engine_inflight": (
+            None if policy_name == "round_robin"
+            else list(cluster_scheduler._load_balancer.engine_inflight)
+        ),
         "num_preemptions": sum(
             request.get_total_preemption_count() for request in requests
         ),
@@ -1320,6 +1359,9 @@ CASES = {
         dummy_execution_time_ms=10.0,
     ),
 }
+
+for _case in ("moe_dp2_online", "moe_dp2_pp4_kv_pressure", "moe_dp2_pp4_release"):
+    CASES[f"v028_{_case}"] = {**CASES[_case], "policy_version": "v0.28.0"}
 
 # The policy run's comparison run: a load-blind baseline, or for the
 # discriminating case the completion-reporting control.
