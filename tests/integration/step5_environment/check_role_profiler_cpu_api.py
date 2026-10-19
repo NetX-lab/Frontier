@@ -1,5 +1,6 @@
 """Verify the original Torch wrapper and capped trace export without using GPUs."""
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -47,6 +48,16 @@ def main():
             observation.ProfilerObservationLimits(cap, 100000), records, time.monotonic()+20,
             execution.write_record, state, report['sources'])
         state.profiler = observed
+        observed.bind_graph_api()
+        assert int(observed.runtime.cudaStream_t(init_value=7)) == 7
+        assert observed.runtime.cudaGraphGetNodes.__doc__.startswith('cudaGraphGetNodes(graph, size_t numNodes=0)')
+        for name, output_type in (('cuptiGetGraphId', ctypes.c_uint32),
+                                  ('cuptiGetGraphNodeId', ctypes.c_uint64),
+                                  ('cuptiGetGraphExecId', ctypes.c_uint32)):
+            function = getattr(observed.cupti, name)
+            assert function.argtypes == (ctypes.c_void_p, ctypes.POINTER(output_type))
+            assert function.restype is ctypes.c_int
+        report['graph_api'] = 'BOUND_LOCKED_BINARIES_AND_C_SIGNATURES_NO_CUDA_API_CALL'
         original = observed.bind_profiler(ProfilerConfig(**observation.native_config(records)))
         assert original is worker.profiler and isinstance(original, TorchProfilerWrapper)
         assert worker.model_runner._step5_profiler_observation is observed

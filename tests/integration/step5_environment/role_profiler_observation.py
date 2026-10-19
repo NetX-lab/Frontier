@@ -1,7 +1,9 @@
 """Observe the original native Torch profiler without qualifying physical nodes or G2."""
 from dataclasses import dataclass, field
 import copy
+import ctypes
 import hashlib
+import importlib.metadata
 import json
 import math
 import os
@@ -17,6 +19,8 @@ SOURCE_PINS = {
     'wrapper': ('vllm/profiler/wrapper.py', 'ffc5424d87fdcd8ff8bc5da9eaabfb2c8eb9ac70f106b74442b7df6e6e921013'),
     'worker': ('vllm/v1/worker/gpu_worker.py', model_observation.SOURCE_PINS['worker']),
     'torch_graphs': ('torch/cuda/graphs.py', '15b535903f0832cbfbf83070c663ed899a9fd87b5499befde5087b4c2962ed81'),
+    'cuda_runtime': ('cuda/bindings/runtime.cpython-312-x86_64-linux-gnu.so', 'bdd061294dd0d595df280aa7931e125d1356e80016751eaec009f5f2f2c57e59'),
+    'cupti': ('nvidia/cu13/lib/libcupti.so.13', 'e2f9ed861fe27c492b8bb52b5e3220ef5120f3edcda36312e96b7fd8a186be3e'),
 }
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 WINDOWS = ('capture', 'requests')
@@ -183,6 +187,77 @@ def export_trace(profiler, path, byte_limit, deadline, *, clock=time.monotonic):
                 cleanup_pipe()
 
 
+def correlate_capture_nodes(capture, stored, kernels):
+    """Join locked-runtime node IDs while preserving host-interval ownership limits.
+
+    The installed Torch graph annotation remapper replaces the high 32-bit graph
+    ID and preserves the low 32-bit node index. The H800 API smoke verifies this
+    encoding for the locked CUPTI getters and Kineto's actual trace fields.
+    Child graphs, absent intervals and unmatched nodes receive no attribution.
+    """
+    result = dict(status='UNVERIFIED', kernels=[], unmatched_kernel_ids=[],
+                  ownership='HOST_CALL_INTERVAL_ONLY_NOT_EXCLUSIVE_GPU_OWNERSHIP')
+    binding = stored.get('capture_binding_event')
+    if stored['path'] != 'FULL' or type(binding) is not int or binding <= 0:
+        result['reason'] = 'NO_FULL_CAPTURE_INTERVAL_BINDING'
+        return result
+    intervals = [row for row in capture['events'] if row['kind'] == 'capture_node_interval' and
+                 row['capture_binding_event'] == binding]
+    forwards = [row for row in capture['events'] if row['event'] == binding and
+                row['kind'] == 'capture_forward' and row.get('native_capture_region') is True and
+                row['owner_id'] == stored['owner_id']]
+    if (len(forwards) != 1 or len(intervals) < 2 or intervals[0]['boundary'] != 'capture_begin' or
+            intervals[-1]['boundary'] != 'capture_end'):
+        result['reason'] = 'INCOMPLETE_NATIVE_CAPTURE_INTERVALS'
+        return result
+    calls = {row['event']: row for row in capture['events'] if row['kind'] == 'native_call'}
+    nodes, previous_event = {}, binding
+    identity = {key: intervals[0][key] for key in
+                ('capture_id', 'graph_handle', 'stream_handle', 'cupti_graph_id')}
+    exec_id = stored['cupti_graph_exec_id']
+    if (type(exec_id) is not int or not 0 < exec_id < 2**32 or
+            type(identity['cupti_graph_id']) is not int or not 0 < identity['cupti_graph_id'] < 2**32):
+        raise ValueError('CUPTI graph IDs must fit the locked 32-bit identity fields')
+    for index, row in enumerate(intervals):
+        if (not previous_event < row['event'] < stored['event'] or
+                any(row[key] != value for key, value in identity.items()) or
+                row['baseline'] is not (index == 0)):
+            raise ValueError('Capture node intervals lost their original sequence or graph identity')
+        previous_event = row['event']
+        owner = calls.get(row['call_event'])
+        if row['call_event'] is not None and (owner is None or
+                owner['capture_binding_event'] != binding or owner['event'] >= row['event']):
+            raise ValueError('Capture node interval does not refer to its original native call')
+        for node in row['nodes']:
+            node_id = node['cupti_node_id']
+            if (type(node_id) is not int or node_id <= 0 or type(node['node_type']) is not int or
+                    node_id >> 32 != identity['cupti_graph_id'] or node_id in nodes):
+                raise ValueError('Capture nodes have ambiguous or incompatible CUPTI identities')
+            nodes[node_id] = dict(interval_event=row['event'], call_event=row['call_event'],
+                node_type=node['node_type'], site=owner.get('site') if owner else None,
+                layer_id=owner.get('layer_id') if owner else None,
+                owner_id=owner.get('owner_id') if owner else None)
+        if type(row['total_nodes']) is not int or row['total_nodes'] != len(nodes):
+            raise ValueError('Capture node intervals do not cover the observed graph additions')
+    remapped = {(exec_id << 32) | (node_id & 0xFFFFFFFF): (node_id, row)
+                for node_id, row in nodes.items()}
+    seen = set()
+    for kernel in kernels:
+        args = kernel['args']
+        node_id = args.get('graph node id')
+        match = remapped.get(node_id) if type(node_id) is int else None
+        if (type(args.get('graph id')) is not int or args['graph id'] != exec_id or
+                match is None or match[1]['node_type'] != 0 or node_id in seen):
+            result['unmatched_kernel_ids'].append(node_id)
+            continue
+        seen.add(node_id)
+        result['kernels'].append(dict(cupti_replay_node_id=node_id,
+            cupti_capture_node_id=match[0], **match[1]))
+    if result['kernels'] and not result['unmatched_kernel_ids']:
+        result['status'] = 'OBSERVED_CAPTURE_INTERVAL_KERNEL_CORRELATION'
+    return result
+
+
 def correlate_trace(events, records):
     """Join actual replay annotations and launch correlations; never infer node owners."""
     from frontier.profiling.kernel_gap.main import GRAPH_LAUNCH_API_NAMES, graph_launch_chains
@@ -276,26 +351,38 @@ def correlate_trace(events, records):
             result['unmatched_launches'].append(row)
             continue
         stored = [entry for entry in captures if all(entry.get(key) == owner.get(key)
-                    for key in ('path', 'owner_id', 'entry_id', 'graph_id', 'cuda_graph_exec_handle')) and
+                    for key in ('path', 'owner_id', 'entry_id', 'graph_id', 'cuda_graph_exec_handle',
+                                'cupti_graph_exec_id')) and
                   all(type(item.get('continuity', {}).get('serial')) is int and
                       item['continuity']['serial'] > 0 and
                       type(item.get('cuda_graph_exec_handle')) is int and
                       item['cuda_graph_exec_handle'] > 0 and
+                      type(item.get('cupti_graph_exec_id')) is int and item['cupti_graph_exec_id'] > 0 and
                       item.get('cuda_graph_exec_identity') == 'OBSERVED_READ_ONLY_HANDLE_NOT_NODE_BINDING'
                       for item in (entry, owner)) and
                   entry['continuity']['serial'] == owner['continuity']['serial']]
-        result['replay_launches'].append(dict(row, annotation=candidates[0]['name'],
+        replay = dict(row, annotation=candidates[0]['name'],
             **{key: copy.deepcopy(owner.get(key)) for key in
                ('lifecycle', 'sequence', 'event', 'path', 'owner_id', 'entry_id', 'graph_id',
-                'cuda_graph_exec_handle', 'cuda_graph_exec_identity', 'continuity')},
+                'cuda_graph_exec_handle', 'cupti_graph_exec_id', 'cuda_graph_exec_identity', 'continuity')},
             capture_binding=({key: stored[0][key] for key in ('lifecycle', 'sequence', 'event')}
                              if len(stored) == 1 else 'UNVERIFIED_CAPTURE_BINDING'),
-            kernel_trace_events=[indices[id(kernel)] for kernel in chain]))
+            kernel_trace_events=[indices[id(kernel)] for kernel in chain])
+        if len(stored) == 1:
+            capture_records = [record for record in records if
+                (record['lifecycle'], record['sequence']) == (stored[0]['lifecycle'], stored[0]['sequence'])]
+            if len(capture_records) == 1:
+                replay['capture_node_correlation'] = correlate_capture_nodes(capture_records[0], stored[0], chain)
+        result['replay_launches'].append(replay)
         matched.update(id(kernel) for kernel in chain)
     result['unmatched_kernels'] = len(kernels)-len(matched)
     if (result['replay_launches'] and not result['unmatched_launches'] and
             not result['ambiguous_launches'] and not result['unmatched_annotations']):
         result['status'] = 'OBSERVED_REPLAY_LAUNCH_CORRELATION_ONLY_NOT_NODE_ATTRIBUTION'
+        if all(row.get('capture_node_correlation', {}).get('status') ==
+               'OBSERVED_CAPTURE_INTERVAL_KERNEL_CORRELATION' for row in result['replay_launches']):
+            result['status'] = 'OBSERVED_REPLAY_AND_CAPTURE_INTERVAL_CORRELATION'
+            result['physical_kernel_attribution'] = 'UNVERIFIED_EXCLUSIVE_NODE_OWNERSHIP'
     return result
 
 
@@ -313,6 +400,110 @@ class NativeProfilerObservation:
     windows: list = field(default_factory=list)
     errors: list = field(default_factory=list)
     clock: object = time.monotonic
+    runtime: object = None
+    cupti: object = None
+
+    def bind_graph_api(self):
+        """Bind installed read-only APIs; do not initialize CUDA or enable CUPTI collection."""
+        from cuda.bindings import runtime
+
+        package = importlib.metadata.distribution('nvidia-cuda-cupti')
+        for key, path in (('cuda_runtime', Path(runtime.__file__)),
+                          ('cupti', Path(package.locate_file(SOURCE_PINS['cupti'][0])))):
+            relative, digest = SOURCE_PINS[key]
+            if (not path.as_posix().endswith('/'+relative) or
+                    hashlib.sha256(path.read_bytes()).hexdigest() != digest):
+                raise ValueError('Installed graph API differs from the locked source: '+key)
+            self.sources[str(path)] = dict(sha256=digest, code_owners=[])
+        cupti = ctypes.CDLL(str(package.locate_file(SOURCE_PINS['cupti'][0])))
+        for name, output in (('cuptiGetGraphId', ctypes.c_uint32),
+                             ('cuptiGetGraphNodeId', ctypes.c_uint64),
+                             ('cuptiGetGraphExecId', ctypes.c_uint32)):
+            function = getattr(cupti, name)
+            function.argtypes = (ctypes.c_void_p, ctypes.POINTER(output))
+            function.restype = ctypes.c_int
+        self.runtime, self.cupti = runtime, cupti
+
+    def graph_read(self, function, *args, **kwargs):
+        """Every native metadata read shares the original absolute workload deadline."""
+        if self.worker.profiler is not self.profiler or self.clock() >= self.deadline:
+            raise RuntimeError('Graph observation lost its original profiler or workload deadline')
+        result = function(*args, **kwargs)
+        if self.clock() >= self.deadline:
+            raise TimeoutError('Graph metadata read exceeded the original workload deadline')
+        if int(result[0]) != 0:
+            raise RuntimeError('Native graph metadata API failed: '+str(result[0]))
+        return result[1:]
+
+    def cupti_id(self, name, handle, output_type):
+        output = output_type()
+        def read():
+            return getattr(self.cupti, name)(ctypes.c_void_p(handle), ctypes.byref(output)),
+        self.graph_read(read)
+        if output.value <= 0:
+            raise ValueError('CUPTI did not return a positive graph or node identity')
+        return output.value
+
+    def capture_nodes(self, previous):
+        """Read node additions while the original FULL capture is still active.
+
+        Intervals associate nodes with host call boundaries. They do not prove
+        exclusive ownership when other capture threads or streams add work.
+        The caller discards the numeric handle set before native capture ends.
+        """
+        import torch
+
+        if self.current is None or self.current['label'] != 'capture' or not self.profiler.is_running:
+            raise ValueError('Capture nodes require the original active capture profiler window')
+        runtime = self.runtime
+        stream = torch.cuda.current_stream().cuda_stream
+        status, capture, graph, _, _, _ = self.graph_read(runtime.cudaStreamGetCaptureInfo,
+            runtime.cudaStream_t(init_value=stream))
+        if status != runtime.cudaStreamCaptureStatus.cudaStreamCaptureStatusActive:
+            raise ValueError('Original stream is no longer in an active capture')
+        identity = dict(capture_id=int(capture), graph_handle=int(graph), stream_handle=int(stream))
+        if identity['capture_id'] <= 0 or identity['graph_handle'] <= 0:
+            raise ValueError('Active capture must expose its original positive identities')
+        if previous is not None and any(previous[key] != value for key, value in identity.items()):
+            raise ValueError('Capture identity changed before the node interval ended')
+        _, count = self.graph_read(runtime.cudaGraphGetNodes, graph)
+        if type(count) is not int or not 0 <= count <= self.limits.trace_events:
+            raise ValueError('Capture node count exceeds the original trace event allowance')
+        nodes = []
+        if count:
+            nodes, filled = self.graph_read(runtime.cudaGraphGetNodes, graph, numNodes=count)
+            _, final_count = self.graph_read(runtime.cudaGraphGetNodes, graph)
+            if filled != count or final_count != count or len(nodes) != count:
+                raise ValueError('Capture node enumeration changed during observation')
+        handles = {int(node) for node in nodes}
+        if len(handles) != count or any(handle <= 0 for handle in handles):
+            raise ValueError('Native capture node handles must be positive and unique')
+        old = previous['nodes'] if previous is not None else {}
+        if not old.keys() <= handles:
+            raise ValueError('Previously observed nodes disappeared during the same capture')
+        graph_id = (previous['cupti_graph_id'] if previous is not None else
+                    self.cupti_id('cuptiGetGraphId', int(graph), ctypes.c_uint32))
+        additions = []
+        ids = set(old.values())
+        for node in nodes:
+            handle = int(node)
+            if handle in old:
+                continue
+            node_id = self.cupti_id('cuptiGetGraphNodeId', handle, ctypes.c_uint64)
+            if node_id in ids:
+                raise ValueError('CUPTI node identity is not unique within this capture')
+            node_type, = self.graph_read(runtime.cudaGraphNodeGetType, node)
+            additions.append(dict(cupti_node_id=node_id, node_type=int(node_type),
+                                  node_type_name=node_type.name))
+            ids.add(node_id)
+        # Commit only after every read succeeds. No graph/node object escapes.
+        current = previous if previous is not None else dict(identity, cupti_graph_id=graph_id, nodes={})
+        new_handles = [int(node) for node in nodes if int(node) not in old]
+        current['nodes'].update(zip(new_handles, (row['cupti_node_id'] for row in additions)))
+        return current, dict(identity, cupti_graph_id=graph_id, total_nodes=count,
+            baseline=previous is None, nodes=additions,
+            association='NODE_ADDITIONS_BETWEEN_HOST_BOUNDARIES_NOT_EXCLUSIVE_OWNERSHIP',
+            replay_node_mapping='UNVERIFIED', gpu_completion='UNMEASURED')
 
     def error(self, kind, failure):
         if not self.errors:
@@ -463,6 +654,7 @@ class NativeProfilerObservation:
         if type(handle) is not int or handle <= 0:
             raise ValueError('Original graph executable getter did not return an instantiated identity')
         return dict(cuda_graph_exec_handle=handle,
+                    cupti_graph_exec_id=self.cupti_id('cuptiGetGraphExecId', handle, ctypes.c_uint32),
                     cuda_graph_exec_identity='OBSERVED_READ_ONLY_HANDLE_NOT_NODE_BINDING')
 
     def annotate(self, name):
@@ -517,6 +709,6 @@ def create_observation(worker, state, record):
         raise ValueError('Native profiler config differs from the unscheduled all-rank diagnostic policy')
     state.rank_limit = record_bytes//8
     observed = NativeProfilerObservation(worker, limits, output, deadline, record, state, sources)
-
+    observed.bind_graph_api()
     observed.bind_profiler(worker.profiler_config)
     return observed

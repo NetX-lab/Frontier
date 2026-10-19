@@ -1126,6 +1126,7 @@ class ObservationScope:
         self.active, self.stopped, self.installed = False, False, False
         self.opcodes, self.native_calls, self.excluded_capture_calls = {}, {}, {}
         self.capture_binding_event, self.capture_window = None, False
+        self.capture_node_state = None
         self.annotations = {}
         self.call_tensors, self.tensor_keys = [], {}
         self.profile_hook, self.trace_hook = self.profile, self.trace
@@ -1173,6 +1174,16 @@ class ObservationScope:
         context = self.annotations.pop(key, None)
         if context is not None:
             context.__exit__(None, None, None)
+
+    def capture_nodes(self, boundary, owner=None):
+        observed = getattr(self.runner, '_step5_profiler_observation', None)
+        if observed is None or self.kind != 'capture' or not self.capture_window:
+            return
+        self.capture_node_state, values = observed.capture_nodes(self.capture_node_state)
+        if values['nodes'] or boundary in ('capture_begin', 'capture_end'):
+            self.emit('capture_node_interval', frontiers=False, boundary=boundary,
+                capture_binding_event=self.capture_binding_event,
+                call_event=owner['event'] if owner is not None else None, **values)
 
     def metadata(self):
         return Metadata(self.sites, self.state.limits)
@@ -1272,6 +1283,7 @@ class ObservationScope:
                 self.excluded_capture_calls[name] = self.excluded_capture_calls.get(name, 0)+1
                 return
             parent = self.parent_call(frame)
+            self.capture_nodes('call_enter', parent)
             owner = frame.f_locals.get('self')
             binding = self.sites.census_owners.get(id(owner))
             owner_row = binding[1] if binding is not None and binding[0]() is owner else None
@@ -1305,6 +1317,7 @@ class ObservationScope:
             row = self.native_calls.pop(id(frame), None)
             if row is None:
                 return
+            self.capture_nodes('call_return', row)
             returned = self.returned(frame)
             metadata = Metadata(self.sites, self.state.limits, tensor_record=self.tensor_reference)
             self.update(row, outcome='RETURNED_CPU_CALL_NOT_GPU_COMPLETION' if returned else
@@ -1445,6 +1458,7 @@ class ObservationScope:
             self.capture_binding_event = event['event'] if event is not None and self.capture_window else None
             if self.capture_window:
                 self.start_annotation(('capture', id(frame)), event, 'capture')
+                self.capture_nodes('capture_begin')
 
     def profile(self, frame, event, arg):
         if self.previous_profile is not None:
@@ -1453,6 +1467,9 @@ class ObservationScope:
             return
         if self.stopped:
             if event == 'return':
+                if self.kind == 'capture' and frame.f_code is self.sites.codes['capture_forward']:
+                    self.capture_node_state = None
+                    self.capture_window = False
                 keys = (('call', id(frame)), ('capture', id(frame)), ('python', id(frame)))
             elif event in ('c_return', 'c_exception'):
                 keys = (('c', id(frame), id(getattr(arg, '__self__', None))),)
@@ -1499,6 +1516,10 @@ class ObservationScope:
                         self.capture_inputs(frame, 'capture_forward')
             elif event == 'return':
                 if self.kind == 'capture' and frame.f_code is codes['capture_forward']:
+                    try:
+                        self.capture_nodes('capture_end')
+                    finally:
+                        self.capture_node_state = None
                     self.finish_annotation(('capture', id(frame)))
                     self.capture_window = False
                 key = ('python', id(frame))
@@ -1611,6 +1632,7 @@ class ObservationScope:
         key = (self.breakable_key(frame, entry, metadata) if path == 'BREAKABLE_PIECEWISE'
                else descriptor)
         row = self.emit('capture_entry_stored', path=path, owner_id=id(owner), entry_id=id(entry),
+                  capture_binding_event=self.capture_binding_event if path == 'FULL' else None,
                   graph_id=id(graph), descriptor=descriptor, selection_key=key, source_line=frame.f_lineno,
                   continuity=self.state.continuity(owner, entry, graph, key, path, captured=True),
                   device_operations_added=False, gpu_completion='UNMEASURED')
@@ -1676,6 +1698,7 @@ class ObservationScope:
                 sys.setprofile(self.previous_profile)
 
     def __exit__(self, exc_type, exc, tb):
+        self.capture_node_state = None
         try:
             if self.installed:
                 try:

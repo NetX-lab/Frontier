@@ -165,6 +165,7 @@ def profiler_rows(rows, initial, config, *, started):
                     ('__init__', '_start', '_stop', 'annotate_context_manager')},
         'worker': {'Worker.profile', 'Worker._get_cudagraph_capture_context'},
         'torch_graphs': {'CUDAGraph.raw_cuda_graph_exec'},
+        'cuda_runtime': set(), 'cupti': set(),
     }
     identity_keys = ('rank', 'local_rank', 'pid', 'start_time', 'parent_pid', 'parent_start_time',
                      'generation', 'node_rank', 'boot_id', 'pid_namespace', 'observer_sha256')

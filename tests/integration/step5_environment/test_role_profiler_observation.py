@@ -1,6 +1,8 @@
 """CPU failure and identity checks for the original native profiler observation."""
 import ast
 import copy
+import ctypes
+from enum import IntEnum
 import hashlib
 import json
 import os
@@ -147,7 +149,7 @@ def profiler_sources():
     owners = dict(wrapper=('TorchProfilerWrapper.__init__', 'TorchProfilerWrapper._start',
         'TorchProfilerWrapper._stop', 'TorchProfilerWrapper.annotate_context_manager'),
         worker=('Worker.profile', 'Worker._get_cudagraph_capture_context'),
-        torch_graphs=('CUDAGraph.raw_cuda_graph_exec',))
+        torch_graphs=('CUDAGraph.raw_cuda_graph_exec',), cuda_runtime=(), cupti=())
     return {'/native/'+relative: dict(sha256=digest, code_owners=[dict(name=owner, first_line=index+1)
         for index, owner in enumerate(owners[key])])
         for key, (relative, digest) in observation.SOURCE_PINS.items()}
@@ -381,7 +383,7 @@ def test_caller_rejects_false_profiler_completion(config, tmp_path, fault):
 
 def test_retained_native_profiler_pins_and_loaded_owners_match_exact_sources():
     for key, (relative, pin) in observation.SOURCE_PINS.items():
-        if key == 'torch_graphs':
+        if key in ('torch_graphs', 'cuda_runtime', 'cupti'):
             continue  # Exact-image Torch source binding is checked by the CPU API script.
         base = 'observed_generation5' if key == 'wrapper' else 'observed'
         path = caller.capacity.TASK/'native_role_sources'/base/relative
@@ -423,6 +425,7 @@ def annotate_runner(observed, failure=None):
         return AnnotationContext(name, calls, stack, failure)
 
     observed._step5_profiler_observation = SimpleNamespace(annotate=annotate,
+        capture_nodes=lambda previous: (dict(nodes={}), dict(nodes=[])),
         graph_identity=lambda graph: dict(cuda_graph_exec_handle=id(graph),
             cuda_graph_exec_identity='CPU_FIXTURE_ONLY_NOT_NATIVE'))
     return calls, stack
@@ -503,7 +506,7 @@ def test_annotation_duplicate_boundary_rejects_before_second_native_enter(native
 def correlation_case(pid=7):
     name = observation.annotation_name('execute', 1, 1, 'replay')
     graph = dict(path='FULL', owner_id=11, entry_id=12, graph_id=13,
-                 continuity=dict(serial=1), cuda_graph_exec_handle=14,
+                 continuity=dict(serial=1), cuda_graph_exec_handle=14, cupti_graph_exec_id=15,
                  cuda_graph_exec_identity='OBSERVED_READ_ONLY_HANDLE_NOT_NODE_BINDING')
     records = [dict(lifecycle='capture', sequence=1, events=[dict(copy.deepcopy(graph), kind='capture_entry_stored', event=1)]),
         dict(lifecycle='execute', sequence=1, events=[dict(copy.deepcopy(graph), event=1, kind='replay_attempt',
@@ -824,6 +827,7 @@ def test_malformed_native_trace_is_rejected_before_correlation(fault):
 @pytest.mark.parametrize('fault', ['none', 'container', 'getter', 'zero', 'bool', 'substituted_profiler'])
 def test_graph_executable_identity_uses_only_the_original_read_getter(output, monkeypatch, fault):
     worker, observed, wrapper = profiler_case(output)
+    observed.cupti = CpuCupti()
     calls = []
 
     class Graph:
@@ -944,3 +948,308 @@ def test_original_capture_context_keeps_native_outcome_on_auxiliary_control_fail
         assert actual._request_observation.unverified
         if fault != 'preparation':
             assert observed.windows[0]['status'] == 'UNVERIFIED' and observed.errors
+
+
+class CpuCupti:
+    """Exercise the installed getters' C argument widths without calling CUDA."""
+    def __init__(self):
+        self.calls, self.failure, self.duplicate = [], False, False
+
+    def read(self, name, handle, output):
+        self.calls.append((name, handle.value, type(output._obj)))
+        output._obj.value = 9 if self.duplicate else handle.value + 100
+        return 1 if self.failure else 0
+
+    def cuptiGetGraphId(self, handle, output):
+        return self.read('graph', handle, output)
+
+    def cuptiGetGraphNodeId(self, handle, output):
+        return self.read('node', handle, output)
+
+    def cuptiGetGraphExecId(self, handle, output):
+        return self.read('exec', handle, output)
+
+
+class CpuGraphRuntime:
+    """CUDA metadata responses only; any unlisted API use fails the CPU test."""
+    class cudaStreamCaptureStatus(IntEnum):
+        cudaStreamCaptureStatusActive = 1
+
+    class NodeType(IntEnum):
+        cudaGraphNodeTypeKernel = 0
+        cudaGraphNodeTypeGraph = 4
+
+    @staticmethod
+    def cudaStream_t(*, init_value):
+        return init_value
+
+    def __init__(self):
+        self.nodes, self.calls = [11], []
+        self.capture, self.graph, self.status = 1, 2, self.cudaStreamCaptureStatus(1)
+        self.failure, self.after_fill = None, None
+
+    def cudaStreamGetCaptureInfo(self, stream):
+        self.calls.append(('capture', stream))
+        return (1 if self.failure == 'capture' else 0, self.status,
+                self.capture, self.graph, [], [], 0)
+
+    def cudaGraphGetNodes(self, graph, numNodes=0):
+        self.calls.append(('nodes', graph, numNodes))
+        nodes, count = list(self.nodes[:numNodes]), len(self.nodes)
+        if numNodes and self.after_fill is not None:
+            self.after_fill()
+        return 1 if self.failure == 'nodes' else 0, nodes, count
+
+    def cudaGraphNodeGetType(self, node):
+        self.calls.append(('type', node))
+        return 1 if self.failure == 'type' else 0, self.NodeType(node % 2 * 4)
+
+
+def capture_api_case(output, monkeypatch):
+    worker, observed, wrapper = profiler_case(output)
+    start_window(observed, wrapper, 'capture')
+    observed.runtime, observed.cupti = CpuGraphRuntime(), CpuCupti()
+    monkeypatch.setitem(sys.modules, 'torch', SimpleNamespace(cuda=SimpleNamespace(
+        current_stream=lambda: SimpleNamespace(cuda_stream=7))))
+    return worker, observed, observed.runtime, observed.cupti
+
+
+def test_capture_records_only_additions_and_cupti_widths_while_graph_is_live(output, monkeypatch):
+    _, observed, runtime, cupti = capture_api_case(output, monkeypatch)
+    previous, first = observed.capture_nodes(None)
+    assert first['baseline'] and first['cupti_graph_id'] == 102
+    assert first['nodes'] == [dict(cupti_node_id=111, node_type=4, node_type_name='cudaGraphNodeTypeGraph')]
+    runtime.nodes = [13, 11, 12]
+    current, second = observed.capture_nodes(previous)
+    assert current is previous and not second['baseline']
+    assert {row['cupti_node_id'] for row in second['nodes']} == {112, 113}
+    assert current['nodes'] == {11: 111, 12: 112, 13: 113}
+    _, third = observed.capture_nodes(current)
+    assert third['nodes'] == []
+    assert second['replay_node_mapping'] == 'UNVERIFIED'
+    assert second['gpu_completion'] == 'UNMEASURED'
+    assert cupti.calls == [('graph', 2, ctypes.c_uint32), ('node', 11, ctypes.c_uint64),
+                           ('node', 13, ctypes.c_uint64), ('node', 12, ctypes.c_uint64)]
+    assert observed.cupti_id('cuptiGetGraphExecId', 8, ctypes.c_uint32) == 108
+    assert cupti.calls[-1] == ('exec', 8, ctypes.c_uint32)
+    assert observed.summary()['G2'] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('fault', ['inactive', 'capture_changed', 'graph_changed', 'disappeared',
+    'duplicate_handle', 'null_handle', 'event_limit', 'count_changed', 'capture_api', 'nodes_api',
+    'type_api', 'cupti_api', 'duplicate_id', 'deadline', 'late_api', 'profiler_changed'])
+def test_invalid_capture_evidence_never_dereferences_ended_or_unadmitted_nodes(output, monkeypatch, fault):
+    worker, observed, runtime, cupti = capture_api_case(output, monkeypatch)
+    previous, _ = observed.capture_nodes(None)
+    before = copy.deepcopy(previous)
+    runtime.calls.clear()
+    cupti.calls.clear()
+    runtime.nodes.append(12)
+    if fault == 'inactive':
+        runtime.status = 0
+    elif fault == 'capture_changed':
+        runtime.capture += 1
+    elif fault == 'graph_changed':
+        runtime.graph += 1
+    elif fault == 'disappeared':
+        runtime.nodes = [12]
+    elif fault == 'duplicate_handle':
+        runtime.nodes = [11, 11]
+    elif fault == 'null_handle':
+        runtime.nodes.append(0)
+    elif fault == 'event_limit':
+        observed.limits = observation.ProfilerObservationLimits(8192, 1)
+    elif fault == 'count_changed':
+        runtime.after_fill = lambda: runtime.nodes.append(13)
+    elif fault in ('capture_api', 'nodes_api', 'type_api'):
+        runtime.failure = fault.split('_')[0]
+    elif fault == 'cupti_api':
+        cupti.failure = True
+    elif fault == 'duplicate_id':
+        runtime.nodes.append(13)
+        cupti.duplicate = True
+    elif fault == 'deadline':
+        observed.deadline = 0
+    elif fault == 'late_api':
+        runtime.after_fill = lambda: setattr(observed, 'deadline', 0)
+    else:
+        worker.profiler = object()
+    with pytest.raises((ValueError, RuntimeError, TimeoutError)):
+        observed.capture_nodes(previous)
+    assert previous == before
+    if fault in ('inactive', 'capture_changed', 'graph_changed', 'capture_api', 'deadline', 'profiler_changed'):
+        assert not any(call[0] == 'nodes' for call in runtime.calls)
+    if fault == 'event_limit':
+        assert not any(call[0] == 'nodes' and call[2] for call in runtime.calls)
+    if fault not in ('type_api', 'cupti_api', 'duplicate_id'):
+        assert cupti.calls == []
+
+
+@pytest.mark.parametrize('fault', ['none', 'api', 'bytes', 'native'])
+def test_capture_interval_hooks_preserve_native_calls_and_clear_live_handles(census, monkeypatch, fault):
+    observed, _, records = census_runner(census, 'FULL')
+    annotations, stack = annotate_runner(observed)
+    snapshots, scopes = [], []
+    original_scope = model.ObservationScope.capture_nodes
+    native_failure = RuntimeError('unchanged original capture failure')
+
+    def record_scope(scope, *args, **kwargs):
+        if not scopes or scopes[-1] is not scope:
+            scopes.append(scope)
+        return original_scope(scope, *args, **kwargs)
+
+    monkeypatch.setattr(model.ObservationScope, 'capture_nodes', record_scope)
+
+    def capture_nodes(previous):
+        snapshots.append(previous)
+        if fault == 'api':
+            raise RuntimeError('unavailable original CUDA API')
+        if fault == 'native':
+            observed.model.layers[1].failure = native_failure
+        values = dict(nodes=[dict(cupti_node_id=len(snapshots))], baseline=previous is None)
+        if fault == 'bytes':
+            values['nodes'][0]['oversized'] = 'x' * (observed._model_input_observation.limits.scope_bytes+1)
+        return dict(nodes={len(snapshots): 100}), values
+
+    observed._step5_profiler_observation.capture_nodes = capture_nodes
+    previous_hooks = sys.getprofile(), sys.gettrace()
+    if fault == 'native':
+        with pytest.raises(RuntimeError) as caught:
+            observed.capture_model()
+        assert caught.value is native_failure
+    else:
+        observed.capture_model()
+    assert previous_hooks == (sys.getprofile(), sys.gettrace()) and stack == []
+    assert observed.model.calls == 2
+    assert scopes and all(scope.capture_node_state is None for scope in scopes)
+    if fault == 'none':
+        rows = records[-1]['events']
+        intervals = [row for row in rows if row['kind'] == 'capture_node_interval']
+        assert intervals[0]['boundary'] == 'capture_begin' and intervals[-1]['boundary'] == 'capture_end'
+        calls = {row['event']: row for row in rows if row['kind'] == 'native_call'}
+        assert all(row['call_event'] is None or row['call_event'] in calls for row in intervals)
+        assert all(row['capture_binding_event'] == intervals[0]['capture_binding_event'] for row in intervals)
+        assert snapshots[0] is None and all(value is not None for value in snapshots[1:])
+        assert records[-1]['status'] == 'OBSERVED_CPU_METADATA_ONLY_NOT_G2'
+    elif fault in ('api', 'bytes'):
+        assert observed._model_input_observation.stopped
+        assert records[-1]['status'] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('value', [None, True, 0, 16])
+def test_correlation_requires_matching_positive_cupti_executable_id(value):
+    native_events, records = correlation_case()
+    records[1]['events'][0]['cupti_graph_exec_id'] = value
+    joined = observation.correlate_trace(native_events, records)
+    assert joined['replay_launches'][0]['capture_binding'] == 'UNVERIFIED_CAPTURE_BINDING'
+    assert joined['physical_kernel_attribution'] == 'UNVERIFIED_NO_CAPTURE_NODE_BINDING'
+
+
+@pytest.mark.parametrize('key', ['cuda_runtime', 'cupti'])
+def test_graph_api_source_mismatch_rejects_before_loading_cupti(output, monkeypatch, tmp_path, key):
+    from types import ModuleType
+    _, observed, _ = profiler_case(output)
+    sources = copy.deepcopy(observed.sources)
+    paths = {}
+    for name in ('cuda_runtime', 'cupti'):
+        relative, _ = observation.SOURCE_PINS[name]
+        path = tmp_path/relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode())
+        paths[name] = path
+        monkeypatch.setitem(observation.SOURCE_PINS, name,
+            (relative, hashlib.sha256(name.encode()).hexdigest()))
+    paths[key].write_bytes(b'wrong installed bytes')
+    cuda, bindings = ModuleType('cuda'), ModuleType('cuda.bindings')
+    cuda.bindings = bindings
+    bindings.runtime = SimpleNamespace(__file__=str(paths['cuda_runtime']))
+    monkeypatch.setitem(sys.modules, 'cuda', cuda)
+    monkeypatch.setitem(sys.modules, 'cuda.bindings', bindings)
+    monkeypatch.setattr(observation.importlib.metadata, 'distribution',
+        lambda name: SimpleNamespace(locate_file=lambda relative: tmp_path/relative))
+    loaded = []
+    monkeypatch.setattr(observation.ctypes, 'CDLL', lambda path: loaded.append(path))
+    with pytest.raises(ValueError, match='locked source: '+key):
+        observed.bind_graph_api()
+    assert loaded == [] and observed.runtime is None and observed.cupti is None
+    assert all(observed.sources[path] == value for path, value in sources.items())
+
+
+def node_correlation_case():
+    native_events, records = correlation_case()
+    stored = records[0]['events'][0]
+    stored.update(event=20, capture_binding_event=1)
+    common = dict(kind='capture_node_interval', capture_binding_event=1, capture_id=1,
+                  graph_handle=16, stream_handle=7, cupti_graph_id=4)
+    records[0]['events'] = [
+        dict(kind='capture_forward', event=1, owner_id=stored['owner_id'], native_capture_region=True),
+        dict(common, event=2, boundary='capture_begin', baseline=True, total_nodes=0, call_event=None, nodes=[]),
+        dict(kind='native_call', event=3, capture_binding_event=1, site='triton_gemm', layer_id=8, owner_id=42),
+        dict(common, event=4, boundary='call_return', baseline=False, total_nodes=2, call_event=3,
+             nodes=[dict(cupti_node_id=(4 << 32)+index, node_type=0) for index in (0, 1)]),
+        dict(common, event=5, boundary='capture_end', baseline=False, total_nodes=2, call_event=None, nodes=[]), stored]
+    for index, kernel in enumerate(native_events[2:]):
+        kernel['args'].update({'graph id': 15, 'graph node id': (15 << 32)+index})
+    return native_events, records
+
+
+def test_correlation_uses_native_node_ids_and_keeps_interval_ownership_limit():
+    native_events, records = node_correlation_case()
+    result = observation.correlate_trace(native_events, records)
+    nodes = result['replay_launches'][0]['capture_node_correlation']
+    assert nodes['status'] == 'OBSERVED_CAPTURE_INTERVAL_KERNEL_CORRELATION'
+    assert nodes['ownership'] == 'HOST_CALL_INTERVAL_ONLY_NOT_EXCLUSIVE_GPU_OWNERSHIP'
+    assert [row['cupti_replay_node_id'] for row in nodes['kernels']] == [(15 << 32), (15 << 32)+1]
+    assert [row['cupti_capture_node_id'] for row in nodes['kernels']] == [(4 << 32), (4 << 32)+1]
+    assert all(row['call_event'] == 3 and row['layer_id'] == 8 for row in nodes['kernels'])
+    assert result['G2'] == 'UNVERIFIED'
+    assert result['status'] == 'OBSERVED_REPLAY_AND_CAPTURE_INTERVAL_CORRELATION'
+    assert result['physical_kernel_attribution'] == 'UNVERIFIED_EXCLUSIVE_NODE_OWNERSHIP'
+
+
+@pytest.mark.parametrize('fault', ['missing_begin', 'missing_end', 'other_forward', 'wrong_owner',
+    'count', 'duplicate_node', 'wrong_encoding', 'graph_changed', 'sequence', 'unknown_call',
+    'wrong_call_capture', 'graph_id', 'missing_node_id', 'repeated_kernel', 'child_graph', 'bool_type'])
+def test_node_correlation_rejects_unwitnessed_or_ambiguous_mapping(fault):
+    native_events, records = node_correlation_case()
+    rows = records[0]['events']
+    if fault == 'missing_begin':
+        rows.pop(1)
+    elif fault == 'missing_end':
+        rows.pop(-2)
+    elif fault == 'other_forward':
+        rows[0]['native_capture_region'] = False
+    elif fault == 'wrong_owner':
+        rows[0]['owner_id'] += 1
+    elif fault == 'count':
+        rows[3]['total_nodes'] += 1
+    elif fault == 'duplicate_node':
+        rows[3]['nodes'][1]['cupti_node_id'] = rows[3]['nodes'][0]['cupti_node_id']
+    elif fault == 'wrong_encoding':
+        rows[3]['nodes'][0]['cupti_node_id'] = (3 << 32)
+    elif fault == 'graph_changed':
+        rows[3]['capture_id'] += 1
+    elif fault == 'sequence':
+        rows[3]['event'] = 30
+    elif fault == 'unknown_call':
+        rows[3]['call_event'] = 99
+    elif fault == 'wrong_call_capture':
+        rows[2]['capture_binding_event'] += 1
+    elif fault == 'graph_id':
+        native_events[2]['args']['graph id'] = 16
+    elif fault == 'missing_node_id':
+        native_events[2]['args'].pop('graph node id')
+    elif fault == 'repeated_kernel':
+        native_events[3]['args']['graph node id'] = native_events[2]['args']['graph node id']
+    elif fault == 'child_graph':
+        rows[3]['nodes'][0]['node_type'] = 4
+    else:
+        rows[3]['nodes'][0]['node_type'] = False
+    if fault in ('count', 'duplicate_node', 'wrong_encoding', 'graph_changed', 'sequence',
+                  'unknown_call', 'wrong_call_capture', 'bool_type'):
+        with pytest.raises(ValueError):
+            observation.correlate_trace(native_events, records)
+    else:
+        result = observation.correlate_trace(native_events, records)
+        assert result['replay_launches'][0]['capture_node_correlation']['status'] == 'UNVERIFIED'
+        assert result['G2'] == 'UNVERIFIED'
