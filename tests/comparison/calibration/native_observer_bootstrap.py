@@ -11,6 +11,9 @@ FILES = ('v1/frontier_trace.py', 'v1/worker/gpu_worker.py',
     'v1/worker/gpu_model_runner.py', 'v1/engine/core.py', 'v1/core/sched/output.py',
     'compilation/cuda_graph.py')
 V4_MODEL = 'models/deepseek_v4/nvidia/model.py'
+NIXL_FILES = ('distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
+    'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
+    'v1/worker/kv_connector_model_runner_mixin.py')
 
 def require(condition, message):
     if not condition:
@@ -41,13 +44,18 @@ def bootstrap(config_path, *, package=PACKAGE, launch=os.execve):
     staged = Path(overlay['staged_dir'])
     require(staged.is_absolute() and staged.is_dir()
             and all(path.parent == staged for path in paths), 'Staged paths mismatch')
-    files = FILES + ((V4_MODEL,) if V4_MODEL in overlay['files'] else ())
+    nixl = NIXL_FILES if any(name in overlay['files'] for name in NIXL_FILES) else ()
+    files = FILES + ((V4_MODEL,) if V4_MODEL in overlay['files'] else ()) + nixl
     require(overlay['installed_package'] == str(package)
             and set(overlay['files']) == set(files),
-            'Six approved files required; only the pinned V4 model may be added')
+            'Six approved files required; only the pinned V4 model and '
+            'complete NIXL group may be added')
     if V4_MODEL in overlay['files']:
         require(config['expected_source_hashes']['vllm/' + V4_MODEL]
                 == overlay['files'][V4_MODEL]['sha256'], 'V4 diagnostic source mismatch')
+    for name in nixl:
+        require(config['expected_source_hashes']['vllm/' + name]
+                == overlay['files'][name]['sha256'], 'NIXL diagnostic source mismatch')
     fields = ('run_id', 'source_sha', 'instrumentation_sha', 'config_id',
               'replica_id', 'role', 'expected_ranks', 'output_dir')
     require(set(observer) == set(fields), 'Observer identity fields mismatch')

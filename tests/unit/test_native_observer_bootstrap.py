@@ -135,3 +135,48 @@ def test_v4_repair_requires_exact_source_and_original_base_before_writes(inputs,
         assert digest(target) == config['expected_source_hashes']['vllm/' + name]
         assert all(digest(package / path) == row['sha256']
                    for path, row in overlay['files'].items())
+
+
+@pytest.mark.parametrize('name', [
+    'distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
+    'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
+    'v1/worker/kv_connector_model_runner_mixin.py'])
+@pytest.mark.parametrize('fault', ['normal', 'missing', 'base', 'source', 'pin'])
+def test_nixl_requires_complete_pinned_sources_before_writes(inputs, name, fault):
+    package, staged, config, overlay, observer = inputs
+    config['expected_source_hashes'] = {}
+    for index, path in enumerate([
+        'distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
+        'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
+        'v1/worker/kv_connector_model_runner_mixin.py']):
+        target, source = package / path, staged / f'nixl_{index}.py'
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(f'# Original NIXL source {index}\n')
+        source.write_text(f'# Reviewed NIXL observation {index}\n')
+        overlay['files'][path] = dict(source=str(source), sha256=digest(source),
+                                     base_sha256=digest(target))
+        config['expected_source_hashes']['vllm/' + path] = digest(source)
+    if fault == 'missing':
+        overlay['files'].pop(name)
+    elif fault == 'base':
+        (package / name).write_text('# Different installed source\n')
+    elif fault == 'source':
+        Path(overlay['files'][name]['source']).write_text('# Unreviewed source\n')
+    elif fault == 'pin':
+        config['expected_source_hashes']['vllm/' + name] = '0' * 64
+    for filename, value in dict(overlay=overlay, observer=observer, config=config).items():
+        (staged / f'{filename}.json').write_text(json.dumps(value))
+    before = {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}
+    calls = []
+    if fault != 'normal':
+        with pytest.raises((ValueError, OSError, KeyError)):
+            bootstrap(staged / 'config.json', package=package,
+                      launch=lambda *args: calls.append(args))
+        assert before == {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}
+        assert calls == []
+    else:
+        bootstrap(staged / 'config.json', package=package,
+                  launch=lambda *args: calls.append(args))
+        assert len(calls) == 1
+        assert all(digest(package / path) == row['sha256']
+                   for path, row in overlay['files'].items())
