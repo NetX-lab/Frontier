@@ -16,7 +16,7 @@ from frontier.config import (
     SyntheticRequestGeneratorConfig,
     VllmV1SchedulerConfig,
 )
-from frontier.entities import Replica
+from frontier.entities import Replica, Request
 from frontier.kv_cache.base_kv_cache_manager import KVCacheManager
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
@@ -283,13 +283,22 @@ class _ClusterScheduler:
             stage_id=0,
             ep_size=16,
         )
+        self.lanes = []
 
     def get_stage_execution_context(self, replica_id: int, stage_id: int):
         assert (replica_id, stage_id) == (self._context.replica_id, 0)
         return self._context
 
+    def get_replica_scheduler(self, replica_id: int, lane_id: int):
+        assert replica_id == self._context.replica_id
+        return self.lanes[lane_id]
 
-def test_real_v4_scheduler_reuses_planner_layout_with_reserved_pool() -> None:
+    def on_replica_batch_scheduled(self, time, replica_id, lane_id, batch):
+        assert replica_id == self._context.replica_id
+        assert batch.scheduled_at == time
+
+
+def _v4_schedulers(*, blocks=200, chunk=64):
     replica_config = ReplicaConfig(
         model_name="deepseek-ai/DeepSeek-V4-Flash",
         device="h800",
@@ -304,24 +313,102 @@ def test_real_v4_scheduler_reuses_planner_layout_with_reserved_pool() -> None:
     )
     request_config = SyntheticRequestGeneratorConfig()
     replica = Replica(replica_config, request_config, ClusterType.MONOLITHIC)
-    scheduler = VLLMv1EngineReplicaScheduler(
-        replica_config=replica_config,
-        replica_scheduler_config=VllmV1SchedulerConfig(
-            num_blocks=200,
-            num_blocks_mode="explicit",
-            block_size=256,
-            max_tokens_in_batch=64,
-            batch_size_cap=8,
-        ),
-        request_generator_config=request_config,
-        replica=replica,
-        predictor=object(),
-        cluster_scheduler=_ClusterScheduler(replica.id),
-        cluster_type=ClusterType.MONOLITHIC,
-    )
+    cluster = _ClusterScheduler(replica.id)
+    for lane in range(2):
+        cluster.lanes.append(VLLMv1EngineReplicaScheduler(
+            replica_config=replica_config,
+            replica_scheduler_config=VllmV1SchedulerConfig(
+                num_blocks=blocks,
+                num_blocks_mode="explicit",
+                block_size=256,
+                max_tokens_in_batch=chunk,
+                long_prefill_token_threshold=chunk,
+                enable_chunked_prefill=True,
+                max_model_len=256,
+                batch_size_cap=8,
+            ),
+            request_generator_config=request_config,
+            replica=replica,
+            predictor=object(),
+            cluster_scheduler=cluster,
+            cluster_type=ClusterType.MONOLITHIC,
+            replica_local_id=lane,
+        ))
+    return cluster.lanes
+
+
+def test_real_v4_scheduler_reuses_planner_layout_with_reserved_pool() -> None:
+    scheduler = _v4_schedulers()[0]
 
     assert scheduler._kv_cache_manager.cache_capacity is scheduler._kv_cache_capacity
     assert scheduler._kv_cache_manager.enable_caching is False
     assert scheduler._is_grouped_kv_allocation()
     assert not scheduler._is_prefix_caching_enabled()
     assert scheduler._get_available_kv_blocks() == 199
+
+
+def test_real_v4_scheduler_retires_pages_only_after_settled_decode() -> None:
+    scheduler = _v4_schedulers(blocks=80, chunk=189)[0]
+    manager = scheduler._kv_cache_manager
+    pool = manager.block_pool
+    # 189 allocated tokens need 1 compressed, 3+3 SWA, 48 CSA and 24 HCA pages.
+    # At settled 190 the SWA cutoff is 63; only settled 191 retires page zero.
+    expected = (
+        (189, 0, 0, (0, 0, 0, 0, 0), 79, 189),
+        (1, 189, 189, (0, 0, 0, 45, 7), 27, 191),
+        (1, 190, 191, (0, 0, 0, 45, 7), 27, 192),
+        (1, 191, 192, (0, 1, 1, 46, 8), 23, 193),
+    )
+    groups = ("compressed", "swa_0", "swa_1", "csa_state_0", "hca_state_0")
+    sizes = (1, 3, 3, 48, 24)
+    all_ids = set(range(1, 80))
+    previous_cycle_ids = set()
+    for cycle in range(2):
+        request = Request(float(cycle * 10), 190, 3)
+        scheduler.add_request(request)
+        initial_tables = None
+        for step, (query, context, processed_before, retired, live, processed_after) in enumerate(expected):
+            now = float(cycle * 10 + step * 2)
+            assert request.num_processed_tokens == processed_before
+            batches = scheduler.on_schedule(now)
+            assert len(batches) == 1
+            batch = batches[0]
+            assert batch.num_tokens == [query]
+            assert batch.num_context_tokens == [context]
+            tables = manager.get_group_block_ids(request.id)
+            assert set(tables) == set(groups)
+            for group, size, skipped in zip(groups, sizes, retired):
+                assert len(tables[group]) == size
+                assert tables[group][:skipped] == (None,) * skipped
+                assert all(block is not None for block in tables[group][skipped:])
+            if initial_tables is None:
+                initial_tables = tables
+            for group, skipped in zip(groups, retired):
+                assert tables[group][skipped:] == initial_tables[group][skipped:]
+            ids = [block for table in tables.values() for block in table if block is not None]
+            assert len(ids) == len(set(ids)) == live
+            assert set(ids) <= all_ids
+            assert [block.ref_cnt for block in pool.blocks] == [
+                int(block_id in ids) for block_id in range(80)
+            ]
+            assert manager.get_num_blocks_for_request(request) == manager.num_used_blocks == live
+            assert pool.get_num_free_blocks() + live + pool.reserved_blocks == 80
+            assert scheduler.memory_usage_percent == pytest.approx(live / 79 * 100)
+            if step == 0:
+                assert set(ids) == all_ids
+                if cycle:
+                    assert set(ids) == previous_cycle_ids
+                previous_cycle_ids = set(ids)
+            # A second admission attempt cannot reclaim pages while this batch is in flight.
+            assert scheduler.on_schedule(now + 0.25) == []
+            assert manager.get_group_block_ids(request.id) == tables
+            batch.on_batch_end(now + 1.0, ClusterType.MONOLITHIC)
+            scheduler.on_batch_end(batch)
+            assert request.num_processed_tokens == processed_after
+        assert request.completed
+        assert manager.get_group_block_ids(request.id) == {}
+        assert manager.num_used_blocks == 0
+        assert pool.get_num_free_blocks() == 79
+        assert scheduler.memory_usage_percent == 0.0
+        assert scheduler.num_running_batches == 0
+        assert not scheduler.has_unfinished_requests
