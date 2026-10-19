@@ -349,7 +349,14 @@ def test_structural_transfer_trace_rejects_non_page_payload(monkeypatch) -> None
         )
 
 
-def _timing_layer(*, family: str, variant: str, op_times: dict[str, float]):
+def _timing_layer(
+    *,
+    family: str,
+    variant: str,
+    op_times: dict[str, float],
+    add_attn_residual_time: float = 0.0,
+    add_ffn_residual_time: float = 0.0,
+):
     return ExecutionTime(
         num_layers_per_pipeline_stage=1,
         attention_rope_execution_time=0.0,
@@ -376,6 +383,8 @@ def _timing_layer(*, family: str, variant: str, op_times: dict[str, float]):
         attention_family_id=family,
         attention_variant_id=variant,
         op_times=op_times,
+        add_attn_residual_time=add_attn_residual_time,
+        add_ffn_residual_time=add_ffn_residual_time,
     )
 
 
@@ -400,6 +409,8 @@ def test_dense_metrics_preserve_dsa_attention_when_adding_dense_ffn() -> None:
             "mlp_down_proj": 23.0,
             "mlp_tensor_parallel_allreduce": 29.0,
         },
+        add_attn_residual_time=31.0,
+        add_ffn_residual_time=37.0,
     )
     predictor = SimpleNamespace(
         _enable_dummy_mode=True,
@@ -436,6 +447,12 @@ def test_dense_metrics_preserve_dsa_attention_when_adding_dense_ffn() -> None:
     assert corrected.mlp_layer_act_execution_time == 19.0
     assert corrected.mlp_layer_down_proj_execution_time == 23.0
     assert corrected.mlp_all_reduce_time == 29.0
+    # The attention source scope has no residual adds, and no EP wave owns a
+    # dense layer's adds, so both come from the dense probe.
+    assert attention_only.add_attn_residual_time == 0.0
+    assert attention_only.add_ffn_residual_time == 0.0
+    assert corrected.add_attn_residual_time == 31.0
+    assert corrected.add_ffn_residual_time == 37.0
 
 
 def test_duplicate_and_late_events_reject_before_metrics_or_release() -> None:

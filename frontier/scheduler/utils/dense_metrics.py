@@ -64,7 +64,12 @@ def _merge_dense_ffn_metrics_layer(
     attention_layer: ExecutionTime,
     dense_layer: ExecutionTime,
 ) -> ExecutionTime:
-    """Add one dense FFN probe without replacing the executed attention scope."""
+    """Add one dense FFN probe without replacing the executed attention scope.
+
+    The attention source scope is predicted without its FFN, so it carries no
+    residual adds. A routed layer's EP waves own its adds; no EP wave runs for
+    a dense layer, so the probe supplies both of its residual adds.
+    """
     if attention_layer.global_layer_id != dense_layer.global_layer_id:
         raise ValueError(
             "Dense FFN metrics require matching physical layer identities: "
@@ -79,9 +84,7 @@ def _merge_dense_ffn_metrics_layer(
         attention_variant_id=attention_layer.attention_variant_id,
     )
     merged._moe_or_mlp_time = deepcopy(dense_layer._moe_or_mlp_time)
-    merged._residual_time.add_ffn_residual_time = (
-        dense_layer.residual_time_component.add_ffn_residual_time
-    )
+    merged._residual_time = dense_layer.residual_time_component
 
     dense_communication = dense_layer.communication_time_component
     merged_communication = merged._communication_time
