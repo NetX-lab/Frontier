@@ -5,6 +5,10 @@ from collections.abc import Mapping
 import torch
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
+    build_fp8_linear_method_kernels,
+    linear_fp8_backends_by_operator,
+)
 from frontier.profiling.common.parallel_utils.tensor_parallel_utils import (
     get_padded_vocab_size,
 )
@@ -86,6 +90,12 @@ class LinearOpWrapper:
         )
         initialize_dummy_weights(self.model)
         self.model = self.model.to(dtype=self.model_config.dtype).cuda().eval()
+        build_fp8_linear_method_kernels(
+            self.model,
+            model_dtype=self.model_config.dtype,
+            model_type=self.model_config.model_type,
+        )
+        self.linear_backends = linear_fp8_backends_by_operator(self.model)
 
     def _get_expected_keys(self) -> list[str]:
         if self.profiling_plan is not None and "enabled_ops" in self.profiling_plan:
@@ -147,7 +157,6 @@ class LinearOpWrapper:
             "share_expert_dim": self.model_config.share_expert_dim,
             "share_q_dim": self.model_config.share_q_dim,
         }
-
         if self.profiling_plan is not None and "typed_operator_contracts" in self.profiling_plan:
             typed_contracts = self.profiling_plan["typed_operator_contracts"]
             if not isinstance(typed_contracts, Mapping):
@@ -246,6 +255,8 @@ class LinearOpWrapper:
 
 
         stats = self._build_profile_result(time_stats, num_tokens=num_tokens)
+        if self.linear_backends:
+            stats["linear_backends"] = self.linear_backends
         self.timer_stats_store.clear_stats()
 
         return stats

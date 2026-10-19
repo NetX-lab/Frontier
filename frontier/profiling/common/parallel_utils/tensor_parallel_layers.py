@@ -7,6 +7,7 @@
 """Tensor parallel layers for profiling."""
 
 import os
+from types import SimpleNamespace
 from typing import Optional, Tuple
 
 import torch
@@ -16,6 +17,11 @@ from torch.nn.parameter import Parameter
 
 from frontier.config import PrecisionType, get_quantization_manager
 from frontier.profiling.common.cuda_timer import CudaTimer
+from frontier.profiling.common.parallel_utils.fp8_block_linear import (
+    LEGACY_BLOCK_FP8_OP_NAME,
+    Fp8LinearMethodKernel,
+    has_legacy_block_fp8_op,
+)
 from frontier.profiling.common.parallel_utils.parallel_state import (
     get_tensor_model_parallel_rank,
     get_tensor_model_parallel_world_size,
@@ -373,6 +379,89 @@ def _apply_fp8_linear(
     )
 
 
+def _require_fp8_linear_method_kernel(layer: torch.nn.Module) -> Fp8LinearMethodKernel:
+    kernel = getattr(layer, "_fp8_linear_method_kernel", None)
+    if kernel is None:
+        raise RuntimeError(
+            "This vLLM release has no block-FP8 custom op; call "
+            "build_fp8_linear_method_kernels(model, ...) before profiling."
+        )
+    return kernel
+
+
+def build_fp8_linear_method_kernels(
+    model: torch.nn.Module,
+    *,
+    model_dtype: torch.dtype,
+    model_type: str,
+) -> None:
+    """Bind a vLLM ``Fp8LinearMethod`` to every block-FP8 profiling linear layer.
+
+    Only vLLM releases without the 0.10 block-FP8 custom op need this. Kernel
+    selection reads the model dtype and type from the active vLLM config.
+    """
+
+    layers = [
+        module
+        for module in model.modules()
+        if isinstance(module, (ReplicatedLinear, ColumnParallelLinear, RowParallelLinear))
+        and module._fp8_block_size_list is not None
+        and module._get_precision() == PrecisionType.FP8
+    ]
+    if not layers or _use_fp8_gemm_surrogate() or has_legacy_block_fp8_op():
+        return
+    from frontier.profiling.common.vllm_compat import vllm_config_context
+
+    model_config = SimpleNamespace(
+        dtype=model_dtype,
+        hf_config=SimpleNamespace(model_type=model_type),
+        hf_text_config=SimpleNamespace(model_type=model_type),
+    )
+    with vllm_config_context(model_config=model_config):
+        for layer in layers:
+            layer._fp8_linear_method_kernel = Fp8LinearMethodKernel(
+                weight=layer.weight.data,
+                block_size=layer._fp8_block_size_list,
+                logical_widths=[layer.weight.shape[0]],
+                input_size=layer.input_size,
+                output_size=layer.output_size,
+                tensor_parallel_size=(
+                    1 if isinstance(layer, ReplicatedLinear) else layer.world_size
+                ),
+            )
+
+
+def _linear_fp8_backend_name(layer: torch.nn.Module) -> Optional[str]:
+    kernel = getattr(layer, "_fp8_linear_method_kernel", None)
+    if kernel is not None:
+        return kernel.backend_name
+    if layer._fp8_weight is None:
+        return None
+    if layer._fp8_block_size_list is not None:
+        return LEGACY_BLOCK_FP8_OP_NAME
+    return type(layer._tensorwise_fp8_linear_op).__name__
+
+
+def linear_fp8_backends_by_operator(model: torch.nn.Module) -> dict[str, list[str]]:
+    """Map each profiled operator to the FP8 GEMM kernels its linear layers ran.
+
+    Call after a forward pass: the 0.10 path quantizes weights lazily on first
+    use. Layers that ran no FP8 GEMM are omitted.
+    """
+
+    backends: dict[str, set[str]] = {}
+    for module in model.modules():
+        if not isinstance(module, (ReplicatedLinear, ColumnParallelLinear, RowParallelLinear)):
+            continue
+        backend = _linear_fp8_backend_name(module)
+        if backend is None:
+            continue
+        if module._precision_op_name is None:
+            raise ValueError("an FP8 profiling linear layer has no operator name")
+        backends.setdefault(module._precision_op_name, set()).add(backend)
+    return {operator: sorted(names) for operator, names in sorted(backends.items())}
+
+
 class VocabParallelEmbedding(torch.nn.Module):
     """Embedding parallelized in the vocabulary dimension.
 
@@ -597,6 +686,10 @@ class ReplicatedLinear(torch.nn.Module):
             if _use_fp8_gemm_surrogate():
                 with self._linear_timer:
                     return _run_unquantized_gemm(self, x, self.weight, bias)
+            if self._fp8_block_size_list is not None and not has_legacy_block_fp8_op():
+                kernel = _require_fp8_linear_method_kernel(self)
+                with self._linear_timer:
+                    return kernel.apply(x, bias)
             fp8_weight, weight_scale = self._get_fp8_weights()
             with self._linear_timer:
                 return _apply_fp8_linear(
@@ -765,6 +858,10 @@ class ColumnParallelLinear(torch.nn.Module):
             if _use_fp8_gemm_surrogate():
                 with self._linear_timer:
                     return _run_unquantized_gemm(self, x, self.weight, bias)
+            if self._fp8_block_size_list is not None and not has_legacy_block_fp8_op():
+                kernel = _require_fp8_linear_method_kernel(self)
+                with self._linear_timer:
+                    return kernel.apply(x, bias)
             fp8_weight, weight_scale = self._get_fp8_weights()
             with self._linear_timer:
                 return _apply_fp8_linear(
@@ -954,6 +1051,10 @@ class RowParallelLinear(torch.nn.Module):
             if _use_fp8_gemm_surrogate():
                 with self._linear_timer:
                     return _run_unquantized_gemm(self, x, self.weight, None)
+            if self._fp8_block_size_list is not None and not has_legacy_block_fp8_op():
+                kernel = _require_fp8_linear_method_kernel(self)
+                with self._linear_timer:
+                    return kernel.apply(x, None)
             fp8_weight, weight_scale = self._get_fp8_weights()
             with self._linear_timer:
                 return _apply_fp8_linear(
