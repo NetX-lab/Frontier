@@ -659,34 +659,18 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
     }
 
 
-def _model_config_json_path(model: str) -> Path:
-    path = Path("data", "config", "models", f"{model.replace('/', '__')}.json")
-    if not path.is_file():
-        raise ValueError(
-            f"runtime identity needs the JSON model config of {model!r} at {path}"
-        )
-    return path
-
-
 def _attach_runtime_identity(
     df: pd.DataFrame, args: argparse.Namespace, model: str, model_config: ModelConfig
 ) -> pd.DataFrame:
     from frontier.profiling.common.runtime_identity import (
-        RuntimeIdentity,
         attach_identity_columns,
-        collect_device_identity,
-        collect_runtime_versions,
-        file_sha256,
+        measure_runtime_identity,
     )
 
-    device_name, device_capability = collect_device_identity()
-    identity = RuntimeIdentity(
-        runtime_versions=collect_runtime_versions(),
+    identity = measure_runtime_identity(
+        model_name=model,
         source_revision=args.source_revision,
         model_config_revision=args.model_config_revision,
-        model_config_sha256=file_sha256(_model_config_json_path(model)),
-        device_name=device_name,
-        device_capability=device_capability,
         schema_version=LINEAR_OP_SCHEMA_VERSION,
         quant_signature=model_config.get_quant_signature(),
         parallel_groups={"engine_tensor_parallel": 1},

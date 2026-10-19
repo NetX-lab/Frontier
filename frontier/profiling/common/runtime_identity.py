@@ -160,6 +160,44 @@ class RuntimeIdentity:
         return {**self.columns(), "parallel_groups": dict(self.parallel_groups)}
 
 
+def model_config_json_path(model_name: str) -> Path:
+    """Return the checked-in JSON config ``ModelConfig.from_model_name`` loads."""
+
+    path = Path("data", "config", "models", f"{model_name.replace('/', '__')}.json")
+    if not path.is_file():
+        raise ValueError(
+            f"runtime identity needs the JSON model config of {model_name!r} at {path}"
+        )
+    return path
+
+
+def measure_runtime_identity(
+    *,
+    model_name: str,
+    source_revision: str,
+    model_config_revision: str,
+    schema_version: str,
+    quant_signature: str,
+    parallel_groups: Mapping[str, int],
+    graph_mode: str,
+) -> RuntimeIdentity:
+    """Collect the identity of a table measured on the current CUDA device."""
+
+    device_name, device_capability = collect_device_identity()
+    return RuntimeIdentity(
+        runtime_versions=collect_runtime_versions(),
+        source_revision=source_revision,
+        model_config_revision=model_config_revision,
+        model_config_sha256=file_sha256(model_config_json_path(model_name)),
+        device_name=device_name,
+        device_capability=device_capability,
+        schema_version=schema_version,
+        quant_signature=quant_signature,
+        parallel_groups=parallel_groups,
+        graph_mode=graph_mode,
+    )
+
+
 def attach_identity_columns(
     rows: Iterable[dict[str, Any]], identity: RuntimeIdentity
 ) -> list[dict[str, Any]]:
@@ -188,4 +226,6 @@ __all__ = [
     "collect_device_identity",
     "collect_runtime_versions",
     "file_sha256",
+    "measure_runtime_identity",
+    "model_config_json_path",
 ]
