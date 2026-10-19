@@ -137,18 +137,20 @@ def test_v4_repair_requires_exact_source_and_original_base_before_writes(inputs,
                    for path, row in overlay['files'].items())
 
 
-@pytest.mark.parametrize('name', [
-    'distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
-    'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
-    'v1/worker/kv_connector_model_runner_mixin.py'])
+@pytest.mark.parametrize('names,name', [(names, name) for names in (
+    ('distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
+     'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
+     'v1/worker/kv_connector_model_runner_mixin.py'),
+    ('distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
+     'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
+     'v1/worker/kv_connector_model_runner_mixin.py',
+     'v1/core/sched/scheduler.py', 'v1/engine/core_client.py'),
+) for name in names])
 @pytest.mark.parametrize('fault', ['normal', 'missing', 'base', 'source', 'pin'])
-def test_nixl_requires_complete_pinned_sources_before_writes(inputs, name, fault):
+def test_nixl_requires_complete_pinned_sources_before_writes(inputs, names, name, fault):
     package, staged, config, overlay, observer = inputs
     config['expected_source_hashes'] = {}
-    for index, path in enumerate([
-        'distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
-        'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
-        'v1/worker/kv_connector_model_runner_mixin.py']):
+    for index, path in enumerate(names):
         target, source = package / path, staged / f'nixl_{index}.py'
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(f'# Original NIXL source {index}\n')
@@ -180,3 +182,18 @@ def test_nixl_requires_complete_pinned_sources_before_writes(inputs, name, fault
         assert len(calls) == 1
         assert all(digest(package / path) == row['sha256']
                    for path, row in overlay['files'].items())
+
+
+def test_pd_observation_requires_nixl_dependency_group_before_writes(inputs):
+    package, staged, config, overlay, observer = inputs
+    for name in ('v1/core/sched/scheduler.py', 'v1/engine/core_client.py'):
+        overlay['files'][name] = overlay['files'][FILES[-1]]
+    for filename, value in dict(overlay=overlay, observer=observer, config=config).items():
+        (staged / f'{filename}.json').write_text(json.dumps(value))
+    before = {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}
+    calls = []
+    with pytest.raises(ValueError, match='P/D requires NIXL'):
+        bootstrap(staged / 'config.json', package=package,
+                  launch=lambda *args: calls.append(args))
+    assert before == {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}
+    assert calls == []

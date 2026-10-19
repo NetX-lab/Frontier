@@ -14,6 +14,7 @@ V4_MODEL = 'models/deepseek_v4/nvidia/model.py'
 NIXL_FILES = ('distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
     'distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
     'v1/worker/kv_connector_model_runner_mixin.py')
+PD_FILES = ('v1/core/sched/scheduler.py', 'v1/engine/core_client.py')
 
 def require(condition, message):
     if not condition:
@@ -45,17 +46,18 @@ def bootstrap(config_path, *, package=PACKAGE, launch=os.execve):
     require(staged.is_absolute() and staged.is_dir()
             and all(path.parent == staged for path in paths), 'Staged paths mismatch')
     nixl = NIXL_FILES if any(name in overlay['files'] for name in NIXL_FILES) else ()
-    files = FILES + ((V4_MODEL,) if V4_MODEL in overlay['files'] else ()) + nixl
+    pd = PD_FILES if any(name in overlay['files'] for name in PD_FILES) else ()
+    files = FILES + ((V4_MODEL,) if V4_MODEL in overlay['files'] else ()) + nixl + pd
     require(overlay['installed_package'] == str(package)
-            and set(overlay['files']) == set(files),
+            and set(overlay['files']) == set(files) and (not pd or bool(nixl)),
             'Six approved files required; only the pinned V4 model and '
-            'complete NIXL group may be added')
+            'complete NIXL/P/D groups may be added; P/D requires NIXL')
     if V4_MODEL in overlay['files']:
         require(config['expected_source_hashes']['vllm/' + V4_MODEL]
                 == overlay['files'][V4_MODEL]['sha256'], 'V4 diagnostic source mismatch')
-    for name in nixl:
+    for name in nixl + pd:
         require(config['expected_source_hashes']['vllm/' + name]
-                == overlay['files'][name]['sha256'], 'NIXL diagnostic source mismatch')
+                == overlay['files'][name]['sha256'], 'NIXL/P/D diagnostic source mismatch')
     fields = ('run_id', 'source_sha', 'instrumentation_sha', 'config_id',
               'replica_id', 'role', 'expected_ranks', 'output_dir')
     require(set(observer) == set(fields), 'Observer identity fields mismatch')
