@@ -7,6 +7,7 @@ import json
 import math
 import os
 import socket
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -40,7 +41,13 @@ def inspect_model(model, config):
                     .all().item())
             if "scale" in field:
                 row["positive"] = bool(tensor.numel() and (values > 0).all().item())
-                if (type(method).__name__ == "Fp8MoEMethod"
+                if ((type(owner).__name__ == "DeepseekV4DecoderLayer"
+                     and field in ("hc_attn_scale", "hc_ffn_scale"))
+                        or (type(owner).__name__ == "DeepseekV4Model" and field == "hc_head_scale")):
+                    row["scale_role"] = "mhc_native_coefficients"
+                    row["scale_valid"] = (tensor.dtype == torch.float32 and row["finite"]
+                                          and row["shape"] == ([1] if field == "hc_head_scale" else [3]))
+                elif (type(method).__name__ == "Fp8MoEMethod"
                         and method.block_quant
                         and method.fp8_backend.name == "TRITON"
                         and field in ("w13_weight_scale_inv", "w2_weight_scale_inv")):
@@ -123,6 +130,47 @@ def inspect_model(model, config):
                                   and quant.w2_scale is module.w2_weight_scale_inv
                                   and list(quant.block_shape) == list(module.weight_block_size)
                                   and quant.a1_scale is None and quant.a2_scale is None})
+        if type(method).__name__ == "Mxfp4MoEMethod":
+            backends[name] = {"quant_method": type(method).__name__,
+                              "backend": method.mxfp4_backend.name,
+                              "experts": method.experts_cls.__name__ if method.experts_cls else None}
+            auxiliary.append({"name": name, "role": "mxfp4_quantization_inventory",
+                              "valid": False, "reason": "Backend-specific packed weights and scales are unverified"})
+    if type(model).__name__ == "DeepseekV4ForCausalLM":
+        core = model.model
+        hf = config.model_config.hf_config
+        expected = [i for i in range(core.start_layer, core.end_layer)
+                    if i < hf.num_hash_layers]
+        tables = []
+        for i in range(core.start_layer, core.end_layer):
+            moe = core.layers[i].ffn
+            tensor = moe.gate.tid2eid
+            if tensor is not None:
+                valid = (i in expected and isinstance(tensor, torch.Tensor)
+                         and list(tensor.shape) == [hf.vocab_size, hf.num_experts_per_tok]
+                         and tensor.dtype == (torch.int64 if moe.use_mega_moe else torch.int32)
+                         and bool(((tensor >= 0) & (tensor < hf.n_routed_experts)).all().item()))
+                tables.append({"name": f"model.layers.{i}.ffn.gate.tid2eid", "valid": valid})
+        auxiliary.append({"name": "model.layers", "role": "v4_hash_tables",
+                          "expected_count": len(expected), "observed_count": len(tables),
+                          "valid": len(tables) == len(expected) and all(row["valid"] for row in tables),
+                          "tables": tables})
+        if core.start_layer == 0 and core.start_layer < core.end_layer:
+            layer = core.layers[core.start_layer]
+            tensor = layer.hc_attn_fn_broadcast
+            shape = [(2 + layer.hc_mult) * layer.hc_mult, layer.hidden_size]
+            valid = (isinstance(tensor, torch.Tensor) and list(tensor.shape) == shape
+                     and tensor.dtype == layer.hc_attn_fn.dtype == torch.float32
+                     and tensor.device == layer.hc_attn_fn.device
+                     and not tensor.requires_grad and tensor.grad_fn is None
+                     and bool(torch.isfinite(tensor).all().item()))
+            if valid:
+                valid = torch.equal(tensor, layer.hc_attn_fn.detach().view(
+                    -1, layer.hc_mult, layer.hidden_size).sum(dim=1))
+            auxiliary.append({"name": f"model.layers.{core.start_layer}.hc_attn_fn_broadcast",
+                              "role": "mhc_first_layer_broadcast", "valid": valid,
+                              "shape": list(tensor.shape) if isinstance(tensor, torch.Tensor) else None,
+                              "dtype": str(tensor.dtype) if isinstance(tensor, torch.Tensor) else None})
     return {"architecture": type(model).__name__, "tensors": tensors,
             "auxiliary": auxiliary, "backends": backends,
             "modules": {name: type(module).__module__ + "." + type(module).__name__
@@ -162,6 +210,8 @@ def run(config):
                                 ("FLASHINFER_WORKSPACE_BASE", "flashinfer")):
             os.environ[variable] = str(Path(scratch) / child)
         record("imports")
+        result["nvidia_smi_L"] = subprocess.run(
+            ["nvidia-smi", "-L"], check=True, text=True, stdout=subprocess.PIPE).stdout
         import torch
         import vllm
         from vllm import LLM, SamplingParams
