@@ -13,6 +13,7 @@ import numpy as np
 import role_capacity_observation as capacity
 import role_model_input_observation as model_observation
 import role_state_observation as state_observation
+import role_profiler_observation as profiler_observation
 
 
 CPU_ARRAY_FIELDS = (
@@ -32,6 +33,7 @@ SOURCE = dict(observer_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdig
               model_input_observer_sha256=hashlib.sha256(
                   Path(model_observation.__file__).read_bytes()).hexdigest(),
               state_observer_sha256=hashlib.sha256(Path(state_observation.__file__).read_bytes()).hexdigest(),
+              profiler_observer_sha256=profiler_observation.SOURCE_SHA256,
               native_source_status='UNVERIFIED')
 
 
@@ -54,6 +56,10 @@ class RequestObservation:
     device_rpc_bytes: int | None = None
     device_owned_bytes: int = 0
     device_reservation_file: str | None = None
+    device_prepared: bool = False
+    profiler_reserved_bytes: int = 0
+    profiler_label: str | None = None
+    profiler: object | None = None
 
 
 def class_name(value):
@@ -99,40 +105,82 @@ def batch_snapshot(batch):
 
 def rank_record_bytes(output, rank):
     prefixes = (f'rank_{rank}_pid_', f'request_rank_{rank}_pid_',
-                f'worker_{rank}_', f'device_reservation_rank_{rank}_pid_')
+                f'worker_{rank}_', f'device_reservation_rank_{rank}_pid_',
+                f'profile_rank_{rank}_pid_')
     return sum(path.stat().st_size for path in output.iterdir()
                if path.is_file() and path.name.startswith(prefixes))
 
 
-def reserve_device_bytes(worker, owned_bytes):
-    """Retain a conservative tensor reservation before the first allocation."""
+def reserve_device_bytes(worker, owned_bytes, *, profiler_bytes=None,
+                         device_preparation=True, label=None):
+    """Reserve tensors and the original trace allowance through one worker record."""
     state = worker._request_observation
     output, record_bytes = capacity.observation_output()
     pid = os.getpid()
     path = output/f'device_reservation_rank_{worker.rank}_pid_{pid}.json'
+    reserved = state.profiler_reserved_bytes if profiler_bytes is None else profiler_bytes
+    label = state.profiler_label if label is None else label
+    if any(type(value) is not int or value < 0 for value in (owned_bytes, reserved)):
+        raise ValueError('Native observer reservations need explicit nonnegative byte counts')
+    if device_preparation and state.device_prepared:
+        raise ValueError('Device observation may be prepared only once')
+    if state.device_reservation_file is not None and state.device_reservation_file != str(path):
+        raise ValueError('Native observer reservation changed its original worker file')
+    identity = dict(getattr(worker, '_capacity_identity', {}))
     value = dict(kind='device_observation_reservation', rank=worker.rank,
-        local_rank=worker.local_rank, pid=pid,
-        worker_identity=dict(getattr(worker, '_capacity_identity', {})), source=dict(SOURCE),
+        local_rank=worker.local_rank, pid=pid, worker_identity=identity, source=dict(SOURCE),
         status='RESERVED_BEFORE_ALLOCATION' if owned_bytes else 'NOT_ALLOCATED_PREPARATION_FAILED',
         owned_bytes=owned_bytes, allocation_scope='prepared_tensor_storage_bytes')
+    if profiler_bytes is not None or state.profiler is not None:
+        if label not in profiler_observation.WINDOWS:
+            raise ValueError('Native trace reservation must identify the original diagnostic window')
+        value.update(profiler_bytes=reserved, profiler_label=label,
+            device_prepared=state.device_prepared or device_preparation,
+            allocation_scope='prepared_tensor_storage_and_pending_native_trace_bytes')
     encoded = (json.dumps(value, allow_nan=False, separators=(',', ':'))+'\n').encode('utf-8')
-    if rank_record_bytes(output, worker.rank)+len(encoded)+owned_bytes > record_bytes//8:
+    pending = pending_trace_bytes(output, worker.rank, pid, reserved, label)
+    if rank_record_bytes(output, worker.rank)+len(encoded)+owned_bytes+pending > record_bytes//8:
         raise ValueError('Rank aggregate device reservation exceeds record budget')
-    with path.open('xb') as stream:
-        stream.write(encoded)
-    state.device_owned_bytes = owned_bytes
-    state.device_reservation_file = str(path)
+    if state.device_reservation_file is None:
+        with path.open('xb') as stream:
+            stream.write(encoded)
+    else:
+        old = json.loads(path.read_text())
+        if (old['worker_identity'] != identity or old['source'] != SOURCE or
+                old['owned_bytes'] != state.device_owned_bytes or
+                old.get('profiler_bytes', 0) != state.profiler_reserved_bytes or
+                old.get('profiler_label') != state.profiler_label):
+            raise ValueError('Native observer reservation no longer belongs to the original worker')
+        temporary = path.with_name(path.name+'.pending')
+        with temporary.open('xb') as stream:
+            stream.write(encoded)
+        # Atomic replacement keeps concurrent caller reads on a complete record.
+        # Both copies are included in the allowance above until replacement.
+        os.replace(temporary, path)
+    state.device_owned_bytes, state.profiler_reserved_bytes = owned_bytes, reserved
+    state.device_reservation_file, state.profiler_label = str(path), label
+    state.device_prepared |= device_preparation
+
+
+def pending_trace_bytes(output, rank, pid, reserved, label):
+    """Charge retained trace bytes once and reserve only the unfinished remainder."""
+    if not reserved:
+        return 0
+    path = Path(output)/f'profile_rank_{rank}_pid_{pid}_{label}.json'
+    retained = path.stat().st_size if path.exists() else 0
+    return max(0, reserved-retained)
 
 
 def device_reservation_bytes(output, *, require_complete=False):
-    """Read the same worker-owned reservations for caller and node finalization."""
+    """Read the same tensor/trace reservations for caller and node finalization."""
     output = Path(output)
     seen, used = set(), 0
     for path in output.glob('device_reservation_rank_*_pid_*.json'):
         row = json.loads(path.read_text())
         rank, local, pid, owned = (row[name] for name in ('rank', 'local_rank', 'pid', 'owned_bytes'))
-        if (any(type(value) is not int for value in (rank, local, pid, owned)) or
-                rank < 0 or not 0 <= local < 8 or pid <= 0 or owned < 0 or rank in seen or
+        trace = row.get('profiler_bytes', 0)
+        if (any(type(value) is not int for value in (rank, local, pid, owned, trace)) or
+                rank < 0 or not 0 <= local < 8 or pid <= 0 or owned < 0 or trace < 0 or rank in seen or
                 path.name != f'device_reservation_rank_{rank}_pid_{pid}.json' or
                 row['kind'] != 'device_observation_reservation' or row['source'] != SOURCE or
                 row['status'] not in ('RESERVED_BEFORE_ALLOCATION', 'NOT_ALLOCATED_PREPARATION_FAILED')):
@@ -142,13 +190,29 @@ def device_reservation_bytes(output, *, require_complete=False):
             raise ValueError('Device reservation differs from its original worker identity')
         if row['status'] == 'NOT_ALLOCATED_PREPARATION_FAILED' and owned != 0:
             raise ValueError('Failed preparation without allocation must reserve zero bytes')
+        if 'profiler_bytes' in row and (row['profiler_label'] not in profiler_observation.WINDOWS or
+                type(row['device_prepared']) is not bool):
+            raise ValueError('Native trace reservation has no original diagnostic window')
+        if require_complete and trace:
+            raise ValueError('Final native trace reservation remains pending; completion is unverified')
         seen.add(rank)
-        used += owned
+        used += owned+pending_trace_bytes(output, rank, pid, trace, row.get('profiler_label'))
     if require_complete:
         workers = [json.loads(path.read_text()) for path in output.glob('worker_*.json')]
         if len(workers) != 8 or seen != {row['rank'] for row in workers}:
             raise ValueError('Final device reservations do not cover all eight node workers')
     return used
+
+
+def pending_profiler_bytes(state):
+    """Use the same trace reservation calculation as node and archive accounting."""
+    if not state.profiler_reserved_bytes:
+        return 0
+    output, _ = capacity.observation_output()
+    observed = state.profiler
+    rank = observed.worker.rank if observed is not None else json.loads(
+        Path(state.device_reservation_file).read_text())['rank']
+    return pending_trace_bytes(output, rank, os.getpid(), state.profiler_reserved_bytes, state.profiler_label)
 
 
 def device_response(worker, state, result, observed=None):
@@ -190,7 +254,7 @@ def write_record(worker, payload):
     used = rank_record_bytes(output, worker.rank)
     encoded = payload.encode('utf-8')
     rank_limit = record_bytes//8
-    if used+len(encoded)+state.device_owned_bytes > rank_limit:
+    if used+len(encoded)+state.device_owned_bytes+pending_profiler_bytes(state) > rank_limit:
         raise ValueError('Rank aggregate evidence exceeds record budget')
     # First write cannot append to an earlier session's evidence. No retry on failure.
     with path.open('xb' if state.record_file is None else 'ab') as stream:
@@ -265,14 +329,15 @@ def prepare_device_observation(worker, preparation):
             state.device_rpc_bytes = limits.rpc_bytes
         runner = worker.model_runner
         observed = runner._model_input_observation
-        if observed.device is not None or state.device_reservation_file is not None:
+        if observed.device is not None or state.device_prepared:
             raise ValueError('Device observation may be prepared only once per native resident runner')
         if state.collection_stopped:
             raise ValueError('Worker evidence collection is already stopped')
         output, record_bytes = capacity.observation_output()
         used = rank_record_bytes(output, worker.rank)
         candidate = model_observation.DeviceObservation(runner, observed.sites, limits,
-            preparation['requests'], preparation['sampling_fields'], record_bytes//8-used,
+            preparation['requests'], preparation['sampling_fields'],
+            record_bytes//8-used-pending_profiler_bytes(state),
             metadata_limits=observed.limits, reserve=lambda owned: reserve_device_bytes(worker, owned))
         observed.device = candidate
         result = dict(rank=worker.rank, local_rank=worker.local_rank, pid=os.getpid(),
@@ -285,7 +350,7 @@ def prepare_device_observation(worker, preparation):
             observed.stopped = True
             if observed.device is not None:
                 observed.device.error('device_preparation', failure)
-        if state.device_reservation_file is None:
+        if not state.device_prepared:
             try:
                 reserve_device_bytes(worker, 0)
             except BaseException as reservation_error:
@@ -340,6 +405,8 @@ def request_snapshot(worker, record=write_record):
                 result['status'] = 'UNVERIFIED'
                 result['request_metadata']['collection_stopped'] = state.collection_stopped
                 result['errors']['observer'] = dict(state.observer_error)
+    if state.profiler is not None:
+        result['profiler_observation'] = state.profiler.summary()
     if hasattr(worker, '_runner_observer_error'):
         result['runner_observer_error'] = copy.deepcopy(worker._runner_observer_error)
     if runner is not None and hasattr(runner, '_model_input_observation_error'):
@@ -401,9 +468,83 @@ def observed_worker(base, record=write_record, *, prepare_runner=model_observati
                 except BaseException as failure:
                     observer_failure(state, 'runner_collection_stop', failure, stop=True)
 
-    methods = dict(execute_model=execute_model,
+    def physical_profile(self, label, is_start=True):
+        state = getattr(self, '_request_observation', None)
+        observed = state.profiler if state is not None else None
+        if observed is None:
+            return dict(status='UNVERIFIED', error='No prepared original native profiler', rank=self.rank)
+        stop_window = False
+        try:
+            if type(is_start) is not bool or label not in profiler_observation.WINDOWS:
+                raise ValueError('Native profiler control requires an original window and explicit operation')
+            if is_start:
+                observed.before_start(label)
+                self.profile(is_start=True, profile_prefix=label, delay_iterations=0, max_iterations=0)
+                observed.after_start()
+            else:
+                if observed.current is None or observed.current['label'] != label:
+                    raise ValueError('Native profiler stop must identify the original diagnostic window')
+                stop_window = True
+                self.profile(is_start=False)
+        except BaseException as failure:
+            observed.error('native_profiler_control', failure)
+            # A failed start may leave the original wrapper active. Follow its
+            # normal stop once and keep the diagnostic window unverified.
+            if is_start and observed.current is not None and observed.current['label'] == label:
+                stop_window = True
+                try:
+                    self.profile(is_start=False)
+                except BaseException as stop_failure:
+                    observed.error('native_profiler_cleanup', stop_failure)
+        finally:
+            if stop_window:
+                try:
+                    observed.after_stop()
+                except BaseException as failure:
+                    observed.error('native_profiler_finalization', failure)
+        try:
+            result = dict(rank=self.rank, local_rank=self.local_rank, pid=os.getpid(),
+                worker_identity=dict(getattr(self, '_capacity_identity', {})),
+                source=dict(SOURCE), profiler_observation=observed.summary())
+        except BaseException as failure:
+            observed.error('native_profiler_response', failure)
+            if stop_window and observed.windows and observed.windows[-1]['label'] == label:
+                observed.windows[-1]['status'] = 'UNVERIFIED'
+            result = dict(status='UNVERIFIED', rank=self.rank)
+        return device_response(self, state, result, getattr(self.model_runner, '_model_input_observation', None))
+
+    methods = dict(execute_model=execute_model, physical_profile=physical_profile,
                    request_snapshot=lambda self: request_snapshot(self, record),
                    prepare_device_observation=prepare_device_observation)
+    if hasattr(base, '_get_cudagraph_capture_context'):
+        from contextlib import contextmanager
+        native_capture_context = base._get_cudagraph_capture_context
+
+        def capture_context(self):
+            context = native_capture_context(self)
+            if 'STEP5_PHYSICAL_OBSERVATION' not in os.environ:
+                return context
+            state = getattr(self, '_request_observation', None)
+            if state is None:
+                state = self._request_observation = RequestObservation()
+            try:
+                if state.profiler is not None:
+                    raise ValueError('The native capture profiler may be prepared only once')
+                state.profiler = profiler_observation.create_observation(self, state, record)
+            except BaseException as failure:
+                observer_failure(state, 'native_profiler_preparation', failure)
+                return context
+
+            @contextmanager
+            def observe_capture():
+                physical_profile(self, 'capture', True)
+                try:
+                    with context:
+                        yield
+                finally:
+                    physical_profile(self, 'capture', False)
+            return observe_capture()
+        methods['_get_cudagraph_capture_context'] = capture_context
     if hasattr(base, '_make_model_runner'):
         native_factory = base._make_model_runner
 

@@ -126,7 +126,13 @@ def write_record(worker, phase, boundary, error=None):
         used = path.stat().st_size if path.exists() else 0
         if 'STEP5_CAPACITY_NODE_FILE' not in os.environ:
             used = sum(p.stat().st_size for p in output.glob('rank_*.jsonl'))
-        assert used+len(payload.encode()) <= rank_limit, 'Rank evidence exceeds record budget'
+        reserved = 0
+        if 'STEP5_CAPACITY_NODE_FILE' in os.environ and hasattr(worker, '_request_observation'):
+            from role_execution_observation import pending_profiler_bytes, rank_record_bytes
+            state = worker._request_observation
+            used = rank_record_bytes(output, worker.rank)
+            reserved = state.device_owned_bytes+pending_profiler_bytes(state)
+        assert used+len(payload.encode())+reserved <= rank_limit, 'Rank evidence exceeds record budget'
         with path.open('a') as stream:
             stream.write(payload)
     except Exception:

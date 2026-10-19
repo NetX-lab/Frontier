@@ -57,6 +57,7 @@ def config(tmp_path):
         request_observer_sha256=capacity.sha256(HERE/'role_execution_observation.py'),
         model_input_observer_sha256=capacity.sha256(HERE/'role_model_input_observation.py'),
         state_observer_sha256=capacity.sha256(HERE/'role_state_observation.py'),
+        profiler_observer_sha256=capacity.sha256(HERE/'role_profiler_observation.py'),
         request_manifest=str(capacity.TASK/'request_input_candidate_20261018_01.json'),
         request_manifest_sha256=capacity.sha256(capacity.TASK/'request_input_candidate_20261018_01.json'))
 
@@ -470,7 +471,8 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
                         caller_sha256=config['request_caller_sha256'],
                         observer_sha256=config['request_observer_sha256'],
                         model_input_observer_sha256=config['model_input_observer_sha256'],
-                        state_observer_sha256=config['state_observer_sha256']),
+                        state_observer_sha256=config['state_observer_sha256'],
+                        profiler_observer_sha256=config['profiler_observer_sha256']),
                     request_manifest_sha256=config['request_manifest_sha256']))
         return Connection()
 
@@ -499,6 +501,7 @@ def native_node_attempt(config, tmp_path, monkeypatch, *, rank=0, archive_bytes=
         assert passed_env['STEP5_REQUEST_OBSERVER_SHA'] == config['request_observer_sha256']
         assert passed_env['STEP5_MODEL_INPUT_OBSERVER_SHA'] == config['model_input_observer_sha256']
         assert passed_env['STEP5_STATE_OBSERVER_SHA'] == config['state_observer_sha256']
+        assert passed_env['STEP5_PROFILER_OBSERVER_SHA'] == config['profiler_observer_sha256']
         actual_node = json.loads(Path(passed_env['STEP5_CAPACITY_NODE_FILE']).read_text())
         node.update(actual_node)
         assert actual_node['observer_sha256'] == original_config['observer_sha256']
@@ -995,6 +998,7 @@ def test_lazy_request_worker_rejects_unbound_environment_before_native_import(co
         STEP5_REQUEST_CALLER_SHA=config['request_caller_sha256'],
         STEP5_REQUEST_OBSERVER_SHA=config['request_observer_sha256'],
         STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
+        STEP5_PROFILER_OBSERVER_SHA=config['profiler_observer_sha256'],
         STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256']).items():
         monkeypatch.setenv(name, value)
     if fault == 'missing_hash':
@@ -1548,6 +1552,7 @@ def test_state_child_source_is_required_before_lazy_native_worker_import(config,
         STEP5_CAPACITY_OBSERVER_SHA=config['observer_sha256'], STEP5_REQUEST_CALLER_SHA=config['request_caller_sha256'],
         STEP5_REQUEST_OBSERVER_SHA=config['request_observer_sha256'],
         STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
+        STEP5_PROFILER_OBSERVER_SHA=config['profiler_observer_sha256'],
         STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256'])
     for name, value in environment.items():
         monkeypatch.setenv(name, value)

@@ -1122,6 +1122,7 @@ class ObservationScope:
         self.active, self.stopped, self.installed = False, False, False
         self.opcodes, self.native_calls, self.excluded_capture_calls = {}, {}, {}
         self.capture_binding_event, self.capture_window = None, False
+        self.annotations = {}
         self.call_tensors, self.tensor_keys = [], {}
         self.profile_hook, self.trace_hook = self.profile, self.trace
         self.previous_profile, self.previous_trace = sys.getprofile(), sys.gettrace()
@@ -1146,6 +1147,28 @@ class ObservationScope:
         self.events.append(event)
         self.used += len(payload.encode())
         return event
+
+    def start_annotation(self, key, row, kind):
+        """Use only the current original native profiler and existing event identity."""
+        observed = getattr(self.runner, '_step5_profiler_observation', None)
+        if observed is None or row is None:
+            return
+        if key in self.annotations:
+            raise ValueError('A native annotation is already active at this boundary')
+        from role_profiler_observation import annotation_name
+        sequence = self.state.captures if self.kind == 'capture' else self.state.invocations
+        name = annotation_name(self.kind, sequence, row['event'], kind)
+        context = observed.annotate(name)
+        if context is None:
+            return
+        context.__enter__()
+        self.annotations[key] = context
+        self.update(row, trace_annotation=name)
+
+    def finish_annotation(self, key):
+        context = self.annotations.pop(key, None)
+        if context is not None:
+            context.__exit__(None, None, None)
 
     def metadata(self):
         return Metadata(self.sites, self.state.limits)
@@ -1272,7 +1295,9 @@ class ObservationScope:
                 outcome='CALL_ENTERED_NOT_COMPLETED', gpu_completion='UNMEASURED')
             if row is not None:
                 self.native_calls[id(frame)] = row
+                self.start_annotation(('call', id(frame)), row, 'call')
         elif event == 'return':
+            self.finish_annotation(('call', id(frame)))
             row = self.native_calls.pop(id(frame), None)
             if row is None:
                 return
@@ -1381,9 +1406,15 @@ class ObservationScope:
         if path is None:
             return
         row = self.emit('replay_attempt', **self.selection(parent, graph, path))
-        self.pending[key] = dict(row=row, exception=None)
+        observed = getattr(self.runner, '_step5_profiler_observation', None)
+        if row is not None and observed is not None:
+            self.update(row, **observed.graph_identity(graph))
+        if row is not None:
+            self.pending[key] = dict(row=row, exception=None)
+            self.start_annotation(key, row, 'replay')
 
     def finish_replay(self, key, outcome, error=None):
+        self.finish_annotation(key)
         pending = self.pending.pop(key, None)
         if pending is not None:
             self.emit('replay_outcome', replay_event=pending['row']['event'],
@@ -1408,11 +1439,26 @@ class ObservationScope:
         if self.kind == 'capture' and kind == 'capture_forward':
             self.capture_window = row['native_capture_region']
             self.capture_binding_event = event['event'] if event is not None and self.capture_window else None
+            if self.capture_window:
+                self.start_annotation(('capture', id(frame)), event, 'capture')
 
     def profile(self, frame, event, arg):
         if self.previous_profile is not None:
             self.previous_profile(frame, event, arg)
-        if not self.active or self.stopped:
+        if not self.active:
+            return
+        if self.stopped:
+            if event == 'return':
+                keys = (('call', id(frame)), ('capture', id(frame)), ('python', id(frame)))
+            elif event in ('c_return', 'c_exception'):
+                keys = (('c', id(frame), id(getattr(arg, '__self__', None))),)
+            else:
+                keys = ()
+            for key in keys:
+                try:
+                    self.finish_annotation(key)
+                except BaseException as failure:
+                    self.error('trace_annotation_unwind', failure)
             return
         try:
             codes = self.sites.codes
@@ -1449,6 +1495,7 @@ class ObservationScope:
                         self.capture_inputs(frame, 'capture_forward')
             elif event == 'return':
                 if self.kind == 'capture' and frame.f_code is codes['capture_forward']:
+                    self.finish_annotation(('capture', id(frame)))
                     self.capture_window = False
                 key = ('python', id(frame))
                 registration = (self.state.device is not None and frame.f_code is codes['add_requests'] and
@@ -1532,44 +1579,53 @@ class ObservationScope:
             if frame.f_lineno == lines['pw_capture']:
                 self.wrapper_capture(frame, 'PIECEWISE', values['cudagraph'])
             elif frame.f_lineno == lines['pw_capture_store']:
+                self.finish_annotation(('capture', id(frame)))
                 self.capture_stored(values['self'], values['entry'], values['entry'].cudagraph,
                                     values['entry'].batch_descriptor, 'PIECEWISE', frame)
         elif frame.f_code is codes['break_capture']:
             if frame.f_lineno == lines['break_capture']:
                 self.wrapper_capture(frame, 'BREAKABLE_PIECEWISE', values['capture'])
             elif frame.f_lineno == lines['break_capture_store']:
+                self.finish_annotation(('capture', id(frame)))
                 self.capture_stored(values['self'], values['entry'], values['entry'].capture,
                                     values['entry'].batch_descriptor, 'BREAKABLE_PIECEWISE', frame)
         elif frame.f_code is codes['segments'] and frame.f_lineno == lines['break_segment']:
             segment = values['r']
             receiver = getattr(segment, '__self__', None)
-            self.emit('breakable_segment_attempt', capture_id=id(values['self']),
+            row = self.emit('breakable_segment_attempt', capture_id=id(values['self']),
                       segment_id=id(segment),
                       segment_kind='GRAPH_REPLAY' if isinstance(receiver, self.sites.graph_type) else 'EAGER_BREAK',
                       graph_id=id(receiver) if isinstance(receiver, self.sites.graph_type) else None,
                       source_line=frame.f_lineno, outcome='ATTEMPT_ONLY', gpu_completion='UNMEASURED')
+            observed = getattr(self.runner, '_step5_profiler_observation', None)
+            if row is not None and observed is not None and row['segment_kind'] == 'GRAPH_REPLAY':
+                self.update(row, **observed.graph_identity(receiver))
 
     def capture_stored(self, owner, entry, graph, descriptor, path, frame):
         metadata = self.metadata()
         descriptor = metadata.descriptor(descriptor)
         key = (self.breakable_key(frame, entry, metadata) if path == 'BREAKABLE_PIECEWISE'
                else descriptor)
-        self.emit('capture_entry_stored', path=path, owner_id=id(owner), entry_id=id(entry),
+        row = self.emit('capture_entry_stored', path=path, owner_id=id(owner), entry_id=id(entry),
                   graph_id=id(graph), descriptor=descriptor, selection_key=key, source_line=frame.f_lineno,
                   continuity=self.state.continuity(owner, entry, graph, key, path, captured=True),
                   device_operations_added=False, gpu_completion='UNMEASURED')
+        observed = getattr(self.runner, '_step5_profiler_observation', None)
+        if row is not None and observed is not None:
+            self.update(row, **observed.graph_identity(graph))
 
     def wrapper_capture(self, frame, path, graph):
         values, metadata = frame.f_locals, self.metadata()
         descriptor = metadata.descriptor(values['entry'].batch_descriptor)
         key = (self.breakable_key(frame, values['entry'], metadata) if path == 'BREAKABLE_PIECEWISE'
                else descriptor)
-        self.emit('wrapper_capture_forward', path=path, owner_id=id(values['self']),
+        row = self.emit('wrapper_capture_forward', path=path, owner_id=id(values['self']),
                   entry_id=id(values['entry']), graph_id=id(graph),
                   descriptor=descriptor, selection_key=key,
                   args=metadata.value(values['args']), kwargs=metadata.value(values['kwargs']),
                   metadata_complete=metadata.complete, device_operations_added=False,
                   source_line=frame.f_lineno, gpu_completion='UNMEASURED')
+        self.start_annotation(('capture', id(frame)), row, 'capture')
 
     def __enter__(self):
         if self.state.stopped:
@@ -1591,6 +1647,7 @@ class ObservationScope:
             if state_rows or state_gaps:
                 self.emit('resident_state_bindings', frontiers=False, owners=state_rows, gaps=state_gaps,
                           device_completion='UNMEASURED', lifetime='OBSERVED_BINDING_BOUNDARIES_ONLY')
+            self.start_annotation(('scope',), dict(event=0), 'scope')
             sys.setprofile(self.profile_hook)
             sys.settrace(self.trace_hook)
             self.installed = self.active = True
@@ -1624,6 +1681,11 @@ class ObservationScope:
                     self.restore()
         except BaseException as failure:
             self.error('hook_restoration', failure)
+        for key in reversed(list(self.annotations)):
+            try:
+                self.finish_annotation(key)
+            except BaseException as failure:
+                self.error('trace_annotation_exit', failure)
         if self.state.device is not None and self.device_step is not None:
             try:
                 self.state.device.output(self.device_step, exc_type, self.errors, events=self.events)
@@ -1668,6 +1730,7 @@ class ObservationScope:
         else:
             status = 'OBSERVED_CPU_METADATA_ONLY_NOT_G2' if self.events else 'UNMEASURED'
         record = dict(scope='source_pinned_model_metadata_only_not_G2', lifecycle=self.kind,
+                      sequence=self.state.captures if self.kind == 'capture' else self.state.invocations,
                       status=status, observation_status=observation_status,
                       events=self.events, call_tensor_metadata=self.call_tensors,
                       observer_errors=copy.deepcopy(self.errors), call_census=self.call_summary(),

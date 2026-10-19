@@ -2,6 +2,7 @@
 """Prepare a private TP16 native request run using the existing capacity lifecycle."""
 import argparse
 import copy
+import hashlib
 import json
 import math
 import os
@@ -14,6 +15,7 @@ import traceback
 import check_role_tp16 as capacity
 import role_execution_observation as observation
 import role_model_input_observation as model_observation
+import role_profiler_observation as profiler_observation
 
 GEN5_MANIFEST_SHA = '68b9233b16b59832a0061fe2ecf75cc4e8f95b22c2600cf29ddc7ecfd6540137'
 # Only census bodies absent from the immutable capacity/request ledgers need
@@ -92,7 +94,7 @@ def preflight(config, *, new_generation=True):
                 'marker_root', 'worker_local_root', 'archive_root', 'native_cli', 'caller_sha256',
                 'observer_sha256', 'supervisor_sha256', 'request_manifest', 'request_manifest_sha256',
                 'request_caller_sha256', 'request_observer_sha256', 'model_input_observer_sha256',
-                'state_observer_sha256'):
+                'state_observer_sha256', 'profiler_observer_sha256'):
         if key not in config:
             raise ValueError(key+' must be explicitly configured')
     original = copy.deepcopy(config)
@@ -101,6 +103,12 @@ def preflight(config, *, new_generation=True):
     if config['rpc_seconds'] > 60 or config['archive_reserve_seconds'] != 300 or \
             config['record_bytes'] > 512*1024**2 or config['archive_bytes'] > 4*1024**3:
         raise ValueError('Preserve the 60s RPC, 300s reserve, 512MiB records and 4GiB archive ceilings')
+    if 'physical_observation' in config:
+        limits = profiler_observation.ProfilerObservationLimits(**config['physical_observation'])
+        if limits.trace_bytes > config['record_bytes']//8:
+            raise ValueError('Native diagnostic traces share the original rank allowance')
+        if capacity.sha256(Path(__file__).with_name('role_profiler_observation.py')) != config.get('profiler_observer_sha256'):
+            raise ValueError('Native profiler observer source identity mismatch')
     if 'device_observation' in config:
         limits = model_observation.DeviceObservationLimits(**config['device_observation'])
         if max(limits.owned_bytes, limits.rpc_bytes) > config['record_bytes']//8:
@@ -114,7 +122,8 @@ def preflight(config, *, new_generation=True):
     for filename, key in (('check_role_execution.py', 'request_caller_sha256'),
                           ('role_execution_observation.py', 'request_observer_sha256'),
                           ('role_model_input_observation.py', 'model_input_observer_sha256'),
-                          ('role_state_observation.py', 'state_observer_sha256')):
+                          ('role_state_observation.py', 'state_observer_sha256'),
+                          ('role_profiler_observation.py', 'profiler_observer_sha256')):
         if capacity.sha256(Path(__file__).with_name(filename)) != config[key]:
             raise ValueError('Request source identity mismatch: '+filename)
     path = capacity.TASK/'native_role_sources/observed_generation5/source_manifest.json'
@@ -144,15 +153,192 @@ def preflight(config, *, new_generation=True):
         evidence_status=dict(UNMEASURED))
 
 
+def profiler_rows(rows, initial, config, *, started):
+    """Verify source, worker, lifecycle and trace completion without node attribution."""
+    if not isinstance(rows, list) or len(rows) != len(initial) or not initial:
+        raise ValueError('Every original native worker must return its profiler observation')
+    workers = {row['rank']: row for row in initial}
+    if len(workers) != len(initial) or set(workers) != set(range(16)):
+        raise ValueError('The original TP16 worker census must be complete and unique')
+    source_owners = {
+        'wrapper': {'TorchProfilerWrapper.'+name for name in
+                    ('__init__', '_start', '_stop', 'annotate_context_manager')},
+        'worker': {'Worker.profile', 'Worker._get_cudagraph_capture_context'},
+        'torch_graphs': {'CUDAGraph.raw_cuda_graph_exec'},
+    }
+    identity_keys = ('rank', 'local_rank', 'pid', 'start_time', 'parent_pid', 'parent_start_time',
+                     'generation', 'node_rank', 'boot_id', 'pid_namespace', 'observer_sha256')
+    seen = set()
+    for row in rows:
+        rank = row['rank']
+        if type(rank) is not int or rank in seen or rank not in workers:
+            raise ValueError('Native profiler workers are missing, duplicated or substituted')
+        seen.add(rank)
+        native = workers[rank]
+        identity = {key: native[key] for key in identity_keys}
+        observed = row['profiler_observation']
+        if (row['source'] != observation.SOURCE or row['pid'] != native['pid'] or
+                row['local_rank'] != native['local_rank'] or row['worker_identity'] != identity or
+                observed['worker_identity'] != identity or observed['errors'] or
+                observed['status'] != 'NATIVE_PROFILER_DIAGNOSTIC_ONLY_NOT_G2' or
+                observed['observer_sha256'] != config['profiler_observer_sha256'] or
+                observed['limits'] != config['physical_observation']):
+            raise ValueError('Native profiler source, worker, limit or error state is unverified')
+        sources = observed['sources']
+        if len(sources) != len(profiler_observation.SOURCE_PINS):
+            raise ValueError('Native profiler must bind its original wrapper and worker sources')
+        for key, (relative, digest) in profiler_observation.SOURCE_PINS.items():
+            selected = [source for path, source in sources.items() if Path(path).as_posix().endswith('/'+relative)]
+            if (len(selected) != 1 or selected[0]['sha256'] != digest or
+                    len(selected[0]['code_owners']) != len(source_owners[key]) or
+                    {owner['name'] for owner in selected[0]['code_owners']} != source_owners[key] or
+                    any(type(owner['first_line']) is not int or owner['first_line'] <= 0
+                        for owner in selected[0]['code_owners'])):
+                raise ValueError('Native profiler loaded code differs from the pinned original owners')
+        windows = observed['windows']
+        expected = ['capture'] if started else ['capture', 'requests']
+        if [window['label'] for window in windows] != expected:
+            raise ValueError('Original capture/request profiling windows are missing or out of order')
+        previous = None
+        for window in windows:
+            trace = window['trace']
+            if (window['status'] != 'COMPLETE_DIAGNOSTIC_WINDOW_NOT_G2' or window['handler_calls'] != 1 or
+                    window['native_start'] != 'ORIGINAL_PROFILER_RUNNING' or
+                    window['native_stop'] != 'ORIGINAL_PROFILER_STOPPED_AND_TRACE_COMPLETE' or
+                    type(window['profiler_id']) is not int or window['profiler_id'] <= 0 or
+                    window['wrapper_source'] != sources or trace is None or
+                    trace['status'] != 'COMPLETE_NATIVE_TRACE_NOT_G2' or not trace['reader_complete'] or
+                    trace['error'] is not None or trace['deadline_exceeded'] or
+                    trace['byte_limit'] != config['physical_observation']['trace_bytes'] or
+                    trace['bytes_seen'] != trace['retained_bytes'] or
+                    type(trace['retained_bytes']) is not int or not 0 < trace['retained_bytes'] <= trace['byte_limit'] or
+                    type(trace['events']) is not int or not 0 < trace['events'] <= config['physical_observation']['trace_events'] or
+                    any(type(trace[key]) is not int or trace[key] < 0 for key in ('annotations', 'graph_launches', 'kernels')) or
+                    trace['annotations'] <= 0 or
+                    any(trace[key] > trace['events'] for key in ('annotations', 'graph_launches', 'kernels')) or
+                    type(trace['sha256']) is not str or len(trace['sha256']) != 64 or
+                    any(character not in '0123456789abcdef' for character in trace['sha256'])):
+                raise ValueError('Native trace handler, source, activity, hash or byte completion is unverified')
+            if Path(trace['path']).name != f'profile_rank_{rank}_pid_{native["pid"]}_{window["label"]}.json':
+                raise ValueError('Native trace output differs from its original worker/window identity')
+            times = [window['start'], trace['started'], trace['finished'], trace['inspection_started'],
+                     trace['inspection_finished'], window['stop'], trace['deadline']]
+            if (any(type(value) not in (int, float) or not math.isfinite(value) for value in times) or
+                    times != sorted(times) or window['stop'] >= trace['deadline'] or
+                    trace['seconds'] != trace['finished']-trace['started']):
+                raise ValueError('Native trace export and inspection did not complete within the original deadline')
+            if previous is not None and (previous['stop'] > window['start'] or
+                    previous['profiler_id'] != window['profiler_id']):
+                raise ValueError('Native request trace must follow capture with the same original profiler')
+            previous = window
+        if started:
+            window = observed['current']
+            if (window is None or window['label'] != 'requests' or
+                    window['status'] != 'COLLECTING_DIAGNOSTIC_TRACE_NOT_G2' or
+                    window['native_start'] != 'ORIGINAL_PROFILER_RUNNING' or
+                    window['native_stop'] != 'UNMEASURED' or window['trace'] is not None or
+                    window['handler_calls'] != 0 or window['wrapper_source'] != sources or
+                    previous['profiler_id'] != window['profiler_id'] or previous['stop'] > window['start']):
+                raise ValueError('Native profiler RPC returned without original request collection')
+        elif observed['current'] is not None:
+            raise ValueError('Native profiler stop left an unfinished diagnostic window')
+    return dict(status='ALL_RANK_NATIVE_PROFILER_CONTROL_ONLY_NOT_G2', ranks=sorted(seen),
+                operation='start' if started else 'stop', physical_kernel_attribution='UNVERIFIED')
+
+
+def analyze_profiler(config, root):
+    """Verify detached original worker files before joining diagnostic launch evidence."""
+    root = Path(root).resolve()
+    rank_limit = config['record_bytes']//8
+
+    def read(path, cap):
+        if not path.is_file() or path.is_symlink() or path.stat().st_size > cap:
+            raise ValueError('Missing, substituted or over-budget retained profiler evidence: '+str(path))
+        return path.read_bytes()
+
+    node0 = root/'node_0'
+    initial = json.loads(read(node0/'all_rank_snapshots.json', config['record_bytes']))['workers']
+    stopped = json.loads(read(node0/'profiler_stop.json', config['record_bytes']))['workers']
+    control = profiler_rows(stopped, initial, config, started=False)
+    nodes = {rank: json.loads(read(root/f'node_{rank}'/'node.json', config['record_bytes'])) for rank in (0, 1)}
+    for rank, node in nodes.items():
+        if node['node_rank'] != rank or node['generation'] != config['generation']:
+            raise ValueError('Retained native node differs from the original generation')
+    results = []
+    for worker in stopped:
+        identity = worker['worker_identity']
+        node = nodes[identity['node_rank']]
+        directory = root/f'node_{node["node_rank"]}'/'workers'
+        if observation.rank_record_bytes(directory, worker['rank']) > rank_limit:
+            raise ValueError('Retained profiler and worker files exceed the original rank allowance')
+        original = json.loads(read(directory/f'worker_{worker["rank"]}_{worker["pid"]}.json', rank_limit))
+        if original != identity:
+            raise ValueError('Retained profiler worker differs from the original census')
+        source = read(directory/f'request_rank_{worker["rank"]}_pid_{worker["pid"]}.jsonl', rank_limit)
+        records, completions = [], {}
+        for line in source.splitlines():
+            row = json.loads(line)
+            if (row['rank'] != worker['rank'] or row['local_rank'] != worker['local_rank'] or
+                    row['pid'] != worker['pid'] or row['worker_identity'] != identity):
+                raise ValueError('Retained profiler/model row differs from its original worker')
+            if row['scope'] == 'native_profiler_completion_only_not_G2':
+                label = row['window']['label']
+                if label in completions or row['observer_sha256'] != config['profiler_observer_sha256'] or row['errors']:
+                    raise ValueError('Retained native profiler completion is duplicated or unverified')
+                completions[label] = row['window']
+            else:
+                if row['source'] != observation.SOURCE:
+                    raise ValueError('Retained model observation source differs from the profiler generation')
+                observed = row.get('source_pinned_model_observation')
+                if observed is not None:
+                    if observed['status'] != 'OBSERVED_CPU_METADATA_ONLY_NOT_G2':
+                        raise ValueError('Retained native model annotation scope is unverified')
+                    records.append(observed)
+        joined = []
+        windows = worker['profiler_observation']['windows']
+        if set(completions) != set(profiler_observation.WINDOWS):
+            raise ValueError('Retained native profiler completion records are missing')
+        for window in windows:
+            if completions[window['label']] != window or window['trace']['deadline'] != node['workload_deadline']:
+                raise ValueError('Retained native trace completion/deadline differs from the original receipt')
+            trace = window['trace']
+            original_path = Path(trace['path'])
+            if original_path.parent != Path(node['observer_output']):
+                raise ValueError('Native trace output has no original node observer ownership')
+            payload = read(directory/original_path.name, config['physical_observation']['trace_bytes'])
+            if len(payload) != trace['retained_bytes'] or hashlib.sha256(payload).hexdigest() != trace['sha256']:
+                raise ValueError('Actual retained trace bytes/hash differ from native completion')
+            events = json.loads(payload)['traceEvents']
+            if (len(events) != trace['events'] or any(event.get('cat') == 'user_annotation' and
+                    event.get('name', '').startswith(profiler_observation.ANNOTATION_PREFIX) and
+                    event.get('pid') != worker['pid'] for event in events)):
+                raise ValueError('Actual native trace events differ from original worker completion')
+            correlation = profiler_observation.correlate_trace(events, records)
+            if (correlation['annotations'], correlation['graph_launches'], correlation['kernels']) != (
+                    trace['annotations'], trace['graph_launches'], trace['kernels']):
+                raise ValueError('Actual native trace activities differ from original completion counts')
+            joined.append(dict(label=window['label'], path=str(directory/original_path.name),
+                               sha256=trace['sha256'], correlation=correlation))
+        results.append(dict(rank=worker['rank'], worker_identity=identity, windows=joined))
+    return dict(status='RETAINED_NATIVE_PROFILER_ANALYSIS_ONLY_NOT_G2', generation=config['generation'],
+        control=control, workers=results, physical_kernel_attribution='UNVERIFIED_NO_CAPTURE_NODE_BINDING',
+        transient_scale_content='UNMEASURED', clean_performance='UNVERIFIED', G2='UNVERIFIED')
+
+
 def engine_kwargs(config, node):
     kwargs = capacity.engine_kwargs(config, node)
     kwargs['worker_cls'] = 'check_role_execution.RequestWorker'
+    if 'physical_observation' in config:
+        kwargs['profiler_config'] = profiler_observation.native_config(node['observer_output'])
     return kwargs
 
 
 def headless_argv(config, node):
     argv = capacity.headless_argv(config, node)
     argv[argv.index('--worker-cls')+1] = 'check_role_execution.RequestWorker'
+    if 'physical_observation' in config:
+        argv.extend(['--profiler-config', json.dumps(profiler_observation.native_config(
+            node['observer_output']), separators=(',', ':'))])
     return argv
 
 
@@ -164,7 +350,7 @@ def non_cache_bytes(local):
 
 
 def owned_device_bytes(config, node, *, require_complete=False):
-    if 'device_observation' not in config:
+    if 'device_observation' not in config and 'physical_observation' not in config:
         return 0
     return observation.device_reservation_bytes(node['observer_output'], require_complete=require_complete)
 
@@ -239,7 +425,8 @@ def request_metadata(rows, initial, previous, config):
                     ('observer_sha256', 'request_observer_sha256'),
                     ('capacity_observer_sha256', 'observer_sha256'),
                     ('model_input_observer_sha256', 'model_input_observer_sha256'),
-                    ('state_observer_sha256', 'state_observer_sha256')))):
+                    ('state_observer_sha256', 'state_observer_sha256'),
+                    ('profiler_observer_sha256', 'profiler_observer_sha256')))):
             raise ValueError('Request metadata or observer source is unverified')
         if (row.get('runner_observer_error') is not None or
                 row.get('model_input_observer_error') is not None):
@@ -276,7 +463,8 @@ def device_preparation_rows(rows, initial, preparation, config):
                     ('observer_sha256', 'request_observer_sha256'),
                     ('capacity_observer_sha256', 'observer_sha256'),
                     ('model_input_observer_sha256', 'model_input_observer_sha256'),
-                    ('state_observer_sha256', 'state_observer_sha256')))):
+                    ('state_observer_sha256', 'state_observer_sha256'),
+                    ('profiler_observer_sha256', 'profiler_observer_sha256')))):
             raise ValueError('Device preparation is absent, unverified or from a different worker/source')
         observed = row['device_observation']
         if (observed['status'] != 'PREPARED_NOT_EXECUTED' or observed['collected_steps'] or
@@ -424,7 +612,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
     kwargs = engine_kwargs(config, node)
     receipt = dict(scope=REQUEST_SCOPE, status='UNVERIFIED', generation=config['generation'],
         native_generation_returns=[], completed_requests=[], requests=[], frontend_associations=[],
-        device_associations=[],
+        device_associations=[], profiler_observations=[],
         evidence_status=dict(UNMEASURED), evidence_verdict='PASS', evidence_errors=[],
         result='PASS', return_code=0, reasons=[], request_manifest=inputs['manifest'],
         request_manifest_sha256=inputs['manifest_sha256'],
@@ -433,6 +621,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
         terminal_publication='UNMEASURED',
         terminal_marker=str(Path(config['marker_root'])/'node_0_workload_terminal.json'))
     llm, phase, request, sampling_fields = None, 'deadline_before_initialization', None, None
+    profiler_start_attempted, profiler_stop_attempted = False, False
 
     def remaining():
         value = end-clock()
@@ -445,6 +634,27 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
 
     def record(filename, value):
         return evidence('save '+filename, lambda: retain(config, node, filename, value, clock=clock))
+
+    def stop_profiler(operation):
+        nonlocal profiler_stop_attempted
+        if llm is None or not profiler_start_attempted or profiler_stop_attempted:
+            return
+        profiler_stop_attempted = True
+        try:
+            profiled = evidence(operation, lambda: llm.collective_rpc('physical_profile',
+                args=('requests', False), timeout=min(remaining(), config['rpc_seconds'])))
+            if profiled is not None:
+                record('profiler_stop.json', dict(workers=profiled))
+                verified = evidence('validate all-rank completed native traces', lambda: profiler_rows(
+                    profiled, initial, config, started=False))
+                if verified is not None:
+                    receipt['profiler_observations'].append(verified)
+        except BaseException as failure:
+            # Auxiliary cleanup must not replace a native generation exception.
+            receipt['evidence_verdict'] = 'UNVERIFIED'
+            receipt['evidence_errors'].append(dict(operation=operation, error=repr(failure)))
+            receipt['result'], receipt['return_code'] = 'FAIL', 1
+            receipt['reasons'].append('evidence unavailable: '+operation)
 
     def census(rows, raw_name, census_name):
         if record(raw_name, dict(workers=rows)) is None:
@@ -502,6 +712,15 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
             record('device_preparation.json', dict(workers=prepared))
             evidence('validate all-worker device preparation',
                 lambda: device_preparation_rows(prepared, initial, preparation, config))
+        if 'physical_observation' in config:
+            profiler_start_attempted = True
+            phase = 'native_profiler_start_rpc'
+            profiled = evidence('start original native request profiler', lambda: llm.collective_rpc(
+                'physical_profile', args=('requests', True), timeout=min(remaining(), config['rpc_seconds'])))
+            if profiled is not None:
+                record('profiler_start.json', dict(workers=profiled))
+                evidence('validate original all-rank profiler start', lambda: profiler_rows(
+                    profiled, initial, config, started=True))
         previous = None
         for request in inputs['requests']:
             name = request['name']
@@ -561,6 +780,8 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
             previous = rows
             if checked is None:
                 break
+        phase = 'native_profiler_stop_rpc'
+        stop_profiler('stop and drain original native request profiler')
         phase = 'deadline_before_final_capacity_rpc'
         timeout = min(remaining(), config['rpc_seconds'])
         phase = 'native_final_capacity_rpc'
@@ -590,6 +811,7 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
         evidence('publish native workload terminal', lambda: publish(config, node, receipt['result'], reason))
         return llm
     except BaseException as failure:
+        stop_profiler('cleanup original native request profiler after failure')
         error = dict(phase=phase, error_type=observation.class_name(failure), traceback=traceback.format_exc(),
             request=copy.deepcopy(request), engine_kwargs=kwargs,
             submitted_sampling_fields=sampling_fields, config=config, sources=sources)
@@ -609,6 +831,8 @@ def execute_leader(config, node, sources, *, llm_factory=None, sampling_factory=
         capacity.diagnostic(lambda: publish(config, node, 'FAIL',
             receipt['status']+'; phase='+phase+': '+error['traceback']))
         raise
+    finally:
+        stop_profiler('cleanup original native request profiler')
 
 
 
@@ -619,17 +843,29 @@ def run_node(config, sources, config_path, *, env=None, run=subprocess.run, pope
     env.update(STEP5_REQUEST_CALLER_SHA=config['request_caller_sha256'],
                STEP5_REQUEST_OBSERVER_SHA=config['request_observer_sha256'],
                STEP5_MODEL_INPUT_OBSERVER_SHA=config['model_input_observer_sha256'],
-               STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256'])
+               STEP5_STATE_OBSERVER_SHA=config['state_observer_sha256'],
+               STEP5_PROFILER_OBSERVER_SHA=config['profiler_observer_sha256'])
 
     def request_supervision(root, generation, passed_env, engine, argv, *args, **kwargs):
         argv = list(argv)
         argv[2] = str(Path(__file__).resolve())
+        if 'physical_observation' in config:
+            passed_env = dict(passed_env,
+                STEP5_PHYSICAL_OBSERVATION=json.dumps(config['physical_observation'], separators=(',', ':')),
+                STEP5_PROFILER_OBSERVER_SHA=config['profiler_observer_sha256'])
         engine = dict(engine, request_sources=dict(caller_sha256=config['request_caller_sha256'],
             observer_sha256=config['request_observer_sha256'],
             model_input_observer_sha256=config['model_input_observer_sha256'],
-            state_observer_sha256=config['state_observer_sha256']),
+            state_observer_sha256=config['state_observer_sha256'],
+            profiler_observer_sha256=config['profiler_observer_sha256']),
             request_manifest_sha256=config['request_manifest_sha256'])
         node = json.loads(Path(passed_env['STEP5_CAPACITY_NODE_FILE']).read_text())
+        if 'physical_observation' in config:
+            node.update(physical_observation=copy.deepcopy(config['physical_observation']),
+                profiler_observer_sha256=config['profiler_observer_sha256'])
+            capacity.save(Path(passed_env['STEP5_CAPACITY_NODE_FILE']), node)
+            capacity.save(Path(root)/f"node_{node['node_rank']}_inventory.json", node)
+            engine['physical_observation'] = copy.deepcopy(config['physical_observation'])
         original_finalize = kwargs['finalize_evidence']
 
         def finalize_request_records(status):
@@ -672,7 +908,8 @@ def __getattr__(name):
         raise AttributeError(name)
     for variable in ('STEP5_CAPACITY_TASK', 'STEP5_CAPACITY_NODE_FILE',
                      'STEP5_REQUEST_CALLER_SHA', 'STEP5_REQUEST_OBSERVER_SHA',
-                     'STEP5_MODEL_INPUT_OBSERVER_SHA', 'STEP5_STATE_OBSERVER_SHA', 'STEP5_CAPACITY_OBSERVER_SHA'):
+                     'STEP5_MODEL_INPUT_OBSERVER_SHA', 'STEP5_STATE_OBSERVER_SHA', 'STEP5_PROFILER_OBSERVER_SHA',
+                     'STEP5_CAPACITY_OBSERVER_SHA'):
         if variable not in os.environ:
             raise ValueError(variable+' must be explicitly configured')
     if Path(os.environ['STEP5_CAPACITY_TASK']).resolve() != capacity.TASK:
@@ -681,9 +918,12 @@ def __getattr__(name):
         ('role_execution_observation.py', 'STEP5_REQUEST_OBSERVER_SHA'),
         ('role_model_input_observation.py', 'STEP5_MODEL_INPUT_OBSERVER_SHA'),
         ('role_state_observation.py', 'STEP5_STATE_OBSERVER_SHA'),
+        ('role_profiler_observation.py', 'STEP5_PROFILER_OBSERVER_SHA'),
         ('role_capacity_observation.py', 'STEP5_CAPACITY_OBSERVER_SHA')):
         if capacity.sha256(Path(__file__).with_name(filename)) != os.environ[variable]:
             raise ValueError('Request worker source identity mismatch: '+filename)
+    if 'STEP5_PHYSICAL_OBSERVATION' in os.environ and os.environ.get('STEP5_PROFILER_OBSERVER_SHA') != profiler_observation.SOURCE_SHA256:
+        raise ValueError('Request worker native profiler source identity mismatch')
     observation.capacity.observation_output()
     from vllm.v1.worker.gpu_worker import Worker
     return observation.observed_worker(Worker)
@@ -693,11 +933,21 @@ def __getattr__(name):
 def main():
     deadline = time.monotonic()+capacity.supervision.SECONDS
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('preflight', 'node', 'leader', 'headless'))
+    parser.add_argument('mode', choices=('preflight', 'node', 'leader', 'headless', 'analyze-profiler'))
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--node-file', type=Path)
+    parser.add_argument('--evidence-root', type=Path)
+    parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
+    if args.mode == 'analyze-profiler':
+        if args.evidence_root is None or args.output is None:
+            parser.error('--evidence-root and --output are required for detached profiler analysis')
+        result = analyze_profiler(config, args.evidence_root)
+        with args.output.open('x') as stream:
+            json.dump(result, stream, indent=2, allow_nan=False)
+            stream.write('\n')
+        return 0
     if args.mode == 'preflight':
         print(json.dumps(preflight(config), indent=2))
         return 0
