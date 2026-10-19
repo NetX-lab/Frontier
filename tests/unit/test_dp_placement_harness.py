@@ -240,6 +240,58 @@ def test_v028_retains_nested_trace_file_identities_without_admitting_contents(tm
     assert evidence["process_expectations"]["inventory_verified"] is False
 
 
+def test_v028_collector_selects_only_the_configured_root_and_retains_partial_bytes(tmp_path):
+    trace = tmp_path / "persisted" / "engine" / "EngineCore.jsonl"
+    trace.parent.mkdir(parents=True)
+    payload = b'{"kind":"manifest"}\n{"kind":"incomplete'
+    trace.write_bytes(payload)
+    observer = native_observer() | {"output_dir": str(tmp_path / "wrong-root")}
+    excluded = vllm_replay.observer_evidence(native_engine(), observer)
+    assert excluded["trace_files"] == []
+    assert excluded["trace_directory_exists"] is False
+    assert excluded["collection_errors"] == []
+
+    included = vllm_replay.observer_evidence(
+        native_engine(), observer | {"output_dir": str(trace.parents[1])})
+    assert included["trace_files"] == [{
+        "path": str(trace), "bytes": len(payload),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+    }]
+    assert included["qualification_verified"] is False
+    assert included["process_expectations"]["inventory_verified"] is False
+    assert included["native_close_and_device_completion"] == "unverified"
+
+
+@pytest.mark.parametrize("failed_index", [0, 1, 2])
+def test_v028_collector_read_failure_preserves_only_preceding_file_identities(
+        tmp_path, monkeypatch, failed_index):
+    traces = [tmp_path / name for name in ("a_engine.jsonl", "b_worker.jsonl", "c.jsonl")]
+    payloads = [b"engine fixture\n", b"worker fixture\n", b"unclassified fixture\n"]
+    for trace, payload in zip(traces, payloads):
+        trace.write_bytes(payload)
+    original_open, reads = Path.open, []
+
+    def open_trace(path, mode="r", *args, **kwargs):
+        if path in traces and mode == "rb":
+            reads.append(path)
+            if path == traces[failed_index]:
+                raise OSError("injected collector read failure")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_trace)
+    observer = native_observer() | {"output_dir": str(tmp_path)}
+    evidence = vllm_replay.observer_evidence(native_engine(), observer)
+    assert reads == traces[:failed_index + 1]
+    assert evidence["trace_files"] == [{
+        "path": str(trace), "bytes": len(payload),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+    } for trace, payload in zip(traces[:failed_index], payloads)]
+    assert evidence["collection_errors"] == ["OSError: injected collector read failure"]
+    assert evidence["trace_directory_exists"] is True
+    assert evidence["qualification_verified"] is False
+    assert evidence["process_expectations"]["inventory_verified"] is False
+
+
 @pytest.mark.parametrize("config", [[], {"architectures": ["DeepseekV4ForCausalLM"]},
                                     {"architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": True}])
 def test_v028_main_rejects_invalid_local_metadata_before_launch(tmp_path, monkeypatch, config):

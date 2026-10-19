@@ -7,7 +7,8 @@ import pytest
 from tests.comparison.calibration.native_observer_bootstrap import bootstrap
 
 FILES = ('v1/frontier_trace.py', 'v1/worker/gpu_worker.py',
-    'v1/worker/gpu_model_runner.py', 'v1/engine/core.py', 'v1/core/sched/output.py')
+    'v1/worker/gpu_model_runner.py', 'v1/engine/core.py', 'v1/core/sched/output.py',
+    'compilation/cuda_graph.py')
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 @pytest.fixture
@@ -45,7 +46,8 @@ def inputs(tmp_path, monkeypatch):
     return package, staged, config, overlay, observer
 @pytest.mark.parametrize('fault', ['normal', 'base', 'origin', 'torch', 'vllm',
     'binary_manifest', 'unwritable', 'observer', 'source_hash', 'recorder_present',
-    'binary_hash', 'allowlist', 'missing_input', 'binary_removed'])
+    'binary_hash', 'allowlist', 'missing_input', 'binary_removed',
+    'missing_graph', 'missing_graph_source', 'missing_graph_base'])
 def test_bootstrap_validates_before_writes_and_launch(inputs, monkeypatch, fault):
     package, staged, config, overlay, observer = inputs
     last, binaries = package / FILES[-1], overlay['binary_sha256']
@@ -57,6 +59,9 @@ def test_bootstrap_validates_before_writes_and_launch(inputs, monkeypatch, fault
         'vllm': lambda: monkeypatch.setitem(sys.modules, 'vllm', object()),
         'binary_manifest': lambda: binaries.pop(binary),
         'binary_removed': lambda: Path(binary).unlink(),
+        'missing_graph': lambda: overlay['files'].pop('compilation/cuda_graph.py'),
+        'missing_graph_source': lambda: Path(row['source']).unlink(),
+        'missing_graph_base': lambda: row.pop('base_sha256'),
         'missing_input': lambda: config.pop('overlay_manifest'),
         'unwritable': lambda: last.chmod(0o444),
         'observer': lambda: observer.pop('run_id'),
@@ -72,7 +77,8 @@ def test_bootstrap_validates_before_writes_and_launch(inputs, monkeypatch, fault
     calls = []
     monkeypatch.setenv('PYTHONPATH', '/unapproved/full/native/source')
     if fault != 'normal':
-        with pytest.raises((ValueError, OSError, KeyError)):
+        expected_error = 'Six approved files required' if fault == 'missing_graph' else None
+        with pytest.raises((ValueError, OSError, KeyError), match=expected_error):
             bootstrap(staged / 'config.json', package=package,
                       launch=lambda *args: calls.append(args))
         assert before == {p: p.read_bytes() for p in package.rglob('*') if p.is_file()}

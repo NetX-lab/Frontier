@@ -8,7 +8,8 @@ from pathlib import Path
 
 PACKAGE = Path('/usr/local/lib/python3.12/dist-packages/vllm')
 FILES = ('v1/frontier_trace.py', 'v1/worker/gpu_worker.py',
-    'v1/worker/gpu_model_runner.py', 'v1/engine/core.py', 'v1/core/sched/output.py')
+    'v1/worker/gpu_model_runner.py', 'v1/engine/core.py', 'v1/core/sched/output.py',
+    'compilation/cuda_graph.py')
 
 def require(condition, message):
     if not condition:
@@ -40,7 +41,7 @@ def bootstrap(config_path, *, package=PACKAGE, launch=os.execve):
     require(staged.is_absolute() and staged.is_dir()
             and all(path.parent == staged for path in paths), 'Staged paths mismatch')
     require(overlay['installed_package'] == str(package)
-            and set(overlay['files']) == set(FILES), 'Five approved files required')
+            and set(overlay['files']) == set(FILES), 'Six approved files required')
     fields = ('run_id', 'source_sha', 'instrumentation_sha', 'config_id',
               'replica_id', 'role', 'expected_ranks', 'output_dir')
     require(set(observer) == set(fields), 'Observer identity fields mismatch')
