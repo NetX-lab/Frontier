@@ -314,6 +314,47 @@ class AdmissionScope:
         return False
 
 
+# The finite source table belongs to this native observer, not Frontier's model or
+# operator registries. It reads only already imported, constructed native owners.
+CENSUS_SOURCES = {
+    'model': ('vllm.models.step5.nvidia.model', '6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0'),
+    'norm': ('vllm.models.step5.nvidia.layernorm', 'f6213b9466d2bfe62fa9021dc8404b3c8413ff4a08e964b5b43dbe110d31b510'),
+    'linear': ('vllm.model_executor.layers.linear', '7a9b90937865fa35d955ffc2017f23d3997bc4fba954e2667870b1b4854a38e0'),
+    'gate': ('vllm.model_executor.layers.fused_moe.router.gate_linear', 'ba05b95f4bece910a2df67c7ebfbaf9519b629bb65ba953afc3a820539cab98b'),
+    'moe_runner': ('vllm.model_executor.layers.fused_moe.runner.moe_runner', '20b69fe514bebd6723a1378f89a564c8fec4144c30244101f629c3f32c188183'),
+    'routed': ('vllm.model_executor.layers.fused_moe.routed_experts', '7b74a9792ce2da26d503185bae7fb4607a6ea41130c98cc820d4e39d38273c43'),
+    'fp8': ('vllm.model_executor.layers.quantization.fp8', '37db0145189cd8870d8ac53a6eeb59ac070af51fe78e933597f51e8948250403'),
+    'unquantized': ('vllm.model_executor.layers.fused_moe.unquantized_fused_moe_method', '1ab96e74cce2d1a8540af0eb5518cf8ff77d02c7b770d55c2556cdb34c74bc1c'),
+    'modular': ('vllm.model_executor.layers.fused_moe.modular_kernel', '82a5d100f42d3df3d20baea4a86e5147d4d5c17e3775ed7b5a1ce4bfb433fe0a'),
+    'triton_experts': ('vllm.model_executor.layers.fused_moe.experts.triton_moe', 'ee6b83b108a0460e6308e35447434165d0778a053aa39f0c6c8ed7f36a3ddbab'),
+    'triton_dispatch': ('vllm.model_executor.layers.fused_moe.fused_moe', '21860340e4b409b01666e2ba0f0edae66b0f97b859756b174b573bab895cfaf7'),
+}
+# source, original code owner, observed arguments, resident owner attributes
+CENSUS_CALLS = {
+    'backbone': ('model', ('Step5Model', 'forward'), ('input_ids', 'positions', 'inputs_embeds', 'intermediate_tensors'), ('start_layer', 'end_layer', 'fp32_residual_connection', 'use_sequence_parallel')),
+    'layer': ('model', ('Step5DecoderLayer', 'forward'), ('positions', 'hidden_states', 'residual', 'padding'), ('layer_idx', 'use_moe', 'fp32_residual_connection', 'use_fused_all_reduce', 'use_sequence_parallel')),
+    'ffn': ('model', ('Step5DecoderLayer', '_forward_ffn'), ('hidden_states', 'padding'), ()),
+    'attention': ('model', ('Step5Attention', 'forward'), ('positions', 'hidden_states'), ('num_heads', 'num_kv_heads', 'head_dim', 'params_dtype')),
+    'mlp': ('model', ('Step5MLP', 'forward'), ('hidden_states',), ('reduce_in_fp32', 'shard_sequence_parallel', 'limit')),
+    'moe': ('model', ('Step5MoE', 'forward'), ('hidden_states', 'padding'), ('layer_idx', 'n_routed_experts', 'n_local_physical_experts', 'fuse_all_reduce', 'use_mega_moe')),
+    'norm': ('norm', ('Step5RMSNorm', 'forward'), ('x', 'residual', 'output', 'out_dtype'), ('weight', 'variance_epsilon', 'zero_centered')),
+    'router': ('gate', ('GateLinear', 'forward'), ('x',), ('weight', 'out_dtype', 'allow_ll_bf16_gemm', 'allow_fp32_router_gemm', 'allow_bf16x3_router_gemm', 'allow_cublas_router_gemm')),
+    'router_dispatch': ('gate', ('fp32_router_gemm_dispatch_impl',), ('x', 'weight', 'allow_bf16x3_router_gemm'), ()),
+    'linear_replicated': ('linear', ('ReplicatedLinear', 'forward'), ('x',), ('weight', 'bias', 'return_bias')),
+    'linear_column': ('linear', ('ColumnParallelLinear', 'forward'), ('input_',), ('weight', 'bias', 'gather_output')),
+    'linear_row': ('linear', ('RowParallelLinear', 'forward'), ('input_',), ('weight', 'bias', 'reduce_results', 'input_is_parallel')),
+    'moe_routing': ('moe_runner', ('MoERunner', '_apply_quant_method'), ('hidden_states', 'router_logits', 'shared_experts_input'), ()),
+    'routed_modular': ('routed', ('RoutedExperts', 'forward_modular'), ('x', 'topk_weights', 'topk_ids'), ('w13_weight', 'w2_weight', 'w13_weight_scale_inv', 'w2_weight_scale_inv', 'w13_input_scale', 'w2_input_scale', 'expert_map', 'global_num_experts', 'local_num_experts', 'intermediate_size_per_partition')),
+    'routed_monolithic': ('routed', ('RoutedExperts', 'forward_monolithic'), ('x', 'router_logits', 'input_ids'), ()),
+    'fp8_apply': ('fp8', ('Fp8MoEMethod', 'apply'), ('x', 'topk_weights', 'topk_ids'), ('weight_block_size', 'moe_block_shape', 'weight_scale_refine', 'weight_scale_name', 'fp8_backend')),
+    'unquantized_apply': ('unquantized', ('UnquantizedFusedMoEMethod', 'forward_native'), ('x', 'topk_weights', 'topk_ids'), ('unquantized_backend',)),
+    'moe_prepare': ('modular', ('FusedMoEKernelModularImpl', '_prepare'), ('hidden_states', 'topk_weights', 'topk_ids', 'expert_map'), ('is_dp_ep',)),
+    'triton_experts': ('triton_experts', ('TritonExperts', 'apply'), ('hidden_states', 'w1', 'w2', 'a1q_scale', 'a2_scale', 'topk_ids', 'topk_weights'), ('quant_dtype', 'block_shape', 'w1_scale', 'w2_scale', 'a1_scale', 'a2_scale', 'per_act_token_quant', 'quantization_emulation')),
+    'triton_gemm': ('triton_dispatch', ('invoke_fused_moe_triton_kernel',), ('A', 'B', 'C', 'A_scale', 'B_scale', 'topk_weights', 'sorted_token_ids', 'expert_ids', 'num_tokens_post_padded', 'top_k', 'config', 'compute_type', 'use_fp8_w8a8', 'block_shape'), ()),
+}
+CENSUS_LAYER_LINE = 2139
+
+
 @dataclass
 class ObservationSites:
     codes: dict
@@ -324,6 +365,10 @@ class ObservationSites:
     intermediate_type: type | None = None
     torch: object | None = None
     padding_mask_used: bool | None = None
+    census_names: dict = field(default_factory=dict)
+    census_owners: dict = field(default_factory=dict)
+    census_inventory: dict = field(default_factory=dict)
+    census_bound: bool = False
 
     @classmethod
     def bind(cls, native, worker_factory, *, pins=SOURCE_PINS, lines=SOURCE_LINES):
@@ -381,6 +426,115 @@ class ObservationSites:
                    getattr(native, 'intermediate_type', None), getattr(native, 'torch', None),
                    getattr(native, 'padding_mask_used', None))
 
+    def bind_census(self, runner, limits):
+        """Read resident modules and loaded code; never import or construct native owners."""
+        if self.census_bound:
+            return
+        self.census_bound = True
+        gaps, modules, layers = [], [], []
+        model = getattr(runner, 'model', None)
+        if model is None or not callable(getattr(model, 'named_modules', None)):
+            self.census_inventory = dict(status='UNVERIFIED_NO_RESIDENT_MODULE_TRAVERSAL',
+                                         gaps=['resident model named_modules unavailable'], owners=[], layers=[])
+            return
+        for name, (source, owner, arguments, attributes) in CENSUS_CALLS.items():
+            module_name, pin = CENSUS_SOURCES[source]
+            module = sys.modules.get(module_name)
+            if module is None:
+                gaps.append(dict(site=name, reason='NATIVE_MODULE_NOT_ALREADY_IMPORTED'))
+                continue
+            try:
+                function = module
+                for part in owner:
+                    function = getattr(function, part)
+                code = bind_code(function, owner, pin, self.sources)
+                argument_names = code.co_varnames[:code.co_argcount+code.co_kwonlyargcount]
+                if any(argument not in argument_names for argument in arguments):
+                    raise ValueError('Pinned call argument is absent: '+name)
+                self.codes['census_'+name] = code
+                self.census_names[id(code)] = name
+            except BaseException as failure:
+                gaps.append(dict(site=name, reason='UNVERIFIED_SOURCE_BINDING',
+                                 error_type=class_name(failure), error=str(failure)))
+        if 'census_backbone' in self.codes:
+            code = self.codes['census_backbone']
+            if CENSUS_LAYER_LINE not in {line for _, line in dis.findlinestarts(code)}:
+                gaps.append(dict(site='backbone', reason='PINNED_LAYER_DISPATCH_LINE_ABSENT'))
+            else:
+                self.lines['census_layer'] = CENSUS_LAYER_LINE
+        if 'census_triton_experts' in self.codes:
+            for name, nested in (('gemm1', '_base_w13_fn'), ('gemm2', '_base_w2_fn')):
+                try:
+                    self.codes['census_'+name] = nested_code(self.codes['census_triton_experts'], nested)
+                except BaseException as failure:
+                    gaps.append(dict(site=name, reason='UNVERIFIED_NESTED_DISPATCH_OWNER', error=str(failure)))
+        def matching_sites(owner):
+            names = []
+            for name, (_, code_owner, _, _) in CENSUS_CALLS.items():
+                if len(code_owner) != 2:
+                    continue
+                method = inspect.getattr_static(type(owner), code_owner[-1], None)
+                original = inspect.unwrap(method) if method is not None else None
+                code = self.codes.get('census_'+name)
+                if code is not None and getattr(original, '__code__', None) is code:
+                    names.append(name)
+            return names
+        for path, module in model.named_modules():
+            modules.append((path, module))
+            if 'layer' in matching_sites(module):
+                layer = getattr(module, 'layer_idx')
+                if len(layers) >= limits.tracked_entries:
+                    raise ValueError('Resident layer bindings exceed the existing entry cap')
+                if type(layer) is not int:
+                    raise ValueError('Resident layer index must be an integer')
+                layers.append(dict(path=path, layer_id=layer))
+        objects = list(modules)
+        # These are existing constructed owners, not allocation/configuration factories.
+        for path, module in modules:
+            if 'routed_modular' not in matching_sites(module):
+                continue
+            method = module.quant_method
+            objects.append((path+'.quant_method', method))
+            kernel = getattr(method, 'moe_kernel', None)
+            if kernel is not None:
+                objects.extend(((path+'.quant_method.moe_kernel.impl', kernel.impl),
+                                (path+'.quant_method.moe_kernel.fused_experts', kernel.fused_experts),
+                                (path+'.quant_method.moe_kernel.prepare_finalize', kernel.prepare_finalize)))
+        rows = []
+        for path, owner in objects:
+            names = matching_sites(owner)
+            if not names:
+                continue
+            metadata = Metadata(self, limits)
+            attributes = {}
+            for name in names:
+                for attr in CENSUS_CALLS[name][3]:
+                    if attr in attributes or not hasattr(owner, attr):
+                        continue
+                    value = getattr(owner, attr)
+                    if value is not None and (attr.endswith('dtype') or attr.endswith('backend')):
+                        value = str(value)
+                    attributes[attr] = metadata.value(value)
+            matching = [layer for layer in layers if path == layer['path'] or path.startswith(layer['path']+'.')]
+            layer = max(matching, key=lambda item: len(item['path']))['layer_id'] if matching else None
+            row = dict(owner_id=id(owner), module_path=path, cls=class_name(owner), layer_id=layer,
+                       sites=list(names), attributes=attributes, metadata_complete=metadata.complete)
+            if len(rows) >= limits.tracked_entries:
+                raise ValueError('Resident native owner bindings exceed the existing entry cap')
+            rows.append(row)
+            try:
+                self.census_owners[id(owner)] = (weakref.ref(owner), row)
+            except TypeError:
+                gaps.append(dict(owner=path, reason='NATIVE_OWNER_WEAK_REFERENCE_UNAVAILABLE'))
+        if len({row['layer_id'] for row in layers}) != len(layers):
+            gaps.append(dict(site='layer', reason='DUPLICATE_RESIDENT_LAYER_IDS'))
+        self.census_inventory = dict(status='LOADED_CPU_BINDINGS_NOT_EXECUTION_QUALIFICATION',
+            owners=rows, layers=layers, gaps=gaps, source_status='PINNED_BOUND_SITES_ONLY',
+            sites={name: dict(source=CENSUS_SOURCES[source][0], code_owner='.'.join(owner),
+                   first_line=self.codes['census_'+name].co_firstlineno)
+                   for name, (source, owner, _, _) in CENSUS_CALLS.items() if 'census_'+name in self.codes},
+            device_content='UNMEASURED', physical_replay='UNMEASURED')
+
 
 def installed_sites(worker, worker_factory):
     """Prepare the supported Worker factory branch without constructing a native runner."""
@@ -403,9 +557,9 @@ def installed_sites(worker, worker_factory):
 
 class Metadata:
     """Read only CPU tensor descriptors and ordinary containers, never tensor values."""
-    def __init__(self, sites, limits):
+    def __init__(self, sites, limits, *, tensor_record=None):
         self.sites, self.limits, self.items = sites, limits, 0
-        self.complete = True
+        self.complete, self.tensor_record = True, tensor_record
 
     def value(self, value, depth=0):
         self.items += 1
@@ -415,12 +569,13 @@ class Metadata:
             return value
         if isinstance(value, self.sites.tensor_type):
             storage = value.untyped_storage()
-            return dict(kind='tensor_metadata_only', type=class_name(value),
+            row = dict(kind='tensor_metadata_only', type=class_name(value),
                         shape=list(value.shape), stride=list(value.stride()),
                         dtype=str(value.dtype), device=str(value.device),
                         data_ptr=value.data_ptr(), storage_ptr=storage.data_ptr(),
                         storage_bytes=storage.nbytes(), storage_offset=value.storage_offset(),
                         content='UNMEASURED')
+            return self.tensor_record(row) if self.tensor_record is not None else row
         if type(value) is dict:
             if any(type(key) is not str for key in value):
                 raise ValueError('Metadata dictionary keys must be strings')
@@ -801,11 +956,12 @@ class ModelInputObservation:
     captures: int = 0
     failures: int = 0
     last_record: dict | None = None
-    last_summary: dict = field(default_factory=dict)
+    last_summary: dict | None = field(default_factory=dict)
     identities: dict = field(default_factory=dict)
     identity_serial: int = 0
     stopped: bool = False
     device: object | None = None
+    census_inventory_record: dict | None = None
 
     def continuity(self, owner, entry, graph, selection_key, path, *, captured=False):
         key = (path, id(owner), json.dumps(selection_key, sort_keys=True, allow_nan=False))
@@ -831,7 +987,8 @@ class ModelInputObservation:
                     serial=self.identities[key]['serial'], residency_between_scopes='UNVERIFIED')
 
     def summary(self):
-        return dict(status='CPU_METADATA_ONLY_NATIVE_COMPATIBILITY_UNVERIFIED',
+        return dict(status='UNVERIFIED' if self.stopped or self.failures else
+                    'CPU_METADATA_ONLY_NATIVE_COMPATIBILITY_UNVERIFIED',
                     source_status='LOADED_CODE_MATCHES_PINNED_SOURCE',
                     native_compatibility='UNVERIFIED', invocations=self.invocations,
                     captures=self.captures, observer_failures=self.failures,
@@ -848,21 +1005,23 @@ class ObservationScope:
         self.device_step = None
         self.pending, self.local_hooks, self.errors = {}, {}, []
         self.active, self.stopped, self.installed = False, False, False
-        self.opcodes = {}
+        self.opcodes, self.native_calls, self.excluded_capture_calls = {}, {}, {}
+        self.capture_binding_event, self.capture_window = None, False
+        self.call_tensors, self.tensor_keys = [], {}
         self.profile_hook, self.trace_hook = self.profile, self.trace
         self.previous_profile, self.previous_trace = sys.getprofile(), sys.gettrace()
 
     def error(self, kind, failure):
         self.state.failures += 1
-        self.stopped = True
+        self.stopped = self.state.stopped = True
         if not self.errors:
             self.errors.append(dict(kind=kind, error_type=class_name(failure), error=str(failure)))
 
-    def emit(self, kind, **row):
+    def emit(self, kind, *, frontiers=True, **row):
         if self.stopped:
             return None
         event = dict(event=len(self.events)+1, kind=kind, lifecycle=self.kind,
-                     input_observation=self.input_id, request_frontiers=self.frontiers,
+                     input_observation=self.input_id, request_frontiers=self.frontiers if frontiers else None,
                      cpu_frontier_semantics='optimistic_upper_bounds_not_device_progress',
                      **row)
         payload = json.dumps(event, allow_nan=False, separators=(',', ':'))
@@ -875,6 +1034,128 @@ class ObservationScope:
 
     def metadata(self):
         return Metadata(self.sites, self.state.limits)
+
+    def tensor_reference(self, descriptor):
+        """Reuse equal CPU descriptors within this record; content/lifetimes stay unknown."""
+        key = tuple((name, tuple(value) if type(value) is list else value)
+                    for name, value in sorted(descriptor.items()))
+        index = self.tensor_keys.get(key)
+        if index is None:
+            index = len(self.call_tensors)+1
+            row = dict(tensor_id=index, **descriptor)
+            size = len(json.dumps(row, allow_nan=False, separators=(',', ':')).encode())
+            if self.used+size > self.state.limits.scope_bytes:
+                raise ValueError('Native call tensor metadata exceeds the CPU evidence limit')
+            self.call_tensors.append(row)
+            self.tensor_keys[key] = index
+            self.used += size
+        return dict(kind='tensor_metadata_reference', tensor_id=index)
+
+    def update(self, row, **values):
+        """Charge call-return growth before the complete final record check."""
+        previous = len(json.dumps(row, allow_nan=False, separators=(',', ':')).encode())
+        candidate = dict(row, **values)
+        current = len(json.dumps(candidate, allow_nan=False, separators=(',', ':')).encode())
+        if self.used+current-previous > self.state.limits.scope_bytes:
+            raise ValueError('Model call return exceeds the CPU evidence limit')
+        row.update(values)
+        self.used += current-previous
+
+    def returned(self, frame):
+        code = frame.f_code
+        if code not in self.opcodes:
+            self.opcodes[code] = {instruction.offset: instruction.opname
+                                  for instruction in dis.get_instructions(code)}
+        return self.opcodes[code].get(frame.f_lasti) in ('RETURN_VALUE', 'RETURN_CONST')
+
+    def record_fits(self, record):
+        payload = (json.dumps(record, allow_nan=False, separators=(',', ':'))+'\n').encode('utf-8')
+        return len(payload) <= self.state.limits.scope_bytes
+
+    def bounded_record(self, record):
+        """Check the complete encoded record; an omitted record earns no evidence credit."""
+        if self.record_fits(record):
+            return record
+        self.error('scope_record_bytes', ValueError('Complete model observation record exceeds the CPU evidence limit'))
+        rejected = dict(status='UNVERIFIED', lifecycle=self.kind, events=[],
+                        native_outcome=record['native_outcome'],
+                        native_error_type=record['native_error_type'],
+                        observer_errors=[dict(kind='scope_record_bytes')])
+        return rejected if self.record_fits(rejected) else None
+
+    def parent_call(self, frame):
+        parent = frame.f_back
+        while parent is not None:
+            row = self.native_calls.get(id(parent))
+            if row is not None:
+                return row
+            parent = parent.f_back
+        return None
+
+    def native_call(self, frame, event, arg):
+        name = self.sites.census_names.get(id(frame.f_code))
+        if name is None or frame.f_code is not self.sites.codes['census_'+name]:
+            return
+        if event == 'call':
+            if self.kind == 'capture' and not self.capture_window:
+                self.excluded_capture_calls[name] = self.excluded_capture_calls.get(name, 0)+1
+                return
+            parent = self.parent_call(frame)
+            owner = frame.f_locals.get('self')
+            binding = self.sites.census_owners.get(id(owner))
+            owner_row = binding[1] if binding is not None and binding[0]() is owner else None
+            metadata = Metadata(self.sites, self.state.limits, tensor_record=self.tensor_reference)
+            arguments = {}
+            for key in CENSUS_CALLS[name][2]:
+                value = frame.f_locals[key]
+                if value is not None and key in ('compute_type', 'out_dtype'):
+                    value = str(value)
+                arguments[key] = metadata.value(value)
+            caller = frame.f_back.f_code if frame.f_back is not None else None
+            gemm = next((key.upper() for key in ('gemm1', 'gemm2')
+                if caller is self.sites.codes.get('census_'+key)), 'UNVERIFIED_NATIVE_CALLER') if name == 'triton_gemm' else None
+            inherited = parent is not None and owner is None
+            row = self.emit('native_call', frontiers=False, site=name, gemm=gemm,
+                capture_binding_event=self.capture_binding_event if self.kind == 'capture' else None,
+                owner_binding='RESIDENT_BOUND_OWNER' if owner_row else
+                    'NATIVE_FUNCTION_ANCESTOR' if inherited else 'UNVERIFIED_OWNER_NOT_RESIDENT',
+                owner_id=id(owner) if owner_row else parent.get('owner_id') if inherited else None,
+                layer_id=owner_row['layer_id'] if owner_row else parent.get('layer_id') if inherited else None,
+                parent_call=parent['event'] if parent else None, arguments=arguments,
+                metadata_complete=metadata.complete, source_line=frame.f_lineno,
+                outcome='CALL_ENTERED_NOT_COMPLETED', gpu_completion='UNMEASURED')
+            if row is not None:
+                self.native_calls[id(frame)] = row
+        elif event == 'return':
+            row = self.native_calls.pop(id(frame), None)
+            if row is None:
+                return
+            returned = self.returned(frame)
+            metadata = Metadata(self.sites, self.state.limits, tensor_record=self.tensor_reference)
+            self.update(row, outcome='RETURNED_CPU_CALL_NOT_GPU_COMPLETION' if returned else
+                        'UNVERIFIED_NATIVE_UNWIND', return_line=frame.f_lineno,
+                        result=metadata.value(arg) if returned else None,
+                        return_metadata_complete=metadata.complete)
+
+    def call_summary(self):
+        calls = [row for row in self.events if row['kind'] == 'native_call']
+        returned = [row for row in calls if row['site'] == 'layer' and
+                    row['outcome'] == 'RETURNED_CPU_CALL_NOT_GPU_COMPLETION' and
+                    row['owner_binding'] == 'RESIDENT_BOUND_OWNER']
+        layers = sorted({row['layer_id'] for row in returned if row['layer_id'] is not None})
+        expected = sorted({row['layer_id'] for row in self.sites.census_inventory.get('layers', [])})
+        modes = [row['descriptor']['cg_mode'] for row in self.events if row['kind'] == 'finalized_model_inputs']
+        return dict(status='CPU_NATIVE_CALLS_ONLY_NOT_PHYSICAL_OR_CONTENT_QUALIFICATION',
+            inventory_record=copy.deepcopy(self.state.census_inventory_record),
+            source_gaps=copy.deepcopy(self.sites.census_inventory.get('gaps', [])),
+            calls=len(calls), pending_calls=len(self.native_calls), returned_layer_ids=layers,
+            incomplete_calls=sum(row['outcome'] != 'RETURNED_CPU_CALL_NOT_GPU_COMPLETION' for row in calls),
+            capture_policy='OBSERVE_ACTUAL_FULL_CAPTURE_ONLY; EXCLUDE_WARMUP_AND_PIECEWISE',
+            excluded_capture_calls=dict(self.excluded_capture_calls),
+            declared_layer_ids=expected, missing_python_layer_returns=sorted(set(expected)-set(layers)),
+            layer_coverage='FULL_REPLAY_BYPASSES_PYTHON_LAYER_FRAMES' if modes and modes[-1] == 'FULL' else
+                'OBSERVED_CPU_LAYER_RETURNS' if expected and layers == expected else 'UNVERIFIED_INCOMPLETE_PYTHON_LAYER_RETURNS',
+            physical_kernel_census='UNMEASURED', transient_scale_content='UNMEASURED', G2='UNVERIFIED')
 
     def final_inputs(self, frame):
         values = frame.f_locals
@@ -970,7 +1251,10 @@ class ObservationScope:
             row['native_capture_region'] = bool(parent is not None and
                 parent.f_code is self.sites.codes['manager_capture'] and
                 parent.f_lineno == self.sites.lines['full_capture_forward'] and values['desc'].cg_mode.name == 'FULL')
-        self.emit(kind, **row)
+        event = self.emit(kind, **row)
+        if self.kind == 'capture' and kind == 'capture_forward':
+            self.capture_window = row['native_capture_region']
+            self.capture_binding_event = event['event'] if event is not None and self.capture_window else None
 
     def profile(self, frame, event, arg):
         if self.previous_profile is not None:
@@ -979,6 +1263,7 @@ class ObservationScope:
             return
         try:
             codes = self.sites.codes
+            self.native_call(frame, event, arg)
             if event == 'call':
                 parent = frame.f_back
                 if any(frame.f_code is codes[name] for name in ('full_clear', 'pw_clear', 'break_clear')):
@@ -1010,13 +1295,13 @@ class ObservationScope:
                     if frame.f_locals['self'] is self.runner.cudagraph_manager:
                         self.capture_inputs(frame, 'capture_forward')
             elif event == 'return':
+                if self.kind == 'capture' and frame.f_code is codes['capture_forward']:
+                    self.capture_window = False
                 key = ('python', id(frame))
                 registration = (self.state.device is not None and frame.f_code is codes['add_requests'] and
                                 frame.f_locals.get('self') is self.runner)
                 if registration or key in self.pending:
-                    opcodes = self.opcodes.setdefault(frame.f_code, {
-                        instruction.offset: instruction.opname for instruction in dis.get_instructions(frame.f_code)})
-                    returned = opcodes.get(frame.f_lasti) in ('RETURN_VALUE', 'RETURN_CONST')
+                    returned = self.returned(frame)
                 if registration and returned:
                     self.state.device.registrations(frame.f_locals['scheduler_output'])
                 if self.kind == 'capture' and frame.f_code is codes['create_capture']:
@@ -1044,8 +1329,8 @@ class ObservationScope:
             return previous
         # Global tracing is used only to select frames; line work stays in pinned frames.
         try:
-            selected = ('manager_capture', 'pw', 'break_capture', 'segments')
-            relevant = (any(frame.f_code is self.sites.codes[name] for name in selected)
+            selected = ('manager_capture', 'pw', 'break_capture', 'segments', 'census_backbone')
+            relevant = (any(frame.f_code is self.sites.codes.get(name) for name in selected)
                         or self.replay_parent(frame.f_back) is not None)
             if not relevant:
                 return previous
@@ -1077,7 +1362,17 @@ class ObservationScope:
         if event != 'line':
             return
         codes, lines, values = self.sites.codes, self.sites.lines, frame.f_locals
-        if (frame.f_code is codes['manager_capture'] and frame.f_lineno == lines['full_capture_store']
+        if (frame.f_code is codes.get('census_backbone') and
+                frame.f_lineno == lines.get('census_layer') and
+                (self.kind != 'capture' or self.capture_window)):
+            owner = values['layer']
+            binding = self.sites.census_owners.get(id(owner))
+            row = binding[1] if binding is not None and binding[0]() is owner else None
+            self.emit('native_layer_dispatch', frontiers=False, layer_index=values['i'],
+                      owner_id=id(owner), layer_id=row['layer_id'] if row else None,
+                      source_line=frame.f_lineno, outcome='ORIGINAL_LAYER_CALL_ATTEMPT_ONLY',
+                      module_path=row['module_path'] if row else None, gpu_completion='UNMEASURED')
+        elif (frame.f_code is codes['manager_capture'] and frame.f_lineno == lines['full_capture_store']
                 and values['self'] is self.runner.cudagraph_manager):
             self.capture_stored(values['self'], values['graph'], values['graph'], values['desc'], 'FULL', frame)
         elif frame.f_code is codes['pw']:
@@ -1131,6 +1426,14 @@ class ObservationScope:
             self.error('hook_compatibility', TypeError('Prior non-callable hook cannot be composed or restored'))
             return self
         try:
+            self.sites.bind_census(self.runner, self.state.limits)
+            if self.state.census_inventory_record is None:
+                row = self.emit('resident_model_bindings', frontiers=False,
+                                **self.sites.census_inventory)
+                if row is not None:
+                    self.state.census_inventory_record = dict(lifecycle=self.kind,
+                        sequence=self.state.captures if self.kind == 'capture' else self.state.invocations,
+                        event=row['event'])
             sys.setprofile(self.profile_hook)
             sys.settrace(self.trace_hook)
             self.installed = self.active = True
@@ -1202,7 +1505,8 @@ class ObservationScope:
             status = 'OBSERVED_CPU_METADATA_ONLY_NOT_G2' if self.events else 'UNMEASURED'
         record = dict(scope='source_pinned_model_metadata_only_not_G2', lifecycle=self.kind,
                       status=status, observation_status=observation_status,
-                      events=self.events, observer_errors=self.errors,
+                      events=self.events, call_tensor_metadata=self.call_tensors,
+                      observer_errors=copy.deepcopy(self.errors), call_census=self.call_summary(),
                       native_outcome='raised' if exc_type is not None else 'returned',
                       native_error_type=exc_type.__module__+'.'+exc_type.__qualname__ if exc_type else None,
                       native_compatibility='UNVERIFIED', evidence_status=dict(UNMEASURED),
@@ -1210,23 +1514,26 @@ class ObservationScope:
                       device_step=self.device_step,
                       sources=self.sites.sources, hook_delivery='UNVERIFIED' if self.errors else
                       'OBSERVED_CALLBACKS' if self.events else 'NOT_OBSERVED')
-        self.state.last_record = record
-        self.state.last_summary = dict(status=status, lifecycle=self.kind, events=len(self.events),
-                                       observation_status=dict(observation_status),
-                                       final_inputs_observed=self.input_id is not None,
-                                       replay_attempts=sum(row['kind'] == 'replay_attempt' for row in self.events),
-                                       native_outcome=record['native_outcome'],
-                                       observer_errors=list(self.errors))
-        if self.stopped:
-            self.state.stopped = True
-        if self.kind == 'capture':
+        record = self.bounded_record(record)
+        if self.kind == 'capture' and record is not None:
             try:
                 self.state.capture_record(record)
             except BaseException as failure:
                 self.error('capture_record', failure)
-                self.state.stopped = True
-                record['status'] = self.state.last_summary['status'] = 'UNVERIFIED'
-                self.state.last_summary['observer_errors'] = list(self.errors)
+                record = self.bounded_record(dict(record, status='UNVERIFIED',
+                    observer_errors=copy.deepcopy(self.errors)))
+        self.state.last_record = record
+        if record is None or 'observation_status' not in record:
+            summary = None if record is None else dict(status='UNVERIFIED', lifecycle=self.kind,
+                events=0, native_outcome=record['native_outcome'], observer_errors=copy.deepcopy(record['observer_errors']))
+        else:
+            summary = dict(status=record['status'], lifecycle=self.kind, events=len(self.events),
+                observation_status=dict(observation_status), final_inputs_observed=self.input_id is not None,
+                replay_attempts=sum(row['kind'] == 'replay_attempt' for row in self.events),
+                native_outcome=record['native_outcome'], observer_errors=copy.deepcopy(record['observer_errors']))
+        self.state.last_summary = summary if summary is not None and self.record_fits(summary) else None
+        if self.stopped:
+            self.state.stopped = True
         return False
 
 

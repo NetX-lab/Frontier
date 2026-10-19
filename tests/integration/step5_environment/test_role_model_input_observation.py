@@ -620,11 +620,19 @@ def test_explicit_limits_stop_only_observations_without_native_retries(native, l
         assert observed.execution_calls == graph.calls == 2
     else:
         assert observed.execution_calls == graph.calls == 1
-    assert observed._model_input_observation.last_summary['status'] == 'UNVERIFIED'
-    assert observed._model_input_observation.stopped is True
+    state = observed._model_input_observation
+    assert state.stopped and state.summary()['status'] == 'UNVERIFIED'
+    if limit == 'scope_bytes':
+        assert state.last_record is None and state.last_summary is None
+    else:
+        assert state.last_summary['status'] == 'UNVERIFIED'
     before = graph.calls
     observed.execute_model(work())
-    assert graph.calls == before+1 and record(observed)['events'] == []
+    assert graph.calls == before+1
+    if limit == 'scope_bytes':
+        assert state.last_record is None and state.last_summary is None
+    else:
+        assert record(observed)['events'] == []
 
 
 def test_missing_finalized_callback_delivery_is_unverified_not_forward_inferred(native):
@@ -1361,3 +1369,610 @@ def test_device_limits_reject_unencodable_rpc_cap(rpc_bytes):
     with pytest.raises(ValueError, match='encode a JSON response'):
         observation.DeviceObservationLimits(steps=1, scan_rows=1, witness_rows=1,
                                             owned_bytes=4096, rpc_bytes=rpc_bytes)
+
+
+CENSUS_SOURCE = """class Module:
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)
+
+class Step5MLP(Module):
+    reduce_in_fp32 = True
+    shard_sequence_parallel = False
+    limit = None
+    def forward(self, hidden_states):
+        return hidden_states
+
+class Step5Attention(Module):
+    num_heads = 12
+    num_kv_heads = 1
+    head_dim = 192
+    params_dtype = 'torch.bfloat16'
+    def forward(self, positions, hidden_states):
+        return hidden_states
+
+class Step5RMSNorm(Module):
+    variance_epsilon = 1e-6
+    zero_centered = False
+    def __init__(self):
+        self.weight = Tensor()
+    def forward(self, x, residual=None, output=None, fp16_out=False, *, out_dtype=None):
+        return x
+
+class GateLinear(Module):
+    out_dtype = 'torch.float32'
+    allow_ll_bf16_gemm = False
+    allow_fp32_router_gemm = True
+    allow_bf16x3_router_gemm = False
+    allow_cublas_router_gemm = False
+    def __init__(self):
+        self.weight = Tensor()
+    def forward(self, x):
+        return x, None
+
+class FusedMoEKernelModularImpl:
+    is_dp_ep = False
+    def _prepare(self, hidden_states, topk_weights, topk_ids, global_num_experts,
+                 expert_map, apply_router_weight_on_input):
+        return hidden_states, None, None, topk_ids, topk_weights
+
+class TritonExperts:
+    quant_dtype = 'torch.float8_e4m3fn'
+    block_shape = [128, 64]
+    per_act_token_quant = False
+    quantization_emulation = False
+    a1_scale = None
+    a2_scale = None
+    def __init__(self):
+        self.w1_scale = Tensor(9010)
+        self.w2_scale = Tensor(9020)
+    def apply(self, output, hidden_states, w1, w2, topk_weights, topk_ids, activation,
+              global_num_experts, expert_map, a1q_scale, a2_scale, workspace13,
+              workspace2, expert_tokens_meta, apply_router_weight_on_input):
+        def _base_w13_fn():
+            return invoke_fused_moe_triton_kernel(hidden_states, w1, output,
+                a1q_scale, self.w1_scale, None, topk_ids, topk_ids, topk_ids,
+                False, 8, {'BLOCK_SIZE_M': 16}, 'bf16', self.quant_dtype is not None, False, False,
+                False, False, self.block_shape)
+        _base_w13_fn()
+        def _base_w2_fn():
+            return invoke_fused_moe_triton_kernel(hidden_states, w2, output,
+                a2_scale, self.w2_scale, topk_weights, topk_ids, topk_ids, topk_ids,
+                True, 1, {'BLOCK_SIZE_M': 16}, 'bf16', self.quant_dtype is not None, False, False,
+                False, False, self.block_shape)
+        return _base_w2_fn()
+
+def invoke_fused_moe_triton_kernel(A, B, C, A_scale, B_scale, topk_weights,
+    sorted_token_ids, expert_ids, num_tokens_post_padded, mul_routed_weight,
+    top_k, config, compute_type, use_fp8_w8a8, use_int8_w8a8, use_int8_w8a16,
+    use_int4_w4a16, per_channel_quant, block_shape=None, B_bias=None):
+    return C
+
+class Fp8MoEMethod:
+    weight_block_size = [128, 128]
+    moe_block_shape = [128, 64]
+    weight_scale_refine = (1, 2)
+    weight_scale_name = 'weight_scale_inv'
+    fp8_backend = 'TRITON'
+    def __init__(self):
+        self.moe_kernel = SimpleNamespace(impl=FusedMoEKernelModularImpl(),
+            fused_experts=TritonExperts(), prepare_finalize=SimpleNamespace())
+    def apply(self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input):
+        a, scale, meta, ids, weights = self.moe_kernel.impl._prepare(
+            x, topk_weights, topk_ids, 352, None, False)
+        return self.moe_kernel.fused_experts.apply(x, a, layer.w13_weight,
+            layer.w2_weight, weights, ids, None, 352, None, scale, None,
+            x, x, meta, False)
+
+class UnquantizedFusedMoEMethod:
+    unquantized_backend = 'TRITON'
+    def __init__(self):
+        experts = TritonExperts()
+        experts.quant_dtype, experts.block_shape = None, None
+        experts.w1_scale, experts.w2_scale = None, None
+        self.moe_kernel = SimpleNamespace(impl=FusedMoEKernelModularImpl(),
+            fused_experts=experts, prepare_finalize=SimpleNamespace())
+    def apply(self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input):
+        return self.forward_native(layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input)
+    def forward_native(self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input):
+        return self.moe_kernel.fused_experts.apply(x, x, layer.w13_weight,
+            layer.w2_weight, topk_weights, topk_ids, None, 352, None, None, None,
+            x, x, None, False)
+
+class RoutedExperts:
+    global_num_experts = 352
+    local_num_experts = 352
+    intermediate_size_per_partition = 64
+    w13_input_scale = None
+    w2_input_scale = None
+    expert_map = None
+    def __init__(self):
+        self.quant_method = Fp8MoEMethod()
+        self.w13_weight, self.w2_weight = Tensor(8010), Tensor(8020)
+        self.w13_weight_scale_inv = self.quant_method.moe_kernel.fused_experts.w1_scale
+        self.w2_weight_scale_inv = self.quant_method.moe_kernel.fused_experts.w2_scale
+    def forward_modular(self, x, topk_weights, topk_ids,
+                        shared_experts=None, shared_experts_input=None):
+        return self.quant_method.apply(self, x, topk_weights, topk_ids,
+                                       shared_experts, shared_experts_input)
+
+class MoERunner:
+    def __init__(self):
+        self.routed_experts = RoutedExperts()
+    def _apply_quant_method(self, hidden_states, router_logits,
+        shared_experts_input, input_ids=None, shared_experts_overlapping=False):
+        return None, self.routed_experts.forward_modular(hidden_states, router_logits, Tensor())
+
+class Step5MoE(Module):
+    n_routed_experts = 352
+    n_local_physical_experts = 352
+    fuse_all_reduce = True
+    use_mega_moe = False
+    def __init__(self, layer_idx):
+        self.layer_idx = layer_idx
+        self.share_expert, self.gate, self.experts = Step5MLP(), GateLinear(), MoERunner()
+    def forward(self, hidden_states, padding=None):
+        shared = self.share_expert(hidden_states)
+        logits, _ = self.gate(hidden_states)
+        _, routed = self.experts._apply_quant_method(hidden_states, logits, None)
+        return shared, routed
+
+class Step5DecoderLayer(Module):
+    fp32_residual_connection = True
+    use_fused_all_reduce = True
+    use_sequence_parallel = False
+    def __init__(self, layer_idx, use_moe):
+        self.layer_idx, self.use_moe = layer_idx, use_moe
+        self.input_layernorm, self.post_attention_layernorm = Step5RMSNorm(), Step5RMSNorm()
+        self.self_attn = Step5Attention()
+        if use_moe:
+            self.moe = Step5MoE(layer_idx)
+        else:
+            self.mlp = Step5MLP()
+        self.calls, self.failure = 0, None
+    def _forward_ffn(self, hidden_states, padding=None):
+        return self.moe(hidden_states, padding)[1] if self.use_moe else self.mlp(hidden_states)
+    def forward(self, positions, hidden_states, residual=None, padding=None):
+        self.calls += 1
+        if self.failure is not None:
+            raise self.failure
+        x = self.input_layernorm(hidden_states, residual)
+        x = self.self_attn(positions, x)
+        x = self.post_attention_layernorm(x, hidden_states)
+        return self._forward_ffn(x, padding), hidden_states
+
+class Step5Model(Module):
+    fp32_residual_connection = True
+    use_sequence_parallel = False
+    def __init__(self, choices=(False, True)):
+        self.start_layer, self.end_layer = 0, len(choices)
+        self.layers = [Step5DecoderLayer(i, choice) for i, choice in enumerate(choices)]
+        self.calls = 0
+    def forward(self, input_ids, positions, intermediate_tensors=None, inputs_embeds=None):
+        self.calls += 1
+        hidden_states, residual = inputs_embeds, None
+        for i in range(self.start_layer, self.end_layer):
+            layer = self.layers[i]
+            hidden_states, residual = layer(positions, hidden_states, residual)  # CENSUS_LAYER
+        return hidden_states
+    def named_modules(self):
+        yield 'language_model.model', self
+        for i, layer in enumerate(self.layers):
+            path = 'language_model.model.layers.'+str(i)
+            yield path, layer
+            yield path+'.input_layernorm', layer.input_layernorm
+            yield path+'.post_attention_layernorm', layer.post_attention_layernorm
+            yield path+'.self_attn', layer.self_attn
+            if layer.use_moe:
+                yield path+'.moe', layer.moe
+                yield path+'.moe.share_expert', layer.moe.share_expert
+                yield path+'.moe.gate', layer.moe.gate
+                yield path+'.moe.experts', layer.moe.experts
+                yield path+'.moe.experts.routed_experts', layer.moe.experts.routed_experts
+            else:
+                yield path+'.mlp', layer.mlp
+"""
+
+
+@pytest.fixture
+def census(native, monkeypatch, tmp_path):
+    path = tmp_path/'cpu_census_fixture.py'
+    path.write_text(CENSUS_SOURCE)
+    module = ModuleType('cpu_census_fixture_'+str(id(path)))
+    module.__file__ = str(path)
+    module.Tensor, module.SimpleNamespace = native.module.Tensor, SimpleNamespace
+    sys.modules[module.__name__] = module
+    exec(compile(CENSUS_SOURCE, str(path), 'exec', dont_inherit=True), module.__dict__)
+    sources = {name: (module.__name__, hashlib.sha256(path.read_bytes()).hexdigest())
+               for name in observation.CENSUS_SOURCES}
+    calls = {name: row for name, row in observation.CENSUS_CALLS.items()
+             if len(row[1]) == 1 and hasattr(module, row[1][0]) or
+                len(row[1]) == 2 and hasattr(module, row[1][0]) and hasattr(getattr(module, row[1][0]), row[1][1])}
+    monkeypatch.setattr(observation, 'CENSUS_SOURCES', sources)
+    monkeypatch.setattr(observation, 'CENSUS_CALLS', calls)
+    monkeypatch.setattr(observation, 'CENSUS_LAYER_LINE', next(i for i, line in
+        enumerate(CENSUS_SOURCE.splitlines(), 1) if '# CENSUS_LAYER' in line))
+    yield SimpleNamespace(module=module, path=path, native=native)
+    sys.modules.pop(module.__name__, None)
+
+
+def census_runner(census, mode='NONE', *, limits=observation.ObservationLimits(), choices=(False, True)):
+    observed, graph, records = runner(census.native, mode, limits=limits)
+    observed.vllm_config.model_inputs.pop('override')
+    observed.model = census.module.Step5Model(choices)
+    return observed, graph, records
+
+
+def test_native_layer_paths_dense_shared_router_and_real_gemm_owners(census):
+    observed, _, _ = census_runner(census)
+    result = observed.execute_model(work())
+    assert result is observed.vllm_config.model_inputs['inputs_embeds']
+    assert [layer.calls for layer in observed.model.layers] == [1, 1]
+    calls = events(observed, 'native_call')
+    assert record(observed)['call_census']['returned_layer_ids'] == [0, 1]
+    assert record(observed)['call_census']['physical_kernel_census'] == 'UNMEASURED'
+    assert all(row['request_frontiers'] is None for row in calls)
+    assert all(row['input_observation'] == events(observed, 'finalized_model_inputs')[0]['event'] for row in calls)
+    assert len([row for row in calls if row['site'] == 'mlp']) == 2
+    gemms = [row for row in calls if row['site'] == 'triton_gemm']
+    assert [row['gemm'] for row in gemms] == ['GEMM1', 'GEMM2']
+    tensors = {row['tensor_id']: row for row in record(observed)['call_tensor_metadata']}
+    assert [tensors[row['arguments']['B_scale']['tensor_id']]['data_ptr'] for row in gemms] == [9010, 9020]
+    assert all(row['arguments']['A_scale'] is None and row['layer_id'] == 1 for row in gemms)
+    inventory = events(observed, 'resident_model_bindings')[0]
+    owner = next(row for row in inventory['owners'] if row['module_path'].endswith('routed_experts'))
+    assert owner['attributes']['w13_input_scale'] is None
+    assert owner['attributes']['w13_weight_scale_inv']['data_ptr'] == 9010
+    assert [row['layer_id'] for row in inventory['layers']] == [0, 1]
+    assert len(events(observed, 'native_layer_dispatch')) == 2
+    assert observed._model_input_observation.sites.sources[str(census.path)]['sha256'] == hashlib.sha256(census.path.read_bytes()).hexdigest()
+
+
+def test_full_replay_does_not_receive_python_layer_coverage(census):
+    observed, graph, _ = census_runner(census, 'FULL')
+    observed.execute_model(work())
+    assert graph.calls == 1 and observed.model.calls == 0
+    summary = record(observed)['call_census']
+    assert summary['returned_layer_ids'] == []
+    assert summary['layer_coverage'] == 'FULL_REPLAY_BYPASSES_PYTHON_LAYER_FRAMES'
+    assert summary['physical_kernel_census'] == 'UNMEASURED'
+    assert summary['transient_scale_content'] == 'UNMEASURED'
+
+
+def test_capture_excludes_warmup_but_records_actual_full_owner(census):
+    observed, _, records = census_runner(census, 'FULL')
+    observed.capture_model()
+    capture = records[-1]
+    calls = [row for row in capture['events'] if row['kind'] == 'native_call']
+    assert observed.model.calls == 2 and len([row for row in calls if row['site'] == 'backbone']) == 1
+    binding = next(row for row in capture['events'] if row['kind'] == 'capture_forward' and row['native_capture_region'])
+    assert all(row['capture_binding_event'] == binding['event'] for row in calls)
+    assert capture['call_census']['excluded_capture_calls']['backbone'] == 1
+    assert capture['call_census']['G2'] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('fault', ['hash', 'loaded_code', 'layer_line', 'missing_import'])
+def test_census_binding_failure_preserves_native_execution_with_an_explicit_gap(census, monkeypatch, fault):
+    observed, _, _ = census_runner(census)
+    if fault == 'hash':
+        census.path.write_text(CENSUS_SOURCE+'\n# different retained source\n')
+    elif fault == 'loaded_code':
+        function = census.module.Step5DecoderLayer.forward
+        monkeypatch.setattr(function, '__code__', function.__code__.replace(co_firstlineno=1))
+    elif fault == 'layer_line':
+        monkeypatch.setattr(observation, 'CENSUS_LAYER_LINE', 999999)
+    else:
+        monkeypatch.delitem(sys.modules, census.module.__name__)
+    result = observed.execute_model(work())
+    assert result is observed.vllm_config.model_inputs['inputs_embeds']
+    assert observed.model.calls == 1
+    assert record(observed)['call_census']['source_gaps']
+    assert record(observed)['call_census']['G2'] == 'UNVERIFIED'
+    if fault == 'missing_import':
+        monkeypatch.setitem(sys.modules, census.module.__name__, census.module)
+
+
+def test_native_exception_and_hook_restoration_do_not_become_returned_layers(census):
+    observed, _, _ = census_runner(census)
+    failure = RuntimeError('native layer fails')
+    observed.model.layers[1].failure = failure
+    profile, trace = sys.getprofile(), sys.gettrace()
+    with pytest.raises(RuntimeError) as caught:
+        observed.execute_model(work())
+    assert caught.value is failure
+    assert sys.getprofile() is profile and sys.gettrace() is trace
+    assert observed.model.calls == 1 and [layer.calls for layer in observed.model.layers] == [1, 1]
+    layer_calls = [row for row in events(observed, 'native_call') if row['site'] == 'layer']
+    assert layer_calls[1]['outcome'] == 'UNVERIFIED_NATIVE_UNWIND'
+    assert record(observed)['call_census']['returned_layer_ids'] == [0]
+
+
+def test_call_return_growth_is_charged_and_cannot_mutate_a_full_record(census):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(scope_bytes=700), execution.batch_snapshot, lambda row: None)
+    scope = observation.ObservationScope(observed, state, 'execute')
+    row = scope.emit('native_call', frontiers=False, outcome='CALL_ENTERED_NOT_COMPLETED')
+    before, used = dict(row), scope.used
+    with pytest.raises(ValueError, match='call return'):
+        scope.update(row, result='x'*1000, outcome='RETURNED_CPU_CALL_NOT_GPU_COMPLETION')
+    assert row == before and scope.used == used
+    scope.update(row, result=None, outcome='RETURNED_CPU_CALL_NOT_GPU_COMPLETION')
+    assert scope.used == sum(len(json.dumps(item, allow_nan=False, separators=(',', ':')).encode()) for item in scope.events)
+
+
+@pytest.mark.parametrize('limit', ['scope_events', 'scope_bytes', 'metadata_items'])
+def test_census_limits_stop_only_observation(census, limit):
+    limits = observation.ObservationLimits(**{limit: 1})
+    observed, _, _ = census_runner(census, limits=limits)
+    result = observed.execute_model(work())
+    assert result is observed.vllm_config.model_inputs['inputs_embeds']
+    assert observed.model.calls == 1 and [layer.calls for layer in observed.model.layers] == [1, 1]
+    state = observed._model_input_observation
+    assert state.stopped and state.summary()['status'] == 'UNVERIFIED'
+    if limit == 'scope_bytes':
+        assert state.last_record is None and state.last_summary is None
+    else:
+        assert record(observed)['status'] == 'UNVERIFIED'
+
+
+@pytest.mark.parametrize('kind', ['execute', 'capture'])
+def test_complete_scope_envelope_exhaustion_cannot_reach_a_writer(census, kind):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(scope_bytes=1200), execution.batch_snapshot, lambda row: None)
+    state.sites.census_bound = True
+    state.sites.sources = {'cpu-fixture-\u6c49': dict(sha256='x'*2000, code_owners=[])}
+    written = []
+    state.capture_record = written.append
+    scope = observation.ObservationScope(observed, state, kind)
+    row = scope.emit('fixture_only', frontiers=False)
+    assert scope.used < state.limits.scope_bytes
+    assert scope.__exit__(None, None, None) is False
+    assert state.stopped and state.last_summary['status'] == 'UNVERIFIED'
+    assert state.last_record is None or len((json.dumps(state.last_record,
+        allow_nan=False, separators=(',', ':'))+'\n').encode()) <= state.limits.scope_bytes
+    assert state.last_record is None or row not in state.last_record['events']
+    assert all(len((json.dumps(item, allow_nan=False, separators=(',', ':'))+'\n').encode())
+               <= state.limits.scope_bytes for item in written)
+
+
+@pytest.mark.parametrize('scope_bytes', [1, 2, 3, 4])
+def test_unencodable_scope_failure_is_omitted_without_a_capture_write(census, scope_bytes):
+    observed, _, _ = census_runner(census)
+    written = []
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(scope_bytes=scope_bytes), execution.batch_snapshot, written.append)
+    scope = observation.ObservationScope(observed, state, 'capture')
+    assert scope.__exit__(None, None, None) is False
+    assert state.last_record is None and written == [] and state.stopped
+    assert state.last_summary is None
+    assert state.summary()['collection_stopped'] is True
+    assert state.summary()['status'] == 'UNVERIFIED'
+
+
+def test_native_return_classifier_disassembles_each_observed_code_once(census, monkeypatch):
+    observed, _, _ = census_runner(census)
+    original = observation.dis.get_instructions
+    counts = {}
+    def inspected(code, *args, **kwargs):
+        counts[code] = counts.get(code, 0)+1
+        return original(code, *args, **kwargs)
+    monkeypatch.setattr(observation.dis, 'get_instructions', inspected)
+    observed.execute_model(work())
+    code = census.module.Step5DecoderLayer.forward.__code__
+    assert [layer.calls for layer in observed.model.layers] == [1, 1]
+    assert counts[code] == 1
+    assert record(observed)['call_census']['returned_layer_ids'] == [0, 1]
+
+
+@pytest.mark.parametrize('kind', ['execute', 'capture'])
+@pytest.mark.parametrize('offset', [-1, 0])
+def test_complete_scope_record_accepts_only_the_exact_json_boundary(census, kind, offset):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(), execution.batch_snapshot, lambda row: None)
+    state.sites.census_bound = True
+    state.sites.sources = {'cpu-fixture-\u6c49': dict(sha256='a'*64, code_owners=[])}
+    scope = observation.ObservationScope(observed, state, kind)
+    scope.emit('fixture_only', frontiers=False, value='\u6c49')
+    scope.__exit__(None, None, None)
+    baseline = state.last_record
+    size = len((json.dumps(baseline, allow_nan=False, separators=(',', ':'))+'\n').encode())
+    state.limits = observation.ObservationLimits(scope_bytes=size+offset)
+    written = []
+    state.capture_record = written.append
+    scope = observation.ObservationScope(observed, state, kind)
+    scope.emit('fixture_only', frontiers=False, value='\u6c49')
+    scope.__exit__(None, None, None)
+    actual = state.last_record
+    assert len((json.dumps(actual, allow_nan=False, separators=(',', ':'))+'\n').encode()) <= state.limits.scope_bytes
+    if offset == 0:
+        assert actual == baseline and state.failures == 0 and not state.stopped
+    else:
+        assert actual['status'] == 'UNVERIFIED' and actual['events'] == [] and state.stopped
+        assert actual['observer_errors'] == [dict(kind='scope_record_bytes')]
+    assert written == ([actual] if kind == 'capture' else [])
+
+
+@pytest.mark.parametrize('kind', ['execute', 'capture'])
+@pytest.mark.parametrize('native_raises', [False, True])
+def test_scope_byte_exhaustion_preserves_native_outcome_and_hooks(census, kind, native_raises):
+    limits = observation.ObservationLimits(scope_bytes=1 if not native_raises else 1200)
+    observed, _, records = census_runner(census, limits=limits)
+    failure = RuntimeError('native fixture failure')
+    if native_raises:
+        observed.model.layers[1].failure = failure
+    profile, trace = sys.getprofile(), sys.gettrace()
+    action = observed.execute_model if kind == 'execute' else observed.capture_model
+    args = (work(),) if kind == 'execute' else ()
+    if native_raises:
+        with pytest.raises(RuntimeError) as caught:
+            action(*args)
+        assert caught.value is failure
+    else:
+        result = action(*args)
+        assert result is observed.vllm_config.model_inputs['inputs_embeds'] if kind == 'execute' else result == 41
+    assert sys.getprofile() is profile and sys.gettrace() is trace
+    state = observed._model_input_observation
+    assert state.stopped and state.summary()['status'] == 'UNVERIFIED'
+    if native_raises:
+        assert state.last_record['native_outcome'] == 'raised'
+        assert state.last_record['native_error_type'] == 'builtins.RuntimeError'
+    else:
+        assert state.last_record is None and state.last_summary is None and records == []
+    expected_calls = 2 if kind == 'capture' and not native_raises else 1
+    assert observed.model.calls == expected_calls
+    assert (observed.execution_calls if kind == 'execute' else observed.capture_calls) == 1
+
+
+@pytest.mark.parametrize('fail_writer', [False, True])
+@pytest.mark.parametrize('near_limit', [False, True])
+def test_device_output_precedes_final_record_cap_and_capture_writer(census, fail_writer, near_limit):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(), execution.batch_snapshot, lambda row: None)
+    order = []
+    class Device:
+        def output(self, index, native_error, observer_errors, *, events):
+            assert index == 3 and native_error is None and observer_errors == []
+            order.append('device_output')
+        def error(self, *args):
+            raise AssertionError('No device observer error expected')
+    state.device = Device()
+    scope = observation.ObservationScope(observed, state, 'capture')
+    scope.device_step = 3
+    scope.__exit__(None, None, None)
+    size = len((json.dumps(state.last_record, allow_nan=False, separators=(',', ':'))+'\n').encode())
+    if near_limit:
+        state.limits = observation.ObservationLimits(scope_bytes=size+1)
+    order.clear()
+    written = []
+    def writer(row):
+        assert order == ['device_output']
+        assert len((json.dumps(row, allow_nan=False, separators=(',', ':'))+'\n').encode()) <= state.limits.scope_bytes
+        written.append(json.loads(json.dumps(row)))
+        order.append('capture_writer')
+        if fail_writer:
+            raise KeyboardInterrupt('x'*10000)
+    state.capture_record = writer
+    scope = observation.ObservationScope(observed, state, 'capture')
+    scope.device_step = 3
+    assert scope.__exit__(None, None, None) is False
+    assert order == ['device_output', 'capture_writer']
+    assert state.last_summary['status'] == state.last_record['status']
+    if fail_writer:
+        assert state.last_record['status'] == 'UNVERIFIED' and state.stopped
+        expected_error = 'scope_record_bytes' if near_limit else 'capture_record'
+        assert state.last_record['observer_errors'][0]['kind'] == expected_error
+        assert written[0]['observer_errors'] == []
+    else:
+        state.limits = observation.ObservationLimits(scope_bytes=size-1)
+        order.clear()
+        scope = observation.ObservationScope(observed, state, 'capture')
+        scope.device_step = 3
+        scope.__exit__(None, None, None)
+        assert order == ['device_output', 'capture_writer']
+        assert state.last_record['events'] == [] and state.last_record['status'] == 'UNVERIFIED'
+    assert len((json.dumps(state.last_record, allow_nan=False, separators=(',', ':'))+'\n').encode()) <= state.limits.scope_bytes
+
+
+@pytest.mark.parametrize('offset', [-1, 0])
+def test_rejected_record_itself_obeys_the_same_encoded_byte_cap(census, offset):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(scope_bytes=1000), execution.batch_snapshot, lambda row: None)
+    oversized = dict(native_outcome='returned', native_error_type=None, content='x'*2000)
+    rejected = observation.ObservationScope(observed, state, 'capture').bounded_record(oversized)
+    size = len((json.dumps(rejected, allow_nan=False, separators=(',', ':'))+'\n').encode())
+    state.limits = observation.ObservationLimits(scope_bytes=size+offset)
+    actual = observation.ObservationScope(observed, state, 'capture').bounded_record(oversized)
+    assert actual == rejected if offset == 0 else actual is None
+    assert state.stopped and state.summary()['status'] == 'UNVERIFIED'
+
+
+def test_full_model_size_cpu_evidence_fits_existing_scope_cap(census):
+    choices = tuple(i >= 3 and i < 91 for i in range(92))
+    observed, _, _ = census_runner(census, choices=choices)
+    observed.execute_model(work())
+    result = record(observed)
+    assert not result['observer_errors']
+    assert result['call_census']['returned_layer_ids'] == list(range(92))
+    encoded = len((json.dumps(result, allow_nan=False, separators=(',', ':'))+'\n').encode())
+    assert encoded <= observed._model_input_observation.limits.scope_bytes
+    assert all(layer.calls == 1 for layer in observed.model.layers)
+
+
+def test_call_metadata_reuses_only_complete_equal_descriptors(census):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(), execution.batch_snapshot, lambda row: None)
+    scope = observation.ObservationScope(observed, state, 'execute')
+    metadata = observation.Metadata(census.native.sites, state.limits,
+                                     tensor_record=scope.tensor_reference)
+    first = census.native.module.Tensor(7000)
+    assert metadata.value(first) == metadata.value(census.native.module.Tensor(7000))
+    changed = census.native.module.Tensor(7000)
+    changed.dtype = 'torch.bfloat16'
+    assert metadata.value(changed) != metadata.value(first)
+    assert len(scope.call_tensors) == 2
+    assert all(row['content'] == 'UNMEASURED' for row in scope.call_tensors)
+    assert scope.used == sum(len(json.dumps(row, allow_nan=False, separators=(',', ':')).encode())
+                             for row in scope.call_tensors)
+
+
+def test_call_tensor_pool_exhaustion_preserves_existing_descriptors(census):
+    observed, _, _ = census_runner(census)
+    state = observation.ModelInputObservation(census.native.sites,
+        observation.ObservationLimits(scope_bytes=1), execution.batch_snapshot, lambda row: None)
+    scope = observation.ObservationScope(observed, state, 'execute')
+    metadata = observation.Metadata(census.native.sites, state.limits,
+                                     tensor_record=scope.tensor_reference)
+    with pytest.raises(ValueError, match='tensor metadata'):
+        metadata.value(census.native.module.Tensor())
+    assert scope.call_tensors == [] and scope.tensor_keys == {} and scope.used == 0
+
+
+def test_unquantized_resident_method_and_no_scale_dispatch_are_observed(census):
+    observed, _, _ = census_runner(census)
+    routed = observed.model.layers[1].moe.experts.routed_experts
+    routed.quant_method = census.module.UnquantizedFusedMoEMethod()
+    routed.w13_weight_scale_inv, routed.w2_weight_scale_inv = None, None
+    observed.execute_model(work())
+    calls = events(observed, 'native_call')
+    assert [row['site'] for row in calls if row['site'] in ('fp8_apply', 'unquantized_apply')] == ['unquantized_apply']
+    assert all(row['arguments']['B_scale'] is None and row['arguments']['use_fp8_w8a8'] is False
+               for row in calls if row['site'] == 'triton_gemm')
+    assert record(observed)['call_census']['returned_layer_ids'] == [0, 1]
+
+
+def test_same_code_on_an_unbound_layer_cannot_inherit_resident_layer_credit(census):
+    observed, _, _ = census_runner(census)
+    observed.execute_model(work())
+    observed.model.layers[1] = census.module.Step5DecoderLayer(1, True)
+    observed.execute_model(work())
+    layer_calls = [row for row in events(observed, 'native_call') if row['site'] == 'layer']
+    assert layer_calls[1]['owner_binding'] == 'UNVERIFIED_OWNER_NOT_RESIDENT'
+    assert layer_calls[1]['layer_id'] is None
+    assert record(observed)['call_census']['returned_layer_ids'] == [0]
+    assert record(observed)['call_census']['layer_coverage'] == 'UNVERIFIED_INCOMPLETE_PYTHON_LAYER_RETURNS'
+
+
+def test_inherited_original_native_method_binds_to_actual_subclass_owner(census):
+    observed, _, _ = census_runner(census)
+    class DerivedLayer(census.module.Step5DecoderLayer):
+        pass
+    observed.model.layers[1] = DerivedLayer(1, True)
+    observed.execute_model(work())
+    assert record(observed)['call_census']['returned_layer_ids'] == [0, 1]
+    owner = next(row for row in events(observed, 'resident_model_bindings')[0]['owners']
+                 if row['module_path'] == 'language_model.model.layers.1')
+    assert owner['cls'].endswith('DerivedLayer')
+
+
+def test_duplicate_resident_layer_ids_remain_an_explicit_source_gap(census):
+    observed, _, _ = census_runner(census)
+    observed.model.layers[1].layer_idx = 0
+    observed.execute_model(work())
+    assert any(row['reason'] == 'DUPLICATE_RESIDENT_LAYER_IDS'
+               for row in record(observed)['call_census']['source_gaps'])
+    assert record(observed)['call_census']['G2'] == 'UNVERIFIED'
