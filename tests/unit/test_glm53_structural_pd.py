@@ -185,12 +185,11 @@ def _harness(*, target_blocks: int = 8, target_max_model_len: int = 4096):
     return source_lane, target_lane, _GlobalScheduler(source, target), predictor
 
 
-@pytest.mark.parametrize(
-    ("prompt_tokens", "source_blocks", "target_blocks"),
-    [(64, 1, 2), (65, 2, 2)],
-)
+# The D reservation holds exactly the source prompt pages, as vLLM's remote
+# load does, with no block for the next token.
+@pytest.mark.parametrize(("prompt_tokens", "prompt_blocks"), [(64, 1), (65, 2)])
 def test_structural_transfer_counts_only_source_backed_prompt_pages(
-    prompt_tokens: int, source_blocks: int, target_blocks: int
+    prompt_tokens: int, prompt_blocks: int
 ) -> None:
     source, target, scheduler, _ = _harness()
     request = _request_owned_by_prefill(source, prompt_tokens)
@@ -199,12 +198,12 @@ def test_structural_transfer_counts_only_source_backed_prompt_pages(
     [end_event] = _start_event(request, source).handle_event(scheduler, metrics)
     info = end_event._transfer_info
 
-    assert source._allocation_map[request.id] == source_blocks
-    assert target._allocation_map[request.id] == target_blocks
-    assert info.source_prompt_common_blocks == source_blocks
-    assert info.target_reserved_common_blocks == target_blocks
+    assert source._allocation_map[request.id] == prompt_blocks
+    assert target._allocation_map[request.id] == prompt_blocks
+    assert info.source_prompt_common_blocks == prompt_blocks
+    assert info.target_reserved_common_blocks == prompt_blocks
     assert info.kv_cache_size_bytes == (
-        source_blocks * source._kv_cache_capacity.resident_bytes_per_common_block
+        prompt_blocks * source._kv_cache_capacity.resident_bytes_per_common_block
     )
     assert info.payload_kind == "structural_whole_prompt_pages_per_worker_lane"
 
@@ -247,6 +246,25 @@ def test_structural_start_rejects_source_prefix_before_side_effects() -> None:
     assert target._allocation_map == {}
     assert scheduler._clusters[ClusterType.DECODE]._request_counter == 0
     assert metrics.starts == []
+
+
+def test_failed_payload_rolls_back_the_reserved_decode_frontier(monkeypatch) -> None:
+    source, target, scheduler, predictor = _harness()
+    request = _request_owned_by_prefill(source, 128)
+
+    def fail_payload(**_):
+        raise ValueError("payload construction failed")
+
+    monkeypatch.setattr(
+        predictor, "get_structural_nixl_transfer_info_for_request", fail_payload
+    )
+    with pytest.raises(ValueError, match="payload construction failed"):
+        _start_event(request, source).handle_event(scheduler, _Metrics())
+
+    assert target._allocation_map == {}
+    assert target._scheduled_num_computed_tokens_by_request == {}
+    assert target._kv_transfer_receiving_request_ids == set()
+    assert source._kv_transfer_start_claimed_request_ids == set()
 
 
 def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> None:
@@ -477,8 +495,10 @@ def test_near_full_target_preserves_fifo_and_prefill_ownership() -> None:
     source, target, scheduler, _ = _harness(target_blocks=4)
     occupied = Request(0.0, 127, 3)
     target._allocate_request(occupied, 127)
-    head = _request_owned_by_prefill(source, 128)
-    tail = _request_owned_by_prefill(source, 64)
+    # vLLM reserves ceil(prompt / 64) blocks for a remote load: three for
+    # the head and two for the tail, exactly the source prompt pages.
+    head = _request_owned_by_prefill(source, 192)
+    tail = _request_owned_by_prefill(source, 128)
     metrics = _Metrics()
     head_event = _start_event(head, source)
     tail_event = _start_event(tail, source)
@@ -501,7 +521,7 @@ def test_near_full_target_preserves_fifo_and_prefill_ownership() -> None:
     [head_end] = target._popped_output_events.pop(0).handle_event(
         scheduler, metrics
     )
-    assert head_end._transfer_info.source_prompt_common_blocks == 2
+    assert head_end._transfer_info.source_prompt_common_blocks == 3
     assert head_end._transfer_info.target_reserved_common_blocks == 3
     assert set(source._allocation_map) == {head.id, tail.id}
 
@@ -519,7 +539,7 @@ def test_near_full_target_preserves_fifo_and_prefill_ownership() -> None:
         scheduler, metrics
     )
     tail_end.handle_event(scheduler, metrics)
-    assert tail_end._transfer_info.source_prompt_common_blocks == 1
+    assert tail_end._transfer_info.source_prompt_common_blocks == 2
     assert tail_end._transfer_info.target_reserved_common_blocks == 2
     assert source._allocation_map == {}
     assert len(metrics.starts) == len(metrics.ends) == 2
@@ -540,7 +560,8 @@ def test_d_ready_reservation_progresses_before_blocked_growth_head() -> None:
 
     old._num_processed_tokens = 128
     target._scheduled_num_computed_tokens_by_request[old.id] = 128
-    incoming = _request_owned_by_prefill(source, 64)
+    # Its two-block reservation fills the pool, so the old head cannot grow.
+    incoming = _request_owned_by_prefill(source, 128)
     metrics = _Metrics()
     [end_event] = _start_event(incoming, source).handle_event(scheduler, metrics)
     preempted = []
@@ -555,6 +576,8 @@ def test_d_ready_reservation_progresses_before_blocked_growth_head() -> None:
 
     _, admitted, _ = target._schedule_decode_waiting_requests(256)
     assert admitted == [incoming]
+    # Its first D step recomputes the last prompt token in the reserved blocks.
+    assert target._allocation_map[incoming.id] == 2
     assert target._waiting_requests == [old]
     assert target._kv_transfer_ready_request_ids == set()
 
@@ -584,7 +607,7 @@ def test_d_ready_admission_preserves_order_within_each_class() -> None:
         request._prefill_completed_at = 0.5
         request.on_arrival(0.5, ClusterType.DECODE)
     for request in (ready_a, ready_b):
-        assert target.reserve_kv_transfer_target(request) == 2
+        assert target.reserve_kv_transfer_target(request) == 1
         target.mark_kv_transfer_target_ready(request)
     target._waiting_requests = [ordinary_a, ready_a, ordinary_b, ready_b]
 

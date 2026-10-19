@@ -160,7 +160,15 @@ class KvBlockAllocation:
         self._check_request_fits_kv_pool(request)
 
     def reserve_kv_transfer_target(self, request: Request) -> Optional[int]:
-        """Reserve the existing DECODE allocation before structural NIXL READ."""
+        """Reserve the prompt's DECODE blocks before structural NIXL READ.
+
+        vLLM's async remote load schedules no new tokens and no lookahead, so
+        it holds only the prompt's blocks. Once the load lands, vLLM sets
+        num_computed_tokens to the prompt length minus one and recomputes the
+        last prompt token to sample (scheduler.py _update_waiting_for_remote_kv).
+        Seeding that frontier sizes the reservation, and the first D step,
+        to exactly the prompt's blocks.
+        """
         self.validate_kv_transfer_target_scope(request)
         receiving = self._kv_transfer_receiving_request_ids
         ready = self._kv_transfer_ready_request_ids
@@ -173,18 +181,14 @@ class KvBlockAllocation:
                 f"Request {request.id} already has a DECODE allocation"
             )
         self._check_request_fits_kv_pool(request)
+        frontiers = self._scheduled_num_computed_tokens_by_request
+        frontiers[request.id] = int(request.num_prefill_tokens) - 1
         if not self._can_allocate_request(request, 1):
+            del frontiers[request.id]
             return None
         self._allocate_request(request, 1)
-        reserved_blocks = int(self._allocation_map.get(request.id, 0))
-        prompt_blocks = ceil(request.num_prefill_tokens / self._config.block_size)
-        if reserved_blocks < prompt_blocks:
-            self._free_request_resources_by_id(request.id)
-            raise RuntimeError(
-                "DECODE reservation does not cover every source prompt block"
-            )
         receiving.add(request.id)
-        return reserved_blocks
+        return int(self._allocation_map[request.id])
 
     def mark_kv_transfer_target_ready(self, request: Request) -> None:
         """Move a reserved request from receiving to D-ready exactly once."""
@@ -233,6 +237,7 @@ class KvBlockAllocation:
                 f"Request {request.id} has no receiving reservation to abort"
             )
         self._kv_transfer_receiving_request_ids.remove(request.id)
+        del self._scheduled_num_computed_tokens_by_request[request.id]
         self._free_request_resources_by_id(request.id)
 
     def _find_request_by_id(self, request_id: int) -> Optional[Request]:
