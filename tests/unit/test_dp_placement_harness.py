@@ -144,6 +144,43 @@ def test_v028_rejects_invalid_or_external_dp_node_options(tmp_path, changes):
         server_command(engine, tmp_path, 8100)
 
 
+@pytest.mark.parametrize("blocks", [0, -1, True, None, "17", 17.5])
+def test_v028_rejects_invalid_native_gpu_block_override(tmp_path, blocks):
+    with pytest.raises(ValueError, match="num_gpu_blocks_override"):
+        server_command(native_engine() | {"num_gpu_blocks_override": blocks}, tmp_path, 8100)
+
+
+@pytest.mark.parametrize("block_counts", [{}, {"decode": 17}, {"prefill": 19, "decode": 17},
+                                          {"other": 17}, {"decode": True}, {"decode": 0}, None])
+def test_native_pd_node_capacity_reaches_only_its_selected_role(tmp_path, block_counts):
+    from tests.comparison.calibration.native_pd_worker import node_plan
+
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {"kv_transfer": {}}
+    config = {"engine": engine, "data_parallel_size_local": 1,
+              "dp_rpc_ports": {"prefill": 24471, "decode": 24571},
+              "http_ports": {"prefill": 8100, "decode": 8200},
+              "role_num_gpu_blocks_override": block_counts}
+    peers = [{"host": f"node{index}", "ip": f"192.0.2.{10 + index}"} for index in range(4)]
+    before = json.dumps(config, sort_keys=True)
+    for index, peer in enumerate(peers):
+        if block_counts in ({"other": 17}, {"decode": True}, {"decode": 0}, None):
+            with pytest.raises(ValueError, match="Role GPU block overrides"):
+                node_plan(config, peers, peer["host"], [str(n) for n in range(8)])
+            continue
+        plan = node_plan(config, peers, peer["host"], [str(n) for n in range(8)])
+        command = server_command(plan["engine"], tmp_path, config["http_ports"][plan["role"]])
+        flag = "--num-gpu-blocks-override"
+        if plan["role"] in block_counts:
+            assert command[command.index(flag) + 1] == str(block_counts[plan["role"]])
+        else:
+            assert flag not in command
+        assert ("--headless" in command) is bool(index % 2)
+    assert json.dumps(config, sort_keys=True) == before
+
+
 @pytest.mark.parametrize("fault", ["version", "source", "image", "mode", "no_observer",
                                   "clean_light", "capacity", "ranks", "role", "output",
                                   "observer_source", "startup", "routing", "weights",

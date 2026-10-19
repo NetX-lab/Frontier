@@ -155,6 +155,10 @@ def runtime_version(engine: dict) -> str:
         for name in ("tensor_parallel_size", "pipeline_parallel_size", "data_parallel_size"):
             if type(engine.get(name)) is not int or engine[name] <= 0:
                 raise ValueError(f"{name} must be a positive integer")
+        if "num_gpu_blocks_override" in engine:
+            blocks = engine["num_gpu_blocks_override"]
+            if type(blocks) is not int or blocks <= 0:
+                raise ValueError("num_gpu_blocks_override must be a positive integer")
         for name in ("enable_expert_parallel", "enforce_eager", "enable_chunked_prefill",
                      "enable_prefix_caching"):
             if type(engine.get(name)) is not bool:
@@ -331,7 +335,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     if version == "0.28.0":
         for name in ("attention_backend", "quantization", "shutdown_timeout",
                      "distributed_executor_backend", "data_parallel_size_local",
-                     "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port"):
+                     "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port",
+                     "num_gpu_blocks_override"):
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
         if "async_scheduling" in engine:

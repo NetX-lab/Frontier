@@ -30,6 +30,12 @@ def node_plan(config, peers, host, devices):
     position = [peer['host'] for peer in peers].index(host)
     nodes_per_role = dp // local
     role = ('prefill', 'decode')[position // nodes_per_role]
+    block_counts = config.get('role_num_gpu_blocks_override', {})
+    if (type(block_counts) is not dict or set(block_counts) - {'prefill', 'decode'}
+            or any(type(value) is not int or value <= 0 for value in block_counts.values())):
+        raise ValueError('Role GPU block overrides require positive integer counts')
+    if role in block_counts:
+        engine['num_gpu_blocks_override'] = block_counts[role]
     lane = position % nodes_per_role * local
     heads = dict(zip(('prefill', 'decode'), (peers[0], peers[nodes_per_role])))
     engine.update(host=peers[position]['ip'], data_parallel_size_local=local,
