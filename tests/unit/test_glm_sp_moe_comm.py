@@ -155,6 +155,66 @@ def source_predictor(ctx):
     return predictor
 
 
+def pd_source_predictor(ctx):
+    from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
+        SklearnDisaggregationExecutionTimePredictor,
+    )
+
+    base = source_predictor(ctx)
+    cls = type("PDSourcePredictor", (SklearnDisaggregationExecutionTimePredictor, type(base)), {})
+    predictor = cls.__new__(cls)
+    predictor.__dict__.update(base.__dict__)
+    ctx.replica_config.model_config = ctx.model_config
+    predictor._get_cluster_replica_config = lambda _: ctx.replica_config
+    predictor._log_architecture_attention_shape = lambda *_: None
+    predictor._get_tensor_parallel_communication_time = lambda _: 10.0
+    predictor._get_pipeline_parallel_communication_time = lambda _: 0.0
+    predictor._predict_one_op_time = lambda name, time, *args: time
+    predictor.predict_attention_layer_time = lambda *args, **kwargs: AttentionTime()
+    return predictor
+
+
+@pytest.mark.parametrize("role", ROLES)
+@pytest.mark.parametrize("layer,expected", [
+    (0, {"embedding_allreduce"}), (2, set()),
+    (3, {"sp_moe_attention_reduce_scatter"}),
+    (4, {"sp_moe_attention_reduce_scatter", "sp_moe_layer_input_allgather"}),
+    (77, {"sp_moe_attention_reduce_scatter", "sp_moe_layer_input_allgather", "sp_moe_final_allgather", "logits_allgather"}),
+])
+def test_pd_live_attention_source_calls_and_accounting(role, layer, expected):
+    ctx = context(64, role)
+    predictor = pd_source_predictor(ctx)
+    predictor._cc_backend = measured_backend(role)
+    if layer >= 3:
+        predictor._get_tensor_parallel_communication_time = lambda _: pytest.fail("SP must not look up legacy attention all-reduce")
+    comm = predictor._get_communication_time(ctx.batch, 0, role, layer_id=layer, include_stage_owned=False)
+    assert set(comm.source_operator_times) == expected
+    assert comm.tensor_parallel_time == (0.0 if layer >= 3 else 10.0)
+    result = predictor._predict_attention_only_stage_execution_time(
+        batch=ctx.batch, stage_id=0, cluster_type=role, num_layers=1,
+        layer_id=layer, include_stage_owned=False,
+    )
+    assert result.model_time_ms == pytest.approx(sum(comm.source_operator_times.values()) + comm.tensor_parallel_time)
+    assert sum(MetricsStore.__new__(MetricsStore)._build_frontier_stage_batch_component_ledger(result).values()) == pytest.approx(result.model_time_ms)
+
+
+@pytest.mark.parametrize("role", ROLES)
+def test_pd_dummy_public_stage_charges_actual_source_calls(role):
+    ctx = context(64, role)
+    predictor = pd_source_predictor(ctx)
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 0.01
+    result = predictor.predict_stage_execution_time(ctx.batch, 0, role, num_layers=78, include_ffn=False)
+    times = result.op_times
+    assert result.attention_all_reduce_time == pytest.approx(0.03)
+    for name, calls in {"embedding_allreduce": 1, "logits_allgather": 1,
+                       "sp_moe_attention_reduce_scatter": 75,
+                       "sp_moe_layer_input_allgather": 74, "sp_moe_final_allgather": 1}.items():
+        assert times[name] == pytest.approx(calls * 0.01)
+    comm = result.communication_time_component
+    assert comm.total_time() - comm.pipeline_parallel_send_recv_time == pytest.approx(1.55)
+
+
 @pytest.mark.parametrize("role", ROLES)
 @pytest.mark.parametrize("layer,expected", [
     (0, {"embedding_allreduce", "attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce"}),

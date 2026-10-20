@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from frontier.logger import init_logger
 from frontier.model_architectures import (
     ModelArchitectureProfile,
@@ -31,6 +31,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 )
 from frontier.operators.families import get_comm_operator
 from frontier.operators.spec import CommPayloadContext
+from frontier.operators.sequence_parallel_moe import source_tp_operator_times
 from frontier.types import ClusterType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
@@ -53,6 +54,7 @@ class CommunicationTime:
 
     tensor_parallel_time: float = 0.0
     pipeline_parallel_time: float = 0.0
+    source_operator_times: dict[str, float] = field(default_factory=dict)
 
 
 class WorkloadDistributionType(Enum):
@@ -583,6 +585,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         include_moe: Optional[bool] = None,
         include_ffn: bool = True,
         include_stage_owned: bool = True,
+        layer_id: int = 0,
     ) -> ExecutionTime:
         """Return cluster-specific dummy ExecutionTime object."""
         if cluster_type is None:
@@ -606,9 +609,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         routed_token_count = self._get_ep_lane_routed_token_count(batch)
 
         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
-        # A direct helper caller has no layer identity, so preserve the historic
-        # model-level default. Public single-layer calls pass the resolved
-        # concrete classification explicitly.
+        # Direct callers without an FFN selector retain the historic model-level
+        # default. Public single-layer calls pass the concrete classification.
         model_config = cluster_replica_config.model_config
         model_is_moe = bool(
             model_config is not None and getattr(model_config, "is_moe", False)
@@ -654,6 +656,16 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             else None
         )
         architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
+        source_operator_times = (
+            source_tp_operator_times(self, batch, model_config, cluster_replica_config,
+                                     cluster_type, layer_id)
+            if include_attention else {}
+        )
+        if source_operator_times:
+            ep_operator_times = CommunicationOperatorTimes({
+                **({} if ep_operator_times is None else ep_operator_times.op_times),
+                **source_operator_times,
+            })
         share_expert_enabled = (
             is_moe_model
             and cluster_replica_config.model_config is not None
@@ -672,7 +684,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             else 0.0
         )
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
-        attn_tp_comm_time = base_time if attn_tp_size > 1 else 0.0
+        attn_tp_comm_time = (
+            base_time if attn_tp_size > 1
+            and "sp_moe_attention_reduce_scatter" not in source_operator_times else 0.0
+        )
         # DECODE_FFN owns the FFN tensor-parallel domain for every FFN layer,
         # including dense boundary layers in a mixed model.  The legacy
         # ``moe_tensor_parallel_allreduce_time`` field is the shared
@@ -856,6 +871,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_down_proj_execution_time=0.0,
                 mlp_layer_act_execution_time=0.0,
                 moe_grouped_gemm_time=0.0,  # No MoE in attention cluster
+                communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE_FFN:
             # DECODE_FFN cluster only handles FFN/MoE operations
@@ -1022,6 +1038,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         *,
         include_attention: bool = True,
         include_stage_owned: bool = True,
+        layer_id: int = 0,
     ) -> CommunicationTime:
         """
         Get communication times for a batch at a given stage.
@@ -1040,10 +1057,17 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         """
         tensor_parallel_time = 0.0
         pipeline_parallel_time = 0.0
+        replica_config = self._get_cluster_replica_config(cluster_type)
+        source_operator_times = (
+            source_tp_operator_times(self, batch, replica_config.model_config,
+                                     replica_config, cluster_type, layer_id)
+            if include_attention else {}
+        )
 
         # Tensor parallel communication (all-reduce)
         if (
             include_attention
+            and "sp_moe_attention_reduce_scatter" not in source_operator_times
             and self._supports_operation("tensor_parallel_communication")
         ):
             tensor_parallel_time = self._get_tensor_parallel_communication_time(batch)
@@ -1057,6 +1081,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         return CommunicationTime(
             tensor_parallel_time=tensor_parallel_time,
             pipeline_parallel_time=pipeline_parallel_time,
+            source_operator_times=source_operator_times,
         )
 
     def _get_overhead_time(
@@ -1241,7 +1266,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             batch, layer_id=layer_id, cluster_type=cluster_type
         )
         communication_time = self._get_communication_time(
-            batch, stage_id, cluster_type, include_stage_owned=include_stage_owned
+            batch, stage_id, cluster_type, include_stage_owned=include_stage_owned,
+            layer_id=layer_id,
         )
         overhead_time = (
             self._get_overhead_time(batch, cluster_type, stage_id)
@@ -1355,6 +1381,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             mlp_layer_down_proj_execution_time=0.0,
             mlp_layer_act_execution_time=0.0,
             attention_operator_times=attention_time.operator_times,
+            communication_operator_times=(
+                CommunicationOperatorTimes(communication_time.source_operator_times)
+                if communication_time.source_operator_times else None
+            ),
             **self._get_zero_moe_params(),
         )
 
@@ -1522,6 +1552,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 include_moe=(execution_include_moe if include_ffn else None),
                 include_ffn=include_ffn,
                 include_stage_owned=include_stage_owned,
+                layer_id=layer_id,
             )
 
             return dummy_exec_time
@@ -1573,6 +1604,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             cluster_type,
             include_attention=include_attention,
             include_stage_owned=include_stage_owned,
+            layer_id=layer_id,
         )
         overhead_time = (
             self._get_overhead_time(batch, cluster_type, stage_id)
@@ -1596,6 +1628,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # Attention-only cluster
             return ExecutionTime(
                 num_layers_per_pipeline_stage=1,
+                communication_operator_times=(
+                    CommunicationOperatorTimes(communication_time.source_operator_times)
+                    if communication_time.source_operator_times else None
+                ),
                 attention_rope_execution_time=self._predict_one_op_time(
                     "attention_rope_execution_time",
                     attention_time.attention_rope_execution_time,
@@ -1892,7 +1928,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         num_layers,
                     ),
                     communication_operator_times=CommunicationOperatorTimes(
-                        ep_operator_times
+                        {**ep_operator_times, **communication_time.source_operator_times}
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -2269,7 +2305,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         num_layers,
                     ),
                     communication_operator_times=CommunicationOperatorTimes(
-                        ep_operator_times
+                        {**ep_operator_times, **communication_time.source_operator_times}
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -2381,6 +2417,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=1,
                     **attention_execution_params,
+                    communication_operator_times=(
+                        CommunicationOperatorTimes(communication_time.source_operator_times)
+                        if communication_time.source_operator_times else None
+                    ),
                     mlp_norm_time=self._predict_one_op_time(
                         "mlp_norm_time",
                         mlp_time.mlp_norm_time,
@@ -2698,7 +2738,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         num_layers,
                     ),
                     communication_operator_times=CommunicationOperatorTimes(
-                        ep_operator_times
+                        {**ep_operator_times, **communication_time.source_operator_times}
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -2835,6 +2875,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # Build ExecutionTime object for dense model
                 exec_time = ExecutionTime(
                     num_layers_per_pipeline_stage=1,
+                    communication_operator_times=(
+                        CommunicationOperatorTimes(communication_time.source_operator_times)
+                        if communication_time.source_operator_times else None
+                    ),
                     attention_rope_execution_time=self._predict_one_op_time(
                         "attention_rope_execution_time",
                         attention_time.attention_rope_execution_time,

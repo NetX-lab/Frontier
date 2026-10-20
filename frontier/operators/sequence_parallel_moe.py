@@ -1,4 +1,4 @@
-"""vLLM sequence-parallel collective geometry, independent of routing."""
+"""vLLM sequence-parallel collective geometry and source-owned timing."""
 
 from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
 from frontier.config.precision_type import PrecisionType
@@ -77,6 +77,25 @@ def tp_payload(name, ctx):
         # including partial prefill; dummy forwards contain no requests.
         logits_rows=len(ctx.batch.requests),
     )["data_size_bytes"]
+
+
+def source_tp_operator_times(predictor, batch, model, replica, role, layer_id):
+    """Price the same physical source calls in live and structural PD execution."""
+    from frontier.config import get_quantization_manager
+    from frontier.operators.families import get_comm_operator
+    from frontier.operators.spec import CommPayloadContext
+
+    profile = predictor._get_cluster_model_architecture_profile(role)
+    if not (profile.replicate_shared_expert_in_sequence_parallel
+            or profile.embedding_logits_collectives):
+        return {}
+    names = source_tp_operator_names(model, replica, layer_id)
+    if predictor._enable_dummy_mode:
+        return {name: predictor._dummy_execution_time for name in names
+                if name != "logits_allgather" or batch.requests}
+    ctx = CommPayloadContext(batch, model, replica, role, get_quantization_manager())
+    return {name: predictor._predict_comm_operator_with_context(get_comm_operator(name), ctx)
+            for name in names}
 
 
 def ep_widths(ctx):
