@@ -1,15 +1,20 @@
-"""Block-FP8 routed experts selected by the vLLM 0.28 FP8 MoE oracle.
+"""Routed experts built by vLLM's native MoE oracles, for one EP rank.
 
-vLLM 0.28 picks the FP8 MoE kernel in ``select_fp8_moe_backend`` from the
-layer's ``FusedMoEConfig``. On Hopper, block-scaled FP8 weights with expert
-parallelism select ``FLASHINFER_CUTLASS``. With the all-gather/reduce-scatter
-dispatch, each EP rank receives every token of its EP group with global expert
-ids, and ``FlashInferExperts`` computes only the experts that rank owns.
+vLLM picks the routed-expert kernel from the layer's ``FusedMoEConfig``:
+``select_fp8_moe_backend`` for block-FP8 weights and
+``select_unquantized_moe_backend`` for BF16/FP16 weights. The result is a
+modular ``FusedMoEKernel`` (prepare, experts, finalize). Native layers time the
+same ``FusedMoEKernel.apply`` call this module exposes.
 
-This module builds those experts for one EP rank and exposes their ``apply``,
-which the profiler times. Dispatch and combine are communication that Frontier
-models separately. Weights are random FP8 values with unit block scales; they
-set the kernel's shapes and dtypes, not its numerical results.
+The kernel is built for one EP rank with ``dp_size=1``. vLLM then selects the
+no-DP/EP prepare/finalize, which quantizes the activations locally and skips
+experts that ``expert_map`` marks as remote. That is the expert compute of one
+EP rank without the dispatch and combine communication, which Frontier models
+separately. Weights are random values with unit block scales; they set the
+kernel's shapes and dtypes, not its numerical results.
+
+Accepted backends are the ones whose weight layout and prepare/finalize this
+module was checked against; any other selection fails fast.
 """
 
 from __future__ import annotations
@@ -23,9 +28,15 @@ import torch
 
 from frontier.profiling.common.vllm_compat import vllm_config_context
 
-SUPPORTED_FP8_BLOCK_BACKEND = "FLASHINFER_CUTLASS"
+SUPPORTED_EXPERT_BACKENDS = {
+    "fp8": frozenset({"FLASHINFER_CUTLASS", "DEEPGEMM", "TRITON"}),
+    "bf16": frozenset({"TRITON"}),
+}
 
-_FP8_BLOCK_EXPERTS: Dict[Tuple[Any, ...], "Fp8BlockRoutedExperts"] = {}
+# Reported when the Triton experts find no tuned config file for the layout.
+DEFAULT_TRITON_TUNING_CONFIG = "default"
+
+_ROUTED_EXPERTS: Dict[Tuple[Any, ...], "NativeRoutedExperts"] = {}
 
 
 def expert_parallel_layout(
@@ -58,9 +69,9 @@ def expert_parallel_layout(
     return global_num_experts // num_local_experts, start // num_local_experts
 
 
-def _random_fp8(shape: Sequence[int], *, device: torch.device) -> torch.Tensor:
+def _random_weight(shape: Sequence[int], *, dtype: torch.dtype, device) -> torch.Tensor:
     weight = torch.empty(tuple(shape), dtype=torch.bfloat16, device=device)
-    return weight.normal_(mean=0.0, std=0.02).to(torch.float8_e4m3fn)
+    return weight.normal_(mean=0.0, std=0.02).to(dtype)
 
 
 def _block_scale(shape: Sequence[int], block_shape: Sequence[int], *, device) -> torch.Tensor:
@@ -71,11 +82,13 @@ def _block_scale(shape: Sequence[int], block_shape: Sequence[int], *, device) ->
 
 
 @dataclass(frozen=True)
-class Fp8BlockRoutedExperts:
-    """vLLM experts of one EP rank plus the weights their ``apply`` consumes."""
+class NativeRoutedExperts:
+    """A native modular MoE kernel of one EP rank plus the weights it consumes."""
 
     backend: str
-    experts: Any
+    experts_class: str
+    triton_tuning_config: Optional[str]
+    kernel: Any
     w13: torch.Tensor
     w2: torch.Tensor
     activation: Any
@@ -83,67 +96,107 @@ class Fp8BlockRoutedExperts:
 
     def apply(
         self,
-        output: torch.Tensor,
         hidden_states: torch.Tensor,
         topk_weights: torch.Tensor,
         topk_ids: torch.Tensor,
-    ) -> None:
-        self.experts.apply(
-            output,
-            hidden_states,
-            self.w13,
-            self.w2,
-            topk_weights,
-            topk_ids,
+        expert_map: Optional[torch.Tensor],
+    ) -> torch.Tensor:
+        # Keyword arguments: the modular implementation behind this call
+        # takes topk_ids before topk_weights.
+        output = self.kernel.apply(
+            hidden_states=hidden_states,
+            w1=self.w13,
+            w2=self.w2,
+            topk_weights=topk_weights,
+            topk_ids=topk_ids,
             activation=self.activation,
             global_num_experts=self.global_num_experts,
-            expert_map=None,
-            a1q_scale=None,
-            a2_scale=None,
-            workspace13=None,
-            workspace2=None,
-            expert_tokens_meta=None,
+            expert_map=expert_map,
             apply_router_weight_on_input=False,
         )
+        # Only consumers that defer the finalize receive an unfinalized output.
+        if not isinstance(output, torch.Tensor):
+            raise TypeError(
+                f"FusedMoEKernel.apply returned {type(output).__name__}; the profiler "
+                "times the finalized routed-expert output"
+            )
+        return output
 
 
-def _build_fp8_block_routed_experts(
+def _triton_tuning_config(experts_cls, *, w2: torch.Tensor, quant_config, in_dtype) -> Optional[str]:
+    """Return the tuned Triton config file the experts load, or ``"default"``.
+
+    Returns ``None`` when the selected experts never run the Triton kernel.
+    """
+
+    from vllm.model_executor.layers.fused_moe.experts.triton_moe import TritonExperts
+    from vllm.model_executor.layers.fused_moe.fused_moe import (
+        get_config_file_name,
+        get_moe_configs,
+    )
+
+    # Fallback experts (e.g. TritonOrDeepGemmExperts) name both of their classes.
+    get_clses = getattr(experts_cls, "get_clses", None)
+    classes = get_clses() if get_clses is not None else (experts_cls,)
+    if not any(issubclass(cls, TritonExperts) for cls in classes):
+        return None
+    # The same lookup arguments as vLLM's try_get_optimal_moe_config.
+    num_experts, _, intermediate = w2.shape
+    dtype = quant_config.config_name(in_dtype)
+    block_shape = quant_config.block_shape
+    block_n = block_shape[0] if block_shape else 0
+    block_k = block_shape[1] if block_shape else 0
+    if get_moe_configs(num_experts, intermediate, dtype, block_n, block_k) is None:
+        return DEFAULT_TRITON_TUNING_CONFIG
+    return get_config_file_name(num_experts, intermediate, dtype, block_shape)
+
+
+def _build_native_routed_experts(
     *,
+    quantization_mode: str,
+    activation: str,
     num_local_experts: int,
     global_num_experts: int,
     hidden_dim: int,
     intermediate_dim: int,
     top_k: int,
-    block_shape: Sequence[int],
+    block_shape: Optional[Sequence[int]],
     expert_parallel_size: int,
     expert_parallel_rank: int,
     dtype: torch.dtype,
     model_type: str,
     device: torch.device,
-) -> Fp8BlockRoutedExperts:
+) -> NativeRoutedExperts:
     from vllm.config import get_current_vllm_config
     from vllm.model_executor.layers.fused_moe.activation import MoEActivation
     from vllm.model_executor.layers.fused_moe.config import (
         FusedMoEConfig,
         FusedMoEParallelConfig,
+        FusedMoEQuantConfig,
         RoutingMethodType,
     )
-    from vllm.model_executor.layers.fused_moe.oracle.fp8 import (
-        convert_to_fp8_moe_kernel_format,
-        make_fp8_moe_quant_config,
-        select_fp8_moe_backend,
-    )
-    from vllm.model_executor.layers.quantization.utils.quant_utils import (
-        kFp8Dynamic128Sym,
-        kFp8Static128BlockSym,
+    from vllm.v1.worker.workspace import (
+        init_workspace_manager,
+        is_workspace_manager_initialized,
     )
 
+    if quantization_mode not in SUPPORTED_EXPERT_BACKENDS:
+        raise ValueError(
+            f"Native routed experts support quantization modes "
+            f"{sorted(SUPPORTED_EXPERT_BACKENDS)}, got {quantization_mode!r}"
+        )
+    if quantization_mode == "fp8" and block_shape is None:
+        raise ValueError("FP8 routed experts require a weight block shape")
+
+    moe_activation = MoEActivation(activation)
     model_config = SimpleNamespace(
         dtype=dtype,
         hf_config=SimpleNamespace(model_type=model_type),
         hf_text_config=SimpleNamespace(model_type=model_type),
     )
     with vllm_config_context(model_config=model_config):
+        if not is_workspace_manager_initialized():
+            init_workspace_manager(device)
         parallel_config = FusedMoEParallelConfig(
             tp_size=1,
             pcp_size=1,
@@ -167,86 +220,139 @@ def _build_fp8_block_routed_experts(
             intermediate_size=intermediate_dim,
             num_local_experts=num_local_experts,
             num_logical_experts=global_num_experts,
-            activation=MoEActivation.SILU,
+            activation=moe_activation,
             device=device,
             routing_method=RoutingMethodType.Unspecified,
             moe_parallel_config=parallel_config,
             in_dtype=dtype,
         )
-        backend, experts_cls = select_fp8_moe_backend(
-            config=moe_config,
-            weight_key=kFp8Static128BlockSym,
-            activation_key=kFp8Dynamic128Sym,
-            allow_vllm_cutlass=False,
-        )
-        if backend.value != SUPPORTED_FP8_BLOCK_BACKEND:
-            raise RuntimeError(
-                f"vLLM selected the {backend.value} FP8 MoE backend for EP="
-                f"{expert_parallel_size}; this profiler supports only "
-                f"{SUPPORTED_FP8_BLOCK_BACKEND}, which vLLM selects on Hopper "
-                "for block-FP8 experts with expert parallelism."
-            )
-
         w13_shape = (num_local_experts, 2 * intermediate_dim, hidden_dim)
         w2_shape = (num_local_experts, hidden_dim, intermediate_dim)
-        layer = SimpleNamespace(
-            moe_config=moe_config,
-            weight_block_size=list(block_shape),
-            activation=MoEActivation.SILU,
+
+        if quantization_mode == "fp8":
+            from vllm.model_executor.layers.fused_moe.oracle.fp8 import (
+                convert_to_fp8_moe_kernel_format,
+                make_fp8_moe_kernel,
+                make_fp8_moe_quant_config,
+                select_fp8_moe_backend,
+            )
+            from vllm.model_executor.layers.quantization.utils.quant_utils import (
+                GroupShape,
+                create_fp8_quant_key,
+                kFp8Dynamic128Sym,
+            )
+
+            backend, experts_cls = select_fp8_moe_backend(
+                config=moe_config,
+                weight_key=create_fp8_quant_key(
+                    static=True, group_shape=GroupShape(*block_shape)
+                ),
+                activation_key=kFp8Dynamic128Sym,
+                allow_vllm_cutlass=False,
+            )
+            _require_supported_backend(backend.value, quantization_mode, moe_activation)
+            layer = SimpleNamespace(
+                moe_config=moe_config,
+                weight_block_size=list(block_shape),
+                activation=moe_activation,
+            )
+            w13, w2, w13_scale, w2_scale = convert_to_fp8_moe_kernel_format(
+                fp8_backend=backend,
+                layer=layer,
+                w13=_random_weight(w13_shape, dtype=torch.float8_e4m3fn, device=device),
+                w2=_random_weight(w2_shape, dtype=torch.float8_e4m3fn, device=device),
+                w13_scale=_block_scale(w13_shape, block_shape, device=device),
+                w2_scale=_block_scale(w2_shape, block_shape, device=device),
+                w13_input_scale=None,
+                w2_input_scale=None,
+            )
+            quant_config = make_fp8_moe_quant_config(
+                fp8_backend=backend,
+                w1_scale=w13_scale,
+                w2_scale=w2_scale,
+                a1_scale=None,
+                a2_scale=None,
+                block_shape=list(block_shape),
+            )
+            kernel = make_fp8_moe_kernel(
+                moe_quant_config=quant_config,
+                moe_config=moe_config,
+                experts_cls=experts_cls,
+                fp8_backend=backend,
+            )
+        else:
+            from vllm.model_executor.layers.fused_moe.oracle.unquantized import (
+                convert_to_unquantized_kernel_format,
+                make_unquantized_moe_kernel,
+                select_unquantized_moe_backend,
+            )
+
+            backend, experts_cls = select_unquantized_moe_backend(moe_config)
+            _require_supported_backend(backend.value, quantization_mode, moe_activation)
+            w13, w2 = convert_to_unquantized_kernel_format(
+                unquantized_backend=backend,
+                moe_config=moe_config,
+                w13_weight=_random_weight(w13_shape, dtype=dtype, device=device),
+                w2_weight=_random_weight(w2_shape, dtype=dtype, device=device),
+            )
+            quant_config = FusedMoEQuantConfig.make()
+            kernel = make_unquantized_moe_kernel(
+                quant_config=quant_config,
+                moe_config=moe_config,
+                backend=backend,
+                experts_cls=experts_cls,
+            )
+        triton_tuning_config = _triton_tuning_config(
+            experts_cls, w2=w2, quant_config=quant_config, in_dtype=dtype
         )
-        w13, w2, w13_scale, w2_scale = convert_to_fp8_moe_kernel_format(
-            fp8_backend=backend,
-            layer=layer,
-            w13=_random_fp8(w13_shape, device=device),
-            w2=_random_fp8(w2_shape, device=device),
-            w13_scale=_block_scale(w13_shape, block_shape, device=device),
-            w2_scale=_block_scale(w2_shape, block_shape, device=device),
-            w13_input_scale=None,
-            w2_input_scale=None,
-        )
-        quant_config = make_fp8_moe_quant_config(
-            fp8_backend=backend,
-            w1_scale=w13_scale,
-            w2_scale=w2_scale,
-            a1_scale=None,
-            a2_scale=None,
-            block_shape=list(block_shape),
-        )
-        experts = experts_cls(moe_config=moe_config, quant_config=quant_config)
-    return Fp8BlockRoutedExperts(
+    return NativeRoutedExperts(
         backend=backend.value,
-        experts=experts,
+        experts_class=experts_cls.__name__,
+        triton_tuning_config=triton_tuning_config,
+        kernel=kernel,
         w13=w13,
         w2=w2,
-        activation=MoEActivation.SILU,
+        activation=moe_activation,
         global_num_experts=global_num_experts,
     )
 
 
-def get_fp8_block_routed_experts(**kwargs: Any) -> Fp8BlockRoutedExperts:
+def _require_supported_backend(backend: str, quantization_mode: str, activation) -> None:
+    supported = SUPPORTED_EXPERT_BACKENDS[quantization_mode]
+    if backend not in supported:
+        raise RuntimeError(
+            f"vLLM selected the {backend} {quantization_mode} MoE backend for "
+            f"activation {activation.value}; this profiler supports "
+            f"{sorted(supported)} for {quantization_mode} routed experts."
+        )
+
+
+def get_native_routed_experts(**kwargs: Any) -> NativeRoutedExperts:
     """Build the experts once per layout; a new layout frees the previous one.
 
     The profiler calls this once per token count with the same layout, and
     the expert weights of one EP layout can take several GiB of HBM.
     """
 
-    kwargs["block_shape"] = tuple(kwargs["block_shape"])
+    if kwargs["block_shape"] is not None:
+        kwargs["block_shape"] = tuple(kwargs["block_shape"])
     device = torch.device("cuda", torch.cuda.current_device())
     key = (device, *sorted(kwargs.items()))
-    cached = _FP8_BLOCK_EXPERTS.get(key)
+    cached = _ROUTED_EXPERTS.get(key)
     if cached is not None:
         return cached
-    if _FP8_BLOCK_EXPERTS:
-        _FP8_BLOCK_EXPERTS.clear()
+    if _ROUTED_EXPERTS:
+        _ROUTED_EXPERTS.clear()
         torch.cuda.empty_cache()
-    experts = _build_fp8_block_routed_experts(device=device, **kwargs)
-    _FP8_BLOCK_EXPERTS[key] = experts
+    experts = _build_native_routed_experts(device=device, **kwargs)
+    _ROUTED_EXPERTS[key] = experts
     return experts
 
 
 __all__ = [
-    "Fp8BlockRoutedExperts",
-    "SUPPORTED_FP8_BLOCK_BACKEND",
+    "DEFAULT_TRITON_TUNING_CONFIG",
+    "NativeRoutedExperts",
+    "SUPPORTED_EXPERT_BACKENDS",
     "expert_parallel_layout",
-    "get_fp8_block_routed_experts",
+    "get_native_routed_experts",
 ]

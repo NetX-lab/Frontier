@@ -12,7 +12,8 @@ Design rationale:
 
 Supported vLLM APIs:
 - vLLM 0.10.x low-level fused kernel entry point
-- Current vLLM functional ``fused_experts`` entry point
+- Current vLLM modular ``FusedMoEKernel``, built by vLLM's own MoE backend
+  oracles (``fp8_block_experts``)
 
 Note: vLLM 0.3.x support has been removed. Please use vLLM >= 0.10.0.
 """
@@ -30,8 +31,9 @@ from frontier.profiling.common.accelerator import accelerator_platform
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.moe.fp8_block_experts import (
     expert_parallel_layout,
-    get_fp8_block_routed_experts,
+    get_native_routed_experts,
 )
+from frontier.profiling.moe.routed_layer_groups import SILU_ACTIVATION
 from frontier.profiling.utils import (
     normalize_profile_method,
     validate_profile_method_platform,
@@ -41,10 +43,17 @@ VLLM_AVAILABLE = False
 VLLM_VERSION = None
 VLLM_API_VERSION = None
 FP8_QUANT_AVAILABLE = False
-_functional_fused_experts = None
-# Bound only by the low-level import below, like `_functional_fused_experts`.
+# Bound only by the vLLM 0.10.x low-level import below.
 _vllm_custom_ops = None
 _FUNCTIONAL_MXFP4_STATES: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
+
+# Kernel identity entries of the returned stats, and the MoE row column each
+# one is reported under. They describe the measured kernel, not its timing.
+KERNEL_IDENTITY_COLUMNS = {
+    "native_backend": "moe_native_backend",
+    "native_experts_class": "moe_native_experts_class",
+    "triton_tuning_config": "moe_triton_tuning_config",
+}
 
 
 def validate_moe_quantization_mode(*, use_fp8: bool, use_mxfp4: bool) -> str:
@@ -140,10 +149,10 @@ try:
 
         VLLM_API_VERSION = "0.10.x"
     except ImportError:
-        # Current vLLM intentionally exposes the complete fused operation
-        # rather than the two private kernel invocations Frontier used before.
-        from vllm.model_executor.layers.fused_moe import (
-            fused_experts as _functional_fused_experts,
+        # Current vLLM exposes the routed experts only as modular kernels that
+        # its backend oracles build; `fp8_block_experts` constructs them.
+        from vllm.model_executor.layers.fused_moe.oracle.unquantized import (  # noqa: F401
+            make_unquantized_moe_kernel,
         )
 
         VLLM_API_VERSION = "functional_fused_experts"
@@ -474,29 +483,6 @@ def _run_fused_moe_iteration(
     _vllm_custom_ops.moe_sum(intermediate_cache3, out_hidden_states)
 
 
-def _run_functional_fused_experts_iteration(
-    A: torch.Tensor,
-    w1: torch.Tensor,
-    w2: torch.Tensor,
-    topk_weights: torch.Tensor,
-    topk_ids: torch.Tensor,
-    global_num_experts: int,
-    expert_map: Optional[torch.Tensor],
-) -> None:
-    """Run the complete fused expert op exposed by current vLLM."""
-    if _functional_fused_experts is None:  # pragma: no cover - import invariant
-        raise RuntimeError("Current vLLM fused_experts API is unavailable.")
-    _functional_fused_experts(
-        hidden_states=A,
-        w1=w1,
-        w2=w2,
-        topk_weights=topk_weights,
-        topk_ids=topk_ids,
-        global_num_experts=global_num_experts,
-        expert_map=expert_map,
-    )
-
-
 def validate_mxfp4_runtime(*, model_type: Optional[str]) -> None:
     """Admit only the model/platform implemented by the online MXFP4 adapter."""
     # Resolve this dependency after the architecture/config bootstrap cycle.
@@ -749,6 +735,7 @@ def profile_fused_moe_kernel(
     global_num_experts: Optional[int] = None,
     expert_map: Optional[torch.Tensor] = None,
     model_type: Optional[str] = None,
+    activation: str = SILU_ACTIVATION,
 ) -> Dict:
     """
     Profile vLLM's fused MoE kernel with given routing decisions.
@@ -779,6 +766,9 @@ def profile_fused_moe_kernel(
         global_num_experts: Global expert count for alignment when profiling EP-local workloads.
         expert_map: Optional mapping from global expert ids to local expert ids.
         model_type: Actual model identity required by the pinned MXFP4 adapter.
+        activation: vLLM ``MoEActivation`` value of the gated expert
+            activation. Only current vLLM's native BF16 and block-FP8 experts
+            accept values other than ``"silu"``.
 
     Returns:
         Dictionary containing timing statistics. On the vLLM 0.10.x path it also
@@ -787,6 +777,8 @@ def profile_fused_moe_kernel(
         multiple of ``block_size_m``), the row count the grouped GEMM computes,
         and ``block_size_m_ranges``, the JSON-encoded result of
         ``block_size_m_ranges`` for this weight layout up to ``num_tokens``.
+        On current vLLM it also holds the ``KERNEL_IDENTITY_COLUMNS`` entries
+        of the kernel vLLM selected.
 
     Raises:
         RuntimeError: If vLLM is not available.
@@ -814,8 +806,13 @@ def profile_fused_moe_kernel(
 
     if use_mxfp4:
         validate_mxfp4_runtime(model_type=model_type)
-    fp8_block_experts = use_fp8 and VLLM_API_VERSION == "functional_fused_experts"
-    if fp8_block_experts:
+    native_experts = VLLM_API_VERSION == "functional_fused_experts" and not use_mxfp4
+    if activation != SILU_ACTIVATION and not native_experts:
+        raise NotImplementedError(
+            f"MoE activation {activation!r} needs current vLLM's native BF16 or "
+            "block-FP8 experts; the vLLM 0.10.x and MXFP4 paths run SiLU only."
+        )
+    if native_experts and use_fp8:
         if per_channel_quant or block_shape is None:
             raise NotImplementedError(
                 "FP8 profiling with current vLLM supports block-scaled weights "
@@ -860,27 +857,6 @@ def profile_fused_moe_kernel(
     base_dtype = torch.bfloat16 if quantization_mode in {"fp8", "mxfp4"} else dtype
     A = torch.randn(num_tokens, hidden_dim, dtype=base_dtype, device=device)
 
-    w1 = None
-    w2 = None
-    if not (use_mxfp4 or fp8_block_experts):
-        w1 = torch.randn(
-            num_experts,
-            2 * expert_hidden_dim_per_partition,
-            hidden_dim,
-            dtype=base_dtype,
-            device=device,
-        )
-        w2 = torch.randn(
-            num_experts,
-            hidden_dim,
-            expert_hidden_dim_per_partition,
-            dtype=base_dtype,
-            device=device,
-        )
-
-    w1_scale = None
-    w2_scale = None
-
     if VLLM_API_VERSION == "functional_fused_experts":
         functional_topk_weights = topk_weights.to(
             device=device,
@@ -917,13 +893,19 @@ def profile_fused_moe_kernel(
                     shared_experts=None,
                     shared_experts_input=None,
                 )
-        elif fp8_block_experts:
+
+            kernel_identity = {"native_backend": mxfp4_state["backend"]}
+        else:
             ep_size, ep_rank = expert_parallel_layout(
                 expert_map,
                 num_local_experts=num_experts,
                 global_num_experts=align_num_experts,
             )
-            routed_experts = get_fp8_block_routed_experts(
+            # A TP-sharded expert computes like an unsharded expert of the
+            # per-partition width, so the kernel is built with TP 1.
+            routed_experts = get_native_routed_experts(
+                quantization_mode=quantization_mode,
+                activation=activation,
                 num_local_experts=num_experts,
                 global_num_experts=align_num_experts,
                 hidden_dim=hidden_dim,
@@ -935,27 +917,22 @@ def profile_fused_moe_kernel(
                 dtype=base_dtype,
                 model_type=model_type,
             )
-            routed_output = torch.empty_like(A)
 
             def _step() -> None:
                 routed_experts.apply(
-                    routed_output,
                     A,
                     functional_topk_weights,
                     functional_topk_ids,
+                    expert_map,
                 )
-        else:
-            assert w1 is not None and w2 is not None
 
-            def _step() -> None:
-                _run_functional_fused_experts_iteration(
-                    A=A,
-                    w1=w1,
-                    w2=w2,
-                    topk_weights=functional_topk_weights,
-                    topk_ids=functional_topk_ids,
-                    global_num_experts=align_num_experts,
-                    expert_map=expert_map,
+            kernel_identity = {
+                "native_backend": routed_experts.backend,
+                "native_experts_class": routed_experts.experts_class,
+            }
+            if routed_experts.triton_tuning_config is not None:
+                kernel_identity["triton_tuning_config"] = (
+                    routed_experts.triton_tuning_config
                 )
 
         from frontier.profiling.common.vllm_compat import vllm_config_context
@@ -977,14 +954,26 @@ def profile_fused_moe_kernel(
                     step_fn=_step,
                     active_steps=active_steps,
                 )
-            if use_mxfp4:
-                stats["native_backend"] = mxfp4_state["backend"]
-            elif fp8_block_experts:
-                stats["native_backend"] = routed_experts.backend
-            return stats
+        stats.update(kernel_identity)
+        return stats
 
     _validate_block_shape(block_shape)
-    assert w1 is not None and w2 is not None
+    w1 = torch.randn(
+        num_experts,
+        2 * expert_hidden_dim_per_partition,
+        hidden_dim,
+        dtype=base_dtype,
+        device=device,
+    )
+    w2 = torch.randn(
+        num_experts,
+        hidden_dim,
+        expert_hidden_dim_per_partition,
+        dtype=base_dtype,
+        device=device,
+    )
+    w1_scale = None
+    w2_scale = None
     if use_fp8:
         w1, w1_scale = quantize_weights_to_fp8(
             w1,

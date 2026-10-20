@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional
 
+from frontier.config import PrecisionType
 from frontier.profiling.common.cuda_timer import CudaTimer
 from frontier.profiling.common.layers.activation import SiluAndMul
 from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
@@ -232,6 +233,84 @@ class MoEGatingNetwork(nn.Module):
                     dtype=torch.float32,
                 ).to(hidden_states.dtype)
 
+        return routing_weights, selected_experts
+
+
+class SigmoidBiasGatingNetwork(nn.Module):
+    """Router of a layer whose ``RoutedLayerRouter`` scores with a biased sigmoid.
+
+    It runs the native vLLM router of such layers (Step-5): an FP32
+    ``GateLinear`` that returns FP32 logits, then ``fused_topk_bias``, which
+    selects the top-k experts by sigmoid score plus a per-expert selection
+    bias and weights them by the unbiased scores, renormalized when the router
+    renormalizes and multiplied by the routed scaling factor. The timer split
+    matches ``MoEGatingNetwork``.
+
+    Keep this module in FP32: casting the gate to the model dtype disables the
+    FP32 router GEMM that vLLM selects for these layers.
+    """
+
+    linear_backend = "vllm_gate_linear"
+    routing_assignment_policy = "biased_score_topk"
+
+    def __init__(self, *, hidden_dim: int, num_experts: int, router_topk: int, router):
+        super().__init__()
+        if (
+            router.scoring_func != "sigmoid"
+            or not router.uses_selection_bias
+            or router.gate_precision != PrecisionType.FP32
+        ):
+            raise ValueError(
+                "SigmoidBiasGatingNetwork measures sigmoid routers with a "
+                f"selection bias and an FP32 gate; got {router}"
+            )
+        from vllm.model_executor.layers.fused_moe.router.fused_topk_bias_router import (
+            fused_topk_bias,
+        )
+        from vllm.model_executor.layers.fused_moe.router.gate_linear import GateLinear
+
+        self._fused_topk_bias = fused_topk_bias
+        self.router = router
+        self.router_topk = router_topk
+        ensure_vllm_single_rank_parallel_state()
+        self.gate = GateLinear(
+            hidden_dim,
+            num_experts,
+            bias=False,
+            out_dtype=torch.float32,
+            params_dtype=torch.float32,
+        )
+        # The checkpoint's selection bias; its values do not change the cost.
+        self.selection_bias = nn.Parameter(
+            torch.zeros(num_experts, dtype=torch.float32), requires_grad=False
+        )
+        self.gating_linear_timer = CudaTimer("moe_gating_linear")
+        self.gating_routing_topk_timer = CudaTimer("moe_gating_routing_topk")
+
+    @property
+    def routing_weight_policy(self) -> str:
+        # The selection bias picks the experts; the weights use plain scores.
+        return "sigmoid_renorm_scaled" if self.router.renormalize else "sigmoid_scaled"
+
+    def routing_policy_metadata(self) -> dict[str, object]:
+        return {
+            "routing_assignment_policy": self.routing_assignment_policy,
+            "routing_weight_policy": self.routing_weight_policy,
+        }
+
+    def forward(self, hidden_states: torch.Tensor):
+        with self.gating_linear_timer:
+            logits, _ = self.gate(hidden_states)
+        with self.gating_routing_topk_timer:
+            routing_weights, selected_experts = self._fused_topk_bias(
+                hidden_states=hidden_states,
+                gating_output=logits,
+                scoring_func=self.router.scoring_func,
+                e_score_correction_bias=self.selection_bias,
+                topk=self.router_topk,
+                renormalize=self.router.renormalize,
+                routed_scaling_factor=self.router.routed_scaling_factor,
+            )
         return routing_weights, selected_experts
 
 
