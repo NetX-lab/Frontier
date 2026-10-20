@@ -7,13 +7,16 @@ import pytest
 
 from frontier.config import (
     AnalyticalKVCacheTransferConfig,
+    ClusterConfig,
+    MetricsConfig,
     RandomForrestExecutionTimePredictorConfig,
     ReplicaConfig,
     SyntheticRequestGeneratorConfig,
+    VllmLoadBalancingClusterSchedulerConfig,
     VllmV1SchedulerConfig,
 )
 from frontier.config import global_vars
-from frontier.entities import Batch, ExecutionTime, Replica, Request, StageExecutionTime
+from frontier.entities import Batch, Cluster, ExecutionTime, Replica, Request, StageExecutionTime
 from frontier.events.kv_cache_transfer_end_event import KVCacheTransferEndEvent
 from frontier.events.kv_cache_transfer_start_event import KVCacheTransferStartEvent
 from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
@@ -22,6 +25,9 @@ from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
 from frontier.metrics.op_trace_utils import build_kv_cache_transfer_meta
 from frontier.scheduler.cluster_scheduler.lor_cluster_scheduler import (
     LORClusterScheduler,
+)
+from frontier.scheduler.cluster_scheduler.cluster_scheduler_registry import (
+    ClusterSchedulerRegistry,
 )
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
@@ -33,6 +39,7 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     StageExecutionContext,
 )
 from frontier.scheduler.utils.dense_metrics import build_prefill_metrics_execution_time
+from frontier.scheduler.request_load import RequestLoad
 from frontier.types import ClusterType
 
 
@@ -77,14 +84,15 @@ class _GlobalScheduler:
         return 0.0
 
 
-def _replica_config() -> ReplicaConfig:
+def _replica_config(attn_dp: int = 1) -> ReplicaConfig:
     return ReplicaConfig(
         model_name="zai-org/GLM-5.3",
         device="h800",
         network_device="h800_dgx",
         attn_tensor_parallel_size=8,
         moe_tensor_parallel_size=1,
-        moe_expert_parallel_size=8,
+        attn_dp=attn_dp,
+        moe_expert_parallel_size=8 * attn_dp,
         total_expert_num=256,
         router_topk=8,
     )
@@ -96,8 +104,9 @@ def _lane(
     num_blocks: int = 8,
     max_model_len: int = 4096,
     enable_prefix_caching: bool = False,
+    attn_dp: int = 1,
 ):
-    replica_config = _replica_config()
+    replica_config = _replica_config(attn_dp)
     request_config = SyntheticRequestGeneratorConfig()
     replica = Replica(replica_config, request_config, cluster_type)
     lane = VLLMv1EngineReplicaScheduler(
@@ -186,6 +195,97 @@ def _harness(*, target_blocks: int = 8, target_max_model_len: int = 4096):
     source = _source_cluster(source_lane, source_config, predictor)
     target = _target_cluster(target_lane)
     return source_lane, target_lane, _GlobalScheduler(source, target), predictor
+
+
+def _placement_harness(policy_version):
+    source, replica_config = _lane(ClusterType.PREFILL, attn_dp=4)
+    config = ClusterConfig(
+        cluster_type=ClusterType.DECODE, replica_config=replica_config,
+        cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+            policy_version=policy_version
+        ),
+        replica_scheduler_config=VllmV1SchedulerConfig(
+            num_blocks=8, num_blocks_mode="explicit", block_size=64,
+            max_model_len=4096, max_tokens_in_batch=256, batch_size_cap=8,
+        ),
+    )
+    generator = SyntheticRequestGeneratorConfig()
+    cluster = Cluster(config, MetricsConfig(write_metrics=False), generator)
+    target = ClusterSchedulerRegistry.get(
+        config.cluster_scheduler_config.get_type(), config=config,
+        cluster=cluster, request_generator_config=generator, predictor=None,
+    )
+    predictor = AnalyticalKVCacheTransferPredictor(
+        AnalyticalKVCacheTransferConfig(kv_connector="nixl")
+    )
+    return source, target, _GlobalScheduler(
+        _source_cluster(source, replica_config, predictor), target
+    )
+
+
+@pytest.mark.parametrize("policy_version", ["v0.10.2", "v0.28.0"])
+def test_nixl_target_uses_policy_snapshot_and_receiving_is_not_waiting(policy_version):
+    source, target, scheduler = _placement_harness(policy_version)
+    request = _request_owned_by_prefill(source, 65)
+    balancer = target._load_balancer
+    for lane_id, load in enumerate(
+        [RequestLoad(3, 0, 1.0), RequestLoad(0, 1), RequestLoad(0, 8), RequestLoad(0, 8)]
+    ):
+        balancer.report(0.01, lane_id, 0, load)
+
+    [end_event] = _start_event(request, source).handle_event(scheduler, _Metrics())
+    info = end_event._transfer_info
+    assert (info.target_replica_id, info.target_replica_local_id) == (
+        target._serving_replica_id, 1
+    )
+    # The report at 10 ms starts the coordinator's 50 ms collection wait.
+    assert balancer.last_publish_ms == 60
+    lane = target.get_replica_scheduler(info.target_replica_id, 1)
+    assert lane._kv_transfer_receiving_request_ids == {request.id}
+    assert lane.get_request_load() == RequestLoad(0, 0)
+    assert lane.get_request_load().kv_cache_usage == 2 / 8
+    if policy_version == "v0.28.0":
+        assert balancer.request_owners == {request.id: 1}
+
+    end_event.handle_event(scheduler, _Metrics())
+    assert lane._kv_transfer_receiving_request_ids == set()
+    assert lane.get_request_load() == RequestLoad(1, 0)
+
+
+def test_nixl_round_robin_still_rotates_over_four_decode_lanes():
+    source, target, scheduler = _placement_harness("v0.28.0")
+    round_robin = _target_cluster(
+        target.get_replica_scheduler(target._serving_replica_id, 0)
+    )
+    round_robin._replica_dp_size = target._replica_dp_size
+    round_robin._replica_schedulers = target._replica_schedulers
+    scheduler._clusters[ClusterType.DECODE] = round_robin
+    placements = []
+    for _ in range(5):
+        request = _request_owned_by_prefill(source, 64)
+        [end_event] = _start_event(request, source).handle_event(scheduler, _Metrics())
+        placements.append(end_event._transfer_info.target_replica_local_id)
+    assert placements == [0, 1, 2, 3, 0]
+
+
+def test_nixl_deferred_retry_keeps_one_policy_ownership():
+    source, target, scheduler = _placement_harness("v0.28.0")
+    request = _request_owned_by_prefill(source, 65)
+    lane = target.get_replica_scheduler(target._serving_replica_id, 0)
+    occupied = Request(0.0, 7 * 64, 3)
+    lane._allocate_request(occupied, 7 * 64)
+    event = _start_event(request, source)
+    event.handle_event(scheduler, _Metrics())
+    assert lane._pending_kv_transfer_start_events == [event]
+    assert target._load_balancer.engine_inflight == [1, 0, 0, 0]
+
+    lane._free_request_resources(occupied)
+    lane._retry_pending_kv_transfer_starts(2.0)
+    retry = lane._popped_output_events.pop(0)
+    [end_event] = retry.handle_event(scheduler, _Metrics())
+    assert end_event._transfer_info.target_replica_local_id == 0
+    assert target._load_balancer.request_owners == {request.id: 0}
+    assert target._load_balancer.engine_inflight == [1, 0, 0, 0]
 
 
 # The D reservation holds exactly the source prompt pages, as vLLM's remote

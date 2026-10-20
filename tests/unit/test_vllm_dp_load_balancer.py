@@ -547,6 +547,70 @@ def test_the_supported_shapes_construct(
     assert len(scheduler._load_balancer.engine_counts) == attn_dp
 
 
+@pytest.mark.parametrize("is_moe,attn_dp", [(True, 4), (True, 1), (False, 1)])
+def test_decode_pp1_shapes_construct(is_moe, attn_dp) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch, cluster_type=ClusterType.DECODE,
+            is_moe=is_moe, attn_dp=attn_dp, moe_ep=attn_dp,
+        )
+    assert len(scheduler._load_balancer.engine_counts) == attn_dp
+
+
+@pytest.mark.parametrize(
+    "kwargs,message",
+    [
+        (dict(cluster_type=ClusterType.PREFILL), "one co-location Replica"),
+        (dict(cluster_type=ClusterType.DECODE, num_replicas=2), "one DECODE Replica"),
+        (dict(cluster_type=ClusterType.DECODE, num_pipeline_stages=2), "PP1 only"),
+        (dict(cluster_type=ClusterType.DECODE, is_moe=False), "share no stage-0 forward"),
+    ],
+)
+def test_decode_extension_keeps_unsupported_shapes_rejected(kwargs, message) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        with pytest.raises(ValueError, match=message):
+            _policy_scheduler(patch, **kwargs)
+
+
+def test_decode_admission_holds_its_forward_key_until_completion() -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch, cluster_type=ClusterType.DECODE,
+            cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+                policy_version="v0.28.0"
+            ),
+        )
+        request = _request()
+        request._num_processed_tokens = request.num_prefill_tokens
+        request._is_prefill_complete = True
+        request._prefill_completed_at = 0.0
+        request.on_arrival(0.0, ClusterType.DECODE)
+        replica_id, lane_id = scheduler.select_kv_transfer_target(0.0, request)
+        lane = scheduler.get_replica_scheduler(replica_id, lane_id)
+        lane.add_request(request)
+        balancer = scheduler._load_balancer
+
+        [batch] = lane.on_schedule(0.0)
+        assert scheduler._held_key[lane_id] == 0
+        assert balancer.engine_counts[lane_id] == RequestLoad(0, 0)
+        batch.on_batch_end(0.01, ClusterType.DECODE)
+        lane.on_batch_end(batch)
+        scheduler.on_replica_batch_end(0.01, replica_id, lane_id, batch)
+        assert scheduler._held_key[lane_id] is None
+        assert balancer.last_report_step == 0
+        assert balancer.engine_counts[lane_id] == lane.get_request_load()
+        assert balancer.engine_counts[lane_id].running == 1
+        assert balancer.request_owners == {request.id: lane_id}
+
+        [batch] = lane.on_schedule(0.02)
+        batch.on_batch_end(0.03, ClusterType.DECODE)
+        lane.on_batch_end(batch)
+        scheduler.on_replica_batch_end(0.03, replica_id, lane_id, batch)
+        assert request.completed
+        assert balancer.request_owners == {}
+        assert balancer.engine_inflight == [0, 0]
+
+
 def test_routing_without_a_time_is_refused_rather_than_reusing_a_stale_one() -> None:
     with pytest.MonkeyPatch.context() as patch:
         scheduler = _policy_scheduler(patch)
