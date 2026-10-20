@@ -128,7 +128,7 @@ def test_context_grid_has_topk_boundary_and_maximum():
 def test_cases_respect_target_limits(plan):
     limits = plan.limits
     engines = {engine.engine_index: engine for engine in plan.engines}
-    assert [engine.chunk_budget for engine in plan.engines] == [256, 1024]
+    assert [engine.chunk_budget for engine in plan.engines] == [256, 1024, 1024]
     decode_engine = max(plan.engines, key=lambda engine: engine.chunk_budget)
     decode = [case for case in plan.cases if case.phase == PHASE_DECODE]
     assert decode and {case.engine_index for case in decode} == {decode_engine.engine_index}
@@ -138,6 +138,8 @@ def test_cases_respect_target_limits(plan):
         assert case.batch_size * (case.prompt_len + case.max_tokens) <= limits.max_kv_tokens_per_lane
     prefill = {case.case_id: case for case in plan.cases if case.phase == PHASE_PREFILL}
     for engine in plan.engines:
+        if engine.prefill_query_len:
+            continue
         long_case = prefill[f"e{engine.engine_index}-prefill-p4159"]
         assert long_case.max_tokens == 1
     # A prompt shorter than a budget is one chunk and runs once, on the smallest
@@ -155,7 +157,8 @@ def test_plan_covers_short_extend_and_multi_sequence_prefill(plan):
     assert {2, 4, 8, 16, 32, 64, 128, 256} <= {case.prompt_len for case in prefills}
     multi = [case for case in prefills if case.batch_size > 1]
     assert multi
-    assert all(case.prompt_len > DSA_DECODE_QUERY_LIMIT for case in multi)
+    assert any(case.prompt_len > DSA_DECODE_QUERY_LIMIT for case in multi)
+    assert any(2 <= case.prompt_len <= DSA_DECODE_QUERY_LIMIT for case in multi)
     load, context = batch_load_columns([StepRequest(512, 0, 512), StepRequest(512, 0, 512)])
     assert load["num_prefill_seqs"] == 2
     assert json.loads(load["prefill_seq_lens"]) == [512, 512]
@@ -177,12 +180,13 @@ def test_engine_max_num_seqs_fits_chunk_budget_at_target_limits(hf_config):
             chunk_budgets=(256, 512, 1024, 2048, 4096, 8192),
         ),
     )
-    assert len(plan.engines) == 6
+    assert len(plan.engines) == 8
     for engine in plan.engines:
         cases = plan.cases_for_engine(engine.engine_index)
         assert engine.max_num_seqs == max(case.batch_size for case in cases)
         assert engine.max_num_seqs <= engine.chunk_budget
-    assert plan.engines[-1].max_num_seqs == 1024
+    assert plan.engines[5].max_num_seqs == 1024
+    assert [engine.prefill_query_len for engine in plan.engines[6:]] == [512, 4096]
 
 
 def test_limits_reject_decode_engine_smaller_than_batch():
@@ -196,7 +200,7 @@ def test_plan_dry_run_cli(tmp_path, capsys):
     summary = json.loads(capsys.readouterr().out.split("[dsa]")[0])
     full = json.loads(output.read_text())
     assert summary["num_cases"] == len(full["cases"])
-    assert summary["num_engines"] == 2
+    assert summary["num_engines"] == 3
 
 
 def _trace(events):

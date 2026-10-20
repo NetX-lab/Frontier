@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from typing import Sequence
 
 
-# FlashAttnMLASparseMetadataBuilder in vLLM 0.28 (2cf0a6915ce5).
+# vLLM 0.28 (2cf0a6915ce5), mla/flashattn_mla_sparse.py:155-159.
+# This labels the MLA path; the indexer independently splits at next_n=1
+# without speculation (mla/indexer.py:553-555,841-847). Extends consequently
+# retain their own fitted workload rather than sharing one-token decode rows.
 DSA_DECODE_QUERY_LIMIT = 256
 DSA_ROW_SCHEMA_VERSION = "dsa_attention.v1"
 _DECODE_QUERY_LIMIT_BY_HEADS = {16: 128, 32: 128, 64: 256, 128: 256}

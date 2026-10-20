@@ -473,7 +473,8 @@ def _case_window(case: DsaCase, engine: DsaEngineSpec) -> tuple[int, int]:
     """Return how many matching steps to skip and to record."""
 
     if case.phase == PHASE_PREFILL:
-        steps_per_prompt = math.ceil(case.prompt_len / engine.chunk_budget)
+        query_budget = engine.prefill_query_len or engine.chunk_budget
+        steps_per_prompt = math.ceil(case.prompt_len / query_budget)
         return case.warmup * steps_per_prompt, case.measured * steps_per_prompt
     if case.phase == PHASE_DECODE:
         return case.warmup, case.measured
@@ -545,11 +546,12 @@ def run_case(
     label = f"{case.case_id}/{measurement}"
     if case.phase == PHASE_PREFILL:
         for repeat in range(case.warmup + case.measured):
-            llm_engine.add_request(
-                f"{label}/r{repeat}",
-                _random_prompt(rng, case.prompt_len, vocab_size),
-                params,
-            )
+            for index in range(case.batch_size):
+                llm_engine.add_request(
+                    f"{label}/r{repeat}/q{index}",
+                    _random_prompt(rng, case.prompt_len, vocab_size),
+                    params,
+                )
             while llm_engine.has_unfinished_requests():
                 llm_engine.step()
     else:
@@ -608,6 +610,7 @@ def build_engine(
         max_num_batched_tokens=engine.chunk_budget,
         max_num_seqs=engine.max_num_seqs,
         max_model_len=engine.max_model_len,
+        long_prefill_token_threshold=engine.prefill_query_len,
         block_size=engine.block_size,
         gpu_memory_utilization=gpu_memory_utilization,
         seed=seed,

@@ -11,8 +11,10 @@ run needs before any GPU work starts:
 * one engine per prefill chunk budget (``max_num_batched_tokens``);
 * the prefill and decode cases each engine runs.
 
-Prefill cases send one prompt at a time, so every measured step is a single
-prefill chunk ``(chunk tokens, cached context)``. Decode cases run on the
+Prefill cases send one or several prompts together. Short-query tail cases
+measure decode-path extends after native chunked context construction. A
+separate engine caps each request's prefill chunk to measure several cached
+prefills together without changing the original engines. Decode cases run on the
 engine with the largest chunk budget, which builds the decode contexts in the
 fewest steps and therefore keeps the per-request context spread smallest; only
 steps in which exactly the case's requests all decode are measured.
@@ -29,6 +31,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from frontier.attention.families import DSA_ATTENTION_FAMILY
+from frontier.attention.dsa_features import dsa_decode_query_limit
 from frontier.profiling.common.model_config import ModelConfig
 
 PLAN_SCHEMA_VERSION = "dsa_attention_plan.v1"
@@ -94,6 +97,7 @@ class DsaEngineSpec:
     max_num_seqs: int
     max_model_len: int
     block_size: int
+    prefill_query_len: int = 0
 
 
 @dataclass(frozen=True)
@@ -102,8 +106,8 @@ class DsaCase:
 
     Decode: ``batch_size`` prompts of ``prompt_len`` tokens; ``warmup`` pure
     decode steps are skipped and the next ``measured`` steps are recorded.
-    Prefill: one prompt of ``prompt_len`` tokens sent ``warmup + measured``
-    times; the first ``warmup`` sends are not recorded.
+    Prefill: ``batch_size`` prompts of ``prompt_len`` tokens sent together
+    ``warmup + measured`` times; the first ``warmup`` sends are not recorded.
     """
 
     case_id: str
@@ -377,7 +381,10 @@ def _build_prefill_cases(
                 estimated_steps=repeats * _prefill_steps(long_prompt, budget),
             )
         )
-    short_queries = build_batch_grid(min(decode_query_limit, long_prompt)) if decode_query_limit is not None else ()
+    short_queries = (
+        (*build_batch_grid(min(decode_query_limit, long_prompt)), decode_query_limit + 1)
+        if decode_query_limit is not None else ()
+    )
     for prompt_len in sorted(set(context_grid) | set(short_queries)):
         engine_index = next(
             (index for index, budget in enumerate(chunk_budgets) if budget > prompt_len),
@@ -410,16 +417,16 @@ def _build_prefill_cases(
         for batch_size in build_batch_grid(max_batch):
             if batch_size == 1:
                 continue
-            prompt_len = min(budget // batch_size, long_prompt)
-            if batch_size * (prompt_len + 1) > limits.max_kv_tokens_per_lane:
-                continue
-            cases.append(DsaCase(
-                case_id=f"e{engine_index}-prefill-b{batch_size}-p{prompt_len}",
-                engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch_size,
-                prompt_len=prompt_len, max_tokens=1,
-                warmup=limits.prefill_warmup_repeats, measured=limits.prefill_measured_repeats,
-                estimated_steps=repeats,
-            ))
+            for prompt_len in sorted({decode_query_limit + 1, min(budget // batch_size, long_prompt)}):
+                if batch_size * (prompt_len + 1) > limits.max_kv_tokens_per_lane:
+                    continue
+                cases.append(DsaCase(
+                    case_id=f"e{engine_index}-prefill-b{batch_size}-p{prompt_len}",
+                    engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch_size,
+                    prompt_len=prompt_len, max_tokens=1,
+                    warmup=limits.prefill_warmup_repeats, measured=limits.prefill_measured_repeats,
+                    estimated_steps=repeats,
+                ))
     return cases
 
 
@@ -463,6 +470,89 @@ def _build_decode_cases(
                     + limits.decode_measured_steps,
                 )
             )
+    return cases
+
+
+def _build_extend_cases(
+    chunk_budgets: Sequence[int], limits: DsaMeasurementLimits,
+    context_grid: Sequence[int], decode_query_limit: int,
+) -> list[DsaCase]:
+    """Short-query tails with cached keys, plus concurrent short prompts.
+
+    Context construction uses ordinary native chunking, not injected cache or
+    request state. Use the largest budget dividing the cached context so its
+    final chunk has exactly the requested query length.
+    """
+    repeats = limits.prefill_warmup_repeats + limits.prefill_measured_repeats
+    queries = build_batch_grid(decode_query_limit)
+    cases = []
+    for context in context_grid:
+        candidates = [b for b in chunk_budgets if context % b == 0]
+        if not candidates:
+            continue
+        budget = max(candidates)
+        engine_index = chunk_budgets.index(budget)
+        for query in queries:
+            if query == 1 or context + query >= limits.max_context_len:
+                continue
+            if context + query + 1 > limits.max_kv_tokens_per_lane:
+                continue
+            cases.append(DsaCase(
+                case_id=f"e{engine_index}-extend-q{query}-c{context}",
+                engine_index=engine_index, phase=PHASE_PREFILL, batch_size=1,
+                prompt_len=context + query, max_tokens=1,
+                warmup=limits.prefill_warmup_repeats,
+                measured=limits.prefill_measured_repeats,
+                estimated_steps=repeats * _prefill_steps(context + query, budget),
+            ))
+    for batch in build_batch_grid(limits.max_num_seqs):
+        if batch == 1:
+            continue
+        for query in queries:
+            if query == 1 or batch * (query + 1) > limits.max_kv_tokens_per_lane:
+                continue
+            engine_index = next((i for i, budget in enumerate(chunk_budgets)
+                                 if budget >= batch * query), None)
+            if engine_index is None:
+                continue
+            cases.append(DsaCase(
+                case_id=f"e{engine_index}-extend-b{batch}-q{query}",
+                engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch,
+                prompt_len=query, max_tokens=1,
+                warmup=limits.prefill_warmup_repeats,
+                measured=limits.prefill_measured_repeats, estimated_steps=repeats,
+            ))
+    return cases
+
+
+def _build_cached_prefill_cases(
+    engine_index: int, budget: int, query: int, limits: DsaMeasurementLimits,
+    tail_queries: Sequence[int] = (),
+) -> list[DsaCase]:
+    """Uniform native per-request chunks keep every sequence in each step."""
+    repeats = limits.prefill_warmup_repeats + limits.prefill_measured_repeats
+    cases = []
+    for batch in build_batch_grid(min(limits.max_num_seqs, budget // query)):
+        if batch == 1:
+            continue
+        max_prompt = min(limits.max_context_len - 1,
+                         limits.max_kv_tokens_per_lane // batch - 1)
+        # Whole chunks keep the final step on the same sparse-prefill path.
+        prompts = {max_prompt // query * query}
+        # Two short-tail boundaries span summed keys for cached multi-request
+        # extends; initial short prompts alone cannot cover this work.
+        prompts.update((max_prompt - tail) // query * query + tail for tail in tail_queries)
+        for prompt in sorted(prompts):
+            if prompt <= query:
+                continue
+            cases.append(DsaCase(
+                case_id=f"e{engine_index}-prefill-b{batch}-p{prompt}",
+                engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch,
+                prompt_len=prompt, max_tokens=1,
+                warmup=limits.prefill_warmup_repeats,
+                measured=limits.prefill_measured_repeats,
+                estimated_steps=repeats * _prefill_steps(prompt, query),
+            ))
     return cases
 
 
@@ -519,13 +609,26 @@ def build_dsa_profile_plan(
         limits.block_size, shape.index_topk, limits.max_context_len
     )
     # The largest budget runs the decode cases.
-    from frontier.attention.dsa_features import dsa_decode_query_limit
-
-    cases = _build_prefill_cases(chunk_budgets, limits, context_grid, dsa_decode_query_limit(heads_per_rank))
+    decode_query_limit = dsa_decode_query_limit(heads_per_rank)
+    cases = _build_prefill_cases(chunk_budgets, limits, context_grid, decode_query_limit)
     cases += _build_decode_cases(
         len(chunk_budgets) - 1, chunk_budgets[-1], limits, context_grid
     )
-    engines = tuple(
+    # A single request needs no allowance for other requests' prefill. Include
+    # the final legal context, beyond the conservative build allowance of the
+    # original decode cases. Prefill itself samples the first output.
+    output_tokens = limits.decode_warmup_steps + limits.decode_measured_steps + 1
+    prompt = limits.max_context_len - output_tokens
+    if prompt > 0 and limits.max_context_len <= limits.max_kv_tokens_per_lane:
+        cases.append(DsaCase(
+            case_id=f"e{len(chunk_budgets) - 1}-decode-b1-p{prompt}",
+            engine_index=len(chunk_budgets) - 1, phase=PHASE_DECODE, batch_size=1,
+            prompt_len=prompt, max_tokens=output_tokens,
+            warmup=limits.decode_warmup_steps, measured=limits.decode_measured_steps,
+            estimated_steps=_prefill_steps(prompt, chunk_budgets[-1]) + output_tokens,
+        ))
+    cases += _build_extend_cases(chunk_budgets, limits, context_grid, decode_query_limit)
+    engines = [
         DsaEngineSpec(
             engine_index=index,
             chunk_budget=budget,
@@ -536,13 +639,30 @@ def build_dsa_profile_plan(
             block_size=limits.block_size,
         )
         for index, budget in enumerate(chunk_budgets)
-    )
+    ]
+    # Small chunks cover many cached sequences; two large chunks cover the
+    # high causal-pair count of two long requests sharing the token budget.
+    queries = {1 << decode_query_limit.bit_length(), chunk_budgets[-1] // 2}
+    for query in sorted(query for query in queries if query > decode_query_limit):
+        cached_prefills = _build_cached_prefill_cases(
+            len(engines), chunk_budgets[-1], query, limits,
+            tail_queries=(2, decode_query_limit) if query == min(queries) else (),
+        )
+        if not cached_prefills:
+            continue
+        engines.append(DsaEngineSpec(
+            engine_index=len(engines), chunk_budget=chunk_budgets[-1],
+            max_num_seqs=max(case.batch_size for case in cached_prefills),
+            max_model_len=limits.max_context_len, block_size=limits.block_size,
+            prefill_query_len=query,
+        ))
+        cases += cached_prefills
     return DsaProfilePlan(
         schema_version=PLAN_SCHEMA_VERSION,
         shape=shape,
         limits=limits,
         hf_overrides=build_reduced_hf_overrides(hf_config, layers, heads_per_rank),
-        engines=engines,
+        engines=tuple(engines),
         cases=tuple(cases),
     )
 
