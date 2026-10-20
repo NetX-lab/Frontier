@@ -6,9 +6,11 @@
 #
 # The image's CUDA 13 user-space needs the forward-compatibility driver on the
 # H800 hosts; VLLM_ENABLE_CUDA_COMPATIBILITY must be set before Python starts.
-# Python packages Frontier needs but the image lacks are installed from the
+# Python packages the profilers need but the image lacks are installed from the
 # internal mirror into a worker-local directory, without dependencies, so the
-# image's torch, vLLM, Triton and numpy stay untouched.
+# image's torch, vLLM, Triton and numpy stay untouched. scipy and scikit-learn
+# are deliberately absent: the profilers do not import them, and a --no-deps
+# scikit-learn breaks transformers' optional sklearn import inside vLLM.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
@@ -30,10 +32,6 @@ packages = {
     "tzdata": "tzdata",
     "yaml": "pyyaml",
     "tqdm": "tqdm",
-    "scipy": "scipy",
-    "sklearn": "scikit-learn",
-    "joblib": "joblib",
-    "threadpoolctl": "threadpoolctl",
 }
 missing = []
 for module, distribution in packages.items():
