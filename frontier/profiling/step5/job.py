@@ -29,6 +29,9 @@ def describe_smoke(stage, run_id, *, gpus=1):
         "set -euo pipefail", "export TMPDIR=/data/ycfeng/tmp/step5_attention_worker",
         'mkdir -p "$TMPDIR/model"', f"test ! -e {q(str(output))}",
         'cp data/config/models/stepfun-ai__Step-5-Preview.json "$TMPDIR/model/config.json"',
+        'export PYTHONPATH="$PWD/offline_site${PYTHONPATH:+:$PYTHONPATH}"',
+        "python3 -c 'import pandas, dateutil, pytz, tzdata, yaml, tqdm, six; "
+        "print(\"OFFLINE_DEPENDENCIES_READY\", pandas.__version__, pandas.__file__)'",
         "nvidia-smi -L",
         "bash tests/integration/step5_profiling/run_on_worker.sh "
         "-m frontier.profiling.step5.main --model-path \"$TMPDIR/model\" "
@@ -50,13 +53,16 @@ def describe_smoke(stage, run_id, *, gpus=1):
                 f"--timeout-seconds 3600 {q(worker)}")}
 
 
-def stage_smoke(stage, run_id, *, gpus=1):
+def stage_smoke(stage, run_id, *, dependency_site, gpus=1):
     stage = Path(stage).resolve()
     manifest = describe_smoke(stage, run_id, gpus=gpus)
+    dependency_site = Path(dependency_site).resolve(strict=True)
     stage.mkdir(parents=True, exist_ok=False)
     shutil.copytree(REPO_ROOT / "frontier", stage / "frontier",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".git"))
     shutil.copytree(REPO_ROOT / "data/config", stage / "data/config")
+    shutil.copytree(dependency_site, stage / "offline_site",
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     scripts = stage / "tests/integration/step5_profiling"
     scripts.mkdir(parents=True)
     for name in ("submit_profiling_job.py", "run_on_worker.sh"):
@@ -74,9 +80,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--dependency-site", type=Path, required=True)
     parser.add_argument("--gpus", type=int, default=1)
     args = parser.parse_args()
-    print(json.dumps(stage_smoke(args.stage, args.run_id, gpus=args.gpus), indent=2))
+    manifest = stage_smoke(args.stage, args.run_id, dependency_site=args.dependency_site, gpus=args.gpus)
+    print(json.dumps({**{k: v for k, v in manifest.items() if k != "sha256"},
+                      "staged_files": len(manifest["sha256"])}, indent=2))
 
 
 if __name__ == "__main__":

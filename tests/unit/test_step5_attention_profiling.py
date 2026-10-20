@@ -120,6 +120,7 @@ def test_smoke_description_uses_locked_image_and_personal_cloud_root(tmp_path):
     assert job["expected_rows"] == 16
     assert job["gpus"] == 1
     assert "--tensor-parallel-size 8" in job["worker_command"]
+    assert "OFFLINE_DEPENDENCIES_READY" in job["worker_command"]
     assert "submit_profiling_job.py" in job["submission_command"]
 
 

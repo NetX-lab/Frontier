@@ -33,6 +33,7 @@ heterogeneous-prefix and mixed prefill/decode batches are not implemented.
 ```bash
 python -m frontier.profiling.step5.job \
   --stage /data/ycfeng/tmp/step5_attention_smoke_stage \
+  --dependency-site /path/to/cpu-verified/cp312/dependency-site \
   --run-id attention_smoke_20261020_01
 ```
 
@@ -41,8 +42,10 @@ local NFS source mount, personal cloud root, every staged source SHA-256, worker
 command and exact submission command. `submit.sh` only executes that existing
 StepMind launcher when a human/parent explicitly runs it with personal auth and
 `STEPMIND_BACKEND=rjob`. Keep that launcher alive through terminal job status.
-The worker wrapper sets CUDA compatibility before starting Python and installs
-only missing lightweight dependencies, without changing torch/vLLM/Triton.
+The stage includes CPU-prepared pandas, dateutil, pytz, tzdata, PyYAML, tqdm and
+six. The worker must import them successfully before entering the existing
+wrapper, so its normal path performs no dependency installation. The wrapper
+sets CUDA compatibility before importing torch, without changing torch/vLLM/Triton.
 
 ## Outputs and judgment
 
