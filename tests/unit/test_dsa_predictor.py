@@ -157,19 +157,23 @@ def test_trained_data_is_required():
 
 def test_attention_dp_dummy_forward_runs_only_outer_projection_bundle(model):
     from frontier.entities.batch import DummyForwardBatch
+    from unittest.mock import ANY, Mock
 
     owner = SimpleNamespace(
         _model_config=model,
         _get_attention_layer_pre_proj_execution_time=lambda _: 0.1,
         _get_attention_layer_post_proj_execution_time=lambda _: 0.2,
         _get_attention_rope_execution_time=lambda _: 0.3,
-        _get_attn_norm_layer_act_execution_time=lambda _: 0.4,
+        _get_attn_norm_layer_act_execution_time=Mock(return_value=0.4),
     )
     predictor = DSAPredictor({"attn_dsa_mla": SimpleNamespace()})
     timing = predictor.predict_attention_time(owner, DummyForwardBatch(0, 0, 0), 2)
     assert timing.operator_times.total_time() == 0
     assert timing.attention_layer_pre_proj_execution_time == 0.1
     assert timing.attention_layer_post_proj_execution_time == 0.2
+    owner._get_attn_norm_layer_act_execution_time.assert_called_once_with(
+        ANY, layer_id=2,
+    )
 
 
 def test_stage_metrics_retain_measured_scopes_without_dummy_reconstruction():

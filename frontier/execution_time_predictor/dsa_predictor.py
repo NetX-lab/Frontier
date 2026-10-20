@@ -197,6 +197,6 @@ class DSAPredictor:
             attention_layer_pre_proj_execution_time=predictor._get_attention_layer_pre_proj_execution_time(batch),
             attention_layer_post_proj_execution_time=predictor._get_attention_layer_post_proj_execution_time(batch),
             attention_rope_execution_time=predictor._get_attention_rope_execution_time(batch),
-            attn_norm_time=predictor._get_attn_norm_layer_act_execution_time(batch),
+            attn_norm_time=predictor._get_attn_norm_layer_act_execution_time(batch, layer_id=layer_id),
             operator_times=operators,
         )
