@@ -82,7 +82,7 @@ indexer only to full-index owners. CUDA-event pure-decode rows, including the
 known host-stall outlier, are excluded; kernel-only measurements supply decode
 timing. Both DSA tables contain 3,708 rows: 1,942 original rows and 1,766
 verified query-extend/multi-sequence rows from producer revision `0660717`
-(RJob `exp-1020-215941-680022`). Their aggregation keys are disjoint; measured
+on H800. Their aggregation keys are disjoint; measured
 cells and all runtime identity columns are preserved. The extension uses the
 same schema and does not replace the original measurements. Zero-context FULL
 dummy attention remains unmeasured. Uncovered and mixed serving workloads fail
