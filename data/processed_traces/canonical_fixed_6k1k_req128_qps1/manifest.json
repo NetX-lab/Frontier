@@ -1,0 +1,136 @@
+{
+  "schema": "frontier.canonical_fixed_workload.v1",
+  "schema_version": 1,
+  "metadata_only": true,
+  "runtime_consumer_asserted": false,
+  "name": "canonical_fixed_6k1k_req128_qps1",
+  "decision": "Step D17; parent-selected request count, QPS and warmup protocol",
+  "namespace": "canonical-fixed-6k1k-h200",
+  "files": {
+    "formal_input": "workload.json",
+    "formal_trace": "trace.csv",
+    "formal_request_ids": "request_ids.json",
+    "warmup_input": "warmup_workload.json",
+    "warmup_trace": "warmup/trace.csv",
+    "warmup_request_ids": "warmup/request_ids.json",
+    "checksums": "SHA256SUMS"
+  },
+  "source": {
+    "generator": {
+      "path": "tests/comparison/dp_placement_pp/make_trace.py",
+      "entrypoint": "main",
+      "sha256": "40a0c484ae660c1cad89021d9e37d4a13b5f3a9eb90dac951d3910a3f7a1ff5c",
+      "inspected_repository_head": "8da1b42c9315728ea32a89a4569c26e49ad15ccc",
+      "formal_segments": "one formal burst row at 0 s, followed by 127 formal steady rows at 1..127 s; zero warmup rows",
+      "warmup_segments": "16 warmup rows at 0..15 s, generated separately"
+    },
+    "prompt_token_ids": {
+      "path": "tests/comparison/stage_admission_pp/vllm_burst_driver.py",
+      "function": "prompt_token_ids(request_id, length, vocab_size)",
+      "sha256": "ed15833bc8f53706e46f4e0c59085004fae92d5980d0dfde23ad01fea9e45da6",
+      "scope": "reuse this function only, not the driver's stage-admission run command or sampling settings",
+      "rule": "random.Random(request_id); length draws from range(100, vocab_size - 100)",
+      "step_model_config": "data/config/models/stepfun-ai__Step-5-Preview.json",
+      "step_model_config_sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+      "step_vocab_size_field": "text_config.vocab_size",
+      "step_vocab_size": 128896,
+      "other_models": "use each qualified model's own vocabulary size with the same request_id and length; GLM/V4 adoption and qualification remain pending"
+    }
+  },
+  "formal": {
+    "num_requests": 128,
+    "qps": 1.0,
+    "arrivals": {
+      "rule": "arrived_at[i] = i / qps seconds, i = 0..127, qps = 1.0",
+      "distribution": "deterministic evenly spaced open-loop arrivals",
+      "interval_s": 1.0,
+      "first_arrival_s": 0.0,
+      "last_arrival_s": 127.0,
+      "span_s": 127.0,
+      "seed": null,
+      "seed_note": "no arrival or length sampling; request-ID-derived prompt content is separate from arrival generation"
+    },
+    "lengths": {
+      "num_prefill_tokens": 6144,
+      "num_decode_tokens": 1024,
+      "total_tokens_per_request": 7168,
+      "formal_prompt_tokens": 786432,
+      "formal_output_tokens": 131072,
+      "formal_total_tokens": 917504,
+      "counting_boundary": "native engine prompt and generated-token counts; no text re-tokenization"
+    },
+    "population": "all 128 formal rows, including the first request; no first-request discard, warmup rows, sizing rows, or probes",
+    "failed_or_short_requests": "retain their records; a failure or output count other than 1024 does not permit dropping rows or claiming a complete formal result"
+  },
+  "warmup": {
+    "num_requests": 16,
+    "qps": 1.0,
+    "arrival_rule": "warmup_arrived_at[i] = i seconds, i = 0..15, on a separate timeline",
+    "num_prefill_tokens": 6144,
+    "num_decode_tokens": 1024,
+    "prompt_tokens": 98304,
+    "output_tokens": 16384,
+    "total_tokens": 114688,
+    "formal_ids_disjoint": true,
+    "measurement": "excluded from every formal metric and from the formal trace",
+    "drain_before_formal": "complete all warmup requests and verify both P/D roles have no waiting or running requests and KV cache usage is 0; only then start the formal timeline",
+    "repeat_identity": "reuse exactly the same warmup IDs, lengths, arrivals, prompt-generation rule and sampling contract in every clean repetition"
+  },
+  "frontier_replay_contract": {
+    "request_generator_config_type": "trace_replay",
+    "trace_request_generator_config_trace_file": "data/processed_traces/canonical_fixed_6k1k_req128_qps1/trace.csv",
+    "trace_request_generator_config_max_tokens": 7168,
+    "trace_request_generator_config_prefill_scale_factor": 1.0,
+    "trace_request_generator_config_decode_scale_factor": 1.0,
+    "trace_request_generator_config_time_scale_factor": 1.0,
+    "validation": "verify all generated requests retain 6144/1024 tokens and arrival offsets 0..127; the default max_tokens=4096 would clip the prompt and must not be inherited"
+  },
+  "native_request_contract": {
+    "requests_per_row": 1,
+    "api": "/v1/completions",
+    "prompt": "pass prompt_token_ids(request_id, 6144, model_vocab_size) directly as the token-ID prompt",
+    "stream": true,
+    "first_token_evidence": "record the first client-visible generated token, submission and completion on one client monotonic clock; native streaming behavior remains to be qualified",
+    "max_tokens": 1024,
+    "min_tokens": 1024,
+    "ignore_eos": true,
+    "add_special_tokens": false,
+    "chat_template": null,
+    "thinking_mode": false,
+    "length_validation": "verify native accepted prompt count is 6144 and actual output count is 1024 for every warmup and formal request; do not add BOS/EOS or chat-template tokens"
+  },
+  "clean_repetitions": {
+    "default_count": 3,
+    "decision": "D6, ticket 09",
+    "same_job_and_startup_permitted": true,
+    "per_repeat": "identical frozen formal and warmup inputs, IDs, lengths and arrival offsets; independent warmup/drain/formal windows with recorded boundaries",
+    "between_repeats": "both roles idle with no running or waiting requests and KV cache usage back to 0",
+    "prefix_caching": false,
+    "startup_limitation": "a shared startup samples graph capture, kernel selection and placement only once per job"
+  },
+  "metric_contract": {
+    "population": "all 128 formal requests; warmup is always excluded",
+    "TTFT": "per request: first client-visible token time minus client submission time; arithmetic mean over all formal requests; not internal prefill completion",
+    "E2E": "per request: client completion time minus client submission time; arithmetic mean over all formal requests; not makespan",
+    "TPOT": "per request: (E2E - TTFT) / (1024 - 1) = (E2E - TTFT) / 1023; arithmetic mean of the 128 per-request TPOT values",
+    "THPT": "sum of formal prompt plus output tokens divided by the formal first-client-submission-to-last-client-completion window in seconds; for complete exact-length replay, 917504 / window_s tokens/s",
+    "formal_window": "max(formal completion_monotonic) - min(formal submit_monotonic); excludes warmup and inter-phase idle periods, retains all elapsed time inside the formal window, and is not the 127-second arrival span",
+    "diagnostics": "output-only throughput = 131072 / window_s tokens/s; request throughput = 128 / window_s requests/s; neither replaces gated THPT",
+    "latency_units": "timestamp differences in seconds; report TTFT and E2E in ms and TPOT in ms/token with the matching factor of 1000",
+    "accuracy_gate": "each of mean TTFT, mean TPOT, THPT and mean E2E independently requires abs(Frontier - native) / abs(native) <= 0.10; no measured values or passing verdicts are asserted here"
+  },
+  "regeneration": {
+    "working_directory": "repository root",
+    "input_path_rule": "use the exact repository-relative --workload arguments below; the generator records that argument in request_ids.json",
+    "formal_command": "python3 tests/comparison/dp_placement_pp/make_trace.py --workload data/processed_traces/canonical_fixed_6k1k_req128_qps1/workload.json --output-dir data/processed_traces/canonical_fixed_6k1k_req128_qps1",
+    "warmup_command": "python3 tests/comparison/dp_placement_pp/make_trace.py --workload data/processed_traces/canonical_fixed_6k1k_req128_qps1/warmup_workload.json --output-dir data/processed_traces/canonical_fixed_6k1k_req128_qps1/warmup",
+    "checksum_command": "cd data/processed_traces/canonical_fixed_6k1k_req128_qps1 && sha256sum -c SHA256SUMS",
+    "checksum_scope": "workload.json, trace.csv, request_ids.json, warmup_workload.json, warmup/trace.csv, warmup/request_ids.json, manifest.json; SHA256SUMS does not hash itself"
+  },
+  "qualification": {
+    "runtime": "PENDING: native long-output completion, streaming measurements, warmup drain and clean-repeat integration have not been run for this package",
+    "glm_v4_adoption": "PENDING: handoff required; the other session has not adopted these files",
+    "cross_task_formal_run": "PENDING: do not start a formal cross-task workload run before both sessions reference the same frozen package",
+    "claims": "workload artifact and CPU reproducibility evidence only; no GPU readiness, serving-capacity, performance or calibration claim"
+  }
+}
