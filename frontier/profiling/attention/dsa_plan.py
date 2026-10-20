@@ -527,6 +527,7 @@ def _build_extend_cases(
 
 def _build_cached_prefill_cases(
     engine_index: int, budget: int, query: int, limits: DsaMeasurementLimits,
+    tail_queries: Sequence[int] = (),
 ) -> list[DsaCase]:
     """Uniform native per-request chunks keep every sequence in each step."""
     repeats = limits.prefill_warmup_repeats + limits.prefill_measured_repeats
@@ -534,20 +535,24 @@ def _build_cached_prefill_cases(
     for batch in build_batch_grid(min(limits.max_num_seqs, budget // query)):
         if batch == 1:
             continue
-        prompt = min(limits.max_context_len - 1,
-                     limits.max_kv_tokens_per_lane // batch - 1)
+        max_prompt = min(limits.max_context_len - 1,
+                         limits.max_kv_tokens_per_lane // batch - 1)
         # Whole chunks keep the final step on the same sparse-prefill path.
-        prompt = prompt // query * query
-        if prompt <= query:
-            continue
-        cases.append(DsaCase(
-            case_id=f"e{engine_index}-prefill-b{batch}-p{prompt}",
-            engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch,
-            prompt_len=prompt, max_tokens=1,
-            warmup=limits.prefill_warmup_repeats,
-            measured=limits.prefill_measured_repeats,
-            estimated_steps=repeats * _prefill_steps(prompt, query),
-        ))
+        prompts = {max_prompt // query * query}
+        # Two short-tail boundaries span summed keys for cached multi-request
+        # extends; initial short prompts alone cannot cover this work.
+        prompts.update((max_prompt - tail) // query * query + tail for tail in tail_queries)
+        for prompt in sorted(prompts):
+            if prompt <= query:
+                continue
+            cases.append(DsaCase(
+                case_id=f"e{engine_index}-prefill-b{batch}-p{prompt}",
+                engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch,
+                prompt_len=prompt, max_tokens=1,
+                warmup=limits.prefill_warmup_repeats,
+                measured=limits.prefill_measured_repeats,
+                estimated_steps=repeats * _prefill_steps(prompt, query),
+            ))
     return cases
 
 
@@ -641,6 +646,7 @@ def build_dsa_profile_plan(
     for query in sorted(query for query in queries if query > decode_query_limit):
         cached_prefills = _build_cached_prefill_cases(
             len(engines), chunk_budgets[-1], query, limits,
+            tail_queries=(2, decode_query_limit) if query == min(queries) else (),
         )
         if not cached_prefills:
             continue

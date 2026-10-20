@@ -60,10 +60,14 @@ def test_cached_multi_prefills_use_a_separate_native_chunk_cap(plan):
     assert {case.batch_size for case in cases} == {2, 4, 8, 16}
     for case in cases:
         assert case.batch_size * engine.prefill_query_len <= engine.chunk_budget
-        assert case.prompt_len % engine.prefill_query_len == 0
+        assert case.prompt_len % engine.prefill_query_len in (0, 2, 256)
         assert case.batch_size * (case.prompt_len + 1) <= plan.limits.max_kv_tokens_per_lane
-        chunks = case.prompt_len // engine.prefill_query_len
+        chunks = (case.prompt_len + engine.prefill_query_len - 1) // engine.prefill_query_len
         assert runner._case_window(case, engine) == (chunks, 3 * chunks)
+    tails = [case for case in cases if case.prompt_len % engine.prefill_query_len]
+    assert len(tails) == 8
+    assert any(case.batch_size == 2 and case.prompt_len == 32770 for case in tails)
+    assert any(case.batch_size == 16 and case.prompt_len == 12802 for case in tails)
     large = plan.engines[7]
     assert large.prefill_query_len == 4096
     assert [(case.batch_size, case.prompt_len) for case in plan.cases_for_engine(7)] == [(2, 32768)]

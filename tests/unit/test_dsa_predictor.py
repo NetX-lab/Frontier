@@ -162,6 +162,7 @@ def test_extended_rows_select_exact_features_and_interpolate_with_coverage(tmp_p
         ([256] * 32, [0] * 32), ([257, 257], [0, 0]),
         ([512] * 16, [12288] * 16), ([4096, 4096], [0, 0]),
         ([512, 512], [32256, 32256]), ([4096, 4096], [28672, 28672]),
+        ([2, 2], [32768, 32768]), ([2] * 16, [12800] * 16),
     ]
     rows = [_row(model, q, c, variant) for variant in ("full_index", "shared_index") for q, c in shapes]
     for row in rows:
@@ -176,7 +177,8 @@ def test_extended_rows_select_exact_features_and_interpolate_with_coverage(tmp_p
         assert predictor.operator_times(features, "shared_index").total_time() == 0.3
     # Non-round native chunks/contexts and heterogeneous calibration batches
     # use the existing fitted interpolation, not a synthetic measured row.
-    for queries, contexts in [([192], [768]), ([64, 128], [384, 928]), ([768, 960], [512, 1024])]:
+    for queries, contexts in [([192], [768]), ([64, 128], [384, 928]), ([768, 960], [512, 1024]),
+                              ([64, 128], [32256, 32768])]:
         features = build_dsa_features(queries, contexts, model.index_topk)
         assert predictor.operator_times(features, "full_index").op_times == {
             "attn_dsa_indexer": 0.25, "attn_dsa_mla": 0.25,
