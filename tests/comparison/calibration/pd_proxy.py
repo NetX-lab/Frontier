@@ -19,7 +19,7 @@ response is returned to the client. This is the flow of vLLM's
 When a request finishes, one line is appended to ``--log-path`` with the proxy
 arrival and the prefill and decode response times, each on ``time.time()`` and
 ``time.monotonic()``. The routes are ``POST /v1/completions`` and
-``GET /health``. The explicit v0.28 adapter follows the pinned NIXL pull toy
+``GET /health``. The NIXL pull adapters (v0.28 and Step-5) follow the pinned native toy
 proxy: P returns the native ``kv_transfer_params`` passed unchanged to D
 under the same client header. These HTTP records do not prove native READ
 completion or device readiness.
@@ -30,8 +30,13 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import sys
 import time
 from pathlib import Path
+
+sys.path[:0] = [str(Path(__file__).resolve().parent),
+                str(Path(__file__).resolve().parent.parent / "dp_placement_pp")]
+from vllm_replay import RUNTIME_ADAPTERS, uses_nixl_pull  # noqa: E402
 
 logger = logging.getLogger("pd_proxy")
 
@@ -56,8 +61,7 @@ def proxied_request_id(client_request_id: str, prefill_kv_address: str, decode_k
 
 def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
               decode_kv_address: str, log_path: Path, *, vllm_version: str = "0.10.2"):
-    if vllm_version not in ("0.10.2", "0.28.0"):
-        raise ValueError(f"Unsupported proxy vLLM version: {vllm_version!r}")
+    pull = uses_nixl_pull(vllm_version)
     from aiohttp import ClientError, ClientSession, ClientTimeout, TCPConnector, web
 
     session = None
@@ -80,7 +84,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
     async def completions(request):
         arrival_time, arrival_monotonic = time.time(), time.monotonic()
         client_request_id = request.headers["X-Request-Id"]
-        request_id = (client_request_id if vllm_version == "0.28.0" else
+        request_id = (client_request_id if pull else
                       proxied_request_id(client_request_id, prefill_kv_address, decode_kv_address))
         record = {
             "request_id": client_request_id,
@@ -90,7 +94,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
         }
         body = await request.read()
         try:
-            if vllm_version == "0.28.0":
+            if pull:
                 record["handoff_protocol"] = "nixl_pull"
                 original = json.loads(body)
                 if (type(original) is not dict or original.get("stream") is not False
@@ -119,7 +123,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     {"error": "prefill failed", "prefill_status": status, "prefill_body": record["error"]},
                     status=502,
                 )
-            if vllm_version == "0.28.0":
+            if pull:
                 response = json.loads(payload)
                 params = response.get("kv_transfer_params") if type(response) is dict else None
                 if (type(params) is not dict or params.get("transfer_mode") != "pull"
@@ -164,12 +168,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--prefill-url", required=True, help="http://<host>:<port> of the prefill instance")
     parser.add_argument("--decode-url", required=True, help="http://<host>:<port> of the decode instance")
-    parser.add_argument("--vllm-version", choices=("0.10.2", "0.28.0"), default="0.10.2")
+    parser.add_argument("--vllm-version", choices=tuple(RUNTIME_ADAPTERS), default="0.10.2")
     parser.add_argument("--prefill-kv-address", default="", help="legacy <kv_ip>:<kv_port>")
     parser.add_argument("--decode-kv-address", default="", help="legacy <kv_ip>:<kv_port>")
     parser.add_argument("--log-path", type=Path, required=True)
     args = parser.parse_args(argv)
-    if args.vllm_version == "0.10.2" and not (args.prefill_kv_address and args.decode_kv_address):
+    if not uses_nixl_pull(args.vllm_version) and not (args.prefill_kv_address and args.decode_kv_address):
         parser.error("Legacy P2P proxy requires both KV addresses")
 
     from aiohttp import web

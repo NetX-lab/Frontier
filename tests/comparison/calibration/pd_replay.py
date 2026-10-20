@@ -7,8 +7,8 @@ calibration decisions Q4 and Q5: a prefill instance on the first visible GPU and
 a decode instance on the second, each a ``vllm serve`` of the engine file, joined
 by P2pNcclConnector with ``send_type`` PUT_ASYNC, with pd_proxy.py in front.
 
-The explicit v0.28 adapter prepares PP1 NIXL pull roles and forwards P's
-native response metadata through that same proxy. It retains declared observer
+The NIXL pull adapters (v0.28 and Step-5) prepare PP1 pull roles and forward
+P's native response metadata through that same proxy. It retains declared observer
 inputs and terminal diagnostics without applying the legacy PUT checks or metric
 join. With explicit external P/D endpoints, it owns only the proxy and client;
 the worker coordinator owns native multi-node startup and drain. This adapter
@@ -71,6 +71,7 @@ from pd_proxy import proxied_request_id  # noqa: E402
 from vllm_replay import (  # noqa: E402
     MODES, REPO_ROOT, kv_cache_tokens, replay, server_command, server_env, stop_server,
     wait_until_ready, write_model_dir, runtime_version, local_model_config, observer_evidence,
+    adapter_record, native_serving, uses_nixl_pull,
 )
 
 ROLES = ("prefill", "decode")
@@ -96,14 +97,15 @@ def kv_transfer_config(engine: dict, role: str, http_port: int) -> dict:
     if role not in ROLES:
         raise ValueError(f"Unsupported P/D role: {role!r}")
     version = runtime_version(engine)
-    kv = engine.get("kv_transfer") if version == "0.28.0" else engine["kv_transfer"]
-    if version == "0.28.0":
+    pull = uses_nixl_pull(version)
+    kv = engine.get("kv_transfer") if pull else engine["kv_transfer"]
+    if pull:
         fields = {"kv_buffer_device", "side_channel_host", "prefill_side_channel_port",
                   "decode_side_channel_port"}
         if (type(kv) is not dict or set(kv) != fields or kv["kv_buffer_device"] != "cuda"
                 or type(kv["side_channel_host"]) is not str
                 or engine["pipeline_parallel_size"] != 1):
-            raise ValueError("v0.28 pull requires explicit PP1 CUDA NIXL configuration")
+            raise ValueError(f"The {version} pull adapter requires explicit PP1 CUDA NIXL configuration")
         address = ipaddress.IPv4Address(kv["side_channel_host"])
         if (address.is_multicast or address.is_unspecified
                 or "data_parallel_size_local" in engine and address.is_loopback):
@@ -118,8 +120,12 @@ def kv_transfer_config(engine: dict, role: str, http_port: int) -> dict:
                                       if "data_parallel_rpc_port" in engine else [])
         if any(start <= port < start + dp for start in ports for port in service_ports):
             raise ValueError("HTTP and DP RPC ports must be outside NIXL side-channel windows")
-        return {"kv_connector": "NixlConnector", "kv_role": KV_ROLES[role],
-                "kv_buffer_device": "cuda", "kv_load_failure_policy": "fail"}
+        config = {"kv_connector": "NixlConnector", "kv_role": KV_ROLES[role],
+                  "kv_buffer_device": "cuda", "kv_load_failure_policy": "fail"}
+        extra = adapter_record(version)["kv_connector_extra_config"]
+        if extra:
+            config["kv_connector_extra_config"] = dict(extra)
+        return config
     return {
         "kv_connector": "P2pNcclConnector",
         "kv_role": KV_ROLES[role],
@@ -143,7 +149,7 @@ def instance_devices(inherited: dict, *, engine: dict | None = None,
 
     # Without CUDA_VISIBLE_DEVICES, CUDA numbers the visible GPUs from 0.
     visible = inherited.get("CUDA_VISIBLE_DEVICES")
-    if engine is not None and runtime_version(engine) == "0.28.0":
+    if engine is not None and native_serving(runtime_version(engine)):
         roles = engine.get("role_devices")
         selected_roles = (role,) if role is not None else ROLES
         if any(name not in ROLES for name in selected_roles):
@@ -156,7 +162,7 @@ def instance_devices(inherited: dict, *, engine: dict | None = None,
                 or any(type(values) is not list or len(values) != count
                        or any(type(value) is not str or not value or "," in value for value in values)
                        for values in roles.values())):
-            raise ValueError("v0.28 requires explicit PP1 per-role devices matching TP * local DP")
+            raise ValueError(f"{runtime_version(engine)} requires explicit PP1 per-role devices matching TP * local DP")
         selected = [device for name in selected_roles for device in roles[name]]
         if len(set(selected)) != len(selected) or (visible and not set(selected) <= set(visible.split(","))):
             raise ValueError("P/D devices must be disjoint and included in CUDA_VISIBLE_DEVICES")
@@ -173,7 +179,7 @@ def instance_env(mode: str, engine: dict, role_dir: Path, inherited: dict,
     """Return one instance's environment and the variables the harness set in it."""
 
     env, set_env = server_env(mode, engine, role_dir, inherited, observer=observer)
-    if runtime_version(engine) == "0.28.0":
+    if uses_nixl_pull(runtime_version(engine)):
         kv_transfer_config(engine, role, 0)
         if observer is not None and observer["role"] != role.upper():
             raise ValueError("Observer role conflicts with P/D instance role")
@@ -225,9 +231,10 @@ def main(argv: list[str] | None = None) -> int:
 
     engine = json.loads(args.engine_config.read_text())
     version = runtime_version(engine)
+    native = native_serving(version)
     external = args.prefill_url is not None or args.decode_url is not None
-    if external and (version != "0.28.0" or args.prefill_url is None or args.decode_url is None):
-        raise ValueError("External P/D endpoints require v0.28 and both --prefill-url and --decode-url")
+    if external and (not native or args.prefill_url is None or args.decode_url is None):
+        raise ValueError("External P/D endpoints require a native adapter and both endpoint URLs")
     if external:
         urls = {role: getattr(args, f"{role}_url").rstrip("/") for role in ROLES}
         for url in urls.values():
@@ -243,17 +250,17 @@ def main(argv: list[str] | None = None) -> int:
         if urls["prefill"] == urls["decode"]:
             raise ValueError("External P/D endpoints must be distinct")
     else:
-        if version == "0.28.0" and "data_parallel_size_local" in engine:
+        if native and "data_parallel_size_local" in engine:
             raise ValueError("Native DP node partitions require externally managed P/D endpoints")
-        host = engine.get("host", "127.0.0.1") if version == "0.28.0" else "127.0.0.1"
+        host = engine.get("host", "127.0.0.1") if native else "127.0.0.1"
         host = "127.0.0.1" if host == "0.0.0.0" else host
         urls = {role: f"http://{host}:{getattr(args, f'{role}_port')}" for role in ROLES}
     observers = json.loads(args.observer_config.read_text()) if args.observer_config else None
-    if version == "0.28.0":
+    if native:
         if args.model_dir is None:
-            parser.error("v0.28 requires --model-dir with local GLM metadata")
+            parser.error(f"{version} requires --model-dir with the local metadata it declares")
         model_dir = args.model_dir
-        model_config = local_model_config(model_dir)
+        model_config = local_model_config(model_dir, version)
         if observers is not None and (type(observers) is not dict or set(observers) != set(ROLES)
                                       or any(type(value) is not dict for value in observers.values())):
             raise ValueError("PD observer JSON must contain exactly prefill/decode inputs")
@@ -261,25 +268,26 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("PD observers require one run identity")
     else:
         if args.model_dir is not None or observers is not None:
-            parser.error("Explicit metadata/observer inputs require the v0.28 adapter")
+            parser.error("Explicit metadata/observer inputs require a native adapter")
         missing = [name for name in KV_TRANSFER_FIELDS if name not in engine.get("kv_transfer", {})]
         if missing:
             raise SystemExit(f"{args.engine_config}: kv_transfer lacks {missing}")
     rows = json.loads((args.trace_dir / "request_ids.json").read_text())["rows"]
+    legacy = not uses_nixl_pull(version)
     kv_addresses = ({role: f"{KV_IP}:{engine['kv_transfer'][f'{role}_kv_port']}" for role in ROLES}
-                    if version == "0.10.2" else {})
+                    if legacy else {})
     # Every trace id must survive the connector's address parsing before a GPU is used.
     proxied = {
         row["request_id"]: proxied_request_id(row["request_id"], kv_addresses["prefill"],
                                               kv_addresses["decode"])
         for row in rows
-    } if version == "0.10.2" else {}
+    } if legacy else {}
     output_dir = args.output_dir
     devices = {} if external else instance_devices(dict(os.environ), engine=engine)
     ports = {"prefill": args.prefill_port, "decode": args.decode_port}
     if not external and len({args.proxy_port, *ports.values()}) != 3:
         raise ValueError("Proxy and P/D HTTP ports must be distinct")
-    if version == "0.10.2":
+    if not native:
         output_dir.mkdir(parents=True, exist_ok=True)
         model_dir = output_dir / "model"
         model_config = write_model_dir(
@@ -299,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
             "--kv-transfer-config", json.dumps(kv_transfer_config(engine, role, ports[role])),
         ]
         plans[role] = (env, changed, command)
-    if version == "0.28.0":
+    if native:
         if observers is not None:
             prefill_dir, decode_dir = (Path(observers[role]["output_dir"]).resolve() for role in ROLES)
             if prefill_dir.is_relative_to(decode_dir) or decode_dir.is_relative_to(prefill_dir):
@@ -308,12 +316,13 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("Proxy port must be valid")
         if not external:
             http_ports = [args.proxy_port, *ports.values()]
-            kv = engine["kv_transfer"]
+            kv = engine.get("kv_transfer") or {}
             dp = engine["data_parallel_size"]
             if (any(not 0 < port < 65536 for port in http_ports)
                     or any(kv[f"{role}_side_channel_port"] <= port
                            < kv[f"{role}_side_channel_port"] + dp
-                           for role in ROLES for port in http_ports)):
+                           for role in ROLES for port in http_ports
+                           if f"{role}_side_channel_port" in kv)):
                 raise ValueError("HTTP ports must be valid and outside both NIXL side-channel windows")
     output_dir.mkdir(parents=True, exist_ok=True)
     proxy_command = [
@@ -322,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
         "--decode-url", urls["decode"],
         "--log-path", str(output_dir / "proxy_requests.jsonl"),
     ]
-    if version == "0.10.2":
+    if legacy:
         proxy_command += ["--prefill-kv-address", kv_addresses["prefill"],
                           "--decode-kv-address", kv_addresses["decode"]]
     else:
@@ -336,7 +345,7 @@ def main(argv: list[str] | None = None) -> int:
         "proxy_command": proxy_command,
         "instances": {},
     }
-    if version == "0.28.0":
+    if native:
         summary.update(vllm_version=version, qualification_verified=False,
                        model_config_sha256=hashlib.sha256((model_dir / "config.json").read_bytes()).hexdigest())
     if external:
@@ -392,13 +401,13 @@ def main(argv: list[str] | None = None) -> int:
             summary["process_stop"] = {
                 name: stop_server(processes[name], args.stop_timeout_s) for name in reversed(processes)
             }
-            if version == "0.28.0":
+            if native:
                 for role in ROLES:
                     summary["instances"].setdefault(role, {})["observer_evidence"] = observer_evidence(
                         engine, None if observers is None else observers[role])
             (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
 
-    if version == "0.10.2":
+    if legacy:
         for record in records:
             record["engine_request_id"] = engine_request_id(proxied[record["request_id"]])
     records.sort(key=lambda record: record["dispatch_monotonic"])
@@ -408,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
     failed = [record["request_id"] for record in records if record["http_status"] != 200]
     summary["num_requests"] = len(records)
     summary["failed_request_ids"] = failed
-    if version == "0.28.0":
+    if native:
         summary["native_transfer_verification"] = {
             "status": "UNVERIFIED", "expected_protocol": "NixlConnector pull READ",
             "native_done": "unobserved", "device_completion": "unobserved",
