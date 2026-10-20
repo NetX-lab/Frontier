@@ -28,6 +28,7 @@ def dsv4_config() -> ModelConfig:
 
 
 def test_checkpoint_mxfp4_is_labelled_by_the_engine_that_runs_it():
+    pytest.importorskip("torch")
     from frontier.profiling.moe.moe_wrapper import (
         MXFP4_ENGINE,
         resolve_grouped_gemm_backend,
@@ -49,6 +50,7 @@ def test_checkpoint_mxfp4_is_labelled_by_the_engine_that_runs_it():
 
 
 def test_weight_source_is_required_exactly_when_the_experts_are_mxfp4():
+    pytest.importorskip("torch")
     from frontier.profiling.moe import moe_vllm_kernel as kernel
 
     kernel.validate_mxfp4_quantization(use_mxfp4=True, mxfp4_weight_source="checkpoint")
@@ -64,6 +66,7 @@ def test_weight_source_is_required_exactly_when_the_experts_are_mxfp4():
 
 
 def test_checkpoint_mxfp4_runtime_requires_cuda(monkeypatch):
+    pytest.importorskip("torch")
     from frontier.profiling.moe import moe_vllm_kernel as kernel
 
     monkeypatch.setattr(
@@ -81,12 +84,12 @@ def test_checkpoint_mxfp4_runtime_requires_cuda(monkeypatch):
 
 
 def test_deepseek_v4_is_mxfp4_in_the_quantization_manager(dsv4_config):
+    pytest.importorskip("torch")
     from frontier.profiling.common.utils import (
         configure_quantization_manager_for_model_name,
         get_operation_precision,
     )
 
-    pytest.importorskip("torch")
     configure_quantization_manager_for_model_name(dsv4_config.name)
     # The routed experts are MXFP4 while the checkpoint's own quant_method is FP8
     # for the base and shared weights, so the source cannot be read from the
