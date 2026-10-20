@@ -84,6 +84,92 @@ def test_summary_takes_slowest_rank_per_repeat():
     assert [t["pass"] for t in other_pass] == [1, 2]
 
 
+@pytest.mark.parametrize("begin_complete", [False, True])
+def test_gpu_repeat_checks_the_begin_event_not_alignment_host_time(monkeypatch, begin_complete):
+    import frontier.profiling.collectives.vllm_collective_benchmark as benchmark
+
+    runner = _runner(_parallel())
+    runner.settings["calls_per_repeat"] = 5
+    clock = [0.0]
+    events = []
+    recorded = []
+
+    class Event:
+        def __init__(self, **kwargs):
+            events.append(self)
+
+        def record(self):
+            recorded.append(self)
+
+        def synchronize(self):
+            pass
+
+        def query(self):
+            assert events[-1] in recorded
+            return begin_complete
+
+        def elapsed_time(self, other):
+            return 0.05 if self is events[-2] else 0.1
+
+    runner.torch = types.SimpleNamespace(
+        distributed=types.SimpleNamespace(barrier=lambda **kwargs: None),
+        cuda=types.SimpleNamespace(Event=Event, _sleep=lambda cycles: None))
+    monkeypatch.setattr(benchmark.time, "perf_counter", lambda: clock[0])
+    monkeypatch.setattr(runner, "_align_start", lambda group: clock.__setitem__(0, clock[0] + 0.001))
+
+    def run():
+        clock[0] += 0.000020
+
+    result = runner.gpu_repeat(run, runner.groups["tp"], 100)
+    assert result[1] is (not begin_complete)
+    assert result[2] == pytest.approx(20.0)
+    assert result[0] == pytest.approx(10.0)
+
+
+def test_queue_sleep_budget_uses_the_measured_cpu_enqueue_window():
+    runner = _runner(_parallel())
+    runner.sleep_cycles_per_us = 2
+
+    class Tensor:
+        def __init__(self, values, **kwargs):
+            self.value = values[0]
+
+        def item(self):
+            return self.value
+
+    runner.torch = types.SimpleNamespace(
+        tensor=Tensor, float64="float64",
+        distributed=types.SimpleNamespace(ReduceOp=types.SimpleNamespace(MAX="max"),
+                                          all_reduce=lambda *args, **kwargs: None))
+    assert runner.queue_sleep_cycles([20.0, 100.0, 80.0], runner.groups["tp"]) == 400
+
+
+def test_device_timing_calibrates_from_cpu_enqueue_and_retains_diagnostics(monkeypatch):
+    runner = _runner(_parallel())
+    runner.torch = types.SimpleNamespace()
+    runner.settings["repeats"] = 2
+    runner.sleep_cycles_per_us = 2
+    samples = iter([(1.0, False, 100.0), (2.0, False, 200.0),
+                    (3.0, True, 150.0), (4.0, False, 170.0)])
+    sleeps = []
+
+    def repeat(run, group, sleep_cycles):
+        sleeps.append(sleep_cycles)
+        return next(samples)
+
+    def budget(enqueue, group):
+        assert enqueue == [100.0, 200.0]
+        return 800
+
+    monkeypatch.setattr(runner, "gpu_repeat", repeat)
+    monkeypatch.setattr(runner, "queue_sleep_cycles", budget)
+    result = runner.time_call(_call(runner.parallel, captured=True), lambda: None)
+    assert sleeps == [0, 0, 800, 800]
+    assert result == {"call_us": [3.0, 4.0], "launch_call_us": [1.0, 2.0],
+                      "queue_held": [True, False], "launch_enqueue_us": [100.0, 200.0],
+                      "enqueue_us": [150.0, 170.0], "queue_sleep_us": 400.0}
+
+
 @pytest.mark.parametrize("op,kernels,expected", [
     ("all_reduce", ["void flashinfer::trtllm_allreduce::oneShotAllReduceKernel<half>(...)"],
      "flashinfer_trtllm"),
@@ -129,6 +215,16 @@ def test_summary_csv_schema_and_separate_host_device_totals(tmp_path):
     (total,) = forward_totals([device, host])
     assert total["forward_device_comm_us"] == total["forward_host_comm_us"] == 9.0
     assert "forward_comm_us" not in total
+
+
+@pytest.mark.parametrize("host_first", [False, True])
+def test_forward_graph_identity_is_independent_of_shuffled_host_sync(host_first):
+    device = summarize(_record(graph=True))
+    host = summarize({**_record(call="dp_sync", op="cpu_all_reduce", group="dp"),
+                      "kernels": [], "per_rank_launch_call_us": [None] * 3,
+                      "per_rank_queue_held": [None] * 3})
+    (result,) = forward_totals([host, device] if host_first else [device, host])
+    assert result["cuda_graph"] is True
 
 
 def _parallel(tp=8, dp=4):
@@ -277,7 +373,7 @@ def test_native_launch_flag_and_manifest_preserve_platform_nccl(monkeypatch, eng
     groups = _runner(parallel).groups
     for group in groups.values():
         group.device_communicator = types.SimpleNamespace(
-            pynccl_comm=types.SimpleNamespace(disabled=False), ca_comm=None,
+            pynccl_comm=types.SimpleNamespace(disabled=False, nccl_version=23007), ca_comm=None,
             fi_ar_comm=types.SimpleNamespace(disabled=False))
     calls = []
     env_values = {"VLLM_ALLREDUCE_USE_FLASHINFER": True,
@@ -332,6 +428,7 @@ def test_native_launch_flag_and_manifest_preserve_platform_nccl(monkeypatch, eng
     assert runtime["vllm_environment"]["VLLM_ALLREDUCE_USE_SYMM_MEM"]["source"] == "environment"
     assert runtime["vllm_environment"]["VLLM_USE_NCCL_SYMM_MEM"]["value"] is False
     assert runtime["enabled_communicators"]["tp"]["fi_ar_comm"] is True
+    assert runtime["pynccl_versions"] == {"tp": 23007, "ep": 23007, "dp": 23007}
     assert runtime["nccl_log_destination"] == os.environ.get("NCCL_DEBUG_FILE", "stderr (stage wrapper log)")
 
 

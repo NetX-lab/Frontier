@@ -49,8 +49,8 @@ from frontier.profiling.collectives.vllm_forward_collectives import (
 )
 
 RUN_SETTINGS = ("warmup_calls", "repeats", "calls_per_repeat", "passes", "shuffle_seed")
-# The queued timing sleeps for this multiple of the slowest launch-inclusive
-# repeat, which bounds the CPU enqueue time of a repeat.
+# The queued timing budgets this multiple of the measured CPU enqueue window.
+# The begin-event query verifies the ordering for every measured repeat.
 QUEUE_SLEEP_MARGIN = 2.0
 # Length of the GPU sleep that converts microseconds to torch.cuda._sleep cycles.
 SLEEP_CALIBRATION_CYCLES = 10_000_000
@@ -164,6 +164,7 @@ def forward_totals(summary_rows: list[dict]) -> list[dict]:
             "pass": row["pass"], "scenario": row["scenario"], "cuda_graph": row["cuda_graph"],
             "tokens_per_dp_rank": row["tokens_per_dp_rank"],
             "forward_device_comm_us": 0.0, "forward_host_comm_us": 0.0})
+        total["cuda_graph"] = total["cuda_graph"] or row["cuda_graph"]
         total[f"forward_{row['timing_domain']}_comm_us"] += (
             row["calls_per_forward"] * row["median_us"])
         total[f"{row['call']}_us"] = row["calls_per_forward"] * row["median_us"]
@@ -296,15 +297,19 @@ class CollectiveRunner:
         from vllm import envs
 
         enabled = {}
+        pynccl_versions = {}
         for name, group in self.groups.items():
             comm = group.device_communicator
             enabled[name] = {
                 attr: getattr(comm, attr, None) is not None
                 and not getattr(getattr(comm, attr), "disabled", False)
-                for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
-                             "qr_comm", "all2all_manager")}
+                 for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
+                              "qr_comm", "all2all_manager")}
+            pynccl_versions[name] = (comm.pynccl_comm.nccl_version
+                                     if enabled[name]["pynccl_comm"] else None)
         return {"torch": self.torch.__version__, "vllm": vllm.__version__,
-                "enabled_communicators": enabled,
+                 "enabled_communicators": enabled,
+                 "pynccl_versions": pynccl_versions,
                 "disable_custom_all_reduce": self.vllm_config.parallel_config.disable_custom_all_reduce,
                 "disable_nccl_for_dp_synchronization": (
                     self.vllm_config.parallel_config.disable_nccl_for_dp_synchronization),
@@ -382,24 +387,25 @@ class CollectiveRunner:
         torch.cuda.synchronize()
         return issue, graph.replay
 
-    def gpu_repeat(self, run, group, sleep_cycles: int) -> tuple[float, bool]:
-        """Per-call microseconds of one repeat, and whether the GPU sleep outlasted the enqueue."""
+    def gpu_repeat(self, run, group, sleep_cycles: int) -> tuple[float, bool, float]:
+        """Return device call time, whether its begin event is pending, and CPU enqueue time."""
         torch = self.torch
-        sleep_start, begin, end = (torch.cuda.Event(enable_timing=True) for _ in range(3))
+        begin, end = (torch.cuda.Event(enable_timing=True) for _ in range(2))
         torch.distributed.barrier(group=group.cpu_group)
-        start = time.perf_counter()
         if sleep_cycles:
             self._align_start(group)
-        sleep_start.record()
-        if sleep_cycles:
             torch.cuda._sleep(sleep_cycles)
+        start = time.perf_counter()
         begin.record()
         run()
-        enqueue_us = (time.perf_counter() - start) * 1e6
         end.record()
+        enqueue_us = (time.perf_counter() - start) * 1e6
+        # Both events and every launch must be queued before the GPU reaches
+        # begin. Alignment latency is outside this enqueue window.
+        held = bool(sleep_cycles) and not begin.query()
         end.synchronize()
         per_call_us = begin.elapsed_time(end) * 1e3 / self.settings["calls_per_repeat"]
-        return per_call_us, enqueue_us < sleep_start.elapsed_time(begin) * 1e3
+        return per_call_us, held, enqueue_us
 
     def time_call(self, call: CollectiveCall, run) -> dict:
         """Time ``run`` on the ranks of the call's group.
@@ -409,7 +415,7 @@ class CollectiveRunner:
         ``call_us`` first queues a GPU sleep, of equal length on every rank and
         started by a device-side all-reduce on the group, that outlasts the
         launches, so the events time the device work alone from aligned start
-        times; ``queue_held`` records whether the sleep did outlast them.
+        times; ``queue_held`` checks that begin was still pending after enqueue.
         """
         torch = self.torch
         group = self.groups[call.group]
@@ -421,18 +427,22 @@ class CollectiveRunner:
                 start = time.perf_counter()
                 run()
                 timings.append((time.perf_counter() - start) * 1e6 / per_repeat)
-            return {"call_us": timings, "launch_call_us": None, "queue_held": None}
-        launch = [self.gpu_repeat(run, group, 0)[0] for _ in range(repeats)]
-        sleep_cycles = self.queue_sleep_cycles(launch, group)
+            return {"call_us": timings, "launch_call_us": None, "queue_held": None,
+                    "launch_enqueue_us": None, "enqueue_us": None, "queue_sleep_us": None}
+        launch = [self.gpu_repeat(run, group, 0) for _ in range(repeats)]
+        enqueue_us = [item[2] for item in launch]
+        sleep_cycles = self.queue_sleep_cycles(enqueue_us, group)
         queued = [self.gpu_repeat(run, group, sleep_cycles) for _ in range(repeats)]
-        return {"call_us": [q[0] for q in queued], "launch_call_us": launch,
-                "queue_held": [q[1] for q in queued]}
+        return {"call_us": [q[0] for q in queued], "launch_call_us": [item[0] for item in launch],
+                "queue_held": [q[1] for q in queued], "launch_enqueue_us": enqueue_us,
+                "enqueue_us": [q[2] for q in queued],
+                "queue_sleep_us": sleep_cycles / self.sleep_cycles_per_us}
 
-    def queue_sleep_cycles(self, launch_call_us: list[float], group) -> int:
-        """GPU sleep that outlasts the slowest launch-inclusive repeat of any group member."""
+    def queue_sleep_cycles(self, launch_enqueue_us: list[float], group) -> int:
+        """Budget the GPU sleep from the measured CPU enqueue window on every member."""
         torch = self.torch
         sleep_us = torch.tensor(
-            [QUEUE_SLEEP_MARGIN * max(launch_call_us) * self.settings["calls_per_repeat"]],
+            [QUEUE_SLEEP_MARGIN * max(launch_enqueue_us)],
             dtype=torch.float64)
         torch.distributed.all_reduce(sleep_us, op=torch.distributed.ReduceOp.MAX,
                                      group=group.cpu_group)
@@ -496,6 +506,9 @@ class CollectiveRunner:
             "per_rank_call_us": [g["call_us"] if g else None for g in gathered],
             "per_rank_launch_call_us": [g["launch_call_us"] if g else None for g in gathered],
             "per_rank_queue_held": [g["queue_held"] if g else None for g in gathered],
+            "per_rank_launch_enqueue_us": [g["launch_enqueue_us"] if g else None for g in gathered],
+            "per_rank_enqueue_us": [g["enqueue_us"] if g else None for g in gathered],
+            "per_rank_queue_sleep_us": [g["queue_sleep_us"] if g else None for g in gathered],
         }
 
     def kernel_names(self, call: CollectiveCall, scenario=None) -> list[str] | None:

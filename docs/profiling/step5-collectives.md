@@ -46,6 +46,11 @@ compatibility environment, and installs no packages. It preserves platform
 `NCCL_*` transport settings. The launcher only adds NCCL INFO/INIT,NET logging.
 The SDK's RDMA resource defaults are retained. Durable outputs are confined to
 `/mnt/codesign-exp/ycfeng/frontier/step5_comm/<run_id>/`.
+The platform log prints `STEP5_COMM_WORKER_LOG` before workload stdout/stderr
+are redirected to that cloud file; the full workload log is not the platform
+log. The manifest labels the PyTorch NCCL version separately from each native
+PyNccl communicator's version in `collectives/plan.json`. They can differ in
+the same pinned image.
 
 ## S0 result checks
 
@@ -69,6 +74,19 @@ For device timings require `queue_held_fraction=1`, or show a median change
 below 1% after dropping unheld repeats. Unknown communicators remain
 unverified. S0 TP4 communicator thresholds are not the target TP8 thresholds.
 One-node S0 cannot demonstrate inter-node IB/GDRDMA or the target eight rails.
+
+The sleep is calibrated from the maximum measured CPU enqueue window across
+the participating group, with the existing 2x margin. The held predicate checks
+that the CUDA begin event is still pending after every launch and the end event
+have been enqueued. Raw measurements retain per-rank launch/queued enqueue
+times and the sleep budget. Do not substitute GPU elapsed time for CPU enqueue
+time or include the alignment collective's host cost in the held predicate.
+
+The original `s0_20261020_01` run completed on eight H800 GPUs, and all sixteen
+native layer/rank schema comparisons matched. It exposed the old clock-window
+and calibration defects; use a new package/run ID for the corrected collector.
+The original run's flags do not contain enough diagnostics to reconstruct the
+correct predicate. CPU regression checks do not replace a GPU recheck of it.
 
 ## Build S1 and S2 after S0
 

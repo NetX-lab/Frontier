@@ -132,11 +132,11 @@ def measure_case(runner: CollectiveRunner, peer: KVReadPeer, call, read: ReadCas
         if repeat >= settings["read_warmup"]:
             read_alone.append(timing)
 
-    sleep_cycles = runner.queue_sleep_cycles(ep_alone["launch_call_us"], group)
+    sleep_cycles = runner.queue_sleep_cycles(ep_alone["launch_enqueue_us"], group)
     ep_loaded, ep_held, ep_covered = [], [], []
     for repeat in range(repeats):
         reads = peer.post_reads(read, f"{tag}:ep_loaded:{repeat}")
-        call_us, held = runner.gpu_repeat(run, group, sleep_cycles)
+        call_us, held, _enqueue_us = runner.gpu_repeat(run, group, sleep_cycles)
         ep_covered.append(not peer.reads_done(reads))
         peer.finish_reads(reads)
         ep_loaded.append(call_us)

@@ -72,6 +72,9 @@ def test_worker_does_not_install_or_replace_native_dependencies():
     assert "python3 tests/integration/step5_comm/worker.py" in text
     assert "VLLM_ENABLE_CUDA_COMPATIBILITY=1" in text
     assert "NCCL_IB_HCA=" not in text
+    worker = (PACKAGE / "worker.py").read_text()
+    assert worker.index("STEP5_COMM_WORKER_LOG") < worker.index("os.dup2")
+    assert '"torch_nccl_version": torch.cuda.nccl.version()' in worker
     subprocess.run(["bash", "-n", str(PACKAGE / "run_on_worker.sh")], check=True)
 
 

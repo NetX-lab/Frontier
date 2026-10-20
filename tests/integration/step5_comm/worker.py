@@ -42,6 +42,7 @@ def main() -> None:
     if not root.is_relative_to("/mnt/codesign-exp/ycfeng/frontier/step5_comm"):
         raise ValueError("Outputs must remain inside the personal communication directory")
     root.mkdir(parents=True, exist_ok=False)
+    print("STEP5_COMM_WORKER_LOG", str(root / "worker.log"), flush=True)
     log = (root / "worker.log").open("w", buffering=1)
     os.dup2(log.fileno(), 1)
     os.dup2(log.fileno(), 2)
@@ -63,8 +64,11 @@ def main() -> None:
 
     manifest = {"job": job, "host": socket.gethostname(), "python": sys.version,
                 "torch": torch.__version__, "vllm": vllm.__version__,
-                "nccl": torch.cuda.nccl.version(),
+                "torch_nccl_version": torch.cuda.nccl.version(),
                 "devices": [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())],
+                "platform_environment": {name: os.environ.get(name) for name in
+                                         ("RDMA_NETWORK_LINK_TYPE", "CUDA_VISIBLE_DEVICES",
+                                          "NODE_RANK", "NODE_COUNT")},
                 "nccl_environment": {k: v for k, v in os.environ.items() if k.startswith("NCCL_")}}
     manifest["nvidia_smi"] = subprocess.check_output(["nvidia-smi", "-L"], text=True)
     (root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
