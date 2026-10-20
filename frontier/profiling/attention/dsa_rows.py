@@ -219,7 +219,7 @@ def scope_columns(
                 f"kernel counts {sorted(kernel_counts)}; these calls measure "
                 "different work"
             )
-        columns[f"kernel_count.{scope}"] = next(iter(kernel_counts))
+        columns[f"time_stats.{scope}.kernel_count"] = next(iter(kernel_counts))
     return columns
 
 

@@ -284,7 +284,9 @@ def test_rows_group_layers_and_repeats_per_variant(plan):
     assert shared["attention_variant"] == "shared_index"
     assert shared["index_producer_layers"] == "[2, 6]"
     assert f"time_stats.{INDEXER_SCOPE}.count" not in shared
-    assert rows[KERNEL_ONLY][0][f"kernel_count.{MLA_SCOPE}"] == 7
+    assert rows[KERNEL_ONLY][0][f"time_stats.{MLA_SCOPE}.kernel_count"] == 7
+    assert rows[KERNEL_ONLY][0][f"time_stats.{INDEXER_SCOPE}.kernel_count"] == 7
+    assert not any(name.startswith("kernel_count.") for name in rows[KERNEL_ONLY][0])
 
 
 def test_rows_reject_missing_scope_and_kernel_count_drift(plan):
