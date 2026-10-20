@@ -157,3 +157,34 @@ def test_non_generic_h800_profiles_pass_predictor_metadata_validation() -> None:
             metadata = predictor._get_profiling_metadata(pd.read_csv(csv_path), str(csv_path))
 
             assert metadata.model_architecture_profile == expected_profile
+
+
+def test_glm_h800_moe_tables_match_runtime_contract() -> None:
+    import yaml
+
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
+
+    model_root = DATA_ROOT / "h800" / "zai-org/GLM-5.3"
+    config = yaml.safe_load((model_root / "moe_config.yaml").read_text())
+    profile = BaseModelConfig.create_from_name("zai-org/GLM-5.3").get_model_architecture_profile()
+    runtime_path = resolve_moe_gating_routing_runtime_path("balanced", profile)
+    assert config["routing_runtime_path"] == runtime_path
+
+    contract = {
+        "routing_runtime_path": runtime_path,
+        "routing_assignment_policy": "grouped_topk_bias",
+        "routing_weight_policy": "sigmoid_renorm_scaled",
+        "moe_native_backend": "FLASHINFER_CUTLASS",
+        "source_revision": config["source_revision"],
+    }
+    for filename, measurement in (
+        ("moe.csv", "CUDA_EVENT"),
+        ("moe_kernel_only.csv", "KERNEL_ONLY"),
+    ):
+        expected = {**contract, "measurement_type": measurement}
+        frame = pd.read_csv(model_root / filename, usecols=list(expected))
+        assert not frame.empty
+        for column, value in expected.items():
+            assert frame[column].notna().all(), (filename, column)
+            assert set(frame[column]) == {value}, (filename, column)
