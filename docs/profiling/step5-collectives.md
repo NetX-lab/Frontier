@@ -192,3 +192,60 @@ and shared-network measurements. The ported NIXL/overlap tools are retained,
 but S0 does not run them. Simulator cost-table integration belongs to ticket
 21; this preparation creates no measured `data/profiling/network/h800_dgx/`
 dataset and makes no prediction-accuracy claim.
+
+## Offline judging and candidate costs
+
+Analyze local copies, not a live worker or an unmounted cloud path. The tools
+accept `collectives/measurements.jsonl.gz` as well as uncompressed JSONL and
+never access the platform. Keep large GPU traces in cloud storage.
+
+```bash
+PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python \
+  tests/integration/step5_comm/analyze_result.py "$RUN" --output-dir "$RUN/analysis"
+PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python \
+  tests/integration/step5_comm/export_costs.py "$RUN" --output-dir "$RUN/costs" \
+  --environment-note "Parent reports a nonexclusive cluster; causal effect unknown."
+```
+
+`observations.csv` preserves every pass/scenario/call, the critical-rank repeat
+averages, queue verdict, physical and useful token vectors, typed payloads,
+group placement, active rails and observed kernel/backend labels. `curves.csv`
+adds unfiltered descriptive aggregates without combining graph modes,
+backends, rail sets, uneven patterns or physical sizes. Only identical TP
+all-reduce contexts merge their five call labels. Their unique multiplicities
+sum to 273, not 819 over three passes. Each pass remains visible. A batch
+average, another label and another pass are not independent native forwards.
+
+Times are in **milliseconds**, matching `BaseCCBackend.predict_comm_cost`.
+`api_operation` uses `allreduce`, `allgather` or `reduce_scatter` only as an
+endpoint-byte projection. Uniform AR/AG use per-rank input bytes; RS uses the
+full input, not its output shard. TP has eight participants; S1 DP collectives
+have four, not EP32. Uneven/idle vectors and host/Gloo have no lossless scalar
+projection. A scalar size does not encode the typed tensor list, graph mode,
+backend or eight concurrent rails. Endpoint bytes are not measured wire traffic.
+
+The samples are the maximum across participating ranks of the concurrent role,
+including its multiple TP8 groups; they are not independent isolated TP groups.
+The exporter retains CV, repeat range, all per-pass statistics and every failed
+observation. No outlier is removed, no row is selected for training, and
+`production_consumable` and `cost_data_qualified` are always false. Its manifest
+records source hashes and reported environmental context. Output must not
+overwrite the copied source worker manifest.
+
+The legacy collector's `all_reduce.csv` already supplies the eager Vidur byte/ms
+schema. Neither it nor these candidate sidecars is an admitted H800 dataset.
+The current Vidur loader cannot represent the required context: its
+`devices_per_node == world_size` filter excludes a real 8-GPU/node world of
+32, and its precomputed element keys stop at 100000. All-gather/reduce-scatter
+also lack measured curve consumers. Ticket 21 owns the consumption changes;
+do not copy candidates into production profiling paths to bypass those limits.
+
+The first S1/S2 jobs at `307467b` completed all containers, payload/group checks
+and native module probes, with actual RoCE NET/IB/GDRDMA channels and no selected
+Socket channels. Their strict queue check rejects 9/1350 and 15/1242 device
+cells respectively, leaving the auxiliary result unverified without stopping
+healthy work. The parent reports cluster co-tenancy; there is no isolated
+baseline to quantify its effect. Stable curves, independent held-out shapes,
+per-DP-communicator transport attribution and cost admission remain open. Native
+module/group observations do not establish full-model/runner or PD load-balancer
+behavior for tickets 06, 08 or 20.
