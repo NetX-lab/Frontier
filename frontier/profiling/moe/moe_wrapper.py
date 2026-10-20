@@ -47,16 +47,30 @@ WARMUP_STEPS = 2
 ACTIVE_STEPS = 20
 
 
-def resolve_grouped_gemm_backend(*, use_vllm_kernel: bool, use_mxfp4: bool) -> str:
-    """Resolve the explicit standard grouped-GEMM implementation label."""
+# The weight source decides which vLLM MXFP4 engine runs the experts, and
+# ``validate_mxfp4_runtime`` admits each source only on its platform: AITER on
+# ROCm for online quantization, MARLIN on CUDA for checkpoint-stored experts.
+MXFP4_ENGINE = {"online": "aiter", "checkpoint": "marlin"}
 
-    if use_mxfp4 and not use_vllm_kernel:
-        raise ValueError(
-            "MXFP4 moe_grouped_gemm requires vLLM/AITER kernel profiling."
-        )
+
+def resolve_grouped_gemm_backend(
+    *, use_vllm_kernel: bool, mxfp4_weight_source: Optional[str]
+) -> str:
+    """Resolve the explicit standard grouped-GEMM implementation label.
+
+    ``mxfp4_weight_source`` is ``None`` unless the experts are MXFP4, and then
+    says where the packed weights come from, because that decides the engine:
+    checkpoints ship MXFP4 routed experts (vLLM selects MARLIN on Hopper), while
+    online quantization of dense checkpoints selects AITER on ROCm.
+    """
+
+    if mxfp4_weight_source is not None and not use_vllm_kernel:
+        raise ValueError("MXFP4 moe_grouped_gemm requires vLLM kernel profiling.")
     if not use_vllm_kernel:
         return "frontier_loop"
-    return "vllm_aiter_mxfp4" if use_mxfp4 else "vllm_fused"
+    if mxfp4_weight_source is None:
+        return "vllm_fused"
+    return f"vllm_{MXFP4_ENGINE[mxfp4_weight_source]}_mxfp4"
 
 
 class MoEWrapper:
@@ -149,8 +163,20 @@ class MoEWrapper:
                 raise ImportError(
                     "vLLM FP8 quantization utilities are unavailable for moe_grouped_gemm profiling."
                 )
+        # A checkpoint that stores MXFP4 experts loads vLLM's quantization method
+        # and its backend; a dense checkpoint is quantized to MXFP4 at load time.
+        self.mxfp4_weight_source = (
+            None
+            if not use_mxfp4_from_manager
+            else "checkpoint"
+            if model_config.expert_dtype == "fp4"
+            else "online"
+        )
         if use_mxfp4_from_manager:
-            validate_mxfp4_runtime(model_type=model_config.model_type)
+            validate_mxfp4_runtime(
+                model_type=model_config.model_type,
+                mxfp4_weight_source=self.mxfp4_weight_source,
+            )
         self.use_fp8 = use_fp8_from_manager
         self.use_mxfp4 = use_mxfp4_from_manager
         self.quantization_mode = quantization_mode
@@ -618,7 +644,7 @@ class MoEWrapper:
             )
             grouped_gemm_backend = resolve_grouped_gemm_backend(
                 use_vllm_kernel=self.use_vllm_kernel,
-                use_mxfp4=self.use_mxfp4,
+                mxfp4_weight_source=self.mxfp4_weight_source,
             )
         else:
             time_stats = self._profile_with_loop(
@@ -626,7 +652,7 @@ class MoEWrapper:
             )
             grouped_gemm_backend = resolve_grouped_gemm_backend(
                 use_vllm_kernel=self.use_vllm_kernel,
-                use_mxfp4=self.use_mxfp4,
+                mxfp4_weight_source=self.mxfp4_weight_source,
             )
 
         load_input = MoELoadImbalanceInput(
@@ -679,6 +705,8 @@ class MoEWrapper:
             active_steps=ACTIVE_STEPS,
             use_fp8=self.use_fp8,
             use_mxfp4=self.use_mxfp4,
+            mxfp4_weight_source=self.mxfp4_weight_source,
+            swiglu_limit=self.model_config.swiglu_limit,
             per_channel_quant=self.per_channel_quant,
             block_shape=self.block_shape,
             profile_method=self.profile_method,

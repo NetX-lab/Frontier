@@ -195,8 +195,9 @@ def test_wrapper_reports_the_block_fp8_backend(cuda_runtime):
 
     wrapper = object.__new__(MoEWrapper)
     for name, value in dict(
-        model_config=SimpleNamespace(model_type="glm_moe_dsa"),
+        model_config=SimpleNamespace(model_type="glm_moe_dsa", swiglu_limit=None),
         use_vllm_kernel=True, use_mxfp4=False, use_fp8=True,
+        mxfp4_weight_source=None,
         num_experts=256, num_experts_per_device=8, hidden_dim=6144,
         expert_hidden_dim=2048, router_topk=8, num_tensor_parallel_workers=1,
         _dtype=cuda_runtime.torch.bfloat16, per_channel_quant=False,
