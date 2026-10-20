@@ -66,13 +66,26 @@ class KVCacheTransferEndEvent(BaseEvent):
                     f"{source_blocks} prompt blocks"
                 )
             source_capacity = source_replica_scheduler._kv_cache_capacity
-            expected_payload_bytes = (
-                source_blocks * source_capacity.resident_bytes_per_common_block
+            expected_payload, _ = (
+                source_cluster_scheduler._kv_cache_transfer_predictor
+                .get_structural_nixl_transfer_info_for_request(
+                    request=request,
+                    replica_config=source_cluster_scheduler._config.replica_config,
+                    cache_capacity=source_capacity,
+                    source_prompt_common_blocks=source_blocks,
+                    target_reserved_common_blocks=(
+                        self._transfer_info.target_reserved_common_blocks
+                    ),
+                )
             )
-            if self._transfer_info.kv_cache_size_bytes != expected_payload_bytes:
+            if (
+                self._transfer_info.transfer_payload != expected_payload
+                or self._transfer_info.kv_cache_size_bytes
+                != expected_payload.transfer_bytes_per_rank
+            ):
                 raise RuntimeError(
                     f"Request {request.id} NIXL payload changed from "
-                    f"{expected_payload_bytes} to "
+                    f"{expected_payload.transfer_bytes_per_rank} to "
                     f"{self._transfer_info.kv_cache_size_bytes} bytes"
                 )
             source_replica_scheduler.validate_kv_transfer_source_release(request)

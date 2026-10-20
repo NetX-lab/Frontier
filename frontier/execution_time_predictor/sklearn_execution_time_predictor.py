@@ -7522,9 +7522,28 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             }),
         )
 
+    def _step5_attention_workload(self, batch: Batch):
+        from frontier.attention.step5 import Step5AttentionWorkload
+
+        phase = "mixed" if batch.num_prefill_tokens and batch.num_decode_tokens else (
+            "prefill" if batch.num_prefill_tokens else "decode"
+        )
+        queries = tuple(batch.num_tokens)
+        lengths = tuple(context + query for context, query in zip(batch.num_context_tokens, queries))
+        max_model_len = self._step5_max_model_len
+        return Step5AttentionWorkload.from_lengths(
+            self._model_config, phase=phase, query_lengths=queries, sequence_lengths=lengths,
+            physical_query_rows=batch.get_effective_total_tokens_for_compute(self._cluster_type),
+            block_size_tokens=self._block_size,
+            block_table_columns=(max_model_len + self._block_size - 1) // self._block_size,
+            max_model_len_tokens=max_model_len,
+            graph_mode=batch.get_decode_cuda_graph_runtime_mode().lower(),
+        )
+
     def _predict_step5_dummy_attention_time(self, batch: Batch, layer_id: int) -> AttentionTime:
         """Price exclusive source scopes with controlled durations, never native timings."""
-        from frontier.attention.step5 import Step5AttentionWorkload, describe_step5_layer
+        from frontier.attention.step5 import describe_step5_layer
+        from frontier.entities.batch import DummyForwardBatch
         from frontier.entities.time_components import AttentionOperatorTimes
 
         metadata_by_layer = getattr(self, "_step5_layer_metadata", None)
@@ -7537,21 +7556,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 moe_tp_size=self._replica_config.moe_tensor_parallel_size,
                 expert_parallel_size=self._replica_config.moe_expert_parallel_size,
             )
-        phase = "mixed" if batch.num_prefill_tokens and batch.num_decode_tokens else (
-            "prefill" if batch.num_prefill_tokens else "decode"
-        )
-        queries = tuple(batch.num_tokens)
-        lengths = tuple(context + query for context, query in zip(batch.num_context_tokens, queries))
-        max_model_len = self._step5_max_model_len
-        workload = Step5AttentionWorkload.from_lengths(
-            self._model_config, phase=phase, query_lengths=queries, sequence_lengths=lengths,
-            physical_query_rows=batch.get_effective_total_tokens_for_compute(self._cluster_type),
-            block_size_tokens=self._block_size,
-            block_table_columns=(max_model_len + self._block_size - 1) // self._block_size,
-            max_model_len_tokens=max_model_len,
-            graph_mode=batch.get_decode_cuda_graph_runtime_mode().lower(),
-        )
-        active_scopes = tuple(name for name, _ in metadata_by_layer[layer_id].attention_scopes(workload))
+        metadata = metadata_by_layer[layer_id]
+        if isinstance(batch, DummyForwardBatch):
+            active_scopes = tuple(name for name, _ in metadata.request_free_attention_scopes())
+        else:
+            active_scopes = tuple(
+                name for name, _ in metadata.attention_scopes(self._step5_attention_workload(batch))
+            )
         return AttentionTime(
             attn_norm_time=self._dummy_execution_time,
             operator_times=AttentionOperatorTimes({

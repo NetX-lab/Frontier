@@ -477,7 +477,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
                 lane.validate_kv_transfer_target_scope(request)
                 if lane._kv_cache_capacity != source_capacity:
                     raise ValueError(
-                        "PREFILL and DECODE GLM cache capacities must match"
+                        "PREFILL and DECODE cache capacities must match"
                     )
 
     def select_kv_transfer_target(self) -> tuple[int, int]:

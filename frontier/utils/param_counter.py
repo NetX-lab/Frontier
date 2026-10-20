@@ -414,8 +414,13 @@ class ParamCounter:
         )
 
         model, replica = self._model_config, self._replica_config
-        if self._cluster_type is not ClusterType.MONOLITHIC:
-            raise NotImplementedError("Step parameter storage requires MONOLITHIC ownership")
+        # These roles each hold the complete attention and FFN weights.
+        if self._cluster_type not in (
+            ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+        ):
+            raise NotImplementedError(
+                "Step parameter storage requires MONOLITHIC, PREFILL or DECODE ownership"
+            )
         for name in (
             "num_pipeline_stages", "attn_tensor_parallel_size", "attn_dp",
             "moe_tensor_parallel_size", "moe_expert_parallel_size",

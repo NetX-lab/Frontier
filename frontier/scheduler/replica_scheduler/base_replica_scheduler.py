@@ -27,6 +27,12 @@ if TYPE_CHECKING:
     from frontier.scheduler.request_load import RequestLoad
 
 
+_FIXED_CACHE_SCRATCH_BLOCKS_ERROR = (
+    "Fixed cache scratch requires automatic memory_planner blocks "
+    "and source accounting without profiled overhead"
+)
+
+
 class BaseReplicaScheduler(ABC):
     def __init__(
         self,
@@ -81,17 +87,16 @@ class BaseReplicaScheduler(ABC):
         )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")
-        if self._kv_cache_capacity is not None and self._kv_cache_capacity.fixed_bytes_per_request_slot:
-            if (
-                num_blocks_mode != "memory_planner"
-                or self._config.num_blocks
-                or getattr(self._config, "enable_runtime_non_kv_cache_overhead_profiling", False)
-                or getattr(self._config, "non_kv_cache_overhead_bytes", 0)
-            ):
-                raise NotImplementedError(
-                    "Fixed cache scratch requires automatic memory_planner blocks "
-                    "and source accounting without profiled overhead"
-                )
+        has_fixed_cache_scratch = bool(
+            self._kv_cache_capacity is not None
+            and self._kv_cache_capacity.fixed_bytes_per_request_slot
+        )
+        if has_fixed_cache_scratch and (
+            num_blocks_mode != "memory_planner"
+            or getattr(self._config, "enable_runtime_non_kv_cache_overhead_profiling", False)
+            or getattr(self._config, "non_kv_cache_overhead_bytes", 0)
+        ):
+            raise NotImplementedError(_FIXED_CACHE_SCRATCH_BLOCKS_ERROR)
         if num_blocks_mode not in {
             "memory_planner",
             "memory_planner_profiled",
@@ -279,6 +284,15 @@ class BaseReplicaScheduler(ABC):
                         planner_overhead_for_memory_estimation,
                     )
                 )
+        elif has_fixed_cache_scratch and self._config.num_blocks != memory_planner.get_num_blocks(
+            block_size=self._config.block_size,
+            gpu_memory_utilization=planner_gpu_utilization,
+            non_kv_cache_overhead_bytes=planner_overhead_for_memory_estimation,
+        ):
+            # Attention-DP lanes share one scheduler config, so an earlier lane
+            # may already hold the planner count. Any other count would bypass
+            # the fixed scratch reservation.
+            raise NotImplementedError(_FIXED_CACHE_SCRATCH_BLOCKS_ERROR)
 
         scheduler_type = (
             self._config.get_type() if hasattr(self._config, "get_type") else None

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from frontier.attention.memory import (
         AttentionKVCacheCapacity,
         AttentionKVCacheSelection,
+        AttentionKVTransferComponent,
     )
 
 from frontier.operators.spec import (
@@ -97,6 +98,14 @@ class AttentionFamilySpec(OperatorFamilySpec):
     kv_cache_capacity_resolver: (
         Callable[
             [Any, int, AttentionKVCacheSelection | None], AttentionKVCacheCapacity
+        ] | None
+    ) = None
+    # (config, source capacity, prompt tokens, attention TP) -> pages one
+    # source rank sends per cache component in a structural NIXL P/D handoff.
+    kv_transfer_payload_resolver: (
+        Callable[
+            [Any, AttentionKVCacheCapacity, int, int],
+            tuple[AttentionKVTransferComponent, ...],
         ] | None
     ) = None
 

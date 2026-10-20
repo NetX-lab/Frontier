@@ -124,6 +124,19 @@ class AttentionKVCacheGroup:
             raise ValueError("extra_retained_tokens must be a non-negative int")
         object.__setattr__(self, "component_owners", owners)
 
+    def transfer_page_count(self, prompt_pages: int) -> int:
+        """Return the prompt pages a P/D handoff reads for this group.
+
+        A sliding-window group sends only its in-window tail plus one page for
+        a window that is not page aligned (vLLM NIXL ``blocks_per_sw``:
+        ``cdiv(sliding_window, block_size) + 1``).
+        """
+        if type(prompt_pages) is not int or prompt_pages <= 0:
+            raise ValueError("prompt_pages must be a positive int")
+        if self.retention == "full_history":
+            return prompt_pages
+        return min(prompt_pages, -(-self.window_tokens // self.logical_block_size) + 1)
+
 
 @dataclass(frozen=True)
 class AttentionKVCacheCapacity:
@@ -261,6 +274,113 @@ def get_attention_kv_cache_capacity(
     if capacity.num_layers != config.num_layers:
         raise ValueError("cache capacity does not match the model backbone layer count")
     return capacity
+
+
+@dataclass(frozen=True)
+class AttentionKVTransferComponent:
+    """Pages one source TP rank sends for one cache component.
+
+    ``rank_replication`` counts the TP ranks of a lane that hold identical
+    content, so a lane's unique bytes divide its rank sum by it.
+    """
+
+    component_id: str
+    owner_layer_ids: tuple[int, ...]
+    page_count: int
+    page_size_bytes: int
+    rank_replication: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.component_id, str) or not self.component_id:
+            raise ValueError("component_id must be a non-empty string")
+        owners = tuple(self.owner_layer_ids)
+        if not owners or any(type(owner) is not int or owner < 0 for owner in owners):
+            raise ValueError("owner_layer_ids must contain non-negative ints")
+        if type(self.page_count) is not int or self.page_count < 0:
+            raise ValueError("page_count must be a non-negative int")
+        for name in ("page_size_bytes", "rank_replication"):
+            value = getattr(self, name)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive int")
+        object.__setattr__(self, "owner_layer_ids", owners)
+
+    @property
+    def bytes_per_rank(self) -> int:
+        return self.page_count * len(self.owner_layer_ids) * self.page_size_bytes
+
+
+@dataclass(frozen=True)
+class AttentionKVTransferPayload:
+    """Structural page payload of one prompt and its target reservation.
+
+    Each TP rank of a lane reads its own pages, with the same TP on both roles,
+    so ``transfer_bytes_per_rank`` prices the transfer. These are modeled page
+    bytes, not measured native wire bytes.
+    """
+
+    family_id: str
+    components: tuple[AttentionKVTransferComponent, ...]
+    tensor_parallel_size: int
+    target_reserved_blocks: int
+    physical_block_size_bytes: int
+
+    def __post_init__(self) -> None:
+        components = tuple(self.components)
+        if not components or any(
+            not isinstance(component, AttentionKVTransferComponent) for component in components
+        ):
+            raise ValueError("components must contain transfer components")
+        if len({component.component_id for component in components}) != len(components):
+            raise ValueError("duplicate transfer component")
+        for name in ("tensor_parallel_size", "target_reserved_blocks", "physical_block_size_bytes"):
+            value = getattr(self, name)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive int")
+        if any(self.tensor_parallel_size % component.rank_replication for component in components):
+            raise ValueError("rank_replication must divide tensor_parallel_size")
+        if self.transfer_bytes_per_rank <= 0:
+            raise ValueError("transfer payload must contain at least one page")
+        object.__setattr__(self, "components", components)
+
+    @property
+    def transfer_bytes_per_rank(self) -> int:
+        return sum(component.bytes_per_rank for component in self.components)
+
+    @property
+    def transfer_bytes_per_lane(self) -> int:
+        return self.tensor_parallel_size * self.transfer_bytes_per_rank
+
+    @property
+    def logical_unique_bytes(self) -> int:
+        return sum(
+            component.bytes_per_rank * self.tensor_parallel_size // component.rank_replication
+            for component in self.components
+        )
+
+    @property
+    def target_resident_bytes_per_rank(self) -> int:
+        return self.target_reserved_blocks * self.physical_block_size_bytes
+
+
+def get_attention_kv_transfer_payload(
+    config: Any, capacity: AttentionKVCacheCapacity, *,
+    prompt_tokens: int, tensor_parallel_size: int, target_reserved_blocks: int,
+) -> AttentionKVTransferPayload:
+    """Resolve the structural P/D page payload of one prompt in ``capacity``."""
+    from frontier.attention.families import get_attention_family
+
+    family = get_attention_family(capacity.family_id)
+    if family.kv_transfer_payload_resolver is None:
+        raise NotImplementedError(
+            f"Attention family {family.family_id!r} has no structural NIXL transfer payload"
+        )
+    if type(prompt_tokens) is not int or prompt_tokens <= 0:
+        raise ValueError("prompt_tokens must be a positive int")
+    return AttentionKVTransferPayload(
+        family.family_id,
+        family.kv_transfer_payload_resolver(config, capacity, prompt_tokens, tensor_parallel_size),
+        tensor_parallel_size, target_reserved_blocks, capacity.physical_block_size_bytes,
+    )
 
 
 @dataclass(frozen=True)

@@ -355,15 +355,29 @@ def test_metrics_catalog_uses_existing_registry_and_does_not_label_legacy_as_ste
 ])
 def test_predictor_rejects_unadmitted_parallel_layout_before_pricing(inputs, field, value):
     setattr(inputs["replica_config"], field, value)
-    with pytest.raises(NotImplementedError, match="MONOLITHIC/vllm_v1/PP1"):
+    with pytest.raises(NotImplementedError, match="MONOLITHIC, PREFILL or DECODE"):
         RandomForrestExecutionTimePredictor(**inputs)
 
 
-@pytest.mark.parametrize("role", [None, ClusterType.PREFILL, ClusterType.DECODE])
-def test_predictor_requires_explicit_monolithic_role(inputs, role):
+@pytest.mark.parametrize(
+    "role", [None, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN, ClusterType.TRANS],
+)
+def test_predictor_requires_an_admitted_role(inputs, role):
     inputs["cluster_type"] = role
-    with pytest.raises(NotImplementedError, match="MONOLITHIC/vllm_v1/PP1"):
+    with pytest.raises(NotImplementedError, match="MONOLITHIC, PREFILL or DECODE"):
         RandomForrestExecutionTimePredictor(**inputs)
+
+
+def test_full_expert_parallel_layout_is_admitted_only_on_pd_roles(inputs):
+    replica = inputs["replica_config"]
+    replica.attn_tensor_parallel_size = 8
+    replica.attn_dp = 4
+    replica.moe_tensor_parallel_size = 1
+    replica.moe_expert_parallel_size = 32
+    with pytest.raises(NotImplementedError, match="MONOLITHIC, PREFILL or DECODE"):
+        RandomForrestExecutionTimePredictor(**inputs)
+    for role in (ClusterType.PREFILL, ClusterType.DECODE):
+        RandomForrestExecutionTimePredictor(**{**inputs, "cluster_type": role})
 
 
 def test_real_predictor_rejects_measured_mode_before_training(inputs):

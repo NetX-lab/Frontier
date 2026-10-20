@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING, List, Optional
 
+from frontier.attention.families import get_attention_family
 from frontier.events.base_event import BaseEvent
 from frontier.types import ClusterType, EventType
 
 if TYPE_CHECKING:
+    from frontier.attention.memory import AttentionKVTransferPayload
     from frontier.entities import Batch
     from frontier.metrics import MetricsStore
     from frontier.scheduler import BaseGlobalScheduler
@@ -47,6 +49,7 @@ class KVCacheTransferStartEvent(BaseEvent):
         self._target_replica_local_id: int | None = None
         self._source_prompt_common_blocks: int | None = None
         self._target_reserved_common_blocks: int | None = None
+        self._transfer_payload: "AttentionKVTransferPayload | None" = None
         self._source_claimed = False
         self._started = False
         if kv_connector == "nixl":
@@ -102,18 +105,18 @@ class KVCacheTransferStartEvent(BaseEvent):
             predictor_config = source_config.execution_time_predictor_config
             if not bool(getattr(predictor_config, "enable_dummy_mode", False)):
                 raise NotImplementedError(
-                    "NIXL currently supports only dummy GLM structural PD"
+                    "NIXL currently supports only dummy structural PD"
                 )
             replica_config = source_config.replica_config
             if int(replica_config.num_pipeline_stages) != 1:
-                raise NotImplementedError("NIXL structural GLM PD supports PP1 only")
+                raise NotImplementedError("NIXL structural PD supports PP1 only")
             source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
                 self._source_replica_id,
                 self._source_replica_local_id,
             )
             if source_replica_scheduler._is_prefix_caching_enabled():
                 raise NotImplementedError(
-                    "NIXL structural GLM PD excludes source prefix caching"
+                    "NIXL structural PD excludes source prefix caching"
                 )
             request = self._batch.requests[0]
             self._source_prompt_common_blocks = (
@@ -124,12 +127,12 @@ class KVCacheTransferStartEvent(BaseEvent):
             source_capacity = source_replica_scheduler._kv_cache_capacity
             if (
                 source_capacity is None
-                or source_capacity.family_id != "dsa_attention"
-                or source_capacity.is_grouped
-                or source_capacity.block_size != 64
+                or get_attention_family(
+                    source_capacity.family_id
+                ).kv_transfer_payload_resolver is None
             ):
                 raise NotImplementedError(
-                    "NIXL currently supports only dummy GLM DSA block64 structural PD"
+                    "NIXL requires an attention family with a structural transfer payload"
                 )
             predictor = source_cluster_scheduler._kv_cache_transfer_predictor
             if not hasattr(
@@ -177,7 +180,7 @@ class KVCacheTransferStartEvent(BaseEvent):
 
             try:
                 (
-                    self._kv_cache_size_bytes,
+                    self._transfer_payload,
                     self._transfer_time_ms,
                 ) = predictor.get_structural_nixl_transfer_info_for_request(
                     request=request,
@@ -196,6 +199,7 @@ class KVCacheTransferStartEvent(BaseEvent):
                 self._source_claimed = False
                 self._target_reserved_common_blocks = None
                 raise
+            self._kv_cache_size_bytes = self._transfer_payload.transfer_bytes_per_rank
 
         transfer_info = KVCacheTransferInfo(
             batch=self._batch,
@@ -217,6 +221,7 @@ class KVCacheTransferStartEvent(BaseEvent):
             ),
             source_prompt_common_blocks=self._source_prompt_common_blocks,
             target_reserved_common_blocks=self._target_reserved_common_blocks,
+            transfer_payload=self._transfer_payload,
         )
         if self._kv_connector == "nixl":
             self._started = True
