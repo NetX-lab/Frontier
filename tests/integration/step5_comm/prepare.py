@@ -1,4 +1,4 @@
-"""Prepare one S0 package locally, without constructing a GPU platform client."""
+"""Freeze a Step collective package without constructing a GPU platform client."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import shlex
 import subprocess
 
 from frontier.profiling.collectives.vllm_forward_collectives import (
@@ -22,7 +23,7 @@ def sha256(path: Path) -> str:
 
 
 def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = REPO) -> dict:
-    """Bind the existing benchmark to a one-node job and record offline row counts."""
+    """Bind the existing benchmark to the declared placement and count its rows."""
     if not run_id or Path(run_id).name != run_id or run_id in (".", ".."):
         raise ValueError("run_id must be one path component")
     repository, stage = repository.resolve(), stage.resolve()
@@ -34,12 +35,23 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
         raise ValueError("Commit the source before preparing a submission package")
     resources = definition["resources"]
     parallel = ServingParallelism.from_engine(definition["engine"])
-    if resources["replica"] != 1 or resources["gpu"] != parallel.world_size:
-        raise ValueError("S0 requires a single node and GPU count equal to TP x DP")
-    if (parallel.tensor_parallel_size, parallel.data_parallel_size) != (4, 2):
-        raise ValueError("S0's native dispatch probe requires TP4/DP2/EP8")
+    if (resources["gpu"] != definition["gpus_per_node"] or
+            resources["gpu"] * resources["replica"] != parallel.world_size):
+        raise ValueError("Node GPU counts and replicas must equal TP x DP")
+    if definition["gpus_per_node"] % parallel.tensor_parallel_size:
+        raise ValueError("Every TP group must fit within one node")
+    tokens = definition["native_probe"]["tokens_per_dp_rank"]
+    if len(tokens) != parallel.data_parallel_size or any(t <= 0 for t in tokens):
+        raise ValueError("The native probe needs one positive physical token count per DP owner")
+    if definition["native_probe"]["layers"] != [3, 88]:
+        raise ValueError("The native probe observes exactly layers 3 and 88")
+    if resources["replica"] > 1:
+        ports = definition["rendezvous"]
+        if not (0 < ports["master_port"] < 65536 and 0 < ports["probe_port"] < 65536
+                and ports["master_port"] != ports["probe_port"]):
+            raise ValueError("Benchmark and probe require distinct valid rendezvous ports")
     if (resources["positive_tags"], resources["charged_group"]) != (["H800"], "codesign"):
-        raise ValueError("S0 is H800/codesign only")
+        raise ValueError("Step communication stages use H800/codesign only")
     model = ModelShape.from_hf_config(json.loads((repository / MODEL_CONFIG).read_text()))
     scenarios = scenarios_from_grid(parallel, definition["grid"])
     cases = sum(len(forward_collectives(model, parallel, scenario)) for scenario in scenarios)
@@ -63,7 +75,9 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
     hashes = {name: sha256(repository / name) for name in names if (repository / name).is_file()}
     job = {"description": definition["description"], "run_id": run_id,
            "repository": str(repository), "image": definition["image"],
-           "resources": resources, "benchmark": str(benchmark_path),
+            "resources": resources, "benchmark": str(benchmark_path),
+            "engine": definition["engine"], "gpus_per_node": definition["gpus_per_node"],
+            "rendezvous": definition.get("rendezvous", {}),
            "benchmark_sha256": sha256(benchmark_path), "output_dir": str(output),
            "native_probe": {**definition["native_probe"], "model_path": str(model_path),
                             "config_sha256": sha256(model_path / "config.json"),
@@ -74,8 +88,17 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
            "expected": {"scenarios": len(scenarios), "cases": cases,
                         "measurements": cases * definition["passes"],
                         "kernel_rows": cases,
-                        "wall_minutes": definition["expected_wall_minutes"],
-                        "gpu_hours": definition["expected_gpu_hours"]}}
+                         "wall_minutes": definition["expected_wall_minutes"],
+                         "gpu_hours": definition["expected_gpu_hours"]}}
+    launcher = stage / "submit_with_env.sh"
+    script = ("#!/usr/bin/env bash\nset -euo pipefail\nset +x\n"
+              f"source {shlex.quote(definition['credential_environment'])}\n"
+              f"cd {shlex.quote(str(repository))}\n"
+              f'exec "$STEPMIND_PYTHON" -u {shlex.quote(str(repository / "tests/integration/step5_comm/submit.py"))} '
+              f"--config {shlex.quote(str(stage / 'job.json'))}\n")
+    launcher.write_text(script)
+    job["submission_script"] = str(launcher)
+    job["submission_script_sha256"] = sha256(launcher)
     (stage / "job.json").write_text(json.dumps(job, indent=2) + "\n")
     return job
 

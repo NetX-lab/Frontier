@@ -1,5 +1,6 @@
 {
   "description": "Ticket 12 S0: isolated one-node Step communication smoke and native FP8/BF16 dispatch identity probe. Diagnostic TP4/DP2/EP8, not target TP8/DP4 qualification.",
+  "credential_environment": "/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh",
   "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
   "resources": {
     "gpu": 8, "replica": 1, "cpu": 32, "mem_gb": 128,
@@ -14,6 +15,7 @@
     "disable_custom_all_reduce": false, "moe_backend": "auto"
   },
   "gpus_per_node": 8,
+  "rendezvous": {"master_port":29600,"probe_port":29601},
   "warmup_calls": 3, "repeats": 5, "calls_per_repeat": 5,
   "passes": 1, "shuffle_seed": 20261020,
   "grid": {

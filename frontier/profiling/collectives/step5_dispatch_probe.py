@@ -6,12 +6,18 @@ Run after the collective benchmark in the official Step image::
         frontier.profiling.collectives.step5_dispatch_probe \
         --model-path /model/metadata --output-dir /output/native_dispatch
 
+For multi-node torchrun, pass --tensor-parallel-size 8 and
+--data-parallel-size 4 (S1, four nodes) or 2 (S2, two nodes). Each node runs
+--gpus-per-node 8 processes; EP is derived from TP x DP, never set separately.
+
 The metadata directory must contain config.json; no checkpoint is loaded. The
 native dummy loader initializes one layer at a time. Native shared experts,
 router, expert oracle, prepare/finalize, and communication remain unchanged.
 Interceptors record before calling the original methods. A schema discrepancy
 is a diagnostic verdict in dispatch_probe.json, not a fabricated pass or a
 reason to discard the preceding benchmark. Native execution errors still raise.
+Observer and artifact failures mark diagnostics unverified, retain in-memory
+and best-effort stderr evidence, and do not block native calls or the next layer.
 This verifies complete native MoE layers, not the full model/model-runner path.
 """
 
@@ -21,28 +27,105 @@ import argparse
 import json
 import os
 import socket
+import sys
 from contextlib import ExitStack, contextmanager
 from functools import wraps
 from pathlib import Path
 from unittest.mock import patch
 
 
-# S0's preregistered layer identities and serving topology, not cost constants.
+# Preregistered layer identities, not cost constants.
 LAYERS = ((3, "fp8", 4288), (88, "bf16", 8256))
-TP_SIZE, DP_SIZE, EP_SIZE = 4, 2, 8
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-path", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--tokens-per-dp-rank", type=int, nargs=DP_SIZE, default=[1, 1])
+    parser.add_argument("--tensor-parallel-size", type=int, default=4)
+    parser.add_argument("--data-parallel-size", type=int, default=2)
+    parser.add_argument("--gpus-per-node", type=int, default=8)
+    parser.add_argument("--tokens-per-dp-rank", type=int, nargs="+")
     parser.add_argument("--disable-custom-all-reduce", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
+    try:
+        expected_topology(args.tensor_parallel_size, args.data_parallel_size, args.gpus_per_node)
+    except ValueError as error:
+        parser.error(str(error))
+    if args.tokens_per_dp_rank is None:
+        args.tokens_per_dp_rank = [1] * args.data_parallel_size
+    if len(args.tokens_per_dp_rank) != args.data_parallel_size:
+        parser.error("--tokens-per-dp-rank must contain one count per DP rank "
+                     f"(expected {args.data_parallel_size})")
     if any(n <= 0 for n in args.tokens_per_dp_rank):
         parser.error("Each DP rank needs a positive token count (idle ranks use one)")
     return args
+
+
+def expected_topology(tp, dp, gpus_per_node):
+    """Plan native TP x DP ranks on full nodes with node-local TP groups."""
+    if min(tp, dp, gpus_per_node) <= 0:
+        raise ValueError("TP, DP and GPUs per node must be positive")
+    world_size = tp * dp
+    if gpus_per_node % tp:
+        raise ValueError("GPUs per node must be divisible by TP for node-local TP groups")
+    if world_size % gpus_per_node:
+        raise ValueError("TP x DP must fill an integer number of GPU nodes")
+    ranks = []
+    for rank in range(world_size):
+        tp_start = rank // tp * tp
+        ranks.append({"rank": rank, "node_rank": rank // gpus_per_node,
+                      "local_rank": rank % gpus_per_node, "dp_rank": rank // tp,
+                      "group_ranks": {"tp": list(range(tp_start, tp_start + tp)),
+                                      "dp": list(range(rank % tp, world_size, tp)),
+                                      "ep": list(range(world_size))}})
+    return {"world_size": world_size, "gpus_per_node": gpus_per_node,
+            "node_count": world_size // gpus_per_node, "ranks": ranks}
+
+
+def validate_launcher(topology, environ):
+    """Reject an incompatible torchrun allocation before native initialization."""
+    for name, expected in (("WORLD_SIZE", topology["world_size"]),
+                           ("LOCAL_WORLD_SIZE", topology["gpus_per_node"])):
+        actual = int(environ[name])
+        if actual != expected:
+            raise ValueError(f"{name}={actual}; expected {expected} from TP x DP "
+                             "and --gpus-per-node")
+
+
+def compare_placement(topology, ranks):
+    """Compare gathered rank/host observations without raising on discrepancies."""
+    differences = []
+
+    def check(name, actual, expected):
+        if actual != expected:
+            differences.append({"field": name, "expected": expected, "actual": actual})
+
+    expected_ranks = topology["ranks"]
+    check("rank_order", [r["rank"] for r in ranks], [r["rank"] for r in expected_ranks])
+    hosts = sorted({r["host"] for r in ranks})
+    check("node_count", len(hosts), topology["node_count"])
+    for host in hosts:
+        members = [r for r in ranks if r["host"] == host]
+        check(f"host[{host}].gpu_count", len(members), topology["gpus_per_node"])
+        check(f"host[{host}].local_ranks", sorted(r["local_rank"] for r in members),
+              list(range(topology["gpus_per_node"])))
+    observed = {r["rank"]: r for r in ranks}
+    for expected in expected_ranks:
+        if expected["rank"] in observed:
+            check(f"rank[{expected['rank']}].local_rank",
+                  observed[expected["rank"]]["local_rank"], expected["local_rank"])
+    for node in range(topology["node_count"]):
+        node_ranks = [r["rank"] for r in expected_ranks if r["node_rank"] == node]
+        members = [r for r in ranks if r["rank"] in node_ranks]
+        check(f"node[{node}].ranks", sorted(r["rank"] for r in members), node_ranks)
+        check(f"node[{node}].host_count", len({r["host"] for r in members}), 1)
+    tp_groups = {tuple(r["group_ranks"]["tp"]) for r in expected_ranks}
+    for group in sorted(tp_groups):
+        members = [r for r in ranks if r["rank"] in group]
+        check(f"tp_group{list(group)}.host_count", len({r["host"] for r in members}), 1)
+    return {"status": "discrepancy" if differences else "match", "differences": differences}
 
 
 def probe_plan(args):
@@ -74,7 +157,10 @@ def probe_plan(args):
             "verification_scope": "native_moe_layer",
             "full_model_verified": False, "model_runner_verified": False,
             "model_config_path": str(config_path),
-            "parallelism": {"tp": TP_SIZE, "dp": DP_SIZE, "ep": EP_SIZE},
+            "parallelism": {"tp": args.tensor_parallel_size, "dp": args.data_parallel_size,
+                            "ep": args.tensor_parallel_size * args.data_parallel_size},
+            "topology": expected_topology(args.tensor_parallel_size, args.data_parallel_size,
+                                          args.gpus_per_node),
             "tokens_per_dp_rank": list(args.tokens_per_dp_rank),
             "disable_custom_all_reduce": args.disable_custom_all_reduce,
             "cases": cases}
@@ -89,6 +175,33 @@ def tensor_schema(tensor):
             "device": str(tensor.device)}
 
 
+@contextmanager
+def diagnostic_scope(errors, operation):
+    """Isolate diagnostic work only; native execution must stay outside this scope."""
+    try:
+        yield
+    except Exception as error:
+        record = {"operation": operation, "error": repr(error)}
+        errors.append(record)
+        try:
+            print("STEP5_DISPATCH_PROBE_DIAGNOSTIC_ERROR", json.dumps(record),
+                  file=sys.stderr, flush=True)
+        except Exception:
+            # The in-memory evidence remains even when the diagnostic stream fails.
+            pass
+
+
+def write_report(path, report):
+    """Retain write failures in memory without replacing a native exception."""
+    errors = report["diagnostic_errors"]
+    if errors and report["status"] != "runtime_error":
+        report["status"] = "discrepancy"
+    with diagnostic_scope(errors, f"write:{path.name}"):
+        path.write_text(json.dumps(report, indent=2) + "\n")
+    if errors and report["status"] != "runtime_error":
+        report["status"] = "discrepancy"
+
+
 class DispatchObserver:
     """Transparent, synchronous diagnostics at the GroupCoordinator boundary."""
 
@@ -96,6 +209,7 @@ class DispatchObserver:
         self.emit = emit
         self.calls = []
         self.expert_calls = []
+        self.errors = []
 
     @contextmanager
     def collectives(self, coordinator):
@@ -110,22 +224,26 @@ class DispatchObserver:
                     # is a tensor, whereas all_gatherv's second argument is dim.
                     import inspect
 
-                    bound = inspect.signature(_original).bind(group, input_, *args, **kwargs)
-                    bound.apply_defaults()
-                    tensors = input_ if isinstance(input_, list) else [input_]
-                    call = {"op": _name, "group_ranks": list(group.ranks),
-                            "dim": bound.arguments.get("dim"),
-                            "sizes": bound.arguments.get("sizes"),
-                            "inputs": [tensor_schema(t) for t in tensors],
-                            "completed": False}
-                    self.calls.append(call)
-                    self.emit({"event": "collective_enter", **call})
+                    call = None
+                    with diagnostic_scope(self.errors, f"{_name}.enter"):
+                        bound = inspect.signature(_original).bind(group, input_, *args, **kwargs)
+                        bound.apply_defaults()
+                        tensors = input_ if isinstance(input_, list) else [input_]
+                        call = {"op": _name, "group_ranks": list(group.ranks),
+                                "dim": bound.arguments.get("dim"),
+                                "sizes": bound.arguments.get("sizes"),
+                                "inputs": [tensor_schema(t) for t in tensors],
+                                "completed": False}
+                        self.calls.append(call)
+                        self.emit({"event": "collective_enter", **call})
                     result = _original(group, input_, *args, **kwargs)
-                    output = bound.arguments.get("output", result)
-                    outputs = output if isinstance(output, list) else [output]
-                    call["outputs"] = [tensor_schema(t) for t in outputs if t is not None]
-                    call["completed"] = True
-                    self.emit({"event": "collective_exit", **call})
+                    if call is not None:
+                        with diagnostic_scope(self.errors, f"{_name}.exit"):
+                            output = bound.arguments.get("output", result)
+                            outputs = output if isinstance(output, list) else [output]
+                            call["outputs"] = [tensor_schema(t) for t in outputs if t is not None]
+                            call["completed"] = True
+                            self.emit({"event": "collective_exit", **call})
                     return result
 
                 stack.enter_context(patch.object(coordinator, name, observed))
@@ -140,9 +258,10 @@ class DispatchObserver:
 
                 @wraps(original)
                 def applied(*args, **kwargs):
-                    name = type(instance).__name__
-                    self.expert_calls.append(name)
-                    self.emit({"event": "expert_enter", "experts_class": name})
+                    with diagnostic_scope(self.errors, "expert.enter"):
+                        name = type(instance).__name__
+                        self.expert_calls.append(name)
+                        self.emit({"event": "expert_enter", "experts_class": name})
                     return original(*args, **kwargs)
 
                 stack.enter_context(patch.object(instance, "apply", applied))
@@ -215,7 +334,7 @@ def create_native_config(args):
     config = EngineArgs(
         model=str(args.model_path.resolve()),
         load_format="dummy", skip_tokenizer_init=True, language_model_only=True,
-        tensor_parallel_size=TP_SIZE, data_parallel_size=DP_SIZE,
+        tensor_parallel_size=args.tensor_parallel_size, data_parallel_size=args.data_parallel_size,
         enable_expert_parallel=True, all2all_backend="allgather_reducescatter",
         distributed_executor_backend="external_launcher", enforce_eager=True,
         disable_custom_all_reduce=args.disable_custom_all_reduce,
@@ -258,6 +377,9 @@ def native_backend(layer):
 
 
 def run_probe(args, plan):
+    topology = plan["topology"]
+    validate_launcher(topology, os.environ)
+
     import torch
     import vllm
     from vllm.config import set_current_vllm_config
@@ -267,83 +389,126 @@ def run_probe(args, plan):
     from vllm.v1.worker.workspace import init_workspace_manager
 
     rank, local_rank = int(os.environ["RANK"]), int(os.environ["LOCAL_RANK"])
-    if int(os.environ["WORLD_SIZE"]) != EP_SIZE or int(os.environ["LOCAL_WORLD_SIZE"]) != EP_SIZE:
-        raise ValueError("S0 requires torchrun --standalone --nproc-per-node=8 on one node")
     device = torch.device("cuda", local_rank)
     torch.cuda.set_device(device)
     config = create_native_config(args)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
     rank_path = args.output_dir / f"rank_{rank}.json"
     report = {"rank": rank, "local_rank": local_rank, "host": socket.gethostname(),
-              "status": "in_progress", "layers": [],
+              "status": "in_progress", "layers": [], "diagnostic_errors": [],
               "torch": torch.__version__, "vllm": vllm.__version__}
-    with (args.output_dir / f"rank_{rank}.jsonl").open("w", buffering=1) as log:
-        def emit(record):
-            log.write(json.dumps({"rank": rank, **record}) + "\n")
+    errors = report["diagnostic_errors"]
+    log = None
+    with diagnostic_scope(errors, "output_directory"):
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+    with diagnostic_scope(errors, "log_open"):
+        log = (args.output_dir / f"rank_{rank}.jsonl").open("w", buffering=1)
 
-        with set_current_vllm_config(config):
+    def emit(record):
+        if log is not None:
+            with diagnostic_scope(errors, f"log_write:{record['event']}:{record.get('layer_id')}"):
+                log.write(json.dumps({"rank": rank, **record}) + "\n")
+
+    with set_current_vllm_config(config):
+        try:
             init_worker_distributed_environment(config, rank, "env://", local_rank)
             init_workspace_manager(device)
             groups = {name: getattr(ps, f"get_{name}_group")() for name in ("tp", "dp", "ep")}
             report["group_ranks"] = {name: list(group.ranks) for name, group in groups.items()}
-            tp_start = rank // TP_SIZE * TP_SIZE
-            expected_tp = list(range(tp_start, tp_start + TP_SIZE))
-            expected_dp = list(range(rank % TP_SIZE, EP_SIZE, TP_SIZE))
-            expected_groups = {"tp": expected_tp, "dp": expected_dp, "ep": list(range(EP_SIZE))}
-            if report["group_ranks"] != expected_groups:
-                raise RuntimeError(f"Unexpected native serving groups: {report['group_ranks']}")
+            expected_rank = topology["ranks"][rank]
+            expected_groups = expected_rank["group_ranks"]
+            expected_tp, expected_dp = expected_groups["tp"], expected_groups["dp"]
             dp_rank = config.parallel_config.data_parallel_rank
+            report["dp_rank"] = dp_rank
+            group_differences = []
+            for field, expected in (("group_ranks", expected_groups),
+                                    ("dp_rank", expected_rank["dp_rank"])):
+                if report[field] != expected:
+                    group_differences.append({"field": field, "expected": expected,
+                                              "actual": report[field]})
+            report["group_comparison"] = {
+                "status": "discrepancy" if group_differences else "match",
+                "differences": group_differences}
+            emit({"event": "group_verdict", **report["group_comparison"]})
             rows = args.tokens_per_dp_rank[dp_rank]
             sizes = torch.tensor(args.tokens_per_dp_rank, dtype=torch.int32, device="cpu")
             hidden = config.model_config.hf_text_config.hidden_size
-            try:
-                for case in plan["cases"]:
-                    emit({"event": "layer_start", "layer_id": case["layer_id"]})
-                    layer = load_native_layer(config, case, device)
-                    result = {"layer_id": case["layer_id"], **native_backend(layer)}
-                    report["layers"].append(result)
-                    emit({"event": "native_backend", **result})
-                    observer = DispatchObserver(lambda event: emit({"layer_id": case["layer_id"], **event}))
-                    inputs = torch.randn(rows, hidden, dtype=config.model_config.dtype, device=device)
-                    with (torch.inference_mode(), set_forward_context(
-                            None, config, num_tokens=rows, num_tokens_across_dp=sizes),
-                          observer.collectives(ps.GroupCoordinator),
-                          observer.experts(layer.experts.routed_experts.quant_method.moe_kernel.fused_experts)):
+            for case in plan["cases"]:
+                error_start = len(errors)
+                emit({"event": "layer_start", "layer_id": case["layer_id"]})
+                layer = load_native_layer(config, case, device)
+                observer = DispatchObserver(lambda event: emit({"layer_id": case["layer_id"], **event}))
+                result = {"layer_id": case["layer_id"], "observer_errors": observer.errors,
+                          "comparison": {"status": "unverified", "differences": []}}
+                report["layers"].append(result)
+                with diagnostic_scope(observer.errors, "native_backend"):
+                    result.update(native_backend(layer))
+                emit({"event": "native_backend", **result})
+                inputs = torch.randn(rows, hidden, dtype=config.model_config.dtype, device=device)
+                observation = ExitStack()
+                with diagnostic_scope(observer.errors, "observe_collectives"):
+                    observation.enter_context(observer.collectives(ps.GroupCoordinator))
+                with diagnostic_scope(observer.errors, "observe_experts"):
+                    observation.enter_context(observer.experts(
+                        layer.experts.routed_experts.quant_method.moe_kernel.fused_experts))
+                try:
+                    with torch.inference_mode(), set_forward_context(
+                            None, config, num_tokens=rows, num_tokens_across_dp=sizes):
                         shared, routed = layer(inputs)
                         torch.cuda.synchronize(device)
-                    result.update({"collectives": observer.calls,
-                                   "executed_experts_classes": observer.expert_calls,
-                                   "shared_output": tensor_schema(shared),
+                finally:
+                    with diagnostic_scope(observer.errors, "observer_close"):
+                        observation.close()
+                result.update({"collectives": observer.calls,
+                               "executed_experts_classes": observer.expert_calls})
+                with diagnostic_scope(observer.errors, "output_schema"):
+                    result.update({"shared_output": tensor_schema(shared),
                                    "routed_output": tensor_schema(routed)})
+                with diagnostic_scope(observer.errors, "compare_dispatch"):
                     result["comparison"] = compare_dispatch(
                         case, observer.calls, rows=rows, sizes=args.tokens_per_dp_rank,
                         dp_ranks=expected_dp, tp_ranks=expected_tp, hidden=hidden)
-                    emit({"event": "layer_verdict", "layer_id": case["layer_id"],
-                          **result["comparison"]})
-                    rank_path.write_text(json.dumps(report, indent=2) + "\n")
-                    del inputs, shared, routed, layer
-                    torch.cuda.empty_cache()
-                report["status"] = ("match" if all(layer["comparison"]["status"] == "match"
-                                                   for layer in report["layers"]) else "discrepancy")
-            except Exception as error:
-                report.update(status="runtime_error", error=repr(error))
-                raise
-            finally:
-                rank_path.write_text(json.dumps(report, indent=2) + "\n")
-            ranks = [None] * EP_SIZE
-            torch.distributed.all_gather_object(ranks, report, group=ps.get_world_group().cpu_group)
-            if rank == 0:
-                report = {**plan, "ranks": ranks,
-                          "status": "match" if all(r["status"] == "match" for r in ranks) else "discrepancy"}
-                if len({r["host"] for r in ranks}) != 1:
-                    report["status"] = "discrepancy"
-                    report["placement_error"] = "S0 requires one node"
-                path = args.output_dir / "dispatch_probe.json"
-                path.write_text(json.dumps(report, indent=2) + "\n")
+                if observer.errors or len(errors) > error_start:
+                    result["comparison"]["status"] = "unverified"
+                emit({"event": "layer_verdict", "layer_id": case["layer_id"], **result["comparison"]})
+                result["diagnostic_errors"] = errors[error_start:]
+                if result["diagnostic_errors"]:
+                    result["comparison"]["status"] = "unverified"
+                write_report(rank_path, report)
+                del inputs, shared, routed, layer
+                torch.cuda.empty_cache()
+            report["status"] = ("match" if not group_differences and not errors and all(
+                layer["comparison"]["status"] == "match" for layer in report["layers"])
+                else "discrepancy")
+        except Exception as error:
+            report.update(status="runtime_error", error=repr(error))
+            raise
+        finally:
+            if log is not None:
+                with diagnostic_scope(errors, "log_close"):
+                    log.close()
+            write_report(rank_path, report)
+        ranks = [None] * topology["world_size"]
+        torch.distributed.all_gather_object(ranks, report, group=ps.get_world_group().cpu_group)
+        if rank == 0:
+            aggregate = {**plan, "ranks": ranks, "status": "discrepancy", "diagnostic_errors": []}
+            placement = {"status": "unverified", "differences": []}
+            with diagnostic_scope(aggregate["diagnostic_errors"], "compare_placement"):
+                placement = compare_placement(topology, ranks)
+            aggregate.update(placement_comparison=placement,
+                             status="match" if placement["status"] == "match" and all(
+                                 r["status"] == "match" for r in ranks) else "discrepancy")
+            path = args.output_dir / "dispatch_probe.json"
+            write_report(path, aggregate)
+            with diagnostic_scope(aggregate["diagnostic_errors"], "report_stdout"):
                 print("STEP5_DISPATCH_PROBE_REPORT", json.dumps({"path": str(path),
-                      "status": report["status"], "cost_data": False}), flush=True)
-            ps.destroy_model_parallel()
-            ps.destroy_distributed_environment()
+                      "status": aggregate["status"], "cost_data": False}), flush=True)
+            if aggregate["diagnostic_errors"] and aggregate["status"] == "match":
+                aggregate["status"] = "discrepancy"
+                write_report(path, aggregate)
+            report = aggregate
+        ps.destroy_model_parallel()
+        ps.destroy_distributed_environment()
+    return report
 
 
 def main(argv=None):

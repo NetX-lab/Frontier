@@ -1,4 +1,4 @@
-"""Submit a prepared S0 package once; only the parent agent runs this command."""
+"""Submit a prepared package once and stay alive until StepMind finishes it."""
 
 from __future__ import annotations
 
@@ -17,12 +17,15 @@ def job_command(job: dict, config_path: Path) -> str:
 
 def resource_arguments(job: dict) -> dict:
     resources = job["resources"]
+    if resources["gpu"] != job["gpus_per_node"]:
+        raise ValueError("gpus_per_node must equal the per-replica GPU allocation")
     return dict(cpu=resources["cpu"], gpu=resources["gpu"], mem_gb=resources["mem_gb"],
                 replica=resources["replica"], image=job["image"],
                 positive_tags=resources["positive_tags"], extra_requirements=[],
                 mounts=[resources["cloud_mount"]], preemptible=False,
-                envs={"DISTRIBUTED_JOB": "true", "NCCL_DEBUG": "INFO",
-                      "NCCL_DEBUG_SUBSYS": "INIT,NET", "PYTHONDONTWRITEBYTECODE": "1"},
+                envs={"DISTRIBUTED_JOB": "true", "MASTER_PORT": str(job["rendezvous"]["master_port"]),
+                       "NCCL_DEBUG": "INFO",
+                       "NCCL_DEBUG_SUBSYS": "INIT,NET,GRAPH", "PYTHONDONTWRITEBYTECODE": "1"},
                 task_anti_affinities=["hard/default"], command="{COMMAND}",
                 task_specs={"default": {"is_critical": True}})
 

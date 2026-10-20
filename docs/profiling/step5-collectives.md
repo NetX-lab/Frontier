@@ -43,7 +43,7 @@ changes directories.
 
 The worker uses the image interpreter, sets the established CUDA 13 forward
 compatibility environment, and installs no packages. It preserves platform
-`NCCL_*` transport settings. The launcher only adds NCCL INFO/INIT,NET logging.
+`NCCL_*` transport settings. The launcher only adds NCCL INFO/INIT,NET,GRAPH logging.
 The SDK's RDMA resource defaults are retained. Durable outputs are confined to
 `/mnt/codesign-exp/ycfeng/frontier/step5_comm/<run_id>/`.
 The platform log prints `STEP5_COMM_WORKER_LOG` before workload stdout/stderr
@@ -88,11 +88,61 @@ and calibration defects; use a new package/run ID for the corrected collector.
 The original run's flags do not contain enough diagnostics to reconstruct the
 correct predicate. CPU regression checks do not replace a GPU recheck of it.
 
-## Build S1 and S2 after S0
+The parent submitted corrected `s0_20261020_02` as `exp-1020-213124-403435`.
+All 100 rows/groups/rails and all sixteen native rank/layer schemas passed.
+All 90 device cells, 450 repeat positions and 3470 rank-repeat flags held;
+the full-versus-held median difference is zero. Device sample CV median fell
+from 9.29% to 4.43%, but five short repeat averages still do not qualify a
+low-noise cost dataset. The worst cell has 52.05% CV despite every repeat
+holding. No further timing-algorithm change or new threshold was applied.
 
-Do not submit S0's one-node package with a larger replica count. Multi-node
-torchrun rendezvous and node rank assignment must be added to the worker using
-the existing native launch patterns, then dry-run and record all node commands.
+## Prepare S1 and S2 after S0
+
+Do not submit an old S0 package with a larger replica count. Prepare the
+stage definitions with the multi-node worker and stage-supplied native probe:
+
+```bash
+PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python tests/integration/step5_comm/prepare.py \
+  --definition tests/integration/step5_comm/s1_run.json \
+  --stage-dir "$PWD/task_memory/step5_comm/s1_new" --run-id s1_new
+PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python tests/integration/step5_comm/prepare.py \
+  --definition tests/integration/step5_comm/s2_run.json \
+  --stage-dir "$PWD/task_memory/step5_comm/s2_new" --run-id s2_new
+bash "$PWD/task_memory/step5_comm/s1_new/submit_with_env.sh"
+```
+
+Only the parent runs the last command. Each generated wrapper loads the
+credential environment before the submitter, restores the repository directory
+and uses `exec` to keep the blocking launcher alive. Do not detach or terminate
+it. Use a new ID for every attempt and recheck quota before submission.
+
+The worker consumes platform-produced `NODE_RANK`, `NODE_COUNT`, `PROC_PER_NODE`
+and `MASTER_ADDR`, requires eight processes per node, and uses distinct
+benchmark/probe ports. All nodes use the same static torchrun rendezvous;
+`--standalone` is used only for a one-node stage. Native failures retain their
+exit status. Node lifecycle receipts coordinate phase completion through the
+mounted local workspace, not an auxiliary quality verdict.
+
+Each node owns `node_<rank>/worker.log`, `manifest.json`, source/transport
+preflight and phase-exit receipts. Node zero alone creates the common root,
+collective outputs, `transport.json`, `validation.json` and `result.json`.
+The probe writes rank-specific diagnostics and only global rank zero writes
+`native_dispatch/dispatch_probe.json`; it checks stage TP/DP/EP groups and
+host placement, without substituting TP ranks for request-owner DP lanes.
+
+Transport verification retains libibverbs device visibility, active port/link
+type and actual inter-node `Channel ... via NET/IB/.../GDRDMA` lines from every
+node. Merely finding `NET/IB` initialization is insufficient. Bootstrap sockets
+are not data-plane fallback; selected Socket channels leave evidence unverified.
+These are node-level channel observations, not inferred attribution of each
+interleaved line to one DP group. Native DP group identity is checked separately.
+
+All auxiliary source, inventory, artifact and timing validators are advisory:
+exceptions or negative verdicts mark outputs unverified and print
+`STEP5_COMM_UNVERIFIED` to the platform log, without aborting healthy native
+phases. Native probe observation/diagnostic failures must likewise not suppress
+the underlying native call. This is mandatory for 32-GPU S1, and is also used
+for S2. Platform success alone never admits cost data.
 
 | Setting | S0 | S1 | S2 |
 | --- | --- | --- | --- |
@@ -115,6 +165,10 @@ These are 50 scenarios and 500 callsite cases per pass (1500 rows for 3 passes),
 not the design's approximate 300 distinct-payload rows. Five all-reduce
 callsites share the same payload; their multiplicities sum to 273. Keep exact
 dry-run counts authoritative and revise the wall estimate after S0.
+
+Kernel profiling runs once per callsite, not once per pass: expect 500 kernel
+rows for S1 and 460 for S2, versus 1500 and 1380 measurement/summary rows.
+The wall times above are planning budgets, not measured multi-node runtimes.
 
 S2 keeps TP8 and all payload boundaries, adapting each explicit scenario to
 two DP owners. Use the distinct uneven patterns `[T,1]`, `[T,T/2]`,
