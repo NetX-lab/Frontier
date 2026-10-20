@@ -282,6 +282,98 @@ def native_replay_inputs(tmp_path, engine, observer=None):
     return argv, output
 
 
+@pytest.mark.parametrize("version", ["0.10.2", "0.28.0"])
+@pytest.mark.parametrize("phase", ["completed", "cancelled"])
+def test_main_posts_and_retains_every_planned_request_over_http(tmp_path, monkeypatch, version, phase):
+    import threading
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+
+    engine = native_engine() | {"vllm_version": version, "model_name": "cpu-entry-fixture"}
+    argv, output = native_replay_inputs(tmp_path, engine)
+    if version == "0.10.2":
+        index = argv.index("--model-dir")
+        del argv[index:index + 2]
+
+    def local_metadata(source, destination):
+        destination.mkdir()
+        return {"vocab_size": 1024}
+
+    monkeypatch.setattr(vllm_replay, "write_model_dir", local_metadata)
+    monkeypatch.setattr(vllm_replay.subprocess, "Popen", lambda *args, **kwargs: object())
+    monkeypatch.setattr(vllm_replay, "wait_until_ready", lambda *args: 0.)
+    monkeypatch.setattr(vllm_replay, "stop_server", lambda *args: {"signal": "SIGINT", "returncode": 0})
+    planned = [{"request_id": f"main-{index}", "arrived_at": 0., "role": "formal", "segment": "formal",
+                "num_prefill_tokens": 4, "num_decode_tokens": 3} for index in range(2)]
+    if phase == "cancelled":
+        planned[1]["arrived_at"] = 10000.
+    trace = Path(argv[argv.index("--trace-dir") + 1])
+    (trace / "request_ids.json").write_text(json.dumps({"rows": planned}))
+    posted = []
+    started = threading.Event()
+    actual_replay = vllm_replay.replay
+
+    if phase == "cancelled":
+        async def cancel_replay(*args, **kwargs):
+            task = asyncio.create_task(actual_replay(*args, **kwargs))
+            try:
+                assert await asyncio.to_thread(started.wait, 5), "main never submitted its planned request"
+                task.cancel()
+                return await task
+            finally:
+                if not task.done():
+                    task.cancel()
+        monkeypatch.setattr(vllm_replay, "replay", cancel_replay)
+
+    async def exercise():
+        release = asyncio.Event()
+
+        async def complete(request):
+            body = await request.json()
+            posted.append(request.headers["X-Request-Id"])
+            assert body["stream"] is (version == "0.28.0")
+            started.set()
+            if phase == "cancelled":
+                await release.wait()
+            usage = {"prompt_tokens": 4, "completion_tokens": 3, "total_tokens": 7}
+            if version == "0.28.0":
+                payloads = [{"choices": [{"index": 0, "text": "", "token_ids": [1, 2, 3], "finish_reason": "length"}]},
+                            {"choices": [], "usage": usage}]
+                return web.Response(text="".join("data: " + json.dumps(payload) + "\n\n" for payload in payloads)
+                                    + "data: [DONE]\n\n", content_type="text/event-stream")
+            return web.json_response({"choices": [{"finish_reason": "length"}], "usage": usage})
+
+        app = web.Application()
+        app.router.add_post("/v1/completions", complete)
+        async with TestServer(app) as server:
+            args = argv + ["--port", str(server.port), "--origin-lead-s", "0"]
+            try:
+                if phase == "cancelled":
+                    with pytest.raises(asyncio.CancelledError):
+                        await asyncio.to_thread(vllm_replay.main, args)
+                else:
+                    assert await asyncio.to_thread(vllm_replay.main, args) == 0
+            finally:
+                release.set()
+
+    asyncio.run(exercise())
+    records = [json.loads(line) for line in (output / "client_requests.jsonl").read_text().splitlines()]
+    assert len(posted) == (2 if phase == "completed" else 1)
+    assert len(records) == len(planned) == 2
+    assert {record["request_id"] for record in records} == {entry["request_id"] for entry in planned}
+    assert len({record["request_id"] for record in records}) == len(records)
+    assert all(record["status"] == ("completed" if phase == "completed" else "unfinished") for record in records)
+    summary = json.loads((output / "replay_summary.json").read_text())
+    if phase == "cancelled":
+        assert records[0]["dispatch_monotonic"] is not None
+        assert records[1]["dispatch_monotonic"] is None
+        assert summary["error"]["type"] == "CancelledError"
+    else:
+        assert summary["num_requests"] == 2 and summary["failed_request_ids"] == []
+    print("MAIN_HTTP_EVIDENCE", json.dumps({"version": version, "phase": phase, "posts": len(posted),
+                                           "records": len(records), "ids": sorted(record["request_id"] for record in records)}))
+
+
 @pytest.mark.parametrize("failure", ["spawn", "startup"])
 def test_v028_main_retains_terminal_evidence_on_launch_failure(tmp_path, monkeypatch, failure):
     monkeypatch.setattr(vllm_replay.os, "environ", {

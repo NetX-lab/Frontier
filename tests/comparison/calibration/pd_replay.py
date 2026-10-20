@@ -76,6 +76,7 @@ from vllm_replay import (  # noqa: E402
     MODES, REPO_ROOT, kv_cache_tokens, replay, server_command, server_env, stop_server,
     wait_until_ready, write_model_dir, runtime_version, local_model_config, observer_evidence,
     SERVED_MODEL_NAME,
+    request_records,
 )
 
 ROLES = ("prefill", "decode")
@@ -284,29 +285,35 @@ async def observe_idle(urls, dp_size, timeout_s, poll_s, *, completed_after=None
     """Observe idle as an auxiliary soft gate; never stop native workers."""
     import aiohttp
 
-    started = time.monotonic()
+    if not math.isfinite(timeout_s) or timeout_s <= 0:
+        raise ValueError("Idle observation timeout must be positive and finite")
+    deadline = asyncio.get_running_loop().time() + timeout_s
     observations = []
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout_s)) as session:
-        while True:
-            sample = {"monotonic": time.monotonic(), "roles": {}, "errors": []}
-            for role in ROLES:
-                try:
-                    async with session.get(urls[role] + "/metrics") as response:
-                        response.raise_for_status()
-                        sample["roles"][role] = idle_metrics(await response.text(), dp_size)
-                except Exception as error:
-                    sample["errors"].append(f"{role}: {type(error).__name__}: {error}")
-            observations.append(sample)
-            fresh = completed_after is None or all(
-                sample["roles"].get(role, {}).get("completed_requests", -1) >= completed_after[role]
-                for role in ROLES)
-            if (not sample["errors"] and fresh
-                    and all(sample["roles"][role]["idle"] for role in ROLES)):
-                return {"verified": True, "observations": observations}
-            if time.monotonic() - started >= timeout_s:
-                return {"verified": False, "observations": observations,
-                        "error": "Idle/KV release or fresh native completion metrics unverified"}
-            await asyncio.sleep(poll_s)
+    try:
+        async with asyncio.timeout_at(deadline):
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout_s)) as session:
+                async def scrape(role, sample):
+                    try:
+                        async with session.get(urls[role] + "/metrics") as response:
+                            response.raise_for_status()
+                            sample["roles"][role] = idle_metrics(await response.text(), dp_size)
+                    except Exception as error:
+                        sample["errors"].append(f"{role}: {type(error).__name__}: {error}")
+
+                while True:
+                    sample = {"monotonic": time.monotonic(), "roles": {}, "errors": []}
+                    observations.append(sample)
+                    await asyncio.gather(*(scrape(role, sample) for role in ROLES))
+                    fresh = completed_after is None or all(
+                        sample["roles"].get(role, {}).get("completed_requests", -1) >= completed_after[role]
+                        for role in ROLES)
+                    if (not sample["errors"] and fresh
+                            and all(sample["roles"][role]["idle"] for role in ROLES)):
+                        return {"verified": True, "observations": observations}
+                    await asyncio.sleep(poll_s)
+    except TimeoutError:
+        return {"verified": False, "observations": observations,
+                "error": "Idle observation deadline exceeded; idle/KV release or fresh completion metrics unverified"}
 
 
 def formal_metrics(records):
@@ -336,13 +343,12 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp
     phases = {}
     for repeat in manifest["repetitions"]["repeat_indices"]:
         for phase, templates in (("warmup", warmup), ("formal", formal)):
-            phases[repeat, phase] = [row | {
+            phases[repeat, phase] = request_records([row | {
                 "template_request_id": row["request_id"],
                 "request_id": manifest["repetitions"]["runtime_request_id_rule"].format(
                     request_id=row["request_id"], repeat=repeat),
-                "repeat": repeat, "segment": phase, "status": "not_submitted",
-                "dispatch_monotonic": None, "http_status": None,
-            } for row in templates]
+                "repeat": repeat, "segment": phase,
+            } for row in templates])
             records.extend(phases[repeat, phase])
 
     def persist():

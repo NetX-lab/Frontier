@@ -305,8 +305,10 @@ def test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monke
     assert result["status"] == ("CLIENT_WORKLOAD_VERIFIED" if fault is None else "REFERENCE_UNSTABLE")
     if fault is None:
         assert all(boundary["verified"] for boundary in boundaries)
-        assert metrics_reads == [(role, count) for count in (0, 16, 144, 160, 288, 304, 432)
-                                 for role in ("prefill", "decode")]
+        assert len(metrics_reads) == 14
+        for index, count in enumerate((0, 16, 144, 160, 288, 304, 432)):
+            assert set(metrics_reads[index * 2:index * 2 + 2]) == {
+                (role, count) for role in ("prefill", "decode")}
     if fault == "request":
         assert sum(record["status"] == "failed" for record in records) == 1
         assert result["repetitions"][0]["metrics"] is None
@@ -325,7 +327,7 @@ def test_cancelled_replay_keeps_all_planned_records_and_marks_unfinished():
     async def exercise():
         started = asyncio.Event()
         release = asyncio.Event()
-        records = [row("in-flight"), row("not-yet-due") | {"arrived_at": 10000.}]
+        records = vllm_replay.request_records([row("in-flight"), row("not-yet-due") | {"arrived_at": 10000.}])
 
         async def complete(request):
             started.set()
@@ -371,3 +373,97 @@ def test_idle_observation_waits_for_fresh_completion_and_release():
                                                   completed_after={"prefill": 2, "decode": 2})
         assert result["verified"] and len(result["observations"]) == 3
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("metrics_fault", ["both_hang", "slow_body", "poll"])
+def test_idle_observation_deadline_does_not_cancel_later_phases(tmp_path, monkeypatch, metrics_fault):
+    async def exercise():
+        # Reduced CPU fixture only: one warmup and one formal request per repeat.
+        # The 80 ms observation budget compresses timeout behavior, not production arrivals.
+        budget = .08
+        workload = copy.deepcopy(pd_replay.canonical_workload(TRACE))
+        workload = (workload[0], workload[1][:1], workload[2][:1])
+        released = asyncio.Event()
+        seen = []
+        posted = {role: [] for role in ("prefill", "decode")}
+        durations = []
+        loop = asyncio.get_running_loop()
+        actual_observe = pd_replay.observe_idle
+
+        async def timed_observe(*args, **kwargs):
+            start = loop.time()
+            try:
+                return await actual_observe(*args, **kwargs)
+            finally:
+                durations.append(loop.time() - start)
+
+        monkeypatch.setattr(pd_replay, "observe_idle", timed_observe)
+
+        def complete(role):
+            async def post(request):
+                body = await request.json()
+                posted[role].append(request.headers["X-Request-Id"])
+                if role == "prefill":
+                    return web.json_response({"kv_transfer_params": PARAMS})
+                count = body["max_tokens"]
+                return web.Response(body=event(token_event([1] * count, "length"))
+                                    + event(usage_event(len(body["prompt"]), count)) + event("[DONE]"),
+                                    content_type="text/event-stream")
+            return post
+
+        def scrape(role):
+            async def get(request):
+                seen.append(role)
+                if metrics_fault == "both_hang":
+                    await released.wait()
+                elif metrics_fault == "slow_body":
+                    response = web.StreamResponse()
+                    await response.prepare(request)
+                    body_ready = asyncio.Event()
+                    timer = loop.call_later(budget * .8, body_ready.set)
+                    try:
+                        await body_ready.wait()
+                        await response.write(metrics(0, busy=1).encode())
+                    finally:
+                        timer.cancel()
+                    return response
+                return web.Response(text=metrics(0, busy=1))
+            return get
+
+        p, d = web.Application(), web.Application()
+        for role, app in (("prefill", p), ("decode", d)):
+            app.router.add_post("/v1/completions", complete(role))
+            app.router.add_get("/metrics", scrape(role))
+        async with TestServer(p) as ps, TestServer(d) as ds:
+            urls = {"prefill": str(ps.make_url("")).rstrip("/"),
+                    "decode": str(ds.make_url("")).rstrip("/")}
+            proxy = build_app(urls["prefill"], urls["decode"], "", "", tmp_path / "proxy.jsonl",
+                              vllm_version="0.28.0")
+            async with TestServer(proxy) as front:
+                try:
+                    # This outer deadline represents a worker workload deadline.
+                    # Two full per-GET waits or an uncapped poll sleep exceed it.
+                    result, records = await asyncio.wait_for(pd_replay.replay_repetitions(
+                        workload, front.port, 154880, 0., urls, 1, budget, budget * 3),
+                        timeout=7 * budget * 1.5)
+                finally:
+                    released.set()
+        assert len(durations) == 7
+        assert all(budget * .9 <= elapsed < budget * 1.5 for elapsed in durations)
+        assert all(seen.count(role) == 7 for role in ("prefill", "decode"))
+        assert len(records) == 6 and all(record["status"] == "completed" for record in records)
+        assert all(len(ids) == 6 for ids in posted.values())
+        assert posted["prefill"] == posted["decode"]
+        assert len(result["repetitions"]) == 3
+        assert all(not boundary["verified"] for boundary in result["idle_boundaries"])
+        assert result["status"] == "REFERENCE_UNSTABLE" and not result["client_workload_verified"]
+        print("IDLE_DEADLINE_HTTP_EVIDENCE", json.dumps({"fault": metrics_fault, "budget_s": budget,
+              "durations_s": durations, "requests_per_role": {role: len(ids) for role, ids in posted.items()},
+              "repeats": len(result["repetitions"]), "status": result["status"]}))
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("timeout", [0., -1., float("inf"), float("nan")])
+def test_idle_observation_rejects_disabled_or_unbounded_deadline(timeout):
+    with pytest.raises(ValueError, match="positive and finite"):
+        asyncio.run(pd_replay.observe_idle({}, 1, timeout, .001))

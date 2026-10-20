@@ -478,11 +478,21 @@ async def read_token_stream(response, record):
         errors.append("No actual output token observed")
 
 
+def request_records(rows: list[dict]) -> list[dict]:
+    """Allocate one mutable record per planned request before any submission."""
+    return [row | {"segment": row.get("segment", row["role"]), "dispatch_monotonic": None,
+                   "http_status": None, "status": "not_submitted", "validation_errors": []}
+            for row in rows]
+
+
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
                  profile_window_s: tuple[float, float] | None = None, *,
                  vllm_version: str = "0.10.2", records: list[dict] | None = None) -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
-    close the server's torch profiler at those two offsets of the same clock."""
+    close the server's torch profiler at those two offsets of the same clock.
+
+    Callers retaining partial results pass one preallocated request record per row.
+    """
     import aiohttp
 
     url = f"http://127.0.0.1:{port}/v1/completions"
@@ -502,10 +512,7 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
         for row in rows
     }
     if records is None:
-        records = [dict(row) for row in rows]
-    for record in records:
-        record.update(segment=record.get("segment", record["role"]), dispatch_monotonic=None,
-                      http_status=None, status="not_submitted", validation_errors=[])
+        records = request_records(rows)
     timeout = aiohttp.ClientTimeout(total=None)
     connector = aiohttp.TCPConnector(limit=0)
     async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
@@ -670,7 +677,7 @@ def main(argv: list[str] | None = None) -> int:
     if version == "0.28.0":
         summary.update(vllm_version=version, qualification_verified=False,
                        model_config_sha256=hashlib.sha256((model_dir / "config.json").read_bytes()).hexdigest())
-    records = []
+    records = request_records(request_ids["rows"])
     with (output_dir / "server.log").open("w") as server_log:
         server = None
         try:
@@ -691,6 +698,8 @@ def main(argv: list[str] | None = None) -> int:
                 summary["server_stop"] = stop_server(server, args.stop_timeout_s)
             if version == "0.28.0":
                 summary["observer_evidence"] = observer_evidence(engine, observer)
+            (output_dir / "client_requests.jsonl").write_text(
+                "".join(json.dumps(record) + "\n" for record in records))
             (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
     records.sort(key=lambda record: record["dispatch_monotonic"])
     (output_dir / "client_requests.jsonl").write_text(
