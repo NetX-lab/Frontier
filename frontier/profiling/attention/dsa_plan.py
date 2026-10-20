@@ -350,6 +350,7 @@ def _build_prefill_cases(
     chunk_budgets: Sequence[int],
     limits: DsaMeasurementLimits,
     context_grid: Sequence[int],
+    decode_query_limit: int | None = None,
 ) -> list[DsaCase]:
     """One full-length prompt per engine plus each shorter single-chunk prompt.
 
@@ -376,7 +377,8 @@ def _build_prefill_cases(
                 estimated_steps=repeats * _prefill_steps(long_prompt, budget),
             )
         )
-    for prompt_len in context_grid:
+    short_queries = build_batch_grid(min(decode_query_limit, long_prompt)) if decode_query_limit is not None else ()
+    for prompt_len in sorted(set(context_grid) | set(short_queries)):
         engine_index = next(
             (index for index, budget in enumerate(chunk_budgets) if budget > prompt_len),
             None,
@@ -396,6 +398,28 @@ def _build_prefill_cases(
                 estimated_steps=repeats,
             )
         )
+    if decode_query_limit is None:
+        # DeepSeek-V4 reuses the ordinary prefill plan, not sparse-MLA paths.
+        return cases
+    # Multiple long queries use the sparse prefill path. Schedule all prompts
+    # in one step so the recorded sequence count is the requested case size.
+    for engine_index, budget in enumerate(chunk_budgets):
+        max_batch = min(limits.max_num_seqs, budget // (decode_query_limit + 1))
+        if max_batch < 2:
+            continue
+        for batch_size in build_batch_grid(max_batch):
+            if batch_size == 1:
+                continue
+            prompt_len = min(budget // batch_size, long_prompt)
+            if batch_size * (prompt_len + 1) > limits.max_kv_tokens_per_lane:
+                continue
+            cases.append(DsaCase(
+                case_id=f"e{engine_index}-prefill-b{batch_size}-p{prompt_len}",
+                engine_index=engine_index, phase=PHASE_PREFILL, batch_size=batch_size,
+                prompt_len=prompt_len, max_tokens=1,
+                warmup=limits.prefill_warmup_repeats, measured=limits.prefill_measured_repeats,
+                estimated_steps=repeats,
+            ))
     return cases
 
 
@@ -495,7 +519,9 @@ def build_dsa_profile_plan(
         limits.block_size, shape.index_topk, limits.max_context_len
     )
     # The largest budget runs the decode cases.
-    cases = _build_prefill_cases(chunk_budgets, limits, context_grid)
+    from frontier.attention.dsa_features import dsa_decode_query_limit
+
+    cases = _build_prefill_cases(chunk_budgets, limits, context_grid, dsa_decode_query_limit(heads_per_rank))
     cases += _build_decode_cases(
         len(chunk_budgets) - 1, chunk_budgets[-1], limits, context_grid
     )

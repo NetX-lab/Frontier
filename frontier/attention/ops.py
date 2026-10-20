@@ -30,7 +30,7 @@ class AttentionMemoryLayout(Enum):
 
     DENSE_KV = "dense_kv"
     LATENT_MLA = "latent_mla"
-    FROZEN_DSA = "frozen_dsa"
+    DSA = "dsa"
     FIXED_STATE = "fixed_state"
     COMPRESSED_KV = "compressed_kv"
 

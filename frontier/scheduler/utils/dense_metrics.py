@@ -31,13 +31,13 @@ def _restore_structural_dsa_attention(
     layer: ExecutionTime,
     predictor: Any,
 ) -> ExecutionTime:
-    """Use the existing dummy DSA source scope on the PDD reporting path."""
+    """Retain measured DSA scopes; reconstruct only synthetic source timing."""
     if layer.attention_family_id != "dsa_attention":
         return layer
     if not getattr(predictor, "_enable_dummy_mode", False):
-        raise NotImplementedError(
-            "DSA stage metrics require the supported dummy structural path"
-        )
+        if layer.attention_operator_times is None:
+            raise ValueError("Measured DSA stage metrics require executed attention scopes")
+        return layer
     predict_dsa = getattr(predictor, "_predict_dsa_dummy_attention_time", None)
     if not callable(predict_dsa):
         raise ValueError("DSA predictor is missing its structural attention source")

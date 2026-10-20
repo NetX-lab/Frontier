@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
+from frontier.attention.dsa_features import DSA_ROW_SCHEMA_VERSION
 from frontier.config.precision_type import PrecisionType
 from frontier.profiling.attention.dsa_plan import (
     DSA_SCOPES,
@@ -37,7 +38,6 @@ from frontier.profiling.common.runtime_identity import (
     canonical_json,
 )
 
-DSA_ROW_SCHEMA_VERSION = "dsa_attention.v1"
 CUDA_EVENT = "CUDA_EVENT"
 KERNEL_ONLY = "KERNEL_ONLY"
 MEASUREMENT_TYPES = (CUDA_EVENT, KERNEL_ONLY)
@@ -136,10 +136,10 @@ def batch_load_columns(
         "max_key_len": max(r.num_computed_tokens + r.num_scheduled_tokens for r in requests),
     }
     context: dict[str, Any]
-    if len(prefills) == 1 and not decodes:
+    if prefills and not decodes:
         context = {
-            "prefill_chunk_size": prefills[0].num_scheduled_tokens,
-            "kv_cache_size": prefills[0].num_computed_tokens,
+            "prefill_chunk_size": sum(r.num_scheduled_tokens for r in prefills),
+            "kv_cache_size": sum(r.num_computed_tokens for r in prefills) // len(prefills),
         }
     elif not prefills:
         context = {

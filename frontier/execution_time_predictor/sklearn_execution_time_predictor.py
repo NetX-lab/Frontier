@@ -1418,6 +1418,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
     def _load_attention_df(self, file_path: str) -> pd.DataFrame:
+        if self._get_attention_family() is DSA_ATTENTION_FAMILY:
+            from frontier.execution_time_predictor.dsa_predictor import load_dsa_dataframe
+
+            return load_dsa_dataframe(file_path, self._model_config, self._replica_config.attn_tensor_parallel_size,
+                                      self._block_size, self._active_measurement_type)
         df = pd.read_csv(file_path)
         df = df.drop_duplicates()
 
@@ -2491,6 +2496,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     def _register_profiling_metadata_from_file(
         self, file_path: str, operation_names: List[str]
     ) -> None:
+        if operation_names == list(get_enabled_predictor_metric_names(DSA_ATTENTION_FAMILY)):
+            from frontier.execution_time_predictor.dsa_predictor import dsa_input_path
+
+            file_path = dsa_input_path(file_path)
         if not file_path:
             logger.warning("Profiling file missing: %s", file_path)
             self._register_missing_profiling_metadata(operation_names, file_path)
@@ -3529,6 +3538,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         return models
 
     def _train_attention_layer_models(self) -> Dict[str, BaseEstimator]:
+        if self._get_attention_family() is DSA_ATTENTION_FAMILY:
+            from frontier.execution_time_predictor.dsa_predictor import train_dsa_models
+
+            return train_dsa_models(self._load_attention_df(self._attention_input_file), self._train_model)
         if self._is_mla_attention_family():
             return self._train_mla_attention_layer_models()
 
@@ -4003,6 +4016,10 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         ]:
             return predictions
 
+        if self._get_attention_family() is DSA_ATTENTION_FAMILY:
+            from frontier.execution_time_predictor.dsa_predictor import DSAPredictor
+
+            return {"dsa_attention": DSAPredictor(self._models)}
         if self._is_mla_attention_family():
             feature_columns = get_enabled_shared_predictor_feature_columns(
                 LATENT_MLA_ATTENTION_FAMILY
@@ -7641,6 +7658,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 f"Attention operations not supported for cluster type {cluster_type}"
             )
 
+        if attention_family is DSA_ATTENTION_FAMILY:
+            self._dsa_predictor = self._predictions["dsa_attention"]
+            return self._dsa_predictor.predict_attention_time(self, batch, layer_id)
         if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:
             return self._predict_mla_attention_layer_time(
                 batch=batch,

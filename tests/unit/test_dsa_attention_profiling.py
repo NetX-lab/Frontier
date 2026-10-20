@@ -147,6 +147,21 @@ def test_cases_respect_target_limits(plan):
     assert not any(case_id.endswith("-p1024") for case_id in prefill)
 
 
+def test_plan_covers_short_extend_and_multi_sequence_prefill(plan):
+    from frontier.attention.dsa_features import DSA_DECODE_QUERY_LIMIT
+    from frontier.profiling.attention.dsa_rows import StepRequest, batch_load_columns
+
+    prefills = [case for case in plan.cases if case.phase == PHASE_PREFILL]
+    assert {2, 4, 8, 16, 32, 64, 128, 256} <= {case.prompt_len for case in prefills}
+    multi = [case for case in prefills if case.batch_size > 1]
+    assert multi
+    assert all(case.prompt_len > DSA_DECODE_QUERY_LIMIT for case in multi)
+    load, context = batch_load_columns([StepRequest(512, 0, 512), StepRequest(512, 0, 512)])
+    assert load["num_prefill_seqs"] == 2
+    assert json.loads(load["prefill_seq_lens"]) == [512, 512]
+    assert context == {"prefill_chunk_size": 1024, "kv_cache_size": 0}
+
+
 def test_engine_max_num_seqs_fits_chunk_budget_at_target_limits(hf_config):
     # vLLM rejects an engine whose max_num_batched_tokens is below
     # max_num_seqs; the target limits allow 1024 sequences with 256-token chunks.
@@ -430,6 +445,14 @@ def test_end_step_requires_captured_metadata():
     active = state.begin_step(_scheduler_output(new=[("a", 256, 0, 512)]))
     with pytest.raises(RuntimeError, match="metadata was not captured"):
         state.end_step(active)
+
+
+def test_worker_records_all_sequences_in_a_multi_prefill_case():
+    state = runner._WorkerState(engine_index=1, torch_module=_fake_torch())
+    state.case = runner._CaseRecorder("c", PHASE_PREFILL, 2, skip=0, limit=1, measurement=CUDA_EVENT)
+    active = state.begin_step(_scheduler_output(new=[("a", 512, 0, 512), ("b", 512, 0, 512)]))
+    assert active is not None
+    assert len(active.record["requests"]) == 2
 
 
 def test_prefill_window_counts_chunks_per_prompt(plan):

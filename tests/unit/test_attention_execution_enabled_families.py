@@ -17,9 +17,9 @@ from frontier.attention.families import (
 )
 
 
-def test_iter_execution_enabled_families_excludes_frozen_dsa() -> None:
+def test_iter_execution_enabled_families_includes_measured_dsa() -> None:
     enabled_ids = {family.family_id for family in iter_execution_enabled_families()}
-    assert DSA_ATTENTION_FAMILY.family_id not in enabled_ids
+    assert DSA_ATTENTION_FAMILY.family_id in enabled_ids
     assert DEEPSEEK_V4_ATTENTION_FAMILY.family_id not in enabled_ids
     assert DENSE_ATTENTION_FAMILY.family_id in enabled_ids
     assert LATENT_MLA_ATTENTION_FAMILY.family_id in enabled_ids
@@ -35,9 +35,7 @@ def test_iter_execution_enabled_families_returns_only_runtime_enabled() -> None:
 def test_iter_execution_enabled_families_is_order_preserving_subset() -> None:
     full_ids = [family.family_id for family in iter_attention_families()]
     enabled_ids = [family.family_id for family in iter_execution_enabled_families()]
-    unsupported = {
-        DSA_ATTENTION_FAMILY.family_id, DEEPSEEK_V4_ATTENTION_FAMILY.family_id,
-    }
+    unsupported = {DEEPSEEK_V4_ATTENTION_FAMILY.family_id}
     assert enabled_ids == [
         family_id for family_id in full_ids if family_id not in unsupported
     ]

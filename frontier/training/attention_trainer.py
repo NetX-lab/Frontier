@@ -109,6 +109,10 @@ class AttentionTrainer(BaseTrainer):
 
         self.model_config = BaseModelConfig.create_from_name(model_name)
         resolve_runtime_attention_family(self.model_config).require_enabled_for_execution()
+        if resolve_runtime_attention_family(self.model_config).family_id == "dsa_attention":
+            raise NotImplementedError(
+                "DSA fitting uses the simulator's shared model manager; standalone AttentionTrainer is dense-only"
+            )
 
         # Use layer dataset path as the primary dataset path for base class
         # (compute_dataset_path is now optional)

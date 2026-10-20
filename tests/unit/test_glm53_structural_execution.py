@@ -193,12 +193,13 @@ def test_post_attention_moe_stage_has_no_attention_scopes(predictor_inputs):
     _assert_cpu_once(stage)
 
 
-def test_structural_trace_requires_explicit_admission(predictor_inputs):
+def test_dsa_structural_and_measured_trace_share_scope_mapping(predictor_inputs):
     predictor = RandomForrestExecutionTimePredictor(**predictor_inputs)
     stage = _predict(predictor, layer_id=2, num_layers=2)
     for layer in stage.layer_execution_times:
-        with pytest.raises(NotImplementedError, match="DSA"):
-            get_attention_trace_op_times(layer, DSA_ATTENTION_FAMILY)
+        assert get_attention_trace_op_times(layer, DSA_ATTENTION_FAMILY) == get_attention_trace_op_times(
+            layer, DSA_ATTENTION_FAMILY, allow_structural=True,
+        )
     full, shared = stage.layer_execution_times
     assert [(op.name, value) for op, value in get_attention_trace_op_times(
         full, DSA_ATTENTION_FAMILY, allow_structural=True,
@@ -208,11 +209,12 @@ def test_structural_trace_requires_explicit_admission(predictor_inputs):
     )] == [("attn_dsa_indexer", 0.0), ("attn_dsa_mla", DUMMY_MS)]
 
 
-def test_real_factory_rejects_normal_mode_before_loading_profiles(predictor_inputs):
+def test_real_factory_requires_profiles_in_normal_mode(predictor_inputs, tmp_path):
     predictor_inputs["predictor_config"] = replace(
         predictor_inputs["predictor_config"], enable_dummy_mode=False,
+        linear_op_input_file=str(tmp_path / "missing_linear_op.csv"),
     )
-    with pytest.raises(NotImplementedError, match="DSA"):
+    with pytest.raises(FileNotFoundError, match="missing_linear_op"):
         RandomForrestExecutionTimePredictor(**predictor_inputs)
 
 
