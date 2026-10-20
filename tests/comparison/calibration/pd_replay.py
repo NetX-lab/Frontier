@@ -54,11 +54,15 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import csv
 import hashlib
 import ipaddress
 import json
+import math
 import os
 from pathlib import Path
+import re
+import statistics
 import subprocess
 import sys
 import time
@@ -71,6 +75,8 @@ from pd_proxy import proxied_request_id  # noqa: E402
 from vllm_replay import (  # noqa: E402
     MODES, REPO_ROOT, kv_cache_tokens, replay, server_command, server_env, stop_server,
     wait_until_ready, write_model_dir, runtime_version, local_model_config, observer_evidence,
+    SERVED_MODEL_NAME,
+    request_records,
 )
 
 ROLES = ("prefill", "decode")
@@ -202,6 +208,211 @@ def connector_check(server_log: Path) -> dict:
     }
 
 
+def canonical_workload(trace_dir):
+    """Read the existing frozen artifact layout without rewriting any input."""
+    path = trace_dir / "manifest.json"
+    if not path.exists():
+        return None
+    manifest = json.loads(path.read_text())
+    if manifest.get("schema") != "frontier.canonical_fixed_workload.v1":
+        return None
+    members = {"manifest.json", "trace.csv", "request_ids.json", "warmup_pool.csv"}
+    checked = set()
+    for line in (trace_dir / "SHA256SUMS").read_text().splitlines():
+        expected, name = line.split()
+        if name not in members or name in checked:
+            raise ValueError("Unexpected canonical checksum member")
+        checked.add(name)
+        if hashlib.sha256((trace_dir / name).read_bytes()).hexdigest() != expected:
+            raise ValueError(f"Canonical workload checksum mismatch: {name}")
+    if checked != members:
+        raise ValueError("Incomplete canonical checksum manifest")
+    formal = json.loads((trace_dir / "request_ids.json").read_text())["rows"]
+    with (trace_dir / "warmup_pool.csv").open() as stream:
+        warmup = [row | {"arrived_at": float(row["arrived_at"]),
+                         "num_prefill_tokens": int(row["num_prefill_tokens"]),
+                         "num_decode_tokens": int(row["num_decode_tokens"]), "role": "warmup"}
+                  for row in csv.DictReader(stream)]
+    for phase, rows, count in (
+        ("formal", formal, manifest["selection"]["num_formal_requests"]),
+        ("warmup", warmup, manifest["warmup"]["num_requests_per_repetition"]),
+    ):
+        if len(rows) != count or any(
+            row["role"] != phase or row["arrived_at"] != index * manifest["arrivals"]["inter_arrival_s"]
+            or row["num_prefill_tokens"] != manifest["lengths"]["prompt_tokens_per_request"]
+            or row["num_decode_tokens"] != manifest["lengths"]["output_tokens_per_request"]
+            for index, row in enumerate(rows)
+        ):
+            raise ValueError(f"Canonical {phase} row/count mismatch")
+    ids = [row["request_id"] for row in formal + warmup]
+    if len(set(ids)) != len(ids):
+        raise ValueError("Canonical formal/warmup template IDs must be disjoint")
+    return manifest, formal, warmup
+
+
+def idle_metrics(text, dp_size):
+    """Require native metrics for every declared request-owner DP lane."""
+    names = ("num_requests_running", "num_requests_waiting", "kv_cache_usage_perc")
+    lanes = {str(index): {} for index in range(dp_size)}
+    completed = 0.0
+    for line in text.splitlines():
+        match = re.fullmatch(r'vllm:(\w+)\{(.*)\}\s+([^\s]+)(?:\s+\d+)?', line)
+        if match is None:
+            continue
+        name, labels, value = match.groups()
+        if name not in (*names, "request_success_total"):
+            continue
+        labels = dict(re.findall(r'(\w+)="([^"\\]*)"', labels))
+        if labels.get("model_name") != SERVED_MODEL_NAME:
+            continue
+        lane = labels.get("engine")
+        if lane not in lanes:
+            raise ValueError(f"Unexpected native metrics engine: {lane}")
+        number = float(value)
+        if name == "request_success_total":
+            completed += number
+        else:
+            if name in lanes[lane]:
+                raise ValueError("Duplicate native idle gauge")
+            lanes[lane][name] = number
+    if any(set(values) != set(names) for values in lanes.values()):
+        raise ValueError("Missing native running/waiting/KV gauge for a declared lane")
+    return {"lanes": lanes, "completed_requests": completed,
+            "idle": all(value == 0 for values in lanes.values() for value in values.values())}
+
+
+async def observe_idle(urls, dp_size, timeout_s, poll_s, *, completed_after=None):
+    """Observe idle as an auxiliary soft gate; never stop native workers."""
+    import aiohttp
+
+    if not math.isfinite(timeout_s) or timeout_s <= 0:
+        raise ValueError("Idle observation timeout must be positive and finite")
+    deadline = asyncio.get_running_loop().time() + timeout_s
+    observations = []
+    try:
+        async with asyncio.timeout_at(deadline):
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout_s)) as session:
+                async def scrape(role, sample):
+                    try:
+                        async with session.get(urls[role] + "/metrics") as response:
+                            response.raise_for_status()
+                            sample["roles"][role] = idle_metrics(await response.text(), dp_size)
+                    except Exception as error:
+                        sample["errors"].append(f"{role}: {type(error).__name__}: {error}")
+
+                while True:
+                    sample = {"monotonic": time.monotonic(), "roles": {}, "errors": []}
+                    observations.append(sample)
+                    await asyncio.gather(*(scrape(role, sample) for role in ROLES))
+                    fresh = completed_after is None or all(
+                        sample["roles"].get(role, {}).get("completed_requests", -1) >= completed_after[role]
+                        for role in ROLES)
+                    if (not sample["errors"] and fresh
+                            and all(sample["roles"][role]["idle"] for role in ROLES)):
+                        return {"verified": True, "observations": observations}
+                    await asyncio.sleep(poll_s)
+    except TimeoutError:
+        return {"verified": False, "observations": observations,
+                "error": "Idle observation deadline exceeded; idle/KV release or fresh completion metrics unverified"}
+
+
+def formal_metrics(records):
+    """Compute only a complete population's uncorrected client-token metrics."""
+    if not records or any(record["status"] != "completed" for record in records):
+        return None
+    start = min(record["dispatch_monotonic"] for record in records)
+    stop = max(record["last_token_monotonic"] for record in records)
+    total = sum(record["num_prefill_tokens"] + record["num_decode_tokens"] for record in records)
+    metrics = {"first_submission_monotonic": start, "last_token_monotonic": stop,
+               "window_s": stop - start, "total_tokens": total, "total_thpt_tokens_s": total / (stop - start)}
+    for field in ("ttft_ms", "tpot_ms", "e2e_ms"):
+        values = sorted(record[field] for record in records)
+        metrics[field] = {"mean": statistics.mean(values), "p50": statistics.median(values),
+                          "p95": values[max(0, math.ceil(len(values) * .95) - 1)]}
+    return metrics
+
+
+async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp_size,
+                             idle_timeout_s, idle_poll_s, *, checkpoint=None, records=None):
+    """Run canonical warmup/formal phases in one existing proxy/client lifetime."""
+    manifest, formal, warmup = workload
+    result = {"repetitions": [], "idle_boundaries": [], "observation_errors": [],
+              "reference_admission": "UNVERIFIED"}
+    if records is None:
+        records = []
+    phases = {}
+    for repeat in manifest["repetitions"]["repeat_indices"]:
+        for phase, templates in (("warmup", warmup), ("formal", formal)):
+            phases[repeat, phase] = request_records([row | {
+                "template_request_id": row["request_id"],
+                "request_id": manifest["repetitions"]["runtime_request_id_rule"].format(
+                    request_id=row["request_id"], repeat=repeat),
+                "repeat": repeat, "segment": phase,
+            } for row in templates])
+            records.extend(phases[repeat, phase])
+
+    def persist():
+        if checkpoint is not None:
+            try:
+                checkpoint(result, records)
+            except Exception as error:
+                result["observation_errors"].append(f"{type(error).__name__}: {error}")
+                print("NATIVE_PD_AUXILIARY_UNVERIFIED", result["observation_errors"][-1], flush=True)
+
+    async def boundary(name, completed_after=None):
+        try:
+            observed = await observe_idle(urls, dp_size, idle_timeout_s, idle_poll_s,
+                                          completed_after=completed_after)
+        except Exception as error:
+            observed = {"verified": False, "error": f"{type(error).__name__}: {error}"}
+        observed["boundary"] = name
+        if not observed["verified"]:
+            print("NATIVE_PD_AUXILIARY_UNVERIFIED", name, observed.get("error"), flush=True)
+        result["idle_boundaries"].append(observed)
+        persist()
+        return observed
+
+    idle = await boundary("before_repeat01_warmup")
+    completed = ({role: idle["observations"][-1]["roles"][role]["completed_requests"] for role in ROLES}
+                 if idle["verified"] else None)
+    for repeat in manifest["repetitions"]["repeat_indices"]:
+        current = {"repeat": repeat, "phases": {}, "client_workload_verified": idle["verified"]}
+        result["repetitions"].append(current)
+        for phase in ("warmup", "formal"):
+            rows = phases[repeat, phase]
+            try:
+                clock, phase_records = await replay(rows, port, vocab_size, origin_lead_s,
+                                                    vllm_version="0.28.0", records=rows)
+            finally:
+                persist()
+            failed = [record["request_id"] for record in phase_records if record["status"] != "completed"]
+            current["phases"][phase] = clock | {"planned_requests": len(rows),
+                                               "recorded_requests": len(phase_records),
+                                               "failed_request_ids": failed}
+            current["client_workload_verified"] &= not failed and len(phase_records) == len(rows)
+            persist()
+            if completed is not None:
+                completed = {role: count + len(rows) for role, count in completed.items()}
+            idle = await boundary(f"after_repeat{repeat:02d}_{phase}", completed)
+            current["client_workload_verified"] &= idle["verified"]
+            if phase == "formal":
+                try:
+                    current["metrics"] = formal_metrics(phase_records) if len(phase_records) == len(rows) else None
+                except Exception as error:
+                    current["metrics"] = None
+                    result["observation_errors"].append(f"{type(error).__name__}: {error}")
+                    print("NATIVE_PD_AUXILIARY_UNVERIFIED", result["observation_errors"][-1], flush=True)
+                    current["client_workload_verified"] = False
+        persist()
+    result["client_workload_verified"] = (all(row["client_workload_verified"] for row in result["repetitions"])
+                                           and not result["observation_errors"])
+    result["status"] = "CLIENT_WORKLOAD_VERIFIED" if result["client_workload_verified"] else "REFERENCE_UNSTABLE"
+    persist()
+    if result["observation_errors"]:
+        result.update(client_workload_verified=False, status="REFERENCE_UNSTABLE")
+    return result, records
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--engine-config", type=Path, required=True)
@@ -221,10 +432,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--origin-lead-s", type=float, default=1.0)
     parser.add_argument("--drain-s", type=float, default=3.0)
     parser.add_argument("--stop-timeout-s", type=float, default=60.0)
+    parser.add_argument("--idle-timeout-s", type=float, default=180.0)
+    parser.add_argument("--idle-poll-s", type=float, default=1.0)
     args = parser.parse_args(argv)
 
     engine = json.loads(args.engine_config.read_text())
     version = runtime_version(engine)
+    workload = canonical_workload(args.trace_dir)
+    if workload is not None and (version != "0.28.0" or args.mode != "clean"):
+        raise ValueError("Canonical repetitions require the native v0.28 clean mode")
+    if args.idle_timeout_s <= 0 or args.idle_poll_s <= 0:
+        raise ValueError("Idle observation timeout and poll interval must be positive")
     external = args.prefill_url is not None or args.decode_url is not None
     if external and (version != "0.28.0" or args.prefill_url is None or args.decode_url is None):
         raise ValueError("External P/D endpoints require v0.28 and both --prefill-url and --decode-url")
@@ -379,11 +597,23 @@ def main(argv: list[str] | None = None) -> int:
                 proxy_command, stdout=proxy_log, stderr=subprocess.STDOUT
             )
             wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
-            clock, records = asyncio.run(replay(
-                rows, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
-                vllm_version=version,
-            ))
-            summary.update(clock)
+            if workload is not None:
+                def checkpoint(result, phase_records):
+                    (output_dir / "client_requests.jsonl").write_text(
+                        "".join(json.dumps(record) + "\n" for record in phase_records))
+                    (output_dir / "canonical_repetitions.json").write_text(json.dumps(result, indent=1))
+
+                repetitions, records = asyncio.run(replay_repetitions(
+                    workload, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
+                    urls, engine["data_parallel_size"], args.idle_timeout_s, args.idle_poll_s,
+                    checkpoint=checkpoint, records=records))
+                summary["canonical_repetitions"] = repetitions
+            else:
+                clock, records = asyncio.run(replay(
+                    rows, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
+                    vllm_version=version,
+                ))
+                summary.update(clock)
             time.sleep(args.drain_s)
         except BaseException as error:
             summary["error"] = {"type": type(error).__name__, "message": str(error)}
@@ -396,16 +626,20 @@ def main(argv: list[str] | None = None) -> int:
                 for role in ROLES:
                     summary["instances"].setdefault(role, {})["observer_evidence"] = observer_evidence(
                         engine, None if observers is None else observers[role])
+            (output_dir / "client_requests.jsonl").write_text(
+                "".join(json.dumps(record) + "\n" for record in records))
             (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
 
     if version == "0.10.2":
         for record in records:
             record["engine_request_id"] = engine_request_id(proxied[record["request_id"]])
-    records.sort(key=lambda record: record["dispatch_monotonic"])
+    records.sort(key=lambda record: (record["dispatch_monotonic"] is None,
+                                     record["dispatch_monotonic"] or 0))
     (output_dir / "client_requests.jsonl").write_text(
         "".join(json.dumps(record) + "\n" for record in records)
     )
-    failed = [record["request_id"] for record in records if record["http_status"] != 200]
+    failed = [record["request_id"] for record in records
+              if record["http_status"] != 200 or record.get("status", "completed") != "completed"]
     summary["num_requests"] = len(records)
     summary["failed_request_ids"] = failed
     if version == "0.28.0":
@@ -414,7 +648,8 @@ def main(argv: list[str] | None = None) -> int:
             "native_done": "unobserved", "device_completion": "unobserved",
             "decode_readiness": "unobserved", "metric_normalization": "not_applied",
         }
-        summary["status"] = 4 if failed else 0
+        summary["status"] = 4 if (failed or workload is not None
+                                  and not repetitions["client_workload_verified"]) else 0
         (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
         print("REPLAY_DONE", json.dumps({"status": summary["status"], "requests": len(records),
                                          "qualification_verified": False}))

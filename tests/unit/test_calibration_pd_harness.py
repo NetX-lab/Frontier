@@ -418,10 +418,19 @@ def test_v028_external_pd_replays_http_without_owning_native_servers(
             payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
                        {"choices": [{"text": "native response", "finish_reason": "length"}],
                         "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+            streaming = self.server.role == "decode" and status == 200 and body["stream"]
             self.send_response(status)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", "text/event-stream" if streaming else "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(payload).encode())
+            if streaming:
+                events = [
+                    {"choices": [{"index": 0, "text": "", "token_ids": [7, 8, 9], "finish_reason": "length"}]},
+                    {"choices": [], "usage": {"prompt_tokens": 65, "completion_tokens": 3, "total_tokens": 68}},
+                ]
+                self.wfile.write(("".join("data: " + json.dumps(event) + "\n\n" for event in events)
+                                 + "data: [DONE]\n\n").encode())
+            else:
+                self.wfile.write(json.dumps(payload).encode())
 
     servers, threads = [], []
     try:
@@ -486,6 +495,9 @@ def test_v028_external_pd_replays_http_without_owning_native_servers(
         assert received[1][2]["max_tokens"] == 3
         client = json.loads((output / "client_requests.jsonl").read_text())
         assert client["http_status"] == decode_status
+        assert client["status"] == ("completed" if decode_status == 200 else "failed")
+        if decode_status == 200:
+            assert client["output_token_count"] == 3 and client["stream_done"]
     finally:
         for server in servers:
             server.shutdown()

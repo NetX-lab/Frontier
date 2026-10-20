@@ -29,6 +29,7 @@ def exercise(worker, temporary, case):
         (node / "drained.json").write_text("{}")
     (root / "nodes/host2/server_ready.json").write_text("{}")
     events = []
+    replay_commands = []
     injected = False
 
     def write_json(path, value):
@@ -50,7 +51,9 @@ def exercise(worker, temporary, case):
 
         def poll(self):
             if self.kind == "replay":
-                self.returncode = 0
+                self.returncode = 4 if case == "canonical_clean_admission_failure" else 0
+                if "replay_completed" not in events:
+                    events.append("replay_completed")
                 if case == "native_exit_at_replay_completion":
                     server.returncode = 23
                     events.append("native_exit_23_before_requested_stop")
@@ -61,6 +64,8 @@ def exercise(worker, temporary, case):
 
     def popen(command, **kwargs):
         kind = "server" if command[0] == "fake-native-server" else "replay"
+        if kind == "replay":
+            replay_commands.append(command)
         events.append(kind + "_launch")
         return server if kind == "server" else replay
 
@@ -102,6 +107,8 @@ def exercise(worker, temporary, case):
         "peer_wait_seconds": 10, "startup_timeout_s": 10, "replay_timeout_s": 10,
         "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
     }
+    if case.startswith("canonical_clean"):
+        config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
     original_relative = Path.is_relative_to
 
     def is_relative_to(path, other):
@@ -141,6 +148,7 @@ def exercise(worker, temporary, case):
         "native_server_stop_signal": result.get("server_stop", {}).get("signal"),
         "failed_sentinel": (root / "nodes/host0/failed.json").exists(),
         "observation_errors": result["observation_errors"],
+        "replay_commands": replay_commands,
     }
 
 
@@ -162,3 +170,20 @@ def test_worker_separates_auxiliary_report_faults_from_native_failure(tmp_path, 
         assert "Injected auxiliary result writer failure" in result["observation_errors"][0]
     if case == "native_exit_at_replay_completion":
         assert result["failed_sentinel"]
+
+
+def test_worker_forwards_canonical_clean_mode_and_idle_configuration(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean")
+    assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+    command = result["replay_commands"][0]
+    assert command[command.index("--mode") + 1] == "clean"
+    assert command[command.index("--idle-timeout-s") + 1] == "180"
+    assert command[command.index("--idle-poll-s") + 1] == "1"
+
+
+def test_worker_preserves_native_completion_when_client_admission_is_unverified(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_admission_failure")
+    assert result["worker_returncode"] == 4
+    assert result["native_server_returncode"] == 0
+    assert not result["failed_sentinel"]
+    assert result["events"].index("replay_completed") < result["events"].index("server_stop_called")
