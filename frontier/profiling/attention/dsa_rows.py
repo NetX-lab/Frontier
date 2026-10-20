@@ -104,9 +104,14 @@ def _metadata_signature(step: Mapping[str, Any]) -> str:
     return canonical_json({"mla": mla, "indexer": step["indexer_metadata"]})
 
 
-def _batch_columns(
-    requests: Sequence[StepRequest], index_topk: int
-) -> dict[str, Any]:
+def batch_load_columns(
+    requests: Sequence[StepRequest],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Return the step's load columns and its context-size columns.
+
+    Model-specific columns sit between the two groups in the DSA tables.
+    """
+
     prefills = [r for r in requests if r.is_prefill]
     decodes = [r for r in requests if not r.is_prefill]
     for request in decodes:
@@ -116,8 +121,7 @@ def _batch_columns(
                 f"{request.num_scheduled_tokens}"
             )
     decode_contexts = sorted(r.num_computed_tokens for r in decodes)
-    max_key_len = max(r.num_computed_tokens + r.num_scheduled_tokens for r in requests)
-    columns: dict[str, Any] = {
+    load: dict[str, Any] = {
         "is_prefill": bool(prefills) and not decodes,
         "is_mixed_batch": bool(prefills) and bool(decodes),
         "batch_size": len(requests),
@@ -129,21 +133,36 @@ def _batch_columns(
         "prefill_seq_lens": json.dumps([r.num_scheduled_tokens for r in prefills]),
         "prefill_kv_cache_sizes": json.dumps([r.num_computed_tokens for r in prefills]),
         "decode_kv_cache_sizes": json.dumps(decode_contexts),
-        "max_key_len": max_key_len,
-        "max_selected_key_len": min(max_key_len, index_topk),
+        "max_key_len": max(r.num_computed_tokens + r.num_scheduled_tokens for r in requests),
     }
+    context: dict[str, Any]
     if len(prefills) == 1 and not decodes:
-        columns["prefill_chunk_size"] = prefills[0].num_scheduled_tokens
-        columns["kv_cache_size"] = prefills[0].num_computed_tokens
+        context = {
+            "prefill_chunk_size": prefills[0].num_scheduled_tokens,
+            "kv_cache_size": prefills[0].num_computed_tokens,
+        }
     elif not prefills:
-        columns["prefill_chunk_size"] = 0
-        columns["kv_cache_size"] = sum(decode_contexts) // len(decode_contexts)
-        columns["decode_kv_cache_size_min"] = decode_contexts[0]
-        columns["decode_kv_cache_size_max"] = decode_contexts[-1]
-        columns["decode_kv_cache_size_mean"] = statistics.fmean(decode_contexts)
+        context = {
+            "prefill_chunk_size": 0,
+            "kv_cache_size": sum(decode_contexts) // len(decode_contexts),
+            "decode_kv_cache_size_min": decode_contexts[0],
+            "decode_kv_cache_size_max": decode_contexts[-1],
+            "decode_kv_cache_size_mean": statistics.fmean(decode_contexts),
+        }
     else:
         raise ValueError("Measured DSA steps are pure prefill or pure decode")
-    return columns
+    return load, context
+
+
+def _batch_columns(
+    requests: Sequence[StepRequest], index_topk: int
+) -> dict[str, Any]:
+    load, context = batch_load_columns(requests)
+    return {
+        **load,
+        "max_selected_key_len": min(load["max_key_len"], index_topk),
+        **context,
+    }
 
 
 def _model_columns(plan: DsaProfilePlan, engine: Mapping[str, Any]) -> dict[str, Any]:
@@ -187,28 +206,34 @@ def _stat_columns(scope: str, values: Sequence[float]) -> dict[str, Any]:
     }
 
 
-def _validate_step_calls(
-    plan: DsaProfilePlan, step_key: tuple, calls: Sequence[Mapping[str, Any]]
-) -> None:
-    seen: dict[int, list[str]] = defaultdict(list)
-    for call in calls:
-        seen[call["global_layer_id"]].append(call["scope"])
-    for layer in plan.shape.layers:
-        observed = sorted(seen.pop(layer.global_layer_id, []))
-        expected = sorted(expected_scopes(plan, layer.global_layer_id))
-        if observed != expected:
+def scope_columns(
+    scope: str, values: Sequence[float], kernel_counts: set[int] | None, row_label: Any
+) -> dict[str, Any]:
+    """Time statistics of one scope plus its kernel count when kernel-only."""
+
+    columns = _stat_columns(scope, values)
+    if kernel_counts:
+        if len(kernel_counts) > 1:
             raise ValueError(
-                f"Step {step_key}: layer {layer.global_layer_id} "
-                f"({layer.attention_variant}) ran scopes {observed}, expected {expected}"
+                f"Scope {scope} in row {row_label} launched different "
+                f"kernel counts {sorted(kernel_counts)}; these calls measure "
+                "different work"
             )
-    if seen:
-        raise ValueError(f"Step {step_key}: calls for unknown layers {sorted(seen)}")
+        columns[f"kernel_count.{scope}"] = next(iter(kernel_counts))
+    return columns
 
 
-def build_dsa_rows(
-    plan: DsaProfilePlan, records: Iterable[Mapping[str, Any]]
-) -> dict[str, list[dict[str, Any]]]:
-    """Group raw records into rows, keyed by measurement type."""
+def index_records(
+    records: Iterable[Mapping[str, Any]],
+) -> tuple[
+    dict[int, Mapping[str, Any]],
+    dict[tuple, Mapping[str, Any]],
+    dict[tuple, list[Mapping[str, Any]]],
+]:
+    """Index raw records: engines by index; steps and calls by step key.
+
+    A step key is ``(measurement, engine_index, step_index)``.
+    """
 
     engines: dict[int, Mapping[str, Any]] = {}
     steps: dict[tuple, Mapping[str, Any]] = {}
@@ -233,15 +258,42 @@ def build_dsa_rows(
     orphan_calls = sorted(set(calls) - set(steps))
     if orphan_calls:
         raise ValueError(f"Calls without a step record, first {orphan_calls[0]}")
+    for key, step in steps.items():
+        if key[0] not in MEASUREMENT_TYPES:
+            raise ValueError(f"Unknown measurement type {key[0]!r}")
+        if key[1] not in engines:
+            raise ValueError(f"Step {key} has no engine record")
+    return engines, steps, calls
 
+
+def _validate_step_calls(
+    plan: DsaProfilePlan, step_key: tuple, calls: Sequence[Mapping[str, Any]]
+) -> None:
+    seen: dict[int, list[str]] = defaultdict(list)
+    for call in calls:
+        seen[call["global_layer_id"]].append(call["scope"])
+    for layer in plan.shape.layers:
+        observed = sorted(seen.pop(layer.global_layer_id, []))
+        expected = sorted(expected_scopes(plan, layer.global_layer_id))
+        if observed != expected:
+            raise ValueError(
+                f"Step {step_key}: layer {layer.global_layer_id} "
+                f"({layer.attention_variant}) ran scopes {observed}, expected {expected}"
+            )
+    if seen:
+        raise ValueError(f"Step {step_key}: calls for unknown layers {sorted(seen)}")
+
+
+def build_dsa_rows(
+    plan: DsaProfilePlan, records: Iterable[Mapping[str, Any]]
+) -> dict[str, list[dict[str, Any]]]:
+    """Group raw records into rows, keyed by measurement type."""
+
+    engines, steps, calls = index_records(records)
     groups: dict[tuple, _RowAccumulator] = {}
     for key, step in sorted(steps.items()):
         measurement, engine_index, step_index = key
-        if measurement not in MEASUREMENT_TYPES:
-            raise ValueError(f"Unknown measurement type {measurement!r}")
-        engine = engines.get(engine_index)
-        if engine is None:
-            raise ValueError(f"Step {key} has no engine record")
+        engine = engines[engine_index]
         step_calls = calls.get(key, [])
         _validate_step_calls(plan, key, step_calls)
         requests = _requests(step)
@@ -297,16 +349,11 @@ def build_dsa_rows(
             values = accumulator.times.get(scope)
             if not values:
                 continue
-            row.update(_stat_columns(scope, values))
-            counts = accumulator.kernel_counts.get(scope)
-            if counts:
-                if len(counts) > 1:
-                    raise ValueError(
-                        f"Scope {scope} in row {group_key[:5]} launched different "
-                        f"kernel counts {sorted(counts)}; these calls measure "
-                        "different work"
-                    )
-                row[f"kernel_count.{scope}"] = next(iter(counts))
+            row.update(
+                scope_columns(
+                    scope, values, accumulator.kernel_counts.get(scope), group_key[:5]
+                )
+            )
         rows[group_key[0]].append(row)
     for measurement in MEASUREMENT_TYPES:
         rows[measurement].sort(
@@ -357,8 +404,11 @@ __all__ = [
     "MEASUREMENT_TYPES",
     "REQUIRED_MLA_METADATA_FIELDS",
     "StepRequest",
+    "batch_load_columns",
     "build_dsa_rows",
     "expected_scopes",
+    "index_records",
     "read_records",
+    "scope_columns",
     "write_rows_csv",
 ]

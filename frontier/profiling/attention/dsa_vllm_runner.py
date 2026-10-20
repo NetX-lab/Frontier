@@ -20,6 +20,10 @@ profiling and dummy runs are never recorded.
 
 The weights are vLLM dummy weights and routing, top-k selection, and metadata
 are the engine's own; nothing in the measured path is replaced.
+
+The step classification, case window, timing, and raw-record writing below are
+model independent: ``install_case_recorder`` and ``measure_engine`` also drive
+the DeepSeek-V4 attention producer, which installs its own module hooks.
 """
 
 from __future__ import annotations
@@ -75,6 +79,8 @@ _INDEXER_METADATA_FIELDS = (
     "num_prefills",
     "num_prefill_tokens",
 )
+# Step record keys of the native metadata each DSA step must capture.
+DSA_STEP_METADATA = ("mla_metadata", "indexer_metadata")
 # CUPTI can drop the first kernel of a fresh profiler session; these tiny
 # kernels run outside every DSA scope, as in RecordFunctionTracer.
 _PROFILER_PRIME_KERNELS = 4
@@ -102,9 +108,15 @@ class _ActiveStep:
 
 
 class _WorkerState:
-    def __init__(self, engine_index: int, torch_module: Any) -> None:
+    def __init__(
+        self,
+        engine_index: int,
+        torch_module: Any,
+        step_metadata: tuple[str, ...] = DSA_STEP_METADATA,
+    ) -> None:
         self.engine_index = engine_index
         self.torch = torch_module
+        self.step_metadata = step_metadata
         self.prompt_lens: dict[str, int] = {}
         self.case: _CaseRecorder | None = None
         self.active: _ActiveStep | None = None
@@ -159,18 +171,25 @@ class _WorkerState:
                 "phase": case.phase,
                 "step_index": step_index,
                 "requests": requests,
-                "mla_metadata": None,
-                "indexer_metadata": None,
+                **dict.fromkeys(self.step_metadata),
             },
         )
+
+    def capture_metadata(self, key: str, read: Callable[[], dict[str, Any]]) -> None:
+        """Store ``read()`` under ``key`` once per recorded step."""
+
+        active = self.active
+        if active is not None and active.record[key] is None:
+            active.record[key] = read()
 
     def end_step(self, active: _ActiveStep) -> None:
         case = self.case
         record = active.record
-        if record["mla_metadata"] is None or record["indexer_metadata"] is None:
+        missing = [key for key in self.step_metadata if record[key] is None]
+        if missing:
             raise RuntimeError(
-                f"Step {active.step_index} of {case.case_id} ran no hooked "
-                "full-index MLA layer; the attention metadata was not captured"
+                f"Step {active.step_index} of {case.case_id} ran no hooked layer "
+                f"providing {missing}; the attention metadata was not captured"
             )
         if case.measurement == CUDA_EVENT:
             self.torch.cuda.synchronize()
@@ -192,8 +211,21 @@ class _WorkerState:
         case.recorded += 1
 
     def timed_call(
-        self, layer_id: int, scope: str, function: Callable[..., Any], args, kwargs
+        self,
+        layer_id: int,
+        scope: str,
+        function: Callable[..., Any],
+        args,
+        kwargs,
+        annotate: bool = True,
     ) -> Any:
+        """Time one scope call of the active step.
+
+        ``annotate=False`` marks a scope that encloses other scopes: it gets
+        CUDA-event wall time only, because kernel-only annotations must not
+        nest.
+        """
+
         active = self.active
         if active is None:
             return function(*args, **kwargs)
@@ -205,6 +237,8 @@ class _WorkerState:
             end.record()
             active.events.append((layer_id, scope, start, end))
             return result
+        if not annotate:
+            return function(*args, **kwargs)
         with self.torch.profiler.record_function(
             annotation_name(active.step_index, layer_id, scope)
         ):
@@ -283,17 +317,17 @@ def _wrap_mla(module: Any, layer_id: int) -> None:
 
     def forward(*args, **kwargs):
         state = _require_state()
-        active = state.active
-        if active is not None:
-            record = active.record
-            if record["mla_metadata"] is None:
-                record["mla_metadata"] = _scalar_fields(
-                    _layer_metadata(layer_name), _MLA_METADATA_FIELDS
-                )
-            if record["indexer_metadata"] is None and indexer_prefix is not None:
-                record["indexer_metadata"] = _scalar_fields(
+        state.capture_metadata(
+            "mla_metadata",
+            lambda: _scalar_fields(_layer_metadata(layer_name), _MLA_METADATA_FIELDS),
+        )
+        if indexer_prefix is not None:
+            state.capture_metadata(
+                "indexer_metadata",
+                lambda: _scalar_fields(
                     _layer_metadata(indexer_prefix), _INDEXER_METADATA_FIELDS
-                )
+                ),
+            )
         return state.timed_call(layer_id, MLA_SCOPE, original, args, kwargs)
 
     module.forward = forward
@@ -318,15 +352,30 @@ def _wrap_execute_model(runner: Any) -> None:
     runner.execute_model = execute_model
 
 
-def install_dsa_hooks(
-    worker: Any, engine_index: int, layer_variants: dict[int, str]
-) -> dict[str, Any]:
-    """Wrap the measured modules; return the engine's attention inventory."""
+def install_case_recorder(
+    worker: Any, engine_index: int, step_metadata: tuple[str, ...]
+) -> None:
+    """Create the worker's case state and classify every scheduled step.
+
+    Each step record carries one entry per ``step_metadata`` key, which the
+    model's module hooks fill through ``capture_metadata``.
+    """
 
     global _STATE
     if _STATE is not None:
         raise RuntimeError("DSA hooks are already installed on this worker")
     import torch
+
+    _wrap_execute_model(worker.model_runner)
+    _STATE = _WorkerState(engine_index, torch, step_metadata)
+
+
+def install_dsa_hooks(
+    worker: Any, engine_index: int, layer_variants: dict[int, str]
+) -> dict[str, Any]:
+    """Wrap the measured modules; return the engine's attention inventory."""
+
+    install_case_recorder(worker, engine_index, DSA_STEP_METADATA)
     from vllm.model_executor.layers.attention.mla_attention import MLAAttention
     from vllm.model_executor.models.deepseek_v2 import Indexer
 
@@ -371,8 +420,6 @@ def install_dsa_hooks(
     if len(backends) != 1 or len(impls) != 1:
         raise ValueError(f"Layers selected different backends {backends} / {impls}")
 
-    _wrap_execute_model(worker.model_runner)
-    _STATE = _WorkerState(engine_index, torch)
     return {
         "attention_backend": backends.pop(),
         "attention_impl": impls.pop(),
@@ -539,7 +586,10 @@ def build_engine(
     model_dir: str,
     seed: int,
     gpu_memory_utilization: float,
+    **engine_options: Any,
 ) -> Any:
+    """Build the in-process engine; ``engine_options`` adds model-specific LLM arguments."""
+
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
     from vllm import LLM
 
@@ -561,30 +611,27 @@ def build_engine(
         block_size=engine.block_size,
         gpu_memory_utilization=gpu_memory_utilization,
         seed=seed,
+        **engine_options,
     )
 
 
-def run_engine(
+def measure_engine(
     *,
+    llm: Any,
     plan: DsaProfilePlan,
     engine_index: int,
-    model_dir: str,
+    inventory: dict[str, Any],
     vocab_size: int,
     seed: int,
-    gpu_memory_utilization: float,
     expected_attention_backend: str,
     raw_path: Path,
     trace_dir: Path,
     keep_traces: bool,
-    case_ids: set[str] | None = None,
+    case_ids: set[str] | None,
+    log_label: str,
 ) -> None:
-    """Measure every case of one engine; append raw records to ``raw_path``."""
+    """Measure the engine's cases with installed hooks; write raw records to ``raw_path``."""
 
-    llm = build_engine(plan, engine_index, model_dir, seed, gpu_memory_utilization)
-    layer_variants = {
-        layer.global_layer_id: layer.attention_variant for layer in plan.shape.layers
-    }
-    inventory = llm.collective_rpc(install_dsa_hooks, args=(engine_index, layer_variants))[0]
     if inventory["attention_backend"] != expected_attention_backend:
         raise RuntimeError(
             f"Engine selected attention backend {inventory['attention_backend']!r}, "
@@ -619,16 +666,56 @@ def run_engine(
                 )
                 handle.writelines(json.dumps(record) + "\n" for record in records)
                 handle.flush()
-                print(f"[dsa] engine {engine_index} {case.case_id} {measurement}: "
+                print(f"[{log_label}] engine {engine_index} {case.case_id} {measurement}: "
                       f"{sum(r['kind'] == 'step' for r in records)} steps", flush=True)
 
 
+def run_engine(
+    *,
+    plan: DsaProfilePlan,
+    engine_index: int,
+    model_dir: str,
+    vocab_size: int,
+    seed: int,
+    gpu_memory_utilization: float,
+    expected_attention_backend: str,
+    raw_path: Path,
+    trace_dir: Path,
+    keep_traces: bool,
+    case_ids: set[str] | None = None,
+) -> None:
+    """Measure every case of one engine; append raw records to ``raw_path``."""
+
+    llm = build_engine(plan, engine_index, model_dir, seed, gpu_memory_utilization)
+    layer_variants = {
+        layer.global_layer_id: layer.attention_variant for layer in plan.shape.layers
+    }
+    inventory = llm.collective_rpc(install_dsa_hooks, args=(engine_index, layer_variants))[0]
+    measure_engine(
+        llm=llm,
+        plan=plan,
+        engine_index=engine_index,
+        inventory=inventory,
+        vocab_size=vocab_size,
+        seed=seed,
+        expected_attention_backend=expected_attention_backend,
+        raw_path=raw_path,
+        trace_dir=trace_dir,
+        keep_traces=keep_traces,
+        case_ids=case_ids,
+        log_label="dsa",
+    )
+
+
 __all__ = [
+    "DSA_STEP_METADATA",
     "begin_case",
     "build_engine",
     "case_progress",
     "finish_case",
+    "install_case_recorder",
     "install_dsa_hooks",
+    "measure_engine",
     "run_case",
     "run_engine",
 ]
