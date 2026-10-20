@@ -7,9 +7,33 @@ product milestone is the full trained GLM P/D path, followed by independent
 calibration and holdout checks, then measured V4 integration.
 
 This snapshot includes the W7 measured-DSA, sequence-parallel MoE and measured
-communication integrations through October 20, 2026 Asia/Hong_Kong. Test results below
-belong to their stated revisions and scopes; they are not a claim that every
-test passes at the branch tip. Step-5-Preview integration is outside this branch.
+communication integrations through October 20, 2026 Asia/Hong_Kong, and the
+calibration-scope revision of October 21, 2026. Test results below belong to their
+stated revisions and scopes; they are not a claim that every test passes at the
+branch tip. Step-5-Preview integration is outside this branch.
+
+## Calibration contract (2026-10-21)
+
+Formal acceptance for each model is **one end-to-end calibration case** on
+**64 × NVIDIA H200** with prefill/decode disaggregation, online serving, thinking
+disabled, prefix caching and chunked prefill disabled, CUDA Graph and quantization
+enabled, and dummy-weight execution: SharedGPT at QPS 4.0 with 256 requests in the
+actual trace length distribution. Four metrics are gated independently at
+`|frontier - vllm| / |vllm| <= 0.10` on their means: client TTFT; TPOT as the
+per-request mean of `(E2E - TTFT) / (output_tokens - 1)`; total token throughput;
+and per-request end-to-end latency. Internal TTFT, ITL, KV-ready time and
+percentiles are diagnostics and do not gate.
+
+MTP follows the native default. GLM-5.3 declares `num_nextn_predict_layers: 1` but
+its reference engine configuration enables no speculative decoding, so MTP stays
+disabled and no MTP work is planned. The DeepSeek-V4-Flash check is still open.
+
+Multi-workload families, multi-QPS levels, large scenario matrices, multiple formal
+parallel layouts, broad hardware-generalization campaigns and extended holdout
+workloads are no longer acceptance scope. Their historical results remain recorded.
+Measured tables in this branch were collected on H800; they remain H800 evidence and
+are not blended into an H200 result, so the H200 tables for the shapes the two cases
+touch are being re-collected.
 
 ## Model and reference-runtime contract
 
