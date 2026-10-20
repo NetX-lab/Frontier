@@ -613,6 +613,68 @@ class ParamCounter:
         # Native embedding/head use UnquantizedEmbeddingMethod, regardless of exclusions.
         return endpoints + norms, 2 * endpoints + norms * int(norm_precision.bytes_per_element)
 
+    def _get_step5_vision_totals(self) -> tuple[int, int]:
+        """Count the loaded, unexecuted Step3p7 frontend (step3p7.py:53-68)."""
+        vision = self._model_config.vision_config
+        if vision is None:
+            return 0, 0
+        if vision["model_type"] != "perception_encoder" or vision["use_rope2d"] is not True:
+            raise NotImplementedError("Step resident frontend requires PerceptionEncoder with RoPE2D")
+        width, layers, heads = (vision[name] for name in ("width", "layers", "heads"))
+        patch, image = vision["patch_size"], vision["image_size"]
+        intermediate = int(width * vision["mlp_ratio"])
+        tp = self._get_attn_tp_size()
+        if heads % tp or width % heads or intermediate % tp:
+            raise NotImplementedError("Step resident frontend requires unpadded vision TP shards")
+        # Conv2dLayer and position embeddings are replicated, not TP sharded.
+        elements = width * 3 * patch**2
+        elements += 2 * width * width * 3**2 + 2 * width
+        elements += 4 * width * 2 * width * 3**2 + 4 * width
+        elements += 2 * width * (vision["use_ln_pre"] + vision["use_ln_post"])
+        elements += width * int(vision["use_cls_token"])
+        if vision["use_abs_posemb"]:
+            elements += ((image // patch)**2 + int(vision["use_cls_token"])) * width
+        quant = self._model_config.quantization_config
+        for layer_id in range(layers):
+            prefix = f"vision_model.transformer.resblocks.{layer_id}"
+            for suffix in ("attn.qkv_proj", "attn.out_proj", "mlp.fc1", "mlp.fc2"):
+                precision = quant.resolve_module_precision(f"{prefix}.{suffix}", PrecisionType.BF16)
+                if precision is not PrecisionType.BF16:
+                    raise NotImplementedError("Step resident frontend requires BF16 vision projections")
+            # QKV/fc1 biases are column sharded; out/fc2 biases, two LayerNorms
+            # and the two LayerScales remain replicated (step_vl.py:147-297).
+            elements += (4 * width**2 + 2 * width * intermediate) // tp
+            elements += (3 * width + intermediate) // tp + 6 * width
+            if vision["ls_init_value"] is not None:
+                elements += 2 * width
+        if quant.resolve_module_precision("vit_large_projector", PrecisionType.BF16) is not PrecisionType.BF16:
+            raise NotImplementedError("Step resident frontend requires a BF16 projector")
+        elements += 4 * width * self._model_config.embedding_dim // tp
+        elements += self._model_config.embedding_dim // tp * int(self._model_config.projector_bias)
+        # PerceptionEncoderRope2D has a separate FP32 grid on every block.
+        frequencies = layers * ((image // patch)**2 + int(vision["use_cls_token"])) * (width // heads)
+        return elements, 2 * elements + 4 * frequencies
+
+    def _get_step5_rotary_memory_bytes(self) -> int:
+        """Count unique get_rope allocations, not one cache per decoder layer."""
+        model = self._model_config
+        rope_type = (model.rope_scaling or {}).get("rope_type", "default")
+        if rope_type not in ("default", "llama3"):
+            raise NotImplementedError("Step resident rotary storage requires default or llama3 RoPE")
+        keys = set()
+        for layer in self._step5_layers:
+            attention_type = model.layer_types[layer.attention_spec.global_layer_id]
+            scaled = bool(model.rope_scaling) and (
+                not model.yarn_only_types or attention_type in model.yarn_only_types
+            )
+            # get_rope's registry shares identical construction arguments. The
+            # cache is constructed even when use_rope_layers disables its use.
+            keys.add((layer.geometry.head_dim, layer.rotary_dim, layer.rope_theta, scaled))
+            if layer.attention_spec.variant_id == "sparse_gqa":
+                keys.add((layer.geometry.proxy_dim, model.sparse_config["sparse_indexer_rope_dim"],
+                          layer.rope_theta, bool(model.rope_scaling)))
+        return model.max_position_embeddings * sum(key[1] for key in keys) * 2
+
     def _validate_dsa_parameter_contract(self) -> None:
         """Limit source estimates to the represented BF16/block-FP8 topology."""
 
@@ -1241,6 +1303,7 @@ class ParamCounter:
                 self.get_num_attention_parameters_per_device()
                 + self.get_num_mlp_parameters_per_device()
                 + self._get_step5_other_totals()[0]
+                + self._get_step5_vision_totals()[0]
             )
         if self._uses_v4_parameter_contract:
             return (
@@ -1322,11 +1385,10 @@ class ParamCounter:
         V4 returns source-declared constructor bytes, including UE8M0 scales
         and integer auxiliaries, excluding conditional mHC broadcast storage.
         V4 native unique resident storage remains unverified.
-        Step returns ordinary TP/EP source-required parameter, auto-refined
-        FP32 weight scale, attention scalar and expert map storage. It does not
-        establish native-observed unique storage or runtime fit.
-        It excludes backend conversions/padding, rotary buffers, cache/workspace,
-        MTP and the native multimodal wrapper's non-text modules.
+        Step includes ordinary TP/EP weights, scales, expert maps, shared rotary
+        buffers and the loaded vision frontend, even for text-only execution.
+        Allocator rounding, activation/graph/workspace reserves, KV and MTP are
+        excluded; their measured overhead belongs to the memory planner input.
         """
 
         if self._uses_step5_parameter_contract:
@@ -1334,6 +1396,8 @@ class ParamCounter:
                 self.get_attention_parameter_memory_per_device_bytes()
                 + self.get_mlp_parameter_memory_per_device_bytes()
                 + self._get_step5_other_totals()[1]
+                + self._get_step5_vision_totals()[1]
+                + self._get_step5_rotary_memory_bytes()
             )
         if self._uses_v4_parameter_contract:
             return (
