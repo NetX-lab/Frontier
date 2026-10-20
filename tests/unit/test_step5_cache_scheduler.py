@@ -38,7 +38,7 @@ from frontier.types import ClusterType
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PARAMETER_BYTES = 40_599_958_208
+PARAMETER_BYTES = 41_909_084_704
 BF16_BLOCK_BYTES = 1_224_980
 SUMMARY_BYTES_PER_SLOT = 94_484
 DEVICE_BYTES = 80 * 1024**3
@@ -129,10 +129,10 @@ def assert_pool_conserved(scheduler, requests):
 
 
 @pytest.mark.parametrize(("dtype", "raw_page", "stride", "planned"), [
-    ("auto", 49_152, 1_224_980, 29_967),
-    ("bfloat16", 49_152, 1_224_980, 29_967),
-    ("fp8", 24_576, 659_732, 55_642),
-    ("fp8_e4m3", 24_576, 659_732, 55_642),
+    ("auto", 49_152, 1_224_980, 28_898),
+    ("bfloat16", 49_152, 1_224_980, 28_898),
+    ("fp8", 24_576, 659_732, 53_658),
+    ("fp8_e4m3", 24_576, 659_732, 53_658),
 ])
 def test_tp16_planner_binds_four_groups_to_one_physical_pool(
     replica_config, tmp_path, dtype, raw_page, stride, planned,
@@ -251,9 +251,9 @@ def test_scheduler_reclaims_only_completed_swa_pages_and_keeps_sparse_history(
 
 
 @pytest.mark.parametrize(("max_num_seqs", "blocks", "remainder"), [
-    (1, 29_967, 382_976),
-    (8, 29_966, 946_568),
-    (64, 29_962, 555_384),
+    (1, 28_898, 760_100),
+    (8, 28_898, 98_712),
+    (64, 28_893, 932_508),
 ])
 def test_automatic_planning_reserves_summary_scratch_once_per_request_slot(
     replica_config, tmp_path, max_num_seqs, blocks, remainder,
@@ -286,7 +286,7 @@ def test_planner_reserves_largest_scheduler_ownership_cap_without_more_token_gro
         hidden_phase_batch_size_cap=8, final_phase_batch_size_cap=64,
     )
     assert actual._admitted_request_capacity == 64
-    assert actual._config.num_blocks == 29_962
+    assert actual._config.num_blocks == 28_893
     assert actual._kv_cache_capacity.fixed_bytes_per_request_slot == SUMMARY_BYTES_PER_SLOT
     assert len(actual._kv_cache_capacity.groups) == 4
 
@@ -515,17 +515,25 @@ def test_scheduler_limits_request_ownership_and_frees_only_completed_owners(
 @pytest.mark.parametrize("fields", [
     {"num_blocks_mode": "explicit", "num_blocks": 2},
     {"num_blocks": 2},
-    {"num_blocks_mode": "memory_planner_profiled"},
     {"num_blocks_mode": "memory_planner_profiled",
      "enable_runtime_non_kv_cache_overhead_profiling": True},
     {"non_kv_cache_overhead_bytes": 1},
-], ids=("explicit_blocks", "prepopulated_blocks", "profiled_mode",
+], ids=("explicit_blocks", "prepopulated_blocks",
         "runtime_profile", "additional_overhead"))
 def test_scheduler_rejects_unverified_block_counts_or_double_charged_scratch(
     replica_config, tmp_path, fields,
 ):
     with pytest.raises(NotImplementedError, match="Fixed cache scratch requires automatic memory_planner"):
         scheduler(replica_config, tmp_path, **fields)
+
+
+def test_profiled_reserve_is_additive_and_summary_scratch_is_charged_once(replica_config, tmp_path):
+    overhead = BF16_BLOCK_BYTES * 7
+    actual = scheduler(replica_config, tmp_path, num_blocks_mode="memory_planner_profiled",
+                       non_kv_cache_overhead_bytes=overhead)
+    assert actual._config.num_blocks == 28_898 - 7
+    assert actual._kv_cache_capacity.fixed_bytes_per_request_slot == SUMMARY_BYTES_PER_SLOT
+    assert_pool_conserved(actual, [])
 
 
 @pytest.mark.parametrize(("fields", "message"), [
@@ -621,7 +629,7 @@ def test_complete_request_logs_cache_state_at_actual_batch_end(
     assert [row["grouped_cache_state"]["num_emitted_decode_tokens"] for row in ends] == [1, 2, 3]
     for row in allocations + ends + releases:
         state = row["grouped_cache_state"]
-        assert state["pool_used_blocks"] + state["pool_free_blocks"] + state["pool_reserved_blocks"] == 29967
+        assert state["pool_used_blocks"] + state["pool_free_blocks"] + state["pool_reserved_blocks"] == 28898
         assert state["fixed_cache_reservation_bytes"] == SUMMARY_BYTES_PER_SLOT
         assert state["physical_block_size_bytes"] == BF16_BLOCK_BYTES
     release = releases[0]
@@ -632,7 +640,7 @@ def test_complete_request_logs_cache_state_at_actual_batch_end(
     assert state["scheduled_num_computed_tokens"] is None
     assert state["reclamation_num_computed_tokens"] is None
     assert state["request_allocated_blocks"] == state["scheduler_allocated_blocks"] == state["pool_used_blocks"] == 0
-    assert state["pool_free_blocks"] == 29966
+    assert state["pool_free_blocks"] == 28897
 
 
 @pytest.mark.parametrize("fault", [
@@ -667,7 +675,7 @@ def test_complete_controlled_cache_lifetime_rejects_incomplete_or_invalid_eviden
     completion = {"completed_at": 34, "request_id": request.id}
     result = check_cache_lifetime(events, stages, completion)
     assert result == {"cache_state_events": 35, "kv_input_tokens": 4113,
-                      "pool_num_blocks": 29967, "released_free_blocks": 29966,
+                      "pool_num_blocks": 28898, "released_free_blocks": 28897,
                       "fixed_cache_reservation_bytes": 94484}
     altered = deepcopy(events)
     allocations = [row for row in altered if row["event"] == "grouped_cache_allocation"]
