@@ -25,16 +25,25 @@ KV_CACHE = {
 
 
 def _record(call="c", op="all_reduce", group="tp", graph=False, timings=None, nbytes=1024):
+    timings = timings or [[1.0, 2.0, 3.0], [4.0, 1.0, 1.0], None]
     return {"scenario": "s", "call": call, "op": op, "group": group, "group_size": 8,
             "cuda_graph": graph, "calls_per_forward": 3, "tokens_per_dp_rank": [4, 1],
             "max_input_bytes": nbytes, "max_output_bytes": nbytes, "kernels": ["k"],
-            "per_rank_call_us": timings or [[1.0, 2.0, 3.0], [4.0, 1.0, 1.0], None]}
+            "per_rank_call_us": timings,
+            "per_rank_launch_call_us": [r and [10 * v for v in r] for r in timings],
+            "per_rank_queue_held": [r and [True, True, False] for r in timings]}
 
 
 def test_summary_takes_slowest_rank_per_repeat():
     row = summarize(_record())
     assert (row["median_us"], row["min_us"], row["max_us"]) == (3.0, 2.0, 4.0)
+    assert row["launch_median_us"] == 30.0
+    assert row["queue_held_fraction"] == pytest.approx(2 / 3)
     assert row["tokens_per_dp_rank"] == "4/1"
+    cpu = {**_record(op="cpu_all_reduce"), "per_rank_launch_call_us": [None, None, None],
+           "per_rank_queue_held": [None, None, None]}
+    assert summarize(cpu)["launch_median_us"] is None
+    assert summarize(cpu)["queue_held_fraction"] is None
     totals = forward_totals([row, summarize(_record(call="d"))])
     assert totals == [{"scenario": "s", "cuda_graph": False, "tokens_per_dp_rank": "4/1",
                        "forward_comm_us": 18.0, "c_us": 9.0, "d_us": 9.0}]

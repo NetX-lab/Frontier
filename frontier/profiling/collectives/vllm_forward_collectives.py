@@ -165,7 +165,7 @@ class CollectiveCall:
         return sum(c * DTYPE_BYTES[d] for c, d in zip(self.columns, self.dtypes))
 
 
-def _group_members(parallel: ServingParallelism, group: str, rank: int) -> list[int]:
+def group_members(parallel: ServingParallelism, group: str, rank: int) -> list[int]:
     tp = parallel.tensor_parallel_size
     if group == "tp":
         start = rank - rank % tp
@@ -180,7 +180,7 @@ def _group_members(parallel: ServingParallelism, group: str, rank: int) -> list[
 def call_bytes(call: CollectiveCall, parallel: ServingParallelism,
                rank: int) -> tuple[int, int]:
     """Return (input_bytes, output_bytes) of ``call`` on ``rank``."""
-    members = _group_members(parallel, call.group, rank)
+    members = group_members(parallel, call.group, rank)
     own = call.shard_rows[rank] * call.row_bytes()
     total = sum(call.shard_rows[m] for m in members) * call.row_bytes()
     if call.op in ("all_reduce", "device_group_all_reduce", "cpu_all_reduce"):
