@@ -36,14 +36,14 @@ def read_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line]
 
 
-def source_identity() -> dict:
+def source_identity(driver: Path = Path(__file__)) -> dict:
     diff = subprocess.check_output(["git", "diff", "--binary", "HEAD"], cwd=REPO)
     return {
         "head": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=REPO, text=True
         ).strip(),
         "tracked_diff_sha256": hashlib.sha256(diff).hexdigest(),
-        "driver_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "driver_sha256": hashlib.sha256(driver.read_bytes()).hexdigest(),
     }
 
 

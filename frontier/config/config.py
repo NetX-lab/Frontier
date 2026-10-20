@@ -587,6 +587,14 @@ class SimulationConfig(ABC):
                 "'pd-disaggregation'."
             )
 
+        from frontier.attention.families import STEP5_ATTENTION_FAMILY
+
+        if any(
+            spec.family_id == STEP5_ATTENTION_FAMILY.family_id
+            for spec in self._get_model_config_for_is_moe().get_layer_attention_specs()
+        ):
+            raise ValueError("Thinking Mode is not supported for Step structural execution.")
+
         if has_explicit_hidden_rounds:
             if (
                 self.thinking_round_prefill_tokens is None

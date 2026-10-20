@@ -241,7 +241,7 @@ def run_case(mode: str, scenario: str, output_root: Path) -> dict:
         for request_id, prompt_tokens in enumerate(prompts):
             arrival_s = 0.0 if mode == "offline" else request_id * ONLINE_ARRIVAL_GAP_S
             writer.writerow((arrival_s, prompt_tokens, decode_tokens))
-    before = source_identity()
+    before = source_identity(Path(__file__))
     argv = command(mode, scenario, case_root)
     (case_root / "command.json").write_text(json.dumps(argv, indent=2) + "\n")
     env = {**os.environ, "PYTHONPATH": str(REPO), "PYTHONDONTWRITEBYTECODE": "1",
@@ -254,7 +254,7 @@ def run_case(mode: str, scenario: str, output_root: Path) -> dict:
     wall_s = time.monotonic() - started
     require(os.waitstatus_to_exitcode(status) == 0,
             f"{scenario} {mode} failed; see {case_root / 'run.log'}")
-    require(source_identity() == before, "source changed during structural run")
+    require(source_identity(Path(__file__)) == before, "source changed during structural run")
     [config_path] = list((case_root / "metrics").rglob("config.json"))
     result = validate_artifacts(config_path.parent, mode, scenario)
     result.update(wall_time_s=round(wall_s, 1), peak_rss_mib=round(usage.ru_maxrss / 1024, 1),

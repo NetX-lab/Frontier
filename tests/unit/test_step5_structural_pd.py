@@ -208,6 +208,23 @@ def test_fractional_heads_fail_clearly(step_config, capacity, tensor_parallel_si
         _payload(step_config, capacity, 4105, tensor_parallel_size=tensor_parallel_size)
 
 
+@pytest.mark.parametrize("sys_arch", ["co-location", "pd-disaggregation"])
+def test_thinking_mode_fails_clearly(step_config, sys_arch):
+    from frontier.config.config import SimulationConfig
+
+    config = object.__new__(SimulationConfig)
+    config.sys_arch = sys_arch
+    config.enable_thinking_mode = True
+    config.thinking_depth = 2
+    config.tool_call_latency = 0.0
+    config.thinking_round_prefill_tokens = None
+    config.thinking_round_decode_tokens = None
+    config.cluster_config = SimpleNamespace(replica_config=step_config)
+
+    with pytest.raises(ValueError, match="not supported for Step structural execution"):
+        config._validate_thinking_mode_config()
+
+
 def test_trace_reports_rank_lane_unique_and_resident_bytes_separately(
     step_config, capacity,
 ):
