@@ -155,12 +155,11 @@ def test_glm_planner_uses_common_block_budget_once(model, monkeypatch):
     assert available_bytes // (78 * 73728) == 103
 
 
-def test_glm_component_capacity_is_independent_of_frozen_execution(model):
+def test_glm_component_capacity_is_independent_of_measured_execution(model):
     assert _capacity(model).resident_bytes_per_common_block == 5928192
-    assert DSA_ATTENTION_FAMILY.execution_enabled is False
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        DSA_ATTENTION_FAMILY.require_enabled_for_execution()
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
+    assert DSA_ATTENTION_FAMILY.execution_enabled is True
+    DSA_ATTENTION_FAMILY.require_enabled_for_execution()
+    with pytest.raises(NotImplementedError, match="kv_factor"):
         get_attention_runtime_kv_layout(
             DSA_ATTENTION_FAMILY,
             runtime_num_kv_heads_per_worker=1,

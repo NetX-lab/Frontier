@@ -29,7 +29,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.mark.parametrize(("model_name", "dummy_mode"), [
-    (MODEL_NAME, False),
     ("deepseek-ai/DeepSeek-V4-Flash", False),
 ])
 def test_predictor_initialization_rejects_frozen_model_before_mode_dispatch(
@@ -222,14 +221,12 @@ def test_glm53_rejects_shared_index_without_prior_producer(model: BaseModelConfi
         replace(model, index_topk_pattern="S").get_layer_attention_specs()
 
 
-def test_glm53_representation_preserves_disabled_execution(model: BaseModelConfig) -> None:
+def test_glm53_representation_enables_measured_execution(model: BaseModelConfig) -> None:
     spec = bind_layer_attention(model, 77)
     family = get_attention_family(spec.family_id)
-    assert family.execution_enabled is False
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        family.require_enabled_for_execution()
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        model.get_runtime_head_size()
+    assert family.execution_enabled is True
+    family.require_enabled_for_execution()
+    assert model.get_runtime_head_size() == model.kv_lora_rank + model.qk_rope_head_dim
 
 
 @pytest.mark.parametrize("model_name", ["llama3.3-70b", "Phi-tiny-MoE-instruct"])

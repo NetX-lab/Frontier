@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import cast
 
+from frontier.attention.dsa_features import DSA_PROFILING_COLUMNS
 from frontier.operators.registry import OperatorRegistry
 from frontier.attention.ops import (
     AttentionFamilySpec,
@@ -439,16 +440,14 @@ DSA_ATTENTION_FAMILY = AttentionFamilySpec(
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
     ),
-    memory_layout=AttentionMemoryLayout.FROZEN_DSA,
+    memory_layout=AttentionMemoryLayout.DSA,
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
-    dsa_frozen=True,
     structural_execution_enabled=True,
-    execution_enabled=False,
-    disabled_reason=(
-        "DSA attention is frozen until a real vLLM/FlashInfer truth backend "
-        "and Frontier mapping are approved."
-    ),
+    execution_enabled=True,
+    required_profiling_feature_columns=DSA_PROFILING_COLUMNS,
+    runtime_num_kv_heads_resolver=_latent_mla_runtime_num_kv_heads,
+    runtime_head_size_resolver=_latent_mla_runtime_head_size,
     kv_cache_capacity_resolver=_dsa_kv_cache_capacity,
     disjoint_model_projection_attrs=(
         "attention_layer_pre_proj_execution_time",

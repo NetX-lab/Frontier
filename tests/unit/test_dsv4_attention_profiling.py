@@ -304,7 +304,7 @@ def test_rows_split_variant_and_tile_schedule_role(plan):
     assert "time_stats.dsv4_compressor.count" not in uncompressed
     kernel_csa = rows[KERNEL_ONLY][0]
     assert f"time_stats.{LAYER_SCOPE}.count" not in kernel_csa
-    assert kernel_csa["kernel_count.dsv4_sparse_attention"] == 7
+    assert kernel_csa["time_stats.dsv4_sparse_attention.kernel_count"] == 7
 
 
 def test_short_context_rows_skip_index_scoring(plan):

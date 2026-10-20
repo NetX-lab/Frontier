@@ -170,8 +170,8 @@ def _bind_homogeneous_attention_family(config: Any) -> AttentionFamilyBinding:
         return AttentionFamilyBinding(
             family_id="dsa_attention",
             variant_id="dsa",
-            frozen=True,
-            reason="DSA marker detected; truth backend remains frozen",
+            frozen=False,
+            reason="DSA marker detected; measured execution requires matching DSA profiling data",
         )
 
     if bool(_get_attr(config, "use_mla", False)) and bool(

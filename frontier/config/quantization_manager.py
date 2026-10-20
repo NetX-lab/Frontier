@@ -10,6 +10,7 @@ from typing import Dict, Optional, Set, Any, List
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DEEPSEEK_V4_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
     iter_execution_enabled_families,
 )
@@ -85,6 +86,9 @@ class QuantizationManager:
     _GDN_OPERATION_NAMES = frozenset(
         operator.name for operator in GATED_DELTA_NET_ATTENTION_FAMILY.profiling_ops()
     )
+    _DSA_OPERATION_NAMES = frozenset(
+        operator.name for operator in DSA_ATTENTION_FAMILY.profiling_ops()
+    )
     _DSV4_OPERATION_NAMES = frozenset(
         operator.precision_name()
         for family in (DEEPSEEK_V4_ATTENTION_FAMILY, DEEPSEEK_V4_MHC_FAMILY)
@@ -119,6 +123,7 @@ class QuantizationManager:
             self._config: Dict[str, Any] = {}
             self._precision_mismatches: Set[PrecisionMismatchInfo] = set()
             self._active_gdn_operations = False
+            self._active_dsa_operations = False
             self._operation_source_inventory: Dict[str, Dict[str, Any]] = {}
 
             self._load_registry()
@@ -188,6 +193,7 @@ class QuantizationManager:
             self._cluster_overrides = {}
             self._precision_mismatches = set()
             self._active_gdn_operations = False
+            self._active_dsa_operations = False
             self._operation_source_inventory = {}
             self._warned_mismatches = set()
             self._warned_approximations = set()
@@ -215,6 +221,11 @@ class QuantizationManager:
             get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
             self._active_gdn_operations = bool(
                 get_num_gdn_layers() if get_num_gdn_layers is not None else 0
+            )
+            get_attention_family = getattr(model_config, "get_attention_family", None)
+            self._active_dsa_operations = bool(
+                get_attention_family is not None
+                and get_attention_family().family_id == DSA_ATTENTION_FAMILY.family_id
             )
             self._config_path = "model_config"
             self._default_precision = model_config.get_default_precision()
@@ -829,6 +840,8 @@ class QuantizationManager:
             elif op_name in self._DSV4_OPERATION_NAMES:
                 continue
             if op_name in self._GDN_OPERATION_NAMES and not self._active_gdn_operations:
+                continue
+            if op_name in self._DSA_OPERATION_NAMES and not self._active_dsa_operations:
                 continue
             source_inventory = self._operation_source_inventory.get(op_name, {})
             precision_name = source_inventory.get("precision")

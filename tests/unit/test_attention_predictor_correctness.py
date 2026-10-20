@@ -160,6 +160,7 @@ def test_kernel_only_attention_trains_true_mixed_decode_when_real_rows_exist(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
+    predictor._model_config = _ConcreteSklearnExecutionTimePredictor()._model_config
     predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
     predictor._attention_input_file = "unused.csv"
 
@@ -231,6 +232,7 @@ def test_kernel_only_attention_registers_true_mixed_decode_prediction(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
+    predictor._model_config = _ConcreteSklearnExecutionTimePredictor()._model_config
     predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._config = SimpleNamespace(

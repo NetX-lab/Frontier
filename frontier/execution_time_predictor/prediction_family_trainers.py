@@ -17,7 +17,7 @@ from frontier.attention.families import (
     LATENT_MLA_ATTENTION_FAMILY,
 )
 from frontier.attention.model_binding import resolve_runtime_attention_family
-from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.ops import AttentionMemoryLayout, AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_columns,
     get_enabled_predictor_metric_name_by_role,
@@ -796,6 +796,18 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     logger.info("Trained architecture-profile %s for %s", model_name, cluster_type)
 
         # ========== Part 2: Attention core operations from attention.csv ==========
+        if resolve_runtime_attention_family(model_config).memory_layout is AttentionMemoryLayout.DSA:
+            from frontier.execution_time_predictor.dsa_predictor import train_dsa_models
+
+            attention_df = self._load_attention_df(attn_file, replica_config, replica_scheduler_config)
+            fit = functools.partial(
+                self._train_single_model,
+                execution_time_predictor_config=execution_time_predictor_config,
+                training_context=training_context,
+            )
+            models.update(train_dsa_models(attention_df, fit))
+            trained_model_signatures.add(attention_signature)
+            return models
         if not os.path.exists(attn_file):
             raise FileNotFoundError(f"Attention input file {attn_file} not found")
 

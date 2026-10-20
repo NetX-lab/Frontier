@@ -25,7 +25,7 @@ from frontier.metrics.data_series import DataSeries
 from frontier.metrics.metrics_store import MetricsStore
 from frontier.metrics.op_trace_utils import OpTraceContext, compute_op_trace_meta
 from frontier.operators.spec import ResourceClass
-from frontier.types import ClusterType
+from frontier.types import ClusterType, MeasurementType
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -274,20 +274,19 @@ def test_legacy_csv_omits_absent_dsa_series(tmp_path):
     ]
 
 
-def test_production_family_stays_disabled():
-    assert not DSA_ATTENTION_FAMILY.execution_enabled
-    assert DSA_ATTENTION_FAMILY.dsa_frozen
-    with pytest.raises(NotImplementedError, match="DSA"):
-        DSA_ATTENTION_FAMILY.require_enabled_for_execution()
+def test_production_family_requires_measured_data_at_prediction():
+    assert DSA_ATTENTION_FAMILY.execution_enabled
+    assert not DSA_ATTENTION_FAMILY.dsa_frozen
+    DSA_ATTENTION_FAMILY.require_enabled_for_execution()
 
 
-def test_structural_trace_requires_explicit_admission():
+def test_measured_dsa_trace_uses_the_same_scopes_as_structural_trace():
     layer = _layer(0)
-    with pytest.raises(NotImplementedError, match="DSA"):
-        get_attention_trace_op_times(layer, DSA_ATTENTION_FAMILY)
+    measured = get_attention_trace_op_times(layer, DSA_ATTENTION_FAMILY)
     values = get_attention_trace_op_times(
         layer, DSA_ATTENTION_FAMILY, allow_structural=True,
     )
+    assert measured == values
     assert [(op.name, value) for op, value in values] == [
         ("attn_dsa_indexer", 5.0), ("attn_dsa_mla", 7.0),
     ]
@@ -300,7 +299,7 @@ def test_inclusive_projection_ownership_requires_disjoint_declaration():
 
 
 @pytest.mark.parametrize("model_name", [
-    "zai-org/GLM-5.3", "deepseek-ai/DeepSeek-V4-Flash",
+    "deepseek-ai/DeepSeek-V4-Flash",
 ])
 def test_unmeasured_family_rejects_csv_loading_and_standalone_training(
     model_name, monkeypatch, tmp_path,
@@ -322,4 +321,22 @@ def test_unmeasured_family_rejects_csv_loading_and_standalone_training(
             str(tmp_path / "missing.csv"), str(tmp_path / "trained"),
             model_name, "h800",
         )
+    assert not (tmp_path / "trained").exists()
+
+
+def test_measured_dsa_needs_isolated_input_and_shared_training(tmp_path, monkeypatch):
+    from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
+    from frontier.training.attention_trainer import AttentionTrainer
+
+    monkeypatch.chdir(REPO_ROOT)
+    model_name = "zai-org/GLM-5.3"
+    model = BaseModelConfig.create_from_name(model_name)
+    loader = ProfilingDataFrameLoaders()
+    loader._active_measurement_type = MeasurementType.KERNEL_ONLY
+    with pytest.raises(FileNotFoundError, match="dsa_attention_kernel_only"):
+        loader._load_attention_df(str(tmp_path / "attention_kernel_only.csv"),
+                                  SimpleNamespace(model_config=model, attn_tensor_parallel_size=8),
+                                  SimpleNamespace(block_size=64))
+    with pytest.raises(NotImplementedError, match="shared model manager"):
+        AttentionTrainer(str(tmp_path / "attention.csv"), str(tmp_path / "trained"), model_name, "h800")
     assert not (tmp_path / "trained").exists()

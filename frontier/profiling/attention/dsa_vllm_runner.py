@@ -151,7 +151,7 @@ class _WorkerState:
             return None
         prefills = sum(r["num_computed_tokens"] < r["prompt_len"] for r in requests)
         if case.phase == PHASE_PREFILL:
-            matches = len(requests) == 1 and prefills == 1
+            matches = len(requests) == case.batch_size and prefills == case.batch_size
         else:
             matches = prefills == 0 and len(requests) == case.batch_size
         if not matches:

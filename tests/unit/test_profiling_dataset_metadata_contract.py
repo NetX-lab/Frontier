@@ -22,10 +22,11 @@ DEVICE_EXPECTATIONS = {
         "directory_profiles": {},
     },
     "h800": {
-        "allowed_profiles": {"generic", "step2_mini", "step3_text"},
+        "allowed_profiles": {"generic"},
         "directory_profiles": {
             "Step2Mini-tiny": "step2_mini",
             "step-moe-noquant-small": "step3_text",
+            "zai-org/GLM-5.3": "glm_moe_dsa",
         },
     },
 }
@@ -71,8 +72,8 @@ def test_release_profiling_dataset_profile_values_are_model_consistent() -> None
     violations: list[str] = []
 
     for device, expectation in DEVICE_EXPECTATIONS.items():
-        allowed_profiles = expectation["allowed_profiles"]
         directory_profiles = expectation["directory_profiles"]
+        allowed_profiles = expectation["allowed_profiles"] | set(directory_profiles.values())
         for csv_path in _csv_files_for_device(device):
             if "model_architecture_profile" not in pd.read_csv(csv_path, nrows=0).columns:
                 violations.append(f"{csv_path.relative_to(REPO_ROOT)} missing model_architecture_profile")
@@ -96,7 +97,7 @@ def test_release_profiling_dataset_profile_values_are_model_consistent() -> None
                     f"allowed={sorted(allowed_profiles)}"
                 )
 
-            model_dir = csv_path.relative_to(DATA_ROOT / device).parts[0]
+            model_dir = csv_path.parent.relative_to(DATA_ROOT / device).as_posix()
             expected_profile = directory_profiles.get(model_dir)
             if expected_profile is not None and observed_profiles != [expected_profile]:
                 violations.append(
@@ -138,6 +139,11 @@ def test_non_generic_h800_profiles_pass_predictor_metadata_validation() -> None:
                 "attention_combined.csv",
                 "attention_combined_kernel_only.csv",
             ],
+        ),
+        (
+            "zai-org/GLM-5.3",
+            "glm_moe_dsa",
+            ["linear_op.csv", "linear_op_kernel_only.csv", "moe.csv", "moe_kernel_only.csv"],
         ),
     ]
 

@@ -652,7 +652,7 @@ class ModelArchitectureProfile:
 
     @classmethod
     def glm_moe_dsa(cls) -> "ModelArchitectureProfile":
-        """GLM sparse-MLA backbone identity; DSA execution stays guarded."""
+        """GLM sparse-MLA backbone identity with measured DSA coverage."""
 
         return cls(
             profile_id="glm_moe_dsa",
@@ -670,9 +670,8 @@ class ModelArchitectureProfile:
             replicate_shared_expert_in_sequence_parallel=True,
             experimental=True,
             runtime_limitations=(
-                "DSA measured timing and native parameter-storage qualification are unsupported",
-                "shared FFN timing keeps the TP-sharded shape; sequence-parallel "
-                "token sharding and collectives are not modeled",
+                "DSA timing requires measured workload coverage; native "
+                "parameter-storage qualification and full-model calibration remain incomplete",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "glm_moe_dsa"

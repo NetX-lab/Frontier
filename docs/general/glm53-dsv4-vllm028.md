@@ -6,8 +6,8 @@ native comparison tooling for GLM-5.3 and the original DeepSeek-V4-Flash.
 product milestone is the full trained GLM P/D path, followed by independent
 calibration and holdout checks, then measured V4 integration.
 
-This snapshot describes Frontier code through `8f6c3de` and recorded validation
-through October 20, 2026 Asia/Hong_Kong. Test results below
+This snapshot includes the W7 measured-DSA, sequence-parallel MoE and measured
+communication integrations through October 20, 2026 Asia/Hong_Kong. Test results below
 belong to their stated revisions and scopes; they are not a claim that every
 test passes at the branch tip. Step-5-Preview integration is outside this branch.
 
@@ -15,12 +15,12 @@ test passes at the branch tip. Step-5-Preview integration is outside this branch
 
 | Item | Contract |
 | --- | --- |
-| GLM | Original `zai-org/GLM-5.3`, `GlmMoeDsaForCausalLM`, 78 backbone layers, 3 dense and 75 MoE layers, 256 routed experts, FP8 configuration. See the [checked-in model config](../../data/config/models/zai-org__GLM-5.3.json). Under vLLM sequence-parallel MoE (EP enabled, TP>1 and DP>1, PP1 in Frontier), each rank stores one full copy of the shared expert instead of a TP shard. The TP8/DP2/EP16 per-rank weight estimate is 52,154,161,152 B (48.57 GiB), 0.53% below the 48.83 GiB native model-load memory delta. Shared-expert timing keeps the TP-sharded shape; sequence-parallel token sharding and its collectives are not modeled. |
+| GLM | Original `zai-org/GLM-5.3`, `GlmMoeDsaForCausalLM`, 78 backbone layers, 3 dense and 75 MoE layers, 256 routed experts, FP8 configuration. See the [checked-in model config](../../data/config/models/zai-org__GLM-5.3.json). Under vLLM sequence-parallel MoE (EP enabled, TP>1 and DP>1, PP1 in Frontier), each rank stores one full copy of the shared expert instead of a TP shard. The TP8/DP2/EP16 per-rank weight estimate is 52,154,161,152 B (48.57 GiB), 0.53% below the 48.83 GiB native model-load memory delta. Sequence-parallel widths and shared-expert TP1 timing are represented; full-model timing remains uncalibrated. |
 | V4 | Original `deepseek-ai/DeepSeek-V4-Flash`, `DeepseekV4ForCausalLM`, 43 backbone layers and 256 routed experts. Source representation includes mixed-precision parameter storage, uncompressed/CSA/HCA attention, the indexer, sequence parallelism and mHC. See the [checked-in model config](../../data/config/models/deepseek-ai__DeepSeek-V4-Flash.json). |
 | Native reference | vLLM `0.28.0`, source commit `2cf0a6915ce544dc493a0990f2ea38d81601128a`. Native observations use separately developed, pinned instrumentation; those vLLM changes are not part of this Frontier branch. |
 | Recorded GPU environment | H800/SM90; observed package versions include PyTorch `2.13.0+cu130`, Transformers `5.15.1`, Triton `3.7.1`, FlashInfer `0.6.16.post3`, NIXL `1.3.2` and UCX `1.21.0`. CUDA package labels, loaded libraries and selected kernels are distinct evidence. Package versions do not establish build attestation or qualify every backend. |
 | Native weights | `--load-format dummy`: original model structure and real kernels execute on GPUs with random weights. No checkpoint is required. This does not establish production-checkpoint output quality or its expert distribution. |
-| Simulator timing | The new structural paths use explicitly synthetic durations. Their token, allocation and accounting checks do not measure native latency, hardware fit or communication bandwidth. |
+| Simulator timing | Structural drivers use explicitly synthetic durations. The measured GLM DSA path uses the checked-in H800 tables only within their workload coverage. Neither structural runs nor table-point checks establish full-model accuracy or hardware qualification. |
 
 The [dummy-weight ground-truth decision](../adr/0001-dummy-weight-native-ground-truth.md)
 defines the separation between native random weights and simulator dummy timing.
@@ -31,13 +31,13 @@ token-content equality is not asserted without that identity evidence.
 
 | Area | Implemented and exercised scope | Current boundary |
 | --- | --- | --- |
-| GLM model, attention and storage | Typed dense/routed/shared FFN contracts, full/shared DSA index ownership, source-defined parameter/scale storage and KV capacity. Full 78-layer co-location runs use the real simulator entry point in offline and online modes. | DSA measured timing remains guarded. Co-location graph settings in the structural driver establish configuration/accounting only. |
+| GLM model, attention and storage | Typed dense/routed/shared FFN contracts, full/shared DSA index ownership, measured sparse-MLA/indexer lookup and fitting, source-defined parameter/scale storage and KV capacity. Full 78-layer structural co-location runs use the real simulator entry point in offline and online modes. | Measured DSA rejects uncovered workloads. Old GLM router profiling rows do not satisfy the new grouped-top-k contract, so the checked-in tables alone do not yet admit a full-model non-dummy run. Graph settings in the structural driver establish configuration/accounting only. |
 | GLM P/D | Sequential, PP1, eager structural PDD with D-side reservation (the prompt's blocks, as vLLM's remote load holds them; the first D step recomputes the last prompt token in place), transfer readiness, P-side holds, release and re-admission through existing scheduler/cache/transfer owners. The integration driver models P32+D32 as 64 logical devices. | Logical devices are not a 64-GPU qualification. The DECODE cluster scheduler picks each request's D lane through `select_kv_transfer_target`; only `round_robin` and its sticky variant implement it, so the v0.28 DP policy does not yet place NIXL D requests. Transfer payload accounting and same-time readiness/release are simulator contracts; measured NIXL lifetime and timing remain separate. |
 | V4 cache | Explicit H800 sparse-FlashMLA cache selection, grouped allocation, sliding/compressed cache state, partial retirement and reuse, plus one cache-zero scope from allocation IDs carried into the Batch. | The exercised layout requires block size 256, DCP1 and the supported FP8 cache selections. Physical reservation extent is not measured store traffic or bytes zeroed. |
 | V4 execution | Full 43-layer eager PP1 co-location; TP8 with DP2/4/8 and corresponding EP16/32/64 structural cases. Source-rank sequence-parallel geometry, mHC/shared/routed work, compression boundaries, stage/phase accounting and operator traces are represented. | Costs and destination routing distributions are synthetic. V4 measured execution, P/D, CUDA graphs, prefix caching and speculation are not enabled by this structural path. Complete idle-attention tracing and native overlap remain unqualified. |
 | Internal DP placement | Existing balancer gains explicit `policy_version="v0.28.0"`, including request ownership and the selected native scoring/tie behavior. `"v0.10.2"` remains the legacy default. | This is the internal online policy reference; it does not settle P/D placement or establish native DP4 behavior. |
 | V1 queue admission | Explicit `max_concurrent_batches=2` admits queued work independently of physical pipeline stages. `None` retains existing pipeline capacity/default behavior. | The opt-in is restricted to the exact V1 scheduler, ordinary-cache MONOLITHIC PP1/DP1, without prefix caching, speculation or GDN. Stage execution stays serial; grouped/disaggregated paths and subclasses are rejected. |
-| Profiling producers (vLLM 0.28) | GLM DSA sparse-MLA/indexer attention, block-FP8 linear ops (including sequence-parallel shared-expert rows) and block-FP8 FlashInfer CUTLASS routed experts; V4 compressed attention, sequence-parallel shared-expert rows with clamped SwiGLU and checkpoint-MXFP4 MARLIN routed experts; vLLM forward collectives on serving process groups, NIXL KV READ and EP calls under concurrent KV reads. Rows carry runtime identity columns (runtime versions, source and model-config revision, weight source, device, quantization signature, parallel groups, graph mode). The GLM producers and the communication benchmarks have run on H800. | The simulator does not read these tables yet: GLM measured DSA timing stays guarded and V4 non-dummy timing is not implemented. The predictor and measured-communication integration is designed but not merged. V4 producers have not run on GPU. |
+| Profiling producers (vLLM 0.28) | GLM DSA sparse-MLA/indexer attention, block-FP8 linear ops (including sequence-parallel shared-expert rows) and block-FP8 FlashInfer CUTLASS routed experts; V4 compressed attention, sequence-parallel shared-expert rows with clamped SwiGLU and checkpoint-MXFP4 MARLIN routed experts; vLLM forward collectives on serving process groups, NIXL KV READ and EP calls under concurrent KV reads. Rows carry runtime identity columns (runtime versions, source and model-config revision, weight source, device, quantization signature, parallel groups, graph mode). GLM H800 tables and measured communication curves are checked in. | GLM DSA and measured communication consumers are integrated. GLM router rows still need the grouped-top-k rerun. V4 non-dummy timing is not implemented and V4 producers have not run on GPU. |
 | Native harnesses | Pinned observer bootstrap, dummy initialization checks, multi-node DP serving commands, externally managed P/D replay and role-specific native cache overrides. | Tools support qualification work; successful preparation or submission does not qualify the workload, observer or predictor. |
 
 The implementation reuses the existing architecture/attention/operator tables,
@@ -57,6 +57,39 @@ cache pool, scheduler, predictor and metrics owners. Useful review entry points:
   [P/D replay](../../tests/comparison/calibration/pd_replay.py).
 
 ## Recorded validation by revision
+
+### Checked-in GLM H800 tables
+
+The model-name path substitution resolves to
+[`data/profiling/compute/h800/zai-org/GLM-5.3/`](../../data/profiling/compute/h800/zai-org/GLM-5.3/).
+Its [SHA256 manifest](../../data/profiling/compute/h800/zai-org/GLM-5.3/SHA256SUMS)
+covers `dsa_attention.csv`, `dsa_attention_kernel_only.csv`, both `linear_op`
+tables, both `moe` tables and `moe_config.yaml`. All 12 runtime identity columns
+are retained. These measurements used native dummy weights, not simulator
+dummy timing or production-checkpoint routing.
+
+Only the [DSA reader](../../frontier/execution_time_predictor/dsa_predictor.py)
+opens the isolated `dsa_attention` filenames. Dense/MLA readers keep their own
+filenames; no generic `attention.csv` is published in this model directory.
+The kernel-only DSA table was re-aggregated from the original JSONL using its
+original Python 3.12 environment. Its only byte changes are two header names:
+`kernel_count.<scope>` becomes `time_stats.<scope>.kernel_count` for
+`attn_dsa_indexer` and `attn_dsa_mla`; measurements and identity are unchanged.
+
+The DSA consumer separates native decode/prefill kernel paths, uses summed key
+and selected-key work (causal pairs for the prefill path), and charges the
+indexer only to full-index owners. CUDA-event pure-decode rows, including the
+known host-stall outlier, are excluded; kernel-only measurements supply decode
+timing. Current tables do not cover tiny query extends or multi-sequence
+prefill; uncovered and mixed serving workloads fail rather than use dummy
+costs or extrapolation. Producer cases for those missing shapes are implemented
+but do not constitute new GPU measurements.
+
+The old `standard_fused_topk` GLM router rows are deliberately retained as
+measured. They are rejected by the new `grouped_topk_sigmoid` consumer until a
+verified native rerun replaces them. A run on these tables is labeled
+**structural smoke on H800 tables, not an accuracy result**; changing router
+labels or bypassing dataset admission is not a valid smoke.
 
 These are selected completed checks from the development record. A passing
 structural test verifies its modelled invariants, not calibrated predictions.

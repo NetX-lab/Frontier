@@ -97,8 +97,8 @@ def test_runtime_kv_layout_reads_kv_factor_from_spec() -> None:
     assert mla_layout.kv_factor == LATENT_MLA_ATTENTION_FAMILY.kv_factor == 1
 
 
-def test_frozen_dsa_runtime_kv_layout_still_raises_before_reading_kv_factor() -> None:
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
+def test_dsa_runtime_kv_layout_requires_component_capacity() -> None:
+    with pytest.raises(NotImplementedError, match="kv_factor"):
         get_attention_runtime_kv_layout(
             DSA_ATTENTION_FAMILY,
             runtime_num_kv_heads_per_worker=1,
@@ -120,8 +120,9 @@ def test_latent_mla_family_declares_required_profiling_feature_columns_on_spec()
     )
 
 
-def test_frozen_dsa_family_declares_no_profiling_feature_columns() -> None:
-    assert DSA_ATTENTION_FAMILY.required_profiling_feature_columns == ()
+def test_dsa_family_declares_request_list_profiling_columns() -> None:
+    assert "prefill_seq_lens" in DSA_ATTENTION_FAMILY.required_profiling_feature_columns
+    assert "decode_kv_cache_sizes" in DSA_ATTENTION_FAMILY.required_profiling_feature_columns
 
 
 def test_latent_mla_family_declares_imported_predictor_exclusions_on_spec() -> None:
