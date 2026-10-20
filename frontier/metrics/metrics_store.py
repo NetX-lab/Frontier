@@ -554,7 +554,7 @@ class MetricsStore:
             effective_tokens_transfer=batch_stage.effective_total_tokens_transfer,
             effective_tokens_rounded=batch_stage.effective_total_tokens_rounded,
             tokens_are_post_routing=batch_stage.tokens_are_post_routing,
-            selected_logits_rows=len(batch_stage.requests),
+            selected_logits_rows=len(batch_stage.request_ids),
         )
 
     def _emit_op_level_traces(
@@ -1632,14 +1632,16 @@ class MetricsStore:
         if DEEPSEEK_V4_ATTENTION_FAMILY.family_id not in family_ids:
             absent_structural_ops.add(OperationMetrics.KV_CACHE_BLOCK_ZERO.value)
         from frontier.operators.sequence_parallel_moe import (
-            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS, uses_sequence_parallel_moe,
+            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
         )
 
-        replica = cluster_config.replica_config
+        capabilities = CapabilityContext.from_replica_config(
+            cluster_type=cluster_type, replica_config=cluster_config.replica_config,
+        )
         if (DEEPSEEK_V4_ATTENTION_FAMILY.family_id in family_ids
-                or not uses_sequence_parallel_moe(replica.model_config, replica)):
+                or not capabilities.uses_sequence_parallel_moe):
             absent_structural_ops.update(SP_TP_OPERATORS)
-        if not replica.model_config.get_model_architecture_profile().embedding_logits_collectives:
+        if not capabilities.embedding_logits_collectives:
             absent_structural_ops.update(EMBEDDING_LOGITS_OPERATORS)
         operation_metrics = tuple(
             metric for metric in OperationMetrics
@@ -4423,6 +4425,10 @@ class MetricsStore:
                 execution_time.mtp_terminal_overshoot_time
             ),
         }
+        component_ledger.update({
+            name: _round_ledger_ms(duration_ms)
+            for name, duration_ms in _iter_source_tp_collective_times(execution_time)
+        })
         if execution_time.has_kernel_gap:
             component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
         if global_vars.get_kv_connector() != "none":

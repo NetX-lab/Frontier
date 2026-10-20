@@ -50,13 +50,14 @@ def replay(role, lane_tokens, logits_rows):
     measured = MeasuredCCBackend(MeasuredCCBackendConfig(), role, "h800", "h800_dgx", 32)
     before, after = Counter(), Counter()
     for layer in range(model.num_layers):
-        before.update(("attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce"))
+        before.update(("attn_tensor_parallel_allreduce",))
         names = source_tp_operator_names(model, replica, layer)
         after.update(names)
         if model.is_moe_layer(layer):
             before.update({"expert_parallel_alltoall": 2})
             after.update(("expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine"))
         else:
+            before.update(("mlp_tensor_parallel_allreduce",))
             after.update(("attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce"))
 
     def prices(operators, backend):

@@ -282,6 +282,14 @@ def test_real_metrics_initializer_limits_dsa_catalogs_to_dsa_models(
     store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster})
     dsa_metrics = {OperationMetrics.ATTN_DSA_INDEXER, OperationMetrics.ATTN_DSA_MLA}
     expected_catalog = set(OperationMetrics) - {OperationMetrics.KV_CACHE_BLOCK_ZERO}
+    from frontier.operators.sequence_parallel_moe import (
+        EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+    )
+
+    # These fixtures use TP1, so no sequence-parallel MoE calls are reachable.
+    expected_catalog -= {OperationMetrics(name) for name in SP_TP_OPERATORS}
+    if not includes_dsa:
+        expected_catalog -= {OperationMetrics(name) for name in EMBEDDING_LOGITS_OPERATORS}
     if not includes_dsa:
         expected_catalog -= dsa_metrics
 

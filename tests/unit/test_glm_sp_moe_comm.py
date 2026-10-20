@@ -12,6 +12,7 @@ from frontier.config.parallel_semantics import sequence_parallel_moe_token_width
 from frontier.entities import Batch, Request
 from frontier.entities.time_components import AttentionTime
 from frontier.metrics.op_trace_utils import OpTraceContext, compute_op_trace_meta
+from frontier.metrics.metrics_store import MetricsStore
 from frontier.operators.families import get_comm_operator
 from frontier.operators.sequence_parallel_moe import source_tp_operator_names
 from frontier.operators.spec import CommPayloadContext
@@ -172,6 +173,25 @@ def test_live_source_layer_collectives_and_total(role, layer, expected):
     assert set(result.communication_operator_times.op_times) == expected
     assert result.communication_time_component.total_time() == pytest.approx(sum(result.communication_operator_times.op_times.values()))
     assert result.model_time_ms == pytest.approx(sum(result.communication_operator_times.op_times.values()))
+    ledger = MetricsStore.__new__(MetricsStore)._build_frontier_stage_batch_component_ledger(result)
+    assert sum(ledger.values()) == pytest.approx(result.model_time_ms)
+
+
+@pytest.mark.parametrize("role", ROLES)
+def test_split_execution_replay_counts_source_and_ep_calls_once(role):
+    from tests.integration.run_glm53_comm_replay import replay
+
+    result = replay(role, [64] * 4, 1)
+    before = {row["operator"]: row["calls"] for row in result["before_analytical"]["operators"]}
+    after = {row["operator"]: row["calls"] for row in result["after_measured"]["operators"]}
+    assert before == {"attn_tensor_parallel_allreduce": 78, "mlp_tensor_parallel_allreduce": 3,
+                      "expert_parallel_alltoall": 150}
+    assert after == {"embedding_allreduce": 1, "attn_tensor_parallel_allreduce": 3,
+        "mlp_tensor_parallel_allreduce": 3, "sp_moe_attention_reduce_scatter": 75,
+        "sp_moe_layer_input_allgather": 74, "sp_moe_final_allgather": 1,
+        "logits_allgather": 1, "expert_parallel_alltoall_dispatch": 75,
+        "expert_parallel_alltoall_combine": 75}
+    assert result["after_measured"]["step_ms"] > 0
 
 
 def test_tp8_dp1_preserves_non_sp_moe_ffn_allreduce_copy():
