@@ -521,6 +521,38 @@ def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
     )
 
 
+def _ep_phase_alias(ctx: CommPayloadContext, sp_alias: str) -> str:
+    from frontier.operators.sequence_parallel_moe import uses_sequence_parallel_moe
+
+    if uses_sequence_parallel_moe(ctx.model_config, ctx.replica_config):
+        return sp_alias
+    return "alltoall"
+
+
+def _ep_phase_payload(ctx: CommPayloadContext, name: str) -> int:
+    if _ep_phase_alias(ctx, "allgather") == "alltoall":
+        return _expert_parallel_payload_bytes(ctx)
+    from frontier.operators.sequence_parallel_moe import ep_widths, ep_workload
+
+    return ep_workload(name, ctx.model_config, ctx.replica_config.router_topk,
+                       ep_widths(ctx))["data_size_bytes"]
+
+
+def _source_tp_collective_specs():
+    from frontier.operators.sequence_parallel_moe import tp_payload
+
+    return tuple(
+        (name, alias, lambda ctx, name=name: tp_payload(name, ctx))
+        for name, alias in (
+            ("sp_moe_attention_reduce_scatter", "reduce_scatter"),
+            ("sp_moe_layer_input_allgather", "allgather"),
+            ("sp_moe_final_allgather", "allgather"),
+            ("embedding_allreduce", "allreduce"),
+            ("logits_allgather", "allgather"),
+        )
+    )
+
+
 def _attn_tp_devices(ctx: CommPayloadContext) -> int:
     return int(ctx.replica_config.attn_tensor_parallel_size)
 
@@ -686,9 +718,10 @@ COMM_FAMILY = OperatorFamilySpec(
             execution_time_attr="expert_parallel_alltoall_time",
             precision_op="expert_parallel_communication",
             collective_alias="alltoall",
+            collective_alias_builder=lambda ctx: _ep_phase_alias(ctx, "allgather"),
             comm_group="moe_ep",
             comm_domain="EP",
-            payload_builder=_expert_parallel_payload_bytes,
+            payload_builder=lambda ctx: _ep_phase_payload(ctx, "expert_parallel_alltoall_dispatch"),
             num_devices_builder=_moe_ep_devices,
         ),
         CommOperatorSpec(
@@ -700,9 +733,10 @@ COMM_FAMILY = OperatorFamilySpec(
             execution_time_attr="expert_parallel_alltoall_time",
             precision_op="expert_parallel_communication",
             collective_alias="alltoall",
+            collective_alias_builder=lambda ctx: _ep_phase_alias(ctx, "reduce_scatter"),
             comm_group="moe_ep",
             comm_domain="EP",
-            payload_builder=_expert_parallel_payload_bytes,
+            payload_builder=lambda ctx: _ep_phase_payload(ctx, "expert_parallel_alltoall_combine"),
             num_devices_builder=_moe_ep_devices,
         ),
         CommOperatorSpec(
@@ -748,6 +782,19 @@ COMM_FAMILY = OperatorFamilySpec(
                     _dsv4_sp_final_mhc_allgather_bytes,
                 ),
             )
+        ),
+        *(
+            CommOperatorSpec(
+                name=name, role=OperatorRole.COMMUNICATION, phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM, resource_class=ResourceClass.COMM,
+                # Physical op_times and explicit source traces need no legacy scalar.
+                profiling_target=False, e2e_trace_target=False, precision_op=alias,
+                tp_mode=TensorParallelMode.ATTENTION_TP,
+                collective_alias=alias, comm_group="attn_tp", comm_domain="ATTN_TP",
+                payload_builder=payload, num_devices_builder=_attn_tp_devices,
+                zero_payload_policy=ZeroPayloadPolicy.EXACT_NOOP,
+            )
+            for name, alias, payload in _source_tp_collective_specs()
         ),
         *(
             CommOperatorSpec(

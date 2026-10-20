@@ -43,6 +43,8 @@ class OpTraceContext:
     effective_tokens_transfer: int
     effective_tokens_rounded: int
     tokens_are_post_routing: bool
+    selected_logits_rows: int | None = None
+    sequence_parallel_token_widths: Any | None = None
 
     @property
     def hidden_size(self) -> int:
@@ -167,7 +169,7 @@ def build_parallel_context(ctx: OpTraceContext) -> Dict[str, int]:
 
 def map_trace_op_to_precision_op(op_name: str) -> str:
     for family in (MEMORY_FAMILY, FFN_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY, COMM_FAMILY):
-        for operator in family.e2e_trace_ops():
+        for operator in family.operators:
             if operator.name == op_name:
                 return operator.precision_name()
 
@@ -757,6 +759,24 @@ def compute_op_trace_meta(
         return result
 
     if op_type == "COMM":
+        from frontier.operators.sequence_parallel_moe import (
+            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS, ep_workload,
+            tp_workload, uses_sequence_parallel_moe,
+        )
+
+        if op_name in (*SP_TP_OPERATORS, *EMBEDDING_LOGITS_OPERATORS):
+            return dict(tp_workload(
+                op_name, ctx.model_config, ctx.attn_tp,
+                ctx.effective_tokens_rounded, ctx.selected_logits_rows,
+            ), precision_op=precision_op)
+        if (op_name in ("expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine")
+                and uses_sequence_parallel_moe(ctx.model_config, ctx.replica_config)):
+            if ctx.sequence_parallel_token_widths is None:
+                raise ValueError("SP EP tracing requires source DP-lane token widths")
+            return dict(ep_workload(
+                op_name, ctx.model_config, ctx.router_topk,
+                ctx.sequence_parallel_token_widths,
+            ), precision_op=precision_op)
         if op_name in (
             "attn_tensor_parallel_allreduce",
             "mlp_tensor_parallel_allreduce",

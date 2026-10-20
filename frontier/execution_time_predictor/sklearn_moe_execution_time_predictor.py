@@ -30,6 +30,10 @@ from frontier.moe_ep_workload import (
 from frontier.operators.families import (
     get_comm_operator,
 )
+from frontier.operators.sequence_parallel_moe import (
+    source_tp_operator_names,
+    uses_sequence_parallel_moe,
+)
 
 if TYPE_CHECKING:
     from frontier.entities import EPBatchGroup
@@ -197,10 +201,14 @@ class SklearnMoEExecutionTimePredictor(
         attn_tp_size = self._replica_config.attn_tensor_parallel_size
         moe_tp_size = self._replica_config.moe_tensor_parallel_size
         moe_ep_size = self._replica_config.moe_expert_parallel_size
+        sp_moe_layer = (
+            uses_sequence_parallel_moe(self._model_config, self._replica_config)
+            and self._model_config.is_moe_layer(layer_id)
+        )
 
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
         attn_tp_allreduce_time = (
-            base_time if include_attention and attn_tp_size > 1 else 0.0
+            base_time if include_attention and attn_tp_size > 1 and not sp_moe_layer else 0.0
         )
         # MoE TP all-reduce covers the shared pre-routing hidden-state domain.
         # A zero-routed physical lane still participates in that collective.
@@ -310,6 +318,15 @@ class SklearnMoEExecutionTimePredictor(
             )
             mlp_operator_times = None
             moe_operator_times = None
+
+        if include_attention:
+            communication_operator_times.op_times.update({
+                name: base_time
+                for name in source_tp_operator_names(
+                    self._model_config, self._replica_config, layer_id,
+                )
+                if name != "logits_allgather" or batch.requests
+            })
 
         return ExecutionTime(
             num_layers_per_pipeline_stage=1,
@@ -585,9 +602,22 @@ class SklearnMoEExecutionTimePredictor(
                 pipeline_parallel_communication_time
             )
 
-        # For MoE models, attention still uses Tensor Parallelism (AllReduce).
+        sp_moe_layer = (
+            uses_sequence_parallel_moe(self._model_config, self._replica_config)
+            and self._model_config.is_moe_layer(layer_id)
+        )
+        if include_attention:
+            communication_operator_times.update({
+                name: self._predict_comm_operator(get_comm_operator(name), batch)
+                for name in source_tp_operator_names(
+                    self._model_config, self._replica_config, layer_id,
+                )
+            })
+
+        # Sequence-parallel MoE reduces the attention output to local SP rows.
         if (
             not include_attention
+            or sp_moe_layer
             or self._replica_config.attn_tensor_parallel_size == 1
         ):
             attn_tp_allreduce_time = 0
@@ -612,7 +642,7 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times["moe_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
             )
-        elif include_ffn and self._replica_config.attn_tensor_parallel_size > 1:
+        elif include_ffn and not sp_moe_layer and self._replica_config.attn_tensor_parallel_size > 1:
             moe_tp_allreduce_time = attn_tp_allreduce_time
             communication_operator_times["mlp_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time

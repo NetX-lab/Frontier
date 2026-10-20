@@ -69,11 +69,13 @@ def _stub_mla_attention_markers(model_config) -> None:
 
 def _build_context(is_moe: bool = False, tokens_are_post_routing: bool = False):
     from frontier.metrics.op_trace_utils import OpTraceContext
+    from frontier.model_architectures import ModelArchitectureProfile
     from frontier.types import ClusterType
 
     _reset_quantization()
 
     model_config = MagicMock()
+    model_config.get_model_architecture_profile.return_value = ModelArchitectureProfile.generic()
     model_config.embedding_dim = 8
     model_config.num_q_heads = 4
     model_config.num_kv_heads = 2

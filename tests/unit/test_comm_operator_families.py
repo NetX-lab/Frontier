@@ -182,12 +182,13 @@ def _comm_context(
 ) -> CommPayloadContext:
     return CommPayloadContext(
         batch=_Batch() if batch is None else batch,
-        model_config=SimpleNamespace(embedding_dim=8, num_experts_per_tok=2),
+        model_config=replace(cache_model(), embedding_dim=8, num_experts_per_tok=2),
         replica_config=SimpleNamespace(
             attn_tensor_parallel_size=4,
             moe_tensor_parallel_size=3,
             moe_expert_parallel_size=2,
             num_pipeline_stages=2,
+            attn_dp=1,
             router_topk=2,
         ),
         cluster_type=ClusterType.MONOLITHIC,
