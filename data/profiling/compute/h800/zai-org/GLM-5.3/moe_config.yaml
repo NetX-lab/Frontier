@@ -1,0 +1,36 @@
+block_shape: null
+device: h800
+disable_ray: true
+disable_replicated: false
+dry_run: false
+enable_load_imbalance: true
+expert_parallel_sizes:
+- 8
+- 16
+- 32
+extra_num_tokens: null
+gating_runtime_context: standalone_legacy
+load_distributions:
+- uniform
+max_tokens: 32768
+model_config_revision: 082a2aa294ad5f4056895c42b297b4af24703384
+models:
+- zai-org/GLM-5.3
+num_gpus: 8
+num_samples_per_distribution: 3
+num_tensor_parallel_workers:
+- 1
+num_tokens_list: null
+output_dir: /tmp/glm_producers/out/full
+per_channel_quant: false
+precision: null
+profile_method: record_function
+resolved_expert_parallel_sizes_by_model:
+  zai-org/GLM-5.3:
+  - 8
+  - 16
+  - 32
+routing_runtime_path: standard_fused_topk
+skip_confirmation: true
+source_revision: 71cde5ebdee3a8eb5eec3b176b4affed478171fd
+use_fp8: null
