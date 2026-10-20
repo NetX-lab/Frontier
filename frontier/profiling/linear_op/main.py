@@ -74,6 +74,7 @@ from frontier.profiling.linear_op.ray_setup_hook import (
 from frontier.profiling.linear_op.profiling_plan import (
     build_profiling_plan,
     build_sequence_parallel_shared_expert_plan,
+    tensor_parallel_sweep_exclusion,
 )
 from frontier.operators.typed_contracts import serialize_typed_operator_contract_column
 from frontier.profiling.utils import (
@@ -578,22 +579,36 @@ def _restrict_to_plan_operators(
 def _build_profiling_plans(
     args: argparse.Namespace, model_config: ModelConfig
 ) -> List[Dict[str, Any]]:
-    """Return the TP-sweep plans followed by the optional sequence-parallel plan."""
+    """Return the TP-sweep plans followed by the optional sequence-parallel plan.
+
+    Profiles that the generic TP sweep cannot represent contribute only the
+    sequence-parallel shared-expert plan, so they require that topology.
+    """
 
     attn_tp, ffn_tp, moe_tp, all_tps = _resolve_tp_ranges(args)
-    plans = [
-        build_profiling_plan(
-            model_config=model_config,
-            tp_size=num_tensor_parallel_workers,
-            attn_tp=attn_tp,
-            ffn_tp=ffn_tp,
-            moe_tp=moe_tp,
-            disable_replicated=args.disable_replicated,
-            is_moe=args.is_moe,
-            include_target_embedded_mtp=args.include_target_embedded_mtp,
+    exclusion = tensor_parallel_sweep_exclusion(model_config)
+    if exclusion is None:
+        plans = [
+            build_profiling_plan(
+                model_config=model_config,
+                tp_size=num_tensor_parallel_workers,
+                attn_tp=attn_tp,
+                ffn_tp=ffn_tp,
+                moe_tp=moe_tp,
+                disable_replicated=args.disable_replicated,
+                is_moe=args.is_moe,
+                include_target_embedded_mtp=args.include_target_embedded_mtp,
+            )
+            for num_tensor_parallel_workers in all_tps
+        ]
+    elif args.sequence_parallel_moe_topology is None:
+        raise ValueError(
+            f"{exclusion}; only its sequence-parallel shared-expert rows are "
+            "supported, which requires --sequence_parallel_moe_topology"
         )
-        for num_tensor_parallel_workers in all_tps
-    ]
+    else:
+        print(f"[INFO] Skipping the TP sweep: {exclusion}", file=sys.stderr)
+        plans = []
     if args.sequence_parallel_moe_topology is not None:
         attention_tp_size, attention_dp_size, expert_parallel_size = (
             args.sequence_parallel_moe_topology
@@ -1064,9 +1079,11 @@ def main():
     ):
         sys.exit(0)
 
-    _, _, _, all_tps = _resolve_tp_ranges(args)
-    num_plans = len(all_tps) + (args.sequence_parallel_moe_topology is not None)
-    pbar = tqdm(total=len(args.models) * len(num_tokens_to_profile) * num_plans)
+    num_plans = sum(
+        len(_build_profiling_plans(args, ModelConfig.from_model_name(model)))
+        for model in args.models
+    )
+    pbar = tqdm(total=num_plans * len(num_tokens_to_profile))
 
     for model in args.models:
         result_df = profile_model(

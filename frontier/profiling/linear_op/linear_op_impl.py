@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from frontier.profiling.common.layers.activation import SiluAndMul
+from frontier.profiling.common.layers.activation import SiluAndMul, SiluAndMulWithClamp
 from frontier.profiling.common.layers.layernorm import GemmaRMSNorm, RMSNorm
 from frontier.profiling.common.layers.rotary_embedding import get_rope
 from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
@@ -671,7 +671,11 @@ class ShareExpertMLP(torch.nn.Module):
             linear_metric_name="share_expert_up_proj",  # Distinct timer name
             fp8_weight_block_size=fp8_block_size,
         )
-        self.act = SiluAndMul()
+        self.act = (
+            SiluAndMul()
+            if config.swiglu_limit is None
+            else SiluAndMulWithClamp(config.swiglu_limit)
+        )
 
         self.down_proj = RowParallelLinear(
             config.share_expert_dim,  # Use share_expert_dim

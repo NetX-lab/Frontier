@@ -320,6 +320,24 @@ def _supports_share_expert(model_config) -> bool:
     return model_config.supports_share_expert()
 
 
+# Architecture profiles whose linear operators the generic TP sweep cannot
+# represent, with the reason. Their shared-expert rows can still be measured by
+# ``build_sequence_parallel_shared_expert_plan``.
+_TENSOR_PARALLEL_SWEEP_EXCLUSIONS = {
+    "deepseek_v4": (
+        "DeepSeek-V4 generic linear profiling cannot represent fused scopes, "
+        "grouped output projection, mHC, and mixed-precision routed experts"
+    ),
+}
+
+
+def tensor_parallel_sweep_exclusion(model_config) -> str | None:
+    """Return why the generic TP sweep cannot profile the model, or None."""
+
+    profile_id = get_model_architecture_profile(model_config).profile_id
+    return _TENSOR_PARALLEL_SWEEP_EXCLUSIONS.get(profile_id)
+
+
 def build_profiling_plan(
     model_config,
     tp_size: int,
@@ -330,12 +348,10 @@ def build_profiling_plan(
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
 ) -> Dict[str, object]:
+    exclusion = tensor_parallel_sweep_exclusion(model_config)
+    if exclusion is not None:
+        raise NotImplementedError(exclusion)
     architecture_profile = get_model_architecture_profile(model_config)
-    if architecture_profile.profile_id == "deepseek_v4":
-        raise NotImplementedError(
-            "DeepSeek-V4 generic linear profiling cannot represent fused scopes, "
-            "grouped output projection, mHC, and mixed-precision routed experts"
-        )
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tp_size must be a positive int, got {tp_size!r}")
     attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
