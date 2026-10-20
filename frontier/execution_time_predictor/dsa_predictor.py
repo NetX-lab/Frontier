@@ -149,7 +149,15 @@ class DSAPredictor:
 
     def operator_times(
         self, features: DSABatchFeatures, variant: str, *, record_kernel_count: Callable | None = None,
+        dummy_capture_width: int | None = None,
     ) -> AttentionOperatorTimes:
+        if dummy_capture_width is not None:
+            raise DSACoverageError(
+                "DSA coverage missing for native FULL DP dummy attention "
+                f"at capture width {dummy_capture_width}: requires measured replay "
+                "scopes with invalid KV slots and padded attention metadata; "
+                "regular serving rows do not qualify"
+            )
         times = {}
         for operator, columns_by_path in DSA_FEATURE_COLUMNS.items():
             if operator == "attn_dsa_indexer" and variant == "shared_index":

@@ -7693,9 +7693,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
             if (isinstance(batch, DummyForwardBatch)
                     and batch.get_decode_cuda_graph_runtime_mode() == "FULL"):
-                # gpu_model_runner._dummy_run builds FULL attention metadata with
-                # one actual uniform-decode request and seq_len=1, not the real
-                # peer's KV context or the padded projection width.
+                # FULL dummy keeps one actual request but has invalid KV slots
+                # and padded attention geometry, unlike a serving q1/c0 row.
                 from frontier.attention.dsa_features import build_dsa_features
 
                 features = build_dsa_features(batch.num_tokens, [0], self._model_config.index_topk)
@@ -7703,6 +7702,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 variant = "full_index" if spec.index_producer_layer_id == layer_id else "shared_index"
                 attention_time.operator_times = self._dsa_predictor.operator_times(
                     features, variant, record_kernel_count=self._record_kernel_count,
+                    dummy_capture_width=batch.get_effective_total_tokens_for_compute(cluster_type),
                 )
             return attention_time
         if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:
