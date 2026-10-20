@@ -1,6 +1,7 @@
 """CPU CUDA-clock contracts, not measurements of native attention performance."""
 
 from fractions import Fraction
+from statistics import mean, median
 from types import SimpleNamespace
 
 import pytest
@@ -10,15 +11,18 @@ from frontier.profiling.step5.timing import ReplayTimings, collect_replay_timing
 
 
 class FakeCudaClock:
-    def __init__(self, *, replay_ms="0.01", prepare_ms="0", window_replay_ms=()):
+    def __init__(self, *, replay_ms="0.01", prepare_ms="0", window_replay_ms=(), replay_durations_ms=()):
         self.time_ms = Fraction(0)
         self.replay_ms = Fraction(replay_ms)
         self.prepare_ms = Fraction(prepare_ms)
         self.window_replay_ms = tuple(Fraction(value) for value in window_replay_ms)
+        self.replay_durations_ms = tuple(Fraction(value) for value in replay_durations_ms)
         self.calls = []
         self.events = []
         self.windows = []
         self.active_replays = None
+        self.run_count = 0
+        self.completed_event_index = -1
         self.torch = SimpleNamespace(cuda=SimpleNamespace(Event=self.event))
 
     def event(self, *, enable_timing):
@@ -39,7 +43,10 @@ class FakeCudaClock:
         self.active_replays += 1
         index = len(self.windows)
         duration = self.window_replay_ms[index] if index < len(self.window_replay_ms) else self.replay_ms
+        if self.run_count < len(self.replay_durations_ms):
+            duration = self.replay_durations_ms[self.run_count]
         self.time_ms += duration
+        self.run_count += 1
 
 
 class FakeEvent:
@@ -53,24 +60,116 @@ class FakeEvent:
         clock = self.clock
         clock.calls.append(("record", self.index))
         self.timestamp = clock.time_ms
-        if self.index % 2 == 0:
-            assert clock.active_replays is None
+        if clock.active_replays is None:
             clock.active_replays = 0
-        else:
-            assert clock.active_replays is not None
-            clock.windows.append(clock.active_replays)
-            clock.active_replays = None
 
     def synchronize(self):
-        assert self.index % 2 == 1, "Only the end event should synchronize"
+        assert self.index == len(self.clock.events) - 1, "Only the final boundary should synchronize"
+        assert self.clock.active_replays is not None
         self.synchronized = True
         self.clock.calls.append(("synchronize", self.index))
+        self.clock.windows.append(self.clock.active_replays)
+        self.clock.active_replays = None
+        self.clock.completed_event_index = self.index
 
     def elapsed_time(self, end):
         assert end.index == self.index + 1
-        assert end.synchronized, "Read elapsed time only after the end event finishes"
+        assert end.index <= self.clock.completed_event_index, "Read elapsed time only after synchronization"
         self.clock.calls.append(("elapsed_time", self.index, end.index))
         return float(end.timestamp - self.timestamp)
+
+
+class AsyncCudaClock:
+    """Independent host/device clocks with deterministic asynchronous enqueueing."""
+
+    def __init__(self):
+        self.host_ms = Fraction(0)
+        self.device_ms = Fraction(0)
+        self.completed_ms = Fraction(0)
+        self.calls = []
+        self.events = []
+        self.outputs = []
+        self.state = 0
+        self.torch = SimpleNamespace(cuda=SimpleNamespace(Event=self.event))
+
+    def event(self, *, enable_timing):
+        assert enable_timing is True
+        event = AsyncEvent(self, len(self.events))
+        self.events.append(event)
+        self.calls.append(("event", event.index))
+        return event
+
+    def prepare(self):
+        self.calls.append(("prepare",))
+        self.host_ms += Fraction("1")
+        self.state = 0
+
+    def run(self):
+        self.host_ms += Fraction("0.006")
+        self.device_ms = max(self.device_ms, self.host_ms) + Fraction("0.05")
+        self.state += 1
+        output = SimpleNamespace(invocation=len(self.outputs) + 1, state=self.state)
+        self.outputs.append(output)
+        self.calls.append(("run", output.invocation))
+        return output
+
+
+class AsyncEvent:
+    def __init__(self, clock, index):
+        self.clock = clock
+        self.index = index
+        self.timestamp = None
+
+    def record(self):
+        clock = self.clock
+        clock.host_ms += Fraction("0.0001")
+        clock.device_ms = max(clock.device_ms, clock.host_ms)
+        self.timestamp = clock.device_ms
+        clock.calls.append(("record", self.index))
+
+    def synchronize(self):
+        clock = self.clock
+        clock.host_ms = max(clock.host_ms, self.timestamp)
+        clock.completed_ms = max(clock.completed_ms, self.timestamp)
+        clock.calls.append(("synchronize", self.index))
+
+    def elapsed_time(self, end):
+        assert end.timestamp <= self.clock.completed_ms
+        self.clock.calls.append(("elapsed_time", self.index, end.index))
+        return float(end.timestamp - self.timestamp)
+
+
+def test_async_queued_singletons_agree_with_amortized_windows():
+    clock = AsyncCudaClock()
+    result = collect_replay_timings(clock.torch, clock.run, clock.prepare, sample_count=5, min_window_ms=0.5)
+    single_median = median(result.single_replay_times)
+    amortized_mean = mean(result.amortized_times)
+    relative_gap = abs(single_median - amortized_mean) / amortized_mean
+
+    assert relative_gap <= 0.05, (
+        f"single_median_ms={single_median:.6f}, amortized_mean_ms={amortized_mean:.6f}, "
+        f"relative_gap={relative_gap:.6%}"
+    )
+    assert result.single_replay_times == pytest.approx((0.056, 0.05, 0.05, 0.05, 0.05))
+    assert result.amortized_times == pytest.approx((0.0506,) * 5)
+
+
+def test_singleton_boundaries_are_queued_before_first_sync_and_final_window_output_is_retained():
+    clock = AsyncCudaClock()
+    result = collect_replay_timings(clock.torch, clock.run, clock.prepare, sample_count=5, min_window_ms=0.5)
+    first_sync = next(index for index, call in enumerate(clock.calls) if call[0] == "synchronize")
+    queued = clock.calls[:first_sync]
+
+    assert [call for call in queued if call[0] == "record"] == [("record", index) for index in range(6)]
+    assert [call for call in queued if call[0] == "event"] == [("event", index) for index in range(6)]
+    assert sum(call[0] == "run" for call in queued) == 5
+    assert sum(call[0] == "prepare" for call in queued) == 1
+    assert clock.calls[first_sync] == ("synchronize", 5)
+    assert clock.calls[first_sync + 1:first_sync + 6] == [("elapsed_time", i, i + 1) for i in range(5)]
+    assert sum(call[0] == "synchronize" for call in clock.calls) == 6
+    assert result.last_output is clock.outputs[-1]
+    assert result.last_output.invocation == 5 + sum(result.window_replays)
+    assert result.last_output.state == clock.state == result.window_replays[-1]
 
 
 def collect(clock, *, sample_count=3, min_window_ms=0.5):
@@ -80,16 +179,25 @@ def collect(clock, *, sample_count=3, min_window_ms=0.5):
     )
 
 
-def assert_window_calls(clock):
-    """Every measured window has one preparation and exactly one event pair."""
-    expected = []
-    for index, replays in enumerate(clock.windows):
-        start, end = 2 * index, 2 * index + 1
+def assert_window_calls(clock, *, single_samples_read=None):
+    """One boundary cohort precedes windows using exactly one event pair each."""
+    sample_count = clock.windows[0]
+    expected = [("prepare",)]
+    expected.extend(("event", index) for index in range(sample_count + 1))
+    expected.append(("record", 0))
+    for index in range(sample_count):
+        expected.extend([("run",), ("record", index + 1)])
+    expected.append(("synchronize", sample_count))
+    read_count = sample_count if single_samples_read is None else single_samples_read
+    expected.extend(("elapsed_time", index, index + 1) for index in range(read_count))
+    for index, replays in enumerate(clock.windows[1:]):
+        start = sample_count + 1 + 2 * index
+        end = start + 1
         expected.extend([("prepare",), ("event", start), ("event", end), ("record", start)])
         expected.extend([("run",)] * replays)
         expected.extend([("record", end), ("synchronize", end), ("elapsed_time", start, end)])
     assert clock.calls == expected
-    assert len(clock.events) == 2 * len(clock.windows)
+    assert len(clock.events) == sample_count + 1 + 2 * (len(clock.windows) - 1)
 
 
 def test_fifty_ten_microsecond_replays_reach_half_millisecond():
@@ -101,7 +209,7 @@ def test_fifty_ten_microsecond_replays_reach_half_millisecond():
     assert result.amortized_times == (0.01,) * 3
     assert result.window_durations_ms == (0.5,) * 3
     assert result.window_replays == (50,) * 3
-    assert clock.windows == [1, 1, 1, 50, 50, 50]
+    assert clock.windows == [3, 50, 50, 50]
     assert_window_calls(clock)
 
 
@@ -145,17 +253,17 @@ def test_preparation_cost_is_excluded_from_singles_and_amortized_windows():
     assert result.single_replay_times == (0.01, 0.01)
     assert result.window_durations_ms == (0.5, 0.5)
     assert result.amortized_times == (0.01, 0.01)
-    assert clock.time_ms == Fraction("4001.02")
+    assert clock.time_ms == Fraction("3001.02")
     assert_window_calls(clock)
 
 
 def test_each_short_window_increases_replays_until_it_meets_the_target():
     clock = FakeCudaClock(
-        replay_ms="0.01", window_replay_ms=("0.01", "0.01", "0.005", "0.005", "0.0025"),
+        replay_ms="0.01", window_replay_ms=("0.01", "0.005", "0.005", "0.0025"),
     )
     result = collect(clock, sample_count=2)
 
-    assert clock.windows == [1, 1, 50, 100, 100, 200]
+    assert clock.windows == [2, 50, 100, 100, 200]
     assert result.window_replays == (100, 200)
     assert result.window_durations_ms == (0.5, 2.0)
     assert result.amortized_times == (0.005, 0.01)
@@ -165,7 +273,8 @@ def test_each_short_window_increases_replays_until_it_meets_the_target():
 
 def test_noise_between_single_and_amortized_samples_is_not_corrected():
     clock = FakeCudaClock(
-        replay_ms="0.03", window_replay_ms=("0.04", "0.01", "0.02", "0.03", "0.04"),
+        replay_ms="0.03", replay_durations_ms=("0.04", "0.01", "0.02"),
+        window_replay_ms=("0.03", "0.03", "0.04"),
     )
     result = collect(clock)
 
@@ -212,20 +321,21 @@ def test_invalid_target_fails_before_preparation_or_events(target):
 
 
 @pytest.mark.parametrize("duration", [0.0, -0.01, float("nan"), float("inf"), -float("inf")])
-@pytest.mark.parametrize("window_index", [0, 2, 3])
-def test_invalid_single_or_window_duration_is_rejected(monkeypatch, duration, window_index):
+@pytest.mark.parametrize("interval", ["single", "first_window", "last_window"])
+def test_invalid_single_or_window_duration_is_rejected(monkeypatch, duration, interval):
     clock = FakeCudaClock()
     elapsed_time = FakeEvent.elapsed_time
+    start_index = {"single": 0, "first_window": 3, "last_window": 5}[interval]
 
     def measured(self, end):
         actual = elapsed_time(self, end)
-        return duration if self.index // 2 == window_index else actual
+        return duration if self.index == start_index else actual
 
     monkeypatch.setattr(FakeEvent, "elapsed_time", measured)
     with pytest.raises(ValueError, match="duration must be positive and finite"):
         collect(clock, sample_count=2)
-    assert len(clock.windows) == window_index + 1
-    assert_window_calls(clock)
+    assert len(clock.windows) == {"single": 1, "first_window": 2, "last_window": 3}[interval]
+    assert_window_calls(clock, single_samples_read=1 if interval == "single" else 2)
 
 
 class FakeScopedCudaClock(FakeCudaClock):

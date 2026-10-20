@@ -40,12 +40,16 @@ class ScopedTimings:
     last_output: object
 
 
-def _window_duration_ms(start, end) -> float:
-    end.synchronize()
+def _event_duration_ms(start, end) -> float:
     duration_ms = start.elapsed_time(end)
     if not isfinite(duration_ms) or duration_ms <= 0:
         raise ValueError("Replay window duration must be positive and finite")
     return duration_ms
+
+
+def _window_duration_ms(start, end) -> float:
+    end.synchronize()
+    return _event_duration_ms(start, end)
 
 
 def collect_replay_timings(
@@ -56,14 +60,16 @@ def collect_replay_timings(
     sample_count: int,
     min_window_ms: float,
 ) -> ReplayTimings:
-    """Measure N=1 samples, then windows meeting the requested minimum duration.
+    """Measure queued per-replay samples, then windows meeting the minimum duration.
 
     The caller owns warmup, capture and the safety of consecutive replays.
-    Preparation runs once before each window, never between its replays. The
-    final single-replay sample also serves as the initial repeat-count pilot.
-    Short windows increase the count from their measured duration and are not
-    retained as amortized samples. No agreement or stability correction is
-    applied; callers can summarize both sample sets with TimerStatsStore.
+    A single prepared cohort uses shared per-iteration boundary events and
+    synchronizes only after its last replay. Preparation then runs once before
+    each window, never between its replays. The final single-replay sample also
+    serves as the initial repeat-count pilot. Short windows increase the count
+    from their measured duration and are not retained as amortized samples. No
+    agreement or stability correction is applied; callers can summarize both
+    sample sets with TimerStatsStore.
     """
     if type(sample_count) is not int or sample_count < 2:
         raise ValueError("sample_count must be an integer of at least two")
@@ -88,7 +94,14 @@ def collect_replay_timings(
         end.record()
         return _window_duration_ms(start, end)
 
-    singles = tuple(measure_window(1) for _ in range(sample_count))
+    prepare()
+    boundaries = tuple(torch.cuda.Event(enable_timing=True) for _ in range(sample_count + 1))
+    boundaries[0].record()
+    for index in range(sample_count):
+        last_output = run()
+        boundaries[index + 1].record()
+    boundaries[-1].synchronize()
+    singles = tuple(_event_duration_ms(start, end) for start, end in zip(boundaries, boundaries[1:]))
     replays = max(1, ceil(min_window_ms / singles[-1]))
     durations = []
     counts = []

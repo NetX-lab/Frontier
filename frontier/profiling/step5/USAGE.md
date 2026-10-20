@@ -97,7 +97,9 @@ one dataframe or pretend to be the same timing quantity.
 - Capture and warmup stay outside event windows. Each accepted clean window uses
   one event pair around N consecutive replays and lasts at least the configured
   0.5 ms. Eager GPU-active windows independently reach 0.5 ms of actual device
-  activity, not 0.5 ms of host waiting. Per-replay statistics remain available.
+  activity, not 0.5 ms of host waiting. Per-replay statistics use a continuous
+  cohort with N+1 shared event boundaries and one final synchronization, avoiding
+  a stopped-queue launch gap before every diagnostic sample.
 - Scope cohorts own distinct event handles per replay. All N matching spans are
   summed before normalization; a last-overwritten graph event is never divided
   by N. `operator_sum_to_layer_ratio` uses the matching instrumented root, not
