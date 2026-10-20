@@ -5227,12 +5227,16 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             feature_names=("num_tokens",),
         )
 
-    def _get_attn_norm_layer_act_execution_time(self, batch: Batch) -> float:
+    def _get_attn_norm_layer_act_execution_time(
+        self, batch: Batch, layer_id: int | None = None,
+    ) -> float:
         if not self._supports_operation("input_layernorm"):
             raise ValueError(
                 f"input layernorm operation not supported for cluster {self._cluster_type}"
             )
-        effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
+        from frontier.execution_time_predictor.sequence_parallel_moe import input_layernorm_tokens
+
+        effective_tokens = input_layernorm_tokens(self, batch, layer_id)
         return self._get_prediction_for_features(
             "input_layernorm",
             {"num_tokens": effective_tokens},

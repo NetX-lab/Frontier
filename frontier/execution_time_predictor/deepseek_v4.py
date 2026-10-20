@@ -122,8 +122,10 @@ def predict_source_execution(
             raise ValueError("V4 DummyForwardBatch cannot select LM rows")
     elif selected_logits_rows is not None:
         raise ValueError("selected_logits_rows is only accepted at the last layer")
-    local = (tokens + tp - 1) // tp
-    valid = max(0, min(local, tokens - rank * local))
+    from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
+
+    widths = sequence_parallel_moe_token_widths([tokens], tp, rank)
+    local, valid = widths.local_tokens[0], widths.valid_tokens[0]
     base = predictor._dummy_execution_time
     hidden = _integer(model.embedding_dim, "hidden width")
     streams = _integer(model.hc_mult, "mHC streams")

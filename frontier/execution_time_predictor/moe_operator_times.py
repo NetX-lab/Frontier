@@ -6,7 +6,7 @@ needs and the model selection that decides which trained estimator answers.
 """
 
 from frontier.config import get_quantization_manager
-from frontier.entities import Batch, ExecutionTime
+from frontier.entities import Batch, EPBatchGroup, ExecutionTime
 from frontier.entities.time_components import MoEOperatorTimes, MoETime
 from frontier.logger import init_logger
 from frontier.moe_ep_workload import EPLaneWorkload, resolve_ep_lane_workload
@@ -294,6 +294,14 @@ class MoeOperatorTimes:
                 "MoE pre-routing token lookup requires the source batch; "
                 "an EPLaneWorkload cannot supply that width"
             )
+        if isinstance(batch, EPBatchGroup):
+            replica = self._replica_config
+            if self._model_config.get_model_architecture_profile().uses_sequence_parallel_moe(
+                replica.attn_tensor_parallel_size, replica.attn_dp,
+                replica.num_pipeline_stages, replica.moe_expert_parallel_size,
+            ):
+                lane = resolve_ep_lane_workload(batch, required=True)
+                return sum(lane.global_token_counts) // lane.router_topk
         return self._get_effective_moe_total_tokens(batch)
 
     def _get_local_ep_routed_tokens(
