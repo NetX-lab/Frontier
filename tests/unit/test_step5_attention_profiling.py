@@ -51,7 +51,7 @@ def test_smoke_grid_and_runtime_stays_disabled(config):
     assert {c.graph_mode for c in cells if c.phase == "prefill"} == {"none"}
     assert {c.graph_mode for c in cells if c.phase == "decode"} == {"full"}
     assert STEP5_ATTENTION_FAMILY.execution_enabled is False
-    assert config.get_model_architecture_profile().attention_linear_ops.profiling_enabled is False
+    assert config.get_model_architecture_profile().attention_linear_ops.profiling_enabled is True
 
 
 @pytest.mark.parametrize("kwargs", [

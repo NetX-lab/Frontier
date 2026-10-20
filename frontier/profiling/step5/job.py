@@ -3,25 +3,20 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import shlex
-import shutil
 from pathlib import Path
+
+from frontier.profiling.common.step5_job import (
+    CLOUD_MOUNT, CLOUD_ROOT, IMAGE, STEPMIND_ENV, describe_job, stage_package,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-IMAGE = ("a.z01.normandyfunc.com/docker-public/vllm/vllm-openai"
-         "@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20")
-CLOUD_MOUNT = "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
-CLOUD_ROOT = Path("/mnt/codesign-exp/ycfeng/frontier/step5_profiling")
-STEPMIND_ENV = Path("/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh")
 
 
 def describe_smoke(stage, run_id, *, gpus=1):
     stage = Path(stage).resolve()
-    if not run_id or Path(run_id).name != run_id or run_id in (".", ".."):
-        raise ValueError("run_id must be a single nonempty path component")
     if gpus != 1:
         raise ValueError("The smoke package profiles one isolated TP8 rank on one GPU")
     output = CLOUD_ROOT / run_id
@@ -43,54 +38,18 @@ def describe_smoke(stage, run_id, *, gpus=1):
         "--min-timing-window-ms 0.5 "
         f"--output-dir {q(str(output))}",
     ])
-    return {"image": IMAGE, "gpu_tag": "H800", "charged_group": "codesign",
-            "gpus": gpus, "cpus": 8 * gpus, "mem_gb": 32 * gpus,
-            "mounts": [f"local_nfs:{stage}:{stage}", CLOUD_MOUNT],
-            "source_mount": str(stage), "cloud_output": str(output), "expected_rows": 12,
+    return {**describe_job(stage, run_id, worker_command=worker, gpus=gpus,
+                          cloud_root=CLOUD_ROOT, credential_env=STEPMIND_ENV),
+            "expected_rows": 12,
             "expected_gpu_active_rows": 8, "expected_csv_rows": 20,
             "native_max_num_seqs": 1, "native_cudagraph_capture_sizes": [1, 2],
-            "native_phase_graph_modes": {"prefill_16_64": "none", "decode_1": "full"},
-            "timeout_seconds": 3600, "preemptible": False,
-            "credential_env": str(STEPMIND_ENV),
-            "submit_wrapper_command": f"bash {q(str(stage / 'submit_with_env.sh'))}",
-            "worker_command": worker,
-            "submission_command": (
-                "/data/ycfeng/tmp/stepmind-env/bin/python -u -B "
-                f"{q(str(stage / 'tests/integration/step5_profiling/submit_profiling_job.py'))} "
-                f"--job-tag {q(run_id)} --gpus {gpus} --cpus {8*gpus} --mem-gb {32*gpus} "
-                f"--timeout-seconds 3600 {q(worker)}")}
+            "native_phase_graph_modes": {"prefill_16_64": "none", "decode_1": "full"}}
 
 
 def stage_smoke(stage, run_id, *, dependency_site, gpus=1):
     stage = Path(stage).resolve()
     manifest = describe_smoke(stage, run_id, gpus=gpus)
-    dependency_site = Path(dependency_site).resolve(strict=True)
-    stage.mkdir(parents=True, exist_ok=False)
-    shutil.copytree(REPO_ROOT / "frontier", stage / "frontier",
-                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".git"))
-    shutil.copytree(REPO_ROOT / "data/config", stage / "data/config")
-    shutil.copytree(dependency_site, stage / "offline_site",
-                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    scripts = stage / "tests/integration/step5_profiling"
-    scripts.mkdir(parents=True)
-    for name in ("submit_profiling_job.py", "run_on_worker.sh"):
-        shutil.copy2(REPO_ROOT / "tests/integration/step5_profiling" / name, scripts / name)
-    (stage / "submit.sh").write_text("#!/usr/bin/env bash\nset -euo pipefail\n" +
-                                    manifest["submission_command"] + "\n")
-    (stage / "submit_with_env.sh").write_text("\n".join([
-        "#!/usr/bin/env bash", "set -euo pipefail", "set +x",
-        f"source {shlex.quote(str(STEPMIND_ENV))}",
-        ': "${BRAINPP_ACCESS_KEY:?personal BRAINPP_ACCESS_KEY is not set}"',
-        ': "${BRAINPP_SECRET_KEY:?personal BRAINPP_SECRET_KEY is not set}"',
-        "export STEPMIND_BACKEND=rjob", "export TMPDIR=/data/ycfeng/tmp",
-        'export PYTHONPATH="/data/ycfeng/steptron${PYTHONPATH:+:$PYTHONPATH}"',
-        f"exec bash {shlex.quote(str(stage / 'submit.sh'))}", "",
-    ]))
-    manifest["sha256"] = {
-        str(path.relative_to(stage)): hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in sorted(stage.rglob("*")) if path.is_file()}
-    (stage / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    return manifest
+    return stage_package(stage, manifest, repo_root=REPO_ROOT, dependency_site=dependency_site)
 
 
 def main():

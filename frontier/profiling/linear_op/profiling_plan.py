@@ -13,7 +13,7 @@ from frontier.operators.families import (
     get_family_profiling_names,
 )
 from frontier.model_architectures import get_model_architecture_profile
-from frontier.operators.spec import TensorParallelMode
+from frontier.operators.spec import OperatorRole, TensorParallelMode
 from frontier.spec_decode.mtp_registry import (
     get_target_embedded_mtp_linear_ops,
     get_target_embedded_mtp_same_tp_linear_ops,
@@ -32,6 +32,11 @@ def _memory_profiling_names(model_config) -> List[str]:
         if (
             operator.name == "post_attention_layernorm"
             and not getattr(model_config, "post_attn_norm", False)
+        ):
+            continue
+        if (
+            operator.role is OperatorRole.RESIDUAL
+            and getattr(model_config, "uses_fused_add_norm", False)
         ):
             continue
         operators.append(operator)
@@ -239,11 +244,21 @@ def _typed_operator_contracts(
             family = get_operator_family(family_id)
             metadata = dict(layer_contract)
             metadata["operator_family_id"] = str(family_id)
+            metadata["operator_family_ids"] = [str(family_id)]
             for operator in family.profiling_ops():
                 if operator.profiling_name() not in producer_names:
                     continue
+                operator_metadata = metadata
+                if operator.tp_mode is TensorParallelMode.REPLICATED:
+                    operator_metadata = _non_layer_contract(
+                        profile_id=profile.profile_id,
+                        family_id=family.family_id,
+                        mode=TensorParallelMode.REPLICATED,
+                        tensor_parallel_sizes=[1],
+                        selected_tensor_parallel_size=1,
+                    )
                 _add_typed_operator_contract(
-                    contracts, operator.profiling_name(), metadata
+                    contracts, operator.profiling_name(), operator_metadata
                 )
 
     normalized_attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
@@ -332,7 +347,8 @@ def build_profiling_plan(
 ) -> Dict[str, object]:
     architecture_profile = get_model_architecture_profile(model_config)
     # Producer admission is separate from attention execution.
-    architecture_profile.attention_linear_ops.require_enabled_for_profiling()
+    attention_linear_ops = architecture_profile.attention_linear_ops
+    attention_linear_ops.require_enabled_for_profiling()
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tp_size must be a positive int, got {tp_size!r}")
     attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
@@ -348,7 +364,7 @@ def build_profiling_plan(
         attn_sharded_enabled = False
         ffn_sharded_enabled = False
     else:
-        attn_sharded_enabled = tp_size in attn_tp_set
+        attn_sharded_enabled = bool(attention_linear_ops.sharded_ops) and tp_size in attn_tp_set
         if attn_sharded_enabled:
             if model_config.embedding_dim % tp_size != 0:
                 attn_sharded_enabled = False
@@ -417,8 +433,21 @@ def build_profiling_plan(
     attn_enabled = attn_sharded_enabled or replicated_enabled
     ffn_enabled = ffn_sharded_enabled or replicated_enabled
 
-    attention_linear_ops = architecture_profile.attention_linear_ops
     memory_ops = _memory_profiling_names(model_config)
+    shared_operators = [
+        operator
+        for contract in typed_layer_contracts
+        if contract["layer_kind"] == "shared"
+        for family_id in _typed_family_ids(contract)
+        for operator in get_operator_family(family_id).profiling_ops()
+    ]
+    shared_ops = _dedupe_preserving_order([
+        operator.profiling_name() for operator in shared_operators
+    ])
+    shared_replicated_ops = _dedupe_preserving_order([
+        operator.profiling_name() for operator in shared_operators
+        if operator.tp_mode is TensorParallelMode.REPLICATED
+    ])
 
     # MEMORY_FAMILY declaration order keeps the pre-attention normalization
     # ahead of architecture-specific attention projections. Preserve that
@@ -429,6 +458,12 @@ def build_profiling_plan(
     replicated_ops.extend(memory_pre_attention_ops)
     replicated_ops.extend(attention_linear_ops.replicated_ops)
     replicated_ops.extend(memory_post_attention_ops)
+    if (
+        ffn_sharded_enabled
+        and getattr(model_config, "is_moe", False)
+        and _supports_share_expert(model_config)
+    ):
+        replicated_ops.extend(shared_replicated_ops)
     target_embedded_same_tp_ops: List[str] = []
     if include_target_embedded_mtp:
         target_embedded_same_tp_ops.extend(
@@ -459,7 +494,9 @@ def build_profiling_plan(
         if not is_moe:
             enabled_ops.extend(_ffn_profiling_names())
         if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-            enabled_ops.extend(_share_expert_profiling_names())
+            enabled_ops.extend(
+                name for name in shared_ops if name not in shared_replicated_ops
+            )
 
     all_ops: List[str] = []
     all_ops.extend(replicated_ops)
@@ -469,7 +506,7 @@ def build_profiling_plan(
     if not is_moe:
         all_ops.extend(_ffn_profiling_names())
     if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-        all_ops.extend(_share_expert_profiling_names())
+        all_ops.extend(shared_ops)
     # Remove duplicates while preserving order.
     all_ops = list(dict.fromkeys(all_ops))
     enabled_ops = list(dict.fromkeys(enabled_ops))

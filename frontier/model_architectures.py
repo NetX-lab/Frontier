@@ -9,7 +9,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Callable, Iterable, Literal, cast
 
-from frontier.operators.spec import TensorParallelMode
+from frontier.operators.spec import ProjectionOwnership, TensorParallelMode
 from frontier.types import ClusterType
 
 
@@ -22,6 +22,13 @@ class AttentionLinearOpImplementation(Enum):
     GENERIC = "generic"
     STEP2_MINI = "step2_mini"
     STEP3_TEXT = "step3_text"
+
+
+class LinearNormImplementation(Enum):
+    """Normalization kernel family selected only by the linear-op producer."""
+
+    GENERIC = "generic"
+    STEP5 = "step5"
 
 
 class ExpertParallelCollective(Enum):
@@ -358,8 +365,10 @@ class AttentionLinearOpProfile:
             raise ValueError("linear attention profiling_enabled must be bool")
         if not self.profiling_enabled and not self.disabled_reason:
             raise ValueError("disabled linear attention profiling requires a reason")
-        if not self.sharded_ops:
-            raise ValueError("linear attention profile must declare sharded_ops")
+        if not self.sharded_ops and self.replicated_ops:
+            raise ValueError(
+                "linear attention replicated_ops require nonempty sharded_ops"
+            )
         if len(set(self.sharded_ops)) != len(self.sharded_ops):
             raise ValueError(
                 f"linear attention sharded_ops contains duplicates: {self.sharded_ops}"
@@ -444,12 +453,25 @@ class ModelArchitectureProfile:
     )
     gemma_rms_norm_model_types: tuple[str, ...] = ()
     mxfp4_moe_model_types: tuple[str, ...] = ()
+    linear_norm_impl: LinearNormImplementation = LinearNormImplementation.GENERIC
+    ffn_activation_resolver: Callable[[Any, bool], tuple[str, float | None]] | None = field(
+        default=None, repr=False, compare=False,
+    )
 
     def __post_init__(self) -> None:
         if not self.profile_id:
             raise ValueError("model architecture profile_id must be non-empty")
         if not self.display_name:
             raise ValueError("model architecture display_name must be non-empty")
+        if not self.attention_linear_ops.sharded_ops:
+            requirement = _requires_attention_projection_ownership()
+            if not any(
+                item.name == requirement.name for item in self.structural_requirements
+            ):
+                object.__setattr__(
+                    self, "structural_requirements",
+                    (*self.structural_requirements, requirement),
+                )
         if self.attention_shape_log_kind is not None and not self.attention_shape_log_kind:
             raise ValueError(
                 "model architecture attention_shape_log_kind must be non-empty "
@@ -666,10 +688,11 @@ class ModelArchitectureProfile:
             display_name="Step-5 text sparse GQA",
             attention_linear_ops=AttentionLinearOpProfile(
                 sharded_impl=AttentionLinearOpImplementation.GENERIC,
-                sharded_ops=("step5_qkv_projection", "step5_attention_prepare", "step5_output_projection"),
-                profiling_enabled=False,
-                disabled_reason="Step native projection/norm/FFN producer is not qualified",
+                # Native attention profiling owns every Step projection scope.
+                sharded_ops=(),
             ),
+            linear_norm_impl=LinearNormImplementation.STEP5,
+            ffn_activation_resolver=_resolve_step5_ffn_activation,
             expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             counts_share_expert_param_memory=True,
             experimental=True,
@@ -750,6 +773,14 @@ class ModelArchitectureProfile:
             # Native SP replicates shared weights; execution remains disabled.
             layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
         )
+
+    def resolve_ffn_activation(
+        self, config: Any, *, share_expert: bool,
+    ) -> tuple[str, float | None]:
+        """Return the linear producer's activation and optional SwiGLU clamp."""
+        if self.ffn_activation_resolver is None:
+            return "silu", None
+        return self.ffn_activation_resolver(config, share_expert)
 
     def validate_structural_requirements(self, config: Any) -> None:
         """Validate profile-owned structural requirements against a config."""
@@ -1106,6 +1137,27 @@ def _moe_share_expert_requirements() -> tuple[StructuralRequirement, ...]:
     )
 
 
+def _requires_attention_projection_ownership() -> StructuralRequirement:
+    def predicate(config: Any) -> bool:
+        from frontier.attention.model_binding import resolve_runtime_attention_family
+
+        projections = resolve_runtime_attention_family(config).projection_ops()
+        return bool(projections) and all(
+            operator.projection_ownership
+            is ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE
+            for operator in projections
+        )
+
+    return StructuralRequirement(
+        name="attention_projection_ownership",
+        predicate=predicate,
+        message=lambda profile, _config: (
+            f"Profile {profile.profile_id} with no linear attention operators requires "
+            "all attention projections inside the attention physical scope"
+        ),
+    )
+
+
 def _requires_attention_family(expected_family_id: str) -> StructuralRequirement:
     def predicate(config: Any) -> bool:
         from frontier.attention.model_binding import bind_attention_family
@@ -1169,6 +1221,27 @@ def _valid_step5_text_configuration(config: Any) -> bool:
 
     validate_step5_config(config)
     return True
+
+
+def _resolve_step5_ffn_activation(config: Any, share_expert: bool) -> tuple[str, float | None]:
+    from frontier.attention.step5 import describe_step5_layer
+
+    routed_layers = set(config.get_moe_layer_ids())
+    layer_ids = tuple(
+        layer_id for layer_id in range(config.num_layers)
+        if (layer_id in routed_layers) == share_expert
+    )
+    if not layer_ids:
+        raise ValueError("Step FFN activation requires layers in the selected dense/shared partition")
+    metadata = describe_step5_layer(
+        config, layer_ids[0], attention_tp_size=1, moe_tp_size=1, expert_parallel_size=1,
+    )
+    limits = {float(config.swiglu_limits_shared[layer_id]) for layer_id in layer_ids}
+    if len(limits) != 1:
+        raise ValueError("Cannot profile heterogeneous Step dense/shared SwiGLU limits in one row")
+    if metadata.dense_swiglu_limit == 0:
+        return "silu", None
+    return "swiglustep", metadata.dense_swiglu_limit
 
 
 def _normalized_attr(config: Any, attr_name: str) -> str:
