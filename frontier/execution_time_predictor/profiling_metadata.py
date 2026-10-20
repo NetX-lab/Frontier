@@ -13,6 +13,11 @@ from frontier.config.precision_type import PrecisionType
 LINEAR_BACKEND_PRECISIONS = {
     "FlashInferFp8DeepGEMMDynamicBlockScaledKernel": PrecisionType.FP8,
 }
+MOE_QUANTIZATION_PRECISIONS = {
+    "bf16": PrecisionType.BF16,
+    "fp8": PrecisionType.FP8,
+    "mxfp4": PrecisionType.FP4,
+}
 
 
 def operation_profiling_precisions(frame: pd.DataFrame) -> dict[str, PrecisionType]:
@@ -31,7 +36,10 @@ def operation_profiling_precisions(frame: pd.DataFrame) -> dict[str, PrecisionTy
         modes = frame["moe_quantization_mode"].dropna().unique()
         if len(modes) != 1:
             raise ValueError(f"Expected one measured MoE quantization mode, got {modes}")
-        precisions["moe_grouped_gemm"] = PrecisionType.from_string(str(modes[0]))
+        mode = str(modes[0])
+        if mode not in MOE_QUANTIZATION_PRECISIONS:
+            raise ValueError(f"Unclassified measured MoE quantization mode: {mode}")
+        precisions["moe_grouped_gemm"] = MOE_QUANTIZATION_PRECISIONS[mode]
     return precisions
 
 

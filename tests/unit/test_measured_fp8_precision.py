@@ -51,3 +51,9 @@ def test_measured_fp8_keeps_measured_times(kind, operations):
 
 def test_legacy_file_precision_is_not_reinterpreted():
     assert operation_profiling_precisions(pd.DataFrame([{"profiling_precision": "BF16"}])) == {}
+
+
+def test_measured_mxfp4_is_a_supported_producer_precision():
+    assert operation_profiling_precisions(pd.DataFrame([{"moe_quantization_mode": "mxfp4"}])) == {
+        "moe_grouped_gemm": PrecisionType.FP4,
+    }
