@@ -7,7 +7,7 @@ import os
 import pickle
 from abc import abstractmethod
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import product
 from typing import (
     TYPE_CHECKING,
@@ -152,6 +152,7 @@ from frontier.spec_decode.mtp_registry import (
 )
 from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
 from frontier.execution_time_predictor.profiling_metadata import (
+    operation_profiling_precisions,
     validate_model_architecture_profile,
 )
 from frontier.entities import ExecutionTime, StageExecutionTime
@@ -165,6 +166,7 @@ class ProfilingMetadata:
     model_arch: str
     model_architecture_profile: str
     measurement_type: MeasurementType
+    operation_precisions: Dict[str, PrecisionType] = field(default_factory=dict)
 
 
 def _build_exact_feature_lookup(
@@ -2439,6 +2441,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             model_arch=actual_arch,
             model_architecture_profile=actual_profile,
             measurement_type=measurement_type,
+            operation_precisions=operation_profiling_precisions(df),
         )
 
     def _validate_active_measurement_type(
@@ -2466,13 +2469,15 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             for operation_name in operation_names
         ]
         normalized_operation_names = list(dict.fromkeys(normalized_operation_names))
-        quant_manager.register_profiling_metadata(
-            operation_names=normalized_operation_names,
-            profiling_precision=metadata.profiling_precision,
-            profiling_quant_signature=metadata.quant_signature,
-            expected_quant_signature=expected_quant,
-            file_path=file_path,
-        )
+        for operation in normalized_operation_names:
+            quant_manager.register_profiling_metadata(
+                operation_names=[operation],
+                profiling_precision=metadata.operation_precisions.get(
+                    operation, metadata.profiling_precision),
+                profiling_quant_signature=metadata.quant_signature,
+                expected_quant_signature=expected_quant,
+                file_path=file_path,
+            )
 
     def _register_missing_profiling_metadata(
         self, operation_names: List[str], file_path: str

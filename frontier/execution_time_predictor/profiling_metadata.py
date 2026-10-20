@@ -3,8 +3,36 @@
 from __future__ import annotations
 
 from typing import Any
+import json
 
 import pandas as pd
+from frontier.config.precision_type import PrecisionType
+
+
+# File-level precision describes activations, not necessarily measured GEMMs.
+LINEAR_BACKEND_PRECISIONS = {
+    "FlashInferFp8DeepGEMMDynamicBlockScaledKernel": PrecisionType.FP8,
+}
+
+
+def operation_profiling_precisions(frame: pd.DataFrame) -> dict[str, PrecisionType]:
+    """Read operation precision from the producer's existing backend metadata."""
+    precisions = {}
+    if "linear_backends" in frame:
+        for raw in frame["linear_backends"].dropna().unique():
+            for operation, backends in json.loads(raw).items():
+                values = {LINEAR_BACKEND_PRECISIONS[backend] for backend in backends
+                          if backend in LINEAR_BACKEND_PRECISIONS}
+                if len(values) > 1:
+                    raise ValueError(f"Conflicting measured precisions for {operation}: {values}")
+                if values:
+                    precisions[operation] = values.pop()
+    if "moe_quantization_mode" in frame:
+        modes = frame["moe_quantization_mode"].dropna().unique()
+        if len(modes) != 1:
+            raise ValueError(f"Expected one measured MoE quantization mode, got {modes}")
+        precisions["moe_grouped_gemm"] = PrecisionType.from_string(str(modes[0]))
+    return precisions
 
 
 def validate_model_architecture_profile(
