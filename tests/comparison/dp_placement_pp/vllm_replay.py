@@ -505,12 +505,44 @@ def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: floa
     raise RuntimeError(f"vllm serve not ready after {timeout_s} s")
 
 
+async def read_completion_stream(response) -> tuple[dict, dict]:
+    """Read OpenAI completion SSE lines and time the first nonempty text choice.
+
+    aiohttp's line iterator joins fragmented network reads, including UTF-8 bytes. Empty
+    choices, SSE comments and the final usage event are not content. All timestamps use
+    the client's host-wide monotonic clock, also used by its local P/D proxy.
+    """
+    payload = {"choices": [{"finish_reason": None}], "usage": None}
+    timing = {"stream": True, "first_token_monotonic": None, "stream_completed": False}
+    async for line in response.content:
+        arrived = time.monotonic()
+        if not line.startswith(b"data:"):
+            continue
+        data = line[5:].strip()
+        if data == b"[DONE]":
+            timing["stream_completed"] = True
+            continue
+        event = json.loads(data)
+        if "error" in event:
+            timing["stream_error"] = event["error"]
+        if event.get("usage") is not None:
+            payload["usage"] = event["usage"]
+        for choice in event.get("choices", []):
+            if choice.get("text") and timing["first_token_monotonic"] is None:
+                timing["first_token_monotonic"] = arrived
+            if choice.get("finish_reason") is not None:
+                payload["choices"][0]["finish_reason"] = choice["finish_reason"]
+    return payload, timing
+
+
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
                  profile_window_s: tuple[float, float] | None = None, *,
                  vllm_version: str = "0.10.2") -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
     close the server's torch profiler at those two offsets of the same clock.
-    An optional prompt_id repeats identical token IDs under distinct request IDs."""
+    An optional prompt_id repeats identical token IDs under distinct request IDs.
+    Rows with stream=true opt into client first-content timing and final usage events;
+    rows without it keep the existing nonstreaming body and record format."""
     import aiohttp
 
     url = f"http://127.0.0.1:{port}/v1/completions"
@@ -523,7 +555,8 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
             "min_tokens": row["num_decode_tokens"],
             "ignore_eos": True,
             "temperature": 0.0,
-            "stream": False,
+            "stream": row.get("stream", False),
+            **({"stream_options": {"include_usage": True}} if row.get("stream") else {}),
         })
         for row in rows
     }
@@ -537,11 +570,15 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
         async def post(row: dict) -> None:
             await asyncio.sleep(max(0.0, origin + row["arrived_at"] - time.monotonic()))
             dispatched = time.monotonic()
+            timing = {"stream": True} if row.get("stream") else {}
             async with session.post(
                 url, data=bodies[row["request_id"]],
                 headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"]},
             ) as response:
-                payload = await response.json(content_type=None)
+                if row.get("stream") and response.status == 200:
+                    payload, timing = await read_completion_stream(response)
+                else:
+                    payload = await response.json(content_type=None)
             record = {
                 "request_id": row["request_id"],
                 "segment": row["segment"],
@@ -553,6 +590,7 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 "dispatch_monotonic": dispatched,
                 "response_monotonic": time.monotonic(),
                 "http_status": response.status,
+                **timing,
             }
             if not native_serving(vllm_version):
                 record["engine_request_id"] = f"cmpl-{row['request_id']}-0"

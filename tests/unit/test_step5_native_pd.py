@@ -380,6 +380,8 @@ def test_warm_definition_keeps_cold_w1_engine_and_one_request_per_wave():
     assert warm == r1
     traces = build_stage.wave_traces(json.loads(R1.with_name("r1w_run.json").read_text()), "warmtest")
     assert len(traces) == 17 and all(len(rows) == 1 for rows in traces.values())
+    assert "stream" not in traces["w1"][0]
+    assert all(rows[0]["stream"] is True for name, rows in traces.items() if name != "w1")
     assert len({rows[0]["request_id"] for rows in traces.values()}) == 17
     baseline = [rows[0] for rows in traces.values() if rows[0]["num_prefill_tokens"] == 4105]
     assert len(baseline) == 7 and {row["prompt_id"] for row in baseline} == {"r1h20001-w1-0"}
@@ -438,7 +440,8 @@ def test_warm_stage_freezes_sequential_boundary_traces_and_expected_splits(tmp_p
 
 
 @pytest.mark.parametrize("fault", [None, "missing_sources", "multiple_requests", "missing_ttft"])
-def test_warm_table_attributes_single_request_windows_without_inventing_client_ttft(staged, fault):
+@pytest.mark.parametrize("stream", [False, True])
+def test_warm_table_attributes_single_request_windows_without_inventing_client_ttft(staged, fault, stream):
     stage, config, _ = staged
     write_evidence(stage, config)
     trace = stage / "trace/w2/request_ids.json"
@@ -447,6 +450,11 @@ def test_warm_table_attributes_single_request_windows_without_inventing_client_t
     for name in ("client_requests.jsonl", "proxy_requests.jsonl"):
         path = replay / "w2" / name
         path.write_text(path.read_text().splitlines()[0] + "\n")
+    if stream:
+        path = replay / "w2/client_requests.jsonl"
+        record = json.loads(path.read_text())
+        record.update(stream=True, first_token_monotonic=1001.5, stream_completed=True)
+        path.write_text(json.dumps(record) + "\n")
     cumulative = {name: 2 * value for name, value in SOURCES.items()}
     text = page(sources=cumulative, requests=2 if fault != "multiple_requests" else 3)
     text += ('vllm:time_to_first_token_seconds_count{engine="0"} 2\n'
@@ -467,8 +475,10 @@ def test_warm_table_attributes_single_request_windows_without_inventing_client_t
     assert warm["client_send_monotonic"] == 1000
     assert warm["proxy_prefill_response_monotonic"] == 1001
     assert warm["client_completion_monotonic"] == 1003
-    assert warm["client_first_token_monotonic"] is None
-    assert warm["client_first_token_status"] == "UNVERIFIED_NONSTREAMING"
+    assert warm["client_first_token_monotonic"] == (1001.5 if stream else None)
+    assert warm["client_first_token_status"] == ("PASS" if stream else "UNVERIFIED_NONSTREAMING")
+    assert warm["client_ttft_s"] == (1.5 if stream else None)
+    assert warm["post_prefill_first_token_s"] == (0.5 if stream else None)
     assert warm["decode_engine_ttft_s"] == (0.5 if fault is None else None)
     assert warm["output_tokens"] == 9
     attributed = fault in (None, "missing_ttft")
@@ -476,3 +486,28 @@ def test_warm_table_attributes_single_request_windows_without_inventing_client_t
     assert warm["decode_external_tokens"] == (4080 if attributed else None)
     assert warm["decode_computed_prompt_tokens"] == (25 if attributed else None)
     assert "not client TTFT" in result["observations"]["client_first_token_note"]
+
+
+@pytest.mark.parametrize("fault", ["missing_first", "missing_done", "before_prefill", "stream_error", "missing_proxy"])
+def test_streaming_timing_gaps_are_unverified_without_changing_w1(staged, fault):
+    stage, config, _ = staged
+    write_evidence(stage, config)
+    path = stage / "evidence/replay/w2/client_requests.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    rows[0].update(stream=True, first_token_monotonic=1001.5, stream_completed=True)
+    if fault == "missing_first":
+        rows[0]["first_token_monotonic"] = None
+    if fault == "missing_done":
+        rows[0]["stream_completed"] = False
+    if fault == "before_prefill":
+        rows[0]["first_token_monotonic"] = 1000.5
+    if fault == "stream_error":
+        rows[0]["stream_error"] = {"message": "generation failed"}
+    if fault == "missing_proxy":
+        (path.parent / "proxy_requests.jsonl").write_text("")
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    result = verdict.judge(stage, "Succeeded")
+    assert result["all_pass"] and len(result["checks"]) == 9
+    row = result["observations"]["requests"][rows[0]["request_id"]]
+    assert row["client_first_token_status"] == "UNVERIFIED_STREAM"
+    assert row["client_ttft_s"] is None and row["post_prefill_first_token_s"] is None

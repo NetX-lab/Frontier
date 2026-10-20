@@ -208,6 +208,12 @@ def judge(stage: Path, platform_status: str) -> dict:
             for rid, record in client.items():
                 routed = proxy.get(rid, {})
                 params = routed.get("kv_transfer_params") or {}
+                first = record.get("first_token_monotonic")
+                prefill_response = routed.get("prefill_response_monotonic")
+                timed = (first is not None and record.get("stream_completed") is True
+                         and "stream_error" not in record and prefill_response is not None
+                         and record["dispatch_monotonic"] < prefill_response
+                         < first <= record["response_monotonic"])
 
                 def interval(start, end, source=routed):
                     return source[end] - source[start] if start in source and end in source else None
@@ -215,9 +221,14 @@ def judge(stage: Path, platform_status: str) -> dict:
                     "wave": wave, "num_prefill_tokens": record["num_prefill_tokens"],
                     "http_status": record["http_status"], "usage": record.get("usage"),
                     "client_send_monotonic": record["dispatch_monotonic"],
-                    "client_first_token_monotonic": None,
-                    "client_first_token_status": "UNVERIFIED_NONSTREAMING",
-                    "proxy_prefill_response_monotonic": routed.get("prefill_response_monotonic"),
+                    "client_first_token_monotonic": first,
+                    "client_first_token_status": ("PASS" if timed else "UNVERIFIED_STREAM"
+                                                  if record.get("stream") else "UNVERIFIED_NONSTREAMING"),
+                    "client_ttft_s": first - record["dispatch_monotonic"] if timed else None,
+                    "post_prefill_first_token_s": first - prefill_response if timed else None,
+                    "stream_completed": record.get("stream_completed"),
+                    "stream_error": record.get("stream_error"),
+                    "proxy_prefill_response_monotonic": prefill_response,
                     "client_completion_monotonic": record["response_monotonic"],
                     "output_tokens": (record.get("usage") or {}).get("completion_tokens"),
                     "client_e2e_s": record["response_monotonic"] - record["dispatch_monotonic"],
@@ -258,11 +269,13 @@ def judge(stage: Path, platform_status: str) -> dict:
                                       and ttft["count"]["total"] == 1 else None))
             if wave != gating:
                 observations["warm_requests"].append({"request_id": rid, **row})
+        observations["timing_clock"] = "time.monotonic() / Linux CLOCK_MONOTONIC on the prefill head"
         observations["client_first_token_note"] = (
-            "The existing replay and proxy are nonstreaming. Client first-token timestamps are "
-            "UNVERIFIED, not response completion times. decode_engine_ttft_s is the native engine "
-            "histogram delta for a single-request window, not client TTFT. Warmup and boundary "
-            "waves are observations; only W1 decides the unchanged nine conditions.")
+            "Streaming requests timestamp the first nonempty completion text chunk, not an empty "
+            "choice, usage event or response completion. Client and proxy run on the same prefill "
+            "head host and use time.monotonic(), so no cross-host clock alignment is needed. "
+            "Nonstreaming W1 has no client first-token timestamp and keeps the nine unchanged "
+            "conditions. decode_engine_ttft_s is a separate histogram delta, not client TTFT.")
         observations["observation_errors"] = {host: result.get("observation_errors")
                                               for host, result in results.items()}
     except Exception:
