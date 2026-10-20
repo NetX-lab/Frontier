@@ -223,6 +223,7 @@ class RequestMetricsTimeDistributions(enum.Enum):
     # These metrics now use the queue-arrival -> prefill-complete contract
     # =========================================================================
     TTFT = "ttft"  # Total time from arrival to prefill completion
+    CLIENT_TTFT = "client_ttft"  # PD arrival to the first D output token
     TTFT_PREFILL_ONLY = "ttft_prefill_only"  # Prefill execution time component
     TTFT_KV_TRANSFER = "ttft_kv_transfer"  # KV cache transfer time component (PD/PD+AF modes)
     TTFT_DECODE_FIRST_TOKEN = (

@@ -951,14 +951,17 @@ class Request(BaseEntity):
 
     @property
     def ttft(self) -> float:
-        """
-        Time To First Token (TTFT).
-        Measured from request arrival to prefill completion.
-        Returns 0 if prefill hasn't completed yet.
-        """
+        """Historical arrival-to-prefill-completion latency, not PD client TTFT."""
         if self._prefill_completed_at == 0:
             return 0
         return self._prefill_completed_at - self._arrived_at
+
+    @property
+    def client_ttft(self) -> float:
+        """Arrival to the first emitted output token on the simulator clock."""
+        if self._first_decode_token_completed_at == 0:
+            return 0
+        return self._first_decode_token_completed_at - self._arrived_at
 
     @property
     def tpot(self) -> float:
