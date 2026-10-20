@@ -8,6 +8,7 @@ available, and which request to preempt when they are not.
 from math import ceil
 from typing import List, Optional
 
+from frontier.attention.families import get_attention_family
 from frontier.attention.gdn.guards import validate_gdn_runtime_support
 from frontier.entities.batch import Request
 from frontier.errors import FrontierMemoryOOMError
@@ -188,20 +189,20 @@ class KvBlockAllocation:
         capacity = getattr(self, "_kv_cache_capacity", None)
         if (
             capacity is None
-            or capacity.family_id != "dsa_attention"
-            or capacity.is_grouped
-            or capacity.block_size != 64
+            or get_attention_family(capacity.family_id).kv_transfer_payload_resolver
+            is None
         ):
             raise NotImplementedError(
-                "NIXL target reservation currently supports GLM DSA block64 only"
+                "NIXL target reservation requires an attention family with a "
+                "structural transfer payload"
             )
         if int(self._replica_config.num_pipeline_stages) != 1:
-            raise NotImplementedError("GLM NIXL target reservation supports PP1 only")
+            raise NotImplementedError("NIXL target reservation supports PP1 only")
         if self._is_prefix_caching_enabled():
-            raise NotImplementedError("GLM NIXL target reservation excludes prefix caching")
+            raise NotImplementedError("NIXL target reservation excludes prefix caching")
         if getattr(self, "_spec_decode_enabled", False):
             raise NotImplementedError(
-                "GLM NIXL target reservation excludes speculative decoding and MTP"
+                "NIXL target reservation excludes speculative decoding and MTP"
             )
         self._check_request_fits_max_model_len(request)
         self._check_request_fits_kv_pool(request)
@@ -531,17 +532,23 @@ class KvBlockAllocation:
             if self._is_request_active_in_batch(request):
                 return False
             has_allocation = self._kv_cache_manager.has_grouped_allocation(request.id)
-            if has_allocation:
-                self._kv_cache_manager.reclaim_skipped_blocks(
-                    request,
-                    settled_num_computed_tokens=self._get_settled_kv_progress(request),
-                )
-                self._sync_prefix_cache_allocation_state(request)
             frontier = (
                 self._get_scheduler_num_computed_tokens(request)
                 if scheduler_num_computed_tokens is None
                 else int(scheduler_num_computed_tokens)
             )
+            if has_allocation:
+                # vLLM retires window pages from num_computed_tokens. A request
+                # received over NIXL counts its whole prompt while D recomputes
+                # the last prompt token from frontier N-1, so retirement must
+                # not pass that frontier.
+                self._kv_cache_manager.reclaim_skipped_blocks(
+                    request,
+                    settled_num_computed_tokens=min(
+                        self._get_settled_kv_progress(request), frontier
+                    ),
+                )
+                self._sync_prefix_cache_allocation_state(request)
             if not has_allocation:
                 admission_blocks = self._get_grouped_admission_blocks(request)
                 admission_fits = (

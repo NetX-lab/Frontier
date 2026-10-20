@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
-from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.memory import (
+    get_attention_kv_transfer_payload,
+    get_attention_runtime_kv_layout,
+)
 from frontier.attention.gdn.guards import validate_gdn_runtime_support
 from frontier.attention.model_binding import bind_attention_family
 from frontier.config import get_quantization_manager
@@ -9,7 +12,10 @@ from frontier.logger import init_logger
 from frontier.types import ClusterType
 
 if TYPE_CHECKING:
-    from frontier.attention.memory import AttentionKVCacheCapacity
+    from frontier.attention.memory import (
+        AttentionKVCacheCapacity,
+        AttentionKVTransferPayload,
+    )
     from frontier.config import ReplicaConfig
     from frontier.config.config import AnalyticalKVCacheTransferConfig
     from frontier.entities import Batch, Request
@@ -40,7 +46,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
     def get_kv_cache_size(self, batch: "Batch", replica_config: "ReplicaConfig") -> int:
         if self._config.kv_connector == "nixl":
             raise NotImplementedError(
-                "NIXL size requires the reservation-backed dummy GLM structural path"
+                "NIXL size requires the reservation-backed structural path"
             )
         total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
         return self._calculate_kv_cache_size_for_tokens(total_tokens, replica_config)
@@ -50,7 +56,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
     ) -> int:
         if self._config.kv_connector == "nixl":
             raise NotImplementedError(
-                "NIXL size requires the reservation-backed dummy GLM structural path"
+                "NIXL size requires the reservation-backed structural path"
             )
         return self._calculate_kv_cache_size_for_tokens(
             request.num_prefill_tokens, replica_config
@@ -64,24 +70,16 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
         cache_capacity: "AttentionKVCacheCapacity",
         source_prompt_common_blocks: int,
         target_reserved_common_blocks: int,
-    ) -> tuple[int, float]:
-        """Price source-backed GLM pages after a real D reservation.
+    ) -> tuple["AttentionKVTransferPayload", float]:
+        """Price the source-backed prompt pages after a real D reservation.
 
-        This is a dummy structural whole-page payload per worker/lane. It is
-        neither a native NIXL wire byte count nor an aggregate across ranks.
-        Empty lookahead capacity reserved by D is deliberately excluded.
+        The family resolves the pages each source TP rank sends; ranks of a
+        lane send in parallel, so one rank's bytes set the duration. These are
+        modeled page bytes, not a native NIXL wire byte count. Empty
+        lookahead capacity reserved by D is deliberately excluded.
         """
         if self._config.kv_connector != "nixl":
             raise ValueError("Structural NIXL sizing requires kv_connector='nixl'")
-        family = bind_attention_family(replica_config.model_config).family
-        if family.family_id != "dsa_attention":
-            raise NotImplementedError(
-                "NIXL structural sizing currently supports dummy GLM DSA only"
-            )
-        if cache_capacity.family_id != family.family_id or cache_capacity.is_grouped:
-            raise ValueError("GLM NIXL requires its non-grouped component capacity")
-        if cache_capacity.block_size != 64:
-            raise ValueError("GLM NIXL structural payload requires block size 64")
         if (
             type(source_prompt_common_blocks) is not int
             or source_prompt_common_blocks <= 0
@@ -94,17 +92,25 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
             raise ValueError(
                 "D reservation does not cover every source-backed prompt common block"
             )
-        payload_bytes = (
-            source_prompt_common_blocks
-            * cache_capacity.resident_bytes_per_common_block
+        payload = get_attention_kv_transfer_payload(
+            replica_config.model_config,
+            cache_capacity,
+            prompt_tokens=int(request.num_prefill_tokens),
+            tensor_parallel_size=int(replica_config.attn_tensor_parallel_size),
+            target_reserved_blocks=target_reserved_common_blocks,
         )
+        if any(
+            component.page_count > source_prompt_common_blocks
+            for component in payload.components
+        ):
+            raise ValueError("NIXL payload exceeds the source-backed prompt pages")
         transfer_time_ms = self.get_transfer_time(
             ClusterType.PREFILL,
             ClusterType.DECODE,
             None,
-            payload_bytes,
+            payload.transfer_bytes_per_rank,
         )
-        return payload_bytes, transfer_time_ms
+        return payload, transfer_time_ms
 
     def _calculate_kv_cache_size_for_tokens(
         self, num_tokens: int, replica_config: "ReplicaConfig"

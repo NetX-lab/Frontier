@@ -494,6 +494,44 @@ class Step5LayerMetadata:
         scopes.append(("step5_output_projection", ("output_projection",)))
         return tuple(scopes)
 
+    def request_free_attention_scopes(self) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        """Return the scopes of vLLM's attention-DP dummy forward.
+
+        Without attention metadata the slot mapping is absent, so the source
+        takes the unfused norm/RoPE path, writes no raw KV or summary, and the
+        attention backends return zero-filled outputs (model.py
+        Step5Attention.forward; sparse_attention.py forward;
+        attention.py unified_kv_cache_update). Projections and the SWA gate
+        still run.
+        """
+        qkv_work = ("q_projection", "k_projection", "v_projection")
+        preparation = ("qk_norm", "main_rope") if self.use_rope else ("qk_norm",)
+        if self.attention_spec.variant_id == "sparse_gqa":
+            qkv_work += ("index_q_projection", "index_k_projection", "index_z_projection", "gate_projection")
+            scopes = [
+                ("step5_qkv_projection", qkv_work),
+                ("step5_attention_prepare", preparation),
+                ("step5_indexer_weights", ("index_weight_projection",)),
+                ("step5_indexer_prepare", (
+                    "index_q_norm", "index_k_norm", "index_rope",
+                    "index_q_fp8_conversion", "index_weight_scaling",
+                )),
+                ("step5_sparse_attention", ("output_zero_fill",)),
+            ]
+        else:
+            if self.fused_qkv_gate:
+                qkv_work += ("gate_projection",)
+            scopes = [
+                ("step5_qkv_projection", qkv_work),
+                ("step5_attention_prepare", preparation),
+                ("step5_swa_attention", ("output_zero_fill",)),
+            ]
+            if not self.fused_qkv_gate:
+                scopes.append(("step5_gate_projection", ("gate_projection",)))
+            scopes.append(("step5_headwise_gate", ("headwise_sigmoid_gate",)))
+        scopes.append(("step5_output_projection", ("output_projection",)))
+        return tuple(scopes)
+
 
 def describe_step5_layer(
     config: Any, global_layer_id: int, *, attention_tp_size: int,

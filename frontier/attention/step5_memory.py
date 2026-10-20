@@ -11,6 +11,7 @@ from frontier.attention.memory import (
     AttentionKVCacheComponent,
     AttentionKVCacheGroup,
     AttentionKVCacheSelection,
+    AttentionKVTransferComponent,
     AttentionRuntimeKVLayout,
 )
 from frontier.attention.step5 import (
@@ -283,4 +284,46 @@ def resolve_step5_kv_cache_capacity(
         family_id="step5_attention", block_size=block_size, num_layers=config.num_layers,
         components=components, groups=groups, reserved_blocks=1,
         fixed_bytes_per_request_slot=len(scratch.owner_layer_ids) * scratch.page_size_bytes,
+    )
+
+
+def resolve_step5_kv_transfer_components(
+    config: Any, capacity: AttentionKVCacheCapacity, prompt_tokens: int,
+    tensor_parallel_size: int,
+) -> tuple[AttentionKVTransferComponent, ...]:
+    """Return the pages one TP rank sends in the structural Step P/D handoff.
+
+    SWA groups send their in-window tail (NIXL get_exchange_clipped_blocks).
+    Sparse raw KV keeps its full history and sends every prompt page, as do
+    its FP8 region summaries. Raw KV shards repeat on ``kv_replication``
+    ranks; summary side storage is identical on every TP rank.
+
+    Native NIXL sends only full pages, which hold closed regions, and D
+    recomputes the open tail. Frontier's D starts from the whole prompt, so
+    one page of open-region accumulators per sparse layer accompanies a
+    prompt that ends inside a region. That tail page is a modeled assumption.
+    """
+    prompt_pages = ceil(prompt_tokens / capacity.block_size)
+    group_pages = {
+        component_id: group.transfer_page_count(prompt_pages)
+        for group in capacity.groups for component_id, _ in group.component_owners
+    }
+    group_pages["open_region_state"] = int(
+        prompt_tokens % config.sparse_config["region_block_size"] != 0
+    )
+    replication = {}
+    for component in capacity.components:
+        if component.component_id in ("swa_raw_kv", "sparse_raw_kv"):
+            replication[component.component_id] = resolve_step5_attention_geometry(
+                config, component.owner_layer_ids[0], tensor_parallel_size=tensor_parallel_size,
+            ).kv_replication
+        else:
+            replication[component.component_id] = tensor_parallel_size
+    return tuple(
+        AttentionKVTransferComponent(
+            component.component_id, component.owner_layer_ids,
+            group_pages[component.component_id], component.page_size_bytes,
+            replication[component.component_id],
+        )
+        for component in capacity.components
     )

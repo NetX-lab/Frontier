@@ -317,9 +317,11 @@ class VLLMv1EngineReplicaScheduler(
             else None
         )
         if grouped_capacity is not None:
-            if self._cluster_type != ClusterType.MONOLITHIC:
+            if self._cluster_type not in (
+                ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+            ):
                 raise NotImplementedError(
-                    "Grouped KV cache allocation initially supports MONOLITHIC only"
+                    "Grouped KV cache allocation supports MONOLITHIC, PREFILL and DECODE only"
                 )
             if int(self._replica_config.num_pipeline_stages) != 1:
                 raise NotImplementedError(

@@ -345,10 +345,21 @@ def test_partial_packed_exclusion_does_not_silently_change_precision(replica):
         ParamCounter(replica)
 
 
-@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN, ClusterType.TRANS])
-def test_source_counts_do_not_claim_pd_or_partial_role_ownership(replica, role):
-    with pytest.raises(NotImplementedError, match="MONOLITHIC"):
+@pytest.mark.parametrize("role", [ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN, ClusterType.TRANS])
+def test_source_counts_do_not_claim_partial_role_ownership(replica, role):
+    with pytest.raises(NotImplementedError, match="MONOLITHIC, PREFILL or DECODE"):
         ParamCounter(replica, role)
+
+
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+def test_pd_roles_store_the_complete_model(replica, role):
+    monolithic = ParamCounter(replica, ClusterType.MONOLITHIC)
+    pd_role = ParamCounter(replica, role)
+    assert pd_role.get_num_parameters_per_device() == monolithic.get_num_parameters_per_device()
+    assert (
+        pd_role.get_parameter_memory_per_device_bytes()
+        == monolithic.get_parameter_memory_per_device_bytes()
+    )
 
 
 @pytest.mark.parametrize(("attribute", "value", "message"), [

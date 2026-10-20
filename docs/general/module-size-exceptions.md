@@ -142,3 +142,22 @@ This exception covers only the two-line filter extension, with focused metric
 checks and the unchanged 77-case artifact and predictor-cache filename
 comparison required before acceptance. It does not authorize further growth
 of the metrics store or claim that the planned split has been performed.
+
+## Step structural PD handoff on `feat/step5-pd-structural`, 2026-10-20
+
+The Step PD slice touches three modules above the limit. Counts use the merge
+base `c14e642` and the current source on 2026-10-20.
+
+| Module | Baseline | Current | Added responsibility |
+| --- | ---: | ---: | --- |
+| `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` | 8,628 | 8,639 | Price the request-free attention-DP dummy forward of Step layers from existing scopes |
+| `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py` | 3,006 | 3,019 | Route Step PREFILL and unified DECODE stages to the existing co-location structural pricing |
+| `frontier/metrics/metrics_store.py` | 5,802 | 5,803 | Pass the resolved transfer payload to the existing transfer trace builder |
+
+The cleanup inspection found no duplicate Step role pricing to remove: PD
+roles run complete Step layers, so the disaggregation predictor delegates to
+the base pricing instead of copying it. The page payload itself lives in the
+attention family modules (`memory.py`, `step5_memory.py`, `families.py`),
+all below the limit, so the large modules only route to it. Moving the role
+routing alone would separate it from the stage pricing it selects. The
+functional splits planned above are unchanged and are not performed here.

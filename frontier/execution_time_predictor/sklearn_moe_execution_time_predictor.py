@@ -1340,12 +1340,13 @@ class SklearnMoEExecutionTimePredictor(
         if type(include_attention) is not bool:
             raise ValueError("include_attention must be a bool")
         if not include_attention and (
-            cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+            cluster_type
+            not in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
             or not include_ffn
         ):
             raise ValueError(
-                "Post-attention-only prediction requires MONOLITHIC or unified "
-                "DECODE with FFN enabled"
+                "Post-attention-only prediction requires MONOLITHIC, PREFILL or "
+                "unified DECODE with FFN enabled"
             )
         if not include_ffn and include_moe is not None:
             raise ValueError(

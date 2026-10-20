@@ -65,7 +65,8 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
         metadata={
             "help": "vLLM KV connector of the PDD prefill instance: none, p2p_nccl "
             "(P2pNcclConnector), or nixl. NIXL is currently admitted only by the "
-            "dummy GLM structural PD path."
+            "dummy structural PD path of attention families with a transfer "
+            "payload (GLM DSA and Step)."
         },
     )
     kv_send_slowdown_per_layer_ms: float = field(

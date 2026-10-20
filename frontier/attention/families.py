@@ -115,6 +115,25 @@ def _dsa_kv_cache_capacity(config, block_size: int, selection=None):
     )
 
 
+def _dsa_kv_transfer_components(config, capacity, prompt_tokens: int, tensor_parallel_size: int):
+    """Send every prompt page of the latent MLA and indexer caches.
+
+    Both caches hold one latent head, replicated on every TP rank.
+    """
+    from math import ceil
+
+    from frontier.attention.memory import AttentionKVTransferComponent
+
+    pages = ceil(prompt_tokens / capacity.block_size)
+    return tuple(
+        AttentionKVTransferComponent(
+            component.component_id, component.owner_layer_ids, pages,
+            component.page_size_bytes, tensor_parallel_size,
+        )
+        for component in capacity.components
+    )
+
+
 def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
     """Pinned FlashMLA packed pages, independent of execution admission."""
     from frontier.attention.memory import (
@@ -450,6 +469,7 @@ DSA_ATTENTION_FAMILY = AttentionFamilySpec(
         "and Frontier mapping are approved."
     ),
     kv_cache_capacity_resolver=_dsa_kv_cache_capacity,
+    kv_transfer_payload_resolver=_dsa_kv_transfer_components,
     disjoint_model_projection_attrs=(
         "attention_layer_pre_proj_execution_time",
         "attention_layer_post_proj_execution_time",
@@ -541,11 +561,20 @@ def _step5_kv_cache_capacity(config, block_size: int, selection=None):
     return resolve_step5_kv_cache_capacity(config, block_size, selection)
 
 
+def _step5_kv_transfer_components(config, capacity, prompt_tokens: int, tensor_parallel_size: int):
+    from frontier.attention.step5_memory import resolve_step5_kv_transfer_components
+
+    return resolve_step5_kv_transfer_components(
+        config, capacity, prompt_tokens, tensor_parallel_size
+    )
+
+
 STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="step5_attention",
     display_name="Step text SWA and sparse GQA",
     structural_execution_enabled=True,
     kv_cache_capacity_resolver=_step5_kv_cache_capacity,
+    kv_transfer_payload_resolver=_step5_kv_transfer_components,
     supported_variants=("swa", "sparse_gqa"),
     operators=(
         AttentionOperatorSpec(

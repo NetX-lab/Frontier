@@ -560,7 +560,8 @@ def test_step_predictor_rejects_measured_mode_and_unadmitted_structural_layout(
         moe_expert_parallel_size=32, attention_backend="STEP5_DSA", kv_cache_dtype="auto",
     )
     replica.model_config = model
-    expected_error = "MONOLITHIC/vllm_v1/PP1" if dummy_mode else "Step attention"
+    # Full EP over the flattened TP x DP ranks is admitted only on PD roles.
+    expected_error = "MONOLITHIC, PREFILL or DECODE" if dummy_mode else "Step attention"
     with pytest.raises(NotImplementedError, match=expected_error):
         RandomForrestExecutionTimePredictor(
             predictor_config=RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=dummy_mode),

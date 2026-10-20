@@ -292,6 +292,26 @@ def compute_op_trace_meta(
         if metadata.attention_spec.global_layer_id != ctx.global_layer_id:
             raise ValueError("Step trace metadata differs from the actual layer identity")
         if op_type == "COMM":
+            if op_name in ("expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine"):
+                if metadata.ffn_merge is None:
+                    raise ValueError("Step expert-parallel exchange requires a routed MoE layer")
+                if type(ctx.pre_routing_tokens) is not int or ctx.pre_routing_tokens <= 0:
+                    raise ValueError("Step expert-parallel trace requires explicit pre-routing rows")
+                shape = [ctx.pre_routing_tokens, ctx.router_topk, ctx.hidden_size]
+                elements = shape[0] * shape[1] * shape[2]
+                precision = metadata.model_precision
+                return {
+                    "precision_op": map_trace_op_to_precision_op(op_name),
+                    "dtype": precision.name, "dtype_bytes": precision.bytes_per_element,
+                    "tensor_shape": {"data": shape}, "tensor_dtype": {"data": precision.name},
+                    "element_count": elements, "base_size_bytes": elements * 2,
+                    "data_size_bytes": int(elements * precision.bytes_per_element),
+                    "source_geometry": {"global_layer_id": ctx.global_layer_id},
+                    # The H800 FusedMoE all-to-all backend and any pre-dispatch
+                    # quantization are not qualified; this is the logical
+                    # model-precision row exchange.
+                    "evidence_kind": "structural_assumption",
+                }
             if op_name not in (
                 "attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce",
                 "moe_tensor_parallel_allreduce",
@@ -850,6 +870,7 @@ def build_kv_cache_transfer_meta(
     replica_config: Any,
     cluster_type: ClusterType,
     transfer_size_bytes: int,
+    transfer_payload: Any = None,
 ) -> Dict[str, Any]:
     model_config = replica_config.model_config
     num_layers = model_config.num_layers
@@ -857,6 +878,13 @@ def build_kv_cache_transfer_meta(
     # Family-aware runtime KV layout: dense keeps (num_kv_heads, get_head_dim(), kv_factor=2);
     # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Mirrors the
     # analytical transfer predictor so capacity and transfer agree on the same MLA cache.
+    if (
+        transfer_payload is not None
+        and transfer_payload.family_id != DSA_ATTENTION_FAMILY.family_id
+    ):
+        return _structural_nixl_payload_meta(
+            batch, model_config, transfer_size_bytes, transfer_payload
+        )
     family = bind_attention_family(model_config).family
     if global_vars.get_kv_connector() == "nixl" and family is DSA_ATTENTION_FAMILY:
         block_size = 64
@@ -968,6 +996,8 @@ def build_kv_cache_transfer_meta(
             ],
             "native_wire_bytes_known": False,
         }
+    if global_vars.get_kv_connector() == "nixl":
+        raise ValueError("Structural NIXL tracing requires the resolved page payload")
     layout = get_attention_runtime_kv_layout(
         family,
         runtime_num_kv_heads_per_worker=model_config.get_runtime_num_kv_heads(),
@@ -1000,6 +1030,54 @@ def build_kv_cache_transfer_meta(
         "num_q_heads": num_q_heads,
         "num_kv_heads": num_kv_heads,
         "head_dim": head_dim,
+    }
+
+
+def _structural_nixl_payload_meta(
+    batch: Any, model_config: Any, transfer_size_bytes: int, transfer_payload: Any,
+) -> Dict[str, Any]:
+    """Describe a family-resolved structural NIXL page payload per TP rank."""
+    if transfer_payload.transfer_bytes_per_rank != transfer_size_bytes:
+        raise ValueError("Structural NIXL trace bytes do not match the page payload")
+    components = transfer_payload.components
+    return {
+        "precision_op": "kv_cache_transfer",
+        "dtype": "MIXED",
+        "dtype_bytes": None,
+        "tensor_shape": {
+            component.component_id: [component.page_count, len(component.owner_layer_ids)]
+            for component in components
+        },
+        "tensor_size_bytes": {
+            component.component_id: component.bytes_per_rank for component in components
+        },
+        "transfer_size_bytes": transfer_size_bytes,
+        "total_tokens": sum(request.num_prefill_tokens for request in batch.requests),
+        "num_layers": model_config.num_layers,
+        "num_heads": None,
+        "num_q_heads": model_config.num_q_heads,
+        "num_kv_heads": None,
+        "head_dim": None,
+        "payload_kind": "structural_whole_prompt_pages_per_worker_lane",
+        "byte_scope": "per_tp_rank_pages",
+        "attention_family": transfer_payload.family_id,
+        "tensor_parallel_size": transfer_payload.tensor_parallel_size,
+        "transfer_bytes_per_lane": transfer_payload.transfer_bytes_per_lane,
+        "logical_unique_bytes": transfer_payload.logical_unique_bytes,
+        "target_reserved_blocks": transfer_payload.target_reserved_blocks,
+        "target_resident_bytes_per_rank": transfer_payload.target_resident_bytes_per_rank,
+        "cache_components": [
+            {
+                "component_id": component.component_id,
+                "owner_layer_ids": list(component.owner_layer_ids),
+                "page_size_bytes": component.page_size_bytes,
+                "page_count": component.page_count * len(component.owner_layer_ids),
+                "rank_replication": component.rank_replication,
+                "transfer_bytes_per_rank": component.bytes_per_rank,
+            }
+            for component in components
+        ],
+        "native_wire_bytes_known": False,
     }
 
 

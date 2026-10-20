@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from frontier.types import ClusterType
 
 if TYPE_CHECKING:
+    from frontier.attention.memory import AttentionKVTransferPayload
     from frontier.entities import Batch
 
 
@@ -33,6 +34,7 @@ class KVCacheTransferInfo:
     payload_kind: Optional[str] = None
     source_prompt_common_blocks: Optional[int] = None
     target_reserved_common_blocks: Optional[int] = None
+    transfer_payload: Optional["AttentionKVTransferPayload"] = None
     target_ready_time: Optional[float] = None
     source_release_time: Optional[float] = None
 
@@ -69,6 +71,12 @@ class KVCacheTransferInfo:
                 < self.source_prompt_common_blocks
             ):
                 raise ValueError("NIXL target reservation does not cover its payload")
+            if (
+                self.transfer_payload is None
+                or self.transfer_payload.transfer_bytes_per_rank
+                != self.kv_cache_size_bytes
+            ):
+                raise ValueError("NIXL transfer size must equal its page payload")
             if self.target_replica_id is None:
                 raise ValueError("NIXL transfer requires a selected target replica")
 
@@ -112,6 +120,11 @@ class KVCacheTransferInfo:
                     "payload_kind": self.payload_kind,
                     "source_prompt_common_blocks": self.source_prompt_common_blocks,
                     "target_reserved_common_blocks": self.target_reserved_common_blocks,
+                    "transfer_bytes_per_lane": self.transfer_payload.transfer_bytes_per_lane,
+                    "logical_unique_bytes": self.transfer_payload.logical_unique_bytes,
+                    "target_resident_bytes_per_rank": (
+                        self.transfer_payload.target_resident_bytes_per_rank
+                    ),
                     "target_ready_time": self.target_ready_time,
                     "source_release_time": self.source_release_time,
                 }
