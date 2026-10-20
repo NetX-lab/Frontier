@@ -409,9 +409,78 @@ def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: floa
     raise RuntimeError(f"vllm serve not ready after {timeout_s} s")
 
 
+async def sse_events(content):
+    """Yield complete SSE data events and their client receipt timestamps."""
+    pending = b""
+    data = []
+    async for chunk in content.iter_any():
+        received = time.monotonic()
+        pending += chunk
+        while match := re.search(rb"\r\n|\r|\n", pending):
+            if pending[match.start():] == b"\r":
+                break  # A CRLF delimiter can itself straddle network chunks.
+            line, pending = pending[:match.start()], pending[match.end():]
+            if not line:
+                if data:
+                    yield b"\n".join(data).decode("utf-8"), received
+                    data = []
+            elif line.startswith(b"data:"):
+                value = line[5:]
+                data.append(value[1:] if value.startswith(b" ") else value)
+    if pending or data:
+        raise ValueError("Unterminated SSE event at EOF")
+
+
+async def read_token_stream(response, record):
+    """Read v0.28 delta token IDs, never treating text or usage as tokens."""
+    record.update(output_token_count=0, stream_done=False,
+                  first_token_monotonic=None, last_token_monotonic=None)
+    async for data, received in sse_events(response.content):
+        if record["stream_done"]:
+            raise ValueError("SSE data after DONE")
+        if data == "[DONE]":
+            record["stream_done"] = True
+            continue
+        payload = json.loads(data)
+        if "error" in payload:
+            record["error"] = {"type": "STREAM_ERROR", "detail": payload["error"]}
+            continue
+        if payload.get("usage") is not None:
+            record["usage"] = payload["usage"]
+        for choice in payload.get("choices", []):
+            if choice.get("index", 0) != 0:
+                raise ValueError("Expected one completion choice at index zero")
+            tokens = choice.get("token_ids")
+            if tokens is not None:
+                if type(tokens) is not list or any(type(token) is not int or token < 0 for token in tokens):
+                    raise ValueError("Invalid delta token_ids")
+                if tokens:
+                    if record["first_token_monotonic"] is None:
+                        record["first_token_monotonic"] = received
+                    record["last_token_monotonic"] = received
+                    record["output_token_count"] += len(tokens)
+            if choice.get("finish_reason") is not None:
+                record["finish_reason"] = choice["finish_reason"]
+    errors = record["validation_errors"]
+    if not record["stream_done"]:
+        errors.append("Missing SSE DONE")
+    if record["output_token_count"] != record["num_decode_tokens"]:
+        errors.append("Delta output token count mismatch")
+    usage = record.get("usage") or {}
+    expected = {"prompt_tokens": record["num_prefill_tokens"],
+                "completion_tokens": record["num_decode_tokens"],
+                "total_tokens": record["num_prefill_tokens"] + record["num_decode_tokens"]}
+    if any(type(usage.get(key)) is not int or usage[key] != value for key, value in expected.items()):
+        errors.append("Native usage token count mismatch or missing usage")
+    if record.get("finish_reason") != "length":
+        errors.append("Missing length finish reason")
+    if record["first_token_monotonic"] is None:
+        errors.append("No actual output token observed")
+
+
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
                  profile_window_s: tuple[float, float] | None = None, *,
-                 vllm_version: str = "0.10.2") -> tuple[dict, list[dict]]:
+                 vllm_version: str = "0.10.2", records: list[dict] | None = None) -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
     close the server's torch profiler at those two offsets of the same clock."""
     import aiohttp
@@ -420,50 +489,66 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
     bodies = {
         row["request_id"]: json.dumps({
             "model": SERVED_MODEL_NAME,
-            "prompt": prompt_token_ids(row["request_id"], row["num_prefill_tokens"], vocab_size),
+            "prompt": prompt_token_ids(row.get("template_request_id", row["request_id"]),
+                                       row["num_prefill_tokens"], vocab_size),
             "max_tokens": row["num_decode_tokens"],
             "min_tokens": row["num_decode_tokens"],
             "ignore_eos": True,
             "temperature": 0.0,
-            "stream": False,
+            "stream": vllm_version == "0.28.0",
+            **({"return_token_ids": True, "stream_options": {"include_usage": True}}
+               if vllm_version == "0.28.0" else {}),
         })
         for row in rows
     }
-    records: list[dict] = []
+    if records is None:
+        records = [dict(row) for row in rows]
+    for record in records:
+        record.update(segment=record.get("segment", record["role"]), dispatch_monotonic=None,
+                      http_status=None, status="not_submitted", validation_errors=[])
     timeout = aiohttp.ClientTimeout(total=None)
     connector = aiohttp.TCPConnector(limit=0)
     async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
         origin = time.monotonic() + origin_lead_s
         origin_wall = time.time() + origin_lead_s
 
-        async def post(row: dict) -> None:
-            await asyncio.sleep(max(0.0, origin + row["arrived_at"] - time.monotonic()))
-            dispatched = time.monotonic()
-            async with session.post(
-                url, data=bodies[row["request_id"]],
-                headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"]},
-            ) as response:
-                payload = await response.json(content_type=None)
-            record = {
-                "request_id": row["request_id"],
-                "segment": row["segment"],
-                "role": row["role"],
-                "arrived_at": row["arrived_at"],
-                "num_prefill_tokens": row["num_prefill_tokens"],
-                "num_decode_tokens": row["num_decode_tokens"],
-                "dispatch_offset_s": dispatched - origin,
-                "dispatch_monotonic": dispatched,
-                "response_monotonic": time.monotonic(),
-                "http_status": response.status,
-            }
+        async def post(record: dict) -> None:
             if vllm_version == "0.10.2":
-                record["engine_request_id"] = f"cmpl-{row['request_id']}-0"
-            if response.status == 200:
-                record["usage"] = payload.get("usage")
-                record["finish_reason"] = payload["choices"][0].get("finish_reason")
-            else:
-                record["error"] = payload
-            records.append(record)
+                record["engine_request_id"] = f"cmpl-{record['request_id']}-0"
+            try:
+                due = origin + record["arrived_at"]
+                await asyncio.sleep(max(0.0, due - time.monotonic()))
+                dispatched = time.monotonic()
+                record.update(dispatch_monotonic=dispatched, dispatch_offset_s=dispatched - origin,
+                              send_lateness_s=dispatched - due, status="submitted")
+                async with session.post(
+                    url, data=bodies[record["request_id"]],
+                    headers={"Content-Type": "application/json", "X-Request-Id": record["request_id"]},
+                ) as response:
+                    record["http_status"] = response.status
+                    if response.status != 200:
+                        record["error"] = {"type": "HTTP_ERROR", "body": await response.text()}
+                    elif vllm_version == "0.28.0":
+                        await read_token_stream(response, record)
+                    else:
+                        payload = await response.json(content_type=None)
+                        record["usage"] = payload.get("usage")
+                        record["finish_reason"] = payload["choices"][0].get("finish_reason")
+            except asyncio.CancelledError:
+                record["error"] = {"type": "CancelledError", "message": "Request unfinished at client cancellation"}
+                raise
+            except Exception as error:
+                record["error"] = {"type": type(error).__name__, "message": str(error)}
+            finally:
+                record["response_monotonic"] = time.monotonic()
+                record["status"] = ("unfinished" if record.get("error", {}).get("type") == "CancelledError"
+                                    else "failed" if record.get("error") or record["validation_errors"] else "completed")
+                first, last = record.get("first_token_monotonic"), record.get("last_token_monotonic")
+                if first is not None and last is not None:
+                    record.update(ttft_ms=(first - record["dispatch_monotonic"]) * 1000,
+                                  e2e_ms=(last - record["dispatch_monotonic"]) * 1000,
+                                  tpot_ms=((last - first) * 1000 / (record["num_decode_tokens"] - 1)
+                                           if record["num_decode_tokens"] > 1 else None))
 
         profile_marks: dict = {}
 
@@ -483,12 +568,14 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
             while True:
                 await asyncio.sleep(HEARTBEAT_S)
 
-        posts = [post(row) for row in rows]
+        posts = [post(record) for record in records]
         if profile_window_s is not None:
             posts.append(profile(*profile_window_s))
         beat = asyncio.ensure_future(heartbeat())
-        await asyncio.gather(*posts)
-        beat.cancel()
+        try:
+            await asyncio.gather(*posts)
+        finally:
+            beat.cancel()
     clock = {"origin_monotonic": origin, "origin_wall": origin_wall}
     if profile_window_s is not None:
         clock["profile_marks"] = profile_marks
@@ -592,6 +679,7 @@ def main(argv: list[str] | None = None) -> int:
             clock, records = asyncio.run(replay(
                 request_ids["rows"], args.port, int(model_config["vocab_size"]), args.origin_lead_s,
                 profile_window_s, vllm_version=version,
+                records=records,
             ))
             summary.update(clock)
             time.sleep(args.drain_s)
@@ -608,7 +696,7 @@ def main(argv: list[str] | None = None) -> int:
     (output_dir / "client_requests.jsonl").write_text(
         "".join(json.dumps(record) + "\n" for record in records)
     )
-    failed = [record["request_id"] for record in records if record["http_status"] != 200]
+    failed = [record["request_id"] for record in records if record["status"] != "completed"]
     summary["num_requests"] = len(records)
     summary["failed_request_ids"] = failed
     summary["kv_cache_tokens_by_engine"] = kv_cache_tokens(output_dir / "server.log")

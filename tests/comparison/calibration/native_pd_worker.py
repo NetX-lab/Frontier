@@ -136,7 +136,8 @@ def run(config):
             result['observation_errors'].append(traceback.format_exc())
         selected = instance_devices(dict(os.environ), engine=plan['engine'], role=role)
         observer = config['serve_observers'][role]
-        env, changed = instance_env('light', plan['engine'], node, dict(os.environ),
+        mode = config.get('mode', 'light')
+        env, changed = instance_env(mode, plan['engine'], node, dict(os.environ),
                                     selected[role], observer=observer, role=role)
         port = config['http_ports'][role]
         command = server_command(plan['engine'], model, port) + [
@@ -163,12 +164,15 @@ def run(config):
                             config['startup_timeout_s'], native_required=True)
             replay_command = [sys.executable, str(Path(config['harness_dir']) / 'pd_replay.py'),
                 '--engine-config', str(stage / 'engine.json'), '--trace-dir', str(stage / 'trace'),
-                '--output-dir', str(root / 'replay'), '--mode', 'light',
+                '--output-dir', str(root / 'replay'), '--mode', mode,
                 '--observer-config', str(stage / 'serve_observers.json'), '--model-dir', str(model),
                 '--prefill-url', plan['urls']['prefill'], '--decode-url', plan['urls']['decode'],
                 '--proxy-port', str(config['proxy_port']),
                 '--startup-timeout-s', str(config['startup_timeout_s']),
                 '--drain-s', str(config['drain_seconds'])]
+            for field in ('idle_timeout_s', 'idle_poll_s'):
+                if field in config:
+                    replay_command += ['--' + field.replace('_', '-'), str(config[field])]
             result['replay_command'] = replay_command
             record('replay')
             with (node / 'replay.log').open('w') as log:

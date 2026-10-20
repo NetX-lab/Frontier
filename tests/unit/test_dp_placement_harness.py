@@ -229,6 +229,13 @@ def test_replay_keeps_client_identity_and_only_legacy_internal_id_contract(versi
     async def exercise():
         async def complete(request):
             assert request.headers["X-Request-Id"] == "request-7"
+            body = await request.json()
+            if version == "0.28.0":
+                assert body["stream"] and body["return_token_ids"]
+                payloads = [{"choices": [{"index": 0, "text": "", "token_ids": [1], "finish_reason": "length"}]},
+                            {"choices": [], "usage": {"prompt_tokens": 3, "completion_tokens": 1, "total_tokens": 4}}]
+                return web.Response(text="".join("data: " + json.dumps(payload) + "\n\n" for payload in payloads)
+                                    + "data: [DONE]\n\n", content_type="text/event-stream")
             return web.json_response({"choices": [{"finish_reason": "length"}], "usage": {}})
 
         app = web.Application()
@@ -243,6 +250,7 @@ def test_replay_keeps_client_identity_and_only_legacy_internal_id_contract(versi
     records = asyncio.run(exercise())
     assert records[0]["request_id"] == "request-7"
     assert records[0]["http_status"] == 200
+    assert records[0]["status"] == "completed"
     if version == "0.10.2":
         assert records[0]["engine_request_id"] == "cmpl-request-7-0"
     else:
