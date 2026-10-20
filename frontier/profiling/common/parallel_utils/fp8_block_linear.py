@@ -5,9 +5,10 @@ profiling linear layers call it directly. Later releases removed that op and
 select a block-scaled GEMM kernel per weight shape inside ``Fp8LinearMethod``.
 ``Fp8LinearMethodKernel`` binds one ``Fp8LinearMethod`` to one profiled weight
 so the timed GEMM is the kernel vLLM itself selects for that shape. Kernel
-selection reads the active vLLM config (model dtype and model type), so
-construction must run inside ``vllm_config_context``; the forward does not read
-it.
+selection reads the active vLLM config (model dtype and model type), and the
+weight parameters read vLLM's tensor-parallel group, so construction must run
+after ``ensure_vllm_single_rank_parallel_state`` and inside
+``vllm_config_context``; the forward reads neither.
 """
 
 from __future__ import annotations

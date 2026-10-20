@@ -83,6 +83,12 @@ class DsaModelShape:
 
 @dataclass(frozen=True)
 class DsaEngineSpec:
+    """One measurement engine.
+
+    ``max_num_seqs`` is the largest batch among the engine's cases, so it
+    never exceeds ``chunk_budget`` as vLLM requires.
+    """
+
     engine_index: int
     chunk_budget: int
     max_num_seqs: int
@@ -341,7 +347,7 @@ def _prefill_steps(prompt_len: int, chunk_budget: int) -> int:
 
 
 def _build_prefill_cases(
-    engines: Sequence[DsaEngineSpec],
+    chunk_budgets: Sequence[int],
     limits: DsaMeasurementLimits,
     context_grid: Sequence[int],
 ) -> list[DsaCase]:
@@ -356,29 +362,31 @@ def _build_prefill_cases(
     repeats = limits.prefill_warmup_repeats + limits.prefill_measured_repeats
     long_prompt = limits.max_context_len - 1
     cases = []
-    for engine in engines:
+    for engine_index, budget in enumerate(chunk_budgets):
         cases.append(
             DsaCase(
-                case_id=f"e{engine.engine_index}-prefill-p{long_prompt}",
-                engine_index=engine.engine_index,
+                case_id=f"e{engine_index}-prefill-p{long_prompt}",
+                engine_index=engine_index,
                 phase=PHASE_PREFILL,
                 batch_size=1,
                 prompt_len=long_prompt,
                 max_tokens=1,
                 warmup=limits.prefill_warmup_repeats,
                 measured=limits.prefill_measured_repeats,
-                estimated_steps=repeats * _prefill_steps(long_prompt, engine.chunk_budget),
+                estimated_steps=repeats * _prefill_steps(long_prompt, budget),
             )
         )
-    by_budget = sorted(engines, key=lambda engine: engine.chunk_budget)
     for prompt_len in context_grid:
-        engine = next((e for e in by_budget if e.chunk_budget > prompt_len), None)
-        if engine is None:
+        engine_index = next(
+            (index for index, budget in enumerate(chunk_budgets) if budget > prompt_len),
+            None,
+        )
+        if engine_index is None:
             continue
         cases.append(
             DsaCase(
-                case_id=f"e{engine.engine_index}-prefill-p{prompt_len}",
-                engine_index=engine.engine_index,
+                case_id=f"e{engine_index}-prefill-p{prompt_len}",
+                engine_index=engine_index,
                 phase=PHASE_PREFILL,
                 batch_size=1,
                 prompt_len=prompt_len,
@@ -392,7 +400,8 @@ def _build_prefill_cases(
 
 
 def _build_decode_cases(
-    decode_engine: DsaEngineSpec,
+    engine_index: int,
+    budget: int,
     limits: DsaMeasurementLimits,
     context_grid: Sequence[int],
 ) -> list[DsaCase]:
@@ -405,7 +414,6 @@ def _build_decode_cases(
     """
 
     cases = []
-    budget = decode_engine.chunk_budget
     for batch in build_batch_grid(limits.max_num_seqs):
         for context in context_grid:
             build_steps = math.ceil(batch * context / (budget - batch + 1)) + 1
@@ -418,8 +426,8 @@ def _build_decode_cases(
                 continue
             cases.append(
                 DsaCase(
-                    case_id=f"e{decode_engine.engine_index}-decode-b{batch}-p{context}",
-                    engine_index=decode_engine.engine_index,
+                    case_id=f"e{engine_index}-decode-b{batch}-p{context}",
+                    engine_index=engine_index,
                     phase=PHASE_DECODE,
                     batch_size=batch,
                     prompt_len=context,
@@ -482,22 +490,27 @@ def build_dsa_profile_plan(
         index_head_dim=_required_config_int(hf_config, "index_head_dim"),
         layers=layers,
     )
+    chunk_budgets = tuple(sorted(limits.chunk_budgets))
+    context_grid = build_context_grid(
+        limits.block_size, shape.index_topk, limits.max_context_len
+    )
+    # The largest budget runs the decode cases.
+    cases = _build_prefill_cases(chunk_budgets, limits, context_grid)
+    cases += _build_decode_cases(
+        len(chunk_budgets) - 1, chunk_budgets[-1], limits, context_grid
+    )
     engines = tuple(
         DsaEngineSpec(
             engine_index=index,
             chunk_budget=budget,
-            max_num_seqs=limits.max_num_seqs,
+            max_num_seqs=max(
+                case.batch_size for case in cases if case.engine_index == index
+            ),
             max_model_len=limits.max_context_len,
             block_size=limits.block_size,
         )
-        for index, budget in enumerate(sorted(limits.chunk_budgets))
+        for index, budget in enumerate(chunk_budgets)
     )
-    context_grid = build_context_grid(
-        limits.block_size, shape.index_topk, limits.max_context_len
-    )
-    decode_engine = max(engines, key=lambda engine: engine.chunk_budget)
-    cases = _build_prefill_cases(engines, limits, context_grid)
-    cases += _build_decode_cases(decode_engine, limits, context_grid)
     return DsaProfilePlan(
         schema_version=PLAN_SCHEMA_VERSION,
         shape=shape,

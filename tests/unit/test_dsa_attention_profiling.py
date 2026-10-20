@@ -147,6 +147,29 @@ def test_cases_respect_target_limits(plan):
     assert not any(case_id.endswith("-p1024") for case_id in prefill)
 
 
+def test_engine_max_num_seqs_fits_chunk_budget_at_target_limits(hf_config):
+    # vLLM rejects an engine whose max_num_batched_tokens is below
+    # max_num_seqs; the target limits allow 1024 sequences with 256-token chunks.
+    plan = build_dsa_profile_plan(
+        model_name=MODEL_NAME,
+        hf_config=hf_config,
+        target_tensor_parallel_size=8,
+        num_layers=8,
+        limits=_limits(
+            max_context_len=33024,
+            max_kv_tokens_per_lane=205632,
+            max_num_seqs=1024,
+            chunk_budgets=(256, 512, 1024, 2048, 4096, 8192),
+        ),
+    )
+    assert len(plan.engines) == 6
+    for engine in plan.engines:
+        cases = plan.cases_for_engine(engine.engine_index)
+        assert engine.max_num_seqs == max(case.batch_size for case in cases)
+        assert engine.max_num_seqs <= engine.chunk_budget
+    assert plan.engines[-1].max_num_seqs == 1024
+
+
 def test_limits_reject_decode_engine_smaller_than_batch():
     with pytest.raises(ValueError, match="max_num_seqs"):
         _limits(chunk_budgets=(4,), max_num_seqs=8)

@@ -398,7 +398,8 @@ def build_fp8_linear_method_kernels(
     """Bind a vLLM ``Fp8LinearMethod`` to every block-FP8 profiling linear layer.
 
     Only vLLM releases without the 0.10 block-FP8 custom op need this. Kernel
-    selection reads the model dtype and type from the active vLLM config.
+    selection reads the model dtype and type from the active vLLM config, and
+    the vLLM weight parameters read vLLM's tensor-parallel group.
     """
 
     layers = [
@@ -410,8 +411,12 @@ def build_fp8_linear_method_kernels(
     ]
     if not layers or _use_fp8_gemm_surrogate() or has_legacy_block_fp8_op():
         return
-    from frontier.profiling.common.vllm_compat import vllm_config_context
+    from frontier.profiling.common.vllm_compat import (
+        ensure_vllm_single_rank_parallel_state,
+        vllm_config_context,
+    )
 
+    ensure_vllm_single_rank_parallel_state()
     model_config = SimpleNamespace(
         dtype=model_dtype,
         hf_config=SimpleNamespace(model_type=model_type),
