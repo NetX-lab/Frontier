@@ -2,9 +2,10 @@
 
 This branch adds source-derived model representation, structural simulation and
 native comparison tooling for GLM-5.3 and the original DeepSeek-V4-Flash.
-**It does not yet provide a calibrated predictor for either model.** The next
-product milestone is the full trained GLM P/D path, followed by independent
-calibration and holdout checks, then measured V4 integration.
+**It does not yet provide a calibrated predictor for either model.** The target
+is one admitted H200 calibration result per model, with the trained GLM P/D path
+first and measured V4 integration following it. The fixed workload below replaces
+the earlier SharedGPT formal case; historical artifacts remain unchanged.
 
 This snapshot includes the W7 measured-DSA, sequence-parallel MoE and measured
 communication integrations through October 20, 2026 Asia/Hong_Kong, and the
@@ -17,16 +18,51 @@ branch tip. Step-5-Preview integration is outside this branch.
 Formal acceptance for each model is **one end-to-end calibration case** on
 **64 × NVIDIA H200** with prefill/decode disaggregation, online serving, thinking
 disabled, prefix caching and chunked prefill disabled, CUDA Graph and quantization
-enabled, and dummy-weight execution: SharedGPT at QPS 4.0 with 256 requests in the
-actual trace length distribution. Four metrics are gated independently at
+enabled, and dummy-weight execution. The topology is P32/D32 with per-role
+TP8 × DP4 × EP32 × PP1; V4 may step down only if the locked runtime cannot support
+that layout, with the concrete refusal recorded. Each case has **128 requests**,
+each exactly **6144 input / 1024 output tokens** (`k=1024` interpretation of 6k/1k),
+at **QPS 1.0 with fixed one-second arrivals** from 0 through 127 s. No Poisson
+arrivals, SharedGPT sampling or tokenizer re-count defines this workload.
+Four metrics are gated independently at
 `|frontier - vllm| / |vllm| <= 0.10` on their means: client TTFT; TPOT as the
 per-request mean of `(E2E - TTFT) / (output_tokens - 1)`; total token throughput;
-and per-request end-to-end latency. Internal TTFT, ITL, KV-ready time and
+and per-request end-to-end latency. THPT is formal prompt-plus-output tokens over
+the interval **from the first formal submission through the last formal
+last-token completion**, not the 127 s arrival span. A complete repetition has
+786432 input + 131072 output = **917504 total tokens**. Internal TTFT, ITL, KV-ready time and
 percentiles are diagnostics and do not gate.
 
-MTP follows the native default. GLM-5.3 declares `num_nextn_predict_layers: 1` but
-its reference engine configuration enables no speculative decoding, so MTP stays
-disabled and no MTP work is planned. The DeepSeek-V4-Flash check is still open.
+Each model needs **3 clean repetitions in one job**, each with its own independent
+16-request warmup of the same shape at QPS 1.0 and formal measurement window,
+and both roles idle between repetitions (no
+running/waiting requests and KV usage back to zero). Every repetition must finish
+all 128 requests with exact native token counts; failed, unfinished, truncated or
+early-terminated requests cannot be dropped to create a result. Warmup, startup
+and between-repetition idle time do not enter formal throughput. Stable template
+IDs keep prompt content unchanged across repetition-qualified transport IDs;
+warmup completion counts alone do not prove all-lane graph coverage.
+
+The replacement artifact is
+[`data/processed_traces/canonical_fixed_6144_1024_req128_qps1/`](../../data/processed_traces/canonical_fixed_6144_1024_req128_qps1/),
+using the existing trace, request-ID, disjoint warmup-pool, manifest and checksum
+layout. The earlier
+[`canonical_sharegpt_req256_qps4/`](../../data/processed_traces/canonical_sharegpt_req256_qps4/)
+artifact is retained as deferred history, not a second formal workload. This
+document does not assert synchronization with the separate Step-5-Preview worktree.
+
+MTP follows the native default, disabled for **both** models. Both declare
+`num_nextn_predict_layers: 1`, but that does not enable serving speculation.
+Final canonical command/runtime parity, effective CUDA Graph mode and capture
+sizes, quantization and memory budgets remain evidence to collect, not an actual
+freeze established by these requested settings.
+
+Without chunking, the serving configuration must satisfy `max_model_len >= 7168`
+and `max_num_batched_tokens >= max_model_len`. H200 profiling must cover the
+6144-token unchunked prompt and the 1024-output decode progression through a
+7168-token total context, including reached graph/compression/page boundaries.
+The formal communication backend remains **measured**; every touched H200
+collective shape needs a matching curve, not extrapolation or an H800 substitute.
 
 Multi-workload families, multi-QPS levels, large scenario matrices, multiple formal
 parallel layouts, broad hardware-generalization campaigns and extended holdout
@@ -113,8 +149,7 @@ dummy attention remains unmeasured. Uncovered and mixed serving workloads fail
 rather than use dummy costs or extrapolation.
 
 The MoE tables contain the verified `grouped_topk_sigmoid` rerun from source
-`9dee7defd932624f68d55c75833c57f2a925d8ac` (RJob
-`exp-1020-192409-258863`). Both tables have 4,059 rows, with
+`9dee7defd932624f68d55c75833c57f2a925d8ac`. Both tables have 4,059 rows, with
 `grouped_topk_bias` assignment, `sigmoid_renorm_scaled` weights, and native
 `FLASHINFER_CUTLASS` expert execution. These replace the old
 `standard_fused_topk` measurements without relabeling them. A run on these
@@ -205,8 +240,9 @@ Other open boundaries remain material:
   absolute GPU endpoints and a cross-node clock relation remain missing. The
   [raw admission path](../../tests/comparison/e2e_gate/admission.py) remains
   insufficient for numeric publication.
-- Complete full-model observation, P/D qualification, 64-H800 P32+D32/DP4
-  qualification, trained artifacts and formal calibration/holdout gates remain
+- Complete full-model observation, P/D qualification, the canonical 64-H200
+  P32+D32/DP4 reference with 128 exact-length completions in each clean repetition,
+  trained artifacts and the four-metric calibration gates remain
   open. One placement failure,
   `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward`,
   is inherited from `bfa82de` and remains unresolved; its reproduction is not a
@@ -248,7 +284,8 @@ collectives, the measured DSA timing module, and a measured communication
 backend. Then continue into CPU normalization, bundle training, cost replay and
 coverage paths.
 Complete the trained GLM P/D path before claiming a calibrated GLM predictor;
-then run independent calibration/holdout checks and measured V4 integration.
+then compare the fixed canonical case against its admitted native repetitions
+and continue measured V4 integration. The older broad holdout matrix is deferred.
 Native async disposition needs qualified GLM P/D/schema evidence; DP P/D placement
 also needs the separate DP4 observation. Neither a structural run nor a source
 policy oracle closes those decisions.
