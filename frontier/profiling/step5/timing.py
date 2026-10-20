@@ -52,6 +52,13 @@ def _window_duration_ms(start, end) -> float:
     return _event_duration_ms(start, end)
 
 
+def _prime_events(events) -> None:
+    # CUDA event handles are allocated lazily on their first record.
+    for event in events:
+        event.record()
+    events[-1].synchronize()
+
+
 def collect_replay_timings(
     torch,
     run: Callable[[], object],
@@ -62,7 +69,8 @@ def collect_replay_timings(
 ) -> ReplayTimings:
     """Measure queued per-replay samples, then windows meeting the minimum duration.
 
-    The caller owns warmup, capture and the safety of consecutive replays.
+    The caller owns native warmup, capture and the safety of consecutive replays.
+    Event handles are primed before preparation and any measured replay.
     A single prepared cohort uses shared per-iteration boundary events and
     synchronizes only after its last replay. Preparation then runs once before
     each window, never between its replays. The final single-replay sample also
@@ -85,17 +93,19 @@ def collect_replay_timings(
 
     def measure_window(replays: int) -> float:
         nonlocal last_output
-        prepare()
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
+        _prime_events((start, end))
+        prepare()
         start.record()
         for _ in range(replays):
             last_output = run()
         end.record()
         return _window_duration_ms(start, end)
 
-    prepare()
     boundaries = tuple(torch.cuda.Event(enable_timing=True) for _ in range(sample_count + 1))
+    _prime_events(boundaries)
+    prepare()
     boundaries[0].record()
     for index in range(sample_count):
         last_output = run()

@@ -68,7 +68,8 @@ class FakeEvent:
         assert self.clock.active_replays is not None
         self.synchronized = True
         self.clock.calls.append(("synchronize", self.index))
-        self.clock.windows.append(self.clock.active_replays)
+        if self.clock.active_replays:
+            self.clock.windows.append(self.clock.active_replays)
         self.clock.active_replays = None
         self.clock.completed_event_index = self.index
 
@@ -154,19 +155,51 @@ def test_async_queued_singletons_agree_with_amortized_windows():
     assert result.amortized_times == pytest.approx((0.0506,) * 5)
 
 
+@pytest.mark.parametrize("sample_count", [2, 10])
+def test_lazy_cuda_events_are_primed_before_measured_replays(sample_count):
+    class InitializedEvent(AsyncEvent):
+        initialized = False
+
+        def record(self):
+            super().record()
+            self.initialized = True
+
+    class InitializingClock(AsyncCudaClock):
+        def event(self, *, enable_timing):
+            assert enable_timing is True
+            event = InitializedEvent(self, len(self.events))
+            self.events.append(event)
+            self.calls.append(("event", event.index))
+            return event
+
+        def run(self):
+            assert all(event.initialized for event in self.events), (
+                "A CUDA event's first record must be outside measured replays"
+            )
+            return super().run()
+
+    clock = InitializingClock()
+    result = collect_replay_timings(clock.torch, clock.run, clock.prepare,
+                                   sample_count=sample_count, min_window_ms=0.5)
+    assert result.last_output is clock.outputs[-1]
+
+
 def test_singleton_boundaries_are_queued_before_first_sync_and_final_window_output_is_retained():
     clock = AsyncCudaClock()
     result = collect_replay_timings(clock.torch, clock.run, clock.prepare, sample_count=5, min_window_ms=0.5)
-    first_sync = next(index for index, call in enumerate(clock.calls) if call[0] == "synchronize")
-    queued = clock.calls[:first_sync]
+    first_prepare = next(index for index, call in enumerate(clock.calls) if call[0] == "prepare")
+    assert clock.calls[:first_prepare] == ([('event', index) for index in range(6)]
+        + [('record', index) for index in range(6)] + [('synchronize', 5)])
+    first_sync = next(index for index in range(first_prepare, len(clock.calls))
+                      if clock.calls[index][0] == "synchronize")
+    queued = clock.calls[first_prepare:first_sync]
 
     assert [call for call in queued if call[0] == "record"] == [("record", index) for index in range(6)]
-    assert [call for call in queued if call[0] == "event"] == [("event", index) for index in range(6)]
     assert sum(call[0] == "run" for call in queued) == 5
     assert sum(call[0] == "prepare" for call in queued) == 1
     assert clock.calls[first_sync] == ("synchronize", 5)
     assert clock.calls[first_sync + 1:first_sync + 6] == [("elapsed_time", i, i + 1) for i in range(5)]
-    assert sum(call[0] == "synchronize" for call in clock.calls) == 6
+    assert sum(call[0] == "synchronize" for call in clock.calls) == 12
     assert result.last_output is clock.outputs[-1]
     assert result.last_output.invocation == 5 + sum(result.window_replays)
     assert result.last_output.state == clock.state == result.window_replays[-1]
@@ -182,8 +215,9 @@ def collect(clock, *, sample_count=3, min_window_ms=0.5):
 def assert_window_calls(clock, *, single_samples_read=None):
     """One boundary cohort precedes windows using exactly one event pair each."""
     sample_count = clock.windows[0]
-    expected = [("prepare",)]
-    expected.extend(("event", index) for index in range(sample_count + 1))
+    expected = [("event", index) for index in range(sample_count + 1)]
+    expected.extend(("record", index) for index in range(sample_count + 1))
+    expected.extend([("synchronize", sample_count), ("prepare",)])
     expected.append(("record", 0))
     for index in range(sample_count):
         expected.extend([("run",), ("record", index + 1)])
@@ -193,7 +227,8 @@ def assert_window_calls(clock, *, single_samples_read=None):
     for index, replays in enumerate(clock.windows[1:]):
         start = sample_count + 1 + 2 * index
         end = start + 1
-        expected.extend([("prepare",), ("event", start), ("event", end), ("record", start)])
+        expected.extend([("event", start), ("event", end), ("record", start),
+                         ("record", end), ("synchronize", end), ("prepare",), ("record", start)])
         expected.extend([("run",)] * replays)
         expected.extend([("record", end), ("synchronize", end), ("elapsed_time", start, end)])
     assert clock.calls == expected
