@@ -5,8 +5,10 @@ forward, so every MoE layer of the other lanes finds this lane's partner. It
 carries no request: no layer is credited and no metric is recorded.
 """
 
+from dataclasses import replace
 from typing import Any
 
+from frontier.config import global_vars
 from frontier.entities import BatchStage, DummyForwardBatch
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
@@ -75,13 +77,62 @@ def start_dummy_forward(
 
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
     first_layer_id, _ = scheduler.get_pipeline_stage_layer_bounds(stage_id, num_layers)
-    execution_time = _predict_layer(scheduler, stage_id, dummy_forward, first_layer_id)
     dummy_forward.stage_start_time = time
     dummy_forward._forward_launch_start_time = time
+    if (
+        scheduler._cluster_type in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+        and global_vars.get_decode_cuda_graph_mode() != "none"
+    ):
+        # The first pre_moe room already collects exactly this forward's lanes.
+        # Defer the dummy's first prediction until its peers' dispatch descriptors
+        # are known, instead of charging eager host overhead before DP negotiation.
+        dummy_forward._dummy_dispatch_pending = True
+        dummy_forward._forward_launch_time = 0.0
+        from frontier.events.decode_sync_event import DecodeSyncEvent
+
+        return [DecodeSyncEvent(
+            time, replica_id, stage_id, dummy_forward,
+            dummy_forward._stage_owner_replica_local_id,
+            "pre_moe", first_layer_id, 0.0, cluster_type=scheduler._cluster_type,
+        )]
+    execution_time = _predict_layer(scheduler, stage_id, dummy_forward, first_layer_id)
     dummy_forward._forward_launch_time = execution_time.forward_launch_time * 1e-3
     return _enter_layer(
         scheduler, time, replica_id, stage_id, dummy_forward, first_layer_id, execution_time
     )
+
+
+def resolve_dummy_forward_inputs(scheduler: Any, stage_id: int, layer_id: int, room: dict) -> None:
+    """Price deferred first layers with vLLM's DP-min mode and DP-max width."""
+    batches = room["batches"]
+    pending = [
+        (lane_id, batch) for lane_id, batch in batches.items()
+        if isinstance(batch, DummyForwardBatch)
+        and getattr(batch, "_dummy_dispatch_pending", False)
+    ]
+    if not pending:
+        return
+    modes = [batch.get_decode_cuda_graph_runtime_mode() for batch in batches.values()]
+    graph_mode = "NONE" if "NONE" in modes else (
+        "PIECEWISE" if "PIECEWISE" in modes else "FULL"
+    )
+    width = max(batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
+                for batch in batches.values())
+    for lane_id, dummy in pending:
+        if graph_mode == "NONE":
+            dummy.decode_cuda_graph_metadata = None
+        else:
+            dummy.decode_cuda_graph_metadata = replace(
+                dummy.decode_cuda_graph_metadata,
+                runtime_mode=graph_mode, padded_total_tokens=width,
+                padded_decode_batch_size=width,
+            )
+        execution_time = _predict_layer(scheduler, stage_id, dummy, layer_id)
+        dummy._forward_launch_time = execution_time.forward_launch_time * 1e-3
+        room["arrival_times"][lane_id] = (
+            dummy.stage_start_time + attention_delay_seconds(execution_time)
+        )
+        dummy._dummy_dispatch_pending = False
 
 
 def advance_dummy_forward(

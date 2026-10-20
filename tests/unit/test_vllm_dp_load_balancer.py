@@ -560,7 +560,7 @@ def test_decode_pp1_shapes_construct(is_moe, attn_dp) -> None:
 @pytest.mark.parametrize(
     "kwargs,message",
     [
-        (dict(cluster_type=ClusterType.PREFILL), "one co-location Replica"),
+        (dict(cluster_type=ClusterType.PREFILL, num_pipeline_stages=2), "PP1 only"),
         (dict(cluster_type=ClusterType.DECODE, num_replicas=2), "one DECODE Replica"),
         (dict(cluster_type=ClusterType.DECODE, num_pipeline_stages=2), "PP1 only"),
         (dict(cluster_type=ClusterType.DECODE, is_moe=False), "share no stage-0 forward"),
@@ -609,6 +609,39 @@ def test_decode_admission_holds_its_forward_key_until_completion() -> None:
         assert request.completed
         assert balancer.request_owners == {}
         assert balancer.engine_inflight == [0, 0]
+
+
+@pytest.mark.parametrize("attn_dp", [1, 4])
+def test_prefill_pp1_routes_and_releases_ownership_after_the_final_chunk(attn_dp) -> None:
+    with pytest.MonkeyPatch.context() as patch:
+        scheduler = _policy_scheduler(
+            patch, cluster_type=ClusterType.PREFILL, attn_dp=attn_dp, moe_ep=attn_dp,
+            cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(policy_version="v0.28.0"),
+        )
+        request = _request(tokens=32)
+        request.on_arrival(0.0, ClusterType.PREFILL)
+        scheduler.add_request(request)
+        [(replica_id, lane_id, routed)] = scheduler.schedule_at(0.0)
+        assert routed is request
+        lane = scheduler.get_replica_scheduler(replica_id, lane_id)
+        lane.add_request(request)
+        balancer = scheduler._load_balancer
+
+        [first] = lane.on_schedule(0.0)
+        first.on_batch_end(0.01, ClusterType.PREFILL)
+        lane.on_batch_end(first)
+        scheduler.on_replica_batch_end(0.01, replica_id, lane_id, first)
+        assert not request.is_prefill_complete
+        assert balancer.request_owners == {request.id: lane_id}
+        [last] = lane.on_schedule(0.02)
+        last.on_batch_end(0.03, ClusterType.PREFILL)
+        lane.on_batch_end(last)
+        scheduler.on_replica_batch_end(0.03, replica_id, lane_id, last)
+        assert request.is_prefill_complete
+        assert not request.completed
+        assert balancer.request_owners == {}
+        assert balancer.engine_inflight == [0] * attn_dp
+        assert lane._allocation_map[request.id] > 0
 
 
 def test_routing_without_a_time_is_refused_rather_than_reusing_a_stale_one() -> None:
