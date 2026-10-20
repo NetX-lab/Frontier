@@ -505,7 +505,7 @@ def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: floa
     raise RuntimeError(f"vllm serve not ready after {timeout_s} s")
 
 
-async def read_completion_stream(response) -> tuple[dict, dict]:
+async def read_completion_stream(response, *, cancel_after_first_content: bool = False) -> tuple[dict, dict]:
     """Read OpenAI completion SSE lines and time the first nonempty text choice.
 
     aiohttp's line iterator joins fragmented network reads, including UTF-8 bytes. Empty
@@ -530,8 +530,12 @@ async def read_completion_stream(response) -> tuple[dict, dict]:
         for choice in event.get("choices", []):
             if choice.get("text") and timing["first_token_monotonic"] is None:
                 timing["first_token_monotonic"] = arrived
+                if cancel_after_first_content:
+                    timing["client_cancelled"] = True
             if choice.get("finish_reason") is not None:
                 payload["choices"][0]["finish_reason"] = choice["finish_reason"]
+        if timing.get("client_cancelled"):
+            break
     return payload, timing
 
 
@@ -576,7 +580,8 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"]},
             ) as response:
                 if row.get("stream") and response.status == 200:
-                    payload, timing = await read_completion_stream(response)
+                    payload, timing = await read_completion_stream(response,
+                        cancel_after_first_content=row.get("cancel_after_first_content", False))
                 else:
                     payload = await response.json(content_type=None)
             record = {

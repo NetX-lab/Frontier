@@ -29,7 +29,7 @@ import sys
 REPO = Path(__file__).resolve().parents[3]
 CALIBRATION = REPO / "tests/comparison/calibration"
 sys.path[:0] = [str(CALIBRATION), str(REPO / "tests/comparison/dp_placement_pp")]
-from native_pd_worker import node_plan  # noqa: E402
+from native_pd_worker import node_plan, pd_state_environment  # noqa: E402
 from pd_replay import instance_devices, instance_env, kv_transfer_config  # noqa: E402
 from serving_metrics import expected_pull_prompt_sources  # noqa: E402
 from vllm_replay import adapter_record, local_model_config, runtime_version, server_command  # noqa: E402
@@ -84,7 +84,7 @@ def wave_traces(definition: dict, namespace: str) -> dict[str, list[dict]]:
              "role": "gating" if wave["name"] == definition["gating_wave"] else "recorded",
              "arrived_at": round(index * wave["spacing_s"], 6), "num_prefill_tokens": length,
              "num_decode_tokens": wave["num_decode_tokens"],
-             **({key: wave[key] for key in ("prompt_id", "stream") if key in wave})}
+             **({key: wave[key] for key in ("prompt_id", "stream", "cancel_after_first_content") if key in wave})}
             for index, length in enumerate(wave["prompt_lengths"])]
     return traces
 
@@ -101,6 +101,9 @@ def preflight(config: dict, model_dir: Path) -> list[dict]:
         selected = instance_devices({}, engine=plan["engine"], role=role)
         env, changed = instance_env(config["mode"], plan["engine"], Path("/nonexistent"), {},
                                     selected[role], observer=None, role=role)
+        env, state_changed = pd_state_environment(config, role, Path("/worker-local-scratch"),
+                                                  Path(config["script"]).parent, env)
+        changed.update(state_changed)
         command = server_command(plan["engine"], model_dir, port) + [
             "--kv-transfer-config", json.dumps(kv_transfer_config(plan["engine"], role, port))]
         rows.append({"host": peer["host"], "position": plan["position"], "role": role,
@@ -165,6 +168,9 @@ def build(definition: dict, *, stage: Path, workspace: Path, output_dir: Path, m
             "weight_suffixes")},
         **resources,
     }
+    if "pd_state_observation" in definition:
+        from tests.integration.step5_pd.r2_stage import stage_observation
+        stage_observation(config, definition, stage, model_dir)
     (stage / "preflight.json").write_text(json.dumps(preflight(config, model_dir), indent=1))
     config["tool_hashes"] = {str(path.relative_to(stage)): sha256(path)
                              for path in sorted(stage.rglob("*")) if path.is_file()}

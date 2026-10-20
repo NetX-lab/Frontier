@@ -57,8 +57,22 @@ def node_plan(config, peers, host, devices):
     engine['kv_transfer'] = engine['kv_transfer'] | {'side_channel_host': engine['host']}
     return dict(position=position, role=role, lane=lane, engine=engine,
                 heads=heads, peers=peers,
-                urls={name: f"http://{peer['ip']}:{config['http_ports'][name]}"
-                      for name, peer in heads.items()})
+                 urls={name: f"http://{peer['ip']}:{config['http_ports'][name]}"
+                       for name, peer in heads.items()})
+
+
+def pd_state_environment(config, role, scratch, stage, inherited):
+    """Activate opt-in diagnostic hooks only in role servers, never clean replay clients."""
+    settings = config.get('pd_state_observation')
+    if settings is None:
+        return inherited, {}
+    settings = settings | {
+        'role': role, 'output_dir': str(scratch / 'pd_state')}
+    changed = {
+        'STEP5_PD_STATE_OBSERVATION': json.dumps(settings, sort_keys=True),
+        'PYTHONPATH': os.pathsep.join([str(stage / 'r2_bootstrap'), str(stage),
+                                      inherited.get('PYTHONPATH', '')]).rstrip(os.pathsep)}
+    return inherited | changed, changed
 
 
 def run(config):
@@ -102,6 +116,7 @@ def run(config):
             if failed:
                 raise RuntimeError(f'Native P/D peer failed: {failed}')
             if native_required and server.poll() is not None:
+                result['native_exit_before_requested_stop'] = server.returncode
                 raise RuntimeError(f'Native server exited early: {server.returncode}')
             if condition():
                 return
@@ -147,7 +162,9 @@ def run(config):
         selected = instance_devices(dict(os.environ), engine=plan['engine'], role=role)
         observer = None if observers is None else observers[role]
         env, changed = instance_env(mode, plan['engine'], node, dict(os.environ),
-                                    selected[role], observer=observer, role=role)
+                                     selected[role], observer=observer, role=role)
+        env, state_env = pd_state_environment(config, role, scratch, stage, env)
+        changed.update(state_env)
         port = config['http_ports'][role]
         command = server_command(plan['engine'], model, port) + [
             '--kv-transfer-config', json.dumps(kv_transfer_config(plan['engine'], role, port))]
@@ -218,9 +235,26 @@ def run(config):
             write_json(node / 'native_stopped.json', result['server_stop'])
         try:
             result['weight_audit'] = weight_candidates([scratch / 'hf', model],
-                                                       tuple(config['weight_suffixes']))
+                                                        tuple(config['weight_suffixes']))
         except Exception:
             result['observation_errors'].append(traceback.format_exc())
+        try:
+            if 'pd_state_observation' in config and (scratch / 'pd_state').is_dir():
+                shutil.copytree(scratch / 'pd_state', node / 'pd_state', dirs_exist_ok=True)
+            if 'pd_state_observation' in config and server is not None and (
+                    'native_exit_before_requested_stop' in result or result['server_stop']['returncode'] != 0):
+                output = node / 'pd_state'
+                output.mkdir(exist_ok=True)
+                (output / 'native_lifecycle.jsonl').write_text(json.dumps({
+                    'event': 'native_error', 'role': plan['role'], 'host': host,
+                    'pid': os.getpid(), 'monotonic_ns': time.monotonic_ns(),
+                    'message': 'Native server exited before the required lifecycle completed',
+                    'native_exit_before_requested_stop': result.get('native_exit_before_requested_stop'),
+                    'server_stop': result['server_stop']}) + '\n')
+        except Exception:
+            error = traceback.format_exc()
+            result['observation_errors'].append(error)
+            print('PD_STATE_OBSERVATION_ERROR', error, flush=True)
         result['workload_returncode'] = exit_code
         record('finished')
         if 'evidence_dir' in config:
