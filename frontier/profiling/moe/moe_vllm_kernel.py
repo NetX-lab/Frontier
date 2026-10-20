@@ -32,6 +32,9 @@ from frontier.profiling.moe.fp8_block_experts import (
     expert_parallel_layout,
     get_fp8_block_routed_experts,
 )
+from frontier.profiling.moe.mxfp4_marlin_experts import (
+    get_mxfp4_marlin_routed_experts,
+)
 from frontier.profiling.utils import (
     normalize_profile_method,
     validate_profile_method_platform,
