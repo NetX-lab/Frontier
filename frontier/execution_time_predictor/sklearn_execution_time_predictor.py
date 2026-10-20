@@ -7,7 +7,7 @@ import os
 import pickle
 from abc import abstractmethod
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import product
 from typing import (
     TYPE_CHECKING,
@@ -152,6 +152,7 @@ from frontier.spec_decode.mtp_registry import (
 )
 from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
 from frontier.execution_time_predictor.profiling_metadata import (
+    operation_profiling_precisions,
     validate_model_architecture_profile,
 )
 from frontier.entities import ExecutionTime, StageExecutionTime
@@ -165,6 +166,7 @@ class ProfilingMetadata:
     model_arch: str
     model_architecture_profile: str
     measurement_type: MeasurementType
+    operation_precisions: Dict[str, PrecisionType] = field(default_factory=dict)
 
 
 def _build_exact_feature_lookup(
@@ -2439,6 +2441,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             model_arch=actual_arch,
             model_architecture_profile=actual_profile,
             measurement_type=measurement_type,
+            operation_precisions=operation_profiling_precisions(df),
         )
 
     def _validate_active_measurement_type(
@@ -2466,13 +2469,15 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             for operation_name in operation_names
         ]
         normalized_operation_names = list(dict.fromkeys(normalized_operation_names))
-        quant_manager.register_profiling_metadata(
-            operation_names=normalized_operation_names,
-            profiling_precision=metadata.profiling_precision,
-            profiling_quant_signature=metadata.quant_signature,
-            expected_quant_signature=expected_quant,
-            file_path=file_path,
-        )
+        for operation in normalized_operation_names:
+            quant_manager.register_profiling_metadata(
+                operation_names=[operation],
+                profiling_precision=metadata.operation_precisions.get(
+                    operation, metadata.profiling_precision),
+                profiling_quant_signature=metadata.quant_signature,
+                expected_quant_signature=expected_quant,
+                file_path=file_path,
+            )
 
     def _register_missing_profiling_metadata(
         self, operation_names: List[str], file_path: str
@@ -2811,7 +2816,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         supports_share_expert = getattr(
             self._model_config, "supports_share_expert", None
         )
-        if callable(supports_share_expert) and supports_share_expert():
+        if (callable(supports_share_expert) and supports_share_expert()
+                and self._get_model_architecture_profile().dense_layers_use_shared_expert_rows):
             # Step2Mini/Step3 mixed layers use the profiled shared-expert FFN
             # path for their non-routed layers.  They do not expose the
             # standard mlp_* profiling rows, so requesting those models would
@@ -2909,6 +2915,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             self._model_config,
             operator_name=op_name,
             attention_tp_size=requested_attention_tp,
+            attention_dp_size=self._replica_config.attn_dp,
+            num_pipeline_stages=self._replica_config.num_pipeline_stages,
             ffn_tp_size=requested_ffn_tp,
             moe_tp_size=self._replica_config.moe_tensor_parallel_size,
             expert_parallel_size=getattr(
@@ -5225,12 +5233,16 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             feature_names=("num_tokens",),
         )
 
-    def _get_attn_norm_layer_act_execution_time(self, batch: Batch) -> float:
+    def _get_attn_norm_layer_act_execution_time(
+        self, batch: Batch, layer_id: int | None = None,
+    ) -> float:
         if not self._supports_operation("input_layernorm"):
             raise ValueError(
                 f"input layernorm operation not supported for cluster {self._cluster_type}"
             )
-        effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
+        from frontier.execution_time_predictor.sequence_parallel_moe import input_layernorm_tokens
+
+        effective_tokens = input_layernorm_tokens(self, batch, layer_id)
         return self._get_prediction_for_features(
             "input_layernorm",
             {"num_tokens": effective_tokens},
@@ -7842,6 +7854,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         supports_share_expert = bool(
             getattr(self._model_config, "supports_share_expert", lambda: False)()
+            and self._get_model_architecture_profile().dense_layers_use_shared_expert_rows
         )
         if supports_share_expert:
             required_operations = (

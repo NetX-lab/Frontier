@@ -121,9 +121,12 @@ class MoEWrapper:
         self.use_fp8 = use_fp8  # Flag for FP8 W8A8 quantization
         self.per_channel_quant = per_channel_quant  # Per-channel quantization flag
         self.block_shape = block_shape  # Block-wise quantization shape
-        self.routing_runtime_path = routing_runtime_path
+        self.routing_runtime_path = (
+            model_config.get_model_architecture_profile().moe_gating_routing_runtime_path
+            or routing_runtime_path
+        )
         self.routing_runtime_metadata = get_routing_runtime_metadata(
-            routing_runtime_path
+            self.routing_runtime_path
         )
         self.gating_runtime_context_metadata = get_moe_gating_runtime_context_metadata(
             gating_runtime_context
@@ -201,7 +204,10 @@ class MoEWrapper:
             tensor_parallel_size=num_tensor_parallel_workers,
             use_vllm_fused_topk=self.use_vllm_kernel,
             routing_runtime_path=self.routing_runtime_path,
+            router_config=model_config,
         ).to(dtype=self._dtype).cuda().eval()
+        if self.routing_runtime_path == "grouped_topk_sigmoid":
+            self.gating.e_score_correction_bias = self.gating.e_score_correction_bias.float()
 
         self.shuffler = MoETokenShuffler(
             num_experts=self.num_experts,
@@ -895,6 +901,9 @@ class MoEWrapper:
 
         # Combine all stats (including load imbalance features from grouped_gemm_stats)
         stats = self._build_profile_result(combined_time_stats, num_tokens=num_tokens)
+        for key, value in gating_stats.items():
+            if key not in stats and key != "time_stats":
+                stats[key] = value
         
         # Add load imbalance features from grouped_gemm_stats (if present)
         # These are added by profile_grouped_gemm when load imbalance is enabled

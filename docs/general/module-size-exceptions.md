@@ -111,3 +111,19 @@ This exception covers only the two-line filter extension, with focused metric
 checks and the unchanged 77-case artifact and predictor-cache filename
 comparison required before acceptance. It does not authorize further growth
 of the metrics store or claim that the planned split has been performed.
+
+## GLM sequence-parallel MoE wiring, 2026-10-20
+
+At `98416de`, the main predictor has 8,583 lines; the SP-MoE changes bring it
+to 8,596. The additions pass DP/PP to the existing typed contract, delegate
+input-norm row selection to `sequence_parallel_moe.py`, select dense FFN rows
+through the architecture profile, and register operation-level measured
+precision through `profiling_metadata.py`. No new width or precision classifier
+lives in the main predictor. The metadata registration replaces its previous
+file-wide precision registration rather than adding a second path.
+
+Cleanup inspection found the affected methods own predictor binding and the
+existing subclass-facing getters. Moving their state here would overlap the
+pending measurement-family split above and the independently implemented DSA
+consumer. Those splits remain separate movement-only work; this exception is
+limited to the local contract wiring, with the unchanged 77-case matrix gate.
