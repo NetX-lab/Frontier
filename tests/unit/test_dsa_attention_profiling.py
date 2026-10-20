@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from types import SimpleNamespace
@@ -192,6 +193,59 @@ def test_engine_max_num_seqs_fits_chunk_budget_at_target_limits(hf_config):
 def test_limits_reject_decode_engine_smaller_than_batch():
     with pytest.raises(ValueError, match="max_num_seqs"):
         _limits(chunk_budgets=(4,), max_num_seqs=8)
+
+
+def test_legacy_namespace_and_serialization_remain_the_shared_interface():
+    from frontier.profiling.attention.dsa_main import (
+        _add_plan_arguments, build_parser, build_plan,
+    )
+
+    shared = argparse.ArgumentParser()
+    _add_plan_arguments(shared)
+    old_namespace = shared.parse_args(PLAN_ARGS)
+    assert not hasattr(old_namespace, "engine_policy")
+    assert not hasattr(old_namespace, "prefill_prompt_len")
+    assert not hasattr(old_namespace, "query_one_context_min")
+    old_plan = build_plan(old_namespace)
+    ordinary = build_plan(build_parser().parse_args(["plan", *PLAN_ARGS]))
+    assert json.dumps(old_plan.to_json()) == json.dumps(ordinary.to_json())
+    assert "engine_policy" not in old_plan.to_json()["limits"]
+    assert "timing_collection" not in old_plan.to_json()
+    assert "timing_collection" not in old_plan.summary()
+
+
+@pytest.mark.parametrize("option,value", [
+    ("--engine_policy", "native_defaults"),
+    ("--prefill_prompt_len", "6144"),
+    ("--query_one_context_min", "6143"),
+])
+def test_native_ordinary_options_do_not_leak_into_full_dummy_cli(option, value, tmp_path):
+    from frontier.profiling.attention import dsa_full_dummy as full
+
+    with pytest.raises(SystemExit) as stopped:
+        full.main(["plan", *PLAN_ARGS, "--capture_sizes", "2", "8",
+                   "--source_revision", full.NATIVE_REVISION,
+                   "--model_config_revision", "fixture",
+                   "--expected_attention_backend", "UNOBSERVED",
+                   "--output", str(tmp_path / "full.json"), option, value])
+    assert stopped.value.code == 2
+    assert not (tmp_path / "full.json").exists()
+
+
+def test_legacy_run_keeps_model_identity_rejection_before_engine(monkeypatch, tmp_path):
+    def forbidden(*args, **kwargs):
+        pytest.fail("A mismatched model configuration must not allocate an engine")
+
+    monkeypatch.setattr(runner, "run_engine", forbidden)
+    model = tmp_path / "model"
+    model.mkdir()
+    (model / "config.json").write_text('{"wrong_model": true}')
+    with pytest.raises(ValueError, match="differs from --model_config_path"):
+        dsa_main(["run", *PLAN_ARGS, "--engine_index", "0", "--model_dir", str(model),
+                  "--raw_dir", str(tmp_path / "raw"), "--trace_dir", str(tmp_path / "trace"),
+                  "--expected_attention_backend", "UNOBSERVED",
+                  "--gpu_memory_utilization", "0.85", "--seed", "1234"])
+    assert not (tmp_path / "raw").exists() and not (tmp_path / "trace").exists()
 
 
 def test_plan_dry_run_cli(tmp_path, capsys):

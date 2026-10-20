@@ -43,6 +43,7 @@ from frontier.profiling.attention.dsa_kernel_trace import (
     load_trace_events,
 )
 from frontier.profiling.attention.dsa_plan import (
+    ENGINE_POLICY_NATIVE_DEFAULTS,
     INDEXER_SCOPE,
     MLA_SCOPE,
     PHASE_DECODE,
@@ -51,6 +52,7 @@ from frontier.profiling.attention.dsa_plan import (
     DsaCase,
     DsaEngineSpec,
     DsaProfilePlan,
+    require_scope_timing,
 )
 from frontier.profiling.attention.dsa_rows import CUDA_EVENT, KERNEL_ONLY, MEASUREMENT_TYPES
 from frontier.profiling.common.runtime_identity import (
@@ -592,6 +594,14 @@ def build_engine(
 ) -> Any:
     """Build the in-process engine; ``engine_options`` adds model-specific LLM arguments."""
 
+    native_defaults = plan.limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS
+    if native_defaults and engine_options:
+        raise ValueError("native_defaults does not accept engine_options overrides")
+    execution_options = {"enable_chunked_prefill": False} if native_defaults else {
+        "enforce_eager": True, "enable_chunked_prefill": True,
+        "async_scheduling": False,
+        "long_prefill_token_threshold": plan.engine(engine_index).prefill_query_len,
+    }
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
     from vllm import LLM
 
@@ -603,17 +613,14 @@ def build_engine(
         hf_overrides=dict(plan.hf_overrides),
         tensor_parallel_size=1,
         dtype=plan.shape.dtype,
-        enforce_eager=True,
         enable_prefix_caching=False,
-        enable_chunked_prefill=True,
-        async_scheduling=False,
         max_num_batched_tokens=engine.chunk_budget,
         max_num_seqs=engine.max_num_seqs,
         max_model_len=engine.max_model_len,
-        long_prefill_token_threshold=engine.prefill_query_len,
         block_size=engine.block_size,
         gpu_memory_utilization=gpu_memory_utilization,
         seed=seed,
+        **execution_options,
         **engine_options,
     )
 
@@ -635,6 +642,7 @@ def measure_engine(
 ) -> None:
     """Measure the engine's cases with installed hooks; write raw records to ``raw_path``."""
 
+    require_scope_timing(plan.limits.engine_policy)
     if inventory["attention_backend"] != expected_attention_backend:
         raise RuntimeError(
             f"Engine selected attention backend {inventory['attention_backend']!r}, "
@@ -643,6 +651,7 @@ def measure_engine(
     device_name, device_capability = collect_device_identity()
     engine_record = {
         "kind": "engine",
+        "engine_policy": plan.limits.engine_policy,
         "engine_index": engine_index,
         "chunk_budget": plan.engine(engine_index).chunk_budget,
         "kv_cache_dtype": str(llm.llm_engine.vllm_config.cache_config.cache_dtype),
@@ -689,6 +698,7 @@ def run_engine(
 ) -> None:
     """Measure every case of one engine; append raw records to ``raw_path``."""
 
+    require_scope_timing(plan.limits.engine_policy)
     llm = build_engine(plan, engine_index, model_dir, seed, gpu_memory_utilization)
     layer_variants = {
         layer.global_layer_id: layer.attention_variant for layer in plan.shape.layers

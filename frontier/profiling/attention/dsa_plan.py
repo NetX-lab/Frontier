@@ -28,7 +28,7 @@ import json
 import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Literal, Mapping, Sequence
 
 from frontier.attention.families import DSA_ATTENTION_FAMILY
 from frontier.attention.dsa_features import dsa_decode_query_limit
@@ -43,6 +43,8 @@ SHARED_INDEX_VARIANT = "shared_index"
 
 PHASE_PREFILL = "prefill"
 PHASE_DECODE = "decode"
+ENGINE_POLICY_EAGER_CHUNKED = "eager_chunked"
+ENGINE_POLICY_NATIVE_DEFAULTS = "native_defaults"
 
 # Native per-layer config lists that must shrink with ``num_hidden_layers``.
 _DENSE_MLP_LAYER_TYPE = "dense"
@@ -88,8 +90,8 @@ class DsaModelShape:
 class DsaEngineSpec:
     """One measurement engine.
 
-    ``max_num_seqs`` is the largest batch among the engine's cases, so it
-    never exceeds ``chunk_budget`` as vLLM requires.
+    Legacy engines use the largest case batch. Native-default engines retain
+    the requested scheduler limit even when the measured case has one request.
     """
 
     engine_index: int
@@ -134,8 +136,15 @@ class DsaMeasurementLimits:
     decode_measured_steps: int
     prefill_warmup_repeats: int
     prefill_measured_repeats: int
+    engine_policy: Literal["eager_chunked", "native_defaults"] = (
+        ENGINE_POLICY_EAGER_CHUNKED
+    )
 
     def __post_init__(self) -> None:
+        if self.engine_policy not in (
+            ENGINE_POLICY_EAGER_CHUNKED, ENGINE_POLICY_NATIVE_DEFAULTS
+        ):
+            raise ValueError(f"Unknown DSA engine_policy {self.engine_policy!r}")
         for name in (
             "max_context_len",
             "max_kv_tokens_per_lane",
@@ -161,7 +170,15 @@ class DsaMeasurementLimits:
                 f"max_num_seqs={self.max_num_seqs} decode tokens in one step, got "
                 f"{max(self.chunk_budgets)}"
             )
-        if max(self.chunk_budgets) >= self.max_context_len:
+        if self.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS:
+            if len(self.chunk_budgets) != 1:
+                raise ValueError("native_defaults requires exactly one token budget")
+            if self.chunk_budgets[0] < self.max_context_len:
+                raise ValueError(
+                    "native_defaults disables chunking and requires token budget "
+                    f">= max_context_len={self.max_context_len}"
+                )
+        elif max(self.chunk_budgets) >= self.max_context_len:
             raise ValueError(
                 f"chunk budgets must stay below max_context_len={self.max_context_len}"
             )
@@ -198,6 +215,11 @@ class DsaProfilePlan:
     def to_json(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["hf_overrides"] = dict(self.hf_overrides)
+        if self.limits.engine_policy == ENGINE_POLICY_EAGER_CHUNKED:
+            # V4 and FULL callers inherit this serializer and frozen legacy plans.
+            payload["limits"].pop("engine_policy")
+        else:
+            payload["timing_collection"] = "pending_native_scope_instrumentation"
         return payload
 
     def summary(self) -> dict[str, Any]:
@@ -214,7 +236,7 @@ class DsaProfilePlan:
                 }
             )
         layers = self.shape.layers
-        return {
+        summary = {
             "schema_version": self.schema_version,
             "model_name": self.shape.model_name,
             "heads_per_rank": self.shape.heads_per_rank,
@@ -230,6 +252,10 @@ class DsaProfilePlan:
             "engines": per_engine,
             "hf_overrides": dict(self.hf_overrides),
         }
+        if self.limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS:
+            summary["engine_policy"] = self.limits.engine_policy
+            summary["timing_collection"] = "pending_native_scope_instrumentation"
+        return summary
 
 
 def _require_positive_int(name: str, value: Any) -> None:
@@ -556,41 +582,63 @@ def _build_cached_prefill_cases(
     return cases
 
 
-def _build_query_one_cases(
-    limits: DsaMeasurementLimits, max_context: int,
+def _build_serving_cases(
+    limits: DsaMeasurementLimits, max_context: int | None,
+    min_context: int, prefill_prompt_len: int | None,
 ) -> tuple[tuple[DsaEngineSpec, ...], tuple[DsaCase, ...]]:
-    """Measure regular serving queries at every context from zero to the maximum.
+    """Exact ordinary prefill and inclusive cached-context q1 fixtures.
 
-    The first prompt writes a real KV slot at context zero. A second request
-    starts from the same one-token prompt and records every decode step,
-    without skipping small contexts as warmup. Neither request is a DP dummy:
-    native ``_dummy_run`` uses invalid slot mappings and graph-padded metadata.
+    A positive q1 window seeds a prompt at its lower endpoint; its prefill
+    sample is unmeasured, then every decode in the window is recorded. The
+    local seed does not reproduce the request phase of a remote-prefill tail.
+    The legacy zero endpoint retains its separate real one-token prefill.
     """
-    if type(max_context) is not int or max_context < 0:
-        raise ValueError("query_one_context_max must be a non-negative int")
-    # One prompt token plus the requested output tokens, including the output
-    # sampled by prefill, must fit the native request's length/capacity checks.
-    request_len = max_context + 2
-    if request_len > min(limits.max_context_len, limits.max_kv_tokens_per_lane):
-        raise ValueError(
-            f"query_one_context_max={max_context} requires capacity for "
-            f"{request_len} prompt-plus-output tokens"
-        )
+    capacity = min(limits.max_context_len, limits.max_kv_tokens_per_lane)
+    if prefill_prompt_len is not None:
+        _require_positive_int("prefill_prompt_len", prefill_prompt_len)
+        if prefill_prompt_len + 1 > capacity:
+            raise ValueError("prefill_prompt_len plus one output exceeds request capacity")
+    if max_context is not None:
+        if type(max_context) is not int or max_context < 0:
+            raise ValueError("query_one_context_max must be a non-negative int")
+        if min_context > max_context:
+            raise ValueError("query_one_context_min must not exceed query_one_context_max")
+        # The seed prefill samples one setup output before the measured decodes.
+        request_len = max_context + 2
+        if request_len > capacity:
+            raise ValueError(
+                f"query_one_context_max={max_context} requires capacity for "
+                f"{request_len} prompt-plus-output tokens"
+            )
+    elif prefill_prompt_len is None:
+        raise ValueError("native_defaults requires an explicit prefill or q1 window")
     engine = DsaEngineSpec(
-        engine_index=0, chunk_budget=min(limits.chunk_budgets), max_num_seqs=1,
+        engine_index=0, chunk_budget=min(limits.chunk_budgets),
+        max_num_seqs=(limits.max_num_seqs
+                      if limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS else 1),
         max_model_len=limits.max_context_len, block_size=limits.block_size,
     )
-    cases = [DsaCase(
-        case_id="e0-prefill-p1", engine_index=0, phase=PHASE_PREFILL,
-        batch_size=1, prompt_len=1, max_tokens=1,
-        warmup=limits.prefill_warmup_repeats, measured=limits.prefill_measured_repeats,
-        estimated_steps=limits.prefill_warmup_repeats + limits.prefill_measured_repeats,
-    )]
-    if max_context:
+    prompts = set() if prefill_prompt_len is None else {prefill_prompt_len}
+    if max_context is not None and min_context == 0:
+        prompts.add(1)
+    cases = []
+    for prompt in sorted(prompts):
         cases.append(DsaCase(
-            case_id=f"e0-decode-q1-c1-{max_context}", engine_index=0, phase=PHASE_DECODE,
-            batch_size=1, prompt_len=1, max_tokens=max_context + 1,
-            warmup=0, measured=max_context, estimated_steps=max_context + 1,
+            case_id=f"e0-prefill-p{prompt}", engine_index=0, phase=PHASE_PREFILL,
+            batch_size=1, prompt_len=prompt, max_tokens=1,
+            warmup=limits.prefill_warmup_repeats, measured=limits.prefill_measured_repeats,
+            estimated_steps=(limits.prefill_warmup_repeats + limits.prefill_measured_repeats)
+            * _prefill_steps(prompt, engine.chunk_budget),
+        ))
+    lower = max(1, min_context)
+    if max_context is not None and max_context >= lower:
+        count = max_context - lower + 1
+        cases.append(DsaCase(
+            case_id=f"e0-decode-q1-c{lower}-{max_context}",
+            engine_index=0, phase=PHASE_DECODE,
+            batch_size=1, prompt_len=lower, max_tokens=count + 1,
+            warmup=0, measured=count,
+            estimated_steps=_prefill_steps(lower, engine.chunk_budget) + count,
         ))
     return (engine,), tuple(cases)
 
@@ -603,7 +651,13 @@ def build_dsa_profile_plan(
     num_layers: int,
     limits: DsaMeasurementLimits,
     query_one_context_max: int | None = None,
+    query_one_context_min: int = 0,
+    prefill_prompt_len: int | None = None,
 ) -> DsaProfilePlan:
+    if type(query_one_context_min) is not int or query_one_context_min < 0:
+        raise ValueError("query_one_context_min must be a non-negative int")
+    if query_one_context_max is None and query_one_context_min:
+        raise ValueError("query_one_context_min requires query_one_context_max")
     model_config = ModelConfig.from_model_name(model_name)
     if not model_config.use_mla:
         raise ValueError(f"{model_name} does not use MLA attention")
@@ -644,8 +698,11 @@ def build_dsa_profile_plan(
         index_head_dim=_required_config_int(hf_config, "index_head_dim"),
         layers=layers,
     )
-    if query_one_context_max is not None:
-        engines, cases = _build_query_one_cases(limits, query_one_context_max)
+    if (query_one_context_max is not None or prefill_prompt_len is not None
+            or limits.engine_policy == ENGINE_POLICY_NATIVE_DEFAULTS):
+        engines, cases = _build_serving_cases(
+            limits, query_one_context_max, query_one_context_min, prefill_prompt_len
+        )
         return DsaProfilePlan(
             schema_version=PLAN_SCHEMA_VERSION, shape=shape, limits=limits,
             hf_overrides=build_reduced_hf_overrides(hf_config, layers, heads_per_rank),
@@ -714,6 +771,16 @@ def build_dsa_profile_plan(
     )
 
 
+def require_scope_timing(engine_policy: str) -> None:
+    """Keep unqualified native-default collection and row admission explicit."""
+    if engine_policy != ENGINE_POLICY_EAGER_CHUNKED:
+        raise ValueError(
+            f"DSA engine_policy={engine_policy!r} cannot collect or aggregate timings: "
+            "native compiled/graph per-scope instrumentation is not qualified. "
+            "native_defaults supports planning and engine configuration only."
+        )
+
+
 def load_hf_config(path: str | Path) -> dict[str, Any]:
     with open(path, "r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -721,6 +788,8 @@ def load_hf_config(path: str | Path) -> dict[str, Any]:
 
 __all__ = [
     "DSA_SCOPES",
+    "ENGINE_POLICY_EAGER_CHUNKED",
+    "ENGINE_POLICY_NATIVE_DEFAULTS",
     "DsaCase",
     "DsaEngineSpec",
     "DsaLayer",
@@ -738,5 +807,6 @@ __all__ = [
     "build_dsa_profile_plan",
     "build_reduced_hf_overrides",
     "load_hf_config",
+    "require_scope_timing",
     "resolve_reduced_layers",
 ]

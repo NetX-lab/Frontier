@@ -29,8 +29,10 @@ from frontier.attention.dsa_features import DSA_ROW_SCHEMA_VERSION
 from frontier.config.precision_type import PrecisionType
 from frontier.profiling.attention.dsa_plan import (
     DSA_SCOPES,
+    ENGINE_POLICY_EAGER_CHUNKED,
     MLA_SCOPE,
     DsaProfilePlan,
+    require_scope_timing,
 )
 from frontier.profiling.common.runtime_identity import (
     RuntimeIdentity,
@@ -241,6 +243,7 @@ def index_records(
     for record in records:
         kind = record["kind"]
         if kind == "engine":
+            require_scope_timing(record.get("engine_policy", ENGINE_POLICY_EAGER_CHUNKED))
             if record["engine_index"] in engines:
                 raise ValueError(f"Engine {record['engine_index']} recorded twice")
             engines[record["engine_index"]] = record
@@ -289,6 +292,7 @@ def build_dsa_rows(
 ) -> dict[str, list[dict[str, Any]]]:
     """Group raw records into rows, keyed by measurement type."""
 
+    require_scope_timing(plan.limits.engine_policy)
     engines, steps, calls = index_records(records)
     groups: dict[tuple, _RowAccumulator] = {}
     for key, step in sorted(steps.items()):
