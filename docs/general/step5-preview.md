@@ -6,7 +6,7 @@ The shared implementation serves the GLM-5.3, DeepSeek-V4-Flash and Step-5-Previ
 
 ## Scope and reference
 
-The target is full text-backbone online simulation on 64 H800 GPUs with sequential prefill/decode disaggregation, PP1, chunked prefill and native decode CUDA Graph replay. The primary PD topology is P32/D32 with TP8/DP4/EP32. Actual H200 qualification and comparisons are also required before overall completion. Testing uses H800 first, with no GPU-count limit. When H800 quota is insufficient, H200 may run the same work with at most 70 non-preemptible GPUs; H200 results do not replace the required H800 acceptance.
+The target is full text-backbone online simulation on 64 H800 GPUs with sequential prefill/decode disaggregation, PP1, chunked prefill and native decode CUDA Graph replay. The primary PD topology is P32/D32 with TP8/DP4/EP32. Actual H200 qualification and comparisons are also required before overall completion. Testing uses H800 first, with no GPU-count limit. When H800 quota is insufficient, H200 may run the same work with at most 70 non-preemptible GPUs; H200 results do not replace the required H800 acceptance. Thinking Mode is off in every run of this work; Step structural execution rejects it with an explicit `ValueError`.
 
 The Step native reference is the official `vllm/vllm-openai:step-5-preview` image pinned to linux/amd64 manifest `sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20`. The observed installed package is `0.1.dev22912+g8224bb82f`, with retained file identities; its full build revision is unknown. This reference is separate from the GLM/DeepSeek vLLM 0.28.0 reference. Frontier itself remains CPU-only and does not import native vLLM or Torch to simulate requests.
 
@@ -50,7 +50,9 @@ Prior failed generations, zero-byte traces, original errors and over-budget or u
 
 1. The ticket 06 simulation scope is closed from retained native runs. The complete per-rank precision and physical census runs only when an E2E error needs it.
 2. In parallel: rerun native P/D R1 on H800 and continue ticket 08 with content and lifecycle checks; build the Step attention profiler and run the full operator grids on H800 (ticket 10); measure TP8 and DP4 collectives on the Step image (ticket 12). The Step structural PD path with DP4 and EP32 is done with dummy timing.
-3. Collect clean native E2E measurements on the target P32/D32 topology (ticket 09), H800 first. Adapt the existing metric normalizer and gate without changing metric meanings.
+3. Collect clean native E2E measurements on the target P32/D32 topology (ticket 09), H800 first; the three or more clean repetitions may share one job and one engine startup. Adapt the existing metric normalizer and gate without changing metric meanings.
+
+The native P/D run showed two differences from Frontier's PD timeline. Native D, not P, produces the first output token after reading the KV cache, and native D recomputes the last prompt tokens (25 of 4105) that P does not compute. Frontier's `ttft` ends at P prefill completion, and Frontier D computes one token. The error contribution of each difference is measured first. A difference that changes the mean client TTFT and mean request E2E by at most one percentage point in every compared cell, without changing a verdict, is recorded and not fixed for now; a larger difference is aligned within the existing transfer, decode and metric code.
 4. After the shared GLM full-path milestone, train the Step predictors, build the bundle and compare with native E2E. Localize and explain errors before any calibration.
 5. Validate with independent holdouts, required H200 work and same-source legacy and three-model regression.
 
