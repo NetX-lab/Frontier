@@ -10,6 +10,20 @@ also the only Python files under `frontier/` above 2,000 lines on `main` at
 
 ## Inventory
 
+D5 T1 (2026-10-20) extends the existing request metric exporter in
+`frontier/metrics/metrics_store.py` with PD-only `client_ttft`. The CSV is in
+milliseconds, from request arrival to `first_decode_token_completed_at` (the
+first D output); optional ground-truth rows expose `client_ttft_s` and
+`client_ttft_ms`. Historical `ttft`, `ttft_statistics` and trace `ttft_ms` remain
+arrival to P-prefill completion for existing comparison/gate consumers. No
+proxy/HTTP delivery or host overhead is invented; this is the simulator's
+client endpoint, not evidence of native client accuracy. Non-PD exports are
+unchanged. The existing request distributions own its storage and unit
+conversion; moving this field alone would introduce a second metrics owner.
+The planned metrics-ledger split below remains independent. `request.py` stays
+below 2,000 lines by replacing the old TTFT docstring rather than growing its
+lifecycle logic. There is no execution, token-accounting or event-order change.
+
 "Before" is PR 42's head (`17f8088`). "After" is PR 44 with the review fixes.
 
 | Module | Before | After | What PR 44 adds |
