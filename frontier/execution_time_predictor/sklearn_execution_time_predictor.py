@@ -944,6 +944,14 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
     def _select_measurement_type_for_batch(self, batch: Batch) -> MeasurementType:
         event_measurement_type = self._event_measurement_type_for_replica()
+        from frontier.entities import DummyForwardBatch
+
+        if isinstance(batch, DummyForwardBatch):
+            return (
+                MeasurementType.KERNEL_ONLY
+                if batch.get_decode_cuda_graph_runtime_mode() != "NONE"
+                else event_measurement_type
+            )
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:
                 if getattr(batch, "num_prefill_tokens", 0) > 0:
@@ -7678,7 +7686,23 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         if attention_family is DSA_ATTENTION_FAMILY:
             self._dsa_predictor = self._predictions["dsa_attention"]
-            return self._dsa_predictor.predict_attention_time(self, batch, layer_id)
+            attention_time = self._dsa_predictor.predict_attention_time(self, batch, layer_id)
+            from frontier.entities import DummyForwardBatch
+
+            if (isinstance(batch, DummyForwardBatch)
+                    and batch.get_decode_cuda_graph_runtime_mode() == "FULL"):
+                # gpu_model_runner._dummy_run builds FULL attention metadata with
+                # one actual uniform-decode request and seq_len=1, not the real
+                # peer's KV context or the padded projection width.
+                from frontier.attention.dsa_features import build_dsa_features
+
+                features = build_dsa_features(batch.num_tokens, [0], self._model_config.index_topk)
+                spec = bind_layer_attention(self._model_config, layer_id)
+                variant = "full_index" if spec.index_producer_layer_id == layer_id else "shared_index"
+                attention_time.operator_times = self._dsa_predictor.operator_times(
+                    features, variant, record_kernel_count=self._record_kernel_count,
+                )
+            return attention_time
         if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:
             return self._predict_mla_attention_layer_time(
                 batch=batch,

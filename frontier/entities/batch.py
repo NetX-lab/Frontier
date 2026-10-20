@@ -1332,10 +1332,11 @@ class DummyForwardBatch(Batch):
     """One pipeline stage's part of vLLM's attention-DP dummy pass.
 
     A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
-    ``_dummy_run(1)`` on every pipeline stage: one request slot with one token
-    and no attention metadata. Attention kernels and KV-cache writes are
-    skipped, while projections, norms and every MoE layer with its EP
-    collectives run. The forward carries no request.
+    ``_dummy_run(1, uniform_decode=True)`` on every pipeline stage. Eager and
+    piecewise execution have no attention metadata; FULL replay builds metadata
+    for one actual request slot with seq_len=1. Graph forwards pad projections
+    and MoE input to the DP-wide capture width. Dummy slot mappings are -1, so
+    no real KV page is written. The forward carries no serving request.
     """
 
     def __init__(

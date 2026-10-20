@@ -14,6 +14,7 @@ from frontier.config import global_vars
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
+    DummyForwardBatch,
     Request,
     SpecDecodeBatchMetadata,
 )
@@ -67,6 +68,9 @@ class IterationSchedulingPolicy:
             for request, num_tokens in zip(batch.requests, batch.num_tokens)
             if request.is_decoding
         ]
+        if isinstance(batch, DummyForwardBatch):
+            # gpu_worker.execute_dummy_batch calls _dummy_run(1, uniform_decode=True).
+            decode_query_lens = list(batch.num_tokens)
         original_decode_batch_size = len(decode_query_lens)
 
         # Align with vLLM's uniform_decode_query_len semantics.
@@ -83,7 +87,7 @@ class IterationSchedulingPolicy:
 
         is_uniform_decode_batch = (
             bool(decode_query_lens)
-            and len(decode_query_lens) == len(batch.requests)
+            and len(decode_query_lens) == batch.size
             and all(
                 query_len == uniform_decode_query_len
                 for query_len in decode_query_lens

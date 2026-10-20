@@ -649,6 +649,9 @@ class VLLMv1EngineReplicaScheduler(
             dummy_forward = DummyForwardBatch(
                 self._replica_id, stage_id, self._batch_creation_counter
             )
+            dummy_forward.decode_cuda_graph_metadata = (
+                self._build_decode_cuda_graph_metadata(dummy_forward)
+            )
             self._assign_lane_identity(dummy_forward, self._batch_creation_counter)
             dummy_forwards.append(dummy_forward)
         self._batch_creation_counter += 1
