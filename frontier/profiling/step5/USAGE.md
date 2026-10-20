@@ -32,16 +32,20 @@ heterogeneous-prefix and mixed prefill/decode batches are not implemented.
 
 ```bash
 python -m frontier.profiling.step5.job \
-  --stage /data/ycfeng/tmp/step5_attention_smoke_stage \
+  --stage /data/ycfeng/tmp/step5_attention_20261020/smoke_stage03 \
   --dependency-site /path/to/cpu-verified/cp312/dependency-site \
-  --run-id attention_smoke_20261020_01
+  --run-id attention_smoke_20261020_02
 ```
 
 `manifest.json` records the locked image digest, one-H800/codesign resources,
 local NFS source mount, personal cloud root, every staged source SHA-256, worker
-command and exact submission command. `submit.sh` only executes that existing
-StepMind launcher when a human/parent explicitly runs it with personal auth and
-`STEPMIND_BACKEND=rjob`. Keep that launcher alive through terminal job status.
+command and exact submission command. The parent must run `submit_with_env.sh`,
+which sources `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`, checks that
+personal credentials are set and replaces itself with the existing launcher
+path in `submit.sh`. Running `submit.sh` alone requires an already initialized
+credential environment. Keep the launcher alive through terminal job status;
+do not close it when the job is merely queued. Neither staging nor verification
+executes the real submission wrapper.
 The stage includes CPU-prepared pandas, dateutil, pytz, tzdata, PyYAML, tqdm and
 six. The worker must import them successfully before entering the existing
 wrapper, so its normal path performs no dependency installation. The wrapper

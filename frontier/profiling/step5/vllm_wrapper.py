@@ -73,13 +73,14 @@ class VllmStep5AttentionWrapper:
                 max_model_len=max_model_len,
             ).create_engine_config()
             self.native = outer.with_hf_config(outer.model_config.hf_text_config)
+            self._cleanup.enter_context(set_current_vllm_config(self.native))
             configure_quant_config(self.native.quant_config, Step5ForCausalLM)
             if torch.distributed.is_initialized():
                 raise RuntimeError("The isolated Step producer must own its process groups")
             parallel.init_distributed_environment(
                 world_size=1, rank=0, local_rank=0, backend="nccl",
                 distributed_init_method=f"tcp://127.0.0.1:{get_open_port()}")
-            self._cleanup.callback(torch.distributed.destroy_process_group)
+            self._cleanup.callback(parallel.destroy_distributed_environment)
             parallel.initialize_model_parallel(1, 1)
             self._cleanup.callback(parallel.destroy_model_parallel)
             import vllm.models.step5.nvidia.model as step_model
@@ -93,21 +94,20 @@ class VllmStep5AttentionWrapper:
                     owner, "get_tensor_model_parallel_world_size", lambda: self.tp))
                 self._cleanup.enter_context(patch.object(
                     owner, "get_tensor_model_parallel_rank", lambda: 0))
-            with set_current_vllm_config(self.native):
-                init_workspace_manager(torch.device("cuda"))
-                original_dtype = torch.get_default_dtype()
-                try:
-                    torch.set_default_dtype(torch.bfloat16)
-                    with torch.device("cuda"), torch.no_grad():
-                        self.layer = self._construct_layer()
-                        self.layer.o_proj.reduce_results = False
-                        self._initialize_weights()
-                        self._bind_cache()
-                finally:
-                    torch.set_default_dtype(original_dtype)
-                self.builder = self.layer.attn.attn_backend.get_builder_cls()(
-                    kv_cache_spec=self.cache_spec, layer_names=[self.layer.attn.layer_name],
-                    vllm_config=self.native, device=torch.device("cuda"))
+            init_workspace_manager(torch.device("cuda"))
+            original_dtype = torch.get_default_dtype()
+            try:
+                torch.set_default_dtype(torch.bfloat16)
+                with torch.device("cuda"), torch.no_grad():
+                    self.layer = self._construct_layer()
+                    self.layer.o_proj.reduce_results = False
+                    self._initialize_weights()
+                    self._bind_cache()
+            finally:
+                torch.set_default_dtype(original_dtype)
+            self.builder = self.layer.attn.attn_backend.get_builder_cls()(
+                kv_cache_spec=self.cache_spec, layer_names=[self.layer.attn.layer_name],
+                vllm_config=self.native, device=torch.device("cuda"))
             self.layer.eval().requires_grad_(False)
             self._check_shapes()
             self.scopes = NativeScopes(torch)

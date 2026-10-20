@@ -15,6 +15,7 @@ IMAGE = ("a.z01.normandyfunc.com/docker-public/vllm/vllm-openai"
          "@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20")
 CLOUD_MOUNT = "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
 CLOUD_ROOT = Path("/mnt/codesign-exp/ycfeng/frontier/step5_profiling")
+STEPMIND_ENV = Path("/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh")
 
 
 def describe_smoke(stage, run_id, *, gpus=1):
@@ -45,6 +46,8 @@ def describe_smoke(stage, run_id, *, gpus=1):
             "mounts": [f"local_nfs:{stage}:{stage}", CLOUD_MOUNT],
             "source_mount": str(stage), "cloud_output": str(output), "expected_rows": 16,
             "timeout_seconds": 3600, "preemptible": False,
+            "credential_env": str(STEPMIND_ENV),
+            "submit_wrapper_command": f"bash {q(str(stage / 'submit_with_env.sh'))}",
             "worker_command": worker,
             "submission_command": (
                 "/data/ycfeng/tmp/stepmind-env/bin/python -u -B "
@@ -67,12 +70,21 @@ def stage_smoke(stage, run_id, *, dependency_site, gpus=1):
     scripts.mkdir(parents=True)
     for name in ("submit_profiling_job.py", "run_on_worker.sh"):
         shutil.copy2(REPO_ROOT / "tests/integration/step5_profiling" / name, scripts / name)
+    (stage / "submit.sh").write_text("#!/usr/bin/env bash\nset -euo pipefail\n" +
+                                    manifest["submission_command"] + "\n")
+    (stage / "submit_with_env.sh").write_text("\n".join([
+        "#!/usr/bin/env bash", "set -euo pipefail", "set +x",
+        f"source {shlex.quote(str(STEPMIND_ENV))}",
+        ': "${BRAINPP_ACCESS_KEY:?personal BRAINPP_ACCESS_KEY is not set}"',
+        ': "${BRAINPP_SECRET_KEY:?personal BRAINPP_SECRET_KEY is not set}"',
+        "export STEPMIND_BACKEND=rjob", "export TMPDIR=/data/ycfeng/tmp",
+        'export PYTHONPATH="/data/ycfeng/steptron${PYTHONPATH:+:$PYTHONPATH}"',
+        f"exec bash {shlex.quote(str(stage / 'submit.sh'))}", "",
+    ]))
     manifest["sha256"] = {
         str(path.relative_to(stage)): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in sorted(stage.rglob("*")) if path.is_file()}
     (stage / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    (stage / "submit.sh").write_text("#!/usr/bin/env bash\nset -euo pipefail\n" +
-                                    manifest["submission_command"] + "\n")
     return manifest
 
 
