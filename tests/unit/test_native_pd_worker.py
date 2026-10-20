@@ -13,7 +13,7 @@ import pytest
 from tests.comparison.calibration import native_pd_worker
 
 
-def exercise(worker, temporary, case):
+def exercise(worker, temporary, case, overrides=None):
     directory = Path(tempfile.mkdtemp(prefix=case + "_", dir=temporary))
     root = directory / "output"
     model = directory / "model"
@@ -102,6 +102,9 @@ def exercise(worker, temporary, case):
         "peer_wait_seconds": 10, "startup_timeout_s": 10, "replay_timeout_s": 10,
         "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
     }
+    if overrides is not None:
+        config = {key: value for key, value in (config | overrides(directory)).items()
+                  if value is not None}
     original_relative = Path.is_relative_to
 
     def is_relative_to(path, other):
@@ -141,6 +144,7 @@ def exercise(worker, temporary, case):
         "native_server_stop_signal": result.get("server_stop", {}).get("signal"),
         "failed_sentinel": (root / "nodes/host0/failed.json").exists(),
         "observation_errors": result["observation_errors"],
+        "replay_command": result.get("replay_command"), "directory": directory,
     }
 
 

@@ -1,10 +1,18 @@
-"""Coordinate an original-model native P/D run using the existing replay harness."""
+"""Coordinate an original-model native P/D run using the existing replay harness.
+
+Optional config keys: `mode` (default `light`) selects the serving mode, `serve_observers`
+(absent for clean native runs) holds the per-role recorder inputs, `replay_script` (default
+`pd_replay.py` in `harness_dir`) is the client driver started on the prefill head with the
+pd_replay arguments, and `evidence_dir` names a task-local directory that receives a copy of
+each node's small records and the replay outputs after the run.
+"""
 
 import argparse
 import importlib.metadata
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 import sys
@@ -64,6 +72,8 @@ def run(config):
     root = Path(config['output_dir'])
     if not root.resolve().is_relative_to('/mnt/codesign-exp/ycfeng'):
         raise ValueError('P/D output must remain inside the personal cloud root')
+    mode = config.get('mode', 'light')
+    observers = config.get('serve_observers')
     host = socket.gethostname()
     node = root / 'nodes' / host
     node.mkdir(parents=True, exist_ok=False)
@@ -100,7 +110,7 @@ def run(config):
             time.sleep(1)
 
     try:
-        scratch = Path(tempfile.mkdtemp(prefix='glm_full_pd_'))
+        scratch = Path(tempfile.mkdtemp(prefix='native_pd_'))
         for name, child in config['cache_environment'].items():
             os.environ[name] = str(scratch / child)
         model = Path(config['model_dir'])
@@ -135,8 +145,8 @@ def run(config):
         except Exception:
             result['observation_errors'].append(traceback.format_exc())
         selected = instance_devices(dict(os.environ), engine=plan['engine'], role=role)
-        observer = config['serve_observers'][role]
-        env, changed = instance_env('light', plan['engine'], node, dict(os.environ),
+        observer = None if observers is None else observers[role]
+        env, changed = instance_env(mode, plan['engine'], node, dict(os.environ),
                                     selected[role], observer=observer, role=role)
         port = config['http_ports'][role]
         command = server_command(plan['engine'], model, port) + [
@@ -161,14 +171,16 @@ def run(config):
         if plan['position'] == 0:
             await_condition(lambda: len(list(root.glob('nodes/*/server_ready.json'))) == 2,
                             config['startup_timeout_s'], native_required=True)
-            replay_command = [sys.executable, str(Path(config['harness_dir']) / 'pd_replay.py'),
+            replay_script = config.get('replay_script', str(Path(config['harness_dir']) / 'pd_replay.py'))
+            replay_command = [sys.executable, replay_script,
                 '--engine-config', str(stage / 'engine.json'), '--trace-dir', str(stage / 'trace'),
-                '--output-dir', str(root / 'replay'), '--mode', 'light',
-                '--observer-config', str(stage / 'serve_observers.json'), '--model-dir', str(model),
+                '--output-dir', str(root / 'replay'), '--mode', mode, '--model-dir', str(model),
                 '--prefill-url', plan['urls']['prefill'], '--decode-url', plan['urls']['decode'],
                 '--proxy-port', str(config['proxy_port']),
                 '--startup-timeout-s', str(config['startup_timeout_s']),
                 '--drain-s', str(config['drain_seconds'])]
+            if observers is not None:
+                replay_command += ['--observer-config', str(stage / 'serve_observers.json')]
             result['replay_command'] = replay_command
             record('replay')
             with (node / 'replay.log').open('w') as log:
@@ -211,6 +223,17 @@ def run(config):
             result['observation_errors'].append(traceback.format_exc())
         result['workload_returncode'] = exit_code
         record('finished')
+        if 'evidence_dir' in config:
+            try:
+                evidence = Path(config['evidence_dir'])
+                shutil.copytree(node, evidence / 'nodes' / host, dirs_exist_ok=True)
+                if plan is not None and plan['position'] == 0 and (root / 'replay').is_dir():
+                    shutil.copytree(root / 'replay', evidence / 'replay', dirs_exist_ok=True)
+            except Exception:
+                error = traceback.format_exc()
+                result['observation_errors'].append(error)
+                print('NATIVE_PD_OBSERVATION_ERROR', error, flush=True)
+                record('finished')
     return exit_code
 
 
