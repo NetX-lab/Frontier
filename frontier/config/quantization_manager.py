@@ -71,11 +71,15 @@ class QuantizationManager:
     DEFAULT_CONFIG_DIR = Path("data/config/op_quantization")
     DEFAULT_CONFIG_FILE = "default.json"
     REGISTRY_FILE = "supported_operations.json"
+    # vLLM builds shared-expert projections with the model's quant_config, so
+    # they follow the checkpoint quantization like the dense MLP projections.
     MODEL_CONFIG_QUANT_OPS = {
         "attn_pre_proj",
         "attn_post_proj",
         "mlp_up_proj",
         "mlp_down_proj",
+        "share_expert_up_proj",
+        "share_expert_down_proj",
         "moe_grouped_gemm",
     }
     _GDN_OPERATION_NAMES = frozenset(
