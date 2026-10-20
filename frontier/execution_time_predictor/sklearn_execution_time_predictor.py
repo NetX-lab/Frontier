@@ -6276,8 +6276,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         num_devices = operator.num_devices(ctx)
         comm_domain = operator.resolve_comm_domain(ctx)
+        collective_alias = operator.resolve_collective_alias(ctx)
+        from frontier.operators.sequence_parallel_moe import validate_combine_coverage
 
-        if operator.collective_alias == "allreduce":
+        validate_combine_coverage(operator, ctx, self._cc_backend, data_size_bytes)
+
+        if collective_alias == "allreduce":
             if num_devices is None:
                 raise ValueError(
                     f"CommOperator {operator.name} requires num_devices for allreduce"
@@ -6304,7 +6308,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 )
             return predicted_ms
 
-        if operator.collective_alias == "allgather":
+        if collective_alias == "allgather":
             if num_devices is None:
                 raise ValueError(
                     f"CommOperator {operator.name} requires num_devices for allgather"
@@ -6316,7 +6320,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 comm_domain=comm_domain,
             )
 
-        if operator.collective_alias == "reduce_scatter":
+        if collective_alias == "reduce_scatter":
             if num_devices is None:
                 raise ValueError(
                     f"CommOperator {operator.name} requires num_devices for reduce_scatter"
@@ -6328,7 +6332,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 comm_domain=comm_domain,
             )
 
-        if operator.collective_alias == "alltoall":
+        if collective_alias == "alltoall":
             if num_devices is None:
                 raise ValueError(
                     f"CommOperator {operator.name} requires num_devices for alltoall"
@@ -6340,7 +6344,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 comm_domain=comm_domain,
             )
 
-        if operator.collective_alias == "send_recv":
+        if collective_alias == "send_recv":
             return self.predict_p2p_time(
                 data_size_bytes=data_size_bytes,
                 cluster_type=ctx.cluster_type,
@@ -6349,7 +6353,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         raise ValueError(
             f"Unsupported communication collective alias for {operator.name}: "
-            f"{operator.collective_alias}"
+            f"{collective_alias}"
         )
 
     # Expert-parallel communication timing is modeled through COMM family operators.

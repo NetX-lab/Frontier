@@ -10,6 +10,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -222,6 +223,17 @@ def validate_artifacts(run_dir: Path, case: str) -> dict:
             "stage component ledgers must be populated")
     for row in stage_rows:
         ledger = row["execution_time"]["component_ledger_ms"]
+        for name, calls in {
+            "attention_all_reduce_time": 3,
+            "sp_moe_attention_reduce_scatter": 75,
+            "sp_moe_layer_input_allgather": 74,
+            "sp_moe_final_allgather": 1,
+            "embedding_allreduce": 1,
+            "logits_allgather": 1,
+        }.items():
+            expected = calls * config["cluster_config"]["execution_time_predictor_config"]["dummy_execution_time_ms"]
+            require(name in ledger and math.isclose(ledger[name], expected),
+                    f"source stage must charge {calls} {name} calls, not legacy MoE all-reduce")
         require(ledger["attn_dsa_indexer"] == 0.21,
                 "stage must contain 21 full-index DSA layers")
         require(ledger["attn_dsa_mla"] == 0.78,

@@ -1408,6 +1408,8 @@ class EPBatchGroup(Batch):
         # expert tokens; predictor lookups must not collapse to a zero-token
         # stage in that case.
         self._moe_pre_routing_effective_total_tokens: Optional[int] = None
+        # C2's immutable result identifies all source lanes, independent of routing.
+        self.moe_sequence_parallel_token_widths = None
         self._decode_ffn_execution_time_recorded_stage_ids: set[int] = set()
         self.activation_bytes: int = 0
     

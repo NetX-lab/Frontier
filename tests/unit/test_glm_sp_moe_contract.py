@@ -177,6 +177,8 @@ def test_glm_ep_wave_uses_local_and_gathered_rows():
     def predict(batch, *args, **kwargs):
         local = 2 if batch.ep_id // 8 == 3 else 1
         assert batch.moe_pre_routing_effective_total_tokens == local
+        assert batch.moe_sequence_parallel_token_widths.local_tokens == (1, 1, 1, 2)
+        assert batch.moe_sequence_parallel_token_widths.gathered_tokens == 40
         assert predictor._get_gating_linear_time(batch) == local
         assert predictor._get_gating_routing_topk_time(batch) == local
         assert predictor._get_mlp_norm_layer_act_execution_time(batch) == local

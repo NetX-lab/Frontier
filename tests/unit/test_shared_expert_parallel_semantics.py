@@ -193,6 +193,7 @@ def test_comm_prediction_uses_resolved_shared_expert_domain() -> None:
     predictor = _ConcreteExecutionTimePredictor.__new__(
         _ConcreteExecutionTimePredictor
     )
+    predictor._cc_backend = None
     predictor.predict_allreduce_time = lambda **kwargs: captured.update(kwargs) or 1.5
     predictor._strip_collective_sim_allreduce_launch_overhead_if_needed = (
         lambda **kwargs: float(kwargs["predicted_ms"])

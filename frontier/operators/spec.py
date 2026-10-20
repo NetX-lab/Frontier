@@ -174,6 +174,7 @@ class CommOperatorSpec(OperatorSpec):
     """Declarative contract for one collective communication operator."""
 
     collective_alias: str = ""
+    collective_alias_builder: CommStringBuilder | None = None
     comm_group: str = ""
     comm_group_builder: CommStringBuilder | None = None
     payload_builder: CommPayloadBuilder | None = None
@@ -186,16 +187,16 @@ class CommOperatorSpec(OperatorSpec):
     kernel_count: int = 1
 
     _operator_label: ClassVar[str] = "CommOperator"
+    _valid_collectives: ClassVar[frozenset[str]] = frozenset({
+        "allreduce", "allgather", "reduce_scatter", "alltoall", "send_recv",
+    })
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        valid_collectives = {
-            "allreduce", "allgather", "reduce_scatter", "alltoall", "send_recv",
-        }
-        if self.collective_alias not in valid_collectives:
+        if self.collective_alias not in self._valid_collectives:
             raise ValueError(
                 f"CommOperator {self.name} collective_alias must be one of "
-                f"{sorted(valid_collectives)}, got {self.collective_alias!r}"
+                f"{sorted(self._valid_collectives)}, got {self.collective_alias!r}"
             )
         if not self.comm_group:
             raise ValueError(f"CommOperator {self.name} comm_group must be non-empty")
@@ -246,6 +247,13 @@ class CommOperatorSpec(OperatorSpec):
             raise ValueError(
                 f"CommOperator {self.name} produced an invalid comm_group: {value!r}"
             )
+        return value
+
+    def resolve_collective_alias(self, ctx: CommPayloadContext) -> str:
+        value = (self.collective_alias_builder(ctx)
+                 if self.collective_alias_builder is not None else self.collective_alias)
+        if value not in self._valid_collectives:
+            raise ValueError(f"CommOperator {self.name} produced invalid collective alias: {value!r}")
         return value
 
     def resolve_comm_domain(self, ctx: CommPayloadContext) -> str | None:

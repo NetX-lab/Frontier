@@ -425,6 +425,7 @@ class ModelArchitectureProfile:
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
     replicate_shared_expert_in_sequence_parallel: bool = False
+    embedding_logits_collectives: bool = False
     dense_layers_use_shared_expert_rows: bool = True
     moe_gating_routing_runtime_path: str | None = None
     experimental: bool = False
@@ -656,6 +657,7 @@ class ModelArchitectureProfile:
 
         return cls(
             profile_id="glm_moe_dsa",
+            embedding_logits_collectives=True,
             dense_layers_use_shared_expert_rows=False,
             moe_gating_routing_runtime_path="grouped_topk_sigmoid",
             display_name="GLM MoE DSA",
@@ -672,6 +674,7 @@ class ModelArchitectureProfile:
             runtime_limitations=(
                 "DSA timing requires measured workload coverage; native "
                 "parameter-storage qualification and full-model calibration remain incomplete",
+                "shared-expert overlap and native end-to-end timing remain unqualified",
             ),
             match=lambda config: (
                 _normalized_attr(config, "model_type") == "glm_moe_dsa"

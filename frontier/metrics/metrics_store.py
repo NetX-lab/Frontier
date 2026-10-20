@@ -98,6 +98,18 @@ def _round_ledger_ms(value: float) -> float:
     return round(float(value), 9)
 
 
+def _iter_source_tp_collective_times(execution_time: ExecutionTime):
+    from frontier.operators.sequence_parallel_moe import (
+        EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+    )
+
+    return tuple(
+        (name, execution_time.op_times[name])
+        for name in (*SP_TP_OPERATORS, *EMBEDDING_LOGITS_OPERATORS)
+        if execution_time.op_times.get(name, 0.0) > 0
+    )
+
+
 def _iter_mla_attention_op_times(execution_time: ExecutionTime):
     return tuple(
         (operator.name, duration_ms)
@@ -542,6 +554,7 @@ class MetricsStore:
             effective_tokens_transfer=batch_stage.effective_total_tokens_transfer,
             effective_tokens_rounded=batch_stage.effective_total_tokens_rounded,
             tokens_are_post_routing=batch_stage.tokens_are_post_routing,
+            selected_logits_rows=len(batch_stage.request_ids),
         )
 
     def _emit_op_level_traces(
@@ -1001,6 +1014,8 @@ class MetricsStore:
             "attn_tensor_parallel_allreduce",
             execution_time.attention_all_reduce_time,
         )
+        for name, duration_ms in _iter_source_tp_collective_times(execution_time):
+            emit("COMM", name, duration_ms)
 
         # MLP or MoE Block
         if not skip_ffn_attn_norm_residual:
@@ -1168,6 +1183,8 @@ class MetricsStore:
                 "attn_tensor_parallel_allreduce",
                 layer.attention_all_reduce_time,
             )
+            for name, duration_ms in _iter_source_tp_collective_times(layer):
+                emit_layer("COMM", name, duration_ms)
 
             if not skip_ffn_attn_norm_residual:
                 for op_name, duration_ms in _iter_memory_execution_times(
@@ -1401,6 +1418,8 @@ class MetricsStore:
                 layer_idx,
                 layer_meta,
             )
+            for name, duration_ms in _iter_source_tp_collective_times(execution_time):
+                emit("COMM", name, duration_ms / num_layers, layer_idx, layer_meta)
 
             # MLP or MoE Block
             if not skip_ffn_attn_norm_residual:
@@ -1612,6 +1631,18 @@ class MetricsStore:
         }
         if DEEPSEEK_V4_ATTENTION_FAMILY.family_id not in family_ids:
             absent_structural_ops.add(OperationMetrics.KV_CACHE_BLOCK_ZERO.value)
+        from frontier.operators.sequence_parallel_moe import (
+            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+        )
+
+        capabilities = CapabilityContext.from_replica_config(
+            cluster_type=cluster_type, replica_config=cluster_config.replica_config,
+        )
+        if (DEEPSEEK_V4_ATTENTION_FAMILY.family_id in family_ids
+                or not capabilities.uses_sequence_parallel_moe):
+            absent_structural_ops.update(SP_TP_OPERATORS)
+        if not capabilities.embedding_logits_collectives:
+            absent_structural_ops.update(EMBEDDING_LOGITS_OPERATORS)
         operation_metrics = tuple(
             metric for metric in OperationMetrics
             if metric.value not in absent_structural_ops
@@ -3838,6 +3869,8 @@ class MetricsStore:
             for op_name, duration_ms in _iter_layer_attention_times(layer, skip_zero=False):
                 push(OperationMetrics(op_name), duration_ms)
             push(OperationMetrics.ATTN_TENSOR_PARALLEL_ALLREDUCE, layer.attention_all_reduce_time)
+            for name, duration_ms in _iter_source_tp_collective_times(layer):
+                push(OperationMetrics(name), duration_ms)
 
             push(OperationMetrics.INPUT_LAYERNORM, layer.attn_norm_time)
             push(OperationMetrics.POST_ATTENTION_LAYERNORM, layer.mlp_norm_time)
@@ -4392,6 +4425,10 @@ class MetricsStore:
                 execution_time.mtp_terminal_overshoot_time
             ),
         }
+        component_ledger.update({
+            name: _round_ledger_ms(duration_ms)
+            for name, duration_ms in _iter_source_tp_collective_times(execution_time)
+        })
         if execution_time.has_kernel_gap:
             component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
         if global_vars.get_kv_connector() != "none":

@@ -1123,9 +1123,15 @@ class ExecutionTime(BaseEntity):
             from frontier.execution_time_predictor.deepseek_v4 import timing_operator_times
 
             return sum(value for _, _, value in timing_operator_times(self, "attention"))
+        from frontier.operators.sequence_parallel_moe import (
+            EMBEDDING_LOGITS_OPERATORS, SP_TP_OPERATORS,
+        )
+
         return (
             self._attention_time.total_time()
             + self._get_attn_tp_allreduce_time()
+            + sum(self._op_times.get(name, 0.0)
+                  for name in (*SP_TP_OPERATORS, *EMBEDDING_LOGITS_OPERATORS))
             + self._kernel_gap_times.get("attention", 0.0)
         )
 

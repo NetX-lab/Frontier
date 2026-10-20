@@ -68,6 +68,7 @@ def record_ep_wave(store, plan, *, time, replica_id, stage_id, cluster_type):
                 context = OpTraceContext(
                     cluster_type, replica.model_config, replica,
                     total_tokens, tokens, tokens, tokens, routed,
+                    sequence_parallel_token_widths=batch.moe_sequence_parallel_token_widths,
                 )
                 parallel_context = build_parallel_context(context)
             for kind, name, duration in operators:

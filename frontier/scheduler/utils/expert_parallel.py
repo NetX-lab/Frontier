@@ -13,6 +13,7 @@ from numbers import Real
 from typing import Any, Callable, NamedTuple, Optional
 
 from frontier.entities import Batch, Request, StageExecutionTime
+from frontier.config.parallel_semantics import SequenceParallelMoETokenWidths
 from frontier.moe_ep_workload import (
     EPLaneWorkload,
     LayerEPWorkload,
@@ -102,7 +103,7 @@ def predict_ep_wave_phase_times(
     batch_id: int,
     capture_lane_timings: bool = False,
     source_batches: dict[int, Batch] | None = None,
-    sp_local_tokens: tuple[int, ...] | None = None,
+    sp_token_widths: SequenceParallelMoETokenWidths | None = None,
 ) -> EPWavePhaseTimes:
     """Predict each EP lane and emit workload traces in participant order."""
     values = [[] for _ in range(6)]
@@ -114,9 +115,10 @@ def predict_ep_wave_phase_times(
             ep_id=ep_id,
             layer_workload=layer_workload,
         )
-        if sp_local_tokens is not None:
+        if sp_token_widths is not None:
             replica = predictor._get_cluster_replica_config(cluster_type)
-            lane_batch.moe_pre_routing_effective_total_tokens = sp_local_tokens[
+            lane_batch.moe_sequence_parallel_token_widths = sp_token_widths
+            lane_batch.moe_pre_routing_effective_total_tokens = sp_token_widths.local_tokens[
                 ep_id // replica.attn_tensor_parallel_size
             ]
         if source_batches is None:
