@@ -103,11 +103,11 @@ class _GlobalScheduler:
         return 0.0
 
 
-def _replica_config() -> ReplicaConfig:
+def _replica_config(attention_tp: int = TENSOR_PARALLEL_SIZE) -> ReplicaConfig:
     return ReplicaConfig(
         model_name="stepfun-ai/Step-5-Preview", device="h800", network_device="h800_dgx",
-        num_pipeline_stages=1, attn_tensor_parallel_size=TENSOR_PARALLEL_SIZE, attn_dp=4,
-        moe_tensor_parallel_size=1, moe_expert_parallel_size=32,
+        num_pipeline_stages=1, attn_tensor_parallel_size=attention_tp, attn_dp=4,
+        moe_tensor_parallel_size=1, moe_expert_parallel_size=attention_tp * 4,
         total_expert_num=352, router_topk=8,
         attention_backend="STEP5_DSA", kv_cache_dtype="auto",
     )
@@ -249,8 +249,8 @@ def test_trace_reports_rank_lane_unique_and_resident_bytes_separately(
         )
 
 
-def _lane(cluster_type: ClusterType):
-    replica_config = _replica_config()
+def _lane(cluster_type: ClusterType, attention_tp: int = TENSOR_PARALLEL_SIZE):
+    replica_config = _replica_config(attention_tp)
     request_config = SyntheticRequestGeneratorConfig()
     replica = Replica(replica_config, request_config, cluster_type)
     lane = VLLMv1EngineReplicaScheduler(
@@ -270,9 +270,9 @@ def _lane(cluster_type: ClusterType):
     return lane, replica_config
 
 
-def _harness():
+def _harness(decode_attention_tp: int = TENSOR_PARALLEL_SIZE):
     source_lane, source_config = _lane(ClusterType.PREFILL)
-    target_lane, _ = _lane(ClusterType.DECODE)
+    target_lane, _ = _lane(ClusterType.DECODE, decode_attention_tp)
     predictor = AnalyticalKVCacheTransferPredictor(
         AnalyticalKVCacheTransferConfig(kv_connector="nixl")
     )
@@ -380,3 +380,60 @@ def test_first_decode_step_keeps_the_window_page_its_recompute_reads(harness):
     for group in target._kv_cache_capacity.groups:
         assert len(tables[group.group_id]) == 33
         assert tables[group.group_id][0] is not None
+
+
+def test_equal_capacity_with_different_decode_tp_is_rejected_before_placement():
+    # Step holds one local KV head per rank at TP4 and TP8, so both roles
+    # resolve the same capacity; the payload is still sized with the P TP.
+    source, target, scheduler, _ = _harness(decode_attention_tp=4)
+    assert target._kv_cache_capacity == source._kv_cache_capacity
+    request = _request_owned_by_prefill(source, 4105)
+    metrics = _Metrics()
+
+    with pytest.raises(NotImplementedError, match="PREFILL=8, DECODE=4"):
+        _start_event(request, source).handle_event(scheduler, metrics)
+
+    assert source._kv_transfer_start_claimed_request_ids == set()
+    assert target._allocation_map == {}
+    assert target._scheduled_num_computed_tokens_by_request == {}
+    assert scheduler._clusters[ClusterType.DECODE]._request_counter == 0
+    assert metrics.starts == []
+
+
+def test_trace_component_bytes_are_transfer_not_target_residency(harness, step_config):
+    # 4096 tokens close every 8-token region, so no open-region page is sent,
+    # yet every sparse page D reserves holds that state for 23 layers.
+    source, target, scheduler, _ = harness
+    request = _request_owned_by_prefill(source, 4096)
+    [end_event] = _start_event(request, source).handle_event(scheduler, _Metrics())
+    payload = end_event._transfer_info.transfer_payload
+    sparse_group = next(
+        group for group in target._kv_cache_capacity.groups
+        if any(component_id == "open_region_state" for component_id, _ in group.component_owners)
+    )
+    resident_pages = sum(
+        block is not None
+        for block in target._kv_cache_manager.get_group_block_ids(request.id)[sparse_group.group_id]
+    )
+    open_region_owners = sum(
+        component_id == "open_region_state" for component_id, _ in sparse_group.component_owners
+    )
+    assert resident_pages * open_region_owners * OPEN_REGION_PAGE_BYTES == 256 * 23 * 2060
+
+    meta = build_kv_cache_transfer_meta(
+        SimpleNamespace(requests=[request]), step_config, ClusterType.PREFILL,
+        payload.transfer_bytes_per_rank, transfer_payload=payload,
+    )
+    components = {entry["component_id"]: entry for entry in meta["cache_components"]}
+
+    assert components["open_region_state"]["page_count"] == 0
+    assert components["open_region_state"]["transfer_bytes_per_rank"] == 0
+    assert all("resident_bytes" not in entry for entry in components.values())
+    assert {
+        name: entry["transfer_bytes_per_rank"] for name, entry in components.items()
+    } == meta["tensor_size_bytes"]
+    # Residency is reported once per lane, in whole physical blocks.
+    assert meta["target_resident_bytes_per_rank"] == (
+        NUM_CACHE_GROUPS * 256 * SPARSE_LAYERS
+        * (RAW_PAGE_BYTES + SUMMARY_PAGE_BYTES + OPEN_REGION_PAGE_BYTES)
+    )

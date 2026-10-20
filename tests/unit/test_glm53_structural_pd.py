@@ -259,7 +259,9 @@ def test_decode_policy_without_target_selection_fails_as_configuration_error() -
 
     # Lane validation belongs to every DECODE policy; selection does not.
     lor_target.validate_kv_transfer_target_scope(
-        source._kv_cache_capacity, request
+        source._kv_cache_capacity,
+        source._replica_config.attn_tensor_parallel_size,
+        request,
     )
     with pytest.raises(ValueError, match="LORClusterScheduler does not"):
         _start_event(request, source).handle_event(scheduler, _Metrics())

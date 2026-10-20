@@ -146,7 +146,7 @@ class KVCacheTransferStartEvent(BaseEvent):
                 self._target_cluster_type
             )
             target_cluster_scheduler.validate_kv_transfer_target_scope(
-                source_capacity, request
+                source_capacity, replica_config.attn_tensor_parallel_size, request
             )
             if not self._source_claimed:
                 source_replica_scheduler.claim_kv_transfer_start(request)

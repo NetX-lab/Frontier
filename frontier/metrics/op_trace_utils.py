@@ -1073,7 +1073,7 @@ def _structural_nixl_payload_meta(
                 "page_size_bytes": component.page_size_bytes,
                 "page_count": component.page_count * len(component.owner_layer_ids),
                 "rank_replication": component.rank_replication,
-                "resident_bytes": component.bytes_per_rank,
+                "transfer_bytes_per_rank": component.bytes_per_rank,
             }
             for component in components
         ],

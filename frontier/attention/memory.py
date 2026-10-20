@@ -313,9 +313,11 @@ class AttentionKVTransferComponent:
 class AttentionKVTransferPayload:
     """Structural page payload of one prompt and its target reservation.
 
-    Each TP rank of a lane reads its own pages, with the same TP on both roles,
-    so ``transfer_bytes_per_rank`` prices the transfer. These are modeled page
-    bytes, not measured native wire bytes.
+    Each TP rank of a lane reads its own pages, with the same TP on both roles
+    (the DECODE cluster scheduler rejects unequal TP before reservation), so
+    ``transfer_bytes_per_rank`` prices the transfer. These are modeled page
+    bytes, not measured native wire bytes. Components carry transfer pages
+    only; target residency is the reserved blocks of whole physical pages.
     """
 
     family_id: str

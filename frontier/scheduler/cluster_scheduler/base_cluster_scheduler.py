@@ -464,8 +464,16 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
         return None
 
-    def validate_kv_transfer_target_scope(self, source_capacity, request: Request) -> None:
-        """Validate every selectable NIXL lane before advancing placement."""
+    def validate_kv_transfer_target_scope(
+        self, source_capacity, source_attention_tp: int, request: Request
+    ) -> None:
+        """Validate every selectable NIXL lane before advancing placement.
+
+        The structural page payload is resolved with the source attention TP,
+        and each DECODE rank reads the pages of its PREFILL peer rank, so both
+        roles need the same attention TP. Equal capacity does not imply it:
+        Step holds one local KV head per rank at both TP4 and TP8.
+        """
         if self._cluster_type != ClusterType.DECODE:
             raise ValueError("NIXL transfer target validation requires DECODE")
         replica_ids = list(self._cluster.replicas.keys())
@@ -475,6 +483,13 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             for replica_local_id in range(self._replica_dp_size):
                 lane = self.get_replica_scheduler(replica_id, replica_local_id)
                 lane.validate_kv_transfer_target_scope(request)
+                target_attention_tp = lane._replica_config.attn_tensor_parallel_size
+                if target_attention_tp != source_attention_tp:
+                    raise NotImplementedError(
+                        "NIXL structural PD requires equal PREFILL and DECODE "
+                        f"attention TP; got PREFILL={source_attention_tp}, "
+                        f"DECODE={target_attention_tp}"
+                    )
                 if lane._kv_cache_capacity != source_capacity:
                     raise ValueError(
                         "PREFILL and DECODE cache capacities must match"
