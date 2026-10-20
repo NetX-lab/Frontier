@@ -1,6 +1,6 @@
 # Step-5-Preview development status
 
-Step-5-Preview has complete configuration and layer representation, plus a controlled structural request path in Frontier. Native single-role qualification, measured prediction, PD integration and formal hardware validation remain incomplete. This branch must be described as development work until the acceptance gates below pass.
+Step-5-Preview has complete configuration and layer representation, a controlled structural request path, and a sequential PD structural path with dummy timing in Frontier. The native single-role run is qualified within the simulation scope, and one native P/D request over NIXL has completed on H200. Measured prediction, native PD qualification on H800 and formal hardware validation remain incomplete. This branch must be described as development work until the acceptance gates below pass.
 
 The shared implementation serves the GLM-5.3, DeepSeek-V4-Flash and Step-5-Preview integration plan. Model profiles extend the existing configuration, attention, operator, execution-time and cache interfaces. Shared infrastructure has one canonical implementation; model-specific contracts remain at their existing binding boundaries. The final integration target remains `feat/glm53-dsv4-vllm028`, with one reviewed source revision for three-model regression.
 
@@ -29,8 +29,11 @@ Use the locked official model configuration and tokenizer with native dummy weig
 | Early physical scopes; ticket 05 |PARTIAL |Local measurements and coverage dispositions retained |Admit exclusive measurements through the complete native path |
 | Model representation; ticket 15 milestone |DONE within contract scope |738 checks, 77 legacy scenarios and 451 artifact pairs in the accepted representation generation |Official comparator/cache and recorded performance limitations remain |
 | Controlled structural path; ticket 15 milestone |DONE within source-structural scope |646 affected checks, 3 actual CLI cases, 77 legacy scenarios and 451 artifact pairs |Native reconciliation and all 8 whole-ticket criteria remain open |
-| Native single-role; ticket 06 |In progress: simulation scope |Fixed-length completion accepted; startup, structure and graph replay are being mapped from retained runs |The simulation-scope criteria S1–S6; the complete precision/physical census runs only on demand for error diagnosis |
-| Observer validation and native PD; tickets 07–08 |Waiting for the 06 simulation scope; preparation available |Existing observation and source/metric preparation |Correlation/perturbation, complete handoff, CUDA-visible content and release ordering |
+| Native single-role; ticket 06 |DONE within simulation scope |Retained TP16 runs show all 16 ranks loaded (39.11 GiB each), 1,036,282 KV tokens, the complete 92-layer structure, 288 prefill and 256 FULL-graph decode steps, fixed-length completion and finite hidden outputs |The complete precision/physical census runs only on demand for error diagnosis; the target TP8/DP4/EP32 topology has not run natively |
+| Step structural PD; ticket 17 structural part |DONE with dummy timing |Sequential PD at P32/D32 with attention TP8×DP4 and MoE EP32 completes offline and online; 4105-token transfer is 103,687,956 B per rank; 77 legacy fidelity cases unchanged |Native lifetime ordering, the D-side recomputed tail and native wire bytes wait for ticket 08 |
+| Native PD; ticket 08 |IN PROGRESS |Run R1 on H200 (`exp-1020-164750-497812`, P and D each TP8/DP2/EP16): one 4105-token request completes over NIXL; D loads 4080 prompt tokens and recomputes 25; all nine conditions pass |H800 rerun of R1; KV and summary content checks (R2); concurrency and release cases |
+| Operator profiles; ticket 10 |IN PROGRESS |MoE profiler measures block-FP8 layers 3–87 and BF16 layers 88–90 with the native router; H800 pilot `exp-1020-152802-841686` selected DeepGEMM for FP8 and Triton for BF16 |Attention profiler for SWA and sparse layers, full grids, typed admission |
+| Observer validation; ticket 07 |Preparation available |Existing observation and source/metric preparation |Only observations a mainline ticket consumes |
 | Predictors, H800 64-GPU, H200 and three-model acceptance |NOT VALIDATED |No formal predictive acceptance claimed |Independent profiles/calibration/holdouts, per-cell gates and common-source regression |
 
 The latest native correction is commit `94d154e`: a fresh CPU process drains Kineto FIFO output while the original exporter remains on its calling thread. Cleanup preserves the primary native error and verifies reader termination before releasing its pending allowance. Legitimate `preempted_req_ids=None` is retained. Five files extend the existing native observer and tests; no Frontier core, graph policy, workload or native model implementation changes.
@@ -45,8 +48,8 @@ Prior failed generations, zero-byte traces, original errors and over-budget or u
 
 ## Resume order and ownership
 
-1. Close the ticket 06 simulation scope from retained native runs: full-role startup and capacity, complete structure, prefill chunks, decode, graph replay, fixed-length completion and finite outputs. The complete per-rank precision and physical census runs only when an E2E error needs it.
-2. In parallel: extend the Step structural path to sequential PD with attention DP4 and EP32 using dummy timing, reusing the shared GLM PD and DeepSeek EP changes; register Step operators in the existing profilers and measure them on H800; run one native P/D request over NIXL (ticket 08).
+1. The ticket 06 simulation scope is closed from retained native runs. The complete per-rank precision and physical census runs only when an E2E error needs it.
+2. In parallel: rerun native P/D R1 on H800 and continue ticket 08 with content and lifecycle checks; build the Step attention profiler and run the full operator grids on H800 (ticket 10); measure TP8 and DP4 collectives on the Step image (ticket 12). The Step structural PD path with DP4 and EP32 is done with dummy timing.
 3. Collect clean native E2E measurements on the target P32/D32 topology (ticket 09), H800 first. Adapt the existing metric normalizer and gate without changing metric meanings.
 4. After the shared GLM full-path milestone, train the Step predictors, build the bundle and compare with native E2E. Localize and explain errors before any calibration.
 5. Validate with independent holdouts, required H200 work and same-source legacy and three-model regression.
