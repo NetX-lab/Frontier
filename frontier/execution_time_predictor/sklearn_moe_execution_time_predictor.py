@@ -659,7 +659,8 @@ class SklearnMoEExecutionTimePredictor(
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            if self._model_config.supports_share_expert():
+            if (self._model_config.supports_share_expert()
+                    and self._get_model_architecture_profile().dense_layers_use_shared_expert_rows):
                 # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
                 # those profiled operations into the dense MLP component
                 # fields so the layer remains a FULL_STAGE_WORLD operation and

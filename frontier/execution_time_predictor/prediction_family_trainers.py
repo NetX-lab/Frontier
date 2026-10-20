@@ -574,9 +574,11 @@ class PredictionFamilyTrainers(KernelCountTraining):
         ]
         if missing_standard_columns:
             model_config = getattr(replica_config, "model_config", None)
+            profile = _resolve_model_architecture_profile(model_config)
             supports_share_expert = bool(
                 model_config is not None
                 and model_config.supports_share_expert()
+                and (profile is None or profile.dense_layers_use_shared_expert_rows)
             )
             if supports_share_expert:
                 logger.info(

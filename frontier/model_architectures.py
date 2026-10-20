@@ -425,6 +425,7 @@ class ModelArchitectureProfile:
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
     replicate_shared_expert_in_sequence_parallel: bool = False
+    dense_layers_use_shared_expert_rows: bool = True
     experimental: bool = False
     runtime_limitations: tuple[str, ...] = ()
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -654,6 +655,7 @@ class ModelArchitectureProfile:
 
         return cls(
             profile_id="glm_moe_dsa",
+            dense_layers_use_shared_expert_rows=False,
             display_name="GLM MoE DSA",
             attention_linear_ops=AttentionLinearOpProfile(
                 sharded_impl=AttentionLinearOpImplementation.GENERIC,

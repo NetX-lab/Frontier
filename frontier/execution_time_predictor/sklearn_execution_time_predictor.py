@@ -2811,7 +2811,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         supports_share_expert = getattr(
             self._model_config, "supports_share_expert", None
         )
-        if callable(supports_share_expert) and supports_share_expert():
+        if (callable(supports_share_expert) and supports_share_expert()
+                and self._get_model_architecture_profile().dense_layers_use_shared_expert_rows):
             # Step2Mini/Step3 mixed layers use the profiled shared-expert FFN
             # path for their non-routed layers.  They do not expose the
             # standard mlp_* profiling rows, so requesting those models would
@@ -7848,6 +7849,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         supports_share_expert = bool(
             getattr(self._model_config, "supports_share_expert", lambda: False)()
+            and self._get_model_architecture_profile().dense_layers_use_shared_expert_rows
         )
         if supports_share_expert:
             required_operations = (

@@ -82,6 +82,24 @@ def test_glm_shared_expert_csv_selects_replicated_sp_row(tmp_path):
     assert loaded["time_stats.share_expert_up_proj.median"].tolist() == [1.0]
 
 
+def test_glm_dense_layers_use_dense_ffn_rows():
+    predictor = glm_predictor()
+    predictor._enable_dummy_mode = False
+    predictor._supports_operation = lambda name: name.startswith("mlp_")
+    predictor._get_mlp_layer_up_proj_execution_time = lambda _: 12.288
+    predictor._get_mlp_layer_down_proj_execution_time = lambda _: 6.144
+    predictor._get_mlp_layer_act_execution_time = lambda _: 1.536
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _: 0.1
+    batch = Batch(0, [Request(0.0, 9, 0)], [9], is_moe=True)
+    assert predictor._requires_dense_mlp_compute_models()
+    assert "mlp_up_proj" in predictor._get_compute_model_names()
+    timing = predictor.predict_mlp_layer_time(batch, 0, ClusterType.PREFILL)
+    assert timing.mlp_layer_up_proj_execution_time == 12.288
+    dense_contract = predictor._resolve_typed_linear_contract("mlp_up_proj")
+    assert dense_contract.effective_ffn_width == predictor._model_config.dense_mlp_hidden_dim
+    assert dense_contract.tensor_parallel_size == 8
+
+
 @pytest.mark.parametrize("tokens,local", [(1, 1), (7, 1), (8, 1), (9, 2), (8192, 1024)])
 def test_sequence_parallel_widths(tokens, local):
     for rank in range(8):
