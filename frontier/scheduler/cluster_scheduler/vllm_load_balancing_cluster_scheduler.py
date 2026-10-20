@@ -13,8 +13,9 @@ from frontier.types import ClusterType, ReplicaSchedulerType
 class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     """Model single-frontend vLLM V1 DP routing with delayed load snapshots.
 
-    Supported scope, and nothing wider: one co-location Replica, one modeled
-    frontend, the `vllm_v1` replica scheduler, and a report key whose ordering
+    Supported scope, and nothing wider: one co-location Replica or one PP1
+    DECODE Replica, one modeled frontend, the `vllm_v1` replica scheduler, and
+    a report key whose ordering
     actually holds -- a MoE model, whose attention-DP lanes share each stage-0
     forward, or a single lane, where the question does not arise. Everything
     else is rejected in the constructor.
@@ -25,17 +26,23 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if (
-            self._cluster_type is not ClusterType.MONOLITHIC
+            self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE)
             or self._num_replicas != 1
             or self._replica_scheduler_type is not ReplicaSchedulerType.VLLM_V1
         ):
             raise ValueError(
-                "vllm_load_balancing supports one co-location Replica with "
+                "vllm_load_balancing supports one co-location Replica or one "
+                "DECODE Replica at PP1 with "
                 "vllm_v1, got "
                 f"cluster_type={self._cluster_type.name}, "
                 f"num_replicas={self._num_replicas}, "
                 f"replica_scheduler={self._replica_scheduler_type}"
             )
+        if (
+            self._cluster_type is ClusterType.DECODE
+            and self._config.replica_config.num_pipeline_stages != 1
+        ):
+            raise ValueError("vllm_load_balancing supports DECODE at PP1 only")
         # The load report is keyed by the Replica's stage-0 forward group. A
         # MoE Replica binds one group for every lane of one forward, so peer
         # lanes share the key. A dense Replica has no per-forward collective
@@ -85,6 +92,18 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
         raise RuntimeError(
             "vllm_load_balancing selects from a time-dependent load snapshot; "
             "route through schedule_at(time), which ClusterScheduleEvent calls"
+        )
+
+    def select_kv_transfer_target(
+        self, time: float, request: Request
+    ) -> tuple[int, int]:
+        """Place a NIXL request once, before its selected lane reserves KV."""
+
+        if self._cluster_type is not ClusterType.DECODE:
+            raise ValueError("NIXL transfer target selection requires DECODE")
+        return (
+            self._serving_replica_id,
+            self._load_balancer.select(time, request_id=request.id),
         )
 
     def on_replica_batch_scheduled(

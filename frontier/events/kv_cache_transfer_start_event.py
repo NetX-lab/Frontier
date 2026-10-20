@@ -153,7 +153,9 @@ class KVCacheTransferStartEvent(BaseEvent):
                 (
                     self._target_replica_id,
                     self._target_replica_local_id,
-                ) = target_cluster_scheduler.select_kv_transfer_target()
+                ) = target_cluster_scheduler.select_kv_transfer_target(
+                    self.time, request
+                )
             target_replica_scheduler = target_cluster_scheduler.get_replica_scheduler(
                 self._target_replica_id,
                 self._target_replica_local_id,
