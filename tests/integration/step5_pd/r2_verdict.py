@@ -653,7 +653,7 @@ def check_native_readiness(source, target, check, *, no_fence):
             local.require(type(ready.get("observer_fence")) is bool, f"{name}: native readiness lacks explicit observer_fence flag")
             local.expect(ready.get("observer_fence") is not True, f"{name}: observer fence is not a native readiness witness")
             boundary = ready.get("boundary")
-            local.require(isinstance(boundary, str) and "native" in boundary.lower() and "finished_recving" in boundary,
+            local.require(boundary == "native_get_transfer_results_finished_recving",
                           f"{name}: no explicit native finished_recving completion boundary")
         ordered(network, ready, local, f"{name}: native completion preceded network completion")
         ordered(ready, first, local, f"{name}: target computed before native finished_recving readiness")
@@ -678,6 +678,20 @@ def check_native_readiness(source, target, check, *, no_fence):
 def check_free(held, freed, check, *, prefix_caching_disabled):
     if freed is None:
         return
+    if freed['event'] == 'target_free':
+        defer = freed.get('defer_block_free')
+        check.require(type(defer) is bool, f"{label(freed)}: missing native release guard")
+        if defer is True:
+            last, processed = freed.get('last_sched_seq'), freed.get('processed_step_seq')
+            check.require(integer(last) and integer(processed),
+                          f"{label(freed)}: missing native GPU-step completion fence")
+            if integer(last) and integer(processed):
+                check.expect(last <= processed, f"{label(freed)}: native last GPU step was not processed before free")
+            if 'deferred_fence_seq' in freed:
+                fence = freed['deferred_fence_seq']
+                check.require(integer(fence), f"{label(freed)}: invalid native deferred release fence")
+                if integer(fence) and integer(processed):
+                    check.expect(fence <= processed, f"{label(freed)}: native deferred free preceded its completion fence")
     allocated = blocks(held, "block_ids", check) if held else None
     released = blocks(freed, "block_ids", check)
     check.require(allocated is not None, f"{label(freed)}: no ownership snapshot for release accounting")

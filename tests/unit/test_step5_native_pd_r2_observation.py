@@ -512,6 +512,79 @@ def test_network_gpu_visibility_and_notification_are_distinct(tmp_path, torch):
     assert [r['event'] for r in events(observer)].count('source_notified') == 1
 
 
+def test_actual_collector_native_ready_records_satisfy_offline_verdict(tmp_path, torch):
+    from tests.integration.step5_pd import r2_verdict
+
+    observer = r2.Observation(configuration(tmp_path, content_client_request_ids=[]))
+    for rank in range(8):
+        value = connector(torch)
+        value.tp_rank = rank
+        observer.register(value, None, {}, None)
+        observer.connector_states[value]['reads']['case'] = dict(metadata={}, plans=[])
+        observer.transfer_results(value, NS(finished_recving={'case'}, failed_recving=set()), {}, None)
+    ready = [row for row in events(observer) if row['event'] == 'native_read_ready']
+    assert len(ready) == 8 and not torch.syncs
+    target = []
+    for row in ready:
+        target.extend([
+            dict(row, event='read_network_done', monotonic_ns=row['monotonic_ns']-1),
+            row,
+            dict(row, event='target_compute', monotonic_ns=row['monotonic_ns']+1)])
+    check = r2_verdict.Check()
+    assert r2_verdict.check_native_readiness([], target, check, no_fence=True), check.result()
+
+
+@pytest.mark.parametrize('conflict', [None, 'tokens', 'local_blocks', 'engine'])
+def test_initial_handshake_reentry_has_one_metadata_and_one_read(tmp_path, torch, conflict):
+    observer = r2.Observation(configuration(tmp_path, content_client_request_ids=[]))
+    value = connector(torch)
+    observer.register(value, None, {}, None)
+    remote = NS(engine_id='prefill_dp0', request_id='source-case', host='p-host', port=123,
+                num_tokens=256, block_ids=[[0, 1], [0, 1]])
+    meta = NS(remote=remote, local_block_ids=[[2], [3]], local_physical_block_ids=[[2], [3]])
+
+    class Pull:
+        def _compute_desc_ids(self, block_ids):
+            return NS(tolist=lambda: [101, 102])
+
+        def _read_blocks(self, read_spec, dst_engine_id, request_id, remote_request_id):
+            self._compute_desc_ids([[1], [1]])
+            self._compute_desc_ids([[2], [3]])
+            return True
+
+        def _read_blocks_for_req(self, req_id, meta):
+            self.calls += 1
+            if self.calls == 1:
+                return False
+            spec = NS(remote_rank=3, local_block_ids=meta.local_physical_block_ids,
+                      remote_block_ids=meta.remote.block_ids, block_ids_by_region=False)
+            return self._read_blocks(spec, meta.remote.engine_id, req_id, meta.remote.request_id)
+
+    value.__class__ = Pull
+    value.calls = 0
+    r2.wrap(Pull, '_read_blocks_for_req', observer, before=observer.read_request)
+    r2.wrap(Pull, '_compute_desc_ids', observer, after=observer.descriptors)
+    r2.wrap(Pull, '_read_blocks', observer, before=observer.read_context,
+            after=observer.read_submitted, read_scope=True)
+    assert value._read_blocks_for_req('case', meta) is False
+    assert value._read_blocks_for_req('case', meta) is True
+    assert value.calls == 2
+    rows = events(observer)
+    assert sum(row['event'] == 'read_metadata' for row in rows) == 1
+    assert sum(row['event'] == 'read_submit' for row in rows) == 1
+    if conflict:
+        if conflict == 'tokens':
+            remote.num_tokens += 16
+        elif conflict == 'local_blocks':
+            meta.local_physical_block_ids[0][0] = 1
+        else:
+            remote.engine_id = 'different-prefill-engine'
+        assert value._read_blocks_for_req('case', meta) is True
+        assert value.calls == 3 and observer.disabled
+        assert events(observer)[-1]['event'] == 'observer_error'
+        assert 'changed canonical READ metadata' in events(observer)[-1]['error']
+
+
 def test_worker_positions_and_source_snapshot_precede_return(tmp_path, torch):
     observer = r2.Observation(configuration(tmp_path, role='prefill'))
     value = connector(torch)

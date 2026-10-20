@@ -104,7 +104,8 @@ def observations(lengths=(63, 64, 65)):
         event("source_free", "prefill", 80, block_ids=source_blocks,
               pool_free_before=100, pool_free_after=100 + source_count, released_block_count=source_count, counts_scope="request_release")
         event("target_free", "decode", 80, block_ids=target_blocks,
-              pool_free_before=100, pool_free_after=100 + target_count, released_block_count=target_count, counts_scope="request_release")
+              pool_free_before=100, pool_free_after=100 + target_count, released_block_count=target_count,
+              counts_scope="request_release", last_sched_seq=7, processed_step_seq=7, defer_block_free=True)
     return rows, trace
 
 
@@ -199,6 +200,25 @@ def test_matching_bytes_must_cover_first_recomputed_query_swa_window(tmp_path):
     verdict = result(tmp_path, rows, trace)
     assert_check(verdict, 'content', 'PASS')
     assert_check(verdict, 'mapping', 'FAIL')
+    assert not verdict['scope_pass']
+
+
+@pytest.mark.parametrize('fault,status', [
+    ('missing_guard', 'UNVERIFIED'), ('missing_last_seq', 'UNVERIFIED'),
+    ('early_last_seq', 'FAIL'), ('pending_deferred_fence', 'FAIL')])
+def test_target_release_requires_native_gpu_step_completion_guard(tmp_path, fault, status):
+    rows, trace = observations()
+    released = first(rows, 'target_free')
+    if fault == 'missing_guard':
+        released.pop('defer_block_free')
+    elif fault == 'missing_last_seq':
+        released.pop('last_sched_seq')
+    elif fault == 'early_last_seq':
+        released['processed_step_seq'] = released['last_sched_seq']-1
+    else:
+        released['deferred_fence_seq'] = released['processed_step_seq']+1
+    verdict = result(tmp_path, rows, trace)
+    assert_check(verdict, 'lifetime', status)
     assert not verdict['scope_pass']
 
 

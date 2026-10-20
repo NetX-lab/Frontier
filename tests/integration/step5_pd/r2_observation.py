@@ -372,7 +372,12 @@ class Observation:
                         reserved_local_block_ids=block_lists(meta.local_block_ids),
                         local_physical_block_ids=block_lists(meta.local_physical_block_ids))
         snapshot['block_id_group_order'] = 'transfer_group'
-        self.connector_states[connector]['reads'].setdefault(req, dict(metadata=snapshot, plans=[]))
+        reads = self.connector_states[connector]['reads']
+        if req in reads:
+            if reads[req]['metadata'] != snapshot:
+                raise ValueError('Native handshake reentry changed canonical READ metadata')
+            return
+        reads[req] = dict(metadata=snapshot, plans=[])
         self.emit('read_metadata', connector, req, **snapshot)
 
     def read_context(self, connector, arguments):
@@ -427,7 +432,7 @@ class Observation:
         for req in ready:
             state = self.connector_states[connector]['reads'][req]
             self.emit('native_read_ready', connector, req,
-                      boundary='native_get_transfer_results_return_before_observer_fence',
+                       boundary='native_get_transfer_results_finished_recving',
                       observer_fence=False, **state['metadata'])
         for req in ready:
             if self.content_selected(req):
