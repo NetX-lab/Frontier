@@ -11,3 +11,4 @@ class CCBackendType(BaseIntEnum):
     COLLECTIVE_SIM = 3  # Topology-aware discrete-event simulator backend
     AICONFIGURATOR = 4  # Internal-only backend excluded from the public release surface
     ASTRA_SIM_ANALYTICAL = 5  # Lightweight ASTRA-Sim analytical backend
+    MEASURED = 6  # Interpolated device-time collective measurements
