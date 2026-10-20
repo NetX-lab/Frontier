@@ -127,9 +127,98 @@ MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cp
 V028_SOURCE = "2cf0a6915ce544dc493a0990f2ea38d81601128a"
 V028_IMAGE = ("hub.i.basemind.com/vllm-openai/vllm-openai@sha256:"
               "2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635")
+STEP5_IMAGE = ("a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:"
+               "69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20")
+# The locked Step-5 image reports this version; it is recorded evidence, not a check on the
+# installed package, because a served container cannot be inspected from the client node.
+STEP5_INSTALLED = "0.1.dev22912+g8224bb82f"
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
-V028_NODE_FIELDS = ("data_parallel_size_local", "data_parallel_address", "data_parallel_rpc_port",
-                    "data_parallel_start_rank", "headless")
+NATIVE_NODE_FIELDS = ("data_parallel_size_local", "data_parallel_address", "data_parallel_rpc_port",
+                      "data_parallel_start_rank", "headless")
+# Native-serving engine keys passed through to the server command as flags.
+NATIVE_SERVING_FIELDS = ("attention_backend", "quantization", "shutdown_timeout",
+                         "distributed_executor_backend", "data_parallel_size_local",
+                         "data_parallel_start_rank", "data_parallel_address",
+                         "data_parallel_rpc_port", "num_gpu_blocks_override")
+
+# One record per explicit harness adapter. `connector` selects the P/D transfer protocol,
+# `native_serving` whether the record serves a pinned native image (which enables the native
+# engine checks, the node flags and the local model metadata), and `model_metadata` names the
+# metadata files, the architecture and the key path of `vocab_size` in `config.json`.
+RUNTIME_ADAPTERS = {
+    "0.10.2": {
+        "installed_version": "0.10.2",
+        "connector": "p2p_nccl",
+        "native_serving": False,
+        "modes": (*MODES, "device_timeline"),
+        "model_metadata": None,
+        "native_reference": None,
+        "skip_tokenizer_init": None,
+        "kv_connector_extra_config": {},
+    },
+    "0.28.0": {
+        "installed_version": "0.28.0",
+        "connector": "nixl_pull",
+        "native_serving": True,
+        "modes": ("clean", "light"),
+        "model_metadata": {"files": ("config.json",),
+                           "architecture": "GlmMoeDsaForCausalLM",
+                           "vocab_size_keys": ("vocab_size",)},
+        "native_reference": {"source_sha": V028_SOURCE,
+                             "instrumentation_sha": re.compile(r"[0-9a-f]{40}"),
+                             "image": V028_IMAGE},
+        "skip_tokenizer_init": True,
+        "kv_connector_extra_config": {},
+    },
+    # Step-5-Preview transfers sparse-summary state, so the image accepts only a CUDA-buffer
+    # NixlConnector or MooncakeStoreConnector; this record keeps the pull connector. The image
+    # carries no Frontier instrumentation, so only clean mode is legal. The text configuration
+    # nests `vocab_size` under `text_config`, and the tokenizer stays initialized because the
+    # `step5_vl` processor needs it at startup.
+    "step5": {
+        "installed_version": STEP5_INSTALLED,
+        "connector": "nixl_pull",
+        "native_serving": True,
+        "modes": ("clean",),
+        "model_metadata": {"files": ("config.json", "tokenizer_config.json", "tokenizer.json"),
+                           "architecture": "Step5ForConditionalGeneration",
+                           "vocab_size_keys": ("text_config", "vocab_size")},
+        "native_reference": {"image": STEP5_IMAGE},
+        "skip_tokenizer_init": False,
+        # Verified against the pinned image: base_worker defaults to UCX and a 30 s lease.
+        "kv_connector_extra_config": {"backends": ["UCX"], "kv_lease_duration": 30},
+    },
+}
+
+
+def adapter_record(version: str) -> dict:
+    """Return the declared adapter for a harness version label."""
+    if version not in RUNTIME_ADAPTERS:
+        raise ValueError(f"Unsupported vLLM harness version: {version!r}")
+    return RUNTIME_ADAPTERS[version]
+
+
+def uses_nixl_pull(version: str) -> bool:
+    """Whether the adapter transfers KV by having the decode instance read prefill blocks."""
+    return adapter_record(version)["connector"] == "nixl_pull"
+
+
+def native_serving(version: str) -> bool:
+    """Whether the adapter serves a pinned native image instead of the legacy instrumented one."""
+    return adapter_record(version)["native_serving"]
+
+
+def check_native_reference(reference, expected: dict) -> None:
+    """Require exactly the declared reference fields; a pattern value must match in full."""
+    if type(reference) is not dict or set(reference) != set(expected):
+        raise ValueError(f"Adapter requires the locked native reference {sorted(expected)}")
+    for name, wanted in expected.items():
+        value = reference[name]
+        matches = (type(value) is str and wanted.fullmatch(value) is not None
+                   if isinstance(wanted, re.Pattern)
+                   else value == wanted)
+        if not matches:
+            raise ValueError(f"Adapter rejects native reference {name}: {value!r}")
 
 
 def runtime_version(engine: dict) -> str:
@@ -137,60 +226,56 @@ def runtime_version(engine: dict) -> str:
     if type(engine) is not dict:
         raise ValueError("Engine configuration must be a JSON object")
     version = engine.get("vllm_version", "0.10.2")
-    if version not in ("0.10.2", "0.28.0"):
-        raise ValueError(f"Unsupported vLLM harness version: {version!r}")
-    if version == "0.28.0":
-        reference = engine.get("native_reference")
-        if (type(reference) is not dict or set(reference) != {
-                "source_sha", "instrumentation_sha", "image"}
-                or reference["source_sha"] != V028_SOURCE
-                or reference["image"] != V028_IMAGE
-                or not isinstance(reference["instrumentation_sha"], str)
-                or re.fullmatch(r"[0-9a-f]{40}", reference["instrumentation_sha"]) is None):
-            raise ValueError("v0.28 requires the locked native source/image and instrumentation SHA")
-        if engine.get("load_format") != "dummy" or engine.get("skip_tokenizer_init") is not True:
-            raise ValueError("v0.28 harness requires dummy weights and skip_tokenizer_init")
-        if engine.get("moe_uniform_routing") or engine.get("enable_return_routed_experts"):
-            raise ValueError("v0.28 routing content and forced routing must remain OFF")
-        for name in ("tensor_parallel_size", "pipeline_parallel_size", "data_parallel_size"):
-            if type(engine.get(name)) is not int or engine[name] <= 0:
-                raise ValueError(f"{name} must be a positive integer")
-        if "num_gpu_blocks_override" in engine:
-            blocks = engine["num_gpu_blocks_override"]
-            if type(blocks) is not int or blocks <= 0:
-                raise ValueError("num_gpu_blocks_override must be a positive integer")
-        for name in ("enable_expert_parallel", "enforce_eager", "enable_chunked_prefill",
-                     "enable_prefix_caching"):
-            if type(engine.get(name)) is not bool:
-                raise ValueError(f"{name} must be boolean")
-        if any(name in engine for name in V028_NODE_FIELDS):
-            if (engine.get("data_parallel_rank") is not None or engine.get("data_parallel_hybrid_lb")
-                    or engine.get("data_parallel_external_lb")):
-                raise ValueError("Native DP node replay supports internal load balancing only")
-            if any(name not in engine for name in V028_NODE_FIELDS[:3]):
-                raise ValueError("Native DP nodes require explicit local size, head address and RPC port")
-            local, dp = engine["data_parallel_size_local"], engine["data_parallel_size"]
-            headless = engine.get("headless", False)
-            start = engine.get("data_parallel_start_rank")
-            rpc_port = engine["data_parallel_rpc_port"]
-            if (engine["pipeline_parallel_size"] != 1 or type(local) is not int
-                    or not 0 < local < dp or type(headless) is not bool
-                    or type(rpc_port) is not int or not 0 < rpc_port < 65536):
-                raise ValueError("Native DP nodes require PP1, valid local size, headless flag and RPC port")
-            if headless:
-                if type(start) is not int or start <= 0 or start + local > dp:
-                    raise ValueError("Headless nodes require a valid nonzero native DP start rank")
-            elif "data_parallel_start_rank" in engine:
-                raise ValueError("An internal-DP API head must omit data_parallel_start_rank")
-            for name in ("data_parallel_address", "host"):
-                value = engine.get(name, "127.0.0.1")
-                if type(value) is not str:
-                    raise ValueError(f"{name} requires an explicit IPv4 address")
-                address = ipaddress.IPv4Address(value)
-                if (address.is_multicast
-                        or name == "data_parallel_address" and (address.is_loopback or address.is_unspecified)
-                        or name == "host" and not headless and address.is_loopback):
-                    raise ValueError(f"{name} must permit inter-node communication")
+    adapter = adapter_record(version)
+    if not adapter["native_serving"]:
+        return version
+    check_native_reference(engine.get("native_reference"), adapter["native_reference"])
+    expected_init = adapter["skip_tokenizer_init"]
+    if (engine.get("load_format") != "dummy"
+            or engine.get("skip_tokenizer_init") is not expected_init):
+        raise ValueError(
+            f"{version} harness requires dummy weights and skip_tokenizer_init={expected_init}")
+    if engine.get("moe_uniform_routing") or engine.get("enable_return_routed_experts"):
+        raise ValueError(f"{version} routing content and forced routing must remain OFF")
+    for name in ("tensor_parallel_size", "pipeline_parallel_size", "data_parallel_size"):
+        if type(engine.get(name)) is not int or engine[name] <= 0:
+            raise ValueError(f"{name} must be a positive integer")
+    if "num_gpu_blocks_override" in engine:
+        blocks = engine["num_gpu_blocks_override"]
+        if type(blocks) is not int or blocks <= 0:
+            raise ValueError("num_gpu_blocks_override must be a positive integer")
+    for name in ("enable_expert_parallel", "enforce_eager", "enable_chunked_prefill",
+                 "enable_prefix_caching"):
+        if type(engine.get(name)) is not bool:
+            raise ValueError(f"{name} must be boolean")
+    if any(name in engine for name in NATIVE_NODE_FIELDS):
+        if (engine.get("data_parallel_rank") is not None or engine.get("data_parallel_hybrid_lb")
+                or engine.get("data_parallel_external_lb")):
+            raise ValueError("Native DP node replay supports internal load balancing only")
+        if any(name not in engine for name in NATIVE_NODE_FIELDS[:3]):
+            raise ValueError("Native DP nodes require explicit local size, head address and RPC port")
+        local, dp = engine["data_parallel_size_local"], engine["data_parallel_size"]
+        headless = engine.get("headless", False)
+        start = engine.get("data_parallel_start_rank")
+        rpc_port = engine["data_parallel_rpc_port"]
+        if (engine["pipeline_parallel_size"] != 1 or type(local) is not int
+                or not 0 < local < dp or type(headless) is not bool
+                or type(rpc_port) is not int or not 0 < rpc_port < 65536):
+            raise ValueError("Native DP nodes require PP1, valid local size, headless flag and RPC port")
+        if headless:
+            if type(start) is not int or start <= 0 or start + local > dp:
+                raise ValueError("Headless nodes require a valid nonzero native DP start rank")
+        elif "data_parallel_start_rank" in engine:
+            raise ValueError("An internal-DP API head must omit data_parallel_start_rank")
+        for name in ("data_parallel_address", "host"):
+            value = engine.get(name, "127.0.0.1")
+            if type(value) is not str:
+                raise ValueError(f"{name} requires an explicit IPv4 address")
+            address = ipaddress.IPv4Address(value)
+            if (address.is_multicast
+                    or name == "data_parallel_address" and (address.is_loopback or address.is_unspecified)
+                    or name == "host" and not headless and address.is_loopback):
+                raise ValueError(f"{name} must permit inter-node communication")
     return version
 
 
@@ -235,11 +320,14 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL",
                         "VLLM_MOE_UNIFORM_ROUTING")
     }
-    if runtime_version(engine) == "0.28.0":
-        if mode not in ("clean", "light"):
-            raise ValueError("v0.28 supports only clean/light observer modes")
+    if native_serving(runtime_version(engine)):
+        adapter = adapter_record(runtime_version(engine))
+        if mode not in adapter["modes"]:
+            raise ValueError(f"The native adapter supports only {'/'.join(adapter['modes'])} modes")
         if mode == "light" and observer is None:
             raise ValueError("Light mode requires explicitly supplied observer JSON")
+        if observer is not None and "instrumentation_sha" not in adapter["native_reference"]:
+            raise ValueError("Explicit observer JSON requires an instrumented native reference")
         mode_env = {}
         if observer is not None:
             validate_observer(observer, engine, mode)
@@ -299,14 +387,15 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
 
 def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     version = runtime_version(engine)
-    if version == "0.28.0":
-        local_model_config(model_dir)
+    native = native_serving(version)
+    if native:
+        local_model_config(model_dir, version)
         if engine.get("data_parallel_rpc_port") == port and not engine.get("headless"):
             raise ValueError("HTTP and DP RPC ports must be distinct")
     command = [
         sys.executable, "-m", "vllm.entrypoints.cli.main", "serve", str(model_dir),
         "--served-model-name", SERVED_MODEL_NAME,
-        "--host", engine.get("host", "127.0.0.1") if version == "0.28.0" else "127.0.0.1",
+        "--host", engine.get("host", "127.0.0.1") if native else "127.0.0.1",
         "--port", str(port),
         "--load-format", engine["load_format"],
         "--dtype", engine["dtype"],
@@ -332,11 +421,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     command += [flag for flag, enabled in flags.items() if enabled]
     if "compilation_config" in engine:
         command += ["--compilation-config", json.dumps(engine["compilation_config"])]
-    if version == "0.28.0":
-        for name in ("attention_backend", "quantization", "shutdown_timeout",
-                     "distributed_executor_backend", "data_parallel_size_local",
-                     "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port",
-                     "num_gpu_blocks_override"):
+    if native:
+        for name in NATIVE_SERVING_FIELDS:
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
         if "async_scheduling" in engine:
@@ -348,16 +434,26 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     return command
 
 
-def local_model_config(model_dir: Path) -> dict:
-    """Read local GLM metadata only; this adapter does not prepare or download weights."""
-    if not model_dir.is_absolute() or not (model_dir / "config.json").is_file():
-        raise ValueError("v0.28 requires an absolute local metadata directory with config.json")
+def local_model_config(model_dir: Path, version: str = "0.28.0") -> dict:
+    """Read the local metadata the adapter declares; this harness never prepares weights."""
+    metadata = adapter_record(version)["model_metadata"]
+    if metadata is None:
+        raise ValueError(f"The {version} adapter does not read local model metadata")
+    if not model_dir.is_absolute() or not all((model_dir / name).is_file()
+                                             for name in metadata["files"]):
+        raise ValueError("A native adapter requires an absolute local metadata directory with "
+                         + ", ".join(metadata["files"]))
     config = json.loads((model_dir / "config.json").read_text())
-    if type(config) is not dict or config.get("architectures") != ["GlmMoeDsaForCausalLM"]:
-        raise ValueError("Only the GLM native workflow is prepared; original V4 remains blocked")
-    if type(config.get("vocab_size")) is not int or config["vocab_size"] <= 200:
-        raise ValueError("Local metadata requires an integer vocab_size above the prompt generator's 200-token margin")
-    return config
+    if type(config) is not dict or config.get("architectures") != [metadata["architecture"]]:
+        raise ValueError(f"The {version} adapter prepares only {metadata['architecture']}")
+    value = config
+    for key in metadata["vocab_size_keys"]:
+        value = value.get(key) if type(value) is dict else None
+    if type(value) is not int or value <= 200:
+        raise ValueError("Local metadata requires an integer vocab_size above the prompt "
+                         "generator's 200-token margin")
+    # Downstream replay reads a single scalar, which Step-5 declares inside its text config.
+    return config | {"vocab_size": value}
 
 
 def observer_evidence(engine: dict, observer: dict | None) -> dict:
@@ -456,7 +552,7 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 "response_monotonic": time.monotonic(),
                 "http_status": response.status,
             }
-            if vllm_version == "0.10.2":
+            if not native_serving(vllm_version):
                 record["engine_request_id"] = f"cmpl-{row['request_id']}-0"
             if response.status == 200:
                 record["usage"] = payload.get("usage")
@@ -523,9 +619,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--mode", choices=(*MODES, "device_timeline", "light"), required=True)
     parser.add_argument("--observer-config", type=Path,
-                        help="Explicit v0.28 serving recorder JSON; never inherited")
+                        help="Explicit native serving recorder JSON; never inherited")
     parser.add_argument("--model-dir", type=Path,
-                        help="v0.28: existing local GLM metadata directory")
+                        help="native adapters: existing local metadata directory")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--startup-timeout-s", type=float, default=900.0)
     parser.add_argument("--origin-lead-s", type=float, default=1.0)
@@ -543,22 +639,23 @@ def main(argv: list[str] | None = None) -> int:
 
     engine = json.loads(args.engine_config.read_text())
     version = runtime_version(engine)
+    native = native_serving(version)
     observer = json.loads(args.observer_config.read_text()) if args.observer_config else None
     env, mode_env = server_env(args.mode, engine, args.output_dir, dict(os.environ),
                                args.torch_trace_dir, observer=observer)
     if observer is not None and observer["role"] != "MONOLITHIC":
         raise ValueError("DP replay requires MONOLITHIC observer role")
-    if version == "0.28.0":
+    if native:
         if args.model_dir is None:
-            parser.error("v0.28 requires --model-dir with local GLM metadata")
-        model_config = local_model_config(args.model_dir)
+            parser.error(f"{version} requires --model-dir with the local metadata it declares")
+        model_config = local_model_config(args.model_dir, version)
         model_dir = args.model_dir
     elif args.model_dir is not None:
-        parser.error("--model-dir requires the explicit v0.28 adapter")
+        parser.error("--model-dir requires a native adapter")
     request_ids = json.loads((args.trace_dir / "request_ids.json").read_text())
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    if version == "0.10.2":
+    if not native:
         model_dir = output_dir / "model"
         model_config = write_model_dir(
             REPO_ROOT / "data/config/models" / f"{engine['model_name']}.json", model_dir,
@@ -580,7 +677,7 @@ def main(argv: list[str] | None = None) -> int:
         "trace_dir": str(args.trace_dir),
         "profile_window_s": profile_window_s,
     }
-    if version == "0.28.0":
+    if native:
         summary.update(vllm_version=version, qualification_verified=False,
                        model_config_sha256=hashlib.sha256((model_dir / "config.json").read_bytes()).hexdigest())
     records = []
@@ -601,7 +698,7 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             if server is not None:
                 summary["server_stop"] = stop_server(server, args.stop_timeout_s)
-            if version == "0.28.0":
+            if native:
                 summary["observer_evidence"] = observer_evidence(engine, observer)
             (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
     records.sort(key=lambda record: record["dispatch_monotonic"])
