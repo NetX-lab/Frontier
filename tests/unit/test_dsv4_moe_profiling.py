@@ -83,6 +83,18 @@ def test_checkpoint_mxfp4_runtime_requires_cuda(monkeypatch):
         )
 
 
+def test_the_checkpoint_path_builds_marlin_experts():
+    pytest.importorskip("torch")
+    from frontier.profiling.moe import moe_vllm_kernel as kernel
+    from frontier.profiling.moe.mxfp4_marlin_experts import (
+        get_mxfp4_marlin_routed_experts,
+    )
+
+    # The checkpoint branch of the kernel profiler calls this builder by name;
+    # the H800 run failed with a NameError when the import was missing.
+    assert kernel.get_mxfp4_marlin_routed_experts is get_mxfp4_marlin_routed_experts
+
+
 def test_deepseek_v4_is_mxfp4_in_the_quantization_manager(dsv4_config):
     pytest.importorskip("torch")
     from frontier.profiling.common.utils import (
