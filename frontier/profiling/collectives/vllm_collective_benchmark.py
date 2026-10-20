@@ -10,16 +10,20 @@ broadcast/reduce for uneven ``all_gatherv``/``reduce_scatterv`` sizes.
 Each repeat runs ``calls_per_repeat`` back-to-back calls between CUDA events
 after a CPU barrier on the call's group; the per-call time of a repeat is the
 maximum over ranks, which is the time the slowest participant spends in the
-collective. The primary time queues the launches behind a GPU sleep so it
-measures device work; a second, launch-inclusive time is kept alongside
-(``_Runner._time``). Kernel names are recorded in a separate pass after all
-timings, so the profiler is never active before a timed repeat.
+collective. The primary time queues the launches behind a GPU sleep that starts
+on every rank when a one-element all-reduce on the group's device group
+completes, so it measures device work from aligned device start times; a
+second, launch-inclusive time is kept alongside (``CollectiveRunner.time_call``).
+Kernel names are recorded in a separate pass after all timings, so the profiler
+is never active before a timed repeat.
 
-Rank 0 appends one JSON line per (scenario, collective) to
-``<output_dir>/measurements.jsonl``, one line of kernel names per case to
-``kernels.jsonl``, and writes ``summary.csv``, ``forward_totals.csv`` and, for
-TP all-reduce, ``all_reduce.csv`` in the network-profile format read by the
-Vidur CC backend.
+The plan runs ``passes`` times, each pass in an order shuffled with
+``shuffle_seed + pass`` and identical on every rank. Rank 0 appends one JSON
+line per (pass, scenario, collective) to ``<output_dir>/measurements.jsonl``,
+one line of kernel names per case to ``kernels.jsonl``, and writes
+``summary.csv`` and ``forward_totals.csv`` with one row per pass and, for TP
+all-reduce, ``all_reduce.csv`` in the network-profile format read by the Vidur
+CC backend.
 """
 
 from __future__ import annotations
@@ -27,6 +31,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
+import socket
 import statistics
 import time
 from pathlib import Path
@@ -41,7 +47,7 @@ from frontier.profiling.collectives.vllm_forward_collectives import (
     scenarios_from_grid,
 )
 
-RUN_SETTINGS = ("warmup_calls", "repeats", "calls_per_repeat")
+RUN_SETTINGS = ("warmup_calls", "repeats", "calls_per_repeat", "passes", "shuffle_seed")
 # The queued timing sleeps for this multiple of the slowest launch-inclusive
 # repeat, which bounds the CPU enqueue time of a repeat.
 QUEUE_SLEEP_MARGIN = 2.0
@@ -49,22 +55,30 @@ QUEUE_SLEEP_MARGIN = 2.0
 SLEEP_CALIBRATION_CYCLES = 10_000_000
 
 
+def pass_order(items: list, shuffle_seed: int, pass_index: int) -> list:
+    """``items`` in the order of one pass; every rank derives the same order."""
+    order = list(items)
+    random.Random(shuffle_seed + pass_index).shuffle(order)
+    return order
+
+
 def _percentile(values: list[float], fraction: float) -> float:
     ordered = sorted(values)
     return ordered[min(len(ordered) - 1, int(fraction * len(ordered)))]
 
 
-def _critical_path(per_rank: list) -> list[float]:
+def critical_path(per_rank: list) -> list[float]:
     """Slowest participating rank of each repeat."""
     return [max(values) for values in zip(*(r for r in per_rank if r is not None))]
 
 
 def summarize(record: dict) -> dict:
     """Reduce per-rank repeat timings of one measurement to critical-path stats."""
-    critical = _critical_path(record["per_rank_call_us"])
-    launch = _critical_path(record["per_rank_launch_call_us"])
+    critical = critical_path(record["per_rank_call_us"])
+    launch = critical_path(record["per_rank_launch_call_us"])
     held = [h for rank in record["per_rank_queue_held"] if rank is not None for h in rank]
     return {
+        "pass": record["pass"],
         "scenario": record["scenario"], "call": record["call"], "op": record["op"],
         "group": record["group"], "group_size": record["group_size"],
         "cuda_graph": record["cuda_graph"], "calls_per_forward": record["calls_per_forward"],
@@ -82,11 +96,11 @@ def summarize(record: dict) -> dict:
 
 
 def forward_totals(summary_rows: list[dict]) -> list[dict]:
-    """Per-scenario communication time of one forward pass (median-based)."""
-    totals: dict[str, dict] = {}
+    """Per-pass, per-scenario communication time of one forward pass (median-based)."""
+    totals: dict[tuple, dict] = {}
     for row in summary_rows:
-        total = totals.setdefault(row["scenario"], {
-            "scenario": row["scenario"], "cuda_graph": row["cuda_graph"],
+        total = totals.setdefault((row["pass"], row["scenario"]), {
+            "pass": row["pass"], "scenario": row["scenario"], "cuda_graph": row["cuda_graph"],
             "tokens_per_dp_rank": row["tokens_per_dp_rank"], "forward_comm_us": 0.0})
         total["forward_comm_us"] += row["calls_per_forward"] * row["median_us"]
         total[f"{row['call']}_us"] = row["calls_per_forward"] * row["median_us"]
@@ -116,8 +130,16 @@ def network_all_reduce_rows(summary_rows: list[dict], gpus_per_node: int) -> lis
     return sorted(rows, key=lambda row: row["size"])
 
 
-class _Runner:
-    def __init__(self, parallel: ServingParallelism, settings: dict):
+class CollectiveRunner:
+    """One rank of ``instances`` vLLM serving instances that share the torch world.
+
+    vLLM lays the world out as ExternalDP x DP x PP x TP
+    (parallel_state.py ``initialize_model_parallel``), so instance ``i`` holds
+    ranks ``[i * W, (i + 1) * W)`` with ``W = TP x DP``. Calls are planned on
+    instance-local ranks; each instance measures on its own ranks.
+    """
+
+    def __init__(self, parallel: ServingParallelism, settings: dict, instances: int = 1):
         import torch
         from vllm.config import ParallelConfig, VllmConfig, set_current_vllm_config
         from vllm.distributed import parallel_state
@@ -128,17 +150,25 @@ class _Runner:
         self.settings = settings
         self.rank = int(os.environ["RANK"])
         self.local_rank = int(os.environ["LOCAL_RANK"])
-        if int(os.environ["WORLD_SIZE"]) != parallel.world_size:
-            raise ValueError("torchrun WORLD_SIZE must equal TP x DP")
+        if int(os.environ["WORLD_SIZE"]) != instances * parallel.world_size:
+            raise ValueError(f"torchrun WORLD_SIZE must equal {instances} x TP x DP")
+        self.instance, self.instance_rank = divmod(self.rank, parallel.world_size)
         self.device = torch.device("cuda", self.local_rank)
         torch.cuda.set_device(self.device)
-        self.vllm_config = VllmConfig(parallel_config=ParallelConfig(
-            tensor_parallel_size=parallel.tensor_parallel_size,
-            data_parallel_size=parallel.data_parallel_size,
-            pipeline_parallel_size=parallel.pipeline_parallel_size,
-            enable_expert_parallel=parallel.enable_expert_parallel,
-            all2all_backend=parallel.all2all_backend,
-            distributed_executor_backend="external_launcher"))
+        # Under the external launcher ParallelConfig derives the DP rank from
+        # RANK (config/parallel.py ``__post_init__``), so it reads the
+        # instance-local rank, as it would in an instance with its own world.
+        os.environ["RANK"] = str(self.instance_rank)
+        try:
+            self.vllm_config = VllmConfig(parallel_config=ParallelConfig(
+                tensor_parallel_size=parallel.tensor_parallel_size,
+                data_parallel_size=parallel.data_parallel_size,
+                pipeline_parallel_size=parallel.pipeline_parallel_size,
+                enable_expert_parallel=parallel.enable_expert_parallel,
+                all2all_backend=parallel.all2all_backend,
+                distributed_executor_backend="external_launcher"))
+        finally:
+            os.environ["RANK"] = str(self.rank)
         self._config_context = set_current_vllm_config(self.vllm_config)
         self._config_context.__enter__()
         init_worker_distributed_environment(self.vllm_config, self.rank, "env://",
@@ -147,14 +177,27 @@ class _Runner:
         self.groups = {"tp": parallel_state.get_tp_group(),
                        "ep": parallel_state.get_ep_group(),
                        "dp": parallel_state.get_dp_group()}
-        self.world_cpu = parallel_state.get_world_group().cpu_group
+        # Every rank creates every instance's group, as new_group requires.
+        instance_groups = [torch.distributed.new_group(
+            list(range(i * parallel.world_size, (i + 1) * parallel.world_size)),
+            backend="gloo") for i in range(instances)]
+        self.instance_cpu = instance_groups[self.instance]
         self._check_layout()
+        self.hosts = [None] * parallel.world_size
+        torch.distributed.all_gather_object(self.hosts, socket.gethostname(),
+                                            group=self.instance_cpu)
+        self._start_flag = torch.zeros(1, device=self.device)
+        for group in self.groups.values():
+            self._align_start(group)
+        torch.cuda.synchronize()
         self.sleep_cycles_per_us = self._sleep_cycles_per_us()
 
     def _check_layout(self) -> None:
         """Fail when vLLM's groups or DP-sync transport differ from the plan's."""
+        offset = self.instance * self.parallel.world_size
         for name, group in self.groups.items():
-            expected = group_members(self.parallel, name, self.rank)
+            expected = [offset + member for member in
+                        group_members(self.parallel, name, self.instance_rank)]
             if list(group.ranks) != expected:
                 raise RuntimeError(f"vLLM {name} group of rank {self.rank} is "
                                    f"{group.ranks}; the plan assumes {expected}")
@@ -162,6 +205,14 @@ class _Runner:
         if bool(on_cpu) != self.parallel.dp_sync_on_cpu:
             raise RuntimeError(f"vLLM DP sync on CPU is {on_cpu}; the plan assumes "
                                f"{self.parallel.dp_sync_on_cpu}")
+
+    def _align_start(self, group) -> None:
+        """Queue a one-element all-reduce on ``group``'s device group.
+
+        Work queued after it starts on every member when the all-reduce
+        completes, instead of when each rank's CPU leaves the barrier.
+        """
+        self.torch.distributed.all_reduce(self._start_flag, group=group.device_group)
 
     def _sleep_cycles_per_us(self) -> float:
         torch = self.torch
@@ -188,6 +239,7 @@ class _Runner:
         return {"torch": self.torch.__version__, "vllm": vllm.__version__,
                 "communicators": enabled,
                 "group_ranks": {name: list(g.ranks) for name, g in self.groups.items()},
+                "hosts": self.hosts,
                 "sleep_cycles_per_us": self.sleep_cycles_per_us}
 
     def _tensors(self, call: CollectiveCall, rows: int, device):
@@ -199,9 +251,9 @@ class _Runner:
         """Return a zero-argument function that issues ``call`` once on this rank."""
         torch = self.torch
         group = self.groups[call.group]
-        rows = call.shard_rows[self.rank]
-        members = group.ranks
-        sizes = [call.shard_rows[m] for m in members]
+        rows = call.shard_rows[self.instance_rank]
+        offset = self.instance * self.parallel.world_size
+        sizes = [call.shard_rows[m - offset] for m in group.ranks]
         if call.op == "cpu_all_reduce":
             (tensor,) = self._tensors(call, rows, "cpu")
             return lambda: torch.distributed.all_reduce(tensor, group=group.cpu_group)
@@ -215,7 +267,7 @@ class _Runner:
             (tensor,) = self._tensors(call, rows, self.device)
             return lambda: group.all_gather(tensor, dim=call.dim)
         if call.op == "reduce_scatter":
-            (tensor,) = self._tensors(call, rows * len(members), self.device)
+            (tensor,) = self._tensors(call, rows * len(sizes), self.device)
             return lambda: group.reduce_scatter(tensor, dim=call.dim)
         if call.op == "all_gatherv":
             tensors = self._tensors(call, rows, self.device)
@@ -225,7 +277,7 @@ class _Runner:
             return lambda: group.reduce_scatterv(tensor, dim=call.dim, sizes=sizes)
         raise ValueError(f"Unknown op {call.op!r}")
 
-    def _prepare(self, call: CollectiveCall):
+    def prepare(self, call: CollectiveCall):
         """Warm ``call`` up; return ``(issue, run)``, ``run`` issuing ``calls_per_repeat`` calls.
 
         Captured calls run as one CUDA-graph replay. The caller keeps ``issue``
@@ -250,12 +302,14 @@ class _Runner:
         torch.cuda.synchronize()
         return issue, graph.replay
 
-    def _gpu_repeat(self, run, barrier_group, sleep_cycles: int) -> tuple[float, bool]:
+    def gpu_repeat(self, run, group, sleep_cycles: int) -> tuple[float, bool]:
         """Per-call microseconds of one repeat, and whether the GPU sleep outlasted the enqueue."""
         torch = self.torch
         sleep_start, begin, end = (torch.cuda.Event(enable_timing=True) for _ in range(3))
-        torch.distributed.barrier(group=barrier_group)
+        torch.distributed.barrier(group=group.cpu_group)
         start = time.perf_counter()
+        if sleep_cycles:
+            self._align_start(group)
         sleep_start.record()
         if sleep_cycles:
             torch.cuda._sleep(sleep_cycles)
@@ -267,51 +321,56 @@ class _Runner:
         per_call_us = begin.elapsed_time(end) * 1e3 / self.settings["calls_per_repeat"]
         return per_call_us, enqueue_us < sleep_start.elapsed_time(begin) * 1e3
 
-    def _time(self, call: CollectiveCall, run, barrier_group) -> dict:
-        """Time ``run`` on the ranks of ``barrier_group``.
+    def time_call(self, call: CollectiveCall, run) -> dict:
+        """Time ``run`` on the ranks of the call's group.
 
         GPU calls are timed twice. ``launch_call_us`` starts the CUDA events
         when the CPU starts launching, so small calls measure the launch path.
-        ``call_us`` first queues a GPU sleep, of equal length on every rank,
-        that outlasts the launches, so the events time the device work alone;
-        ``queue_held`` records whether the sleep did outlast them.
+        ``call_us`` first queues a GPU sleep, of equal length on every rank and
+        started by a device-side all-reduce on the group, that outlasts the
+        launches, so the events time the device work alone from aligned start
+        times; ``queue_held`` records whether the sleep did outlast them.
         """
         torch = self.torch
+        group = self.groups[call.group]
         repeats, per_repeat = self.settings["repeats"], self.settings["calls_per_repeat"]
         if call.op == "cpu_all_reduce":
             timings = []
             for _ in range(repeats):
-                torch.distributed.barrier(group=barrier_group)
+                torch.distributed.barrier(group=group.cpu_group)
                 start = time.perf_counter()
                 run()
                 timings.append((time.perf_counter() - start) * 1e6 / per_repeat)
             return {"call_us": timings, "launch_call_us": None, "queue_held": None}
-        launch = [self._gpu_repeat(run, barrier_group, 0)[0] for _ in range(repeats)]
-        sleep_us = torch.tensor([QUEUE_SLEEP_MARGIN * max(launch) * per_repeat],
-                                dtype=torch.float64)
-        torch.distributed.all_reduce(sleep_us, op=torch.distributed.ReduceOp.MAX,
-                                     group=barrier_group)
-        sleep_cycles = int(sleep_us.item() * self.sleep_cycles_per_us)
-        queued = [self._gpu_repeat(run, barrier_group, sleep_cycles) for _ in range(repeats)]
+        launch = [self.gpu_repeat(run, group, 0)[0] for _ in range(repeats)]
+        sleep_cycles = self.queue_sleep_cycles(launch, group)
+        queued = [self.gpu_repeat(run, group, sleep_cycles) for _ in range(repeats)]
         return {"call_us": [q[0] for q in queued], "launch_call_us": launch,
                 "queue_held": [q[1] for q in queued]}
 
-    def measure(self, scenario, call: CollectiveCall) -> dict | None:
-        """Time one call; return the merged record on rank 0."""
+    def queue_sleep_cycles(self, launch_call_us: list[float], group) -> int:
+        """GPU sleep that outlasts the slowest launch-inclusive repeat of any group member."""
         torch = self.torch
-        torch.distributed.barrier(group=self.world_cpu)
-        local = None
-        # Only the call's participants time it; ranks with no rows (logits on
-        # idle DP ranks) skip to the world gather below.
-        if call.shard_rows[self.rank] > 0:
-            issue, run = self._prepare(call)
-            local = {**self._time(call, run, self.groups[call.group].cpu_group),
-                     "bytes": call_bytes(call, self.parallel, self.rank)}
-            del issue, run
+        sleep_us = torch.tensor(
+            [QUEUE_SLEEP_MARGIN * max(launch_call_us) * self.settings["calls_per_repeat"]],
+            dtype=torch.float64)
+        torch.distributed.all_reduce(sleep_us, op=torch.distributed.ReduceOp.MAX,
+                                     group=group.cpu_group)
+        return int(sleep_us.item() * self.sleep_cycles_per_us)
+
+    def participates(self, call: CollectiveCall) -> bool:
+        """Whether this rank issues ``call``; ranks without rows, such as idle DP ranks
+        for logits, skip it."""
+        return call.shard_rows[self.instance_rank] > 0
+
+    def gather(self, local) -> list | None:
+        """``local`` of every rank of this instance, on its first rank; None elsewhere."""
         gathered = [None] * self.parallel.world_size
-        torch.distributed.all_gather_object(gathered, local, group=self.world_cpu)
-        if self.rank != 0:
-            return None
+        self.torch.distributed.all_gather_object(gathered, local, group=self.instance_cpu)
+        return gathered if self.instance_rank == 0 else None
+
+    def call_record(self, scenario, call: CollectiveCall, gathered: list) -> dict:
+        """Identity and byte counts of ``call``, merged over the gathered ranks."""
         present = [g for g in gathered if g is not None]
         return {
             "scenario": scenario.name, "call": call.name, "op": call.op,
@@ -322,18 +381,34 @@ class _Runner:
             "shard_rows": list(call.shard_rows), "source": call.source,
             "max_input_bytes": max(g["bytes"][0] for g in present),
             "max_output_bytes": max(g["bytes"][1] for g in present),
+        }
+
+    def measure(self, scenario, call: CollectiveCall) -> dict | None:
+        """Time one call; return the merged record on the instance's first rank."""
+        self.torch.distributed.barrier(group=self.instance_cpu)
+        local = None
+        if self.participates(call):
+            issue, run = self.prepare(call)
+            local = {**self.time_call(call, run),
+                     "bytes": call_bytes(call, self.parallel, self.instance_rank)}
+            del issue, run
+        gathered = self.gather(local)
+        if gathered is None:
+            return None
+        return {
+            **self.call_record(scenario, call, gathered),
             "per_rank_call_us": [g["call_us"] if g else None for g in gathered],
             "per_rank_launch_call_us": [g["launch_call_us"] if g else None for g in gathered],
             "per_rank_queue_held": [g["queue_held"] if g else None for g in gathered],
         }
 
     def kernel_names(self, call: CollectiveCall) -> list[str] | None:
-        """CUDA kernels of one ``run`` of ``call``, merged over ranks on rank 0."""
+        """CUDA kernels of one ``run`` of ``call``, merged over ranks on the first rank."""
         torch = self.torch
-        torch.distributed.barrier(group=self.world_cpu)
+        torch.distributed.barrier(group=self.instance_cpu)
         names = []
-        if call.shard_rows[self.rank] > 0 and call.op != "cpu_all_reduce":
-            issue, run = self._prepare(call)
+        if self.participates(call) and call.op != "cpu_all_reduce":
+            issue, run = self.prepare(call)
             with torch.profiler.profile(
                     activities=[torch.profiler.ProfilerActivity.CUDA]) as profile:
                 run()
@@ -341,14 +416,13 @@ class _Runner:
             names = [event.name for event in profile.events()
                      if event.device_type == torch.autograd.DeviceType.CUDA]
             del issue, run
-        gathered = [None] * self.parallel.world_size
-        torch.distributed.all_gather_object(gathered, names, group=self.world_cpu)
-        if self.rank != 0:
+        gathered = self.gather(names)
+        if gathered is None:
             return None
         return sorted({name for rank_names in gathered for name in rank_names})
 
 
-def _write_csv(path: Path, rows: list[dict]) -> None:
+def write_csv(path: Path, rows: list[dict]) -> None:
     import csv
 
     if not rows:
@@ -371,16 +445,16 @@ def main() -> None:
     model = ModelShape.from_hf_config(json.loads(Path(config["model_config"]).read_text()))
     scenarios = scenarios_from_grid(parallel, config["grid"])
     plan = [(s, c) for s in scenarios for c in forward_collectives(model, parallel, s)]
+    settings = {key: int(config[key]) for key in RUN_SETTINGS}
     if args.list_cases:
         for scenario, call in plan:
             print(scenario.name, call.name, call.op, call.group,
                   call_bytes(call, parallel, 0), call.calls_per_forward)
-        print("cases", len(plan))
+        print("cases", len(plan), "passes", settings["passes"],
+              "measurements", len(plan) * settings["passes"])
         return
-    settings = {key: int(config[key]) for key in RUN_SETTINGS}
-    runner = _Runner(parallel, settings)
+    runner = CollectiveRunner(parallel, settings)
     output = Path(config["output_dir"])
-    summary = []
     log = None
     if runner.rank == 0:
         output.mkdir(parents=True, exist_ok=True)
@@ -389,27 +463,29 @@ def main() -> None:
             indent=2))
         log = (output / "measurements.jsonl").open("a")
     records = []
-    for scenario, call in plan:
-        record = runner.measure(scenario, call)
-        if record is None:
-            continue
-        log.write(json.dumps(record) + "\n")
-        log.flush()
-        records.append(record)
-    kernels = [runner.kernel_names(call) for _, call in plan]
+    for pass_index in range(settings["passes"]):
+        for scenario, call in pass_order(plan, settings["shuffle_seed"], pass_index):
+            record = runner.measure(scenario, call)
+            if record is None:
+                continue
+            record = {"pass": pass_index, **record}
+            log.write(json.dumps(record) + "\n")
+            log.flush()
+            records.append(record)
+    kernels = {(s.name, c.name): runner.kernel_names(c) for s, c in plan}
     if runner.rank == 0:
         log.close()
         with (output / "kernels.jsonl").open("a") as kernel_log:
-            for record, names in zip(records, kernels):
-                record["kernels"] = names
-                kernel_log.write(json.dumps({"scenario": record["scenario"],
-                                             "call": record["call"], "kernels": names}) + "\n")
-                summary.append(summarize(record))
-        _write_csv(output / "summary.csv", summary)
-        _write_csv(output / "forward_totals.csv", forward_totals(summary))
-        _write_csv(output / "all_reduce.csv",
+            for (scenario, call), names in kernels.items():
+                kernel_log.write(json.dumps({"scenario": scenario, "call": call,
+                                             "kernels": names}) + "\n")
+        summary = [summarize({**r, "kernels": kernels[(r["scenario"], r["call"])]})
+                   for r in records]
+        write_csv(output / "summary.csv", summary)
+        write_csv(output / "forward_totals.csv", forward_totals(summary))
+        write_csv(output / "all_reduce.csv",
                    network_all_reduce_rows(summary, int(config["gpus_per_node"])))
-    runner.torch.distributed.barrier(group=runner.world_cpu)
+    runner.torch.distributed.barrier(group=runner.instance_cpu)
 
 
 if __name__ == "__main__":
