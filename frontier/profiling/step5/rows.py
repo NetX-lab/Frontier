@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import asdict, replace
+from dataclasses import asdict, dataclass, replace
 
 from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.attention.profiling_mapping import validate_attention_profiling_dataframe
@@ -13,6 +13,39 @@ from frontier.operators.typed_contracts import serialize_typed_operator_contract
 
 
 OPERATOR_NAMES = tuple(op.name for op in STEP5_ATTENTION_FAMILY.operators)
+
+
+@dataclass
+class Step5ProfileResult:
+    event_row: dict
+    gpu_active_row: dict | None = None
+
+    @property
+    def calibration_row(self):
+        return self.gpu_active_row if self.gpu_active_row is not None else self.event_row
+
+
+def summarize_replays(window_times, per_replay_times, active, *, max_time_cv):
+    from frontier.profiling.common.timer_stats_store import TimerStatsStore
+
+    stats = TimerStatsStore.get_stats_from_times(window_times)
+    singles = TimerStatsStore.get_stats_from_times(per_replay_times)
+    targets = (*active, "step5_layer_e2e")
+    if any(stats[name]["mean"] <= 0 or singles[name]["median"] <= 0 for name in targets):
+        raise ValueError("Every active timing target must have positive measured work")
+    cv = {name: float(stats[name]["std"] / stats[name]["mean"]) for name in targets}
+    disagreement = {name: float(abs(stats[name]["mean"] - singles[name]["median"])
+                                / singles[name]["median"]) for name in targets}
+    return stats, {
+        "time_cv": cv["step5_layer_e2e"],
+        "max_operator_time_cv": max(cv[name] for name in active),
+        "max_time_cv": max_time_cv,
+        "time_cv_by_target": json.dumps(cv),
+        "per_iteration_time_stats": json.dumps(singles),
+        "median_relative_error_by_target": json.dumps(disagreement),
+        "max_median_relative_error": max(disagreement.values()),
+        "stability_pass": all(value <= max_time_cv for value in (*cv.values(), *disagreement.values())),
+    }
 
 
 def operator_contracts(config, layer_id, tp):
@@ -29,13 +62,13 @@ def operator_contracts(config, layer_id, tp):
 
 
 def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
-              device, time_stats, evidence):
+              device, time_stats, evidence, measurement_type="CUDA_EVENT"):
     metadata = describe_step5_layer(config, cell.global_layer_id, attention_tp_size=tp,
                                    moe_tp_size=1, expert_parallel_size=1)
     workload = cell.workload(config, block_size=block_size, max_model_len=max_model_len)
     g = metadata.geometry
     return {
-        "measurement_type": "CUDA_EVENT", "attention_backend": evidence["attention_backend"],
+        "measurement_type": measurement_type, "attention_backend": evidence["attention_backend"],
         "model_architecture_profile": config.get_model_architecture_profile().profile_id,
         "attention_variant": metadata.attention_spec.variant_id,
         "global_layer_id": cell.global_layer_id, "quant_signature": config.get_quant_signature(),
@@ -66,7 +99,7 @@ def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
     }
 
 
-def rows_to_dataframe(rows):
+def rows_to_dataframe(rows, *, measurement_type="CUDA_EVENT"):
     import pandas as pd
 
     frame = pd.DataFrame(rows)
@@ -74,7 +107,7 @@ def rows_to_dataframe(rows):
     # The shared validator currently couples schema validation to runtime
     # enablement. Use a private schema view; never mutate/register the family.
     schema = replace(STEP5_ATTENTION_FAMILY, execution_enabled=True)
-    validate_attention_profiling_dataframe(frame, schema, measurement_type="CUDA_EVENT")
+    validate_attention_profiling_dataframe(frame, schema, measurement_type=measurement_type)
     whole_columns = [f"time_stats.step5_layer_e2e.{suffix}"
                      for suffix in ("min", "max", "mean", "median", "std", "count")]
     if any(column not in frame for column in whole_columns):

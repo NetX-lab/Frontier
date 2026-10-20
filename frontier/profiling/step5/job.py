@@ -28,6 +28,7 @@ def describe_smoke(stage, run_id, *, gpus=1):
     q = shlex.quote
     worker = "\n".join([
         "set -euo pipefail", "export TMPDIR=/data/ycfeng/tmp/step5_attention_worker",
+        "export VLLM_USE_BREAKABLE_CUDAGRAPH=1",
         'mkdir -p "$TMPDIR/model"', f"test ! -e {q(str(output))}",
         'cp data/config/models/stepfun-ai__Step-5-Preview.json "$TMPDIR/model/config.json"',
         'export PYTHONPATH="$PWD/offline_site${PYTHONPATH:+:$PYTHONPATH}"',
@@ -37,14 +38,18 @@ def describe_smoke(stage, run_id, *, gpus=1):
         "bash tests/integration/step5_profiling/run_on_worker.sh "
         "-m frontier.profiling.step5.main --model-path \"$TMPDIR/model\" "
         "--tensor-parallel-size 8 --max-model-len 8192 "
-        "--prefill-tokens 16 64 --prefixes 0 4104 --decode-batches 1 "
-        "--decode-contexts 512 4104 --graph-modes none full "
+        "--prefill-tokens 16 64 --prefixes 0 4104 --prefill-batches 1 --decode-batches 1 "
+        "--decode-contexts 512 4104 --cudagraph-capture-sizes 1 2 "
+        "--min-timing-window-ms 0.5 "
         f"--output-dir {q(str(output))}",
     ])
     return {"image": IMAGE, "gpu_tag": "H800", "charged_group": "codesign",
             "gpus": gpus, "cpus": 8 * gpus, "mem_gb": 32 * gpus,
             "mounts": [f"local_nfs:{stage}:{stage}", CLOUD_MOUNT],
-            "source_mount": str(stage), "cloud_output": str(output), "expected_rows": 16,
+            "source_mount": str(stage), "cloud_output": str(output), "expected_rows": 12,
+            "expected_gpu_active_rows": 8, "expected_csv_rows": 20,
+            "native_max_num_seqs": 1, "native_cudagraph_capture_sizes": [1, 2],
+            "native_phase_graph_modes": {"prefill_16_64": "none", "decode_1": "full"},
             "timeout_seconds": 3600, "preemptible": False,
             "credential_env": str(STEPMIND_ENV),
             "submit_wrapper_command": f"bash {q(str(stage / 'submit_with_env.sh'))}",

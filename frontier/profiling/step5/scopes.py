@@ -14,6 +14,7 @@ class NativeScopes:
         self.active = None
         self.events = {}
         self.graph_capture = False
+        self.record_events = True
 
     @contextmanager
     def scope(self, name):
@@ -21,19 +22,22 @@ class NativeScopes:
             yield
             return
         self.active = name
-        start = self.torch.cuda.Event(enable_timing=True, external=self.graph_capture)
-        end = self.torch.cuda.Event(enable_timing=True, external=self.graph_capture)
+        start = self.torch.cuda.Event(enable_timing=True, external=self.graph_capture) if self.record_events else None
+        end = self.torch.cuda.Event(enable_timing=True, external=self.graph_capture) if self.record_events else None
         try:
             with self.torch.profiler.record_function(name):
-                start.record()
+                if start is not None:
+                    start.record()
                 yield
-                end.record()
-            self.events.setdefault(name, []).append((start, end))
+                if end is not None:
+                    end.record()
+            if start is not None:
+                self.events.setdefault(name, []).append((start, end))
         finally:
             self.active = None
 
     @contextmanager
-    def observe(self, bindings):
+    def observe(self, bindings, *, record_events=True):
         with ExitStack() as stack:
             for owner, attr, name in bindings:
                 original = getattr(owner, attr)
@@ -45,10 +49,12 @@ class NativeScopes:
 
                 stack.enter_context(patch.object(owner, attr, observed))
             self.enabled = True
+            self.record_events = record_events
             try:
                 yield
             finally:
                 self.enabled = False
+                self.record_events = True
 
     def times(self):
         return {name: sum(start.elapsed_time(end) for start, end in events)

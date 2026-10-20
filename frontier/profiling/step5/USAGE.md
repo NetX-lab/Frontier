@@ -17,24 +17,45 @@ local query heads (one replicated provider), not two.
 ```bash
 python -m frontier.profiling.step5.main \
   --model-path /path/to/locked/metadata --max-model-len 8192 \
-  --prefixes 0 4104 --graph-modes none full \
+  --prefixes 0 4104 --cudagraph-capture-sizes 1 2 \
+  --min-timing-window-ms 0.5 \
   --output-dir /path/to/output --dry-run
 ```
 
-The smoke grid contains 16 rows: eight per layer variant, including initial and
-continuation prefill at 16/64 query tokens, and eager/full-graph decode at
-512/4104 prefix tokens. The long prefix exercises selection beyond 512 regions
+The smoke grid contains 12 native cells: initial and continuation prefill at
+16/64 query tokens, and FULL decode at 512/4104 prefix tokens, for both layer
+variants. It emits 12 event-latency rows and eight separate GPU-active rows.
+The long prefix exercises selection beyond 512 regions
 of eight tokens. Prefill must contain at least two query tokens because the
 native one-token branch is decode. Batches currently use equal prefix lengths;
 heterogeneous-prefix and mixed prefill/decode batches are not implemented.
+
+## Native graph policy
+
+The locked Step image auto-enables `VLLM_USE_BREAKABLE_CUDAGRAPH=1` for the Step
+architecture before model decorators bind (`vllm/config/vllm.py:814-842`). Its O2
+policy is `FULL_AND_PIECEWISE`, with compilation mode NONE, not torch.compile
+piecewise. This does **not** mean every prefill uses a graph. The observed native
+configuration has `max_num_seqs=1`, giving capture sizes `[1,2]`
+(`config/vllm.py:2389-2392,2473`). Native dispatch chooses NONE for 16/64-token
+prefill and FULL for single-token decode (`v1/worker/gpu/cudagraph_utils.py:518-563`).
+The parent chose to retain that configuration; this package does not enlarge its
+capture ceiling just to obtain faster-looking prefill numbers.
+
+A two-token prefill fits the ceiling and uses the image's actual
+`BreakableCUDAGraphWrapper`. FULL capture mirrors the native graph context,
+pool and offloader synchronization and captures the forward with runtime NONE
+(`cudagraph_utils.py:435-502`). Input and metadata buffers remain address-stable.
+Padding to an intermediate capture bucket is not implemented; such inputs fail
+clearly rather than silently measuring an unpadded graph.
 
 ## Stage; do not submit automatically
 
 ```bash
 python -m frontier.profiling.step5.job \
-  --stage /data/ycfeng/tmp/step5_attention_20261020/smoke_stage03 \
+  --stage /data/ycfeng/tmp/step5_attention_20261020/smoke_stage04 \
   --dependency-site /path/to/cpu-verified/cp312/dependency-site \
-  --run-id attention_smoke_20261020_02
+  --run-id attention_smoke_20261020_03
 ```
 
 `manifest.json` records the locked image digest, one-H800/codesign resources,
@@ -53,32 +74,52 @@ sets CUDA compatibility before importing torch, without changing torch/vLLM/Trit
 
 ## Outputs and judgment
 
-The CSV is `compute/h800/stepfun-ai/Step-5-Preview/step5_attention.csv` below the
-requested output root. `summary.json` reports expected/actual/stable row counts;
-raw Chrome traces remain in `traces/`. Completed rows are written incrementally.
+Below `compute/h800/stepfun-ai/Step-5-Preview/` in the requested output root:
 
-- Require 16 rows, finite nonnegative timings and positive whole-layer times.
+- `step5_attention.csv` has 12 `CUDA_EVENT` rows. Eager rows include native host
+  launch gaps and are diagnostic latency, **not** GPU-compute calibration data.
+- `step5_attention_kernel_only.csv` has eight `KERNEL_ONLY` eager rows, containing
+  correlated kernel **and device-copy** duration sums, without host gaps. This
+  sum is not an elapsed interval or a union of overlapping device intervals.
+
+`summary.json` reports grid/event counts, GPU-active counts and stable calibration
+targets (FULL event rows plus eager GPU-active rows). Raw Chrome traces remain in
+`traces/`. Completed rows are written incrementally; the two methods never share
+one dataframe or pretend to be the same timing quantity.
+
+- Require 12 event rows and eight GPU-active rows, finite nonnegative timings and
+  positive whole-layer times. All 12 calibration targets must pass quality checks.
 - Native uninstrumented versus instrumented output and KV/summary state must
   match at `rtol=atol=0.02`. Continuations also compare against a full-prefix
   native forward. Graph rows compare actual replay output/state against eager.
 - Only contract-inactive or fused targets receive zeros. Missing active scopes
   fail rather than being filled. Outermost observed scopes own fused work once.
-- CUDA events time the complete layer, including DSA prefill device copies.
-  Per-operator scopes use a separate observed native pass; full-graph operator
-  measurements use external CUDA-event nodes in a separate captured graph.
-- The default stability threshold is 5% coefficient of variation, with one
-  explicit retry. Unstable rows remain raw evidence, not admitted measurements.
-- Inspect `operator_sum_to_layer_ratio`; host launch gaps and instrumentation
-  make it a diagnostic, not an automatic reconciliation PASS. Compare 16/64
-  prefill timings at matching context and graph policy; tiny-token launch-bound
-  cases can be flat/noisy, so do not rescale a nonmonotone result.
+- Capture and warmup stay outside event windows. Each accepted clean window uses
+  one event pair around N consecutive replays and lasts at least the configured
+  0.5 ms. Eager GPU-active windows independently reach 0.5 ms of actual device
+  activity, not 0.5 ms of host waiting. Per-replay statistics remain available.
+- Scope cohorts own distinct event handles per replay. All N matching spans are
+  summed before normalization; a last-overwritten graph event is never divided
+  by N. `operator_sum_to_layer_ratio` uses the matching instrumented root, not
+  the clean graph. `instrumentation_overhead_fraction` reports the clean/scoped
+  outer-window difference separately, without clipping or rescaling.
+- The 5% CV bound applies to the layer and every active target. Window means must
+  also agree with per-replay medians within that bound. One explicit retry keeps
+  the initial outcome; failure remains unqualified evidence.
+- Repeated DSA timing requires region-aligned contexts because native partial
+  summary tails accumulate state (`ops/summary_update.py:35-58,140-148`). Output
+  and cache are checked immediately after the final measured replay, without an
+  extra forward masking the measured state.
+- Compare GPU-active prefill costs at matching context, not the eager event
+  latency. Missing activity/correlation or unowned measured work fails rather
+  than silently dropping a kernel or copy. Restore/priming work is excluded.
 - Inspect native kernel names: BF16 GEMMs, FlashAttention SWA,
   `_headwise_sigmoid_gate`, sparse prefill/indexer/summary/top-k kernels and
   `_sparse_decode_*`. Keep `memory_copy_count` separate from kernel counts;
   graph decode should have zero device copies. The raw trace settles exact
   spelling/branch identity; substring expectations alone do not admit a row.
 
-Estimated smoke runtime is 15–40 minutes (0.25–0.67 H800 GPU-hours), with a
+Estimated smoke runtime is 15–45 minutes (0.25–0.75 H800 GPU-hours), with a
 one-hour worker timeout. This is an estimate, not a measurement.
 
 ## Qualification limits

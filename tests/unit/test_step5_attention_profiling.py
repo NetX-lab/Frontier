@@ -7,6 +7,7 @@ import subprocess
 import sys
 from contextlib import contextmanager, nullcontext
 from itertools import product
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
 import pytest
@@ -15,7 +16,7 @@ from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.attention.step5 import resolve_step5_attention_geometry
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.step5.inputs import Step5ProfileInput, build_profile_inputs
-from frontier.profiling.step5.rows import OPERATOR_NAMES, build_row, rows_to_dataframe
+from frontier.profiling.step5.rows import OPERATOR_NAMES, Step5ProfileResult, build_row, rows_to_dataframe, summarize_replays
 from frontier.profiling.step5.scopes import NativeScopes, trace_signature
 from frontier.profiling.step5.job import describe_smoke, IMAGE, CLOUD_MOUNT
 
@@ -47,13 +48,15 @@ def test_smoke_grid_and_runtime_stays_disabled(config):
                                 decode_batches=[1], decode_contexts=[512, 4104])
     assert len(cells) == 12
     assert {c.global_layer_id for c in cells} == {0, 3}
+    assert {c.graph_mode for c in cells if c.phase == "prefill"} == {"none"}
+    assert {c.graph_mode for c in cells if c.phase == "decode"} == {"full"}
     assert STEP5_ATTENTION_FAMILY.execution_enabled is False
     assert config.get_model_architecture_profile().attention_linear_ops.profiling_enabled is False
 
 
 @pytest.mark.parametrize("kwargs", [
     {"query_lens": (0,)}, {"context_lens": (-1,)}, {"context_lens": ()},
-    {"phase": "mixed"}, {"phase": "decode"}, {"graph_mode": "piecewise"},
+    {"phase": "mixed"}, {"phase": "decode"}, {"graph_mode": "invalid"},
     {"graph_mode": "full"}, {"global_layer_id": True},
 ])
 def test_invalid_cells(kwargs):
@@ -84,6 +87,42 @@ def test_typed_row_has_complete_family_schema(config):
     assert {c["operator_family_id"] for c in contracts.values()} == {"step5_attention"}
     assert frame.iloc[0].local_index_q_heads == 4
     assert STEP5_ATTENTION_FAMILY.execution_enabled is False
+
+
+def test_gpu_active_rows_use_separate_kernel_only_measurement(config):
+    result = row(config)
+    result["measurement_type"] = "KERNEL_ONLY"
+    with pytest.raises(ValueError, match="measurement_type mismatch"):
+        rows_to_dataframe([result])
+    frame = rows_to_dataframe([result], measurement_type="KERNEL_ONLY")
+    assert set(frame.measurement_type) == {"KERNEL_ONLY"}
+
+
+@pytest.mark.parametrize("failure", ["operator_cv", "median_disagreement", "zero_work"])
+def test_timing_quality_checks_all_active_targets_without_correction(failure):
+    window = {"step5_qkv_projection": [1., 1.], "step5_layer_e2e": [3., 3.]}
+    raw = {name: values[:] for name, values in window.items()}
+    if failure == "operator_cv":
+        window["step5_qkv_projection"] = [.8, 1.2]
+    elif failure == "median_disagreement":
+        window["step5_qkv_projection"] = [1.1, 1.1]
+    else:
+        window["step5_qkv_projection"] = [0., 0.]
+        with pytest.raises(ValueError, match="positive measured work"):
+            summarize_replays(window, raw, ("step5_qkv_projection",), max_time_cv=.05)
+        return
+    stats, quality = summarize_replays(window, raw, ("step5_qkv_projection",), max_time_cv=.05)
+    assert quality["time_cv"] == 0.
+    assert not quality["stability_pass"]
+    assert stats["step5_qkv_projection"]["mean"] == pytest.approx(sum(window["step5_qkv_projection"]) / 2)
+
+
+def test_timing_quality_retains_single_replay_stats():
+    values = {"step5_qkv_projection": [1., 1.], "step5_layer_e2e": [3., 3.]}
+    _, quality = summarize_replays(values, values, ("step5_qkv_projection",), max_time_cv=.05)
+    assert quality["stability_pass"]
+    assert quality["max_median_relative_error"] == 0.
+    assert json.loads(quality["per_iteration_time_stats"])["step5_layer_e2e"]["count"] == 2
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -1.])
@@ -120,7 +159,8 @@ def test_smoke_description_uses_locked_image_and_personal_cloud_root(tmp_path):
     assert CLOUD_MOUNT in job["mounts"]
     assert job["charged_group"] == "codesign" and job["gpu_tag"] == "H800"
     assert job["cloud_output"].startswith("/mnt/codesign-exp/ycfeng/")
-    assert job["expected_rows"] == 16
+    assert job["expected_rows"] == 12
+    assert job["expected_gpu_active_rows"] == 8
     assert job["gpus"] == 1
     assert "--tensor-parallel-size 8" in job["worker_command"]
     assert "OFFLINE_DEPENDENCIES_READY" in job["worker_command"]
@@ -184,6 +224,164 @@ def test_nested_native_scopes_charge_only_the_outer_fused_owner():
     assert not scopes.enabled
 
 
+def test_gpu_activity_annotations_do_not_insert_timing_events():
+    names = []
+
+    def event(**_):
+        raise AssertionError("GPU-active trace must not contain instrumentation event nodes")
+
+    @contextmanager
+    def record(name):
+        names.append(name)
+        yield
+
+    scopes = NativeScopes(SimpleNamespace(cuda=SimpleNamespace(Event=event),
+        profiler=SimpleNamespace(record_function=record)))
+    target = SimpleNamespace(forward=lambda: "native output")
+    with scopes.observe([(target, "forward", "projection")], record_events=False):
+        assert target.forward() == "native output"
+    assert names == ["projection"]
+    assert scopes.times() == {}
+    assert scopes.record_events
+
+
+def test_eager_activity_windows_use_gpu_work_not_restore_or_host_gaps(tmp_path, monkeypatch):
+    from frontier.profiling.step5.vllm_wrapper import VllmStep5AttentionWrapper
+
+    cpu, gpu, events = [0.], [0.], []
+    correlation = [0]
+    output = object()
+
+    @contextmanager
+    def annotation(name):
+        start = cpu[0]
+        cpu[0] += 1
+        yield
+        cpu[0] += 1
+        events.append(dict(cat="user_annotation", name=name, ts=start,
+                           dur=cpu[0] - start, pid=1, tid=1))
+
+    def activity(category, name, duration):
+        correlation[0] += 1
+        cpu[0] += 1
+        events.append(dict(cat="cuda_runtime", name="cudaLaunchKernel" if category == "kernel"
+                           else "cudaMemcpyAsync", ts=cpu[0], dur=1., pid=1, tid=1,
+                           args={"correlation": correlation[0]}))
+        events.append(dict(cat=category, name=name, ts=1_000_000 + cpu[0], dur=duration * 1000,
+                           args={"correlation": correlation[0]}))
+        cpu[0] += 2
+        gpu[0] += duration
+        return output
+
+    class Event:
+        def __init__(self, **_):
+            pass
+
+        def record(self):
+            self.timestamp = gpu[0]
+
+        def synchronize(self):
+            pass
+
+        def elapsed_time(self, other):
+            return other.timestamp - self.timestamp
+
+    class Tracer:
+        def __init__(self, **_):
+            pass
+
+        def __enter__(self):
+            events.clear()
+            return self
+
+        def __exit__(self, *_):
+            Path(self.trace_path).write_text(json.dumps({"traceEvents": events}))
+
+    tracer_module = ModuleType("frontier.profiling.utils.record_function_tracer")
+    tracer_module.RecordFunctionTracer = Tracer
+    monkeypatch.setitem(sys.modules, tracer_module.__name__, tracer_module)
+    torch = SimpleNamespace(cuda=SimpleNamespace(Event=Event),
+                            profiler=SimpleNamespace(record_function=annotation))
+    def native_forward():
+        cpu[0] += 1000.
+        gpu[0] += 1.
+        return activity("kernel", "native_kernel", .01)
+
+    target = SimpleNamespace(forward=native_forward)
+    wrapper = VllmStep5AttentionWrapper.__new__(VllmStep5AttentionWrapper)
+    wrapper.torch, wrapper.trace_dir, wrapper.scopes = torch, tmp_path, NativeScopes(torch)
+    wrapper._bindings = lambda: [(target, "forward", "step5_qkv_projection")]
+    wrapper._forward = lambda *_, **__: target.forward()
+    wrapper._restore = lambda _: activity("gpu_memcpy", "outside_root_restore", 100.)
+    window, raw, evidence, last = wrapper._gpu_activity(None, None, None,
+        ("step5_qkv_projection",), "fixture", sample_count=2, min_window_ms=.05)
+    assert last is output
+    assert window["step5_layer_e2e"] == pytest.approx([.01, .01])
+    assert all(duration >= .05 for duration in json.loads(evidence["window_durations_ms"]))
+    assert min(json.loads(evidence["window_replays"])) >= 5
+    assert min(json.loads(evidence["trace_window_event_durations_ms"])) > 5.
+    assert len(raw["step5_qkv_projection"]) >= 10
+    assert evidence["memory_copy_count"] == 0
+    assert evidence["skipped_memory_copy_count"] == 2
+    assert evidence["operator_sum_to_layer_ratio"] == pytest.approx(1.)
+
+
+def test_piecewise_scoped_replays_retain_their_own_operator_events(monkeypatch):
+    from frontier.profiling.step5.vllm_wrapper import VllmStep5AttentionWrapper
+
+    clock, records, current_duration = [0.], [], [0.]
+    durations = iter((1., 2., 3.))
+    output = object()
+
+    class Event:
+        def __init__(self, **_):
+            pass
+
+        def record(self):
+            self.timestamp = clock[0]
+            records.append(self)
+
+        def elapsed_time(self, other):
+            return other.timestamp - self.timestamp
+
+    def native():
+        clock[0] += current_duration[0]
+        return output
+
+    target = SimpleNamespace(forward=native)
+    torch = SimpleNamespace(cuda=SimpleNamespace(Event=Event, synchronize=lambda: None),
+        profiler=SimpleNamespace(record_function=lambda _: nullcontext()))
+
+    def capture(_torch, _native, _layer, forward, mode):
+        assert mode == "piecewise"
+        duration = next(durations)
+        current_duration[0] = duration
+        begin = len(records)
+        forward(runtime_mode="piecewise")
+        _, start, end, _ = records[begin:]
+
+        def replay_layer():
+            start.record()
+            clock[0] += duration
+            end.record()
+            return output
+
+        return lambda: forward(runtime_mode="piecewise", layer=replay_layer)
+
+    monkeypatch.setattr("frontier.profiling.step5.vllm_wrapper.capture_native_replay", capture)
+    wrapper = VllmStep5AttentionWrapper.__new__(VllmStep5AttentionWrapper)
+    wrapper.torch, wrapper.native, wrapper.layer = torch, object(), object()
+    wrapper.graph_mode, wrapper.scopes = "piecewise", NativeScopes(torch)
+    wrapper._bindings = lambda: [(target, "forward", "projection")]
+    wrapper._restore = lambda _: None
+    wrapper._validate_output_state = lambda *args: None
+    wrapper._forward = lambda *args, runtime_mode, layer=None: (target.forward if layer is None else layer)()
+    replays = [wrapper._scoped_replay(None, None, (), output, ()) for _ in range(3)]
+    for duration, replay in zip((1., 2., 3.), replays):
+        assert replay.run() is output
+        assert replay.times() == {"projection": duration, "step5_layer_scoped": duration}
+
+
 def test_one_token_prefill_is_rejected():
     with pytest.raises(ValueError, match="native one-token"):
         Step5ProfileInput(3, (1,), (512,), "prefill")
@@ -195,9 +393,10 @@ def test_dry_run_grid_does_not_import_native_runtime(tmp_path, monkeypatch, caps
     monkeypatch.setitem(sys.modules, "vllm", None)
     main(["--model-path", str(tmp_path / "no_model_needed"), "--max-model-len", "8192",
           "--output-dir", str(tmp_path / "no_output_created"), "--dry-run",
-          "--prefixes", "0", "4104", "--graph-modes", "none", "full"])
+          "--prefixes", "0", "4104", "--cudagraph-capture-sizes", "1", "2"])
     result = json.loads(capsys.readouterr().out)
-    assert result["rows"] == 16
+    assert result["rows"] == 12
+    assert result["gpu_active_rows"] == 8
     assert not (tmp_path / "no_output_created").exists()
 
 
@@ -242,10 +441,12 @@ def fake_native_wrapper(config, monkeypatch):
 
         def profile(self, cell, **kwargs):
             assert cell.graph_mode == self.args["graph_mode"]
-            return build_row(config, cell, tp=8, block_size=16, max_model_len=8192,
+            event = build_row(config, cell, tp=8, block_size=16, max_model_len=8192,
                 runtime_signature="cpu_schema_fixture_not_measurement", device="h800",
                 time_stats=fake_stats(), evidence={"attention_backend": "native_fixture",
                 "stability_pass": True, "time_cv": 0., "trace_path": "cpu_fixture_no_trace"})
+            active = {**event, "measurement_type": "KERNEL_ONLY"} if cell.graph_mode == "none" else None
+            return Step5ProfileResult(event_row=event, gpu_active_row=active)
 
     monkeypatch.setattr("frontier.profiling.step5.vllm_wrapper.VllmStep5AttentionWrapper", Wrapper)
     return constructed
@@ -254,7 +455,7 @@ def fake_native_wrapper(config, monkeypatch):
 def small_main_args(tmp_path):
     return ["--model-path", str(tmp_path / "model"), "--max-model-len", "8192",
             "--output-dir", str(tmp_path / "output"), "--prefill-tokens", "16",
-            "--prefixes", "0", "--decode-contexts", "512", "--graph-modes", "none", "full"]
+            "--prefixes", "0", "--decode-contexts", "512", "--cudagraph-capture-sizes", "1", "2"]
 
 
 def test_main_separates_native_graph_policies_and_writes_complete_summary(tmp_path, fake_native_wrapper):
@@ -262,7 +463,8 @@ def test_main_separates_native_graph_policies_and_writes_complete_summary(tmp_pa
 
     main(small_main_args(tmp_path))
     summary = json.loads((tmp_path / "output/summary.json").read_text())
-    assert summary["expected_rows"] == summary["actual_rows"] == summary["stable_rows"] == 6
+    assert summary["expected_rows"] == summary["actual_rows"] == summary["stable_rows"] == 4
+    assert summary["expected_gpu_active_rows"] == summary["gpu_active_rows"] == 2
     assert summary["complete"] and not summary["admitted"]
     assert set(fake_native_wrapper) == {(0, "none"), (0, "full"), (3, "none"), (3, "full")}
 
@@ -287,6 +489,7 @@ def test_native_initialization_keeps_config_until_group_cleanup(config, tmp_path
     """Run the real constructor with CPU-only native boundaries, not a fake wrapper."""
     from frontier.profiling.step5.vllm_wrapper import VllmStep5AttentionWrapper
 
+    monkeypatch.setenv("VLLM_USE_BREAKABLE_CUDAGRAPH", "1")
     calls = []
     current = []
     groups = set()

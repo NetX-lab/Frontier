@@ -15,8 +15,10 @@ from frontier.attention.step5 import describe_step5_layer
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.step5.inputs import Step5ProfileInput
 from frontier.profiling.step5.job import IMAGE
-from frontier.profiling.step5.rows import OPERATOR_NAMES, build_row
+from frontier.profiling.step5.rows import OPERATOR_NAMES, Step5ProfileResult, build_row, summarize_replays
 from frontier.profiling.step5.scopes import NativeScopes, trace_signature
+from frontier.profiling.step5.replay import capture_native_replay
+from frontier.profiling.step5.timing import ScopedReplay, collect_replay_timings, collect_scoped_timings
 
 
 class VllmStep5AttentionWrapper:
@@ -28,14 +30,17 @@ class VllmStep5AttentionWrapper:
     """
 
     def __init__(self, *, config, model_path, device, tensor_parallel_size,
-                 layer_id, block_size, max_model_len, max_batch_size, trace_dir, seed, graph_mode):
+                  layer_id, block_size, max_model_len, max_batch_size, trace_dir, seed, graph_mode,
+                  cudagraph_capture_sizes=(1, 2)):
+        # Native eager-break decorators bind at model import, before EngineArgs
+        # can otherwise auto-enable the Step architecture's default.
+        os.environ.setdefault("VLLM_USE_BREAKABLE_CUDAGRAPH", "1")
         import torch
         import vllm
         import vllm.distributed.parallel_state as parallel
         from vllm.config import set_current_vllm_config
         from vllm.engine.arg_utils import EngineArgs
         from vllm.model_executor.model_loader.utils import configure_quant_config
-        from vllm.models.step5.nvidia.model import Step5ForCausalLM
         from vllm.utils.network_utils import get_open_port
         from vllm.v1.worker.workspace import init_workspace_manager
 
@@ -49,6 +54,7 @@ class VllmStep5AttentionWrapper:
         self.max_batch_size = max_batch_size
         self.seed = seed
         self.graph_mode = graph_mode
+        self.cudagraph_capture_sizes = tuple(cudagraph_capture_sizes)
         self.profile_index = 0
         if block_size not in (16, 32, 64, 128):
             raise ValueError("Native Step paged prefill requires block_size in 16, 32, 64, 128")
@@ -65,15 +71,17 @@ class VllmStep5AttentionWrapper:
                 model=model_path, load_format="dummy", skip_tokenizer_init=True,
                 tensor_parallel_size=1, block_size=block_size,
                 enable_prefix_caching=False, enable_chunked_prefill=True,
-                enforce_eager=graph_mode == "none", max_num_seqs=max_batch_size,
-                compilation_config={"mode": 0, "cudagraph_mode": graph_mode.upper(),
-                                    "cudagraph_capture_sizes": [max_batch_size],
-                                    "max_cudagraph_capture_size": max_batch_size},
+                enforce_eager=False, max_num_seqs=max_batch_size,
+                compilation_config={"mode": 0, "cudagraph_mode": "FULL_AND_PIECEWISE",
+                                    "cudagraph_capture_sizes": list(self.cudagraph_capture_sizes),
+                                    "max_cudagraph_capture_size": max(self.cudagraph_capture_sizes)},
                 max_num_batched_tokens=max_model_len * max_batch_size,
                 max_model_len=max_model_len,
             ).create_engine_config()
             self.native = outer.with_hf_config(outer.model_config.hf_text_config)
             self._cleanup.enter_context(set_current_vllm_config(self.native))
+            from vllm.models.step5.nvidia.model import Step5ForCausalLM
+
             configure_quant_config(self.native.quant_config, Step5ForCausalLM)
             if torch.distributed.is_initialized():
                 raise RuntimeError("The isolated Step producer must own its process groups")
@@ -219,16 +227,18 @@ class VllmStep5AttentionWrapper:
             metadata = self.builder.build(0, common, fast_build=False)
         return positions, slots, metadata, cell.graph_mode
 
-    def _forward(self, hidden, prepared):
-        from vllm.forward_context import set_forward_context
+    def _forward(self, hidden, prepared, *, runtime_mode=None, layer=None):
+        from vllm.forward_context import BatchDescriptor, set_forward_context
         from vllm.config import CUDAGraphMode
 
         positions, slots, metadata, graph_mode = prepared
+        graph_mode = runtime_mode if runtime_mode is not None else graph_mode
         name = self.layer.attn.layer_name
         with self._set_current(self.native), set_forward_context(
                 {name: metadata}, self.native, num_tokens=len(hidden), slot_mapping={name: slots},
-                cudagraph_runtime_mode=CUDAGraphMode[graph_mode.upper()]):
-            return self.layer(positions, hidden)
+                cudagraph_runtime_mode=CUDAGraphMode[graph_mode.upper()],
+                batch_descriptor=BatchDescriptor(num_tokens=len(hidden))):
+            return (self.layer if layer is None else layer)(positions, hidden)
 
     def _bindings(self):
         import vllm._custom_ops as ops
@@ -257,12 +267,124 @@ class VllmStep5AttentionWrapper:
                 result.append((layer.g_proj, "forward", "step5_gate_projection"))
         return result
 
-    def profile(self, cell, *, warmup_iterations, profile_iterations, max_time_cv):
+    def _validate_output_state(self, actual, expected, expected_state):
+        if not self.torch.isfinite(actual).all():
+            raise AssertionError("Native Step attention produced nonfinite output")
+        self.torch.testing.assert_close(actual, expected, rtol=2e-2, atol=2e-2)
+        for current, reference in zip(self.state, expected_state):
+            self.torch.testing.assert_close(current, reference, rtol=2e-2, atol=2e-2)
+
+    def _scoped_replay(self, hidden, prepared, initial, expected, expected_state):
+        torch = self.torch
+        recorded = {}
+
+        def forward(**kwargs):
+            start = torch.cuda.Event(enable_timing=True, external=self.scopes.graph_capture)
+            end = torch.cuda.Event(enable_timing=True, external=self.scopes.graph_capture)
+            start.record()
+            output = self._forward(hidden, prepared, **kwargs)
+            end.record()
+            recorded["layer"] = start, end
+            # Breakable replay re-enters Python but retains its captured events.
+            if self.graph_mode == "none" or "operators" not in recorded:
+                recorded["operators"] = self.scopes.events
+            return output
+
+        if self.graph_mode == "none":
+            def run():
+                self.scopes.events = {}
+                with self.scopes.observe(self._bindings()):
+                    return forward(runtime_mode="none")
+        else:
+            self._restore(initial)
+            self.scopes.events = {}
+            self.scopes.graph_capture = True
+            try:
+                with self.scopes.observe(self._bindings()):
+                    run = capture_native_replay(torch, self.native, self.layer, forward, self.graph_mode)
+            finally:
+                self.scopes.graph_capture = False
+            self._restore(initial)
+            actual = run()
+            torch.cuda.synchronize()
+            self._validate_output_state(actual, expected, expected_state)
+
+        def times():
+            result = {name: sum(start.elapsed_time(end) for start, end in pairs)
+                      for name, pairs in recorded["operators"].items()}
+            result["step5_layer_scoped"] = recorded["layer"][0].elapsed_time(recorded["layer"][1])
+            return result
+
+        return ScopedReplay(run=run, times=times)
+
+    def _gpu_activity(self, hidden, prepared, initial, active, stem, *, sample_count, min_window_ms):
+        from frontier.profiling.step5.device_activity import parse_device_activity
+        from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
+
+        torch = self.torch
+
+        def capture(replays, suffix):
+            trace = self.trace_dir / f"{stem}_activity_{suffix}.json"
+            tracer = RecordFunctionTracer(output_path=str(self.trace_dir))
+            tracer.trace_path = str(trace)
+            intervals = []
+            with tracer, self.scopes.observe(self._bindings(), record_events=False):
+                for window in range(sample_count):
+                    self._restore(initial)
+                    start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+                    start.record()
+                    for replay in range(replays):
+                        with torch.profiler.record_function(f"step5_iteration/{window}/{replay}"):
+                            output = self._forward(hidden, prepared, runtime_mode="none")
+                    end.record()
+                    end.synchronize()
+                    intervals.append(start.elapsed_time(end))
+            return parse_device_activity(trace, active), trace, intervals, output
+
+        pilot, _, _, _ = capture(1, "pilot")
+        replays = max(1, ceil(min_window_ms / min(
+            item["step5_layer_e2e"] for item in pilot["per_iteration"].values())))
+        attempt = 0
+        while True:
+            attempt += 1
+            activity, trace, intervals, output = capture(replays, str(attempt))
+            window_times = {name: [] for name in (*OPERATOR_NAMES, "step5_layer_e2e")}
+            raw_times = {name: [] for name in window_times}
+            for window in range(sample_count):
+                entries = [activity["per_iteration"][f"step5_iteration/{window}/{replay}"]
+                           for replay in range(replays)]
+                for name in window_times:
+                    values = [entry[name] if name in entry else 0. for entry in entries]
+                    raw_times[name].extend(values)
+                    window_times[name].append(sum(values) / replays)
+            durations = [value * replays for value in window_times["step5_layer_e2e"]]
+            shortest = min(durations)
+            if shortest >= min_window_ms:
+                break
+            replays = max(replays + 1, ceil(replays * min_window_ms / shortest))
+        evidence = {key: value for key, value in activity.items() if key != "per_iteration"}
+        evidence["kernel_names"] = json.dumps(evidence["kernel_names"])
+        evidence["memory_copy_names"] = json.dumps(evidence["memory_copy_names"])
+        evidence.update({"trace_path": str(trace), "timing_basis": "correlated_kernel_plus_memcpy_duration_sum",
+                         "kernel_only_includes_memory_copies": True,
+                         "window_replays": json.dumps([replays] * sample_count),
+                         "window_durations_ms": json.dumps(durations),
+                         "trace_window_event_durations_ms": json.dumps(intervals),
+                         "operator_ratio_definition": "exclusive_gpu_activity_sum / same_iteration_gpu_activity_sum",
+                         "operator_sum_to_layer_ratio": sum(sum(window_times[name]) for name in active)
+                                                        / sum(window_times["step5_layer_e2e"]),
+                         "calibration_candidate": True})
+        return window_times, raw_times, evidence, output
+
+    def profile(self, cell, *, warmup_iterations, profile_iterations, max_time_cv, min_timing_window_ms=0.5):
         if cell.global_layer_id != self.layer_id or cell.graph_mode != self.graph_mode:
             raise ValueError("Profile cell must match the constructed layer and graph policy")
         if cell.batch_size > self.max_batch_size:
             raise ValueError("Profile batch exceeds the configured request capacity")
         cell.workload(self.config, block_size=self.block_size, max_model_len=self.max_model_len)
+        if self.layer.use_dsa_backend and any(
+                context % self.config.sparse_config["region_block_size"] for context in cell.context_lens):
+            raise ValueError("Repeated Step DSA timing requires region-aligned contexts; partial summary tails are stateful")
         torch = self.torch
         self.profile_index += 1
         torch.manual_seed(self.seed)
@@ -320,63 +442,34 @@ class VllmStep5AttentionWrapper:
                 cell.workload(self.config, block_size=self.block_size, max_model_len=self.max_model_len)))
             if active != expected_active:
                 raise RuntimeError(f"Native Step scope coverage differs from contract: {active} != {expected_active}")
-            clean_run = lambda: self._forward(hidden, prepared)
-            if cell.graph_mode == "full":
-                self._restore(initial)
-                clean_graph = torch.cuda.CUDAGraph()
-                with torch.cuda.graph(clean_graph):
-                    graph_output = self._forward(hidden, prepared)
-                self._restore(initial)
-                clean_graph.replay()
-                torch.cuda.synchronize()
-                torch.testing.assert_close(graph_output, expected, rtol=2e-2, atol=2e-2)
-                for actual_state, reference in zip(self.state, expected_state):
-                    torch.testing.assert_close(actual_state, reference, rtol=2e-2, atol=2e-2)
-                clean_run = clean_graph.replay
-                self._restore(initial)
-                self.scopes.events = {}
-                self.scopes.graph_capture = True
-                scoped_graph = torch.cuda.CUDAGraph()
-                try:
-                    with torch.cuda.graph(scoped_graph), self.scopes.observe(self._bindings()):
-                        scoped_output = self._forward(hidden, prepared)
-                finally:
-                    self.scopes.graph_capture = False
-                self._restore(initial)
-                scoped_graph.replay()
-                torch.cuda.synchronize()
-                torch.testing.assert_close(scoped_output, expected, rtol=2e-2, atol=2e-2)
-                for actual_state, reference in zip(self.state, expected_state):
-                    torch.testing.assert_close(actual_state, reference, rtol=2e-2, atol=2e-2)
-            samples = {name: [] for name in (*OPERATOR_NAMES, "step5_layer_e2e")}
-            for _ in range(profile_iterations):
-                self._restore(initial)
-                start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-                start.record()
-                clean_run()
-                end.record()
-                torch.cuda.synchronize()
-                samples["step5_layer_e2e"].append(start.elapsed_time(end))
-                self._restore(initial)
-                if cell.graph_mode == "full":
-                    scoped_graph.replay()
-                else:
-                    self.scopes.events = {}
-                    with self.scopes.observe(self._bindings()):
-                        self._forward(hidden, prepared)
-                torch.cuda.synchronize()
-                times = self.scopes.times()
-                if tuple(times) != active:
-                    raise RuntimeError("Native Step physical-scope dispatch changed between repeats")
-                for name in OPERATOR_NAMES:
-                    samples[name].append(times[name] if name in active else 0.)
-            stats = TimerStatsStore.get_stats_from_times(samples)
-            e2e = stats["step5_layer_e2e"]
-            cv = float(e2e["std"] / e2e["mean"])
             self._restore(initial)
-            trace = self.trace_dir / (f"layer{self.layer_id}_{cell.phase}_{cell.graph_mode}"
+            clean_run = capture_native_replay(torch, self.native, self.layer,
+                lambda **kwargs: self._forward(hidden, prepared, **kwargs), cell.graph_mode)
+            self._restore(initial)
+            self._validate_output_state(clean_run(), expected, expected_state)
+            clean = collect_replay_timings(torch, clean_run, lambda: self._restore(initial),
+                sample_count=profile_iterations, min_window_ms=min_timing_window_ms)
+            self._validate_output_state(clean.last_output, expected, expected_state)
+            scoped = collect_scoped_timings(torch,
+                lambda: self._scoped_replay(hidden, prepared, initial, expected, expected_state),
+                lambda: self._restore(initial), window_replays=clean.window_replays,
+                operator_names=active)
+            self._validate_output_state(scoped.last_output, expected, expected_state)
+            samples = {name: list(scoped.amortized_times[name]) if name in active
+                       else [0.] * profile_iterations for name in OPERATOR_NAMES}
+            samples["step5_layer_e2e"] = clean.amortized_times
+            raw = {name: scoped.per_replay_times[name] if name in active
+                   else [0.] * profile_iterations for name in OPERATOR_NAMES}
+            raw["step5_layer_e2e"] = clean.single_replay_times
+            stats, quality = summarize_replays(samples, raw, active, max_time_cv=max_time_cv)
+            scoped_stats = TimerStatsStore.get_stats_from_times(scoped.amortized_times)
+            outer_stats = TimerStatsStore.get_stats_from_times({"layer": [duration / count
+                for duration, count in zip(scoped.window_durations_ms, clean.window_replays)]})["layer"]
+            stem = (f"layer{self.layer_id}_{cell.phase}_{cell.graph_mode}"
                 f"_batch{cell.batch_size}_q{max(cell.query_lens)}_c{prefix}"
-                f"_attempt{self.profile_index}.json")
+                f"_attempt{self.profile_index}")
+            trace = self.trace_dir / f"{stem}.json"
+            self._restore(initial)
             with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,
                                                    torch.profiler.ProfilerActivity.CUDA]) as profiler:
                 clean_run()
@@ -385,9 +478,7 @@ class VllmStep5AttentionWrapper:
             signature = trace_signature(trace)
             if not signature["kernel_count"]:
                 raise RuntimeError("Native Step kernel observation was empty")
-            return build_row(self.config, cell, tp=self.tp, block_size=self.block_size,
-                max_model_len=self.max_model_len, runtime_signature=self.runtime_signature,
-                device=self.device, time_stats=stats, evidence={
+            common = {
                     "attention_backend": self.layer.attn.attn_backend.get_name(),
                     "native_impl": type(self.layer.attn.impl).__name__,
                     "rank_aggregation": "isolated_rank_zero_no_collectives",
@@ -395,12 +486,37 @@ class VllmStep5AttentionWrapper:
                     "seed": self.seed,
                     "warmup_iterations": warmup_iterations, "profile_iterations": profile_iterations,
                     "native_cudagraph_policy": str(self.native.compilation_config.cudagraph_mode),
-                    "trace_path": str(trace),
+                    "native_cudagraph_capture_sizes": json.dumps(self.native.compilation_config.cudagraph_capture_sizes),
+                    "native_max_num_seqs": self.native.scheduler_config.max_num_seqs,
+                    "native_max_num_batched_tokens": self.native.scheduler_config.max_num_batched_tokens,
+                    "native_breakable_cudagraph": os.environ["VLLM_USE_BREAKABLE_CUDAGRAPH"],
                     "prefix_continuation_validation": "PASS" if prefix else "not_applicable",
-                    "active_operators": json.dumps(sorted(active)), "time_cv": cv,
-                    "stability_pass": cv <= max_time_cv, "max_time_cv": max_time_cv,
-                    "operator_sum_to_layer_ratio": sum(stats[n]["mean"] for n in OPERATOR_NAMES) / e2e["mean"],
-                    **signature})
+                    "active_operators": json.dumps(sorted(active)),
+                    "min_timing_window_ms": min_timing_window_ms}
+            row_args = dict(config=self.config, cell=cell, tp=self.tp, block_size=self.block_size,
+                max_model_len=self.max_model_len, runtime_signature=self.runtime_signature, device=self.device)
+            event_row = build_row(**row_args, time_stats=stats, evidence={**common, **signature, **quality,
+                "trace_path": str(trace), "timing_basis": "cuda_event_native_runtime_latency",
+                "calibration_candidate": cell.graph_mode == "full",
+                "window_replays": json.dumps(clean.window_replays),
+                "window_durations_ms": json.dumps(clean.window_durations_ms),
+                "scoped_layer_time_stats": json.dumps(scoped_stats["step5_layer_scoped"]),
+                "scoped_outer_time_stats": json.dumps(outer_stats),
+                "operator_ratio_definition": "exclusive_scope_window_sum / matching_instrumented_layer_window_sum",
+                "operator_sum_to_layer_ratio": sum(stats[name]["mean"] for name in active)
+                    / scoped_stats["step5_layer_scoped"]["mean"],
+                "instrumentation_overhead_fraction": float(outer_stats["mean"]
+                    / stats["step5_layer_e2e"]["mean"] - 1)})
+            gpu_active_row = None
+            if cell.graph_mode == "none":
+                activity, raw_activity, evidence, actual = self._gpu_activity(
+                    hidden, prepared, initial, active, stem, sample_count=profile_iterations,
+                    min_window_ms=min_timing_window_ms)
+                self._validate_output_state(actual, expected, expected_state)
+                gpu_stats, gpu_quality = summarize_replays(activity, raw_activity, active, max_time_cv=max_time_cv)
+                gpu_active_row = build_row(**row_args, time_stats=gpu_stats,
+                    measurement_type="KERNEL_ONLY", evidence={**common, **evidence, **gpu_quality})
+            return Step5ProfileResult(event_row=event_row, gpu_active_row=gpu_active_row)
 
     def close(self):
         self._cleanup.close()

@@ -7,6 +7,7 @@ from itertools import product
 from math import ceil
 
 from frontier.attention.step5 import Step5AttentionWorkload
+from frontier.profiling.step5.replay import choose_graph_mode
 
 
 @dataclass(frozen=True)
@@ -32,8 +33,8 @@ class Step5ProfileInput:
             raise ValueError("Decode requires one query token per request")
         if self.phase == "prefill" and max(self.query_lens) == 1:
             raise ValueError("The native one-token path is decode, not prefill")
-        if self.graph_mode not in ("none", "full"):
-            raise ValueError("graph_mode must be none or full")
+        if self.graph_mode not in ("none", "piecewise", "full"):
+            raise ValueError("graph_mode must be none, piecewise or full")
         if self.graph_mode == "full" and self.phase != "decode":
             raise ValueError("Full graph capture is decode-only")
 
@@ -61,14 +62,16 @@ class Step5ProfileInput:
 
 
 def build_profile_inputs(config, *, prefill_tokens, prefixes, decode_batches,
-                         decode_contexts, graph_modes=("none",), prefill_batches=(1,)):
+                          decode_contexts, cudagraph_capture_sizes=(1, 2), prefill_batches=(1,)):
     """Choose real global layer IDs from the configured schedule, not labels."""
     layers = tuple(config.layer_types.index(kind)
                    for kind in ("sliding_attention", "full_attention"))
     result = []
     for layer, tokens, prefix, batch in product(layers, prefill_tokens, prefixes, prefill_batches):
-        result.append(Step5ProfileInput(layer, (tokens,) * batch, (prefix,) * batch, "prefill"))
-    for layer, batch, context, graph in product(layers, decode_batches, decode_contexts, graph_modes):
+        mode = choose_graph_mode("prefill", tokens * batch, cudagraph_capture_sizes)
+        result.append(Step5ProfileInput(layer, (tokens,) * batch, (prefix,) * batch, "prefill", mode))
+    for layer, batch, context in product(layers, decode_batches, decode_contexts):
+        graph = choose_graph_mode("decode", batch, cudagraph_capture_sizes)
         result.append(Step5ProfileInput(layer, (1,) * batch, (context,) * batch, "decode", graph))
     if len(set(result)) != len(result):
         raise ValueError("The profile grid contains duplicate cells")
