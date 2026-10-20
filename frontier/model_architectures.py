@@ -758,6 +758,23 @@ class ModelArchitectureProfile:
             )
         return matches[0]
 
+    def uses_sequence_parallel_moe(
+        self,
+        attention_tp_size: int | None,
+        attention_dp_size: int | None,
+        num_pipeline_stages: int | None,
+        expert_parallel_size: int | None,
+    ) -> bool:
+        """Select vLLM's sequence-parallel MoE with allgather/reduce-scatter."""
+
+        return (
+            self.replicate_shared_expert_in_sequence_parallel
+            and num_pipeline_stages == 1
+            and attention_tp_size is not None and attention_tp_size > 1
+            and attention_dp_size is not None and attention_dp_size > 1
+            and expert_parallel_size is not None and expert_parallel_size > 1
+        )
+
     def resolve_layer_contract(
         self,
         config: Any,
@@ -877,12 +894,11 @@ class ModelArchitectureProfile:
         width = spec.resolve_width(config, mixed_model=mixed_model)
         tp_mode = spec.tensor_parallel_mode
         if (
-            self.replicate_shared_expert_in_sequence_parallel
-            and selected_kind is LayerKind.SHARED
-            and num_pipeline_stages == 1
-            and attention_tp_size is not None and attention_tp_size > 1
-            and attention_dp_size is not None and attention_dp_size > 1
-            and expert_parallel_size is not None and expert_parallel_size > 1
+            selected_kind is LayerKind.SHARED
+            and self.uses_sequence_parallel_moe(
+                attention_tp_size, attention_dp_size,
+                num_pipeline_stages, expert_parallel_size,
+            )
         ):
             tp_mode = TensorParallelMode.REPLICATED
         if tp_mode is TensorParallelMode.REPLICATED:

@@ -2909,6 +2909,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             self._model_config,
             operator_name=op_name,
             attention_tp_size=requested_attention_tp,
+            attention_dp_size=self._replica_config.attn_dp,
+            num_pipeline_stages=self._replica_config.num_pipeline_stages,
             ffn_tp_size=requested_ffn_tp,
             moe_tp_size=self._replica_config.moe_tensor_parallel_size,
             expert_parallel_size=getattr(
