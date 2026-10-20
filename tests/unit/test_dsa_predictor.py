@@ -155,6 +155,37 @@ def test_trained_data_is_required():
         DSAPredictor({})
 
 
+@pytest.mark.parametrize("measurement", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+def test_extended_rows_select_exact_features_and_interpolate_with_coverage(tmp_path, model, measurement):
+    shapes = [
+        ([2], [0]), ([256], [32768]), ([2] * 1024, [0] * 1024),
+        ([256] * 32, [0] * 32), ([257, 257], [0, 0]),
+        ([512] * 16, [12288] * 16), ([4096, 4096], [0, 0]),
+        ([512, 512], [32256, 32256]),
+    ]
+    rows = [_row(model, q, c, variant) for variant in ("full_index", "shared_index") for q, c in shapes]
+    for row in rows:
+        row["measurement_type"] = measurement.value
+    fitted = train_dsa_models(_load(tmp_path, model, rows, measurement), _fit)
+    predictor = DSAPredictor(fitted)
+    for queries, contexts in shapes:
+        features = build_dsa_features(queries, contexts, model.index_topk)
+        assert predictor.operator_times(features, "full_index").op_times == {
+            "attn_dsa_indexer": 0.2, "attn_dsa_mla": 0.3,
+        }
+        assert predictor.operator_times(features, "shared_index").total_time() == 0.3
+    # Non-round native chunks/contexts and heterogeneous calibration batches
+    # use the existing fitted interpolation, not a synthetic measured row.
+    for queries, contexts in [([192], [768]), ([64, 128], [384, 928]), ([768, 960], [512, 1024])]:
+        features = build_dsa_features(queries, contexts, model.index_topk)
+        assert predictor.operator_times(features, "full_index").op_times == {
+            "attn_dsa_indexer": 0.25, "attn_dsa_mla": 0.25,
+        }
+    for queries, contexts in [([2] * 1025, [0] * 1025), ([256], [33024]), ([512] * 17, [0] * 17)]:
+        with pytest.raises(DSACoverageError, match="coverage missing"):
+            predictor.operator_times(build_dsa_features(queries, contexts, model.index_topk), "full_index")
+
+
 def test_attention_dp_dummy_forward_runs_only_outer_projection_bundle(model):
     from frontier.entities.batch import DummyForwardBatch
     from unittest.mock import ANY, Mock
