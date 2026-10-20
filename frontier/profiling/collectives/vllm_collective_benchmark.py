@@ -4,7 +4,7 @@ Run one process per GPU under ``torchrun`` with ``WORLD_SIZE`` equal to
 TP x DP. Each process initializes vLLM's distributed state the way a vLLM
 worker does (``init_worker_distributed_environment`` with the external-launcher
 backend) and calls the vLLM ``GroupCoordinator`` APIs, so vLLM itself selects
-the communicator: custom all-reduce, symmetric memory, PyNccl, or grouped
+the communicator: FlashInfer, custom all-reduce, symmetric memory, PyNccl, or grouped
 broadcast/reduce for uneven ``all_gatherv``/``reduce_scatterv`` sizes.
 
 Each repeat runs ``calls_per_repeat`` back-to-back calls between CUDA events
@@ -35,6 +35,7 @@ import random
 import socket
 import statistics
 import time
+from dataclasses import replace
 from pathlib import Path
 
 from frontier.profiling.collectives.vllm_forward_collectives import (
@@ -53,6 +54,57 @@ RUN_SETTINGS = ("warmup_calls", "repeats", "calls_per_repeat", "passes", "shuffl
 QUEUE_SLEEP_MARGIN = 2.0
 # Length of the GPU sleep that converts microseconds to torch.cuda._sleep cycles.
 SLEEP_CALIBRATION_CYCLES = 10_000_000
+# Kernel namespaces from FlashInfer's trtllm_allreduce headers, torch's
+# symmetric-memory kernels, vLLM custom all-reduce, and NCCL respectively.
+COMMUNICATOR_KERNEL_MARKERS = {
+    "flashinfer_trtllm": ("flashinfer::trtllm_allreduce",),
+    "symmetric_memory": ("multimem_all_reduce_kernel", "two_shot_all_reduce_kernel"),
+    "custom_all_reduce": ("vllm::cross_device_reduce_",),
+    "nccl": ("nccldevkernel", "ncclkernel"),
+}
+VLLM_ENVIRONMENT = (
+    "VLLM_ALLREDUCE_USE_FLASHINFER", "VLLM_ALLREDUCE_USE_FLASHINFER_PCIE_IPC",
+    "VLLM_ALLREDUCE_USE_SYMM_MEM", "VLLM_USE_NCCL_SYMM_MEM",
+    "VLLM_FLASHINFER_ALLREDUCE_BACKEND", "VLLM_BATCH_INVARIANT", "VLLM_USE_V2_MODEL_RUNNER",
+)
+
+
+def actual_communicator(op: str, kernels: list[str]) -> str:
+    """Classify observed kernels, never the enabled backends or payload size.
+
+    Uneven TP lanes may use different communicators in the same case, so keep
+    every observed communicator. Copy kernels do not identify a communicator.
+    """
+    if op == "cpu_all_reduce":
+        return "host_gloo"
+    names = [name.lower() for name in kernels]
+    observed = [comm for comm, markers in COMMUNICATOR_KERNEL_MARKERS.items()
+                if any(marker in name for marker in markers for name in names)]
+    return ";".join(observed) if observed else "unknown"
+
+
+def runtime_environment(vllm_envs) -> dict:
+    """Record image-resolved defaults and overrides without changing any env var."""
+    return {
+        "vllm_environment": {
+            name: {"value": getattr(vllm_envs, name),
+                   "environment_override": os.environ.get(name),
+                   "source": "environment" if name in os.environ else "image_default"}
+            for name in VLLM_ENVIRONMENT if name in vllm_envs.environment_variables
+        },
+        "nccl_environment": {name: value for name, value in sorted(os.environ.items())
+                             if name.startswith("NCCL_")},
+        "nccl_log_destination": os.environ.get("NCCL_DEBUG_FILE", "stderr (stage wrapper log)"),
+    }
+
+
+def active_dp_rails(parallel: ServingParallelism, call: CollectiveCall,
+                    scenario=None, isolated: bool = False) -> tuple[int, ...]:
+    """Active DP groups: native device rails, or the one host-sync rail."""
+    if call.op == "cpu_all_reduce" or isolated:
+        return (0,)
+    rails = getattr(scenario, "active_dp_rails", None)
+    return tuple(range(parallel.tensor_parallel_size)) if rails is None else rails
 
 
 def pass_order(items: list, shuffle_seed: int, pass_index: int) -> list:
@@ -85,6 +137,15 @@ def summarize(record: dict) -> dict:
         "tokens_per_dp_rank": "/".join(map(str, record["tokens_per_dp_rank"])),
         "max_input_bytes": record["max_input_bytes"],
         "max_output_bytes": record["max_output_bytes"],
+        "useful_tokens_per_dp_rank": "/".join(map(str, record["useful_tokens_per_dp_rank"])),
+        "padded_tokens_per_dp_rank": "/".join(map(str, record["padded_tokens_per_dp_rank"])),
+        "dtypes": ";".join(record["dtypes"]),
+        "columns": "/".join(map(str, record["columns"])),
+        "concurrent_dp_rails": record["concurrent_dp_rails"],
+        "participating_ranks": "/".join(map(str, record["participating_ranks"])),
+        "group_ranks": json.dumps(record["group_ranks"]),
+        "timing_domain": "host" if record["op"] == "cpu_all_reduce" else "device",
+        "communicator": actual_communicator(record["op"], record["kernels"]),
         "median_us": statistics.median(critical), "mean_us": statistics.fmean(critical),
         "std_us": statistics.pstdev(critical), "min_us": min(critical),
         "max_us": max(critical), "p10_us": _percentile(critical, 0.1),
@@ -101,8 +162,10 @@ def forward_totals(summary_rows: list[dict]) -> list[dict]:
     for row in summary_rows:
         total = totals.setdefault((row["pass"], row["scenario"]), {
             "pass": row["pass"], "scenario": row["scenario"], "cuda_graph": row["cuda_graph"],
-            "tokens_per_dp_rank": row["tokens_per_dp_rank"], "forward_comm_us": 0.0})
-        total["forward_comm_us"] += row["calls_per_forward"] * row["median_us"]
+            "tokens_per_dp_rank": row["tokens_per_dp_rank"],
+            "forward_device_comm_us": 0.0, "forward_host_comm_us": 0.0})
+        total[f"forward_{row['timing_domain']}_comm_us"] += (
+            row["calls_per_forward"] * row["median_us"])
         total[f"{row['call']}_us"] = row["calls_per_forward"] * row["median_us"]
     return list(totals.values())
 
@@ -139,7 +202,8 @@ class CollectiveRunner:
     instance-local ranks; each instance measures on its own ranks.
     """
 
-    def __init__(self, parallel: ServingParallelism, settings: dict, instances: int = 1):
+    def __init__(self, parallel: ServingParallelism, settings: dict, instances: int = 1,
+                 *, engine: dict | None = None, dp_rail_isolation: bool = False):
         import torch
         from vllm.config import ParallelConfig, VllmConfig, set_current_vllm_config
         from vllm.distributed import parallel_state
@@ -148,6 +212,7 @@ class CollectiveRunner:
         self.torch = torch
         self.parallel = parallel
         self.settings = settings
+        self.dp_rail_isolation = dp_rail_isolation
         self.rank = int(os.environ["RANK"])
         self.local_rank = int(os.environ["LOCAL_RANK"])
         if int(os.environ["WORLD_SIZE"]) != instances * parallel.world_size:
@@ -166,11 +231,14 @@ class CollectiveRunner:
                 pipeline_parallel_size=parallel.pipeline_parallel_size,
                 enable_expert_parallel=parallel.enable_expert_parallel,
                 all2all_backend=parallel.all2all_backend,
+                disable_custom_all_reduce=bool((engine or {}).get("disable_custom_all_reduce", False)),
                 distributed_executor_backend="external_launcher"))
         finally:
             os.environ["RANK"] = str(self.rank)
         self._config_context = set_current_vllm_config(self.vllm_config)
         self._config_context.__enter__()
+        # The native worker calls set_custom_all_reduce from this ParallelConfig
+        # before creating groups; do not override FlashInfer/symmetric-memory envs.
         init_worker_distributed_environment(self.vllm_config, self.rank, "env://",
                                             self.local_rank)
         self.ps = parallel_state
@@ -193,7 +261,7 @@ class CollectiveRunner:
         self.sleep_cycles_per_us = self._sleep_cycles_per_us()
 
     def _check_layout(self) -> None:
-        """Fail when vLLM's groups or DP-sync transport differ from the plan's."""
+        """Fail when vLLM's groups differ from the plan's."""
         offset = self.instance * self.parallel.world_size
         for name, group in self.groups.items():
             expected = [offset + member for member in
@@ -201,10 +269,8 @@ class CollectiveRunner:
             if list(group.ranks) != expected:
                 raise RuntimeError(f"vLLM {name} group of rank {self.rank} is "
                                    f"{group.ranks}; the plan assumes {expected}")
-        on_cpu = self.vllm_config.parallel_config.disable_nccl_for_dp_synchronization
-        if bool(on_cpu) != self.parallel.dp_sync_on_cpu:
-            raise RuntimeError(f"vLLM DP sync on CPU is {on_cpu}; the plan assumes "
-                               f"{self.parallel.dp_sync_on_cpu}")
+        # Each planned sync op explicitly selects cpu_group or device_group.
+        # Step's V2 host sync does not consult the V1 runner's NCCL-sync flag.
 
     def _align_start(self, group) -> None:
         """Queue a one-element all-reduce on ``group``'s device group.
@@ -227,25 +293,36 @@ class CollectiveRunner:
     def communicators(self) -> dict:
         """Which all-reduce communicators vLLM enabled on each group of this rank."""
         import vllm
+        from vllm import envs
 
         enabled = {}
         for name, group in self.groups.items():
             comm = group.device_communicator
             enabled[name] = {
-                attr: getattr(comm, attr) is not None
+                attr: getattr(comm, attr, None) is not None
                 and not getattr(getattr(comm, attr), "disabled", False)
                 for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
                              "qr_comm", "all2all_manager")}
         return {"torch": self.torch.__version__, "vllm": vllm.__version__,
-                "communicators": enabled,
+                "enabled_communicators": enabled,
+                "disable_custom_all_reduce": self.vllm_config.parallel_config.disable_custom_all_reduce,
+                "disable_nccl_for_dp_synchronization": (
+                    self.vllm_config.parallel_config.disable_nccl_for_dp_synchronization),
+                "dp_rail_isolation": self.dp_rail_isolation,
+                **runtime_environment(envs),
                 "group_ranks": {name: list(g.ranks) for name, g in self.groups.items()},
                 "hosts": self.hosts,
                 "sleep_cycles_per_us": self.sleep_cycles_per_us}
 
     def _tensors(self, call: CollectiveCall, rows: int, device):
         torch = self.torch
-        return [torch.ones((rows, columns), dtype=getattr(torch, dtype), device=device)
-                for columns, dtype in zip(call.columns, call.dtypes)]
+        tensors = []
+        for columns, dtype in zip(call.columns, call.dtypes):
+            # Casting BF16 avoids requiring an FP8 fill kernel during allocation.
+            allocation_dtype = torch.bfloat16 if dtype == "float8_e4m3fn" else getattr(torch, dtype)
+            tensor = torch.ones((rows, columns), dtype=allocation_dtype, device=device)
+            tensors.append(tensor.to(dtype=getattr(torch, dtype)))
+        return tensors
 
     def _issue(self, call: CollectiveCall):
         """Return a zero-argument function that issues ``call`` once on this rank."""
@@ -288,14 +365,17 @@ class CollectiveRunner:
         per_repeat = self.settings["calls_per_repeat"]
         for _ in range(self.settings["warmup_calls"]):
             issue()
-        torch.cuda.synchronize()
+        if call.op != "cpu_all_reduce":
+            torch.cuda.synchronize()
         if not call.captured:
             def run():
                 for _ in range(per_repeat):
                     issue()
             return issue, run
         graph = torch.cuda.CUDAGraph()
-        with self.ps.graph_capture(self.device) as context:
+        # Only this group participates. A global context would register TP
+        # buffers on inactive ranks during an isolated DP-rail capture.
+        with self.groups[call.group].graph_capture() as context:
             with torch.cuda.graph(graph, stream=context.stream):
                 for _ in range(per_repeat):
                     issue()
@@ -358,10 +438,15 @@ class CollectiveRunner:
                                      group=group.cpu_group)
         return int(sleep_us.item() * self.sleep_cycles_per_us)
 
-    def participates(self, call: CollectiveCall) -> bool:
+    def participates(self, call: CollectiveCall, scenario=None) -> bool:
         """Whether this rank issues ``call``; ranks without rows, such as idle DP ranks
         for logits, skip it."""
-        return call.shard_rows[self.instance_rank] > 0
+        if call.shard_rows[self.instance_rank] == 0:
+            return False
+        if call.group == "dp":
+            rails = active_dp_rails(self.parallel, call, scenario, self.dp_rail_isolation)
+            return self.instance_rank % self.parallel.tensor_parallel_size in rails
+        return True
 
     def gather(self, local) -> list | None:
         """``local`` of every rank of this instance, on its first rank; None elsewhere."""
@@ -372,12 +457,23 @@ class CollectiveRunner:
     def call_record(self, scenario, call: CollectiveCall, gathered: list) -> dict:
         """Identity and byte counts of ``call``, merged over the gathered ranks."""
         present = [g for g in gathered if g is not None]
+        ranks = [rank for rank, value in enumerate(gathered) if value is not None]
+        offset = self.instance * self.parallel.world_size
+        groups = sorted({tuple(offset + m for m in group_members(self.parallel, call.group, rank))
+                         for rank in ranks})
         return {
             "scenario": scenario.name, "call": call.name, "op": call.op,
             "group": call.group, "group_size": self.groups[call.group].world_size,
             "cuda_graph": call.captured,
             "calls_per_forward": call.calls_per_forward,
             "tokens_per_dp_rank": list(scenario.tokens_per_dp_rank),
+            "useful_tokens_per_dp_rank": list(
+                getattr(scenario, "useful_tokens_per_dp_rank", None) or scenario.tokens_per_dp_rank),
+            "padded_tokens_per_dp_rank": list(scenario.tokens_per_dp_rank),
+            "dtypes": list(call.dtypes), "columns": list(call.columns),
+            "concurrent_dp_rails": len(groups) if call.group == "dp" else None,
+            "participating_ranks": [offset + rank for rank in ranks],
+            "group_ranks": [list(members) for members in groups],
             "shard_rows": list(call.shard_rows), "source": call.source,
             "max_input_bytes": max(g["bytes"][0] for g in present),
             "max_output_bytes": max(g["bytes"][1] for g in present),
@@ -387,7 +483,7 @@ class CollectiveRunner:
         """Time one call; return the merged record on the instance's first rank."""
         self.torch.distributed.barrier(group=self.instance_cpu)
         local = None
-        if self.participates(call):
+        if self.participates(call, scenario):
             issue, run = self.prepare(call)
             local = {**self.time_call(call, run),
                      "bytes": call_bytes(call, self.parallel, self.instance_rank)}
@@ -402,12 +498,12 @@ class CollectiveRunner:
             "per_rank_queue_held": [g["queue_held"] if g else None for g in gathered],
         }
 
-    def kernel_names(self, call: CollectiveCall) -> list[str] | None:
+    def kernel_names(self, call: CollectiveCall, scenario=None) -> list[str] | None:
         """CUDA kernels of one ``run`` of ``call``, merged over ranks on the first rank."""
         torch = self.torch
         torch.distributed.barrier(group=self.instance_cpu)
         names = []
-        if self.participates(call) and call.op != "cpu_all_reduce":
+        if self.participates(call, scenario) and call.op != "cpu_all_reduce":
             issue, run = self.prepare(call)
             with torch.profiler.profile(
                     activities=[torch.profiler.ProfilerActivity.CUDA]) as profile:
@@ -439,21 +535,28 @@ def main() -> None:
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--list-cases", action="store_true",
                         help="Print the planned cases without initializing CUDA")
+    parser.add_argument("--dp-rail-isolation", action="store_true",
+                        help="Issue DP device calls only on the TP-index-0 group")
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
     parallel = ServingParallelism.from_engine(config["engine"])
     model = ModelShape.from_hf_config(json.loads(Path(config["model_config"]).read_text()))
     scenarios = scenarios_from_grid(parallel, config["grid"])
+    if args.dp_rail_isolation:
+        scenarios = [replace(scenario, active_dp_rails=(0,)) for scenario in scenarios]
     plan = [(s, c) for s in scenarios for c in forward_collectives(model, parallel, s)]
     settings = {key: int(config[key]) for key in RUN_SETTINGS}
     if args.list_cases:
         for scenario, call in plan:
             print(scenario.name, call.name, call.op, call.group,
-                  call_bytes(call, parallel, 0), call.calls_per_forward)
+                  call_bytes(call, parallel, 0), call.calls_per_forward,
+                  "dp_rails", active_dp_rails(parallel, call, scenario, args.dp_rail_isolation)
+                  if call.group == "dp" else ())
         print("cases", len(plan), "passes", settings["passes"],
               "measurements", len(plan) * settings["passes"])
         return
-    runner = CollectiveRunner(parallel, settings)
+    runner = CollectiveRunner(parallel, settings, engine=config["engine"],
+                              dp_rail_isolation=args.dp_rail_isolation)
     output = Path(config["output_dir"])
     log = None
     if runner.rank == 0:
@@ -472,12 +575,14 @@ def main() -> None:
             log.write(json.dumps(record) + "\n")
             log.flush()
             records.append(record)
-    kernels = {(s.name, c.name): runner.kernel_names(c) for s, c in plan}
+    kernels = {(s.name, c.name): runner.kernel_names(c, s) for s, c in plan}
     if runner.rank == 0:
         log.close()
         with (output / "kernels.jsonl").open("a") as kernel_log:
-            for (scenario, call), names in kernels.items():
-                kernel_log.write(json.dumps({"scenario": scenario, "call": call,
+            for scenario, call in plan:
+                names = kernels[(scenario.name, call.name)]
+                kernel_log.write(json.dumps({"scenario": scenario.name, "call": call.name,
+                                             "communicator": actual_communicator(call.op, names),
                                              "kernels": names}) + "\n")
         summary = [summarize({**r, "kernels": kernels[(r["scenario"], r["call"])]})
                    for r in records]

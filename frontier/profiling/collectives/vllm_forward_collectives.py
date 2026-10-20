@@ -1,4 +1,4 @@
-"""Collectives that vLLM v0.28 issues in one DeepseekV2-family forward pass.
+"""Native vLLM forward collectives for DeepseekV2-family SP and Step5 MoE.
 
 The shapes follow the sequence-parallel MoE path that vLLM selects when expert
 parallelism spans tensor- and data-parallel ranks (``ParallelConfig.
@@ -13,6 +13,13 @@ use_sequence_parallel_moe``). Source references are to vLLM v0.28.0:
 * ``forward_context.py``: ``_compute_sp_num_tokens`` (per-EP-rank rows).
 * ``v1/worker/dp_utils.py``: ``_run_ar`` (per-step DP synchronization).
 * ``model_executor/layers/logits_processor.py``: logits all-gather.
+
+The Step5 image instead selects non-sequence-parallel MoE unless
+``kernel_config.moe_backend == "deep_gemm_mega_moe"``. Its model issues separate
+attention, dense, shared and routed TP reductions; AgRsAll2AllManager dispatches
+unsharded tokens over DP, and the V2 runner synchronizes six int32 rows on gloo.
+FP8 dispatch scales assume the per-token block layout of the SM90
+Triton/DeepGemm path; native DP>1 shape confirmation remains a collection gate.
 
 All functions here are pure; ``vllm_collective_benchmark`` executes the calls.
 """
@@ -32,11 +39,14 @@ TOPK_WEIGHTS_DTYPE = "float32"
 TOPK_IDS_DTYPE = "int32"
 # dp_utils._run_ar all-reduces an int32 tensor of shape [4, dp_size].
 DP_SYNC_ROWS = 4
+# Step5 image v1/worker/gpu/dp_utils.py:67 (V2 model runner, always host-side).
+STEP5_DP_SYNC_ROWS = 6
 DP_SYNC_DTYPE = "int32"
 # vocab_parallel_embedding.DEFAULT_VOCAB_PADDING_SIZE.
 VOCAB_PADDING_SIZE = 64
 
-DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4}
+DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4,
+               "float8_e4m3fn": 1}
 
 # ``all_reduce`` etc. go through vLLM's GroupCoordinator, which picks the
 # communicator. ``device_group_all_reduce`` and ``cpu_all_reduce`` are plain
@@ -50,6 +60,16 @@ def _ceil_div(a: int, b: int) -> int:
     return -(-a // b)
 
 
+def _layer_indices(value: str | Iterable[int] | None) -> tuple[int, ...] | None:
+    if value is None:
+        return None
+    values = value.split(",") if isinstance(value, str) else value
+    indices = tuple(int(i) for i in values if str(i).strip())
+    if len(indices) != len(set(indices)):
+        raise ValueError("MoE layer schedule contains duplicate indices")
+    return tuple(sorted(indices))
+
+
 @dataclass(frozen=True)
 class ModelShape:
     hidden_size: int
@@ -58,22 +78,64 @@ class ModelShape:
     moe_layer_freq: int
     num_experts_per_tok: int
     vocab_size: int
+    model_type: str = ""
+    moe_layers: tuple[int, ...] | None = None
+    fp8_moe_layers: tuple[int, ...] = ()
+    fp8_group_size: int | None = None
 
     @classmethod
     def from_hf_config(cls, config: dict) -> "ModelShape":
-        if config.get("n_routed_experts") is None:
+        text = config.get("text_config", config)
+        model_type = str(text.get("model_type", "")).lower()
+        if text.get("n_routed_experts", text.get("moe_num_experts")) is None:
             raise ValueError("Config has no routed experts; this path covers MoE models")
-        return cls(
-            hidden_size=int(config["hidden_size"]),
-            num_hidden_layers=int(config["num_hidden_layers"]),
-            first_k_dense_replace=int(config["first_k_dense_replace"]),
+        listed = _layer_indices(text.get("moe_layer_list"))
+        enumerated = _layer_indices(text.get("moe_layers_enum"))
+        if listed is not None and enumerated is not None and listed != enumerated:
+            raise ValueError("moe_layers_enum and moe_layer_list describe different layers")
+        layers = enumerated if enumerated is not None else listed
+        n_layers = int(text["num_hidden_layers"])
+        if layers is None and model_type == "step5":
+            # Step5 _get_step5_moe_layer_indices uses this native default.
+            layers = tuple(range(1, n_layers))
+        if layers is not None:
+            total_layers = n_layers + int(text.get("num_nextn_predict_layers", 0) or 0)
+            if any(not 0 <= i < total_layers for i in layers):
+                raise ValueError(f"MoE layer schedule must be in [0, {total_layers})")
+            # MTP layers do not run in the ordinary model forward.
+            layers = tuple(i for i in layers if i < n_layers)
+        model = cls(
+            hidden_size=int(text["hidden_size"]),
+            num_hidden_layers=n_layers,
+            first_k_dense_replace=int(text.get("first_k_dense_replace", 0)),
             # deepseek_v2.py reads getattr(config, "moe_layer_freq", 1).
-            moe_layer_freq=int(config.get("moe_layer_freq", 1)),
-            num_experts_per_tok=int(config["num_experts_per_tok"]),
-            vocab_size=int(config["vocab_size"]),
+            moe_layer_freq=int(text.get("moe_layer_freq", 1)),
+            num_experts_per_tok=int(text.get("moe_top_k", text.get("num_experts_per_tok"))),
+            vocab_size=int(text["vocab_size"]),
+            model_type=model_type,
+            moe_layers=layers,
         )
+        if model_type != "step5":
+            return model
+        quant = config.get("quantization_config", text.get("quantization_config")) or {}
+        if not quant.get("quant_method"):
+            return model
+        if (quant["quant_method"] != "fp8" or quant.get("fmt", "e4m3") != "e4m3"
+                or quant.get("activation_scheme") != "dynamic"):
+            raise ValueError("Step5 dispatch models only dynamic e4m3 block FP8 or unquantized inputs")
+        block = quant.get("weight_block_size")
+        if not block or len(block) != 2 or any(int(n) <= 0 for n in block):
+            raise ValueError("FP8 dispatch requires positive weight_block_size dimensions")
+        excluded = quant.get("ignored_layers") or quant.get("modules_to_not_convert") or []
+        # Native FusedMoE matches its exact module prefix inside excluded weight
+        # names, including w13_weight/w2_weight, not attention/shared exclusions.
+        fp8_layers = tuple(i for i in model.moe_layer_ids() if not any(
+            f"model.layers.{i}.moe.experts" in name for name in excluded))
+        return replace(model, fp8_moe_layers=fp8_layers, fp8_group_size=int(block[1]))
 
     def moe_layer_ids(self) -> list[int]:
+        if self.moe_layers is not None:
+            return list(self.moe_layers)
         return [i for i in range(self.num_hidden_layers)
                 if i >= self.first_k_dense_replace and i % self.moe_layer_freq == 0]
 
@@ -87,6 +149,7 @@ class ServingParallelism:
     all2all_backend: str
     activation_dtype: str
     async_scheduling: bool
+    moe_backend: str = "auto"
 
     @classmethod
     def from_engine(cls, engine: dict) -> "ServingParallelism":
@@ -98,6 +161,7 @@ class ServingParallelism:
             all2all_backend=engine.get("all2all_backend", VLLM_DEFAULT_ALL2ALL_BACKEND),
             activation_dtype=str(engine["dtype"]),
             async_scheduling=bool(engine["async_scheduling"]),
+            moe_backend=str(engine.get("moe_backend", "auto")),
         )
 
     @property
@@ -127,15 +191,58 @@ class ServingParallelism:
         if self.activation_dtype not in DTYPE_BYTES:
             raise ValueError(f"Unsupported activation dtype {self.activation_dtype!r}")
 
+    def validate_step5_moe(self) -> None:
+        """Limit the model to Step5's separate-reduction, DP AgRs path."""
+        if self.moe_backend == "deep_gemm_mega_moe":
+            raise ValueError("Step5 deep_gemm_mega_moe sequence-parallel collectives are not modeled")
+        if not (self.enable_expert_parallel and self.tensor_parallel_size > 1
+                and self.data_parallel_size > 1 and self.pipeline_parallel_size == 1):
+            raise ValueError("Step5 DP MoE requires EP, TP>1, DP>1 and PP=1")
+        if self.all2all_backend != VLLM_DEFAULT_ALL2ALL_BACKEND:
+            raise ValueError(f"all2all_backend={self.all2all_backend!r} is not modeled for Step5")
+        if self.activation_dtype != "bfloat16":
+            raise ValueError("Step5 dispatch/combine currently models bfloat16 activations")
+
 
 @dataclass(frozen=True)
 class ForwardScenario:
-    """Tokens and logits rows each DP rank runs in one engine step."""
+    """Wire tokens and logits rows each DP rank runs in one engine step.
+
+    Useful tokens exclude graph padding and idle-rank dummy work. None preserves
+    the original interpretation (all wire tokens are useful). ``active_dp_rails``
+    selects TP indices whose device DP groups run; None means all rails, while
+    (0,) measures isolation. It does not suppress TP calls or host DP sync.
+    """
 
     name: str
     tokens_per_dp_rank: tuple[int, ...]
     logit_rows_per_dp_rank: tuple[int, ...]
     cuda_graph: bool
+    useful_tokens_per_dp_rank: tuple[int, ...] | None = None
+    active_dp_rails: tuple[int, ...] | None = None
+
+    def validate(self, parallel: ServingParallelism) -> None:
+        dp = parallel.data_parallel_size
+        if len(self.tokens_per_dp_rank) != dp or len(self.logit_rows_per_dp_rank) != dp:
+            raise ValueError("Scenario must give one token and logits count per DP rank")
+        if min(self.tokens_per_dp_rank) <= 0:
+            raise ValueError("Every DP rank runs at least one token (idle ranks run a dummy batch)")
+        if self.cuda_graph and len(set(self.tokens_per_dp_rank)) != 1:
+            raise ValueError("CUDA graph steps are DP-padded to a uniform size (dp_utils.py:80)")
+        useful = self.useful_tokens_per_dp_rank
+        if useful is not None:
+            if len(useful) != dp or any(not 0 <= u <= t for u, t in zip(useful, self.tokens_per_dp_rank)):
+                raise ValueError("Useful token counts must be between zero and wire tokens per DP rank")
+            if not any(useful):
+                raise ValueError("A forward scenario requires at least one DP rank with useful tokens")
+            if not self.cuda_graph and any(u == 0 and t != 1 for u, t in zip(useful, self.tokens_per_dp_rank)):
+                raise ValueError("Idle eager ranks must run a one-token dummy batch")
+            if any(not 0 <= r <= u for r, u in zip(self.logit_rows_per_dp_rank, useful)):
+                raise ValueError("Logits rows must not exceed useful tokens per DP rank")
+        rails = self.active_dp_rails
+        if rails is not None and (not rails or len(rails) != len(set(rails))
+                                  or any(not 0 <= i < parallel.tensor_parallel_size for i in rails)):
+            raise ValueError("active_dp_rails must contain distinct TP indices")
 
 
 @dataclass(frozen=True)
@@ -144,7 +251,8 @@ class CollectiveCall:
 
     ``shard_rows`` holds, per global rank, the rows on the sharded side: the
     input of all_reduce/all_gather(v), the output of reduce_scatter(v). A rank
-    with zero rows does not issue a TP-local call. ``captured`` marks calls
+    with zero rows skips the call; DP rail isolation zeros an entire DP group.
+    ``captured`` marks calls
     inside the CUDA-graph-captured model forward; logits and DP synchronization
     run outside it (gpu_model_runner.py ``compute_logits`` after
     ``_model_forward``).
@@ -197,14 +305,15 @@ def call_bytes(call: CollectiveCall, parallel: ServingParallelism,
 def forward_collectives(model: ModelShape, parallel: ServingParallelism,
                         scenario: ForwardScenario) -> list[CollectiveCall]:
     """List the distinct collectives of one forward pass for ``scenario``."""
+    if model.model_type == "step5":
+        parallel.validate_step5_moe()
+        scenario.validate(parallel)
+        return _step5_collectives(model, parallel, scenario)
     parallel.validate_sequence_parallel_moe()
     tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
-    if len(scenario.tokens_per_dp_rank) != dp or len(scenario.logit_rows_per_dp_rank) != dp:
-        raise ValueError("Scenario must give one token and logits count per DP rank")
-    if min(scenario.tokens_per_dp_rank) <= 0:
-        raise ValueError("Every DP rank runs at least one token (idle ranks run a dummy batch)")
-    if scenario.cuda_graph and len(set(scenario.tokens_per_dp_rank)) != 1:
-        raise ValueError("CUDA graph steps are DP-padded to a uniform size (dp_utils.py:80)")
+    scenario.validate(parallel)
+    if scenario.active_dp_rails is not None:
+        raise ValueError("DP rail isolation applies only to non-sequence-parallel Step5")
 
     act = parallel.activation_dtype
     hidden = model.hidden_size
@@ -261,6 +370,67 @@ def forward_collectives(model: ModelShape, parallel: ServingParallelism,
     return calls
 
 
+def _step5_collectives(model: ModelShape, parallel: ServingParallelism,
+                      scenario: ForwardScenario) -> list[CollectiveCall]:
+    tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
+    hidden, act = model.hidden_size, parallel.activation_dtype
+    n_moe = len(model.moe_layer_ids())
+    n_dense = model.num_hidden_layers - n_moe
+    tokens = tuple(n for n in scenario.tokens_per_dp_rank for _ in range(tp))
+    dp_tokens = tuple(n if scenario.active_dp_rails is None or rank % tp in scenario.active_dp_rails
+                      else 0 for rank, n in enumerate(tokens))
+    calls = [
+        CollectiveCall("embedding_all_reduce", "all_reduce", "tp", 0, (hidden,), (act,),
+                       tokens, 1, "vocab_parallel_embedding.py:VocabParallelEmbedding.forward"),
+        CollectiveCall("attention_all_reduce", "all_reduce", "tp", 0, (hidden,), (act,),
+                       tokens, model.num_hidden_layers, "step5/nvidia/model.py:Step5Attention.o_proj"),
+    ]
+    if n_dense:
+        calls.append(CollectiveCall(
+            "dense_down_proj_all_reduce", "all_reduce", "tp", 0, (hidden,), (act,),
+            tokens, n_dense, "step5/nvidia/model.py:Step5MLP.down_proj"))
+    if n_moe:
+        calls.append(CollectiveCall(
+            "shared_expert_down_proj_all_reduce", "all_reduce", "tp", 0, (hidden,), (act,),
+            tokens, n_moe, "step5/nvidia/model.py:Step5MoE.share_expert.down_proj"))
+        k = model.num_experts_per_tok
+        n_fp8 = len(model.fp8_moe_layers)
+        if n_fp8:
+            if model.fp8_group_size is None:
+                raise ValueError("FP8 dispatch requires the activation group size")
+            calls.append(CollectiveCall(
+                "moe_dispatch_all_gatherv_fp8", "all_gatherv", "dp", 0,
+                (hidden, k, k, _ceil_div(hidden, model.fp8_group_size)),
+                ("float8_e4m3fn", TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE, "float32"),
+                dp_tokens, n_fp8, "naive_dp_ep.py:prepare; all2all.py:AgRsAll2AllManager.dispatch"))
+        if n_moe - n_fp8:
+            calls.append(CollectiveCall(
+                "moe_dispatch_all_gatherv_bf16", "all_gatherv", "dp", 0, (hidden, k, k),
+                (act, TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE), dp_tokens, n_moe - n_fp8,
+                "naive_dp_ep.py:prepare; all2all.py:AgRsAll2AllManager.dispatch"))
+        calls += [
+            CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv", "dp", 0,
+                           (hidden,), (act,), dp_tokens, n_moe,
+                           "all2all.py:AgRsAll2AllManager.combine"),
+            CollectiveCall("routed_expert_all_reduce", "all_reduce", "tp", 0,
+                           (hidden,), (act,), tokens, n_moe,
+                           "moe_runner.py:_maybe_reduce_final_output"),
+        ]
+    calls = [replace(call, captured=scenario.cuda_graph) for call in calls]
+    logit_rows = tuple(n for n in scenario.logit_rows_per_dp_rank for _ in range(tp))
+    padded_vocab = _ceil_div(model.vocab_size, VOCAB_PADDING_SIZE) * VOCAB_PADDING_SIZE
+    if padded_vocab % tp:
+        raise ValueError("Padded vocab is not divisible by TP")
+    if any(logit_rows):
+        calls.append(CollectiveCall(
+            "logits_all_gather", "all_gather", "tp", -1, (padded_vocab // tp,), (act,),
+            logit_rows, 1, "logits_processor.py:LogitsProcessor._gather_logits"))
+    calls.append(CollectiveCall(
+        "dp_batch_sync_all_reduce", "cpu_all_reduce", "dp", 0, (dp,), (DP_SYNC_DTYPE,),
+        (STEP5_DP_SYNC_ROWS,) * parallel.world_size, 1, "v1/worker/gpu/dp_utils.py:67-77"))
+    return calls
+
+
 def scenarios_from_grid(parallel: ServingParallelism, grid: dict) -> list[ForwardScenario]:
     """Build step scenarios from a grid spec.
 
@@ -269,18 +439,34 @@ def scenarios_from_grid(parallel: ServingParallelism, grid: dict) -> list[Forwar
     others run vLLM's one-token dummy batch (``single_active``,
     gpu_worker.py:1210). ``grid["cuda_graph_batch_sizes"]`` lists decode batch
     sizes, which vLLM pads to the same size on every DP rank.
+
+    ``grid["scenarios"]`` optionally adds explicit ForwardScenario records with
+    ``name``, ``tokens_per_dp_rank``, ``logit_rows_per_dp_rank``, ``cuda_graph``,
+    and optionally ``useful_tokens_per_dp_rank`` and ``active_dp_rails``. Wire
+    counts stay positive even on idle ranks: one in eager, capture size in graph.
+    Explicit-only grids may omit the two legacy grid keys.
     """
     dp = parallel.data_parallel_size
     scenarios = []
-    for tokens, requests in grid["eager"]:
+    for tokens, requests in grid.get("eager", []):
         if not 0 < requests <= tokens:
             raise ValueError(f"Invalid eager point tokens={tokens} requests={requests}")
         scenarios.append(ForwardScenario(
             f"eager_uniform_t{tokens}_r{requests}", (tokens,) * dp, (requests,) * dp, False))
         scenarios.append(ForwardScenario(
             f"eager_single_active_t{tokens}_r{requests}", (tokens,) + (1,) * (dp - 1),
-            (requests,) + (0,) * (dp - 1), False))
-    for batch in grid["cuda_graph_batch_sizes"]:
+            (requests,) + (0,) * (dp - 1), False,
+            useful_tokens_per_dp_rank=(tokens,) + (0,) * (dp - 1)))
+    for batch in grid.get("cuda_graph_batch_sizes", []):
         scenarios.append(ForwardScenario(
             f"graph_decode_b{batch}", (batch,) * dp, (batch,) * dp, True))
+    for entry in grid.get("scenarios", []):
+        values = dict(entry)
+        for field in ("tokens_per_dp_rank", "logit_rows_per_dp_rank",
+                      "useful_tokens_per_dp_rank", "active_dp_rails"):
+            if values.get(field) is not None:
+                values[field] = tuple(values[field])
+        scenarios.append(ForwardScenario(**values))
+    for scenario in scenarios:
+        scenario.validate(parallel)
     return scenarios
