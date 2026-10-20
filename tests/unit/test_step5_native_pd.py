@@ -124,6 +124,18 @@ def staged(tmp_path):
     return stage, config, inputs
 
 
+def test_h200_run_definition_changes_only_the_hardware():
+    h800 = json.loads(R1.read_text())
+    h200 = json.loads(R1.with_name("r1_run_h200.json").read_text())
+    assert h200["resources"].pop("charged_group") == "step_main"
+    assert h200["resources"].pop("gpu_type") == "H200"
+    for definition in (h800, h200):
+        definition.pop("description")
+    h800["resources"].pop("charged_group")
+    h800["resources"].pop("gpu_type")
+    assert h200 == h800
+
+
 def test_stage_holds_every_worker_config_key_and_the_harness_layout(staged):
     stage, config, _ = staged
     worker_source = (REPO / "tests/comparison/calibration/native_pd_worker.py").read_text()
