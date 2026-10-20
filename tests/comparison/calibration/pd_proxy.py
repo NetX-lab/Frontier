@@ -21,7 +21,9 @@ arrival and the prefill and decode response times, each on ``time.time()`` and
 ``time.monotonic()``. The routes are ``POST /v1/completions`` and
 ``GET /health``. The explicit v0.28 adapter follows the pinned NIXL pull toy
 proxy: P returns the native ``kv_transfer_params`` passed unchanged to D
-under the same client header. These HTTP records do not prove native READ
+under the same client header. Streaming clients receive D's chunks immediately;
+P still uses a non-streaming response to supply the handoff metadata. Proxy byte
+timestamps are diagnostics, not client token timestamps. These records do not prove native READ
 completion or device readiness.
 """
 
@@ -89,14 +91,15 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
             "proxy_arrival_monotonic": arrival_monotonic,
         }
         body = await request.read()
+        stream_response = None
         try:
             if vllm_version == "0.28.0":
                 record["handoff_protocol"] = "nixl_pull"
                 original = json.loads(body)
-                if (type(original) is not dict or original.get("stream") is not False
+                if (type(original) is not dict or type(original.get("stream")) is not bool
                         or "kv_transfer_params" in original
                         or type(original.get("prompt")) is not list or not original["prompt"]):
-                    raise ValueError("NIXL replay requires nonstreaming token prompts without client transfer metadata")
+                    raise ValueError("NIXL replay requires token prompts, an explicit stream boolean, and no client transfer metadata")
                 prefill = original | {"stream": False, "max_tokens": 1,
                     "kv_transfer_params": {"do_remote_decode": True, "do_remote_prefill": False,
                         "remote_engine_id": None, "remote_block_ids": None,
@@ -137,15 +140,42 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     raise ValueError("Prefill response lacks valid native NIXL pull metadata")
                 body = json.dumps(original | {"kv_transfer_params": params}).encode()
                 record["kv_transfer_params"] = params
+                if original["stream"]:
+                    async with session.post(
+                        f"{decode_url}/v1/completions", data=body,
+                        headers={"Content-Type": "application/json", "X-Request-Id": request_id},
+                    ) as response:
+                        record["decode_status"] = response.status
+                        if response.status != 200:
+                            payload = await response.read()
+                            record.update(decode_response_time=time.time(),
+                                          decode_response_monotonic=time.monotonic())
+                            return web.Response(body=payload, status=response.status,
+                                                content_type=response.content_type)
+                        stream_response = web.StreamResponse(
+                            headers={"Content-Type": response.headers["Content-Type"]})
+                        await stream_response.prepare(request)
+                        async for chunk in response.content.iter_any():
+                            if "decode_first_byte_monotonic" not in record:
+                                record.update(decode_first_byte_time=time.time(),
+                                              decode_first_byte_monotonic=time.monotonic())
+                            await stream_response.write(chunk)
+                        await stream_response.write_eof()
+                        record.update(decode_response_time=time.time(),
+                                      decode_response_monotonic=time.monotonic())
+                        return stream_response
             status, payload, content_type = await forward(f"{decode_url}/v1/completions", body, request_id)
             record.update(decode_status=status, decode_response_time=time.time(),
                           decode_response_monotonic=time.monotonic())
             if status != 200:
                 logger.error("decode of %s returned %d", client_request_id, status)
             return web.Response(body=payload, status=status, content_type=content_type)
-        except (ClientError, ValueError) as exc:
+        except (ClientError, ValueError, ConnectionError) as exc:
             record["error"] = f"{type(exc).__name__}: {exc}"
             logger.error("request %s failed: %s", client_request_id, record["error"])
+            if stream_response is not None and stream_response.prepared:
+                stream_response.force_close()
+                raise
             return web.json_response({"error": record["error"]}, status=502)
         finally:
             log.write(json.dumps(record) + "\n")

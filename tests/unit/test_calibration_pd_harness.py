@@ -157,6 +157,83 @@ def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path
     assert "kv_ready" not in record and "device_completion" not in record
 
 
+@pytest.mark.parametrize(("decode_status", "disconnect"), [(200, False), (503, False), (200, True)])
+def test_v028_proxy_streams_before_decode_finishes_and_preserves_pull_metadata(tmp_path, decode_status, disconnect):
+    from aiohttp import ClientPayloadError, web
+    from aiohttp.test_utils import TestClient, TestServer
+
+    params = {
+        "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+        "remote_engine_id": "p-engine", "remote_request_id": "p-request",
+        "remote_host": "127.0.0.1", "remote_port": 5557, "remote_block_ids": [[7]],
+    }
+    observed = []
+
+    async def exercise():
+        client_received = asyncio.Event()
+
+        async def prefill(request):
+            observed.append(("P", request.headers["X-Request-Id"], await request.json()))
+            return web.json_response({"kv_transfer_params": params})
+
+        async def decode(request):
+            observed.append(("D", request.headers["X-Request-Id"], await request.json()))
+            if decode_status != 200:
+                return web.json_response({"error": "native decode failed"}, status=decode_status)
+            stream = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
+            await stream.prepare(request)
+            await stream.write(b'data: {"choices":[{"token_ids":[42],"text":""}]}\n\n')
+            # The upstream cannot finish until the client has received the first event.
+            await asyncio.wait_for(client_received.wait(), timeout=5)
+            if disconnect:
+                request.transport.close()
+                return stream
+            await stream.write(b"data: [DONE]\n\n")
+            await stream.write_eof()
+            return stream
+
+        p, d = web.Application(), web.Application()
+        p.router.add_post("/v1/completions", prefill)
+        d.router.add_post("/v1/completions", decode)
+        async with TestServer(p) as ps, TestServer(d) as ds:
+            proxy = build_app(str(ps.make_url("")).rstrip("/"), str(ds.make_url("")).rstrip("/"),
+                              "", "", tmp_path / "proxy.jsonl", vllm_version="0.28.0")
+            async with TestClient(TestServer(proxy)) as client:
+                body = {"prompt": [1, 2, 3], "stream": True, "max_tokens": 2, "min_tokens": 2,
+                        "stream_options": {"include_usage": True}, "return_token_ids": True}
+                response = await client.post("/v1/completions", json=body,
+                                             headers={"X-Request-Id": "repeat-1-formal-0"})
+                assert response.status == decode_status
+                if decode_status == 200:
+                    assert response.content_type == "text/event-stream"
+                    first = await asyncio.wait_for(response.content.readline(), timeout=2)
+                    assert json.loads(first.removeprefix(b"data: "))["choices"][0]["token_ids"] == [42]
+                    client_received.set()
+                    if disconnect:
+                        with pytest.raises(ClientPayloadError):
+                            await response.read()
+                    else:
+                        assert (await response.read()).endswith(b"data: [DONE]\n\n")
+                else:
+                    assert (await response.json())["error"] == "native decode failed"
+                assert observed[1][2] == body | {"kv_transfer_params": params}
+
+    asyncio.run(exercise())
+    assert [item[1] for item in observed] == ["repeat-1-formal-0"] * 2
+    assert observed[0][2]["stream"] is False
+    assert observed[0][2]["max_tokens"] == 1
+    assert "min_tokens" not in observed[0][2] and "stream_options" not in observed[0][2]
+    record = json.loads((tmp_path / "proxy.jsonl").read_text())
+    assert record["decode_status"] == decode_status
+    if decode_status == 200 and not disconnect:
+        assert record["prefill_response_monotonic"] <= record["decode_first_byte_monotonic"]
+        assert record["decode_first_byte_monotonic"] <= record["decode_response_monotonic"]
+    if disconnect:
+        assert "ClientPayloadError" in record["error"]
+        assert "decode_response_monotonic" not in record
+    assert "client_ttft" not in record and "device_completion" not in record
+
+
 def test_legacy_proxy_preserves_address_id_and_unchanged_decode_body(tmp_path):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
