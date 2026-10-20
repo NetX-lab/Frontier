@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from dataclasses import replace
 import json
 from pathlib import Path
@@ -193,6 +194,145 @@ def test_lm_head_default_and_unrepresented_runtime_override_are_distinguished(
     assert "head_dtype override" in row["output_dtype_condition"]
 
 
+def test_source_projection_shapes_use_unpartitioned_constructor_dimensions(
+    model: BaseModelConfig, manager: QuantizationManager,
+) -> None:
+    manager.configure_from_model_config(model)
+    rows = _rows(manager)
+    expected = {
+        "dsv4_fused_qkv_projection": {"fused_wqa_wkv.weight": [1536, 4096]},
+        "dsv4_fused_qkv_rmsnorm": {
+            "q_norm.weight": [1024], "kv_norm.weight": [512],
+        },
+        "dsv4_q_projection": {"wq_b.weight": [32768, 1024]},
+        "dsv4_grouped_output_projection": {"wo_a.weight": [8192, 4096]},
+        "dsv4_output_projection": {"wo_b.weight": [4096, 8192]},
+        "dsv4_index_query_projection": {"wq_b.weight": [8192, 1024]},
+        "dsv4_index_weights_projection": {"weights_proj.weight": [64, 4096]},
+    }
+    for operation, shapes in expected.items():
+        assert rows[operation]["source_parameter_shapes"] == shapes
+        assert rows[operation]["shape_scope"] == (
+            "unpartitioned source dimensions before TP or backend layout conversion; "
+            "not runtime workload shapes or memory accounting"
+        )
+    assert rows["dsv4_grouped_output_projection"][
+        "source_grouped_weight_view_shape"
+    ] == [8, 1024, 4096]
+
+
+def test_source_compressor_shapes_preserve_csa_hca_and_indexer_contracts(
+    model: BaseModelConfig, manager: QuantizationManager,
+) -> None:
+    manager.configure_from_model_config(model)
+    rows = _rows(manager)
+    assert rows["dsv4_compressor_projection"][
+        "source_parameter_shapes_by_attention_variant"
+    ] == {
+        "csa": {"fused_wkv_wgate.weight": [2048, 4096]},
+        "hca": {"fused_wkv_wgate.weight": [1024, 4096]},
+    }
+    save = rows["dsv4_compressor_save_partial_states"]
+    assert save["source_parameter_shapes_by_attention_variant"] == {
+        "csa": {"ape": [4, 1024]}, "hca": {"ape": [128, 512]},
+    }
+    assert save["source_state_row_width_by_attention_variant"] == {
+        "csa": 2048, "hca": 1024,
+    }
+    assert rows["dsv4_compressor_fused_compress_store"][
+        "source_parameter_shapes_by_attention_variant"
+    ] == {
+        "csa": {"norm.weight": [512]}, "hca": {"norm.weight": [512]},
+    }
+    index_expected = {
+        "dsv4_index_compressor_projection": {
+            "fused_wkv_wgate.weight": [512, 4096],
+        },
+        "dsv4_index_compressor_save_partial_states": {"ape": [4, 256]},
+        "dsv4_index_compressor_fused_compress_store": {"norm.weight": [128]},
+    }
+    for operation, shapes in index_expected.items():
+        assert rows[operation]["source_parameter_shapes_by_attention_variant"] == {
+            "csa": shapes,
+        }
+    assert rows["dsv4_index_compressor_save_partial_states"][
+        "source_state_row_width_by_attention_variant"
+    ] == {"csa": 512}
+
+
+def test_source_shapes_are_config_derived_without_implying_runtime_support(
+    model: BaseModelConfig, manager: QuantizationManager,
+) -> None:
+    altered = replace(
+        model, embedding_dim=6144, num_q_heads=96, o_groups=12,
+        q_lora_rank=1536, o_lora_rank=512, index_n_heads=32,
+    )
+    manager.configure_from_model_config(altered)
+    rows = _rows(manager)
+    assert rows["dsv4_fused_qkv_projection"]["source_parameter_shapes"] == {
+        "fused_wqa_wkv.weight": [2048, 6144],
+    }
+    assert rows["dsv4_q_projection"]["source_parameter_shapes"] == {
+        "wq_b.weight": [49152, 1536],
+    }
+    grouped = rows["dsv4_grouped_output_projection"]
+    assert grouped["source_parameter_shapes"] == {"wo_a.weight": [6144, 4096]}
+    assert grouped["source_grouped_weight_view_shape"] == [12, 512, 4096]
+    assert rows["dsv4_output_projection"]["source_parameter_shapes"] == {
+        "wo_b.weight": [6144, 6144],
+    }
+    assert rows["dsv4_index_query_projection"]["source_parameter_shapes"] == {
+        "wq_b.weight": [4096, 1536],
+    }
+    assert rows["dsv4_index_weights_projection"]["source_parameter_shapes"] == {
+        "weights_proj.weight": [32, 6144],
+    }
+    assert rows["dsv4_compressor_projection"][
+        "source_parameter_shapes_by_attention_variant"
+    ]["csa"] == {"fused_wkv_wgate.weight": [2048, 6144]}
+    assert all(row["source_inventory_only"] for row in rows.values())
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("embedding_dim", 0), ("head_dim", None), ("num_q_heads", True),
+        ("q_lora_rank", -1), ("o_groups", 3), ("o_lora_rank", 1.5),
+        ("index_n_heads", "64"), ("index_head_dim", 0),
+    ],
+)
+def test_malformed_source_dimensions_fail_without_replacing_configured_inventory(
+    model: BaseModelConfig, manager: QuantizationManager, field: str, value: object,
+) -> None:
+    manager.configure_from_model_config(model)
+    before = json.dumps(manager.get_operation_precision_metadata(), sort_keys=True)
+    before_hash = manager.get_config_hash()
+    altered = replace(model)
+    setattr(altered, field, value)
+    with pytest.raises(ValueError, match=f"DeepSeek-V4 source dimensions.*{field}"):
+        manager.configure_from_model_config(altered)
+    assert json.dumps(manager.get_operation_precision_metadata(), sort_keys=True) == before
+    assert manager.get_config_hash() == before_hash
+
+
+def test_source_shapes_do_not_assign_dynamic_workloads_or_duplicate_parameter_totals(
+    model: BaseModelConfig, manager: QuantizationManager,
+) -> None:
+    manager.configure_from_model_config(model)
+    rows = _rows(manager)
+    for operation in (
+        "dsv4_sparse_attention", "dsv4_fused_q_kv_prepare",
+        "dsv4_output_inv_rope_quant", "dsv4_index_scores", "dsv4_index_topk",
+        "dsv4_index_short_context_fill", "moe_grouped_gemm", "dsv4_lm_head",
+    ):
+        assert "shape_scope" not in rows[operation]
+    for row in rows.values():
+        assert not {
+            "num_tokens", "padded_heads", "tensor_parallel_size", "selected_backend",
+            "compressed_token_count", "parameter_bytes", "parameter_count",
+        } & row.keys()
+
+
 def _legacy_model() -> SimpleNamespace:
     return SimpleNamespace(
         get_default_precision=lambda: PrecisionType.FP16,
@@ -275,3 +415,13 @@ def test_existing_metrics_csv_writer_retains_source_precision_fields(
     assert frame.loc["dsv4_index_short_context_fill", "precision"] == "INT32"
     assert frame["source_inventory_only"].all()
     assert set(frame["data_source"]) == {"model_config_and_vllm_source"}
+    for operation, row in _rows(manager).items():
+        for field in (
+            "source_parameter_shapes", "source_grouped_weight_view_shape",
+            "source_parameter_shapes_by_attention_variant",
+            "source_state_row_width_by_attention_variant",
+        ):
+            if field in row:
+                assert ast.literal_eval(frame.loc[operation, field]) == row[field]
+        if "shape_scope" in row:
+            assert frame.loc[operation, "shape_scope"] == row["shape_scope"]

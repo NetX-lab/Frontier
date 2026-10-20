@@ -9,24 +9,449 @@ from __future__ import annotations
 
 import json
 import re
+import asyncio
 from pathlib import Path
 
 import pytest
 
 from tests.comparison.calibration.e2e_metrics_gap import NORMALIZED_COLUMNS
 from tests.comparison.calibration.pd_metrics import engine_request_id, join_pd_rows, write_pd_rows
-from tests.comparison.calibration.pd_proxy import proxied_request_id
+from tests.comparison.calibration.pd_proxy import proxied_request_id, build_app
 from tests.comparison.calibration.pd_replay import (
     connector_check,
     instance_devices,
     instance_env,
     kv_transfer_config,
 )
+from tests.comparison.calibration import pd_replay
+from tests.unit.test_dp_placement_harness import native_engine, native_observer, native_replay_inputs
 
 # P2pNcclConnector.parse_request_id, vLLM-BS ff328f82a
 # vllm/distributed/kv_transfer/kv_connector/v1/p2p/p2p_nccl_connector.py:514-530.
 DECODE_ADDRESS_OF_PREFILL = re.compile(r"___decode_addr_(.*):(\d+)")
 PREFILL_ADDRESS_OF_DECODE = re.compile(r"___prefill_addr_(.*):(\d+)___")
+
+
+def nixl_engine() -> dict:
+    return native_engine() | {
+        "role_devices": {"prefill": [str(i) for i in range(16)],
+                         "decode": [str(i) for i in range(16, 32)]},
+        "kv_transfer": {"kv_buffer_device": "cuda", "side_channel_host": "127.0.0.1",
+                        "prefill_side_channel_port": 5557, "decode_side_channel_port": 5657},
+    }
+
+
+def test_v028_pd_selects_pull_roles_explicit_devices_and_distinct_side_channels():
+    engine = nixl_engine()
+    assert kv_transfer_config(engine, "prefill", 8100) == {
+        "kv_connector": "NixlConnector", "kv_role": "kv_producer",
+        "kv_buffer_device": "cuda", "kv_load_failure_policy": "fail",
+    }
+    devices = instance_devices({}, engine=engine)
+    assert devices == {"prefill": ",".join(map(str, range(16))),
+                       "decode": ",".join(map(str, range(16, 32)))}
+    observer = native_observer("DECODE")
+    env, changed = instance_env("light", engine, Path("/run/decode"), {},
+                                devices["decode"], observer=observer, role="decode")
+    assert json.loads(env["VLLM_FRONTIER_OBSERVER"]) == observer
+    assert changed["VLLM_NIXL_SIDE_CHANNEL_PORT"] == "5657"
+    assert changed["VLLM_NIXL_SIDE_CHANNEL_HOST"] == "127.0.0.1"
+    assert changed["CUDA_VISIBLE_DEVICES"] == devices["decode"]
+    assert "VLLM_FRONTIER_KV_TRANSFER_LOG_PATH" not in env
+
+
+@pytest.mark.parametrize("role", ["prefill", "decode"])
+def test_v028_pd_node_uses_its_local_lane_and_reachable_side_channel(role):
+    engine = nixl_engine() | {
+        "host": "192.0.2.10", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+        "role_devices": {role: [str(i) for i in range(8)]},
+    }
+    engine["kv_transfer"]["side_channel_host"] = "192.0.2.10"
+    inherited = {"CUDA_VISIBLE_DEVICES": "0,1,2,3,4,5,6,7", "NCCL_IB_HCA": "platform-value"}
+    devices = instance_devices(inherited, engine=engine, role=role)
+    assert devices == {role: "0,1,2,3,4,5,6,7"}
+    env, changed = instance_env("light", engine, Path("/run") / role, inherited,
+                                devices[role], observer=native_observer(role.upper()), role=role)
+    assert env["NCCL_IB_HCA"] == "platform-value"
+    assert changed["VLLM_NIXL_SIDE_CHANNEL_HOST"] == "192.0.2.10"
+    assert changed["VLLM_NIXL_SIDE_CHANNEL_PORT"] == ("5557" if role == "prefill" else "5657")
+    assert json.loads(env["VLLM_FRONTIER_OBSERVER"])["expected_ranks"] == list(range(16))
+
+
+@pytest.mark.parametrize("fault", ["loopback", "unspecified", "multicast", "rpc_window", "http_window"])
+def test_v028_pd_node_rejects_unusable_side_channels(fault):
+    engine = nixl_engine() | {
+        "host": "192.0.2.10", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    }
+    engine["kv_transfer"]["side_channel_host"] = {
+        "loopback": "127.0.0.1", "unspecified": "0.0.0.0", "multicast": "224.0.0.1",
+    }.get(fault, "192.0.2.10")
+    if fault == "rpc_window":
+        engine["data_parallel_rpc_port"] = 5558
+    with pytest.raises(ValueError):
+        kv_transfer_config(engine, "prefill", 5558 if fault == "http_window" else 8100)
+
+
+@pytest.mark.parametrize("fault", [None, "missing", "push", "identity", "blocks", "response_list"])
+def test_v028_proxy_passes_only_native_pull_response_metadata_to_decode(tmp_path, fault):
+    from aiohttp import web
+    from aiohttp.test_utils import TestClient, TestServer
+
+    params = {
+        "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+        "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+        "remote_host": "127.0.0.1", "remote_port": 5557,
+        "remote_block_ids": [[7, 9], []], "remote_num_tokens": 65, "tp_size": 8,
+    }
+    if fault == "push":
+        params["transfer_mode"] = "push"
+    if fault == "identity":
+        params["remote_request_id"] = None
+    if fault == "blocks":
+        params["remote_block_ids"] = [[True, -1], "invalid-group"]
+    observed = []
+
+    async def exercise():
+        async def prefill(request):
+            observed.append(("P", request.headers["X-Request-Id"], await request.json()))
+            payload = ([] if fault == "response_list" else
+                       {} if fault == "missing" else {"kv_transfer_params": params})
+            return web.json_response(payload)
+
+        async def decode(request):
+            observed.append(("D", request.headers["X-Request-Id"], await request.json()))
+            return web.json_response({"choices": [{"text": "native response"}]})
+
+        p, d = web.Application(), web.Application()
+        p.router.add_post("/v1/completions", prefill)
+        d.router.add_post("/v1/completions", decode)
+        async with TestServer(p) as ps, TestServer(d) as ds:
+            proxy = build_app(str(ps.make_url("")).rstrip("/"), str(ds.make_url("")).rstrip("/"),
+                              "", "", tmp_path / "proxy.jsonl", vllm_version="0.28.0")
+            async with TestClient(TestServer(proxy)) as client:
+                body = {"model": "dp_pp_case", "prompt": [1, 2, 3], "stream": False,
+                        "max_tokens": 3, "min_tokens": 3, "ignore_eos": True}
+                response = await client.post("/v1/completions", json=body,
+                                             headers={"X-Request-Id": "client-7"})
+                assert response.status == (200 if fault is None else 502)
+                await response.read()
+    asyncio.run(exercise())
+    assert observed[0][1] == "client-7"
+    pbody = observed[0][2]
+    assert pbody["max_tokens"] == 1 and "min_tokens" not in pbody
+    assert pbody["kv_transfer_params"] == {
+        "do_remote_decode": True, "do_remote_prefill": False,
+        "remote_engine_id": None, "remote_block_ids": None,
+        "remote_host": None, "remote_port": None,
+    }
+    if fault is None:
+        assert observed[1][0:2] == ("D", "client-7")
+        assert observed[1][2]["kv_transfer_params"] == params
+        assert observed[1][2]["max_tokens"] == observed[1][2]["min_tokens"] == 3
+    else:
+        assert len(observed) == 1
+    record = json.loads((tmp_path / "proxy.jsonl").read_text())
+    assert record["handoff_protocol"] == "nixl_pull"
+    assert "kv_ready" not in record and "device_completion" not in record
+
+
+def test_legacy_proxy_preserves_address_id_and_unchanged_decode_body(tmp_path):
+    from aiohttp import web
+    from aiohttp.test_utils import TestClient, TestServer
+
+    observed = []
+
+    async def exercise():
+        async def endpoint(request):
+            observed.append((request.path, request.headers["X-Request-Id"], await request.json()))
+            return web.json_response({"choices": [{"text": "fixture"}]})
+
+        app = web.Application()
+        app.router.add_post("/P/v1/completions", endpoint)
+        app.router.add_post("/D/v1/completions", endpoint)
+        async with TestServer(app) as server:
+            proxy = build_app(str(server.make_url("/P")), str(server.make_url("/D")),
+                              "127.0.0.1:21001", "127.0.0.1:22001", tmp_path / "proxy.jsonl")
+            async with TestClient(TestServer(proxy)) as client:
+                body = {"prompt": [1, 2, 3], "stream": False, "max_tokens": 3, "min_tokens": 3}
+                response = await client.post("/v1/completions", json=body,
+                                             headers={"X-Request-Id": "client-7"})
+                assert response.status == 200
+                await response.read()
+                assert observed[1][2] == body
+
+    asyncio.run(exercise())
+    expected = "___prefill_addr_127.0.0.1:21001___decode_addr_127.0.0.1:22001_client-7"
+    assert [entry[1] for entry in observed] == [expected, expected]
+    assert observed[0][2]["max_tokens"] == observed[0][2]["min_tokens"] == 1
+    assert "kv_transfer_params" not in observed[0][2]
+
+
+@pytest.mark.parametrize("fault", ["role", "nested", "same_output", "alias_output",
+                                  "nested_output", "parent_output", "run", "devices", "pp",
+                                  "missing_kv", "overlap", "side_http"])
+def test_v028_pd_preflights_both_roles_before_any_launch(tmp_path, monkeypatch, fault):
+    monkeypatch.setattr(pd_replay.os, "environ", {"PATH": "/usr/bin"})
+    engine = nixl_engine()
+    observers = {"prefill": native_observer("PREFILL"), "decode": native_observer("DECODE")}
+    if fault == "role":
+        observers["decode"]["role"] = "PREFILL"
+    elif fault == "nested":
+        observers["decode"] = None
+    elif fault == "same_output":
+        observers["decode"]["output_dir"] = observers["prefill"]["output_dir"]
+    elif fault == "alias_output":
+        observers["decode"]["output_dir"] = observers["prefill"]["output_dir"] + "/child/.."
+    elif fault == "nested_output":
+        observers["decode"]["output_dir"] = observers["prefill"]["output_dir"] + "/decode"
+    elif fault == "parent_output":
+        observers["prefill"]["output_dir"] = observers["decode"]["output_dir"] + "/prefill"
+    elif fault == "run":
+        observers["decode"]["run_id"] = "different-run"
+    elif fault == "devices":
+        engine["role_devices"]["decode"][0] = "0"
+    elif fault == "pp":
+        engine["pipeline_parallel_size"] = 2
+    elif fault == "missing_kv":
+        del engine["kv_transfer"]
+    elif fault == "overlap":
+        engine["kv_transfer"]["decode_side_channel_port"] = 5558
+    elif fault == "side_http":
+        engine["kv_transfer"]["decode_side_channel_port"] = 8100
+    argv, output = native_replay_inputs(tmp_path, engine, observers)
+    monkeypatch.delenv("CUDA_VISIBLE_DEVICES", raising=False)
+    launches = []
+    monkeypatch.setattr(pd_replay.subprocess, "Popen", lambda *args, **kwargs: launches.append(True))
+    with pytest.raises(ValueError):
+        pd_replay.main(argv)
+    assert launches == []
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("failure", [None, "prefill_spawn", "decode_spawn"])
+def test_v028_pd_main_retains_plans_and_terminal_state_without_legacy_admission(tmp_path, monkeypatch, failure):
+    monkeypatch.setattr(pd_replay.os, "environ", {
+        "PATH": "/usr/bin", "VLLM_FRONTIER_OBSERVER": '{"mode":"inherited"}',
+        "VLLM_MOE_UNIFORM_ROUTING": "1",
+    })
+    engine = nixl_engine()
+    observers = {"prefill": native_observer("PREFILL"), "decode": native_observer("DECODE")}
+    argv, output = native_replay_inputs(tmp_path, engine, observers)
+    monkeypatch.delenv("CUDA_VISIBLE_DEVICES", raising=False)
+    launched, stopped = [], []
+
+    class Server:
+        returncode = None
+
+        def __init__(self, name):
+            self.name = name
+
+        def poll(self):
+            return self.returncode
+
+        def send_signal(self, sent):
+            stopped.append(self.name)
+            self.returncode = 0
+
+        def wait(self, timeout=None):
+            return self.returncode
+
+    def spawn(command, **kwargs):
+        name = ("prefill", "decode", "proxy")[len(launched)]
+        launched.append((name, command, kwargs.get("env")))
+        if failure == f"{name}_spawn":
+            raise OSError(f"fixture {name} spawn failed")
+        return Server(name)
+
+    async def http_replay(rows, port, vocab_size, origin_lead_s, *, vllm_version):
+        assert vllm_version == "0.28.0"
+        return {"origin_monotonic": 100.0, "origin_wall": 1000.0}, [
+            {"request_id": "request-7", "dispatch_monotonic": 100.0, "http_status": 200},
+        ]
+
+    monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+    monkeypatch.setattr(pd_replay, "wait_until_ready", lambda *args: 0.0)
+    monkeypatch.setattr(pd_replay, "replay", http_replay)
+    if failure is not None:
+        with pytest.raises(OSError, match=f"fixture {failure.split('_')[0]} spawn failed"):
+            pd_replay.main(argv)
+        assert stopped == ([] if failure == "prefill_spawn" else ["prefill"])
+    else:
+        assert pd_replay.main(argv) == 0
+        assert stopped == ["proxy", "decode", "prefill"]
+    summary = json.loads((output / "replay_summary.json").read_text())
+    assert summary["qualification_verified"] is False
+    assert "pd_join" not in summary and "connector_check_failed" not in summary
+    for role in ("prefill", "decode"):
+        instance = summary["instances"][role]
+        assert "VLLM_MOE_UNIFORM_ROUTING" in instance["server_env_removed"]
+        assert json.loads(instance["server_env_set"]["VLLM_FRONTIER_OBSERVER"]) == observers[role]
+        assert instance["observer_evidence"]["installed_runtime_verified"] is False
+        assert instance["observer_evidence"]["process_expectations"]["inventory_verified"] is False
+        command = instance["server_command"]
+        transfer = json.loads(command[command.index("--kv-transfer-config") + 1])
+        assert transfer["kv_connector"] == "NixlConnector"
+        assert transfer["kv_role"] == {"prefill": "kv_producer", "decode": "kv_consumer"}[role]
+        assert "engine_id" not in transfer
+    if failure is None:
+        assert summary["native_transfer_verification"] == {
+            "status": "UNVERIFIED", "expected_protocol": "NixlConnector pull READ",
+            "native_done": "unobserved", "device_completion": "unobserved",
+            "decode_readiness": "unobserved", "metric_normalization": "not_applied",
+        }
+        record = json.loads((output / "client_requests.jsonl").read_text())
+        assert "engine_request_id" not in record
+        assert "--vllm-version" in launched[2][1]
+        assert "--prefill-kv-address" not in launched[2][1]
+    else:
+        assert summary["error"]["message"] == f"fixture {failure.split('_')[0]} spawn failed"
+
+
+@pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+def test_v028_external_pd_replays_http_without_owning_native_servers(
+    tmp_path, monkeypatch, decode_status, health_status,
+):
+    import socket
+    import threading
+    import urllib.request
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    received, launched = [], []
+    params = {
+        "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+        "remote_engine_id": "native-p-engine", "remote_request_id": "native-p-request",
+        "remote_host": "192.0.2.10", "remote_port": 5557, "remote_block_ids": [[7, 9]],
+    }
+
+    class Endpoint(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def do_GET(self):
+            assert self.path == "/health"
+            self.send_response(health_status)
+            self.end_headers()
+
+        def do_POST(self):
+            body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            received.append((self.server.role, self.headers["X-Request-Id"], body))
+            status = 200 if self.server.role == "prefill" else decode_status
+            payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
+                       {"choices": [{"text": "native response", "finish_reason": "length"}],
+                        "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode())
+
+    servers, threads = [], []
+    try:
+        urls = []
+        for role in ("prefill", "decode"):
+            server = ThreadingHTTPServer(("127.0.0.1", 0), Endpoint)
+            server.role = role
+            servers.append(server)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            threads.append(thread)
+            urls.append(f"http://127.0.0.1:{server.server_port}")
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            proxy_port = listener.getsockname()[1]
+        engine = nixl_engine()
+        del engine["role_devices"]
+        argv, output = native_replay_inputs(tmp_path, engine)
+        argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
+                 "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
+                 "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
+        popen = pd_replay.subprocess.Popen
+
+        def spawn(command, **kwargs):
+            assert command[1].endswith("/pd_proxy.py")
+            process = popen(command, **kwargs)
+            launched.append(process)
+            return process
+
+        monkeypatch.setattr(pd_replay.subprocess, "Popen", spawn)
+        if health_status == 200:
+            assert pd_replay.main(argv) == (0 if decode_status == 200 else 4)
+        else:
+            with pytest.raises(RuntimeError, match="not ready"):
+                pd_replay.main(argv)
+        summary = json.loads((output / "replay_summary.json").read_text())
+        assert set(summary["process_stop"]) == ({"proxy"} if health_status == 200 else set())
+        assert summary["devices"] == {}
+        assert len(launched) == (1 if health_status == 200 else 0)
+        assert all(process.poll() == 0 for process in launched)
+        assert summary["qualification_verified"] is False
+        for role, url in zip(("prefill", "decode"), urls):
+            assert summary["instances"][role]["lifecycle_owner"] == "external"
+            assert summary["instances"][role]["http_url"] == url
+            assert "server_command" not in summary["instances"][role]
+            assert "ready_after_launch_s" not in summary["instances"][role]
+            if health_status == 200:
+                with urllib.request.urlopen(url + "/health") as response:
+                    assert response.status == 200
+            else:
+                with pytest.raises(urllib.error.HTTPError) as error:
+                    urllib.request.urlopen(url + "/health")
+                assert error.value.code == 503
+                error.value.close()
+        assert all(thread.is_alive() for thread in threads)
+        if health_status != 200:
+            assert received == [] and summary["error"]["type"] == "RuntimeError"
+            return
+        assert [(role, request) for role, request, body in received] == [
+            ("prefill", "request-7"), ("decode", "request-7")]
+        assert received[1][2]["kv_transfer_params"] == params
+        assert received[1][2]["max_tokens"] == 3
+        client = json.loads((output / "client_requests.jsonl").read_text())
+        assert client["http_status"] == decode_status
+    finally:
+        for server in servers:
+            server.shutdown()
+            server.server_close()
+        for thread in threads:
+            thread.join(timeout=2)
+
+
+@pytest.mark.parametrize("prefill,decode", [
+    ("http://192.0.2.10:8100", None), (None, "http://192.0.2.12:8200"),
+    ("https://192.0.2.10:8100", "http://192.0.2.12:8200"),
+    ("http://user:secret@192.0.2.10:8100", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:8100/path", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:8100?query=1", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:65536", "http://192.0.2.12:8200"),
+    ("http://0.0.0.0:8100", "http://192.0.2.12:8200"),
+    ("http://127.0.0.1:8000", "http://192.0.2.12:8200"),
+    ("http://192.0.2.10:8100", "http://192.0.2.10:8100"),
+])
+def test_v028_external_pd_rejects_invalid_endpoint_pairs_before_launch(tmp_path, monkeypatch, prefill, decode):
+    argv, output = native_replay_inputs(tmp_path, nixl_engine())
+    for role, url in (("prefill", prefill), ("decode", decode)):
+        if url is not None:
+            argv += [f"--{role}-url", url]
+    launches = []
+    monkeypatch.setattr(pd_replay.subprocess, "Popen", lambda *args, **kwargs: launches.append(True))
+    with pytest.raises(ValueError):
+        pd_replay.main(argv)
+    assert launches == [] and not output.exists()
+
+
+def test_v028_local_pair_rejects_an_unmanaged_partial_dp_deployment(tmp_path, monkeypatch):
+    engine = nixl_engine() | {
+        "host": "192.0.2.10", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    }
+    argv, output = native_replay_inputs(tmp_path, engine)
+    launches = []
+    monkeypatch.setattr(pd_replay.subprocess, "Popen", lambda *args, **kwargs: launches.append(True))
+    with pytest.raises(ValueError, match="externally managed"):
+        pd_replay.main(argv)
+    assert launches == [] and not output.exists()
 
 
 @pytest.mark.parametrize("client_request_id", ["g3-p000", "g3-batch-w15", "7-1", "a_b"])

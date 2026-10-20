@@ -24,6 +24,7 @@ from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
     RowParallelLinear,
 )
 from frontier.profiling.common.utils import raise_if_fp8_requested
+from frontier.profiling.common.vllm_compat import ensure_vllm_single_rank_parallel_state
 
 try:
     try:
@@ -152,6 +153,7 @@ class MoEGatingNetwork(nn.Module):
 
         if self.use_vllm_fused_topk and HAS_VLLM_REPLICATED_LINEAR:
             # Align gating linear kernel family with vLLM runtime contract.
+            ensure_vllm_single_rank_parallel_state()
             self.gate = ReplicatedLinear(
                 hidden_dim, num_experts, bias=False, disable_tp=True,
             )

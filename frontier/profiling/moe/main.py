@@ -25,6 +25,7 @@ Multi-GPU modes:
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import argparse
@@ -349,7 +350,24 @@ def parse_args():
             "prefill_hot enables a prefill-only hot-context prefix before timing."
         ),
     )
+    parser.add_argument(
+        "--source_revision",
+        default=None,
+        help="Frontier source revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--model_config_revision",
+        default=None,
+        help="Upstream model config revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--dry_run",
+        action="store_true",
+        help="Print the profiling grid as JSON and exit without torch or GPUs.",
+    )
     args = parser.parse_args()
+    if (args.source_revision is None) != (args.model_config_revision is None):
+        parser.error("--source_revision and --model_config_revision must be given together")
     args.profile_method = normalize_profile_method(args.profile_method)
 
     return args, args.enable_load_imbalance
@@ -919,6 +937,70 @@ def profile_model(
     return df
 
 
+MOE_SCHEMA_VERSION = "moe.v1"
+
+
+def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict[str, Any]:
+    cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
+    models = {}
+    for model in args.models:
+        model_config = ModelConfig.from_model_name(model)
+        if not model_config.is_moe:
+            raise ValueError(f"Model {model} is not a MoE model (is_moe=False)")
+        use_fp8, block_shape = _resolve_fp8_settings(
+            model_config, args.use_fp8, args.block_shape, model
+        )
+        expert_parallel_sizes = resolve_moe_expert_parallel_sizes(
+            model_config.num_experts, args.expert_parallel_sizes
+        )
+        models[model] = {
+            "num_experts": model_config.num_experts,
+            "num_experts_per_tok": model_config.num_experts_per_tok,
+            "hidden_dim": model_config.embedding_dim,
+            "use_fp8": use_fp8,
+            "block_shape": block_shape,
+            "local_experts_by_expert_parallel_size": {
+                str(size): model_config.num_experts // size for size in expert_parallel_sizes
+            },
+            "tensor_parallel_sizes": list(args.num_tensor_parallel_workers),
+            "profiled_steps": _count_moe_configurations(
+                num_tokens_count=len(num_tokens_to_profile),
+                tensor_parallel_count=len(args.num_tensor_parallel_workers),
+                expert_parallel_count=len(expert_parallel_sizes),
+                cases_per_parallel_point=cases_per_parallel_point,
+            ),
+        }
+    return {
+        "profile_method": args.profile_method,
+        "load_distributions": (
+            list(args.load_distributions) if args.enable_load_imbalance else ["uniform"]
+        ),
+        "cases_per_parallel_point": cases_per_parallel_point,
+        "num_tokens": list(num_tokens_to_profile),
+        "models": models,
+    }
+
+
+def _attach_runtime_identity(
+    df: pd.DataFrame, args: argparse.Namespace, model: str, quant_signature: str
+) -> pd.DataFrame:
+    from frontier.profiling.common.runtime_identity import (
+        attach_identity_columns,
+        measure_runtime_identity,
+    )
+
+    identity = measure_runtime_identity(
+        model_name=model,
+        source_revision=args.source_revision,
+        model_config_revision=args.model_config_revision,
+        schema_version=MOE_SCHEMA_VERSION,
+        quant_signature=quant_signature,
+        parallel_groups={"engine_tensor_parallel": 1},
+        graph_mode="eager",
+    )
+    return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
+
+
 def _get_available_gpus(num_gpus: int) -> List[int]:
     """Discover GPUs without initializing torch in the parent process."""
     return get_available_gpu_ids(num_gpus)
@@ -926,6 +1008,14 @@ def _get_available_gpus(num_gpus: int) -> List[int]:
 
 def main():
     args, use_vllm_kernel_default = parse_args()
+    if args.dry_run:
+        num_tokens_to_profile = get_num_tokens_to_profile(
+            args.max_tokens,
+            extra_num_tokens=args.extra_num_tokens,
+            num_tokens_list=args.num_tokens_list,
+        )
+        print(json.dumps(_dry_run(args, num_tokens_to_profile), indent=2))
+        return
     require_profiling_dependencies("moe", ("torch", "vllm", "triton"))
     ray_initialized_by_main = False
 
@@ -1067,6 +1157,10 @@ def main():
                     args.profile_method
                 ).value,
             )
+            if args.source_revision is not None:
+                result_df = _attach_runtime_identity(
+                    result_df, args, model, quant_signature
+                )
             result_df.to_csv(output_file, index=False)
             print(f"✓ Saved MoE profiling data to: {output_file}")
     finally:

@@ -292,7 +292,9 @@ def test_real_metrics_initializer_limits_dsa_catalogs_to_dsa_models(
         OperationMetrics.INPUT_CAST,
         OperationMetrics.FINAL_RESIDUAL,
     }
-    expected_catalog = set(OperationMetrics) - step5_metrics
+    expected_catalog = (
+        set(OperationMetrics) - step5_metrics - {OperationMetrics.KV_CACHE_BLOCK_ZERO}
+    )
     if not includes_dsa:
         expected_catalog -= dsa_metrics
 
@@ -330,16 +332,19 @@ def test_real_metrics_writer_preserves_glm_parameter_and_storage_ownership(
     )
     memory = report["model_weight_memory"]["MONOLITHIC"]
     assert "error" not in memory
-    assert memory["total_parameters"] == 15_026_562_048
-    assert memory["total_memory_bytes"] == 15_694_138_752
+    # TP8/DP8/EP64 is sequence-parallel MoE: each rank keeps a full shared
+    # expert, adding 75 * 37,748,736 * 7 / 8 coefficients and their scales
+    # (75 * (37,748,736 + 9,216) * 7 / 8 bytes) to the TP-sharded totals.
+    assert memory["total_parameters"] == 17_503_822_848
+    assert memory["total_memory_bytes"] == 18_172_004_352
     assert memory["memory_accounting"] == (
         "source-defined weight storage estimate; native allocation unverified"
     )
     breakdown = memory["breakdown"]
     assert breakdown["attention_parameters"] == 2_906_267_904
     assert breakdown["attention_memory_bytes"] == 3_214_089_984
-    assert breakdown["ffn_parameters"] == 11_881_433_856
-    assert breakdown["ffn_memory_bytes"] == 12_002_328_192
+    assert breakdown["ffn_parameters"] == 14_358_694_656
+    assert breakdown["ffn_memory_bytes"] == 14_480_193_792
     assert breakdown["other_parameters"] == 238_860_288
     assert breakdown["other_memory_bytes"] == 477_720_576
     assert memory["total_memory_bytes"] == sum(

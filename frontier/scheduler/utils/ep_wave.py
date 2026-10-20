@@ -99,10 +99,18 @@ def prepare_moe_wave_from_inputs(
     aggregate_batch = wave_inputs.aggregate_batch
     sample_batch = wave_inputs.sample_batch
     cohort_id = wave_inputs.step_id
+    model = getattr(predictor, "_model_config", None)
+    v4 = model is not None and model.get_model_architecture_profile().profile_id == "deepseek_v4"
+    physical_rows = {}
+    if v4:
+        from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+
+        physical_rows["routing_token_count"] = source_physical_rows(predictor, wave_inputs.source_batches)
     layer_workload = materialize_workload(
         batch=aggregate_batch,
         target_replica_id=replica_id,
         global_layer_id=layer_id,
+        **physical_rows,
     )
     trace_identity = trace_identity_builder(
         batch=sample_batch,
@@ -134,6 +142,7 @@ def prepare_moe_wave_from_inputs(
         trace_identity=trace_identity,
         batch_id=int(cohort_id),
         capture_lane_timings=capture_lane_timings,
+        source_batches=wave_inputs.source_batches if v4 else None,
     )
     timing = calculate_ep_wave_timing(
         start_time_s=float(time),

@@ -202,6 +202,7 @@ class QuantizationManager:
             )
             if is_deepseek_v4:
                 self._validate_deepseek_v4_precision(model_config)
+                self._validate_deepseek_v4_dimensions(model_config)
             # The registry contains every execution family so lookups remain
             # valid for model-specific profiling, but emitted metadata must
             # describe the configured model.  In particular, dense runs must
@@ -308,6 +309,24 @@ class QuantizationManager:
                 "DeepSeek-V4 source precision inventory requires BF16 activations, "
                 "FP8 dynamic base/shared weights with UE8M0 scales and 128x128 "
                 "blocks, and FP4 routed experts; precision overrides are unsupported."
+            )
+
+    @staticmethod
+    def _validate_deepseek_v4_dimensions(model_config: BaseModelConfig) -> None:
+        for name in (
+            "embedding_dim", "head_dim", "num_q_heads", "q_lora_rank",
+            "o_groups", "o_lora_rank", "index_n_heads", "index_head_dim",
+        ):
+            value = getattr(model_config, name)
+            if type(value) is not int or value <= 0:
+                raise ValueError(
+                    f"DeepSeek-V4 source dimensions require positive integer {name}; "
+                    f"got {value!r}."
+                )
+        if model_config.num_q_heads % model_config.o_groups:
+            raise ValueError(
+                "DeepSeek-V4 source dimensions require num_q_heads divisible by "
+                "o_groups for grouped output projection."
             )
 
     def _configure_deepseek_v4_operations(self, model_config: BaseModelConfig) -> None:
@@ -471,6 +490,11 @@ class QuantizationManager:
             activation_dtype="bfloat16", output_dtype="bfloat16",
         )
         add(
+            ("dsv4_query_padding", "dsv4_attention_output_zero"), PrecisionType.BF16,
+            source_scope="vllm/models/deepseek_v4: explicit no-metadata DP idle forward",
+            activation_dtype="bfloat16", output_dtype="bfloat16",
+        )
+        add(
             ("dsv4_embedding",), PrecisionType.BF16,
             source_scope="vllm/models/deepseek_v4/nvidia/model.py: model endpoints",
             weight_dtype="bfloat16", output_dtype="bfloat16",
@@ -499,6 +523,78 @@ class QuantizationManager:
             source_scope="vllm/models/deepseek_v4/nvidia/model.py: final mHC post",
             activation_dtype="bfloat16", output_dtype="bfloat16", state_dtype="float32",
         )
+
+        hidden = model_config.embedding_dim
+        head_dim = model_config.head_dim
+        heads = model_config.num_q_heads
+        query_rank = model_config.q_lora_rank
+        groups = model_config.o_groups
+        output_rank = model_config.o_lora_rank
+        index_heads = model_config.index_n_heads
+        index_dim = model_config.index_head_dim
+        shape_scope = (
+            "unpartitioned source dimensions before TP or backend layout conversion; "
+            "not runtime workload shapes or memory accounting"
+        )
+        # Parameter references follow attention.py constructors. Quantized
+        # storage, rank-local tensors and launch shapes need runtime context.
+        for name, shapes in {
+            "dsv4_fused_qkv_projection": {
+                "fused_wqa_wkv.weight": [query_rank + head_dim, hidden],
+            },
+            "dsv4_fused_qkv_rmsnorm": {
+                "q_norm.weight": [query_rank], "kv_norm.weight": [head_dim],
+            },
+            "dsv4_q_projection": {"wq_b.weight": [heads * head_dim, query_rank]},
+            "dsv4_grouped_output_projection": {
+                "wo_a.weight": [groups * output_rank, heads * head_dim // groups],
+            },
+            "dsv4_output_projection": {"wo_b.weight": [hidden, groups * output_rank]},
+            "dsv4_index_query_projection": {
+                "wq_b.weight": [index_heads * index_dim, query_rank],
+            },
+            "dsv4_index_weights_projection": {"weights_proj.weight": [index_heads, hidden]},
+        }.items():
+            inventory[name].update(source_parameter_shapes=shapes, shape_scope=shape_scope)
+        inventory["dsv4_grouped_output_projection"]["source_grouped_weight_view_shape"] = [
+            groups, output_rank, heads * head_dim // groups,
+        ]
+
+        compressor_ratios = {
+            spec.variant_id: model_config.compress_ratios[spec.global_layer_id]
+            for spec in model_config.get_layer_attention_specs()
+            if spec.variant_id != "uncompressed"
+        }
+        for prefix, dimension, ratios in (
+            ("dsv4_compressor", head_dim, compressor_ratios),
+            ("dsv4_index_compressor", index_dim, {
+                variant: ratio for variant, ratio in compressor_ratios.items()
+                if variant == "csa"
+            }),
+        ):
+            if not ratios:
+                continue
+            for suffix in ("projection", "save_partial_states", "fused_compress_store"):
+                inventory[f"{prefix}_{suffix}"].update(
+                    source_parameter_shapes_by_attention_variant={}, shape_scope=shape_scope,
+                )
+            for variant, ratio in ratios.items():
+                # compressor.py retains two KV/score lanes for C4 overlap.
+                coff = 1 + int(ratio == 4)
+                for suffix, shapes in (
+                    ("projection", {"fused_wkv_wgate.weight": [2 * coff * dimension, hidden]}),
+                    ("save_partial_states", {"ape": [ratio, coff * dimension]}),
+                    ("fused_compress_store", {"norm.weight": [dimension]}),
+                ):
+                    inventory[f"{prefix}_{suffix}"][
+                        "source_parameter_shapes_by_attention_variant"
+                    ][variant] = shapes
+            inventory[f"{prefix}_save_partial_states"][
+                "source_state_row_width_by_attention_variant"
+            ] = {
+                variant: 2 * (1 + int(ratio == 4)) * dimension
+                for variant, ratio in ratios.items()
+            }
         self._operation_source_inventory = inventory
 
     def _resolve_config_path(self, config_path: Optional[str]) -> Optional[str]:

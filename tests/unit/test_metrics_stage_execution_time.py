@@ -449,15 +449,18 @@ def test_stage_component_ledger_preserves_family_names_and_owner_once() -> None:
 
 
 @pytest.mark.parametrize(("model_name", "tp", "ep", "expected"), [
+    # TP8/DP2/EP16 is sequence-parallel MoE: each rank keeps a full shared
+    # expert, adding 75 * 37,748,736 * 7 / 8 coefficients and
+    # 75 * (37,748,736 + 9,216) * 7 / 8 bytes to the TP-sharded totals.
     ("zai-org/GLM-5.3", 8, 16, {
-        "total_parameters": 49_000_424_448,
-        "total_memory_bytes": 49_676_295_552,
+        "total_parameters": 49_000_424_448 + 2_477_260_800,
+        "total_memory_bytes": 49_676_295_552 + 2_477_865_600,
         "memory_accounting": "source-defined weight storage estimate; native allocation unverified",
         "breakdown": {
             "attention_parameters": 2_906_267_904,
             "attention_memory_bytes": 3_214_089_984,
-            "ffn_parameters": 45_855_296_256,
-            "ffn_memory_bytes": 45_984_484_992,
+            "ffn_parameters": 45_855_296_256 + 2_477_260_800,
+            "ffn_memory_bytes": 45_984_484_992 + 2_477_865_600,
             "other_parameters": 238_860_288,
             "other_memory_bytes": 477_720_576,
         },

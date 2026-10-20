@@ -3,6 +3,46 @@
 from typing import Any
 
 
+def handle_reserved_decode_arrival(
+    scheduler: Any,
+    time: float,
+    batch: Any,
+    transfer_info: Any,
+    logger: Any,
+) -> list:
+    """Make a reserved NIXL request runnable on its preselected D lane."""
+    if len(batch.requests) != 1:
+        raise ValueError("Reserved NIXL arrival requires one request")
+    request = batch.requests[0]
+    if (
+        transfer_info.target_replica_id != scheduler._replica_id
+        or transfer_info.target_replica_local_id != scheduler._replica_local_id
+    ):
+        raise RuntimeError("NIXL arrival target differs from its reserved D lane")
+    scheduler.mark_kv_transfer_target_ready(request)
+    transfer_info.target_ready_time = time
+    request.on_arrival(time, scheduler._cluster_type)
+    scheduler.add_request(request)
+    logger.info(
+        "Request %s became D-ready on reserved lane (%s, %s) at %.6fs",
+        request.id,
+        transfer_info.target_replica_id,
+        transfer_info.target_replica_local_id,
+        time,
+    )
+
+    from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+
+    return [
+        ReplicaScheduleEvent(
+            time,
+            transfer_info.target_replica_id,
+            scheduler._cluster_type,
+            transfer_info.target_replica_local_id,
+        )
+    ]
+
+
 def handle_decode_attn_arrival(scheduler: Any, time: float, batch: Any, transfer_info: Any, logger: Any) -> list:
     """Handoff requests to DECODE_ATTN and trigger its next schedule."""
     request_ids = [request.id for request in batch.requests]

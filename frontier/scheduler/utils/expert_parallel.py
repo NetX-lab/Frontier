@@ -101,6 +101,7 @@ def predict_ep_wave_phase_times(
     trace_identity: Any,
     batch_id: int,
     capture_lane_timings: bool = False,
+    source_batches: dict[int, Batch] | None = None,
 ) -> EPWavePhaseTimes:
     """Predict each EP lane and emit workload traces in participant order."""
     values = [[] for _ in range(6)]
@@ -112,10 +113,22 @@ def predict_ep_wave_phase_times(
             ep_id=ep_id,
             layer_workload=layer_workload,
         )
-        execution_time = predictor.predict_stage_execution_time(
-            lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,
-            layer_id=layer_id, include_attention=False,
-        )
+        if source_batches is None:
+            execution_time = predictor.predict_stage_execution_time(
+                lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,
+                layer_id=layer_id, include_attention=False,
+            )
+        else:
+            from frontier.execution_time_predictor.deepseek_v4 import serving_context
+
+            tp = predictor._replica_config.attn_tensor_parallel_size
+            source = source_batches[ep_id // tp]
+            layer = predictor._predict_dsv4_dummy_structural_execution(
+                source, layer_id, ep_id % tp, lane_workload=lane_batch.lane_workload,
+                include_attention=False, include_ffn=True,
+                **serving_context(predictor, source, layer_id),
+            )
+            execution_time = predictor._assemble_stage([layer], first_layer_id=layer_id)
         phases = phase_getter(
             execution_time, cluster_type=cluster_type, batch_id=int(batch_id),
             layer_id=layer_id, ep_id=int(ep_id),

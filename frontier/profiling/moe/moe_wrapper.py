@@ -687,7 +687,8 @@ class MoEWrapper:
             expert_map=expert_map,
             model_type=self.model_config.model_type,
         )
-        native_backend = stats.pop("native_backend") if self.use_mxfp4 else None
+        # The kernel reports the native backend whenever vLLM selected one.
+        native_backend = stats.pop("native_backend", None)
         return {"moe_grouped_gemm": stats}, native_backend
     
     def _profile_with_loop(

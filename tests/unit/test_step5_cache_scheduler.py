@@ -193,13 +193,14 @@ def test_scheduler_reclaims_only_completed_swa_pages_and_keeps_sparse_history(
     assert_pool_conserved(actual, [])
 
     # Each row is a worked 64-token page boundary, with a 512-token SWA
-    # window. The last sampled output never becomes another cache input.
+    # window. The last sampled output never becomes another cache input, and
+    # decode context excludes the sampled token that is the step's query.
     steps = (
         (512, 0, 512, 512, 8, 0, 32),
         (512, 512, 1024, 1024, 16, 0, 64),
         (1, 1024, 1025, 1026, 17, 8, 44),
-        (1, 1026, 1026, 1027, 17, 8, 44),
-        (1, 1027, 1027, 1028, 17, 8, 44),
+        (1, 1025, 1026, 1027, 17, 8, 44),
+        (1, 1026, 1027, 1028, 17, 8, 44),
     )
     previous_sparse = ()
     for index, (query, context, scheduled, completed, pages, retired, used) in enumerate(steps):
@@ -435,14 +436,14 @@ def test_real_scheduler_logs_only_new_group_ids_without_pool_zeroing(
     (1, (
         ((0,), (64,), (0,), 8),
         ((1,), (64,), (0,), 8),
+        ((1,), (1,), (64,), 4),
         ((1,), (1,), (65,), 4),
-        ((1,), (1,), (66,), 4),
         ((2,), (64,), (0,), 8),
     )),
     (2, (
         ((0, 1), (64, 64), (0, 0), 4),
-        ((2, 1), (64, 1), (0, 65), 0),
-        ((1,), (1,), (66,), 4),
+        ((2, 1), (64, 1), (0, 64), 0),
+        ((1,), (1,), (65,), 4),
     )),
 ])
 def test_scheduler_limits_request_ownership_and_frees_only_completed_owners(

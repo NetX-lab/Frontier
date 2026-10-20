@@ -283,20 +283,16 @@ class StageExecutionTime:
 
     @property
     def op_times(self) -> Mapping[str, float]:
-        values: dict[str, float] = {}
-        for operator_times in (
-            self._aggregate_attention_operator_times(),
-            self._aggregate_mlp_operator_times(),
-            self._aggregate_moe_operator_times(),
-            self._aggregate_communication_operator_times(),
-        ):
-            if operator_times is None:
-                continue
-            for name, value in operator_times.op_times.items():
-                values[name] = float(value)
+        values = self._sum_operator_maps(
+            self._layer_execution_times,
+            exclude=frozenset({"pipeline_parallel_send_recv"}),
+        )
+        owner = self._stage_execution_time.op_times
+        if "pipeline_parallel_send_recv" in owner:
+            values["pipeline_parallel_send_recv"] = float(owner["pipeline_parallel_send_recv"])
         attributes = canonical_operator_execution_time_attrs()
-        for name, value in self._stage_execution_time.op_times.items():
-            if attributes[name] in self.stage_owned_fields:
+        for name, value in owner.items():
+            if attributes.get(name) in self.stage_owned_fields:
                 values[name] = float(value)
         return MappingProxyType(values)
 

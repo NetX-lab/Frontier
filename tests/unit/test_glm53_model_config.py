@@ -30,7 +30,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 @pytest.mark.parametrize(("model_name", "dummy_mode"), [
     (MODEL_NAME, False),
-    ("deepseek-ai/DeepSeek-V4-Flash", True),
     ("deepseek-ai/DeepSeek-V4-Flash", False),
 ])
 def test_predictor_initialization_rejects_frozen_model_before_mode_dispatch(
@@ -48,6 +47,42 @@ def test_predictor_initialization_rejects_frozen_model_before_mode_dispatch(
             replica_scheduler_config=SimpleNamespace(),
             metrics_config=SimpleNamespace(),
         )
+
+
+def test_v4_dummy_constructor_requires_resolved_cache_selection(tmp_path) -> None:
+    from frontier.config import (
+        MetricsConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig,
+        VllmV1SchedulerConfig,
+    )
+
+    replica = ReplicaConfig(
+        model_name="deepseek-ai/DeepSeek-V4-Flash", device="h800",
+        network_device="h800_dgx", attn_tensor_parallel_size=8, attn_dp=2,
+        moe_tensor_parallel_size=1, moe_expert_parallel_size=16,
+        attention_backend="FLASHMLA_SPARSE_DSV4", kv_cache_dtype="fp8",
+        indexer_kv_cache_dtype="fp8",
+    )
+    predictor = RandomForrestExecutionTimePredictor(
+        RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=True), replica,
+        VllmV1SchedulerConfig(block_size=256),
+        MetricsConfig(cache_dir=str(tmp_path / "cache")),
+    )
+    assert predictor._enable_dummy_mode is True
+    family = get_attention_family("deepseek_v4_attention")
+    assert family.structural_execution_enabled is True
+    assert family.execution_enabled is False
+    family.require_enabled_for_execution(structural=True)
+    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
+        family.require_enabled_for_execution()
+    replica.attention_backend = "FLASHMLA_SPARSE"
+    with pytest.raises(NotImplementedError, match="DeepSeek-V4"):
+        RandomForrestExecutionTimePredictor(
+            RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=True), replica,
+            VllmV1SchedulerConfig(block_size=256),
+            MetricsConfig(cache_dir=str(tmp_path / "unsupported-cache")),
+        )
+
+
 MODEL_PATH = REPO_ROOT / "data/config/models/zai-org__GLM-5.3.json"
 
 

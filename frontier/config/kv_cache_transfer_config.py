@@ -5,7 +5,7 @@ from frontier.config.base_poly_config import BasePolyConfig
 from frontier.types import KVCacheTransferType
 
 # vLLM KV connectors of a PDD prefill instance whose device work Frontier prices.
-KV_CONNECTORS = ("none", "p2p_nccl")
+KV_CONNECTORS = ("none", "p2p_nccl", "nixl")
 
 
 def _require_positive(value: float | int, field_name: str) -> None:
@@ -63,8 +63,9 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
     kv_connector: str = field(
         default="none",
         metadata={
-            "help": "vLLM KV connector of the PDD prefill instance: none, or p2p_nccl "
-            "(P2pNcclConnector), whose per-layer KV extract each prefill step pays."
+            "help": "vLLM KV connector of the PDD prefill instance: none, p2p_nccl "
+            "(P2pNcclConnector), or nixl. NIXL is currently admitted only by the "
+            "dummy GLM structural PD path."
         },
     )
     kv_send_slowdown_per_layer_ms: float = field(
@@ -85,6 +86,16 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
             raise ValueError(f"kv_connector must be one of {list(KV_CONNECTORS)}, got {self.kv_connector!r}")
         if self.kv_send_slowdown_per_layer_ms > 0 and self.kv_connector == "none":
             raise ValueError("kv_send_slowdown_per_layer_ms corrects the KV send of a kv_connector; kv_connector is 'none'.")
+        if self.kv_connector == "nixl" and self.kv_send_slowdown_per_layer_ms > 0:
+            raise ValueError(
+                "kv_send_slowdown_per_layer_ms is a P2P per-layer correction and "
+                "must be zero for the NIXL structural path."
+            )
+        if self.kv_connector == "nixl" and self.enable_latency_hiding:
+            raise ValueError(
+                "NIXL structural PD models one whole-request handoff and does not "
+                "support latency hiding."
+            )
 
 
 @dataclass

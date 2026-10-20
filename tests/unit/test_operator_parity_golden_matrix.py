@@ -287,7 +287,9 @@ def test_memory_guard_uses_glm_source_storage_instead_of_two_byte_parameter_coun
             moe_tensor_parallel_size=1, moe_expert_parallel_size=64,
         ),
     )
-    assert memory == 15_694_138_752
+    # TP-sharded 15,694,138,752 plus the vLLM sequence-parallel shared-expert
+    # copy, 75 * (37,748,736 + 9,216) * 7 / 8 = 2,477,865,600.
+    assert memory == 18_172_004_352
 
 
 def test_normalize_op_traces_jsonl_to_csv_writes_stable_ragged_trace_csv(

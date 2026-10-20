@@ -6,6 +6,12 @@ overlay first on ``PYTHONPATH``. The server is the deployment the placement is
 measured on (plan §18.1): one API server, whose ``DPLBAsyncMPClient`` routes
 every request, plus the DP coordinator and one engine core per DP rank.
 
+The explicit ``vllm_version=0.28.0`` adapter instead accepts existing local GLM
+metadata, dummy weights and clean/light observer JSON. It prepares a standalone
+local serve command; it does not orchestrate the approved multi-node deployment
+or verify the installed image, process inventory or native qualification. The
+legacy modes and outputs described below remain the v0.10.2 defaults.
+
 Each trace row becomes one ``/v1/completions`` request posted at its
 ``arrived_at`` offset from a common origin, with deterministic prompt token ids,
 ``max_tokens = min_tokens = num_decode_tokens`` and ``ignore_eos``, and the
@@ -79,6 +85,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -116,11 +124,108 @@ OP_TIMING_SCOPES = (
 # script starts, so it is this script's own.
 MODES = ("clean", "instrumented", *OP_TIMING_SCOPE_MODES, "schedule_timing", "cpu",
          "kv_save_timing", "kv_save_device_ids")
+V028_SOURCE = "2cf0a6915ce544dc493a0990f2ea38d81601128a"
+V028_IMAGE = ("hub.i.basemind.com/vllm-openai/vllm-openai@sha256:"
+              "2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635")
 KV_CACHE_LINE = re.compile(r"\((EngineCore_DP\d+) pid=\d+\).*GPU KV cache size: ([\d,]+) tokens")
+V028_NODE_FIELDS = ("data_parallel_size_local", "data_parallel_address", "data_parallel_rpc_port",
+                    "data_parallel_start_rank", "headless")
+
+
+def runtime_version(engine: dict) -> str:
+    """Select the explicit harness adapter without claiming installed-runtime identity."""
+    if type(engine) is not dict:
+        raise ValueError("Engine configuration must be a JSON object")
+    version = engine.get("vllm_version", "0.10.2")
+    if version not in ("0.10.2", "0.28.0"):
+        raise ValueError(f"Unsupported vLLM harness version: {version!r}")
+    if version == "0.28.0":
+        reference = engine.get("native_reference")
+        if (type(reference) is not dict or set(reference) != {
+                "source_sha", "instrumentation_sha", "image"}
+                or reference["source_sha"] != V028_SOURCE
+                or reference["image"] != V028_IMAGE
+                or not isinstance(reference["instrumentation_sha"], str)
+                or re.fullmatch(r"[0-9a-f]{40}", reference["instrumentation_sha"]) is None):
+            raise ValueError("v0.28 requires the locked native source/image and instrumentation SHA")
+        if engine.get("load_format") != "dummy" or engine.get("skip_tokenizer_init") is not True:
+            raise ValueError("v0.28 harness requires dummy weights and skip_tokenizer_init")
+        if engine.get("moe_uniform_routing") or engine.get("enable_return_routed_experts"):
+            raise ValueError("v0.28 routing content and forced routing must remain OFF")
+        for name in ("tensor_parallel_size", "pipeline_parallel_size", "data_parallel_size"):
+            if type(engine.get(name)) is not int or engine[name] <= 0:
+                raise ValueError(f"{name} must be a positive integer")
+        if "num_gpu_blocks_override" in engine:
+            blocks = engine["num_gpu_blocks_override"]
+            if type(blocks) is not int or blocks <= 0:
+                raise ValueError("num_gpu_blocks_override must be a positive integer")
+        for name in ("enable_expert_parallel", "enforce_eager", "enable_chunked_prefill",
+                     "enable_prefix_caching"):
+            if type(engine.get(name)) is not bool:
+                raise ValueError(f"{name} must be boolean")
+        if any(name in engine for name in V028_NODE_FIELDS):
+            if (engine.get("data_parallel_rank") is not None or engine.get("data_parallel_hybrid_lb")
+                    or engine.get("data_parallel_external_lb")):
+                raise ValueError("Native DP node replay supports internal load balancing only")
+            if any(name not in engine for name in V028_NODE_FIELDS[:3]):
+                raise ValueError("Native DP nodes require explicit local size, head address and RPC port")
+            local, dp = engine["data_parallel_size_local"], engine["data_parallel_size"]
+            headless = engine.get("headless", False)
+            start = engine.get("data_parallel_start_rank")
+            rpc_port = engine["data_parallel_rpc_port"]
+            if (engine["pipeline_parallel_size"] != 1 or type(local) is not int
+                    or not 0 < local < dp or type(headless) is not bool
+                    or type(rpc_port) is not int or not 0 < rpc_port < 65536):
+                raise ValueError("Native DP nodes require PP1, valid local size, headless flag and RPC port")
+            if headless:
+                if type(start) is not int or start <= 0 or start + local > dp:
+                    raise ValueError("Headless nodes require a valid nonzero native DP start rank")
+            elif "data_parallel_start_rank" in engine:
+                raise ValueError("An internal-DP API head must omit data_parallel_start_rank")
+            for name in ("data_parallel_address", "host"):
+                value = engine.get(name, "127.0.0.1")
+                if type(value) is not str:
+                    raise ValueError(f"{name} requires an explicit IPv4 address")
+                address = ipaddress.IPv4Address(value)
+                if (address.is_multicast
+                        or name == "data_parallel_address" and (address.is_loopback or address.is_unspecified)
+                        or name == "host" and not headless and address.is_loopback):
+                    raise ValueError(f"{name} must permit inter-node communication")
+    return version
+
+
+def validate_observer(observer: dict, engine: dict, mode: str) -> None:
+    """Check explicitly supplied recorder inputs; never infer process completeness."""
+    fields = {"run_id", "source_sha", "instrumentation_sha", "config_id", "replica_id",
+              "role", "expected_ranks", "output_dir", "mode", "capacity_bytes"}
+    if type(observer) is not dict or set(observer) != fields:
+        raise ValueError("Observer requires exact serving identity/mode/capacity fields")
+    strings = fields - {"expected_ranks", "capacity_bytes"}
+    if any(type(observer[key]) is not str or not observer[key] for key in strings):
+        raise ValueError("Observer identity fields must be nonempty strings")
+    if observer["mode"] != mode or mode not in ("clean", "light"):
+        raise ValueError("Observer mode conflicts with explicit clean/light mode")
+    if observer["role"] not in ("MONOLITHIC", "PREFILL", "DECODE"):
+        raise ValueError("Unsupported observer role")
+    reference = engine["native_reference"]
+    if any(observer[key] != reference[key] for key in ("source_sha", "instrumentation_sha")):
+        raise ValueError("Observer source/instrumentation conflicts with native reference")
+    ranks = observer["expected_ranks"]
+    if (type(ranks) is not list or not ranks or any(type(rank) is not int or rank < 0 for rank in ranks)
+            or len(set(ranks)) != len(ranks)):
+        raise ValueError("Observer expected_ranks must contain unique nonnegative integers")
+    if len(ranks) != (engine["tensor_parallel_size"] * engine["pipeline_parallel_size"]
+                      * engine["data_parallel_size"]):
+        raise ValueError("Observer expected_ranks count conflicts with declared topology")
+    if type(observer["capacity_bytes"]) is not int or observer["capacity_bytes"] <= 0:
+        raise ValueError("Observer capacity_bytes must be a positive integer")
+    output = Path(observer["output_dir"])
+    if not output.is_absolute() or not output.resolve().is_relative_to("/mnt/codesign-exp/ycfeng"):
+        raise ValueError("Observer output must be inside the personal cloud root")
 
 
 def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
-               torch_trace_dir: Path | None = None) -> tuple[dict, dict]:
+               torch_trace_dir: Path | None = None, *, observer: dict | None = None) -> tuple[dict, dict]:
     """Return the server environment and the variables the mode set in it."""
 
     env = {
@@ -130,6 +235,20 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL",
                         "VLLM_MOE_UNIFORM_ROUTING")
     }
+    if runtime_version(engine) == "0.28.0":
+        if mode not in ("clean", "light"):
+            raise ValueError("v0.28 supports only clean/light observer modes")
+        if mode == "light" and observer is None:
+            raise ValueError("Light mode requires explicitly supplied observer JSON")
+        mode_env = {}
+        if observer is not None:
+            validate_observer(observer, engine, mode)
+            mode_env["VLLM_FRONTIER_OBSERVER"] = json.dumps(observer, sort_keys=True)
+        return env | mode_env, mode_env
+    if observer is not None:
+        raise ValueError("Explicit observer JSON requires the v0.28 adapter")
+    if mode not in (*MODES, "device_timeline"):
+        raise ValueError(f"Unsupported legacy mode: {mode!r}")
     mode_env = {"VLLM_FRONTIER_DP_PLACEMENT_LOG_DIR": str(output_dir / "dp_placement")}
     if mode == "clean":
         mode_env["VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH"] = str(output_dir / "request_metrics.jsonl")
@@ -179,10 +298,16 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
 
 
 def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
+    version = runtime_version(engine)
+    if version == "0.28.0":
+        local_model_config(model_dir)
+        if engine.get("data_parallel_rpc_port") == port and not engine.get("headless"):
+            raise ValueError("HTTP and DP RPC ports must be distinct")
     command = [
         sys.executable, "-m", "vllm.entrypoints.cli.main", "serve", str(model_dir),
         "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "127.0.0.1", "--port", str(port),
+        "--host", engine.get("host", "127.0.0.1") if version == "0.28.0" else "127.0.0.1",
+        "--port", str(port),
         "--load-format", engine["load_format"],
         "--dtype", engine["dtype"],
         "--tensor-parallel-size", str(engine["tensor_parallel_size"]),
@@ -207,16 +332,75 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
     command += [flag for flag, enabled in flags.items() if enabled]
     if "compilation_config" in engine:
         command += ["--compilation-config", json.dumps(engine["compilation_config"])]
+    if version == "0.28.0":
+        for name in ("attention_backend", "quantization", "shutdown_timeout",
+                     "distributed_executor_backend", "data_parallel_size_local",
+                     "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port",
+                     "num_gpu_blocks_override"):
+            if name in engine:
+                command += ["--" + name.replace("_", "-"), str(engine[name])]
+        if "async_scheduling" in engine:
+            if type(engine["async_scheduling"]) is not bool:
+                raise ValueError("async_scheduling must be boolean")
+            command += ["--async-scheduling" if engine["async_scheduling"] else "--no-async-scheduling"]
+        if engine.get("headless"):
+            command.append("--headless")
     return command
 
 
-def wait_until_ready(server: subprocess.Popen, port: int, timeout_s: float) -> float:
+def local_model_config(model_dir: Path) -> dict:
+    """Read local GLM metadata only; this adapter does not prepare or download weights."""
+    if not model_dir.is_absolute() or not (model_dir / "config.json").is_file():
+        raise ValueError("v0.28 requires an absolute local metadata directory with config.json")
+    config = json.loads((model_dir / "config.json").read_text())
+    if type(config) is not dict or config.get("architectures") != ["GlmMoeDsaForCausalLM"]:
+        raise ValueError("Only the GLM native workflow is prepared; original V4 remains blocked")
+    if type(config.get("vocab_size")) is not int or config["vocab_size"] <= 200:
+        raise ValueError("Local metadata requires an integer vocab_size above the prompt generator's 200-token margin")
+    return config
+
+
+def observer_evidence(engine: dict, observer: dict | None) -> dict:
+    """Retain file identities and declared process expectations, without raw-trace admission."""
+    files = []
+    directory = Path(observer["output_dir"]) if observer is not None else None
+    errors = []
+    if directory is not None:
+        try:
+            for path in sorted(directory.rglob("*.jsonl")):
+                digest = hashlib.sha256()
+                size = 0
+                with path.open("rb") as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        digest.update(block)
+                        size += len(block)
+                files.append({"path": str(path), "bytes": size,
+                              "sha256": digest.hexdigest()})
+        except OSError as error:
+            errors.append(f"{type(error).__name__}: {error}")
+    return {
+        "declared_native_reference": engine["native_reference"],
+        "installed_runtime_verified": False, "qualification_verified": False,
+        "process_expectations": {
+            "declared_dp_size": engine["data_parallel_size"],
+            "declared_worker_ranks": None if observer is None else observer["expected_ranks"],
+            "engine_owner_inventory": None, "worker_inventory": None,
+            "inventory_verified": False,
+        },
+        "observer": observer, "trace_directory_exists": directory is not None and directory.is_dir(),
+        "trace_files": files, "collection_errors": errors,
+        "native_close_and_device_completion": "unverified",
+    }
+
+
+def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: float, *,
+                     host: str = "127.0.0.1") -> float:
     started = time.monotonic()
     while time.monotonic() - started < timeout_s:
-        if server.poll() is not None:
+        if server is not None and server.poll() is not None:
             raise RuntimeError(f"vllm serve exited with {server.returncode} during startup")
         try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=2) as response:
+            with urllib.request.urlopen(f"http://{host}:{port}/health", timeout=2) as response:
                 if response.status == 200:
                     return time.monotonic() - started
         except OSError:
@@ -226,7 +410,8 @@ def wait_until_ready(server: subprocess.Popen, port: int, timeout_s: float) -> f
 
 
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
-                 profile_window_s: tuple[float, float] | None = None) -> tuple[dict, list[dict]]:
+                 profile_window_s: tuple[float, float] | None = None, *,
+                 vllm_version: str = "0.10.2") -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
     close the server's torch profiler at those two offsets of the same clock."""
     import aiohttp
@@ -261,7 +446,6 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 payload = await response.json(content_type=None)
             record = {
                 "request_id": row["request_id"],
-                "engine_request_id": f"cmpl-{row['request_id']}-0",
                 "segment": row["segment"],
                 "role": row["role"],
                 "arrived_at": row["arrived_at"],
@@ -272,6 +456,8 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                 "response_monotonic": time.monotonic(),
                 "http_status": response.status,
             }
+            if vllm_version == "0.10.2":
+                record["engine_request_id"] = f"cmpl-{row['request_id']}-0"
             if response.status == 200:
                 record["usage"] = payload.get("usage")
                 record["finish_reason"] = payload["choices"][0].get("finish_reason")
@@ -310,6 +496,8 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
 
 
 def stop_server(server: subprocess.Popen, timeout_s: float) -> dict:
+    if server.poll() is not None:
+        return {"signal": None, "returncode": server.returncode}
     for sent in (signal.SIGINT, signal.SIGTERM, signal.SIGKILL):
         server.send_signal(sent)
         try:
@@ -333,7 +521,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--engine-config", type=Path, required=True)
     parser.add_argument("--trace-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--mode", choices=(*MODES, "device_timeline"), required=True)
+    parser.add_argument("--mode", choices=(*MODES, "device_timeline", "light"), required=True)
+    parser.add_argument("--observer-config", type=Path,
+                        help="Explicit v0.28 serving recorder JSON; never inherited")
+    parser.add_argument("--model-dir", type=Path,
+                        help="v0.28: existing local GLM metadata directory")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--startup-timeout-s", type=float, default=900.0)
     parser.add_argument("--origin-lead-s", type=float, default=1.0)
@@ -350,21 +542,33 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("mode device_timeline needs --torch-trace-dir")
 
     engine = json.loads(args.engine_config.read_text())
+    version = runtime_version(engine)
+    observer = json.loads(args.observer_config.read_text()) if args.observer_config else None
+    env, mode_env = server_env(args.mode, engine, args.output_dir, dict(os.environ),
+                               args.torch_trace_dir, observer=observer)
+    if observer is not None and observer["role"] != "MONOLITHIC":
+        raise ValueError("DP replay requires MONOLITHIC observer role")
+    if version == "0.28.0":
+        if args.model_dir is None:
+            parser.error("v0.28 requires --model-dir with local GLM metadata")
+        model_config = local_model_config(args.model_dir)
+        model_dir = args.model_dir
+    elif args.model_dir is not None:
+        parser.error("--model-dir requires the explicit v0.28 adapter")
     request_ids = json.loads((args.trace_dir / "request_ids.json").read_text())
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    model_config = write_model_dir(
-        REPO_ROOT / "data/config/models" / f"{engine['model_name']}.json",
-        output_dir / "model",
-    )
-
-    env, mode_env = server_env(args.mode, engine, output_dir, dict(os.environ), args.torch_trace_dir)
+    if version == "0.10.2":
+        model_dir = output_dir / "model"
+        model_config = write_model_dir(
+            REPO_ROOT / "data/config/models" / f"{engine['model_name']}.json", model_dir,
+        )
     profile_window_s = None
     if args.mode == "device_timeline":
         first_formal = min(row["arrived_at"] for row in request_ids["rows"] if row["role"] == "formal")
         start = first_formal + args.profile_start_s
         profile_window_s = (start, start + args.profile_duration_s)
-    command = server_command(engine, output_dir / "model", args.port)
+    command = server_command(engine, model_dir, args.port)
     summary: dict = {
         "mode": args.mode,
         "engine_config": engine,
@@ -376,18 +580,30 @@ def main(argv: list[str] | None = None) -> int:
         "trace_dir": str(args.trace_dir),
         "profile_window_s": profile_window_s,
     }
+    if version == "0.28.0":
+        summary.update(vllm_version=version, qualification_verified=False,
+                       model_config_sha256=hashlib.sha256((model_dir / "config.json").read_bytes()).hexdigest())
+    records = []
     with (output_dir / "server.log").open("w") as server_log:
-        server = subprocess.Popen(command, env=env, stdout=server_log, stderr=subprocess.STDOUT)
+        server = None
         try:
+            server = subprocess.Popen(command, env=env, stdout=server_log, stderr=subprocess.STDOUT)
             summary["startup_s"] = wait_until_ready(server, args.port, args.startup_timeout_s)
             clock, records = asyncio.run(replay(
                 request_ids["rows"], args.port, int(model_config["vocab_size"]), args.origin_lead_s,
-                profile_window_s,
+                profile_window_s, vllm_version=version,
             ))
             summary.update(clock)
             time.sleep(args.drain_s)
+        except BaseException as error:
+            summary["error"] = {"type": type(error).__name__, "message": str(error)}
+            raise
         finally:
-            summary["server_stop"] = stop_server(server, args.stop_timeout_s)
+            if server is not None:
+                summary["server_stop"] = stop_server(server, args.stop_timeout_s)
+            if version == "0.28.0":
+                summary["observer_evidence"] = observer_evidence(engine, observer)
+            (output_dir / "replay_summary.json").write_text(json.dumps(summary, indent=1))
     records.sort(key=lambda record: record["dispatch_monotonic"])
     (output_dir / "client_requests.jsonl").write_text(
         "".join(json.dumps(record) + "\n" for record in records)

@@ -119,3 +119,26 @@ binding moves with its pricing state, and the stage ledger moves with its
 consumers. This capability does not require that core refactor. Any such future
 refactor follows the task's material-architecture approval policy and must
 preserve legacy numeric/intermediate fidelity and the same operator ownership.
+
+## Scoped V4 cache-zero metric admission, 2026-10-19
+
+At `b5120e6`, `frontier/metrics/metrics_store.py` has 5,703 lines. The
+cache-zero change adds two lines to the existing operation-metric admission
+filter, bringing it to 5,705 lines. The corresponding enum entry is required
+by actual structural execution; excluding that entry for models without the
+V4 structural attention family preserves their existing output files instead
+of creating an empty cache-zero table.
+
+The cleanup inspection found this filter already owns the exclusion of absent
+structural operations. Extending it avoids a second metrics owner or an
+additional model classifier. Cache allocation metadata and timing remain in
+their existing scheduler, Batch and V4 predictor modules; no cache algorithm
+or new ledger responsibility is added to the metrics store. Moving unrelated
+ledger code during this correction would expand the regression surface
+without improving cache-zero representation.
+
+The functional split remains step 3 above, as a separate movement-only change.
+This exception covers only the two-line filter extension, with focused metric
+checks and the unchanged 77-case artifact and predictor-cache filename
+comparison required before acceptance. It does not authorize further growth
+of the metrics store or claim that the planned split has been performed.

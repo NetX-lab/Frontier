@@ -23,7 +23,7 @@ from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
-from frontier.entities.batch import Batch, DummyForwardBatch, Request
+from frontier.entities.batch import Batch, DummyForwardBatch, KVCacheBlockZeroing, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -116,7 +116,13 @@ class VLLMv1EngineReplicaScheduler(
         self._waiting_requests: List[Request] = []
         # Requests waiting for prefill-side KV transfer completion.
         self._pending_kv_transfer_requests: set[int] = set()
+        self._kv_transfer_start_claimed_request_ids: set[int] = set()
+        # NIXL starts blocked by one selected DECODE lane's real KV capacity.
+        self._pending_kv_transfer_start_events: List = []
+        self._kv_transfer_receiving_request_ids: set[int] = set()
+        self._kv_transfer_ready_request_ids: set[int] = set()
         self._scheduled_num_computed_tokens_by_request: Dict[int, int] = {}
+        self._pending_cache_zero_block_ids: Dict[str, List[int]] = {}
         self._monolithic_pp_pending_terminal_release_iters: Dict[int, int] = {}
         self._monolithic_pp_waiting_sensitive_release_extensions: set[int] = set()
         self._monolithic_pp_terminal_release_followup_poll_pending = False
@@ -357,17 +363,56 @@ class VLLMv1EngineReplicaScheduler(
                 ),
             )
 
+        requested_capacity = getattr(self._config, "max_concurrent_batches", None)
+        if requested_capacity is not None:
+            if (
+                type(self) is not VLLMv1EngineReplicaScheduler
+                or self._cluster_type != ClusterType.MONOLITHIC
+                or self._num_stages != 1
+                or self._replica_config.attn_dp != 1
+                or self._is_grouped_kv_allocation()
+                or self._is_prefix_caching_enabled()
+                or self._spec_decode_enabled
+                or model_has_gdn(self._replica_config.model_config)
+            ):
+                raise NotImplementedError(
+                    "Explicit queue capacity requires ordinary-cache VLLM V1 "
+                    "MONOLITHIC PP1/DP1 without prefix caching, speculation or GDN"
+                )
+            self._max_concurrent_batches = requested_capacity
+
     def _create_batch(self, requests: List[Request], num_tokens: List[int]) -> Batch:
         # The scheduler frontier already counts this batch's tokens. A prompt
         # chunk scheduled while the request's previous chunk is in flight
         # attends to tokens the Request counts only when that chunk ends.
         num_context_tokens = [
-            request.num_context_tokens
+            self._get_settled_kv_progress(request)
             if request.is_decoding
             else self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
             for request, scheduled_tokens in zip(requests, num_tokens)
         ]
         batch = super()._create_batch(requests, num_tokens, num_context_tokens)
+        if self._is_grouped_kv_allocation():
+            block_ids = tuple(
+                block_id for group in self._kv_cache_capacity.groups
+                for block_id in self._pending_cache_zero_block_ids.get(group.group_id, ())
+            )
+            if block_ids:
+                batch.cache_block_zeroing = KVCacheBlockZeroing(
+                    block_ids, self._kv_cache_capacity.physical_block_size_bytes,
+                )
+            self._emit_schedule_decision_event(
+                event="grouped_cache_batch", decision_result=None, request_id=None,
+                token_budget=int(self._current_iteration_token_budget),
+                num_tokens=sum(num_tokens),
+                extra_fields={
+                    "batch_id": batch.id, "replica_id": self._replica_id,
+                    "replica_local_id": self._replica_local_id,
+                    "zero_required_block_ids": list(block_ids),
+                    "physical_block_size_bytes": self._kv_cache_capacity.physical_block_size_bytes,
+                },
+            )
+            self._pending_cache_zero_block_ids.clear()
         metadata = self._build_decode_cuda_graph_metadata(batch)
         if metadata is not None:
             batch.decode_cuda_graph_metadata = metadata
@@ -441,10 +486,13 @@ class VLLMv1EngineReplicaScheduler(
                     f"source_replica={self._replica_id}, "
                     f"source_dp={self._replica_local_id}"
                 )
-
+        for request in requests:
             if request.id in self._allocation_map:
                 self._free_request_resources(request)
             self._pending_kv_transfer_requests.discard(request.id)
+            getattr(
+                self, "_kv_transfer_start_claimed_request_ids", set()
+            ).discard(request.id)
 
     def on_schedule(self, time: float = 0.0) -> List[Batch]:
         # vLLM runs iterations until its batch queue is full or an iteration
@@ -501,7 +549,7 @@ class VLLMv1EngineReplicaScheduler(
                 self._popped_output_events.extend(apply_output(time))
                 if not formed:
                     return batches + self._issue_dummy_pass()
-            elif not formed or self._num_running_batches == self._num_stages:
+            elif not formed or self._num_running_batches == self._max_concurrent_batches:
                 if self._in_flight_batch_ids:
                     self._blocking_batch_id = self._in_flight_batch_ids[0]
                     self._dummy_pass_due = not formed
@@ -812,6 +860,37 @@ class VLLMv1EngineReplicaScheduler(
                     f"processed_tokens={request.num_processed_tokens}"
                 )
 
+        if self._cluster_type == ClusterType.DECODE:
+            self._retry_pending_kv_transfer_starts(batch.completed_at)
+
+    def defer_kv_transfer_start(self, event) -> None:
+        """Retain one capacity-blocked NIXL start on its selected D lane."""
+        request_id = event.get_request_id()
+        if any(
+            pending.get_request_id() == request_id
+            for pending in self._pending_kv_transfer_start_events
+        ):
+            raise RuntimeError(
+                f"Duplicate pending NIXL transfer start for request {request_id}"
+            )
+        self._pending_kv_transfer_start_events.append(event)
+
+    def has_pending_kv_transfer_starts(self) -> bool:
+        """Return whether this lane already has an older blocked NIXL start."""
+        return bool(self._pending_kv_transfer_start_events)
+
+    def _retry_pending_kv_transfer_starts(self, time: float) -> None:
+        """Reserve FIFO blocked starts after this D output releases capacity."""
+        ready_events = []
+        while self._pending_kv_transfer_start_events:
+            event = self._pending_kv_transfer_start_events[0]
+            if not event.try_reserve_target(self):
+                break
+            self._pending_kv_transfer_start_events.pop(0)
+            event.set_capacity_retry_time(time)
+            ready_events.append(event)
+        self._popped_output_events.extend(ready_events)
+
     def _waiting_queues(self) -> Tuple[List[Request], List[Request], List[Request]]:
         # Preemption inserts a victim into `_request_queue`, or into
         # `_waiting_requests` on DECODE and DECODE_ATTN. A later waiting-queue
@@ -930,16 +1009,16 @@ class VLLMv1EngineReplicaScheduler(
             # vLLM skips an in-flight request only once every prompt token is
             # scheduled; the next chunk goes out while the previous one is in
             # flight (scheduler.py, the num_new_tokens == 0 branch).
-            active_in_pp_batch = (
+            active_in_batch_queue = (
                 self._cluster_type in {ClusterType.MONOLITHIC, ClusterType.DECODE}
-                and self._num_stages > 1
+                and self._max_concurrent_batches > 1
                 and self._is_request_active_in_batch(request)
                 and (
                     request.is_decoding
                     or self._get_request_next_num_tokens(request) == 0
                 )
             )
-            if active_in_pp_batch:
+            if active_in_batch_queue:
                 if self._cluster_type == ClusterType.MONOLITHIC:
                     reserved_tokens = (
                         self._get_monolithic_pp_mtp_visible_budget_reservation_tokens(
@@ -958,7 +1037,7 @@ class VLLMv1EngineReplicaScheduler(
                         )
                 logger.debug(
                     "[VLLMv1Engine][%s] Phase 1: skipping req=%s "
-                    "(already active in a PP batch)",
+                    "(already active in the batch queue)",
                     self._cluster_type.name,
                     request.id,
                 )

@@ -2,11 +2,26 @@
 
 from types import SimpleNamespace
 
+import pytest
+
+from frontier.config import (
+    ReplicaConfig,
+    SyntheticRequestGeneratorConfig,
+    VllmV1SchedulerConfig,
+)
+from frontier.config.speculative_decoding_config import SpeculativeDecodingConfig
+from frontier.entities import Replica
 from frontier.entities.batch import Batch
 from frontier.entities.batch_stage import BatchStage
 from frontier.entities.request import Request
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
+)
+from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
+    VLLMv1EngineReplicaScheduler,
+)
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    StageExecutionContext,
 )
 from frontier.types import ClusterType
 
@@ -128,3 +143,114 @@ def test_a_decode_row_keeps_its_scheduled_phase_after_a_later_preemption() -> No
         cluster_type=ClusterType.MONOLITHIC,
     )
     assert stage.request_num_prefill_tokens == [0]
+
+
+def _scheduler(
+    cluster_type: ClusterType,
+    *,
+    num_stages: int = 1,
+    speculative: bool = False,
+) -> VLLMv1EngineReplicaScheduler:
+    replica_config = ReplicaConfig(
+        model_name="meta-llama/Llama-2-7b-hf",
+        device="a100",
+        network_device="a100_pairwise_nvlink",
+        num_pipeline_stages=num_stages,
+        speculative_decoding_config=SpeculativeDecodingConfig(enabled=speculative),
+    )
+    request_config = SyntheticRequestGeneratorConfig()
+    replica = Replica(replica_config, request_config, cluster_type)
+    contexts = {
+        stage_id: StageExecutionContext(
+            replica_id=replica.id, stage_id=stage_id, ep_size=1
+        )
+        for stage_id in range(num_stages)
+    }
+    cluster_scheduler = SimpleNamespace(
+        _config=SimpleNamespace(decode_attn_micro_batch_size=1),
+        get_stage_execution_context=lambda replica_id, stage_id: contexts[stage_id],
+    )
+    return VLLMv1EngineReplicaScheduler(
+        replica_config=replica_config,
+        replica_scheduler_config=VllmV1SchedulerConfig(
+            num_blocks=100,
+            block_size=16,
+            batch_size_cap=4,
+            max_tokens_in_batch=128,
+            max_model_len=256,
+            enable_chunked_prefill=True,
+        ),
+        request_generator_config=request_config,
+        replica=replica,
+        predictor=object(),
+        cluster_scheduler=cluster_scheduler,
+        cluster_type=cluster_type,
+    )
+
+
+@pytest.mark.parametrize("num_stages", [1, 2])
+def test_scheduler_decode_context_excludes_sampled_token_after_final_prefill(
+    num_stages: int,
+) -> None:
+    scheduler = _scheduler(ClusterType.MONOLITHIC, num_stages=num_stages)
+    request = Request(0.0, 128, 4)
+    request.on_batch_end(1.0, 127, ClusterType.MONOLITHIC)
+    scheduler._scheduled_num_computed_tokens_by_request[request.id] = 128
+    final_prefill = scheduler._create_batch([request], [1])
+    assert final_prefill.num_context_tokens == [127]
+    assert final_prefill.request_is_decoding == [False]
+
+    request.on_batch_end(2.0, 1, ClusterType.MONOLITHIC)
+    assert request.num_processed_tokens == 129
+    first_decode = scheduler._create_batch([request], [1])
+    assert first_decode.num_context_tokens == [128]
+    assert first_decode.request_is_decoding == [True]
+
+    request.on_batch_end(3.0, 1, ClusterType.MONOLITHIC)
+    assert request.num_processed_tokens == 130
+    second_decode = scheduler._create_batch([request], [1])
+    assert second_decode.num_context_tokens == [129]
+    assert first_decode.num_context_tokens == [128]
+    assert first_decode.request_is_decoding == [True]
+
+
+@pytest.mark.parametrize("cluster_type", [ClusterType.DECODE, ClusterType.DECODE_ATTN])
+def test_disaggregated_decode_context_keeps_all_completed_kv(cluster_type) -> None:
+    scheduler = _scheduler(cluster_type)
+    request = Request(0.0, 128, 4)
+    request.on_batch_end(1.0, 128, ClusterType.PREFILL)
+    assert request.num_processed_tokens == 128
+    assert scheduler._create_batch([request], [1]).num_context_tokens == [128]
+    request.on_batch_end(2.0, 1, cluster_type)
+    assert request.num_processed_tokens == 129
+    assert scheduler._create_batch([request], [1]).num_context_tokens == [129]
+
+
+def test_scheduler_recompute_context_uses_cursor_then_settled_decode_frontier() -> None:
+    scheduler = _scheduler(ClusterType.MONOLITHIC)
+    request = _request_at_cursor(20)
+    scheduler._scheduled_num_computed_tokens_by_request[request.id] = 28
+    recompute = scheduler._create_batch([request], [8])
+    assert recompute.num_context_tokens == [20]
+    assert recompute.request_is_decoding == [False]
+    request.on_batch_end(3.0, 20, ClusterType.MONOLITHIC)
+    assert request.num_processed_tokens == 41
+    assert scheduler._create_batch([request], [1]).num_context_tokens == [40]
+    assert recompute.num_context_tokens == [20]
+
+
+@pytest.mark.parametrize("num_stages", [1, 2])
+def test_speculative_decode_keeps_verify_metadata_with_settled_context(num_stages) -> None:
+    scheduler = _scheduler(
+        ClusterType.MONOLITHIC, num_stages=num_stages, speculative=True
+    )
+    request = Request(0.0, 32, 16)
+    request.initialize_spec_decode_state(enabled=True, method="eagle")
+    request.on_batch_end(1.0, 32, ClusterType.MONOLITHIC)
+    batch = scheduler._create_batch([request], [3])
+    assert batch.num_context_tokens == [32]
+    assert batch.num_tokens == [3]
+    assert batch.request_is_decoding == [True]
+    assert batch.spec_decode_metadata.planned_draft_tokens_per_request == [2]
+    assert batch.spec_decode_metadata.verify_tokens_per_request == [3]
+    assert batch.spec_decode_metadata.committed_tokens_per_request == [2]

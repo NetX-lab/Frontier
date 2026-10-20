@@ -559,12 +559,19 @@ class IterationSchedulingPolicy:
         Running counts every admitted request, including one that is admitted
         but not scheduled in the current iteration. Waiting reuses the
         decision-log accessor above so a load balancer and the decision log can
-        never disagree about what is waiting.
+        never disagree about what is waiting. The ordinary capacity is already
+        allocatable blocks; grouped managers exclude their reserved null block
+        when calculating usage. Neither path subtracts a second null block.
         """
 
         return RequestLoad(
             self._get_num_waiting_reqs_for_decision_log(),
             len(self._running_requests),
+            (
+                self._kv_cache_manager.usage
+                if self._kv_cache_manager is not None
+                else self._num_allocated_blocks / self._config.num_blocks
+            ),
         )
 
     def _apply_long_prefill_token_threshold(

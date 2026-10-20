@@ -28,6 +28,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.profiling.common.accelerator import accelerator_platform
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
+from frontier.profiling.moe.fp8_block_experts import (
+    expert_parallel_layout,
+    get_fp8_block_routed_experts,
+)
 from frontier.profiling.utils import (
     normalize_profile_method,
     validate_profile_method_platform,
@@ -810,12 +814,19 @@ def profile_fused_moe_kernel(
 
     if use_mxfp4:
         validate_mxfp4_runtime(model_type=model_type)
-    if use_fp8 and VLLM_API_VERSION == "functional_fused_experts":
-        raise NotImplementedError(
-            "FP8 profiling with current vLLM requires its quantization "
-            "descriptor API; use BF16 or the vLLM 0.10 profiling "
-            "environment until that adapter is configured."
-        )
+    fp8_block_experts = use_fp8 and VLLM_API_VERSION == "functional_fused_experts"
+    if fp8_block_experts:
+        if per_channel_quant or block_shape is None:
+            raise NotImplementedError(
+                "FP8 profiling with current vLLM supports block-scaled weights "
+                "only; per-tensor and per-channel FP8 experts have no adapter."
+            )
+        _validate_block_shape(block_shape)
+        if tensor_parallel_size != 1:
+            raise ValueError(
+                "Block-FP8 expert profiling with current vLLM shards experts by "
+                f"expert parallelism only; got tensor_parallel_size={tensor_parallel_size}."
+            )
 
     align_num_experts = int(global_num_experts) if global_num_experts is not None else int(num_experts)
     if align_num_experts <= 0:
@@ -851,7 +862,7 @@ def profile_fused_moe_kernel(
 
     w1 = None
     w2 = None
-    if not use_mxfp4:
+    if not (use_mxfp4 or fp8_block_experts):
         w1 = torch.randn(
             num_experts,
             2 * expert_hidden_dim_per_partition,
@@ -906,6 +917,33 @@ def profile_fused_moe_kernel(
                     shared_experts=None,
                     shared_experts_input=None,
                 )
+        elif fp8_block_experts:
+            ep_size, ep_rank = expert_parallel_layout(
+                expert_map,
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+            )
+            routed_experts = get_fp8_block_routed_experts(
+                num_local_experts=num_experts,
+                global_num_experts=align_num_experts,
+                hidden_dim=hidden_dim,
+                intermediate_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                block_shape=block_shape,
+                expert_parallel_size=ep_size,
+                expert_parallel_rank=ep_rank,
+                dtype=base_dtype,
+                model_type=model_type,
+            )
+            routed_output = torch.empty_like(A)
+
+            def _step() -> None:
+                routed_experts.apply(
+                    routed_output,
+                    A,
+                    functional_topk_weights,
+                    functional_topk_ids,
+                )
         else:
             assert w1 is not None and w2 is not None
 
@@ -941,6 +979,8 @@ def profile_fused_moe_kernel(
                 )
             if use_mxfp4:
                 stats["native_backend"] = mxfp4_state["backend"]
+            elif fp8_block_experts:
+                stats["native_backend"] = routed_experts.backend
             return stats
 
     _validate_block_shape(block_shape)

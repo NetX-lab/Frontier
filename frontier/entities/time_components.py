@@ -10,7 +10,7 @@ from functools import cache
 from types import MappingProxyType
 from typing import Mapping
 
-from frontier.attention.families import iter_execution_enabled_families
+from frontier.attention.families import iter_attention_families, iter_execution_enabled_families
 from frontier.operators.families import (
     COMM_FAMILY,
     FFN_FAMILY,
@@ -18,6 +18,7 @@ from frontier.operators.families import (
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
     STEP5_FFN_FAMILY,
+    iter_operator_families,
 )
 
 
@@ -29,6 +30,16 @@ def _attention_operator_execution_time_attrs() -> Mapping[str, str]:
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
     })
+
+
+@cache
+def _canonical_operator_names() -> tuple[str, ...]:
+    """Registered physical keys are independent of runtime admission and scalars."""
+    return tuple(dict.fromkeys(
+        operator.name
+        for family in (*iter_operator_families(), *iter_attention_families())
+        for operator in family.operators
+    ))
 
 
 @cache
@@ -69,11 +80,10 @@ def _moe_operator_execution_time_attrs() -> Mapping[str, str]:
 
 
 @cache
-def _communication_operator_execution_time_attrs() -> Mapping[str, str]:
+def _communication_operator_execution_time_attrs() -> Mapping[str, str | None]:
     return MappingProxyType({
         operator.name: operator.execution_time_attr
-        for operator in COMM_FAMILY.e2e_trace_ops()
-        if operator.execution_time_attr is not None
+        for operator in COMM_FAMILY.operators
     })
 
 
@@ -109,13 +119,13 @@ def canonical_operator_execution_time_attrs() -> dict[str, str]:
 def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, float]:
     """Validate and return op timings in canonical operator order."""
 
-    operator_attrs = _canonical_operator_execution_time_attrs()
+    operator_names = _canonical_operator_names()
     normalized_by_name: dict[str, float] = {}
     for op_name, time_ms in op_times.items():
         normalized_op_name = str(op_name)
         if not normalized_op_name:
             raise ValueError("Execution operator name must be non-empty")
-        if normalized_op_name not in operator_attrs:
+        if normalized_op_name not in operator_names:
             raise ValueError(
                 f"Unsupported ExecutionTime operator timing: {normalized_op_name}"
             )
@@ -128,7 +138,7 @@ def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, flo
         normalized_by_name[normalized_op_name] = normalized_time_ms
     return {
         op_name: normalized_by_name[op_name]
-        for op_name in operator_attrs
+        for op_name in operator_names
         if op_name in normalized_by_name
     }
 
@@ -139,7 +149,9 @@ def execution_op_time_values_by_attr(op_times: Mapping[str, float]) -> dict[str,
     operator_attrs = _canonical_operator_execution_time_attrs()
     attr_values: dict[str, float] = {}
     for op_name, time_ms in normalize_execution_op_times(op_times).items():
-        attr_name = operator_attrs[op_name]
+        attr_name = operator_attrs.get(op_name)
+        if attr_name is None:
+            continue
         attr_values[attr_name] = attr_values.get(attr_name, 0.0) + float(time_ms)
     return attr_values
 
@@ -161,7 +173,8 @@ def build_attention_operator_times_from_op_times(
 ) -> "AttentionOperatorTimes | None":
     subset = _build_operator_times_subset(
         op_times,
-        _attention_operator_execution_time_attrs(),
+        {operator.name: operator.execution_time_attr
+         for family in iter_attention_families() for operator in family.operators},
     )
     return AttentionOperatorTimes(subset) if subset else None
 
@@ -247,7 +260,7 @@ class CommunicationOperatorTimes:
         covered_attrs: set[str] = set()
         for op_name in self.op_times:
             attr_name = communication_operator_attrs[op_name]
-            if attr_name in covered_attrs:
+            if attr_name is None or attr_name in covered_attrs:
                 continue
             covered_time_ms += float(getattr(communication_time, attr_name))
             covered_attrs.add(attr_name)
