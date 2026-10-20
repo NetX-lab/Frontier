@@ -480,7 +480,9 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
                         "PREFILL and DECODE GLM cache capacities must match"
                     )
 
-    def select_kv_transfer_target(self) -> tuple[int, int]:
+    def select_kv_transfer_target(
+        self, time: float, request: Request
+    ) -> tuple[int, int]:
         """Select the DECODE lane that reserves before a NIXL READ.
 
         A NIXL request reaches its reserved lane directly, so this is the only
@@ -488,7 +490,8 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         """
         raise ValueError(
             "NIXL structural PD needs a DECODE cluster scheduler that selects "
-            f"transfer targets; {type(self).__name__} does not. Use round_robin."
+            f"transfer targets; {type(self).__name__} does not. "
+            "Use round_robin or vllm_load_balancing."
         )
 
     def get_replica(self, replica_id: int) -> Replica:

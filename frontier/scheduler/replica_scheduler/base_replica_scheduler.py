@@ -959,6 +959,10 @@ class BaseReplicaScheduler(ABC):
                 scheduled_batches.append(batch)
                 self._num_running_batches += 1
 
+                self._cluster_scheduler.on_replica_batch_scheduled(
+                    time, self._replica_id, self._replica_local_id, batch
+                )
+
                 # DEBUG: Enhanced logging for batch scheduling
                 request_ids = [req.id for req in batch.requests] if batch.requests else []
                 debug_msg = (
