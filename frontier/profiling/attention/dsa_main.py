@@ -89,6 +89,13 @@ def _add_plan_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--decode_measured_steps", type=int, default=8)
     parser.add_argument("--prefill_warmup_repeats", type=int, default=1)
     parser.add_argument("--prefill_measured_repeats", type=int, default=3)
+    parser.add_argument(
+        "--query_one_context_max", type=int,
+        help=("Measure only regular one-token serving queries at every cached context "
+              "from 0 through this value, on one reduced-model GPU engine. "
+              "These requests write valid KV slots; they do not measure DP dummy "
+              "forwards or graph-padded capture widths."),
+    )
 
 
 def build_plan(args: argparse.Namespace) -> DsaProfilePlan:
@@ -109,6 +116,7 @@ def build_plan(args: argparse.Namespace) -> DsaProfilePlan:
         target_tensor_parallel_size=args.target_tensor_parallel_size,
         num_layers=args.num_layers,
         limits=limits,
+        query_one_context_max=args.query_one_context_max,
     )
 
 
