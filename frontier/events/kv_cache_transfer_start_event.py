@@ -99,11 +99,6 @@ class KVCacheTransferStartEvent(BaseEvent):
                 self._source_cluster_type
             )
             source_config = source_cluster_scheduler._config
-            predictor_config = source_config.execution_time_predictor_config
-            if not bool(getattr(predictor_config, "enable_dummy_mode", False)):
-                raise NotImplementedError(
-                    "NIXL currently supports only dummy GLM structural PD"
-                )
             replica_config = source_config.replica_config
             if int(replica_config.num_pipeline_stages) != 1:
                 raise NotImplementedError("NIXL structural GLM PD supports PP1 only")
@@ -129,7 +124,7 @@ class KVCacheTransferStartEvent(BaseEvent):
                 or source_capacity.block_size != 64
             ):
                 raise NotImplementedError(
-                    "NIXL currently supports only dummy GLM DSA block64 structural PD"
+                    "NIXL currently supports only GLM DSA block64 structural payloads"
                 )
             predictor = source_cluster_scheduler._kv_cache_transfer_predictor
             if not hasattr(

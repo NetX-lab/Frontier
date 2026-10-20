@@ -329,6 +329,27 @@ def test_generic_nixl_sizing_is_fail_closed() -> None:
         predictor.get_kv_cache_size_for_request(request, _replica_config())
 
 
+@pytest.mark.parametrize("dummy_compute", [True, False])
+def test_nixl_reservation_and_payload_do_not_depend_on_compute_timing(dummy_compute) -> None:
+    source, target, scheduler, predictor = _harness()
+    scheduler._clusters[ClusterType.PREFILL]._config.execution_time_predictor_config.enable_dummy_mode = dummy_compute
+    predictor._config.network_bandwidth_gbps = 126.2
+    predictor._config.network_latency_ms = 0.0647
+    request = _request_owned_by_prefill(source, 65)
+    metrics = _Metrics()
+    [end_event] = _start_event(request, source).handle_event(scheduler, metrics)
+    info = end_event._transfer_info
+    expected_bytes = 2 * source._kv_cache_capacity.resident_bytes_per_common_block
+    assert info.kv_cache_size_bytes == expected_bytes
+    assert info.transfer_time_ms == pytest.approx(0.0647 + expected_bytes * 8 / (126.2 * 1e6))
+    assert info.source_prompt_common_blocks == info.target_reserved_common_blocks == 2
+    assert info.payload_kind == "structural_whole_prompt_pages_per_worker_lane"
+    end_event.handle_event(scheduler, metrics)
+    assert request.id not in source._allocation_map
+    assert target._allocation_map[request.id] == 2
+    assert len(metrics.starts) == len(metrics.ends) == 1
+
+
 def test_structural_start_rejects_source_prefix_before_side_effects() -> None:
     source, target, scheduler, _ = _harness()
     source, source_config = _lane(

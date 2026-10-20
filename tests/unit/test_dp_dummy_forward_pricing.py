@@ -173,7 +173,7 @@ def test_full_dummy_attention_has_one_actual_zero_context_request(runtime, scope
     seen = []
 
     def operator_times(features, variant, **kwargs):
-        seen.append((features, variant))
+        seen.append((features, variant, kwargs["dummy_capture_width"]))
         return AttentionOperatorTimes({"attn_dsa_indexer": 0.5, "attn_dsa_mla": 0.6})
 
     dsa.operator_times = operator_times
@@ -184,7 +184,8 @@ def test_full_dummy_attention_has_one_actual_zero_context_request(runtime, scope
     assert len(seen) == (1 if runtime == "FULL" else 0)
     assert sum(value > 0 for value in result.operator_times.op_times.values()) == scopes
     if seen:
-        features, variant = seen[0]
+        features, variant, capture_width = seen[0]
         assert features.values["num_query_tokens"] == 1
         assert features.values["sum_key_len"] == 1
         assert variant == "full_index"
+        assert capture_width == 4

@@ -80,10 +80,13 @@ The DSA consumer separates native decode/prefill kernel paths, uses summed key
 and selected-key work (causal pairs for the prefill path), and charges the
 indexer only to full-index owners. CUDA-event pure-decode rows, including the
 known host-stall outlier, are excluded; kernel-only measurements supply decode
-timing. Current tables do not cover tiny query extends or multi-sequence
-prefill; uncovered and mixed serving workloads fail rather than use dummy
-costs or extrapolation. Producer cases for those missing shapes are implemented
-but do not constitute new GPU measurements.
+timing. Both DSA tables contain 3,708 rows: 1,942 original rows and 1,766
+verified query-extend/multi-sequence rows from producer revision `0660717`
+on H800. Their aggregation keys are disjoint; measured
+cells and all runtime identity columns are preserved. The extension uses the
+same schema and does not replace the original measurements. Zero-context FULL
+dummy attention remains unmeasured. Uncovered and mixed serving workloads fail
+rather than use dummy costs or extrapolation.
 
 The MoE tables contain the verified `grouped_topk_sigmoid` rerun from source
 `9dee7defd932624f68d55c75833c57f2a925d8ac` (RJob

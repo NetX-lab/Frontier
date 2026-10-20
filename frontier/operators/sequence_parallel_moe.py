@@ -130,11 +130,9 @@ def ep_workload(name, model, topk, widths):
     }
 
 
-def validate_combine_coverage(operator, ctx, backend, size):
-    """Unequal S_d selects per-root Reduce kernels absent from uniform curves."""
-    from frontier.cc_backend.backends.measured_cc_backend import (
-        MeasuredCCBackend, MeasuredCCOutOfRangeError,
-    )
+def measured_unequal_combine_time(operator, ctx, backend, size):
+    """Return exact measured unequal-combine time, or None for scalar pricing."""
+    from frontier.cc_backend.backends.measured_cc_backend import MeasuredCCBackend
 
     if (operator.name != "expert_parallel_alltoall_combine"
             or not isinstance(backend, MeasuredCCBackend)
@@ -142,9 +140,7 @@ def validate_combine_coverage(operator, ctx, backend, size):
         return
     rows = ep_widths(ctx).local_tokens
     if max(rows) != min(rows):
-        key = ("reduce_scatterv", "ep", ctx.replica_config.moe_expert_parallel_size)
-        curve = next((curve for curve in backend.describe_curves() if curve["key"] == key), None)
-        raise MeasuredCCOutOfRangeError(
-            key, size, None if curve is None else curve["byte_range"],
-            reason=f"unequal SP rows {rows} select unmeasured per-root Reduce kernels",
+        return backend.predict_unequal_reduce_scatter(
+            size, ctx.replica_config.moe_expert_parallel_size, rows,
+            comm_domain=operator.resolve_comm_domain(ctx),
         )

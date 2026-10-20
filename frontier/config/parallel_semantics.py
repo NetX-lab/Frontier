@@ -168,6 +168,14 @@ def resolve_shared_expert_tensor_parallel_size(
     if model_config is None:
         raise ValueError("Shared-expert TP requires replica_config.model_config")
     mode = resolve_shared_expert_tensor_parallel_mode(model_config=model_config)
+    profile = model_config.get_model_architecture_profile()
+    if cluster_type is not ClusterType.DECODE_FFN and profile.uses_sequence_parallel_moe(
+        getattr(replica_config, "attn_tensor_parallel_size", None),
+        getattr(replica_config, "attn_dp", None),
+        getattr(replica_config, "num_pipeline_stages", None),
+        getattr(replica_config, "moe_expert_parallel_size", None),
+    ):
+        return 1
     if cluster_type is ClusterType.DECODE_FFN or mode in {
         TensorParallelMode.FFN_TP,
         TensorParallelMode.MOE_TP,

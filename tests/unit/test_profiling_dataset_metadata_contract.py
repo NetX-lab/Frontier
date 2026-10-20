@@ -188,3 +188,44 @@ def test_glm_h800_moe_tables_match_runtime_contract() -> None:
         for column, value in expected.items():
             assert frame[column].notna().all(), (filename, column)
             assert set(frame[column]) == {value}, (filename, column)
+
+
+def test_glm_h800_dsa_extension_preserves_row_keys_and_runtime_identity() -> None:
+    import hashlib
+
+    from frontier.profiling.common.runtime_identity import IDENTITY_COLUMNS
+
+    model_root = DATA_ROOT / "h800" / "zai-org/GLM-5.3"
+    manifest = {
+        filename: checksum
+        for checksum, filename in (
+            line.split() for line in (model_root / "SHA256SUMS").read_text().splitlines()
+        )
+    }
+    source_rows = {
+        "71cde5ebdee3a8eb5eec3b176b4affed478171fd": 1942,
+        "0660717b4d402101ed04ca08f7ba60ccf1f6a116": 1766,
+    }
+    keys = [
+        "measurement_type", "case_id", "attention_variant", "prefill_seq_lens",
+        "prefill_kv_cache_sizes", "decode_kv_cache_sizes", "max_num_batched_tokens",
+    ]
+    for filename, measurement in (
+        ("dsa_attention.csv", "CUDA_EVENT"),
+        ("dsa_attention_kernel_only.csv", "KERNEL_ONLY"),
+    ):
+        path = model_root / filename
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == manifest[filename]
+        frame = pd.read_csv(path)
+        assert frame["source_revision"].value_counts().to_dict() == source_rows
+        assert set(frame["measurement_type"]) == {measurement}
+        assert set(frame["model_architecture_profile"]) == {"glm_moe_dsa"}
+        assert frame[list(IDENTITY_COLUMNS)].notna().all().all()
+        metadata = [
+            name for name in frame if name.startswith(("mla_metadata.", "indexer_metadata."))
+        ]
+        assert not frame.duplicated(subset=keys + metadata).any()
+        shared = frame["attention_variant"] == "shared_index"
+        assert frame.loc[shared, "time_stats.attn_dsa_indexer.median"].isna().all()
+        assert frame.loc[~shared, "time_stats.attn_dsa_indexer.median"].gt(0).all()
+        assert frame["time_stats.attn_dsa_mla.median"].gt(0).all()

@@ -39,13 +39,24 @@ def _row(size=100, time_us=10.0):
 def _backend(tmp_path, rows):
     path = tmp_path / "summary.csv"
     with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=rows[0])
+        writer = csv.DictWriter(stream, fieldnames=dict.fromkeys(key for row in rows for key in row))
         writer.writeheader()
         writer.writerows(rows)
     return MeasuredCCBackend(
         MeasuredCCBackendConfig(summary_csv_path=str(path)),
         ClusterType.PREFILL, "h800", "h800_dgx", 32,
     )
+
+
+def _unequal_combine_row(time_us=339.5):
+    row = _row(3440640, time_us)
+    row.update(
+        scenario="eager_single_active_t256_r1", call="moe_combine_reduce_scatterv",
+        op="reduce_scatterv", group="ep", group_size=32,
+        tokens_per_dp_rank="256/1/1/1", max_output_bytes=393216,
+        kernels="ncclDevKernel_Reduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+    )
+    return row
 
 
 @pytest.mark.parametrize("size,expected", [(100, .01), (200, .02), (400, .04)])
@@ -138,13 +149,81 @@ def test_uneven_dispatch_uses_caller_supplied_largest_rank_bytes(tmp_path):
     backend = _backend(tmp_path, rows)
     rank_bytes = [100, 100, 100, 400]
     assert backend.predict_allgather(max(rank_bytes), 32, comm_domain="EP") == .04
-    # K2 owns row geometry and must use the same typed error before a uniform
-    # reduce-scatter lookup when unequal SP rows select the per-root NCCL kernel.
+    # Unmeasured size vectors still fail instead of using the uniform curve.
     error = MeasuredCCOutOfRangeError(
         ("reduce_scatterv", "ep", 32), sum(rank_bytes), (100, 400),
         reason="unequal SP rows select an unmeasured combine kernel",
     )
     assert "unmeasured combine kernel" in str(error)
+
+
+@pytest.mark.parametrize("domain", ["EP", "MOE_EP"])
+def test_unequal_combine_exact_match_pools_samples_without_changing_uniform_curve(tmp_path, domain):
+    uniform = _row(3440640, 133.8)
+    uniform.update(op="reduce_scatterv", group="ep", group_size=32)
+    rows = [uniform, *[_unequal_combine_row(t) for t in (339.0, 339.5, 340.0)]]
+    rows[-1].update(scenario="eager_single_active_t256_r2")
+    backend = _backend(tmp_path, rows)
+    assert backend.predict_unequal_reduce_scatter(
+        3440640, 32, (32, 1, 1, 1), comm_domain=domain,
+    ) == .3395
+    assert backend.predict_reduce_scatter(3440640, 32, comm_domain=domain) == .1338
+    assert backend.describe_curves()[0]["point_count"] == 1
+
+
+@pytest.mark.parametrize("size,rows,devices,domain", [
+    (3440641, (32, 1, 1, 1), 32, "EP"),
+    (3440640, (31, 2, 1, 1), 32, "EP"),
+    (3440640, (1, 32, 1, 1), 32, "EP"),
+    (3440640, (32, 1, 1, 1), 16, "EP"),
+    (3440640, (32, 1, 1, 1), 32, "ATTN_TP"),
+    (3342336, (16, 16, 1, 1), 32, "EP"),
+])
+def test_unequal_combine_requires_exact_ordered_rows_bytes_and_group(tmp_path, size, rows, devices, domain):
+    backend = _backend(tmp_path, [_row(), _unequal_combine_row()])
+    with pytest.raises(MeasuredCCOutOfRangeError, match="unequal SP rows") as caught:
+        backend.predict_unequal_reduce_scatter(size, devices, rows, comm_domain=domain)
+    assert caught.value.requested_bytes == size
+    assert str(rows) in caught.value.reason
+
+
+@pytest.mark.parametrize("change", [
+    {"kernels": ""},
+    {"kernels": "ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(args)"},
+    {"kernels": "ncclDevKernel_Reduce_Sum_f32_RING_LL(args)"},
+    {"kernels": "ncclDevKernel_Reduce_Sum_bf16_RING_LL(args);ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(args)"},
+    {"tokens_per_dp_rank": ""}, {"tokens_per_dp_rank": "256/1/1"},
+    {"tokens_per_dp_rank": "256/0/1/1"}, {"group_size": 31},
+    {"max_input_bytes": 3440641}, {"max_output_bytes": 393217},
+    {"max_input_bytes": 840, "max_output_bytes": 96},
+])
+def test_invalid_retained_unequal_combine_kernel_or_shape_is_rejected(tmp_path, change):
+    row = _unequal_combine_row()
+    row.update(change)
+    with pytest.raises(ValueError, match="retained SP combine"):
+        _backend(tmp_path, [_row(), row])
+
+
+def test_equal_sp_holdout_stays_out_of_exact_and_uniform_samples(tmp_path):
+    row = _unequal_combine_row(1000)
+    row.update(tokens_per_dp_rank="1/2/7/8", scenario="eager_single_active_t8_r8",
+               max_input_bytes=393216, max_output_bytes=12288,
+               kernels="ncclDevKernel_ReduceScatter_Sum_bf16_RING_LL(args)")
+    backend = _backend(tmp_path, [_row(), row])
+    assert len(backend.describe_curves()) == 1
+    with pytest.raises(MeasuredCCOutOfRangeError):
+        backend.predict_unequal_reduce_scatter(393216, 32, (1, 1, 1, 1), comm_domain="EP")
+
+
+def test_unequal_combine_does_not_interpolate_between_nonmonotone_points(tmp_path):
+    small = _unequal_combine_row(525.3)
+    small.update(tokens_per_dp_rank="128/1/1/1", scenario="eager_single_active_t128_r1",
+                 max_input_bytes=1867776, max_output_bytes=196608)
+    backend = _backend(tmp_path, [_row(), small, _unequal_combine_row()])
+    assert backend.predict_unequal_reduce_scatter(1867776, 32, (16, 1, 1, 1), "EP") == .5253
+    assert backend.predict_unequal_reduce_scatter(3440640, 32, (32, 1, 1, 1), "EP") == .3395
+    with pytest.raises(MeasuredCCOutOfRangeError):
+        backend.predict_unequal_reduce_scatter(2654208, 32, (24, 1, 1, 1), "EP")
 
 
 def test_logit_option_b_uses_hidden_state_curve(tmp_path):
@@ -296,6 +375,55 @@ def test_checked_in_curves_match_producer_medians_and_ranges():
         backend.predict_allgather(12648448 + 12352, 32, comm_domain="EP")
     # R=512 logits remain inside the hidden-state byte range under option B.
     assert math.isfinite(backend.predict_allgather(19824640, 8, comm_domain="ATTN_TP"))
+
+
+def test_retained_unequal_samples_preserve_all_uniform_curves_and_predictions(tmp_path):
+    rows = list(csv.DictReader((ROOT / "data/profiling/network/h800_dgx/summary.csv").open()))
+    baseline = _backend(tmp_path, [r for r in rows if "single_active" not in r["scenario"]])
+    backend = MeasuredCCBackend(
+        MeasuredCCBackendConfig(), ClusterType.PREFILL, "h800", "h800_dgx", 32,
+    )
+    assert backend.describe_curves() == [dict(c, source_files=(backend._source_path,))
+                                         for c in baseline.describe_curves()]
+    assert backend._curves == baseline._curves
+    for key, curve in baseline._curves.items():
+        op, group, devices = key
+        alias = {"all_reduce": "allreduce", "all_gather": "allgather",
+                 "all_gatherv": "allgather", "reduce_scatterv": "reduce_scatter"}.get(op, op)
+        domain = "EP" if group == "ep" else "ATTN_TP"
+        sizes = [*curve.sizes, *[(a + b) // 2 for a, b in zip(curve.sizes, curve.sizes[1:])]]
+        for size in sizes:
+            args = dict(data_size_bytes=size, num_devices=devices, comm_domain=domain)
+            assert backend.predict_comm_cost(alias, **args) == baseline.predict_comm_cost(alias, **args)
+
+
+def test_checked_in_unequal_combine_samples_match_producer_medians():
+    from collections import defaultdict
+    from statistics import median
+
+    backend = MeasuredCCBackend(
+        MeasuredCCBackendConfig(), ClusterType.PREFILL, "h800", "h800_dgx", 32,
+    )
+    samples = defaultdict(list)
+    with (ROOT / "data/profiling/network/h800_dgx/summary.csv").open() as stream:
+        for row in csv.DictReader(stream):
+            if "single_active" not in row["scenario"] or row["op"] != "reduce_scatterv":
+                continue
+            raw_tokens = tuple(int(value) for value in row["tokens_per_dp_rank"].split("/"))
+            sp_rows = tuple(math.ceil(tokens / 8) for tokens in raw_tokens)
+            if len(set(sp_rows)) == 1:
+                continue
+            assert "ncclDevKernel_Reduce_Sum_bf16_" in row["kernels"]
+            size = int(row["max_input_bytes"])
+            assert size == 8 * sum(sp_rows) * 6144 * 2
+            samples[(sp_rows, size)].append(float(row["median_us"]))
+    assert sum(len(times) for times in samples.values()) == 30
+    assert len(samples) == len(backend._unequal_combine_times) == 9
+    assert {rows for rows, size in samples} == {
+        (x, 1, 1, 1) for x in (4, 8, 16, 32, 64, 128, 256, 512, 1024)
+    }
+    for (sp_rows, size), times in samples.items():
+        assert backend.predict_unequal_reduce_scatter(size, 32, sp_rows, "EP") == median(times) / 1000
 
 
 def test_glm_run_uses_k5_nixl_values_without_changing_global_defaults(tmp_path):

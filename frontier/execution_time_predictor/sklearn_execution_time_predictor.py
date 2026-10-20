@@ -6285,9 +6285,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         num_devices = operator.num_devices(ctx)
         comm_domain = operator.resolve_comm_domain(ctx)
         collective_alias = operator.resolve_collective_alias(ctx)
-        from frontier.operators.sequence_parallel_moe import validate_combine_coverage
+        from frontier.operators.sequence_parallel_moe import measured_unequal_combine_time
 
-        validate_combine_coverage(operator, ctx, self._cc_backend, data_size_bytes)
+        measured_combine_ms = measured_unequal_combine_time(operator, ctx, self._cc_backend, data_size_bytes)
+        if measured_combine_ms is not None:
+            return measured_combine_ms
 
         if collective_alias == "allreduce":
             if num_devices is None:
@@ -7691,9 +7693,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
             if (isinstance(batch, DummyForwardBatch)
                     and batch.get_decode_cuda_graph_runtime_mode() == "FULL"):
-                # gpu_model_runner._dummy_run builds FULL attention metadata with
-                # one actual uniform-decode request and seq_len=1, not the real
-                # peer's KV context or the padded projection width.
+                # FULL dummy keeps one actual request but has invalid KV slots
+                # and padded attention geometry, unlike a serving q1/c0 row.
                 from frontier.attention.dsa_features import build_dsa_features
 
                 features = build_dsa_features(batch.num_tokens, [0], self._model_config.index_topk)
@@ -7701,6 +7702,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 variant = "full_index" if spec.index_producer_layer_id == layer_id else "shared_index"
                 attention_time.operator_times = self._dsa_predictor.operator_times(
                     features, variant, record_kernel_count=self._record_kernel_count,
+                    dummy_capture_width=batch.get_effective_total_tokens_for_compute(cluster_type),
                 )
             return attention_time
         if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:

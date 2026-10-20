@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -153,6 +154,43 @@ def test_uncovered_extend_multi_prefill_and_long_context_fail(tmp_path, model, q
 def test_trained_data_is_required():
     with pytest.raises(ValueError, match="trained profiling data"):
         DSAPredictor({})
+
+
+@pytest.mark.parametrize("variant", ["full_index", "shared_index"])
+@pytest.mark.parametrize("capture_width", [1, 2, 4])
+def test_regular_zero_context_measurements_cannot_qualify_full_dummy(
+    tmp_path, model, variant, capture_width,
+):
+    rows = [_row(model, [1], [0], kind) for kind in ("full_index", "shared_index")]
+    predictor = DSAPredictor(train_dsa_models(_load(tmp_path, model, rows), _fit))
+    features = build_dsa_features([1], [0], model.index_topk)
+    assert predictor.operator_times(features, variant).total_time() > 0
+    with pytest.raises(DSACoverageError, match=f"capture width {capture_width}.*regular serving"):
+        predictor.operator_times(features, variant, dummy_capture_width=capture_width)
+
+
+@pytest.mark.parametrize("variant", ["full_index", "shared_index"])
+def test_checked_in_one_token_context_band_never_expands_through_an_unmeasured_hole(model, variant):
+    path = (Path(__file__).resolve().parents[2] /
+            "data/profiling/compute/h800/zai-org/GLM-5.3/dsa_attention_kernel_only.csv")
+    rows = load_dsa_dataframe(str(path), model, 8, 64, MeasurementType.KERNEL_ONLY)
+    predictor = DSAPredictor(train_dsa_models(rows, _fit))
+    single = rows[
+        (rows["attention_variant"] == variant)
+        & (rows["dsa_workload"] == "decode")
+        & (rows["num_query_tokens"] == 1)
+        & (rows["num_sequences"] == 1)
+    ]
+    measured_contexts = set(single["min_context_len"])
+    # The original one-token grid starts at context66. New boundary coverage
+    # must measure this band, not merely widen a model's rectangular bounds.
+    for context in range(66):
+        features = build_dsa_features([1], [context], model.index_topk)
+        if context in measured_contexts:
+            assert predictor.operator_times(features, variant).total_time() > 0
+        else:
+            with pytest.raises(DSACoverageError, match="coverage missing"):
+                predictor.operator_times(features, variant)
 
 
 @pytest.mark.parametrize("measurement", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])

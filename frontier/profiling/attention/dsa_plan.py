@@ -556,6 +556,45 @@ def _build_cached_prefill_cases(
     return cases
 
 
+def _build_query_one_cases(
+    limits: DsaMeasurementLimits, max_context: int,
+) -> tuple[tuple[DsaEngineSpec, ...], tuple[DsaCase, ...]]:
+    """Measure regular serving queries at every context from zero to the maximum.
+
+    The first prompt writes a real KV slot at context zero. A second request
+    starts from the same one-token prompt and records every decode step,
+    without skipping small contexts as warmup. Neither request is a DP dummy:
+    native ``_dummy_run`` uses invalid slot mappings and graph-padded metadata.
+    """
+    if type(max_context) is not int or max_context < 0:
+        raise ValueError("query_one_context_max must be a non-negative int")
+    # One prompt token plus the requested output tokens, including the output
+    # sampled by prefill, must fit the native request's length/capacity checks.
+    request_len = max_context + 2
+    if request_len > min(limits.max_context_len, limits.max_kv_tokens_per_lane):
+        raise ValueError(
+            f"query_one_context_max={max_context} requires capacity for "
+            f"{request_len} prompt-plus-output tokens"
+        )
+    engine = DsaEngineSpec(
+        engine_index=0, chunk_budget=min(limits.chunk_budgets), max_num_seqs=1,
+        max_model_len=limits.max_context_len, block_size=limits.block_size,
+    )
+    cases = [DsaCase(
+        case_id="e0-prefill-p1", engine_index=0, phase=PHASE_PREFILL,
+        batch_size=1, prompt_len=1, max_tokens=1,
+        warmup=limits.prefill_warmup_repeats, measured=limits.prefill_measured_repeats,
+        estimated_steps=limits.prefill_warmup_repeats + limits.prefill_measured_repeats,
+    )]
+    if max_context:
+        cases.append(DsaCase(
+            case_id=f"e0-decode-q1-c1-{max_context}", engine_index=0, phase=PHASE_DECODE,
+            batch_size=1, prompt_len=1, max_tokens=max_context + 1,
+            warmup=0, measured=max_context, estimated_steps=max_context + 1,
+        ))
+    return (engine,), tuple(cases)
+
+
 def build_dsa_profile_plan(
     *,
     model_name: str,
@@ -563,6 +602,7 @@ def build_dsa_profile_plan(
     target_tensor_parallel_size: int,
     num_layers: int,
     limits: DsaMeasurementLimits,
+    query_one_context_max: int | None = None,
 ) -> DsaProfilePlan:
     model_config = ModelConfig.from_model_name(model_name)
     if not model_config.use_mla:
@@ -604,6 +644,13 @@ def build_dsa_profile_plan(
         index_head_dim=_required_config_int(hf_config, "index_head_dim"),
         layers=layers,
     )
+    if query_one_context_max is not None:
+        engines, cases = _build_query_one_cases(limits, query_one_context_max)
+        return DsaProfilePlan(
+            schema_version=PLAN_SCHEMA_VERSION, shape=shape, limits=limits,
+            hf_overrides=build_reduced_hf_overrides(hf_config, layers, heads_per_rank),
+            engines=engines, cases=cases,
+        )
     chunk_budgets = tuple(sorted(limits.chunk_budgets))
     context_grid = build_context_grid(
         limits.block_size, shape.index_topk, limits.max_context_len

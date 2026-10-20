@@ -40,7 +40,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
     def get_kv_cache_size(self, batch: "Batch", replica_config: "ReplicaConfig") -> int:
         if self._config.kv_connector == "nixl":
             raise NotImplementedError(
-                "NIXL size requires the reservation-backed dummy GLM structural path"
+                "NIXL size requires the reservation-backed GLM structural payload path"
             )
         total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
         return self._calculate_kv_cache_size_for_tokens(total_tokens, replica_config)
@@ -50,7 +50,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
     ) -> int:
         if self._config.kv_connector == "nixl":
             raise NotImplementedError(
-                "NIXL size requires the reservation-backed dummy GLM structural path"
+                "NIXL size requires the reservation-backed GLM structural payload path"
             )
         return self._calculate_kv_cache_size_for_tokens(
             request.num_prefill_tokens, replica_config
@@ -67,7 +67,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
     ) -> tuple[int, float]:
         """Price source-backed GLM pages after a real D reservation.
 
-        This is a dummy structural whole-page payload per worker/lane. It is
+        This is a structural whole-page payload per worker/lane. It is
         neither a native NIXL wire byte count nor an aggregate across ranks.
         Empty lookahead capacity reserved by D is deliberately excluded.
         """
@@ -76,7 +76,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
         family = bind_attention_family(replica_config.model_config).family
         if family.family_id != "dsa_attention":
             raise NotImplementedError(
-                "NIXL structural sizing currently supports dummy GLM DSA only"
+                "NIXL structural sizing currently supports GLM DSA only"
             )
         if cache_capacity.family_id != family.family_id or cache_capacity.is_grouped:
             raise ValueError("GLM NIXL requires its non-grouped component capacity")
