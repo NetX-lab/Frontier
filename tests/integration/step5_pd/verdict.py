@@ -238,7 +238,9 @@ def judge(stage: Path, platform_status: str) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--stage-dir", type=Path, required=True)
-    parser.add_argument("--platform-status", required=True)
+    parser.add_argument("--platform-status", required=True,
+                        help="Phase of the RJob object as the platform reports it, e.g. Succeeded; "
+                             "the launcher's lowercase FINAL_STATUS value does not match")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     verdict = judge(args.stage_dir, args.platform_status)
