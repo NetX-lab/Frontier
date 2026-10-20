@@ -1005,6 +1005,7 @@ def test_moe_wrapper_typed_result_round_trips_through_manager(tmp_path) -> None:
     wrapper.use_gated = config.use_gated_mlp
     wrapper.routing_runtime_metadata = {}
     wrapper.gating_runtime_context_metadata = {}
+    wrapper.routed_layer_group = None
 
     result = wrapper._build_profile_result(  # pylint: disable=protected-access
         {
