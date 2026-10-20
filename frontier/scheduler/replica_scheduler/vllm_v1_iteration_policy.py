@@ -549,7 +549,14 @@ class IterationSchedulingPolicy:
         return reclaimed_requests
 
     def _get_num_waiting_reqs_for_decision_log(self) -> int:
-        if self._cluster_type in (ClusterType.DECODE, ClusterType.DECODE_ATTN):
+        if self._cluster_type == ClusterType.DECODE:
+            # Remote-KV requests are waiting, not running, before D readiness.
+            return (
+                len(self._waiting_requests)
+                + len(self._pending_kv_transfer_start_events)
+                + len(self._kv_transfer_receiving_request_ids)
+            )
+        if self._cluster_type == ClusterType.DECODE_ATTN:
             return len(self._waiting_requests)
         return len(self._request_queue) + len(self._preempted_requests)
 
