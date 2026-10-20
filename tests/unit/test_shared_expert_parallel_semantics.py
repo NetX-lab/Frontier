@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_size,
@@ -184,6 +186,25 @@ def test_shared_expert_resolver_preserves_profile_ffn_tp_domain() -> None:
     )
 
     assert selected_tp == 2
+
+
+@pytest.mark.parametrize("role", [ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE])
+def test_sequence_parallel_shared_expert_resolver_matches_replicated_contract(role) -> None:
+    config = BaseModelConfig.create_from_name("zai-org/GLM-5.3")
+    replica = _replica(config, attn_tp=8, moe_tp=1, moe_ep=32)
+    replica.attn_dp = 4
+    assert resolve_shared_expert_tensor_parallel_size(
+        cluster_type=role, replica_config=replica,
+    ) == 1
+
+
+def test_sequence_parallel_shared_expert_resolver_keeps_decode_ffn_domain() -> None:
+    config = BaseModelConfig.create_from_name("zai-org/GLM-5.3")
+    replica = _replica(config, attn_tp=8, moe_tp=2, moe_ep=16)
+    replica.attn_dp = 4
+    assert resolve_shared_expert_tensor_parallel_size(
+        cluster_type=ClusterType.DECODE_FFN, replica_config=replica,
+    ) == 2
 
 
 def test_comm_prediction_uses_resolved_shared_expert_domain() -> None:
