@@ -10,6 +10,29 @@ SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
 }
 
+# Only classified producer backends may change the standalone shuffle charge.
+MOE_BACKEND_FUSES_PERMUTATION = {
+    "FLASHINFER_CUTLASS": True,
+    "MARLIN": False,
+}
+
+
+def moe_permutation_is_fused(df: pd.DataFrame) -> bool:
+    """Return the selected expert rows' permutation ownership."""
+
+    if "moe_native_backend" not in df.columns:
+        return False
+    backends = set(df["moe_native_backend"].dropna().astype(str))
+    unknown = backends - MOE_BACKEND_FUSES_PERMUTATION.keys()
+    if unknown:
+        raise ValueError(f"Unclassified moe_native_backend values: {sorted(unknown)}")
+    fused = {MOE_BACKEND_FUSES_PERMUTATION[name] for name in backends}
+    if df["moe_native_backend"].isna().any():
+        fused.add(False)
+    if len(fused) != 1:
+        raise ValueError("MoE rows mix fused and standalone permutation measurements")
+    return fused.pop()
+
 
 def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str:
     normalized_path = str(requested_runtime_path).strip()

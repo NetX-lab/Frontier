@@ -477,6 +477,8 @@ class MoeOperatorTimes:
             )
 
         prediction_cache = self._predictions["moe_shuffling"]
+        if isinstance(prediction_cache, dict) and prediction_cache.get("_permutation_fused", False):
+            return 0.0
         if isinstance(prediction_cache, dict) and prediction_cache.get(
             "_on_demand_prediction", False
         ):

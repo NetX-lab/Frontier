@@ -308,6 +308,11 @@ class PredictionFamilyTrainers(KernelCountTraining):
                         "ANY" if moe_ep_key is None else moe_ep_key
                     )
 
+                    from frontier.moe_routing_runtime import moe_permutation_is_fused
+
+                    permutation_fused = moe_permutation_is_fused(op_moe_df)
+                    if model_name == "moe_shuffling" and permutation_fused:
+                        continue
                     op_moe_df, op_feature_cols = select_moe_operator_features(
                         model_name, op_moe_df
                     )
@@ -331,6 +336,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
+                    if model_name == "moe_grouped_gemm" and permutation_fused:
+                        models[model_name]._frontier_moe_permutation_fused = True
                     if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
                         models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
                             op_moe_df

@@ -30,7 +30,7 @@ from frontier.moe_load_imbalance import (
     MOE_LOAD_IMBALANCE_FEATURES,
     block_size_m_for_tokens,
 )
-from frontier.moe_routing_runtime import filter_moe_gating_routing_topk_rows
+from frontier.moe_routing_runtime import filter_moe_gating_routing_topk_rows, moe_permutation_is_fused
 from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
 from frontier.operators.typed_contracts import (
     TYPED_OPERATOR_CONTRACTS_COLUMN,
@@ -218,6 +218,8 @@ class MoeDatasetTraining:
         missing_requirements: List[str] = []
         for model_name in model_names:
             base_model_name = get_moe_gating_base_model_name(model_name)
+            if base_model_name == "moe_shuffling" and moe_permutation_is_fused(base_df):
+                continue
             tp_key = self._get_moe_op_tp_key(
                 base_model_name,
                 moe_tp_size,
@@ -418,6 +420,9 @@ class MoeDatasetTraining:
                 )
                 continue
             target_op_name = get_moe_gating_base_model_name(model_name)
+            permutation_fused = moe_permutation_is_fused(op_df)
+            if model_name == "moe_shuffling" and permutation_fused:
+                continue
             target_col = f"time_stats.{target_op_name}.median"
             if target_col not in op_df.columns:
                 ep_desc = "ANY" if moe_ep_key is None else str(moe_ep_key)
@@ -435,6 +440,8 @@ class MoeDatasetTraining:
                 feature_cols=feature_cols,
                 target_col=target_col,
             )
+            if model_name == "moe_grouped_gemm" and permutation_fused:
+                models[model_name]._frontier_moe_permutation_fused = True
             if feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
                 models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(op_df)
             logger.info(f"Trained MoE model: {model_name}")
@@ -490,4 +497,6 @@ class MoeDatasetTraining:
             predictions[model_name] = self._get_model_prediction(
                 model_name, model, X
             )
+        if getattr(self._models.get("moe_grouped_gemm"), "_frontier_moe_permutation_fused", False):
+            predictions["moe_shuffling"] = {"_permutation_fused": True}
         return predictions
