@@ -6,8 +6,8 @@ native comparison tooling for GLM-5.3 and the original DeepSeek-V4-Flash.
 product milestone is the full trained GLM P/D path, followed by independent
 calibration and holdout checks, then measured V4 integration.
 
-This snapshot describes Frontier code through `6c3acc0` and recorded validation
-through October 19, 2026 UTC / October 20, 2026 Asia/Hong_Kong. Test results below
+This snapshot describes Frontier code through `8f6c3de` and recorded validation
+through October 20, 2026 Asia/Hong_Kong. Test results below
 belong to their stated revisions and scopes; they are not a claim that every
 test passes at the branch tip. Step-5-Preview integration is outside this branch.
 
@@ -37,6 +37,7 @@ token-content equality is not asserted without that identity evidence.
 | V4 execution | Full 43-layer eager PP1 co-location; TP8 with DP2/4/8 and corresponding EP16/32/64 structural cases. Source-rank sequence-parallel geometry, mHC/shared/routed work, compression boundaries, stage/phase accounting and operator traces are represented. | Costs and destination routing distributions are synthetic. V4 measured execution, P/D, CUDA graphs, prefix caching and speculation are not enabled by this structural path. Complete idle-attention tracing and native overlap remain unqualified. |
 | Internal DP placement | Existing balancer gains explicit `policy_version="v0.28.0"`, including request ownership and the selected native scoring/tie behavior. `"v0.10.2"` remains the legacy default. | This is the internal online policy reference; it does not settle P/D placement or establish native DP4 behavior. |
 | V1 queue admission | Explicit `max_concurrent_batches=2` admits queued work independently of physical pipeline stages. `None` retains existing pipeline capacity/default behavior. | The opt-in is restricted to the exact V1 scheduler, ordinary-cache MONOLITHIC PP1/DP1, without prefix caching, speculation or GDN. Stage execution stays serial; grouped/disaggregated paths and subclasses are rejected. |
+| Profiling producers (vLLM 0.28) | GLM DSA sparse-MLA/indexer attention, block-FP8 linear ops (including sequence-parallel shared-expert rows) and block-FP8 FlashInfer CUTLASS routed experts; V4 compressed attention, sequence-parallel shared-expert rows with clamped SwiGLU and checkpoint-MXFP4 MARLIN routed experts; vLLM forward collectives on serving process groups, NIXL KV READ and EP calls under concurrent KV reads. Rows carry runtime identity columns (runtime versions, source and model-config revision, weight source, device, quantization signature, parallel groups, graph mode). The GLM producers and the communication benchmarks have run on H800. | The simulator does not read these tables yet: GLM measured DSA timing stays guarded and V4 non-dummy timing is not implemented. The predictor and measured-communication integration is designed but not merged. V4 producers have not run on GPU. |
 | Native harnesses | Pinned observer bootstrap, dummy initialization checks, multi-node DP serving commands, externally managed P/D replay and role-specific native cache overrides. | Tools support qualification work; successful preparation or submission does not qualify the workload, observer or predictor. |
 
 The implementation reuses the existing architecture/attention/operator tables,
@@ -72,6 +73,9 @@ alone without its separately pinned runtime, instrumentation and inputs.
 | `563dfff` | Explicit DP policy: 163 focused checks and three DES cases. A clean candidate passed the unchanged 77-case fidelity comparison against clean baseline `bfa82de`; two placement tests failed there. Only `test_a_request_reaching_a_lane_during_its_dummy_forward_starts_the_next_forward` also fails on `bfa82de`; the in-flight preemption-key test failed because of branch commit `3e6a421` and passes after the in-flight decode sample correction recorded below. See [balancer tests](../../tests/unit/test_vllm_dp_load_balancer.py). |
 | `8d479ef` | Queue admission: independent focused result 135 PASS / 7 FAIL. All seven failure IDs and normalized exception headings reproduce on clean parent `da13911`. Correction (2026-10-20): `da13911` already contains branch commit `3e6a421`, whose settled decode context shortened MONOLITHIC decode rows by one token while the in-flight sample still expected the old row length. The seven decode-preemption failures came from that commit, not from before this branch, and pass after the in-flight decode sample correction. A clean candidate separately passes the unchanged 77-case fidelity comparison, including artifact and cache-filename agreement. See [queue/overlap integration checks](../../tests/integration/test_vllm_v1_pp_prefill_chunk_overlap.py). |
 | `9069538` | Native deployment/coordination source: 156 root tests and independent review accepted. This result covers preparation and lifecycle handling, not native workload qualification. See [worker tests](../../tests/unit/test_native_pd_worker.py) and [P/D harness tests](../../tests/unit/test_calibration_pd_harness.py). |
+| `9dec8d1`, `85a5c90`, `5ad40e0`, `0a8cc8e`, `7311c17`, `7e49a80` | Review fixes: GLM shared-expert replication under sequence-parallel MoE, in-flight decode sample length after preemption, the NIXL D-side reservation of the prompt's blocks, the D-lane selector on the cluster scheduler base, and the dense-layer residual-add stage metric. Full `tests/unit` has the same failure set as the parent revision, and the 77-case fidelity comparison is unchanged against `bfa82de`. |
+| `20b0621`, `dd119a7` | [Layer and KV-cache inventory check](../../tests/comparison/calibration/native_layer_cache_inventory.py) against native inventories: all 78 GLM and 43 V4 layers and all cache groups match. Two capacity differences remain for calibration: vLLM's null block, which cannot be allocated, and the device memory size Frontier assumes. |
+| `f01a1d7`–`8f6c3de` | Profiling producers listed above, for example the [DSA producer](../../frontier/profiling/attention/dsa_main.py), [V4 attention producer](../../frontier/profiling/attention/dsv4_attention_main.py), [MXFP4 MARLIN experts](../../frontier/profiling/moe/mxfp4_marlin_experts.py) and [collective benchmarks](../../frontier/profiling/collectives/vllm_collective_benchmark.py). CPU unit tests and dry-run plans cover them; GPU runs are recorded outside the repository. `4780667` makes shared-expert projections follow the model quantization config, which matches vLLM block FP8 for GLM-5.3, DeepSeek-V3 and step-moe; non-dummy predictions for those models change, and the 77-case fidelity comparison is unchanged. |
 | `89290df`, `6c3acc0` | Complete observer bootstrap and per-role cache override accepted separately: 63 bootstrap tests with dependency-combination/fault checks; 132 pressure-harness tests with 45 frozen baseline/candidate checks. |
 
 The older C16/C17/C23 comparisons associated with `2da11c8`, `dc7f382` and
@@ -175,8 +179,11 @@ python tests/integration/run_dsv4_structural.py \
 These CPU commands are structural checks. They do not launch native GPU jobs or
 produce qualified calibration data.
 
-Continue from qualified native workflow and measurement inputs into the existing
-profiling, CPU normalization, bundle training, cost replay and coverage paths.
+Continue from the measured GLM primitive and communication tables into the
+approved predictor integration: sequence-parallel MoE token widths and
+collectives, the measured DSA timing module, and a measured communication
+backend. Then continue into CPU normalization, bundle training, cost replay and
+coverage paths.
 Complete the trained GLM P/D path before claiming a calibrated GLM predictor;
 then run independent calibration/holdout checks and measured V4 integration.
 Native async disposition needs qualified GLM P/D/schema evidence; DP P/D placement
