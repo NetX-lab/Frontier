@@ -11,7 +11,7 @@ native_simulation_scope_20261020/disposition01.md: 1,036,282 KV tokens.
   1.18 GiB activation peak, 979,459 KV tokens per DP lane (not per role).
 Locked image 69308454c, vLLM 0.1.dev22912+g8224bb82f:
   step_vl.py:147-419; rotary_embedding/__init__.py:74-85;
-  v1/kv_cache_utils.py get_max_concurrency_for_kv_cache_config;
+  v1/core/kv_cache_utils.py get_max_concurrency_for_kv_cache_config;
   v1/kv_cache_interface.py:1016-1059; config/vllm.py:578-600.
 
 Rounded profiling logs bound reconstruction error. These tests do not declare
