@@ -14,7 +14,7 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     """Model single-frontend vLLM V1 DP routing with delayed load snapshots.
 
     Supported scope, and nothing wider: one co-location Replica or one PP1
-    DECODE Replica, one modeled frontend, the `vllm_v1` replica scheduler, and
+    PREFILL/DECODE Replica, one modeled frontend, the `vllm_v1` replica scheduler, and
     a report key whose ordering
     actually holds -- a MoE model, whose attention-DP lanes share each stage-0
     forward, or a single lane, where the question does not arise. Everything
@@ -26,12 +26,12 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if (
-            self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+            self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
             or self._num_replicas != 1
             or self._replica_scheduler_type is not ReplicaSchedulerType.VLLM_V1
         ):
             raise ValueError(
-                "vllm_load_balancing supports one co-location Replica or one "
+                "vllm_load_balancing supports one co-location Replica, one PREFILL Replica or one "
                 "DECODE Replica at PP1 with "
                 "vllm_v1, got "
                 f"cluster_type={self._cluster_type.name}, "
@@ -39,10 +39,10 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
                 f"replica_scheduler={self._replica_scheduler_type}"
             )
         if (
-            self._cluster_type is ClusterType.DECODE
+            self._cluster_type in (ClusterType.PREFILL, ClusterType.DECODE)
             and self._config.replica_config.num_pipeline_stages != 1
         ):
-            raise ValueError("vllm_load_balancing supports DECODE at PP1 only")
+            raise ValueError(f"vllm_load_balancing supports {self._cluster_type.name} at PP1 only")
         # The load report is keyed by the Replica's stage-0 forward group. A
         # MoE Replica binds one group for every lane of one forward, so peer
         # lanes share the key. A dense Replica has no per-forward collective
@@ -151,7 +151,10 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
             # signature is now stale. Stale-drop callbacks apply no output and
             # leave batch.completed false; they must not release ownership.
             self._load_balancer.finish_requests(
-                request.id for request in batch.requests if request.completed
+                request.id for request in batch.requests
+                if request.completed or (
+                    self._cluster_type is ClusterType.PREFILL and request.is_prefill_complete
+                )
             )
         key = self._held_key[lane_id]
         if key is None:
