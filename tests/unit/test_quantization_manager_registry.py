@@ -205,3 +205,23 @@ def test_attention_package_keeps_trace_mapper_lazy_export_after_config_import() 
         "get_attention_trace_op_times"
     )
     assert get_attention_trace_op_times.__name__ == "get_attention_trace_op_times"
+
+
+@pytest.mark.parametrize("model_name", ["meta-llama/Llama-2-7b-hf", "deepseek-v3", "zai-org/GLM-5.3"])
+def test_dsa_precision_metadata_follows_the_configured_attention_family(model_name):
+    from frontier.attention.families import DSA_ATTENTION_FAMILY
+    from frontier.config import BaseModelConfig
+
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        model = BaseModelConfig.create_from_name(model_name)
+        manager.configure_from_model_config(model)
+        dsa_ops = {op.name for op in DSA_ATTENTION_FAMILY.profiling_ops()}
+        names = {row["operation"] for row in manager.get_operation_precision_metadata()}
+        assert dsa_ops & names == (dsa_ops if model.get_attention_family() == DSA_ATTENTION_FAMILY else set())
+        # Reconfiguring the singleton must not leak active DSA operations.
+        manager.configure_from_model_config(BaseModelConfig.create_from_name("meta-llama/Llama-2-7b-hf"))
+        assert not dsa_ops & {row["operation"] for row in manager.get_operation_precision_metadata()}
+    finally:
+        QuantizationManager.reset()

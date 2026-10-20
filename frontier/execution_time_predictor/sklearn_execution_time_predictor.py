@@ -2500,16 +2500,18 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             from frontier.execution_time_predictor.dsa_predictor import dsa_input_path
 
             file_path = dsa_input_path(file_path)
-        if not file_path:
-            logger.warning("Profiling file missing: %s", file_path)
-            self._register_missing_profiling_metadata(operation_names, file_path)
-            return
-        try:
-            df = pd.read_csv(file_path)
-        except FileNotFoundError:
-            logger.warning("Profiling file missing: %s", file_path)
-            self._register_missing_profiling_metadata(operation_names, file_path)
-            return
+            df = self._load_attention_df(file_path)
+        else:
+            if not file_path:
+                logger.warning("Profiling file missing: %s", file_path)
+                self._register_missing_profiling_metadata(operation_names, file_path)
+                return
+            try:
+                df = pd.read_csv(file_path)
+            except FileNotFoundError:
+                logger.warning("Profiling file missing: %s", file_path)
+                self._register_missing_profiling_metadata(operation_names, file_path)
+                return
         metadata = self._get_profiling_metadata(df, file_path)
         self._validate_active_measurement_type(metadata, file_path)
         self._register_profiling_metadata_for_ops(operation_names, metadata, file_path)

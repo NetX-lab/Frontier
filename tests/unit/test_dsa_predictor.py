@@ -210,3 +210,26 @@ def test_dsa_scopes_reuse_the_canonical_kernel_count_training(tmp_path, model):
     DSAPredictor(fitted).operator_times(build_dsa_features([1, 1], [128, 2048], model.index_topk),
                                       "full_index", record_kernel_count=record)
     assert recorded == {"attn_dsa_indexer": 5.0, "attn_dsa_mla": 7.0}
+
+
+def test_dsa_metadata_registration_uses_only_the_child_reader(monkeypatch):
+    from unittest.mock import Mock
+    from frontier.attention.families import DSA_ATTENTION_FAMILY
+    from frontier.attention.profiling_mapping import get_enabled_predictor_metric_names
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import SklearnExecutionTimePredictor
+
+    predictor = SimpleNamespace()
+    rows = pd.DataFrame({"measurement_type": ["CUDA_EVENT"]})
+    predictor._load_attention_df = Mock(return_value=rows)
+    predictor._get_profiling_metadata = Mock(return_value={})
+    predictor._validate_active_measurement_type = Mock()
+    predictor._register_profiling_metadata_for_ops = Mock()
+
+    def reject_generic_read(*args, **kwargs):
+        raise AssertionError("The generic metadata reader must not open DSA files")
+
+    monkeypatch.setattr(pd, "read_csv", reject_generic_read)
+    names = list(get_enabled_predictor_metric_names(DSA_ATTENTION_FAMILY))
+    SklearnExecutionTimePredictor._register_profiling_metadata_from_file(predictor, "/profiles/attention.csv", names)
+    predictor._load_attention_df.assert_called_once_with("/profiles/dsa_attention.csv")
+    predictor._register_profiling_metadata_for_ops.assert_called_once_with(names, {}, "/profiles/dsa_attention.csv")
