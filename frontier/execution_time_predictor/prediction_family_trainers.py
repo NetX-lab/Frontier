@@ -181,7 +181,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 **_layer_contract_kwargs(primary_contract),
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-                getattr(replica_config, "moe_routing_distribution_type", "balanced")
+                getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+                _resolve_model_architecture_profile(model_config),
             )
 
             moe_df_cache: Dict[

@@ -31,7 +31,7 @@ def test_training_skips_only_fused_shuffle(tmp_path, monkeypatch, backend, fused
             num_tokens=tokens, num_experts=model.num_experts,
             router_topk=model.num_experts_per_tok, hidden_dim=model.embedding_dim,
             expert_hidden_dim=model.mlp_hidden_dim, num_tensor_parallel_workers=1,
-            expert_parallel_size=32, routing_runtime_path="standard_fused_topk",
+            expert_parallel_size=32, routing_runtime_path="grouped_topk_sigmoid",
             gating_runtime_context="standalone_legacy", gating_runtime_context_impl="none",
         )
         row.update(MoELoadImbalanceInput(

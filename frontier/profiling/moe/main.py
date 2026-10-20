@@ -44,6 +44,7 @@ except ImportError:
     torch = None
 
 from frontier.config.precision_type import PrecisionType
+from frontier.moe_routing_runtime import SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
 )
@@ -334,7 +335,7 @@ def parse_args():
         "--routing_runtime_path",
         type=str,
         default="standard_fused_topk",
-        choices=["standard_fused_topk", "uniform_topk"],
+        choices=sorted(SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS),
         help=(
             "Routing runtime path to profile for moe_gating_routing_topk. "
             "Use uniform_topk for runtime-equivalent uniform-routing profiling."

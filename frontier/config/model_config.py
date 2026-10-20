@@ -384,6 +384,8 @@ class BaseModelConfig(BaseFixedConfig):
     topk_method: Optional[str] = field(
         default=None, metadata={"omit_if_none": True}
     )
+    n_group: Optional[int] = field(default=None, metadata={"omit_if_none": True})
+    topk_group: Optional[int] = field(default=None, metadata={"omit_if_none": True})
 
     # Compressed attention, routing, and mHC metadata from the native model.
     scoring_func: Optional[str] = field(default=None, metadata={"omit_if_none": True})
@@ -979,15 +981,17 @@ class BaseModelConfig(BaseFixedConfig):
                 if cfg.get("index_topk") is not None
                 else None
             ),
+            n_group=cfg.get("n_group") if cfg.get("index_topk") is not None else None,
+            topk_group=cfg.get("topk_group") if cfg.get("index_topk") is not None else None,
             scoring_func=(
-                cfg.get("scoring_func") if cfg.get("compress_ratios") is not None else None
+                cfg.get("scoring_func") if cfg.get("compress_ratios") is not None or cfg.get("index_topk") is not None else None
             ),
             norm_topk_prob=(
-                cfg.get("norm_topk_prob") if cfg.get("compress_ratios") is not None else None
+                cfg.get("norm_topk_prob") if cfg.get("compress_ratios") is not None or cfg.get("index_topk") is not None else None
             ),
             routed_scaling_factor=(
                 cfg.get("routed_scaling_factor")
-                if cfg.get("compress_ratios") is not None else None
+                if cfg.get("compress_ratios") is not None or cfg.get("index_topk") is not None else None
             ),
             compress_ratios=cfg.get("compress_ratios"),
             sliding_window=(

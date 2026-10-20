@@ -8,6 +8,7 @@ UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH = "uniform_topk"
 SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
     STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
+    "grouped_topk_sigmoid",
 }
 
 # Only classified producer backends may change the standalone shuffle charge.
@@ -46,8 +47,12 @@ def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str
 
 def resolve_moe_gating_routing_runtime_path(
     moe_routing_distribution_type: str,
+    architecture_profile=None,
 ) -> str:
-    """Map the canonical routing distribution to profiling runtime metadata."""
+    """Use the model's router kernel independently of the workload distribution."""
+    if architecture_profile is not None and architecture_profile.moe_gating_routing_runtime_path:
+        return validate_moe_gating_routing_runtime_path(
+            architecture_profile.moe_gating_routing_runtime_path)
     normalized_distribution = str(moe_routing_distribution_type).strip().lower()
     if normalized_distribution in {"balanced", "skewed", "zipf"}:
         return STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH

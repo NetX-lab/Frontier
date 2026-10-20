@@ -426,6 +426,7 @@ class ModelArchitectureProfile:
     counts_share_expert_param_memory: bool = False
     replicate_shared_expert_in_sequence_parallel: bool = False
     dense_layers_use_shared_expert_rows: bool = True
+    moe_gating_routing_runtime_path: str | None = None
     experimental: bool = False
     runtime_limitations: tuple[str, ...] = ()
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -656,6 +657,7 @@ class ModelArchitectureProfile:
         return cls(
             profile_id="glm_moe_dsa",
             dense_layers_use_shared_expert_rows=False,
+            moe_gating_routing_runtime_path="grouped_topk_sigmoid",
             display_name="GLM MoE DSA",
             attention_linear_ops=AttentionLinearOpProfile(
                 sharded_impl=AttentionLinearOpImplementation.GENERIC,

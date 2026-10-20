@@ -449,7 +449,8 @@ class LayerContractResolution:
             }
         )
         requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-            getattr(replica_config, "moe_routing_distribution_type", "balanced")
+            getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+            _resolve_model_architecture_profile(model_config),
         )
 
         missing_requirements: List[str] = []
