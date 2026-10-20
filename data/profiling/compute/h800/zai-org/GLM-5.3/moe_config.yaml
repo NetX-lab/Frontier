@@ -30,7 +30,7 @@ resolved_expert_parallel_sizes_by_model:
   - 8
   - 16
   - 32
-routing_runtime_path: standard_fused_topk
+routing_runtime_path: grouped_topk_sigmoid
 skip_confirmation: true
-source_revision: 71cde5ebdee3a8eb5eec3b176b4affed478171fd
+source_revision: 9dee7defd932624f68d55c75833c57f2a925d8ac
 use_fp8: null

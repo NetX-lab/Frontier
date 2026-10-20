@@ -19,6 +19,7 @@ from frontier.entities.time_components import (
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.sequence_parallel_moe import input_layernorm_tokens
 from frontier.logger import init_logger
 from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_routing_runtime import (
@@ -474,14 +475,15 @@ class SklearnMoEExecutionTimePredictor(
         batch: Batch,
         layer_id: int,
         cluster_type: ClusterType,
-        cache: dict[tuple[str, str], AttentionTime] | None = None,
+        cache: dict[tuple[str, str, int], AttentionTime] | None = None,
     ) -> AttentionTime:
         """Reuse numerics only within one synchronous stage prediction.
 
         The stage owns one batch, cluster, predictor configuration and loaded
         artifact set. Phase, context, padding, state initialization, physical
         shape and TP/quantization therefore cannot change during this lifetime.
-        Only the normalized attention family/variant varies between layers.
+        The attention binding and input-norm width can vary between layers:
+        sequence-parallel MoE outputs leave later inputs locally sharded.
         Global layer identity and MoE routing remain outside this numeric cache.
         Direct layer calls do not retain numerical results across requests.
         """
@@ -490,7 +492,7 @@ class SklearnMoEExecutionTimePredictor(
                 batch=batch, layer_id=layer_id, cluster_type=cluster_type,
             )
         spec = self._model_config.get_layer_attention_spec(layer_id)
-        key = (spec.family_id, spec.variant_id)
+        key = (spec.family_id, spec.variant_id, input_layernorm_tokens(self, batch, layer_id))
         cached = cache.get(key)
         if cached is not None:
             self._attention_query_cache_hits += 1
@@ -528,7 +530,7 @@ class SklearnMoEExecutionTimePredictor(
         include_ffn: bool = True,
         include_attention: bool = True,
         layer_id: int = 0,
-        attention_query_cache: dict[tuple[str, str], AttentionTime] | None = None,
+        attention_query_cache: dict[tuple[str, str, int], AttentionTime] | None = None,
         include_stage_owned: bool = True,
         stage_num_layers: int = 1,
     ) -> "ExecutionTime":
@@ -1297,7 +1299,7 @@ class SklearnMoEExecutionTimePredictor(
         """Predict layer-specific routing with a shared stage-local attention cache."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
-        cache: dict[tuple[str, str], AttentionTime] = {}
+        cache: dict[tuple[str, str, int], AttentionTime] = {}
         layers = [
             self._predict_layer_with_kernel_gap(
                 self._predict_moe_layer_execution_time,
@@ -1319,7 +1321,7 @@ class SklearnMoEExecutionTimePredictor(
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
-        _attention_query_cache: dict[tuple[str, str], AttentionTime] | None = None,
+        _attention_query_cache: dict[tuple[str, str, int], AttentionTime] | None = None,
         *,
         include_stage_owned: bool = True,
         stage_num_layers: int = 1,

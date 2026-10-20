@@ -85,11 +85,14 @@ prefill; uncovered and mixed serving workloads fail rather than use dummy
 costs or extrapolation. Producer cases for those missing shapes are implemented
 but do not constitute new GPU measurements.
 
-The old `standard_fused_topk` GLM router rows are deliberately retained as
-measured. They are rejected by the new `grouped_topk_sigmoid` consumer until a
-verified native rerun replaces them. A run on these tables is labeled
-**structural smoke on H800 tables, not an accuracy result**; changing router
-labels or bypassing dataset admission is not a valid smoke.
+The MoE tables contain the verified `grouped_topk_sigmoid` rerun from source
+`9dee7defd932624f68d55c75833c57f2a925d8ac` (RJob
+`exp-1020-192409-258863`). Both tables have 4,059 rows, with
+`grouped_topk_bias` assignment, `sigmoid_renorm_scaled` weights, and native
+`FLASHINFER_CUTLASS` expert execution. These replace the old
+`standard_fused_topk` measurements without relabeling them. A run on these
+tables is labeled **structural smoke on H800 tables, not an accuracy result**;
+bypassing dataset admission is not a valid smoke.
 
 These are selected completed checks from the development record. A passing
 structural test verifies its modelled invariants, not calibrated predictions.
