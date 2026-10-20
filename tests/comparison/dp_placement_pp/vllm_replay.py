@@ -509,14 +509,16 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
                  profile_window_s: tuple[float, float] | None = None, *,
                  vllm_version: str = "0.10.2") -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
-    close the server's torch profiler at those two offsets of the same clock."""
+    close the server's torch profiler at those two offsets of the same clock.
+    An optional prompt_id repeats identical token IDs under distinct request IDs."""
     import aiohttp
 
     url = f"http://127.0.0.1:{port}/v1/completions"
     bodies = {
         row["request_id"]: json.dumps({
             "model": SERVED_MODEL_NAME,
-            "prompt": prompt_token_ids(row["request_id"], row["num_prefill_tokens"], vocab_size),
+            "prompt": prompt_token_ids(row.get("prompt_id", row["request_id"]),
+                                       row["num_prefill_tokens"], vocab_size),
             "max_tokens": row["num_decode_tokens"],
             "min_tokens": row["num_decode_tokens"],
             "ignore_eos": True,

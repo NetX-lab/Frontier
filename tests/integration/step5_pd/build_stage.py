@@ -83,7 +83,8 @@ def wave_traces(definition: dict, namespace: str) -> dict[str, list[dict]]:
             {"request_id": f"{namespace}-{wave['name']}-{index}", "segment": wave["name"],
              "role": "gating" if wave["name"] == definition["gating_wave"] else "recorded",
              "arrived_at": round(index * wave["spacing_s"], 6), "num_prefill_tokens": length,
-             "num_decode_tokens": wave["num_decode_tokens"]}
+             "num_decode_tokens": wave["num_decode_tokens"],
+             **({"prompt_id": wave["prompt_id"]} if "prompt_id" in wave else {})}
             for index, length in enumerate(wave["prompt_lengths"])]
     return traces
 

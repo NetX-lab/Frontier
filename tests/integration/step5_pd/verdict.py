@@ -199,7 +199,11 @@ def judge(stage: Path, platform_status: str) -> dict:
 
     try:
         observations["requests"] = {}
+        single_request_waves = set()
         for wave in waves["waves"]:
+            trace_rows = json.loads((stage / "trace" / wave / "request_ids.json").read_text())["rows"]
+            if len(trace_rows) == 1:
+                single_request_waves.add(wave)
             client, proxy = wave_records(wave)
             for rid, record in client.items():
                 routed = proxy.get(rid, {})
@@ -210,6 +214,12 @@ def judge(stage: Path, platform_status: str) -> dict:
                 observations["requests"][rid] = {
                     "wave": wave, "num_prefill_tokens": record["num_prefill_tokens"],
                     "http_status": record["http_status"], "usage": record.get("usage"),
+                    "client_send_monotonic": record["dispatch_monotonic"],
+                    "client_first_token_monotonic": None,
+                    "client_first_token_status": "UNVERIFIED_NONSTREAMING",
+                    "proxy_prefill_response_monotonic": routed.get("prefill_response_monotonic"),
+                    "client_completion_monotonic": record["response_monotonic"],
+                    "output_tokens": (record.get("usage") or {}).get("completion_tokens"),
                     "client_e2e_s": record["response_monotonic"] - record["dispatch_monotonic"],
                     "prefill_phase_s": interval("proxy_arrival_monotonic", "prefill_response_monotonic"),
                     "decode_phase_s": interval("prefill_response_monotonic", "decode_response_monotonic"),
@@ -227,6 +237,32 @@ def judge(stage: Path, platform_status: str) -> dict:
                 "decode_nixl_transfers": delta["decode"]["nixl_transfers"],
                 "decode_requests": delta["decode"]["requests"],
                 "prefill_requests": delta["prefill"]["requests"]}
+        observations["warm_requests"] = []
+        for rid, row in observations["requests"].items():
+            wave = row["wave"]
+            window = observations["wave_changes"][wave]
+            sources = window["decode_prompt_sources"]
+            requests = window["decode_requests"]
+            completed = requests["vllm:e2e_request_latency_seconds"]["count"]
+            attributed = (wave in single_request_waves and completed["present"]
+                          and completed["total"] == 1
+                          and all(series["present"] for series in sources.values())
+                          and sum(series["total"] for series in sources.values()) == row["num_prefill_tokens"])
+            ttft = requests["vllm:time_to_first_token_seconds"]
+            row.update(
+                decode_external_tokens=sources["external_kv_transfer"]["total"] if attributed else None,
+                decode_computed_prompt_tokens=sources["local_compute"]["total"] if attributed else None,
+                decode_prompt_attribution="single_request_window" if attributed else "UNVERIFIED",
+                decode_prompt_sources_per_engine={name: series["per_engine"] for name, series in sources.items()},
+                decode_engine_ttft_s=(ttft["sum"]["total"] if attributed and ttft["sum"]["present"]
+                                      and ttft["count"]["total"] == 1 else None))
+            if wave != gating:
+                observations["warm_requests"].append({"request_id": rid, **row})
+        observations["client_first_token_note"] = (
+            "The existing replay and proxy are nonstreaming. Client first-token timestamps are "
+            "UNVERIFIED, not response completion times. decode_engine_ttft_s is the native engine "
+            "histogram delta for a single-request window, not client TTFT. Warmup and boundary "
+            "waves are observations; only W1 decides the unchanged nine conditions.")
         observations["observation_errors"] = {host: result.get("observation_errors")
                                               for host, result in results.items()}
     except Exception:
