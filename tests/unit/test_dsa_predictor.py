@@ -161,7 +161,7 @@ def test_extended_rows_select_exact_features_and_interpolate_with_coverage(tmp_p
         ([2], [0]), ([256], [32768]), ([2] * 1024, [0] * 1024),
         ([256] * 32, [0] * 32), ([257, 257], [0, 0]),
         ([512] * 16, [12288] * 16), ([4096, 4096], [0, 0]),
-        ([512, 512], [32256, 32256]),
+        ([512, 512], [32256, 32256]), ([4096, 4096], [28672, 28672]),
     ]
     rows = [_row(model, q, c, variant) for variant in ("full_index", "shared_index") for q, c in shapes]
     for row in rows:

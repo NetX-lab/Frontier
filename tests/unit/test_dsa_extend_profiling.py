@@ -53,9 +53,9 @@ def test_concurrent_short_prompts_fit_one_native_step(plan):
 
 
 def test_cached_multi_prefills_use_a_separate_native_chunk_cap(plan):
-    engine = plan.engines[-1]
+    engine = plan.engines[6]
     assert engine.prefill_query_len == 512
-    assert all(engine.prefill_query_len == 0 for engine in plan.engines[:-1])
+    assert all(engine.prefill_query_len == 0 for engine in plan.engines[:6])
     cases = plan.cases_for_engine(engine.engine_index)
     assert {case.batch_size for case in cases} == {2, 4, 8, 16}
     for case in cases:
@@ -64,6 +64,9 @@ def test_cached_multi_prefills_use_a_separate_native_chunk_cap(plan):
         assert case.batch_size * (case.prompt_len + 1) <= plan.limits.max_kv_tokens_per_lane
         chunks = case.prompt_len // engine.prefill_query_len
         assert runner._case_window(case, engine) == (chunks, 3 * chunks)
+    large = plan.engines[7]
+    assert large.prefill_query_len == 4096
+    assert [(case.batch_size, case.prompt_len) for case in plan.cases_for_engine(7)] == [(2, 32768)]
 
 
 def test_prefill_boundary_and_last_legal_decode_context_are_covered(plan):
@@ -103,7 +106,7 @@ def test_prefill_runner_enqueues_the_whole_batch_before_stepping(plan, monkeypat
 def test_build_engine_preserves_original_arguments_and_adds_native_chunk_cap(plan, monkeypatch):
     monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(LLM=lambda **kw: kw))
     original = runner.build_engine(plan, 0, "model", 1234, 0.85)
-    cached = runner.build_engine(plan, len(plan.engines) - 1, "model", 1234, 0.85)
+    cached = runner.build_engine(plan, 6, "model", 1234, 0.85)
     assert original["long_prefill_token_threshold"] == 0
     assert cached["long_prefill_token_threshold"] == 512
     assert cached["max_num_batched_tokens"] == 8192

@@ -635,12 +635,15 @@ def build_dsa_profile_plan(
         )
         for index, budget in enumerate(chunk_budgets)
     ]
-    # The next power of two above the decode limit stays on the prefill path.
-    query = 1 << decode_query_limit.bit_length()
-    cached_prefills = _build_cached_prefill_cases(
-        len(engines), chunk_budgets[-1], query, limits,
-    )
-    if cached_prefills:
+    # Small chunks cover many cached sequences; two large chunks cover the
+    # high causal-pair count of two long requests sharing the token budget.
+    queries = {1 << decode_query_limit.bit_length(), chunk_budgets[-1] // 2}
+    for query in sorted(query for query in queries if query > decode_query_limit):
+        cached_prefills = _build_cached_prefill_cases(
+            len(engines), chunk_budgets[-1], query, limits,
+        )
+        if not cached_prefills:
+            continue
         engines.append(DsaEngineSpec(
             engine_index=len(engines), chunk_budget=chunk_budgets[-1],
             max_num_seqs=max(case.batch_size for case in cached_prefills),

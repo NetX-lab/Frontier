@@ -180,13 +180,13 @@ def test_engine_max_num_seqs_fits_chunk_budget_at_target_limits(hf_config):
             chunk_budgets=(256, 512, 1024, 2048, 4096, 8192),
         ),
     )
-    assert len(plan.engines) == 7
+    assert len(plan.engines) == 8
     for engine in plan.engines:
         cases = plan.cases_for_engine(engine.engine_index)
         assert engine.max_num_seqs == max(case.batch_size for case in cases)
         assert engine.max_num_seqs <= engine.chunk_budget
-    assert plan.engines[-2].max_num_seqs == 1024
-    assert plan.engines[-1].prefill_query_len == 512
+    assert plan.engines[5].max_num_seqs == 1024
+    assert [engine.prefill_query_len for engine in plan.engines[6:]] == [512, 4096]
 
 
 def test_limits_reject_decode_engine_smaller_than_batch():
