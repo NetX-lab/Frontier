@@ -12,11 +12,12 @@
 - completed: successor copied from exact frozen root bytes (SHA256 equal before edits); only `native_idle_evidence` and native replay proof binding changed. Eight replay scenarios and seven readiness mutations pass. Root checker remains unchanged.
 - completed: focused regressions. Iteration01: 36 PASS / 9 FAIL (new optional keyword in existing test stub, fractional fixture counter, worker fixture absent provenance); cause-specific corrections keep keyword absent when proof is unavailable, leave later counter number semantics unchanged, and add explicit fixture process receipts. Iteration02: 59 PASS / 1 FAIL (fault-injection fixture accidentally changed its original missing-file error to missing-key); corrected fixture setup only. No native or transport change. Broader oneshot-py312 attempt: 12 FAIL / 14 ERROR due to unrelated installed `tests` shadowing fresh subprocesses; existing asyncopd-py312 + py310 simulator avoids that environment issue. Final 241 PASS / 21 SKIP / 0 ERROR,113.62s. Evidence retained in this directory.
 - completed: report, narrow successor diff, canonical/checker/collector byte-identity evidence. Five production/test files and453 changed lines. Read back requirements before completion.
-- pending: local commit; parent review/freeze/repoint and future authorized native run are outside this slice.
+- completed: code/test/artifact commit `1a2d6e9` (`fix(calibration): prove dedicated native cold start before warmup`); indexed diff check passes. No unrelated files staged.
+- pending outside this slice: parent review/freeze/repoint and future authorized native run.
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -24,12 +25,12 @@
 | 首次证明及 readiness | PASS | 432 请求 replay 与 readiness 负例通过。 |
 | 后续严格 freshness | PASS | 失效初始 baseline 不再放行后续边界。 |
 | successor 与回归 | PASS | 完整候选 checker 路径及最终241测试通过。 |
-| 报告、冻结及 commit | TODO | 报告/identity已归档，本地commit待完成；parent冻结另行处理。 |
+| 报告、归档及 commit | PASS | 报告/identity已归档，本地commit1a2d6e9；parent冻结另行处理。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 捕获响应 GREEN 至最终回归｜**当前前沿：** 本地commit与parent交付
+**检测窗口：** 最终回归至commit1a2d6e9｜**当前前沿：** parent交付
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -51,8 +52,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 精确stage本slice的五个code/test文件与任务证据 → 完成标志：无无关文件。
-2. 本地commit并交付 → 完成标志：五文件/500 行预算、canonical/root checker 不变有证据。
+1. 交付commit、报告、successor及narrow diff → 完成标志：parent获得明确冻结/repoint责任。
 
 ## 4. 最值得关注的 3 点
 
