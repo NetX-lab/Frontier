@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | D22: attention agreement uses independently executed clean-window references; thresholds and historical verdicts remain unchanged. |
 | 2026-10-21 | D21: four prioritized hardware/scale tracks, independent 32-to-64 formal release gates, basic/formal separation and global H200 non-preemptible cap32. |
 | 2026-10-21 | D20 releases measured-path CPU implementation while retaining native/profile/predictive acceptance conditions. |
 | 2026-10-21 | D18: adopt the byte-identical GLM/V4 workload from 68f891b (Step cherry-pick 958d81a); close reciprocal artifact adoption, retain separate native/runtime qualification. |
@@ -258,6 +259,8 @@ Use existing queues, held-output semantics, launch/drain, and kernel-gap account
 Padding may consume compute and scratch but must not advance live request tokens, regions, or KV frontiers. DP dummy forwards retain required synchronization even with zero useful payload.
 
 ## 6. Native reference and qualification
+
+**D22 attention timing contract.** Candidate and independent reference measurements use disjoint cohorts of primed outer-only, normalized clean-replay windows through the existing timing path, with matching replay counts and minimum-window rules. Candidate mean versus reference-window median must remain within5%, and candidate CV must remain<=5%. Boundary-instrumented single replays are exported as diagnostics only. No fixed overhead subtraction, quality-dependent retry or historical FAIL reclassification is permitted. Scoped-operator and linear protocols are unchanged. Fresh admitted measurements must still match each D21 hardware/scale/runtime contract.
 
 S01/G0 must capture immutable target-platform image digest, image ID/RepoDigests, architecture/entrypoint, actual package versions, relevant source/library hashes, and any available provenance. Missing build SHA stays unknown; candidate code must not be relabeled as image-build code.
 Retrieve exact revision-pinned metadata through a file allowlist. No checkpoint weights or whole-repository snapshot may be downloaded. Additional small sidecar metadata is admitted only if the native text loader actually requires it and its content/purpose is recorded.

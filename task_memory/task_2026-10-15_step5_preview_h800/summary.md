@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | D21 code/native execution and D22 strict native PASS recorded:274 compute and204 native parent checks;P0 basic PARTIAL;full actual-main idle-DP binding still active. |
 | 2026-10-21 | D21-DOCS: archive four-track priority/dependency update, global H200 non-preemptible cap32, terminal receipts and superseded package intent; final acceptance remains open. |
 | 2026-10-21 | Bounded communication startup correction6a9cedc integrated asb68ce4d;101 parent tests and189 package pins pass. Old H20001 fails141 before measurement; unchanged32-GPU case02 exp-1021-143708-523626 isPending under96/130 reservations. Exact commands/evidence: test_report_2026-10-21_d20_comm_startup.md and scratch_evidence/d20_comm_startup/. Native quality remains unverified; measured compute/PD implementation continues. |
 | 2026-10-21 | D20-CLIENT executable comparison accepted at e2be122: parent183/148 passing suites, Step/GLM CLI arithmetic and shipped-matrix evidence rejection; reviewP3 corrected. Full16/17/22/28 and real native calibration remain open. See test_report_2026-10-21_d20_client_integration.md. |

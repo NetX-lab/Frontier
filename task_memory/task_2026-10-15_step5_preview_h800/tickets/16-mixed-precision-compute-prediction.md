@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Full compute83af0a7 delivered and274 combined parent checks passed; actual CLI graph-policy mapping remains the implementation blocker. |
 | 2026-10-21 | D21: P0-first CPU delivery with separate hardware/scale profile identities; historical H200-only coverage and implementation-wait wording are superseded. |
 | 2026-10-21 | D20 releases CPU implementation; measured consumption code is assigned to the compute/bundle owner while actual profile/native acceptance stays blocked. |
 | 2026-10-20 | Recorded that trained-predictor integration still waits for the GLM milestone (decision D3). |
@@ -19,6 +20,8 @@ Demonstrate actual computation-cost composition from physical scopes to request 
 Shared-contract sufficiency and any necessary material-change decision are recorded under the existing C/D owners; preparation may proceed independently.
 
 **Status:** in-progress (D20 CPU implementation); qualified measured and whole-ticket acceptance blocked
+
+**Execution receipt:** full shared-manager fit/cache/bundle/lookup/Stage code is delivered in83af0a7; four synthetic CPU bundles were generated through the public fixture, each with34 artifacts. Parent274 combined checks pass. Actual offline/online `frontier.main` reaches the production path but rejects `full_decode_only` at the phase-profile boundary; fix that mapping and rerun the real CLI before marking integrated execution complete. No qualified timing or four-metric result follows from fixture data.
 
 **Current D21 scope:** D20 implementation continues P0 H80032 first, serving the existing four-track plan without new predictor infrastructure. Hardware/scale-compatible profiles and bundle identities are separate for H80032/64 and H20032/64; no timing scaling.32 uses P16/D16 TP8/DP2/EP16/PP1,64 uses P32/D32 TP8/DP4/EP32/PP1. Native/profile/predictive acceptance is not waived. Historical H200-only references or GLM CPU waits below are superseded by D20/D21; the external GLM gate remains an acceptance condition. See `../plan.md` for basic/formal releases and resources.
 

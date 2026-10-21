@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Parent integrates D21/D22, records actual bundle execution, P0 partial native success and D22 strict native PASS; idle-DP measured consumption remains active. |
 | 2026-10-21 | D21-DOCS: synchronize four tracks, separate basic/formal dependencies, global H200 non-preemptible cap32 and terminal reconciliation; preserve historical records. |
 | 2026-10-21 | Record160-PASS foundation/input integration and pause obsolete noncanonical R2 capture. |
 | 2026-10-21 | Communication startup correction accepted asb68ce4d after101 parent passes; new32-H200 jobexp-1021-143708-523626 queued at96/130 reservations. |
@@ -175,11 +176,12 @@ Task ID: **D21-DOCS**. Authority is the final D21 in [requirements.md](requireme
 | Work | Status | Evidence / next action |
 | --- | --- | --- |
 | D21 decision and dependency synchronization | completed | Four existing-ticket tracks in09/23/28/30; supporting active tickets updated, no new ticket or revived W1–W6 sweep |
-| P0 H80032 | pending formal evidence; highest priority | Non-preemptible codesign; P16/D16, each TP8/DP2/EP16/PP1; native/profile/runtime readiness and three clean four-metric comparisons remain |
-| P1 H80064 | basic eligible now; formal blocked | Non-preemptible codesign; P32/D32 TP8/DP4/EP32/PP1; own readiness AND H80032 four clean errors<=30% before formal start |
-| P2 H20032 | independent calibration; formal evidence pending | Non-preemptible step_main within global32 cap; P16/D16 TP8/DP2/EP16/PP1; no H800 accuracy edge |
+| P0 H80032 | basic PARTIAL; formal blocked | `exp-1021-195639-166258` Succeeded;24/24 exact requests and both-role/lane idle PASS; actual FULL replay rows and G3/reference still absent |
+| P1 H80064 | basic Starting12:26UTC; formal blocked | `exp-1021-202325-579469`,64 non-preemptible H800; own readiness AND H80032 four clean errors<=30% remain formal prerequisites |
+| P2 H20032 | basic Running12:21UTC; formal evidence pending | `exp-1021-201544-965435`,32 non-preemptible H200; no H800 accuracy edge |
 | P2 H20064 | basic eligible now; formal blocked | Wholly preemptible step_main; P32/D32 TP8/DP4/EP32/PP1; own readiness AND H20032 four clean errors<=30% before formal start |
-| D20 shared measured implementation | in-progress; P0-first | Keep compute/bundle/PD/client implementation active; integrated executable result and fidelity/performance verification remain |
+| D20 shared measured implementation | in-progress; P0-first |274 parent checks;four public-manager bundles with34 artifacts each. Actual-main graph mapping fixed7e41b80; request-free idle-DP coverage is the next reached missing capability, assigned to the same owner |
+| D22 independent timing reference | completed within approved probe scope | `exp-1021-201658-886733`,one preemptible H200;18/18 strict candidates,22/22 output/cache,18/18 prefix PASS; full-grid/linear-quality/serving admission remains open |
 | Native content/readiness/lifetime and profile admission | pending | Ticket08 case-aligned G3/independent reference and10/12/13 compatible admitted inputs; CPU fixtures/platform success are not substitutes |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
@@ -191,9 +193,9 @@ The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% 
 
 **Resources:** all personal nonterminal reservations across sessions, including queued, count toward H200 non-preemptible total<=32. Every additional H200 job is preemptible even below obsolete80/130. Lower-priority H800 work must not starve ready P0.
 
-**Scope/verification:** documentation only; no requirements edit, GPU/network/auth/push, source/test/config/frozen-package changes, other-worktree edits or README changes. Active link/current-reference checks and whitespace checks are recorded in the D21 report. A missing unqualified native/profile result remains open, not PASS.
+**Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
 
-**Next actions:** (1) parent accepts docs and integrates separately owned launch/runtime changes; (2) finish combined D20 measured execution P0-first while independent basic/H20032 inputs advance within caps; (3) close each32 readiness/clean comparison, release matching64 only at30%; (4) all four final10% rows ->29 same-HEAD regression ->30. No new user decision is needed for this documentation contract.
+**Next actions:** (1) finish actual-main idle-DP measured consumption and final integration/fidelity; (2) resolve missing runtime replay evidence from native source/logging and assess retained H20064 basic evidence; (3) use D22 protocol for admitted per-track profiles and close case-aligned G3/reference; (4) complete32 four-metric comparisons, release matching64 formal only at30%, and retain all final10% gates. No new scope decision is pending.
 
 ## Historical Ticket 15 native resident memory and KV capacity — 2026-10-20
 

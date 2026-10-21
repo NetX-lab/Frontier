@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | P0 H80032 finished; H20032 and H80064 basic validation launched. Fix staged-package shadowing before generation02;204+38 parent checks retain formal gates. |
 | 2026-10-21 | D21: own all four native tracks in this existing ticket, distinguish basic readiness from formal clean qualification, and supersede H20064 non-preemptible staging. |
 | 2026-10-21 | D19 cap130: qualification02 submitted as exp-1021-125354-923219;96 total reserved GPUs, Pending with identity/mount checks complete. |
 | 2026-10-21 | Native stage02 merged db5c99f with585 parent passes; source review closed and64-GPU qualification waits for32-GPU reservation. |
@@ -24,7 +25,7 @@
 
 **External prerequisites:** D21 policy below; original personal local StepMind Python RJobBackend and current host/storage rules. Basic native validation has no GLM simulator barrier; predictive acceptance retains existing prerequisites. G3, actual capacity/placement and required runtime are not waived. TP16/DP1 startup does not qualify TP8/DP2/EP16 or TP8/DP4/EP32 roles. Each scale is its own target, never a reduced substitute for another.
 
-**Status:** all four formal track records remain open. Parent's complete09:02UTC personal list had0 nonterminal jobs. Historical H20064 qualification `exp-1021-125354-923219` Succeeded08:20:59UTC; business/runtime judgment is pending. Assess retained basic-runtime evidence before deciding whether any repeat is necessary; it cannot establish a formal result or H20032 release30. Source preparation db5c99f/585 parent passes and27 stage files/47 native pins/12 source comparisons remain historical scoped evidence. Submission report: `../test_report_2026-10-21_h200_qualification_submission.md`.
+**Status:** all four formal track records remain open. D21 source is integrated after204 parent checks. P0 H80032 `exp-1021-195639-166258` Succeeded12:10:22UTC, with business/runtime judgment in progress. H20032 `exp-1021-201544-965435` is Running12:21UTC, and H80064 generation02 has been submitted for basic validation. H20032 generation01 failed locally before allocation because an installed `tests` package shadowed staged imports; correction42dda4c passes38 checks and actual StepMind-Python dry-run. Historical H20064 `exp-1021-125354-923219` remains the first basic evidence to assess before any repeat. No basic result establishes G4, four-metric accuracy or a30% release.
 
 ## Current D21 milestones
 

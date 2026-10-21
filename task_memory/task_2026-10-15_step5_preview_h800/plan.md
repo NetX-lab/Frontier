@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Record full compute delivery, actual-main graph mapping blocker, D21 native execution and approved D22 reference implementation. |
 | 2026-10-21 | D21: replace single-H20064 scheduling with four existing-ticket track milestones; separate basic runtime from formal work, enforce paired32-to64 release and global H200 non-preemptible cap32. |
 | 2026-10-21 | Integrated foundations/input pass160 checks; pause old R2 capture that cannot cover canonical workload or independent reference. |
 | 2026-10-21 | Bounded ticket12 startup fix accepted; new32-GPU diagnostic queued without changing D20 compute/PD implementation priority. |
@@ -483,7 +484,11 @@ D19 preparation is completed and superseded as the main assignment. The user exp
 
 The parent owns interfaces between these streams, consolidation and final acceptance. Cross-owner changes are coordinated before editing. Reuse the existing shared client-metrics changes rather than merging unrelated GLM work or writing another comparator. Report integrated source execution separately from profile/native admission. The current R2 P1 and timing judgment finish from existing work, then their agents move to the implementation streams; no new diagnostic campaign is part of this priority change.
 
-Current integration: isolated `step5-d20-integration` contains PD9625984, attention1ca09be and parent transfer-input8215196. Combined160 checks pass; file costs drive6144/1024 offline/online through existing PD hooks. Full FFN/normal manager/delegates and actual `frontier.main` remain pending. A freshb65609b fidelity baseline is running; compare the final integrated candidate once ready.
+Current integration: `step5-d20-integration` contains PD9625984, full compute/FFN83af0a7 and transfer-input8215196. Parent274 checks pass; the public manager generated four bundles with34 artifacts each. Actual `frontier.main` still fails at the global `full_decode_only` to per-phase profile mapping; its owner is correcting that boundary and rerunning offline/online requests. The completed77-case candidate has no execution failures; strict comparison reports only the new null `nixl_read_profile` config field and nine added Step operator metadata rows. Preserve the raw comparison and verify the final candidate after the actual-main correction.
+
+Current D21 execution: source2033376/90724ba/f3f704e is integrated after204 parent checks. P0 H80032 `exp-1021-195639-166258` Succeeded at12:10:22UTC; business/runtime assessment is active. H20032 generation01 failed locally before GPU allocation because an installed `tests` package shadowed the staged namespace. Correction42dda4c passes38 checks and actual StepMind-Python dry-run; generation02 `exp-1021-201544-965435` is Running at12:21UTC. H80064 generation02 basic validation has been submitted independently of the30% formal gate. Assess old H20064 basic evidence before repeating it. No formal track is released by these basic runs.
+
+Current D22 execution: source74df010/2a4db97 is integrated after264 parent focused checks and3407-payload preflight. The unminimized18-event/4-GPU-active probe `exp-1021-201658-886733` Succeeded on one preemptible H200;18/18 strict candidates,22/22 output/cache and18/18 prefix comparisons pass the unchanged5% rules. Historical failures remain unchanged. The next step is required per-track profile coverage/admission, not another boundary experiment.
 
 Current R2 disposition supersedes D19's suggestion to replay the old20-request package: P1 code/review closed and offline stage02 is valid, but max_model_len2048, prompts255–1537 and outputs17/128/256 cannot cover6144/1024; independent referenceG3 is absent by construction. The old capture stays paused under D20/D21. Ticket08 owns case-aligned content/lifetime/reference evidence. The former64 qualification and32 communication jobs have ended; judgments are pending, not live reservations.
 

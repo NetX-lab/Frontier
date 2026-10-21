@@ -1,0 +1,130 @@
+WORKER_HOST_DRIVER 570.124.06
+WORKER_DEVICE NVIDIA H200 2.13.0+cu130
+WORKER_LIBCUDA ['/usr/local/cuda-13.0/compat/libcuda.so.580.82.07']
+WARNING 12:24:12 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+(MainProcess pid=115) INFO 10-21 12:24:33 [model.py:737] Resolved architecture: Step5ForConditionalGeneration
+(MainProcess pid=115) INFO 10-21 12:24:33 [model.py:2148] Using max model len 7168
+(MainProcess pid=115) WARNING 10-21 12:24:33 [model.py:1107] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+(MainProcess pid=115) WARNING 10-21 12:24:34 [arg_utils.py:2992] This model does not officially support disabling chunked prefill. Disabling this manually may cause the engine to crash or produce incorrect outputs.
+(MainProcess pid=115) INFO 10-21 12:24:34 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=115) INFO 10-21 12:24:34 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+(MainProcess pid=115) INFO 10-21 12:24:34 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:48057 backend=nccl
+(MainProcess pid=115) INFO 10-21 12:24:34 [parallel_state.py:2350] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, ETP rank 0, EP rank 0, EPLB rank N/A
+(MainProcess pid=115) INFO 10-21 12:24:34 [flash_attn.py:1411] Using FlashAttention version 3
+USDT:2026-10-21 12:24:35 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:35 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 1 Step5ProfileInput(global_layer_id=0, query_lens=(1,), context_lens=(6144,), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 2 Step5ProfileInput(global_layer_id=0, query_lens=(1, 1), context_lens=(6144, 6144), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 3 Step5ProfileInput(global_layer_id=0, query_lens=(1,), context_lens=(6656,), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 4 Step5ProfileInput(global_layer_id=0, query_lens=(1, 1), context_lens=(6656, 6656), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 5 Step5ProfileInput(global_layer_id=0, query_lens=(1,), context_lens=(7160,), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:36 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 6 Step5ProfileInput(global_layer_id=0, query_lens=(1, 1), context_lens=(7160, 7160), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 7 Step5ProfileInput(global_layer_id=0, query_lens=(1,), context_lens=(7167,), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 8 Step5ProfileInput(global_layer_id=0, query_lens=(1, 1), context_lens=(7167, 7167), phase='decode', graph_mode='full')
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+(MainProcess pid=115) INFO 10-21 12:24:37 [model.py:737] Resolved architecture: Step5ForConditionalGeneration
+(MainProcess pid=115) INFO 10-21 12:24:37 [model.py:2148] Using max model len 7168
+(MainProcess pid=115) WARNING 10-21 12:24:37 [model.py:1107] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+(MainProcess pid=115) INFO 10-21 12:24:37 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=115) INFO 10-21 12:24:37 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:35357 backend=nccl
+(MainProcess pid=115) WARNING 10-21 12:24:37 [workspace.py:349] WorkspaceManager already initialized on device cuda, reinitializing on device cuda
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:37 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 9 Step5ProfileInput(global_layer_id=0, query_lens=(6144,), context_lens=(0,), phase='prefill', graph_mode='none')
+USDT:2026-10-21 12:24:38 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:38 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:24:38 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:38 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:24:39 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:39 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:24:39 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:24:39 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 10 Step5ProfileInput(global_layer_id=0, query_lens=(16,), context_lens=(6128,), phase='prefill', graph_mode='none')
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+(MainProcess pid=115) INFO 10-21 12:24:39 [model.py:737] Resolved architecture: Step5ForConditionalGeneration
+(MainProcess pid=115) INFO 10-21 12:24:39 [model.py:2148] Using max model len 7168
+(MainProcess pid=115) WARNING 10-21 12:24:39 [model.py:1107] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+(MainProcess pid=115) INFO 10-21 12:24:39 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=115) INFO 10-21 12:24:39 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:49609 backend=nccl
+(MainProcess pid=115) WARNING 10-21 12:24:39 [workspace.py:349] WorkspaceManager already initialized on device cuda, reinitializing on device cuda
+(MainProcess pid=115) WARNING 10-21 12:24:39 [config.py:101] Step5 sparse config carries ssmax metadata, but the DSA selector uses its fixed weighted-ReLU scoring path; ssmax_s is loaded for checkpoint completeness but is not consumed.
+2026-10-21 12:24:40,903 - INFO - core.py:564 - flashinfer.jit: Building JIT module batch_prefill_with_kv_cache_dtype_q_bf16_dtype_kv_bf16_dtype_o_bf16_dtype_idx_i32_head_dim_qk_192_head_dim_vo_192_posenc_0_use_swa_False_use_logits_cap_False_f16qk_False_kv_stride_equal; this can take several minutes on first use.
+2026-10-21 12:25:12,744 - INFO - cute_dsl_core.py:177 - flashinfer.jit: Compiling CuTe-DSL kernel attn_scores_schedule_sm90a_cute_dsl/sched_b2048_split256_sms132_sm_90a
+2026-10-21 12:25:13,702 - INFO - cute_dsl_core.py:266 - flashinfer.jit: Persisted CuTe-DSL kernel to /root/.cache/flashinfer/0.7.0.post1/90a/cached_ops/attn_scores_schedule_sm90a_cute_dsl/sched_b2048_split256_sms132_sm_90a.o
+2026-10-21 12:25:13,706 - INFO - cute_dsl_core.py:177 - flashinfer.jit: Compiling CuTe-DSL kernel attn_scores_schedule_sm90a_cute_dsl/sched_b1024_split256_sms132_sm_90a
+2026-10-21 12:25:14,351 - INFO - cute_dsl_core.py:266 - flashinfer.jit: Persisted CuTe-DSL kernel to /root/.cache/flashinfer/0.7.0.post1/90a/cached_ops/attn_scores_schedule_sm90a_cute_dsl/sched_b1024_split256_sms132_sm_90a.o
+USDT:2026-10-21 12:25:21 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:21 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 11 Step5ProfileInput(global_layer_id=3, query_lens=(1,), context_lens=(6144,), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:25:23 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:23 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 12 Step5ProfileInput(global_layer_id=3, query_lens=(1, 1), context_lens=(6144, 6144), phase='decode', graph_mode='full')
+2026-10-21 12:25:23,201 - INFO - cute_dsl_core.py:177 - flashinfer.jit: Compiling CuTe-DSL kernel attn_scores_schedule_sm90a_cute_dsl/sched_b1280_split256_sms132_sm_90a
+2026-10-21 12:25:23,923 - INFO - cute_dsl_core.py:266 - flashinfer.jit: Persisted CuTe-DSL kernel to /root/.cache/flashinfer/0.7.0.post1/90a/cached_ops/attn_scores_schedule_sm90a_cute_dsl/sched_b1280_split256_sms132_sm_90a.o
+USDT:2026-10-21 12:25:25 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:25 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 13 Step5ProfileInput(global_layer_id=3, query_lens=(1,), context_lens=(6656,), phase='decode', graph_mode='full')
+2026-10-21 12:25:25,217 - INFO - cute_dsl_core.py:177 - flashinfer.jit: Compiling CuTe-DSL kernel attn_scores_schedule_sm90a_cute_dsl/sched_b512_split256_sms132_sm_90a
+2026-10-21 12:25:25,737 - INFO - cute_dsl_core.py:266 - flashinfer.jit: Persisted CuTe-DSL kernel to /root/.cache/flashinfer/0.7.0.post1/90a/cached_ops/attn_scores_schedule_sm90a_cute_dsl/sched_b512_split256_sms132_sm_90a.o
+USDT:2026-10-21 12:25:26 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:26 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 14 Step5ProfileInput(global_layer_id=3, query_lens=(1, 1), context_lens=(6656, 6656), phase='decode', graph_mode='full')
+2026-10-21 12:25:26,510 - INFO - cute_dsl_core.py:177 - flashinfer.jit: Compiling CuTe-DSL kernel attn_scores_schedule_sm90a_cute_dsl/sched_b1536_split256_sms132_sm_90a
+2026-10-21 12:25:27,288 - INFO - cute_dsl_core.py:266 - flashinfer.jit: Persisted CuTe-DSL kernel to /root/.cache/flashinfer/0.7.0.post1/90a/cached_ops/attn_scores_schedule_sm90a_cute_dsl/sched_b1536_split256_sms132_sm_90a.o
+USDT:2026-10-21 12:25:28 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:28 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 15 Step5ProfileInput(global_layer_id=3, query_lens=(1,), context_lens=(7160,), phase='decode', graph_mode='full')
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 16 Step5ProfileInput(global_layer_id=3, query_lens=(1, 1), context_lens=(7160, 7160), phase='decode', graph_mode='full')
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+(MainProcess pid=115) INFO 10-21 12:25:29 [model.py:737] Resolved architecture: Step5ForConditionalGeneration
+(MainProcess pid=115) INFO 10-21 12:25:29 [model.py:2148] Using max model len 7168
+(MainProcess pid=115) WARNING 10-21 12:25:29 [model.py:1107] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+(MainProcess pid=115) INFO 10-21 12:25:29 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'], gelu_and_mul_sparse=['triton', 'native'])
+(MainProcess pid=115) INFO 10-21 12:25:29 [parallel_state.py:1906] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:41983 backend=nccl
+(MainProcess pid=115) WARNING 10-21 12:25:29 [workspace.py:349] WorkspaceManager already initialized on device cuda, reinitializing on device cuda
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:29 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 17 Step5ProfileInput(global_layer_id=3, query_lens=(6144,), context_lens=(0,), phase='prefill', graph_mode='none')
+2026-10-21 12:25:30,381 - INFO - cute_dsl_core.py:177 - flashinfer.jit: Compiling CuTe-DSL kernel attn_scores_schedule_sm90a_cute_dsl/sched_b32_split256_sms132_sm_90a
+2026-10-21 12:25:30,703 - INFO - cute_dsl_core.py:266 - flashinfer.jit: Persisted CuTe-DSL kernel to /root/.cache/flashinfer/0.7.0.post1/90a/cached_ops/attn_scores_schedule_sm90a_cute_dsl/sched_b32_split256_sms132_sm_90a.o
+USDT:2026-10-21 12:25:30 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:30 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:25:30 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:30 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+USDT:2026-10-21 12:25:30 115:115 SyncActivityProfilerHandler.cpp:52] profiler_start
+USDT:2026-10-21 12:25:31 115:115 SyncActivityProfilerHandler.cpp:59] profiler_stop
+STEP5_CELL_DONE 18 Step5ProfileInput(global_layer_id=3, query_lens=(16,), context_lens=(6128,), phase='prefill', graph_mode='none')
+STEP5_SUMMARY {"expected_rows": 18, "actual_rows": 18, "complete": true, "csv": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/compute/h200/stepfun-ai/Step-5-Preview/step5_attention.csv", "gpu_active_csv": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/compute/h200/stepfun-ai/Step-5-Preview/step5_attention_kernel_only.csv", "gpu_active_rows": 4, "expected_gpu_active_rows": 4, "stable_rows": 18, "admitted": false, "limits": "Development measurements; full-grid qualification and typed admission remain open."}

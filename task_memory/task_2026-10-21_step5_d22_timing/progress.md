@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Parent completed unchanged full native probe and strict judgment:18/18 candidates PASS; detailed report and original evidence retained. |
 | 2026-10-21 | Record approved correction,873 affected passes, source commit and sealed parent-only handoff. |
 
 - completed: inspected clean `79c8b45`, applicable AGENTS, parent D21/D22 requirements, real timing seam, wrapper, judge, D18 stage builder and 851-test command.
@@ -12,7 +13,7 @@
 - completed C: final affected873 PASS/14 existing warnings in51.20s, all851 baseline IDs/verdicts preserved and22 added;0 missing/changed. Exact logs/XML: `/data/ycfeng/tmp/d22_timing_20261021/affected02.{log,xml}`, `baseline_comparison02.json`. Compact final log/comparison and original RED XMLs retained under `evidence/`. Prior862 and focused253 counts overlap, not additive. `git diff --check` PASS. Final changes since first affected pass add explicit short-reference/invalid-reference cases and remove dead retry metadata branches.
 - completed D: source commit `74df0100ca0f39d6ff134d999909e863c3db6962`; fresh `/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01`, manifest `a1dc28ceca71235b000e7f7448464a5ff76d27e76d2d51ee63fe0811908b5312`. Frozen verifier PASS:3407 hashes/exact inventory,18+4 attention rows,16 linear rows,both linear CLI dry runs,workload and shell. Source audit confirms525 committed staged payloads; original full probe args/policy/workload/worker command match except run ID;13 linear files byte-identical and scoped timing AST unchanged. Original stage02 remains3407 hashes/inventory PASS with its original42545748...manifest. `handoff.md` records exact parent submission/judge commands,preemptible1H200/8CPU/32GiB/3600s,conservative20–45min/.33–.75GPUh estimate and native limits.
 - scope clarification: existing CLI quality retry conflicted with D22's explicit no-quality-retry contract; removed it in the existing CLI, retaining single-attempt metadata. Resource wiring extends existing stage/launcher only to select `preemptible=True`; no platform imports/calls outside CPU doubles.
-- pending,parent-only: fresh quota/priority/auth checks,one submission,terminal receipt and strict native18/4/0.05 judgment. No native PASS inferred;historical D18/H800 FAIL remains FAIL. Implementation task stops at handoff.
+- completed,parent native: quota/auth/identity checked;`exp-1021-201658-886733` ran one preemptible H200 and Succeeded with exit0/restart0. Frozen18/4/0.05 judge reportsPASS,18/18 candidates,22/22 state and18/18 prefix checks. Scope stays isolated probe;full-case admission remainsfalse. See`test_report_2026-10-21_d22_native.md`. Historical D18/H800 failures are unchanged. The checkpoint below records the earlier implementation handoff.
 
 ## 1. 规划完成情况
 

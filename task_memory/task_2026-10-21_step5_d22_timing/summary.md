@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Parent native verification PASS:18/18 strict candidates,22/22 state and18/18 prefix checks; scope remains isolated probe. |
 | 2026-10-21 | Archive verified source/CPU correction and sealed parent-only native rerun. |
 
 ## Outcome
@@ -19,8 +20,8 @@ Source commit: `74df0100ca0f39d6ff134d999909e863c3db6962`. Final affected suite:
 - Fresh full original D18 stage: `/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01`, manifest SHA256 `a1dc28ceca71235b000e7f7448464a5ff76d27e76d2d51ee63fe0811908b5312`.
 - Offline preflight:3407 payload hashes/exact inventory PASS;525 staged tracked source payloads match source commit;18 event+4 GPU-active attention rows and16 original linear rows; both linear dry runs PASS. All13 linear protocol files are byte-identical to old stage02, scoped timing AST unchanged. Original stage02's3407 payloads/inventory and manifest are unchanged.
 
-## Parent-owned pending work
+## Parent native completion
 
-The sealed job requests one preemptible H200 in step_main,8CPU/32GiB,3600-second workload cap; conservative planning20–45 minutes /0.33–0.75GPU-hours. Parent must check quota/priority/auth, keep the existing launcher alive, submit once, retain a new receipt and run the sealed strict18/4/0.05 judge. Exact commands and limits are in `handoff.md`.
+Parent submitted `exp-1021-201658-886733` on one preemptible H200 after quota checks. The unchanged stage completed with platformSucceeded, container exit0/restart0 and128 container seconds. Frozen strict judge passes all18 candidates, all22 output/cache rows and18 prefix comparisons, with no failed cells. Both original linear methods produced8 rows. Exact commands, provenance, bounds and original hashes are in `test_report_2026-10-21_d22_native.md` and `native_judgment/`.
 
-Native timing remains UNVERIFIED. Historical H200 D18 and H800 Smoke03 FAIL receipts were not recalculated or relabelled. No full-grid, canonical serving/PD or predictive acceptance is claimed. Compute83af0a7 was not merged; parent resolves its known small rows.py overlap. No GPU/auth/network/cloud/SSH/Docker action, nested delegation, push or merge was performed.
+The approved D22 native probe step is complete. Historical H200 D18 and H800 Smoke03 FAIL receipts were not recalculated or relabelled. No full-grid, canonical serving/PD, independent linear-quality or predictive acceptance is claimed; the judge retains `admitted=false`. Parent integrated the D22 source separately from the ongoing compute branch. The original implementation handoff performed no platform operations; the parent run and read-only retrieval are recorded above.
