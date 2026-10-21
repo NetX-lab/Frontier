@@ -884,7 +884,14 @@ def describe_step5_operator_tensors(
         internal("scaled_weights", [tokens, geometry.local_index_q_heads],
                  metadata.indexer_weight_precision)
 
-    if projections:
+    from frontier.attention.families import get_attention_family
+
+    inclusive_roots = {operator.name for operator in get_attention_family(
+        metadata.attention_spec.family_id).operators if operator.is_inclusive_root}
+    if operator_name in inclusive_roots:
+        tensor("input", [tokens, hidden])
+        tensor("output", [tokens, hidden])
+    elif projections:
         if operator_name == "moe_grouped_gemm":
             tensor("input", [tokens, hidden])
             tensor("output", [tokens, hidden])

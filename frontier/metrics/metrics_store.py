@@ -1,7 +1,7 @@
 import json
 import os
 from functools import reduce
-from dataclasses import replace
+from dataclasses import asdict, replace
 from typing import Dict, List, TYPE_CHECKING, Any, Optional
 
 import pandas as pd
@@ -1247,8 +1247,18 @@ class MetricsStore:
             ):
                 emit_layer("COMPUTE", op_name, duration_ms)
 
+            timings = layer.attention_operator_times
             for op_name, duration_ms in _iter_layer_attention_times(layer):
-                emit_layer("COMPUTE", op_name, duration_ms)
+                cost = timings.costs.get(op_name) if timings is not None else None
+                if cost is None:
+                    emit_layer("COMPUTE", op_name, duration_ms)
+                else:
+                    emit("COMPUTE", op_name, duration_ms, layer.global_layer_id, {
+                        **layer_meta, "operator_cost": {
+                            **asdict(cost), "measurement_type": cost.measurement_type.value,
+                            "includes_kernel_gap": cost.includes_kernel_gap,
+                        },
+                    })
             emit_layer(
                 "COMM",
                 "attn_tensor_parallel_allreduce",
@@ -1696,7 +1706,7 @@ class MetricsStore:
             operator.name
             for family in iter_attention_families()
             if family.structural_execution_enabled and family.family_id not in family_ids
-            for operator in family.e2e_trace_ops()
+            for operator in family.operators
         }
         if "step5_attention" not in family_ids:
             absent_structural_ops.update(operator.name for operator in STEP5_FFN_FAMILY.e2e_trace_ops())
@@ -4352,24 +4362,6 @@ class MetricsStore:
             component_ledger: dict[str, float] = {}
             for layer in execution_time.layer_execution_times:
                 layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
-                family = get_attention_family(layer.attention_family_id)
-                # The historical CSV uses public scalar field names for dense
-                # and MLA operators. Newly registered operators keep their
-                # canonical names; remove reused legacy scalar slots first.
-                component_public_names = {
-                    "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
-                    "attention_layer_post_proj_execution_time": "attention_post_proj_time",
-                }
-                for operator, duration_ms in get_attention_trace_op_times(
-                    layer, family, skip_zero=False,
-                    allow_structural=family.structural_execution_enabled,
-                ):
-                    legacy_name = _ATTENTION_LEDGER_FIELD_BY_OPERATOR.get(operator.name)
-                    if legacy_name is None:
-                        old_name = component_public_names.get(operator.execution_time_attr, operator.execution_time_attr)
-                        layer_ledger.pop(old_name, None)
-                        legacy_name = operator.name
-                    layer_ledger[legacy_name] = _round_ledger_ms(duration_ms)
                 for name, value in layer_ledger.items():
                     if name in owner_only_names:
                         continue
@@ -4501,8 +4493,24 @@ class MetricsStore:
             component_ledger[op_name] = _round_ledger_ms(duration_ms)
         attributes = canonical_operator_execution_time_attrs()
         for name, value in execution_time.op_times.items():
-            if attributes[name] in StageExecutionTime.stage_owned_fields:
+            if attributes.get(name) in StageExecutionTime.stage_owned_fields:
                 component_ledger[name] = _round_ledger_ms(value)
+        if execution_time.attention_family_id is not None:
+            family = get_attention_family(execution_time.attention_family_id)
+            component_public_names = {
+                "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
+                "attention_layer_post_proj_execution_time": "attention_post_proj_time",
+            }
+            for operator, duration_ms in get_attention_trace_op_times(
+                execution_time, family, skip_zero=False,
+                allow_structural=family.structural_execution_enabled,
+            ):
+                legacy_name = _ATTENTION_LEDGER_FIELD_BY_OPERATOR.get(operator.name)
+                if legacy_name is None:
+                    old_name = component_public_names.get(operator.execution_time_attr, operator.execution_time_attr)
+                    component_ledger.pop(old_name, None)
+                    legacy_name = operator.name
+                component_ledger[legacy_name] = _round_ledger_ms(duration_ms)
         if execution_time.has_kernel_gap:
             component_ledger["kernel_gap_time"] = _round_ledger_ms(execution_time.kernel_gap_time)
         if global_vars.get_kv_connector() != "none":

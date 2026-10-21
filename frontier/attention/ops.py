@@ -78,6 +78,16 @@ class AttentionOperatorSpec(OperatorSpec):
 
     _operator_label: ClassVar[str] = "Attention operator"
 
+    @property
+    def is_inclusive_root(self) -> bool:
+        """A scalar-free predictor owns the attention scope, not its trace children."""
+        return (
+            self.role is AttentionOperatorRole.ATTENTION
+            and self.predictor_target
+            and not self.e2e_trace_target
+            and self.execution_time_attr is None
+        )
+
 
 @dataclass(frozen=True)
 class AttentionFamilySpec(OperatorFamilySpec):
