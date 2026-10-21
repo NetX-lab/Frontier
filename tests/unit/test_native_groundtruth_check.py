@@ -32,7 +32,7 @@ CHECKER = original_checkout_root(REPO) / "task_memory/task_2026-09-27_pr_stack_v
 BEFORE = Path(os.environ.get('NATIVE_CHECKER_LEGACY_BASELINE', str(REPO /
     "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py")))
 TRACE = REPO / "data/processed_traces/canonical_fixed_6144_1024_req128_qps1"
-HARNESS_REF = '57f20cf'
+HARNESS_REF = '633f205'
 
 if not CHECKER.is_file():
     pytest.skip(f"External groundtruth checker is unavailable: {CHECKER}", allow_module_level=True)
@@ -73,8 +73,28 @@ def archived_harness(tmp_path_factory):
     return root
 
 
+@pytest.fixture(scope='module')
+def native_ready_exports(tmp_path_factory):
+    """Use the actual adopted worker/child export, not a fabricated timeout env."""
+    from tests.comparison.calibration import native_pd_worker
+    from tests.unit.test_native_pd_worker import exercise
+
+    directory = tmp_path_factory.mktemp('actual_ready_export')
+    exports = {}
+    for budget in (1800, 3600):
+        result = exercise(native_pd_worker, directory, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+        assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+        assert not result['observation_errors']
+        assert result['child_imports'] == [{'ready_timeout_s': str(budget)}]
+        exports[budget] = {'VLLM_ENGINE_READY_TIMEOUT_S': result['server_env_set']['VLLM_ENGINE_READY_TIMEOUT_S']}
+    return exports
+
+
 @pytest.fixture
-def native_case(tmp_path, monkeypatch, archived_harness):
+def native_case(tmp_path, monkeypatch, archived_harness, native_ready_exports):
     checker = load_checker(CHECKER)
     root = tmp_path / "canonical"
     run = root / "runs/groundtruth_clean/native"
@@ -96,7 +116,7 @@ def native_case(tmp_path, monkeypatch, archived_harness):
         model_dir=str(model), model_hashes={"config.json": digest(model / "config.json")},
         expected_source_hashes={"vllm/__init__.py": "a" * 64},
         http_ports=dict(prefill=31000, decode=31100), dp_rpc_ports=dict(prefill=31200, decode=31300),
-        serve_observers=dict(prefill=None, decode=None))
+        serve_observers=dict(prefill=None, decode=None), startup_timeout_s=3600)
     write(root / "inputs/engine.json", engine)
     write(root / "inputs/native_config.json", config)
     case = dict(case_id="canonical", groundtruth_commit=V028_SOURCE, groundtruth_branch="fixture-native",
@@ -157,6 +177,7 @@ def native_case(tmp_path, monkeypatch, archived_harness):
         command = server_command(plan["engine"], model, config["http_ports"][role]) + [
             "--kv-transfer-config", json.dumps(kv_transfer_config(plan["engine"], role, config["http_ports"][role]))]
         _, env = instance_env("clean", plan["engine"], directory, {}, "0,1,2,3,4,5,6,7", role=role)
+        env.update(native_ready_exports[config['startup_timeout_s']])
         order = dict(drained_before_stop=True, all_nodes_drained_before_head_stop=[p["host"] for p in peers],
                      head_stopped_before_headless_stop=True, native_returned_before_requested_stop=False)
         stop = dict(signal="SIGINT", returncode=0)
@@ -211,6 +232,20 @@ def test_native_fixture_uses_actual_reader_and_never_fabricates_graph_pass(nativ
     result = checker.check(root, "native", "clean")
     assert result["status"] == "FAIL"
     assert [k for k, v in result["checks"].items() if v.startswith("FAIL")] == ["rank_runtime_graph"]
+
+
+@pytest.mark.parametrize('fault', ['missing', 'wrong'])
+def test_native_reader_rejects_missing_or_wrong_ready_timeout(native_case, fault):
+    checker, root, run, _, _, _ = native_case
+    path = run / 'nodes/host0/result.json'
+    node = json.loads(path.read_text())
+    if fault == 'missing':
+        node['server_env_set'].pop('VLLM_ENGINE_READY_TIMEOUT_S')
+    else:
+        node['server_env_set']['VLLM_ENGINE_READY_TIMEOUT_S'] = '600'
+    write(path, node)
+    result = checker.check(root, 'native', 'clean')
+    assert result['checks']['harness_pinned_and_client_rows'].startswith('FAIL')
     assert "UNVERIFIED" in result["checks"]["rank_runtime_graph"]
     assert "run_manifest" in result and result["derived_num_blocks"] == {}
 
@@ -316,7 +351,7 @@ def serving_counters(tmp_path, monkeypatch, request):
         compilation_config=dict(mode=3, cudagraph_mode="FULL_AND_PIECEWISE",
                                 cudagraph_capture_sizes=captures, max_cudagraph_capture_size=256))
     config = dict(data_parallel_size_local=1, output_dir=str(run), script=str(stage / "native_pd_worker.py"), harness_dir=str(stage),
-        model_dir=str(tmp_path / 'model'),
+        model_dir=str(tmp_path / 'model'), startup_timeout_s=1800 if v2 else 3600,
         harness_files={module_name: "native_full_structure.py"},
         expected_source_hashes={name: digest(source / name) for name in source_names})
     write(Path(config['model_dir']) / 'config.json', dict(architectures=[
