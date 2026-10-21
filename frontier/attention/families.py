@@ -116,6 +116,17 @@ def _dsa_kv_cache_capacity(config, block_size: int, selection=None):
     )
 
 
+def require_deepseek_v4_storage_device(device: str, gpu_platform: str) -> None:
+    """Admit only the CUDA devices with accepted V4 storage evidence."""
+    from frontier.types import DeviceSKUType
+
+    if (
+        device not in (str(DeviceSKUType.H800), str(DeviceSKUType.H200))
+        or gpu_platform != "cuda"
+    ):
+        raise NotImplementedError("DeepSeek-V4 storage requires H800/H200 CUDA")
+
+
 def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
     """Pinned FlashMLA packed pages, independent of execution admission."""
     from frontier.attention.memory import (
@@ -124,12 +135,9 @@ def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
         AttentionKVCacheGroup,
         AttentionKVCacheSelection,
     )
-    from frontier.types import DeviceSKUType
-
     if not isinstance(selection, AttentionKVCacheSelection):
         raise NotImplementedError("DeepSeek-V4 cache requires explicit runtime cache selection")
-    if selection.device != str(DeviceSKUType.H800) or selection.gpu_platform != "cuda":
-        raise NotImplementedError("DeepSeek-V4 grouped cache currently requires H800/SM90 CUDA")
+    require_deepseek_v4_storage_device(selection.device, selection.gpu_platform)
     if selection.attention_backend != "FLASHMLA_SPARSE_DSV4":
         raise NotImplementedError("DeepSeek-V4 cache requires FLASHMLA_SPARSE_DSV4")
     # vLLM DeepseekV4SparseMLABackend publishes fp8 as an alias of this
@@ -138,7 +146,7 @@ def _deepseek_v4_kv_cache_capacity(config, block_size: int, selection=None):
     if main_dtype != "fp8_ds_mla":
         raise NotImplementedError("DeepSeek-V4 cache requires explicit fp8/fp8_ds_mla main KV dtype")
     if selection.indexer_kv_cache_dtype != "fp8":
-        raise NotImplementedError("DeepSeek-V4 H800 indexer cache requires fp8, not the SM100 mxfp4 path")
+        raise NotImplementedError("DeepSeek-V4 indexer cache requires fp8, not the SM100 mxfp4 path")
     if block_size != 256 or selection.decode_context_parallel_size != 1:
         raise NotImplementedError("DeepSeek-V4 FlashMLA cache requires block_size=256 and DCP1")
 
