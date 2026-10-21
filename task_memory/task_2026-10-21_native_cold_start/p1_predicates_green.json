@@ -1,0 +1,20 @@
+{
+  "checked_at_utc": "2026-10-21T15:57:56Z",
+  "check_record": "written after the run; native pre-launch evidence is the run manifest (written 2026-01-01T00:00:00Z)",
+  "run_manifest": "runs/groundtruth_clean/native/run_manifest.json",
+  "rjob_name": "fixture-not-real",
+  "authorization": "CPU fixture only",
+  "checks": {
+    "checkout": "PASS: /data/ycfeng/tmp/native_cold_start_p1_final/test_successor_full_checker_re0/source: fixture-native 2cf0a6915ce544dc493a0990f2ea38d81601128a, actual dirty=''; case/run/mode/generation bound",
+    "inputs_unchanged": "PASS: changed since launch: []",
+    "harness_pinned_and_client_rows": "PASS: Actual clean pinned canonical_workload/native_client_rows: {'repeat01': 128, 'repeat02': 128, 'repeat03': 128}; native server commands/environments: {'host0': True, 'host1': True, 'host2': True, 'host3': True, 'host4': True, 'host5': True, 'host6': True, 'host7': True}",
+    "requests_and_idle_lanes": "PASS: 7 boundaries; both roles, all 4 DP lanes and fresh phase completion counts",
+    "native_workers": "PASS: 8 distinct native nodes; both roles and every configured DP lane; source/model/GPU verified",
+    "native_lifecycle": "PASS: Every node drained, heads stopped after all drains, headless stopped after heads, native return codes 0",
+    "rank_runtime_graph": "FAIL: UNVERIFIED: KeyError: 'vllm/v1/cudagraph_dispatcher.py'",
+    "terminal_status": "PASS: fixture-not-real: Succeeded, all containers exit 0, no restarts; launcher-bound retained platform receipt"
+  },
+  "kv_cache_tokens_by_engine": {},
+  "derived_num_blocks": {},
+  "status": "FAIL"
+}

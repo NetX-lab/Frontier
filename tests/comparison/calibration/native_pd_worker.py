@@ -297,6 +297,17 @@ def run(config):
         record('native_start')
         with (node / 'server.log').open('w') as log:
             server = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+        if 'case_dir' in config and mode == 'clean':
+            try:
+                manifest_path = (Path(config['case_dir']) / 'runs' / 'groundtruth_clean' /
+                                 config['run_tag'] / 'run_manifest.json')
+                manifest = json.loads(manifest_path.read_text())
+                result.update(server_pid=server.pid, server_started_at_utc=datetime.now(timezone.utc).isoformat(),
+                              run_manifest_sha256=sha256(manifest_path), run_generation=manifest['run_generation'])
+                record('native_launched')
+            except Exception:
+                result['observation_errors'].append(traceback.format_exc())
+                print('NATIVE_PD_OBSERVATION_ERROR', result['observation_errors'][-1], flush=True)
         if plan['lane'] == 0:
             import urllib.request
 
@@ -308,7 +319,12 @@ def run(config):
                     return False
 
             await_condition(healthy, config['startup_timeout_s'], native_required=True)
-            write_json(node / 'server_ready.json', dict(role=role, url=plan['urls'][role]))
+            ready = dict(role=role, url=plan['urls'][role])
+            if 'server_pid' in result:
+                ready.update({key: result[key] for key in ('server_pid', 'server_started_at_utc',
+                             'run_manifest_sha256', 'run_generation')})
+                ready.update(ready_at_utc=datetime.now(timezone.utc).isoformat(), health_status=200)
+            write_json(node / 'server_ready.json', ready)
         record('await_replay')
         if plan['position'] == 0:
             await_condition(lambda: len(list(root.glob('nodes/*/server_ready.json'))) == 2,
