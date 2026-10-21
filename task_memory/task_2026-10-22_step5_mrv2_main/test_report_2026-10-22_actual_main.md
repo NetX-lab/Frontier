@@ -10,6 +10,7 @@
 | 2026-10-22 | Primary passes8 fixture checks, verifies merged bytes and reproduces the root ledger failure. |
 | 2026-10-22 | Parent167 PASS and accepted root/owner repair; start actual05 at26db654 with8 unchanged input hashes. |
 | 2026-10-22 | Root/owner clean comparison77/77 identical; zero cache/provenance findings. |
+| 2026-10-22 | Actual05 fails by2400s timeout after partial decode; retain phase timings and missing-artifact evidence. |
 
 ## Environment and scope
 
@@ -91,8 +92,8 @@ Input hashes:`/data/ycfeng/tmp/d23_main_actual03_{offline,online}/input_hashes.j
 READ cost SHA256:
 `3975d5ec0bf247d0c961bd74af47bd9411de6db59abe37a6251f8e0575d101fa`.
 
-Current status: actual05 is running after the root/owner repair was accepted.
-No full request/READ/final-metrics acceptance has been claimed yet.
+Current status: actual05 timed out in both modes after the root/owner repair was
+accepted. No full request/READ/final-metrics acceptance has been claimed.
 A zero returncode or initialized config does not establish completion. On timeout,
 preserve whether setup or DES was active; do not silently expand2400s.
 
@@ -214,4 +215,41 @@ The new clean77 candidate26db654 and baseline0cdd6cb, both using the fixed32fb93
 driver, completed and passed strict comparison:77/77 identical; zero failures,
 missing evidence, differing definitions or predictor cache/provenance findings.
 Full report `root_metrics_fidelity.json` and exact commands in
-`root_metrics_review.md`. Full actual05 acceptance remains pending.
+`root_metrics_review.md`. Actual05 acceptance failed by timeout, as below.
+
+## Actual05 result: TIMEOUT, not accepted
+
+The exact commands above ran on unchanged26db654 and reached the existing2400s
+child bound. Neither log contains the previous ledger exception. The following
+values were recomputed from each scheduler JSONL, execution receipt and command
+file timestamp; files are only1.6MiB and were streamed with a60s inspection limit.
+
+| Observation | Offline | Online |
+| --- | ---: | ---: |
+| Child wall time (s) | 2400.130515 | 2400.111418 |
+| Useful P batches scheduled | 1 | 1 |
+| Useful D batches scheduled / batch-end records | 43 / 42 | 42 / 41 |
+| Highest observed emitted output tokens | 42 | 41 |
+| Command written to first scheduler event (s) | 998.503711 | 1004.875261 |
+| Median useful D iteration wall gap (s) | 32.486104 | 36.116395 |
+| Minimum / maximum wall gap (s) | 18.613046 / 209.662127 | 18.518195 / 209.332491 |
+| Last recorded simulation time (s) | 87.717413 | 87.924543 |
+
+The first useful D schedule is16 tokens; later ones are1 token. Both simulations
+advance through the prior P-stage ledger failure and partial decode, so complete
+event-loop stagnation is excluded by the observed interval. The wall-gap values
+include all work between useful scheduling events; they are not per-function CPU
+profiles or native GPU token latency. The startup interval is anchored at the
+command-file write, not an instrumented initializer boundary.
+
+Both receipts have `timed_out=true` and null child returncode; wrapper exit1
+reports that timeout. `system_metrics.json`, `request_metrics.csv`,
+`event_trace.json`, `frontier_transfer_ledger.jsonl` and
+`frontier_stage_batch_ledger.jsonl` were not written. Thus complete1024-token
+execution, final READ/readiness/release proof and final metrics remain unverified.
+No partial counter is substituted for accepted terminal metrics.
+
+Full census, event counts and command/log/scheduler/receipt hashes are retained
+in `actual05_timeout_receipt.json`. CPU profiling/minimization is now assigned
+to `D23-ACTUAL-MAIN/PERF`; the execution bound, inputs and modeled costs remain
+unchanged. No additional full attempt has been launched.

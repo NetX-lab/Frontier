@@ -1,0 +1,170 @@
+{
+  "task_id": "D23-ACTUAL-MAIN",
+  "attempt": "actual05",
+  "verdict": "TIMEOUT_NOT_ACCEPTED",
+  "recorded_at": "2026-10-21T22:57:26.399336+00:00",
+  "modes": {
+    "offline": {
+      "execution": {
+        "returncode": null,
+        "timed_out": true,
+        "wall_s": 2400.130515038967,
+        "source": {
+          "commit": "26db654cbbb38b361990aa1aa8ae1dad5db8e000",
+          "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+          "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+        }
+      },
+      "scheduler_rows": 480,
+      "partial_json_rows": 0,
+      "event_counts": {
+        "PREFILL/iteration_start": 66,
+        "PREFILL/grouped_cache_allocation": 1,
+        "PREFILL/decision": 1,
+        "PREFILL/iteration_end": 66,
+        "PREFILL/grouped_cache_batch": 1,
+        "PREFILL/grouped_cache_batch_end": 1,
+        "DECODE/grouped_cache_allocation": 44,
+        "DECODE/iteration_start": 86,
+        "DECODE/decision": 43,
+        "DECODE/iteration_end": 86,
+        "DECODE/grouped_cache_batch": 43,
+        "DECODE/grouped_cache_batch_end": 42
+      },
+      "useful_scheduled_counts": {
+        "PREFILL": 1,
+        "DECODE": 43
+      },
+      "useful_prefill": [
+        {
+          "iteration_id": 0,
+          "timestamp": 1792621874.0096784,
+          "simulation_time": 0.0,
+          "request_num_tokens": [
+            6144
+          ]
+        }
+      ],
+      "decode_first": {
+        "iteration_id": 0,
+        "timestamp": 1792621914.54612,
+        "simulation_time": 85.51607516799994,
+        "request_num_tokens": [
+          16
+        ]
+      },
+      "decode_last": {
+        "iteration_id": 42,
+        "timestamp": 1792623274.7768848,
+        "simulation_time": 87.71741321443413,
+        "request_num_tokens": [
+          1
+        ]
+      },
+      "max_observed_emitted_decode_tokens": 42,
+      "decode_iteration_wall_gaps_s": {
+        "min": 18.613046407699585,
+        "median": 32.4861044883728,
+        "max": 209.66212725639343,
+        "count": 42
+      },
+      "scheduler_wall_span_s": 1400.7795543670654,
+      "command_written_to_first_scheduler_s": 998.5037105083466,
+      "terminal_artifacts": {
+        "system_metrics.json": [],
+        "request_metrics.csv": [],
+        "event_trace.json": [],
+        "frontier_transfer_ledger.jsonl": [],
+        "frontier_stage_batch_ledger.jsonl": []
+      },
+      "sha256": {
+        "/data/ycfeng/tmp/d23_main_actual05_offline/summary.json": "cd9d8ebc4d758a1b7580cf10a3f11cb108deea15d153067222d76d8303b3b849",
+        "/data/ycfeng/tmp/d23_main_actual05_offline/offline/execution.json": "8423f0691682b95d7ca69b6ad11d96efc0487c83348850ec5c2b59d4ad22b5ab",
+        "/data/ycfeng/tmp/d23_main_actual05_offline/offline/run.log": "f21f06cd13be62cd8b3915708f026807c8da0214f6ca546bd9d50055a2925f2f",
+        "/data/ycfeng/tmp/d23_main_actual05_offline/offline/scheduler.jsonl": "cad8f2ebffc31a303e5f8e4dfec13fabaf5c287600c4fad35150732a8d9d5bf9",
+        "/data/ycfeng/tmp/d23_main_actual05_offline/offline/command.json": "8b000a230eeab1c38b0c4036681459d047173166308d5680f966f119d8b8647b"
+      }
+    },
+    "online": {
+      "execution": {
+        "returncode": null,
+        "timed_out": true,
+        "wall_s": 2400.11141824862,
+        "source": {
+          "commit": "26db654cbbb38b361990aa1aa8ae1dad5db8e000",
+          "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+          "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+        }
+      },
+      "scheduler_rows": 472,
+      "partial_json_rows": 0,
+      "event_counts": {
+        "PREFILL/iteration_start": 66,
+        "PREFILL/grouped_cache_allocation": 1,
+        "PREFILL/decision": 1,
+        "PREFILL/iteration_end": 66,
+        "PREFILL/grouped_cache_batch": 1,
+        "PREFILL/grouped_cache_batch_end": 1,
+        "DECODE/grouped_cache_allocation": 43,
+        "DECODE/iteration_start": 84,
+        "DECODE/decision": 42,
+        "DECODE/iteration_end": 84,
+        "DECODE/grouped_cache_batch": 42,
+        "DECODE/grouped_cache_batch_end": 41
+      },
+      "useful_scheduled_counts": {
+        "PREFILL": 1,
+        "DECODE": 42
+      },
+      "useful_prefill": [
+        {
+          "iteration_id": 0,
+          "timestamp": 1792621880.250681,
+          "simulation_time": 0.25,
+          "request_num_tokens": [
+            6144
+          ]
+        }
+      ],
+      "decode_first": {
+        "iteration_id": 0,
+        "timestamp": 1792621920.1722152,
+        "simulation_time": 85.76607516799993,
+        "request_num_tokens": [
+          16
+        ]
+      },
+      "decode_last": {
+        "iteration_id": 41,
+        "timestamp": 1792623260.2447057,
+        "simulation_time": 87.92454314403328,
+        "request_num_tokens": [
+          1
+        ]
+      },
+      "max_observed_emitted_decode_tokens": 41,
+      "decode_iteration_wall_gaps_s": {
+        "min": 18.518195390701294,
+        "median": 36.11639451980591,
+        "max": 209.33249068260193,
+        "count": 41
+      },
+      "scheduler_wall_span_s": 1380.0078237056732,
+      "command_written_to_first_scheduler_s": 1004.8752613067627,
+      "terminal_artifacts": {
+        "system_metrics.json": [],
+        "request_metrics.csv": [],
+        "event_trace.json": [],
+        "frontier_transfer_ledger.jsonl": [],
+        "frontier_stage_batch_ledger.jsonl": []
+      },
+      "sha256": {
+        "/data/ycfeng/tmp/d23_main_actual05_online/summary.json": "02b9667ec3111fb2b166c9da3dd35e6f834ff0b1b8acb5df4e7813969731a9b0",
+        "/data/ycfeng/tmp/d23_main_actual05_online/online/execution.json": "651b8f2b0a3b0d1823e6848c7a80cbb4fcf8d7ebd17a855bf74b559f0a017fa0",
+        "/data/ycfeng/tmp/d23_main_actual05_online/online/run.log": "49064dfc09267ccd3676cf24c55278318d293e50b391fceb421496e9a2a39e1c",
+        "/data/ycfeng/tmp/d23_main_actual05_online/online/scheduler.jsonl": "f49bf7c3e49d111be8b0fdb3de17517261fb0c355bcb0b6988c654a60f5c529e",
+        "/data/ycfeng/tmp/d23_main_actual05_online/online/command.json": "ce606e402a1929a7b7ea49f7b6c3e2a42b9179bcb5bea65942e817def18e94fe"
+      }
+    }
+  }
+}

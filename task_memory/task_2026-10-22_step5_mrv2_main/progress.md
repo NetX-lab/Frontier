@@ -9,6 +9,7 @@
 | 2026-10-22 | Actual04 paired core ledger failure; archive exact blocker without bypass. |
 | 2026-10-22 | Parent167 PASS and final No findings; merge26db654; actual05 and candidate77 running. |
 | 2026-10-22 | Final candidate comparison77/77 identical; full actual05 acceptance remains in progress. |
+| 2026-10-22 | Actual05 times out in both modes after entering decode; archive partial progress and begin CPU profiling. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -280,12 +281,13 @@ Checkpoint after verified compute correction:
   repair and once-only root/count/evidence regression. Parent167 checks passed;
   the independent final source review has No findings. No timing/precision
   substitution was introduced.
-- in-progress: actual05 offline and online launched independently from clean
+- completed execution, failed acceptance: actual05 offline and online launched independently from clean
   `step5-mrv2-main` at accepted26db654, which remains unchanged during execution.
   Fixture02/cache and the built pinned collective-sim dependency are reused.
   All8 input hashes equal actual04; integration files equal e54f9457. Both child
-  bounds remain2400s. Commands/paths are in the test report; full request, READ
-  and final-metric acceptance remains pending. Old outputs are preserved.
+  bounds remained2400s and both timed out. Commands/paths are in the test report;
+  full request, READ and final-metric acceptance remains incomplete. Old outputs
+  are preserved.
 - completed warning diagnosis: source audit plus primary factor-injection
   control confirm generic0.5 factors do not alter this typed Step path.
   Layer3/88 remain122.9/184.35ms, count7, FP8/BF16, exactly equal to the saved
@@ -311,3 +313,31 @@ Checkpoint after verified compute correction:
   completed; strict comparison is77/77 identical, zero failures/missing evidence,
   equal predictor cache filenames and no provenance findings. Byte-exact report:
   `root_metrics_fidelity.json`; command/evidence in `root_metrics_review.md`.
+
+## Actual05 timeout diagnosis
+
+- failed acceptance: offline2400.130515s and online2400.111418s, both
+  `timed_out=true`, child returncode unavailable because the harness killed it.
+  Runner exit1 is the timeout verdict, not a repeated metrics exception.
+- completed partial execution: one useful P6144 batch in each mode. Offline
+  scheduled43 useful D batches and completed42; online scheduled42 and completed41.
+  First D batch has16 local tokens; subsequent scheduled useful batches have1.
+  Observed emitted-token counters reach42/41. The old root/owner error is passed
+  in the actual path, but no complete1024-token request is accepted.
+- measured phase evidence: command-file write to first scheduler event takes
+  998.503711s/1004.875261s. Useful D iteration wall-gap medians are
+  32.486104s/36.116395s, ranges18.613046–209.662127s/18.518195–209.332491s.
+  Events advance to simulation87.717413s/87.924543s; this is ongoing slow
+  execution, not complete scheduler stagnation. Wall gaps do not identify the
+  responsible function, and are not native GPU TPOT.
+- no terminal request/system/event/transfer/stage ledgers exist. Full READ
+  readiness/source-release evidence and final metrics remain unverified.
+  Receipt and hashes: `actual05_timeout_receipt.json`.
+- in-progress: diagnosis-only task `D23-ACTUAL-MAIN/PERF`, session
+  `ses_e9f519775ffe3Cv0bhEzJSKNhH`, isolates the expensive actual CPU call path
+  and constructs a short profile/reproduction before proposing a source fix.
+  No full retry, input changes, new fit, cost substitution or timeout extension.
+- inspection environment: systemd user scope failed, system scope required
+  interactive authentication. Inspections instead stayed small: file metadata,
+  at most32KiB tails, then streaming the verified1.6MiB scheduler files. The first
+  census attempts did not execute and did not change artifacts.

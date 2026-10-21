@@ -8,13 +8,16 @@
 | 2026-10-22 | Archive paired actual04 core ledger blocker and verified integration slice. |
 | 2026-10-22 | Parent accepts root/owner repair26db654 and launches paired actual05 with existing inputs. |
 | 2026-10-22 | Final root/owner clean legacy comparison77/77 identical. |
+| 2026-10-22 | Actual05 both exceed2400s after partial decode; CPU bottleneck diagnosis is active. |
 
 ## Status
 
-IN PROGRESS: parent accepted the metrics root/owner repair at26db654 after
-167 passing checks and independent No findings. Actual05 offline and online
-are running on that stable source, with the existing fixture/cache and2400s
-child bounds. Full6144/1024 acceptance has not yet passed.
+BLOCKED BY RUNTIME: actual05 offline and online both exceeded2400s on26db654.
+Both passed the former ledger error and entered decode; emitted-token counters
+reached42/41, with no terminal request metrics. CPU bottleneck diagnosis is active.
+Parent accepted the metrics root/owner repair after167 passing checks,
+independent No findings and a clean77/77 exact comparison. Full6144/1024
+acceptance has not passed.
 
 Historical attempts: shared fit generation02 is complete and retained. Actual01 rejected
 mutually exclusive runner graph flags (fixed); actual02 rejected an uninitialized
@@ -88,8 +91,11 @@ is integrated at32fb934. The generic mixed-precision warning was checked by
 source and factor-injection controls in `quantization_warning.md`; it does not
 rescale this typed Step path.
 
-Inspect actual05 completion, READ/readiness/source release, useful forward
-census and final metrics in both modes. The clean77 comparison is complete:
+Measure and isolate the CPU bottleneck before selecting a source correction or
+another unchanged-workload run. Preserve the2400s execution bound. Full
+READ/readiness/source release,1024 outputs and final metrics remain outstanding.
+Actual05 phase evidence and hashes are in `actual05_timeout_receipt.json`.
+The clean77 comparison is complete:
 77/77 identical, including predictor cache names and clean provenance; see
 `root_metrics_fidelity.json`. Native/profile/accuracy qualification and the real
 additional-padding producer gap remain open.
