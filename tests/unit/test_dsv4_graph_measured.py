@@ -1,6 +1,7 @@
 """Graph geometry and exact isolated scopes do not establish serving parity."""
 
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -72,6 +73,23 @@ def test_source_sp_uses_descriptor_then_tp_padding_and_real_cc(predictor):
     assert predictor._cc_backend.calls[1][1]["data_size_bytes"] == 40 * 4096 * 2
 
 
+def test_layer0_embedding_collective_uses_pre_sp_graph_width(predictor):
+    batch = graph_batch([17], [0], padded=40)
+    result = predictor._predict_dsv4_dummy_structural_execution(
+        batch, 0, 0, include_ffn=False,
+        execution_mode="cuda_graph", has_attention_metadata=True,
+        prefix_caching=False, decode_context_parallel_size=1,
+        prefill_context_parallel_size=1, enable_expert_parallel=True,
+        moe_backend="auto", all2all_backend="allgather_reducescatter",
+        skip_padding=False, input_padding_mask=None, selected_logits_rows=None,
+    )
+    assert result._dsv4_workloads["dsv4_embedding"]["output_shape"] == (40, 4096)
+    assert result._dsv4_workloads["dsv4_embedding_allreduce"]["input_shape"] == (40, 4096)
+    assert result._dsv4_source_rows["source_rows"] == 17
+    assert result._dsv4_source_rows["compute_rows"] == 40
+    assert batch.num_tokens == [17] and batch.num_context_tokens == [0]
+
+
 def test_global_graph_setting_does_not_override_batch_state(predictor, monkeypatch):
     from frontier.config import global_vars
 
@@ -81,6 +99,15 @@ def test_global_graph_setting_does_not_override_batch_state(predictor, monkeypat
     eager = source_batch([17], [0])
     assert serving_context(predictor, eager, 0)["execution_mode"] == "eager"
     assert serving_context(predictor, graph_batch([17], [0]), 0)["execution_mode"] == "cuda_graph"
+
+
+@pytest.mark.parametrize("dummy", [False, True])
+def test_pd_guard_message_is_independent_of_dummy_mode(monkeypatch, dummy):
+    from frontier.config import global_vars
+
+    monkeypatch.setattr(global_vars, "KV_CONNECTOR", "nixl")
+    with pytest.raises(NotImplementedError, match="V4 predictor PD phase/graph equivalence remains unqualified"):
+        serving_context(SimpleNamespace(_enable_dummy_mode=dummy), None, 0)
 
 
 def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
@@ -117,9 +144,13 @@ def measured(predictor, tmp_path):
     p._block_size = 256
     p._replica_config.device = "h200"
     p._replica_config.model_config = p._model_config
+    p._replica_config.kv_cache_dtype = "fp8_ds_mla"
     p._attention_input_file = str(tmp_path / "attention_kernel_only.csv")
+    p._isolated_attention_layout = json.loads((Path(__file__).parents[1] /
+        "fixtures/deepseek_v4_attention_layouts.json").read_text())["layouts"]["uncompressed"]
     m = p._model_config
     row = {
+        **p._isolated_attention_layout,
         "schema_version": "dsv4_attention.v1", "measurement_type": "KERNEL_ONLY",
         "attention_family": "deepseek_v4_attention", "model_architecture_profile": "deepseek_v4",
         "profiling_precision": "BF16", "attention_backend": "FLASHMLA_SPARSE_DSV4",
@@ -156,7 +187,8 @@ def write_row(p, row):
 def test_exact_isolated_math_preserves_scope_and_provenance(measured):
     p, row = measured
     write_row(p, row)
-    value = read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention")
+    value = read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                               attention_layout=p._isolated_attention_layout)
     assert value["time_ms"] == 0.125
     assert value["physical_tensor_parallel_size"] == 1
     assert value["target_tensor_parallel_size"] == 8
@@ -171,6 +203,127 @@ def test_exact_isolated_math_preserves_scope_and_provenance(measured):
     assert rows["time_stats.dsv4_sparse_attention.median"].iloc[0] == 0.125
 
 
+@pytest.mark.parametrize("column,value", [
+    ("attention_kv_cache_dtype", "bfloat16"), ("padded_heads", 128),
+    ("swa_metadata.block_size", 128), ("max_model_len", 8192),
+])
+def test_attention_rejects_unqualified_isolated_layout(measured, column, value):
+    p, row = measured
+    row[column] = value
+    write_row(p, row)
+    with pytest.raises(DeepSeekV4CoverageError):
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                            attention_layout=p._isolated_attention_layout)
+
+
+def test_attention_does_not_median_across_isolated_layouts(measured):
+    p, row = measured
+    other = {**row, "padded_heads": 128, "time_stats.dsv4_sparse_attention.median": 0.5}
+    pd.DataFrame([{**row, "padded_heads": 64}, other]).to_csv(p._attention_input_file, index=False)
+    value = read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                               attention_layout=p._isolated_attention_layout)
+    assert value["time_ms"] == 0.125
+
+
+def test_attention_layout_must_match_replica_cache_dtype(measured):
+    p, row = measured
+    p._replica_config.kv_cache_dtype = "bfloat16"
+    write_row(p, row)
+    with pytest.raises(DeepSeekV4CoverageError):
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                            attention_layout=p._isolated_attention_layout)
+
+
+def test_attention_layout_cannot_override_source_padded_heads(measured):
+    p, row = measured
+    p._isolated_attention_layout = {**p._isolated_attention_layout, "padded_heads": 128}
+    row["padded_heads"] = 128
+    write_row(p, row)
+    with pytest.raises(DeepSeekV4CoverageError):
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                            attention_layout=p._isolated_attention_layout)
+
+
+@pytest.mark.parametrize("change", ["absent", "incomplete", "extra"])
+def test_attention_requires_complete_explicit_layout_contract(measured, change):
+    p, row = measured
+    write_row(p, row)
+    layout = dict(p._isolated_attention_layout)
+    if change == "absent":
+        layout = None
+    elif change == "incomplete":
+        del layout["attention_kv_cache_dtype"]
+    else:
+        layout["unqualified_layout_field"] = 1
+    with pytest.raises(DeepSeekV4CoverageError, match="complete isolated layout contract"):
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                            attention_layout=layout)
+
+
+@pytest.mark.parametrize("scope", ["share_expert_up_proj", "moe_grouped_gemm"])
+def test_isolated_component_missing_table_is_typed_with_original_cause(measured, tmp_path, scope):
+    from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
+
+    p, _ = measured
+    p._compute_input_file = str(tmp_path / "missing_linear.csv")
+    p._moe_input_file = str(tmp_path / "missing_moe.csv")
+    lane = split_global_expert_tokens_into_lanes(
+        {i: int(i < 96) for i in range(256)}, total_expert_num=256,
+        moe_expert_parallel_size=64, router_topk=6)[0]
+    with pytest.raises(DeepSeekV4CoverageError) as error:
+        read_isolated_scope(p, source_batch([16], [0]), 0, scope, lane_workload=lane)
+    assert isinstance(error.value.__cause__, FileNotFoundError)
+
+
+@pytest.mark.parametrize("scope,change,cause", [
+    ("share_expert_up_proj", "missing_tp", ValueError),
+    ("share_expert_up_proj", "invalid_contract", ValueError),
+    ("share_expert_up_proj", "unmatched_tp", ValueError),
+    ("moe_grouped_gemm", "missing_ep", ValueError),
+    ("moe_grouped_gemm", "missing_tp", KeyError),
+    ("moe_grouped_gemm", "invalid_contract", ValueError),
+])
+def test_known_component_coverage_errors_preserve_cause(measured, tmp_path, scope, change, cause):
+    from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
+
+    p, _ = measured
+    row = {"num_tensor_parallel_workers": 1, "num_tokens": 16,
+           "n_expanded_embd": 2048, "num_experts": 256, "router_topk": 6,
+           "hidden_dim": 4096, "expert_hidden_dim": 2048, "expert_parallel_size": 64}
+    if change == "missing_tp":
+        del row["num_tensor_parallel_workers"]
+    elif change == "missing_ep":
+        del row["expert_parallel_size"]
+    elif change == "unmatched_tp":
+        row["num_tensor_parallel_workers"] = 2
+    else:
+        row["typed_operator_contracts"] = "{}"
+    p._compute_input_file = p._moe_input_file = str(tmp_path / "incomplete.csv")
+    pd.DataFrame([row]).to_csv(p._compute_input_file, index=False)
+    lane = split_global_expert_tokens_into_lanes(
+        {i: int(i < 96) for i in range(256)}, total_expert_num=256,
+        moe_expert_parallel_size=64, router_topk=6)[0]
+    with pytest.raises(DeepSeekV4CoverageError) as error:
+        read_isolated_scope(p, source_batch([16], [0]), 0, scope, lane_workload=lane)
+    assert isinstance(error.value.__cause__, cause)
+
+
+def test_unexpected_reader_failure_is_not_relabelled_as_coverage(measured, monkeypatch):
+    from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
+
+    p, _ = measured
+    p._compute_input_file = "unused.csv"
+
+    def fail(*args, **kwargs):
+        raise ValueError("unexpected reader implementation failure")
+
+    monkeypatch.setattr(ProfilingDataFrameLoaders, "_load_linear_op_df", fail)
+    with pytest.raises(ValueError) as error:
+        read_isolated_scope(p, source_batch([16], [0]), 0, "share_expert_up_proj")
+    assert type(error.value) is ValueError
+    assert error.value.__cause__ is None
+
+
 def test_h800_missing_coverage_cannot_consume_h200_observations(measured):
     p, row = measured
     p._replica_config.device = "h800"
@@ -178,7 +331,8 @@ def test_h800_missing_coverage_cannot_consume_h200_observations(measured):
     p._replica_config.moe_expert_parallel_size = 16
     write_row(p, row)
     with pytest.raises(DeepSeekV4CoverageError, match="device does not match"):
-        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention")
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                            attention_layout=p._isolated_attention_layout)
 
 
 @pytest.mark.parametrize("column,value", [
@@ -196,7 +350,8 @@ def test_unqualified_identity_geometry_phase_or_scope_is_typed_error(measured, c
     row[column] = value
     write_row(p, row)
     with pytest.raises(DeepSeekV4CoverageError):
-        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention")
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention",
+                            attention_layout=p._isolated_attention_layout)
 
 
 def test_no_extrapolation_generic_routing_or_decode_tail_promotion(measured):
@@ -211,7 +366,7 @@ def test_no_extrapolation_generic_routing_or_decode_tail_promotion(measured):
         (graph_batch([6144], [0], padded=6144), "dsv4_sparse_attention"),
     ):
         with pytest.raises(DeepSeekV4CoverageError):
-            read_isolated_scope(p, batch, 0, scope)
+            read_isolated_scope(p, batch, 0, scope, attention_layout=p._isolated_attention_layout)
 
 
 def test_measured_composites_cannot_be_added_to_serve_attention(measured):

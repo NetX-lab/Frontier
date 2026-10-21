@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-21 | Archived CPU implementation621b198, measured scope evidence,686 affected checks and strict77 IDENTICAL; primary acceptance pending. |
 | 2026-10-21 | Applied H800-priority steering without runtime edits:688 tests,102 scopes/14 negatives; H200 data cannot qualify H800. |
+| 2026-10-21 | Implemented independent-review corrections with CPU red/green,208 affected passes and102 scope/68 typed-negative receipts; review strict pending. |
 
 ## Overview
 
@@ -72,4 +73,25 @@ workload, GPU/platform actions and integration with published B2a84c58/2ffd2cb.
   unsupported split/AFD/speculative configurations and complete-family/standalone
   training gates remain closed. No fallback or public runtime flag was added.
 - No GPU/platform/auth/SSH/cloud/network/Docker/delegation, push or merge.
-  Primary owns acceptance and integration with B/H5.
+   Primary owns acceptance and integration with B/H5.
+
+## Review correction
+
+The primary reopened A following independent review. This supersedes the earlier
+runtime-freeze statement: the V4 predictor now requires an explicit complete
+isolated layout, checks source/cache/head consistency, selects no mixed-layout
+medians, wraps only known reader coverage errors with their original causes, and
+uses graph compute width for the layer0 pre-SP embedding all-reduce. The new
+fixture `tests/fixtures/deepseek_v4_attention_layouts.json` is source5e051e4's
+reduced H200 P6144 scope, not universal capacity or H800 evidence.
+
+CPU red reproduction: layout5 failures, source-consistency2 failures, known
+reader8 failures with1 unchanged unexpected-error control, and embedding1 failure.
+Final affected suite:208 PASS/8 SKIP. Actual inputs:102 exact scopes/68 typed
+negatives plus two exact mixed-layout controls PASS. No broad suite was repeated.
+The test report records exact commands, raw artifact paths, native source and the
+one-line B assertion recommendation. B files and timers were not edited.
+
+One source correction and its fresh clean strict77 remain the final frontier;
+the original621b198 strict result is historical, not evidence for this correction.
+Native serving, compiled/TP/phase equivalence and H800 timings remain unqualified.

@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 import pandas as pd
@@ -45,23 +46,32 @@ def main():
     )
     p._cluster_type = ClusterType.MONOLITHIC
     p._block_size = 256
+    layouts = json.loads((Path(__file__).parents[1] /
+        "fixtures/deepseek_v4_attention_layouts.json").read_text())["layouts"]
+
+    def read_scope(batch, layer, scope, **kwargs):
+        return read_isolated_scope(p, batch, layer, scope,
+            attention_layout=layouts[p._model_config.get_layer_attention_spec(layer).variant_id],
+            **kwargs)
+
     receipts = []
     negative = []
+    mixed_layout_controls = []
     for measurement, suffix in ((MeasurementType.CUDA_EVENT, ""), (MeasurementType.KERNEL_ONLY, "_kernel_only")):
         p._active_measurement_type = measurement
         p._attention_input_file = str(next(args.attention_root.rglob(f"attention{suffix}.csv")))
         p._compute_input_file = str(next(args.compute_root.rglob(f"linear_op{suffix}.csv")))
         p._moe_input_file = str(next(args.compute_root.rglob(f"moe{suffix}.csv")))
-        rows = pd.read_csv(p._attention_input_file)
-        for _, row in rows.iterrows():
+        attention_rows = pd.read_csv(p._attention_input_file)
+        for _, row in attention_rows.iterrows():
             layer = json.loads(row.global_layer_ids)[0]
             for scope in json.loads(row.operator_scopes):
-                result = read_isolated_scope(p, source_batch(), layer, scope)
+                result = read_scope(source_batch(), layer, scope)
                 assert result["time_ms"] == row[f"time_stats.{scope}.median"]
                 assert result["serving_admission"] is False
                 receipts.append(result)
         for scope in ("share_expert_up_proj", "share_expert_act", "share_expert_down_proj"):
-            result = read_isolated_scope(p, source_batch(), 0, scope)
+            result = read_scope(source_batch(), 0, scope)
             rows = pd.read_csv(p._compute_input_file)
             assert result["time_ms"] == rows[rows.num_tokens == 768][f"time_stats.{scope}.median"].iloc[0]
             receipts.append(result)
@@ -71,7 +81,7 @@ def main():
         counts = {i: int(i < 2 or 8 <= i < 198) for i in range(256)}
         lane = split_global_expert_tokens_into_lanes(counts, total_expert_num=256,
             moe_expert_parallel_size=32, router_topk=6)[0]
-        result = read_isolated_scope(p, source_batch(32), 0, "moe_grouped_gemm", lane_workload=lane)
+        result = read_scope(source_batch(32), 0, "moe_grouped_gemm", lane_workload=lane)
         rows = pd.read_csv(p._moe_input_file, float_precision="round_trip")
         assert result["time_ms"] == rows[(rows.num_tokens == 32) & (rows.seed == 1)][
             "time_stats.moe_grouped_gemm.median"].iloc[0]
@@ -86,7 +96,7 @@ def main():
             (6144, 0, False, "dsv4_compressor_projection"),
         ):
             try:
-                read_isolated_scope(p, source_batch(query, context, decoding), 2, scope)
+                read_scope(source_batch(query, context, decoding), 2, scope)
             except DeepSeekV4CoverageError as exc:
                 negative.append({"measurement_type": measurement.value,
                     "query": query, "context": context, "scope": scope, "error": str(exc)})
@@ -96,7 +106,7 @@ def main():
         p._replica_config.attn_dp = 2
         p._replica_config.moe_expert_parallel_size = 16
         try:
-            read_isolated_scope(p, source_batch(), 0, "dsv4_sparse_attention")
+            read_scope(source_batch(), 0, "dsv4_sparse_attention")
         except DeepSeekV4CoverageError as exc:
             assert "device does not match" in str(exc)
             negative.append({"measurement_type": measurement.value,
@@ -107,10 +117,90 @@ def main():
         p._replica_config.device = "h200"
         p._replica_config.attn_dp = 4
         p._replica_config.moe_expert_parallel_size = 32
+        original_attention = p._attention_input_file
+        original_compute = p._compute_input_file
+        original_moe = p._moe_input_file
+        with TemporaryDirectory(prefix="v4_scope_review_") as temporary:
+            table = Path(temporary) / "attention.csv"
+            row = attention_rows[(attention_rows.attention_variant == "csa")
+                                 & attention_rows.plans_tile_schedule].iloc[0].copy()
+            p._attention_input_file = str(table)
+            for column, value in (
+                ("attention_kv_cache_dtype", "bfloat16"), ("kv_cache_dtype", "bfloat16"),
+                ("padded_heads", 128), ("aux_stream_count", 4),
+                ("multi_stream_gemm_token_threshold", 2048),
+                ("indexer_uses_fp4_kv", True), ("attention_impl", "unqualified"),
+                ("max_model_len", 8192), ("max_num_batched_tokens", 8192),
+                ("max_num_seqs", 256), ("swa_metadata.block_size", 128),
+                ("attention_metadata.block_size", 64), ("compressor_metadata.block_size", 8),
+                ("index_compressor_metadata.block_size", 8),
+                ("indexer_metadata.max_seq_len", 8192),
+                ("attention_metadata.num_actual_tokens", 8192),
+                ("compressor_metadata.c128_boundary", 1),
+            ):
+                changed = row.copy()
+                changed[column] = value
+                pd.DataFrame([changed]).to_csv(table, index=False)
+                try:
+                    read_scope(source_batch(), 2, "dsv4_sparse_attention")
+                except DeepSeekV4CoverageError as exc:
+                    negative.append({"measurement_type": measurement.value,
+                        "input_file": original_attention, "column": column, "value": value,
+                        "scope": "dsv4_sparse_attention", "error": str(exc)})
+                else:
+                    raise AssertionError(f"Unqualified attention layout accepted: {column}={value}")
+            other = row.copy()
+            other["padded_heads"] = 128
+            other["time_stats.dsv4_sparse_attention.median"] *= 10
+            pd.DataFrame([row, other]).to_csv(table, index=False)
+            result = read_scope(source_batch(), 2, "dsv4_sparse_attention")
+            assert result["time_ms"] == row["time_stats.dsv4_sparse_attention.median"]
+            mixed_layout_controls.append({"measurement_type": measurement.value,
+                "expected_ms": float(row["time_stats.dsv4_sparse_attention.median"]),
+                "actual_ms": result["time_ms"], "excluded_padded_heads": 128})
+            p._attention_input_file = original_attention
+
+            for scope, original in (("share_expert_up_proj", original_compute),
+                                    ("moe_grouped_gemm", original_moe)):
+                rows = pd.read_csv(original, float_precision="round_trip")
+                changes = ["missing_file", "missing_tp", "invalid_contract", "missing_contract"]
+                if scope == "moe_grouped_gemm":
+                    changes.extend(("missing_ep", "unmatched_ep"))
+                for change in changes:
+                    changed = rows.copy()
+                    table = Path(temporary) / f"{scope}_{change}.csv"
+                    if change == "missing_tp":
+                        changed = changed.drop(columns=["num_tensor_parallel_workers"])
+                    elif change == "missing_ep":
+                        changed = changed.drop(columns=["expert_parallel_size"])
+                    elif change == "unmatched_ep":
+                        changed["expert_parallel_size"] = 16
+                    elif change == "missing_contract":
+                        changed = changed.drop(columns=["typed_operator_contracts"])
+                    elif change == "invalid_contract":
+                        changed["typed_operator_contracts"] = "{}"
+                    if change != "missing_file":
+                        changed.to_csv(table, index=False)
+                    if scope == "moe_grouped_gemm":
+                        p._moe_input_file = str(table)
+                    else:
+                        p._compute_input_file = str(table)
+                    try:
+                        read_scope(source_batch(32 if scope == "moe_grouped_gemm" else 6144),
+                                   0, scope, lane_workload=lane)
+                    except DeepSeekV4CoverageError as exc:
+                        negative.append({"measurement_type": measurement.value, "scope": scope,
+                            "input_file": original, "change": change, "error": str(exc),
+                            "cause": type(exc.__cause__).__name__ if exc.__cause__ is not None else None})
+                    else:
+                        raise AssertionError(f"Missing V4 component coverage accepted: {scope}/{change}")
+                p._compute_input_file = original_compute
+                p._moe_input_file = original_moe
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({"status": "PASS", "positive_count": len(receipts),
         "typed_negative_count": len(negative), "serving_admission": False,
-        "receipts": receipts, "negative_controls": negative}, indent=2) + "\n")
+        "receipts": receipts, "negative_controls": negative,
+        "mixed_layout_controls": mixed_layout_controls}, indent=2) + "\n")
     print(f"PASS {len(receipts)} isolated scopes, {len(negative)} typed negative controls; no serving admission")
 
 

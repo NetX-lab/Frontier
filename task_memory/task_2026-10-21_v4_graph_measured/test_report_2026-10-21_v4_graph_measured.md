@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-21 | Recorded source evidence,686 affected passes, real isolated consumer comparisons, full-unit baseline comparison and clean strict77 IDENTICAL. |
 | 2026-10-21 | Applied H800-priority steering:688 affected passes,102 scopes/14 negatives and hardware-mismatch rejection; runtime code remains621b198. |
+| 2026-10-21 | Review correction:CPU red/green evidence, exact layout, typed coverage causes and padded embedding collective;208 affected passes/102 scopes/68 negatives. |
 
 ## Scope and result
 
@@ -151,3 +152,77 @@ This verifies legacy artifact/cache fidelity, not native V4 timing accuracy.
 Only task records and H800 CPU regression checks change after the measured code
 commit. Runtime and strict77 case definitions remain byte-identical to621b198;
 the requested sole strict invocation was not repeated.
+
+## Independent-review correction (supersedes the prior runtime freeze)
+
+Authority: primary's REQUEST CHANGES from reviewer
+`ses_ea22254bfffesOGp3CPziZRXZL`. Only the owned V4 predictor, focused tests,
+qualified-input fixture and task records change. No timer/reference-median audit,
+B edits, other development-worktree edits, broad unit sweep or GPU operations.
+
+### Reproduction and correction
+
+| Finding | Expected red / observed | Final expectation / observation |
+| --- | --- | --- |
+| Layout omissions/mixed median | 5 failed; BF16 cache/padded128/SWA128/maxlen8192 accepted; median0.3125 rather than0.125 | Complete exact43-field isolated contract required; valid scope remains0.125 and invalid layout excluded. |
+| Contract disagrees with source | 2 failed for changed replica cache and contract/row padded128 | Reuse source attention workload's padded heads and require replica cache dtype; both reject. |
+| Missing shared/MARLIN coverage | 8 failed,1 expected control passed; FileNotFoundError, ValueError or required-column KeyError escaped | Only known coverage/read errors become DeepSeekV4CoverageError with original __cause__; unrelated ValueError remains unchanged. |
+| Embedding collective | 1 failed: output40x4096, all-reduce17x4096 | All-reduce40x4096, source/request17 unchanged. |
+
+The explicit layout includes existing engine/backend/dtype/head/stream fields,
+engine bounds, compression and every flattened metadata field, including null
+nonapplicable values. The fixture is an independently retained snapshot of the
+already accepted reduced H200 P6144/C0 scope, not an inferred contract copied from
+the input under test. `attention_layout` in receipts documents the selected
+isolated geometry; attention metadata256 never asserts full physical capacity.
+Source consistency uses existing workload geometry, not a second sizing formula.
+Native authority remains2cf0a6915ce544dc493a0990f2ea38d81601128a:
+`vllm/models/deepseek_v4/nvidia/model.py:1137–1157` embeds before SP and
+`vllm/model_executor/layers/vocab_parallel_embedding.py:506` all-reduces that output.
+
+### Exact commands and affected checks
+
+Same Python3.10.6 environment and command-prefix environment as above. Each red
+command ran before its respective source correction; raw XML/log prefixes are
+`/data/ycfeng/tmp/v4_review_{layout_red,layout_source_red,reader_red,embedding_red}`.
+
+```bash
+/data/ycfeng/envs/frontier-py310/bin/python -m pytest -q tests/unit/test_dsv4_graph_measured.py -k 'unqualified_isolated_layout or median_across_isolated_layouts' --junitxml=/data/ycfeng/tmp/v4_review_layout_red.xml > /data/ycfeng/tmp/v4_review_layout_red.log 2>&1
+/data/ycfeng/envs/frontier-py310/bin/python -m pytest -q tests/unit/test_dsv4_graph_measured.py -k 'layout_must_match_replica_cache_dtype or cannot_override_source_padded_heads' --junitxml=/data/ycfeng/tmp/v4_review_layout_source_red.xml > /data/ycfeng/tmp/v4_review_layout_source_red.log 2>&1
+/data/ycfeng/envs/frontier-py310/bin/python -m pytest -q tests/unit/test_dsv4_graph_measured.py -k 'missing_table or known_component_coverage or unexpected_reader' --junitxml=/data/ycfeng/tmp/v4_review_reader_red.xml > /data/ycfeng/tmp/v4_review_reader_red.log 2>&1
+/data/ycfeng/envs/frontier-py310/bin/python -m pytest -q tests/unit/test_dsv4_graph_measured.py -k 'layer0_embedding_collective' --junitxml=/data/ycfeng/tmp/v4_review_embedding_red.xml > /data/ycfeng/tmp/v4_review_embedding_red.log 2>&1
+/data/ycfeng/envs/frontier-py310/bin/python -m pytest -q tests/unit/test_dsv4_graph_measured.py tests/unit/test_dsv4_source_execution.py tests/unit/test_dsv4_structural_execution.py tests/unit/test_dsv4_attention_workload.py tests/unit/test_dsv4_attention_profiling.py tests/unit/test_dsv4_linear_op_profiling.py tests/unit/test_dsv4_moe_profiling.py tests/unit/test_profiling_runtime_boundary.py --junitxml=/data/ycfeng/tmp/v4_review_affected.xml > /data/ycfeng/tmp/v4_review_affected.log 2>&1
+/data/ycfeng/envs/frontier-py310/bin/python tests/integration/check_dsv4_measured_scopes.py --attention-root /data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144 --compute-root /data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe --output task_memory/task_2026-10-21_v4_graph_measured/real_scope_receipts.json > /data/ycfeng/tmp/v4_review_real_scope.log 2>&1
+```
+
+Final affected checks: **208 PASS/8 SKIP**,216 cases, zero failures/errors.
+Intermediate entire graph-measured module checks passed30/39/40 as fixes landed.
+The first layout integration exposed model ratio0 versus the schema's ratio1
+for uncompressed attention; matching now uses the producer's canonical ratio1.
+Final real rows: **102 exact positive scopes/68 typed negatives PASS** plus two
+mixed-layout controls. The latter preserve the true CSA sparse medians exactly:
+CUDA_EVENT0.9165120124816896ms and KERNEL_ONLY0.904703ms despite a padded128 row
+with tenfold timing. These compare consumer selection only, not timer validity.
+Known errors preserve FileNotFoundError/ValueError/KeyError causes; a missing
+canonical contract rejected directly has no prior exception to wrap. The original
+CUDA_EVENT/KERNEL_ONLY files and raw data are unchanged. All native/compiled,
+physical-TP, decode/first-tail and H800 measurement limitations above still apply.
+
+### Exact recommendation to primary for B assertions
+
+In parent `tests/unit/test_dsv4_structural_pd.py:333–337`, replace only the
+conditional old regex at336 with the following constant. Keep both dummy values,
+the autouse NIXL fixture and NotImplementedError; do not weaken the guard:
+
+```python
+with pytest.raises(NotImplementedError, match="V4 predictor PD phase/graph equivalence remains unqualified"):
+    serving_context(predictor, None, 0)
+```
+
+The owned two-case regression verifies that exact behavior. This is a
+recommendation, not a claim that merged A+B tests were run here. B stays unedited.
+
+### Review clean strict77
+
+Pending the committed correction. The original621b198 strict receipt above does
+not certify these new source changes; a fresh clean committed run is required.

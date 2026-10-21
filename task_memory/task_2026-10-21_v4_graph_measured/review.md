@@ -7,32 +7,34 @@
 | 2026-10-21 | Checkpoint after621b198:686 affected tests,102 scopes/12 negatives, full baseline comparison; strict77 running. |
 | 2026-10-21 | Final checkpoint:strict77 IDENTICAL77/77 with clean metadata; all planned implementation work complete. |
 | 2026-10-21 | Applied explicit P0 H800 steering with CPU-only geometry/device rejection checks;688 tests/102 scopes/14 negatives pass and runtime remains frozen. |
+| 2026-10-21 | Review correction checkpoint:requested CPU counterexamples resolved;208 affected tests/102 scopes/68 negatives; fresh strict77 remains the frontier. |
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| P1 native/source/schema | PASS | 已读取锁定2cf源码、批准范围与真实本地数据。 |
-| P2 bounded CPU implementation | PASS | graph width 和 isolated measured consumer 已实现；serving 缺口保持 typed error。 |
-| P3 verification | PASS | 688 tests PASS/8 SKIP，真实102 scopes/14 negatives PASS；包含H800目标拓扑/硬件拒绝；全量已记录且已修复唯一相关 baseline 回归。 |
-| P4 commit/strict/archive | PASS | 621b198唯一 clean strict77：77执行/77比较/77相同；report/summary/receipts已归档。 |
+| R1 layout | PASS | red5+2反例已复现；完整contract和source/cache/head一致性通过。 |
+| R2 typed errors | PASS | red8失败已修复；原cause保留，非coverage ValueError不被改写。 |
+| R3 embedding | PASS | red1反例已修复；descriptor40用于AR，request17不变。 |
+| R4 affected/data/B recommendation | PASS | 208 PASS/8 SKIP；102真实scope/68 negatives及2 mixed controls；B推荐已记录。 |
+| R5 commit/strict/archive | TODO | 旧621b198 strict不覆盖此次source；等待提交后fresh clean77。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 上次P4自查至今｜**当前前沿：** 无未完成实现；移交primary验收
+**检测窗口：** 独立review重新打开A至今｜**当前前沿：** R5提交、clean77和归档
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | 已完成要求的 baseline preservation 检查；仅修复相关 import allowlist，未修复环境依赖或泛化 harness。 |
-| D2 细节反复重试 | CLEAR | 实际 feature mismatch 定位为 pandas float parsing；只对 exact consumer 改 round_trip 并验证通过。 |
-| D3 支线问题修补 | CLEAR | 未修改 B/H5/profiler 或外部系统。 |
-| D4 可并行任务停滞 | CLEAR | 用户禁止 delegation；attention 新数据未阻塞 CPU 实现。 |
-| D5 超范围镀金 | CLEAR | 未新增 flags、预测框架或时延 fallback。 |
-| D6 分析空转 | CLEAR | 已交付621b198、688 tests 和真实102 scope receipt。 |
-| D7 路线违背 | CLEAR | 保留 TP1/eager/phase 限制，未将 measured scopes 相加为 serving。 |
+| D1 工具打磨 | CLEAR | 新负例直接覆盖review要求；未重复broad unit或泛化测试工具。 |
+| D2 细节反复重试 | CLEAR | 每组red定位具体layout/source/error/shape反例；修复后均green，无遗留循环。 |
+| D3 支线问题修补 | CLEAR | 不触及timer审计、B/H5、profiler或平台。 |
+| D4 可并行任务停滞 | CLEAR | 用户禁止delegation，修复共享同一predictor/test文件。 |
+| D5 超范围镀金 | CLEAR | 显式layout是准确选择所需输入；没有CLI flag、fallback或新预测框架。 |
+| D6 分析空转 | CLEAR | 代码修复及208 affected checks、真实102 scope receipt均已产出。 |
+| D7 路线违背 | CLEAR | 保留TP1/eager/H200和native缺口；B仅推荐，不改写其文件。 |
 
-**文档检查：** S1–S6均无未解决缺陷；上次S5过时资格/targeted状态已纠正，严格回归结果现已写入。
+**文档检查：** S5旧完成记录已由review R1–R5状态纠正；S1–S6无未解决缺陷。
 **归因：** 无。
 
 ## 3. 纠正建议
@@ -42,11 +44,11 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 仅提交最终task records及明确请求的H800 CPU测试并移交primary → 完成标志：工作树clean，runtime保持621b198内容且不重复strict。
-2. Primary独立验收；本agent不push/merge或扩展到formal native run。
+1. R5：冻结source、提交单一修正commit，再运行一次clean strict77 → 完成标志：required absolute baseline下77 IDENTICAL且source/cache clean。
+2. R5：归档该commit的实际receipt，仅允许records后续更新，再交primary独立验收；不push/merge。
 
 ## 4. 最值得关注的 3 点
 
-1. isolated消费不等于 serving；完整forward仍缺 mHC/routing/phase/TP/compiled evidence。
-2. 688 affected tests和102真实scope已通过；H200数据在H800上typed拒绝，未形成H800测量/校准资格。
-3. 唯一strict77已IDENTICAL77/77且provenance/cache clean；不扩展或重复测试，交由primary验收。
+1. 本次208 affected checks和102真实scope/68 negatives已通过；未宣称重跑688或全量unit。
+2. 完整isolated layout不代表full capacity或serving；H800/compiled/TP/phase缺口不变。
+3. 唯一剩余前沿是此次source commit的clean77和实际结果归档；不扩展到timers或B修复。

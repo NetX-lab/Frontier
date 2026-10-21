@@ -353,7 +353,7 @@ def predict_structural_execution(
         }
     if "dsv4_embedding_allreduce" in times:
         workloads["dsv4_embedding_allreduce"] = {
-            "input_shape": (source["source_rows"], predictor._model_config.embedding_dim),
+            "input_shape": (source["compute_rows"], predictor._model_config.embedding_dim),
             "activation_dtype": "bfloat16", "collective": "allreduce",
             "cost_scope": "unmeasured synthetic dummy duration",
         }
@@ -532,19 +532,59 @@ def _select_rows(rows, expected, scope):
     for column, value in expected.items():
         if column not in rows:
             raise DeepSeekV4CoverageError(f"V4 {scope} missing column {column}")
-        rows = rows[rows[column] == value]
+        rows = rows[rows[column].isna() if value is None else rows[column] == value]
     if rows.empty:
         raise DeepSeekV4CoverageError(f"V4 {scope} has no exact measured rows: {expected}")
     return rows
 
 
-def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None):
+def _read_isolated_component(reader, scope, *args, **kwargs):
+    """Translate the existing readers' known data-admission errors, not bugs."""
+    import pandas as pd
+    from frontier.operators.typed_contracts import TYPED_OPERATOR_CONTRACTS_COLUMN
+
+    try:
+        rows = reader(*args, **kwargs)
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as exc:
+        raise DeepSeekV4CoverageError(f"V4 {scope} measured table cannot be read: {exc}") from exc
+    except KeyError as exc:
+        if exc.args[0] not in {
+            "num_experts", "router_topk", "hidden_dim", "num_tensor_parallel_workers",
+            "expert_hidden_dim", "expert_parallel_size",
+        }:
+            raise
+        raise DeepSeekV4CoverageError(f"V4 {scope} measured table missing {exc}") from exc
+    except ValueError as exc:
+        # These legacy readers use ValueError for their explicit coverage
+        # checks. Unrelated ValueErrors retain their original type/traceback.
+        if not str(exc).startswith((
+            "Column 'num_tensor_parallel_workers' not found ",
+            "No data matches the filtering criteria in ",
+            "No linear-op rows match the selected typed layer contract ",
+            "Legacy linear-op profiling data is missing ",
+            "Required attention linear op columns are missing or all-NaN in ",
+            "MoE profiling data is missing 'expert_parallel_size' ",
+            "Missing load imbalance features", "typed_operator_contracts ",
+            "typed metadata ", "typed contract ", "model_architecture_profile ",
+            "Multiple model_architecture_profile values found ",
+        )):
+            raise
+        raise DeepSeekV4CoverageError(f"V4 {scope} measured coverage unavailable: {exc}") from exc
+    if TYPED_OPERATOR_CONTRACTS_COLUMN not in rows:
+        raise DeepSeekV4CoverageError(f"V4 {scope} missing {TYPED_OPERATOR_CONTRACTS_COLUMN}")
+    return rows
+
+
+def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None,
+                        attention_layout=None):
     """Consume one isolated eager measurement, never publish a serving duration.
 
     Attention scopes may overlap and composites cannot be split into their
     constituent operators. Physical TP1 with target per-rank TP8 dimensions is
     retained as such; this receipt does not assert TP8 or phase equivalence.
     Linear/MoE selection uses the existing typed readers and feature classifier.
+    Attention requires an independently qualified complete flattened layout;
+    reduced metadata in that contract never asserts serving capacity.
     """
     import json
     import math
@@ -570,10 +610,30 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     tp = replica.attn_tensor_parallel_size
     layer = model.get_layer_attention_spec(layer_id)
     if scope in DSV4_SCOPE_NAMES:
+        from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
+        from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
+
         path = predictor._attention_input_file
         rows = predictor._load_attention_df(path)
+        layout_columns = set(_ENGINE_COLUMNS) | {
+            "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
+            "max_num_batched_tokens", "max_num_seqs",
+        } | {name for name in rows if "_metadata." in name}
+        if attention_layout is None or set(attention_layout) != layout_columns:
+            raise DeepSeekV4CoverageError("V4 attention requires a complete isolated layout contract")
+        rows = _select_rows(rows, attention_layout, "isolated attention layout")
+        source = build_deepseek_v4_attention_workload(model, replica, batch, layer_id,
+            cluster_type=predictor._cluster_type, execution_mode="eager",
+            has_attention_metadata=True, prefix_caching=False,
+            decode_context_parallel_size=1, prefill_context_parallel_size=1)
+        rows = _select_rows(rows, {
+            "padded_heads": source["num_padded_q_heads"],
+            "kv_cache_dtype": replica.kv_cache_dtype,
+            "attention_kv_cache_dtype": replica.kv_cache_dtype,
+        }, "attention source/cache layout")
         rows = _select_rows(rows, {
             "phase": "prefill", "attention_variant": layer.variant_id,
+            "compress_ratio": max(1, model.compress_ratios[layer_id]),
             "plans_tile_schedule": not any(
                 model.get_layer_attention_spec(i).variant_id == layer.variant_id
                 for i in range(layer_id)
@@ -619,7 +679,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
                     or lane_workload.router_topk != model.num_experts_per_tok):
                 raise DeepSeekV4CoverageError("V4 grouped GEMM lane does not match the typed model/EP contract")
             path = predictor._moe_input_file
-            rows = loaders._load_moe_df(path, replica,
+            rows = _read_isolated_component(loaders._load_moe_df, scope, path, replica,
                 tensor_parallel_size=contract.tensor_parallel_size,
                 expert_parallel_size=contract.expert_parallel_size,
                 layer_contract=contract, operator_name=scope,
@@ -644,7 +704,8 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
             }, scope)
         else:
             path = predictor._compute_input_file
-            rows = loaders._load_linear_op_df(path, contract.tensor_parallel_size,
+            rows = _read_isolated_component(loaders._load_linear_op_df, scope,
+                path, contract.tensor_parallel_size,
                 required_columns=[f"time_stats.{scope}.median"],
                 layer_contract=contract, operator_name=scope)
             local = (compute_rows(batch) + tp - 1) // tp
@@ -679,6 +740,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         "runtime_fingerprint": rows.runtime_fingerprint.iloc[0],
         "model_config_sha256": rows.model_config_sha256.iloc[0],
         "parallel_groups": json.loads(row.parallel_groups),
+        "attention_layout": dict(attention_layout) if scope in DSV4_SCOPE_NAMES else None,
         "row_metadata": {name: value.item() if hasattr(value, "item") else value
                          for name, value in row.items()
                          if (name.endswith(".block_size") or name in (
