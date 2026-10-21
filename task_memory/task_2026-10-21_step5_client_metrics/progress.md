@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Parent accepted CPU implementation at e2be122 after183/148 independent passes and actual shipped-matrix rejection; reviewP3 removed at15a3958. |
 | 2026-10-21 | Start scoped executable implementation. |
 
 - completed: inspected primary requirements/spec/plan, D19 command/input inventory, shared five-file merge delta and native Step canonical replay.
