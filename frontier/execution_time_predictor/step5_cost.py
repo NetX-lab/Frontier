@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict
 import json
 
-from frontier.attention.step5 import describe_step5_layer
+from frontier.attention.step5 import Step5AttentionWorkload, describe_step5_layer
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime, OperatorCost
 from frontier.execution_time_predictor.step5 import (
     STEP5_FEATURE_COLUMNS,
@@ -56,12 +56,40 @@ def step5_predictions(models, measurement_type):
     return predictions
 
 
-def step5_batch_features(predictor, batch, layer_id):
-    """Bind actual batch extents to the same source geometry used by the producer."""
+def step5_batch_workload(predictor, batch):
+    """Bind request-owned or native idle-DP input rows for all Step consumers."""
     from frontier.entities.batch import DummyForwardBatch
 
+    config = predictor._model_config
     if isinstance(batch, DummyForwardBatch):
-        raise ValueError("Step measured request-free attention coverage is unavailable")
+        # Native _dummy_run(1) has a physical input slot but no request/cache metadata.
+        return Step5AttentionWorkload.from_lengths(
+            config, phase="decode", query_lengths=tuple(batch.num_tokens),
+            sequence_lengths=tuple(batch.num_tokens),
+            physical_query_rows=batch.get_effective_total_tokens_for_compute(predictor._cluster_type),
+            block_size_tokens=predictor._block_size, block_table_columns=0,
+            max_model_len_tokens=predictor._step5_max_model_len,
+            graph_mode=batch.get_decode_cuda_graph_runtime_mode().lower(),
+            has_attention_metadata=False,
+        )
+    phase = "mixed" if batch.num_prefill_tokens and batch.num_decode_tokens else (
+        "prefill" if batch.num_prefill_tokens else "decode"
+    )
+    queries = tuple(batch.num_tokens)
+    max_model_len = predictor._step5_max_model_len
+    return Step5AttentionWorkload.from_lengths(
+        config, phase=phase, query_lengths=queries,
+        sequence_lengths=tuple(context + query for context, query in zip(batch.num_context_tokens, queries)),
+        physical_query_rows=batch.get_effective_total_tokens_for_compute(predictor._cluster_type),
+        block_size_tokens=predictor._block_size,
+        block_table_columns=(max_model_len + predictor._block_size - 1) // predictor._block_size,
+        max_model_len_tokens=max_model_len,
+        graph_mode=batch.get_decode_cuda_graph_runtime_mode().lower(),
+    )
+
+
+def step5_batch_features(predictor, batch, layer_id):
+    """Bind actual batch extents to the same source geometry used by the producer."""
     config = predictor._model_config
     metadata = describe_step5_layer(
         config, layer_id,
@@ -86,6 +114,7 @@ def step5_batch_features(predictor, batch, layer_id):
         "valid_tokens": workload.valid_tokens, "padded_tokens": workload.padded_tokens,
         "max_model_len": workload.max_model_len_tokens,
         "block_table_columns": workload.block_table_columns, "score_regions": workload.score_regions,
+        "has_attention_metadata": int(workload.has_attention_metadata),
         "attention_variant": metadata.attention_spec.variant_id,
         "phase": workload.phase, "graph_mode": workload.graph_mode,
         "query_lens": workload.query_lengths,

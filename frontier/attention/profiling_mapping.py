@@ -31,7 +31,7 @@ STEP5_NUMERIC_COLUMNS = {
     "batch_size": 1, "batch_num_tokens": 1,
     "batch_num_prefill_tokens": 0, "batch_num_decode_tokens": 0,
     "valid_tokens": 1, "padded_tokens": 0, "max_model_len": 1,
-    "block_table_columns": 1, "score_regions": 0,
+    "block_table_columns": 0, "score_regions": 0, "has_attention_metadata": 0,
 }
 STEP5_FEATURE_COLUMNS = (
     *STEP5_NUMERIC_COLUMNS,

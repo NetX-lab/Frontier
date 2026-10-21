@@ -6,6 +6,41 @@
 | --- | --- |
 | 2026-10-21 | Preserve deterministic offline/online initialization failure. |
 | 2026-10-21 | Verify the authorized policy correction and preserve post-fix runtime failures. |
+| 2026-10-21 | Verify the newly assigned request-free typed binding; complete request execution remains under test. |
+
+## Request-free capability verification
+
+Current scope: the parent explicitly assigns the separately reached idle-DP measured binding. Existing `Step5AttentionWorkload` now carries explicit `has_attention_metadata`; its no-metadata state is restricted to the native-proven one eager physical slot with no block table/scored history. `attention_scopes` selects the already-existing request-free scope map. Loader numeric schema and model exact-coverage identity preserve this distinction, rejecting missing/invalid identity, regular fusion, graph/history contradictions and absent request-free measured coverage. No regular-decode substitution, zero fallback, new operator enum, native producer or admission changes.
+
+Canonical `_step5_attention_workload` delegates to the same Step consumer builder used by measured attention, so input_cast/final-residual and attention do not disagree about DummyForwardBatch. The old request-owned builder body is removed, not duplicated. This is the only change to the oversized canonical predictor; implementation moves into the existing Step cost module. Request-free projection/norm/output-zero-fill work has positive independent CPU fixture duration .321ms with17 measured fixture launches; public dense-FFN and stage-boundary costs also stay positive.
+
+| Check | Observed | Verdict |
+| --- | --- | --- |
+| Pre-fix request-free minimal replay |2 failed on the exact explicit rejection | RED |
+| First replay/training check |33 passed in10.79s | PASS |
+| Final replay/public predictor/training check |41 passed in27.89s | PASS |
+| Actual CLI initialization regression |1 passed in60.70s; explicitly zero requests complete | PASS boundary only |
+| Broader affected/structural check |271 passed,1 skipped,1 failed in146.81s | PARTIAL, not a green aggregate |
+| Complete actual-main run08 | Running against full synthetic coverage | PENDING |
+
+The one broader failure is `tests/unit/test_step5_structural_execution.py:383-386`: it still expects constructing any non-dummy Step predictor to raise NotImplementedError before training, whereas the existing measured constructor reaches an absent default linear_op.csv. No workload builder or new attention-row check is reached on that failure path. This obsolete pre-measured assertion is left unchanged and handed to parent; it is not silently excluded or counted as PASS. The skipped attention profiling case is preserved, not native evidence.
+
+Exact focused command environment:
+
+```bash
+env PYTHONPATH=.:tests/unit PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp \
+ /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest \
+ tests/unit/test_step5_measured_replay.py tests/unit/test_step5_measured_public_predictor.py tests/unit/test_step5_measured_training.py \
+ -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d20_request_free_green03
+```
+
+The red command selects `tests/unit/test_step5_measured_replay.py -k request_free` with basetemp `d20_request_free_red01`. The actual-CLI regression selects `tests/integration/test_step5_measured_main.py` with basetemp `d20_request_free_cli_regression04`. The broader command selects `test_step5_measured_manager.py`, `test_step5_attention_input_union.py`, `test_step5_model_bundle.py`, `test_step5_measured_cost.py`, `test_step5_measured_pd.py`, `test_step5_structural_execution.py`, `test_step5_attention_profiling.py` with basetemp `d20_request_free_affected01`; all other options/environment are identical. Retained full logs and hashes are under `evidence/request_free/`.
+
+Environment: Python3.10.6, NumPy2.2.6, pandas2.3.3, SciPy1.15.3, sklearn1.7.2, pytest9.1.1. No GPU, authentication, network, SSH, new agents or full fidelity run. Native source inspection is read-only against `/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm`; inspected model.py/sparse_attention.py/attention.py hashes are in the receipt. It verifies the existing scope branch, not native measured timing or serving qualification.
+
+Full-run progress is not disguised as completion: run05 reached stage input_cast's second builder use; run06 then reached shared-expert physical6145 tokens (real6144 plus idle1), beyond the old synthetic6144 bound; run07 accepted6145 then found the missing perfectly uniform expert-load cell. The fixture now explicitly includes the smallest complete uniform expert cycle and every6144..7167 decode context required by strict exact coverage. Production bounds/exact-coverage checks are unchanged. Full run08 uses those declared synthetic inputs; final tail/READ/release/metrics acceptance still awaits actual output inspection.
+
+Parent-owned schema seam: `profiling/step5/rows.py:build_row` must emit `has_attention_metadata=1` for its ordinary request-owned rows. Any future real request-free producer must emit0, zero block-table/score-region extents and the existing exact request-free fusion. This agent deliberately does not edit rows.py while parent owns D22. Old profiles without that explicit column fail typed coverage validation; they are not silently treated as request-free or ordinary.
 
 ## Current result after policy correction
 

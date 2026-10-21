@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import pickle
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
@@ -51,18 +52,25 @@ def _scheduler():
     return SimpleNamespace(block_size=16, max_model_len=8192)
 
 
-def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase="prefill"):
+def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase="prefill",
+         has_attention_metadata=True):
     cell = Step5ProfileInput(layer_id, (query,), (context,), phase, graph_mode=graph_mode)
     metadata = describe_step5_layer(model, layer_id, attention_tp_size=8, moe_tp_size=1,
                                    expert_parallel_size=1)
-    active = {name for name, _ in metadata.attention_scopes(
-        cell.workload(model, block_size=16, max_model_len=8192))}
+    workload = cell.workload(model, block_size=16, max_model_len=8192)
+    if not has_attention_metadata:
+        workload = replace(workload, has_attention_metadata=False, block_table_columns=0)
+    scopes = metadata.attention_scopes(workload)
+    active = {name for name, _ in scopes}
     stats = {}
     for index, name in enumerate((*STEP5_SCOPE_NAMES, *STEP5_OPERATOR_NAMES), start=1):
         value = index / 10 + query / 1000 if name in active or name == "step5_layer_e2e" else 0.
         stats[name] = dict(min=value, max=value, mean=value, median=value, std=0., count=10)
         if name == "step5_layer_e2e":
             stats[name]["kernel_count"] = FIXTURE_ROOT_KERNEL_COUNT
+            if not has_attention_metadata:
+                # Independent positive fixture coverage, never regular-decode substitution.
+                stats[name].update(min=.321, max=.321, mean=.321, median=.321, kernel_count=17)
     measurement = step5_measurement_type(graph_mode)
     basis = ("cuda_event_native_runtime_latency" if measurement is MeasurementType.CUDA_EVENT
              else "correlated_kernel_plus_memcpy_duration_sum")
@@ -77,6 +85,9 @@ def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase=
     # Predictor-only root ownership is not an additional native instrumentation scope.
     contracts = json.loads(row["typed_operator_contracts"])
     row["typed_operator_contracts"] = json.dumps({name: contracts[name] for name in STEP5_SCOPE_NAMES})
+    row.update(has_attention_metadata=int(has_attention_metadata),
+               fusion=json.dumps(scopes), block_table_columns=workload.block_table_columns,
+               score_regions=workload.score_regions)
     return row
 
 

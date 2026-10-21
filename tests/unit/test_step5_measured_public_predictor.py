@@ -15,7 +15,7 @@ from frontier.config import (
     global_vars,
 )
 from frontier.config.quantization_manager import QuantizationManager
-from frontier.entities import Batch, Request
+from frontier.entities import Batch, DummyForwardBatch, Request
 from frontier.execution_time_predictor.random_forrest_execution_time_predictor import (
     RandomForrestExecutionTimePredictor,
 )
@@ -61,7 +61,8 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     compute_dir.mkdir()
     attention = _write(attention_dir, [
         _row(replica.model_config, layer, context=8176) for layer in range(92)
-    ])
+    ] + [_row(replica.model_config, layer, query=1, context=0, phase="decode",
+              has_attention_metadata=False) for layer in range(92)])
     metadata = ffn_fixture._metadata
     with monkeypatch.context() as context:
         # Generate event-labelled CPU fixtures; never relabel existing measurements.
@@ -132,3 +133,15 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     )
     assert last.final_residual_time == last._step5_stage_operator_costs["final_residual"]["duration_ms"]
     assert last.final_residual_time > 0
+    dummy = DummyForwardBatch(0, 0, 0)
+    idle = predictor.predict_stage_execution_time(
+        dummy, 0, ClusterType.PREFILL, layer_id=1, num_layers=1, include_moe=False,
+    ).layer_execution_times[0]
+    assert idle.get_single_layer_attention_scope_time() >= .321
+    assert idle.get_single_layer_post_attention_time() > 0
+    assert idle._step5_ffn_operator_costs["mlp_up_proj"]["duration_ms"] > 0
+    assert dummy.requests == []
+    boundary = predictor.predict_stage_execution_time(
+        dummy, 0, ClusterType.PREFILL, layer_id=0, num_layers=1, include_ffn=False,
+    )
+    assert boundary.input_cast_time > 0

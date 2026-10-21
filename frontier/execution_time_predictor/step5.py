@@ -95,6 +95,7 @@ def _row_workload(row) -> Step5AttentionWorkload:
         max_model_len_tokens=int(row["max_model_len"]),
         region_tokens=int(row["region_block_size"]), topk_regions=int(row["topk_regions"]),
         graph_mode=row["graph_mode"],
+        has_attention_metadata=bool(row["has_attention_metadata"]),
     )
 
 
@@ -108,6 +109,8 @@ def step5_row_features(row) -> dict[str, float]:
                 or (name != "rope_theta" and value != int(value))):
             raise ValueError(f"Invalid Step numeric feature {name}={value!r}")
         features[name] = float(value)
+    if features["has_attention_metadata"] not in (0., 1.):
+        raise ValueError("Step has_attention_metadata must be 0 or 1")
     workload = _row_workload(row)
     queries = workload.query_lengths
     contexts = tuple(length - query for length, query in zip(workload.sequence_lengths, queries))
@@ -393,7 +396,8 @@ def set_step5_model_coverage(model, frame: pd.DataFrame) -> None:
     }
     model._frontier_step5_domains = {
         name: tuple(sorted(float(value) for value in frame[name].unique()))
-        for name in ("global_layer_id", "attention_variant_code", "phase_code", "graph_mode_code")
+        for name in ("global_layer_id", "attention_variant_code", "phase_code", "graph_mode_code",
+                     "has_attention_metadata")
     }
 
 

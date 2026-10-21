@@ -7563,22 +7563,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         )
 
     def _step5_attention_workload(self, batch: Batch):
-        from frontier.attention.step5 import Step5AttentionWorkload
+        from frontier.execution_time_predictor.step5_cost import step5_batch_workload
 
-        phase = "mixed" if batch.num_prefill_tokens and batch.num_decode_tokens else (
-            "prefill" if batch.num_prefill_tokens else "decode"
-        )
-        queries = tuple(batch.num_tokens)
-        lengths = tuple(context + query for context, query in zip(batch.num_context_tokens, queries))
-        max_model_len = self._step5_max_model_len
-        return Step5AttentionWorkload.from_lengths(
-            self._model_config, phase=phase, query_lengths=queries, sequence_lengths=lengths,
-            physical_query_rows=batch.get_effective_total_tokens_for_compute(self._cluster_type),
-            block_size_tokens=self._block_size,
-            block_table_columns=(max_model_len + self._block_size - 1) // self._block_size,
-            max_model_len_tokens=max_model_len,
-            graph_mode=batch.get_decode_cuda_graph_runtime_mode().lower(),
-        )
+        return step5_batch_workload(self, batch)
 
     def _predict_step5_dummy_attention_time(self, batch: Batch, layer_id: int) -> AttentionTime:
         """Price exclusive source scopes with controlled durations, never native timings."""
