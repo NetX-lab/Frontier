@@ -206,3 +206,26 @@ before; their old later projection is removed. Authoritative layers still use
 the strict measured root projection. No new flag, module, owner proof, or
 predictor replacement behavior is added. The correction is net minus 22 lines
 and stays within the existing ledger split exception.
+
+## Step measured fixed-binding reuse, 2026-10-22
+
+D23-MRV2-CONTRACT-REUSE replaces repeated physical-layer metadata and operator
+precision/contract construction at baseline `74980bb`. The implementation stays
+in the existing `frontier/execution_time_predictor/step5_cost.py` (220 to 263
+lines), shared by measured attention batch features and the active measured FFN
+layer context. `sklearn_moe_execution_time_predictor.py` only delegates fixed
+binding construction and shrinks from 1,814 to 1,791 lines. Neither touched
+module exceeds 2,000 lines; the large base predictor, disaggregation predictor,
+metrics store and event modules are unchanged.
+
+The cleanup removes the former per-query precision/contract block and duplicate
+layer description at the two consumers, rather than retaining a second binding
+path. Predictor-instance tables hold physical-layer metadata and fixed
+`(physical layer, operator)` precision/serialized contract identity. The existing
+measurement-family registry still chooses the current estimator on every query;
+dynamic features, duration/count lookups, bounds, source proofs and costs stay
+with the existing measured query. Nested active-layer context and cost records
+retain their original owner and restoration behavior. A new global/model/output
+cache or a broad predictor split would add lifetime ownership without removing
+the measured fixed construction. The functional splits above remain deferred
+and are not prerequisites for this bounded correction.
