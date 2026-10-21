@@ -44,6 +44,7 @@ from frontier.profiling.attention.dsa_plan import (
     DsaProfilePlan,
     _build_decode_cases,
     _build_prefill_cases,
+    _build_serving_cases,
     _require_positive_int,
     _required_config_int,
     _required_config_str,
@@ -382,7 +383,13 @@ def build_dsv4_profile_plan(
     num_layers: int | None,
     limits: DsaMeasurementLimits,
     kv_cache_dtype: str,
+    query_one_context_min: int = 0,
+    query_one_context_max: int | None = None,
 ) -> Dsv4ProfilePlan:
+    if type(query_one_context_min) is not int or query_one_context_min < 0:
+        raise ValueError("query_one_context_min must be a non-negative int")
+    if query_one_context_max is None and query_one_context_min:
+        raise ValueError("query_one_context_min requires query_one_context_max")
     model_config = ModelConfig.from_model_name(model_name)
     family = model_config.get_attention_family()
     if family.family_id != DEEPSEEK_V4_ATTENTION_FAMILY.family_id:
@@ -422,27 +429,32 @@ def build_dsv4_profile_plan(
         short_context_max_seq_len=(index_topk + 1) * csa_ratio - 1,
         layers=layers,
     )
-    chunk_budgets = tuple(sorted(limits.chunk_budgets))
-    context_grid = build_context_grid(
-        limits.block_size, shape.short_context_max_seq_len, limits.max_context_len
-    )
-    # The largest budget runs the decode cases.
-    cases = _build_prefill_cases(chunk_budgets, limits, context_grid)
-    cases += _build_decode_cases(
-        len(chunk_budgets) - 1, chunk_budgets[-1], limits, context_grid
-    )
-    engines = tuple(
-        DsaEngineSpec(
-            engine_index=index,
-            chunk_budget=budget,
-            max_num_seqs=max(
-                case.batch_size for case in cases if case.engine_index == index
-            ),
-            max_model_len=limits.max_context_len,
-            block_size=limits.block_size,
+    if query_one_context_max is not None:
+        engines, cases = _build_serving_cases(
+            limits, query_one_context_max, query_one_context_min, None
         )
-        for index, budget in enumerate(chunk_budgets)
-    )
+    else:
+        chunk_budgets = tuple(sorted(limits.chunk_budgets))
+        context_grid = build_context_grid(
+            limits.block_size, shape.short_context_max_seq_len, limits.max_context_len
+        )
+        # The largest budget runs the decode cases.
+        cases = _build_prefill_cases(chunk_budgets, limits, context_grid)
+        cases += _build_decode_cases(
+            len(chunk_budgets) - 1, chunk_budgets[-1], limits, context_grid
+        )
+        engines = tuple(
+            DsaEngineSpec(
+                engine_index=index,
+                chunk_budget=budget,
+                max_num_seqs=max(
+                    case.batch_size for case in cases if case.engine_index == index
+                ),
+                max_model_len=limits.max_context_len,
+                block_size=limits.block_size,
+            )
+            for index, budget in enumerate(chunk_budgets)
+        )
     return Dsv4ProfilePlan(
         schema_version=PLAN_SCHEMA_VERSION,
         shape=shape,

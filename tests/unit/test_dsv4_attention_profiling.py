@@ -5,8 +5,10 @@ from __future__ import annotations
 import csv
 import functools
 import json
+import random
 import sys
 import types
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -226,7 +228,15 @@ def hf_config():
 
 
 @pytest.fixture(scope="module")
-def plan(hf_config):
+def plan(hf_config, request):
+    if getattr(request, "param", None) == "q1":
+        return build_dsv4_profile_plan(
+            model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+            num_layers=None, kv_cache_dtype="fp8",
+            limits=_limits(max_context_len=7168, max_kv_tokens_per_lane=7168,
+                           max_num_seqs=128, chunk_budgets=(6144,)),
+            query_one_context_min=6143, query_one_context_max=7166,
+        )
     return _build_plan(hf_config)
 
 
@@ -338,6 +348,69 @@ def test_plan_dry_run_cli(tmp_path, capsys):
     assert summary["num_engines"] == 2
     assert summary["kv_cache_dtype"] == "fp8"
     assert full["shape"]["short_context_max_seq_len"] == 2051
+
+
+def _q1_arguments():
+    return [
+        "--model_name", MODEL_NAME, "--model_config_path", CONFIG_PATH,
+        "--target_tensor_parallel_size", "8", "--block_size", "256",
+        "--kv_cache_dtype", "fp8", "--max_context_len", "7168",
+        "--max_kv_tokens_per_lane", "7168", "--max_num_seqs", "128",
+        "--chunk_budgets", "6144", "--query_one_context_min", "6143",
+        "--query_one_context_max", "7166",
+    ]
+
+
+def test_q1_cli_selects_exact_positive_window(tmp_path, capsys):
+    output = tmp_path / "q1.json"
+    dsv4_main(["plan", *_q1_arguments(), "--output", str(output)])
+    plan = json.loads(output.read_text())
+    assert len(plan["engines"]) == len(plan["cases"]) == 1
+    case = plan["cases"][0]
+    assert case["case_id"] == "e0-decode-q1-c6143-7166"
+    assert (case["phase"], case["batch_size"], case["prompt_len"], case["max_tokens"]) == (
+        PHASE_DECODE, 1, 6143, 1025,
+    )
+    assert (case["warmup"], case["measured"], case["estimated_steps"]) == (0, 1024, 1025)
+    assert plan["engines"][0]["max_model_len"] == 7168
+    assert plan["engines"][0]["chunk_budget"] == 6144
+    assert "engine_policy" not in plan["limits"], "Keep the implicit legacy serialization"
+
+
+@pytest.mark.parametrize("minimum,maximum", [
+    (-1, 10), (True, 10), (False, 10), (1.5, 10), (5, 4), (1, None),
+    (1, -1), (1, True), (1, 1.5), (6143, 7167),
+])
+def test_q1_rejects_invalid_window_or_capacity(hf_config, minimum, maximum):
+    with pytest.raises(ValueError, match="query_one_context"):
+        build_dsv4_profile_plan(
+            model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+            num_layers=None, kv_cache_dtype="fp8",
+            limits=_limits(max_context_len=7168, max_kv_tokens_per_lane=7168,
+                           max_num_seqs=128, chunk_budgets=(6144,)),
+            query_one_context_min=minimum, query_one_context_max=maximum,
+        )
+
+
+def test_q1_zero_endpoint_keeps_real_prefill_separate(hf_config):
+    plan = build_dsv4_profile_plan(
+        model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+        num_layers=None, kv_cache_dtype="fp8", limits=_limits(),
+        query_one_context_min=0, query_one_context_max=2,
+    )
+    assert [(case.phase, case.prompt_len, case.measured) for case in plan.cases] == [
+        (PHASE_PREFILL, 1, plan.limits.prefill_measured_repeats), (PHASE_DECODE, 1, 2),
+    ]
+
+
+def test_legacy_namespace_omits_q1_fields_without_changing_plan():
+    from frontier.profiling.attention.dsv4_attention_main import build_parser, build_plan
+
+    args = build_parser().parse_args(["plan", *PLAN_ARGS])
+    expected = build_plan(args).to_json()
+    del args.query_one_context_min
+    del args.query_one_context_max
+    assert build_plan(args).to_json() == expected
 
 
 # ---------------------------------------------------------------------------
@@ -619,15 +692,29 @@ class _FakeAttention:
         return self._o_proj(x)
 
 
-def _fake_metadata(requests):
+def _fake_metadata(requests, ratio, max_model_len, budget):
     max_seq_len = max(r["num_computed_tokens"] + r["num_scheduled_tokens"] for r in requests)
     tokens = sum(r["num_scheduled_tokens"] for r in requests)
-    swa = SimpleNamespace(**{name: 1 for name in dsv4_runner.METADATA_FIELDS["swa"]})
-    attention = SimpleNamespace(**{name: 2 for name in dsv4_runner.METADATA_FIELDS["attention"]})
-    attention.max_seq_len = max_seq_len
-    compressor = SimpleNamespace(block_size=64, num_decode_tokens=0, c128_boundary=None)
-    indexer = SimpleNamespace(max_seq_len=max_seq_len, num_decodes=0, num_decode_tokens=0,
-                              num_prefills=1, num_prefill_tokens=tokens)
+    prefills = [r for r in requests if r["num_computed_tokens"] < r["prompt_len"]]
+    prefill_tokens = sum(r["num_scheduled_tokens"] for r in prefills)
+    decodes = len(requests) - len(prefills)
+    swa = SimpleNamespace(
+        block_size=64, num_decodes=decodes, num_prefills=len(prefills),
+        num_decode_tokens=tokens - prefill_tokens, num_prefill_tokens=prefill_tokens,
+        max_decode_query_len=1, decode_swa_width=128, prefill_window_size=128,
+        prefill_max_model_len=max_model_len, prefill_max_num_batched_tokens=budget,
+    )
+    attention = SimpleNamespace(
+        num_reqs=len(requests), max_query_len=max(r["num_scheduled_tokens"] for r in requests),
+        max_seq_len=max_seq_len, num_actual_tokens=tokens, block_size=256, topk_tokens=512,
+    )
+    compressor = SimpleNamespace(
+        block_size=8 if ratio == 128 else 4, num_decode_tokens=tokens - prefill_tokens,
+        c128_boundary=(max_seq_len % 128 == 0 if ratio == 128 and not prefills else None),
+    )
+    indexer = SimpleNamespace(max_seq_len=max_seq_len, num_decodes=decodes,
+                               num_decode_tokens=tokens - prefill_tokens,
+                               num_prefills=len(prefills), num_prefill_tokens=prefill_tokens)
     return {"swa_cache": swa, "attn": attention, "compressor.state_cache": compressor,
             "indexer.k_cache": indexer, "indexer.compressor.state_cache": compressor}
 
@@ -650,16 +737,23 @@ def fake_engine(plan, monkeypatch):
                          (_ATTENTION_MODULE, attention_module)):
         monkeypatch.setitem(sys.modules, name, module)
     monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(
+        bfloat16="bfloat16",
         cuda=SimpleNamespace(Event=_FakeEvent, synchronize=lambda: None)))
     monkeypatch.setattr(case_runner, "_STATE", None)
     monkeypatch.setattr(dsv4_runner, "_CURRENT_LAYER", None)
 
     def execute_model(scheduler_output):
-        requests = case_runner._require_state().active.record["requests"]
+        active = case_runner._require_state().active
+        if active is None:
+            return "unmeasured setup"
+        requests = active.record["requests"]
         context.attn_metadata = {
             f"{prefix}.{suffix}": value
-            for prefix, _ in modules
-            for suffix, value in _fake_metadata(requests).items()
+            for prefix, module in modules
+            for suffix, value in _fake_metadata(
+                requests, module.compress_ratio, plan.limits.max_context_len,
+                max(engine.chunk_budget for engine in plan.engines),
+            ).items()
         }
         for prefix, module in modules:
             context.attn_metadata[prefix] = context.attn_metadata[f"{prefix}.attn"]
@@ -736,3 +830,84 @@ def test_norm_outside_a_hooked_layer_is_an_error(plan, fake_engine):
     dsv4_runner.install_dsv4_hooks(worker, 1, layers)
     with pytest.raises(RuntimeError, match="outside a hooked DeepSeek-V4 attention layer"):
         sys.modules[_ATTENTION_MODULE].fused_q_kv_rmsnorm("x")
+
+
+@pytest.mark.parametrize("plan", ["q1"], indirect=True)
+def test_q1_cli_runs_native_shaped_schedule_and_metadata(
+    fake_engine, monkeypatch, tmp_path,
+):
+    worker, _ = fake_engine
+    vllm = sys.modules["vllm"]
+    vllm.SamplingParams = lambda **kwargs: kwargs
+    model_dir = tmp_path / "model"
+    model_dir.mkdir()
+    (model_dir / "config.json").write_bytes(Path(CONFIG_PATH).read_bytes())
+    pending, steps, observed = {}, [], {}
+
+    def run_cpu(**kwargs):
+        plan = kwargs["plan"]
+        assert kwargs["case_ids"] == {"e0-decode-q1-c6143-7166"}
+        case, = [case for case in plan.cases if case.case_id in kwargs["case_ids"]]
+        layers = [(layer.global_layer_id, layer.attention_variant, layer.compress_ratio)
+                  for layer in plan.shape.layers]
+        dsv4_runner.install_dsv4_hooks(worker, 0, layers)
+
+        def add(request_id, prompt, params):
+            assert len(prompt["prompt_token_ids"]) == case.prompt_len == 6143
+            assert params["max_tokens"] == 1025
+            pending[request_id] = {"prompt": prompt, "outputs": 0}
+
+        def step():
+            request_id, request = next(iter(pending.items()))
+            emitted = request["outputs"]
+            context = 0 if emitted == 0 else case.prompt_len + emitted - 1
+            query = case.prompt_len if emitted == 0 else 1
+            steps.append((query, context))
+            worker.model_runner.execute_model(SimpleNamespace(
+                finished_req_ids=set(), num_scheduled_tokens={request_id: query},
+                scheduled_new_reqs=([SimpleNamespace(
+                    req_id=request_id, prompt_token_ids=request["prompt"]["prompt_token_ids"],
+                    num_computed_tokens=0,
+                )] if emitted == 0 else []),
+                scheduled_cached_reqs=SimpleNamespace(
+                    req_ids=[] if emitted == 0 else [request_id],
+                    num_computed_tokens=[] if emitted == 0 else [context],
+                ),
+            ))
+            request["outputs"] += 1
+            if request["outputs"] == 1025:
+                del pending[request_id]
+
+        def abort(request_ids):
+            assert len(request_ids) == 1
+            pending.clear()
+
+        llm = SimpleNamespace(
+            llm_engine=SimpleNamespace(add_request=add, step=step, abort_request=abort,
+                                       has_unfinished_requests=lambda: bool(pending)),
+            collective_rpc=lambda function, args=(): [function(worker, *args)],
+        )
+        records = case_runner.run_case(llm, plan, case, CUDA_EVENT, random.Random(1234),
+                                       100, tmp_path / "traces", False)
+        observed["steps"] = [record for record in records if record["kind"] == "step"]
+
+    monkeypatch.setattr(dsv4_runner, "run_engine", run_cpu)
+    dsv4_main([
+        "run", *_q1_arguments(), "--engine_index", "0", "--model_dir", str(model_dir),
+        "--raw_dir", str(tmp_path / "raw"), "--trace_dir", str(tmp_path / "traces"),
+        "--expected_attention_backend", "FLASHMLA_SPARSE_DSV4",
+        "--gpu_memory_utilization", "0.85", "--seed", "1234",
+        "--case_ids", "e0-decode-q1-c6143-7166",
+    ])
+    assert steps == [(6143, 0), *((1, context) for context in range(6143, 7167))]
+    recorded = observed["steps"]
+    assert len(recorded) == 1024
+    assert [row["requests"][0]["num_computed_tokens"] for row in recorded] == list(range(6143, 7167))
+    assert all(row["phase"] == PHASE_DECODE and row["requests"][0]["prompt_len"] == 6143
+               for row in recorded), "The local decode is not a NIXL first-tail prefill"
+    assert [row[metadata_key("csa", "indexer")]["max_seq_len"] for row in recorded] == list(range(6144, 7168))
+    assert all(row[metadata_key("csa", "indexer")]["num_decodes"] == 1
+               and row[metadata_key("csa", "indexer")]["num_prefills"] == 0 for row in recorded)
+    assert sum(row[metadata_key("hca", "attention")]["max_seq_len"] % 128 == 0
+               for row in recorded) == 8
+    assert sum(row[metadata_key("hca", "compressor")]["c128_boundary"] for row in recorded) == 8

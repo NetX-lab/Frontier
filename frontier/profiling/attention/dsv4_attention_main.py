@@ -54,6 +54,11 @@ _RAW_FILE_PATTERN = "dsv4_raw_e*.jsonl"
 def _add_dsv4_plan_arguments(parser: argparse.ArgumentParser) -> None:
     _add_plan_arguments(parser)
     parser.add_argument(
+        "--query_one_context_min", type=int, default=0,
+        help="Inclusive cached-context lower bound for --query_one_context_max. "
+             "A positive bound uses an unmeasured local seed, not a NIXL first-tail.",
+    )
+    parser.add_argument(
         "--kv_cache_dtype",
         required=True,
         help="KV-cache dtype of the target deployment (vLLM --kv-cache-dtype).",
@@ -82,6 +87,8 @@ def build_plan(args: argparse.Namespace) -> Dsv4ProfilePlan:
         num_layers=args.num_layers,
         limits=limits,
         kv_cache_dtype=args.kv_cache_dtype,
+        query_one_context_min=getattr(args, "query_one_context_min", 0),
+        query_one_context_max=getattr(args, "query_one_context_max", None),
     )
 
 
