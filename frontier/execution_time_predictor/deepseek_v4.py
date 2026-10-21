@@ -567,6 +567,7 @@ def _read_isolated_component(reader, scope, *args, **kwargs):
             "Missing load imbalance features", "typed_operator_contracts ",
             "typed metadata ", "typed contract ", "model_architecture_profile ",
             "Multiple model_architecture_profile values found ",
+            "Unknown typed operator ",
         )):
             raise
         raise DeepSeekV4CoverageError(f"V4 {scope} measured coverage unavailable: {exc}") from exc

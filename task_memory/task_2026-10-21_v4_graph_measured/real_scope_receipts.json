@@ -1,7 +1,7 @@
 {
   "status": "PASS",
   "positive_count": 102,
-  "typed_negative_count": 68,
+  "typed_negative_count": 72,
   "serving_admission": false,
   "receipts": [
     {
@@ -7384,7 +7384,7 @@
       "scope": "share_expert_up_proj",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
       "change": "missing_file",
-      "error": "V4 share_expert_up_proj measured table cannot be read: Linear ops input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_f_qer96l/share_expert_up_proj_missing_file.csv\nPlease run profiling first to generate this file.\nSuggested command: bash frontier/profiling/example/test_profiling_linear_op.sh",
+      "error": "V4 share_expert_up_proj measured table cannot be read: Linear ops input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_sy7ltxcn/share_expert_up_proj_missing_file.csv\nPlease run profiling first to generate this file.\nSuggested command: bash frontier/profiling/example/test_profiling_linear_op.sh",
       "cause": "FileNotFoundError"
     },
     {
@@ -7392,7 +7392,7 @@
       "scope": "share_expert_up_proj",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
       "change": "missing_tp",
-      "error": "V4 share_expert_up_proj measured coverage unavailable: Column 'num_tensor_parallel_workers' not found in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_f_qer96l/share_expert_up_proj_missing_tp.csv\nAvailable columns: ['time_stats.share_expert_up_proj.min', 'time_stats.share_expert_up_proj.max', 'time_stats.share_expert_up_proj.mean', 'time_stats.share_expert_up_proj.median', 'time_stats.share_expert_up_proj.std', 'time_stats.share_expert_up_proj.count', 'time_stats.share_expert_down_proj.min', 'time_stats.share_expert_down_proj.max', 'time_stats.share_expert_down_proj.mean', 'time_stats.share_expert_down_proj.median', 'time_stats.share_expert_down_proj.std', 'time_stats.share_expert_down_proj.count', 'time_stats.share_expert_act.min', 'time_stats.share_expert_act.max', 'time_stats.share_expert_act.mean', 'time_stats.share_expert_act.median', 'time_stats.share_expert_act.std', 'time_stats.share_expert_act.count', 'n_head', 'n_kv_head', 'n_embd', 'n_expanded_embd', 'vocab_size', 'use_gated_mlp', 'use_qk_norm', 'attn_output_gate', 'num_tokens', 'padded_n_embd', 'padded_n_expanded_embd', 'model_arch', 'model_architecture_profile', 'share_expert_dim', 'share_q_dim', 'typed_operator_contracts', 'measurement_type', 'linear_backends', 'profiling_precision', 'quant_signature', 'runtime_fingerprint', 'runtime_versions', 'source_revision', 'model_config_revision', 'model_config_sha256', 'weight_source', 'device_name', 'device_capability', 'schema_version', 'parallel_groups', 'graph_mode']\nThis may indicate a corrupted or incompatible profiling file.",
+      "error": "V4 share_expert_up_proj measured coverage unavailable: Column 'num_tensor_parallel_workers' not found in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_sy7ltxcn/share_expert_up_proj_missing_tp.csv\nAvailable columns: ['time_stats.share_expert_up_proj.min', 'time_stats.share_expert_up_proj.max', 'time_stats.share_expert_up_proj.mean', 'time_stats.share_expert_up_proj.median', 'time_stats.share_expert_up_proj.std', 'time_stats.share_expert_up_proj.count', 'time_stats.share_expert_down_proj.min', 'time_stats.share_expert_down_proj.max', 'time_stats.share_expert_down_proj.mean', 'time_stats.share_expert_down_proj.median', 'time_stats.share_expert_down_proj.std', 'time_stats.share_expert_down_proj.count', 'time_stats.share_expert_act.min', 'time_stats.share_expert_act.max', 'time_stats.share_expert_act.mean', 'time_stats.share_expert_act.median', 'time_stats.share_expert_act.std', 'time_stats.share_expert_act.count', 'n_head', 'n_kv_head', 'n_embd', 'n_expanded_embd', 'vocab_size', 'use_gated_mlp', 'use_qk_norm', 'attn_output_gate', 'num_tokens', 'padded_n_embd', 'padded_n_expanded_embd', 'model_arch', 'model_architecture_profile', 'share_expert_dim', 'share_q_dim', 'typed_operator_contracts', 'measurement_type', 'linear_backends', 'profiling_precision', 'quant_signature', 'runtime_fingerprint', 'runtime_versions', 'source_revision', 'model_config_revision', 'model_config_sha256', 'weight_source', 'device_name', 'device_capability', 'schema_version', 'parallel_groups', 'graph_mode']\nThis may indicate a corrupted or incompatible profiling file.",
       "cause": "ValueError"
     },
     {
@@ -7413,10 +7413,18 @@
     },
     {
       "measurement_type": "CUDA_EVENT",
+      "scope": "share_expert_up_proj",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+      "change": "unknown_operator",
+      "error": "V4 share_expert_up_proj measured coverage unavailable: Unknown typed operator 'unqualified_operator'",
+      "cause": "ValueError"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
       "scope": "moe_grouped_gemm",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
       "change": "missing_file",
-      "error": "V4 moe_grouped_gemm measured table cannot be read: MoE input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_f_qer96l/moe_grouped_gemm_missing_file.csv\nPlease run MoE profiling first.\nSuggested command: bash frontier/profiling/example/test_profiling_moe.sh",
+      "error": "V4 moe_grouped_gemm measured table cannot be read: MoE input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_sy7ltxcn/moe_grouped_gemm_missing_file.csv\nPlease run MoE profiling first.\nSuggested command: bash frontier/profiling/example/test_profiling_moe.sh",
       "cause": "FileNotFoundError"
     },
     {
@@ -7447,8 +7455,16 @@
       "measurement_type": "CUDA_EVENT",
       "scope": "moe_grouped_gemm",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+      "change": "unknown_operator",
+      "error": "V4 moe_grouped_gemm measured coverage unavailable: Unknown typed operator 'unqualified_operator'",
+      "cause": "ValueError"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
+      "scope": "moe_grouped_gemm",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
       "change": "missing_ep",
-      "error": "V4 moe_grouped_gemm measured coverage unavailable: MoE profiling data is missing 'expert_parallel_size' while EP=32 is required in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_f_qer96l/moe_grouped_gemm_missing_ep.csv",
+      "error": "V4 moe_grouped_gemm measured coverage unavailable: MoE profiling data is missing 'expert_parallel_size' while EP=32 is required in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_sy7ltxcn/moe_grouped_gemm_missing_ep.csv",
       "cause": "ValueError"
     },
     {
@@ -7456,7 +7472,7 @@
       "scope": "moe_grouped_gemm",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
       "change": "unmatched_ep",
-      "error": "V4 moe_grouped_gemm measured coverage unavailable: No data matches the filtering criteria in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_f_qer96l/moe_grouped_gemm_unmatched_ep.csv\nRequired MoE configuration:\n  - num_experts: 256\n  - router_topk: 6\n  - hidden_dim: 4096\n  - expert_hidden_dim: 2048\n  - tensor_parallel_size: 1\n  - expert_parallel_size: 32\n  - training_mode: load_imbalance (load_imbalance=True)\n  - typed operator: 'moe_grouped_gemm'\n  - typed layer contract admission: required\n  - Available num_experts: [np.int64(256)]\n  - Available router_topk: [np.int64(6)]\n  - Available num_tensor_parallel_workers: [np.int64(1)]\n  - Available expert_parallel_size: [np.int64(16)]\n  - Available load_distribution: ['uniform']",
+      "error": "V4 moe_grouped_gemm measured coverage unavailable: No data matches the filtering criteria in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_sy7ltxcn/moe_grouped_gemm_unmatched_ep.csv\nRequired MoE configuration:\n  - num_experts: 256\n  - router_topk: 6\n  - hidden_dim: 4096\n  - expert_hidden_dim: 2048\n  - tensor_parallel_size: 1\n  - expert_parallel_size: 32\n  - training_mode: load_imbalance (load_imbalance=True)\n  - typed operator: 'moe_grouped_gemm'\n  - typed layer contract admission: required\n  - Available num_experts: [np.int64(256)]\n  - Available router_topk: [np.int64(6)]\n  - Available num_tensor_parallel_workers: [np.int64(1)]\n  - Available expert_parallel_size: [np.int64(16)]\n  - Available load_distribution: ['uniform']",
       "cause": "ValueError"
     },
     {
@@ -7649,7 +7665,7 @@
       "scope": "share_expert_up_proj",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
       "change": "missing_file",
-      "error": "V4 share_expert_up_proj measured table cannot be read: Linear ops input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_rin8iga8/share_expert_up_proj_missing_file.csv\nPlease run profiling first to generate this file.\nSuggested command: bash frontier/profiling/example/test_profiling_linear_op.sh",
+      "error": "V4 share_expert_up_proj measured table cannot be read: Linear ops input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_dopmaztd/share_expert_up_proj_missing_file.csv\nPlease run profiling first to generate this file.\nSuggested command: bash frontier/profiling/example/test_profiling_linear_op.sh",
       "cause": "FileNotFoundError"
     },
     {
@@ -7657,7 +7673,7 @@
       "scope": "share_expert_up_proj",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
       "change": "missing_tp",
-      "error": "V4 share_expert_up_proj measured coverage unavailable: Column 'num_tensor_parallel_workers' not found in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_rin8iga8/share_expert_up_proj_missing_tp.csv\nAvailable columns: ['time_stats.share_expert_up_proj.min', 'time_stats.share_expert_up_proj.max', 'time_stats.share_expert_up_proj.mean', 'time_stats.share_expert_up_proj.median', 'time_stats.share_expert_up_proj.std', 'time_stats.share_expert_up_proj.count', 'time_stats.share_expert_up_proj.kernel_count', 'time_stats.share_expert_down_proj.min', 'time_stats.share_expert_down_proj.max', 'time_stats.share_expert_down_proj.mean', 'time_stats.share_expert_down_proj.median', 'time_stats.share_expert_down_proj.std', 'time_stats.share_expert_down_proj.count', 'time_stats.share_expert_down_proj.kernel_count', 'time_stats.share_expert_act.min', 'time_stats.share_expert_act.max', 'time_stats.share_expert_act.mean', 'time_stats.share_expert_act.median', 'time_stats.share_expert_act.std', 'time_stats.share_expert_act.count', 'time_stats.share_expert_act.kernel_count', 'n_head', 'n_kv_head', 'n_embd', 'n_expanded_embd', 'vocab_size', 'use_gated_mlp', 'use_qk_norm', 'attn_output_gate', 'num_tokens', 'padded_n_embd', 'padded_n_expanded_embd', 'model_arch', 'model_architecture_profile', 'share_expert_dim', 'share_q_dim', 'typed_operator_contracts', 'measurement_type', 'linear_backends', 'profiling_precision', 'quant_signature', 'runtime_fingerprint', 'runtime_versions', 'source_revision', 'model_config_revision', 'model_config_sha256', 'weight_source', 'device_name', 'device_capability', 'schema_version', 'parallel_groups', 'graph_mode']\nThis may indicate a corrupted or incompatible profiling file.",
+      "error": "V4 share_expert_up_proj measured coverage unavailable: Column 'num_tensor_parallel_workers' not found in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_dopmaztd/share_expert_up_proj_missing_tp.csv\nAvailable columns: ['time_stats.share_expert_up_proj.min', 'time_stats.share_expert_up_proj.max', 'time_stats.share_expert_up_proj.mean', 'time_stats.share_expert_up_proj.median', 'time_stats.share_expert_up_proj.std', 'time_stats.share_expert_up_proj.count', 'time_stats.share_expert_up_proj.kernel_count', 'time_stats.share_expert_down_proj.min', 'time_stats.share_expert_down_proj.max', 'time_stats.share_expert_down_proj.mean', 'time_stats.share_expert_down_proj.median', 'time_stats.share_expert_down_proj.std', 'time_stats.share_expert_down_proj.count', 'time_stats.share_expert_down_proj.kernel_count', 'time_stats.share_expert_act.min', 'time_stats.share_expert_act.max', 'time_stats.share_expert_act.mean', 'time_stats.share_expert_act.median', 'time_stats.share_expert_act.std', 'time_stats.share_expert_act.count', 'time_stats.share_expert_act.kernel_count', 'n_head', 'n_kv_head', 'n_embd', 'n_expanded_embd', 'vocab_size', 'use_gated_mlp', 'use_qk_norm', 'attn_output_gate', 'num_tokens', 'padded_n_embd', 'padded_n_expanded_embd', 'model_arch', 'model_architecture_profile', 'share_expert_dim', 'share_q_dim', 'typed_operator_contracts', 'measurement_type', 'linear_backends', 'profiling_precision', 'quant_signature', 'runtime_fingerprint', 'runtime_versions', 'source_revision', 'model_config_revision', 'model_config_sha256', 'weight_source', 'device_name', 'device_capability', 'schema_version', 'parallel_groups', 'graph_mode']\nThis may indicate a corrupted or incompatible profiling file.",
       "cause": "ValueError"
     },
     {
@@ -7678,10 +7694,18 @@
     },
     {
       "measurement_type": "KERNEL_ONLY",
+      "scope": "share_expert_up_proj",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "change": "unknown_operator",
+      "error": "V4 share_expert_up_proj measured coverage unavailable: Unknown typed operator 'unqualified_operator'",
+      "cause": "ValueError"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
       "scope": "moe_grouped_gemm",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
       "change": "missing_file",
-      "error": "V4 moe_grouped_gemm measured table cannot be read: MoE input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_rin8iga8/moe_grouped_gemm_missing_file.csv\nPlease run MoE profiling first.\nSuggested command: bash frontier/profiling/example/test_profiling_moe.sh",
+      "error": "V4 moe_grouped_gemm measured table cannot be read: MoE input file does not exist: /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_dopmaztd/moe_grouped_gemm_missing_file.csv\nPlease run MoE profiling first.\nSuggested command: bash frontier/profiling/example/test_profiling_moe.sh",
       "cause": "FileNotFoundError"
     },
     {
@@ -7712,8 +7736,16 @@
       "measurement_type": "KERNEL_ONLY",
       "scope": "moe_grouped_gemm",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "change": "unknown_operator",
+      "error": "V4 moe_grouped_gemm measured coverage unavailable: Unknown typed operator 'unqualified_operator'",
+      "cause": "ValueError"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "scope": "moe_grouped_gemm",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
       "change": "missing_ep",
-      "error": "V4 moe_grouped_gemm measured coverage unavailable: MoE profiling data is missing 'expert_parallel_size' while EP=32 is required in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_rin8iga8/moe_grouped_gemm_missing_ep.csv",
+      "error": "V4 moe_grouped_gemm measured coverage unavailable: MoE profiling data is missing 'expert_parallel_size' while EP=32 is required in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_dopmaztd/moe_grouped_gemm_missing_ep.csv",
       "cause": "ValueError"
     },
     {
@@ -7721,7 +7753,7 @@
       "scope": "moe_grouped_gemm",
       "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
       "change": "unmatched_ep",
-      "error": "V4 moe_grouped_gemm measured coverage unavailable: No data matches the filtering criteria in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_rin8iga8/moe_grouped_gemm_unmatched_ep.csv\nRequired MoE configuration:\n  - num_experts: 256\n  - router_topk: 6\n  - hidden_dim: 4096\n  - expert_hidden_dim: 2048\n  - tensor_parallel_size: 1\n  - expert_parallel_size: 32\n  - training_mode: load_imbalance (load_imbalance=True)\n  - typed operator: 'moe_grouped_gemm'\n  - typed layer contract admission: required\n  - Available num_experts: [np.int64(256)]\n  - Available router_topk: [np.int64(6)]\n  - Available num_tensor_parallel_workers: [np.int64(1)]\n  - Available expert_parallel_size: [np.int64(16)]\n  - Available load_distribution: ['uniform']",
+      "error": "V4 moe_grouped_gemm measured coverage unavailable: No data matches the filtering criteria in /data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_scope_review_dopmaztd/moe_grouped_gemm_unmatched_ep.csv\nRequired MoE configuration:\n  - num_experts: 256\n  - router_topk: 6\n  - hidden_dim: 4096\n  - expert_hidden_dim: 2048\n  - tensor_parallel_size: 1\n  - expert_parallel_size: 32\n  - training_mode: load_imbalance (load_imbalance=True)\n  - typed operator: 'moe_grouped_gemm'\n  - typed layer contract admission: required\n  - Available num_experts: [np.int64(256)]\n  - Available router_topk: [np.int64(6)]\n  - Available num_tensor_parallel_workers: [np.int64(1)]\n  - Available expert_parallel_size: [np.int64(16)]\n  - Available load_distribution: ['uniform']",
       "cause": "ValueError"
     }
   ],

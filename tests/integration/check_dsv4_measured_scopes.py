@@ -163,7 +163,7 @@ def main():
             for scope, original in (("share_expert_up_proj", original_compute),
                                     ("moe_grouped_gemm", original_moe)):
                 rows = pd.read_csv(original, float_precision="round_trip")
-                changes = ["missing_file", "missing_tp", "invalid_contract", "missing_contract"]
+                changes = ["missing_file", "missing_tp", "invalid_contract", "missing_contract", "unknown_operator"]
                 if scope == "moe_grouped_gemm":
                     changes.extend(("missing_ep", "unmatched_ep"))
                 for change in changes:
@@ -179,6 +179,12 @@ def main():
                         changed = changed.drop(columns=["typed_operator_contracts"])
                     elif change == "invalid_contract":
                         changed["typed_operator_contracts"] = "{}"
+                    elif change == "unknown_operator":
+                        def add_unknown_operator(raw):
+                            contracts = json.loads(raw)
+                            contracts["unqualified_operator"] = dict(next(iter(contracts.values())))
+                            return json.dumps(contracts)
+                        changed["typed_operator_contracts"] = changed.typed_operator_contracts.map(add_unknown_operator)
                     if change != "missing_file":
                         changed.to_csv(table, index=False)
                     if scope == "moe_grouped_gemm":
@@ -189,6 +195,9 @@ def main():
                         read_scope(source_batch(32 if scope == "moe_grouped_gemm" else 6144),
                                    0, scope, lane_workload=lane)
                     except DeepSeekV4CoverageError as exc:
+                        if change == "unknown_operator":
+                            assert type(exc.__cause__) is ValueError
+                            assert str(exc.__cause__).startswith("Unknown typed operator ")
                         negative.append({"measurement_type": measurement.value, "scope": scope,
                             "input_file": original, "change": change, "error": str(exc),
                             "cause": type(exc.__cause__).__name__ if exc.__cause__ is not None else None})

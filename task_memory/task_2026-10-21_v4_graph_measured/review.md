@@ -9,33 +9,32 @@
 | 2026-10-21 | Applied explicit P0 H800 steering with CPU-only geometry/device rejection checks;688 tests/102 scopes/14 negatives pass and runtime remains frozen. |
 | 2026-10-21 | Review correction checkpoint:requested CPU counterexamples resolved;208 affected tests/102 scopes/68 negatives; fresh strict77 remains the frontier. |
 | 2026-10-21 | R5 complete:correction282cb11 clean strict77 IDENTICAL77/77, clean cache/source and records-only archive. |
+| 2026-10-21 | Final P2 checkpoint:two real-reader red/green cases,one-prefix fix and9/102/72 checks;U3 final commit/clean77 pending. |
 
-**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| R1 layout | PASS | red5+2反例已复现；完整contract和source/cache/head一致性通过。 |
-| R2 typed errors | PASS | red8失败已修复；原cause保留，非coverage ValueError不被改写。 |
-| R3 embedding | PASS | red1反例已修复；descriptor40用于AR，request17不变。 |
-| R4 affected/data/B recommendation | PASS | 208 PASS/8 SKIP；102真实scope/68 negatives及2 mixed controls；B推荐已记录。 |
-| R5 commit/strict/archive | PASS | 修正282cb11唯一clean77：77执行/比较/IDENTICAL；source/cache及retained checkout clean，回执已归档。 |
+| U1 actual-reader red | PASS | 真实shared/MARLIN各复现Unknown typed operator原始ValueError泄漏。 |
+| U2 one-case fix/controls | PASS | 两个green保留原cause；9 controls和102 scopes/72 negatives/2 mixed controls PASS。 |
+| U3 final commit/clean77/archive | TODO | 最终source尚需提交并运行自己的clean77；不以282cb11旧回执替代。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** review R4 checkpoint至今｜**当前前沿：** 无未完成实现；records-only archive后移交primary
+**检测窗口：** fresh review P2 follow-up至今｜**当前前沿：** U3最终提交及clean77
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | 仅完成要求的单次clean77和实际结果归档；未重复broad unit或泛化工具。 |
-| D2 细节反复重试 | CLEAR | 每组red定位具体layout/source/error/shape反例；修复后均green，无遗留循环。 |
+| D1 工具打磨 | CLEAR | 只增加请求的unknown负例及cause检查；不重复broad unit或扩展工具。 |
+| D2 细节反复重试 | CLEAR | 明确已知prefix遗漏，一次单行修复后两个实际reader均green。 |
 | D3 支线问题修补 | CLEAR | 不触及timer审计、B/H5、profiler或平台。 |
-| D4 可并行任务停滞 | CLEAR | 用户禁止delegation，修复共享同一predictor/test文件。 |
-| D5 超范围镀金 | CLEAR | 显式layout是准确选择所需输入；没有CLI flag、fallback或新预测框架。 |
-| D6 分析空转 | CLEAR | 修正282cb11和clean77实际回执均已交付，不以旧strict代替新验证。 |
-| D7 路线违背 | CLEAR | 保留TP1/eager/H200和native缺口；B仅推荐，不改写其文件。 |
+| D4 可并行任务停滞 | CLEAR | 独立CPU controls/实际reader/data checks已并行；没有delegation。 |
+| D5 超范围镀金 | CLEAR | runtime只加一个已知错误prefix，消费范围及flags不变。 |
+| D6 分析空转 | CLEAR | 两份实际red/green回执和最终单行修复已产出。 |
+| D7 路线违背 | CLEAR | 保留282cb11精确回执及native缺口；不编辑B/timers或外部系统。 |
 
-**文档检查：** S5旧完成记录已由review R1–R5状态纠正；S1–S6无未解决缺陷。
+**文档检查：** 新follow-up已在requirements/plan/progress中记录；S1–S6无未解决缺陷。
 **归因：** 无。
 
 ## 3. 纠正建议
@@ -45,11 +44,11 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 提交records-only archive → 完成标志：工作树clean，runtime/tests相对282cb11无差异，不再重复strict。
-2. 移交primary独立验收及B assertions集成；本agent不push/merge，不扩展timers/native run。
+1. U3冻结并提交最终单行source修复 → 完成标志：code/test已验证且工作树clean。
+2. U3运行该commit唯一clean77并归档 → 完成标志：77 IDENTICAL、source/cache clean；旧282cb11回执不变。
 
 ## 4. 最值得关注的 3 点
 
-1. 本次208 affected checks和102真实scope/68 negatives已通过；未宣称重跑688或全量unit。
-2. 完整isolated layout不代表full capacity或serving；H800/compiled/TP/phase缺口不变。
-3. 修正282cb11唯一clean77为IDENTICAL77/77且source/cache clean；只归档，不扩展到timers或B修复。
+1. 两个真实reader已从原ValueError转为typed error并保留cause；未知程序ValueError仍原样传播。
+2. 9 controls、102 exact scopes/72 negatives已通过；没有新增消费/校准资格。
+3. 唯一剩余前沿为最终source commit的clean77；282cb11是历史回执，不是本次最终覆盖。

@@ -7,6 +7,7 @@
 | 2026-10-21 | Applied H800-priority steering:688 affected passes,102 scopes/14 negatives and hardware-mismatch rejection; runtime code remains621b198. |
 | 2026-10-21 | Review correction:CPU red/green evidence, exact layout, typed coverage causes and padded embedding collective;208 affected passes/102 scopes/68 negatives. |
 | 2026-10-21 | Archived correction282cb11 sole clean strict77 IDENTICAL77/77, zero cache/provenance differences and clean retained checkout. |
+| 2026-10-21 | Final P2:two real-reader unknown-operator red/green cases;single-prefix repair,9 controls/102 scopes/72 typed negatives PASS; final strict pending. |
 
 ## Scope and result
 
@@ -254,3 +255,95 @@ Only task records are archived after correction282cb11. The review repair is
 complete; primary acceptance/integration and all native/measurement limits remain
 outside this CPU source correction. Inner-event reference timing validity was not
 audited or approved by these median-selection checks.
+
+## Final P2: unknown typed-operator coverage
+
+Fresh static reviewer: `ses_ea1e5109bffedOB7IutNtQU3Q4`. Authority is the final
+W128-V4-A-P2 follow-up. The only runtime change adds the known
+`Unknown typed operator ` validator prefix from `typed_contracts.py:229–230` to
+the existing narrow V4 conversion list. It adds no scope, timer, B or native
+behavior. The282cb11 strict receipt and original raw files remain historical
+and exact; they do not certify this final source change.
+
+### Actual-reader red/green
+
+Python3.10.6 and the same PYTHONPATH/PYTHONDONTWRITEBYTECODE/TMPDIR environment
+were used. An inline Python invocation copied complete metadata from the first
+real row into an `unqualified_operator` entry, wrote only temporary CSVs and
+called `read_isolated_scope` for shared and MARLIN scopes. Source input paths,
+exact errors and causes are retained in `unknown_operator_{red,green}.json`.
+The source32/topk6 MARLIN lane remains the same explicit synthetic192-assignment
+fixture as above, not real routing. The two red cases both leaked plain ValueError
+with no cause; the process's final typed-error assertion failed as expected.
+Both green cases are DeepSeekV4CoverageError with the exact original
+ValueError("Unknown typed operator 'unqualified_operator'") as __cause__.
+
+The executed stdin reproduction body was identical before/after the one-line fix;
+only the output receipt/log names changed from red to green:
+
+```python
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from tests.integration.check_dsv4_measured_scopes import ScopePredictor, source_batch
+from frontier.config.model_config import BaseModelConfig
+from frontier.execution_time_predictor.deepseek_v4 import read_isolated_scope
+from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+from frontier.moe_ep_workload import split_global_expert_tokens_into_lanes
+from frontier.types import MeasurementType
+import pandas as pd
+p=ScopePredictor.__new__(ScopePredictor)
+p._model_config=BaseModelConfig.create_from_name('deepseek-ai/DeepSeek-V4-Flash')
+p._replica_config=SimpleNamespace(model_config=p._model_config,device='h200',num_pipeline_stages=1,attn_tensor_parallel_size=8,attn_dp=4,moe_tensor_parallel_size=1,moe_expert_parallel_size=32)
+p._active_measurement_type=MeasurementType.KERNEL_ONLY
+root=Path('/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe')
+lane=split_global_expert_tokens_into_lanes({i:int(i<2 or 8<=i<198) for i in range(256)},total_expert_num=256,moe_expert_parallel_size=32,router_topk=6)[0]
+results=[]
+with TemporaryDirectory(prefix='v4_unknown_operator_') as temporary:
+ for scope,name in [('share_expert_up_proj','linear_op_kernel_only.csv'),('moe_grouped_gemm','moe_kernel_only.csv')]:
+  original=next(root.rglob(name)); rows=pd.read_csv(original,float_precision='round_trip')
+  contracts=json.loads(rows.loc[0,'typed_operator_contracts'])
+  contracts['unqualified_operator']=dict(next(iter(contracts.values())))
+  rows.loc[0,'typed_operator_contracts']=json.dumps(contracts)
+  table=Path(temporary)/name; rows.to_csv(table,index=False)
+  p._compute_input_file=p._moe_input_file=str(table)
+  try:
+   read_isolated_scope(p,source_batch(32 if scope=='moe_grouped_gemm' else 6144),0,scope,lane_workload=lane)
+  except (DeepSeekV4CoverageError,ValueError) as exc:
+   typed=isinstance(exc,DeepSeekV4CoverageError)
+   cause=exc.__cause__
+   results.append(dict(scope=scope,input_file=str(original),error_type=type(exc).__name__,message=str(exc),cause_type=type(cause).__name__ if cause is not None else None,cause_message=str(cause) if cause is not None else None,pass_condition=typed and type(cause) is ValueError and str(cause).startswith('Unknown typed operator ')))
+  else:
+   raise AssertionError('Unknown operator was accepted')
+output=Path('task_memory/task_2026-10-21_v4_graph_measured/unknown_operator_red.json')
+output.write_text(json.dumps(dict(status='PASS' if all(r['pass_condition'] for r in results) else 'FAIL',cases=results),indent=2)+'\n')
+print(json.dumps(results,indent=2))
+assert len(results)==2 and all(r['pass_condition'] for r in results),'Both actual readers must preserve a typed unknown-operator coverage cause'
+```
+
+Raw command form: `PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1
+TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode
+/data/ycfeng/envs/frontier-py310/bin/python - <<'PY' >
+/data/ycfeng/tmp/v4_p2_unknown_red.log 2>&1`, followed by the body above and `PY`.
+Green uses `unknown_operator_green.json` and `v4_p2_unknown_green.log`.
+
+### Focused and persistent regression
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python -m pytest -q tests/unit/test_dsv4_graph_measured.py -k 'missing_table or known_component_coverage or unexpected_reader' --junitxml=/data/ycfeng/tmp/v4_p2_affected.xml > /data/ycfeng/tmp/v4_p2_affected.log 2>&1
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python tests/integration/check_dsv4_measured_scopes.py --attention-root /data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144 --compute-root /data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe --output task_memory/task_2026-10-21_v4_graph_measured/real_scope_receipts.json > /data/ycfeng/tmp/v4_p2_real_scope.log 2>&1
+```
+
+Expected/actual **PASS**:9 existing unit controls, zero failures/errors/skips;
+unexpected ValueError type/cause propagation remains unchanged. Real scope
+comparisons remain102 exact positives;72 typed negatives include the four new
+unknown-operator cases (two scopes by two methods), each preserving the original
+ValueError cause. Two existing mixed-layout controls still PASS. The count increase
+is negative coverage only, not new measurement admission. No broad suite repeated.
+
+### Final P2 strict77
+
+Pending the final frozen source commit and its own clean77. Do not substitute
+the prior282cb11 result. All native/compiled/physical-TP/phase/H800 and timer
+qualification limits remain unchanged.

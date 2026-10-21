@@ -7,6 +7,7 @@
 | 2026-10-21 | All four steps completed; implementation621b198 and sole strict77 IDENTICAL. |
 | 2026-10-21 | Added the approved review-correction frontier; original completion remains historical. |
 | 2026-10-21 | Correction282cb11 clean strict77 IDENTICAL77/77; review frontier complete, records-only archive. |
+| 2026-10-21 | Reopened only final P2 known unknown-operator coverage conversion. |
 
 1. Inspect pinned native V2 padding/metadata and existing measured schema/readers.
 2. Implement graph-aware physical workloads without changing request geometry; implement exact, scope-qualified measured consumption through existing interfaces.
@@ -34,3 +35,16 @@ and all native/hardware admission limits remain outside this correction.
 
 Dependencies: {R1,R2,R3} -> R4 -> R5. User prohibits delegation; these repairs
 share the same predictor/test files. No broad unit sweep or GPU work is needed.
+
+## Final P2 follow-up
+
+1. U1: reproduce two actual shared/MARLIN reader failures at the existing
+   `read_isolated_scope` seam, copying complete real metadata under an unknown name.
+2. U2: add only the known validator error prefix, verify original causes and the
+   existing unexpected-ValueError control, and extend the existing real-data check.
+3. U3: freeze/commit source, run its sole clean77 against the required absolute
+   baseline, preserve282cb11 receipts exactly and archive the new result separately
+   within the existing receipt file. No B/timer/consumption-scope changes.
+
+Dependency: U1 -> U2 -> U3. Status: U1/U2 completed; U3 pending the final
+frozen source commit and its own clean77. No broad test sweep is required.

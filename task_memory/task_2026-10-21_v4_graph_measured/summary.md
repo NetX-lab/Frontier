@@ -7,6 +7,7 @@
 | 2026-10-21 | Applied H800-priority steering without runtime edits:688 tests,102 scopes/14 negatives; H200 data cannot qualify H800. |
 | 2026-10-21 | Implemented independent-review corrections with CPU red/green,208 affected passes and102 scope/68 typed-negative receipts; review strict pending. |
 | 2026-10-21 | Completed correction282cb11 sole clean strict77 IDENTICAL77/77; only task records changed after measurement. |
+| 2026-10-21 | Reopened final P2:only known Unknown typed operator error conversion;two real-reader red/green cases and9/102/72 checks PASS, final strict pending. |
 
 ## Overview
 
@@ -104,3 +105,19 @@ records change afterward. Diff: `/data/ycfeng/tmp/v4_graph_measured_review.diff`
 All R1–R5 work is complete; primary acceptance, B assertion adaptation,
 integration and timer audits are still root-owned. Native serving,
 compiled/physical-TP/phase equivalence and H800 timings remain unqualified.
+
+## Final P2 follow-up
+
+Fresh static review found one omitted known validator error. The final runtime
+repair adds only `Unknown typed operator ` to the V4 coverage conversion list.
+Two real shared/MARLIN cases first leaked plain ValueError and then passed with
+DeepSeekV4CoverageError retaining that exact original cause. See
+`unknown_operator_red.json` and `unknown_operator_green.json`; the report preserves
+the exact stdin reproduction and raw log paths. Existing unexpected-ValueError
+propagation remains unchanged (9 focused controls PASS). The existing real-data
+checker passes102 exact scopes/72 typed negatives/2 mixed-layout controls, adding
+only four negative cases across the two measurement methods.
+
+The final P2 source freeze/commit and its own clean77 are pending. Existing282cb11
+strict receipts are preserved exactly, not relabelled as P2 evidence. No B/timers,
+native paths, consumption scopes or qualification limits changed.
