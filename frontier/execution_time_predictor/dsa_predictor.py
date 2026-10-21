@@ -21,6 +21,7 @@ from frontier.attention.dsa_features import (
 )
 from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.string_coercion import coerce_truthy_bool
+from frontier.config import global_vars
 from frontier.entities.batch import DummyForwardBatch
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime
 from frontier.types import MeasurementType
@@ -112,7 +113,8 @@ def load_dsa_dataframe(
     for name in features[0].values:
         df[name] = [feature.values[name] for feature in features]
     full_dummy = Path(path).with_name("dsa_full_dummy.json")
-    if measurement_type is MeasurementType.KERNEL_ONLY and full_dummy.exists():
+    if (measurement_type is MeasurementType.KERNEL_ONLY
+            and global_vars.get_decode_cuda_graph_mode() == "full_decode_only" and full_dummy.exists()):
         from frontier.execution_time_predictor.dsa_full_dummy_input import load_full_dummy_rows
 
         df.attrs["full_dummy"] = load_full_dummy_rows(

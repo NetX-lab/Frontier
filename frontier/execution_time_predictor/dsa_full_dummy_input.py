@@ -198,6 +198,8 @@ def load_full_dummy_rows(path: Path, model, tp: int, block_size: int,
                       "kernel duration/count")
             rows.append({"attention_variant": layers[index], "capture_width": width,
                           "scope": scope, "time_ms": duration, "kernel_count": count,
+                          "profiling_precision": serving["profiling_precision"].iat[0],
+                          "measurement_type": payload["measurement_type"],
                           "sidecar_sha256": digest,
                           "admission_sha256": hashlib.sha256(admission_raw).hexdigest()})
         expected_keys = {(width, index, scope, repeat) for width in widths

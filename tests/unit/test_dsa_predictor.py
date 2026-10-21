@@ -403,13 +403,15 @@ def full_dummy_case(tmp_path, model, monkeypatch):
                            replica=replica, scheduler=scheduler, write=write, load=load)
 
 
-def test_full_dummy_real_loader_training_cache_and_runtime(full_dummy_case, tmp_path, monkeypatch):
+@pytest.mark.parametrize("shared_manager", [False, True])
+def test_full_dummy_real_loader_training_cache_and_runtime(full_dummy_case, tmp_path, monkeypatch, shared_manager):
     from sklearn.dummy import DummyRegressor
-    from frontier.config import MetricsConfig, RandomForrestExecutionTimePredictorConfig
+    from frontier.config import MetricsConfig, RandomForrestExecutionTimePredictorConfig, global_vars
     from frontier.config.quantization_manager import QuantizationManager
     from frontier.entities.batch import DecodeCudaGraphMetadata, DummyForwardBatch
     from frontier.execution_time_predictor.sklearn_execution_time_predictor import SklearnExecutionTimePredictor
     from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
+    from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
     from frontier.types import ClusterType
 
     class Consumer(SklearnExecutionTimePredictor):
@@ -426,6 +428,7 @@ def test_full_dummy_real_loader_training_cache_and_runtime(full_dummy_case, tmp_
     monkeypatch.setattr(QuantizationManager, "_instance", None)
     monkeypatch.setattr(QuantizationManager, "_initialized", False)
     owner = Consumer(RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=True, k_fold_cv_splits=2,
+                     num_estimators=[1], max_depth=[2], min_samples_split=[2],
                      num_training_job_threads=1), case.replica, case.scheduler,
                      MetricsConfig(cache_dir=str(tmp_path / "cache")), cluster_type=ClusterType.MONOLITHIC)
     owner._enable_dummy_mode = False
@@ -437,13 +440,35 @@ def test_full_dummy_real_loader_training_cache_and_runtime(full_dummy_case, tmp_
     pd.testing.assert_frame_equal(loaded, alternate)
     assert isinstance(loaded.attrs["full_dummy"], list)
     pd.concat([loaded, alternate])  # pandas metadata equality must remain scalar.
-    owner._models = owner._train_attention_layer_models()
+    train = owner._train_attention_layer_models
+    if shared_manager:
+        manager = ExecutionTimePredictionModelManager({}, MetricsConfig(cache_dir=owner._cache_dir))
+        manager._active_measurement_type = owner._active_measurement_type
+        manager._kernel_gap_ms = owner._kernel_gap_ms
+        linear = pd.DataFrame([{"num_tokens": tokens, "num_tensor_parallel_workers": tp,
+            "profiling_precision": case.replica.model_config.get_default_precision().name,
+            "measurement_type": "KERNEL_ONLY"} for tp in (1, 8) for tokens in (1, 2)])
+        for op in ("input_layernorm", "attn_pre_proj", "attn_post_proj", "attn_rope",
+                   *case.replica.model_config.get_model_architecture_profile().predictor_attention_extra_ops):
+            linear[f"time_stats.{op}.median"] = 0.1
+            linear[f"time_stats.{op}.kernel_count"] = 1
+        linear_file = tmp_path / "linear_op_kernel_only.csv"
+        linear.to_csv(linear_file, index=False)
+        train = lambda: manager._train_attn_models_for_cluster(
+            ClusterType.DECODE, case.replica, owner._config, case.scheduler,
+            str(linear_file), str(case.serving), set())
+    owner._models = train()
     cold = {name: model._frontier_model_hash for name, model in owner._models.items()}
-    assert owner.estimators > 0
+    assert owner.estimators > 0 or shared_manager
     cold_estimators = owner.estimators
-    owner._models = owner._train_attention_layer_models()
+    cached_files = {p: p.stat().st_mtime_ns for p in Path(owner._cache_dir).glob("*.pkl")}
+    assert cached_files
+    owner._models = train()
+    assert cached_files == {p: p.stat().st_mtime_ns for p in Path(owner._cache_dir).glob("*.pkl")}
     assert owner.estimators == cold_estimators
     assert cold == {name: model._frontier_model_hash for name, model in owner._models.items()}
+    if shared_manager:
+        assert all(name in manager._models_by_precision_kernel_only["BF16"] for name in cold)
     owner._predictions = owner._predict_for_attention_layer_models()
     for name in ("_get_attention_layer_pre_proj_execution_time", "_get_attention_layer_post_proj_execution_time",
                  "_get_attention_rope_execution_time", "_get_attn_norm_layer_act_execution_time"):
@@ -463,9 +488,21 @@ def test_full_dummy_real_loader_training_cache_and_runtime(full_dummy_case, tmp_
         owner._predict_attention_layer_time(batch, 0, ClusterType.MONOLITHIC)
     case.payload["records"][0]["time_ms"] += 0.1
     case.write()
-    changed = owner._train_attention_layer_models()
+    changed = train()
     for name in cold:
         assert (cold[name] != changed[name]._frontier_model_hash) == name.endswith("full_dummy")
+
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "piecewise")
+    case.path.write_text("{")
+    serving_only = owner._load_attention_df(str(case.serving))
+    assert "full_dummy" not in serving_only.attrs
+    owner._models = train()
+    owner._predictions = owner._predict_for_attention_layer_models()
+    ordinary = owner._predictions["dsa_attention"]
+    features = build_dsa_features([1], [0], case.replica.model_config.index_topk)
+    assert ordinary.operator_times(features, "full_index").total_time() == 0.5
+    with pytest.raises(DSACoverageError, match="capture width 4"):
+        ordinary.operator_times(features, "full_index", dummy_capture_width=4)
 
 
 @pytest.mark.parametrize("fault", ["event", "flags", "source", "hardware", "tp", "shape", "cache", "compiled",
