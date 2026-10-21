@@ -14,14 +14,14 @@ from frontier.types import ClusterType, MeasurementType
 from test_step5_measured_training import _replica, _row, _scheduler, _write
 
 
-@pytest.mark.parametrize("mode", ["none", "full", "piecewise"])
+@pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
 @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
                                   ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
 def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
     decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
     expected = {
         ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
-        ClusterType.DECODE: (decode,),
+        ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
         ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
         ClusterType.DECODE_FFN: (),
     }
@@ -56,7 +56,7 @@ def test_normal_manager_fits_attention_without_loading_unrelated_event_diagnosti
                               cc_backend_config=SimpleNamespace(get_name=lambda: "cpu_fixture_comm"))
     metrics = SimpleNamespace(cache_dir=str(tmp_path / "cache"))
     monkeypatch.setattr(global_vars, "get_sys_arch", lambda: "colocated")
-    monkeypatch.setattr(global_vars, "get_decode_cuda_graph_mode", lambda: "full")
+    monkeypatch.setattr(global_vars, "get_decode_cuda_graph_mode", lambda: "full_decode_only")
     calls = []
 
     def generic(self, *args, **kwargs):
@@ -124,7 +124,7 @@ def test_normal_manager_fits_and_binds_complete_cpu_fixture_bundle(tmp_path, mon
     cluster = SimpleNamespace(replica_config=replica, replica_scheduler_config=scheduler,
                               execution_time_predictor_config=config, cc_backend_config=backend)
     monkeypatch.setattr(global_vars, "get_sys_arch", lambda: "colocated")
-    monkeypatch.setattr(global_vars, "get_decode_cuda_graph_mode", lambda: "full")
+    monkeypatch.setattr(global_vars, "get_decode_cuda_graph_mode", lambda: "full_decode_only")
     manager = ExecutionTimePredictionModelManager(
         {ClusterType.PREFILL: cluster}, SimpleNamespace(cache_dir=str(tmp_path / "cache")),
     )

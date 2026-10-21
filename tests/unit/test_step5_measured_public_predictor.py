@@ -35,7 +35,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     """Train all categories normally, construct the public MoE predictor, replay FFN."""
     for name, value in (
         ("SYS_ARCH", "co-location"), ("SIMULATION_MODE", "offline"),
-        ("USE_CUDA_GRAPH", False), ("DECODE_CUDA_GRAPH_MODE", "full"),
+        ("USE_CUDA_GRAPH", False), ("DECODE_CUDA_GRAPH_MODE", "full_decode_only"),
         ("KV_CONNECTOR", "none"), ("QUANTIZATION_MANAGER", None),
         ("CUDAGRAPH_CAPTURE_SIZES", None), ("IS_MOE", None),
         ("_IS_MOE_INITIALIZED", False),

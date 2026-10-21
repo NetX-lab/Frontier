@@ -21,8 +21,8 @@ from frontier.attention.step5 import Step5AttentionWorkload
 from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
 from frontier.profiling.step5.rows import rows_to_dataframe
 from frontier.types import CCBackendType, ClusterType, MeasurementType
-import test_step5_measured_ffn as ffn
-from test_step5_measured_training import _row, _scheduler
+from tests.unit import test_step5_measured_ffn as ffn
+from tests.unit.test_step5_measured_training import _row, _scheduler
 
 
 def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile: str | None = None):
@@ -98,7 +98,7 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
                               execution_time_predictor_config=config, cc_backend_config=backend)
     with MonkeyPatch.context() as patch:
         patch.setattr(global_vars, "get_sys_arch", lambda: "pd-disaggregation")
-        patch.setattr(global_vars, "get_decode_cuda_graph_mode", lambda: "full")
+        patch.setattr(global_vars, "get_decode_cuda_graph_mode", lambda: "full_decode_only")
         manager = ExecutionTimePredictionModelManager(
             {ClusterType.PREFILL: cluster, ClusterType.DECODE: cluster},
             SimpleNamespace(cache_dir=str(output / "cache")),

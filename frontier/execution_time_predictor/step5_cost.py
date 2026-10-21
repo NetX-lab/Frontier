@@ -19,13 +19,18 @@ from frontier.types import ClusterType, MeasurementType
 
 def step5_measurements_for_role(role, decode_graph_mode):
     """Attention's measured modality is independent of the step's FFN family."""
-    decode = step5_measurement_type(decode_graph_mode)
+    decode_profile_mode = {
+        "none": "none", "full_decode_only": "full", "piecewise": "piecewise",
+    }[decode_graph_mode]
+    decode = step5_measurement_type(decode_profile_mode)
+    # D's initial prompt tail and graph misses still execute without a graph.
+    decode_measurements = tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode)))
     return {
         ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
-        ClusterType.DECODE: (decode,),
+        ClusterType.DECODE: decode_measurements,
         ClusterType.DECODE_ATTN: (decode,),
         ClusterType.DECODE_FFN: (),
-        ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+        ClusterType.MONOLITHIC: decode_measurements,
     }[role]
 
 

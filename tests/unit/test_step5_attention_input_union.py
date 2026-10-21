@@ -191,22 +191,25 @@ def test_union_rejects_incompatible_attention_topology_before_loading(declared, 
         _fit(manager, configs, ClusterType.PREFILL, set())
 
 
-@pytest.mark.parametrize("mode", ["full", "piecewise"])
-def test_union_excludes_other_modalities_and_ffn_only_roles(declared, tmp_path, monkeypatch, mode):
+@pytest.mark.parametrize("mode,profile_mode", [("full_decode_only", "full"), ("piecewise", "piecewise")])
+def test_union_keeps_decode_eager_coverage_and_excludes_ffn_only_roles(
+    declared, tmp_path, monkeypatch, mode, profile_mode,
+):
     configs, rows = declared
     monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", mode)
-    configs[ClusterType.DECODE].execution_time_predictor_config.atten_kernel_only_input_file = "unneeded_decode_kernel.csv"
     configs[ClusterType.DECODE_FFN] = configs[ClusterType.DECODE]
     manager = _manager(tmp_path / "cache")
     manager._cluster_configs = configs
     signatures = set()
     models = _fit(manager, configs, ClusterType.PREFILL, signatures)
     expected = {tuple(step5_row_features(row)[name] for name in STEP5_FEATURE_COLUMNS)
-                for row in rows[ClusterType.PREFILL]}
+                for source in rows.values() for row in source}
     assert models["step5_layer_e2e"]._frontier_step5_coverage == expected
+    identity = json.loads(models["step5_layer_e2e"]._frontier_measurement_identity)
+    assert {item["role"] for item in identity["attention_inputs"]} == {"prefill", "decode"}
     decode = configs[ClusterType.DECODE]
     event_rows = [_row(decode.replica_config.model_config, layer, query=1, context=8184,
-                       phase="decode", graph_mode=mode) for layer in (0, 3)]
+                       phase="decode", graph_mode=profile_mode) for layer in (0, 3)]
     event_path = _write(tmp_path, event_rows, MeasurementType.CUDA_EVENT)
     decode.execution_time_predictor_config.atten_input_file = str(event_path)
     manager._active_measurement_type = MeasurementType.CUDA_EVENT

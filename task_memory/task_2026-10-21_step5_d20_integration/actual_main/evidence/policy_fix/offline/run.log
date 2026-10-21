@@ -1,0 +1,209 @@
+WARNING 20:12:45 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 20:12:45 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  offline
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         ❌ MODEL CACHE MISS ERROR ❌
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Model 'step5_layer_e2e' with hash '5e3aac89' not found in cache directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Configuration Details:
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Model Name: step5_layer_e2e
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Cache Hash: 5e3aac89
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Cache Directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Expected Cache File: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache/step5_layer_e2e_5e3aac89.pkl
+WARNING 20:12:49 prediction_family_trainers.py:1795]         
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Training Context:
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Cluster Type: prefill
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Device: h800
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Model Name: stepfun-ai/Step-5-Preview
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Tensor Parallel Size: 8
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Expert Parallel Size: N/A
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Input File: ['/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_attention_kernel_only.csv', '/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_attention_kernel_only.csv']
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Feature Columns: ['global_layer_id', 'num_tensor_parallel_workers', 'n_q_head', 'n_kv_head', 'head_size', 'local_q_heads', 'local_kv_heads', 'kv_replication', 'local_provider_groups', 'provider_replication', 'local_index_q_heads', 'local_index_k_heads', 'index_k_replication', 'proxy_dim', 'region_block_size', 'topk_regions', 'sliding_window', 'rope_theta', 'rotary_dim', 'block_size', 'batch_size', 'batch_num_tokens', 'batch_num_prefill_tokens', 'batch_num_decode_tokens', 'valid_tokens', 'padded_tokens', 'max_model_len', 'block_table_columns', 'score_regions', 'attention_variant_code', 'phase_code', 'graph_mode_code', 'min_query_len', 'max_query_len', 'query_len_cv', 'min_context_len', 'max_context_len', 'mean_context_len', 'max_sequence_len']
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Target Column: time_stats.step5_layer_e2e.median
+WARNING 20:12:49 prediction_family_trainers.py:1795]         
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         ⚠️  REQUIRED ACTION ⚠️
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         This error indicates that the required model has not been pre-trained.
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Please follow the complete workflow:
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         ============================================================
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         NOTE: Real-time training is TEMPORARILY ENABLED for cache generation.
+WARNING 20:12:49 prediction_family_trainers.py:1795]         
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         ❌ MODEL CACHE MISS ERROR ❌
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Model 'step5_layer_e2e_kernel_count' with hash '68077a1b' not found in cache directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Configuration Details:
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Model Name: step5_layer_e2e_kernel_count
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Cache Hash: 68077a1b
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Cache Directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Expected Cache File: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache/step5_layer_e2e_kernel_count_68077a1b.pkl
+WARNING 20:12:49 prediction_family_trainers.py:1795]         
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Training Context:
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Cluster Type: prefill
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Device: h800
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Model Name: stepfun-ai/Step-5-Preview
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Tensor Parallel Size: 8
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Expert Parallel Size: N/A
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Input File: ['/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_attention_kernel_only.csv', '/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_attention_kernel_only.csv']
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Feature Columns: ['global_layer_id', 'num_tensor_parallel_workers', 'n_q_head', 'n_kv_head', 'head_size', 'local_q_heads', 'local_kv_heads', 'kv_replication', 'local_provider_groups', 'provider_replication', 'local_index_q_heads', 'local_index_k_heads', 'index_k_replication', 'proxy_dim', 'region_block_size', 'topk_regions', 'sliding_window', 'rope_theta', 'rotary_dim', 'block_size', 'batch_size', 'batch_num_tokens', 'batch_num_prefill_tokens', 'batch_num_decode_tokens', 'valid_tokens', 'padded_tokens', 'max_model_len', 'block_table_columns', 'score_regions', 'attention_variant_code', 'phase_code', 'graph_mode_code', 'min_query_len', 'max_query_len', 'query_len_cv', 'min_context_len', 'max_context_len', 'mean_context_len', 'max_sequence_len']
+WARNING 20:12:49 prediction_family_trainers.py:1795]         - Target Column: time_stats.step5_layer_e2e.kernel_count
+WARNING 20:12:49 prediction_family_trainers.py:1795]         
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         ⚠️  REQUIRED ACTION ⚠️
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         This error indicates that the required model has not been pre-trained.
+WARNING 20:12:49 prediction_family_trainers.py:1795]         Please follow the complete workflow:
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         ============================================================
+WARNING 20:12:49 prediction_family_trainers.py:1795] 
+WARNING 20:12:49 prediction_family_trainers.py:1795]         NOTE: Real-time training is TEMPORARILY ENABLED for cache generation.
+WARNING 20:12:49 prediction_family_trainers.py:1795]         
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         ❌ MODEL CACHE MISS ERROR ❌
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         Model 'step5_layer_e2e' with hash '6891eeba' not found in cache directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         Configuration Details:
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Model Name: step5_layer_e2e
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Cache Hash: 6891eeba
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Cache Directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Expected Cache File: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache/step5_layer_e2e_6891eeba.pkl
+WARNING 20:12:54 prediction_family_trainers.py:1795]         
+WARNING 20:12:54 prediction_family_trainers.py:1795]         Training Context:
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Cluster Type: decode
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Device: h800
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Model Name: stepfun-ai/Step-5-Preview
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Tensor Parallel Size: 8
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Expert Parallel Size: N/A
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Input File: ['/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_attention_cuda_event.csv']
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Feature Columns: ['global_layer_id', 'num_tensor_parallel_workers', 'n_q_head', 'n_kv_head', 'head_size', 'local_q_heads', 'local_kv_heads', 'kv_replication', 'local_provider_groups', 'provider_replication', 'local_index_q_heads', 'local_index_k_heads', 'index_k_replication', 'proxy_dim', 'region_block_size', 'topk_regions', 'sliding_window', 'rope_theta', 'rotary_dim', 'block_size', 'batch_size', 'batch_num_tokens', 'batch_num_prefill_tokens', 'batch_num_decode_tokens', 'valid_tokens', 'padded_tokens', 'max_model_len', 'block_table_columns', 'score_regions', 'attention_variant_code', 'phase_code', 'graph_mode_code', 'min_query_len', 'max_query_len', 'query_len_cv', 'min_context_len', 'max_context_len', 'mean_context_len', 'max_sequence_len']
+WARNING 20:12:54 prediction_family_trainers.py:1795]         - Target Column: time_stats.step5_layer_e2e.mean
+WARNING 20:12:54 prediction_family_trainers.py:1795]         
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         ⚠️  REQUIRED ACTION ⚠️
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         This error indicates that the required model has not been pre-trained.
+WARNING 20:12:54 prediction_family_trainers.py:1795]         Please follow the complete workflow:
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         ============================================================
+WARNING 20:12:54 prediction_family_trainers.py:1795] 
+WARNING 20:12:54 prediction_family_trainers.py:1795]         NOTE: Real-time training is TEMPORARILY ENABLED for cache generation.
+WARNING 20:12:54 prediction_family_trainers.py:1795]         
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         ❌ MODEL CACHE MISS ERROR ❌
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         Model 'step5_layer_e2e_kernel_count' with hash 'e1f39eb9' not found in cache directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         Configuration Details:
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Model Name: step5_layer_e2e_kernel_count
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Cache Hash: e1f39eb9
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Cache Directory: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Expected Cache File: /data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/cache/step5_layer_e2e_kernel_count_e1f39eb9.pkl
+WARNING 20:12:55 prediction_family_trainers.py:1795]         
+WARNING 20:12:55 prediction_family_trainers.py:1795]         Training Context:
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Cluster Type: decode
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Device: h800
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Model Name: stepfun-ai/Step-5-Preview
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Tensor Parallel Size: 8
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Expert Parallel Size: N/A
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Input File: ['/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_attention_cuda_event.csv']
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Feature Columns: ['global_layer_id', 'num_tensor_parallel_workers', 'n_q_head', 'n_kv_head', 'head_size', 'local_q_heads', 'local_kv_heads', 'kv_replication', 'local_provider_groups', 'provider_replication', 'local_index_q_heads', 'local_index_k_heads', 'index_k_replication', 'proxy_dim', 'region_block_size', 'topk_regions', 'sliding_window', 'rope_theta', 'rotary_dim', 'block_size', 'batch_size', 'batch_num_tokens', 'batch_num_prefill_tokens', 'batch_num_decode_tokens', 'valid_tokens', 'padded_tokens', 'max_model_len', 'block_table_columns', 'score_regions', 'attention_variant_code', 'phase_code', 'graph_mode_code', 'min_query_len', 'max_query_len', 'query_len_cv', 'min_context_len', 'max_context_len', 'mean_context_len', 'max_sequence_len']
+WARNING 20:12:55 prediction_family_trainers.py:1795]         - Target Column: time_stats.step5_layer_e2e.kernel_count
+WARNING 20:12:55 prediction_family_trainers.py:1795]         
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         ⚠️  REQUIRED ACTION ⚠️
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         This error indicates that the required model has not been pre-trained.
+WARNING 20:12:55 prediction_family_trainers.py:1795]         Please follow the complete workflow:
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         ============================================================
+WARNING 20:12:55 prediction_family_trainers.py:1795] 
+WARNING 20:12:55 prediction_family_trainers.py:1795]         NOTE: Real-time training is TEMPORARILY ENABLED for cache generation.
+WARNING 20:12:55 prediction_family_trainers.py:1795]         
+WARNING 20:12:59 quantization_manager.py:810] Profiling metadata mismatch for op=attn_pre_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_compute_cuda_event/linear_op.csv
+WARNING 20:12:59 quantization_manager.py:810] Profiling metadata mismatch for op=attn_post_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_compute_cuda_event/linear_op.csv
+WARNING 20:12:59 quantization_manager.py:810] Profiling metadata mismatch for op=moe_grouped_gemm (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_compute_cuda_event/moe.csv
+WARNING 20:13:02 quantization_manager.py:810] Profiling metadata mismatch for op=attn_pre_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_compute_kernel_only/linear_op.csv
+WARNING 20:13:02 quantization_manager.py:810] Profiling metadata mismatch for op=attn_post_proj (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_compute_kernel_only/linear_op.csv
+WARNING 20:13:02 quantization_manager.py:810] Profiling metadata mismatch for op=moe_grouped_gemm (precision mismatch (BF16 -> FP8)). Using approximation factor=0.500. File=/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_parent01/fixture_compute_kernel_only/moe.csv
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/main.py", line 97, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/main.py", line 78, in main
+    simulator.run()
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/simulator.py", line 428, in run
+    self._run_sequential()
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/simulator.py", line 633, in _run_sequential
+    new_events = event.handle_event(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/events/replica_stage_schedule_event.py", line 114, in handle_event
+    return self._schedule_popped_batch(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/events/replica_stage_schedule_event.py", line 167, in _schedule_popped_batch
+    return start_dummy_forward(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/scheduler/utils/dp_dummy_forward.py", line 78, in start_dummy_forward
+    execution_time = _predict_layer(scheduler, stage_id, dummy_forward, first_layer_id)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/scheduler/utils/dp_dummy_forward.py", line 21, in _predict_layer
+    return scheduler._predictor.predict_stage_execution_time(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py", line 1384, in predict_stage_execution_time
+    return super().predict_stage_execution_time(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 1456, in predict_stage_execution_time
+    layers = [
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 1457, in <listcomp>
+    self._predict_layer_with_kernel_gap(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/kernel_gap.py", line 194, in _predict_layer_with_kernel_gap
+    layer = predict_layer(*args, **kwargs)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 1665, in _predict_moe_layer_execution_time
+    base_execution_time = self._get_execution_time_internal(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 647, in _get_execution_time_internal
+    result = self._get_layer_execution_time(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 715, in _get_layer_execution_time
+    self._predict_attention_layer_time_with_query_cache(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py", line 619, in _predict_attention_layer_time_with_query_cache
+    result = self.predict_attention_layer_time(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_execution_time_predictor.py", line 7531, in predict_attention_layer_time
+    attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/sklearn_execution_time_predictor.py", line 7750, in _predict_attention_layer_time
+    timing = predict_step5_attention_time(self, batch, layer_id)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/step5_cost.py", line 100, in predict_step5_attention_time
+    features, workload = step5_batch_features(predictor, batch, layer_id)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/step5_cost.py", line 64, in step5_batch_features
+    raise ValueError("Step measured request-free attention coverage is unavailable")
+ValueError: Step measured request-free attention coverage is unavailable

@@ -5,6 +5,47 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Preserve deterministic offline/online initialization failure. |
+| 2026-10-21 | Verify the authorized policy correction and preserve post-fix runtime failures. |
+
+## Current result after policy correction
+
+The approved graph-policy fix is verified, but the whole D20-ACTUAL-MAIN task remains **BLOCKED**. Existing scheduler semantics are used: full_decode_only selects physical full for a pure-decode capture hit, with physical none for prompt/tail or graph miss. `step5_cost.py` performs the supported-policy conversion and preserves both measured modalities for D. No profile enum, flags, guard, fallback or other production module changed.
+
+| Verification | Actual | Verdict |
+| --- | --- | --- |
+| Pre-fix policy unit regression |5 failed /7 passed | RED on public policy and eager-D ownership |
+| Focused manager tests |14 passed in9.88s | PASS |
+| Final affected manager/public predictor/input union/model bundle tests |100 passed in57.60s | PASS |
+| Actual CLI policy initialization regression |1 passed in64.11s; completion count explicitly0 | PASS boundary only |
+| Full offline6144/1024 attempt03 | exit1 in23.585099s, request-free coverage error | FAIL runtime |
+| Full online6144/1024 attempt04 | exit1 in18.785726s, same error | FAIL runtime |
+| First-D tail/context, completed READ/release, final request metrics | Not reached | BLOCKED |
+
+Final focused commands (same interpreter/environment as below):
+
+```bash
+env PYTHONPATH=.:tests/unit PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 TMPDIR=/data/ycfeng/tmp \
+  /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest \
+  tests/unit/test_step5_measured_manager.py tests/unit/test_step5_measured_public_predictor.py \
+  tests/unit/test_step5_attention_input_union.py tests/unit/test_step5_model_bundle.py \
+  -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d20_actual_main_affected03
+env PYTHONPATH=.:tests/unit PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 TMPDIR=/data/ycfeng/tmp \
+  /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest \
+  tests/integration/test_step5_measured_main.py -q -p no:cacheprovider \
+  --basetemp=/data/ycfeng/tmp/d20_actual_main_cli_regression03
+```
+
+The CLI regression has trace arrival10s and existing integer time_limit1s, testing manager construction through the real subprocess without reaching the unrelated missing request-free runtime capability. It deliberately asserts zero completed requests. No simulator method is patched in the child. Profile production remains the explicitly labelled synthetic helper. This regression is not a replacement for the full attempts below.
+
+The complete runner commands remain those in the original section, changing only output root to `/data/ycfeng/tmp/d20_actual_main_h80032_03 --mode offline` and `/data/ycfeng/tmp/d20_actual_main_h80032_04 --mode online`. Exact child commands/logs/status are retained in `evidence/policy_fix/{offline,online}/`; parsed configs remain at their recorded scratch paths with size/hash receipts. P16/D16 and8192 capacity are unchanged.
+
+New exact defect: `dp_dummy_forward.py:78` -> normal predictor -> `step5_cost.py:64` raises `ValueError: Step measured request-free attention coverage is unavailable`. The workload is not a request-owned one-token decode: `DummyForwardBatch` has no attention metadata, skips attention kernels/cache writes and still executes projections/norms/MoE. Source scopes exist at `attention/step5.py:497`; the supplied request-owned synthetic profile rows cannot establish their measured cost. Parent must assign the missing producer/profile/runtime binding, not remove the rejection or substitute zero/regular-decode timing.
+
+Intermediate verification limits: a broad225-case attempt exceeded120s after partial progress and has no complete result; no matching pytest process remained. The scoped final100-case result above is the affected-suite evidence. Initial CLI regression failures were test-only fractional time_limit (CLI accepts int) and hard-coded enum key3 (DECODE is5); both were corrected without changing workload semantics. Initial affected result98PASS/2FAIL identified obsolete global full and obsolete exclusion of eager-D input; tests were updated to require D coverage and preserve modality/role isolation. No matrix was launched. Parent's prior274PASS is historical, not relabelled as a post-fix aggregate.
+
+Final artifact verification returned `PASS:14 retained hashes;2 parsed-config hashes/topologies;both runtime blockers;changed Python AST`. Authored changes pass `git diff --check`; original raw log bytes are retained. The receipt is `evidence/policy_fix/receipt.json`.
+
+## Original pre-fix report
 
 ## Result
 
