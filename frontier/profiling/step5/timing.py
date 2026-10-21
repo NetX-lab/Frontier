@@ -13,12 +13,15 @@ _SCOPED_LAYER = "step5_layer_scoped"
 
 @dataclass(frozen=True)
 class ReplayTimings:
-    """Unmodified single-replay samples and normalized windows, in milliseconds."""
+    """Independent clean-window cohorts and boundary diagnostics, in milliseconds."""
 
     single_replay_times: tuple[float, ...]
     amortized_times: tuple[float, ...]
     window_durations_ms: tuple[float, ...]
     window_replays: tuple[int, ...]
+    reference_times: tuple[float, ...]
+    reference_window_durations_ms: tuple[float, ...]
+    reference_window_replays: tuple[int, ...]
     last_output: object
 
 
@@ -67,7 +70,7 @@ def collect_replay_timings(
     sample_count: int,
     min_window_ms: float,
 ) -> ReplayTimings:
-    """Measure queued per-replay samples, then windows meeting the minimum duration.
+    """Measure boundary diagnostics and independent candidate/reference windows.
 
     The caller owns native warmup, capture and the safety of consecutive replays.
     Event handles are primed before preparation and any measured replay.
@@ -75,9 +78,11 @@ def collect_replay_timings(
     synchronizes only after its last replay. Preparation then runs once before
     each window, never between its replays. The final single-replay sample also
     serves as the initial repeat-count pilot. Short windows increase the count
-    from their measured duration and are not retained as amortized samples. No
-    agreement or stability correction is applied; callers can summarize both
-    sample sets with TimerStatsStore.
+    from their measured duration and are not retained as amortized samples.
+    Each candidate window and its independently executed reference use the same
+    replay count and distinct primed outer events. If either is short, discard
+    both and increase their common count. This is minimum-duration treatment,
+    never an agreement or stability retry. Boundary samples are diagnostics only.
     """
     if type(sample_count) is not int or sample_count < 2:
         raise ValueError("sample_count must be an integer of at least two")
@@ -114,13 +119,17 @@ def collect_replay_timings(
     singles = tuple(_event_duration_ms(start, end) for start, end in zip(boundaries, boundaries[1:]))
     replays = max(1, ceil(min_window_ms / singles[-1]))
     durations = []
+    reference_durations = []
     counts = []
     while len(durations) < sample_count:
         duration_ms = measure_window(replays)
-        if duration_ms < min_window_ms:
-            replays = max(replays + 1, ceil(replays * (min_window_ms / duration_ms)))
+        reference_ms = measure_window(replays)
+        shortest_ms = min(duration_ms, reference_ms)
+        if shortest_ms < min_window_ms:
+            replays = max(replays + 1, ceil(replays * (min_window_ms / shortest_ms)))
             continue
         durations.append(duration_ms)
+        reference_durations.append(reference_ms)
         counts.append(replays)
 
     return ReplayTimings(
@@ -128,6 +137,9 @@ def collect_replay_timings(
         amortized_times=tuple(duration / count for duration, count in zip(durations, counts)),
         window_durations_ms=tuple(durations),
         window_replays=tuple(counts),
+        reference_times=tuple(duration / count for duration, count in zip(reference_durations, counts)),
+        reference_window_durations_ms=tuple(reference_durations),
+        reference_window_replays=tuple(counts),
         last_output=last_output,
     )
 

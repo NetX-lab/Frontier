@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=int, required=True)
     parser.add_argument("--gpu-tag", choices=("H800", "H200"), default=GPU_TAG)
     parser.add_argument("--charged-group", default=CHARGED_GROUP)
+    parser.add_argument("--preemptible", action="store_true")
     parser.add_argument(
         "worker_command",
         help="Shell command the worker runs from the repository root.",
@@ -74,7 +75,7 @@ def main() -> int:
         custom_resources=[],
         envs={},
         command="{COMMAND}",
-        preemptible=False,
+        preemptible=args.preemptible,
         task_specs={"default": {"is_critical": True}},
     )
     workers = spawn_tasks(

@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "source_commit": "74df0100ca0f39d6ff134d999909e863c3db6962",
+  "committed_payloads_verified": 525,
+  "critical_source_sha256": {
+    "frontier/profiling/step5/timing.py": "ce2229f659e20f94fe356a529d99062fb9cfdfd8379121d748f2a107dd75fd81",
+    "frontier/profiling/step5/rows.py": "4ee1b44ecfffe11837ccce09106ff006972c562df780d8364adcda6b39d0296e",
+    "frontier/profiling/step5/vllm_wrapper.py": "6ae311ed5796d68766584591b637399437d48747f0f7f03c347d452331144cb5",
+    "frontier/profiling/step5/main.py": "d347bd683d225954e455802d2872494704dadff7d032edc5a5b1d38e645af0f9",
+    "frontier/profiling/step5/job.py": "55a0329b6c81524e4ce86746e041107494b176f1aeb5f4ce72a51cdedc1cb27e",
+    "frontier/profiling/common/step5_job.py": "cc3728cac88ac6295a00dbb280a82a454c9c534c17ddb17bb5476254c565d0ad",
+    "tests/integration/step5_profiling/submit_profiling_job.py": "f924fafdc1d03166cf3549332c2dd9a1d5989a320ea9da9dd3b92538b743a2de",
+    "tests/integration/step5_profiling/judge_attention_smoke.py": "55cdde42119b54ecf1087941bf6253428c326003c3d9148db1b361bb491d4f4c",
+    "tests/integration/step5_profiling/verify_fixed_probe.py": "6af449d94cd69f6da084507d236cfe2229f68637898c20cb09124b22f4443e77",
+    "frontier/profiling/step5/fixed_probe_inputs.json": "be39a68fbf2c260b3a4ea2a0d812d3cdadcedc441c0b49c846a48eb4833713ab"
+  },
+  "stage_manifest_sha256": "a1dc28ceca71235b000e7f7448464a5ff76d27e76d2d51ee63fe0811908b5312",
+  "old_stage02_manifest_sha256": "42545748def4f40947037a61ca68541d4f3736cd5e8faaa60a8ec3698be91077",
+  "old_stage02_payloads_verified": 3407,
+  "old_stage02_exact_inventory": "PASS",
+  "original_full_probe_arguments_native_policy_workload_linear_plan": "IDENTICAL_EXCEPT_RUN_ID",
+  "linear_protocol_files_byte_identical": 13,
+  "scoped_timing_function": "UNCHANGED_AST",
+  "new_preemptible": true,
+  "no_platform_operations": true
+}

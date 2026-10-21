@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.204" timestamp="2026-10-21T19:53:06.129971+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_step5_attention_timing" name="test_independent_outer_windows_ignore_internal_boundary_event_overhead" time="0.001"><failure message="AssertionError: Each cohort must execute its own measured windows&#10;assert 5 == (1 + (2 * 3))&#10; +  where 5 = len([3, 14, 15, 15, 15])&#10; +    where [3, 14, 15, 15, 15] = &lt;test_step5_attention_timing.test_independent_outer_windows_ignore_internal_boundary_event_overhead.&lt;locals&gt;.BoundaryCostClock object at 0x7faf58b18ef0&gt;.windows">def test_independent_outer_windows_ignore_internal_boundary_event_overhead():
+        class BoundaryCostEvent(FakeEvent):
+            def record(self):
+                self.clock.time_ms += Fraction("0.00333")
+                super().record()
+    
+        class BoundaryCostClock(FakeCudaClock):
+            def event(self, *, enable_timing):
+                event = BoundaryCostEvent(self, len(self.events))
+                self.events.append(event)
+                self.calls.append(("event", event.index))
+                return event
+    
+        clock = BoundaryCostClock(replay_ms="0.0347")
+        result = collect(clock)
+&gt;       assert len(clock.windows) == 1 + 2 * 3, "Each cohort must execute its own measured windows"
+E       AssertionError: Each cohort must execute its own measured windows
+E       assert 5 == (1 + (2 * 3))
+E        +  where 5 = len([3, 14, 15, 15, 15])
+E        +    where [3, 14, 15, 15, 15] = &lt;test_step5_attention_timing.test_independent_outer_windows_ignore_internal_boundary_event_overhead.&lt;locals&gt;.BoundaryCostClock object at 0x7faf58b18ef0&gt;.windows
+
+tests/unit/test_step5_attention_timing.py:230: AssertionError</failure></testcase></testsuite></testsuites>

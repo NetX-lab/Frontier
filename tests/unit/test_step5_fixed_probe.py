@@ -151,7 +151,7 @@ def test_stage_copies_exact_workload_and_hashes_every_payload(tmp_path):
         job.stage_probe(stage, dependency_site=dependencies)
 
 
-def test_launcher_materializes_h200_resources_without_platform_imports(tmp_path, monkeypatch):
+def test_launcher_materializes_h200_resources_without_platform_imports(tmp_path, monkeypatch, preemptible=False):
     path = job.REPO_ROOT / "tests/integration/step5_profiling/submit_profiling_job.py"
     spec = importlib.util.spec_from_file_location("step5_submit_cpu_fixture", path)
     module = importlib.util.module_from_spec(spec)
@@ -172,7 +172,7 @@ def test_launcher_materializes_h200_resources_without_platform_imports(tmp_path,
     monkeypatch.setenv("STEPMIND_BACKEND", "rjob")
     monkeypatch.setenv("BRAINPP_ACCESS_KEY", "CPU_FIXTURE_NOT_A_CREDENTIAL")
     monkeypatch.setenv("BRAINPP_SECRET_KEY", "CPU_FIXTURE_NOT_A_CREDENTIAL")
-    manifest = job.describe_probe(tmp_path / "stage")
+    manifest = job.describe_probe(tmp_path / "stage", preemptible=preemptible)
     monkeypatch.chdir(tmp_path)
     argv = shlex.split(manifest["submission_command"])
     monkeypatch.setattr(sys, "argv", argv[3:])
@@ -180,8 +180,13 @@ def test_launcher_materializes_h200_resources_without_platform_imports(tmp_path,
     assert calls["charged_group"] == "step_main"
     assert calls["resources"]["positive_tags"] == ["H200"]
     assert calls["resources"]["gpu"] == 1 and calls["resources"]["cpu"] == 8
-    assert calls["resources"]["mem_gb"] == 32 and not calls["resources"]["preemptible"]
+    assert calls["resources"]["mem_gb"] == 32
+    assert calls["resources"]["preemptible"] is manifest["preemptible"] is preemptible
     assert calls["resources"]["image"] == manifest["image"]
+
+
+def test_preemptible_launcher_materializes_h200_resources_without_platform_imports(tmp_path, monkeypatch):
+    test_launcher_materializes_h200_resources_without_platform_imports(tmp_path, monkeypatch, preemptible=True)
 
 
 def test_dry_run_verifier_retains_normal_cli_log_prefix(monkeypatch):

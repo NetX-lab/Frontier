@@ -6,6 +6,7 @@ import json
 import math
 import sys
 from pathlib import Path
+from statistics import mean as arithmetic_mean, median as sample_median
 
 from frontier.profiling.step5.replay import choose_graph_mode
 
@@ -63,14 +64,40 @@ def inspect_row(row, kind, max_time_cv):
     minimum = num("min_timing_window_ms", positive=True)
     checks["timing_windows"] = len(durations) == len(replays) == iterations >= 2 and all(v >= minimum for v in durations)
     singles = json.loads(row["per_iteration_time_stats"])
+    layer_reference = None
+    if kind == "CUDA_EVENT":
+        layer_reference = json.loads(row["layer_reference_time_stats"])
+        reference_counts = [number(v, "reference_window_replays", positive=True, integer=True)
+                            for v in json.loads(row["reference_window_replays"])]
+        reference_durations = [number(v, "reference_window_durations_ms", positive=True)
+                               for v in json.loads(row["reference_window_durations_ms"])]
+        reference_times = [number(v, "layer_reference_times_ms", positive=True)
+                           for v in json.loads(row["layer_reference_times_ms"])]
+        diagnostics = [number(v, "boundary_single_replay_times_ms", positive=True)
+                       for v in json.loads(row["boundary_single_replay_times_ms"])]
+        diagnostic_stats = json.loads(row["boundary_single_replay_time_stats"])
+        checks["timing_windows"] &= (reference_counts == replays
+            and len(reference_durations) == len(reference_times) == iterations
+            and all(v >= minimum for v in reference_durations)
+            and all(close(value, duration / count) for value, duration, count in zip(
+                reference_times, reference_durations, reference_counts)))
+        checks["reference_protocol"] = (
+            row["layer_reference_timing_basis"] == "independent_outer_only_normalized_clean_replay_windows"
+            and row["boundary_single_replay_role"] == "instrumentation_diagnostics_only"
+            and LAYER not in singles and len(diagnostics) == iterations
+            and number(diagnostic_stats["count"], "boundary count", integer=True) == iterations
+            and close(number(diagnostic_stats["median"], "boundary median", positive=True), sample_median(diagnostics))
+            and close(number(layer_reference["mean"], "reference mean", positive=True), arithmetic_mean(reference_times))
+            and close(number(layer_reference["median"], "reference median", positive=True), sample_median(reference_times)))
     cv, median_error, means = {}, {}, {}
     counts_ok = True
     for target in (*active, LAYER):
         mean = num(f"time_stats.{target}.mean", positive=True)
         std = num(f"time_stats.{target}.std")
         count = num(f"time_stats.{target}.count", positive=True, integer=True)
-        median = number(singles[target]["median"], f"{target} raw median", positive=True)
-        raw_count = number(singles[target]["count"], f"{target} raw count", positive=True, integer=True)
+        reference = layer_reference if target == LAYER and layer_reference is not None else singles[target]
+        median = number(reference["median"], f"{target} reference median", positive=True)
+        raw_count = number(reference["count"], f"{target} reference count", positive=True, integer=True)
         expected_raw_count = iterations if kind == "CUDA_EVENT" and target == LAYER else sum(replays)
         counts_ok &= count == iterations >= 2 and raw_count == expected_raw_count
         means[target], cv[target] = mean, number(std / mean, f"{target} CV")
@@ -107,6 +134,7 @@ def inspect_row(row, kind, max_time_cv):
         checks["overhead_reporting"] = close(overhead, reported)
         result["instrumentation_overhead_fraction"] = overhead
     else:
+        checks["reference_protocol"] = True
         denominator = means[LAYER]
         kernel_count = num("kernel_count", positive=True, integer=True)
         kernel_ms, copy_ms = num("kernel_time_ms", positive=True), num("memory_copy_time_ms")
@@ -155,7 +183,7 @@ def judge(directory, expected_event_rows=12, expected_gpu_active_rows=8, max_tim
     checks = {"row_counts": len(events) == expected_event_rows and len(gpu) == expected_gpu_active_rows,
               "cell_coverage": len(event_cells) == len(events) and event_cells == candidate_cells
                                and len(candidate_cells) == len(candidates)}
-    for key in ("measurement_type", "functional", "prefix_continuation", "graph_dispatch", "timing_windows", "counts", "reconciliation"):
+    for key in ("measurement_type", "functional", "prefix_continuation", "graph_dispatch", "timing_windows", "reference_protocol", "counts", "reconciliation"):
         checks[key] = bool(rows) and all(r["checks"].get(key, False) for r in rows)
     checks["cupti"] = bool(gpu) and all(r["checks"].get("cupti", False) for r in gpu)
     checks["overhead_reporting"] = bool(events) and all(r["checks"].get("overhead_reporting", False) for r in events)

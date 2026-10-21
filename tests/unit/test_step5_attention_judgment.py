@@ -47,6 +47,19 @@ def make_row(kind="CUDA_EVENT", phase="decode"):
     for name, mean in means.items():
         row.update({f"time_stats.{name}.mean": str(mean), f"time_stats.{name}.std": str(mean * .01),
                     f"time_stats.{name}.count": "2"})
+    if kind == "CUDA_EVENT":
+        raw = json.loads(row["per_iteration_time_stats"])
+        raw.pop(judgment.LAYER)
+        row.update({
+            "per_iteration_time_stats": json.dumps(raw),
+            "layer_reference_time_stats": json.dumps({"mean": .6, "median": .6, "count": 2}),
+            "reference_window_replays": "[2, 2]", "reference_window_durations_ms": "[1.2, 1.2]",
+            "layer_reference_times_ms": "[0.6, 0.6]",
+            "layer_reference_timing_basis": "independent_outer_only_normalized_clean_replay_windows",
+            "boundary_single_replay_role": "instrumentation_diagnostics_only",
+            "boundary_single_replay_times_ms": "[0.9, 0.9]",
+            "boundary_single_replay_time_stats": json.dumps({"median": .9, "count": 2}),
+        })
     return row
 
 
@@ -125,15 +138,36 @@ def test_cv_is_recomputed_despite_claimed_stability_and_summary(tmp_path, fixtur
 
 def test_median_error_uses_raw_median_denominator(tmp_path, fixture_rows):
     row = fixture_rows[0][0]
-    raw = json.loads(row["per_iteration_time_stats"])
-    raw[judgment.LAYER]["median"] = .6 / 1.051
-    row["per_iteration_time_stats"] = json.dumps(raw)
+    reference = .6 / 1.051
+    row["layer_reference_time_stats"] = json.dumps({"mean": reference, "median": reference, "count": 2})
+    row["layer_reference_times_ms"] = json.dumps([reference] * 2)
+    row["reference_window_durations_ms"] = json.dumps([2 * reference] * 2)
     result = run_judge(tmp_path, fixture_rows)
     assert result["checks"]["cv"] and not result["checks"]["median_agreement"]
     assert result["counts"]["qualified_candidates"] == 1
     failure = result["failed_cells"][0]["targets"][0]
     assert failure["target"] == judgment.LAYER
     assert failure["median_relative_error"] == pytest.approx(.051)
+
+
+def test_boundary_event_diagnostics_cannot_reject_independent_reference(tmp_path, fixture_rows):
+    row = fixture_rows[0][0]
+    row["boundary_single_replay_times_ms"] = "[0.9, 9.0]"
+    row["boundary_single_replay_time_stats"] = json.dumps({"median": 4.95, "count": 2})
+    assert run_judge(tmp_path, fixture_rows)["verdict"] == "PASS"
+
+
+@pytest.mark.parametrize("column,value", [
+    ("reference_window_replays", "[1, 2]"),
+    ("reference_window_durations_ms", "[0.49, 1.2]"),
+    ("layer_reference_times_ms", "[0.3, 0.6]"),
+    ("layer_reference_timing_basis", "boundary_single_replays"),
+    ("boundary_single_replay_role", "agreement_reference"),
+    ("boundary_single_replay_times_ms", "[0.9]"),
+])
+def test_independent_reference_protocol_cannot_be_mislabelled_or_shortened(tmp_path, fixture_rows, column, value):
+    fixture_rows[0][0][column] = value
+    assert run_judge(tmp_path, fixture_rows)["verdict"] == "FAIL"
 
 
 def test_false_stability_flags_do_not_reject_recomputed_good_measurements(tmp_path, fixture_rows):
@@ -157,9 +191,14 @@ def test_replayed_operator_counts_and_isolated_event_layer_counts_qualify(tmp_pa
 def test_raw_operator_and_layer_counts_must_keep_their_own_units(
         tmp_path, fixture_rows, kind, target, wrong_count):
     row = fixture_rows[0 if kind == "CUDA_EVENT" else 1][0]
-    singles = json.loads(row["per_iteration_time_stats"])
-    singles[target]["count"] = wrong_count
-    row["per_iteration_time_stats"] = json.dumps(singles)
+    if kind == "CUDA_EVENT" and target == judgment.LAYER:
+        reference = json.loads(row["layer_reference_time_stats"])
+        reference["count"] = wrong_count
+        row["layer_reference_time_stats"] = json.dumps(reference)
+    else:
+        singles = json.loads(row["per_iteration_time_stats"])
+        singles[target]["count"] = wrong_count
+        row["per_iteration_time_stats"] = json.dumps(singles)
     result = run_judge(tmp_path, fixture_rows)
     assert result["verdict"] == "FAIL" and not result["checks"]["counts"]
     assert result["counts"]["qualified_candidates"] == 1

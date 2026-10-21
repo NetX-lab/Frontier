@@ -1,0 +1,19 @@
+{
+  "model": "stepfun-ai/Step-5-Preview",
+  "cell": {"global_layer_id": 0, "query_lens": [1], "context_lens": [6144], "phase": "decode"},
+  "native": {
+    "device": "h200", "tensor_parallel_size": 8, "block_size": 16,
+    "max_model_len": 7168, "max_batch_size": 2, "cudagraph_capture_sizes": [1, 2],
+    "enable_chunked_prefill": false, "seed": 0
+  },
+  "measurement": {
+    "replays": 15, "windows_per_cohort": 10, "min_window_ms": 0.5, "warmup_iterations": 3
+  },
+  "reference": {
+    "run": "exp-1021-120711-905260",
+    "event_csv_sha256": "a2420591d01d4c4a1bfeffbaf326479b0f8207d72eac993e44948f580f0f0246",
+    "cell_mean_us": 33.598720232645675, "cell_independent_median_us": 35.551998764276505,
+    "observed_swa_gap_range_us": [1.5953060984611511, 2.121388564507164],
+    "meaning": "Historical observations for mechanism prediction only, not admission bounds or a fitted correction"
+  }
+}
