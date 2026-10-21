@@ -293,3 +293,12 @@ Checkpoint after verified compute correction:
   pinned atd28fe917 and executable `sim/datacenter/htsim_ndp` retains SHA256
   `812fb3d86489d76a4d50e2f0ea936bdb6d25dfe740c06050a0d0c1a1f9f4631e`.
   No dependency rebuild, new fit or new actual CLI was started during diagnosis.
+- partial root repair: primary161PASS/1 explicitly deselected; original
+  root/ledger/stage=.6244ms and23 kernels now pass on mergedf237362. The inherited
+  cache-order failure has identical testcase/error before and after this change.
+- blocked source acceptance: independent review identified a reachable P1 in
+  stage-only owner projection. The owner's irrelevant attention has no proof
+  after public first/last boundary replacement and must not be validated.
+  Same owner is implementing the public-call-site RED and stage-owned-only fix;
+  see `root_metrics_review.md`. No actual05 or candidate matrix has launched.
+  Only the clean pre-fix77 baseline is running independently.
