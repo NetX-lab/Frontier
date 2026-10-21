@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | Recorded original scope and R1 independently bound accepted-input requirement. |
+| 2026-10-22 | Recorded original scope, R1 accepted-input requirement and records-only final packaging request. |
 
 ## Original request
 [Original Request] Implement the smallest existing-reader extension for exact measured ongoing q1 DECODE in `read_isolated_scope`, under D-Q10-V4-GRAPH-MEASURED-AND-NIXL approval. Start at 2c150a7 in clean branch/worktree `v4-isolated-decode`. Own only `frontier/execution_time_predictor/deepseek_v4.py`, focused existing V4 tests/fixtures and these records; maximum 500 changed lines. No GPU, platform, SSH, cloud, new diagnostics, GLM5.3 tests, merge or push.
@@ -25,3 +25,6 @@
 [Original Request] W128-V4-ISOLATED-DECODE-R1: independent review requests P2 changes because631250b accepts historical cold b36c2b9 q1 rows using only self-consistent candidate provenance. Preserve all631250b receipts and strict77 identity. Reproduce old-table RED then GREEN. Bind independently supplied acceptance provenance through existing explicit isolated-scope argument contract, without hardcoded accepted path/commit/hash in core or new config flag/shared API. Accepted warmed methods pass exactly; old-table/source/fingerprint/input provenance negatives typed-reject. Keep all serving gates and legacy prefill. Commit scoped fix and supply full original-base code+record diff for rereview; run fixed-source strict comparison separately.
 
 R1 decision: use existing `attention_layout` mapping for decode-only expected source_revision/runtime_fingerprint/model_config_sha256 and input_file_sha256. Expected values come from the independently accepted root warmup report/measurement02_primary receipt, captured in a focused V4 fixture; never from the candidate row. Existing RuntimeIdentity and file_sha256 mechanisms are reused. Legacy prefill layout stays unchanged.
+
+## Final archive follow-up
+[Original Request] Root reran225 focused checks PASS in82.66s and reports independent W128-V4-ISOLATED-DECODE-R1-REVIEW APPROVE/P2closed. Finalize the stale committed102c0c9 summary attribution in a records-only commit with review/primary receipts. Preserve102c0c9 source and its single strict77 run; report final source/archive commits, full diff/SHA, comparison/manifest paths, clean state and blockers. No further production changes, GPU/GLM/platform action, polling or duplicate runs.

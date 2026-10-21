@@ -1,0 +1,42 @@
+{
+  "task_id": "W128-V4-ISOLATED-DECODE-R1",
+  "source_revision": "102c0c9e503548640e86e18be8374faac7f06917",
+  "primary_verification": {
+    "status": "PASS",
+    "evidence_source": "Observed retained root pytest XML and log; exact root invocation not supplied",
+    "tests": 225,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "xml_elapsed_seconds": 82.654,
+    "log_elapsed_seconds": 82.66,
+    "artifacts": [
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/root_v4_isolated_decode_r1_20261022.xml",
+        "sha256": "accff6af4916b916b9695c947dfe7d438029206fae5249b35843c84933244742",
+        "bytes": 34939
+      },
+      {
+        "path": "/data/ycfeng/tmp/glm53_dsv4/root_v4_isolated_decode_r1_20261022.log",
+        "sha256": "0f7d94aa44626f765bdc1416975bc98e163dfb52813147cd010bbd7ce93afc24",
+        "bytes": 351
+      }
+    ]
+  },
+  "independent_review": {
+    "task_id": "W128-V4-ISOLATED-DECODE-R1-REVIEW",
+    "verdict": "APPROVE",
+    "P2_status": "closed",
+    "evidence_source": "Primary final archive instruction; standalone reviewer transcript not supplied",
+    "new_review_performed_by_this_agent": false
+  },
+  "committed_summary_correction": {
+    "stale_revision": "102c0c9e503548640e86e18be8374faac7f06917",
+    "corrected_records_revision": "5bb955e9bd2bb465ac0970a476245c38722e95d7",
+    "verified_with_git_show": true
+  },
+  "fixed_source_strict_receipt": "task_memory/task_2026-10-22_v4_isolated_decode/r1_strict77_receipt.json",
+  "historical_source_strict_receipt": "task_memory/task_2026-10-22_v4_isolated_decode/strict77_receipt.json",
+  "additional_test_or_strict_run_for_final_packaging": false,
+  "remaining_assigned_blockers": []
+}

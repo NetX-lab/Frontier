@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | Preserved original validation and separately recorded R1 RED/GREEN and fixed-source checks. |
+| 2026-10-22 | Preserved separate original/R1 validation and added root rerun evidence without further execution. |
 
 ## Environment and commands
 CPU only, Python3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`, no conda activation. Repository `/data/ycfeng/Frontier/.worktrees/v4-isolated-decode`. Common prefix: `env PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python -B`.
@@ -29,3 +29,9 @@ Native q1 SWA split is not semantic decode evidence. Existing semantic Batch sna
 - Direct uncached GREEN:12 accepted exact scopes and two real old-table typed-rejections, no cache/monkeypatch. `r1_validation_receipt.json` preserves selected values/source/accepted hashes. Original validation_receipt.json/strict77_receipt.json remain unchanged.
 - Independent contract audit: `r1_contract_receipt.json` confirms every expected identity/hash equals the retained measurement02_primary.json rather than the candidate. Parent's explicit accepted-source instruction supplies acceptance authority; the report itself reserves final acceptance to primary.
 - Fixed-source strict command: item6 command with `--sha 102c0c9 --output-root /data/ycfeng/tmp/glm53_dsv4/v4_isolated_decode_20261022/r1_fidelity`, redirected to `/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_isolated_decode_r1_strict77.log`. Clean committed source102c0c9e503548640e86e18be8374faac7f06917; launched once. Expected77 executed/compared/IDENTICAL and clean provenance; actual **PASS77/77 IDENTICAL** with zero failures/missing evidence/definition/cache/provenance differences. Manifest source_dirty=false/cache_clean_before_run=true, retained checkout clean, source/harness/driver HEAD102c0c9. `r1_strict77_receipt.json` pins comparison/manifest/results/log hashes and exact paths. Separate from historical631250b validation; subsequent archive-only edits leave verified code unchanged.
+
+## Primary verification and archive checks
+- Root retained files `/data/ycfeng/tmp/glm53_dsv4/root_v4_isolated_decode_r1_20261022.xml` and `.log`: **PASS225**,0 failures/errors/skips,82.654s XML/82.66s log. Checked by read-only Python3.10.6 `xml.etree.ElementTree` parsing and SHA256 calculation; exact root pytest invocation was not supplied, so it is not invented or rerun here. `primary_review_receipt.json` retains observed XML/log counts and hashes.
+- Primary-supplied review verdict: W128-V4-ISOLATED-DECODE-R1-REVIEW **APPROVE**, P2closed. This agent records that reported independent review, not a new review; inspected source/evidence and limitation recorded in `review.md`.
+- Archive attribution: `git show 102c0c9:task_memory/task_2026-10-22_v4_isolated_decode/summary.md` contains the stale sentence; `git show 5bb955e:task_memory/task_2026-10-22_v4_isolated_decode/summary.md` does not. **PASS correction already committed**; final follow-up only adds records/receipts.
+- Source preservation check `git diff 102c0c9 HEAD -- frontier tests`: empty. **PASS**, no production/test/fixture source change or duplicate strict run. `git diff --check`: **PASS** before final records-only commit.
