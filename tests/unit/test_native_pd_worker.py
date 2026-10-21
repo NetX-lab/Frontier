@@ -109,6 +109,8 @@ def exercise(worker, temporary, case):
     }
     if case.startswith("canonical_clean"):
         config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
+    if case in ("canonical_clean_standard_layout", "canonical_clean_manifest_staging_failure"):
+        config.update(case_dir=str(directory / "local-case"), run_tag="cpu-fixture")
     original_relative = Path.is_relative_to
 
     def is_relative_to(path, other):
@@ -140,6 +142,9 @@ def exercise(worker, temporary, case):
         stack.enter_context(patch.object(worker.subprocess, "check_output", return_value="fake H800"))
         stack.enter_context(patch.object(worker.importlib.metadata, "version", return_value="stub"))
         stack.enter_context(patch("urllib.request.urlopen", return_value=Health()))
+        if case == "canonical_clean_standard_layout":
+            stack.enter_context(patch.object(worker, "stage_run_manifest",
+                side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
         code = worker.run(config)
     result = json.loads((root / "nodes/host0/result.json").read_text())
     return {
@@ -149,6 +154,7 @@ def exercise(worker, temporary, case):
         "failed_sentinel": (root / "nodes/host0/failed.json").exists(),
         "observation_errors": result["observation_errors"],
         "replay_commands": replay_commands,
+        "shutdown_order": result.get("shutdown_order"),
     }
 
 
@@ -185,5 +191,27 @@ def test_worker_preserves_native_completion_when_client_admission_is_unverified(
     result = exercise(native_pd_worker, tmp_path, "canonical_clean_admission_failure")
     assert result["worker_returncode"] == 4
     assert result["native_server_returncode"] == 0
+    assert not result["failed_sentinel"]
+    assert result["events"].index("replay_completed") < result["events"].index("server_stop_called")
+
+
+def test_worker_uses_case_run_layout_and_retains_ordered_shutdown(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_standard_layout")
+    assert result["worker_returncode"] == 0 and not result["failed_sentinel"]
+    assert result["events"].index("prelaunch_manifest_staged") < result["events"].index("server_launch")
+    command = result["replay_commands"][0]
+    assert Path(command[command.index("--output-dir") + 1]).name == "run"
+    assert result["shutdown_order"] == {
+        "drained_before_stop": True,
+        "all_nodes_drained_before_head_stop": ["host0", "host1", "host2", "host3"],
+        "native_returned_before_requested_stop": False,
+    }
+
+
+def test_manifest_copy_failure_is_soft_and_native_work_still_completes(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_manifest_staging_failure")
+    assert result["observation_errors"]
+    assert "FileNotFoundError" in result["observation_errors"][0]
+    assert result["worker_returncode"] == result["native_server_returncode"] == 0
     assert not result["failed_sentinel"]
     assert result["events"].index("replay_completed") < result["events"].index("server_stop_called")
