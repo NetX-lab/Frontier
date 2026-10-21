@@ -4354,12 +4354,28 @@ class MetricsStore:
             from frontier.execution_time_predictor.deepseek_v4 import component_ledger
 
             return {name: _round_ledger_ms(value) for name, value in component_ledger(execution_time).items()}
+        owner = (execution_time.stage_execution_time
+                 if isinstance(execution_time, StageExecutionTime) else execution_time)
+        stage_components = {
+            name: _round_ledger_ms(getattr(owner, name))
+            for name in (
+                "pipeline_parallel_communication_time", "schedule_time", "sampler_e2e_time",
+                "prepare_inputs_e2e_time", "pp_producer_send_path_runtime_time",
+                "pp_receiver_head_runtime_time", "pp_prefill_consumer_active_runtime_time",
+                "pp_stage_boundary_residual_runtime_time", "process_model_outputs_time",
+                "ray_comm_time", "decode_draft_proposer_time", "mtp_terminal_overshoot_time",
+            )
+        }
+        attributes = canonical_operator_execution_time_attrs()
+        for name, value in owner.op_times.items():
+            if attributes.get(name) in StageExecutionTime.stage_owned_fields:
+                stage_components[name] = _round_ledger_ms(value)
         if isinstance(execution_time, StageExecutionTime):
             owner_only_names = execution_time.stage_owned_fields | {
-                name for name, attribute in canonical_operator_execution_time_attrs().items()
+                name for name, attribute in attributes.items()
                 if attribute in execution_time.stage_owned_fields
             }
-            component_ledger: dict[str, float] = {}
+            component_ledger: dict[str, float] = dict(stage_components)
             for layer in execution_time.layer_execution_times:
                 layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
                 for name, value in layer_ledger.items():
@@ -4367,11 +4383,6 @@ class MetricsStore:
                         continue
                     component_ledger[name] = component_ledger.get(name, 0.0) + float(value)
 
-            owner_ledger = self._build_frontier_stage_batch_component_ledger(
-                execution_time.stage_execution_time
-            )
-            for name in owner_only_names & owner_ledger.keys():
-                component_ledger[name] = float(owner_ledger[name])
             return {
                 name: _round_ledger_ms(value)
                 for name, value in component_ledger.items()
@@ -4383,6 +4394,7 @@ class MetricsStore:
         )
         mla_attention_times = dict(_iter_mla_attention_op_times(execution_time))
         component_ledger = {
+            **stage_components,
             "attention_prefill_execution_time": _round_ledger_ms(
                 dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL]
             ),
@@ -4438,9 +4450,6 @@ class MetricsStore:
             ),
             "dp_input_allreduce_time": _round_ledger_ms(execution_time.dp_input_allreduce_time),
             "dp_output_allreduce_time": _round_ledger_ms(execution_time.dp_output_allreduce_time),
-            "pipeline_parallel_communication_time": _round_ledger_ms(
-                execution_time.pipeline_parallel_communication_time
-            ),
             "expert_parallel_communication_time": _round_ledger_ms(
                 execution_time.expert_parallel_communication_time
             ),
@@ -4461,40 +4470,9 @@ class MetricsStore:
                 execution_time.add_attn_residual_time
             ),
             "add_ffn_residual_time": _round_ledger_ms(execution_time.add_ffn_residual_time),
-            "schedule_time": _round_ledger_ms(execution_time.schedule_time),
-            "sampler_e2e_time": _round_ledger_ms(execution_time.sampler_e2e_time),
-            "prepare_inputs_e2e_time": _round_ledger_ms(
-                execution_time.prepare_inputs_e2e_time
-            ),
-            "pp_producer_send_path_runtime_time": _round_ledger_ms(
-                execution_time.pp_producer_send_path_runtime_time
-            ),
-            "pp_receiver_head_runtime_time": _round_ledger_ms(
-                execution_time.pp_receiver_head_runtime_time
-            ),
-            "pp_prefill_consumer_active_runtime_time": _round_ledger_ms(
-                execution_time.pp_prefill_consumer_active_runtime_time
-            ),
-            "pp_stage_boundary_residual_runtime_time": _round_ledger_ms(
-                execution_time.pp_stage_boundary_residual_runtime_time
-            ),
-            "process_model_outputs_time": _round_ledger_ms(
-                execution_time.process_model_outputs_time
-            ),
-            "ray_comm_time": _round_ledger_ms(execution_time.ray_comm_time),
-            "decode_draft_proposer_time": _round_ledger_ms(
-                execution_time.decode_draft_proposer_time
-            ),
-            "mtp_terminal_overshoot_time": _round_ledger_ms(
-                execution_time.mtp_terminal_overshoot_time
-            ),
         }
         for op_name, duration_ms in _iter_ffn_merge_times(execution_time):
             component_ledger[op_name] = _round_ledger_ms(duration_ms)
-        attributes = canonical_operator_execution_time_attrs()
-        for name, value in execution_time.op_times.items():
-            if attributes.get(name) in StageExecutionTime.stage_owned_fields:
-                component_ledger[name] = _round_ledger_ms(value)
         if execution_time.attention_family_id is not None:
             family = get_attention_family(execution_time.attention_family_id)
             component_public_names = {

@@ -179,7 +179,8 @@ functional splits planned above are unchanged and are not performed here.
 ## Measured inclusive attention root projection, 2026-10-22
 
 D23-ROOT-METRICS touches the existing metrics/trace projection at baseline
-`61cbac9`. `frontier/metrics/metrics_store.py` grows from 5,817 to 5,825 lines.
+`61cbac9`. `frontier/metrics/metrics_store.py` initially grew from 5,817 to
+5,825 lines; the P1 owner correction below reduces it to 5,803 lines.
 The cleanup moves the per-family ledger projection from the stage loop to the
 existing layer ledger, removing the duplicate projection and allowing both
 layer and stage consumers to retain a scalar-free measured root. Stage-owned
@@ -194,3 +195,14 @@ predictor, or child cost is introduced. Moving this wiring alone would split
 the same ledger/trace owner, while a broad store split would expand the fix's
 regression surface. The planned movement-only ledger split (step 3 above)
 remains deferred; this exception authorizes only this root projection fix.
+
+The P1 follow-up removes recursive layer projection of the stage-only owner.
+Measured first/last boundary prediction retains the owner's attention duration
+but intentionally does not preserve a layer OperatorCost there. The owner's
+layer payload is not authoritative and must not be projected or validated as
+one. Existing scalar/canonical stage fields are now projected once before
+layer aggregation, using the same names and stage-owned classification as
+before; their old later projection is removed. Authoritative layers still use
+the strict measured root projection. No new flag, module, owner proof, or
+predictor replacement behavior is added. The correction is net minus 22 lines
+and stays within the existing ledger split exception.
