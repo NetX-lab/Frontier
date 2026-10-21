@@ -15,4 +15,6 @@ Dependency: A -> B -> C -> D. No nested delegation; stage sealing follows verifi
 | C | Affected regression | All original 851 baseline IDs still PASS; focused faults reject mismatched/short references and preserve strict 5% checks. |
 | D | Sealed full D18 probe and handoff | Fresh stage; all hashes/inventory/dry-runs/shell/workload/source identity verified; original stage02 unchanged; exact parent launch/judge commands, budget and limitations recorded. |
 
+Final status: A/B/C/D completed for code and offline readiness. Source `74df010`; final affected873 PASS preserves851 baseline IDs. Fresh preemptible full-probe stage and parent-only handoff are verified. Fresh native run/judgment is parent-owned and remains pending, not a completed acceptance claim.
+
 Verification uses `/data/ycfeng/envs/oneshot-opd-py312/bin/python`, `VLLM_TARGET_DEVICE=cpu`, existing offline dependencies, no native/GPU/platform operation. Raw logs live under `/data/ycfeng/tmp/d22_timing_20261021`; compact evidence lives here. Historical FAIL receipts are not recalculated or relabelled.

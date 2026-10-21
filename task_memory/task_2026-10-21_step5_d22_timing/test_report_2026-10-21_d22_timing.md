@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-21 | Record real-seam RED->GREEN, affected regression and pending sealed-stage verification. |
+| 2026-10-21 | Record real-seam RED->GREEN,873 affected passes and verified fresh full-probe stage. |
 
 ## Result and limits
 
@@ -77,4 +77,35 @@ CPU tests include actual launcher execution with inert module doubles and fake c
 
 ## Sealed stage
 
-Pending source commit and fresh-stage preflight. No submission is performed by this task. The parent-only handoff will record the immutable stage path, manifest hash, all payload/source identity checks, full18+4/native-policy dry run, both original linear dry runs, exact launch/judge commands and one-H200 runtime budget. Original stage02 will be rehashed without reading cloud or modifying any receipt.
+Source commit: `74df0100ca0f39d6ff134d999909e863c3db6962`. Stage: `/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01`. Manifest SHA256: `a1dc28ceca71235b000e7f7448464a5ff76d27e76d2d51ee63fe0811908b5312`.
+
+Exact stage command:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 VLLM_TARGET_DEVICE=cpu TMPDIR=/data/ycfeng/tmp \
+  PYTHONPATH=/data/ycfeng/Frontier/.worktrees/step5-profiling:/data/ycfeng/tmp/step5_profiling_20261020/extra_site \
+  /data/ycfeng/envs/oneshot-opd-py312/bin/python -B -m frontier.profiling.step5.job \
+  --stage /data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01 \
+  --run-id fixed_h200_d22_probe_20261021_01 \
+  --dependency-site /data/ycfeng/tmp/d18_profile_20261021/h200_small_probe_stage02/offline_site \
+  --fixed-workload-probe --preemptible
+```
+
+Exact frozen preflight command:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 VLLM_TARGET_DEVICE=cpu TMPDIR=/data/ycfeng/tmp \
+  PYTHONPATH=/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01:/data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01/offline_site \
+  /data/ycfeng/envs/oneshot-opd-py312/bin/python -B \
+  /data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01/tests/integration/step5_profiling/verify_fixed_probe.py \
+  --stage /data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01 \
+  --output /data/ycfeng/tmp/d22_timing_20261021/package_preflight01.json
+```
+
+Actual PASS:3407 payload hashes, exact inventory, workload checksums,18 event+4 GPU-active attention rows,16 total linear rows, both actual linear CLI dry runs, shell syntax and complete native probe policy. All525 tracked staged payloads match committed source; critical hashes are retained in `evidence/source_stage_audit01.json`. Native attention arguments, policy, full linear plan/workload and worker command exactly match original D18 after replacing run ID only. All13 staged linear protocol files are byte-identical; scoped timing function AST is unchanged.
+
+Original `/data/ycfeng/tmp/d18_profile_20261021/h200_small_probe_stage02`: all3407 payload hashes and exact inventory PASS, manifest remains `42545748def4f40947037a61ca68541d4f3736cd5e8faaa60a8ec3698be91077`. Old receipt verdicts were not recomputed. New stage is preemptible; original stage remains non-preemptible historical evidence. Preflight/source audit JSONs are retained locally under this task's `evidence/`.
+
+Source/docs whitespace check PASS excluding original raw RED XML. A first staged-wide `git diff --check` found four whitespace-only lines embedded in the original pytest failure text; raw XML bytes are intentionally preserved rather than rewritten. No product whitespace error exists.
+
+No submission occurred. [handoff.md](handoff.md) records exact parent-only launch/judge commands, quotas, budget and limits. There is no independent review claim; this subtask forbids nested delegation. Native D22 acceptance remains pending the parent's fresh unminimized run.
