@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-21 | Record parent-run suites, actual bundle output, initial fidelity audit, prioritized submissions and remaining actual-main defects. |
 | 2026-10-21 | Reverify the native API-front-end correction and explicit request-owned profile identity. |
+| 2026-10-21 | Record integrated-source77-case execution and separate schema/provenance disposition. |
 
 ## CPU integration checks
 
@@ -65,6 +66,21 @@ Both sides used `tests/e2e/refactor_fidelity/run_matrix.py run`, the existing77 
 - Receipt: `d20_fidelity_schema_audit01.json`. This separate schema-aware disposition does not rewrite the original comparison. Final-source affected verification remains needed after subsequent actual-main code changes.
 
 ## Prioritized native execution
+
+### Final integrated-source legacy run
+
+Parent executed from `step5-preview` at `bc8ae27`:
+
+```bash
+env PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/step5-preview --label candidate --output-root /data/ycfeng/tmp/step5_d20_final_fidelity_20261021 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 --clean-cache --continue-on-failure
+env PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/step5_d20_final_fidelity_20261021 --baseline-label /data/ycfeng/tmp/step5_d20_fidelity_20261021/baseline --candidate-label /data/ycfeng/tmp/step5_d20_final_fidelity_20261021/candidate
+```
+
+Expected no changed legacy simulation results. Actual execution **77/77 PASS**; strict comparison **FAIL/exit1** with77 config/metadata mismatches, no failed/missing cases or cache differences, and one dirty-tree provenance finding. Logs: `/data/ycfeng/tmp/step5_d20_final_fidelity_candidate.log` and `step5_d20_final_fidelity_compare01.log`. The manifest lists six changed documentation files and pre-existing `.pi/`/`.cortexkit/`, not changed source. It remains a dirty-tree result.
+
+Parent separately compared actual files for all77 cases: **297 non-schema pairs byte-identical**;31 prior metadata records preserved plus exactly nine `step5_*` records; normalized configs equal after removing only the new null `cluster_config.execution_time_predictor_config.nixl_read_profile`. The existing comparator's path substitutions were reused; no comparator or retained result was changed. Full per-case receipt: `d20_fidelity_schema_audit02.json`. This explains the differences without promoting the strict or provenance verdict. Final ticket29 must use the completed clean selected source; no additional unchanged-code matrix is started here.
+
+Parent also revalidated **79/79** retained H80064/H20032 evidence hashes, **12/12** generation03 inputs/source hashes and **99/99** raw-log runtime row addresses. A scoped Python link check over the public guide and current plan/progress/summary/checkpoint/report verified **133 existing local targets**; `git diff --check` passes. The campaign checkpoint records four complete tickets, eight partial tickets, fourteen blocked tickets and four intentionally retired tickets; it does not promote CPU implementation to native or accuracy acceptance.
 
 Each command uses the existing persistent personal RJob launcher:
 

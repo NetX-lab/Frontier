@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Assign case-aligned capture/reference implementation in step5-canonical-g3, reusing corrected R2 mechanisms. |
 | 2026-10-21 | D21: case-aligned native evidence serves P0 H80032 first and the other independent tracks; obsolete R2 capture stays paused, no G3 waiver. |
 | 2026-10-21 | R2 P1 review closed; old2048-length capture paused because canonical6144/1024 and independent referenceG3 remain uncovered. |
 | 2026-10-21 | D18 resume: judged sealed H800 R2 as diagnostic FAIL despite platform success; retained raw verdict and identified observer/validator defects for correction. |
@@ -23,7 +24,7 @@
 
 **Blocked by:** `06.simulation_scope` (decision D2). The complete original 06 census is not required.
 
-**External prerequisites:** Complete 06 evidence and the locked native reference are required. Native PD evidence may precede D-PD/D-ASYNC/D-DP-PD dispositions and has no GLM simulator barrier. A different native functional reference requires the applicable conditional decision. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
+**External prerequisites:** Accepted `06.simulation_scope` evidence and the locked native reference are required. Native PD evidence may precede D-PD/D-ASYNC/D-DP-PD dispositions and has no GLM simulator barrier. A different native functional reference requires the applicable conditional decision. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in progress (R1/D5 evidence complete; R2 collector P1 correction/review closed; canonical content/readiness/lifetime and independent reference qualification remain open).
 

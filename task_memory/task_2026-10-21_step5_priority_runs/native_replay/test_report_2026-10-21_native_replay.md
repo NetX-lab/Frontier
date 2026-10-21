@@ -5,8 +5,41 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded actual-source red/green caller regression and125 CPU checks. |
+| 2026-10-21 | Parent executes generation03 and verifies actual runtime FULL rows on both decode lanes; full G3/G4 remain open. |
 
 Environment: local Linux, Python3.12.13 at `/data/ycfeng/envs/asyncopd-py312/bin/python`; existing simulator-export fixture uses `/data/ycfeng/envs/frontier-py310/bin/python` through its documented override. No conda activation, GPU, auth, network, SSH or further delegation. CPU tests are not native replay evidence.
+
+The paragraph above describes the original source/CPU slice. The following parent-only native continuation is additional observed evidence; earlier receipts remain unchanged.
+
+## Parent generation03 native result
+
+- Submitted with `setsid bash /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/submit.sh`, output redirected to the enclosing `launcher.log`. Source/config is the sealed6838bc1 generation,32H800/codesign/non-preemptible. Personal source/mount identity is in `parent_identity02.json` beside the stage.
+- Terminal command, after sourcing `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`: `"$STEPMIND_PYTHON" /data/ycfeng/tmp/step5_native_pd_r1/status.py exp-1021-205523-285491 > /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/parent_terminal03.json`. Observed **Succeeded**, all four tasks succeeded, finish2026-10-21T13:09:48Z, creator i-fengyicheng, non-preemptible.
+- Parent Python3.10.6 read all24 `stage/evidence/replay/client_requests.jsonl` records:24 unique IDs;16 warmup/8 concurrent;6144 requested/accepted prompt tokens;1024 requested/generated/token-ID deltas;completed streams, length finishes and no validation errors. Both idle boundaries are verified for both roles/lanes; no observation errors. **PASS for exact requests/idle**.
+- Parent scans all four complete `stage/evidence/nodes/*/server.log` files. The nearest preceding `Engine NNN` associates each runtime table with its lane; match only five-column numeric rows, excluding capture/config text. **99 runtime rows** retained in `generation03_runtime_rows.csv`, including55 FULL rows: lane0 has30 rows/2224 forwards, lane1 has25 rows/2152 forwards. P lanes each log12 NONE forwards at6128 tokens; D additionally logs20/18 PIECEWISE observations. **PASS for actual FULL replay on both decode lanes**.
+- Source evidence: locked `compilation/cuda_graph.py:120–124` logs then resets interval stats, so counts can be summed across tables. Locked `v1/worker/gpu/cudagraph_utils.py:550–563` executes `graph.replay()` for FULL. The logger chain and runtime identity are pinned by the sealed stage. Counts are observed intervals, not a claim that every rank/request/forward is recorded.
+- `generation03_receipt.json` binds12 input/source files by SHA-256 and records the observations and limits. **Basic remains PARTIAL; formal-ready NO** pending G3 independent content/lifetime/reference, complete G4 useful/dummy-forward and rank accounting, admitted profiles and three clean128-request repetitions. No repeat basic run is needed merely for the corrected logger.
+
+Recheck the retained inputs and source-line addresses from the repository root:
+
+```bash
+python3 - <<'PY'
+import csv, hashlib, json
+from pathlib import Path
+root = Path('task_memory/task_2026-10-21_step5_priority_runs/native_replay')
+receipt = json.loads((root / 'generation03_receipt.json').read_text())
+assert all(hashlib.sha256(Path(r['path']).read_bytes()).hexdigest() == r['sha256'] for r in receipt['inputs'])
+with (root / 'generation03_runtime_rows.csv').open() as handle:
+    rows = list(csv.DictReader(handle))
+for row in rows:
+    line = Path(row['source']).read_bytes().decode(errors='replace').split('\n')[int(row['line']) - 1]
+    assert '| ' + row['unpadded'] in line and row['mode'] in line
+assert len(rows) == 99 and receipt['request_count'] == 24
+print('PASS: 12 input hashes and 99 LF-delimited runtime row addresses')
+PY
+```
+
+Parent executed these checks successfully. Raw LF-delimited line numbers preserve carriage-return progress lines without counting them as new log lines.
 
 Working directory for commands: `/data/ycfeng/Frontier/.worktrees/step5-priority-runs`.
 

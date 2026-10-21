@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Record bc8ae27 integration,323/197 parent checks, final-source fidelity limits and native generation03 per-lane FULL replay. |
 | 2026-10-21 | D21 code/native execution and D22 strict native PASS recorded:274 compute and204 native parent checks;P0 basic PARTIAL;full actual-main idle-DP binding still active. |
 | 2026-10-21 | D21-DOCS: archive four-track priority/dependency update, global H200 non-preemptible cap32, terminal receipts and superseded package intent; final acceptance remains open. |
 | 2026-10-21 | Bounded communication startup correction6a9cedc integrated asb68ce4d;101 parent tests and189 package pins pass. Old H20001 fails141 before measurement; unchanged32-GPU case02 exp-1021-143708-523626 isPending under96/130 reservations. Exact commands/evidence: test_report_2026-10-21_d20_comm_startup.md and scratch_evidence/d20_comm_startup/. Native quality remains unverified; measured compute/PD implementation continues. |
@@ -82,6 +83,8 @@
 
 
 ## Current D21 documentation delivery — 2026-10-21
+
+**Parent execution update:** measured code is integrated at `bc8ae27`, with323 combined and197 profiling/timing checks passing. Legacy execution completes77 cases and preserves297 non-schema artifact pairs byte-for-byte; strict config/metadata additions and documentation-dirty provenance remain recorded in `d20_fidelity_schema_audit02.json`. Full offline/online measured request acceptance remains active. P0 generation03 (`exp-1021-205523-285491`) Succeeded, completes24 exact6144/1024 requests and both idle boundaries, and now records FULL runtime on both decode lanes (2224/2152 observed forwards). This closes the missing replay observation only; G3 and complete G4 remain open. See `../task_2026-10-21_step5_priority_runs/native_replay/generation03_receipt.json`.
 
 **Overview:** D21 replaces the single-H20064 campaign with four hardware/scale milestones in existing tickets. P0 H80032 is highest priority; P1 H80064 basic runtime is eligible now but formal calibration requires own readiness and H80032 all-four clean errors<=30%. Equal-priority P2 H20032 is independent of H800; P2 H20064 basic runtime is eligible now, formal work requires own readiness and H20032 all-four clean errors<=30%. Every final track still needs all four errors<=10% in each of three clean complete-population repetitions;30% is a release condition, never final acceptance or an average.
 

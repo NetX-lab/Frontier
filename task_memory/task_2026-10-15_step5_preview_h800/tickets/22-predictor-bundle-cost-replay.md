@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Measured integrationbc8ae27 passes323 combined/197 profiling parent checks; complete CLI acceptance remains active. |
 | 2026-10-21 | Four public-manager bundles generated; actual-main mapping correction and final integration remain open after274 parent checks. |
 | 2026-10-21 | D21: P0-first measured CPU integration and separate per-track bundle admission; retain external acceptance gates without reinstating the implementation wait. |
 | 2026-10-21 | D20 moves from command preparation to approved predictor/cache/bundle implementation; native and whole-ticket acceptance prerequisites remain. |
@@ -22,7 +23,7 @@ Record reuse sufficiency and evidence-backed changes through the existing C01/C0
 
 **Status:** in-progress (D20 CPU implementation); formal bundle and whole-ticket acceptance blocked
 
-**Execution receipt:** compute83af0a7, PD9625984 and file-backed transfer8215196 meet in `step5-d20-integration`;274 combined parent checks pass. The actual public-manager fixture emits four bundles with34 artifacts each. Actual-main runner `tests/integration/run_step5_measured_main.py` currently rejects global `full_decode_only` in a per-phase profile mapping; repair through the existing policy semantics, then verify6144/1024 request completion, tail16, transfer and final metrics. Synthetic CPU timing is not an admitted production bundle. The77-case strict comparison retains config/metadata schema differences and no execution failures; final-source comparison remains open.
+**Execution receipt:** bc8ae27 integrates compute83af0a7, PD9625984, transfer8215196, graph-policy7e41b80 and request-freeacc3a88 into the primary branch. Parent323 combined and197 profiling/timing checks pass. The public-manager fixture emits four bundles with34 artifacts each. The actual-main owner is completing offline/online6144/1024 requests, first-tail16/cached6128, READ completion/source release and final metrics. Synthetic costs do not constitute an admitted production bundle. Final-source77-case fidelity is running; the earlier comparison retains explained config/metadata differences.
 
 **Current D21 scope:** integrate compute/PD/client measured CPU execution P0 H80032 first. The four hardware/scale tracks have distinct admitted profiles, runtime/native evidence and immutable bundle identities; no scaled times or cross-track PASS.32 total=P16/D16 TP8/DP2/EP16/PP1;64=P32/D32 TP8/DP4/EP32/PP1. Basic64 runtime can proceed now, but own readiness plus matching32 four clean errors<=30% precedes64 formal calibration; H20032 is independent of H800. Final four10% gates remain. D20 overrides historical CPU waiting/review-only paragraphs below; native/profile/external predictive acceptance stays open. Use `../plan.md` D21 graph/resources, not old allowances.
 

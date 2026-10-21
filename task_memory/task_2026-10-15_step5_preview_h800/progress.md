@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | P0 generation03 closes the missing per-lane runtime-replay observation; retain final-source fidelity schema/provenance findings and297 identical non-schema pairs. |
+| 2026-10-21 | Integrate measured code at bc8ae27;125 native/323 combined/197 profiling checks pass; submit P0 replay verification and assign G3/P0 producers. |
 | 2026-10-21 | Parent integrates D21/D22, records actual bundle execution, P0 partial native success and D22 strict native PASS; idle-DP measured consumption remains active. |
 | 2026-10-21 | D21-DOCS: synchronize four tracks, separate basic/formal dependencies, global H200 non-preemptible cap32 and terminal reconciliation; preserve historical records. |
 | 2026-10-21 | Record160-PASS foundation/input integration and pause obsolete noncanonical R2 capture. |
@@ -176,13 +178,13 @@ Task ID: **D21-DOCS**. Authority is the final D21 in [requirements.md](requireme
 | Work | Status | Evidence / next action |
 | --- | --- | --- |
 | D21 decision and dependency synchronization | completed | Four existing-ticket tracks in09/23/28/30; supporting active tickets updated, no new ticket or revived W1–W6 sweep |
-| P0 H80032 | basic PARTIAL; formal blocked | `exp-1021-195639-166258` Succeeded;24/24 exact requests and both-role/lane idle PASS; actual FULL replay rows and G3/reference still absent |
-| P1 H80064 | basic Starting12:26UTC; formal blocked | `exp-1021-202325-579469`,64 non-preemptible H800; own readiness AND H80032 four clean errors<=30% remain formal prerequisites |
-| P2 H20032 | basic Running12:21UTC; formal evidence pending | `exp-1021-201544-965435`,32 non-preemptible H200; no H800 accuracy edge |
-| P2 H20064 | basic eligible now; formal blocked | Wholly preemptible step_main; P32/D32 TP8/DP4/EP32/PP1; own readiness AND H20032 four clean errors<=30% before formal start |
-| D20 shared measured implementation | in-progress; P0-first |274 parent checks;four public-manager bundles with34 artifacts each. Actual-main graph mapping fixed7e41b80; request-free idle-DP coverage is the next reached missing capability, assigned to the same owner |
+| P0 H80032 | basic PARTIAL; per-lane replay observed | qualification03 exp-1021-205523-285491 Succeeded13:09:48UTC;24 exact requests/two idle boundaries PASS; decode lanes0/1 log2224/2152 FULL forwards |
+| P1 H80064 | basic PARTIAL; formal blocked | exp-1021-202325-579469 Succeeded;24/24 requests,64 GPUs, every lane idle; replay/G3/G4 and same-hardware30% release remain open |
+| P2 H20032 | basic PARTIAL; formal blocked | exp-1021-201544-965435 Succeeded;24/24 requests,32 GPUs, every lane idle; post-terminal parent API identity verified13:09UTC |
+| P2 H20064 | retained basic PARTIAL; formal blocked | Old64-GPU startup/capacity/24 exact requests/6128+16 split reusable; retain REFERENCE_UNSTABLE. Future runs wholly preemptible |
+| D20 shared measured implementation | integrated bc8ae27; full CLI acceptance in progress |323 combined and197 profiling/timing parent checks PASS;77 legacy cases execute with297 byte-identical non-schema pairs. Strict schema/provenance findings retained |
 | D22 independent timing reference | completed within approved probe scope | `exp-1021-201658-886733`,one preemptible H200;18/18 strict candidates,22/22 output/cache,18/18 prefix PASS; full-grid/linear-quality/serving admission remains open |
-| Native content/readiness/lifetime and profile admission | pending | Ticket08 case-aligned G3/independent reference and10/12/13 compatible admitted inputs; CPU fixtures/platform success are not substitutes |
+| Native content/readiness/lifetime and profile admission | implementation active |08 owner step5-canonical-g3 builds case-aligned capture/reference;10 owner step5-p0-profiles builds native idle-DP/P0 producers. Admission remains open |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
@@ -195,7 +197,15 @@ The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% 
 
 **Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
 
-**Next actions:** (1) finish actual-main idle-DP measured consumption and final integration/fidelity; (2) resolve missing runtime replay evidence from native source/logging and assess retained H20064 basic evidence; (3) use D22 protocol for admitted per-track profiles and close case-aligned G3/reference; (4) complete32 four-metric comparisons, release matching64 formal only at30%, and retain all final10% gates. No new scope decision is pending.
+**Next actions:** (1) finish actual-main complete request execution and final clean-source integration; (2) complete G4 useful/dummy-forward accounting using the now-visible P0 runtime rows; (3) in parallel, finish D22-based P0 producers and case-aligned G3/reference; (4) complete32 four-metric comparisons, release matching64 formal only at30%, and retain all final10% gates. No new scope decision is pending. Do not repeat basic runs solely for the now-resolved P0 logger setting or old H20064 startup gauges.
+
+**Latest parent execution:** native frontend fix merged asb6755f7 after125 checks; ordinary profile identity16fe134 passed99 checks. Measured integrationbc8ae27 preserves D22 reference cohorts and measured precision/architecture/metadata identity;323 combined and197 profiling/timing checks pass. The stale structural-only assertion now rejects an explicitly absent measured CSV. Exact commands, logs and one corrected test-filename command error are in `test_report_2026-10-21_d20_d21_parent.md`.
+
+**P0 generation03:** fresh personal list12:54:54UTC had zero nonterminal jobs and no continuation; codesign non-preemptible usage68/128. Submitted32 H800 through sealed `h800_32_qualification03/stage/submit.sh` with persistent setsid launcher. `/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/parent_identity02.json` verifies creator,4x8 GPUs,image and local NFS mount. H20032's missing local identity receipt was supplied by post-terminal API observation, not reconstructed preflight, in `h200_32_qualification02/parent_identity02.json`. The initial inspection used an incorrect nested config key (`resources`); inspection of the actual flat schema resolved it and all assertions pass. Native verdicts remain unchanged until their own evidence is complete.
+
+**Generation03 outcome:** parent personal API confirms four tasks Succeeded at13:09:48UTC. Parent checks24 unique requests (16 warmup+8 concurrent), exact6144 accepted/1024 emitted token IDs, no validation errors and both-role/lane idle at both boundaries. Complete server logs contain99 runtime rows: P lanes each12 NONE forwards at6128 tokens; D lanes2224/2152 FULL forwards and20/18 PIECEWISE observations. Counts are interval-local in the locked logger and are not a complete per-request/all-rank census. Receipt and line-addressed rows: `../task_2026-10-21_step5_priority_runs/native_replay/generation03_{receipt.json,runtime_rows.csv}`. G3 and full G4 remain open.
+
+**Final-source legacy execution:** candidatebc8ae27 completes77/77 cases. Parent independently checks297 non-schema artifact pairs byte-identical, all31 prior metadata records preserved, exactly nine registered Step additions, and only a new null NIXL input in normalized config. Original strict comparison remainsFAIL, including a dirty-tree provenance finding from six documentation edits and two pre-existing untracked directories; no source edit is listed. Retained receipt: `d20_fidelity_schema_audit02.json`. Do not rerun an unchanged matrix merely to clear this record; final29 acceptance must use a clean selected checkout after remaining source integration.
 
 ## Historical Ticket 15 native resident memory and KV capacity — 2026-10-20
 
