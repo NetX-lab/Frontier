@@ -67,7 +67,7 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
 
     async def client_session(app):
         nonlocal session
-        session = ClientSession(timeout=ClientTimeout(total=None), connector=TCPConnector(limit=0))
+        session = ClientSession(timeout=ClientTimeout(total=None), connector=TCPConnector(limit=0, force_close=True))
         yield
         await session.close()
         log.close()
