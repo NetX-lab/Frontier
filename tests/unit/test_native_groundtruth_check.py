@@ -356,8 +356,7 @@ def serving_counters(tmp_path, monkeypatch, request):
         write(tmp_path / 'case/inputs/native_config.json', config)
         manifest['inputs_sha256'][manifest['execution_config']] = digest(stage / 'config.json')
         lock = json.loads((retained / 'source_lock.json').read_text())
-        lock.update(native_commit=V028_SOURCE, harness_commit=manifest['harness_commit'], runtime_overlay=overlay,
-            retained_files={name: dict(sha256=value) for name, value in config['retained_files'].items()})
+        lock.update(native_commit=V028_SOURCE, harness_commit=manifest['harness_commit'], runtime_overlay=overlay)
         write(stage / 'source_lock.json', lock)
         write(stage / 'manifest.json', dict(fixture_only=True, files={
             name: digest(stage / name) for name in ('overlay.json', 'overlay_model.py', 'source_lock.json', 'config.json')}))
