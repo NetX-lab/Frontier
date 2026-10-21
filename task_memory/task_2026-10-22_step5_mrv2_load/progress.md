@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record evidence, hypotheses, and bounded profiling plan. |
+| 2026-10-22 | Begin authorized D23-MRV2-LOAD-REUSE. |
 
 - completed: isolated worktree/branch from ec5de15; clean initial Git status.
 - completed: AGENTS, GLOSSARY, existing ADR, diagnosing-bugs workflow, actual-main
@@ -84,3 +85,40 @@ model equality to recorded actual config before API calls.
 - completed: diagnostic code committed separately as `c655305`; only
   `tests/performance/profile_step5_load.py` changed. Evidence records are committed
   separately. Parent owns source decisions, integration and full acceptance.
+
+## D23-MRV2-LOAD-REUSE
+- completed: parent-approved same-manager P/D regression RED before production:
+  two failures (shared source first-load2, distinct source second-role load2),
+  `/data/ycfeng/tmp/d23_load_reuse_red01.log`.
+- completed: consumers inspected: Step training only reads the union/attrs;
+  `_fit_single_model` creates a local copy if NaN rows are removed and otherwise
+  reads features/targets. Registry hashing/lookup reads only. No existing union
+  consumer mutates its frame or nested measurement identity in-place.
+- completed: manager-local current-measurement union/root-hash reuse; SHA per
+  distinct source each lookup; same-file role sharing retains both inputs.
+  Hash-relevant config is checked independently from union validation identity.
+- completed: lifecycle finally clears all retained unions after real train and
+  publication success/failure. Three weakref tests confirm frames collected.
+- completed: union21 tests PASS in12.13s; two repeated-work tests GREEN2 in2.63s.
+  Same-manager content restore/malformed, config/shape/model/topology edits pass.
+- completed: pre-fix baseline truth capture and post-union full frame/attrs/root
+  duration/count hash equality: event100 `9688c187`/`008badcf`, kernel184
+  `b1bedbbb`/`664eca75`. Receipt `reuse_frame_truth.json`.
+- completed: optional feature derivation regression RED `[0,3,0,3]` vs `[0,3]`;
+  retain first validated dictionary, no validation removed from that first call.
+- completed: feature-after baseline frame/attrs/hash equality PASS and reversed
+  role reuse returns identical frame object/hash (`reuse_frame_truth.json`).
+- completed: unchanged probe GREEN exit0; DECODE0.027970s, loader/hash/fit0;
+  PREFILL2.666841s/shared loader1/cache hits2. Source/config/cache proofs PASS.
+- completed: final focused93 PASS/28.65s plus request-free CPU15 PASS/2.03s.
+  Earlier104 PASS/4 missing-torch failures recorded; no dependency installs.
+- completed: progress self-check after verified deliverable: no D1–D7 or S1–S6
+  drift; next route is final ownership checks and commits only.
+- completed: final AST/JSON/whitespace checks PASS. Diagnostic/runtime owner/data
+  diff empty; original hash implementation unchanged. Source/tests committed
+  separately as `02f566a`; task evidence commit follows.
+- completed: no giant module exceeds2,000 lines (Step627,
+  trainer1849, manager703), so no module-size exception change needed.
+- completed: all authorized D23-MRV2-LOAD-REUSE deliverables; no unfinished code
+  work. Limits:4 torch-dependent tests unavailable, no full CLI/77-case run;
+  parent owns review/integration/full acceptance. New retained records are local.

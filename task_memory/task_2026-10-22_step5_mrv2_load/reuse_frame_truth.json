@@ -1,0 +1,22 @@
+{
+  "CUDA_EVENT": {
+    "rows": 100,
+    "hashes": {
+      "step5_layer_e2e": "9688c187",
+      "step5_layer_e2e_kernel_count": "008badcf"
+    },
+    "frame_attrs_equal": true,
+    "reused_frame_same_object": true,
+    "reused_hash_equal": true
+  },
+  "KERNEL_ONLY": {
+    "rows": 184,
+    "hashes": {
+      "step5_layer_e2e": "b1bedbbb",
+      "step5_layer_e2e_kernel_count": "664eca75"
+    },
+    "frame_attrs_equal": true,
+    "reused_frame_same_object": true,
+    "reused_hash_equal": true
+  }
+}

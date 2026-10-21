@@ -6,7 +6,7 @@ Physical owners and workload semantics remain in ``frontier.attention.step5``.
 
 from __future__ import annotations
 
-from dataclasses import asdict, replace
+from dataclasses import asdict, dataclass, replace
 import json
 import math
 from numbers import Real
@@ -26,6 +26,7 @@ from frontier.attention.step5 import (
 )
 from frontier.attention.step5_inputs import validate_step5_input_row
 from frontier.config.precision_type import PrecisionType
+from frontier.config.utils import dataclass_to_dict
 from frontier.operators.typed_contracts import (
     parse_typed_operator_contracts,
     validate_typed_operator_metadata,
@@ -63,6 +64,14 @@ _TIMING_BASES = {
     MeasurementType.CUDA_EVENT: "cuda_event_native_runtime_latency",
     MeasurementType.KERNEL_ONLY: "correlated_kernel_plus_memcpy_duration_sum",
 }
+
+
+@dataclass
+class _Step5AttentionInputUnion:
+    identity: str
+    frame: pd.DataFrame
+    hash_config: str | None = None
+    root_hash: str | None = None
 
 
 def step5_measurement_type(graph_mode: str) -> MeasurementType:
@@ -234,9 +243,10 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
             rows, schema, measurement_type=measurement, identity_columns=("physical_scope",),
         )
         scope_by_kind[kind] = rows.iloc[0]["physical_scope"]
-    metadata_by_layer = {}
+    metadata_by_layer, row_features = {}, []
     for _, row in frame.iterrows():
         features = step5_row_features(row)
+        row_features.append(features)
         layer_id = int(row["global_layer_id"])
         if layer_id not in metadata_by_layer:
             metadata_by_layer[layer_id] = describe_step5_layer(
@@ -290,7 +300,7 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
         raise ValueError("Step profiling_precision conflicts with explicit model_dtype")
     frame["profiling_precision"] = derived_precision
     _validate_targets(frame)
-    features = pd.DataFrame([step5_row_features(row) for _, row in frame.iterrows()], index=frame.index)
+    features = pd.DataFrame(row_features, index=frame.index)
     for name in STEP5_FEATURE_COLUMNS:
         frame[name] = features[name]
     frame.attrs["measurement_identity"] = {
@@ -355,16 +365,49 @@ def load_step5_attention_input_union(
                 raise ValueError(f"incompatible Step attention input topology for {role}: {different}")
         topologies[role] = physical
 
-    frames, inputs = [], []
-    identity = None
-    canonical_config = None
+    inputs, source_keys, fingerprints = [], {}, {}
     for role in sorted(sources, key=str):
-        replica, scheduler, config, resolved = sources[role]
-        frame = load_step5_attention_rows(resolved, replica, scheduler, measurement_type)
+        replica, scheduler, _, resolved = sources[role]
+        source = str(Path(resolved).resolve())
+        if source not in fingerprints:
+            fingerprints[source] = dataset_fingerprint(source)
+        policy = {name: getattr(scheduler, name) for name in (
+            "block_size", "max_model_len", "max_tokens_in_batch", "batch_size_cap",
+            "long_prefill_token_threshold", "enable_chunked_prefill",
+        ) if hasattr(scheduler, name)}
+        source_keys[role] = json.dumps({
+            "path": source, "sha256": fingerprints[source], "measurement": measurement_type.value,
+            "model": dataclass_to_dict(replica.model_config),
+            "topology": topologies[role], "shape_policy": policy,
+        }, sort_keys=True)
+        inputs.append({
+            "role": str(role), "path": source, "sha256": fingerprints[source],
+            "topology": {name: value for name, value in topologies[role].items() if name != "quant_signature"},
+            "shape_policy": policy,
+            "attention_measurements": [method.value for method in step5_measurements_for_role(role, graph_mode)],
+        })
+    input_identity = json.dumps(inputs, sort_keys=True, separators=(",", ":"))
+    lookup_identity = json.dumps([input_identity, list(source_keys.values())])
+    canonical_config = sources[sorted(sources, key=str)[0]][2]
+    if not hasattr(manager, "_step5_attention_inputs"):
+        manager._step5_attention_inputs = {}
+    retained = manager._step5_attention_inputs
+    previous = retained.get(measurement_type)
+    if previous is not None and previous.identity == lookup_identity:
+        return previous.frame, canonical_config
+    # Keep only the current union per measurement; never retain changed source frames.
+    retained.pop(measurement_type, None)
+    frames = {}
+    identity = None
+    for role in sorted(sources, key=str):
+        replica, scheduler, _, resolved = sources[role]
+        source_key = source_keys[role]
+        if source_key not in frames:
+            frames[source_key] = load_step5_attention_rows(resolved, replica, scheduler, measurement_type)
+        frame = frames[source_key]
         actual = frame.attrs["measurement_identity"]
         if identity is None:
             identity = {**actual, **{name: dict(actual[name]) for name in ("attention_backend", "physical_scope")}}
-            canonical_config = config
         else:
             for name in identity.keys() | actual.keys():
                 if name in ("attention_backend", "physical_scope"):
@@ -377,22 +420,27 @@ def load_step5_attention_input_union(
                     if previous is not None and previous != value:
                         raise ValueError(f"incompatible Step attention input identity: {name}/{label}")
                     identity[name][label] = value
-        frames.append(frame)
-        inputs.append({
-            "role": str(role), "path": str(Path(resolved).resolve()),
-            "sha256": dataset_fingerprint(resolved),
-            "topology": {name: value for name, value in topologies[role].items() if name != "quant_signature"},
-            "shape_policy": {name: getattr(scheduler, name) for name in (
-                "block_size", "max_model_len", "max_tokens_in_batch", "batch_size_cap",
-                "long_prefill_token_threshold", "enable_chunked_prefill",
-            ) if hasattr(scheduler, name)},
-            "attention_measurements": [method.value for method in step5_measurements_for_role(role, graph_mode)],
-        })
-    union = pd.concat(frames, ignore_index=True).drop_duplicates().reset_index(drop=True)
+    union = pd.concat(list(frames.values()), ignore_index=True).drop_duplicates().reset_index(drop=True)
     # Bind declared sources/policies into the existing dataframe cache hash, not a second cache.
-    union["step5_attention_inputs"] = json.dumps(inputs, sort_keys=True, separators=(",", ":"))
+    union["step5_attention_inputs"] = input_identity
     union.attrs["measurement_identity"] = {**identity, "attention_inputs": inputs}
+    retained[measurement_type] = _Step5AttentionInputUnion(lookup_identity, union)
     return union, canonical_config
+
+
+def step5_attention_input_hash(manager, frame, predictor_config, measurement_type):
+    """Reuse the existing root hash only for this validated union and fit config."""
+    entry = getattr(manager, "_step5_attention_inputs", {}).get(measurement_type)
+    config_identity = str(sorted(manager._get_hash_relevant_config(predictor_config).items()))
+    if entry is not None and entry.frame is frame and entry.hash_config == config_identity:
+        return entry.root_hash
+    root_hash = manager._get_model_hash(
+        "step5_layer_e2e", frame, predictor_config,
+        manager._get_profiling_precision_from_df(frame), measurement_type,
+    )
+    if entry is not None and entry.frame is frame:
+        entry.hash_config, entry.root_hash = config_identity, root_hash
+    return root_hash
 
 
 def set_step5_model_coverage(model, frame: pd.DataFrame) -> None:

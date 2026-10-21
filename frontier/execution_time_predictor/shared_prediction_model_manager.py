@@ -109,8 +109,12 @@ class ExecutionTimePredictionModelManager(
             # Train all required prediction models once based on capabilities per cluster
             self._models_by_precision = {}
             self._model_profiling_precision = {}
-            self._trained_models = self._train_all_required_models()
-            self._publish_step5_model_bundles()
+            try:
+                self._trained_models = self._train_all_required_models()
+                self._publish_step5_model_bundles()
+            finally:
+                # Validated Step frames are initialization-only, including failed initialization.
+                self.__dict__.pop("_step5_attention_inputs", None)
 
             logger.info(f"ExecutionTimePredictionModelManager initialized with capabilities: {self._required_capabilities}")
 

@@ -1,0 +1,952 @@
+{
+  "task_id": "D23-MRV2-LOAD-REUSE",
+  "config": "/data/ycfeng/tmp/d23_main_actual05_offline/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json",
+  "config_sha256": "f342f1d0edd414105c8f4bc2d904d28d0ecde363c42a9b6bdbc631748790f105",
+  "model_equals_actual_config": true,
+  "subsets": [
+    {
+      "evidence_kind": "diagnostic_source_subset",
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv",
+      "source_bytes": 5606492481,
+      "subset": "/data/ycfeng/tmp/d23_mrv2_load_reuse_probe01/cuda_event_prefix_100.csv",
+      "subset_bytes": 5936404,
+      "rows": 100,
+      "columns": 125,
+      "all_source_fields_equal": true,
+      "subset_sha256": "bf5c6c5ebdd249bab0fbf11c1d8ba8fe2411ca50c0977d03eee58b08115a9612",
+      "largest_first_row_cells": [
+        [
+          "quant_signature",
+          53767
+        ],
+        [
+          "typed_operator_contracts",
+          3987
+        ],
+        [
+          "fusion",
+          354
+        ],
+        [
+          "active_operators",
+          149
+        ],
+        [
+          "physical_scope",
+          43
+        ]
+      ],
+      "shape_counts": [
+        {
+          "shape": [
+            "0",
+            "piecewise",
+            "attention_workload",
+            "swa"
+          ],
+          "rows": 1
+        },
+        {
+          "shape": [
+            "0",
+            "full",
+            "attention_workload",
+            "swa"
+          ],
+          "rows": 99
+        }
+      ]
+    }
+  ],
+  "plain_loader_timings": [
+    {
+      "rows": 100,
+      "wall_s": 0.23246068600565195,
+      "profiler_enabled": false
+    }
+  ],
+  "kernel_source_bytes": 10964211,
+  "scratch_cache_artifacts": [
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_kernel_count_bc7d089f.pkl",
+      "bytes": 200361,
+      "sha256": "52b95cf3f2b2037c7d75519fac1268ca724d99e128d46c56fd6b0c1dcab7beba"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_0d398cf3.pkl",
+      "bytes": 200342,
+      "sha256": "2d13208d99e6425b608877ee5769e67b034e2e8d5dd570977d9605041f35c6b5"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_c7019d55.pkl",
+      "bytes": 200614,
+      "sha256": "4ecfffe6948ae00c108b544d89d361fa4c1fe4485684da46c3c3411972a1672e"
+    },
+    {
+      "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_kernel_count_37e71702.pkl",
+      "bytes": 200633,
+      "sha256": "f142d58555438087c0eedc0bf9bff58f0653a180208ace5791a0aee4a43f2fc5"
+    }
+  ],
+  "event_cache_artifact": {
+    "source": "/data/ycfeng/tmp/d23_main_fixture02/cache/step5_layer_e2e_23b7026a.pkl",
+    "bytes": 71149163,
+    "sha256": "1c21c5542e9d8f9d0cca4568086421220e3c7b508750ee5dc57c53dccd7f1768",
+    "coverage_keys": 94392,
+    "measurement_identity": {
+      "attention_backend": {
+        "sparse_gqa": "cpu_fixture_unadmitted",
+        "swa": "cpu_fixture_unadmitted"
+      },
+      "attention_inputs": [
+        {
+          "attention_measurements": [
+            "KERNEL_ONLY",
+            "CUDA_EVENT"
+          ],
+          "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv",
+          "role": "decode",
+          "sha256": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+          "shape_policy": {
+            "batch_size_cap": 128,
+            "block_size": 16,
+            "enable_chunked_prefill": false,
+            "long_prefill_token_threshold": 0,
+            "max_model_len": 7168,
+            "max_tokens_in_batch": 8192
+          },
+          "topology": {
+            "attention_tp": 8,
+            "block_size": 16,
+            "device": "h800",
+            "kv_cache_dtype": "auto",
+            "model_name": "stepfun-ai/Step-5-Preview"
+          }
+        },
+        {
+          "attention_measurements": [
+            "KERNEL_ONLY",
+            "CUDA_EVENT"
+          ],
+          "path": "/data/ycfeng/tmp/d23_main_fixture02/fixture_attention_cuda_event.csv",
+          "role": "prefill",
+          "sha256": "27baaf5c63315a41e5a78096aa318d50c4c134cae5c338abd8a940cae61b7179",
+          "shape_policy": {
+            "batch_size_cap": 128,
+            "block_size": 16,
+            "enable_chunked_prefill": false,
+            "long_prefill_token_threshold": 0,
+            "max_model_len": 7168,
+            "max_tokens_in_batch": 8192
+          },
+          "topology": {
+            "attention_tp": 8,
+            "block_size": 16,
+            "device": "h800",
+            "kv_cache_dtype": "auto",
+            "model_name": "stepfun-ai/Step-5-Preview"
+          }
+        }
+      ],
+      "block_size": 16.0,
+      "cache_dtype": "auto",
+      "device": "h800",
+      "duration_statistic": "mean",
+      "evidence_kind": "cpu_fixture",
+      "feature_columns": [
+        "global_layer_id",
+        "num_tensor_parallel_workers",
+        "n_q_head",
+        "n_kv_head",
+        "head_size",
+        "local_q_heads",
+        "local_kv_heads",
+        "kv_replication",
+        "local_provider_groups",
+        "provider_replication",
+        "local_index_q_heads",
+        "local_index_k_heads",
+        "index_k_replication",
+        "proxy_dim",
+        "region_block_size",
+        "topk_regions",
+        "sliding_window",
+        "rope_theta",
+        "rotary_dim",
+        "block_size",
+        "batch_size",
+        "batch_num_tokens",
+        "batch_num_prefill_tokens",
+        "batch_num_decode_tokens",
+        "valid_tokens",
+        "padded_tokens",
+        "max_model_len",
+        "block_table_columns",
+        "score_regions",
+        "has_attention_metadata",
+        "attention_variant_code",
+        "phase_code",
+        "graph_mode_code",
+        "native_workload_code",
+        "min_query_len",
+        "max_query_len",
+        "query_len_cv",
+        "min_context_len",
+        "max_context_len",
+        "mean_context_len",
+        "max_sequence_len"
+      ],
+      "measurement_type": "CUDA_EVENT",
+      "model_architecture_profile": "step5",
+      "model_dtype": "bfloat16",
+      "norm_dtype": "float32",
+      "num_tensor_parallel_workers": 8.0,
+      "physical_scope": {
+        "attention_workload": "native_attention_layer_without_tp_allreduce",
+        "mrv2_dp_dummy": "mrv2_dp_dummy_attention_layer_without_tp_allreduce"
+      },
+      "quant_signature": "method=fp8|act=dynamic|serialized=True|block=128x128|ignored=lm_head,model.embed_tokens,model.layers.0.mlp.down_proj,model.layers.0.mlp.gate_proj,model.layers.0.mlp.gate_up_proj,model.layers.0.mlp.up_proj,model.layers.0.self_attn.g_proj,model.layers.0.self_attn.k_proj,model.layers.0.self_attn.o_proj,model.layers.0.self_attn.q_proj,model.layers.0.self_attn.qkv_proj,model.layers.0.self_attn.v_proj,model.layers.1.mlp.down_proj,model.layers.1.mlp.gate_proj,model.layers.1.mlp.gate_up_proj,model.layers.1.mlp.up_proj,model.layers.1.self_attn.g_proj,model.layers.1.self_attn.k_proj,model.layers.1.self_attn.o_proj,model.layers.1.self_attn.q_proj,model.layers.1.self_attn.qkv_proj,model.layers.1.self_attn.v_proj,model.layers.10.moe.gate,model.layers.10.self_attn.g_proj,model.layers.10.self_attn.k_proj,model.layers.10.self_attn.o_proj,model.layers.10.self_attn.q_proj,model.layers.10.self_attn.qkv_proj,model.layers.10.self_attn.v_proj,model.layers.10.share_expert.down_proj,model.layers.10.share_expert.gate_proj,model.layers.10.share_expert.gate_up_proj,model.layers.10.share_expert.up_proj,model.layers.11.moe.gate,model.layers.11.self_attn.g_proj,model.layers.11.self_attn.k_proj,model.layers.11.self_attn.o_proj,model.layers.11.self_attn.q_proj,model.layers.11.self_attn.qkv_indexer_proj,model.layers.11.self_attn.qkv_proj,model.layers.11.self_attn.v_proj,model.layers.11.share_expert.down_proj,model.layers.11.share_expert.gate_proj,model.layers.11.share_expert.gate_up_proj,model.layers.11.share_expert.up_proj,model.layers.12.moe.gate,model.layers.12.self_attn.g_proj,model.layers.12.self_attn.k_proj,model.layers.12.self_attn.o_proj,model.layers.12.self_attn.q_proj,model.layers.12.self_attn.qkv_proj,model.layers.12.self_attn.v_proj,model.layers.12.share_expert.down_proj,model.layers.12.share_expert.gate_proj,model.layers.12.share_expert.gate_up_proj,model.layers.12.share_expert.up_proj,model.layers.13.moe.gate,model.layers.13.self_attn.g_proj,model.layers.13.self_attn.k_proj,model.layers.13.self_attn.o_proj,model.layers.13.self_attn.q_proj,model.layers.13.self_attn.qkv_proj,model.layers.13.self_attn.v_proj,model.layers.13.share_expert.down_proj,model.layers.13.share_expert.gate_proj,model.layers.13.share_expert.gate_up_proj,model.layers.13.share_expert.up_proj,model.layers.14.moe.gate,model.layers.14.self_attn.g_proj,model.layers.14.self_attn.k_proj,model.layers.14.self_attn.o_proj,model.layers.14.self_attn.q_proj,model.layers.14.self_attn.qkv_proj,model.layers.14.self_attn.v_proj,model.layers.14.share_expert.down_proj,model.layers.14.share_expert.gate_proj,model.layers.14.share_expert.gate_up_proj,model.layers.14.share_expert.up_proj,model.layers.15.moe.gate,model.layers.15.self_attn.g_proj,model.layers.15.self_attn.k_proj,model.layers.15.self_attn.o_proj,model.layers.15.self_attn.q_proj,model.layers.15.self_attn.qkv_indexer_proj,model.layers.15.self_attn.qkv_proj,model.layers.15.self_attn.v_proj,model.layers.15.share_expert.down_proj,model.layers.15.share_expert.gate_proj,model.layers.15.share_expert.gate_up_proj,model.layers.15.share_expert.up_proj,model.layers.16.moe.gate,model.layers.16.self_attn.g_proj,model.layers.16.self_attn.k_proj,model.layers.16.self_attn.o_proj,model.layers.16.self_attn.q_proj,model.layers.16.self_attn.qkv_proj,model.layers.16.self_attn.v_proj,model.layers.16.share_expert.down_proj,model.layers.16.share_expert.gate_proj,model.layers.16.share_expert.gate_up_proj,model.layers.16.share_expert.up_proj,model.layers.17.moe.gate,model.layers.17.self_attn.g_proj,model.layers.17.self_attn.k_proj,model.layers.17.self_attn.o_proj,model.layers.17.self_attn.q_proj,model.layers.17.self_attn.qkv_proj,model.layers.17.self_attn.v_proj,model.layers.17.share_expert.down_proj,model.layers.17.share_expert.gate_proj,model.layers.17.share_expert.gate_up_proj,model.layers.17.share_expert.up_proj,model.layers.18.moe.gate,model.layers.18.self_attn.g_proj,model.layers.18.self_attn.k_proj,model.layers.18.self_attn.o_proj,model.layers.18.self_attn.q_proj,model.layers.18.self_attn.qkv_proj,model.layers.18.self_attn.v_proj,model.layers.18.share_expert.down_proj,model.layers.18.share_expert.gate_proj,model.layers.18.share_expert.gate_up_proj,model.layers.18.share_expert.up_proj,model.layers.19.moe.gate,model.layers.19.self_attn.g_proj,model.layers.19.self_attn.k_proj,model.layers.19.self_attn.o_proj,model.layers.19.self_attn.q_proj,model.layers.19.self_attn.qkv_indexer_proj,model.layers.19.self_attn.qkv_proj,model.layers.19.self_attn.v_proj,model.layers.19.share_expert.down_proj,model.layers.19.share_expert.gate_proj,model.layers.19.share_expert.gate_up_proj,model.layers.19.share_expert.up_proj,model.layers.2.mlp.down_proj,model.layers.2.mlp.gate_proj,model.layers.2.mlp.gate_up_proj,model.layers.2.mlp.up_proj,model.layers.2.self_attn.g_proj,model.layers.2.self_attn.k_proj,model.layers.2.self_attn.o_proj,model.layers.2.self_attn.q_proj,model.layers.2.self_attn.qkv_proj,model.layers.2.self_attn.v_proj,model.layers.20.moe.gate,model.layers.20.self_attn.g_proj,model.layers.20.self_attn.k_proj,model.layers.20.self_attn.o_proj,model.layers.20.self_attn.q_proj,model.layers.20.self_attn.qkv_proj,model.layers.20.self_attn.v_proj,model.layers.20.share_expert.down_proj,model.layers.20.share_expert.gate_proj,model.layers.20.share_expert.gate_up_proj,model.layers.20.share_expert.up_proj,model.layers.21.moe.gate,model.layers.21.self_attn.g_proj,model.layers.21.self_attn.k_proj,model.layers.21.self_attn.o_proj,model.layers.21.self_attn.q_proj,model.layers.21.self_attn.qkv_proj,model.layers.21.self_attn.v_proj,model.layers.21.share_expert.down_proj,model.layers.21.share_expert.gate_proj,model.layers.21.share_expert.gate_up_proj,model.layers.21.share_expert.up_proj,model.layers.22.moe.gate,model.layers.22.self_attn.g_proj,model.layers.22.self_attn.k_proj,model.layers.22.self_attn.o_proj,model.layers.22.self_attn.q_proj,model.layers.22.self_attn.qkv_proj,model.layers.22.self_attn.v_proj,model.layers.22.share_expert.down_proj,model.layers.22.share_expert.gate_proj,model.layers.22.share_expert.gate_up_proj,model.layers.22.share_expert.up_proj,model.layers.23.moe.gate,model.layers.23.self_attn.g_proj,model.layers.23.self_attn.k_proj,model.layers.23.self_attn.o_proj,model.layers.23.self_attn.q_proj,model.layers.23.self_attn.qkv_indexer_proj,model.layers.23.self_attn.qkv_proj,model.layers.23.self_attn.v_proj,model.layers.23.share_expert.down_proj,model.layers.23.share_expert.gate_proj,model.layers.23.share_expert.gate_up_proj,model.layers.23.share_expert.up_proj,model.layers.24.moe.gate,model.layers.24.self_attn.g_proj,model.layers.24.self_attn.k_proj,model.layers.24.self_attn.o_proj,model.layers.24.self_attn.q_proj,model.layers.24.self_attn.qkv_proj,model.layers.24.self_attn.v_proj,model.layers.24.share_expert.down_proj,model.layers.24.share_expert.gate_proj,model.layers.24.share_expert.gate_up_proj,model.layers.24.share_expert.up_proj,model.layers.25.moe.gate,model.layers.25.self_attn.g_proj,model.layers.25.self_attn.k_proj,model.layers.25.self_attn.o_proj,model.layers.25.self_attn.q_proj,model.layers.25.self_attn.qkv_proj,model.layers.25.self_attn.v_proj,model.layers.25.share_expert.down_proj,model.layers.25.share_expert.gate_proj,model.layers.25.share_expert.gate_up_proj,model.layers.25.share_expert.up_proj,model.layers.26.moe.gate,model.layers.26.self_attn.g_proj,model.layers.26.self_attn.k_proj,model.layers.26.self_attn.o_proj,model.layers.26.self_attn.q_proj,model.layers.26.self_attn.qkv_proj,model.layers.26.self_attn.v_proj,model.layers.26.share_expert.down_proj,model.layers.26.share_expert.gate_proj,model.layers.26.share_expert.gate_up_proj,model.layers.26.share_expert.up_proj,model.layers.27.moe.gate,model.layers.27.self_attn.g_proj,model.layers.27.self_attn.k_proj,model.layers.27.self_attn.o_proj,model.layers.27.self_attn.q_proj,model.layers.27.self_attn.qkv_indexer_proj,model.layers.27.self_attn.qkv_proj,model.layers.27.self_attn.v_proj,model.layers.27.share_expert.down_proj,model.layers.27.share_expert.gate_proj,model.layers.27.share_expert.gate_up_proj,model.layers.27.share_expert.up_proj,model.layers.28.moe.gate,model.layers.28.self_attn.g_proj,model.layers.28.self_attn.k_proj,model.layers.28.self_attn.o_proj,model.layers.28.self_attn.q_proj,model.layers.28.self_attn.qkv_proj,model.layers.28.self_attn.v_proj,model.layers.28.share_expert.down_proj,model.layers.28.share_expert.gate_proj,model.layers.28.share_expert.gate_up_proj,model.layers.28.share_expert.up_proj,model.layers.29.moe.gate,model.layers.29.self_attn.g_proj,model.layers.29.self_attn.k_proj,model.layers.29.self_attn.o_proj,model.layers.29.self_attn.q_proj,model.layers.29.self_attn.qkv_proj,model.layers.29.self_attn.v_proj,model.layers.29.share_expert.down_proj,model.layers.29.share_expert.gate_proj,model.layers.29.share_expert.gate_up_proj,model.layers.29.share_expert.up_proj,model.layers.3.moe.gate,model.layers.3.self_attn.g_proj,model.layers.3.self_attn.k_proj,model.layers.3.self_attn.o_proj,model.layers.3.self_attn.q_proj,model.layers.3.self_attn.qkv_indexer_proj,model.layers.3.self_attn.qkv_proj,model.layers.3.self_attn.v_proj,model.layers.3.share_expert.down_proj,model.layers.3.share_expert.gate_proj,model.layers.3.share_expert.gate_up_proj,model.layers.3.share_expert.up_proj,model.layers.30.moe.gate,model.layers.30.self_attn.g_proj,model.layers.30.self_attn.k_proj,model.layers.30.self_attn.o_proj,model.layers.30.self_attn.q_proj,model.layers.30.self_attn.qkv_proj,model.layers.30.self_attn.v_proj,model.layers.30.share_expert.down_proj,model.layers.30.share_expert.gate_proj,model.layers.30.share_expert.gate_up_proj,model.layers.30.share_expert.up_proj,model.layers.31.moe.gate,model.layers.31.self_attn.g_proj,model.layers.31.self_attn.k_proj,model.layers.31.self_attn.o_proj,model.layers.31.self_attn.q_proj,model.layers.31.self_attn.qkv_indexer_proj,model.layers.31.self_attn.qkv_proj,model.layers.31.self_attn.v_proj,model.layers.31.share_expert.down_proj,model.layers.31.share_expert.gate_proj,model.layers.31.share_expert.gate_up_proj,model.layers.31.share_expert.up_proj,model.layers.32.moe.gate,model.layers.32.self_attn.g_proj,model.layers.32.self_attn.k_proj,model.layers.32.self_attn.o_proj,model.layers.32.self_attn.q_proj,model.layers.32.self_attn.qkv_proj,model.layers.32.self_attn.v_proj,model.layers.32.share_expert.down_proj,model.layers.32.share_expert.gate_proj,model.layers.32.share_expert.gate_up_proj,model.layers.32.share_expert.up_proj,model.layers.33.moe.gate,model.layers.33.self_attn.g_proj,model.layers.33.self_attn.k_proj,model.layers.33.self_attn.o_proj,model.layers.33.self_attn.q_proj,model.layers.33.self_attn.qkv_proj,model.layers.33.self_attn.v_proj,model.layers.33.share_expert.down_proj,model.layers.33.share_expert.gate_proj,model.layers.33.share_expert.gate_up_proj,model.layers.33.share_expert.up_proj,model.layers.34.moe.gate,model.layers.34.self_attn.g_proj,model.layers.34.self_attn.k_proj,model.layers.34.self_attn.o_proj,model.layers.34.self_attn.q_proj,model.layers.34.self_attn.qkv_proj,model.layers.34.self_attn.v_proj,model.layers.34.share_expert.down_proj,model.layers.34.share_expert.gate_proj,model.layers.34.share_expert.gate_up_proj,model.layers.34.share_expert.up_proj,model.layers.35.moe.gate,model.layers.35.self_attn.g_proj,model.layers.35.self_attn.k_proj,model.layers.35.self_attn.o_proj,model.layers.35.self_attn.q_proj,model.layers.35.self_attn.qkv_indexer_proj,model.layers.35.self_attn.qkv_proj,model.layers.35.self_attn.v_proj,model.layers.35.share_expert.down_proj,model.layers.35.share_expert.gate_proj,model.layers.35.share_expert.gate_up_proj,model.layers.35.share_expert.up_proj,model.layers.36.moe.gate,model.layers.36.self_attn.g_proj,model.layers.36.self_attn.k_proj,model.layers.36.self_attn.o_proj,model.layers.36.self_attn.q_proj,model.layers.36.self_attn.qkv_proj,model.layers.36.self_attn.v_proj,model.layers.36.share_expert.down_proj,model.layers.36.share_expert.gate_proj,model.layers.36.share_expert.gate_up_proj,model.layers.36.share_expert.up_proj,model.layers.37.moe.gate,model.layers.37.self_attn.g_proj,model.layers.37.self_attn.k_proj,model.layers.37.self_attn.o_proj,model.layers.37.self_attn.q_proj,model.layers.37.self_attn.qkv_proj,model.layers.37.self_attn.v_proj,model.layers.37.share_expert.down_proj,model.layers.37.share_expert.gate_proj,model.layers.37.share_expert.gate_up_proj,model.layers.37.share_expert.up_proj,model.layers.38.moe.gate,model.layers.38.self_attn.g_proj,model.layers.38.self_attn.k_proj,model.layers.38.self_attn.o_proj,model.layers.38.self_attn.q_proj,model.layers.38.self_attn.qkv_proj,model.layers.38.self_attn.v_proj,model.layers.38.share_expert.down_proj,model.layers.38.share_expert.gate_proj,model.layers.38.share_expert.gate_up_proj,model.layers.38.share_expert.up_proj,model.layers.39.moe.gate,model.layers.39.self_attn.g_proj,model.layers.39.self_attn.k_proj,model.layers.39.self_attn.o_proj,model.layers.39.self_attn.q_proj,model.layers.39.self_attn.qkv_indexer_proj,model.layers.39.self_attn.qkv_proj,model.layers.39.self_attn.v_proj,model.layers.39.share_expert.down_proj,model.layers.39.share_expert.gate_proj,model.layers.39.share_expert.gate_up_proj,model.layers.39.share_expert.up_proj,model.layers.4.moe.gate,model.layers.4.self_attn.g_proj,model.layers.4.self_attn.k_proj,model.layers.4.self_attn.o_proj,model.layers.4.self_attn.q_proj,model.layers.4.self_attn.qkv_proj,model.layers.4.self_attn.v_proj,model.layers.4.share_expert.down_proj,model.layers.4.share_expert.gate_proj,model.layers.4.share_expert.gate_up_proj,model.layers.4.share_expert.up_proj,model.layers.40.moe.gate,model.layers.40.self_attn.g_proj,model.layers.40.self_attn.k_proj,model.layers.40.self_attn.o_proj,model.layers.40.self_attn.q_proj,model.layers.40.self_attn.qkv_proj,model.layers.40.self_attn.v_proj,model.layers.40.share_expert.down_proj,model.layers.40.share_expert.gate_proj,model.layers.40.share_expert.gate_up_proj,model.layers.40.share_expert.up_proj,model.layers.41.moe.gate,model.layers.41.self_attn.g_proj,model.layers.41.self_attn.k_proj,model.layers.41.self_attn.o_proj,model.layers.41.self_attn.q_proj,model.layers.41.self_attn.qkv_proj,model.layers.41.self_attn.v_proj,model.layers.41.share_expert.down_proj,model.layers.41.share_expert.gate_proj,model.layers.41.share_expert.gate_up_proj,model.layers.41.share_expert.up_proj,model.layers.42.moe.gate,model.layers.42.self_attn.g_proj,model.layers.42.self_attn.k_proj,model.layers.42.self_attn.o_proj,model.layers.42.self_attn.q_proj,model.layers.42.self_attn.qkv_proj,model.layers.42.self_attn.v_proj,model.layers.42.share_expert.down_proj,model.layers.42.share_expert.gate_proj,model.layers.42.share_expert.gate_up_proj,model.layers.42.share_expert.up_proj,model.layers.43.moe.gate,model.layers.43.self_attn.g_proj,model.layers.43.self_attn.k_proj,model.layers.43.self_attn.o_proj,model.layers.43.self_attn.q_proj,model.layers.43.self_attn.qkv_indexer_proj,model.layers.43.self_attn.qkv_proj,model.layers.43.self_attn.v_proj,model.layers.43.share_expert.down_proj,model.layers.43.share_expert.gate_proj,model.layers.43.share_expert.gate_up_proj,model.layers.43.share_expert.up_proj,model.layers.44.moe.gate,model.layers.44.self_attn.g_proj,model.layers.44.self_attn.k_proj,model.layers.44.self_attn.o_proj,model.layers.44.self_attn.q_proj,model.layers.44.self_attn.qkv_proj,model.layers.44.self_attn.v_proj,model.layers.44.share_expert.down_proj,model.layers.44.share_expert.gate_proj,model.layers.44.share_expert.gate_up_proj,model.layers.44.share_expert.up_proj,model.layers.45.moe.gate,model.layers.45.self_attn.g_proj,model.layers.45.self_attn.k_proj,model.layers.45.self_attn.o_proj,model.layers.45.self_attn.q_proj,model.layers.45.self_attn.qkv_proj,model.layers.45.self_attn.v_proj,model.layers.45.share_expert.down_proj,model.layers.45.share_expert.gate_proj,model.layers.45.share_expert.gate_up_proj,model.layers.45.share_expert.up_proj,model.layers.46.moe.gate,model.layers.46.self_attn.g_proj,model.layers.46.self_attn.k_proj,model.layers.46.self_attn.o_proj,model.layers.46.self_attn.q_proj,model.layers.46.self_attn.qkv_proj,model.layers.46.self_attn.v_proj,model.layers.46.share_expert.down_proj,model.layers.46.share_expert.gate_proj,model.layers.46.share_expert.gate_up_proj,model.layers.46.share_expert.up_proj,model.layers.47.moe.gate,model.layers.47.self_attn.g_proj,model.layers.47.self_attn.k_proj,model.layers.47.self_attn.o_proj,model.layers.47.self_attn.q_proj,model.layers.47.self_attn.qkv_indexer_proj,model.layers.47.self_attn.qkv_proj,model.layers.47.self_attn.v_proj,model.layers.47.share_expert.down_proj,model.layers.47.share_expert.gate_proj,model.layers.47.share_expert.gate_up_proj,model.layers.47.share_expert.up_proj,model.layers.48.moe.gate,model.layers.48.self_attn.g_proj,model.layers.48.self_attn.k_proj,model.layers.48.self_attn.o_proj,model.layers.48.self_attn.q_proj,model.layers.48.self_attn.qkv_proj,model.layers.48.self_attn.v_proj,model.layers.48.share_expert.down_proj,model.layers.48.share_expert.gate_proj,model.layers.48.share_expert.gate_up_proj,model.layers.48.share_expert.up_proj,model.layers.49.moe.gate,model.layers.49.self_attn.g_proj,model.layers.49.self_attn.k_proj,model.layers.49.self_attn.o_proj,model.layers.49.self_attn.q_proj,model.layers.49.self_attn.qkv_proj,model.layers.49.self_attn.v_proj,model.layers.49.share_expert.down_proj,model.layers.49.share_expert.gate_proj,model.layers.49.share_expert.gate_up_proj,model.layers.49.share_expert.up_proj,model.layers.5.moe.gate,model.layers.5.self_attn.g_proj,model.layers.5.self_attn.k_proj,model.layers.5.self_attn.o_proj,model.layers.5.self_attn.q_proj,model.layers.5.self_attn.qkv_proj,model.layers.5.self_attn.v_proj,model.layers.5.share_expert.down_proj,model.layers.5.share_expert.gate_proj,model.layers.5.share_expert.gate_up_proj,model.layers.5.share_expert.up_proj,model.layers.50.moe.gate,model.layers.50.self_attn.g_proj,model.layers.50.self_attn.k_proj,model.layers.50.self_attn.o_proj,model.layers.50.self_attn.q_proj,model.layers.50.self_attn.qkv_proj,model.layers.50.self_attn.v_proj,model.layers.50.share_expert.down_proj,model.layers.50.share_expert.gate_proj,model.layers.50.share_expert.gate_up_proj,model.layers.50.share_expert.up_proj,model.layers.51.moe.gate,model.layers.51.self_attn.g_proj,model.layers.51.self_attn.k_proj,model.layers.51.self_attn.o_proj,model.layers.51.self_attn.q_proj,model.layers.51.self_attn.qkv_indexer_proj,model.layers.51.self_attn.qkv_proj,model.layers.51.self_attn.v_proj,model.layers.51.share_expert.down_proj,model.layers.51.share_expert.gate_proj,model.layers.51.share_expert.gate_up_proj,model.layers.51.share_expert.up_proj,model.layers.52.moe.gate,model.layers.52.self_attn.g_proj,model.layers.52.self_attn.k_proj,model.layers.52.self_attn.o_proj,model.layers.52.self_attn.q_proj,model.layers.52.self_attn.qkv_proj,model.layers.52.self_attn.v_proj,model.layers.52.share_expert.down_proj,model.layers.52.share_expert.gate_proj,model.layers.52.share_expert.gate_up_proj,model.layers.52.share_expert.up_proj,model.layers.53.moe.gate,model.layers.53.self_attn.g_proj,model.layers.53.self_attn.k_proj,model.layers.53.self_attn.o_proj,model.layers.53.self_attn.q_proj,model.layers.53.self_attn.qkv_proj,model.layers.53.self_attn.v_proj,model.layers.53.share_expert.down_proj,model.layers.53.share_expert.gate_proj,model.layers.53.share_expert.gate_up_proj,model.layers.53.share_expert.up_proj,model.layers.54.moe.gate,model.layers.54.self_attn.g_proj,model.layers.54.self_attn.k_proj,model.layers.54.self_attn.o_proj,model.layers.54.self_attn.q_proj,model.layers.54.self_attn.qkv_proj,model.layers.54.self_attn.v_proj,model.layers.54.share_expert.down_proj,model.layers.54.share_expert.gate_proj,model.layers.54.share_expert.gate_up_proj,model.layers.54.share_expert.up_proj,model.layers.55.moe.gate,model.layers.55.self_attn.g_proj,model.layers.55.self_attn.k_proj,model.layers.55.self_attn.o_proj,model.layers.55.self_attn.q_proj,model.layers.55.self_attn.qkv_indexer_proj,model.layers.55.self_attn.qkv_proj,model.layers.55.self_attn.v_proj,model.layers.55.share_expert.down_proj,model.layers.55.share_expert.gate_proj,model.layers.55.share_expert.gate_up_proj,model.layers.55.share_expert.up_proj,model.layers.56.moe.gate,model.layers.56.self_attn.g_proj,model.layers.56.self_attn.k_proj,model.layers.56.self_attn.o_proj,model.layers.56.self_attn.q_proj,model.layers.56.self_attn.qkv_proj,model.layers.56.self_attn.v_proj,model.layers.56.share_expert.down_proj,model.layers.56.share_expert.gate_proj,model.layers.56.share_expert.gate_up_proj,model.layers.56.share_expert.up_proj,model.layers.57.moe.gate,model.layers.57.self_attn.g_proj,model.layers.57.self_attn.k_proj,model.layers.57.self_attn.o_proj,model.layers.57.self_attn.q_proj,model.layers.57.self_attn.qkv_proj,model.layers.57.self_attn.v_proj,model.layers.57.share_expert.down_proj,model.layers.57.share_expert.gate_proj,model.layers.57.share_expert.gate_up_proj,model.layers.57.share_expert.up_proj,model.layers.58.moe.gate,model.layers.58.self_attn.g_proj,model.layers.58.self_attn.k_proj,model.layers.58.self_attn.o_proj,model.layers.58.self_attn.q_proj,model.layers.58.self_attn.qkv_proj,model.layers.58.self_attn.v_proj,model.layers.58.share_expert.down_proj,model.layers.58.share_expert.gate_proj,model.layers.58.share_expert.gate_up_proj,model.layers.58.share_expert.up_proj,model.layers.59.moe.gate,model.layers.59.self_attn.g_proj,model.layers.59.self_attn.k_proj,model.layers.59.self_attn.o_proj,model.layers.59.self_attn.q_proj,model.layers.59.self_attn.qkv_indexer_proj,model.layers.59.self_attn.qkv_proj,model.layers.59.self_attn.v_proj,model.layers.59.share_expert.down_proj,model.layers.59.share_expert.gate_proj,model.layers.59.share_expert.gate_up_proj,model.layers.59.share_expert.up_proj,model.layers.6.moe.gate,model.layers.6.self_attn.g_proj,model.layers.6.self_attn.k_proj,model.layers.6.self_attn.o_proj,model.layers.6.self_attn.q_proj,model.layers.6.self_attn.qkv_proj,model.layers.6.self_attn.v_proj,model.layers.6.share_expert.down_proj,model.layers.6.share_expert.gate_proj,model.layers.6.share_expert.gate_up_proj,model.layers.6.share_expert.up_proj,model.layers.60.moe.gate,model.layers.60.self_attn.g_proj,model.layers.60.self_attn.k_proj,model.layers.60.self_attn.o_proj,model.layers.60.self_attn.q_proj,model.layers.60.self_attn.qkv_proj,model.layers.60.self_attn.v_proj,model.layers.60.share_expert.down_proj,model.layers.60.share_expert.gate_proj,model.layers.60.share_expert.gate_up_proj,model.layers.60.share_expert.up_proj,model.layers.61.moe.gate,model.layers.61.self_attn.g_proj,model.layers.61.self_attn.k_proj,model.layers.61.self_attn.o_proj,model.layers.61.self_attn.q_proj,model.layers.61.self_attn.qkv_proj,model.layers.61.self_attn.v_proj,model.layers.61.share_expert.down_proj,model.layers.61.share_expert.gate_proj,model.layers.61.share_expert.gate_up_proj,model.layers.61.share_expert.up_proj,model.layers.62.moe.gate,model.layers.62.self_attn.g_proj,model.layers.62.self_attn.k_proj,model.layers.62.self_attn.o_proj,model.layers.62.self_attn.q_proj,model.layers.62.self_attn.qkv_proj,model.layers.62.self_attn.v_proj,model.layers.62.share_expert.down_proj,model.layers.62.share_expert.gate_proj,model.layers.62.share_expert.gate_up_proj,model.layers.62.share_expert.up_proj,model.layers.63.moe.gate,model.layers.63.self_attn.g_proj,model.layers.63.self_attn.k_proj,model.layers.63.self_attn.o_proj,model.layers.63.self_attn.q_proj,model.layers.63.self_attn.qkv_indexer_proj,model.layers.63.self_attn.qkv_proj,model.layers.63.self_attn.v_proj,model.layers.63.share_expert.down_proj,model.layers.63.share_expert.gate_proj,model.layers.63.share_expert.gate_up_proj,model.layers.63.share_expert.up_proj,model.layers.64.moe.gate,model.layers.64.self_attn.g_proj,model.layers.64.self_attn.k_proj,model.layers.64.self_attn.o_proj,model.layers.64.self_attn.q_proj,model.layers.64.self_attn.qkv_proj,model.layers.64.self_attn.v_proj,model.layers.64.share_expert.down_proj,model.layers.64.share_expert.gate_proj,model.layers.64.share_expert.gate_up_proj,model.layers.64.share_expert.up_proj,model.layers.65.moe.gate,model.layers.65.self_attn.g_proj,model.layers.65.self_attn.k_proj,model.layers.65.self_attn.o_proj,model.layers.65.self_attn.q_proj,model.layers.65.self_attn.qkv_proj,model.layers.65.self_attn.v_proj,model.layers.65.share_expert.down_proj,model.layers.65.share_expert.gate_proj,model.layers.65.share_expert.gate_up_proj,model.layers.65.share_expert.up_proj,model.layers.66.moe.gate,model.layers.66.self_attn.g_proj,model.layers.66.self_attn.k_proj,model.layers.66.self_attn.o_proj,model.layers.66.self_attn.q_proj,model.layers.66.self_attn.qkv_proj,model.layers.66.self_attn.v_proj,model.layers.66.share_expert.down_proj,model.layers.66.share_expert.gate_proj,model.layers.66.share_expert.gate_up_proj,model.layers.66.share_expert.up_proj,model.layers.67.moe.gate,model.layers.67.self_attn.g_proj,model.layers.67.self_attn.k_proj,model.layers.67.self_attn.o_proj,model.layers.67.self_attn.q_proj,model.layers.67.self_attn.qkv_indexer_proj,model.layers.67.self_attn.qkv_proj,model.layers.67.self_attn.v_proj,model.layers.67.share_expert.down_proj,model.layers.67.share_expert.gate_proj,model.layers.67.share_expert.gate_up_proj,model.layers.67.share_expert.up_proj,model.layers.68.moe.gate,model.layers.68.self_attn.g_proj,model.layers.68.self_attn.k_proj,model.layers.68.self_attn.o_proj,model.layers.68.self_attn.q_proj,model.layers.68.self_attn.qkv_proj,model.layers.68.self_attn.v_proj,model.layers.68.share_expert.down_proj,model.layers.68.share_expert.gate_proj,model.layers.68.share_expert.gate_up_proj,model.layers.68.share_expert.up_proj,model.layers.69.moe.gate,model.layers.69.self_attn.g_proj,model.layers.69.self_attn.k_proj,model.layers.69.self_attn.o_proj,model.layers.69.self_attn.q_proj,model.layers.69.self_attn.qkv_proj,model.layers.69.self_attn.v_proj,model.layers.69.share_expert.down_proj,model.layers.69.share_expert.gate_proj,model.layers.69.share_expert.gate_up_proj,model.layers.69.share_expert.up_proj,model.layers.7.moe.gate,model.layers.7.self_attn.g_proj,model.layers.7.self_attn.k_proj,model.layers.7.self_attn.o_proj,model.layers.7.self_attn.q_proj,model.layers.7.self_attn.qkv_indexer_proj,model.layers.7.self_attn.qkv_proj,model.layers.7.self_attn.v_proj,model.layers.7.share_expert.down_proj,model.layers.7.share_expert.gate_proj,model.layers.7.share_expert.gate_up_proj,model.layers.7.share_expert.up_proj,model.layers.70.moe.gate,model.layers.70.self_attn.g_proj,model.layers.70.self_attn.k_proj,model.layers.70.self_attn.o_proj,model.layers.70.self_attn.q_proj,model.layers.70.self_attn.qkv_proj,model.layers.70.self_attn.v_proj,model.layers.70.share_expert.down_proj,model.layers.70.share_expert.gate_proj,model.layers.70.share_expert.gate_up_proj,model.layers.70.share_expert.up_proj,model.layers.71.moe.gate,model.layers.71.self_attn.g_proj,model.layers.71.self_attn.k_proj,model.layers.71.self_attn.o_proj,model.layers.71.self_attn.q_proj,model.layers.71.self_attn.qkv_indexer_proj,model.layers.71.self_attn.qkv_proj,model.layers.71.self_attn.v_proj,model.layers.71.share_expert.down_proj,model.layers.71.share_expert.gate_proj,model.layers.71.share_expert.gate_up_proj,model.layers.71.share_expert.up_proj,model.layers.72.moe.gate,model.layers.72.self_attn.g_proj,model.layers.72.self_attn.k_proj,model.layers.72.self_attn.o_proj,model.layers.72.self_attn.q_proj,model.layers.72.self_attn.qkv_proj,model.layers.72.self_attn.v_proj,model.layers.72.share_expert.down_proj,model.layers.72.share_expert.gate_proj,model.layers.72.share_expert.gate_up_proj,model.layers.72.share_expert.up_proj,model.layers.73.moe.gate,model.layers.73.self_attn.g_proj,model.layers.73.self_attn.k_proj,model.layers.73.self_attn.o_proj,model.layers.73.self_attn.q_proj,model.layers.73.self_attn.qkv_proj,model.layers.73.self_attn.v_proj,model.layers.73.share_expert.down_proj,model.layers.73.share_expert.gate_proj,model.layers.73.share_expert.gate_up_proj,model.layers.73.share_expert.up_proj,model.layers.74.moe.gate,model.layers.74.self_attn.g_proj,model.layers.74.self_attn.k_proj,model.layers.74.self_attn.o_proj,model.layers.74.self_attn.q_proj,model.layers.74.self_attn.qkv_proj,model.layers.74.self_attn.v_proj,model.layers.74.share_expert.down_proj,model.layers.74.share_expert.gate_proj,model.layers.74.share_expert.gate_up_proj,model.layers.74.share_expert.up_proj,model.layers.75.moe.gate,model.layers.75.self_attn.g_proj,model.layers.75.self_attn.k_proj,model.layers.75.self_attn.o_proj,model.layers.75.self_attn.q_proj,model.layers.75.self_attn.qkv_indexer_proj,model.layers.75.self_attn.qkv_proj,model.layers.75.self_attn.v_proj,model.layers.75.share_expert.down_proj,model.layers.75.share_expert.gate_proj,model.layers.75.share_expert.gate_up_proj,model.layers.75.share_expert.up_proj,model.layers.76.moe.gate,model.layers.76.self_attn.g_proj,model.layers.76.self_attn.k_proj,model.layers.76.self_attn.o_proj,model.layers.76.self_attn.q_proj,model.layers.76.self_attn.qkv_proj,model.layers.76.self_attn.v_proj,model.layers.76.share_expert.down_proj,model.layers.76.share_expert.gate_proj,model.layers.76.share_expert.gate_up_proj,model.layers.76.share_expert.up_proj,model.layers.77.moe.gate,model.layers.77.self_attn.g_proj,model.layers.77.self_attn.k_proj,model.layers.77.self_attn.o_proj,model.layers.77.self_attn.q_proj,model.layers.77.self_attn.qkv_proj,model.layers.77.self_attn.v_proj,model.layers.77.share_expert.down_proj,model.layers.77.share_expert.gate_proj,model.layers.77.share_expert.gate_up_proj,model.layers.77.share_expert.up_proj,model.layers.78.moe.gate,model.layers.78.self_attn.g_proj,model.layers.78.self_attn.k_proj,model.layers.78.self_attn.o_proj,model.layers.78.self_attn.q_proj,model.layers.78.self_attn.qkv_proj,model.layers.78.self_attn.v_proj,model.layers.78.share_expert.down_proj,model.layers.78.share_expert.gate_proj,model.layers.78.share_expert.gate_up_proj,model.layers.78.share_expert.up_proj,model.layers.79.moe.gate,model.layers.79.self_attn.g_proj,model.layers.79.self_attn.k_proj,model.layers.79.self_attn.o_proj,model.layers.79.self_attn.q_proj,model.layers.79.self_attn.qkv_indexer_proj,model.layers.79.self_attn.qkv_proj,model.layers.79.self_attn.v_proj,model.layers.79.share_expert.down_proj,model.layers.79.share_expert.gate_proj,model.layers.79.share_expert.gate_up_proj,model.layers.79.share_expert.up_proj,model.layers.8.moe.gate,model.layers.8.self_attn.g_proj,model.layers.8.self_attn.k_proj,model.layers.8.self_attn.o_proj,model.layers.8.self_attn.q_proj,model.layers.8.self_attn.qkv_proj,model.layers.8.self_attn.v_proj,model.layers.8.share_expert.down_proj,model.layers.8.share_expert.gate_proj,model.layers.8.share_expert.gate_up_proj,model.layers.8.share_expert.up_proj,model.layers.80.moe.gate,model.layers.80.self_attn.g_proj,model.layers.80.self_attn.k_proj,model.layers.80.self_attn.o_proj,model.layers.80.self_attn.q_proj,model.layers.80.self_attn.qkv_proj,model.layers.80.self_attn.v_proj,model.layers.80.share_expert.down_proj,model.layers.80.share_expert.gate_proj,model.layers.80.share_expert.gate_up_proj,model.layers.80.share_expert.up_proj,model.layers.81.moe.gate,model.layers.81.self_attn.g_proj,model.layers.81.self_attn.k_proj,model.layers.81.self_attn.o_proj,model.layers.81.self_attn.q_proj,model.layers.81.self_attn.qkv_proj,model.layers.81.self_attn.v_proj,model.layers.81.share_expert.down_proj,model.layers.81.share_expert.gate_proj,model.layers.81.share_expert.gate_up_proj,model.layers.81.share_expert.up_proj,model.layers.82.moe.gate,model.layers.82.self_attn.g_proj,model.layers.82.self_attn.k_proj,model.layers.82.self_attn.o_proj,model.layers.82.self_attn.q_proj,model.layers.82.self_attn.qkv_proj,model.layers.82.self_attn.v_proj,model.layers.82.share_expert.down_proj,model.layers.82.share_expert.gate_proj,model.layers.82.share_expert.gate_up_proj,model.layers.82.share_expert.up_proj,model.layers.83.moe.gate,model.layers.83.self_attn.g_proj,model.layers.83.self_attn.k_proj,model.layers.83.self_attn.o_proj,model.layers.83.self_attn.q_proj,model.layers.83.self_attn.qkv_indexer_proj,model.layers.83.self_attn.qkv_proj,model.layers.83.self_attn.v_proj,model.layers.83.share_expert.down_proj,model.layers.83.share_expert.gate_proj,model.layers.83.share_expert.gate_up_proj,model.layers.83.share_expert.up_proj,model.layers.84.moe.gate,model.layers.84.self_attn.g_proj,model.layers.84.self_attn.k_proj,model.layers.84.self_attn.o_proj,model.layers.84.self_attn.q_proj,model.layers.84.self_attn.qkv_proj,model.layers.84.self_attn.v_proj,model.layers.84.share_expert.down_proj,model.layers.84.share_expert.gate_proj,model.layers.84.share_expert.gate_up_proj,model.layers.84.share_expert.up_proj,model.layers.85.moe.gate,model.layers.85.self_attn.g_proj,model.layers.85.self_attn.k_proj,model.layers.85.self_attn.o_proj,model.layers.85.self_attn.q_proj,model.layers.85.self_attn.qkv_proj,model.layers.85.self_attn.v_proj,model.layers.85.share_expert.down_proj,model.layers.85.share_expert.gate_proj,model.layers.85.share_expert.gate_up_proj,model.layers.85.share_expert.up_proj,model.layers.86.moe.gate,model.layers.86.self_attn.g_proj,model.layers.86.self_attn.k_proj,model.layers.86.self_attn.o_proj,model.layers.86.self_attn.q_proj,model.layers.86.self_attn.qkv_proj,model.layers.86.self_attn.v_proj,model.layers.86.share_expert.down_proj,model.layers.86.share_expert.gate_proj,model.layers.86.share_expert.gate_up_proj,model.layers.86.share_expert.up_proj,model.layers.87.moe.gate,model.layers.87.self_attn.g_proj,model.layers.87.self_attn.k_proj,model.layers.87.self_attn.o_proj,model.layers.87.self_attn.q_proj,model.layers.87.self_attn.qkv_indexer_proj,model.layers.87.self_attn.qkv_proj,model.layers.87.self_attn.v_proj,model.layers.87.share_expert.down_proj,model.layers.87.share_expert.gate_proj,model.layers.87.share_expert.gate_up_proj,model.layers.87.share_expert.up_proj,model.layers.88.moe.experts.w13_weight,model.layers.88.moe.experts.w2_weight,model.layers.88.moe.gate,model.layers.88.self_attn.g_proj,model.layers.88.self_attn.k_proj,model.layers.88.self_attn.o_proj,model.layers.88.self_attn.q_proj,model.layers.88.self_attn.qkv_proj,model.layers.88.self_attn.v_proj,model.layers.88.share_expert.down_proj,model.layers.88.share_expert.gate_proj,model.layers.88.share_expert.gate_up_proj,model.layers.88.share_expert.up_proj,model.layers.89.moe.experts.w13_weight,model.layers.89.moe.experts.w2_weight,model.layers.89.moe.gate,model.layers.89.self_attn.g_proj,model.layers.89.self_attn.k_proj,model.layers.89.self_attn.o_proj,model.layers.89.self_attn.q_proj,model.layers.89.self_attn.qkv_proj,model.layers.89.self_attn.v_proj,model.layers.89.share_expert.down_proj,model.layers.89.share_expert.gate_proj,model.layers.89.share_expert.gate_up_proj,model.layers.89.share_expert.up_proj,model.layers.9.moe.gate,model.layers.9.self_attn.g_proj,model.layers.9.self_attn.k_proj,model.layers.9.self_attn.o_proj,model.layers.9.self_attn.q_proj,model.layers.9.self_attn.qkv_proj,model.layers.9.self_attn.v_proj,model.layers.9.share_expert.down_proj,model.layers.9.share_expert.gate_proj,model.layers.9.share_expert.gate_up_proj,model.layers.9.share_expert.up_proj,model.layers.90.moe.experts.w13_weight,model.layers.90.moe.experts.w2_weight,model.layers.90.moe.gate,model.layers.90.self_attn.g_proj,model.layers.90.self_attn.k_proj,model.layers.90.self_attn.o_proj,model.layers.90.self_attn.q_proj,model.layers.90.self_attn.qkv_proj,model.layers.90.self_attn.v_proj,model.layers.90.share_expert.down_proj,model.layers.90.share_expert.gate_proj,model.layers.90.share_expert.gate_up_proj,model.layers.90.share_expert.up_proj,model.layers.91.mlp.down_proj,model.layers.91.mlp.gate_proj,model.layers.91.mlp.gate_up_proj,model.layers.91.mlp.up_proj,model.layers.91.self_attn.g_proj,model.layers.91.self_attn.k_proj,model.layers.91.self_attn.o_proj,model.layers.91.self_attn.q_proj,model.layers.91.self_attn.qkv_indexer_proj,model.layers.91.self_attn.qkv_proj,model.layers.91.self_attn.v_proj,model.layers.92.mtp_block.mlp.down_proj,model.layers.92.mtp_block.mlp.gate_proj,model.layers.92.mtp_block.mlp.gate_up_proj,model.layers.92.mtp_block.mlp.up_proj,model.layers.92.mtp_block.self_attn.g_proj,model.layers.92.mtp_block.self_attn.k_proj,model.layers.92.mtp_block.self_attn.o_proj,model.layers.92.mtp_block.self_attn.q_proj,model.layers.92.mtp_block.self_attn.qkv_proj,model.layers.92.mtp_block.self_attn.v_proj,model.layers.92.shared_head,model.layers.92.shared_head.head,model.layers.93.mtp_block.mlp.down_proj,model.layers.93.mtp_block.mlp.gate_proj,model.layers.93.mtp_block.mlp.gate_up_proj,model.layers.93.mtp_block.mlp.up_proj,model.layers.93.mtp_block.self_attn.g_proj,model.layers.93.mtp_block.self_attn.k_proj,model.layers.93.mtp_block.self_attn.o_proj,model.layers.93.mtp_block.self_attn.q_proj,model.layers.93.mtp_block.self_attn.qkv_proj,model.layers.93.mtp_block.self_attn.v_proj,model.layers.93.shared_head,model.layers.93.shared_head.head,model.layers.94.mtp_block.mlp.down_proj,model.layers.94.mtp_block.mlp.gate_proj,model.layers.94.mtp_block.mlp.gate_up_proj,model.layers.94.mtp_block.mlp.up_proj,model.layers.94.mtp_block.self_attn.g_proj,model.layers.94.mtp_block.self_attn.k_proj,model.layers.94.mtp_block.self_attn.o_proj,model.layers.94.mtp_block.self_attn.q_proj,model.layers.94.mtp_block.self_attn.qkv_proj,model.layers.94.mtp_block.self_attn.v_proj,model.layers.94.shared_head,model.layers.94.shared_head.head,model.norm,vision_model.transformer.resblocks.0.attn.k_proj,vision_model.transformer.resblocks.0.attn.out_proj,vision_model.transformer.resblocks.0.attn.q_proj,vision_model.transformer.resblocks.0.attn.qkv_proj,vision_model.transformer.resblocks.0.attn.v_proj,vision_model.transformer.resblocks.0.mlp.fc1,vision_model.transformer.resblocks.0.mlp.fc2,vision_model.transformer.resblocks.1.attn.k_proj,vision_model.transformer.resblocks.1.attn.out_proj,vision_model.transformer.resblocks.1.attn.q_proj,vision_model.transformer.resblocks.1.attn.qkv_proj,vision_model.transformer.resblocks.1.attn.v_proj,vision_model.transformer.resblocks.1.mlp.fc1,vision_model.transformer.resblocks.1.mlp.fc2,vision_model.transformer.resblocks.10.attn.k_proj,vision_model.transformer.resblocks.10.attn.out_proj,vision_model.transformer.resblocks.10.attn.q_proj,vision_model.transformer.resblocks.10.attn.qkv_proj,vision_model.transformer.resblocks.10.attn.v_proj,vision_model.transformer.resblocks.10.mlp.fc1,vision_model.transformer.resblocks.10.mlp.fc2,vision_model.transformer.resblocks.11.attn.k_proj,vision_model.transformer.resblocks.11.attn.out_proj,vision_model.transformer.resblocks.11.attn.q_proj,vision_model.transformer.resblocks.11.attn.qkv_proj,vision_model.transformer.resblocks.11.attn.v_proj,vision_model.transformer.resblocks.11.mlp.fc1,vision_model.transformer.resblocks.11.mlp.fc2,vision_model.transformer.resblocks.12.attn.k_proj,vision_model.transformer.resblocks.12.attn.out_proj,vision_model.transformer.resblocks.12.attn.q_proj,vision_model.transformer.resblocks.12.attn.qkv_proj,vision_model.transformer.resblocks.12.attn.v_proj,vision_model.transformer.resblocks.12.mlp.fc1,vision_model.transformer.resblocks.12.mlp.fc2,vision_model.transformer.resblocks.13.attn.k_proj,vision_model.transformer.resblocks.13.attn.out_proj,vision_model.transformer.resblocks.13.attn.q_proj,vision_model.transformer.resblocks.13.attn.qkv_proj,vision_model.transformer.resblocks.13.attn.v_proj,vision_model.transformer.resblocks.13.mlp.fc1,vision_model.transformer.resblocks.13.mlp.fc2,vision_model.transformer.resblocks.14.attn.k_proj,vision_model.transformer.resblocks.14.attn.out_proj,vision_model.transformer.resblocks.14.attn.q_proj,vision_model.transformer.resblocks.14.attn.qkv_proj,vision_model.transformer.resblocks.14.attn.v_proj,vision_model.transformer.resblocks.14.mlp.fc1,vision_model.transformer.resblocks.14.mlp.fc2,vision_model.transformer.resblocks.15.attn.k_proj,vision_model.transformer.resblocks.15.attn.out_proj,vision_model.transformer.resblocks.15.attn.q_proj,vision_model.transformer.resblocks.15.attn.qkv_proj,vision_model.transformer.resblocks.15.attn.v_proj,vision_model.transformer.resblocks.15.mlp.fc1,vision_model.transformer.resblocks.15.mlp.fc2,vision_model.transformer.resblocks.16.attn.k_proj,vision_model.transformer.resblocks.16.attn.out_proj,vision_model.transformer.resblocks.16.attn.q_proj,vision_model.transformer.resblocks.16.attn.qkv_proj,vision_model.transformer.resblocks.16.attn.v_proj,vision_model.transformer.resblocks.16.mlp.fc1,vision_model.transformer.resblocks.16.mlp.fc2,vision_model.transformer.resblocks.17.attn.k_proj,vision_model.transformer.resblocks.17.attn.out_proj,vision_model.transformer.resblocks.17.attn.q_proj,vision_model.transformer.resblocks.17.attn.qkv_proj,vision_model.transformer.resblocks.17.attn.v_proj,vision_model.transformer.resblocks.17.mlp.fc1,vision_model.transformer.resblocks.17.mlp.fc2,vision_model.transformer.resblocks.18.attn.k_proj,vision_model.transformer.resblocks.18.attn.out_proj,vision_model.transformer.resblocks.18.attn.q_proj,vision_model.transformer.resblocks.18.attn.qkv_proj,vision_model.transformer.resblocks.18.attn.v_proj,vision_model.transformer.resblocks.18.mlp.fc1,vision_model.transformer.resblocks.18.mlp.fc2,vision_model.transformer.resblocks.19.attn.k_proj,vision_model.transformer.resblocks.19.attn.out_proj,vision_model.transformer.resblocks.19.attn.q_proj,vision_model.transformer.resblocks.19.attn.qkv_proj,vision_model.transformer.resblocks.19.attn.v_proj,vision_model.transformer.resblocks.19.mlp.fc1,vision_model.transformer.resblocks.19.mlp.fc2,vision_model.transformer.resblocks.2.attn.k_proj,vision_model.transformer.resblocks.2.attn.out_proj,vision_model.transformer.resblocks.2.attn.q_proj,vision_model.transformer.resblocks.2.attn.qkv_proj,vision_model.transformer.resblocks.2.attn.v_proj,vision_model.transformer.resblocks.2.mlp.fc1,vision_model.transformer.resblocks.2.mlp.fc2,vision_model.transformer.resblocks.20.attn.k_proj,vision_model.transformer.resblocks.20.attn.out_proj,vision_model.transformer.resblocks.20.attn.q_proj,vision_model.transformer.resblocks.20.attn.qkv_proj,vision_model.transformer.resblocks.20.attn.v_proj,vision_model.transformer.resblocks.20.mlp.fc1,vision_model.transformer.resblocks.20.mlp.fc2,vision_model.transformer.resblocks.21.attn.k_proj,vision_model.transformer.resblocks.21.attn.out_proj,vision_model.transformer.resblocks.21.attn.q_proj,vision_model.transformer.resblocks.21.attn.qkv_proj,vision_model.transformer.resblocks.21.attn.v_proj,vision_model.transformer.resblocks.21.mlp.fc1,vision_model.transformer.resblocks.21.mlp.fc2,vision_model.transformer.resblocks.22.attn.k_proj,vision_model.transformer.resblocks.22.attn.out_proj,vision_model.transformer.resblocks.22.attn.q_proj,vision_model.transformer.resblocks.22.attn.qkv_proj,vision_model.transformer.resblocks.22.attn.v_proj,vision_model.transformer.resblocks.22.mlp.fc1,vision_model.transformer.resblocks.22.mlp.fc2,vision_model.transformer.resblocks.23.attn.k_proj,vision_model.transformer.resblocks.23.attn.out_proj,vision_model.transformer.resblocks.23.attn.q_proj,vision_model.transformer.resblocks.23.attn.qkv_proj,vision_model.transformer.resblocks.23.attn.v_proj,vision_model.transformer.resblocks.23.mlp.fc1,vision_model.transformer.resblocks.23.mlp.fc2,vision_model.transformer.resblocks.24.attn.k_proj,vision_model.transformer.resblocks.24.attn.out_proj,vision_model.transformer.resblocks.24.attn.q_proj,vision_model.transformer.resblocks.24.attn.qkv_proj,vision_model.transformer.resblocks.24.attn.v_proj,vision_model.transformer.resblocks.24.mlp.fc1,vision_model.transformer.resblocks.24.mlp.fc2,vision_model.transformer.resblocks.25.attn.k_proj,vision_model.transformer.resblocks.25.attn.out_proj,vision_model.transformer.resblocks.25.attn.q_proj,vision_model.transformer.resblocks.25.attn.qkv_proj,vision_model.transformer.resblocks.25.attn.v_proj,vision_model.transformer.resblocks.25.mlp.fc1,vision_model.transformer.resblocks.25.mlp.fc2,vision_model.transformer.resblocks.26.attn.k_proj,vision_model.transformer.resblocks.26.attn.out_proj,vision_model.transformer.resblocks.26.attn.q_proj,vision_model.transformer.resblocks.26.attn.qkv_proj,vision_model.transformer.resblocks.26.attn.v_proj,vision_model.transformer.resblocks.26.mlp.fc1,vision_model.transformer.resblocks.26.mlp.fc2,vision_model.transformer.resblocks.27.attn.k_proj,vision_model.transformer.resblocks.27.attn.out_proj,vision_model.transformer.resblocks.27.attn.q_proj,vision_model.transformer.resblocks.27.attn.qkv_proj,vision_model.transformer.resblocks.27.attn.v_proj,vision_model.transformer.resblocks.27.mlp.fc1,vision_model.transformer.resblocks.27.mlp.fc2,vision_model.transformer.resblocks.28.attn.k_proj,vision_model.transformer.resblocks.28.attn.out_proj,vision_model.transformer.resblocks.28.attn.q_proj,vision_model.transformer.resblocks.28.attn.qkv_proj,vision_model.transformer.resblocks.28.attn.v_proj,vision_model.transformer.resblocks.28.mlp.fc1,vision_model.transformer.resblocks.28.mlp.fc2,vision_model.transformer.resblocks.29.attn.k_proj,vision_model.transformer.resblocks.29.attn.out_proj,vision_model.transformer.resblocks.29.attn.q_proj,vision_model.transformer.resblocks.29.attn.qkv_proj,vision_model.transformer.resblocks.29.attn.v_proj,vision_model.transformer.resblocks.29.mlp.fc1,vision_model.transformer.resblocks.29.mlp.fc2,vision_model.transformer.resblocks.3.attn.k_proj,vision_model.transformer.resblocks.3.attn.out_proj,vision_model.transformer.resblocks.3.attn.q_proj,vision_model.transformer.resblocks.3.attn.qkv_proj,vision_model.transformer.resblocks.3.attn.v_proj,vision_model.transformer.resblocks.3.mlp.fc1,vision_model.transformer.resblocks.3.mlp.fc2,vision_model.transformer.resblocks.30.attn.k_proj,vision_model.transformer.resblocks.30.attn.out_proj,vision_model.transformer.resblocks.30.attn.q_proj,vision_model.transformer.resblocks.30.attn.qkv_proj,vision_model.transformer.resblocks.30.attn.v_proj,vision_model.transformer.resblocks.30.mlp.fc1,vision_model.transformer.resblocks.30.mlp.fc2,vision_model.transformer.resblocks.31.attn.k_proj,vision_model.transformer.resblocks.31.attn.out_proj,vision_model.transformer.resblocks.31.attn.q_proj,vision_model.transformer.resblocks.31.attn.qkv_proj,vision_model.transformer.resblocks.31.attn.v_proj,vision_model.transformer.resblocks.31.mlp.fc1,vision_model.transformer.resblocks.31.mlp.fc2,vision_model.transformer.resblocks.32.attn.k_proj,vision_model.transformer.resblocks.32.attn.out_proj,vision_model.transformer.resblocks.32.attn.q_proj,vision_model.transformer.resblocks.32.attn.qkv_proj,vision_model.transformer.resblocks.32.attn.v_proj,vision_model.transformer.resblocks.32.mlp.fc1,vision_model.transformer.resblocks.32.mlp.fc2,vision_model.transformer.resblocks.33.attn.k_proj,vision_model.transformer.resblocks.33.attn.out_proj,vision_model.transformer.resblocks.33.attn.q_proj,vision_model.transformer.resblocks.33.attn.qkv_proj,vision_model.transformer.resblocks.33.attn.v_proj,vision_model.transformer.resblocks.33.mlp.fc1,vision_model.transformer.resblocks.33.mlp.fc2,vision_model.transformer.resblocks.34.attn.k_proj,vision_model.transformer.resblocks.34.attn.out_proj,vision_model.transformer.resblocks.34.attn.q_proj,vision_model.transformer.resblocks.34.attn.qkv_proj,vision_model.transformer.resblocks.34.attn.v_proj,vision_model.transformer.resblocks.34.mlp.fc1,vision_model.transformer.resblocks.34.mlp.fc2,vision_model.transformer.resblocks.35.attn.k_proj,vision_model.transformer.resblocks.35.attn.out_proj,vision_model.transformer.resblocks.35.attn.q_proj,vision_model.transformer.resblocks.35.attn.qkv_proj,vision_model.transformer.resblocks.35.attn.v_proj,vision_model.transformer.resblocks.35.mlp.fc1,vision_model.transformer.resblocks.35.mlp.fc2,vision_model.transformer.resblocks.36.attn.k_proj,vision_model.transformer.resblocks.36.attn.out_proj,vision_model.transformer.resblocks.36.attn.q_proj,vision_model.transformer.resblocks.36.attn.qkv_proj,vision_model.transformer.resblocks.36.attn.v_proj,vision_model.transformer.resblocks.36.mlp.fc1,vision_model.transformer.resblocks.36.mlp.fc2,vision_model.transformer.resblocks.37.attn.k_proj,vision_model.transformer.resblocks.37.attn.out_proj,vision_model.transformer.resblocks.37.attn.q_proj,vision_model.transformer.resblocks.37.attn.qkv_proj,vision_model.transformer.resblocks.37.attn.v_proj,vision_model.transformer.resblocks.37.mlp.fc1,vision_model.transformer.resblocks.37.mlp.fc2,vision_model.transformer.resblocks.38.attn.k_proj,vision_model.transformer.resblocks.38.attn.out_proj,vision_model.transformer.resblocks.38.attn.q_proj,vision_model.transformer.resblocks.38.attn.qkv_proj,vision_model.transformer.resblocks.38.attn.v_proj,vision_model.transformer.resblocks.38.mlp.fc1,vision_model.transformer.resblocks.38.mlp.fc2,vision_model.transformer.resblocks.39.attn.k_proj,vision_model.transformer.resblocks.39.attn.out_proj,vision_model.transformer.resblocks.39.attn.q_proj,vision_model.transformer.resblocks.39.attn.qkv_proj,vision_model.transformer.resblocks.39.attn.v_proj,vision_model.transformer.resblocks.39.mlp.fc1,vision_model.transformer.resblocks.39.mlp.fc2,vision_model.transformer.resblocks.4.attn.k_proj,vision_model.transformer.resblocks.4.attn.out_proj,vision_model.transformer.resblocks.4.attn.q_proj,vision_model.transformer.resblocks.4.attn.qkv_proj,vision_model.transformer.resblocks.4.attn.v_proj,vision_model.transformer.resblocks.4.mlp.fc1,vision_model.transformer.resblocks.4.mlp.fc2,vision_model.transformer.resblocks.40.attn.k_proj,vision_model.transformer.resblocks.40.attn.out_proj,vision_model.transformer.resblocks.40.attn.q_proj,vision_model.transformer.resblocks.40.attn.qkv_proj,vision_model.transformer.resblocks.40.attn.v_proj,vision_model.transformer.resblocks.40.mlp.fc1,vision_model.transformer.resblocks.40.mlp.fc2,vision_model.transformer.resblocks.41.attn.k_proj,vision_model.transformer.resblocks.41.attn.out_proj,vision_model.transformer.resblocks.41.attn.q_proj,vision_model.transformer.resblocks.41.attn.qkv_proj,vision_model.transformer.resblocks.41.attn.v_proj,vision_model.transformer.resblocks.41.mlp.fc1,vision_model.transformer.resblocks.41.mlp.fc2,vision_model.transformer.resblocks.42.attn.k_proj,vision_model.transformer.resblocks.42.attn.out_proj,vision_model.transformer.resblocks.42.attn.q_proj,vision_model.transformer.resblocks.42.attn.qkv_proj,vision_model.transformer.resblocks.42.attn.v_proj,vision_model.transformer.resblocks.42.mlp.fc1,vision_model.transformer.resblocks.42.mlp.fc2,vision_model.transformer.resblocks.43.attn.k_proj,vision_model.transformer.resblocks.43.attn.out_proj,vision_model.transformer.resblocks.43.attn.q_proj,vision_model.transformer.resblocks.43.attn.qkv_proj,vision_model.transformer.resblocks.43.attn.v_proj,vision_model.transformer.resblocks.43.mlp.fc1,vision_model.transformer.resblocks.43.mlp.fc2,vision_model.transformer.resblocks.44.attn.k_proj,vision_model.transformer.resblocks.44.attn.out_proj,vision_model.transformer.resblocks.44.attn.q_proj,vision_model.transformer.resblocks.44.attn.qkv_proj,vision_model.transformer.resblocks.44.attn.v_proj,vision_model.transformer.resblocks.44.mlp.fc1,vision_model.transformer.resblocks.44.mlp.fc2,vision_model.transformer.resblocks.45.attn.k_proj,vision_model.transformer.resblocks.45.attn.out_proj,vision_model.transformer.resblocks.45.attn.q_proj,vision_model.transformer.resblocks.45.attn.qkv_proj,vision_model.transformer.resblocks.45.attn.v_proj,vision_model.transformer.resblocks.45.mlp.fc1,vision_model.transformer.resblocks.45.mlp.fc2,vision_model.transformer.resblocks.46.attn.k_proj,vision_model.transformer.resblocks.46.attn.out_proj,vision_model.transformer.resblocks.46.attn.q_proj,vision_model.transformer.resblocks.46.attn.qkv_proj,vision_model.transformer.resblocks.46.attn.v_proj,vision_model.transformer.resblocks.46.mlp.fc1,vision_model.transformer.resblocks.46.mlp.fc2,vision_model.transformer.resblocks.5.attn.k_proj,vision_model.transformer.resblocks.5.attn.out_proj,vision_model.transformer.resblocks.5.attn.q_proj,vision_model.transformer.resblocks.5.attn.qkv_proj,vision_model.transformer.resblocks.5.attn.v_proj,vision_model.transformer.resblocks.5.mlp.fc1,vision_model.transformer.resblocks.5.mlp.fc2,vision_model.transformer.resblocks.6.attn.k_proj,vision_model.transformer.resblocks.6.attn.out_proj,vision_model.transformer.resblocks.6.attn.q_proj,vision_model.transformer.resblocks.6.attn.qkv_proj,vision_model.transformer.resblocks.6.attn.v_proj,vision_model.transformer.resblocks.6.mlp.fc1,vision_model.transformer.resblocks.6.mlp.fc2,vision_model.transformer.resblocks.7.attn.k_proj,vision_model.transformer.resblocks.7.attn.out_proj,vision_model.transformer.resblocks.7.attn.q_proj,vision_model.transformer.resblocks.7.attn.qkv_proj,vision_model.transformer.resblocks.7.attn.v_proj,vision_model.transformer.resblocks.7.mlp.fc1,vision_model.transformer.resblocks.7.mlp.fc2,vision_model.transformer.resblocks.8.attn.k_proj,vision_model.transformer.resblocks.8.attn.out_proj,vision_model.transformer.resblocks.8.attn.q_proj,vision_model.transformer.resblocks.8.attn.qkv_proj,vision_model.transformer.resblocks.8.attn.v_proj,vision_model.transformer.resblocks.8.mlp.fc1,vision_model.transformer.resblocks.8.mlp.fc2,vision_model.transformer.resblocks.9.attn.k_proj,vision_model.transformer.resblocks.9.attn.out_proj,vision_model.transformer.resblocks.9.attn.q_proj,vision_model.transformer.resblocks.9.attn.qkv_proj,vision_model.transformer.resblocks.9.attn.v_proj,vision_model.transformer.resblocks.9.mlp.fc1,vision_model.transformer.resblocks.9.mlp.fc2,vit_large_projector",
+      "residual_dtype": "float32",
+      "runtime_stack_signature": "cpu_fixture_unadmitted",
+      "timing_basis": "cuda_event_native_runtime_latency",
+      "weight_source": "synthetic_bf16"
+    }
+  },
+  "source_size_and_mtime_unchanged": true,
+  "warm_prefill_models": [
+    "step5_layer_e2e",
+    "step5_layer_e2e_kernel_count"
+  ],
+  "deduplicated_decode_models": [],
+  "deduplicated_decode_loader_calls": 0,
+  "profiles": [
+    {
+      "label": "event_load_100",
+      "wall_s": 0.4898915430530906
+    },
+    {
+      "label": "kernel_load_full184",
+      "wall_s": 2.1584878996945918
+    },
+    {
+      "label": "event_union_two_roles",
+      "wall_s": 0.5550726843066514
+    },
+    {
+      "label": "kernel_warm_prefill",
+      "wall_s": 2.6668406440876424
+    },
+    {
+      "label": "kernel_warm_decode_deduplicated",
+      "wall_s": 0.027969546150416136
+    },
+    {
+      "label": "event_cache_read",
+      "wall_s": 0.5304181859828532
+    }
+  ],
+  "limits": [
+    "Seconds-scale API profile, not full initialization wall profile",
+    "CUDA_EVENT diagnostic prefixes; original timings/columns are unchanged",
+    "No full manager __init__, estimator fit, runtime query, or CLI run"
+  ],
+  "regression_verdict": "GREEN_NO_REPEATED_LOAD",
+  "profile_details": {
+    "event_load_100": {
+      "wall_s": 0.4898915430530906,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 193,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.007221103,
+          "cumulative_s": 0.48967692500000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 900,
+          "calls": 900,
+          "self_s": 0.024372048,
+          "cumulative_s": 0.09856289600000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 158,
+          "name": "_validate_targets",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.009963124,
+          "cumulative_s": 0.09252738
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 112,
+          "name": "step5_row_features",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.006788602,
+          "cumulative_s": 0.060733752
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000375014,
+          "cumulative_s": 0.057381558000000006
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.7035e-05,
+          "cumulative_s": 0.042691874000000005
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 94,
+          "name": "_row_workload",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.0021968730000000002,
+          "cumulative_s": 0.024420753
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 6.8556e-05,
+          "cumulative_s": 0.012475856
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000192775,
+          "cumulative_s": 0.009070576
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.0007233420000000001,
+          "cumulative_s": 0.004904937000000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000160562,
+          "cumulative_s": 0.001693218
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000254382,
+          "cumulative_s": 0.000295596
+        }
+      ]
+    },
+    "kernel_load_full184": {
+      "wall_s": 2.1584878996945918,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 193,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.013407009000000001,
+          "cumulative_s": 2.157865547
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 92,
+          "calls": 92,
+          "self_s": 0.005836619,
+          "cumulative_s": 1.264028793
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 276,
+          "calls": 276,
+          "self_s": 0.067272052,
+          "cumulative_s": 0.45118863800000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1656,
+          "calls": 1656,
+          "self_s": 0.045906358,
+          "cumulative_s": 0.186711508
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 158,
+          "name": "_validate_targets",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.018585306000000003,
+          "cumulative_s": 0.17434090900000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 112,
+          "name": "step5_row_features",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.012839751,
+          "cumulative_s": 0.115348686
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.00076309,
+          "cumulative_s": 0.10820484600000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.7404e-05,
+          "cumulative_s": 0.06515586000000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 94,
+          "name": "_row_workload",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.004384146,
+          "cumulative_s": 0.046480123000000005
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.00041545000000000004,
+          "cumulative_s": 0.017345417000000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.000381428,
+          "cumulative_s": 0.003378247
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.000706639,
+          "cumulative_s": 0.001323649
+        }
+      ]
+    },
+    "event_union_two_roles": {
+      "wall_s": 0.5550726843066514,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 315,
+          "name": "load_step5_attention_input_union",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.000561622,
+          "cumulative_s": 0.554985739
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 193,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.007528918000000001,
+          "cumulative_s": 0.49507738900000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 900,
+          "calls": 900,
+          "self_s": 0.024709372,
+          "cumulative_s": 0.100158008
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 158,
+          "name": "_validate_targets",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.010073365,
+          "cumulative_s": 0.09296886
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 112,
+          "name": "step5_row_features",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.006929051,
+          "cumulative_s": 0.061644626
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.00037999,
+          "cumulative_s": 0.05817482400000001
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.7898000000000003e-05,
+          "cumulative_s": 0.043169982
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 94,
+          "name": "_row_workload",
+          "primitive_calls": 200,
+          "calls": 200,
+          "self_s": 0.002277925,
+          "cumulative_s": 0.024638287000000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 6.7259e-05,
+          "cumulative_s": 0.012461417
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.00018453300000000002,
+          "cumulative_s": 0.009143246
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 4,
+          "calls": 4,
+          "self_s": 0.001000673,
+          "cumulative_s": 0.0066387780000000006
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'update' of '_hashlib.HASH' objects>",
+          "primitive_calls": 6,
+          "calls": 6,
+          "self_s": 0.006085117,
+          "cumulative_s": 0.006085117
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.000175248,
+          "cumulative_s": 0.0017679540000000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 100,
+          "calls": 100,
+          "self_s": 0.00026408400000000004,
+          "cumulative_s": 0.000307979
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_sha256>",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 1.3016e-05,
+          "cumulative_s": 1.3016e-05
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'hexdigest' of '_hashlib.HASH' objects>",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 6.801000000000001e-06,
+          "cumulative_s": 6.801000000000001e-06
+        }
+      ]
+    },
+    "kernel_warm_prefill": {
+      "wall_s": 2.6668406440876424,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_family_trainers.py",
+          "line": 658,
+          "name": "_train_attn_models_for_cluster",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.000150843,
+          "cumulative_s": 2.666811088
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 315,
+          "name": "load_step5_attention_input_union",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.001103045,
+          "cumulative_s": 2.2465582640000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 193,
+          "name": "load_step5_attention_rows",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.015091247,
+          "cumulative_s": 2.171607979
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 538,
+          "name": "describe_step5_layer",
+          "primitive_calls": 92,
+          "calls": 92,
+          "self_s": 0.006388918,
+          "cumulative_s": 1.297614118
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 279,
+          "calls": 279,
+          "self_s": 0.068909115,
+          "cumulative_s": 0.46303925900000004
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 158,
+          "name": "_validate_targets",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.038925951,
+          "cumulative_s": 0.41407325700000003
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 461,
+          "name": "train_step5_attention_models",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.000347453,
+          "cumulative_s": 0.35584305800000005
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 96,
+          "name": "validate_typed_operator_metadata",
+          "primitive_calls": 1656,
+          "calls": 1656,
+          "self_s": 0.046718783,
+          "cumulative_s": 0.191302311
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_model_registry.py",
+          "line": 127,
+          "name": "_get_model_hash",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.0010425430000000002,
+          "cumulative_s": 0.14613888
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 112,
+          "name": "step5_row_features",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.013391469000000001,
+          "cumulative_s": 0.119786765
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/operators/typed_contracts.py",
+          "line": 384,
+          "name": "parse_typed_operator_contracts",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.0007985570000000001,
+          "cumulative_s": 0.111046903
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_family_trainers.py",
+          "line": 1645,
+          "name": "_fit_single_model",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 9.950100000000001e-05,
+          "cumulative_s": 0.099923672
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/core/generic.py",
+          "line": 2450,
+          "name": "to_json",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 4.9715e-05,
+          "cumulative_s": 0.074674136
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/json/_json.py",
+          "line": 140,
+          "name": "to_json",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 4.1020000000000004e-05,
+          "cumulative_s": 0.074610852
+        },
+        {
+          "path": "/data/ycfeng/envs/frontier-py310/lib/python3.10/site-packages/pandas/io/parsers/readers.py",
+          "line": 868,
+          "name": "read_csv",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 2.9805000000000003e-05,
+          "cumulative_s": 0.065955265
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_md5>",
+          "primitive_calls": 6,
+          "calls": 6,
+          "self_s": 0.06307671200000001,
+          "cumulative_s": 0.06307671200000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 94,
+          "name": "_row_workload",
+          "primitive_calls": 368,
+          "calls": 368,
+          "self_s": 0.004362113,
+          "cumulative_s": 0.047916022
+        },
+        {
+          "path": "/usr/lib/python3.10/dataclasses.py",
+          "line": 1218,
+          "name": "asdict",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.00042995,
+          "cumulative_s": 0.017970551
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'update' of '_hashlib.HASH' objects>",
+          "primitive_calls": 11,
+          "calls": 11,
+          "self_s": 0.011610668000000001,
+          "cumulative_s": 0.011610668000000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_model_registry.py",
+          "line": 570,
+          "name": "_load_model_from_cache",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 5.9954e-05,
+          "cumulative_s": 0.003966459
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/profiling/step5/rows.py",
+          "line": 59,
+          "name": "operator_contracts",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.00041590800000000004,
+          "cumulative_s": 0.003593246
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _pickle.load>",
+          "primitive_calls": 2,
+          "calls": 2,
+          "self_s": 0.0021709290000000003,
+          "cumulative_s": 0.0025939690000000002
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 428,
+          "name": "attention_scopes",
+          "primitive_calls": 184,
+          "calls": 184,
+          "self_s": 0.000771782,
+          "cumulative_s": 0.001414578
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'hexdigest' of '_hashlib.HASH' objects>",
+          "primitive_calls": 7,
+          "calls": 7,
+          "self_s": 2.8419e-05,
+          "cumulative_s": 2.8419e-05
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_sha256>",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 4.102e-06,
+          "cumulative_s": 4.102e-06
+        }
+      ]
+    },
+    "kernel_warm_decode_deduplicated": {
+      "wall_s": 0.027969546150416136,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_family_trainers.py",
+          "line": 658,
+          "name": "_train_attn_models_for_cluster",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 3.3155000000000004e-05,
+          "cumulative_s": 0.027938766
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/step5.py",
+          "line": 315,
+          "name": "load_step5_attention_input_union",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.000151928,
+          "cumulative_s": 0.024385472000000002
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'update' of '_hashlib.HASH' objects>",
+          "primitive_calls": 11,
+          "calls": 11,
+          "self_s": 0.011250995000000001,
+          "cumulative_s": 0.011250995000000001
+        },
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/attention/step5.py",
+          "line": 149,
+          "name": "validate_step5_config",
+          "primitive_calls": 3,
+          "calls": 3,
+          "self_s": 0.0007500990000000001,
+          "cumulative_s": 0.004951906000000001
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _hashlib.openssl_sha256>",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 5.968e-06,
+          "cumulative_s": 5.968e-06
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<method 'hexdigest' of '_hashlib.HASH' objects>",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 5.308000000000001e-06,
+          "cumulative_s": 5.308000000000001e-06
+        }
+      ]
+    },
+    "event_cache_read": {
+      "wall_s": 0.5304181859828532,
+      "selected_functions": [
+        {
+          "path": "/data/ycfeng/Frontier/.worktrees/step5-mrv2-load/frontier/execution_time_predictor/prediction_model_registry.py",
+          "line": 570,
+          "name": "_load_model_from_cache",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 4.4388e-05,
+          "cumulative_s": 0.530385993
+        },
+        {
+          "path": "~",
+          "line": 0,
+          "name": "<built-in method _pickle.load>",
+          "primitive_calls": 1,
+          "calls": 1,
+          "self_s": 0.5294233700000001,
+          "cumulative_s": 0.5295857350000001
+        }
+      ]
+    }
+  },
+  "raw_profile_directory": "/data/ycfeng/tmp/d23_mrv2_load_reuse_probe01",
+  "diagnostic_sha256": "9321b35820325953759b6b457ffc15716824f8b1ec098fe1e542f97159754414",
+  "regression_counts": {
+    "union_tests": 25,
+    "training_tests": 29,
+    "mrv2_tests": 39,
+    "request_free_cpu_tests": 15,
+    "torch_missing_tests": 4
+  }
+}
