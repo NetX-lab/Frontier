@@ -1,12 +1,17 @@
-# Independent functional reference decision required
+# Selected independent native functional reference
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded one source-backed runtime/reference choice before dependent implementation. |
+| 2026-10-21 | Parent selected existing-D full-local-prefill; implemented continuation under existing authority. |
 
-## One decision for the parent
+## Parent implementation disposition
+
+The parent selected existing-D full-local-prefill with no transfer metadata, unchanged native image/model/connector/topology and disabled prefix caching. Separate reference request state follows observed idle. This records a parent implementation disposition under D20/D21 authority, not a new user approval, a reference replacement, or D-S5-REF activation. The conditional native-repair/image/connector changes do not apply. Direct native D requests, full resident identity and exact logical state/output comparisons are now implemented; native evidence has not yet been collected. Numerical differences have no invented tolerance or batch-drift waiver and remain UNVERIFIED.
+
+## Historical proposal (superseded by that disposition)
 
 **May an independent, complete local-prefill execution on the existing D engine be the native functional reference, without any kv_transfer_params or external KV, rather than starting another native instance or introducing another implementation?** Recommended: yes, subject to observed full parameter/buffer/scales identity and explicit reference-state/output checks. This is a proposal, not approval, and is not implemented in this slice.
 
@@ -31,8 +36,8 @@ Frozen source root: `/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm`.
 
 No numeric tolerance, routing, dummy initialization, FP8 exclusion, clean timing definition or native retention policy is changed by this proposal. Bit-exact P→D wire-row integrity remains separate from any functional comparison across differing compute batches.
 
-## Independent implementation still unfinished
+## Prior slice limitations and continuation
 
 The delivered capture caller/consumer and restored P1 checks are usable code, not complete G3. A diagnostic proxy-native-D-client deadline now attempts pending-READ cancellation without native READ delays or fences; the consumer additionally requires a same-host observed READ-submit < native abort < READ completion interval, native pending status, all eight completions/readiness, source notification and page/pool conservation. It rejects first-token cancellation, late/early deadlines, observer fences and incomplete cleanup as pending-READ proof. CPU tests cover the caller and these negative cases, but actual native overlap and cleanup remain UNVERIFIED until parent execution.
 
-Native reset/reuse/capacity-pressure component and alias conservation lacks the completed reference-state acceptance consumer. No explicit capacity-pressure trigger has been implemented: concurrent8 is not called capacity pressure. These items are not waived or falsely labeled complete. No fresh sealed package or submit command is released while they remain unfinished.
+The previous slice lacked the reference-state/reset/reuse/pressure consumer. The continuation implements that consumer and an explicit128-request6144/1024 native PD pressure wave, retaining frozen7168/8192/128 and unmodified capacity. Actual failed native allocation and observed physical ownership/free/reset records are required; offered concurrency alone cannot PASS. Native reset (`sparse_summary_cache.py:347–355`) clears mean/last-slot/journal validity but deliberately does not zero accumulators; native fresh-region use determines their live status. Existing G1 `compare_attention_state.py:27–43,65–87,204–207` supplies error reporting, not an unsupported compiled-kernel numerical bound. Exact wire integrity remains mandatory; a differing independent execution remains UNVERIFIED until an evidenced comparison rule exists.
