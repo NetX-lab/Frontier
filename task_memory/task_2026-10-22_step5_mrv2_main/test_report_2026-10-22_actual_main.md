@@ -8,6 +8,7 @@
 | 2026-10-23 | Record actual layer3 failure and exact compute refresh. |
 | 2026-10-22 | Record paired actual04 core rejection and demonstrated blocker. |
 | 2026-10-22 | Primary passes8 fixture checks, verifies merged bytes and reproduces the root ledger failure. |
+| 2026-10-22 | Parent167 PASS and accepted root/owner repair; start actual05 at26db654 with8 unchanged input hashes. |
 
 ## Environment and scope
 
@@ -89,7 +90,8 @@ Input hashes:`/data/ycfeng/tmp/d23_main_actual03_{offline,online}/input_hashes.j
 READ cost SHA256:
 `3975d5ec0bf247d0c961bd74af47bd9411de6db59abe37a6251f8e0575d101fa`.
 
-Status:BLOCKED by production metrics root projection. No requests/events/READ/final metrics have been accepted yet.
+Current status: actual05 is running after the root/owner repair was accepted.
+No full request/READ/final-metrics acceptance has been claimed yet.
 A zero returncode or initialized config does not establish completion. On timeout,
 preserve whether setup or DES was active; do not silently expand2400s.
 
@@ -172,10 +174,40 @@ the subsequent root-rejection ValueError. Reproduction log:
 `/data/ycfeng/tmp/d23_main_ledger_repro.log`. No core edits, ledger disablement,
 cost substitutes or duplicate fit/runs are used to bypass this defect.
 
-Both actual logs emit mixed-precision generic metadata warnings at
-`quantization_manager.py:810`. Their effect on a live typed Step cost is
-unresolved; scoped exact replay is not a full-runtime scaling or accuracy claim.
+Both actual04 logs emit mixed-precision generic metadata warnings at
+`quantization_manager.py:810`. This was unresolved at the original handoff.
+Parent subsequently confirmed by source and factor-injection controls that
+the generic0.5 factor does not rescale this typed Step path; see
+`quantization_warning.md` and `precision_factor_receipt.json`. No accuracy claim.
 
 Implementation commit:`e54f9457aed7e31336cb6cb553aec016a737ae2a`; source receipt
 proves runner/fixture match actual04 hashes after commit. Tested production core
 remainsc9e9388f; no core edits are part of this integration slice.
+
+## Parent actual05 launch
+
+Stable source: `26db654cbbb38b361990aa1aa8ae1dad5db8e000` in the existing
+`step5-mrv2-main` worktree. Parent verified that all production source and changed
+tests match reviewed7c70461. Root/owner focused verification:167 PASS,1 explicitly
+inherited deselection,46.71s; independent final review No findings. Evidence:
+`root_metrics_review.md` and `/data/ycfeng/tmp/d23_root_p1_parent01.{log,xml}`.
+
+Preflight compared all8 retained fixture/profile hashes against actual04 and
+verified all three integration files match e54f9457. Receipt:
+`/data/ycfeng/tmp/d23_main_actual05_input_preflight.json`. Manifest SHA256 remains
+`417492f6223f83bc702b815cd8a4280323afb60600fd68fe9b9636cc0077fffd`.
+The first read-only helper attempt used Python3.11's `hashlib.file_digest` on
+Python3.10 and failed before hashing; the corrected streaming-hash check passed.
+No fixture regeneration or separate fit was launched.
+
+Exact commands, cwd=`/data/ycfeng/Frontier/.worktrees/step5-mrv2-main`:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json --output-root /data/ycfeng/tmp/d23_main_actual05_offline --mode offline > /data/ycfeng/tmp/d23_main_actual05_offline.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json --output-root /data/ycfeng/tmp/d23_main_actual05_online --mode online > /data/ycfeng/tmp/d23_main_actual05_online.log 2>&1
+```
+
+Both commands run independently, each with the existing2400s child timeout.
+Expected acceptance remains the complete list above; no terminal result yet.
+The new clean77 candidate is also running from26db654 against0cdd6cb, both using
+the fixed32fb934 driver. Baseline77/77 execution alone is not strict comparison.

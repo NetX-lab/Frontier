@@ -6,10 +6,16 @@
 | 2026-10-22 | Record implemented fixture slice; full subprocess acceptance pending. |
 | 2026-10-23 | Exact compute coverage repaired; actual04 pending on retained output. |
 | 2026-10-22 | Archive paired actual04 core ledger blocker and verified integration slice. |
+| 2026-10-22 | Parent accepts root/owner repair26db654 and launches paired actual05 with existing inputs. |
 
 ## Status
 
-BLOCKED; full6144/1024 acceptance FAILED in both modes. Shared fit generation02 is complete and retained. Actual01 rejected
+IN PROGRESS: parent accepted the metrics root/owner repair at26db654 after
+167 passing checks and independent No findings. Actual05 offline and online
+are running on that stable source, with the existing fixture/cache and2400s
+child bounds. Full6144/1024 acceptance has not yet passed.
+
+Historical attempts: shared fit generation02 is complete and retained. Actual01 rejected
 mutually exclusive runner graph flags (fixed); actual02 rejected an uninitialized
 local collective-sim dependency (pinned local initialization and build complete).
 Actual03 offline/online both reachP layer3 EP wave and reject old compute fixture
@@ -73,18 +79,18 @@ additional request or query is introduced here.
 - `scoped_test_receipt.json`: eight scoped PASS,0 errors/failures/skips,5.843s;
   XML/log SHA256 retained.
 
-## Parent-owned next action
+## Parent-owned remaining acceptance
 
-Repair the existing measured-root metrics projection at
-`frontier/metrics/metrics_store.py:4502-4505` and its existing structural trace
-projection seam. A lookup-only `.get()` fix is insufficient: the structural
-projection subsequently rejects root `step5_layer_e2e` because it is not a child
-trace target. Preserve root ownership and ledger sums; do not fabricate child
-costs or disable ledger collection. See `core_blocker.md` for decisive evidence.
-Then rerun both modes with the retained fixture02/cache at unchanged native
-capacity and2400s bound. Parent also owns the fixed `_config.batch_size_cap`
-delta and generic mixed-precision metadata warning inspection. Neither source
-correction is independently implemented here.
+The root/owner projection repair is complete; see `root_metrics_review.md` for
+the initial P1 and final independent acceptance. Fixed graph creation capacity
+is integrated at32fb934. The generic mixed-precision warning was checked by
+source and factor-injection controls in `quantization_warning.md`; it does not
+rescale this typed Step path.
+
+Inspect actual05 completion, READ/readiness/source release, useful forward
+census and final metrics in both modes. Compare the clean77 candidate against
+the completed baseline. Native/profile/accuracy qualification and the real
+additional-padding producer gap remain open.
 
 ## Commit and final scope
 

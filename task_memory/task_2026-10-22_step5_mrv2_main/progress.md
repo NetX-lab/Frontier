@@ -7,6 +7,7 @@
 | 2026-10-22 | Begin exact fixture generation. |
 | 2026-10-22 | Correct exact compute coverage; scoped8 PASS; actual04 pending. |
 | 2026-10-22 | Actual04 paired core ledger failure; archive exact blocker without bypass. |
+| 2026-10-22 | Parent167 PASS and final No findings; merge26db654; actual05 and candidate77 running. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -273,15 +274,17 @@ Checkpoint after verified compute correction:
   `core_blocker.md` on the integration tree, obtaining the same
   `KeyError: 'step5_layer_e2e'` at metrics_store.py4504. Log:
   `/data/ycfeng/tmp/d23_ledger_parent_red01.log`.
-- in-progress: `D23-ROOT-METRICS`, session
+- completed: `D23-ROOT-METRICS`, session
   `ses_e9f9fd0bdffeZH9Q2Ux5NbCYko`, owns the existing metrics/trace projection
-  repair and once-only root/count/evidence regression. Mixed-precision warning
-  investigation is independent; no timing/precision substitution is authorized.
-- pending: after parent verification/merge, fast-forward the clean existing
-  `step5-mrv2-main` worktree to accepted source and keep it unchanged during
-  both actual subprocesses. Reuse fixture02/cache and the built pinned
-  collective-sim dependency. Keep2400s bounds and the full acceptance criteria;
-  preserve all actual04 evidence in place.
+  repair and once-only root/count/evidence regression. Parent167 checks passed;
+  the independent final source review has No findings. No timing/precision
+  substitution was introduced.
+- in-progress: actual05 offline and online launched independently from clean
+  `step5-mrv2-main` at accepted26db654, which remains unchanged during execution.
+  Fixture02/cache and the built pinned collective-sim dependency are reused.
+  All8 input hashes equal actual04; integration files equal e54f9457. Both child
+  bounds remain2400s. Commands/paths are in the test report; full request, READ
+  and final-metric acceptance remains pending. Old outputs are preserved.
 - completed warning diagnosis: source audit plus primary factor-injection
   control confirm generic0.5 factors do not alter this typed Step path.
   Layer3/88 remain122.9/184.35ms, count7, FP8/BF16, exactly equal to the saved
@@ -296,11 +299,12 @@ Checkpoint after verified compute correction:
 - partial root repair: primary161PASS/1 explicitly deselected; original
   root/ledger/stage=.6244ms and23 kernels now pass on mergedf237362. The inherited
   cache-order failure has identical testcase/error before and after this change.
-- blocked source acceptance: independent review identified a reachable P1 in
+- resolved source P1: independent review identified a reachable defect in
   stage-only owner projection. The owner's irrelevant attention has no proof
   after public first/last boundary replacement and must not be validated.
-  Same owner is implementing the public-call-site RED and stage-owned-only fix;
-  see `root_metrics_review.md`. No actual05 or candidate matrix has launched.
+  Public-call-site RED confirmed it;7c70461 projects only stage-owned owner fields
+  and retains strict layer proof checks. Parent167PASS/1 inherited deselection,
+ 46.71s, and final No findings; merge26db654. See `root_metrics_review.md`.
   The clean pre-fix baseline has now completed77/77 cases, all return codes0;
-  source0cdd6cb is clean and the fixed driver is32fb934. Strict comparison
-  remains pending the final candidate.
+  source0cdd6cb is clean and the fixed driver is32fb934. Clean candidate26db654
+  is running with the same driver; strict comparison remains pending.

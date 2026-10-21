@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Record parent verification of initial root repair and independent P1 owner finding. |
 | 2026-10-22 | Clean pre-fix baseline completes77/77 cases; final candidate/comparison still pending. |
+| 2026-10-22 | P1 corrected and independently accepted; parent167 PASS; merged26db654; paired CLI and candidate matrix launched. |
 
 ## Scope and evidence
 
@@ -35,7 +36,7 @@ files match `3a189ba`. The original minimal root/Stage repro is GREEN:
 root=.6244ms, ledger sum=.6244ms, runtime=.6244ms and23 kernels retained;
 `/data/ycfeng/tmp/d23_ledger_parent_green01.log`.
 
-## P1: stage-only owner attention projection — OPEN
+## P1: stage-only owner attention projection — RESOLVED
 
 `metrics_store.py:4370-4372` recursively builds the owner ledger. The newly
 moved attention projection at4498-4506 also validates that owner's attention
@@ -47,8 +48,8 @@ The real measured predictor's first/last boundary path applies
 retains root duration but not OperatorCost (`execution_time.py:620-622`). The
 authoritative layers retain their proofs. Thus a reachable owner can fail
 `Inclusive attention root step5_layer_e2e requires OperatorCost` before its
-non-stage fields would be discarded. This is source-confirmed by the reviewer;
-public-call-site RED is assigned to the implementation owner, not yet claimed.
+non-stage fields would be discarded. The reviewer initially confirmed this from
+source; the author subsequently reproduced the real public-call-site failure.
 
 Required correction: project only stage-owned fields from the owner. Preserve
 strict root validation for authoritative layers and add real public-predictor
@@ -56,9 +57,32 @@ first/last results directly entering the ledger as regressions. No fabricated
 owner proof, disabled ledger or weakened layer validation.
 
 Implementation follow-up: `ses_e9f9fd0bdffeZH9Q2Ux5NbCYko`, same scoped worktree.
-Source phase is not fully accepted. Full CLI and candidate legacy matrix have
-not started on this initial source. The existing generic trace gap-span limit
+The initial source was not fully accepted and did not launch full CLI or a
+candidate matrix. The existing generic trace gap-span limit
 and inherited test fixture issues are not new findings.
+
+## Final source acceptance
+
+Code `7c70461`, records `85552ed`, parent merge `26db654`. Parent verified the
+entire `frontier/` tree and changed tests/exception document match reviewed code.
+The same reviewer checked the complete `61cbac9..7c70461` diff at
+`/data/ycfeng/tmp/d23_root_metrics_7c70461.diff`, updated task records, source,
+RED logs and parent log/XML. Verdict: **P1 resolved; No findings**.
+
+The owner now contributes only its stage-owned scalar/canonical fields before
+aggregation. Field names, millisecond units and rounding are retained; layer
+aggregation excludes stage-owned fields. Authoritative layers still require
+valid root proof and contribute their own gap. Non-authoritative owner attention
+and its99ms test gap are ignored. Real public first/last outputs enter schedule,
+operation series, trace and pending ledger with root/boundary each once;
+dummy-first is verified at its real Stage ledger.
+
+Primary reran the exact ten-file command above on `step5-root-metrics`, changing
+only the output paths to `/data/ycfeng/tmp/d23_root_p1_parent01.{xml,log}`:
+**167 passed,1 deselected in46.71s; zero failures/errors**. The exclusion remains
+the previously compared inherited cache fixture. The author public-call-site
+RED and expanded RED are retained in its test report; no remaining source
+review blocker. This acceptance does not establish full CLI or native accuracy.
 
 ## Clean baseline execution: PASS
 
@@ -75,7 +99,11 @@ Baseline completed: **77/77 cases produced artifacts**, all case return codes0.
 The log confirms source0cdd6cb, dirty=False and harness32fb934. Retained log:
 `/data/ycfeng/tmp/d23_root_fidelity_baseline01.log`; results:
 `/data/ycfeng/tmp/step5_d23_root_fidelity_20261022/baseline/results.jsonl`.
-This is baseline execution only; candidate/comparison wait for the final repair.
-Main worktree is prepared at
-f237362 but no new actual subprocess has launched; it will be fast-forwarded
-again before the unchanged-bound full6144/1024 verification.
+This is baseline execution only. The final candidate was launched from clean
+`fidelity-candidate-26db654`, with the same driver/environment and command above
+except `--label candidate`, the candidate repo path, and log
+`/data/ycfeng/tmp/d23_root_fidelity_candidate01.log`. Comparison is pending.
+
+The stable main worktree was fast-forwarded to26db654 before actual05 launch.
+Both modes reuse fixture02/cache at unchanged6144/1024 and2400s child bounds;
+see the exact commands and acceptance criteria in the actual-main test report.
