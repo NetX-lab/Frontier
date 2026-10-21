@@ -26,15 +26,19 @@ default stream, so it excludes the join wait; kernels that overlap on other
 streams can stretch it. Hooks are installed after engine start-up, so the
 memory profiling and dummy runs are never recorded.
 
-The weights are vLLM dummy weights. vLLM 0.28 runs the DeepSeek-V4 model
-finalizers only from ``load_weights``, which the dummy loader skips, so
-``patch_dummy_weight_finalizers`` runs them after dummy loading as well.
+The weights are vLLM dummy weights. The accepted C26 dummy-loader hook is
+preserved unchanged. For the pristine vLLM 0.28 source without that hook,
+``patch_dummy_weight_finalizers`` supplies it only during engine construction.
 """
 
 from __future__ import annotations
 
+import inspect
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 from frontier.profiling.attention import dsa_vllm_runner as case_runner
@@ -296,28 +300,41 @@ def install_dsv4_hooks(
     }
 
 
-def patch_dummy_weight_finalizers() -> None:
-    """Run the DeepSeek-V4 model finalizers after dummy weight loading.
+@contextmanager
+def patch_dummy_weight_finalizers() -> Iterator[None]:
+    """Preserve C26, or temporarily supply the pristine dummy-loader hook.
 
-    ``DeepseekV4ForCausalLM.load_weights`` finalizes the MegaMoE weights and
-    the first layer's broadcast mHC weights; the dummy loader never calls it
-    and calls ``process_weights_after_loading`` instead, which vLLM 0.28 does
-    not define for this model.
+    The loader alone invokes the hook. C26 initializes missing mHC broadcast
+    weights without replacing existing weights; the pristine source needs its
+    original MegaMoE and mHC finalizers. Unknown native hooks fail closed.
     """
 
     from vllm.models.deepseek_v4 import DeepseekV4ForCausalLM
 
     if hasattr(DeepseekV4ForCausalLM, "process_weights_after_loading"):
-        raise RuntimeError(
-            "DeepseekV4ForCausalLM defines process_weights_after_loading in this vLLM; "
-            "check whether it finalizes dummy weights and drop this patch"
+        native_hook = DeepseekV4ForCausalLM.process_weights_after_loading
+        approved_c26 = (
+            "def process_weights_after_loading(self) -> None:\n"
+            "    self.model.finalize_mhc_broadcast_weights(only_if_missing=True)"
         )
+        try:
+            source = dedent(inspect.getsource(native_hook.__code__)).strip()
+        except (AttributeError, OSError, TypeError) as error:
+            raise RuntimeError("Unapproved DeepSeek-V4 dummy finalizer") from error
+        if source != approved_c26:
+            raise RuntimeError("Unapproved DeepSeek-V4 dummy finalizer; expected C26")
+        yield
+        return
 
     def process_weights_after_loading(self) -> None:
         self.model.finalize_mega_moe_weights()
         self.model.finalize_mhc_broadcast_weights()
 
     DeepseekV4ForCausalLM.process_weights_after_loading = process_weights_after_loading
+    try:
+        yield
+    finally:
+        del DeepseekV4ForCausalLM.process_weights_after_loading
 
 
 def run_engine(
@@ -338,15 +355,15 @@ def run_engine(
 
     # Import the model after selecting the in-process engine core.
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
-    patch_dummy_weight_finalizers()
-    llm = case_runner.build_engine(
-        plan,
-        engine_index,
-        model_dir,
-        seed,
-        gpu_memory_utilization,
-        kv_cache_dtype=plan.kv_cache_dtype,
-    )
+    with patch_dummy_weight_finalizers():
+        llm = case_runner.build_engine(
+            plan,
+            engine_index,
+            model_dir,
+            seed,
+            gpu_memory_utilization,
+            kv_cache_dtype=plan.kv_cache_dtype,
+        )
     layers = [
         (layer.global_layer_id, layer.attention_variant, layer.compress_ratio)
         for layer in plan.shape.layers

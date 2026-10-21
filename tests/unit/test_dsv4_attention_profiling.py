@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import sys
 import types
@@ -49,6 +50,147 @@ PLAN_ARGS = [
     "--chunk_budgets", "1024", "256",
 ]
 VARIANTS = ("uncompressed", "csa", "hca")
+
+
+@pytest.fixture
+def native_model_module(monkeypatch):
+    for name in ("vllm", "vllm.models", "vllm.models.deepseek_v4"):
+        monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
+    return sys.modules["vllm.models.deepseek_v4"]
+
+
+def test_pristine_dummy_finalizer_is_temporary_and_loader_owned(native_model_module):
+    calls = []
+
+    class PristineModel:
+        def __init__(self):
+            self.model = SimpleNamespace(
+                finalize_mega_moe_weights=lambda: calls.append("mega"),
+                finalize_mhc_broadcast_weights=lambda: calls.append("mhc"),
+            )
+
+    native_model_module.DeepseekV4ForCausalLM = PristineModel
+    for _ in range(2):
+        before = len(calls)
+        with dsv4_runner.patch_dummy_weight_finalizers():
+            assert len(calls) == before
+            PristineModel().process_weights_after_loading()
+            assert calls[before:] == ["mega", "mhc"]
+        assert "process_weights_after_loading" not in PristineModel.__dict__
+
+
+@pytest.mark.parametrize("already_initialized", [False, True])
+def test_accepted_c26_finalizer_is_unchanged_and_called_once(
+    native_model_module, already_initialized
+):
+    calls = []
+    existing_weights = object()
+
+    class Core:
+        weights = existing_weights if already_initialized else None
+
+        def finalize_mhc_broadcast_weights(self, *, only_if_missing):
+            calls.append(only_if_missing)
+            if not only_if_missing or self.weights is None:
+                self.weights = object()
+
+    class AcceptedC26Model:
+        def process_weights_after_loading(self) -> None:
+            self.model.finalize_mhc_broadcast_weights(only_if_missing=True)
+
+    native_model_module.DeepseekV4ForCausalLM = AcceptedC26Model
+    original = AcceptedC26Model.process_weights_after_loading
+    model = AcceptedC26Model()
+    model.model = Core()
+    with dsv4_runner.patch_dummy_weight_finalizers():
+        assert AcceptedC26Model.process_weights_after_loading is original
+        assert calls == []
+        model.process_weights_after_loading()
+    assert AcceptedC26Model.process_weights_after_loading is original
+    assert calls == [True]
+    assert model.model.weights is not None
+    if already_initialized:
+        assert model.model.weights is existing_weights
+
+
+@pytest.mark.parametrize("accepted_c26", [False, True])
+def test_dummy_finalizer_restoration_after_load_failure(native_model_module, accepted_c26):
+    class Model:
+        pass
+
+    if accepted_c26:
+        def process_weights_after_loading(self) -> None:
+            self.model.finalize_mhc_broadcast_weights(only_if_missing=True)
+
+        Model.process_weights_after_loading = process_weights_after_loading
+    native_model_module.DeepseekV4ForCausalLM = Model
+    original = Model.__dict__.get("process_weights_after_loading")
+    with pytest.raises(RuntimeError, match="dummy load failed"):
+        with dsv4_runner.patch_dummy_weight_finalizers():
+            raise RuntimeError("dummy load failed")
+    assert Model.__dict__.get("process_weights_after_loading") is original
+
+
+def test_unknown_dummy_finalizer_is_rejected_without_mutation(native_model_module):
+    class UnknownModel:
+        def process_weights_after_loading(self) -> None:
+            self.model.finalize_mhc_broadcast_weights(only_if_missing=False)
+
+    native_model_module.DeepseekV4ForCausalLM = UnknownModel
+    original = UnknownModel.process_weights_after_loading
+    with pytest.raises(RuntimeError, match="Unapproved"):
+        with dsv4_runner.patch_dummy_weight_finalizers():
+            pytest.fail("An unapproved hook entered the loader scope")
+    assert UnknownModel.process_weights_after_loading is original
+
+
+def test_wrapped_c26_hook_is_not_mistaken_for_approved_hook(native_model_module):
+    def process_weights_after_loading(self) -> None:
+        self.model.finalize_mhc_broadcast_weights(only_if_missing=True)
+
+    @functools.wraps(process_weights_after_loading)
+    def wrapped(self):
+        process_weights_after_loading(self)
+        process_weights_after_loading(self)
+
+    model = type("WrappedModel", (), {"process_weights_after_loading": wrapped})
+    native_model_module.DeepseekV4ForCausalLM = model
+    with pytest.raises(RuntimeError, match="Unapproved"):
+        with dsv4_runner.patch_dummy_weight_finalizers():
+            pytest.fail("A wrapper that calls C26 twice was admitted")
+    assert model.process_weights_after_loading is wrapped
+
+
+def test_run_engine_restores_pristine_hook_when_constructor_fails(
+    native_model_module, monkeypatch, tmp_path
+):
+    calls = []
+
+    class Model:
+        model = SimpleNamespace(
+            finalize_mega_moe_weights=lambda: calls.append("mega"),
+            finalize_mhc_broadcast_weights=lambda: calls.append("mhc"),
+        )
+
+    native_model_module.DeepseekV4ForCausalLM = Model
+
+    def fail_constructor(*args, **kwargs):
+        assert "process_weights_after_loading" in Model.__dict__
+        Model().process_weights_after_loading()
+        raise RuntimeError("constructor failed")
+
+    monkeypatch.setattr(case_runner, "build_engine", fail_constructor)
+    with pytest.raises(RuntimeError, match="constructor failed"):
+        dsv4_runner.run_engine(
+            plan=SimpleNamespace(kv_cache_dtype="fp8"), engine_index=0,
+            model_dir="unused", vocab_size=128, seed=0,
+            gpu_memory_utilization=0.85,
+            expected_attention_backend="FLASHMLA_SPARSE_DSV4",
+            raw_path=tmp_path / "raw.jsonl", trace_dir=tmp_path / "traces",
+            keep_traces=True,
+        )
+    assert calls == ["mega", "mhc"]
+    assert "process_weights_after_loading" not in Model.__dict__
 
 
 def _limits(**overrides):
