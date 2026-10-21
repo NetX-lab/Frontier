@@ -4,9 +4,7 @@ from dataclasses import dataclass
 
 from frontier.attention.step5_inputs import MRv2DummyDescriptor
 from frontier.config import global_vars
-from frontier.config.graph_policy import (
-    GRAPH_MODE_ORDER, graph_policy, resolve_capture_size,
-)
+from frontier.config.graph_policy import GRAPH_MODE_ORDER, graph_policy
 from frontier.entities.batch import DecodeCudaGraphMetadata, DummyForwardBatch
 
 
@@ -20,7 +18,7 @@ class ForwardStartDescriptor:
     max_query_len: int | None
 
 
-def bind_forward_start(batches, *, group_id):
+def bind_forward_start(batches, *, group_id, request_capacity):
     """Apply native min-mode/local-eager-or-shared-capture semantics to a group."""
     policy_name = global_vars.get_decode_cuda_graph_mode()
     policy = graph_policy(policy_name)
@@ -38,15 +36,17 @@ def bind_forward_start(batches, *, group_id):
             )
         ) else None
         tokens = sum(queries)
-        mode = policy.uniform_decode if uniform == 1 else policy.other
-        if mode != "NONE" and not resolve_capture_size(tokens, sizes)[0]:
-            mode = "NONE"
+        mode, _ = policy.resolve_capture(
+            tokens, sizes, uniform_decode=uniform == 1, request_capacity=request_capacity,
+        )
         local.append((batch, tokens, len(queries), mode))
     mode = min((row[-1] for row in local), key=GRAPH_MODE_ORDER.__getitem__)
     width = max(row[1] for row in local)
     if mode != "NONE":
-        hit, width = resolve_capture_size(width, sizes)
-        if not hit:
+        mode, width = policy.resolve_capture(
+            width, sizes, uniform_decode=mode == "FULL", request_capacity=request_capacity,
+        )
+        if mode == "NONE":
             raise ValueError("DP-agreed graph width has no capture bucket")
     bindings = []
     for batch, tokens, requests, _ in local:
@@ -104,7 +104,10 @@ def hold_forward_start(scheduler, stage, batch, *, time, replica_id, stage_id):
             for lane_batch in batches
         ):
             raise ValueError("forward start lanes must hold the same admitted group")
-        bind_forward_start(batches, group_id=group)
+        bind_forward_start(
+            batches, group_id=group,
+            request_capacity=scheduler.get_replica_scheduler(replica_id, lane_id)._max_num_running_reqs,
+        )
         context.resolve_forward_start()
         return [
             ReplicaStageScheduleEvent(

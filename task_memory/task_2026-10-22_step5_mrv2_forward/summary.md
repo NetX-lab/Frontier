@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archive the scoped CPU implementation and parent integration contract. |
+| 2026-10-22 | Archive P2 correction,489 affected passes and explicit request-capacity handoff. |
 
 ## Outcome
 
@@ -12,6 +13,14 @@ and dummy lanes before any first predictor call. Base is immutable 5c2319cd;
 branch `feat/step5-mrv2-forward`, worktree
 `/data/ycfeng/Frontier/.worktrees/step5-mrv2-forward`. Inputs worktree stayed clean.
 No GPU/native qualification or accuracy claim is made.
+
+P2 review correction (follow-up to record HEAD `d8e3e941`) removes illegal
+uniform FULL captures above the existing V1 request capacity. With cap3 and
+capture sizes[1,2,4,8], decode3+dummy1 now binds PIECEWISE4 under
+`full_and_piecewise`, or NONE with local3/1 widths under `full_decode_only`.
+Legal wider PIECEWISE prefill captures remain supported. Two real-engine
+controls and four exact RED failures became6 PASS; the affected suites now
+pass221 stage +268 measured =489 checks. No producer/full CLI/strict77 rerun.
 
 ## Deliverables
 
@@ -91,3 +100,24 @@ integration fixtures were not edited. G3 diagnostics/publication and legacy
 selector fixture repairs remain parent-owned.
 
 Task/session: `D23-MRV2-FORWARD` / `ses_ea08efc2cffe6Z1Rc7srkVdebh`.
+
+## P2 deliverables and remaining acceptance
+
+- `frontier/config/graph_policy.py:11-21`: resolve capture candidates through the
+  existing policy fields; FULL token/request buckets must fit request capacity,
+  then PIECEWISE candidates remain available. No new registry or policy flag.
+- `frontier/scheduler/utils/forward_start_agreement.py:21,39-50,107-110`:
+  required existing request capacity, local candidate selection before DP min,
+  shared-width re-dispatch through the same resolver. Event/lifecycle and raw
+  descriptor fields are unchanged.
+- `tests/unit/test_step5_mrv2_forward.py:163-225,281-349`:40 arrival-order/role
+  cases and6 actual V1 wakeup/arrival/first-call cases replace the former1 case.
+  All earlier focused coverage remains; total75 PASS. Exact failure messages,
+  commands, log/XML paths and counts are in the test report's P2 section.
+- `tests/unit/test_step5_measured_public_predictor.py:126,148`: direct agreement
+  calls now supply their existing scheduler config's `batch_size_cap`.
+- Parent fresh fixture/direct agreement callers must add required keyword
+  `request_capacity` from the existing role scheduler/config; do not infer it
+  from captures. No parent fresh CLI fixture was read or edited here.
+- Scope remains CPU forward correction only. Parent independent re-review,
+  merge, full CLI and strict77 are unfinished acceptance, not passing claims.

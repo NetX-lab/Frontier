@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archive executable CPU results and original-source RED evidence. |
+| 2026-10-22 | Add P2 capacity correction RED/GREEN,489 affected passes and exact commands. |
 
 ## Environment and scope
 
@@ -94,3 +95,79 @@ env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfen
 - This CPU result does not establish native qualification or accuracy. Original
   G3 startup gate FAIL/192, state-pressure UNVERIFIED and HTTP502 observations
   remain parent-owned and unchanged.
+
+## P2 review correction validation
+
+Initial correction HEAD: `d8e3e941`, source `3cad8dbe`. Same worktree and
+Python3.10.6/GCC11.3.0, pytest9.1.1; no conda activation. Only local CPU
+tests ran. Parent reported444 affected+measured passes on `3cad8dbe`;
+the repeated same suites now include45 additional cases (489 total).
+No producer suite, full CLI, strict77, GPU/platform/auth/cloud/SSH/push or
+fresh CLI fixture access was performed.
+
+Source mapping: locked `vllm/v1/worker/gpu/cudagraph_utils.py:158` uses
+`scheduler_config.max_num_seqs`; uniform no-MTP FULL candidates at321-326
+cannot exceed that request capacity. PIECEWISE candidates at346-365 have
+`num_reqs=None` and can use wider token captures. Frontier V1
+`vllm_v1_engine_replica_scheduler.py:181-183` maps `batch_size_cap` to the
+existing `_max_num_running_reqs`. Each DP engine of a Replica uses the same
+replica scheduler configuration. Agreement now takes that existing value;
+it does not infer request capacity from token capture sizes.
+
+| Check | Expected | Observed | Status |
+| --- | --- | --- | --- |
+| Tight real V1 idle-lane wakeup/arrival/stage first-call RED before behavior edits | cap3/captures[1,2,4,8] decode3+dummy1: PIECEWISE4 for full_and_piecewise; NONE3/1 for full_decode_only |4 failed,2 passed,29 deselected;12.54s | RED confirmed |
+| Same6 real engine/event cases after correction | Correct modes/widths for both P/D roles; FULL1 remains legal |6 passed,29 deselected;11.98s | PASS |
+| Complete focused first-call/lifecycle/lookup suite | Both arrival orders, useful+useful/dummy, FULL<=cap, miss, other policies, prefill7->PIECEWISE8, unchanged owner/query/context/null fields |75 passed;14.85s | PASS |
+| Same affected stage suite as earlier176-case check | All previous cases plus45 new cases |221 passed;18.75s | PASS |
+| Same measured fit/replay/bundle/FFN/PD suite | Required source contracts and explicit direct-call capacity remain correct |268 passed;202.83s | PASS |
+| Whitespace integrity | No diff whitespace errors | `git diff --check` exit0 | PASS |
+
+Exact RED assertions, preserved before the implementation edit:
+
+```text
+test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival[full_and_piecewise-3-PIECEWISE-widths1-prefill]
+test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival[full_and_piecewise-3-PIECEWISE-widths1-decode]
+E   AssertionError: assert ['full', 'full'] == ['piecewise', 'piecewise']
+test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival[full_decode_only-3-NONE-widths2-prefill]
+test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival[full_decode_only-3-NONE-widths2-decode]
+E   AssertionError: assert ['full', 'full'] == ['none', 'none']
+```
+
+All GREEN XML has0 failures/errors/skips. RED XML has6 tests,4 failures,
+0 errors/skips. Raw logs/XML are `/data/ycfeng/tmp/d23_forward_p2_` plus
+`red`, `green`, `focused`, `stage` or `measured` and `.log`/`.xml`.
+The observed worktree diff changes only2 core modules,2 focused unit test
+files and this task's records. There is no change to iteration metadata,
+timing/cost providers, the policy registry, owner lifecycle or CLI fixtures.
+
+### P2 exact commands
+
+All commands ran in `/data/ycfeng/Frontier/.worktrees/step5-mrv2-forward`.
+The RED command returned1 with the exact assertions above; all other test
+commands returned0. The real first-call seam is the existing V1 engine dummy
+wakeup -> `BatchStageArrivalEvent` -> `ReplicaStageScheduleEvent` -> agreement
+-> first workload prediction, not just a policy-function assertion.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_forward.py -k empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_forward_p2_red.xml > /data/ycfeng/tmp/d23_forward_p2_red.log 2>&1
+
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_forward.py -k empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_forward_p2_green.xml > /data/ycfeng/tmp/d23_forward_p2_green.log 2>&1
+
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_forward.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_forward_p2_focused.xml > /data/ycfeng/tmp/d23_forward_p2_focused.log 2>&1
+
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_forward.py tests/unit/test_shared_forward_group_admission.py tests/unit/test_stage_execution_context.py tests/unit/test_monolithic_mixed_forward_sync.py tests/unit/test_forward_sync_state.py tests/unit/test_cuda_graph_activation_evidence.py tests/unit/test_stage_admission_pp_tools.py tests/unit/test_predictor_effective_tokens.py tests/unit/test_moe_routing_conservation.py tests/unit/test_vllm_v1_engine_idle_time.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_forward_p2_stage.xml > /data/ycfeng/tmp/d23_forward_p2_stage.log 2>&1
+
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_inputs.py tests/unit/test_step5_attention_input_union.py tests/unit/test_step5_measured_training.py tests/unit/test_step5_measured_replay.py tests/unit/test_step5_measured_cost.py tests/unit/test_step5_measured_manager.py tests/unit/test_step5_measured_interfaces.py tests/unit/test_step5_measured_public_predictor.py tests/unit/test_step5_model_bundle.py tests/unit/test_step5_measured_ffn.py tests/unit/test_step5_measured_ffn_replay.py tests/unit/test_step5_measured_stage_boundaries.py tests/unit/test_step5_measured_pd.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_forward_p2_measured.xml > /data/ycfeng/tmp/d23_forward_p2_measured.log 2>&1
+
+git diff --check
+```
+
+### P2 limits
+
+Observed tests prove the corrected CPU dispatch and first-call binding and
+preservation assertions under the supported no-MTP path. They do not execute
+native CUDA graphs or establish native accuracy. Parent owns independent
+re-review, merge, complete fresh CLI and strict77. This correction introduces
+the required keyword `request_capacity` on `bind_forward_start`; direct callers
+must supply the existing scheduler capacity, never the max capture size.

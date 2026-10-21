@@ -123,7 +123,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
                       num_processed_tokens=8176)
     batch = Batch(replica_id=0, requests=[request], num_tokens=[16], is_moe=True,
                   request_is_decoding=[False], num_context_tokens=[8176])
-    bind_forward_start([batch], group_id=0)
+    bind_forward_start([batch], group_id=0, request_capacity=scheduler.batch_size_cap)
     stage = predictor.predict_stage_execution_time(
         batch, stage_id=0, cluster_type=ClusterType.PREFILL,
         layer_id=1, num_layers=1, include_attention=False, include_moe=False,
@@ -145,7 +145,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     assert last.final_residual_time == last._step5_stage_operator_costs["final_residual"]["duration_ms"]
     assert last.final_residual_time > 0
     dummy = DummyForwardBatch(0, 0, 0)
-    bind_forward_start([dummy], group_id=1)
+    bind_forward_start([dummy], group_id=1, request_capacity=scheduler.batch_size_cap)
     idle = predictor.predict_stage_execution_time(
         dummy, 0, ClusterType.PREFILL, layer_id=1, num_layers=1, include_moe=False,
     ).layer_execution_times[0]

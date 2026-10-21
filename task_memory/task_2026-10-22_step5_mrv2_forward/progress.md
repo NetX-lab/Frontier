@@ -6,6 +6,8 @@
 | 2026-10-22 | Record initial implementation and focused green check. |
 | 2026-10-22 | Record real lifecycle/cache validation and broadened legacy baseline. |
 | 2026-10-22 | Complete CPU verification and code commit; archive handoff contract. |
+| 2026-10-22 | Start reviewer P2 correction; record real first-event RED before code. |
+| 2026-10-22 | Finish P2 verification:221 stage +268 measured PASS; prepare scoped commit. |
 
 - completed: new worktree from 5c2319cd; primary approval/source inspected.
 - completed: pre-prediction hold in existing stage scheduler; generic readiness
@@ -67,3 +69,72 @@ behavior has executable CPU evidence; no inherited selector test was patched.
 Read requirements.md before closure. No scheduler approximation, second queue,
 new event or synthetic timing constant was introduced. Input worktree status
 remains clean. Final task record commit follows the verified code commit.
+
+## P2 correction
+
+- completed P2.1: initial worktree is clean on `feat/step5-mrv2-forward`, HEAD
+  `d8e3e941`; no delegation or main/CLI fixture access. Native
+  `gpu/cudagraph_utils.py:158` takes scheduler `max_num_seqs`; lines321-326 omit
+  uniform FULL descriptors exceeding that capacity; lines346-365 allow wider
+  PIECEWISE descriptors with `num_reqs=None`. V1
+  `vllm_v1_engine_replica_scheduler.py:181-183` maps `batch_size_cap` to
+  `_max_num_running_reqs`. All DP owners of the Replica share that configuration.
+- completed P2.1: extend the existing actual V1 dummy wakeup -> batch arrival ->
+  stage agreement -> first prediction test for cap3/captures[1,2,4,8], both roles
+  and both affected policies. Before any behavior edit:4 failed,2 passed,
+  29 deselected in12.54s. Exact assertion failure at test line273:
+  `assert ['full', 'full'] == ['piecewise', 'piecewise']` (P and D), and
+  `assert ['full', 'full'] == ['none', 'none']` (P and D). Passing controls use
+  FULL1/1 within cap3. Raw log and XML:
+  `/data/ycfeng/tmp/d23_forward_p2_red.{log,xml}`.
+- completed P2.2: ranked diagnosis: (1) capacity absent from agreement,
+  (2) unsupported FULL fails to try policy.other PIECEWISE, (3) final redispatch
+  must use the same supported candidate selection. The graph policy now filters
+  uniform FULL token/request captures using the existing V1 request capacity,
+  then tries the existing policy.other family. Agreement receives that capacity
+  from the group's V1 scheduler and reuses the resolver after DP min/max.
+  The same real engine loop is GREEN:6 passed,29 deselected in11.98s,
+  `/data/ycfeng/tmp/d23_forward_p2_green.{log,xml}`. Expanded real first-event
+  matrix plus all earlier focused contracts:75 passed in14.85s,
+  `/data/ycfeng/tmp/d23_forward_p2_focused.{log,xml}`. Both roles, both arrival
+  orders, useful/useful and useful/dummy, capacity3/4, FULL<=cap, NONE local
+  width, miss and legal prefill7->PIECEWISE8 are observed. Query/context arrays,
+  request lists, owner lane/ticket, raw null fields and zero dummy IDs remain
+  unchanged. Direct public predictor tests pass their existing scheduler config
+  capacity explicitly; no CLI fixture is accessed or edited.
+- completed P2.3 verification:221 stage PASS in18.75s and268 measured PASS
+  in202.83s, run concurrently. Same affected suites as prior176+268 check with
+  45 added real first-event cases. All GREEN XML reports zero errors/failures/
+  skips; `git diff --check` passes. Logs/XML:
+  `/data/ycfeng/tmp/d23_forward_p2_{stage,measured}.{log,xml}`. Exact commands,
+  RED errors and environment are archived in the existing test report. No
+  producer or inherited selector suite was rerun.
+- in-progress P2.3 closure: requirements re-read; records updated; scoped commit
+  pending. Parent-owned re-review/merge/full CLI/strict77 remain outstanding.
+
+RED command (CWD is this worktree):
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_forward.py -k empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_forward_p2_red.xml > /data/ycfeng/tmp/d23_forward_p2_red.log 2>&1
+```
+
+### P2 checkpoint after focused verification
+
+1. Plan: P2.1 PASS (source mapping and exact RED), P2.2 PASS (capacity-aware
+   resolution,75 focused PASS), P2.3 TODO (affected suites, records and commit).
+2. Drift: D1-D7 CLEAR. Tests serve explicit P2 cases only; one diagnosis/fix,
+   no side repair, no unapproved delegation, no producer/CLI/native work. S1-S6
+   have no observed defect; dependencies match RED -> fix -> verification.
+3. Route branch A: no scope correction. Run affected stage and measured suites
+   concurrently, inspect XML/logs, complete records and commit. Parent re-review,
+   merge, full CLI and strict77 remain outside this slice.
+4. Attention: preserve scheduler cap rather than max capture width; leave legal
+   PIECEWISE token captures unrestricted; do not claim CPU tests establish
+   native qualification or full CLI acceptance.
+
+Final pre-commit checkpoint: P2.1/P2.2 PASS; P2.3 verification PASS and commit
+TODO. D1-D7 CLEAR, S1-S6 no defect; no scope drift or side work. Exact full
+phase checkpoint is in `review.md` (planning only, not parent code re-review).
+Next: commit the2 core modules,2 focused tests and this task's records, inspect
+clean branch/commit, and return precise parent handoff. No expanded testing
+or unrelated edits are needed after489 affected PASS.

@@ -20,11 +20,13 @@ from test_monolithic_mixed_forward_sync import (
 from test_step5_mrv2_inputs import producer_row
 
 
-def _harness(role, *, dense_layers=frozenset()):
+def _harness(role, *, dense_layers=frozenset(), request_capacity=32):
     scheduler, predictor, context, stages = _build_scheduler(
         cluster_type=role, dense_layers=dense_layers,
     )
     predictor.requires_forward_start_agreement = True
+    for engine in scheduler._replica_schedulers.values():
+        engine._max_num_running_reqs = request_capacity
     predictor._model_config = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     predictor._cluster_type = role
     predictor._block_size = 16
@@ -160,13 +162,73 @@ def test_empty_lane_wakeup_and_next_group_reset_are_exactly_once(role):
     assert len(observed) == 2
 
 
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+@pytest.mark.parametrize("arrival_order", [(0, 1), (1, 0)])
+@pytest.mark.parametrize("policy,capacity,left,right,mode,widths", [
+    ("full_and_piecewise", 3, ("decode", 2), ("decode", 1), "FULL", [2, 2]),
+    ("full_and_piecewise", 4, ("decode", 3), ("decode", 1), "FULL", [4, 4]),
+    ("full_and_piecewise", 3, ("decode", 3), ("decode", 1), "PIECEWISE", [4, 4]),
+    ("full_decode_only", 3, ("decode", 3), ("decode", 1), "NONE", [3, 1]),
+    ("full_and_piecewise", 3, ("prefill", 7), ("decode", 2), "PIECEWISE", [8, 8]),
+    ("full_and_piecewise", 3, ("prefill", 7), ("dummy", 1), "PIECEWISE", [8, 8]),
+    ("piecewise", 3, ("decode", 3), ("decode", 1), "PIECEWISE", [4, 4]),
+    ("none", 3, ("decode", 3), ("decode", 1), "NONE", [3, 1]),
+    ("full_and_piecewise", 3, ("prefill", 9), ("dummy", 1), "NONE", [9, 1]),
+    ("full_decode_only", 3, ("prefill", 7), ("decode", 2), "NONE", [7, 2]),
+])
+def test_stage_first_call_redispatch_uses_request_supported_graph_candidates(
+    role, arrival_order, policy, capacity, left, right, mode, widths, monkeypatch,
+):
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", policy)
+    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", [8, 2, 1, 4])
+    scheduler, _, context, stages, observed = _harness(role, request_capacity=capacity)
+    builders = {"decode": _decode_batch, "prefill": _prefill_batch,
+                "dummy": lambda _: DummyForwardBatch(0, 0, 0)}
+    batches = [builders[kind](tokens) for kind, tokens in (left, right)]
+    snapshots = [(list(batch.num_tokens), list(batch.num_context_tokens), list(batch.requests))
+                 for batch in batches]
+    for lane, batch in enumerate(batches):
+        _enqueue(stages[lane], batch, lane)
+    metrics = _MetricsStore(reporting=False)
+    _event(role, arrival_order[0]).handle_event(_global(scheduler), metrics)
+    assert observed == []
+    resumes = _event(role, arrival_order[1]).handle_event(_global(scheduler), metrics)
+    assert len(resumes) == 2 and observed == []
+    tickets = [batch._stage_admission_ticket for batch in batches]
+    for event in resumes:
+        event.handle_event(_global(scheduler), metrics)
+    assert [batch for batch, _ in observed] == batches
+    assert [workload.graph_mode for _, workload in observed] == [mode.lower()] * 2
+    assert [workload.physical_query_rows for _, workload in observed] == widths
+    for lane, (batch, workload) in enumerate(observed):
+        assert (batch.num_tokens, batch.num_context_tokens, batch.requests) == snapshots[lane]
+        assert batch._stage_admission_ticket == tickets[lane] and context.is_active(tickets[lane])
+        assert batch._stage_owner_replica_local_id == lane
+        descriptor = batch.forward_start_descriptor
+        assert descriptor.graph_mode == mode and descriptor.max_query_len is None
+        assert descriptor.uniform_token_count == (1 if mode == "FULL" else None)
+        assert descriptor.num_reqs == (
+            widths[lane] if mode == "FULL" else None if mode == "PIECEWISE" else len(batch.num_tokens)
+        )
+        if mode == "FULL":
+            assert descriptor.num_reqs <= capacity
+        if isinstance(batch, DummyForwardBatch):
+            assert batch.request_ids == [] and batch.request_execution_signatures == []
+            assert batch.mrv2_dummy_descriptor.query_lens == workload.query_lengths
+        else:
+            assert workload.query_lengths == tuple(snapshots[lane][0])
+            assert workload.sequence_lengths == tuple(
+                query + context for query, context in zip(snapshots[lane][0], snapshots[lane][1])
+            )
+
+
 def test_native_none_ep_aggregate_keeps_local_widths():
     from frontier.scheduler.utils.batch_builders import build_virtual_global_batch
     from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
 
     global_vars.DECODE_CUDA_GRAPH_MODE = "none"
     real, dummy = _prefill_batch(9), DummyForwardBatch(0, 0, 0)
-    bind_forward_start([real, dummy], group_id=1)
+    bind_forward_start([real, dummy], group_id=1, request_capacity=32)
     result = prepare_ep_wave_inputs(
         source_batches={0: real, 1: dummy}, batch=real, step_id_getter=lambda _: 1,
         aggregate_batch_builder=build_virtual_global_batch,
@@ -209,19 +271,28 @@ def test_prefill_one_token_extension_uses_full_descriptor_without_changing_owned
     real._total_num_tokens = real._num_prefill_tokens = 1
     real._num_context_tokens = [15]
     dummy = DummyForwardBatch(0, 0, 0)
-    bind_forward_start([real, dummy], group_id=1)
+    bind_forward_start([real, dummy], group_id=1, request_capacity=32)
     features, workload = step5_batch_features(predictor, real, 3)
     assert workload.phase == "decode" and workload.graph_mode == "full"
     assert features["batch_num_prefill_tokens"] == 0 and features["batch_num_decode_tokens"] == 1
     assert real.num_prefill_tokens == 1 and real.num_decode_tokens == 0
 
 
-def test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival():
+@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
+@pytest.mark.parametrize("policy,requests,mode,widths", [
+    ("full_and_piecewise", 1, "FULL", [1, 1]),
+    ("full_and_piecewise", 3, "PIECEWISE", [4, 4]),
+    ("full_decode_only", 3, "NONE", [3, 1]),
+])
+def test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival(
+    role, policy, requests, mode, widths, monkeypatch,
+):
     from frontier.config import ReplicaConfig, SyntheticRequestGeneratorConfig, VllmV1SchedulerConfig
     from frontier.entities import Replica
     from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import VLLMv1EngineReplicaScheduler
 
-    role = ClusterType.DECODE
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", policy)
+    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", [1, 2, 4, 8])
     scheduler, predictor, _, stages, observed = _harness(role)
     replica_config = ReplicaConfig(
         model_name="stepfun-ai/Step-5-Preview", device="h800", network_device="h800_dgx",
@@ -234,7 +305,7 @@ def test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival():
     replica._id = 0
     config = VllmV1SchedulerConfig(
         num_blocks=0, num_blocks_mode="memory_planner", max_model_len=8192,
-        block_size=16, max_tokens_in_batch=32, batch_size_cap=1,
+        block_size=16, max_tokens_in_batch=32, batch_size_cap=3,
         watermark_blocks_fraction=0,
     )
     engines = [VLLMv1EngineReplicaScheduler(
@@ -247,7 +318,9 @@ def test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival():
     # An already-dispatched real lane has started the native DP busy-loop wave.
     for engine in engines:
         engine._dp_wave_running = True
-    real = _decode_batch(1)
+    assert all(engine._max_num_running_reqs == config.batch_size_cap == 3 for engine in engines)
+    real = _decode_batch(requests)
+    snapshot = (list(real.num_tokens), list(real.num_context_tokens), list(real.requests))
     _enqueue(stages[0], real, 0)
     metrics = _MetricsStore(reporting=False)
     [wake] = _event(role, 0).handle_event(_global(scheduler), metrics)
@@ -259,6 +332,21 @@ def test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival():
     for event in resumes:
         event.handle_event(_global(scheduler), metrics)
     assert len(observed) == 2 and engines[1]._dummy_forwards_in_flight == 1
+    assert [workload.graph_mode for _, workload in observed] == [mode.lower()] * 2
+    assert [workload.physical_query_rows for _, workload in observed] == widths
+    assert (real.num_tokens, real.num_context_tokens, real.requests) == snapshot
+    dummy = observed[1][0]
+    assert dummy.requests == [] and dummy.request_execution_signatures == []
+    for batch, _ in observed:
+        descriptor = batch.forward_start_descriptor
+        assert descriptor.max_query_len is None
+        assert descriptor.uniform_token_count == (1 if mode == "FULL" else None)
+        assert descriptor.num_reqs == (
+            descriptor.num_tokens if mode == "FULL" else
+            None if mode == "PIECEWISE" else len(batch.num_tokens)
+        )
+        if mode == "FULL":
+            assert descriptor.num_reqs <= config.batch_size_cap
 
 
 @pytest.mark.parametrize("policy", ["full_and_piecewise", "full_decode_only", "piecewise"])
@@ -387,9 +475,9 @@ def test_unknown_policy_and_descriptor_mislabeling_reject_before_cost(monkeypatc
     real, dummy = _decode_batch(1), DummyForwardBatch(0, 0, 0)
     monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "unknown")
     with pytest.raises(ValueError, match="Unsupported CUDA graph policy"):
-        bind_forward_start([real, dummy], group_id=1)
+        bind_forward_start([real, dummy], group_id=1, request_capacity=32)
     monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
-    bind_forward_start([real, dummy], group_id=1)
+    bind_forward_start([real, dummy], group_id=1, request_capacity=32)
     dummy.forward_start_descriptor = replace(dummy.forward_start_descriptor, num_reqs=2)
     with pytest.raises(ValueError, match="agreed MRv2 InputBatch descriptor"):
         step5_batch_workload(predictor, dummy)

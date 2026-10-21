@@ -8,6 +8,18 @@ class GraphPolicy:
     uniform_decode: str
     other: str
 
+    def resolve_capture(self, total_tokens, capture_sizes, *, uniform_decode, request_capacity):
+        """Select a no-MTP graph whose token and request dimensions were captured."""
+        candidates = (self.uniform_decode, self.other) if uniform_decode else (self.other,)
+        for mode in candidates:
+            if mode == "NONE":
+                continue
+            sizes = (size for size in capture_sizes if mode != "FULL" or size <= request_capacity)
+            hit, width = resolve_capture_size(total_tokens, sizes)
+            if hit:
+                return mode, width
+        return "NONE", int(total_tokens)
+
 
 GRAPH_POLICIES = {
     "none": GraphPolicy("NONE", "NONE"),
