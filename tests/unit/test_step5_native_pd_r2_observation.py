@@ -1092,7 +1092,8 @@ def test_tail_exact_bytes_are_limited_to_three_decode_checkpoints(tmp_path, torc
                 assert hashlib.sha256(bytes.fromhex(sample['raw_hex'])).hexdigest() == sample['sha256']
                 assert 'storage' in sample['tensor']
             assert len(page['summary_mean_wire_row']['sha256']) == 64
-            assert 'raw_hex' not in page['summary_mean_wire_row']
+            assert ('raw_hex' in page['summary_mean_wire_row']) is (
+                checkpoint['boundary'] == 'first_local_tail_complete')
 
 
 def test_actual_request_journal_abi_is_captured_with_native_request_index(tmp_path, torch):

@@ -86,6 +86,7 @@ def checkpoint(observer, connector, req, request, boundary):
     capacity, state = observer.frozen_helpers()
     observer.synchronize()
     computed, block, region = request['computed'], observer.config['block_size'], observer.config['region_size']
+    last_page = (computed-1)//block
     config = connector.vllm_config.compilation_config.static_forward_context
     metadata = observer.connector_states[connector]
     groups = [request['blocks'][g] for g in connector.kv_cache_config.transfer_group_ids]
@@ -113,7 +114,8 @@ def checkpoint(observer, connector, req, request, boundary):
             if cache is not None:
                 lo, hi = lo//region, (hi+region-1)//region
             sample, _ = observer.tensor_sample(req, registration['component'], tensor[physical, lo:hi], capacity, state)
-            sample.pop('raw_hex')
+            if boundary != 'first_local_tail_complete' or not last_page-1 <= logical <= last_page:
+                sample.pop('raw_hex')
             components.append(dict(group_id=group, layer=registration['layer'],
                 component=registration['component'], logical_page=logical, physical_page=physical,
                 valid_units=[lo, hi], native_units_per_page=units,
