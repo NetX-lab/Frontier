@@ -429,6 +429,10 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
             if type(engine["async_scheduling"]) is not bool:
                 raise ValueError("async_scheduling must be boolean")
             command += ["--async-scheduling" if engine["async_scheduling"] else "--no-async-scheduling"]
+        if "cudagraph_metrics" in engine:
+            if type(engine["cudagraph_metrics"]) is not bool:
+                raise ValueError("cudagraph_metrics must be boolean")
+            command += ["--cudagraph-metrics" if engine["cudagraph_metrics"] else "--no-cudagraph-metrics"]
         if engine.get("headless"):
             command.append("--headless")
     return command
@@ -505,7 +509,8 @@ def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: floa
     raise RuntimeError(f"vllm serve not ready after {timeout_s} s")
 
 
-async def read_completion_stream(response, *, cancel_after_first_content: bool = False) -> tuple[dict, dict]:
+async def read_completion_stream(response, *, cancel_after_first_content: bool = False,
+                                 return_token_ids: bool = False) -> tuple[dict, dict]:
     """Read OpenAI completion SSE lines and time the first nonempty text choice.
 
     aiohttp's line iterator joins fragmented network reads, including UTF-8 bytes. Empty
@@ -514,6 +519,9 @@ async def read_completion_stream(response, *, cancel_after_first_content: bool =
     """
     payload = {"choices": [{"finish_reason": None}], "usage": None}
     timing = {"stream": True, "first_token_monotonic": None, "stream_completed": False}
+    if return_token_ids:
+        timing.update(last_token_monotonic=None, token_id_deltas=[], generated_token_count=0,
+                      accepted_prompt_token_count=None, accepted_prompt_sha256=None)
     async for line in response.content:
         arrived = time.monotonic()
         if not line.startswith(b"data:"):
@@ -528,7 +536,19 @@ async def read_completion_stream(response, *, cancel_after_first_content: bool =
         if event.get("usage") is not None:
             payload["usage"] = event["usage"]
         for choice in event.get("choices", []):
-            if choice.get("text") and timing["first_token_monotonic"] is None:
+            if return_token_ids and choice.get("prompt_token_ids") is not None:
+                prompt = choice["prompt_token_ids"]
+                timing["accepted_prompt_token_count"] = len(prompt)
+                timing["accepted_prompt_sha256"] = hashlib.sha256(json.dumps(prompt).encode()).hexdigest()
+            content = choice.get("token_ids") if return_token_ids else choice.get("text")
+            if return_token_ids and content:
+                if (choice.get("index", 0) != 0 or type(content) is not list
+                        or any(type(token) is not int or token < 0 for token in content)):
+                    raise ValueError("Expected one completion choice with native token-ID deltas")
+                timing["token_id_deltas"].append({"monotonic": arrived, "token_ids": content})
+                timing["generated_token_count"] += len(content)
+                timing["last_token_monotonic"] = arrived
+            if content and timing["first_token_monotonic"] is None:
                 timing["first_token_monotonic"] = arrived
                 if cancel_after_first_content:
                     timing["client_cancelled"] = True
@@ -540,8 +560,9 @@ async def read_completion_stream(response, *, cancel_after_first_content: bool =
 
 
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
-                 profile_window_s: tuple[float, float] | None = None, *,
-                 vllm_version: str = "0.10.2") -> tuple[dict, list[dict]]:
+                  profile_window_s: tuple[float, float] | None = None, *,
+                  vllm_version: str = "0.10.2", records: list[dict] | None = None,
+                  checkpoint=None) -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
     close the server's torch profiler at those two offsets of the same clock.
     An optional prompt_id repeats identical token IDs under distinct request IDs.
@@ -560,11 +581,33 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
             "ignore_eos": True,
             "temperature": 0.0,
             "stream": row.get("stream", False),
-            **({"stream_options": {"include_usage": True}} if row.get("stream") else {}),
+             **({"stream_options": {"include_usage": True}} if row.get("stream") else {}),
+            **({"return_token_ids": True, "add_special_tokens": False, "echo": False}
+               if row.get("return_token_ids") else {}),
         })
         for row in rows
     }
-    records: list[dict] = []
+    if records is None:
+        records = []
+    planned = {}
+    for row in rows:
+        if row.get("return_token_ids"):
+            record = dict(row, status="scheduled", http_status=None, dispatch_monotonic=None,
+                          response_monotonic=None, first_token_monotonic=None,
+                          last_token_monotonic=None)
+            record["prompt_sha256"] = hashlib.sha256(
+                json.dumps(json.loads(bodies[row["request_id"]])["prompt"]).encode()).hexdigest()
+            planned[row["request_id"]] = record
+            records.append(record)
+
+    def persist():
+        if checkpoint is not None:
+            try:
+                checkpoint()
+            except Exception as error:
+                print("NATIVE_PD_AUXILIARY_UNVERIFIED checkpoint", repr(error), flush=True)
+
+    persist()
     timeout = aiohttp.ClientTimeout(total=None)
     connector = aiohttp.TCPConnector(limit=0)
     async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
@@ -575,15 +618,44 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
             await asyncio.sleep(max(0.0, origin + row["arrived_at"] - time.monotonic()))
             dispatched = time.monotonic()
             timing = {"stream": True} if row.get("stream") else {}
-            async with session.post(
-                url, data=bodies[row["request_id"]],
-                headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"]},
-            ) as response:
-                if row.get("stream") and response.status == 200:
-                    payload, timing = await read_completion_stream(response,
-                        cancel_after_first_content=row.get("cancel_after_first_content", False))
-                else:
-                    payload = await response.json(content_type=None)
+            record = planned.get(row["request_id"])
+            if record is not None:
+                record.update(status="dispatched", dispatch_monotonic=dispatched,
+                              dispatch_offset_s=dispatched - origin,
+                              dispatch_lateness_s=dispatched - origin - row["arrived_at"])
+                persist()
+            try:
+                async with session.post(
+                    url, data=bodies[row["request_id"]],
+                    headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"]},
+                ) as response:
+                    if record is not None:
+                        record["http_status"] = response.status
+                    if row.get("stream") and response.status == 200:
+                        options = {"cancel_after_first_content": row.get("cancel_after_first_content", False)}
+                        if row.get("return_token_ids"):
+                            options["return_token_ids"] = True
+                        payload, timing = await read_completion_stream(response, **options)
+                    else:
+                        payload = await response.json(content_type=None)
+                    if record is not None and type(payload) is not dict:
+                        raise ValueError("Native completion payload must be an object")
+            except Exception as error:
+                if record is None:
+                    raise
+                record.update(status="failed", error=f"{type(error).__name__}: {error}",
+                              response_monotonic=time.monotonic())
+                persist()
+                return
+            if record is not None:
+                record.update(timing, response_monotonic=time.monotonic(),
+                              usage=payload.get("usage"),
+                              finish_reason=(payload.get("choices") or [{}])[0].get("finish_reason"),
+                              status="received" if response.status == 200 else "failed")
+                if response.status != 200:
+                    record["error"] = payload
+                persist()
+                return
             record = {
                 "request_id": row["request_id"],
                 "segment": row["segment"],

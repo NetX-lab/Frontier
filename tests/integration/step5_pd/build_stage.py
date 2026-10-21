@@ -89,6 +89,34 @@ def wave_traces(definition: dict, namespace: str) -> dict[str, list[dict]]:
     return traces
 
 
+def stage_canonical(definition: dict, stage: Path) -> None:
+    """Stage common bytes and Step phase policy, with no R2 observation bootstrap."""
+    from tests.integration.step5_pd.canonical_replay import canonical_workload
+
+    if "pd_state_observation" in definition or "role_num_gpu_blocks_override" in definition:
+        raise ValueError("Canonical serving must not inherit R2 instrumentation or diagnostic block limits")
+    settings = definition["canonical_replay"]
+    workload = REPO / settings["workload"]
+    canonical_workload(workload)
+    shutil.copytree(workload, stage / "trace/workload")
+    plan = {key: settings[key] for key in (
+        "kind", "idle_timeout_s", "idle_poll_s", "concurrent_requests")}
+    plan["dp_size"] = definition["engine"]["data_parallel_size"]
+    (stage / "trace/replay_plan.json").write_text(json.dumps(plan, indent=1))
+    relative = "tests/integration/step5_pd/canonical_replay.py"
+    shutil.copy2(REPO / relative, stage / relative)
+    (stage / "qualification_dependency.json").write_text(json.dumps({
+        "status": "UNVERIFIED", "kind": settings["kind"],
+        "required_before_reference_admission": [
+            "Parent-owned R2 content/lifetime verdict", "H200 TP8/DP4/EP32/PP1 native startup on both roles",
+            "Resolved 7168 context / 8192 token budget / 128 sequences and unchanged native FP8 exclusions",
+            "6144 prompt token IDs accepted without expansion and 1024 real streamed output IDs per request",
+            "Native per-lane graph capture and actual FULL decode graph replay at reached batches",
+            "Observed lane participation, D recompute tail, idle/KV release and no transfer failures"],
+        "auxiliary_policy": "Soft diagnostics only; never stop healthy native work on a validator verdict"
+    }, indent=1))
+
+
 def preflight(config: dict, model_dir: Path) -> list[dict]:
     """Run the worker's node plan and the server preparation for every node position."""
     replica, gpu = config["replica"], config["gpu"]
@@ -132,23 +160,26 @@ def build(definition: dict, *, stage: Path, workspace: Path, output_dir: Path, m
         shutil.copy2(probe_dir / name, stage / name)
     engine = engine_config(definition)
     (stage / "engine.json").write_text(json.dumps(engine, indent=1, sort_keys=True))
-    block_size = engine["block_size"]
-    expected_sources = {}
-    for wave, rows in wave_traces(definition, job_tag).items():
-        (stage / "trace" / wave).mkdir(parents=True)
-        (stage / "trace" / wave / "request_ids.json").write_text(json.dumps({"rows": rows}, indent=1))
-        totals = {"local_compute": 0, "local_cache_hit": 0, "external_kv_transfer": 0}
-        for row in rows:
-            for name, value in expected_pull_prompt_sources(row["num_prefill_tokens"], block_size).items():
-                totals[name] += value
-        expected_sources[wave] = totals
-    lease = adapter["kv_connector_extra_config"]["kv_lease_duration"]
-    (stage / "trace" / "waves.json").write_text(json.dumps({
-        "waves": [wave["name"] for wave in definition["waves"]],
-        "gating_wave": definition["gating_wave"],
-        "release_wait_s": lease + definition["release_margin_s"],
-        "scrape_timeout_s": definition["scrape_timeout_s"],
-        "expected_decode_prompt_sources": expected_sources}, indent=1))
+    if "canonical_replay" in definition:
+        stage_canonical(definition, stage)
+    else:
+        block_size = engine["block_size"]
+        expected_sources = {}
+        for wave, rows in wave_traces(definition, job_tag).items():
+            (stage / "trace" / wave).mkdir(parents=True)
+            (stage / "trace" / wave / "request_ids.json").write_text(json.dumps({"rows": rows}, indent=1))
+            totals = {"local_compute": 0, "local_cache_hit": 0, "external_kv_transfer": 0}
+            for row in rows:
+                for name, value in expected_pull_prompt_sources(row["num_prefill_tokens"], block_size).items():
+                    totals[name] += value
+            expected_sources[wave] = totals
+        lease = adapter["kv_connector_extra_config"]["kv_lease_duration"]
+        (stage / "trace" / "waves.json").write_text(json.dumps({
+            "waves": [wave["name"] for wave in definition["waves"]],
+            "gating_wave": definition["gating_wave"],
+            "release_wait_s": lease + definition["release_margin_s"],
+            "scrape_timeout_s": definition["scrape_timeout_s"],
+            "expected_decode_prompt_sources": expected_sources}, indent=1))
     resources, paths = definition["resources"], definition["image_paths"]
     config = {
         "description": definition["description"], "job_tag": job_tag, "source": source,
@@ -171,6 +202,8 @@ def build(definition: dict, *, stage: Path, workspace: Path, output_dir: Path, m
     if "pd_state_observation" in definition:
         from tests.integration.step5_pd.r2_stage import stage_observation
         stage_observation(config, definition, stage, model_dir)
+    if "canonical_replay" in definition:
+        config["replay_script"] = str(stage / "tests/integration/step5_pd/canonical_replay.py")
     (stage / "preflight.json").write_text(json.dumps(preflight(config, model_dir), indent=1))
     config["tool_hashes"] = {str(path.relative_to(stage)): sha256(path)
                              for path in sorted(stage.rglob("*")) if path.is_file()}
