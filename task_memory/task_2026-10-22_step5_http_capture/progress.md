@@ -43,5 +43,7 @@
 - completed: self-review and `git diff --check`; requirements re-read;scope
   satisfied. No private connector signal, independent-connection decision or
   native-cause claim. Checkpoint refreshed with verification complete.
-- pending: commit verified code/task records, final source receipt and handoff.
+- completed: verified code/task records committed8725fafe6187698faad7642229a9bac2f71f92e6;
+  implementation branch clean after commit. Final receipt/summary/select evidence
+  archive follows as documentation-only commit. Parent owns integration.
 - scope: no sealed artifact, previous report, other-owner source or external action.

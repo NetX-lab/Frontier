@@ -6,7 +6,7 @@
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -14,12 +14,12 @@
 | b actual proxy RED | PASS | red.log2fail only missing evidence; EOF502 unchanged |
 | c narrow capture | PASS | Step-only public trace, bounded redaction, green01.log11PASS |
 | d focused verification | PASS | final02.log196PASS;retained EOF502/new evidence and healthy200 |
-| e commit/handoff | TODO | follows verified scoped diff |
+| e commit/handoff | PASS | implementation8725faf;receipt/summary and exact handoff ready |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** implementation checkpoint 至今｜**当前前沿：** e commit/handoff
+**检测窗口：** verification checkpoint 至今｜**当前前沿：** completion archive only
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -41,7 +41,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. e：commit already-reviewed code and task records → exact paths/logs/limits and clean branch delivered.
+1. Save documentation-only completion archive and return exact branch/commits;parent owns integration.
 
 ## 4. 最值得关注的 3 点
 
