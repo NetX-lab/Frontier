@@ -1,0 +1,62 @@
+{
+  "task_id": "D20-ACTUAL-MAIN",
+  "source_commit": "21f29728e2bfedf5713d602557ba96766e75e327",
+  "files": {
+    "environment.json": {
+      "size": 620,
+      "sha256": "fa5dba81e407bc778dd905dc52b74cddb506e298d778e56bf8fb7a145dd66127"
+    },
+    "offline/command.bash": {
+      "size": 5237,
+      "sha256": "5ab2a8cb21f5827df6e38fdf147425da65fed2ea450c778a5699baaaa24404eb"
+    },
+    "offline/command.json": {
+      "size": 5985,
+      "sha256": "540d76a022da7ecf72b9fd2cc08341c68e2e08b961bb1313cd8663da52496f42"
+    },
+    "offline/config.json": {
+      "size": 373388,
+      "sha256": "0d014127d15d81094cb460a0420f3889d0e42e7ec35530260a6db5a5efd5c69e"
+    },
+    "offline/execution.json": {
+      "size": 53,
+      "sha256": "403f3a9a35531e2f611d40b0bc5620a817d1783cf5e6a5313c9fb0616b081e64"
+    },
+    "offline/requests.csv": {
+      "size": 62,
+      "sha256": "25390e5da60239c0d8a550c33150a182c856940f1c30aa502f0c8b58387cd2fa"
+    },
+    "offline/run.log": {
+      "size": 3632,
+      "sha256": "a27b539ab1fe79583698109fb060731f5b58b7b95444a179416cf4ff24dc7fad"
+    },
+    "online/command.bash": {
+      "size": 5232,
+      "sha256": "66df05659344604912f845aa944e2abadc337d5a081d0ea08d316b738b8ddd59"
+    },
+    "online/command.json": {
+      "size": 5980,
+      "sha256": "daab746efd5bcb06e32406aef049031632c228a236f02e3a11b8e839656346ce"
+    },
+    "online/config.json": {
+      "size": 373383,
+      "sha256": "a017cf4023831ffc701efeac188fcd5b2e94eb8ccc124c88384f5c8072911896"
+    },
+    "online/execution.json": {
+      "size": 53,
+      "sha256": "f0fa430cd489468ce4bec46b89940348da7a7befd815000c9ff6122e50a1248e"
+    },
+    "online/requests.csv": {
+      "size": 63,
+      "sha256": "8b3058871fdb5040052801f1839f420435dec2c812fde5492b23e7bacbab526a"
+    },
+    "online/run.log": {
+      "size": 3631,
+      "sha256": "9cff7730b655f65483aafb1820c77722e6532ad8fefb6f3cb74c49fe7dd8716e"
+    },
+    "synthetic_read_cost.json": {
+      "size": 13959,
+      "sha256": "3975d5ec0bf247d0c961bd74af47bd9411de6db59abe37a6251f8e0575d101fa"
+    }
+  }
+}
