@@ -540,7 +540,19 @@ def _install_native_serving_inventory():
 
         def warmup(original):
             def call(worker, *args, **kwargs):
-                result = original(worker, *args, **kwargs)
+                previous = getattr(observer.local, 'context', None)
+                previous_warmup = getattr(observer.local, 'startup_warmup', False)
+                # Native V2 kernel warmup uses ordinary SchedulerOutputs, not
+                # dummy_run=True. Its caller, not request-ID spelling, proves
+                # these forwards are startup work rather than client serving.
+                observer.local.context = dict(kind='dummy', repeat=None, phase=None,
+                    scheduled_num_requests=None, scheduled_num_tokens=None)
+                observer.local.startup_warmup = True
+                try:
+                    result = original(worker, *args, **kwargs)
+                finally:
+                    observer.local.context = previous
+                    observer.local.startup_warmup = previous_warmup
                 observer.observe('post_warmup_dump', observer.emit, worker, 'post_warmup')
                 return result
             return call
@@ -555,8 +567,9 @@ def _install_native_serving_inventory():
             def call(worker, *args, **kwargs):
                 previous = getattr(observer.local, 'context', None)
                 output = args[0] if args else kwargs.get('scheduler_output')
-                observer.local.context = observer.observe(
-                    'scheduler_provenance', observer.scheduler_context, output)
+                if not getattr(observer.local, 'startup_warmup', False):
+                    observer.local.context = observer.observe(
+                        'scheduler_provenance', observer.scheduler_context, output)
                 try:
                     return original(worker, *args, **kwargs)
                 finally:
