@@ -43,6 +43,8 @@ Use the locked official model configuration and tokenizer with native dummy weig
 
 Communication integration at `b1f032d` preserves all 77 legacy fidelity cases against `00ed846`, using separate clean caches; outputs and predictor cache filenames are identical. This establishes simulator fidelity, not H200 timing or the unresolved CPU performance budget.
 
+The first H200 communication attempt failed before measurement when its driver-query shell pipe exited with SIGPIPE. The bounded fix `6a9cedc`, integrated as `b68ce4d`, passes 101 parent startup/package checks. The unchanged 32-GPU scenario was resubmitted as `exp-1021-143708-523626`; it is queued alongside the 64-GPU qualification, with 96 of the approved 130 GPUs reserved. Native startup and timing quality remain unverified. Compute/bundle and measured PD implementation retain priority.
+
 Profiling integration `f0ab2eb` (archived at `3cdc996`) also preserves all 77 cases against the clean `b1f032d` run. Independent review found no actionable source defects. The operator probe is a single-card rank-local measurement, separate from the 64-H200 canonical serving run.
 
 The earlier native observer correction is commit `94d154e`: a fresh CPU process drains Kineto FIFO output while the original exporter remains on its calling thread. Cleanup preserves the primary native error and verifies reader termination before releasing its pending allowance. Legitimate `preempted_req_ids=None` is retained. Five files extend the existing native observer and tests; no Frontier core, graph policy, workload or native model implementation changes.
