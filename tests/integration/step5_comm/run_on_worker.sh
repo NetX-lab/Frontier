@@ -3,7 +3,7 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 # Reuse the qualified H200 launch recipe; R580+ must not load R570 compatibility.
-major=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -n1 | cut -d. -f1)
+major=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sed -n '1p' | cut -d. -f1)
 if [ "$major" = 570 ]; then
     driver_directory=/usr/local/cuda-13.0/compat
     export VLLM_ENABLE_CUDA_COMPATIBILITY=1
