@@ -1,0 +1,148 @@
+{
+  "kind": "submitted configuration, not completion evidence",
+  "tested_core": "c9e9388f117c625c6d546d1d083f8aaf3f824f51",
+  "modes": {
+    "offline": {
+      "config_path": "/data/ycfeng/tmp/d23_main_actual04_offline/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json",
+      "mode": "offline",
+      "graph_mode": "full_and_piecewise",
+      "capture_sizes": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        72,
+        80,
+        88,
+        96,
+        104,
+        112,
+        120,
+        128,
+        136,
+        144,
+        152,
+        160,
+        168,
+        176,
+        184,
+        192,
+        200,
+        208,
+        216,
+        224,
+        232,
+        240,
+        248,
+        256
+      ],
+      "scheduler": {
+        "max_model_len": 7168,
+        "max_tokens_in_batch": 8192,
+        "batch_size_cap": 128,
+        "enable_prefix_caching": false,
+        "enable_chunked_prefill": false
+      },
+      "roles": {
+        "prefill": {
+          "attn_tensor_parallel_size": 8,
+          "attn_dp": 2,
+          "moe_tensor_parallel_size": 1,
+          "moe_expert_parallel_size": 16,
+          "num_pipeline_stages": 1,
+          "device": "h800",
+          "world_size": 16,
+          "kv_cache_dtype": "auto"
+        },
+        "decode": {
+          "attn_tensor_parallel_size": 8,
+          "attn_dp": 2,
+          "moe_tensor_parallel_size": 1,
+          "moe_expert_parallel_size": 16,
+          "num_pipeline_stages": 1,
+          "device": "h800",
+          "world_size": 16,
+          "kv_cache_dtype": "auto"
+        }
+      }
+    },
+    "online": {
+      "config_path": "/data/ycfeng/tmp/d23_main_actual04_online/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online/config.json",
+      "mode": "online",
+      "graph_mode": "full_and_piecewise",
+      "capture_sizes": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        72,
+        80,
+        88,
+        96,
+        104,
+        112,
+        120,
+        128,
+        136,
+        144,
+        152,
+        160,
+        168,
+        176,
+        184,
+        192,
+        200,
+        208,
+        216,
+        224,
+        232,
+        240,
+        248,
+        256
+      ],
+      "scheduler": {
+        "max_model_len": 7168,
+        "max_tokens_in_batch": 8192,
+        "batch_size_cap": 128,
+        "enable_prefix_caching": false,
+        "enable_chunked_prefill": false
+      },
+      "roles": {
+        "prefill": {
+          "attn_tensor_parallel_size": 8,
+          "attn_dp": 2,
+          "moe_tensor_parallel_size": 1,
+          "moe_expert_parallel_size": 16,
+          "num_pipeline_stages": 1,
+          "device": "h800",
+          "world_size": 16,
+          "kv_cache_dtype": "auto"
+        },
+        "decode": {
+          "attn_tensor_parallel_size": 8,
+          "attn_dp": 2,
+          "moe_tensor_parallel_size": 1,
+          "moe_expert_parallel_size": 16,
+          "num_pipeline_stages": 1,
+          "device": "h800",
+          "world_size": 16,
+          "kv_cache_dtype": "auto"
+        }
+      }
+    }
+  }
+}

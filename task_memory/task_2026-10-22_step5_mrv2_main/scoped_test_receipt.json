@@ -1,0 +1,59 @@
+{
+  "command": "env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/integration/test_step5_measured_main.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_main_exact_compute_replay.xml > /data/ycfeng/tmp/d23_main_exact_compute_replay.log 2>&1",
+  "suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "8",
+    "time": "5.843",
+    "timestamp": "2026-10-22T05:11:01.149617+08:00",
+    "hostname": "kun-workspace-vgen2"
+  },
+  "cases": [
+    {
+      "name": "test_real_graph_padding_does_not_duplicate_requests_or_context",
+      "time": "0.021",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_mrv2_dummy_rows_preserve_inputbatch_descriptor[1-1-none-None]",
+      "time": "0.019",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_mrv2_dummy_rows_preserve_inputbatch_descriptor[16-None-piecewise-None]",
+      "time": "0.019",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_mrv2_dummy_rows_preserve_inputbatch_descriptor[1-1-full-1]",
+      "time": "0.018",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_actual_main_command_retains_capacity_graph_topology_and_measured_read",
+      "time": "0.011",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_context_row_contract_reuse_matches_independent_workload_build",
+      "time": "0.110",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_compute_fixture_covers_exact_native_bound_aggregate_and_ep_loads",
+      "time": "0.686",
+      "verdict": "PASS"
+    },
+    {
+      "name": "test_exact_ep_fixture_replays_shared_cache_duration_count_and_missing_coverage",
+      "time": "3.522",
+      "verdict": "PASS"
+    }
+  ],
+  "artifacts": {
+    "/data/ycfeng/tmp/d23_main_exact_compute_replay.xml": "b445f7277013d902d4f4c9dfdc4ced9bf7f3cc7f25cabddabc01c70799916580",
+    "/data/ycfeng/tmp/d23_main_exact_compute_replay.log": "28b4950b82fe35a506dd4bc6a3a6bc9400bfb96bb08ad0cd34bbf10e44be0b9a"
+  }
+}
