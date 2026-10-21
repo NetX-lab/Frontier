@@ -4,7 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Record shared-interface ownership, NIXL lazy delegation/input binding and D21 H80032 priority. |
 | 2026-10-21 | Record explicit CPU implementation approval,exclusive ownership and unchanged external gates. |
+| 2026-10-21 | Record primary follow-up ownership and thin NIXL integration contract. |
 
 ## [Original Request]
 
@@ -20,6 +22,33 @@ CPU env `/data/ycfeng/envs/frontier-py310/bin/python`;profiling-only env oneshot
 
 ## Read authority and acceptance
 
+### [Original Request] Primary follow-up
+
+Continue steps2–4 and preserve existing WIP. Explicit additional ownership now includes `frontier/profiling/step5/rows.py` and `frontier/attention/profiling_mapping.py`;close both notified interfaces without waiting for another owner. Required Step merge CPU declaration is included in `frontier/operators/families.py`. Frozen GPU packets remain immutable. Primary owns PD9625984,NIXL loader/config8215196,production transfer inputs,actual small `frontier.main` integration and77-case fidelity.
+
+Add only lazy predictor delegates `get_nixl_transfer_coverage(**kwargs)` and `get_nixl_transfer_time_ms(**kwargs)`,loading `frontier.kv_cache_transfer.nixl_read_cost.NixlReadCost.from_file(self._config.nixl_read_profile)` once. Methods delegate to `get_coverage` and `get_time_ms`;missing explicit input raises `ValueError('Missing measured NIXL profile')`. Include the configured NIXL file in the same immutable bundle input-binding mechanism. Do not implement a second loader,config,transfer path or analytical fallback. Full native/profile admission remains separate.
+
 - Primary read-only gap inventory:`/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/d19_pipeline_preparation/commands_and_inputs.md`. Its earlier CPU-wait dependency is superseded by the explicit approval above;external native admission is not superseded.
 - First milestone:producer-shaped labelled CPU fixtures pass real trainer/cache/lookup and existing cost interface,with actual count targets,explicit modality identity,positive finite costs,missing-coverage errors and no native-admission claim.
 - Completion:source-integrated Step attention/typed FFN cost coverage,existing-chain bundle isolation/reuse,physical-owner ledger regressions and scoped baseline consistency;all production-input gaps reported honestly. Parent may continue CPU pipeline work independently of unresolved native quality.
+## [Original Request] Shared-interface integration and D21 steering
+
+The primary grants exclusive ownership of `frontier/profiling/step5/rows.py` and
+`frontier/attention/profiling_mapping.py` to close the notified producer/feature seams.
+Continue steps2–4; preserve WIP and frozen packets. Do not wait for primary edits there.
+
+Add only lazy `get_nixl_transfer_coverage(**kwargs)` and
+`get_nixl_transfer_time_ms(**kwargs)` delegates to the primary-owned
+`frontier.kv_cache_transfer.nixl_read_cost.NixlReadCost`; load the explicitly
+configured `nixl_read_profile` once. Missing input raises `ValueError("Missing measured NIXL profile")`.
+The primary owns config/loader and PD9625984/8215196 integration. Bind the supplied NIXL
+file through the same immutable bundle mechanism; no fallback, second loader or publisher.
+
+D21 prioritizes H80032: P16/D16, TP8/DP2/EP16 per role; H80064 is P1,
+H20032/H20064 P2. Shared128-request6144/1024 QPS1 workload and four10% gates are unchanged.
+Core compute remains hardware/topology-neutral. This child performs no GPU/auth/platform
+operations or77-case fidelity run. The parent owns actual-main/transfer integration.
+
+Supplied existing stage-boundary targets may use the same CPU trainer/cache/lookup.
+Absent actual durations/counts remain coverage errors; do not collect new profiling,
+introduce endpoint estimates or claim native qualification from fixtures.
