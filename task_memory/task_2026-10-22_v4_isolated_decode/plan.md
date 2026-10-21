@@ -6,6 +6,7 @@
 | 2026-10-22 | Created the isolated-reader implementation and CPU verification plan. |
 
 Dependency: A -> B -> C -> D; inventory audit is independent of B.
+R1 follow-up: R1 reproduce -> existing-layout acceptance binding -> focused GREEN/P6144 -> fix commit -> separate fixed-source strict77 -> full diff/archive.
 
 | Step | Scope | Acceptance |
 | --- | --- | --- |

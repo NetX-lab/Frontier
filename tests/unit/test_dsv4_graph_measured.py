@@ -414,6 +414,8 @@ def decode_measured(predictor, decode_tables, monkeypatch):
                       float_precision=precision)
     monkeypatch.setattr(deepseek_v4, "load_attention_dataframe",
         lambda path, model, tp, block, method, **kwargs: read(path, kwargs.get("float_precision")))
+    from frontier.profiling.common import runtime_identity
+    monkeypatch.setattr(runtime_identity, "file_sha256", lru_cache(maxsize=2)(runtime_identity.file_sha256))
     return p
 
 
@@ -431,7 +433,11 @@ def decode_layout(row):
         "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
         "max_num_batched_tokens", "max_num_seqs",
     } | {name for name in row.index if "_metadata." in name}
-    return {name: None if pd.isna(row[name]) else row[name] for name in columns}
+    accepted = json.loads((Path(__file__).parents[1] /
+        "fixtures/deepseek_v4_decode_inputs.json").read_text())
+    return {**{name: None if pd.isna(row[name]) else row[name] for name in columns},
+            **accepted["expected_identity"],
+            "input_file_sha256": accepted["input_file_sha256"][row.measurement_type]}
 
 
 @pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
@@ -518,6 +524,8 @@ def test_real_decode_cannot_promote_unqualified_cases(decode_measured, decode_ta
                 layout[column] = row[column]  # Explicit layout cannot override source phase/length.
         p._attention_input_file = str(tmp_path / "changed.csv")
         pd.DataFrame([row, row] if change == "duplicate" else [row]).to_csv(p._attention_input_file, index=False)
+        from frontier.profiling.common.runtime_identity import file_sha256
+        layout["input_file_sha256"] = file_sha256(p._attention_input_file)
     if change == "serving":
         with pytest.raises(DeepSeekV4CoverageError, match="auxiliary streams"):
             p._predict_dsv4_dummy_attention_time(batch, 2, ClusterType.MONOLITHIC,
@@ -526,3 +534,61 @@ def test_real_decode_cannot_promote_unqualified_cases(decode_measured, decode_ta
     else:
         with pytest.raises(ValueError if change == "missing_context" else DeepSeekV4CoverageError):
             read_isolated_scope(p, batch, 2, scope, attention_layout=layout)
+
+
+@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+def test_accepted_decode_contract_rejects_real_cold_table(decode_measured, decode_tables, method):
+    p = decode_measured
+    _, accepted = decode_tables[method]
+    row = accepted[(accepted.decode_kv_cache_sizes == "[6143]")
+                   & (accepted.global_layer_ids == "[2]")].iloc[0]
+    root = Path("/data/ycfeng/tmp/glm53_dsv4/v4_h800_q1_b36c2b9_results/Q1_6143_7166/"
+                "compute/h800/deepseek-ai/DeepSeek-V4-Flash")
+    p._attention_input_file = str(root / ("attention.csv" if method is MeasurementType.CUDA_EVENT
+                                        else "attention_kernel_only.csv"))
+    if not Path(p._attention_input_file).is_file():
+        pytest.skip("Historical cold q1 table is unavailable")
+    p._active_measurement_type = method
+    with pytest.raises(DeepSeekV4CoverageError, match="accepted.*provenance"):
+        read_isolated_scope(p, ongoing_batch(6143), 2, "dsv4_attention_layer"
+            if method is MeasurementType.CUDA_EVENT else "dsv4_sparse_attention",
+            attention_layout=decode_layout(row))
+
+
+@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+@pytest.mark.parametrize("change", ["missing_contract", "expected_source", "expected_fingerprint",
+    "expected_input", "candidate_source", "candidate_fingerprint", "candidate_model", "changed_timing"])
+def test_decode_acceptance_identity_is_independent_of_candidate(decode_measured, decode_tables, tmp_path, method, change):
+    from frontier.profiling.common.runtime_identity import file_sha256
+
+    p = decode_measured
+    path, table = decode_tables[method]
+    p._attention_input_file, p._active_measurement_type = str(path), method
+    row = table[(table.decode_kv_cache_sizes == "[6143]") & (table.global_layer_ids == "[2]")].iloc[0].copy()
+    layout = decode_layout(row)
+    if change == "missing_contract":
+        del layout["input_file_sha256"]
+    elif change.startswith("expected_"):
+        layout[{"expected_source": "source_revision", "expected_fingerprint": "runtime_fingerprint",
+                "expected_input": "input_file_sha256"}[change]] = "unaccepted"
+    else:
+        if change == "candidate_source":
+            identity = RuntimeIdentity(**{name: json.loads(row[name]) if name in (
+                "runtime_versions", "parallel_groups") else row[name] for name in (
+                "runtime_versions", "source_revision", "model_config_revision", "model_config_sha256",
+                "device_name", "device_capability", "schema_version", "quant_signature", "parallel_groups", "graph_mode")})
+            from dataclasses import replace
+            changed = replace(identity, source_revision="self-consistent-but-unaccepted").columns()
+            row["source_revision"], row["runtime_fingerprint"] = changed["source_revision"], changed["runtime_fingerprint"]
+        elif change == "changed_timing":
+            row["time_stats.dsv4_sparse_attention.median"] *= 10
+        else:
+            row["runtime_fingerprint" if change == "candidate_fingerprint" else "model_config_sha256"] = "unaccepted"
+        p._attention_input_file = str(tmp_path / "changed.csv")
+        pd.DataFrame([row]).to_csv(p._attention_input_file, index=False)
+        if change != "changed_timing":
+            # Synthetic input is explicitly bound; independent expected runtime
+            # still comes from the accepted fixture, not this candidate row.
+            layout["input_file_sha256"] = file_sha256(p._attention_input_file)
+    with pytest.raises(DeepSeekV4CoverageError):
+        read_isolated_scope(p, ongoing_batch(6143), 2, "dsv4_sparse_attention", attention_layout=layout)

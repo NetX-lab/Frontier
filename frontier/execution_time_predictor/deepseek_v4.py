@@ -585,7 +585,9 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     retained as such; this receipt does not assert TP8 or phase equivalence.
     Linear/MoE selection uses the existing typed readers and feature classifier.
     Attention requires an independently qualified complete flattened layout;
-    reduced metadata in that contract never asserts serving capacity.
+    decode additionally binds accepted input bytes and runtime identity in that
+    same explicit contract, never inferred from candidate rows. Reduced metadata
+    in that contract never asserts serving capacity.
     """
     import json
     import math
@@ -629,9 +631,22 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
             "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
             "max_num_batched_tokens", "max_num_seqs",
         } | {name for name in rows if "_metadata." in name}
+        provenance_columns = {"source_revision", "runtime_fingerprint", "model_config_sha256",
+                              "input_file_sha256"} if phase == "decode" else set()
+        layout_columns |= provenance_columns
         if attention_layout is None or set(attention_layout) != layout_columns:
             raise DeepSeekV4CoverageError("V4 attention requires a complete isolated layout contract")
-        rows = _select_rows(rows, attention_layout, "isolated attention layout")
+        if phase == "decode":
+            from frontier.profiling.common.runtime_identity import file_sha256
+
+            if (any(not isinstance(attention_layout[name], str) or not attention_layout[name]
+                    for name in provenance_columns)
+                    or file_sha256(path) != attention_layout["input_file_sha256"]):
+                raise DeepSeekV4CoverageError("V4 accepted input provenance does not match the measured table")
+            rows = _select_rows(rows, {name: attention_layout[name] for name in provenance_columns
+                                      if name != "input_file_sha256"}, "accepted input provenance")
+        rows = _select_rows(rows, {name: value for name, value in attention_layout.items()
+                                  if name not in provenance_columns}, "isolated attention layout")
         source = build_deepseek_v4_attention_workload(model, replica, batch, layer_id,
             cluster_type=predictor._cluster_type, execution_mode="eager",
             has_attention_metadata=True, prefix_caching=False,
