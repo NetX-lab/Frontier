@@ -264,11 +264,6 @@ def run(config):
         mode = config.get('mode', 'light')
         env, changed = instance_env(mode, plan['engine'], node, dict(os.environ),
                                     selected[role], observer=observer, role=role)
-        # Python's parent-process search path is not inherited by a new interpreter.
-        # The same deployed harness supplies both the extension and its imports.
-        harness_path = str(Path(config['harness_dir']))
-        env['PYTHONPATH'] = os.pathsep.join(filter(None, (harness_path, env.get('PYTHONPATH'))))
-        changed['PYTHONPATH'] = env['PYTHONPATH']
         if plan['engine'].get('worker_extension_cls') == 'native_full_structure.FullModelInventory':
             fields = ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
                       'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE')
