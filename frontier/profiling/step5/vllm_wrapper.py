@@ -57,6 +57,7 @@ class VllmStep5AttentionWrapper:
         self.graph_mode = graph_mode
         self.cudagraph_capture_sizes = tuple(cudagraph_capture_sizes)
         self.profile_index = 0
+        self.dummy_batches = {}
         if block_size not in (16, 32, 64, 128):
             raise ValueError("Native Step paged prefill requires block_size in 16, 32, 64, 128")
         self.trace_dir = Path(trace_dir)
@@ -205,6 +206,8 @@ class VllmStep5AttentionWrapper:
             tensor.copy_(value)
 
     def _metadata(self, cell, *, request_offset=0):
+        if cell.dummy_descriptor is not None:
+            return self._dummy_metadata(cell)
         if not cell.has_attention_metadata:
             return self.torch.zeros(1, dtype=self.torch.int64, device="cuda"), None, None, "none"
         from vllm.v1.attention.backend import CommonAttentionMetadata
@@ -233,16 +236,55 @@ class VllmStep5AttentionWrapper:
             metadata = self.builder.build(0, common, fast_build=False)
         return positions, slots, metadata, cell.graph_mode
 
+    def _dummy_metadata(self, cell):
+        """Use the same MRv2 helpers as execute_model after DP synchronization."""
+        from vllm.config import CUDAGraphMode
+        from vllm.models.step5.nvidia.model_state import Step5ModelState
+        from vllm.v1.kv_cache_interface import KVCacheConfig, KVCacheGroupSpec
+        from vllm.v1.worker.gpu.block_table import BlockTables
+        from vllm.v1.worker.gpu.input_batch import InputBatch, InputBuffers
+        from vllm.v1.worker.utils import AttentionGroup
+
+        torch, width = self.torch, cell.block_table_columns
+        if width not in self.dummy_batches:
+            device = torch.device("cuda")
+            budget = self.native.scheduler_config.max_num_batched_tokens
+            buffers = InputBuffers(self.max_batch_size, budget, device)
+            tables = BlockTables([self.block_size], self.max_batch_size, budget, [width], device)
+            name = self.layer.attn.layer_name
+            group = AttentionGroup(self.layer.attn.attn_backend, [name], self.cache_spec, 0,
+                                   metadata_builders=[self.builder])
+            # The native layer/cache is already bound. This config identifies
+            # its one isolated metadata group; it allocates no replacement KV.
+            cache = KVCacheConfig(self.raw_cache.numel() // self.cache_spec.page_size_bytes,
+                                  [], [KVCacheGroupSpec([name], self.cache_spec)])
+            state = Step5ModelState(self.native, self.layer, None, device)
+            self.dummy_batches[width] = buffers, tables, state, [[group]], cache
+        buffers, tables, state, groups, cache = self.dummy_batches[width]
+        descriptor = cell.dummy_descriptor
+        batch = InputBatch.make_dummy(cell.batch_size, descriptor.num_tokens, buffers,
+                                     max_query_len=descriptor.max_query_len, is_padding=True)
+        # These helpers zero persistent block tables and fill the entire slots
+        # buffer with PAD_SLOT_ID. A nonzero caller-owned history is never used.
+        blocks = tables.get_dummy_block_tables(batch.num_reqs)
+        slots = tables.get_dummy_slot_mappings(batch.num_tokens)
+        mode = CUDAGraphMode[descriptor.graph_mode.upper()]
+        with self._set_current(self.native):
+            metadata = state.prepare_attn(batch, mode, blocks, slots, groups, cache,
+                                          for_capture=descriptor.graph_mode == "full")
+        return batch.positions, slots[0], metadata[self.layer.attn.layer_name], cell.graph_mode, batch.is_padding
+
     def _forward(self, hidden, prepared, *, runtime_mode=None, layer=None):
         from vllm.forward_context import BatchDescriptor, set_forward_context
         from vllm.config import CUDAGraphMode
 
-        positions, slots, metadata, graph_mode = prepared
+        positions, slots, metadata, graph_mode, *padding = prepared
         graph_mode = runtime_mode if runtime_mode is not None else graph_mode
         name = self.layer.attn.layer_name
         with self._set_current(self.native), set_forward_context(
                 {name: metadata} if metadata is not None else None,
                 self.native, num_tokens=len(hidden), slot_mapping={name: slots} if slots is not None else None,
+                is_padding=padding[0] if padding else None,
                 cudagraph_runtime_mode=CUDAGraphMode[graph_mode.upper()],
                 batch_descriptor=BatchDescriptor(num_tokens=len(hidden))):
             return (self.layer if layer is None else layer)(positions, hidden)
@@ -390,6 +432,8 @@ class VllmStep5AttentionWrapper:
             raise ValueError("Profile cell must match the constructed layer and graph policy")
         if cell.batch_size > self.max_batch_size:
             raise ValueError("Profile batch exceeds the configured request capacity")
+        if cell.dummy_descriptor is not None and cell.num_tokens > self.native.scheduler_config.max_num_batched_tokens:
+            raise ValueError("MRv2 synchronized descriptor exceeds the native token budget")
         cell.workload(self.config, block_size=self.block_size, max_model_len=self.max_model_len)
         if self.layer.use_dsa_backend and any(
                 context % self.config.sparse_config["region_block_size"] for context in cell.context_lens):
@@ -433,6 +477,14 @@ class VllmStep5AttentionWrapper:
             if not cell.has_attention_metadata:
                 for actual_state, reference in zip(expected_state, initial):
                     torch.testing.assert_close(actual_state, reference, rtol=0, atol=0)
+            if cell.dummy_descriptor is not None:
+                torch.testing.assert_close(expected_state[0], initial[0], rtol=0, atol=0)
+                if self.layer.sparse_summary_cache is not None:
+                    # Negative slots intentionally update distinct CSA scratch
+                    # pages. Only live summaries must remain unchanged.
+                    pages = self.layer.sparse_summary_cache._cache.pages
+                    for actual_state, reference in zip(expected_state[1:6], initial[1:6]):
+                        torch.testing.assert_close(actual_state[:pages], reference[:pages], rtol=0, atol=0)
             if prefix:
                 full_lens = cell.sequence_lens
                 full_cell = Step5ProfileInput(cell.global_layer_id, full_lens,
@@ -524,7 +576,8 @@ class VllmStep5AttentionWrapper:
                     "native_max_num_seqs": self.native.scheduler_config.max_num_seqs,
                     "native_max_num_batched_tokens": self.native.scheduler_config.max_num_batched_tokens,
                     "native_breakable_cudagraph": os.environ["VLLM_USE_BREAKABLE_CUDAGRAPH"],
-                    "graph_dispatch_basis": ("independent_eager_profile" if cell.graph_mode == "none"
+                    "graph_dispatch_basis": ("explicit_mrv2_post_dp_sync_descriptor" if cell.dummy_descriptor else
+                                             "independent_eager_profile" if cell.graph_mode == "none"
                                              else "native_dispatch"),
                     "prefix_continuation_validation": "PASS" if prefix else "not_applicable",
                     "active_operators": json.dumps(sorted(active)),

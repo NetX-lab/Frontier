@@ -5,8 +5,24 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Define producer-first implementation,existing consumer compatibility and bounded P0 handoff. |
+| 2026-10-21 | Parent completes MRv2 source/CPU correction and immutable-stage audit. |
 
 Dependency:A -> B -> C -> D. No delegation/platform operations.
+
+## Current MRv2 correction follow-up
+
+Initial stage01 serving binding is superseded;both packages are NOT FOR SUBMISSION. Historical CPU/seal results below are not proof of the corrected serving path.
+
+Dependency:E -> F -> G -> H. No GPU or delegation. Stop generic test expansion after affected checks settle this fix.
+
+| Step | Status | Deliverable | Acceptance |
+| --- | --- | --- | --- |
+| E | completed | Actual MRv2 RED/source binding | Locked worker→_dummy_run→execute_model CPU path reaches metadata after synchronized sizing;initial P0 grid fails the serving metadata assertion. |
+| F | completed | Native helper/cost identity correction | Explicit descriptor input;MRv2 preparation,Step state/builder,FULL restage,negative slots,padding and live-vs-scratch semantics;no no-metadata fallback or core edits. Initial7 source checks PASS. |
+| G | completed | Affected CPU regression | Parent465PASS;ordinary FULL/PIECEWISE and D22 gates unchanged. |
+| H | completed | Corrected records/immutable-stage handoff | Old-stage3415/3415 hashes per role and17 native pins match;report/handoff identify the remaining descriptor and consumer gaps. No invented fresh stage. |
+
+## Historical initial phase (serving-idle conclusion superseded)
 
 | Step | Status | Deliverable | Acceptance evidence |
 | --- | --- | --- | --- |

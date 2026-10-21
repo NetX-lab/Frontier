@@ -485,7 +485,7 @@ def test_main_separates_native_graph_policies_and_writes_complete_summary(tmp_pa
     assert set(fake_native_wrapper) == {(0, "none"), (0, "full"), (3, "none"), (3, "full")}
 
 
-def test_main_writes_request_free_identity_and_independent_role_output(tmp_path, fake_native_wrapper):
+def test_main_writes_isolated_no_metadata_identity_and_independent_role_output(tmp_path, fake_native_wrapper):
     import pandas as pd
     from frontier.profiling.step5.main import main
 
@@ -503,6 +503,7 @@ def test_main_writes_request_free_identity_and_independent_role_output(tmp_path,
         assert frame.graph_mode.tolist() == ["none"]
         assert frame.measurement_role.tolist() == [role]
         assert frame.block_table_columns.tolist() == [0]
+        assert frame.native_workload.tolist() == ["isolated_no_metadata"]
 
 
 def test_failed_csv_write_is_not_a_completed_row(tmp_path, fake_native_wrapper, monkeypatch):

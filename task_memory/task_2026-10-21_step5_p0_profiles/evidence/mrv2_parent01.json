@@ -1,0 +1,33 @@
+{
+  "status": "SOURCE_AND_PARENT_CPU_PASS_NATIVE_UNVERIFIED",
+  "tests": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "465",
+    "time": "19.165",
+    "timestamp": "2026-10-21T22:49:31.545020+08:00",
+    "hostname": "kun-workspace-vgen2"
+  },
+  "test_log_sha256": "cbb32ad3d8302a8f6e63cce4ba8b1d38aa430a0f2d4ed6072e10a15827eda5fa",
+  "native_source_hashes_pass": 17,
+  "old_stages": {
+    "prefill": {
+      "payload_hashes_pass": 3415,
+      "manifest_sha256": "82dfc1146321e92a8fffdffc41e27e2572d5d5993bf95c0d5be44a4cf1c0496c",
+      "inventory_exact": true,
+      "submission_allowed": false
+    },
+    "decode": {
+      "payload_hashes_pass": 3415,
+      "manifest_sha256": "f09b6fc0436889042dabb6fb0d322b9a9d9c17b9b4860f425342b8e9a50a5ca5",
+      "inventory_exact": true,
+      "submission_allowed": false
+    }
+  },
+  "D22_timing_replay_scopes": "BYTE_IDENTICAL",
+  "unchanged_judge_and_collection_methods": "AST_IDENTICAL",
+  "new_stage_created": false,
+  "dummy_census_available": false
+}

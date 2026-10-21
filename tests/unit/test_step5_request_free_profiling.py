@@ -1,4 +1,4 @@
-"""Native producer seams for the one-slot request-free DP workload."""
+"""Isolated no-metadata seams; these do not establish MRv2 serving idle coverage."""
 
 from contextlib import contextmanager, nullcontext
 import json
@@ -18,6 +18,7 @@ def config():
 
 
 def test_request_free_native_forward_receives_no_attention_metadata_or_slot_mapping(monkeypatch):
+    """An isolated skip-attention seam, not an MRv2 serving DP dummy forward."""
     import torch
 
     calls = []
@@ -90,7 +91,7 @@ def test_explicit_request_free_inputs_do_not_inherit_decode_full_graph(tmp_path)
 
 
 @pytest.mark.parametrize("layer", [0, 3])
-def test_request_free_rows_are_accepted_by_unchanged_consumer_not_regular_decode(tmp_path, config, layer):
+def test_isolated_no_metadata_rows_do_not_claim_serving_idle_coverage(tmp_path, config, layer):
     from frontier.attention.step5 import describe_step5_layer
     from frontier.execution_time_predictor.step5 import load_step5_attention_rows, step5_row_features
     from frontier.profiling.step5.rows import OPERATOR_NAMES, build_row, rows_to_dataframe
@@ -112,10 +113,12 @@ def test_request_free_rows_are_accepted_by_unchanged_consumer_not_regular_decode
     frame.to_csv(path, index=False)
     replica = SimpleNamespace(model_config=config, device="h800", attn_tensor_parallel_size=8)
     scheduler = SimpleNamespace(block_size=16, max_model_len=7168)
-    loaded = load_step5_attention_rows(path, replica, scheduler, "KERNEL_ONLY")
-    assert len(loaded) == 1 and loaded.iloc[0].has_attention_metadata == 0
-    assert loaded.iloc[0]["time_stats.step5_layer_e2e.kernel_count"] == len(active)
-    assert loaded.iloc[0]["time_stats.step5_layer_e2e.mean"] > 0
+    assert row["native_workload"] == "isolated_no_metadata"
+    assert frame.iloc[0].has_attention_metadata == 0
+    assert frame.iloc[0]["time_stats.step5_layer_e2e.kernel_count"] == len(active)
+    assert frame.iloc[0]["time_stats.step5_layer_e2e.mean"] > 0
+    with pytest.raises(ValueError, match="physical_scope"):
+        load_step5_attention_rows(path, replica, scheduler, "KERNEL_ONLY")
     regular = build_row(config, Step5ProfileInput(layer, (1,), (0,), "decode"), tp=8,
         block_size=16, max_model_len=7168, runtime_signature="cpu_fixture", device="h800", time_stats=stats,
         evidence={"attention_backend": "native_cpu_boundary"})
@@ -225,7 +228,7 @@ def test_p0_packages_are_independent_h800_role_measurements(tmp_path, config):
     from pathlib import Path
     from frontier.profiling.step5.job import describe_p0_profiles
 
-    for role, rows, gpu_rows in (("PREFILL", 4, 4), ("DECODE", 20, 4)):
+    for role, rows, gpu_rows in (("PREFILL", 2, 2), ("DECODE", 18, 2)):
         manifest = describe_p0_profiles(tmp_path / role, "p0_" + role.lower(), role=role)
         assert (manifest["gpu_tag"], manifest["charged_group"], manifest["gpus"], manifest["preemptible"]) == (
             "H800", "codesign", 1, False)
@@ -238,7 +241,8 @@ def test_p0_packages_are_independent_h800_role_measurements(tmp_path, config):
         cells = read_profile_inputs(Path(manifest["attention_arguments"][
             manifest["attention_arguments"].index("--input-file") + 1]),
             cudagraph_capture_sizes=manifest["measurement_plan"]["cudagraph_capture_sizes"])
-        assert sum(not c.has_attention_metadata for c in cells) == 2
+        assert all(c.has_attention_metadata and c.dummy_descriptor is None for c in cells)
+        assert not manifest["measurement_plan"]["serving_dummy_coverage"]
         for cell in cells:
             workload = cell.workload(config, block_size=16, max_model_len=7168)
             assert workload.block_table_columns == (448 if cell.has_attention_metadata else 0)

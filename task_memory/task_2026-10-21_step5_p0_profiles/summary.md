@@ -5,10 +5,23 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Archive committed native producer support,validated independent P0 role packages and parent-only native handoff. |
+| 2026-10-21 | Correct serving binding to MRv2 and record parent465-test verification;stage01 remains held. |
 
 ## Overview
 
-Source commit `a7551a3a26ec84c66af9a88d282019f47e5ab52b` adds the missing native one-slot request-free idle-DP producer path and a bounded independently callable P0 PREFILL/DECODE measurement package. It does not substitute ordinary decode,history or zero work. Native metadata and slot mapping are None;source-defined projection/norm/zero-fill scopes remain positive;cache mutation is rejected. No predictor/simulator/admission or linear/MoE protocol source was changed. Existing D22 timing/replay/scopes modules are byte-identical to starting bc8ae27.
+The corrected producer consumes explicit MRv2 post-DP-sync descriptors and uses
+native input,block-table,Step model-state and attention-builder helpers. It
+preserves metadata,FULL restaging,invalid slots and padding. Live KV/summary
+changes fail validation;native scratch updates are allowed. The original
+`a7551a3` no-metadata path remains an isolated capability with a separate cost
+identity;its initial serving-idle attribution is withdrawn. No consumer or D22
+protocol change is included in this correction.
+
+Parent verification passed465 affected checks,17 native source hashes and all3415
+payload hashes for each old stage. Both old stage01 packages remain **not for
+submission**. No corrected stage exists until actual dummy descriptors are
+collected and compatible consumer integration is complete. Current evidence:
+`test_report_2026-10-21_mrv2_producer.md` and `evidence/mrv2_parent01.json`.
 
 ## Deliverables
 
@@ -18,7 +31,7 @@ Source commit `a7551a3a26ec84c66af9a88d282019f47e5ab52b` adds the missing native
 - Focused CPU tests and existing local preflight/judge wiring;only the old boundary CPU description matcher/default-field expectation was updated for the expanded input type. No boundary native experiment/retry occurred.
 - `task_memory/task_2026-10-21_step5_p0_profiles/{requirements,plan,progress,handoff,test_report_2026-10-21_p0_profiles}.md` and `evidence/`:requests,checks,exact commands,baseline comparison,manifests,source/hash audit and limits.
 
-## Observed verification
+## Historical initial verification (serving attribution superseded)
 
 - Actual native metadata/forward seam RED→GREEN,cache-mutation rejection,physical448-column/page-offset/8192-budget checks and unchanged consumer loader checks.
 - 448 final focused tests PASS. Latest per-ID combined coverage998PASS/4 starting-commit failures/1002total;all980 starting IDs retained,22 added,no new failure. The4 old execution-disabled assertions are independently reproduced from bc8ae27. One Git-less archive-only baseline limitation is explicitly recorded.
@@ -29,4 +42,10 @@ Source commit `a7551a3a26ec84c66af9a88d282019f47e5ab52b` adds the missing native
 
 ## Open work and acceptance limits
 
-Parent alone submits and monitors using `handoff.md`. New H800 native timings remain UNVERIFIED;linear quality remains unqualified. Prepared attention layers0/3 are not all92 identities;decode widths1/2 are not a reached-width census;DSA partial-summary contexts,graph padding,mixed zero/nonzero history and actual routing distributions are not qualified or substituted. Separate first input norm/input cast/final residual,embedding/sampler,host/launch/gap and communication owners still need compatible measured inputs. This is executable producer support and a bounded first native package,not full-profile admission,32-GPU serving-capacity,canonical/G3 or <=10% accuracy qualification.
+Stage01 must not be submitted. Parent must first collect actual MRv2 dummy
+descriptors,connect their distinct consumer identity and seal compatible new
+inputs. New H800 timing and linear quality remain unverified. Prepared layers0/3
+do not cover all92 identities;decode widths1/2 are not a reached-width census.
+DSA partial-summary contexts,graph padding,mixed histories,actual routing and
+separate norm/host/communication owners remain open. This correction establishes
+source/CPU producer capability,not native or four-metric acceptance.

@@ -1,10 +1,24 @@
 # D21-P0-PROFILES progress
 
+**Current status:** MRv2 producer correction is source/CPU verified by the parent. Both immutable stage01 packages remain NOT FOR SUBMISSION. Native descriptor collection and compatible consumer admission remain open. Initial no-metadata serving-idle conclusion is withdrawn;historical CPU/seal facts below are not reapplied as serving proof.
+
 ## Modification History
 
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Inspect source/native evidence and start executable no-metadata capability. |
+| 2026-10-21 | Resume actual MRv2 binding;withdraw stage01 submission and serving-idle claim. |
+| 2026-10-21 | Parent takes over after advisor usage limit;465 checks and source/stage integrity pass. |
+
+## MRv2 correction follow-up
+
+- completed E:locked `execute_dummy_batch`→`_dummy_run`→`execute_model` CPU path dispatches local1 token then consumes an8-token synchronized fixture descriptor,builds metadata with `for_capture=True` and excludes dummy from ordinary CG statistics. Old no-metadata grid yields intended RED in0.55s;raw `/data/ycfeng/tmp/step5_p0_profiles_20261021/mrv2_red01.xml` preserved. This8-token case is a source fixture,not observed P0 census.
+- completed F initial source checks:7PASS in3.17s. Real InputBatch/BlockTables/Step5ModelState/DefaultModelState/metadata routing execute on CPU for FULL,PIECEWISE and eager fixtures. FULL max_seq_len7168,persistent zero-table restage,entire PAD_SLOT_ID buffer,padding and request indices checked. Actual CSA CPU code writes scratch but not live pages. Producer follows these helpers and distinct MRv2/isolated identities;no consumer or D22 protocol change.
+- completed G:parent independently reran all nine affected modules:465PASS,0FAIL/ERROR/SKIP,20.07s pytest wall time. Source-bound native forward-context and live-vs-scratch fault controls are included. Raw `/data/ycfeng/tmp/step5_p0_profiles_20261021/mrv2_parent01.{log,xml}`;selected receipt `evidence/mrv2_parent01.json`. No GPU/platform/auth/cloud/SSH/network operation.
+- completed H verification:parent rehashed17 native source files and every old-stage payload:3415/3415 per role,exact inventories and both manifests unchanged. D22 timing/replay/scopes remain byte-identical;judge/collection method ASTs remain identical. Corrected report/handoff are recorded for the scoped commit. No fresh stage:actual dummy descriptor census is missing and generation03 ordinary statistics cannot supply it.
+- pending native/consumer work:record actual post-DP-sync descriptors through the existing diagnostic observer,then bind their distinct physical identity to the consumer and collect compatible H800 profiles. The no-metadata isolated path and the MRv2 padded-slot path are separate;neither is silently admitted as live attention.
+
+## Historical initial execution (serving-idle conclusion superseded)
 
 - completed: switched session to clean bc8ae27;read AGENTS,D20–D22,ticket10,measured handoff,actual-main records and source scopes.
 - observed: consumer requires explicit one-slot eager no-metadata identity,zero block-table/score extent and distinct fusion; producer currently always builds metadata and emits1. Ordinary serving consumer uses full448 block-table columns; producer defaults to live width. Eager aggregate trace counts are not yet exported as per-replay root counts required by the consumer.

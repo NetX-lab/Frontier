@@ -17,10 +17,14 @@
     "PREFILL": {"input_file": "frontier/profiling/step5/p0_prefill_inputs.json", "linear_tokens": [1, 2, 6128, 6129, 6144, 6145], "moe_tokens": [1, 2, 11, 6128, 6129, 6144, 6145]},
     "DECODE": {"input_file": "frontier/profiling/step5/p0_decode_inputs.json", "linear_tokens": [1, 2, 3, 4, 16, 17, 32], "moe_tokens": [1, 2, 3, 4, 11, 16, 17, 32]}
   },
-  "coverage_status": "PREPARED_BOUNDED_INDEPENDENT_PRODUCERS_NOT_COMPLETE_ADMISSION",
+  "coverage_status": "PREPARED_LIVE_ATTENTION_ONLY_MRV2_DUMMY_CENSUS_REQUIRED",
+  "native_runner": "MRv2",
+  "serving_dummy_coverage": false,
   "coverage_limits": [
     "Prepared attention layers 0 and 3 are representatives, not coverage for the other 90 global layers required by exact consumer lookup",
-    "Measured request-free width is exactly one physical slot; no wider no-metadata workload is native-proven or accepted by the consumer",
+    "Stage01 is not for submission: isolated no-metadata cells do not measure MRv2 serving DP dummy forwards",
+    "MRv2 dummy requires an explicit post-DP-sync descriptor and evidence reference; actual dummy widths are unmeasured and not inferred from ordinary runtime statistics",
+    "Isolated no-metadata and MRv2 padding-slot rows have distinct physical scopes rejected by the unchanged consumer until the parent coordinates the serving cost contract",
     "Live decode widths 1 and 2 and equal contexts are prepared measurement points, not observed P0 width distributions",
     "Other exact widths, heterogenous contexts, graph padding and all reached decode context arrays require a native census and explicit compatible inputs",
     "Repeated DSA partial-region contexts remain unsupported; these are not rounded to the aligned prepared contexts",

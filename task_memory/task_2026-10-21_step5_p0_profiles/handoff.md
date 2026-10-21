@@ -5,8 +5,21 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Prepare independent P0 role commands, bounded coverage, native budget and admission limits. |
+| 2026-10-21 | Supersede initial serving binding with parent-verified MRv2 producer support. |
 
-## Outcome and ownership
+## Submission hold: stage01 is not for submission
+
+The two immutable `prefill_stage01`/`decode_stage01` packages are **NOT FOR PARENT SUBMISSION**. Their no-metadata cells do not establish serving idle-DP coverage: the locked P0 uses MRv2,not MRv1. MRv2 synchronizes the descriptor,constructs descriptor-sized dummy input and builds real attention metadata. The earlier submission commands below are historical only and must not be executed. No stage01 file is changed. Revised producer binding is source/CPU verified;an actual MRv2 dummy descriptor census is still missing.
+
+## Current corrected delivery
+
+- `Step5ProfileInput.from_mrv2_dummy` consumes an explicit synchronized descriptor,with an evidence reference and physical table extent. It never infers physical width from the local `_dummy_run(1)` call.
+- The producer uses native MRv2 `InputBatch`, `BlockTables`, `Step5ModelState` and attention builders. FULL metadata is restaged from zero tables;slots are `PAD_SLOT_ID`;physical rows retain `is_padding`;CSA scratch changes are permitted while live KV/summary bytes must remain unchanged.
+- `mrv2_dp_dummy`, `isolated_no_metadata` and ordinary live attention have distinct physical identities. The unchanged consumer rejects the first two scopes pending its own explicit integration. Current live grids retain ordinary FULL/PIECEWISE cells and remove the incorrect serving-idle cells;they contain no invented dummy widths.
+- Parent verification:465PASS,17 native source hashes match,3415 old-stage hashes and exact inventory match for each role. D22 timing/replay/scopes are byte-identical;existing judge/collection methods are AST-identical. See [parent report](test_report_2026-10-21_mrv2_producer.md) and `evidence/mrv2_parent01.json`.
+- No corrected stage or native measurement is delivered here. Next:record actual dummy descriptors with the native observer,integrate the compatible consumer identity,then seal the exact measurement inputs. This is source/CPU acceptance,not native timing or four-metric acceptance.
+
+## Historical initial outcome and ownership (serving binding superseded)
 
 Missing request-free producer support is implemented in the existing input/metadata/forward/profile path. It constructs no attention metadata or slot mapping, performs no prefix preparation, requires unchanged cache state and records the existing source-defined positive native scopes. Actual candidate/reference sampling remains the approved D22 independent protocol. No simulator, predictor, typed admission or linear/MoE protocol changed.
 
