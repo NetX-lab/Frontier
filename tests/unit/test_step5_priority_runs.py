@@ -4,6 +4,10 @@ import json
 from pathlib import Path
 import copy
 import shutil
+import os
+import subprocess
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -11,6 +15,46 @@ from tests.integration.step5_pd import build_stage, canonical_stage, formal_rele
 from tests.unit.test_step5_native_pd import stage_inputs
 from tests.unit.test_step5_client_metrics import step_native, synthetic_step_check
 from tests.unit.test_canonical_client_metrics import native, simulator, TRACE
+
+
+def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch):
+    inputs = stage_inputs(tmp_path)
+    model_path = inputs["model_dir"] / "config.json"
+    model = json.loads(model_path.read_text())
+    model["quantization_config"] = {"quant_method": "fp8"}
+    model_path.write_text(json.dumps(model))
+    definition = json.loads((canonical_stage.REPO / "tests/integration/step5_pd/canonical_run_h200.json").read_text())
+    definition["probe_helpers"] = inputs["definition"]["probe_helpers"]
+    definition_path = tmp_path / "definition.json"
+    definition_path.write_text(json.dumps(definition))
+    runtime = tmp_path / "runtime"
+    for name in canonical_stage.RUNTIME_SOURCES:
+        path = runtime / "vllm" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# CPU source binding fixture\n")
+    digest = build_stage.sha256(runtime / "vllm/config/scheduler.py")
+    inputs["image_source_hashes"].write_text(
+        f"{digest}  /usr/local/lib/python3.12/dist-packages/vllm/config/scheduler.py\n")
+    launcher = tmp_path / "launcher_scope.py"
+    launcher.write_text("# Not invoked by the dry-run\n")
+    monkeypatch.setattr(build_stage, "committed_source", lambda: {"commit": "cpu-fixture"})
+    stage = tmp_path / "workspace/stage"
+    canonical_stage.build(SimpleNamespace(
+        run_definition=definition_path, case="h200_32", kind="qualification",
+        workspace=stage.parent, stage_dir=stage,
+        output_dir=Path("/mnt/codesign-exp/ycfeng/d21_test"),
+        runtime_source_root=runtime, launcher_scope=launcher, job_tag="fixture", formal_inputs=None,
+        **{key: value for key, value in inputs.items() if key != "definition"}))
+    installed = tmp_path / "installed/tests"
+    installed.mkdir(parents=True)
+    (installed / "__init__.py").write_text("# An unrelated installed tests package\n")
+    result = subprocess.run([
+        sys.executable, "-B", str(stage / "tests/integration/step5_pd/submit_native_pd.py"),
+        "--config", str(stage / "config.json"), "--launcher-scope", str(stage / "launcher_scope.py"),
+        "--dry-run"], cwd=tmp_path, env={**os.environ, "PYTHONPATH": str(installed.parent)},
+        capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["resource_constructor_arguments"]["positive_tags"] == ["H200"]
 
 
 @pytest.mark.parametrize("case_id", canonical_stage.CASES)

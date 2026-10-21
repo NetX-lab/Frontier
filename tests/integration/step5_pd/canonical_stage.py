@@ -149,6 +149,8 @@ def build(args) -> dict:
         target = stage / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO / relative, target)
+    # A namespace package loses to an unrelated installed regular tests package.
+    (stage / "tests/__init__.py").write_text('"""Staged calibration tools."""\n')
     if args.formal_inputs:
         config["formal_inputs"] = json.loads(args.formal_inputs.read_text())
         if "accuracy" in config["formal_inputs"]:
