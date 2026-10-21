@@ -23,6 +23,7 @@ from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
+from frontier.config import global_vars
 from frontier.entities.batch import Batch, DummyForwardBatch, KVCacheBlockZeroing, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
@@ -387,10 +388,15 @@ class VLLMv1EngineReplicaScheduler(
         # The scheduler frontier already counts this batch's tokens. A prompt
         # chunk scheduled while the request's previous chunk is in flight
         # attends to tokens the Request counts only when that chunk ends.
+        # NIXL D recomputes the last prompt token; Request progress counts
+        # accepted outputs, one ahead of that computed-KV frontier.
         num_context_tokens = [
-            self._get_settled_kv_progress(request)
-            if request.is_decoding
-            else self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
+            self._get_scheduler_num_computed_tokens(request) - scheduled_tokens
+            if not request.is_decoding or (
+                self._cluster_type == ClusterType.DECODE
+                and global_vars.KV_CONNECTOR == "nixl"
+            )
+            else self._get_settled_kv_progress(request)
             for request, scheduled_tokens in zip(requests, num_tokens)
         ]
         batch = super()._create_batch(requests, num_tokens, num_context_tokens)
