@@ -114,7 +114,7 @@
 
 ## Current D21/D23/D24/D25 execution contract — 2026-10-22
 
-**D25 completed:** both native H80032/64 three-repeat fixed workloads, p90/throughput and TTFT analysis are archived in `../task_2026-10-22_step5_full_workload/summary.md`. D23 core integration/review and clean77/77 legacy comparison now pass; continue fresh actual-main acceptance. The next D24/G3 diagnostic remains a separate pending native step. Native performance data alone do not release calibration prerequisites.
+**D25 completed:** both native H80032/64 three-repeat fixed workloads, p90/throughput and TTFT analysis are archived in `../task_2026-10-22_step5_full_workload/summary.md`. D23 core integration/review and clean77/77 legacy comparison pass. Actual04 revealed a measured-root metrics projection blocker: repair and verify that existing path, then rerun full actual-main with fixture02 and unchanged bounds. The next D24/G3 diagnostic remains a separate pending native step. Native performance data alone do not release calibration prerequisites.
 
 Authority: D21/D23/D24 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. Implementation continues P0-first; native/profile/predictive acceptance is unchanged.
 

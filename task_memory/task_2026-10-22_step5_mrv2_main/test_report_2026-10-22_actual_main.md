@@ -7,6 +7,7 @@
 | 2026-10-22 | Retain successful fit and record actual CLI prerequisite failures. |
 | 2026-10-23 | Record actual layer3 failure and exact compute refresh. |
 | 2026-10-22 | Record paired actual04 core rejection and demonstrated blocker. |
+| 2026-10-22 | Primary passes8 fixture checks, verifies merged bytes and reproduces the root ledger failure. |
 
 ## Environment and scope
 
@@ -46,6 +47,21 @@ Exact CSV/count/kind receipts:`/data/ycfeng/tmp/d23_main_fixture02_{rows,kernel_
 Local dependency gitlink:`d28fe917370c2d55230c3ea226e5660785b44aca`.
 Local htsim binary SHA256:
 `812fb3d86489d76a4d50e2f0ea936bdb6d25dfe740c06050a0d0c1a1f9f4631e`.
+
+## Primary fixture acceptance and core reproduction
+
+Primary command, cwd=`/data/ycfeng/Frontier/.worktrees/step5-mrv2-main`:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/integration/test_step5_measured_main.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_main_parent_fixture01.xml > /data/ycfeng/tmp/d23_main_parent_fixture01.log 2>&1
+```
+
+Observed8PASS/6.45s, exit0, Python3.10.6. Primary merged at `8e1d0a1` and
+byte-compared all three integration files to `e54f9457`; all match.
+Primary reran the exact minimal command from [core_blocker.md](core_blocker.md)
+in `step5-preview`, obtaining exit1 and the identical KeyError at4504;
+`/data/ycfeng/tmp/d23_ledger_parent_red01.log` retains the stack. Thus fixture
+acceptance is PASS while actual-main acceptance remains FAILED/BLOCKED.
 
 ## Actual subprocess acceptance
 

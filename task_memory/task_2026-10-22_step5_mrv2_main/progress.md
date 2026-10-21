@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Primary reverified8 fixture tests, merged8e1d0a1 and reproduced the root ledger failure; core repair delegated. |
 | 2026-10-22 | Begin exact fixture generation. |
 | 2026-10-22 | Correct exact compute coverage; scoped8 PASS; actual04 pending. |
 | 2026-10-22 | Actual04 paired core ledger failure; archive exact blocker without bypass. |
@@ -258,4 +259,37 @@ Checkpoint after verified compute correction:
   Only three authorized integration files changed from suppliedc9e9388f.
   Committed runner/fixture SHA256 still match actual04; exact proof in
   `committed_source_receipt.json`. Scoped8 PASS and paired demonstrated blocker
-  preserved. Archive selected receipts now; full actual acceptance staysBLOCKED.
+   preserved. Archive selected receipts now; full actual acceptance staysBLOCKED.
+
+## Primary integration and core repair
+
+- completed: primary reviewed the three integration files and independently ran
+  the8 scoped tests:8PASS/6.45s. Log/XML:
+  `/data/ycfeng/tmp/d23_main_parent_fixture01.{log,xml}`.
+- completed: merged the integration/source records at `8e1d0a1`; all three
+  integration files are byte-identical to `e54f9457`. The only production-source
+  difference from actual04 is the verified fixed graph-capacity binding.
+- confirmed blocker: primary ran the exact minimal root/Stage repro in
+  `core_blocker.md` on the integration tree, obtaining the same
+  `KeyError: 'step5_layer_e2e'` at metrics_store.py4504. Log:
+  `/data/ycfeng/tmp/d23_ledger_parent_red01.log`.
+- in-progress: `D23-ROOT-METRICS`, session
+  `ses_e9f9fd0bdffeZH9Q2Ux5NbCYko`, owns the existing metrics/trace projection
+  repair and once-only root/count/evidence regression. Mixed-precision warning
+  investigation is independent; no timing/precision substitution is authorized.
+- pending: after parent verification/merge, fast-forward the clean existing
+  `step5-mrv2-main` worktree to accepted source and keep it unchanged during
+  both actual subprocesses. Reuse fixture02/cache and the built pinned
+  collective-sim dependency. Keep2400s bounds and the full acceptance criteria;
+  preserve all actual04 evidence in place.
+- completed warning diagnosis: source audit plus primary factor-injection
+  control confirm generic0.5 factors do not alter this typed Step path.
+  Layer3/88 remain122.9/184.35ms, count7, FP8/BF16, exactly equal to the saved
+  source; legacy positive control10ms->5ms works. This is a CPU lookup result,
+  not a completed actual-run measurement. See `quantization_warning.md` and
+  `precision_factor_receipt.json`; no warning suppression or source edit.
+- completed local prerequisite check: the existing main worktree imports
+  `collective_sim_core.predictor.predict_collective_time`; collective-sim is
+  pinned atd28fe917 and executable `sim/datacenter/htsim_ndp` retains SHA256
+  `812fb3d86489d76a4d50e2f0ea936bdb6d25dfe740c06050a0d0c1a1f9f4631e`.
+  No dependency rebuild, new fit or new actual CLI was started during diagnosis.

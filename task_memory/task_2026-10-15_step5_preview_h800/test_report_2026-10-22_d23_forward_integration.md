@@ -74,12 +74,20 @@ hashes: [d23_forward_fidelity.json](d23_forward_fidelity.json).
 Full raw artifacts remain at the output root above. This passes the required
 legacy-fidelity check; full MRv2 CLI and native accuracy are independent.
 
-## Full CLI: in progress
+## Full CLI: FAILED/BLOCKED at measured-root metrics projection
 
-The owner reuses already-fitted fixture02 and existing caches in
-`step5-mrv2-main`. No duplicate fit or old isolated-shape run was started.
-Offline/online completion, actual tail/read/release evidence and final metrics
-remain unverified under the fresh MRv2 input contract.
+Actual04 offline/online both exit1 without timeout after1032.662/1032.432s,
+with `KeyError: 'step5_layer_e2e'` during P-stage ledger projection. Neither
+reached D scheduler records; full output, READ/release and final metrics remain
+unverified. The primary reproduced the same failure with the minimal root/Stage
+command and independently passed8 fixture checks before merging the three
+unchanged integration files at `8e1d0a1`.
+
+The existing metrics/trace root projection is now under scoped repair. After
+verification, reuse fixture02/cache and the initialized `step5-mrv2-main`
+worktree at fixed source for fresh paired CLI, preserving the2400s bound.
+Details: [actual-main report](../task_2026-10-22_step5_mrv2_main/test_report_2026-10-22_actual_main.md)
+and [core blocker](../task_2026-10-22_step5_mrv2_main/core_blocker.md).
 
 ## Legacy cancellation
 
