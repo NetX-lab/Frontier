@@ -714,7 +714,8 @@ class Observation:
                 exact['last_slot'], host_marker = self.tensor_sample(req, 'last_slot', marker, capacity, state_module)
                 mean = connector.device_kv_caches[row['registration_name']][page]
                 mean_sample, _ = self.tensor_sample(req, 'summary_mean', mean, capacity, state_module)
-                mean_sample.pop('raw_hex')
+                if boundary != 'first_local_tail_complete':
+                    mean_sample.pop('raw_hex')
                 records.append(dict(block_id=page, last_slot=int(host_marker.item()),
                                     accumulator_counts=numeric, exact_tensors=exact,
                                     summary_mean_wire_row=mean_sample))
