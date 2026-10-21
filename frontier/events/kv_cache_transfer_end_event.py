@@ -45,7 +45,9 @@ class KVCacheTransferEndEvent(BaseEvent):
             )
             target_replica_scheduler.validate_kv_transfer_target_completion(
                 request,
-                self._transfer_info.target_reserved_common_blocks,
+                sum(block is not None for table in self._transfer_info.target_group_block_ids.values() for block in table)
+                if self._transfer_info.target_group_block_ids is not None
+                else self._transfer_info.target_reserved_common_blocks,
             )
             source_cluster_scheduler = scheduler.get_cluster_scheduler(
                 self._transfer_info.source_cluster_type
@@ -54,21 +56,28 @@ class KVCacheTransferEndEvent(BaseEvent):
                 self._transfer_info.source_replica_id,
                 self._transfer_info.source_replica_local_id,
             )
-            source_blocks = (
-                source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(
-                    request
-                )
-            )
-            if source_blocks != self._transfer_info.source_prompt_common_blocks:
-                raise RuntimeError(
-                    f"Request {request.id} PREFILL ownership changed from "
-                    f"{self._transfer_info.source_prompt_common_blocks} to "
-                    f"{source_blocks} prompt blocks"
-                )
             source_capacity = source_replica_scheduler._kv_cache_capacity
-            expected_payload_bytes = (
-                source_blocks * source_capacity.resident_bytes_per_common_block
-            )
+            if source_capacity.is_grouped:
+                from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import get_grouped_nixl_payload
+
+                source_groups = source_replica_scheduler.get_kv_transfer_source_group_block_ids(request)
+                target_groups = target_replica_scheduler._kv_cache_manager.get_group_block_ids(request.id)
+                if source_groups != self._transfer_info.source_group_block_ids or target_groups != self._transfer_info.target_group_block_ids:
+                    raise RuntimeError("NIXL grouped source or destination ownership changed")
+                transferred, expected_payload_bytes = get_grouped_nixl_payload(
+                    source_capacity, request.num_prefill_tokens, source_groups, target_groups,
+                )
+                if transferred != self._transfer_info.transferred_group_block_ids:
+                    raise RuntimeError("NIXL grouped transferred pages changed")
+            else:
+                source_blocks = source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(request)
+                if source_blocks != self._transfer_info.source_prompt_common_blocks:
+                    raise RuntimeError(
+                        f"Request {request.id} PREFILL ownership changed from "
+                        f"{self._transfer_info.source_prompt_common_blocks} to "
+                        f"{source_blocks} prompt blocks"
+                    )
+                expected_payload_bytes = source_blocks * source_capacity.resident_bytes_per_common_block
             if self._transfer_info.kv_cache_size_bytes != expected_payload_bytes:
                 raise RuntimeError(
                     f"Request {request.id} NIXL payload changed from "
@@ -182,4 +191,10 @@ class KVCacheTransferEndEvent(BaseEvent):
                     "source_release_time": self._transfer_info.source_release_time,
                 }
             )
+            if self._transfer_info.source_group_block_ids is not None:
+                payload.update(
+                    source_group_block_ids=self._transfer_info.source_group_block_ids,
+                    target_group_block_ids=self._transfer_info.target_group_block_ids,
+                    transferred_group_block_ids=self._transfer_info.transferred_group_block_ids,
+                )
         return payload

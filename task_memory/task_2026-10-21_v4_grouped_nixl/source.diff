@@ -1,0 +1,1039 @@
+diff --git a/frontier/entities/kv_cache_transfer_info.py b/frontier/entities/kv_cache_transfer_info.py
+index 03de815..18f40a9 100644
+--- a/frontier/entities/kv_cache_transfer_info.py
++++ b/frontier/entities/kv_cache_transfer_info.py
+@@ -37,0 +38,3 @@ class KVCacheTransferInfo:
++    source_group_block_ids: Optional[dict[str, tuple[int | None, ...]]] = None
++    target_group_block_ids: Optional[dict[str, tuple[int | None, ...]]] = None
++    transferred_group_block_ids: Optional[dict[str, tuple[int, ...]]] = None
+@@ -59 +62,15 @@ class KVCacheTransferInfo:
+-            if self.payload_kind != "structural_whole_prompt_pages_per_worker_lane":
++            if self.payload_kind == "structural_grouped_prompt_pages_per_worker_lane":
++                if self.source_prompt_common_blocks is not None or self.target_reserved_common_blocks is not None:
++                    raise ValueError("Grouped NIXL must not use scalar common blocks")
++                if not self.source_group_block_ids or not self.target_group_block_ids or not self.transferred_group_block_ids:
++                    raise ValueError("Grouped NIXL requires source, destination and transfer groups")
++                if set(self.source_group_block_ids) != set(self.target_group_block_ids) or set(self.source_group_block_ids) != set(self.transferred_group_block_ids):
++                    raise ValueError("Grouped NIXL source, destination and transfer groups differ")
++                for group_id, transferred in self.transferred_group_block_ids.items():
++                    source = self.source_group_block_ids[group_id]
++                    target = self.target_group_block_ids[group_id]
++                    if not transferred or any(type(block) is not int or block <= 0 for block in transferred):
++                        raise ValueError("Grouped NIXL requires positive transferred block IDs")
++                    if not set(transferred) <= set(source) or len(transferred) != sum(block is not None for block in target):
++                        raise ValueError("Grouped NIXL payload lacks source or destination ownership")
++            elif self.payload_kind != "structural_whole_prompt_pages_per_worker_lane":
+@@ -61 +78 @@ class KVCacheTransferInfo:
+-            if (
++            elif (
+@@ -66 +83 @@ class KVCacheTransferInfo:
+-            if (
++            elif (
+@@ -118,0 +136,6 @@ class KVCacheTransferInfo:
++            if self.source_group_block_ids is not None:
++                payload.update(
++                    source_group_block_ids=self.source_group_block_ids,
++                    target_group_block_ids=self.target_group_block_ids,
++                    transferred_group_block_ids=self.transferred_group_block_ids,
++                )
+diff --git a/frontier/events/kv_cache_transfer_end_event.py b/frontier/events/kv_cache_transfer_end_event.py
+index 02a5311..67a971e 100644
+--- a/frontier/events/kv_cache_transfer_end_event.py
++++ b/frontier/events/kv_cache_transfer_end_event.py
+@@ -48 +48,3 @@ class KVCacheTransferEndEvent(BaseEvent):
+-                self._transfer_info.target_reserved_common_blocks,
++                sum(block is not None for table in self._transfer_info.target_group_block_ids.values() for block in table)
++                if self._transfer_info.target_group_block_ids is not None
++                else self._transfer_info.target_reserved_common_blocks,
+@@ -57,11 +58,0 @@ class KVCacheTransferEndEvent(BaseEvent):
+-            source_blocks = (
+-                source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(
+-                    request
+-                )
+-            )
+-            if source_blocks != self._transfer_info.source_prompt_common_blocks:
+-                raise RuntimeError(
+-                    f"Request {request.id} PREFILL ownership changed from "
+-                    f"{self._transfer_info.source_prompt_common_blocks} to "
+-                    f"{source_blocks} prompt blocks"
+-                )
+@@ -69,3 +60,21 @@ class KVCacheTransferEndEvent(BaseEvent):
+-            expected_payload_bytes = (
+-                source_blocks * source_capacity.resident_bytes_per_common_block
+-            )
++            if source_capacity.is_grouped:
++                from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import get_grouped_nixl_payload
++
++                source_groups = source_replica_scheduler.get_kv_transfer_source_group_block_ids(request)
++                target_groups = target_replica_scheduler._kv_cache_manager.get_group_block_ids(request.id)
++                if source_groups != self._transfer_info.source_group_block_ids or target_groups != self._transfer_info.target_group_block_ids:
++                    raise RuntimeError("NIXL grouped source or destination ownership changed")
++                transferred, expected_payload_bytes = get_grouped_nixl_payload(
++                    source_capacity, request.num_prefill_tokens, source_groups, target_groups,
++                )
++                if transferred != self._transfer_info.transferred_group_block_ids:
++                    raise RuntimeError("NIXL grouped transferred pages changed")
++            else:
++                source_blocks = source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(request)
++                if source_blocks != self._transfer_info.source_prompt_common_blocks:
++                    raise RuntimeError(
++                        f"Request {request.id} PREFILL ownership changed from "
++                        f"{self._transfer_info.source_prompt_common_blocks} to "
++                        f"{source_blocks} prompt blocks"
++                    )
++                expected_payload_bytes = source_blocks * source_capacity.resident_bytes_per_common_block
+@@ -184,0 +194,6 @@ class KVCacheTransferEndEvent(BaseEvent):
++            if self._transfer_info.source_group_block_ids is not None:
++                payload.update(
++                    source_group_block_ids=self._transfer_info.source_group_block_ids,
++                    target_group_block_ids=self._transfer_info.target_group_block_ids,
++                    transferred_group_block_ids=self._transfer_info.transferred_group_block_ids,
++                )
+diff --git a/frontier/events/kv_cache_transfer_start_event.py b/frontier/events/kv_cache_transfer_start_event.py
+index e644c58..bd702b5 100644
+--- a/frontier/events/kv_cache_transfer_start_event.py
++++ b/frontier/events/kv_cache_transfer_start_event.py
+@@ -49,0 +50,3 @@ class KVCacheTransferStartEvent(BaseEvent):
++        self._source_group_block_ids = None
++        self._target_group_block_ids = None
++        self._transferred_group_block_ids = None
+@@ -67 +70 @@ class KVCacheTransferStartEvent(BaseEvent):
+-        if self._target_reserved_common_blocks is not None:
++        if self._has_target_reservation():
+@@ -75 +78,4 @@ class KVCacheTransferStartEvent(BaseEvent):
+-        self._target_reserved_common_blocks = int(reserved_blocks)
++        if target_replica_scheduler._kv_cache_capacity.is_grouped:
++            self._target_group_block_ids = target_replica_scheduler._kv_cache_manager.get_group_block_ids(request.id)
++        else:
++            self._target_reserved_common_blocks = int(reserved_blocks)
+@@ -77,0 +84,10 @@ class KVCacheTransferStartEvent(BaseEvent):
++    def _has_target_reservation(self) -> bool:
++        return self._target_reserved_common_blocks is not None or self._target_group_block_ids is not None
++
++    def _payload_kind(self):
++        return (
++            "structural_grouped_prompt_pages_per_worker_lane"
++            if self._source_group_block_ids is not None
++            else "structural_whole_prompt_pages_per_worker_lane"
++        )
++
+@@ -80 +96 @@ class KVCacheTransferStartEvent(BaseEvent):
+-        if self._started or self._target_reserved_common_blocks is None:
++        if self._started or not self._has_target_reservation():
+@@ -104 +120 @@ class KVCacheTransferStartEvent(BaseEvent):
+-                raise NotImplementedError("NIXL structural GLM PD supports PP1 only")
++                raise NotImplementedError("NIXL structural PD supports PP1 only")
+@@ -111 +127 @@ class KVCacheTransferStartEvent(BaseEvent):
+-                    "NIXL structural GLM PD excludes source prefix caching"
++                    "NIXL structural PD excludes source prefix caching"
+@@ -112,0 +129,2 @@ class KVCacheTransferStartEvent(BaseEvent):
++            if source_replica_scheduler._spec_decode_enabled:
++                raise NotImplementedError("NIXL structural PD excludes source speculative decoding and MTP")
+@@ -114,5 +131,0 @@ class KVCacheTransferStartEvent(BaseEvent):
+-            self._source_prompt_common_blocks = (
+-                source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(
+-                    request
+-                )
+-            )
+@@ -120,5 +133,3 @@ class KVCacheTransferStartEvent(BaseEvent):
+-            if (
+-                source_capacity is None
+-                or source_capacity.family_id != "dsa_attention"
+-                or source_capacity.is_grouped
+-                or source_capacity.block_size != 64
++            if source_capacity is None or not (
++                (source_capacity.family_id == "dsa_attention" and not source_capacity.is_grouped and source_capacity.block_size == 64)
++                or (source_capacity.family_id == "deepseek_v4_attention" and source_capacity.is_grouped and source_capacity.block_size == 256)
+@@ -127 +138 @@ class KVCacheTransferStartEvent(BaseEvent):
+-                    "NIXL currently supports only GLM DSA block64 structural payloads"
++                    "NIXL supports GLM DSA block64 or grouped V4 block256 structural payloads"
+@@ -128,0 +140,4 @@ class KVCacheTransferStartEvent(BaseEvent):
++            if source_capacity.is_grouped:
++                self._source_group_block_ids = source_replica_scheduler.get_kv_transfer_source_group_block_ids(request)
++            else:
++                self._source_prompt_common_blocks = source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(request)
+@@ -159 +174 @@ class KVCacheTransferStartEvent(BaseEvent):
+-                self._target_reserved_common_blocks is None
++                not self._has_target_reservation()
+@@ -186,0 +202,4 @@ class KVCacheTransferStartEvent(BaseEvent):
++                    **(dict(
++                        source_group_block_ids=self._source_group_block_ids,
++                        target_group_block_ids=self._target_group_block_ids,
++                    ) if source_capacity.is_grouped else {}),
+@@ -187,0 +207,7 @@ class KVCacheTransferStartEvent(BaseEvent):
++                if source_capacity.is_grouped:
++                    from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import get_grouped_nixl_payload
++
++                    self._transferred_group_block_ids, _ = get_grouped_nixl_payload(
++                        source_capacity, request.num_prefill_tokens,
++                        self._source_group_block_ids, self._target_group_block_ids,
++                    )
+@@ -194,0 +221 @@ class KVCacheTransferStartEvent(BaseEvent):
++                self._target_group_block_ids = None
+@@ -211 +238 @@ class KVCacheTransferStartEvent(BaseEvent):
+-                "structural_whole_prompt_pages_per_worker_lane"
++                self._payload_kind()
+@@ -216,0 +244,3 @@ class KVCacheTransferStartEvent(BaseEvent):
++            source_group_block_ids=self._source_group_block_ids,
++            target_group_block_ids=self._target_group_block_ids,
++            transferred_group_block_ids=self._transferred_group_block_ids,
+@@ -258 +288 @@ class KVCacheTransferStartEvent(BaseEvent):
+-                    "payload_kind": "structural_whole_prompt_pages_per_worker_lane",
++                    "payload_kind": self._payload_kind(),
+@@ -262,0 +293,6 @@ class KVCacheTransferStartEvent(BaseEvent):
++            if self._source_group_block_ids is not None:
++                payload.update(
++                    source_group_block_ids=self._source_group_block_ids,
++                    target_group_block_ids=self._target_group_block_ids,
++                    transferred_group_block_ids=self._transferred_group_block_ids,
++                )
+diff --git a/frontier/kv_cache/base_kv_cache_manager.py b/frontier/kv_cache/base_kv_cache_manager.py
+index 209f155..cc63ff4 100644
+--- a/frontier/kv_cache/base_kv_cache_manager.py
++++ b/frontier/kv_cache/base_kv_cache_manager.py
+@@ -134,2 +134,9 @@ class KVCacheManager:
+-    def _group_allocation_plan(self, request: Request, num_tokens: int, scheduler_num_computed_tokens):
+-        _require_positive_int(num_tokens, field="num_tokens")
++    def _group_allocation_plan(self, request: Request, num_tokens: int, scheduler_num_computed_tokens, num_external_computed_tokens=0):
++        # Async remote loads have no local work. Build their null window prefix
++        # from the complete external prompt, not the later prompt-tail replay.
++        _require_nonnegative_int(num_external_computed_tokens, field="num_external_computed_tokens")
++        if num_external_computed_tokens:
++            if type(num_tokens) is not int or num_tokens != 0 or request.id in self._group_tables:
++                raise ValueError("external grouped KV requires a new request with no local work")
++        else:
++            _require_positive_int(num_tokens, field="num_tokens")
+@@ -136,0 +144,2 @@ class KVCacheManager:
++        if num_external_computed_tokens and frontier != 0:
++            raise ValueError("external grouped KV without prefix caching requires frontier zero")
+@@ -144,2 +153,2 @@ class KVCacheManager:
+-            skipped = self._num_skipped_group_blocks(group, settled)
+-            required = ceil((frontier + num_tokens) / group.logical_block_size)
++            skipped = self._num_skipped_group_blocks(group, max(settled, num_external_computed_tokens))
++            required = ceil((frontier + num_external_computed_tokens + num_tokens) / group.logical_block_size)
+@@ -234,0 +244 @@ class KVCacheManager:
++        num_external_computed_tokens: int = 0,
+@@ -239,3 +249,5 @@ class KVCacheManager:
+-            return self.get_num_blocks_to_allocate(
+-                request, num_tokens, scheduler_num_computed_tokens=scheduler_num_computed_tokens
+-            ) <= self.block_pool.get_num_free_blocks()
++            return sum(item[2] for item in self._group_allocation_plan(
++                request, num_tokens, scheduler_num_computed_tokens, num_external_computed_tokens,
++            )) <= self.block_pool.get_num_free_blocks()
++        if num_external_computed_tokens:
++            raise NotImplementedError("external computed slots require grouped allocation")
+@@ -261,0 +274 @@ class KVCacheManager:
++        num_external_computed_tokens: int = 0,
+@@ -266 +279,3 @@ class KVCacheManager:
+-            return self._allocate_group_slots(request, num_tokens, scheduler_num_computed_tokens)
++            return self._allocate_group_slots(request, num_tokens, scheduler_num_computed_tokens, num_external_computed_tokens)
++        if num_external_computed_tokens:
++            raise NotImplementedError("external computed slots require grouped allocation")
+@@ -350,2 +365,2 @@ class KVCacheManager:
+-    def _allocate_group_slots(self, request: Request, num_tokens: int, frontier):
+-        plan = self._group_allocation_plan(request, num_tokens, frontier)
++    def _allocate_group_slots(self, request: Request, num_tokens: int, frontier, num_external_computed_tokens=0):
++        plan = self._group_allocation_plan(request, num_tokens, frontier, num_external_computed_tokens)
+diff --git a/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py b/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+index b55a522..233508b 100644
+--- a/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
++++ b/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+@@ -1,0 +2 @@ from typing import TYPE_CHECKING
++from math import ceil
+@@ -17,0 +19,47 @@ if TYPE_CHECKING:
++def get_grouped_nixl_payload(cache_capacity, prompt_tokens, source_groups, target_groups):
++    """Select native NIXL pull suffixes from real P/D logical block tables.
++
++    Source: pinned NIXL get_exchange_clipped_blocks and _apply_prefix_caching.
++    V4 compressor states use SlidingWindowMLASpec, not Mamba single-state slots.
++    Page bytes describe structural component payloads on one worker/lane, not
++    wire descriptors, backing-slab padding, or a sum over TP ranks.
++    """
++    if not cache_capacity.is_grouped or cache_capacity.family_id != "deepseek_v4_attention":
++        raise ValueError("Grouped NIXL requires the V4 component capacity")
++    expected_groups = {group.group_id for group in cache_capacity.groups}
++    if not isinstance(source_groups, dict) or not isinstance(target_groups, dict):
++        raise ValueError("Grouped NIXL requires source and target block tables")
++    if set(source_groups) != expected_groups or set(target_groups) != expected_groups:
++        raise ValueError("Grouped NIXL block tables must cover every cache group exactly")
++    for label, tables in (("source", source_groups), ("target", target_groups)):
++        live_ids = []
++        for group in cache_capacity.groups:
++            table = tables[group.group_id]
++            required = ceil(prompt_tokens / group.logical_block_size)
++            skipped = 0 if group.retention == "full_history" else max(
++                0, prompt_tokens - group.window_tokens + 1 - group.extra_retained_tokens,
++            ) // group.logical_block_size
++            if len(table) != required or tuple(table[:skipped]) != (None,) * skipped:
++                raise ValueError(f"NIXL {label} group {group.group_id} has incorrect prompt coverage")
++            ids = table[skipped:]
++            if not ids or any(type(block) is not int or block <= 0 for block in ids):
++                raise ValueError(f"NIXL {label} group {group.group_id} lacks live prompt pages")
++            live_ids.extend(ids)
++        if len(live_ids) != len(set(live_ids)):
++            raise ValueError(f"NIXL {label} group block IDs have duplicate ownership")
++    transferred = {}
++    payload_bytes = 0
++    for group in cache_capacity.groups:
++        source = source_groups[group.group_id]
++        target = tuple(block for block in target_groups[group.group_id] if block is not None)
++        if group.retention == "sliding_window":
++            limit = ceil(group.window_tokens / group.logical_block_size) + 1
++            source, target = source[-limit:], target[-limit:]
++        selected = tuple(source[-len(target):])
++        if any(block is None for block in selected):
++            raise ValueError(f"NIXL group {group.group_id} selected a null source page")
++        transferred[group.group_id] = selected
++        payload_bytes += len(selected) * cache_capacity.get_group_size_bytes(group)
++    return transferred, payload_bytes
++
++
+@@ -43 +91 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+-                "NIXL size requires the reservation-backed GLM structural payload path"
++                "NIXL size requires the reservation-backed structural payload path"
+@@ -53 +101 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+-                "NIXL size requires the reservation-backed GLM structural payload path"
++                "NIXL size requires the reservation-backed structural payload path"
+@@ -65,2 +113,4 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+-        source_prompt_common_blocks: int,
+-        target_reserved_common_blocks: int,
++        source_prompt_common_blocks: int | None = None,
++        target_reserved_common_blocks: int | None = None,
++        source_group_block_ids=None,
++        target_group_block_ids=None,
+@@ -68 +118 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+-        """Price source-backed GLM pages after a real D reservation.
++        """Price source-backed component pages after a real D reservation.
+@@ -75,0 +126,11 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
++        if cache_capacity.is_grouped:
++            families = {spec.family_id for spec in replica_config.model_config.get_layer_attention_specs()}
++            if families != {cache_capacity.family_id}:
++                raise ValueError("V4 NIXL capacity does not match the model")
++            _, payload_bytes = get_grouped_nixl_payload(
++                cache_capacity, request.num_prefill_tokens,
++                source_group_block_ids, target_group_block_ids,
++            )
++            return payload_bytes, self.get_transfer_time(
++                ClusterType.PREFILL, ClusterType.DECODE, None, payload_bytes,
++            )
+@@ -79 +140 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+-                "NIXL structural sizing currently supports GLM DSA only"
++                "NIXL structural sizing supports GLM DSA and grouped V4 only"
+diff --git a/frontier/metrics/metrics_store.py b/frontier/metrics/metrics_store.py
+index 283b2c7..405f70b 100644
+--- a/frontier/metrics/metrics_store.py
++++ b/frontier/metrics/metrics_store.py
+@@ -5458,0 +5459,2 @@ class MetricsStore:
++                transfer_info=transfer_info,
++                block_size=cluster_config.replica_scheduler_config.block_size,
+diff --git a/frontier/metrics/op_trace_utils.py b/frontier/metrics/op_trace_utils.py
+index b198558..76829c5 100644
+--- a/frontier/metrics/op_trace_utils.py
++++ b/frontier/metrics/op_trace_utils.py
+@@ -10,0 +11 @@ from frontier.attention.families import (
++    get_attention_family,
+@@ -12,0 +14 @@ from frontier.attention.memory import (
++    AttentionKVCacheSelection,
+@@ -818,0 +821,77 @@ def compute_op_trace_meta(
++def _build_grouped_kv_cache_transfer_meta(
++    batch, replica_config, transfer_size_bytes, transfer_info, block_size,
++) -> Dict[str, Any]:
++    """Describe the reserved component pages, not a scalar attention tensor."""
++    from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
++        get_grouped_nixl_payload,
++    )
++
++    if transfer_info.kv_connector != "nixl" or len(batch.requests) != 1:
++        raise ValueError("Grouped transfer tracing requires one NIXL request")
++    model_config = replica_config.model_config
++    families = {spec.family_id for spec in model_config.get_layer_attention_specs()}
++    if len(families) != 1:
++        raise ValueError("Grouped transfer tracing requires a single cache family")
++    capacity = get_attention_kv_cache_capacity(
++        get_attention_family(next(iter(families))), model_config,
++        block_size=block_size,
++        selection=AttentionKVCacheSelection.from_replica(replica_config, block_size=block_size),
++    )
++    request = batch.requests[0]
++    transferred, payload_bytes = get_grouped_nixl_payload(
++        capacity, request.num_prefill_tokens,
++        transfer_info.source_group_block_ids, transfer_info.target_group_block_ids,
++    )
++    if (
++        transferred != transfer_info.transferred_group_block_ids
++        or payload_bytes != transfer_size_bytes
++        or payload_bytes != transfer_info.kv_cache_size_bytes
++    ):
++        raise ValueError("Grouped NIXL trace snapshots or bytes do not match the payload")
++
++    component_pages = {component.component_id: 0 for component in capacity.components}
++    groups = []
++    for group in capacity.groups:
++        page_count = len(transferred[group.group_id])
++        for component_id, _ in group.component_owners:
++            component_pages[component_id] += page_count
++        groups.append({
++            "group_id": group.group_id,
++            "logical_block_size": group.logical_block_size,
++            "source_held_pages": sum(block is not None for block in transfer_info.source_group_block_ids[group.group_id]),
++            "target_reserved_pages": sum(block is not None for block in transfer_info.target_group_block_ids[group.group_id]),
++            "transferred_pages": page_count,
++            "page_size_bytes": capacity.get_group_size_bytes(group),
++            "payload_bytes": page_count * capacity.get_group_size_bytes(group),
++        })
++    components = [{
++        "component_id": component.component_id,
++        "owner_layer_ids": list(component.owner_layer_ids),
++        "precision": component.precision,
++        "stored_rows": component.stored_rows,
++        "compression_ratio": component.compression_ratio,
++        "page_size_bytes": component.page_size_bytes,
++        "content_size_bytes": component.content_size_bytes,
++        "page_count": component_pages[component.component_id],
++        "resident_bytes": component_pages[component.component_id] * component.page_size_bytes,
++    } for component in capacity.components]
++    tensor_size_bytes = {component["component_id"]: component["resident_bytes"] for component in components}
++    if sum(tensor_size_bytes.values()) != payload_bytes:
++        raise ValueError("Grouped NIXL trace component bytes do not conserve payload")
++    return {
++        "precision_op": "kv_cache_transfer", "dtype": "MIXED", "dtype_bytes": None,
++        # Packed pages include mixed row formats and alignment, not dense tensors.
++        "tensor_shape": {}, "tensor_size_bytes": tensor_size_bytes,
++        "transfer_size_bytes": payload_bytes, "total_tokens": request.num_prefill_tokens,
++        "num_layers": model_config.num_layers, "num_q_heads": model_config.num_q_heads,
++        "num_heads": None, "num_kv_heads": None, "head_dim": None,
++        "payload_kind": transfer_info.payload_kind,
++        "byte_scope": "per_worker_lane_resident_pages", "block_size": capacity.block_size,
++        "cache_groups": groups, "cache_components": components,
++        "source_group_block_ids": {key: list(value) for key, value in transfer_info.source_group_block_ids.items()},
++        "target_group_block_ids": {key: list(value) for key, value in transfer_info.target_group_block_ids.items()},
++        "transferred_group_block_ids": {key: list(value) for key, value in transferred.items()},
++        "native_wire_bytes_known": False,
++    }
++
++
+@@ -823,0 +903,3 @@ def build_kv_cache_transfer_meta(
++    *,
++    transfer_info: Any = None,
++    block_size: int | None = None,
+@@ -824,0 +907,4 @@ def build_kv_cache_transfer_meta(
++    if transfer_info is not None and transfer_info.payload_kind == "structural_grouped_prompt_pages_per_worker_lane":
++        return _build_grouped_kv_cache_transfer_meta(
++            batch, replica_config, transfer_size_bytes, transfer_info, block_size,
++        )
+diff --git a/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py b/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py
+index 824fc5b..0aebc35 100644
+--- a/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py
++++ b/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py
+@@ -480 +480 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
+-                        "PREFILL and DECODE GLM cache capacities must match"
++                        "PREFILL and DECODE cache capacities must match"
+diff --git a/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py b/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py
+index 7de2d47..93d89d7 100644
+--- a/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py
++++ b/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py
+@@ -321 +321,4 @@ class VLLMv1EngineReplicaScheduler(
+-            if self._cluster_type != ClusterType.MONOLITHIC:
++            if self._cluster_type != ClusterType.MONOLITHIC and not (
++                self._cluster_type in (ClusterType.PREFILL, ClusterType.DECODE)
++                and global_vars.KV_CONNECTOR == "nixl"
++            ):
+@@ -323 +326 @@ class VLLMv1EngineReplicaScheduler(
+-                    "Grouped KV cache allocation initially supports MONOLITHIC only"
++                    "Grouped KV cache allocation supports MONOLITHIC or NIXL PREFILL/DECODE only"
+diff --git a/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py b/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py
+index 216bad7..acd62a2 100644
+--- a/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py
++++ b/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py
+@@ -37,0 +38,4 @@ class KvBlockAllocation:
++        if self._cluster_type == ClusterType.DECODE and self._is_grouped_kv_allocation():
++            # The remote prompt is present, but D replays its final token before
++            # sampling. Its scheduler frontier can therefore trail the prompt.
++            return min(processed_tokens, self._get_scheduler_num_computed_tokens(request))
+@@ -114 +118,4 @@ class KvBlockAllocation:
+-        self.get_kv_transfer_source_prompt_common_blocks(request)
++        if self._is_grouped_kv_allocation():
++            self.get_kv_transfer_source_group_block_ids(request)
++        else:
++            self.get_kv_transfer_source_prompt_common_blocks(request)
+@@ -122 +129,4 @@ class KvBlockAllocation:
+-        self.get_kv_transfer_source_prompt_common_blocks(request)
++        if self._is_grouped_kv_allocation():
++            self.get_kv_transfer_source_group_block_ids(request)
++        else:
++            self.get_kv_transfer_source_prompt_common_blocks(request)
+@@ -128,0 +139,12 @@ class KvBlockAllocation:
++    def get_kv_transfer_source_group_block_ids(self, request: Request):
++        """Snapshot actual P ownership after the native pre-handoff pruning."""
++        if self._cluster_type != ClusterType.PREFILL or request.id not in self._pending_kv_transfer_requests:
++            raise RuntimeError("Grouped KV transfer requires pending PREFILL ownership")
++        if self._is_request_active_in_batch(request):
++            raise RuntimeError("Grouped KV handoff cannot prune an in-flight request")
++        self._kv_cache_manager.reclaim_skipped_blocks(
++            request, settled_num_computed_tokens=int(request.num_prefill_tokens),
++        )
++        self._sync_prefix_cache_allocation_state(request)
++        return self._kv_cache_manager.get_group_block_ids(request.id)
++
+@@ -142,5 +164,3 @@ class KvBlockAllocation:
+-        if (
+-            capacity is None
+-            or capacity.family_id != "dsa_attention"
+-            or capacity.is_grouped
+-            or capacity.block_size != 64
++        if capacity is None or not (
++            (capacity.family_id == "dsa_attention" and not capacity.is_grouped and capacity.block_size == 64)
++            or (capacity.family_id == "deepseek_v4_attention" and capacity.is_grouped and capacity.block_size == 256)
+@@ -149 +169 @@ class KvBlockAllocation:
+-                "NIXL target reservation currently supports GLM DSA block64 only"
++                "NIXL target reservation supports GLM DSA block64 or grouped V4 block256 only"
+@@ -152 +172 @@ class KvBlockAllocation:
+-            raise NotImplementedError("GLM NIXL target reservation supports PP1 only")
++            raise NotImplementedError("NIXL target reservation supports PP1 only")
+@@ -154 +174 @@ class KvBlockAllocation:
+-            raise NotImplementedError("GLM NIXL target reservation excludes prefix caching")
++            raise NotImplementedError("NIXL target reservation excludes prefix caching")
+@@ -157 +177 @@ class KvBlockAllocation:
+-                "GLM NIXL target reservation excludes speculative decoding and MTP"
++                "NIXL target reservation excludes speculative decoding and MTP"
+@@ -184,0 +205,17 @@ class KvBlockAllocation:
++        if self._is_grouped_kv_allocation():
++            manager = self._kv_cache_manager
++            remote = dict(
++                scheduler_num_computed_tokens=0,
++                num_external_computed_tokens=int(request.num_prefill_tokens),
++            )
++            admission = self._get_grouped_admission_blocks(request)
++            if (
++                self._get_available_kv_blocks() - admission < self._watermark_blocks
++                or not manager.can_allocate_slots(request, 0, **remote)
++            ):
++                return None
++            manager.allocate_slots(request, 0, **remote)
++            self._sync_prefix_cache_allocation_state(request)
++            frontiers[request.id] = int(request.num_prefill_tokens) - 1
++            receiving.add(request.id)
++            return int(self._allocation_map[request.id])
+diff --git a/tests/integration/verify_dsv4_native_nixl_rules.py b/tests/integration/verify_dsv4_native_nixl_rules.py
+new file mode 100644
+index 0000000..83f57fd
+--- /dev/null
++++ b/tests/integration/verify_dsv4_native_nixl_rules.py
+@@ -0,0 +1,122 @@
++"""Execute pinned native retention/connector bodies on CPU-only block fixtures."""
++
++from __future__ import annotations
++
++import argparse
++import ast
++from collections import defaultdict
++import hashlib
++import json
++from pathlib import Path
++import subprocess
++from types import SimpleNamespace
++
++
++REVISION = "2cf0a6915ce544dc493a0990f2ea38d81601128a"
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--native-repo", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    evidence = {}
++
++    def body(path, cls, name):
++        text = subprocess.check_output(
++            ["git", "show", f"{REVISION}:{path}"], cwd=args.native_repo, text=True,
++        )
++        tree = ast.parse(text)
++        owner = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == cls)
++        node = next(n for n in owner.body if isinstance(n, ast.FunctionDef) and n.name == name)
++        evidence[f"{path}:{node.lineno}-{node.end_lineno}"] = hashlib.sha256(text.encode()).hexdigest()
++        node.decorator_list = []
++        namespace = {"cdiv": lambda a, b: (a + b - 1) // b, "SupportsHMA": HMA}
++        module = ast.Module(body=[ast.ImportFrom(module="__future__", names=[ast.alias(name="annotations")], level=0), node], type_ignores=[])
++        exec(compile(ast.fix_missing_locations(module), path, "exec"), namespace)
++        return namespace[name]
++
++    class HMA:
++        pass
++
++    manager_path = "vllm/v1/core/single_type_kv_cache_manager.py"
++    base = type("NativeManager", (), {name: body(manager_path, "SingleTypeKVCacheManager", name) for name in (
++        "remove_skipped_blocks", "_remove_blocks_in_range", "add_local_computed_blocks",
++        "allocate_external_computed_blocks",
++    )})
++    skip = body(manager_path, "SlidingWindowManager", "get_num_skipped_tokens")
++    full_skip = body(manager_path, "SingleTypeKVCacheManager", "get_num_skipped_tokens")
++    clip = body("vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_scheduler.py", "NixlBaseConnectorScheduler", "get_exchange_clipped_blocks")
++    trim = body("vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py", "NixlBaseConnectorWorker", "_apply_prefix_caching")
++    finish = body("vllm/v1/core/sched/scheduler.py", "Scheduler", "_connector_finished")
++    destination_ids = body("vllm/v1/core/kv_cache_manager.py", "KVCacheBlocks", "get_unhashed_block_ids_all_groups")
++    source_ids = body("vllm/v1/core/kv_cache_manager.py", "KVCacheManager", "get_block_ids_for_computed_tokens")
++    coordinator_reclaim = body("vllm/v1/core/kv_cache_coordinator.py", "KVCacheCoordinator", "remove_skipped_blocks")
++    # AttentionSpec dispatch is represented by the fixture specs below.
++    source_ids.__globals__.update(AttentionSpec=SimpleNamespace, CrossAttentionSpec=type("Cross", (), {}), EncoderOnlyAttentionSpec=type("Encoder", (), {}))
++    groups = [("compressed", 256, 0), ("swa_0", 64, 128), ("swa_1", 64, 128), ("csa_state_0", 4, 8), ("hca_state_0", 8, 128)]
++    results = []
++    for prompt in (191, 6144, 6145):
++        next_id = 1
++
++        def block():
++            nonlocal next_id
++            value = SimpleNamespace(block_id=next_id, is_null=False, block_hash=None)
++            next_id += 1
++            return value
++
++        null = SimpleNamespace(block_id=0, is_null=True, block_hash=None)
++
++        def manager(size, window, source):
++            m = base()
++            m.block_size, m.sliding_window, m.extra_retained_tokens = size, window, 0
++            m.get_num_skipped_tokens = (skip if window else full_skip).__get__(m)
++            m._null_block, m.enable_caching, m._record_new_block_ids = null, False, False
++            m._has_partial_local_hit = lambda *args: False
++            m.req_to_blocks = defaultdict(list)
++            m.num_cached_block = {}
++            m.block_pool = SimpleNamespace(free_blocks=lambda blocks: None, get_new_blocks=lambda n: [block() for _ in range(n)])
++            if source:
++                m.req_to_blocks["r"] = [block() for _ in range((prompt + size - 1) // size)]
++            else:
++                m.add_local_computed_blocks("r", [], 0, prompt)
++                m.allocate_external_computed_blocks("r", 0, prompt)
++            return m
++
++        sources = [manager(size, window, True) for _, size, window in groups]
++        targets = [manager(size, window, False) for _, size, window in groups]
++        before = [len(m.req_to_blocks["r"]) for m in sources]
++        connector = HMA()
++        connector._is_hma_required = True
++        connector.blocks_per_sw = [(window + size - 1) // size + 1 if window else 0 for _, size, window in groups]
++        connector._ssm_spec_blocks = [None] * 5
++        connector.request_finished_all_groups = lambda req, ids: clip(connector, ids)
++        specs = SimpleNamespace(kv_cache_groups=[SimpleNamespace(kv_cache_spec=SimpleNamespace(block_size=size)) for _, size, _ in groups])
++        coordinator = SimpleNamespace(single_type_managers=sources)
++        adapter = SimpleNamespace(
++            remove_skipped_blocks=lambda **kwargs: coordinator_reclaim(coordinator, **kwargs),
++            get_block_ids=lambda request_id: tuple([b.block_id for b in m.req_to_blocks[request_id]] for m in sources),
++            kv_cache_config=specs,
++        )
++        adapter.get_block_ids_for_computed_tokens = lambda **kwargs: source_ids(adapter, **kwargs)
++        scheduler = SimpleNamespace(connector=connector, kv_cache_manager=adapter)
++        request = SimpleNamespace(request_id="r", num_computed_tokens=prompt, num_in_flight_tokens=0, num_prompt_tokens=prompt)
++        exchanged = finish(scheduler, request)
++        held = [[b.block_id for b in m.req_to_blocks["r"] if not b.is_null] for m in sources]
++        destination = destination_ids(SimpleNamespace(blocks=[m.req_to_blocks["r"] for m in targets]))
++        destination = clip(connector, destination)
++        _, transferred = trim(SimpleNamespace(_has_mamba=False), destination, exchanged, 1, 1)
++        assert list(map(len, held)) == list(map(len, destination)) == list(map(len, transferred))
++        assert all(list(actual) == expected for actual, expected in zip(transferred, held))
++        if prompt == 6144:
++            assert before == [24, 96, 96, 1536, 768]
++            assert list(map(len, held)) == [24, 2, 2, 2, 16]
++            assert list(map(len, exchanged)) == [24, 3, 3, 3, 17]
++        results.append({"prompt": prompt, "initial_allocated": before, "source_held": list(map(len, held)), "connector_exchanged_including_null": list(map(len, exchanged)), "destination_reserved": list(map(len, destination)), "transferred": list(map(len, transferred))})
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    args.output.write_text(json.dumps({"native_revision": REVISION, "checks": results, "source_sha256": evidence, "scope": "extracted actual native bodies; fixture objects, no native runtime import or device execution"}, indent=2) + "\n")
++    print(json.dumps(results))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tests/unit/test_dsv4_structural_pd.py b/tests/unit/test_dsv4_structural_pd.py
+new file mode 100644
+index 0000000..599d002
+--- /dev/null
++++ b/tests/unit/test_dsv4_structural_pd.py
+@@ -0,0 +1,355 @@
++"""Grouped V4 NIXL lifecycle through real allocators, requests and events."""
++
++from dataclasses import replace
++import json
++from types import SimpleNamespace
++
++import pytest
++
++from frontier.config import AnalyticalKVCacheTransferConfig, ReplicaConfig, SyntheticRequestGeneratorConfig, VllmV1SchedulerConfig
++from frontier.config import global_vars
++from frontier.entities import Replica, Request
++from frontier.execution_time_predictor.deepseek_v4 import serving_context
++from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import AnalyticalKVCacheTransferPredictor, get_grouped_nixl_payload
++from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import VLLMv1EngineReplicaScheduler
++from frontier.scheduler.replica_stage_scheduler.stage_execution_context import StageExecutionContext
++from frontier.types import ClusterType
++from tests.unit.test_glm53_structural_pd import _GlobalScheduler, _Metrics, _source_cluster, _start_event, _target_cluster
++
++
++@pytest.fixture(autouse=True)
++def _nixl_context(monkeypatch):
++    for name, value in (
++        ("SYS_ARCH", "pd-disaggregation"), ("SIMULATION_MODE", "offline"),
++        ("KV_CONNECTOR", "nixl"), ("USE_CUDA_GRAPH", False),
++        ("DECODE_CUDA_GRAPH_MODE", "none"), ("CUDAGRAPH_CAPTURE_SIZES", None),
++        ("IS_MOE", None), ("_IS_MOE_INITIALIZED", False), ("QUANTIZATION_MANAGER", None),
++    ):
++        monkeypatch.setattr(global_vars, name, value)
++
++
++def _lane(role, *, blocks=4000):
++    config = ReplicaConfig(
++        model_name="deepseek-ai/DeepSeek-V4-Flash", device="h200", network_device="h200_dgx",
++        attn_tensor_parallel_size=8, attn_dp=4, moe_tensor_parallel_size=1, moe_expert_parallel_size=32,
++        attention_backend="FLASHMLA_SPARSE_DSV4", kv_cache_dtype="fp8", indexer_kv_cache_dtype="fp8",
++    )
++    generator = SyntheticRequestGeneratorConfig()
++    replica = Replica(config, generator, role)
++    context = StageExecutionContext(replica_id=replica.id, stage_id=0, ep_size=32)
++    cluster = SimpleNamespace(
++        get_stage_execution_context=lambda replica_id, stage_id: context,
++        on_replica_batch_scheduled=lambda *args: None,
++    )
++    lane = VLLMv1EngineReplicaScheduler(
++        replica_config=config,
++        replica_scheduler_config=VllmV1SchedulerConfig(
++            num_blocks=blocks, num_blocks_mode="explicit", block_size=256,
++            max_model_len=7169, max_tokens_in_batch=7169, batch_size_cap=8,
++        ),
++        request_generator_config=generator, replica=replica, predictor=object(),
++        cluster_scheduler=cluster, cluster_type=role, replica_local_id=0,
++    )
++    return lane, config
++
++
++def _harness():
++    source, config = _lane(ClusterType.PREFILL)
++    target, _ = _lane(ClusterType.DECODE)
++    predictor = AnalyticalKVCacheTransferPredictor(AnalyticalKVCacheTransferConfig(kv_connector="nixl"))
++    scheduler = _GlobalScheduler(_source_cluster(source, config, predictor), _target_cluster(target))
++    return source, target, scheduler, predictor
++
++
++def _prefill(source, prompt=6144, output=1024):
++    request = Request(0.0, prompt, output)
++    source.add_request(request)
++    # Run the real per-owner scheduling iteration, not the four-owner DP busy
++    # loop: no EP compute or peer idle forwards are executed in this component test.
++    [batch] = source._schedule_iteration(0.0)
++    assert batch.num_tokens == [prompt]
++    initial = source._kv_cache_manager.get_group_block_ids(request.id)
++    batch.on_batch_end(0.5, ClusterType.PREFILL)
++    source.on_batch_end(batch)
++    assert request.id in source._pending_kv_transfer_requests
++    assert request.num_processed_tokens == prompt
++    assert request.num_processed_decode_tokens == 0
++    return request, initial
++
++
++def _counts(tables):
++    return [sum(block is not None for block in table) for table in tables.values()]
++
++
++def _conserves(lane):
++    manager = lane._kv_cache_manager
++    ids = [block for request_id in lane._allocation_map for table in manager.get_group_block_ids(request_id).values() for block in table if block is not None]
++    assert len(ids) == len(set(ids)) == manager.num_used_blocks == lane._num_allocated_blocks
++    pool = manager.block_pool
++    assert pool.get_num_free_blocks() + len(ids) + pool.reserved_blocks == lane._config.num_blocks
++    assert [block.ref_cnt for block in pool.blocks] == [int(i in ids) for i in range(lane._config.num_blocks)]
++
++
++@pytest.mark.parametrize(("prompt", "real_metrics"), [(191, False), (6144, False), (6145, False), (6144, True)])
++def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, record_property, tmp_path):
++    source, target, scheduler, _ = _harness()
++    request, initial = _prefill(source, prompt)
++    if prompt == 6144:
++        assert list(map(len, initial.values())) == [24, 96, 96, 1536, 768]
++    metrics = _Metrics()
++    if real_metrics:
++        from frontier.config import ClusterConfig, MetricsConfig
++        from frontier.metrics.metrics_store import MetricsStore
++        from frontier.metrics.trace_store import TraceStore
++
++        cluster_configs = {
++            role: ClusterConfig(
++                cluster_type=role, replica_config=source._replica_config,
++                replica_scheduler_config=source._config,
++            )
++            for role in (ClusterType.PREFILL, ClusterType.DECODE)
++        }
++        traces = TraceStore(str(tmp_path), enabled=True)
++        traces.initialize({"case": "grouped_nixl_real_metrics"})
++        metrics = MetricsStore(
++            SimpleNamespace(metrics_config=MetricsConfig(
++                output_dir=str(tmp_path), write_metrics=True, store_plots=False,
++                enable_op_level_tracing=True,
++            )),
++            cluster_configs, traces,
++        )
++    start = _start_event(request, source)
++    [end] = start.handle_event(scheduler, metrics)
++    info = end._transfer_info
++    if prompt == 6144:
++        assert _counts(info.source_group_block_ids) == [24, 2, 2, 2, 16]
++        assert _counts(info.target_group_block_ids) == [24, 2, 2, 2, 16]
++        assert list(map(len, info.transferred_group_block_ids.values())) == [24, 2, 2, 2, 16]
++        assert [source._kv_cache_capacity.get_group_size_bytes(group) for group in source._kv_cache_capacity.groups] == [1_002_240, 823_680, 786_240, 870_912, 656_640]
++        assert info.kv_cache_size_bytes == 39_521_664
++    assert info.kv_cache_size_bytes == sum(
++        len(info.transferred_group_block_ids[group.group_id]) * source._kv_cache_capacity.get_group_size_bytes(group)
++        for group in source._kv_cache_capacity.groups
++    )
++    assert info.source_prompt_common_blocks is info.target_reserved_common_blocks is None
++    assert target._get_scheduler_num_computed_tokens(request) == prompt - 1
++    assert target._waiting_requests == []
++    assert target._schedule_iteration(0.75) == []
++    assert request.id in source._allocation_map
++    assert start.to_dict()["target_group_block_ids"] == info.to_dict()["target_group_block_ids"]
++    _conserves(source)
++    _conserves(target)
++    end.handle_event(scheduler, metrics)
++    assert info.target_ready_time == info.source_release_time == end.time
++    assert source._allocation_map == {}
++    assert source._pending_kv_transfer_requests == set()
++    assert request.num_processed_decode_tokens == 0
++    for output in range(1024):
++        [batch] = target._schedule_iteration(end.time + output * 2)
++        assert batch.num_tokens == [1]
++        assert batch.num_context_tokens == [prompt - 1 + output]
++        assert target._schedule_iteration(end.time + output * 2 + 0.25) == []
++        _conserves(target)
++        batch.on_batch_end(end.time + output * 2 + 1, ClusterType.DECODE)
++        computed_frontier = target._get_scheduler_num_computed_tokens(request)
++        target.on_batch_end(batch)
++    assert request.completed
++    assert request.num_processed_decode_tokens == 1024
++    assert computed_frontier == prompt + 1023
++    assert target._allocation_map == {}
++    assert target._scheduled_num_computed_tokens_by_request == {}
++    _conserves(source)
++    _conserves(target)
++    with pytest.raises(RuntimeError, match="no receiving"):
++        end.handle_event(scheduler, metrics)
++    if real_metrics:
++        assert metrics._kv_cache_transfer_metrics["transfer_count"] == 1
++        assert metrics._kv_cache_transfer_metrics["total_data_transferred"] == info.kv_cache_size_bytes
++        [trace] = traces._buffer
++        assert trace.name == "kv_cache_transfer" and trace.type == "TRANSFER"
++        assert trace.meta["transfer_size_bytes"] == info.kv_cache_size_bytes
++        assert trace.meta["payload_kind"] == info.payload_kind
++        assert trace.meta["block_size"] == 256
++        assert trace.meta["tensor_shape"] == {}
++        assert sum(trace.meta["tensor_size_bytes"].values()) == info.kv_cache_size_bytes
++        assert [group["source_held_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
++        assert [group["target_reserved_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
++        assert [group["transferred_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
++        assert sum(group["payload_bytes"] for group in trace.meta["cache_groups"]) == info.kv_cache_size_bytes
++        assert sum(component["resident_bytes"] for component in trace.meta["cache_components"]) == info.kv_cache_size_bytes
++        assert trace.meta["source_group_block_ids"] == {key: list(value) for key, value in info.source_group_block_ids.items()}
++        assert trace.meta["target_group_block_ids"] == {key: list(value) for key, value in info.target_group_block_ids.items()}
++        assert trace.meta["transferred_group_block_ids"] == {key: list(value) for key, value in info.transferred_group_block_ids.items()}
++        assert trace.meta["native_wire_bytes_known"] is False
++        traces.close()
++        written = [json.loads(line) for line in (tmp_path / "op_traces.jsonl").read_text().splitlines()]
++        assert len(written) == 2 and written[1]["meta"] == trace.meta
++        record_property("grouped_nixl_real_metrics_trace", json.dumps(written[1]))
++    else:
++        assert len(metrics.starts) == len(metrics.ends) == 1
++    record_property("grouped_nixl_lifecycle", json.dumps({
++        "prompt": prompt, "outputs": request.num_processed_decode_tokens,
++        "initial_source_groups": list(map(len, initial.values())),
++        "handoff_source_groups": _counts(info.source_group_block_ids),
++        "destination_reserved_groups": _counts(info.target_group_block_ids),
++        "transferred_groups": list(map(len, info.transferred_group_block_ids.values())),
++        "payload_bytes_per_worker_lane": info.kv_cache_size_bytes,
++        "first_context": prompt - 1, "last_context": prompt + 1022,
++        "computed_frontier": computed_frontier,
++        "source_free_blocks": source._kv_cache_manager.block_pool.get_num_free_blocks(),
++        "target_free_blocks": target._kv_cache_manager.block_pool.get_num_free_blocks(),
++        "pool_blocks": target._config.num_blocks, "reserved_null_blocks": 1,
++        "native_wire_bytes_known": False,
++        "real_metrics_callback": real_metrics,
++    }))
++
++
++@pytest.mark.parametrize("owner", ["source", "target"])
++@pytest.mark.parametrize("fault", ["missing", "empty", "zero", "wrong_length", "duplicate", "wrong_null"])
++def test_payload_rejects_missing_zero_or_incorrect_groups(owner, fault):
++    source, target, scheduler, _ = _harness()
++    request, _ = _prefill(source)
++    [end] = _start_event(request, source).handle_event(scheduler, _Metrics())
++    info = end._transfer_info
++    source_groups = dict(info.source_group_block_ids)
++    target_groups = dict(info.target_group_block_ids)
++    tables = source_groups if owner == "source" else target_groups
++    key = "compressed"
++    if fault == "missing":
++        tables.pop(key)
++    elif fault == "empty":
++        tables[key] = ()
++    elif fault == "zero":
++        tables[key] = (0,) + tables[key][1:]
++    elif fault == "wrong_length":
++        tables[key] = tables[key][:-1]
++    elif fault == "duplicate":
++        tables[key] = (tables[key][1],) + tables[key][1:]
++    else:
++        tables["swa_0"] = (tables[key][0],) + tables["swa_0"][1:]
++    with pytest.raises(ValueError, match="NIXL"):
++        get_grouped_nixl_payload(source._kv_cache_capacity, request.num_prefill_tokens, source_groups, target_groups)
++
++
++@pytest.mark.parametrize("fault", ["source", "target", "selected", "bytes"])
++def test_completion_rejects_changed_group_snapshot_before_metrics_or_release(fault):
++    source, target, scheduler, _ = _harness()
++    request, _ = _prefill(source)
++    metrics = _Metrics()
++    [end] = _start_event(request, source).handle_event(scheduler, metrics)
++    info = end._transfer_info
++    if fault == "bytes":
++        info.kv_cache_size_bytes += 1
++    else:
++        tables = {"source": info.source_group_block_ids, "target": info.target_group_block_ids, "selected": info.transferred_group_block_ids}[fault]
++        tables["compressed"] = tuple(reversed(tables["compressed"]))
++    with pytest.raises(RuntimeError, match="changed"):
++        end.handle_event(scheduler, metrics)
++    assert metrics.ends == []
++    assert request.id in source._allocation_map
++    assert request.id in target._kv_transfer_receiving_request_ids
++    assert request.num_processed_decode_tokens == 0
++    _conserves(source)
++    _conserves(target)
++
++
++def test_failed_payload_rolls_back_real_grouped_reservation(monkeypatch):
++    source, target, scheduler, predictor = _harness()
++    request, _ = _prefill(source)
++    monkeypatch.setattr(predictor, "get_structural_nixl_transfer_info_for_request", lambda **kwargs: (_ for _ in ()).throw(ValueError("bad payload")))
++    with pytest.raises(ValueError, match="bad payload"):
++        _start_event(request, source).handle_event(scheduler, _Metrics())
++    assert target._allocation_map == {}
++    assert target._kv_transfer_receiving_request_ids == set()
++    assert target._scheduled_num_computed_tokens_by_request == {}
++    assert source._kv_transfer_start_claimed_request_ids == set()
++    _conserves(source)
++    _conserves(target)
++
++
++def test_capacity_refusal_retains_p_then_reserves_after_actual_free():
++    source, target, scheduler, _ = _harness()
++    blocker = Request(0.0, 6144, 1024)
++    target._allocate_request(blocker, 7167, scheduler_num_computed_tokens=0)
++    blocker._num_processed_tokens = 7167
++    blocker._is_prefill_complete = True
++    target._scheduled_num_computed_tokens_by_request[blocker.id] = 7166
++    target.add_request(blocker)
++    request, _ = _prefill(source, output=1)
++    start = _start_event(request, source)
++    metrics = _Metrics()
++    start.handle_event(scheduler, metrics)
++    assert metrics.starts == []
++    assert request.id not in target._allocation_map
++    assert request.id in source._allocation_map
++    assert target.has_pending_kv_transfer_starts()
++    [last] = target._schedule_iteration(2.0)
++    last.on_batch_end(3.0, ClusterType.DECODE)
++    target.on_batch_end(last)
++    assert blocker.completed
++    assert blocker.id not in target._allocation_map
++    assert target.consume_popped_output_events() == [start]
++    assert not target.has_pending_kv_transfer_starts()
++    assert start.time == 3.0
++    [end] = start.handle_event(scheduler, metrics)
++    end.handle_event(scheduler, metrics)
++    [tail] = target._schedule_iteration(4.0)
++    tail.on_batch_end(5.0, ClusterType.DECODE)
++    target.on_batch_end(tail)
++    assert request.completed
++    assert target._allocation_map == {}
++    _conserves(source)
++    _conserves(target)
++
++
++def test_grouped_transfer_info_rejects_scalar_shortcut_and_empty_group():
++    source, target, scheduler, _ = _harness()
++    request, _ = _prefill(source)
++    [end] = _start_event(request, source).handle_event(scheduler, _Metrics())
++    with pytest.raises(ValueError, match="scalar"):
++        replace(end._transfer_info, source_prompt_common_blocks=24)
++    groups = dict(end._transfer_info.transferred_group_block_ids, compressed=())
++    with pytest.raises(ValueError, match="positive"):
++        replace(end._transfer_info, transferred_group_block_ids=groups)
++
++
++def test_grouped_reservation_rejects_capacity_mismatch_before_placement():
++    source, target, scheduler, _ = _harness()
++    request, _ = _prefill(source)
++    target._kv_cache_capacity = replace(target._kv_cache_capacity, zero_new_blocks=False)
++    with pytest.raises(ValueError, match="capacities must match"):
++        _start_event(request, source).handle_event(scheduler, _Metrics())
++    assert target._allocation_map == {}
++
++
++@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE])
++@pytest.mark.parametrize("connector", ["none", "p2p_nccl"])
++def test_other_grouped_pd_connectors_remain_unsupported(monkeypatch, role, connector):
++    monkeypatch.setattr(global_vars, "KV_CONNECTOR", connector)
++    with pytest.raises(NotImplementedError, match="NIXL PREFILL/DECODE"):
++        _lane(role)
++
++
++@pytest.mark.parametrize("dummy", [False, True])
++def test_grouped_transport_does_not_admit_v4_execution(dummy):
++    predictor = SimpleNamespace(_enable_dummy_mode=dummy)
++    with pytest.raises(NotImplementedError, match="eager co-location without PD" if dummy else "measured/native execution remains unqualified"):
++        serving_context(predictor, None, 0)
++
++
++@pytest.mark.parametrize("owner", ["source", "target"])
++def test_completion_rejects_actual_same_count_group_ownership_change(owner):
++    source, target, scheduler, _ = _harness()
++    request, _ = _prefill(source)
++    metrics = _Metrics()
++    [end] = _start_event(request, source).handle_event(scheduler, metrics)
++    lane = source if owner == "source" else target
++    table = lane._kv_cache_manager._group_tables[request.id]["compressed"]
++    table.reverse()
++    with pytest.raises(RuntimeError, match="ownership changed"):
++        end.handle_event(scheduler, metrics)
++    assert metrics.ends == []
++    assert request.id in source._allocation_map
++    assert request.id in target._kv_transfer_receiving_request_ids
++    _conserves(source)
++    _conserves(target)
+diff --git a/tests/unit/test_glm53_structural_pd.py b/tests/unit/test_glm53_structural_pd.py
+index a68cde8..5fbe5e0 100644
+--- a/tests/unit/test_glm53_structural_pd.py
++++ b/tests/unit/test_glm53_structural_pd.py
+@@ -410 +410 @@ def test_failed_payload_rolls_back_the_reserved_decode_frontier(monkeypatch) ->
+-def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> None:
++def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch, tmp_path, record_property) -> None:
+@@ -451,0 +452,26 @@ def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> Non
++    from frontier.metrics.metrics_store import MetricsStore
++    from frontier.metrics.trace_store import TraceStore
++
++    source, target, scheduler, _ = _harness()
++    request = _request_owned_by_prefill(source, 65)
++    traces = TraceStore(str(tmp_path), enabled=True)
++    metrics = MetricsStore(
++        SimpleNamespace(metrics_config=MetricsConfig(
++            output_dir=str(tmp_path), write_metrics=True, store_plots=False,
++            enable_op_level_tracing=True,
++        )),
++        {ClusterType.PREFILL: ClusterConfig(
++            cluster_type=ClusterType.PREFILL, replica_config=replica_config,
++            replica_scheduler_config=source._config,
++        )},
++        traces,
++    )
++    [end] = _start_event(request, source).handle_event(scheduler, metrics)
++    [trace] = traces._buffer
++    assert all(trace.meta[key] == value for key, value in meta.items())
++    end.handle_event(scheduler, metrics)
++    assert metrics._kv_cache_transfer_metrics["transfer_count"] == 1
++    assert metrics._kv_cache_transfer_metrics["total_data_transferred"] == 2 * 5_928_192
++    assert source._allocation_map == {} and target._allocation_map[request.id] == 2
++    record_property("glm_nixl_real_metrics_trace", str(trace.to_dict()))
++

@@ -131,9 +131,18 @@ class KVCacheManager:
             return 0
         return max(0, settled - group.window_tokens + 1 - group.extra_retained_tokens) // group.logical_block_size
 
-    def _group_allocation_plan(self, request: Request, num_tokens: int, scheduler_num_computed_tokens):
-        _require_positive_int(num_tokens, field="num_tokens")
+    def _group_allocation_plan(self, request: Request, num_tokens: int, scheduler_num_computed_tokens, num_external_computed_tokens=0):
+        # Async remote loads have no local work. Build their null window prefix
+        # from the complete external prompt, not the later prompt-tail replay.
+        _require_nonnegative_int(num_external_computed_tokens, field="num_external_computed_tokens")
+        if num_external_computed_tokens:
+            if type(num_tokens) is not int or num_tokens != 0 or request.id in self._group_tables:
+                raise ValueError("external grouped KV requires a new request with no local work")
+        else:
+            _require_positive_int(num_tokens, field="num_tokens")
         frontier = self._resolve_scheduler_num_computed_tokens(request, scheduler_num_computed_tokens)
+        if num_external_computed_tokens and frontier != 0:
+            raise ValueError("external grouped KV without prefix caching requires frontier zero")
         settled = self._settled_tokens.get(request.id, 0)
         if frontier < settled:
             raise ValueError("allocation frontier cannot precede settled grouped-cache progress")
@@ -141,8 +150,8 @@ class KVCacheManager:
         plan = []
         for group in self.cache_capacity.groups:
             current = len(tables.get(group.group_id, []))
-            skipped = self._num_skipped_group_blocks(group, settled)
-            required = ceil((frontier + num_tokens) / group.logical_block_size)
+            skipped = self._num_skipped_group_blocks(group, max(settled, num_external_computed_tokens))
+            required = ceil((frontier + num_external_computed_tokens + num_tokens) / group.logical_block_size)
             prefix = max(current, skipped)
             plan.append((group.group_id, max(0, skipped - current), max(0, required - prefix)))
         return plan
@@ -232,13 +241,16 @@ class KVCacheManager:
         new_computed_blocks: Optional[list[KVCacheBlock]] = None,
         *,
         scheduler_num_computed_tokens: Optional[int] = None,
+        num_external_computed_tokens: int = 0,
     ) -> bool:
         if self.cache_capacity is not None:
             if new_computed_blocks:
                 raise ValueError("grouped allocation does not support computed prefix blocks")
-            return self.get_num_blocks_to_allocate(
-                request, num_tokens, scheduler_num_computed_tokens=scheduler_num_computed_tokens
-            ) <= self.block_pool.get_num_free_blocks()
+            return sum(item[2] for item in self._group_allocation_plan(
+                request, num_tokens, scheduler_num_computed_tokens, num_external_computed_tokens,
+            )) <= self.block_pool.get_num_free_blocks()
+        if num_external_computed_tokens:
+            raise NotImplementedError("external computed slots require grouped allocation")
         num_new_blocks = self._get_num_new_blocks_required(
             request,
             num_tokens,
@@ -259,11 +271,14 @@ class KVCacheManager:
         new_computed_blocks: Optional[list[KVCacheBlock]] = None,
         *,
         scheduler_num_computed_tokens: Optional[int] = None,
+        num_external_computed_tokens: int = 0,
     ) -> Optional[KVCacheAllocationResult]:
         if self.cache_capacity is not None:
             if new_computed_blocks:
                 raise ValueError("grouped allocation does not support computed prefix blocks")
-            return self._allocate_group_slots(request, num_tokens, scheduler_num_computed_tokens)
+            return self._allocate_group_slots(request, num_tokens, scheduler_num_computed_tokens, num_external_computed_tokens)
+        if num_external_computed_tokens:
+            raise NotImplementedError("external computed slots require grouped allocation")
         computed_blocks = list(new_computed_blocks or [])
         if not self.can_allocate_slots(
             request,
@@ -347,8 +362,8 @@ class KVCacheManager:
             self.block_pool.free_blocks(reversed(request_blocks))
         self.num_cached_blocks.pop(request_id, None)
 
-    def _allocate_group_slots(self, request: Request, num_tokens: int, frontier):
-        plan = self._group_allocation_plan(request, num_tokens, frontier)
+    def _allocate_group_slots(self, request: Request, num_tokens: int, frontier, num_external_computed_tokens=0):
+        plan = self._group_allocation_plan(request, num_tokens, frontier, num_external_computed_tokens)
         total = sum(item[2] for item in plan)
         if total > self.block_pool.get_num_free_blocks():
             return None

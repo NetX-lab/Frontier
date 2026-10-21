@@ -5456,6 +5456,8 @@ class MetricsStore:
                 cluster_config.replica_config,
                 transfer_info.source_cluster_type,
                 kv_cache_size_bytes,
+                transfer_info=transfer_info,
+                block_size=cluster_config.replica_scheduler_config.block_size,
             )
             total_tokens = transfer_meta["total_tokens"]
             trace_context = OpTraceContext(

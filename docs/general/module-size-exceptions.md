@@ -127,3 +127,27 @@ existing subclass-facing getters. Moving their state here would overlap the
 pending measurement-family split above and the independently implemented DSA
 consumer. Those splits remain separate movement-only work; this exception is
 limited to the local contract wiring, with the unchanged 77-case matrix gate.
+
+## V4 grouped-transfer tracing wiring, 2026-10-21
+
+The grouped NIXL tracing fix changes `frontier/metrics/metrics_store.py` from
+5,742 to 5,744 lines. The two added arguments forward the existing transfer
+record and scheduler block size to `build_kv_cache_transfer_meta`. Without
+them, the actual tracing callback attempts to bind V4's mixed compression
+variants as one scalar attention layout and raises before returning the
+transfer-end event.
+
+Cleanup inspection found that the caller already owns transfer accounting and
+trace emission. Grouped layout interpretation, snapshot validation and component
+byte descriptions remain in `op_trace_utils.py`, which grows from 1,003 to
+1,089 lines and reuses the existing grouped payload calculation. No new ledger,
+allocation state or model classifier is added to the metrics store. Moving
+unrelated ledger code would enlarge this correction without fixing another
+part of the actual failing call chain.
+
+This exception covers only those two forwarding arguments. The functional
+split remains the existing stage-batch ledger extraction in step 3 above.
+Acceptance requires the real MetricsStore/TraceStore lifecycle regression,
+unchanged GLM metadata, and the unchanged 77-case artifact/cache comparison.
+It does not authorize additional metrics-store growth or claim that the
+planned split is complete.

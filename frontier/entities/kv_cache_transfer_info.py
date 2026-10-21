@@ -35,6 +35,9 @@ class KVCacheTransferInfo:
     target_reserved_common_blocks: Optional[int] = None
     target_ready_time: Optional[float] = None
     source_release_time: Optional[float] = None
+    source_group_block_ids: Optional[dict[str, tuple[int | None, ...]]] = None
+    target_group_block_ids: Optional[dict[str, tuple[int | None, ...]]] = None
+    transferred_group_block_ids: Optional[dict[str, tuple[int, ...]]] = None
 
     def __post_init__(self) -> None:
         if (
@@ -56,14 +59,28 @@ class KVCacheTransferInfo:
         if self.transfer_end_time is None:
             self.transfer_end_time = self.transfer_start_time + (self.transfer_time_ms * 1e-3)
         if self.kv_connector == "nixl":
-            if self.payload_kind != "structural_whole_prompt_pages_per_worker_lane":
+            if self.payload_kind == "structural_grouped_prompt_pages_per_worker_lane":
+                if self.source_prompt_common_blocks is not None or self.target_reserved_common_blocks is not None:
+                    raise ValueError("Grouped NIXL must not use scalar common blocks")
+                if not self.source_group_block_ids or not self.target_group_block_ids or not self.transferred_group_block_ids:
+                    raise ValueError("Grouped NIXL requires source, destination and transfer groups")
+                if set(self.source_group_block_ids) != set(self.target_group_block_ids) or set(self.source_group_block_ids) != set(self.transferred_group_block_ids):
+                    raise ValueError("Grouped NIXL source, destination and transfer groups differ")
+                for group_id, transferred in self.transferred_group_block_ids.items():
+                    source = self.source_group_block_ids[group_id]
+                    target = self.target_group_block_ids[group_id]
+                    if not transferred or any(type(block) is not int or block <= 0 for block in transferred):
+                        raise ValueError("Grouped NIXL requires positive transferred block IDs")
+                    if not set(transferred) <= set(source) or len(transferred) != sum(block is not None for block in target):
+                        raise ValueError("Grouped NIXL payload lacks source or destination ownership")
+            elif self.payload_kind != "structural_whole_prompt_pages_per_worker_lane":
                 raise ValueError("NIXL transfer requires the structural payload label")
-            if (
+            elif (
                 type(self.source_prompt_common_blocks) is not int
                 or self.source_prompt_common_blocks <= 0
             ):
                 raise ValueError("NIXL transfer requires source prompt common blocks")
-            if (
+            elif (
                 type(self.target_reserved_common_blocks) is not int
                 or self.target_reserved_common_blocks
                 < self.source_prompt_common_blocks
@@ -116,4 +133,10 @@ class KVCacheTransferInfo:
                     "source_release_time": self.source_release_time,
                 }
             )
+            if self.source_group_block_ids is not None:
+                payload.update(
+                    source_group_block_ids=self.source_group_block_ids,
+                    target_group_block_ids=self.target_group_block_ids,
+                    transferred_group_block_ids=self.transferred_group_block_ids,
+                )
         return payload

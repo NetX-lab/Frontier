@@ -407,7 +407,7 @@ def test_failed_payload_rolls_back_the_reserved_decode_frontier(monkeypatch) -> 
     assert source._kv_transfer_start_claimed_request_ids == set()
 
 
-def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> None:
+def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch, tmp_path, record_property) -> None:
     replica_config = _replica_config()
     request = Request(0.0, 65, 3)
     batch = Batch(
@@ -448,6 +448,32 @@ def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> Non
     assert meta["num_kv_heads"] is None
     assert meta["head_dim"] is None
     assert meta["native_wire_bytes_known"] is False
+
+    from frontier.metrics.metrics_store import MetricsStore
+    from frontier.metrics.trace_store import TraceStore
+
+    source, target, scheduler, _ = _harness()
+    request = _request_owned_by_prefill(source, 65)
+    traces = TraceStore(str(tmp_path), enabled=True)
+    metrics = MetricsStore(
+        SimpleNamespace(metrics_config=MetricsConfig(
+            output_dir=str(tmp_path), write_metrics=True, store_plots=False,
+            enable_op_level_tracing=True,
+        )),
+        {ClusterType.PREFILL: ClusterConfig(
+            cluster_type=ClusterType.PREFILL, replica_config=replica_config,
+            replica_scheduler_config=source._config,
+        )},
+        traces,
+    )
+    [end] = _start_event(request, source).handle_event(scheduler, metrics)
+    [trace] = traces._buffer
+    assert all(trace.meta[key] == value for key, value in meta.items())
+    end.handle_event(scheduler, metrics)
+    assert metrics._kv_cache_transfer_metrics["transfer_count"] == 1
+    assert metrics._kv_cache_transfer_metrics["total_data_transferred"] == 2 * 5_928_192
+    assert source._allocation_map == {} and target._allocation_map[request.id] == 2
+    record_property("glm_nixl_real_metrics_trace", str(trace.to_dict()))
 
 
 def test_structural_transfer_trace_rejects_non_page_payload(monkeypatch) -> None:
