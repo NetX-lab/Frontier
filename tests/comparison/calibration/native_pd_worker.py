@@ -264,6 +264,8 @@ def run(config):
         mode = config.get('mode', 'light')
         env, changed = instance_env(mode, plan['engine'], node, dict(os.environ),
                                     selected[role], observer=observer, role=role)
+        env['VLLM_ENGINE_READY_TIMEOUT_S'] = str(config['startup_timeout_s'])
+        changed['VLLM_ENGINE_READY_TIMEOUT_S'] = env['VLLM_ENGINE_READY_TIMEOUT_S']
         if plan['engine'].get('worker_extension_cls') == 'native_full_structure.FullModelInventory':
             fields = ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
                       'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE')
