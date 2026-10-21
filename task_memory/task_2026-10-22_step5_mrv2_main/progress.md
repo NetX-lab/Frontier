@@ -10,6 +10,7 @@
 | 2026-10-22 | Parent167 PASS and final No findings; merge26db654; actual05 and candidate77 running. |
 | 2026-10-22 | Final candidate comparison77/77 identical; full actual05 acceptance remains in progress. |
 | 2026-10-22 | Actual05 times out in both modes after entering decode; archive partial progress and begin CPU profiling. |
+| 2026-10-22 | Parent reproduces fixed-metadata/contract CPU bottleneck; scoped reuse implementation and initializer diagnosis launched. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -341,3 +342,20 @@ Checkpoint after verified compute correction:
   interactive authentication. Inspections instead stayed small: file metadata,
   at most32KiB tails, then streaming the verified1.6MiB scheduler files. The first
   census attempts did not execute and did not change artifacts.
+
+## CPU profiling follow-up
+
+- completed: merged diagnostic74980bb; no production changes. Parent repeats64
+  lane queries in0.532956s with RED and exact source truth PASS. Real collective
+  hits and enabled trace persistence controls also pass. Commands and scope are
+  in `cpu_performance_review.md`.
+- supported measured cause: repeated fixed layer metadata, precision and operator
+  contract construction before exact cache lookup. This explains substantial
+  query cost; the profile is not an allocation of all original wall time.
+- in-progress: same owner implements predictor-lifetime fixed metadata/contract
+  reuse, preserving per-query model selection and all dynamic coverage/proof checks.
+- in-progress independently: `D23-MRV2-LOAD-DIAG` profiles the original input
+  initialization through a short real loader call. No initializer change is
+  authorized by that diagnosis-only assignment.
+- pending: parent source review, repeated real-path validation, and complete
+  unchanged6144/1024 CLI acceptance. No full retry or timeout increase yet.

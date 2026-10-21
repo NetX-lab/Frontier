@@ -10,6 +10,7 @@
 | 2026-10-22 | Root/owner repair accepted; actual05 and final77 candidate in progress. |
 | 2026-10-22 | Final77 strict comparison passed; paired actual05 remains the outstanding CPU acceptance. |
 | 2026-10-22 | Actual05 timeout requires measured CPU diagnosis before the next full run. |
+| 2026-10-22 | Runtime fixed-contract bottleneck reproduced; implement reuse while separately profiling initialization. |
 
 1. Generate exact supported synthetic CPU attention/compute/count coverage through
    producer-shaped rows and shared manager caches, retaining truthful kinds and padding.
@@ -27,8 +28,9 @@ Primary follow-up: fixture/source slice and8 tests complete, merged8e1d0a1.
 Actual04 remains a historical failure. Metrics/trace root and owner repair is
 accepted at26db654 after parent167 PASS and independent No findings. Stable-source
 offline/online actual05 timed out after partial decode. The final77 strict
-comparison passed. Next: isolate the CPU cost with a short real-call profile ->
-review the measured cause and proposed correction -> affected verification ->
+comparison passed. Runtime fixed-contract reconstruction is reproduced at the
+real query boundary. Next: {implement scoped predictor-lifetime reuse,
+independently profile initializer} -> parent review and affected verification ->
 unchanged full6144/1024 execution and tail/READ/release/metrics acceptance.
 Reuse fixture02 and initialized `step5-mrv2-main`; keep2400s bounds and immutable
 old outputs. All validation remains CPU/synthetic, without native admission.

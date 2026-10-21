@@ -11,6 +11,7 @@
 | 2026-10-22 | Parent167 PASS and accepted root/owner repair; start actual05 at26db654 with8 unchanged input hashes. |
 | 2026-10-22 | Root/owner clean comparison77/77 identical; zero cache/provenance findings. |
 | 2026-10-22 | Actual05 fails by2400s timeout after partial decode; retain phase timings and missing-artifact evidence. |
+| 2026-10-22 | Parent repeats real-cache CPU RED and collective/trace controls; source correction remains in progress. |
 
 ## Environment and scope
 
@@ -253,3 +254,9 @@ Full census, event counts and command/log/scheduler/receipt hashes are retained
 in `actual05_timeout_receipt.json`. CPU profiling/minimization is now assigned
 to `D23-ACTUAL-MAIN/PERF`; the execution bound, inputs and modeled costs remain
 unchanged. No additional full attempt has been launched.
+
+Parent has now rerun the delivered short feedback loop and controls. It confirms
+the repeated fixed metadata/contract cost at the real query boundary while exact
+source values remain intact. See `cpu_performance_review.md` for exact commands,
+timings, source review scope and the independent initializer diagnosis. These
+diagnostics do not change the failed full-workload verdict.
