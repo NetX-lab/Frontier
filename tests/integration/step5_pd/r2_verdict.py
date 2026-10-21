@@ -128,7 +128,10 @@ SCHEDULER_EVENTS = {"source_hold", "source_free", "target_reserve", "target_free
 EVENTS = WORKER_EVENTS | SCHEDULER_EVENTS | {"frontend_select"}
 AUXILIARY_EVENTS = {"source_compute", "pressure", "reuse", "reset", "abort", "free_deferred"}
 METADATA_EVENTS = {"observer_started", "hook_installed", "provenance", "runner_created",
-                   "runner_abi", "capture_elapsed"}
+                    "runner_abi", "capture_elapsed"}
+CANONICAL_EVENTS = {'resident_identity', 'reference_start', 'state_checkpoint', 'reset_content', 'pool_snapshot', 'component_inventory'}
+FORWARD_EVENTS = {'native_forward_start', 'native_forward_end'}
+CANONICAL_EVENTS |= FORWARD_EVENTS
 UNVERIFIED_CRITERIA = [
     "Open-tail accumulator reset/continuity and local output equivalence beyond scheduled token positions.",
     "Page reset/reuse with explicit component and alias ownership.",
@@ -264,20 +267,24 @@ def load(stage, instrumentation, config, expected, content_check):
                 if row.get("event") in AUXILIARY_EVENTS | METADATA_EVENTS:
                     # These events do not close the unsupported criteria listed
                     # in UNVERIFIED_CRITERIA. Keep allocation snapshots separately.
-                    continue
+                    if not (('canonical_g3' in config or row.get('event') == 'abort')
+                            and row.get('event') in AUXILIARY_EVENTS-{'reset'}):
+                        continue
                 row = normalize(row, expected)
                 if row.get("event") == "registration":
                     row = registration_record(row, config, content_check)
-                if row.get("event") not in EVENTS:
+                extra = CANONICAL_EVENTS | AUXILIARY_EVENTS if 'canonical_g3' in config else {'abort'}
+                if row.get("event") not in EVENTS | extra:
                     raise ValueError(f"Unknown event: {row.get('event')!r}")
                 if (row.get("role") not in ("prefill", "decode")
                         or not isinstance(row.get("host"), str) or not row["host"]
                         or not all(integer(row.get(key)) for key in ("pid", "dp_rank", "monotonic_ns"))):
                     raise ValueError("Missing/invalid role, host, pid, dp_rank or monotonic_ns")
                 event = row["event"]
-                if event != "state_registration" and (not isinstance(row.get("request_id"), str) or not row["request_id"]):
+                requestless = {'state_registration', 'resident_identity', 'reset', 'reset_content', 'pool_snapshot', 'component_inventory'} | FORWARD_EVENTS
+                if event not in requestless and (not isinstance(row.get("request_id"), str) or not row["request_id"]):
                     raise ValueError("Missing native request_id")
-                if event != "frontend_select" and (not isinstance(row.get("engine_id"), str) or not row["engine_id"]):
+                if event not in {'frontend_select', 'resident_identity', 'pool_snapshot'} and (not isinstance(row.get("engine_id"), str) or not row["engine_id"]):
                     raise ValueError("Missing native engine_id")
                 if event == "frontend_select" and row.get("engine_id") is not None and not isinstance(row["engine_id"], str):
                     raise ValueError("Invalid frontend engine_id")
@@ -287,14 +294,14 @@ def load(stage, instrumentation, config, expected, content_check):
                         continue  # Local P allocation has no remote owner.
                     if key in row and not isinstance(row[key], str):
                         raise ValueError(f"Invalid {key}")
-                if event in WORKER_EVENTS and not integer(row.get("tp_rank")):
+                if event in WORKER_EVENTS | (CANONICAL_EVENTS-{'pool_snapshot'}) and not integer(row.get("tp_rank")):
                     raise ValueError("Worker record is missing tp_rank")
                 instrumentation.expect(row["host"] == path.parents[1].name,
                                        f"{where}: host disagrees with node directory")
-                if event in WORKER_EVENTS:
+                if event in WORKER_EVENTS | (CANONICAL_EVENTS-{'pool_snapshot'}):
                     instrumentation.expect(row["tp_rank"] in TP_RANKS,
                                            f"{where}: TP rank is outside 0..7")
-                if event not in ("state_registration", "frontend_select", "block_allocate", "block_remove_skipped", "tail_state"):
+                if event not in {'state_registration', 'frontend_select', 'block_allocate', 'block_remove_skipped', 'tail_state'} | extra:
                     expected_role = "prefill" if event.startswith("source_") else "decode"
                     instrumentation.expect(row["role"] == expected_role,
                                            f"{where}: event belongs to {expected_role}")
@@ -1297,6 +1304,8 @@ def judge(stage: Path, platform_status: str) -> dict:
             config[field] = {}
     observation = config.get("pd_state_observation", {})
     expected = trace_requests(stage, checks["placement_and_requests"])
+    reference_ids = {client for client, trace in expected.items() if trace.get('local_prefill_reference')}
+    pd_expected = {key: value for key, value in expected.items() if key not in reference_ids}
     abort_ids = {client for client, trace in expected.items() if 'cancel_after_decode_submit_s' in trace}
     if abort_ids:
         checks["pending_read_abort"] = Check()
@@ -1321,7 +1330,9 @@ def judge(stage: Path, platform_status: str) -> dict:
             checks["content"].missing.append(f"Invalid complete registration: {error}")
     native = defaultdict(list)
     for row in records:
-        if row["event"] not in ("frontend_select", "state_registration"):
+        client = row.get('client_request_id')
+        if (row['event'] in (EVENTS | {'abort'})-{'frontend_select', 'state_registration'}
+                and not (isinstance(client, str) and client in reference_ids)):
             native[identity(row)].append(row)
     transfers, summaries, reserves = {}, [], {}
     content_seen, native_qualified = set(), set()
@@ -1388,7 +1399,7 @@ def judge(stage: Path, platform_status: str) -> dict:
     checks["instrumentation"].require(transfers, "No native transfers identified")
     for name in ("content", "mapping", "native_readiness", "lifetime", "tail_and_decode", "cancellation"):
         checks[name].require(transfers, "No native transfers identified for this check")
-    checks["content"].require(content_ids and content_ids <= content_seen, "Missing frozen content-selected transfer evidence")
+    checks["content"].require(content_ids-reference_ids and content_ids-reference_ids <= content_seen, "Missing frozen content-selected transfer evidence")
     if abort_ids:
         checks["pending_read_abort"].require(abort_ids <= {row['client_request_id'] for row in summaries},
                                             'Missing frozen pending-READ abort transfer evidence')
@@ -1397,9 +1408,9 @@ def judge(stage: Path, platform_status: str) -> dict:
             uses = list(transfers.values()).count(key)
             checks["lifetime"].require(uses > 0, f"{key}: held source has no observed target transfer")
             checks["lifetime"].expect(uses <= 1, f"{key}: more than one target claims the source pending owner")
-    placement(records, transfers, reserves, expected, checks["placement_and_requests"])
+    placement(records, transfers, reserves, pd_expected, checks["placement_and_requests"])
     if explicit_mask:
-        readiness_coverage(expected, readiness_ids - abort_ids, native_qualified,
+        readiness_coverage(pd_expected, readiness_ids - abort_ids, native_qualified,
                            checks["placement_and_requests"].details.get("waves", {}), checks["native_readiness"])
     checks["native_readiness"].details["explicit_selection_masks"] = explicit_mask
     lengths = {r["num_prompt_tokens"] for r in reserves.values() if r and integer(r.get("num_prompt_tokens"))}
@@ -1414,6 +1425,22 @@ def judge(stage: Path, platform_status: str) -> dict:
     checks["boundaries"].require(any(r["different_local_page_ids"] for r in summaries), "No unequal source/target local page IDs exercised")
     checks["runtime"].require(platform_status == "Succeeded", f"Platform status is {platform_status}, not Succeeded")
     checks["runtime"].details.update(platform_status=platform_status, native_errors=native_errors)
+    if 'canonical_g3' in config:
+        try:
+            from . import r2_controls, r2_runtime
+        except ImportError:
+            import r2_controls
+            import r2_runtime
+        for name, callback in (
+                ('resident_identity', lambda check: r2_controls.resident(records, observation, check)),
+                ('independent_reference', lambda check: r2_controls.reference(stage, records, config, expected, clients, check)),
+                ('component_alias_conservation', lambda check: r2_controls.ownership(records, config, check)),
+                ('runtime_forward_census', lambda check: r2_runtime.judge(records, config, check))):
+            checks[name] = Check()
+            try:
+                callback(checks[name])
+            except Exception as error:
+                checks[name].missing.append(f'{name}: {type(error).__name__}: {error}')
     results = {name: check.result() for name, check in checks.items()}
     if native_errors:
         results["runtime"]["status"] = "BLOCKED_ON_RUNTIME"

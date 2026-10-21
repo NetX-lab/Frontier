@@ -568,7 +568,7 @@ async def read_completion_stream(response, *, cancel_after_first_content: bool =
 async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: float,
                   profile_window_s: tuple[float, float] | None = None, *,
                   vllm_version: str = "0.10.2", records: list[dict] | None = None,
-                  checkpoint=None) -> tuple[dict, list[dict]]:
+                  checkpoint=None, completion_url: str | None = None) -> tuple[dict, list[dict]]:
     """Post every row at its arrival offset; with profile_window_s, also open and
     close the server's torch profiler at those two offsets of the same clock.
     An optional prompt_id repeats identical token IDs under distinct request IDs.
@@ -576,7 +576,7 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
     rows without it keep the existing nonstreaming body and record format."""
     import aiohttp
 
-    url = f"http://127.0.0.1:{port}/v1/completions"
+    url = completion_url or f"http://127.0.0.1:{port}/v1/completions"
     bodies = {
         row["request_id"]: json.dumps({
             "model": SERVED_MODEL_NAME,

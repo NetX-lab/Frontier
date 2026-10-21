@@ -2,10 +2,15 @@
   "case_id": "h800_32",
   "region_size": 8,
   "capture_limits": {
-    "max_record_bytes": 268435456,
-    "max_capture_bytes_per_request": 268435456,
-    "max_capture_seconds_per_request": 60,
-    "max_events": 100000
+    "max_record_bytes": 1073741824,
+    "max_capture_bytes_per_request": 1073741824,
+    "max_capture_seconds_per_request": 600,
+    "max_events": 500000
+  },
+  "resident_identity": {
+    "chunk_bytes": 1048576,
+    "max_bytes": 68719476736,
+    "max_seconds": 600
   },
   "waves": [
     {"name": "warmup16", "spacing_s": 1, "num_decode_tokens": 1024, "prompt_lengths": [6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144, 6144], "capture_content": false, "templates": "warmup"},

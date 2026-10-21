@@ -15,7 +15,7 @@ from tests.unit.test_step5_native_pd import stage_inputs
 def stage_capture(tmp_path):
     inputs = stage_inputs(tmp_path)
     source = tmp_path / "native"
-    for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES:
+    for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES:
         path = source / (module.replace(".", "/") + ".py")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f'"""{module}"""\n')
@@ -39,8 +39,8 @@ def stage_capture(tmp_path):
 def test_actual_canonical_capture_stage_preserves_native_case_and_original_prompts(tmp_path):
     run, config, stage = stage_capture(tmp_path)
     receipt = verify_r2_stage.verify(stage)
-    assert receipt["requests"] == 32 and receipt["content_requests"] == 5
-    assert receipt["native_readiness_only_requests"] == 27
+    assert receipt["requests"] == 163 and receipt["content_requests"] == 8
+    assert receipt["native_readiness_only_requests"] == 155
     assert receipt["g3_qualified"] is False and receipt["clean_timing_eligible"] is False
     assert "role_num_gpu_blocks_override" not in config
     assert config["engine"]["api_server_count"] == 1
@@ -183,8 +183,8 @@ def test_exact_canonical_http_caller_preserves_proxy_handoff_and_native_token_co
 def test_preparation_command_never_claims_reference_or_launch_eligibility():
     report = r2_canonical.describe(Path("native"))
     assert report["sealed"] is report["submitted"] is report["ready_for_formal"] is False
-    assert report["definition"]["canonical_g3"]["independent_reference"] == "BLOCKED_ON_REFERENCE_DECISION"
-    assert len(report["required_before_sealing"]) == 2
+    assert report["definition"]["canonical_g3"]["independent_reference"] == "EXISTING_D_FULL_LOCAL_PREFILL_NO_KV_TRANSFER_PARAMS"
+    assert len(report["required_before_sealing"]) == 1
 
 
 @pytest.mark.parametrize("prompt", [6143, 6144, 6145])

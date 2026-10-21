@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 
 from tests.integration.step5_pd.r2_observation import NATIVE_SOURCE_PATHS
+from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES
 
 REPO = Path(__file__).resolve().parents[3]
 RUNTIME_MODULES = tuple(path[:-3].replace("/", ".") for path in NATIVE_SOURCE_PATHS)
@@ -15,6 +16,8 @@ SCHEMA_MODULES = (
     "vllm.v1.kv_cache_interface", "vllm.v1.core.sched.output",
     "vllm.v1.engine.input_processor", "vllm.entrypoints.openai.completion.serving",
 )
+CANONICAL_SCHEMA_MODULES = ('vllm.models.step5.nvidia.sparse_summary_cache',
+                            'vllm.distributed.parallel_state') + SOURCE_MODULES
 CAPTURE_FILES = {
     "tests/integration/step5_pd/r2_observation.py": "r2_observation.py",
     "tests/integration/step5_pd/r2_bootstrap/sitecustomize.py": "r2_bootstrap/sitecustomize.py",
@@ -44,11 +47,21 @@ def stage_observation(config: dict, definition: dict, stage: Path, model_dir: Pa
         for module in RUNTIME_MODULES}
     observation["schema_source_hashes"] = {
         module: sha256(source_root / (module.replace(".", "/") + ".py"))
-        for module in SCHEMA_MODULES}
+        for module in SCHEMA_MODULES + (CANONICAL_SCHEMA_MODULES if 'canonical_g3' in definition else ())}
     for source, destination in CAPTURE_FILES.items():
         path = stage / destination
         path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO / source, path)
+    if 'canonical_g3' in definition:
+        for name in ('r2_reference.py', 'r2_controls.py', 'r2_runtime.py'):
+            shutil.copy2(Path(__file__).with_name(name), stage / name)
+        for name in ('r2_replay.py', 'canonical_replay.py'):
+            shutil.copy2(Path(__file__).with_name(name), stage / 'tests/integration/step5_pd' / name)
+        shutil.copy2(REPO / 'tests/integration/step5_environment/compare_attention_state.py',
+                     stage / 'compare_attention_state.py')
+        observation['reference_helper_sha256'] = sha256(stage / 'r2_reference.py')
+        observation['runtime_helper_sha256'] = sha256(stage / 'r2_runtime.py')
+        config['replay_script'] = str(stage / 'tests/integration/step5_pd/r2_replay.py')
     observation["frozen_environment_hashes"] = {
         name: sha256(stage / name) for name in (
             "role_state_observation.py", "role_capacity_observation.py")}
@@ -70,6 +83,14 @@ def stage_observation(config: dict, definition: dict, stage: Path, model_dir: Pa
         if path.parent.name in content_waves for row in json.loads(path.read_text())["rows"]]
     content = set(observation["content_client_request_ids"])
     observation["readiness_only_client_request_ids"] = [row for row in rows if row not in content]
+    if 'canonical_g3' in definition:
+        specifications = {row['request_id']: row for path in (stage / 'trace').glob('*/request_ids.json')
+                          for row in json.loads(path.read_text())['rows']}
+        observation['request_specs'] = specifications
+        observation['local_reference_client_request_ids'] = [key for key, row in specifications.items()
+                                                            if row.get('local_prefill_reference')]
+        observation['pressure_client_request_ids'] = [key for key, row in specifications.items()
+                                                      if row['segment'] == 'capacity_pressure']
     observation["concurrent_waves"] = [wave["name"] for wave in definition["waves"]
                                          if len(wave["prompt_lengths"]) > 1]
     (stage / "r2_run.json").write_text(json.dumps(definition, indent=1, sort_keys=True))

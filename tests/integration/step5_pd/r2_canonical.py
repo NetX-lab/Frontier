@@ -1,8 +1,4 @@
-"""Prepare case-aligned R2 capture inputs without claiming an independent reference.
-
-The describe command is runnable offline. It deliberately does not seal or submit
-a G3 package while the independent functional reference decision is unresolved.
-"""
+"""Prepare case-aligned R2 diagnostics and the selected independent native reference."""
 
 from __future__ import annotations
 
@@ -27,20 +23,36 @@ def definition(source_root: Path) -> dict:
         "D21 P0 canonical R2 capture, not clean timing or G3 acceptance. "
         "6144/1024 content and native no-fence requests; adjacent6145/1023 is "
         "a boundary control only, retaining the frozen7168 context. "
-        "Independent functional reference is not yet selected or implemented.")
+         "Independent reference executes full local prefill on existing D after idle; "
+         "no external metadata, prefix-cache reuse, clean timing or numerical waiver.")
     run["canonical_g3"] = {
         "workload": common["workload"],
         "manifest_sha256": canonical_replay.MANIFEST_SHA256,
         "sums_sha256": canonical_replay.SUMS_SHA256,
-        "independent_reference": "BLOCKED_ON_REFERENCE_DECISION",
+        "independent_reference": "EXISTING_D_FULL_LOCAL_PREFILL_NO_KV_TRANSFER_PARAMS",
         "pending_read_abort": "REQUIRE_OBSERVED_NATIVE_IN_FLIGHT_READ_ABORT_NOT_DEADLINE_ALONE",
         "pressure": "UNVERIFIED_WITHOUT_OBSERVED_NATIVE_ALLOCATION_PRESSURE",
     }
     run["waves"] = [wave | {"stream": True} for wave in settings["waves"]]
+    # Offer the complete frozen template population. Only an observed native
+    # allocation failure establishes pressure; offered concurrency does not.
+    reuse = run["waves"].pop()
+    for length, output in ((6144, 1024), (6143, 1024), (6145, 1023)):
+        run["waves"].append(dict(name=f"reference{length}", spacing_s=0,
+            num_decode_tokens=output, prompt_lengths=[length], stream=True,
+            local_prefill_reference=True))
+    run["waves"].append(dict(name="capacity_pressure", spacing_s=0,
+        num_decode_tokens=1024, prompt_lengths=[6144]*run["engine"]["max_num_seqs"],
+        capture_content=False, stream=True))
+    run["waves"].append(reuse)
     run["gating_wave"] = settings["gating_wave"]
     run["pd_state_observation"] = {
         "region_size": settings["region_size"], "expected_tp_ranks": run["engine"]["tensor_parallel_size"],
-        "source_root": str(source_root), **settings["capture_limits"]}
+        "source_root": str(source_root), **settings["capture_limits"],
+        "resident_identity": settings["resident_identity"]}
+    run["canonical_g3"].update(idle_timeout_s=common["idle_timeout_s"],
+                               idle_poll_s=common["idle_poll_s"],
+                               dp_size=run["engine"]["data_parallel_size"])
     run["scrape_timeout_s"] = 10
     run["release_margin_s"] = 5
     validate_definition(run)
@@ -69,6 +81,16 @@ def validate_definition(run: dict) -> None:
         raise ValueError("Canonical concurrent wave requires eight6144/1024 no-fence requests")
     if not waves["cancel6144"].get("cancel_after_first_content"):
         raise ValueError("Missing declared cancellation control")
+    references = [wave for wave in run['waves'] if wave.get('local_prefill_reference')]
+    if ({(wave['prompt_lengths'][0], wave['num_decode_tokens']) for wave in references}
+            != {(6144, 1024), (6143, 1024), (6145, 1023)}
+            or any(len(wave['prompt_lengths']) != 1 for wave in references)):
+        raise ValueError('Independent local native reference cases must match normal content inputs')
+    pressure = waves['capacity_pressure']
+    if (pressure['prompt_lengths'] != [6144]*run['engine']['max_num_seqs']
+            or pressure['num_decode_tokens'] != 1024 or pressure.get('capture_content') is not False
+            or pressure['spacing_s'] != 0):
+        raise ValueError('Explicit native pressure trigger must preserve full context and capacity')
     abort = waves["abort_read6144"]
     if (type(abort.get("cancel_after_decode_submit_s")) not in (int, float)
             or not 0 < abort["cancel_after_decode_submit_s"] < float("inf")
@@ -98,18 +120,19 @@ def prepare_traces(run: dict, stage: Path) -> None:
             raise ValueError("Canonical diagnostic wave exceeds its frozen prompt template population")
         for row, template in zip(rows, templates):
             row.update(prompt_id=template["request_id"], template_request_id=template["request_id"],
-                       return_token_ids=True)
+                        return_token_ids=True)
+            if wave.get('local_prefill_reference'):
+                row['local_prefill_reference'] = True
         path.write_text(json.dumps({"rows": rows}, indent=1))
 
 
 def describe(source_root: Path) -> dict:
     run = definition(source_root)
     return {"task_id": "D21-CANONICAL-G3", "definition": run,
-            "status": "CAPTURE_CALLER_IMPLEMENTED_REFERENCE_BLOCKED", "sealed": False,
+            "status": "IMPLEMENTED_NATIVE_DIAGNOSTICS_NOT_RUN", "sealed": False,
             "ready_for_formal": False, "submitted": False,
             "required_before_sealing": [
-                "Approve and implement the independent native functional reference and complete parameter/buffer/scales identity comparison",
-                "Complete reset/reuse/pressure component and alias conservation, including independent-reference state checks"],
+                "Commit and verify the exact native-source-bound package before parent submission"],
             "parent_budget": {"replica": 4, "gpu_per_replica": 8, "gpu_type": "H800",
                               "charged_group": "codesign", "preemptible": False,
                               "timeout_seconds": run["resources"]["timeout_seconds"]}}

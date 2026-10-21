@@ -81,6 +81,17 @@ def verify(stage: Path) -> dict:
         assert sum("cancel_after_decode_submit_s" in row for row in rows) == 1
         abort = next(row for row in rows if "cancel_after_decode_submit_s" in row)
         assert abort["request_id"] in native_only and abort["cancel_after_decode_submit_s"] > 0
+        references = {row['request_id'] for row in rows if row.get('local_prefill_reference')}
+        pressure = {row['request_id'] for row in rows if row['segment'] == 'capacity_pressure'}
+        assert references == set(observation['local_reference_client_request_ids']) and len(references) == 3
+        assert references <= content and len(pressure) == engine['max_num_seqs']
+        assert pressure == set(observation['pressure_client_request_ids']) and pressure <= native_only
+        assert config['replay_script'] == str(stage / 'tests/integration/step5_pd/r2_replay.py')
+        assert sha256(stage / 'r2_reference.py') == observation['reference_helper_sha256']
+        assert sha256(stage / 'r2_runtime.py') == observation['runtime_helper_sha256']
+        for name in ('r2_reference.py', 'r2_controls.py', 'r2_runtime.py', 'tests/integration/step5_pd/r2_replay.py', 'compare_attention_state.py'):
+            assert name in config['tool_hashes']
+            compile((stage/name).read_text(), name, 'exec')
     for boundary in (8, 16):
         assert {boundary - 1, 0, 1} <= {row["num_prefill_tokens"] % boundary for row in rows}
     plans = json.loads((stage / "preflight.json").read_text())
@@ -114,7 +125,7 @@ def verify(stage: Path) -> dict:
         "content_requests": len(content), "native_readiness_only_requests": len(native_only),
         "diagnostic_only": True, "clean_timing_eligible": False,
         **({"canonical_g3": config["canonical_g3"], "g3_qualified": False,
-            "package_sealing": "BLOCKED_ON_REFERENCE_AND_PENDING_READ_ABORT"} if canonical else {}),
+            "package_sealing": "OFFLINE_VERIFIED_NATIVE_OBSERVATIONS_NOT_RUN"} if canonical else {}),
     }
 
 
