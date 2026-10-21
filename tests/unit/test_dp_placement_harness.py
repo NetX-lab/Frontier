@@ -76,15 +76,17 @@ def test_v028_command_uses_local_dummy_metadata_and_native_attention_args(tmp_pa
         "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
     }))
     engine = native_engine() | {"attention_backend": "FLASHMLA_SPARSE",
-                                "async_scheduling": True, "quantization": "fp8",
-                                "shutdown_timeout": 30,
-                                "distributed_executor_backend": "mp"}
+                                 "async_scheduling": True, "quantization": "fp8",
+                                 "shutdown_timeout": 30,
+                                 "distributed_executor_backend": "mp",
+                                 "worker_extension_cls": "native_full_structure.FullModelInventory"}
     command = server_command(engine, tmp_path, 8100)
     assert command[command.index("--load-format") + 1] == "dummy"
     assert command[command.index("--attention-backend") + 1] == "FLASHMLA_SPARSE"
     assert command[command.index("--quantization") + 1] == "fp8"
     assert command[command.index("--shutdown-timeout") + 1] == "30"
     assert command[command.index("--distributed-executor-backend") + 1] == "mp"
+    assert command[command.index("--worker-extension-cls") + 1] == "native_full_structure.FullModelInventory"
     assert "--async-scheduling" in command
     assert "--enable-return-routed-experts" not in command
     assert "--trust-remote-code" not in command

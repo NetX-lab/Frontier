@@ -9,7 +9,9 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tarfile
+from types import ModuleType, SimpleNamespace
 
 import pytest
 import yaml
@@ -261,7 +263,7 @@ def test_missing_legacy_snapshot_does_not_skip_native_checker(tmp_path, monkeypa
     with pytest.raises(pytest.skip.Exception, match="External legacy checker baseline is unavailable"):
         legacy_snapshot()
     checker = load_checker(CHECKER)
-    assert checker.native_rank_graph_evidence({}, {}, {})[0] is False
+    assert checker.native_rank_graph_evidence({}, {}, {}, tmp_path, {}, [], {})[0] is False
 
 
 def test_missing_pinned_archive_skips_native_fixture(tmp_path_factory, monkeypatch):
@@ -277,12 +279,237 @@ def test_missing_pinned_archive_skips_native_fixture(tmp_path_factory, monkeypat
         archived_harness.__wrapped__(tmp_path_factory)
 
 
-def test_capture_inventory_and_claimed_replay_boolean_cannot_prove_runtime_coverage():
+def test_capture_inventory_and_claimed_replay_boolean_cannot_prove_runtime_coverage(tmp_path):
     checker = load_checker(CHECKER)
     passed, evidence = checker.native_rank_graph_evidence({"fixture": dict(inventory=[dict(
         groups={"world": {"rank": 0}}, moe_backends={"layer": "FLASHINFER_CUTLASS"},
-        effective_graph="FULL_DECODE_ONLY", serving_replay_verified=True)])}, {}, {})
+        effective_graph="FULL_DECODE_ONLY", serving_replay_verified=True)])}, {}, {}, tmp_path, {}, [], {})
     assert not passed and "UNVERIFIED" in evidence
+
+
+@pytest.fixture
+def serving_counters(tmp_path, monkeypatch, request):
+    """CPU fake workers execute real collector hooks; these are not native qualification."""
+    source = original_checkout_root(REPO) / ".real-engine/vLLM-BS/.worktrees/glm-h5-clean-2cf0a69"
+    if not source.is_dir():
+        pytest.skip(f"Pinned native dispatch source fixture is unavailable: {source}")
+    source_names = ("vllm/v1/cudagraph_dispatcher.py", "vllm/forward_context.py",
+                    "vllm/distributed/parallel_state.py", "vllm/compilation/cuda_graph.py",
+                    "vllm/config/vllm.py", "vllm/config/compilation.py",
+                    "vllm/v1/worker/gpu_model_runner.py", "vllm/v1/worker/gpu_worker.py",
+                    "vllm/entrypoints/openai/completion/serving.py")
+    run, stage = tmp_path / "run", tmp_path / "stage"
+    module_name = "tests/comparison/calibration/native_full_structure.py"
+    stage.mkdir()
+    shutil.copyfile(REPO / module_name, stage / "native_full_structure.py")
+    captures = [1, 2, 4, *range(8, 257, 8)]
+    parameter = getattr(request, 'param', 'FULL')
+    decode_mode, dp, gpu_type, randomized = (parameter if isinstance(parameter, tuple)
+        else (parameter, 4, 'H200', False))
+    engine = dict(tensor_parallel_size=8, data_parallel_size=dp, pipeline_parallel_size=1,
+        enforce_eager=False, max_num_seqs=128, max_num_batched_tokens=8192,
+        worker_extension_cls="native_full_structure.FullModelInventory",
+        compilation_config=dict(mode=3, cudagraph_mode="FULL_AND_PIECEWISE",
+                                cudagraph_capture_sizes=captures, max_cudagraph_capture_size=256))
+    config = dict(data_parallel_size_local=1, output_dir=str(run), script=str(stage / "native_pd_worker.py"), harness_dir=str(stage),
+        harness_files={module_name: "native_full_structure.py"},
+        expected_source_hashes={name: digest(source / name) for name in source_names})
+    manifest = dict(run_generation="cpu-fixture-not-native-qualification", groundtruth_checkout_path=str(source),
+        harness_worktree=str(REPO), harness_sha256={module_name: digest(REPO / module_name)},
+        inputs_sha256={str(stage / "native_full_structure.py"): digest(stage / "native_full_structure.py")},
+        resources=dict(gpus=2 * 8 * dp, gpu_type=gpu_type))
+    write(run / "run_manifest.json", manifest)
+    workload, formal, warmup = canonical_workload(TRACE)
+    records = [dict(request_id=workload["repetitions"]["runtime_request_id_rule"].format(
+                        request_id=row["request_id"], repeat=repeat), repeat=repeat, segment=phase)
+               for repeat in workload["repetitions"]["repeat_indices"]
+               for phase, templates in (("warmup", warmup), ("formal", formal)) for row in templates]
+    nodes, emitted = {}, []
+    with monkeypatch.context() as patch:
+        patch.delenv("FRONTIER_NATIVE_SERVING_EVIDENCE_DIR", raising=False)
+        collector = load_checker(REPO / module_name)
+        patch.setattr(collector.FullModelInventory, "full_model_inventory",
+                      lambda worker: json.dumps(worker.fixture_inventory))
+        for host_index in range(2 * dp):
+            role, owner = ("prefill" if host_index < dp else "decode"), host_index % dp
+            host, directory = f"fixture-host{host_index}", run / "nodes" / f"fixture-host{host_index}"
+            env = dict(FRONTIER_NATIVE_SERVING_EVIDENCE_DIR=str(directory),
+                FRONTIER_NATIVE_RUN_GENERATION=manifest["run_generation"], FRONTIER_NATIVE_ROLE=role)
+            nodes[host] = dict(plan=dict(role=role, lane=owner, engine=engine | {"role_devices": {role: list(map(str, range(8)))}}),
+                native_source_hashes=config["expected_source_hashes"].copy(), server_env_set=env,
+                serving_instrumentation=dict(extension=engine["worker_extension_cls"],
+                    module_sha256=manifest["harness_sha256"][module_name], native_python_callables_wrapped=True,
+                    device_completion_observed=False, overhead_measured=False),
+                server_command=[sys.executable, "-m", "vllm.entrypoints.cli.main", "serve", "CPU-fixture-only",
+                                "--worker-extension-cls", engine["worker_extension_cls"]],
+                nvidia_smi="\n".join(f"GPU {rank}: NVIDIA {gpu_type} (UUID: GPU-fixture-{host}-{rank})" for rank in range(8)))
+            for rank in range(8):
+                state = SimpleNamespace(mode="NONE", tokens=1, replay=False, native_calls=0, native_replays=0)
+                descriptor = SimpleNamespace(num_tokens=1, num_reqs=None, uniform=False, has_lora=False, num_active_loras=0)
+                context = SimpleNamespace(cudagraph_runtime_mode=SimpleNamespace(name="NONE"), batch_descriptor=descriptor)
+
+                def get_context():
+                    context.cudagraph_runtime_mode.name = state.mode
+                    return context
+
+                class CUDAGraph:
+                    def replay(self):
+                        state.native_replays += 1
+                        return None
+
+                class Model:
+                    def __call__(self, **kwargs):
+                        state.native_calls += 1
+                        if state.replay:
+                            CUDAGraph().replay()
+                        return None
+
+                class GPUModelRunner:
+                    def __init__(self):
+                        self.model = Model()
+                        self.cudagraph_dispatcher = SimpleNamespace(
+                            cudagraph_mode=SimpleNamespace(name="FULL_AND_PIECEWISE"), keys_initialized=True)
+
+                    def _model_forward(self, **kwargs):
+                        return self.model(**kwargs)
+
+                    def _dummy_run(self, num_tokens, is_profile=False, is_graph_capturing=False):
+                        return self.model(input_ids=SimpleNamespace(shape=(num_tokens,)),
+                                          positions=SimpleNamespace(shape=(num_tokens,)), inputs_embeds=None)
+
+                class Worker:
+                    def __init__(self):
+                        self.rank, self.device, self.model_runner = rank, f"cuda:{rank}", GPUModelRunner()
+                        self.vllm_config = SimpleNamespace(compilation_config=SimpleNamespace(
+                            cudagraph_mode=SimpleNamespace(name="FULL_AND_PIECEWISE"),
+                            cudagraph_capture_sizes=captures, max_cudagraph_capture_size=256))
+                        global_rank = owner * 8 + rank
+                        memberships = dict(world=list(range(8 * dp)), ep=list(range(8 * dp)),
+                            tp=list(range(owner * 8, (owner + 1) * 8)), dp=list(range(rank, 8 * dp, 8)))
+                        self.fixture_inventory = dict(host=host, worker_rank=rank, device=self.device,
+                            request_owner=owner, groups={name: dict(rank=global_rank, ranks=members,
+                                world_size=len(members), rank_in_group=members.index(global_rank))
+                                for name, members in memberships.items()})
+
+                    def compile_or_warm_up_model(self):
+                        self.model_runner._dummy_run(1, is_profile=True)
+                        self.model_runner._dummy_run(1, is_graph_capturing=True)
+                        self.model_runner._dummy_run(1)
+
+                    def execute_model(self, scheduler_output):
+                        return self.model_runner._model_forward(input_ids=SimpleNamespace(shape=(state.tokens,)),
+                            positions=SimpleNamespace(shape=(state.tokens,)), inputs_embeds=None)
+
+                    def shutdown(self):
+                        return None
+
+                Worker.__module__ = "vllm.v1.worker.gpu_worker"
+                GPUModelRunner.__module__ = "vllm.v1.worker.gpu_model_runner"
+                CUDAGraph.__module__ = "torch.cuda.graphs"
+                for name in ("vllm", "vllm.v1", "vllm.v1.worker", "vllm.forward_context",
+                             "vllm.v1.worker.gpu_worker", "vllm.v1.worker.gpu_model_runner", "torch"):
+                    patch.setitem(sys.modules, name, ModuleType(name))
+                sys.modules["vllm.v1.worker.gpu_worker"].Worker = Worker
+                sys.modules["vllm.v1.worker.gpu_model_runner"].GPUModelRunner = GPUModelRunner
+                sys.modules["vllm.forward_context"].get_forward_context = get_context
+                sys.modules["torch"].cuda = SimpleNamespace(CUDAGraph=CUDAGraph,
+                     get_device_properties=lambda device: SimpleNamespace(name=f"NVIDIA {gpu_type}", uuid=f"GPU-fixture-{host}-{rank}"),
+                    get_device_capability=lambda device: (9, 0))
+                patch.setattr(collector.socket, "gethostname", lambda: host)
+                for name, value in env.items():
+                    patch.setenv(name, value)
+                observer = collector._install_native_serving_inventory()
+                worker = Worker()
+                worker.compile_or_warm_up_model()
+                state.mode, state.tokens, state.replay = ("NONE", 6144, False) if role == "prefill" else (decode_mode, 1, True)
+                descriptor.num_tokens = state.tokens
+                descriptor.num_reqs, descriptor.uniform = (1, True) if state.mode == "FULL" else (None, False)
+                for repeat in workload["repetitions"]["repeat_indices"]:
+                    for phase in ("warmup", "formal"):
+                        clients = [r for r in records if (r["repeat"], r["segment"]) == (repeat, phase)]
+                        for record in clients[owner::dp]:
+                            native_id = "cmpl-" + record["request_id"] + "-0"
+                            if randomized:
+                                native_id += '-a12b34c5'
+                            worker.execute_model(SimpleNamespace(num_scheduled_tokens={native_id: state.tokens},
+                                                                 total_num_scheduled_tokens=state.tokens))
+                worker.shutdown()
+                assert observer.forwards == state.native_calls
+                assert observer.replays == state.native_replays
+                emitted.append(directory / "serving" / f"rank{rank}.json")
+    return SimpleNamespace(checker=load_checker(CHECKER), run=run, nodes=nodes, manifest=manifest,
+                           engine=engine, workload=workload, records=records, config=config, paths=emitted, decode_mode=decode_mode)
+
+
+def check_serving_counters(fixture):
+    return fixture.checker.native_rank_graph_evidence(fixture.nodes, fixture.manifest, fixture.engine,
+        fixture.run, fixture.workload, fixture.records, fixture.config)
+
+
+@pytest.mark.parametrize("serving_counters", ["FULL", "PIECEWISE", ('FULL', 2, 'H800', False),
+    ('PIECEWISE', 2, 'H800', False), ('FULL', 2, 'H800', True)], indirect=True)
+def test_serving_counters_real_hooks_admit_prefill_none_and_actual_decode_replay(serving_counters):
+    passed, evidence = check_serving_counters(serving_counters)
+    assert passed, evidence
+    observed = json.loads(evidence)
+    dp = serving_counters.engine['data_parallel_size']
+    assert observed["physical_ranks"] == 2 * 8 * dp and observed["phases_per_rank"] == 6
+    assert observed["serving_counts"]["prefill"] == {"NONE_forwards": 3456, "NONE_replays": 0}
+    mode = serving_counters.decode_mode
+    assert observed["serving_counts"]["decode"] == {mode + "_forwards": 3456, mode + "_replays": 3456}
+    assert observed["per_rank_phase_counts"]["prefill/fixture-host0/rank0"]["repeat01_warmup"] == {"forwards": 16 // dp, "replays": 0}
+    assert observed["per_rank_phase_counts"][(f"decode/fixture-host{dp}/rank0")]["repeat03_formal"] == {"forwards": 128 // dp, "replays": 128 // dp}
+    write(serving_counters.run.parent / "counter_predicate_cpu_only.json", dict(
+        scope="CPU fake workers with actual collector hooks; not native qualification", predicate=observed))
+
+
+@pytest.mark.parametrize("fault", ["missing", "stale", "dummy_only", "capture_only", "failed_replay",
+    "none_supported_decode", "full_zero", "wrong_role", "wrong_rank", "wrong_generation", "wrong_phase_ids",
+    "native_config", "wrong_uuid", "post_warmup", "observation_error", "dropped", "unattributed", "unknown_shape",
+    "wrong_count", "missing_phase", "module_pin", "source_pin", "missing_hook", "instrumentation_pin", "wrong_owner"])
+def test_serving_counters_reject_unverified_evidence(serving_counters, fault):
+    fixture = serving_counters
+    path = fixture.paths[32]
+    payload = json.loads(path.read_text())
+    serving = [r for r in payload["counters"]["rows"] if r["kind"] == "serving"]
+    if fault in ("dummy_only", "capture_only"):
+        for row in serving:
+            row.update(kind="dummy" if fault == "dummy_only" else "capture", repeat=None, phase=None)
+    if fault == "failed_replay":
+        payload["counters"]["rows"] = [r for r in payload["counters"]["rows"] if r["kind"] != "serving"]
+        payload["counters"]["successful_forwards"] = sum(r["successful_forwards"] for r in payload["counters"]["rows"])
+        payload["counters"]["successful_replays"] = 0
+    if fault == "full_zero":
+        for row in serving: row["successful_replays"] = 0
+        payload["counters"]["successful_replays"] = 0
+    if fault == "none_supported_decode":
+        for row in serving:
+            row.update(graph_mode="NONE", successful_replays=0,
+                       batch_descriptor=dict(num_tokens=1, num_reqs=None, uniform=False, has_lora=False, num_active_loras=0))
+        payload["counters"]["successful_replays"] = 0
+    if fault == "wrong_role": payload["role"] = "prefill"
+    if fault == "wrong_rank": payload["inventory"]["worker_rank"] = 1
+    if fault == "wrong_generation": payload["run_generation"] = "earlier-CPU-fixture"
+    if fault == "wrong_phase_ids": payload["counters"]["request_ids"][0]["request_ids"][0] = "cmpl-wrong-phase-0"
+    if fault == "native_config": payload["inventory"]["effective_graph"]["max_capture_size"] = 6144
+    if fault == "wrong_uuid": payload["inventory"]["device_identity"]["uuid"] = "GPU-another-device"
+    if fault == "post_warmup": payload["stage"] = "post_warmup"
+    if fault == "observation_error": payload["observation_errors"] = [{"where": "fixture", "error": "failed"}]
+    if fault == "dropped": payload["counters"]["dropped_rows"] = 1
+    if fault == "unattributed": serving[0]["kind"] = "unattributed"
+    if fault == "unknown_shape": serving[0]["input_shapes"] = None
+    if fault == "wrong_count": payload["counters"]["successful_forwards"] += 1
+    if fault == "missing_phase": serving[0]["phase"] = "not-a-phase"
+    if fault == "missing_hook": payload["hooks"].pop()
+    if fault == "module_pin": fixture.manifest["harness_sha256"]["tests/comparison/calibration/native_full_structure.py"] = "0" * 64
+    if fault == "source_pin": fixture.config["expected_source_hashes"]["vllm/v1/cudagraph_dispatcher.py"] = "0" * 64
+    if fault == "instrumentation_pin": fixture.nodes["fixture-host4"]["serving_instrumentation"]["module_sha256"] = "0" * 64
+    if fault == "wrong_owner": payload["inventory"]["request_owner"] = 1
+    write(path, payload)
+    if fault == "missing": path.unlink()
+    if fault == "stale": os.utime(path, ns=(0, 0))
+    passed, evidence = check_serving_counters(fixture)
+    assert not passed and "UNVERIFIED" in evidence, evidence
 
 
 def update_native_stop(run, host, *, returned, signal, returncode=0, head_stopped=True):

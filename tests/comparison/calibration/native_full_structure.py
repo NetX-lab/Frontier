@@ -300,6 +300,292 @@ class FullModelInventory:
         return json.dumps(result, default=str)
 
 
+class NativeServingInventory:
+    """Bounded host observations, never a verdict on device completion or timing.
+
+    The evidence directory is the node directory. Both emissions atomically
+    update ``serving/rank<worker.rank>.json``; pre_shutdown is cumulative.
+    Counter rows distinguish native serving, profile, dummy and capture calls.
+    Only original Python calls returning successfully increment counters.
+    """
+
+    MAX_ROWS = 4096
+    MAX_ERRORS = 64
+    # The deployed module is standalone. Keep this fixed-workload ID contract
+    # source-tested against build_fixed_manifest rather than importing tests.
+    REQUEST_NAMESPACE = 'fixed-6144-1024-req128-qps1'
+    REQUEST_LIMITS = {'formal': 128, 'warmup': 16}
+    REPEATS = (1, 2, 3)
+
+    def __init__(self, directory, generation, role):
+        import threading
+        self.directory = Path(directory)
+        self.generation, self.role = generation, role
+        self.local = threading.local()
+        self.rows, self.requests, self.errors, self.hooks = {}, {}, [], []
+        self.forwards = self.replays = self.dropped = 0
+        self.inventory = None
+        if not generation or role not in ('prefill', 'decode'):
+            self.error('provenance', ValueError('Missing run generation or invalid native role'))
+
+    def error(self, where, error):
+        # Even a broken stderr or error formatter must not affect native work.
+        try:
+            row = {'where': where, 'error': f'{type(error).__name__}: {error}'}
+            if len(self.errors) < self.MAX_ERRORS and row not in self.errors:
+                self.errors.append(row)
+                print('NATIVE_SERVING_UNVERIFIED', row, file=sys.stderr, flush=True)
+        except Exception:
+            pass
+
+    def observe(self, where, operation, *args):
+        try:
+            return operation(*args)
+        except Exception as error:
+            self.error(where, error)
+            return None
+
+    def scheduler_context(self, output):
+        import re
+        scheduled = output.num_scheduled_tokens
+        if type(scheduled) is not dict or any(
+                type(n) is not int or n < 0 for n in scheduled.values()):
+            raise ValueError('Malformed native num_scheduled_tokens')
+        active = [name for name, n in scheduled.items() if n > 0]
+        if sum(scheduled.values()) != output.total_num_scheduled_tokens:
+            raise ValueError('Native scheduled token total disagrees with request map')
+        context = dict(kind='unattributed', repeat=None, phase=None,
+            scheduled_num_requests=len(active), scheduled_num_tokens=sum(scheduled.values()))
+        if not active:
+            return context
+        phases = set()
+        for name in active:
+            # Native completion adds -0; InputProcessor normally appends an
+            # 8-hex suffix, omitted only when native randomization is disabled.
+            match = re.fullmatch(r'cmpl-' + re.escape(self.REQUEST_NAMESPACE)
+                + r'-(warmup|formal)-r(\d{3})-repeat(\d{2})-0(?:-[0-9a-f]{8})?', name)
+            if match is None:
+                raise ValueError(f'Unrecognized native request ID: {name!r}')
+            phase, index, repeat = match.groups()
+            if (int(index) >= self.REQUEST_LIMITS[phase]
+                    or int(repeat) not in self.REPEATS):
+                raise ValueError(f'Out-of-contract native request ID: {name!r}')
+            phases.add((int(repeat), phase))
+        if len(phases) != 1:
+            raise ValueError('Mixed repeat/phase IDs violate the drained phase contract')
+        repeat, phase = phases.pop()
+        self.requests.setdefault((repeat, phase), set()).update(active)
+        return context | dict(kind='serving', repeat=repeat, phase=phase)
+
+    def forward_metadata(self, shapes=None):
+        from vllm.forward_context import get_forward_context
+        ctx = get_forward_context()
+        mode = ctx.cudagraph_runtime_mode.name
+        if mode not in ('NONE', 'PIECEWISE', 'FULL'):
+            raise ValueError(f'Unsupported native runtime graph mode: {mode}')
+        batch = ctx.batch_descriptor
+        descriptor = None if batch is None else {
+            key: getattr(batch, key) for key in
+            ('num_tokens', 'num_reqs', 'uniform', 'has_lora', 'num_active_loras')}
+        if descriptor is not None and any(
+                value is not None and type(value) not in (int, bool)
+                for value in descriptor.values()):
+            raise ValueError('Non-scalar native batch descriptor')
+        context = getattr(self.local, 'context', None) or dict(
+            kind='unattributed', repeat=None, phase=None,
+            scheduled_num_requests=None, scheduled_num_tokens=None)
+        return context | dict(graph_mode=mode, batch_descriptor=descriptor,
+            input_shapes=shapes if shapes is not None else getattr(self.local, 'shapes', None))
+
+    def count(self, event, metadata):
+        if event == 'forward':
+            self.forwards += 1
+        else:
+            self.replays += 1
+        if metadata is None:
+            return
+        key = json.dumps(metadata, sort_keys=True, separators=(',', ':'))
+        if key not in self.rows:
+            if len(self.rows) >= self.MAX_ROWS:
+                self.dropped += 1
+                self.error('counter_capacity', ValueError('Native counter row limit exceeded'))
+                return
+            self.rows[key] = metadata | dict(successful_forwards=0, successful_replays=0)
+        self.rows[key]['successful_' + ('forwards' if event == 'forward' else 'replays')] += 1
+
+    def model_call(self, original, owner, args, kwargs):
+        previous = getattr(self.local, 'shapes', None)
+
+        def shapes():
+            # The pinned _model_forward and dummy model call pass keyword tensors.
+            return {key: None if kwargs.get(key) is None else list(kwargs[key].shape)
+                for key in ('input_ids', 'positions', 'inputs_embeds')}
+
+        current = self.observe('input_shapes', shapes)
+        self.local.shapes = current
+        metadata = self.observe('forward_context', self.forward_metadata, current)
+        try:
+            result = original(owner, *args, **kwargs)
+            self.observe('forward_counter', self.count, 'forward', metadata)
+            return result
+        finally:
+            self.local.shapes = previous
+
+    def install_dummy_call(self, runner):
+        # _dummy_run bypasses _model_forward in pinned V1 (line 6266).
+        # Observe its actual outer model call, not the dummy scheduler return.
+        cls = type(runner.model)
+        original = cls.__call__
+        if getattr(original, '_frontier_native_dummy_call', False):
+            return
+        observer = self
+
+        def call(model, *args, **kwargs):
+            if model is getattr(observer.local, 'dummy_model', None):
+                return observer.model_call(original, model, args, kwargs)
+            return original(model, *args, **kwargs)
+
+        call._frontier_native_dummy_call = True
+        cls.__call__ = call
+
+    def collect_inventory(self, worker):
+        import torch
+        row = json.loads(FullModelInventory.full_model_inventory(worker))
+        props = torch.cuda.get_device_properties(worker.device)
+        row['device_identity'] = dict(pid=os.getpid(), device=str(worker.device),
+            name=props.name, uuid=str(props.uuid),
+            capability=list(torch.cuda.get_device_capability(worker.device)))
+        runner, config = worker.model_runner, worker.vllm_config.compilation_config
+        dispatcher = runner.cudagraph_dispatcher
+        row['model_runner'] = identity(runner)
+        row['effective_graph'] = dict(configured_mode=config.cudagraph_mode.name,
+            dispatcher_mode=dispatcher.cudagraph_mode.name,
+            keys_initialized=dispatcher.keys_initialized,
+            capture_sizes=list(config.cudagraph_capture_sizes or []),
+            max_capture_size=config.max_cudagraph_capture_size)
+        return row
+
+    def emit(self, worker, stage):
+        if stage == 'post_warmup':
+            self.inventory = self.observe('inventory', self.collect_inventory, worker)
+        payload = dict(schema='native_serving_v1', run_generation=self.generation,
+            role=self.role, host=socket.gethostname(), stage=stage,
+            inventory=self.inventory, observation_errors=list(self.errors),
+            hooks=list(self.hooks),
+            counters=dict(successful_forwards=self.forwards, successful_replays=self.replays,
+                rows=list(self.rows.values()), dropped_rows=self.dropped,
+                request_ids=[dict(repeat=repeat, phase=phase, request_ids=sorted(names))
+                    for (repeat, phase), names in sorted(self.requests.items())]),
+            coverage='Successful Python host returns only; no device completion or timing claim')
+        directory = self.directory / 'serving'
+        directory.mkdir(parents=True, exist_ok=True)
+        target = directory / f'rank{worker.rank}.json'
+        temporary = target.with_suffix(f'.json.{os.getpid()}.tmp')
+        temporary.write_text(json.dumps(payload, sort_keys=True) + '\n')
+        os.replace(temporary, target)
+
+
+def _install_native_serving_inventory():
+    """Install once per physical worker, before native worker initialization."""
+    directory = os.environ.get('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR')
+    if directory is None:
+        return None
+    observer = NativeServingInventory(directory,
+        os.environ.get('FRONTIER_NATIVE_RUN_GENERATION'), os.environ.get('FRONTIER_NATIVE_ROLE'))
+    try:
+        import functools
+        import inspect
+        import torch
+        from vllm.v1.worker.gpu_worker import Worker
+        from vllm.v1.worker.gpu_model_runner import GPUModelRunner
+        installed = getattr(Worker.compile_or_warm_up_model,
+            '_frontier_native_serving_observer', None)
+        if installed is not None:
+            return installed
+
+        def install(cls, name, wrapper):
+            original = getattr(cls, name)
+            wrapped = functools.wraps(original)(wrapper(original))
+            wrapped._frontier_native_serving_observer = observer
+            setattr(cls, name, wrapped)
+            observer.hooks.append(identity(cls) + '.' + name)
+
+        def warmup(original):
+            def call(worker, *args, **kwargs):
+                result = original(worker, *args, **kwargs)
+                observer.observe('post_warmup_dump', observer.emit, worker, 'post_warmup')
+                return result
+            return call
+
+        def shutdown(original):
+            def call(worker, *args, **kwargs):
+                observer.observe('pre_shutdown_dump', observer.emit, worker, 'pre_shutdown')
+                return original(worker, *args, **kwargs)
+            return call
+
+        def execute(original):
+            def call(worker, *args, **kwargs):
+                previous = getattr(observer.local, 'context', None)
+                output = args[0] if args else kwargs.get('scheduler_output')
+                observer.local.context = observer.observe(
+                    'scheduler_provenance', observer.scheduler_context, output)
+                try:
+                    return original(worker, *args, **kwargs)
+                finally:
+                    observer.local.context = previous
+            return call
+
+        def forward(original):
+            def call(runner, *args, **kwargs):
+                return observer.model_call(original, runner, args, kwargs)
+            return call
+
+        def dummy(original):
+            signature = inspect.signature(original)
+
+            def context(runner, args, kwargs):
+                bound = signature.bind(runner, *args, **kwargs)
+                bound.apply_defaults()
+                kind = ('capture' if bound.arguments['is_graph_capturing'] else
+                    'profile' if bound.arguments['is_profile'] else 'dummy')
+                return dict(kind=kind, repeat=None, phase=None,
+                    scheduled_num_requests=None, scheduled_num_tokens=None)
+
+            def call(runner, *args, **kwargs):
+                previous = getattr(observer.local, 'context', None)
+                previous_model = getattr(observer.local, 'dummy_model', None)
+                observer.local.context = observer.observe('dummy_context', context, runner, args, kwargs)
+                observer.local.dummy_model = getattr(runner, 'model', None)
+                observer.observe('dummy_model_call_install', observer.install_dummy_call, runner)
+                try:
+                    return original(runner, *args, **kwargs)
+                finally:
+                    observer.local.context = previous
+                    observer.local.dummy_model = previous_model
+            return call
+
+        def replay(original):
+            def call(graph, *args, **kwargs):
+                metadata = observer.observe('replay_context', observer.forward_metadata)
+                result = original(graph, *args, **kwargs)
+                observer.observe('replay_counter', observer.count, 'replay', metadata)
+                return result
+            return call
+
+        install(Worker, 'execute_model', execute)
+        install(GPUModelRunner, '_model_forward', forward)
+        install(GPUModelRunner, '_dummy_run', dummy)
+        install(torch.cuda.CUDAGraph, 'replay', replay)
+        install(Worker, 'shutdown', shutdown)
+        install(Worker, 'compile_or_warm_up_model', warmup)
+    except Exception as error:
+        observer.error('installation', error)
+    return observer
+
+
+_NATIVE_SERVING_INVENTORY = _install_native_serving_inventory()
+
+
 def routing_rows(array, prompt_tokens, output_tokens, hf):
     import numpy as np
     expected = (prompt_tokens + output_tokens - 1, hf["num_hidden_layers"], hf["num_experts_per_tok"])

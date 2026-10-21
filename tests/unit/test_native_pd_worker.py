@@ -33,6 +33,7 @@ def exercise(worker, temporary, case):
     (root / "nodes/host2/server_ready.json").write_text("{}")
     events = []
     replay_commands = []
+    server_environments = []
     injected = False
 
     def write_json(path, value):
@@ -72,6 +73,8 @@ def exercise(worker, temporary, case):
         kind = "server" if command[0] == "fake-native-server" else "replay"
         if kind == "replay":
             replay_commands.append(command)
+        else:
+            server_environments.append(dict(kwargs['env']))
         events.append(kind + "_launch")
         return server if kind == "server" else replay
 
@@ -119,6 +122,15 @@ def exercise(worker, temporary, case):
         config.update(case_dir=str(directory / "local-case"), run_tag="cpu-fixture")
     if case == "canonical_clean_natural_headless_exit":
         (root / "replay_finished.json").write_text('{"returncode":0}')
+    if case.startswith('canonical_clean_serving'):
+        config.update(case_dir=str(directory / 'local-case'), run_tag='cpu-fixture')
+        config['engine']['worker_extension_cls'] = 'native_full_structure.FullModelInventory'
+        (directory / 'native_full_structure.py').write_text('CPU fixture module, not executed\n')
+        if case in ('canonical_clean_serving', 'canonical_clean_serving_invalid_generation'):
+            metadata = Path(config['case_dir']) / 'runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+            metadata.parent.mkdir(parents=True)
+            metadata.write_text(json.dumps({'run_generation': 'cpu-serving-generation'
+                if case == 'canonical_clean_serving' else None}))
     original_relative = Path.is_relative_to
 
     def is_relative_to(path, other):
@@ -151,7 +163,7 @@ def exercise(worker, temporary, case):
         stack.enter_context(patch.object(worker.subprocess, "check_output", return_value="fake H800"))
         stack.enter_context(patch.object(worker.importlib.metadata, "version", return_value="stub"))
         stack.enter_context(patch("urllib.request.urlopen", return_value=Health()))
-        if case == "canonical_clean_standard_layout":
+        if case == "canonical_clean_standard_layout" or case.startswith('canonical_clean_serving'):
             stack.enter_context(patch.object(worker, "stage_run_manifest",
                 side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
         if case == "canonical_clean_natural_headless_exit":
@@ -169,6 +181,8 @@ def exercise(worker, temporary, case):
         "observation_errors": result["observation_errors"],
         "replay_commands": replay_commands,
         "shutdown_order": result.get("shutdown_order"),
+        "server_environments": server_environments,
+        "serving_instrumentation": result.get('serving_instrumentation'),
     }
 
 
@@ -239,3 +253,26 @@ def test_headless_natural_completion_still_waits_for_head_stop_evidence(tmp_path
     assert result["shutdown_order"]["native_returned_before_requested_stop"] is True
     assert result["shutdown_order"]["head_stopped_before_headless_stop"] is True
     assert result["events"].index("head_native_stopped") < result["events"].index("server_stop_called")
+
+
+def test_serving_extension_receives_actual_generation_role_and_node_directory(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving')
+    assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+    assert not result['observation_errors']
+    env = result['server_environments'][0]
+    assert env['FRONTIER_NATIVE_RUN_GENERATION'] == 'cpu-serving-generation'
+    assert env['FRONTIER_NATIVE_ROLE'] == 'prefill'
+    assert Path(env['FRONTIER_NATIVE_SERVING_EVIDENCE_DIR']).parts[-2:] == ('nodes', 'host0')
+    assert result['serving_instrumentation']['native_python_callables_wrapped'] is True
+    assert result['serving_instrumentation']['overhead_measured'] is False
+
+
+@pytest.mark.parametrize('case', ['canonical_clean_serving_missing_provenance',
+                                'canonical_clean_serving_invalid_generation'])
+def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(tmp_path, monkeypatch, case):
+    monkeypatch.setenv('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR', '/unrelated/stale')
+    result = exercise(native_pd_worker, tmp_path, case)
+    assert result['observation_errors']
+    assert result['worker_returncode'] == result['native_server_returncode'] == 0
+    assert not result['failed_sentinel']
+    assert 'FRONTIER_NATIVE_SERVING_EVIDENCE_DIR' not in result['server_environments'][0]

@@ -264,6 +264,30 @@ def run(config):
         mode = config.get('mode', 'light')
         env, changed = instance_env(mode, plan['engine'], node, dict(os.environ),
                                     selected[role], observer=observer, role=role)
+        if plan['engine'].get('worker_extension_cls') == 'native_full_structure.FullModelInventory':
+            fields = ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
+                      'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE')
+            for name in fields:
+                env.pop(name, None)
+            try:
+                source = (Path(config['case_dir']) / 'runs' / 'groundtruth_clean' /
+                          config['run_tag'] / 'run_manifest.json')
+                generation = json.loads(source.read_text())['run_generation']
+                if not isinstance(generation, str) or not generation:
+                    raise ValueError('Actual prelaunch run generation must be a nonempty string')
+                values = dict(zip(fields, (str(node), generation, role)))
+                module_hash = sha256(Path(config['harness_dir']) / 'native_full_structure.py')
+                env.update(values)
+                changed.update(values)
+                result['serving_instrumentation'] = dict(
+                    extension=plan['engine']['worker_extension_cls'],
+                    module_sha256=module_hash,
+                    native_python_callables_wrapped=True, device_completion_observed=False,
+                    overhead_measured=False,
+                    counter_semantics='Successful native host returns; serving/profile/dummy/capture separate')
+            except Exception:
+                result['observation_errors'].append(traceback.format_exc())
+                print('NATIVE_PD_OBSERVATION_ERROR', result['observation_errors'][-1], flush=True)
         port = config['http_ports'][role]
         command = server_command(plan['engine'], model, port) + [
             '--kv-transfer-config', json.dumps(kv_transfer_config(plan['engine'], role, port))]
