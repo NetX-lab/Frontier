@@ -4,18 +4,23 @@ This branch adds source-derived model representation, structural simulation and
 native comparison tooling for GLM-5.3 and the original DeepSeek-V4-Flash.
 **It does not yet provide a calibrated predictor for either model.** The target
 is prioritized calibration on H800 and H200 at 32 and 64 GPUs, starting with
-H80032 for both models. The fixed workload below replaces
+H80032 for DeepSeek-V4. **As of October 22, 2026, GLM-5.3 simulation, testing,
+calibration and new run/measurement preparation are paused pending explicit user
+approval to resume.** Existing GLM code, measurements, packages and their original
+verdicts are retained. Active DeepSeek-V4 acceptance does not depend on completing
+the paused GLM work. The fixed workload below replaces
 the earlier SharedGPT formal case; historical artifacts remain unchanged.
 
 This snapshot includes the W7 measured-DSA, sequence-parallel MoE and measured
 communication integrations through October 20, 2026 Asia/Hong_Kong, and the
-calibration-scope revision of October 21, 2026. Test results below belong to their
+calibration-scope revisions of October 21–22, 2026. Test results below belong to their
 stated revisions and scopes; they are not a claim that every test passes at the
 branch tip. Step-5-Preview integration is outside this branch.
 
 ## Calibration contract (2026-10-21)
 
-The four priority tasks apply separately to each model:
+The four priority tasks currently apply to DeepSeek-V4. The same planned GLM
+tiers remain paused, including their basic validation and package preparation:
 
 | Task | Hardware / GPUs | RJob class | Formal calibration dependency |
 | --- | --- | --- | --- |
@@ -56,6 +61,10 @@ the interval **from the first formal submission through the last formal
 last-token completion**, not the 127 s arrival span. A complete repetition has
 786432 input + 131072 output = **917504 total tokens**. Internal TTFT, ITL, KV-ready time and
 percentiles are diagnostics and do not gate.
+
+P90 TTFT, per-request TPOT and E2E have been proposed as the final latency
+statistics, with window throughput retained. This recommendation has not yet
+changed the implemented gate or its 10% final / 30% promotion thresholds.
 
 Each eligible formal model/hardware/size case needs **3 clean repetitions in one
 job**, each with its own independent
@@ -112,7 +121,14 @@ defines the separation between native random weights and simulator dummy timing.
 Equal seeds alone do not establish P/D parameter or auxiliary-state identity, so
 token-content equality is not asserted without that identity evidence.
 
-## What the branch can represent
+## Historical implementation snapshot (October 20, 2026)
+
+The following implementation and validation tables retain their original scope.
+Subsequent V4 work includes source/CPU grouped NIXL and graph-padded measured
+consumption, H800/H200 isolated kernel measurements, and an initial H80032 native
+collection. Full measured serving and calibration remain unaccepted. The native
+reference successor and warmed H800 decode measurements are the active V4 work;
+the GLM follow-ups in the historical tables are paused.
 
 | Area | Implemented and exercised scope | Current boundary |
 | --- | --- | --- |
