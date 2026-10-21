@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Integrated G3/reference and corrected MRv2 producer; primary685/465 tests pass, native P0 capture executing. |
 | 2026-10-21 | Add the parent-owned event logger repair before complete actual-main acceptance. |
 | 2026-10-21 | Integrate measured Step at bc8ae27; assign canonical G3/P0 producers and align the index with the existing milestone graph. |
 | 2026-10-21 | Record full compute delivery, actual-main graph mapping blocker, D21 native execution and approved D22 reference implementation. |
@@ -113,7 +114,7 @@
 
 Authority: final D21 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. D20 CPU implementation continues P0-first; native/profile/predictive acceptance is unchanged.
 
-Actual-main event-logging repair is complete at `b862e57`:36 affected checks and clean-commit77/77 strict fidelity PASS. Complete offline/online READ,release and metrics acceptance remains with the actual-main owner. After the two other owners hit provider usage limits,parent takes over G3/reference and MRv2 profiling. Producer correction `82f4452` is source/CPU verified (465PASS),pending primary integration and observed dummy descriptors. Continue saved G3/reference/state controls and passive descriptor collection in the existing observer,then consume those observations for compatible profiles;do not submit either old stage01 package.
+Actual-main event-logging repair is complete at `b862e57`:36 affected checks and clean-commit77/77 strict fidelity PASS. Complete offline/online READ,release and metrics acceptance remains open. The primary completed and integrated G3/reference1171ab6 and corrected MRv2 producer82f4452 at145a2f5; merged-tree685 native/reference and465 producer checks pass. P0 capture `exp-1021-235955-532667` is executing32 non-preemptible H800 with independent reference, lifecycle controls and post-DP useful/dummy forward census. Next use its actual descriptors to align consumer identity/FULL_AND_PIECEWISE and compatible H800 profiles. Neither withdrawn stage01 is submitted. The consolidated clean-tree comparison passes77/77 exact cases against retained clean5af7638 baseline evidence, including identical predictor cache names.
 
 | Priority / track | Cluster and policy | Per-role topology | Basic runtime | Formal calibration | Final acceptance |
 | --- | --- | --- | --- | --- | --- |
@@ -366,23 +367,23 @@ The graph uses named milestones where preparation can safely precede whole-ticke
 | [03 — Full text-model inventory and observation design](tickets/03-text-model-inventory.md) | DONE | `02` |
 | [04 — G1 rank-local kernel and state qualification](tickets/04-native-kernel-state-qualification.md) | DONE | `03` |
 | [05 — Early exclusive physical-scope measurements](tickets/05-local-physical-scope-measurements.md) | PARTIAL | `04`, `05.coverage_disposition` |
-| [06 — G2 full single-role native qualification](tickets/06-native-single-role-qualification.md) | PARTIAL1/10; fixed-length completion accepted | `04` |
+| [06 — G2 full single-role native qualification](tickets/06-native-single-role-qualification.md) | DONE within D1 simulation scope; historical full census on demand | `04` |
 | [07 — Single-role observer correlation and perturbation](tickets/07-observer-validation.md) | Preparation document complete; native validation BLOCKED | `06.simulation_scope`, `07.instrumentation_preparation` |
-| [08 — G3 native PD content and lifetime qualification](tickets/08-native-pd-state-qualification.md) | Case-aligned capture/reference implementation active; native qualification open | `06.simulation_scope` |
+| [08 — G3 native PD content and lifetime qualification](tickets/08-native-pd-state-qualification.md) | Reference/controls implemented; P0 capture Succeeded; native judgment pending | `06.simulation_scope` |
 | [09 — Per-track basic runtime and clean native qualification](tickets/09-native-h20064-qualification.md) | Basic readiness/judgment open; formal tracks BLOCKED | `09.basic(t)` independent of30%; clean/formal per D21 graph |
-| [10 — Full-path exclusive compute and host profiles](tickets/10-full-path-compute-profiles.md) | P0 producer implementation active; full admission open | `05.coverage_disposition`, `06.simulation_scope`, `15.controlled_structural_path`; `07` only for native graph/host/gap observations |
-| [11 — Independent native routing and selector statistics](tickets/11-native-routing-statistics.md) | BLOCKED | `06`, `07`, `15.controlled_structural_path` |
+| [10 — Full-path exclusive compute and host profiles](tickets/10-full-path-compute-profiles.md) | Corrected MRv2 producer integrated; actual descriptor binding/full admission open | `05.coverage_disposition`, `06.simulation_scope`, `15.controlled_structural_path`; `07` only for native graph/host/gap observations |
+| [11 — Independent native routing and selector statistics](tickets/11-native-routing-statistics.md) | BLOCKED | `06.simulation_scope`, `07`, `15.controlled_structural_path` |
 | [12 — TP and EP communication measurements](tickets/12-tp-ep-communication-measurements.md) | Retained diagnostic judgment/admission open | `06.simulation_scope`, `15.controlled_structural_path` |
 | [13 — NIXL and shared-network measurements](tickets/13-nixl-contention-measurements.md) | BLOCKED | `08`, `12` |
-| [14 — PD metric normalization through the existing gate](tickets/14-pd-metric-normalization.md) | Preparation document complete; native validation BLOCKED | `07`, `08`, `14.tooling_preparation` |
+| [14 — PD metric normalization through the existing gate](tickets/14-pd-metric-normalization.md) | CPU normalization/gate implemented; native validation BLOCKED | `07`, `08`, `14.tooling_preparation` |
 | [15 — Complete mixed-model structural request path](tickets/15-mixed-model-request-path.md) | PARTIAL: representation and generation05 controlled_structural_path accepted within recorded limits; native_reconciliation pending | `15.native_reconciliation` |
-| [16 — Measured mixed-precision compute prediction](tickets/16-mixed-precision-compute-prediction.md) | BLOCKED | `10`, `15` |
-| [17 — Single-request PD handoff from reservation to release](tickets/17-single-request-pd-handoff.md) | BLOCKED | `08`, `15` |
+| [16 — Measured mixed-precision compute prediction](tickets/16-mixed-precision-compute-prediction.md) | CPU implementation integrated; native/profile-matched acceptance open | `10`, `15` |
+| [17 — Single-request PD handoff from reservation to release](tickets/17-single-request-pd-handoff.md) | Structural and measured CPU lifecycle integrated; native/full-CLI acceptance open | `08`, `15` |
 | [18 — PD capacity pressure, concurrency, and cancellation](tickets/18-pd-capacity-cancellation.md) | BLOCKED | `17` |
 | [19 — Graph and host scheduling for mixed arrivals](tickets/19-graph-host-scheduling.md) | BLOCKED | `07`, `17` |
-| [20 — PD request placement and load feedback](tickets/20-pd-request-placement.md) | BLOCKED | `08`, `17` |
+| [20 — PD request placement and load feedback](tickets/20-pd-request-placement.md) | Structural placement complete; native-backed acceptance open | `08`, `17` |
 | [21 — Independent routing and communication prediction](tickets/21-routing-communication-prediction.md) | BLOCKED | `11`, `12`, `13`, `17` |
-| [22 — Complete predictor bundle and end-to-end cost replay](tickets/22-predictor-bundle-cost-replay.md) | BLOCKED | `16`, `18`, `19`, `20`, `21` |
+| [22 — Complete predictor bundle and end-to-end cost replay](tickets/22-predictor-bundle-cost-replay.md) | CPU bundles generated; actual-main completion/native-matched replay open | `16`, `18`, `19`, `20`, `21` |
 | [23 — Common workload and per-track freeze](tickets/23-canonical-case-freeze.md) | Common workload DONE; per-track runtime freeze open | `14`; may freeze before09 completes |
 | [24 — Canonical case comparison and diagnosis](tickets/24-h800-representative-diagnosis.md) | RETIRED as a separate H800 ticket; scope folded into `28` (D12) | — |
 | [25 — Fit freeze for the canonical case](tickets/25-representative-revalidation-fit-freeze.md) | RETIRED as a separate ticket; fit freeze folded into `28` (D12) | — |
@@ -488,9 +489,9 @@ D19 preparation is completed and superseded as the main assignment. The user exp
 
 The parent owns interfaces between these streams, consolidation and final acceptance. Cross-owner changes are coordinated before editing. Reuse the existing shared client-metrics changes rather than merging unrelated GLM work or writing another comparator. Report integrated source execution separately from profile/native admission. The current R2 P1 and timing judgment finish from existing work, then their agents move to the implementation streams; no new diagnostic campaign is part of this priority change.
 
-Current integration: bc8ae27 brings PD9625984, compute83af0a7, transfer8215196, graph-policy7e41b80 and request-freeacc3a88 into the primary branch. Parent323 combined and197 profiling/timing checks pass; ordinary profile rows explicitly carry request-owned identity and idle-DP costs use distinct positive measured scopes. The public manager generated four bundles with34 artifacts each. The actual-main owner is completing offline/online1024-output requests and release/metrics assertions. The earlier77-case comparison has only explained config/metadata differences; final-source fidelity remains pending.
+Current integration: bc8ae27 brings PD9625984, compute83af0a7, transfer8215196, graph-policy7e41b80 and request-freeacc3a88;145a2f5 adds G3/reference1171ab6 and corrected MRv2 producer82f4452. Parent merged-tree685 native/reference and465 producer checks pass; consolidated clean145a2f5 matches77/77 legacy cases and predictor cache names against clean5af7638. Four CPU bundles exist. Full offline/online1024-output READ/release/metrics completion still lacks a final receipt; metadata-bearing MRv2 dummy and FULL_AND_PIECEWISE consumer alignment are active next work. The older no-metadata fixture does not establish native semantic acceptance.
 
-Current D21 execution: H80032/H80064/H20032 each completed24/24 exact6144/1024 requests with every role/lane idle; all remain basicPARTIAL. Old H20064 startup/capacity/request/split evidence is reusable, preserving REFERENCE_UNSTABLE. API-count defaulting suppressed text stats;6838bc1 fixes one frontend per role without removing DP lanes and passes125 parent checks. New P0 qualification03 exp-1021-205523-285491 isRunning at13:09UTC,32 non-preemptible H800, with parent-verified creator/image/local mount. Actual replay/G3/G4 remain unverified; no formal track is released.
+Current D21 execution: all four hardware/scale basic runs have24 completed6144/1024 requests; H20064 retainsREFERENCE_UNSTABLE. P0 qualification03 exp-1021-205523-285491 Succeeded and both D lanes emit FULL runtime rows after6838bc1. Case-aligned G3/G4 capture exp-1021-235955-532667 completedSucceeded4/4 at2026-10-21T16:26:40Z on32 distinct H800; creator,image,RDMA,local mount and installed native version verified. Existing artifacts are being judged, not promoted by platform success. No formal128-request/QPS1 run or four-metric result is complete.
 
 Current D22 execution: source74df010/2a4db97 is integrated after264 parent focused checks and3407-payload preflight. The unminimized18-event/4-GPU-active probe `exp-1021-201658-886733` Succeeded on one preemptible H200;18/18 strict candidates,22/22 output/cache and18/18 prefix comparisons pass the unchanged5% rules. Historical failures remain unchanged. The next step is required per-track profile coverage/admission, not another boundary experiment.
 
@@ -498,7 +499,7 @@ Current R2 disposition supersedes D19's suggestion to replay the old20-request p
 
 Current ticket12 disposition: the first H200 attempt failed before measurement with startup SIGPIPE141. Correction6a9cedc/b68ce4d passes101 parent checks; generation02 `exp-1021-143708-523626` Succeeded08:15:05UTC. Judge retained artifacts for quality/admission; platform success alone is not an admitted profile.16/22 and17 remain P0-first implementation priorities.
 
-Parallel owners after bc8ae27: `step5-d20-integration` finishes actual-main execution/metrics under16/17/22; `step5-canonical-g3` implements08 capture/reference using corrected R2; `step5-p0-profiles` implements native request-free/P0 producers under10 with D22 unchanged. Parent owns consolidation, fidelity and native operations. No repeated boundary diagnostic, obsolete R2 launch or unqualified formal run is assigned.
+Current parallel ownership: actual-main session `ses_ea1aa93d6ffeCP9B6Fa1DHGcYM` owns its final16/17/22 runner/fixture receipt; `ses_ea0b1e701ffeeFbuzgz37Yp3Un` judges completed08/09 native artifacts; `ses_ea09e411affeQjIkGSd3lio2uk` locates the existing MRv2/combined-policy consumer seams before parent implementation assignment. Parent owns integration, publication and native operations. Completed producer/reference branches are integrated. No repeated boundary diagnostic, obsolete R2 launch or unqualified formal run is assigned.
 
 Verification: each owner runs the existing affected checks plus meaningful negative cases, commits complete code steps, and reports actual commands/results. Parent merges reviewed results and runs one baseline/candidate fidelity comparison for the integrated change, plus an actual supported CPU measured execution as soon as the computation and PD interfaces meet. Missing real inputs stay visible and do not trigger dummy substitution. Preparation documents alone do not satisfy any D20 deliverable.
 

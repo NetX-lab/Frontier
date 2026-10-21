@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | G3/reference/state/MRv2 implementation integrated;685 primary checks pass; case-aligned P0 capture Succeeded, native judgment pending. |
 | 2026-10-21 | Verify the canonical capture/abort partial slice and select existing-D independent full-local execution within the locked native reference. |
 | 2026-10-21 | Assign case-aligned capture/reference implementation in step5-canonical-g3, reusing corrected R2 mechanisms. |
 | 2026-10-21 | D21: case-aligned native evidence serves P0 H80032 first and the other independent tracks; obsolete R2 capture stays paused, no G3 waiver. |
@@ -29,7 +30,7 @@
 
 **Status:** in progress (R1/D5 evidence complete; R2 collector P1 correction/review closed; canonical content/readiness/lifetime and independent reference qualification remain open).
 
-**Latest implementation:** capture/abort source7d46abe and recordse14e7df pass658 parent CPU checks on an immutable snapshot. Existing-D full-local6144/1024 execution without transfer metadata is the selected independent functional path; this retains the locked image/model/connector and does not activate conditionalD-S5-REF. Full resident identity, actual state/output comparison, reset/reuse and explicit capacity-pressure/component/alias conservation are still being implemented. No complete stage, native G3 or formal admission is claimed. See the implementation disposition in requirements and `../../task_2026-10-21_step5_priority_runs/canonical_g3_parent/`.
+**Latest implementation:** source1171ab6 supplies existing-D independent full-local6144/1024 reference, complete resident/cache comparison, reset/reuse/pressure/abort controls and all-rank MRv2 post-DP census. It is integrated at145a2f5; primary merged-tree685 tests pass. Fresh capture01 source025d9a9 has49 sealed files/50 installed native pins and actual StepMind-Python dry-run PASS. Native `exp-1021-235955-532667` finishedSucceeded4/4 on32×H800/codesign/non-preemptible at2026-10-21T16:26:40Z; creator/image/RDMA/local mount verified. Actual witnesses and qualification remain pending; offered pressure and a cancellation deadline are insufficient. Reference retains the same image/model/D engine, without transfer metadata, so conditionalD-S5-REF is not activated. Exact commands and evidence: `../../task_2026-10-21_step5_priority_runs/canonical_g3/native_run.md`.
 
 **Current D21 scope:** qualify content/readiness/retention/lifetime and independent native reference for6144/1024, **P0 H80032 first**.32 total=P16/D16, each TP8/DP2/EP16/PP1;64=P32/D32 TP8/DP4/EP32/PP1. Bind distinct hardware/scale evidence and assess existing observations before repeating. G3 remains required before formal work; basic64 runtime may proceed now. H80064 formal waits for own readiness and H80032 four clean errors<=30%; H20064 waits for H20032, which is independent of H800. Final10% remains. Follow `../plan.md` D21 policy: H800 non-preemptible codesign; all personal nonterminal H200 non-preemptible reservations across sessions<=32, every additional job preemptible, H20064 wholly preemptible. Lower-priority work cannot starve P0. Dated records below do not restore old caps or complete06 waiting;06.simulation_scope is the live prerequisite.
 

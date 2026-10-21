@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Recorded requested native32/64 p90/throughput diagnostic and continued P0 execution; formal criteria unchanged. |
 | 2026-10-21 | User continues execution; repair the observed sequential event-logging blocker within D20 actual-main acceptance. |
 | 2026-10-21 | Record parent selection of the existing-D full-local G3 reference within the unchanged locked runtime and acceptance contract. |
 | 2026-10-21 | D22: user approves the independent outer-window reference cohort for attention mean-versus-median agreement; thresholds unchanged. |
@@ -93,6 +94,14 @@
 YC: "、continue"
 
 Continue the active D20/D21 implementation and P0 calibration work. The parent owns the observed sequential event logger failure in actual-main run08: legitimate request-free batches cannot supply request-owned AF layer state. Repair this caller precondition and verify the existing event path; native MRv2 producer correction and canonical G3 remain with their existing owners. No workload, resource, timing, or accuracy decision changes.
+
+## [Original Request] Native workload metrics check and continuation — 2026-10-22
+
+> 【并行】检查已有记录，当前是否以及完成了 step5-preview在workload上的vllm的测试运行（32卡，64卡）并完成p90 ttft,tpot,e2e以及吞吐的统计？如果完成，请简洁回报，我需要确认其数值是否正常
+>
+> 、continue
+
+The requested diagnostic statistics were recomputed from each retained run's eight concurrent requests, excluding16 warmups, for H800/H200 at32/64GPU. All client populations/counts/endpoints were verified. The existing nearest-rank percentile convention is used consistently; for eight rows p90 equals the maximum. Total throughput includes prompt and output tokens and ends at the last client token. These are completed basic tests, not the unexecuted128-request/QPS1 formal workload. H20064 retains its originalREFERENCE_UNSTABLE status. The current formal mean-based four-metric criteria remain unchanged. Parent receipts and source hashes: `../task_2026-10-21_step5_priority_runs/metrics_check_20261022/parent_receipt.json`. Continue P0 implementation and calibration under D20/D21.
 
 ## [Original Request] Follow-up: Step linear-op slice and Smoke 03 judgment — 2026-10-20
 

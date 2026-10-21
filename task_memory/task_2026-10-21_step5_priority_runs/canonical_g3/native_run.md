@@ -8,7 +8,7 @@
 
 ## Status
 
-**Submitted; platform Starting at the first identity check. Native evidence and G3/G4 judgment are pending.**
+**Platform Succeeded4/4 at2026-10-21T16:26:40Z. Native evidence and G3/G4 judgment are pending.**
 
 - Job: `exp-1021-235955-532667` (created2026-10-21 23:59:55 local time).
 - Stage: `/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/stage`.
@@ -27,6 +27,8 @@
 - Actual platform identity: creator `i-fengyicheng`, codesign, preemptible=`no`,4×8GPU, both RDMA device limits present, expected locked image digest and local NFS source/target verified.
 - Actual NFS: `100.96.128.195:/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01:/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01`.
 - Launcher Python PID503604 was alive after submission. `setsid` detached from the tool wrapper; the shell completion notification was not job completion. The existing callback recorded its own SDK exit-stop removal and preserved native submit/wait behavior.
+- Subsequent read-only cloud snapshot `native_startup01.json` sees the coordinator in replay and the other three workers in their normal await-replay stage. All four report locked vLLM `0.1.dev22912+g8224bb82f`, Torch `2.13.0+cu130` and eight H800 UUIDs each. Their node observation-error arrays are empty and inspected server tails show continuing request/FULL execution; this is not a full-run error or completion verdict.
+- Primary subsequently verified32 unique H800 UUIDs and all P/D lanes. The detached launcher reported succeeded at00:26:43 local October22; direct personal API receipt `parent_terminal01.json` confirmsSucceeded4/4 and finish16:26:40Z. Local `stage/evidence/{nodes,replay}` now exists and is assigned to native judgment. Terminal success does not establish G3/G4 acceptance.
 
 Actual launch command (already executed; do not repeat this generation):
 
