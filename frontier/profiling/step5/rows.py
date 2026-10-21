@@ -9,6 +9,9 @@ from dataclasses import asdict, dataclass, replace
 from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.attention.profiling_mapping import validate_attention_profiling_dataframe
 from frontier.attention.step5 import describe_step5_layer
+from frontier.attention.step5_inputs import (
+    MRV2_DUMMY_ROW_IDENTITY, step5_input_kind, step5_workload_kind,
+)
 from frontier.operators.typed_contracts import serialize_typed_operator_contracts
 
 
@@ -72,6 +75,8 @@ def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
                                    moe_tp_size=1, expert_parallel_size=1)
     workload = cell.workload(config, block_size=block_size, max_model_len=max_model_len)
     g = metadata.geometry
+    kind = step5_input_kind(has_attention_metadata=cell.has_attention_metadata,
+                           dummy_descriptor=cell.dummy_descriptor)
     return {
         "measurement_type": measurement_type, "attention_backend": evidence["attention_backend"],
         "model_architecture_profile": config.get_model_architecture_profile().profile_id,
@@ -92,17 +97,10 @@ def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
         "batch_num_tokens": cell.num_tokens,
         "batch_num_prefill_tokens": cell.num_tokens if cell.phase == "prefill" else 0,
         "batch_num_decode_tokens": cell.num_tokens if cell.phase == "decode" else 0,
-        "physical_scope": ("mrv2_dp_dummy_attention_layer_without_tp_allreduce" if cell.dummy_descriptor else
-                           "isolated_no_metadata_attention_layer_without_tp_allreduce" if not cell.has_attention_metadata else
-                           "native_attention_layer_without_tp_allreduce"),
-        "native_workload": ("mrv2_dp_dummy" if cell.dummy_descriptor else
-                            "isolated_no_metadata" if not cell.has_attention_metadata else "attention_workload"),
-        **({"native_runner": "MRv2", "dummy_descriptor": json.dumps(asdict(cell.dummy_descriptor)),
-            "dummy_is_padding": True, "dummy_has_prefill": False,
-            "dummy_owned_requests": 0, "dummy_local_num_tokens": 1,
-            "slot_mapping_kind": "PAD_SLOT_ID", "cache_policy": "live_pages_unchanged_scratch_updates_allowed",
-            "valid_token_semantics": "MRv2_InputBatch_physical_rows_not_owned_serving_tokens"}
-           if cell.dummy_descriptor else {}),
+        "physical_scope": step5_workload_kind(kind).physical_scope,
+        "native_workload": kind,
+        **({**MRV2_DUMMY_ROW_IDENTITY, "dummy_descriptor": json.dumps(asdict(cell.dummy_descriptor))}
+            if cell.dummy_descriptor else {}),
         "fusion": json.dumps(metadata.attention_scopes(workload)),
         "graph_mode": cell.graph_mode, "valid_tokens": cell.num_tokens, "padded_tokens": 0,
         "query_lens": json.dumps(cell.query_lens), "context_lens": json.dumps(cell.context_lens),

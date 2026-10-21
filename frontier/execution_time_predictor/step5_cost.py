@@ -6,6 +6,7 @@ from dataclasses import asdict
 import json
 
 from frontier.attention.step5 import Step5AttentionWorkload, describe_step5_layer
+from frontier.attention.step5_inputs import step5_input_kind, step5_workload_kind, step5_workload_label
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime, OperatorCost
 from frontier.execution_time_predictor.step5 import (
     STEP5_FEATURE_COLUMNS,
@@ -57,12 +58,12 @@ def step5_predictions(models, measurement_type):
 
 
 def step5_batch_workload(predictor, batch):
-    """Bind request-owned or native idle-DP input rows for all Step consumers."""
+    """Bind request-owned work or the isolated no-metadata CPU diagnostic."""
     from frontier.entities.batch import DummyForwardBatch
 
     config = predictor._model_config
     if isinstance(batch, DummyForwardBatch):
-        # Native _dummy_run(1) has a physical input slot but no request/cache metadata.
+        # This isolated diagnostic is not MRv2's metadata-bearing DP dummy path.
         return Step5AttentionWorkload.from_lengths(
             config, phase="decode", query_lengths=tuple(batch.num_tokens),
             sequence_lengths=tuple(batch.num_tokens),
@@ -98,6 +99,7 @@ def step5_batch_features(predictor, batch, layer_id):
         expert_parallel_size=predictor._replica_config.moe_expert_parallel_size,
     )
     workload = predictor._step5_attention_workload(batch)
+    kind = step5_input_kind(has_attention_metadata=workload.has_attention_metadata)
     geometry = metadata.geometry
     row = {
         **asdict(geometry),
@@ -115,6 +117,7 @@ def step5_batch_features(predictor, batch, layer_id):
         "max_model_len": workload.max_model_len_tokens,
         "block_table_columns": workload.block_table_columns, "score_regions": workload.score_regions,
         "has_attention_metadata": int(workload.has_attention_metadata),
+        "native_workload": kind, "physical_scope": step5_workload_kind(kind).physical_scope,
         "attention_variant": metadata.attention_spec.variant_id,
         "phase": workload.phase, "graph_mode": workload.graph_mode,
         "query_lens": workload.query_lengths,
@@ -152,11 +155,13 @@ def predict_step5_attention_time(predictor, batch, layer_id):
             "device": predictor._replica_config.device,
             "num_tensor_parallel_workers": predictor._replica_config.attn_tensor_parallel_size,
             "block_size": predictor._block_size,
-            "physical_scope": "native_attention_layer_without_tp_allreduce",
             "duration_statistic": STEP5_DURATION_STATISTICS[measurement],
         }
         if any(identity.get(name) != value for name, value in expected.items()):
             raise ValueError("Step runtime query conflicts with measured physical identity")
+        kind = step5_workload_label(features["native_workload_code"])
+        if identity.get("physical_scope", {}).get(kind) != step5_workload_kind(kind).physical_scope:
+            raise ValueError("Step runtime query conflicts with measured kind-bound physical identity")
         targets = (f"time_stats.{root}.{expected['duration_statistic']}", f"time_stats.{root}.kernel_count")
         if tuple(model._frontier_target_col for model in models) != targets:
             raise ValueError("Step measurement target policy conflicts with fitted model")

@@ -164,6 +164,37 @@ def test_union_deduplicates_a_shared_declared_input(declared, tmp_path):
     assert len(frame.attrs["measurement_identity"]["attention_inputs"]) == 2
 
 
+def test_union_merges_only_observed_kinds_from_separate_role_sources(declared, tmp_path, monkeypatch):
+    from frontier.profiling.step5.inputs import MRv2DummyDescriptor, Step5ProfileInput
+    from test_step5_mrv2_inputs import producer_row
+
+    configs, rows = declared
+    decode = configs[ClusterType.DECODE]
+    descriptor = MRv2DummyDescriptor(1, 1, "none", None, "CPU_SOURCE_FIXTURE_NOT_P0_CENSUS")
+    dummy = Step5ProfileInput.from_mrv2_dummy(3, descriptor, block_table_columns=512)
+    dummy_row = producer_row(decode.replica_config.model_config, dummy, duration=.5, count=17)
+    path = Path(decode.execution_time_predictor_config.atten_kernel_only_input_file)
+    _write(path.parent, [dummy_row])
+    manager = _manager(tmp_path / "cache")
+    manager._cluster_configs = configs
+    models = _fit(manager, configs, ClusterType.PREFILL, set())
+    root = models["step5_layer_e2e"]
+    identity = json.loads(root._frontier_measurement_identity)
+    assert identity["physical_scope"] == {
+        "attention_workload": "native_attention_layer_without_tp_allreduce",
+        "mrv2_dp_dummy": "mrv2_dp_dummy_attention_layer_without_tp_allreduce",
+    }
+    assert root._frontier_step5_domains["native_workload_code"] == (0., 1.)
+    assert len(root._frontier_step5_coverage) == len(rows[ClusterType.PREFILL]) + 1
+    warm = _manager(tmp_path / "cache")
+    warm._cluster_configs = dict(reversed(tuple(configs.items())))
+    monkeypatch.setattr(warm, "_create_estimator_and_params", lambda *_: pytest.fail("warm union refitted"))
+    loaded = _fit(warm, configs, ClusterType.DECODE, set())
+    for name in models:
+        assert loaded[name]._frontier_exact_lookup == models[name]._frontier_exact_lookup
+        assert loaded[name]._frontier_measurement_identity == models[name]._frontier_measurement_identity
+
+
 @pytest.mark.parametrize("column,value", [
     ("runtime_stack_signature", "different_cpu_fixture_runtime"),
     ("attention_backend", "different_cpu_fixture_backend"),

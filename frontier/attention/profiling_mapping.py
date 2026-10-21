@@ -35,7 +35,7 @@ STEP5_NUMERIC_COLUMNS = {
 }
 STEP5_FEATURE_COLUMNS = (
     *STEP5_NUMERIC_COLUMNS,
-    "attention_variant_code", "phase_code", "graph_mode_code",
+    "attention_variant_code", "phase_code", "graph_mode_code", "native_workload_code",
     "min_query_len", "max_query_len", "query_len_cv",
     "min_context_len", "max_context_len", "mean_context_len", "max_sequence_len",
 )
