@@ -1,0 +1,3044 @@
+{
+  "status": "PASS",
+  "positive_count": 102,
+  "typed_negative_count": 12,
+  "serving_admission": false,
+  "receipts": [
+    {
+      "scope": "dsv4_attention_layer",
+      "time_ms": 3.3013761043548584,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.2332479953765869,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.2413119971752166,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.0210560001432895,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_prepare",
+      "time_ms": 0.3927359879016876,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_scores_topk",
+      "time_ms": 1.4604480266571045,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1732800006866455,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.31318399310112,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.1175040006637573,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.9165120124816896,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_attention_layer",
+      "time_ms": 3.2863359451293945,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.2306240051984787,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.2420800030231475,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.0202879998832941,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_prepare",
+      "time_ms": 0.3890880048274994,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_scores_topk",
+      "time_ms": 1.4570239782333374,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1707199960947036,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.313728004693985,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.1132799983024597,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.9080960154533386,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_attention_layer",
+      "time_ms": 1.2449599504470823,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.2876800000667572,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.209087997674942,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.0208320003002882,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1744959950447082,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.1855040043592453,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0764160007238388,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.5548480153083801,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_attention_layer",
+      "time_ms": 1.2374720573425293,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.2899520099163055,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.2125120013952255,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.0203840006142854,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1722880005836486,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.184576004743576,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0751679986715316,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.5501120090484619,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_attention_layer",
+      "time_ms": 1.3524800539016724,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.1558720022439956,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.0885759964585304,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.173567995429039,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.2149759978055954,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.1488319933414459,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.5184640288352966,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_attention_layer",
+      "time_ms": 0.9350079894065856,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.1387200057506561,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.0208640005439519,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1720959991216659,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.1153599992394447,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0637440010905265,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.4045760035514831,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "share_expert_up_proj",
+      "time_ms": 0.1019520014524459,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "share_expert_act",
+      "time_ms": 0.0318240001797676,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "share_expert_down_proj",
+      "time_ms": 0.0999040007591247,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "moe_grouped_gemm",
+      "time_ms": 0.19604799896478653,
+      "measurement_type": "CUDA_EVENT",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.071712,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.148735,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.016032,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_prepare",
+      "time_ms": 0.207008,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_scores_topk",
+      "time_ms": 1.452095,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1681929999999999,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.29872,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0712,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.904703,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.072,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.1537589999999999,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.016033,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_prepare",
+      "time_ms": 0.197407,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_index_scores_topk",
+      "time_ms": 1.452383,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.167232,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.298688,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.067776,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.904671,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "csa",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 4.0,
+        "index_compressor_metadata.block_size": 4.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.134881,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.133727,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.016192,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.169568,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.18016,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.062592,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.5404789999999999,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_compressor",
+      "time_ms": 0.138944,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.1336639999999999,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.01616,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.1679669999999999,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.180704,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.0620789999999999,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.5345270000000001,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "hca",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64,
+        "attention_metadata.block_size": 256.0,
+        "compressor_metadata.block_size": 8.0
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.134016,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.015584,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.167424,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.112992,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.059583,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.402047,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": true,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_q_kv_prepare",
+      "time_ms": 0.133344,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_fused_qkv_rmsnorm",
+      "time_ms": 0.016032,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_o_proj",
+      "time_ms": 0.16768,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_parallel_input_projections",
+      "time_ms": 0.110658,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_q_projection",
+      "time_ms": 0.058944,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "dsv4_sparse_attention",
+      "time_ms": 0.401983,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "5e051e4f87222cacec838fe6bb208426074d3ad1",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144/compute/h200/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "runtime_fingerprint": "e50b75afb3850562",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1,
+        "target_tensor_parallel": 8
+      },
+      "row_metadata": {
+        "attention_variant": "uncompressed",
+        "plans_tile_schedule": false,
+        "attention_kv_cache_dtype": "fp8_ds_mla",
+        "padded_heads": 64,
+        "max_model_len": 6145,
+        "max_num_batched_tokens": 6144,
+        "max_num_seqs": 128,
+        "swa_metadata.block_size": 64
+      }
+    },
+    {
+      "scope": "share_expert_up_proj",
+      "time_ms": 0.029392,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "share_expert_act",
+      "time_ms": 0.003936,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "share_expert_down_proj",
+      "time_ms": 0.0182075,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/shared_tp1_sp/shared_tp1_sp/compute/h200/deepseek-ai/DeepSeek-V4-Flash/linear_op_kernel_only.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    },
+    {
+      "scope": "moe_grouped_gemm",
+      "time_ms": 0.043567499999999995,
+      "measurement_type": "KERNEL_ONLY",
+      "graph_mode": "eager",
+      "physical_tensor_parallel_size": 1,
+      "target_tensor_parallel_size": 8,
+      "serving_admission": false,
+      "qualification": "isolated eager scope only",
+      "source_revision": "9f58dbe8618322c85848945b6cc04bb2e1c6ec6a",
+      "input_file": "/data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe/moe/moe/compute/h200/deepseek-ai/DeepSeek-V4-Flash/moe_kernel_only.csv",
+      "runtime_fingerprint": "b2a61805dce0f44d",
+      "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+      "parallel_groups": {
+        "engine_tensor_parallel": 1
+      },
+      "row_metadata": {}
+    }
+  ],
+  "negative_controls": [
+    {
+      "measurement_type": "CUDA_EVENT",
+      "query": 6145,
+      "context": 0,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 dsv4_sparse_attention has no exact measured rows: {'phase': 'prefill', 'attention_variant': 'csa', 'plans_tile_schedule': True, 'total_tokens': 6145, 'batch_size': 1}"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
+      "query": 6144,
+      "context": 1,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 dsv4_sparse_attention actual query/context has no exact measured rows: {}"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
+      "query": 1,
+      "context": 6143,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 decode/first-tail phase equivalence is unqualified"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
+      "query": 1,
+      "context": 6144,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 decode/first-tail phase equivalence is unqualified"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
+      "query": 6144,
+      "context": 0,
+      "scope": "moe_gating_routing_topk",
+      "error": "V4 moe_gating_routing_topk has no qualified native measurement; generic routing columns do not qualify"
+    },
+    {
+      "measurement_type": "CUDA_EVENT",
+      "query": 6144,
+      "context": 0,
+      "scope": "dsv4_compressor_projection",
+      "error": "V4 dsv4_compressor_projection has no qualified native measurement; generic routing columns do not qualify"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "query": 6145,
+      "context": 0,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 dsv4_sparse_attention has no exact measured rows: {'phase': 'prefill', 'attention_variant': 'csa', 'plans_tile_schedule': True, 'total_tokens': 6145, 'batch_size': 1}"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "query": 6144,
+      "context": 1,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 dsv4_sparse_attention actual query/context has no exact measured rows: {}"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "query": 1,
+      "context": 6143,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 decode/first-tail phase equivalence is unqualified"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "query": 1,
+      "context": 6144,
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 decode/first-tail phase equivalence is unqualified"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "query": 6144,
+      "context": 0,
+      "scope": "moe_gating_routing_topk",
+      "error": "V4 moe_gating_routing_topk has no qualified native measurement; generic routing columns do not qualify"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "query": 6144,
+      "context": 0,
+      "scope": "dsv4_compressor_projection",
+      "error": "V4 dsv4_compressor_projection has no qualified native measurement; generic routing columns do not qualify"
+    }
+  ]
+}

@@ -86,8 +86,6 @@ class SklearnMoEExecutionTimePredictor(
         self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
     ) -> dict:
         """Query partial source-rank components without admitting V4 serving."""
-        if not self._enable_dummy_mode:
-            raise NotImplementedError("V4 source components require synthetic dummy timing")
         from frontier.execution_time_predictor.deepseek_v4 import predict_source_execution
 
         return predict_source_execution(
@@ -99,7 +97,12 @@ class SklearnMoEExecutionTimePredictor(
     ) -> ExecutionTime:
         """Query explicit synthetic V4 timing without enabling measured serving."""
         if not self._enable_dummy_mode:
-            raise NotImplementedError("V4 structural execution requires synthetic dummy timing")
+            from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+
+            raise DeepSeekV4CoverageError(
+                "V4 serving requires measured mHC, routing, phase and TP equivalence; "
+                "isolated shared/MARLIN/attention rows do not qualify a complete forward"
+            )
         from frontier.execution_time_predictor.deepseek_v4 import predict_structural_execution
 
         return predict_structural_execution(
@@ -1371,6 +1374,10 @@ class SklearnMoEExecutionTimePredictor(
             from frontier.execution_time_predictor.deepseek_v4 import serving_context
 
             if include_ffn:
+                if not self._enable_dummy_mode:
+                    from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
+
+                    raise DeepSeekV4CoverageError("V4 native hash/score routing and serving scope remain unqualified")
                 raise ValueError(
                     "V4 serving FFN requires the source-qualified synthetic EP wave"
                 )
