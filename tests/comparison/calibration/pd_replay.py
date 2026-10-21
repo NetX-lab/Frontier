@@ -55,6 +55,7 @@ import argparse
 import asyncio
 import contextlib
 import csv
+from datetime import datetime
 import hashlib
 import ipaddress
 import json
@@ -254,11 +255,53 @@ def canonical_workload(trace_dir):
     return manifest, formal, warmup
 
 
-def idle_metrics(text, dp_size):
-    """Require native metrics for every declared request-owner DP lane."""
+def dedicated_services(root, urls, dp_size):
+    """Bind fresh Popen/readiness receipts to this prelaunch manifest and DP layout."""
+    manifest_path = root / "run_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    written = datetime.fromisoformat(manifest["written_before_launch_utc"])
+    generation = manifest["run_generation"]
+    if (manifest["mode"] != "clean" or type(generation) is not str or not generation
+            or written.tzinfo is None):
+        raise ValueError("Missing dedicated service prelaunch identity")
+    lanes, services = {role: set() for role in ROLES}, {}
+    paths = sorted((root / "nodes").glob("*/result.json"))
+    if len(paths) != manifest["resources"]["replica"]:
+        raise ValueError("Missing dedicated service node receipts")
+    for path in paths:
+        result = json.loads(path.read_text())
+        plan = result["plan"]
+        role, lane, engine = plan["role"], plan["lane"], plan["engine"]
+        started = datetime.fromisoformat(result["server_started_at_utc"])
+        if (role not in lanes or engine["data_parallel_size"] != dp_size
+                or type(result["server_pid"]) is not int or result["server_pid"] <= 0
+                or result["run_manifest_sha256"] != digest or result["run_generation"] != generation
+                or started.tzinfo is None or started < written or plan["urls"] != urls):
+            raise ValueError("Unbound dedicated native service launch")
+        owned = set(range(lane, lane + engine["data_parallel_size_local"]))
+        if not owned or lanes[role] & owned or not owned <= set(range(dp_size)):
+            raise ValueError("Invalid dedicated service DP lane ownership")
+        lanes[role].update(owned)
+        if lane == 0:
+            ready = json.loads((path.parent / "server_ready.json").read_text())
+            stamp = datetime.fromisoformat(ready["ready_at_utc"])
+            if (ready["role"] != role or ready["url"] != urls[role] or ready["health_status"] != 200
+                    or stamp.tzinfo is None or stamp < started
+                    or any(ready[key] != result[key] for key in ("server_pid", "server_started_at_utc",
+                                                               "run_manifest_sha256", "run_generation"))):
+                raise ValueError("Unbound dedicated native service readiness")
+            services[role] = ready
+    if set(services) != set(ROLES) or any(values != set(range(dp_size)) for values in lanes.values()):
+        raise ValueError("Missing dedicated native service DP lanes")
+    return {"run_manifest_sha256": digest, "run_generation": generation, "services": services}
+
+
+def native_idle_metrics(text, dp_size):
+    """Retain published gauges and explicit counters; never fill missing samples."""
     names = ("num_requests_running", "num_requests_waiting", "kv_cache_usage_perc")
     lanes = {str(index): {} for index in range(dp_size)}
-    completed = 0.0
+    counters = {str(index): {} for index in range(dp_size)}
     for line in text.splitlines():
         match = re.fullmatch(r'vllm:(\w+)\{(.*)\}\s+([^\s]+)(?:\s+\d+)?', line)
         if match is None:
@@ -273,19 +316,34 @@ def idle_metrics(text, dp_size):
         if lane not in lanes:
             raise ValueError(f"Unexpected native metrics engine: {lane}")
         number = float(value)
+        if not math.isfinite(number) or number < 0:
+            raise ValueError("Invalid native idle metric")
         if name == "request_success_total":
-            completed += number
+            reason = labels.get("finished_reason", "")
+            if reason in counters[lane]:
+                raise ValueError("Duplicate or invalid native completion counter")
+            counters[lane][reason] = number
         else:
             if name in lanes[lane]:
                 raise ValueError("Duplicate native idle gauge")
             lanes[lane][name] = number
-    if any(set(values) != set(names) for values in lanes.values()):
+    if any(not values for values in counters.values()):
+        raise ValueError("Missing native completion counter for a declared lane")
+    return {"lanes": lanes, "completion_counters": counters,
+            "completed_requests": sum(sum(values.values()) for values in counters.values()),
+            "idle": all(set(values) == set(names) and all(value == 0 for value in values.values())
+                        for values in lanes.values())}
+
+
+def idle_metrics(text, dp_size):
+    """Require native metrics for every declared request-owner DP lane."""
+    observed = native_idle_metrics(text, dp_size)
+    if any(len(values) != 3 for values in observed["lanes"].values()):
         raise ValueError("Missing native running/waiting/KV gauge for a declared lane")
-    return {"lanes": lanes, "completed_requests": completed,
-            "idle": all(value == 0 for values in lanes.values() for value in values.values())}
+    return observed
 
 
-async def observe_idle(urls, dp_size, timeout_s, poll_s, *, completed_after=None):
+async def observe_idle(urls, dp_size, timeout_s, poll_s, *, completed_after=None, fresh_services=None):
     """Observe idle as an auxiliary soft gate; never stop native workers."""
     import aiohttp
 
@@ -300,7 +358,16 @@ async def observe_idle(urls, dp_size, timeout_s, poll_s, *, completed_after=None
                     try:
                         async with session.get(urls[role] + "/metrics") as response:
                             response.raise_for_status()
-                            sample["roles"][role] = idle_metrics(await response.text(), dp_size)
+                            text = await response.text()
+                            observed = native_idle_metrics(text, dp_size) if fresh_services else idle_metrics(text, dp_size)
+                            if fresh_services:
+                                # v0.28 FinishReason children are created eagerly (loggers.py:713-724).
+                                reasons = {"stop", "length", "abort", "error", "repetition"}
+                                if (any(set(values) != reasons or any(values.values())
+                                        for values in observed["completion_counters"].values())
+                                        or any(observed["lanes"].values()) and not observed["idle"]):
+                                    raise ValueError("Cold start requires explicit all-lane zero counters and unpublished or idle gauges")
+                            sample["roles"][role] = observed
                     except Exception as error:
                         sample["errors"].append(f"{role}: {type(error).__name__}: {error}")
 
@@ -312,7 +379,7 @@ async def observe_idle(urls, dp_size, timeout_s, poll_s, *, completed_after=None
                         sample["roles"].get(role, {}).get("completed_requests", -1) >= completed_after[role]
                         for role in ROLES)
                     if (not sample["errors"] and fresh
-                            and all(sample["roles"][role]["idle"] for role in ROLES)):
+                            and (fresh_services or all(sample["roles"][role]["idle"] for role in ROLES))):
                         return {"verified": True, "observations": observations}
                     await asyncio.sleep(poll_s)
     except TimeoutError:
@@ -337,7 +404,7 @@ def formal_metrics(records):
 
 
 async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp_size,
-                             idle_timeout_s, idle_poll_s, *, checkpoint=None, records=None):
+                             idle_timeout_s, idle_poll_s, *, checkpoint=None, records=None, fresh_services=None):
     """Run canonical warmup/formal phases in one existing proxy/client lifetime."""
     manifest, formal, warmup = workload
     result = {"repetitions": [], "idle_boundaries": [], "observation_errors": [],
@@ -363,10 +430,22 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp
                 result["observation_errors"].append(f"{type(error).__name__}: {error}")
                 print("NATIVE_PD_AUXILIARY_UNVERIFIED", result["observation_errors"][-1], flush=True)
 
-    async def boundary(name, completed_after=None):
+    async def boundary(name, completed_after=None, *, first=False):
         try:
+            dispatched = sum(row["dispatch_monotonic"] is not None for row in records)
+            cold = (dedicated_services(fresh_services, urls, dp_size)
+                    if first and fresh_services and dispatched == 0 else None)
             observed = await observe_idle(urls, dp_size, idle_timeout_s, idle_poll_s,
-                                          completed_after=completed_after)
+                                          completed_after=completed_after, fresh_services=cold)
+            if first and cold and observed["verified"]:
+                observed.update(proof="dedicated_services_ready_client_zero_native_counters_zero",
+                                fresh_services=cold, client_dispatched_requests=dispatched)
+            elif not first and completed_after is None:
+                observed.update(verified=False, error="Initial native completion baseline is unverified")
+            if first and dispatched:
+                observed.update(verified=False, error="Existing client dispatches invalidate cold start")
+            if not first:
+                observed["completed_after"] = completed_after
         except Exception as error:
             observed = {"verified": False, "error": f"{type(error).__name__}: {error}"}
         observed["boundary"] = name
@@ -376,7 +455,7 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, dp
         persist()
         return observed
 
-    idle = await boundary("before_repeat01_warmup")
+    idle = await boundary("before_repeat01_warmup", first=True)
     completed = ({role: idle["observations"][-1]["roles"][role]["completed_requests"] for role in ROLES}
                  if idle["verified"] else None)
     for repeat in manifest["repetitions"]["repeat_indices"]:
@@ -602,6 +681,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             wait_until_ready(processes["proxy"], args.proxy_port, args.startup_timeout_s)
             if workload is not None:
+                fresh_services = output_dir.parent if external and (output_dir.parent / "run_manifest.json").is_file() else None
                 def checkpoint(result, phase_records):
                     (output_dir / "client_requests.jsonl").write_text(
                         "".join(json.dumps(record) + "\n" for record in phase_records))
@@ -610,7 +690,8 @@ def main(argv: list[str] | None = None) -> int:
                 repetitions, records = asyncio.run(replay_repetitions(
                     workload, args.proxy_port, int(model_config["vocab_size"]), args.origin_lead_s,
                     urls, engine["data_parallel_size"], args.idle_timeout_s, args.idle_poll_s,
-                    checkpoint=checkpoint, records=records))
+                    checkpoint=checkpoint, records=records,
+                    **({"fresh_services": fresh_services} if fresh_services else {})))
                 summary["canonical_repetitions"] = repetitions
             else:
                 clock, records = asyncio.run(replay(

@@ -58,6 +58,7 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
     class Process:
         def __init__(self, kind):
             self.kind = kind
+            self.pid = 101 if kind == 'server' else 102
             self.returncode = None
 
         def poll(self):
@@ -144,6 +145,10 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
         config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
     if case in ("canonical_clean_standard_layout", "canonical_clean_manifest_staging_failure"):
         config.update(case_dir=str(directory / "local-case"), run_tag="cpu-fixture")
+        if case == 'canonical_clean_standard_layout':
+            metadata = Path(config['case_dir']) / 'runs/groundtruth_clean/cpu-fixture/run_manifest.json'
+            metadata.parent.mkdir(parents=True)
+            metadata.write_text(json.dumps({'run_generation': 'CPU-worker-cold-start'}))
     if case == "canonical_clean_natural_headless_exit":
         (root / "replay_finished.json").write_text('{"returncode":0}')
     if case.startswith('canonical_clean_serving'):
@@ -240,6 +245,9 @@ def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, 
         "server_env_set": result.get('server_env_set'),
         "serving_instrumentation": result.get('serving_instrumentation'),
         "child_imports": child_imports,
+        "server_pid": result.get('server_pid'),
+        "server_ready": json.loads((root / 'nodes' / own_host / 'server_ready.json').read_text())
+            if (root / 'nodes' / own_host / 'server_ready.json').exists() else None,
     }
 
 
@@ -322,6 +330,11 @@ def test_serving_extension_receives_actual_generation_role_and_node_directory(tm
     assert Path(env['FRONTIER_NATIVE_SERVING_EVIDENCE_DIR']).parts[-2:] == ('nodes', 'host0')
     assert result['serving_instrumentation']['native_python_callables_wrapped'] is True
     assert result['serving_instrumentation']['overhead_measured'] is False
+    ready = result['server_ready']
+    assert ready['server_pid'] == result['server_pid'] == 101
+    assert ready['health_status'] == 200 and ready['run_generation'] == 'cpu-serving-generation'
+    assert ready['server_started_at_utc'] <= ready['ready_at_utc']
+    assert len(ready['run_manifest_sha256']) == 64
 
 
 def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
