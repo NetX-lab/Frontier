@@ -11,6 +11,13 @@ PREDICTOR_ROOT = REPO_ROOT / "frontier/execution_time_predictor"
 # Profiling helpers each predictor module may import; any module not listed
 # imports none.
 RUNTIME_IMPORTS = {
+    # V4 reads the producer's CPU-only schema, composite scope ownership and
+    # provenance format. No runner, native package or collection function runs.
+    "deepseek_v4.py": {
+        "frontier.profiling.attention.dsv4_attention_plan",
+        "frontier.profiling.attention.dsv4_attention_rows",
+        "frontier.profiling.common.runtime_identity",
+    },
     "sklearn_execution_time_predictor.py": {
         "frontier.profiling.cpu_overhead.schema",
         "frontier.profiling.cpu_overhead.validation",

@@ -1,4 +1,4 @@
-"""Source workloads for eager DeepSeek-V4 FlashMLA attention components.
+"""Source workloads for DeepSeek-V4 FlashMLA attention components.
 
 These workloads do not admit serving or predict native auxiliary-stream latency.
 SWA window spans describe logical interval unions, not physical gather execution.
@@ -13,6 +13,10 @@ from typing import Any
 from frontier.attention.model_binding import bind_layer_attention
 from frontier.entities.batch import Batch, DummyForwardBatch, EPBatchGroup
 from frontier.types import ClusterType
+
+
+class DeepSeekV4CoverageError(ValueError):
+    """The requested V4 scope, geometry or execution evidence is unavailable."""
 
 
 def _integer(value, name, *, minimum=1):
@@ -33,11 +37,7 @@ def _validate_source_batch(batch):
         raise NotImplementedError("V4 speculative attention is unsupported")
     if batch.afd_stage_metadata is not None:
         raise NotImplementedError("V4 PD attention is unsupported")
-    graph = batch.decode_cuda_graph_metadata
-    if batch.get_decode_cuda_graph_runtime_mode() != "NONE" or (
-        graph is not None and graph.capture_hit is not False
-    ):
-        raise NotImplementedError("V4 component requires actual eager graph state")
+    compute_rows(batch)
     fields = (batch.num_tokens, batch.num_context_tokens, batch.request_is_decoding)
     if any(not isinstance(v, (list, tuple)) or len(v) != len(batch.requests)
            for v in fields):
@@ -60,6 +60,30 @@ def _validate_source_batch(batch):
             raise ValueError(f"V4 {name} does not match scheduling snapshots")
 
 
+def compute_rows(batch):
+    """Read the native descriptor width, never infer it from compilation mode.
+
+    V2 prepare_inputs slices input IDs/positions to batch_desc.num_tokens;
+    prepare_attn pads slot mappings with invalid slots. Scheduling snapshots
+    remain the only source of actual query/context geometry.
+    """
+    mode = batch.get_decode_cuda_graph_runtime_mode()
+    graph = batch.decode_cuda_graph_metadata
+    actual = batch.total_num_tokens
+    if mode not in ("NONE", "FULL", "PIECEWISE"):
+        raise DeepSeekV4CoverageError(f"V4 graph runtime mode is unsupported: {mode}")
+    if graph is not None:
+        if graph.original_total_tokens != actual:
+            raise ValueError("V4 graph original width disagrees with scheduled rows")
+        if type(graph.capture_hit) is not bool or graph.capture_hit != (mode != "NONE"):
+            raise ValueError("V4 graph capture hit disagrees with runtime mode")
+        _integer(graph.padded_total_tokens, "graph padded rows")
+        if graph.padded_total_tokens < actual:
+            raise ValueError("V4 graph padded rows cannot be smaller than scheduled rows")
+    return _integer(batch.get_effective_total_tokens_for_compute(ClusterType.MONOLITHIC),
+                    "effective compute rows")
+
+
 def _call(input_shape, output_shape, **features):
     """One source component call, not an internal GPU kernel launch count.
 
@@ -76,8 +100,8 @@ def _validate_attention_context(
         raise ValueError("V4 attention workload requires the DeepSeek-V4 profile")
     if cluster_type is not ClusterType.MONOLITHIC:
         raise NotImplementedError("V4 attention component requires co-location")
-    if execution_mode != "eager":
-        raise NotImplementedError("V4 component requires eager execution")
+    if execution_mode not in ("eager", "cuda_graph"):
+        raise NotImplementedError("V4 component requires explicit eager or cuda_graph execution")
     if prefix_caching is not False:
         raise NotImplementedError("V4 component does not support prefix caching")
     if _integer(decode_context_parallel_size, "DCP") != 1:
@@ -131,7 +155,11 @@ def build_deepseek_v4_attention_workload(
         raise NotImplementedError("V4 component requires real metadata eager execution")
     _validate_source_batch(batch)
     layer = bind_layer_attention(model_config, global_layer_id)
-    tokens = sum(batch.num_tokens)
+    mode = batch.get_decode_cuda_graph_runtime_mode()
+    if (execution_mode == "eager") != (mode == "NONE"):
+        raise ValueError("V4 execution claim disagrees with actual graph runtime state")
+    tokens = compute_rows(batch)
+    actual_tokens = sum(batch.num_tokens)
     hidden = _integer(model_config.embedding_dim, "hidden width")
     head = _integer(model_config.get_head_dim(), "head dimension")
     if head != 512:
@@ -152,6 +180,10 @@ def build_deepseek_v4_attention_workload(
     query = (tokens, local_heads, head)
     padded = (tokens, padded_heads, head)
     ratio = model_config.compress_ratios[global_layer_id]
+    if mode == "PIECEWISE" and ratio == 128:
+        raise DeepSeekV4CoverageError(
+            "V4 PIECEWISE HCA compressor requires capture branch evidence"
+        )
     contexts = tuple(batch.num_context_tokens)
     queries = tuple(batch.num_tokens)
     sequences = tuple(c + q for c, q in zip(contexts, queries))
@@ -163,7 +195,8 @@ def build_deepseek_v4_attention_workload(
     operators = _projection_workloads(model_config, replica_config, tokens)
     operators.update({
         "dsv4_fused_q_kv_prepare": (_call(
-            query, padded, kv_input_shape=(tokens, head), kv_cache_write_rows=tokens,
+            query, padded, kv_input_shape=(tokens, head), kv_cache_write_rows=actual_tokens,
+            invalid_padding_rows=tokens - actual_tokens,
         ),),
         "dsv4_sparse_attention": (_call(
             padded, padded,
@@ -172,6 +205,7 @@ def build_deepseek_v4_attention_workload(
                 for q, c in zip(queries, contexts)
             ),
             compressed_history_rows=history,
+            actual_query_rows=actual_tokens, invalid_padding_rows=tokens - actual_tokens,
             query_intervals=tuple(zip(contexts, sequences)),
             compression_ratio=ratio, window_size=model_config.sliding_window,
             decode_request_indices=decode_indices,
@@ -180,7 +214,7 @@ def build_deepseek_v4_attention_workload(
     })
     if ratio > 1:
         operators.update(_compressor_workloads(
-            "dsv4_compressor", tokens, hidden, head, ratio, writes,
+            "dsv4_compressor", tokens, hidden, head, ratio, writes, mode == "FULL",
         ))
     if layer.variant_id == "csa":
         index_heads = _integer(model_config.index_n_heads, "index heads")
@@ -191,9 +225,13 @@ def build_deepseek_v4_attention_workload(
             _call((tokens, hidden), (tokens, index_heads)),
         )
         operators.update(_compressor_workloads(
-            "dsv4_index_compressor", tokens, hidden, index_dim, ratio, writes,
+            "dsv4_index_compressor", tokens, hidden, index_dim, ratio, writes, mode == "FULL",
         ))
-        if max(sequences) // ratio <= model_config.index_topk:
+        if mode == "PIECEWISE" and max(sequences) // ratio <= model_config.index_topk:
+            raise DeepSeekV4CoverageError(
+                "V4 PIECEWISE short-context indexer requires capture branch evidence"
+            )
+        if mode != "FULL" and max(sequences) // ratio <= model_config.index_topk:
             operators["dsv4_index_short_context_fill"] = (
                 _call((tokens,), (tokens, model_config.index_topk)),
             )
@@ -213,7 +251,8 @@ def build_deepseek_v4_attention_workload(
             })
     return {
         "global_layer_id": global_layer_id, "variant": layer.variant_id,
-        "num_tokens": tokens, "num_local_q_heads": local_heads,
+        "num_tokens": tokens, "actual_num_tokens": actual_tokens,
+        "graph_runtime_mode": mode, "num_local_q_heads": local_heads,
         "num_padded_q_heads": padded_heads, "operators": operators,
         "request_intervals": tuple(zip(contexts, sequences)),
         "semantic_is_decoding": tuple(batch.request_is_decoding),
@@ -298,7 +337,7 @@ def build_deepseek_v4_dummy_attention_workload(
             "operators": operators, "workspace_memory": "native qualification pending"}
 
 
-def _compressor_workloads(prefix, tokens, hidden, head, ratio, writes):
+def _compressor_workloads(prefix, tokens, hidden, head, ratio, writes, full_graph=False):
     overlap = 2 if ratio == 4 else 1
     width = 2 * overlap * head
     operators = {
@@ -308,7 +347,7 @@ def _compressor_workloads(prefix, tokens, hidden, head, ratio, writes):
             kv_shape=(tokens, overlap * head), score_shape=(tokens, overlap * head),
         ),),
     }
-    if ratio != 128 or any(writes):
+    if full_graph or ratio != 128 or any(writes):
         operators[f"{prefix}_fused_compress_store"] = (_call(
             (tokens, width), None, new_compressed_rows=writes,
         ),)

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.attention.deepseek_v4 import build_deepseek_v4_attention_workload
+from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
 from frontier.config.model_config import BaseModelConfig
 from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
 from frontier.entities import Batch, Request
@@ -326,9 +327,9 @@ def test_component_requires_dummy_mode_and_measured_prediction_stays_closed(mode
     predictor = component_predictor(model, replica)
     batch = source_batch([1], [127], [True])
     predictor._enable_dummy_mode = False
-    with pytest.raises(NotImplementedError, match="synthetic"):
+    with pytest.raises(DeepSeekV4CoverageError, match="phase/physical-TP/graph"):
         component_cost(predictor, batch, 3)
-    with pytest.raises(NotImplementedError, match="not enabled"):
+    with pytest.raises(DeepSeekV4CoverageError, match="auxiliary streams"):
         predictor.predict_attention_layer_time(batch, 3, ClusterType.MONOLITHIC)
     predictor._enable_dummy_mode = True
     result = predictor.predict_attention_layer_time(batch, 3, ClusterType.MONOLITHIC)

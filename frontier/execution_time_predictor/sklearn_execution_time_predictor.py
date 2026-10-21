@@ -1428,6 +1428,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             )
 
     def _load_attention_df(self, file_path: str) -> pd.DataFrame:
+        if self._get_attention_family().family_id == "deepseek_v4_attention":
+            from frontier.execution_time_predictor.deepseek_v4 import load_attention_dataframe
+
+            return load_attention_dataframe(file_path, self._model_config,
+                self._replica_config.attn_tensor_parallel_size, self._block_size,
+                self._active_measurement_type)
         if self._get_attention_family() is DSA_ATTENTION_FAMILY:
             from frontier.execution_time_predictor.dsa_predictor import load_dsa_dataframe
 
@@ -7577,9 +7583,8 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         Each source component call receives the configured synthetic duration.
         Their sum does not model native auxiliary-stream critical-path latency.
         """
-        if not self._enable_dummy_mode:
-            raise NotImplementedError("V4 component costs require synthetic dummy timing")
         from frontier.attention.deepseek_v4 import (
+            DeepSeekV4CoverageError,
             build_deepseek_v4_attention_workload,
             build_deepseek_v4_dummy_attention_workload,
         )
@@ -7596,6 +7601,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             decode_context_parallel_size=decode_context_parallel_size,
             prefill_context_parallel_size=prefill_context_parallel_size,
         )
+        if not self._enable_dummy_mode:
+            raise DeepSeekV4CoverageError(
+                "V4 attention serving lacks phase/physical-TP/graph-qualified latency; "
+                "isolated eager composite scopes cannot be summed across auxiliary streams"
+            )
         timing = AttentionOperatorTimes({
             name: self._dummy_execution_time * len(calls)
             for name, calls in workload["operators"].items()
@@ -7628,7 +7638,6 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
 
         layer_spec = bind_layer_attention(self._model_config, layer_id)
         attention_family = get_attention_family(layer_spec.family_id)
-        attention_family.require_enabled_for_execution(structural=self._enable_dummy_mode)
         if attention_family.family_id == "deepseek_v4_attention":
             from frontier.execution_time_predictor.deepseek_v4 import serving_context
 
@@ -7642,6 +7651,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 },
             )
             return AttentionTime(operator_times=components)
+        attention_family.require_enabled_for_execution(structural=self._enable_dummy_mode)
         prices_kv_cache_extract = (
             cluster_type == ClusterType.PREFILL and global_vars.get_kv_connector() == "p2p_nccl"
         )

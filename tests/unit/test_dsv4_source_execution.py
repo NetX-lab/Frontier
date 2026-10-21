@@ -9,6 +9,7 @@ from frontier.entities import Batch, Request
 from frontier.entities.batch import DecodeCudaGraphMetadata, EPBatchGroup
 from frontier.entities.time_components import MoETime
 from frontier.attention.families import DEEPSEEK_V4_ATTENTION_FAMILY
+from frontier.attention.deepseek_v4 import DeepSeekV4CoverageError
 from frontier.operators.families import DEEPSEEK_V4_MHC_FAMILY
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
@@ -261,7 +262,7 @@ def test_actual_eager_state_and_request_snapshot_are_preserved(predictor):
     batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
         "full_decode_only", "FULL", True, False, 1, 8, 1, 8,
     )
-    with pytest.raises(NotImplementedError, match="graph"):
+    with pytest.raises(ValueError, match="graph"):
         component(predictor, batch)
 
 
@@ -297,7 +298,7 @@ def test_dimensions_follow_config_and_weights_remain_replicated(predictor):
 def test_structural_admission_keeps_normal_execution_and_training_closed(predictor):
     batch = source_batch()
     predictor._enable_dummy_mode = False
-    with pytest.raises(NotImplementedError, match="synthetic"):
+    with pytest.raises(DeepSeekV4CoverageError, match="dsv4_embedding"):
         component(predictor, batch)
     predictor._enable_dummy_mode = True
     result = predictor.predict_attention_layer_time(batch, 0, ClusterType.MONOLITHIC)

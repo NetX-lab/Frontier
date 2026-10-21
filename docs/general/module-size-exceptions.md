@@ -151,3 +151,24 @@ Acceptance requires the real MetricsStore/TraceStore lifecycle regression,
 unchanged GLM metadata, and the unchanged 77-case artifact/cache comparison.
 It does not authorize additional metrics-store growth or claim that the
 planned split is complete.
+
+## V4 graph and measured-scope dispatch, 2026-10-21
+
+The main predictor keeps only V4-specific delegates at its existing attention
+loader and execution dispatch boundaries. Workload geometry, source validation,
+isolated exact measured selection and typed coverage errors live in the existing
+model-specific `attention/deepseek_v4.py` and
+`execution_time_predictor/deepseek_v4.py` modules. Removing the previous dummy-only
+check replaces blanket rejection with a specific missing phase/TP/critical-path
+error; it does not admit a native V4 forward or add prediction state.
+
+Cleanup inspection found no redundant owned implementation to remove at these
+delegation points. Moving unrelated predictor state would overlap the pending
+measurement-family split above and expand this approved slice. That split and
+its ordering remain unchanged. The exception covers only these delegates and
+requires focused V4/GLM/reader checks and one clean 77-case comparison.
+
+The runtime import allowlist explicitly permits V4 to reuse only the existing
+CPU-only row schema, composite scope plan and identity format. It still forbids
+profiling runners and native main modules. This avoids a second runtime copy of
+the producer's scope ownership or fingerprint algorithm.
