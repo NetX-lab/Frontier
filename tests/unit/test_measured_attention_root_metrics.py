@@ -65,7 +65,7 @@ def test_measured_root_mixed_stage_keeps_stage_owner_and_gap_once():
     dense_values.update(num_layers_per_pipeline_stage=1, global_layer_id=2,
                         attention_family_id="dense_attention", attention_variant_id="standard",
                         attention_prefill_execution_time=.3)
-    owner = _root_layer(proof=replace(PROOF, duration_ms=99.),
+    owner = _root_layer(proof=replace(PROOF, duration_ms=99.), costs={},
                         op_times={"emb": .11, "input_cast": .12, "final_residual": .13},
                         pipeline_parallel_communication_time=.14, schedule_time=.15)
     stage = StageExecutionTime([first, second, ExecutionTime(**dense_values)], stage_execution_time=owner)
@@ -78,6 +78,41 @@ def test_measured_root_mixed_stage_keeps_stage_owner_and_gap_once():
     assert math.fsum(ledger.values()) == pytest.approx(stage.total_time * 1e3)
     assert stage.layer_execution_times[0].attention_time_component.kernel_count == 23
     assert stage.layer_execution_times[1].attention_operator_times.costs[ROOT].kernel_count == 7
+
+
+@pytest.mark.parametrize("owner_fault", ["missing_proof", "invalid_proof", "overlap"])
+def test_stage_owner_ignores_non_authoritative_layer_payload(owner_fault):
+    first = _root_layer()
+    first.add_kernel_gap(.001, 23., {})
+    second = _root_layer(1, proof=replace(PROOF, duration_ms=.2, kernel_count=7))
+    owner_kwargs = {"costs": {}}
+    if owner_fault == "overlap":
+        owner_kwargs.update(times={ROOT: .6244, "step5_swa_attention": .5},
+                            attention_layer_pre_proj_execution_time=99.)
+    owner = _root_layer(mlp_layer_up_proj_execution_time=99., attn_norm_time=99.,
+                        pipeline_parallel_communication_time=.14, schedule_time=.15,
+                        **owner_kwargs)
+    owner._replace_operator_time_values({"emb": .11, "input_cast": .12, "final_residual": .13})
+    if owner_fault == "invalid_proof":
+        owner.attention_time_component.operator_times = AttentionOperatorTimes(
+            {ROOT: .6244}, costs={ROOT: replace(PROOF, kernel_count=float("nan"))})
+    owner.add_kernel_gap(1., 99., {})
+    stage = StageExecutionTime([first, second], stage_execution_time=owner)
+    store = MetricsStore.__new__(MetricsStore)
+    ledger = store._build_frontier_stage_batch_component_ledger(stage)
+    assert ledger[ROOT] == .8244 and ledger["kernel_gap_time"] == .023
+    assert ledger["mlp_layer_up_proj_execution_time"] == 0. and ledger["attn_norm_time"] == 0.
+    assert ledger["emb"] == .11 and ledger["input_cast"] == .12 and ledger["final_residual"] == .13
+    assert ledger["pipeline_parallel_communication_time"] == .14 and ledger["schedule_time"] == .15
+    assert math.fsum(ledger.values()) == pytest.approx(stage.total_time * 1e3)
+    with pytest.raises(ValueError):
+        store._build_frontier_stage_batch_component_ledger(stage.stage_execution_time)
+
+
+def test_stage_authoritative_root_still_requires_proof():
+    stage = StageExecutionTime([_root_layer(costs={})], stage_execution_time=_root_layer())
+    with pytest.raises(ValueError, match="requires OperatorCost"):
+        MetricsStore.__new__(MetricsStore)._build_frontier_stage_batch_component_ledger(stage)
 
 
 @pytest.mark.parametrize("expand", [False, True])

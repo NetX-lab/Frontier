@@ -4,6 +4,7 @@ import math
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from frontier.cc_backend.cc_backend_config import CollectiveSimCCBackendConfig
 from frontier.config import (
@@ -11,11 +12,14 @@ from frontier.config import (
     MetricsConfig,
     RandomForrestExecutionTimePredictorConfig,
     ReplicaConfig,
+    SimulationConfig,
     VllmV1SchedulerConfig,
     global_vars,
 )
 from frontier.config.quantization_manager import QuantizationManager
-from frontier.entities import Batch, DummyForwardBatch, Request
+from frontier.entities import Batch, BatchStage, DummyForwardBatch, Request
+from frontier.metrics.constants import OperationMetrics
+from frontier.metrics.metrics_store import MetricsStore
 from frontier.execution_time_predictor.random_forrest_execution_time_predictor import (
     RandomForrestExecutionTimePredictor,
 )
@@ -28,6 +32,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 from frontier.types import ClusterType, MeasurementType
 
 import test_step5_measured_ffn as ffn_fixture
+from test_metrics_stage_execution_time import _TraceStore
 from test_step5_measured_training import _row, _write
 from test_step5_mrv2_inputs import producer_row
 from frontier.attention.step5_inputs import MRv2DummyDescriptor
@@ -35,7 +40,8 @@ from frontier.profiling.step5.inputs import Step5ProfileInput
 from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
 
 
-def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
+@pytest.mark.parametrize("owner_scope", ["first", "last", "dummy_first"])
+def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch, owner_scope):
     """Train all categories normally, construct the public MoE predictor, replay FFN."""
     for name, value in (
         ("SYS_ARCH", "co-location"), ("SIMULATION_MODE", "offline"),
@@ -157,3 +163,35 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
         dummy, 0, ClusterType.PREFILL, layer_id=0, num_layers=1, include_ffn=False,
     )
     assert boundary.input_cast_time > 0
+    result = {"first": first, "last": last, "dummy_first": boundary}[owner_scope]
+    assert result.stage_execution_time.attention_operator_times.costs == {}
+    root_cost = result.layer_execution_times[0].attention_operator_times.costs["step5_layer_e2e"]
+    ledger = MetricsStore.__new__(MetricsStore)._build_frontier_stage_batch_component_ledger(result)
+    assert ledger["step5_layer_e2e"] == root_cost.duration_ms
+    assert math.fsum(ledger.values()) == pytest.approx(result.total_time * 1e3)
+    boundary_name = "final_residual" if owner_scope == "last" else "input_cast"
+    assert ledger[boundary_name] == result._step5_stage_operator_costs[boundary_name]["duration_ms"]
+    if owner_scope == "dummy_first":
+        return
+    sink = _TraceStore()
+    store = MetricsStore(SimulationConfig(cluster_config=cluster, metrics_config=MetricsConfig(
+        output_dir=str(tmp_path / "reported_metrics"), write_metrics=True, store_plots=False,
+        store_operation_metrics=True, enable_op_level_tracing=True,
+        store_frontier_stage_batch_ledger=True,
+    )), {ClusterType.PREFILL: cluster}, sink)
+    reported = BatchStage(batch_id=batch.id, replica_id=0, pipeline_stage=0,
+                          execution_time=result.total_time, model_execution_time=result.model_time,
+                          requests=batch.requests, num_tokens=batch.num_tokens,
+                          request_is_decoding=batch.request_is_decoding, cluster_type=ClusterType.PREFILL)
+    reported.on_schedule(0.)
+    store.on_replica_stage_schedule(0., 0, 0, reported, result, ClusterType.PREFILL)
+    root_series = store._operation_metrics_per_batch[ClusterType.PREFILL][OperationMetrics.STEP5_LAYER_E2E]
+    assert [duration for _, duration in root_series._data_series] == [root_cost.duration_ms]
+    roots = [event for event in sink.events if event.name == "step5_layer_e2e"]
+    assert len(roots) == 1 and roots[0].duration_ms == root_cost.duration_ms
+    assert roots[0].meta["operator_cost"]["kernel_count"] == root_cost.kernel_count
+    assert roots[0].meta["operator_cost"]["duration_model_hash"] == root_cost.duration_model_hash
+    boundaries = [event for event in sink.events if event.name == boundary_name]
+    assert len(boundaries) == 1 and boundaries[0].duration_ms == ledger[boundary_name]
+    pending = store._pending_frontier_stage_batch_ledger_rows[id(reported)]["execution_time"]
+    assert pending["component_ledger_ms"] == ledger

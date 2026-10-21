@@ -4,12 +4,13 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archive RED/GREEN, call-site metadata, ownership checks, and verification limits. |
+| 2026-10-22 | Add blocking P1 public predictor owner reproduction, correction, and final affected-suite evidence. |
 
 ## Environment
 
 - Worktree: `/data/ycfeng/Frontier/.worktrees/step5-root-metrics`.
 - Baseline: `61cbac9a3e8c29190b91a5d4e8f7fa2ad9fcd359`.
-- Verified source commit: `3a189ba`.
+- Initial source commit: `3a189ba`; P1 source commit: `7c70461`, from local baseline `9ef9cd0`.
 - Python: `/data/ycfeng/envs/frontier-py310/bin/python`, 3.10.6, GCC 11.3.0; pytest 9.1.1. No separate conda activation.
 - Environment for tests/repros: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp`; Python flags `-B`; pytest flags `-q -p no:cacheprovider`.
 - CPU-only synthetic fixtures; no actual full CLI, native/GPU runs, or profile admission.
@@ -103,3 +104,98 @@ the `.01 ms` attention norm is separate from the root, not a diagnostic child.
 - Existing scalar aggregate metric/trace adapters are unchanged; the inspected measured P/D producer publishes StageExecutionTime and traces authoritative per-layer records. An aggregate attention map intentionally has no per-layer OperatorCost, so it is not presented as a measured proof.
 - Root trace duration remains the measured duration; KERNEL_ONLY cost metadata explicitly says `includes_kernel_gap=False`. Existing component ledgers separately include kernel gap. The legacy trace emitter has no separate kernel-gap spans; this task does not claim trace cursor parity with total occupancy for gap-bearing stages or alter that behavior.
 - Two pre-existing old test fixture defects remain unresolved as detailed above. Their exclusion is explicit, not an all-suite PASS.
+
+## P1 follow-up: non-authoritative stage owner
+
+### Cause and pre-fix coverage gap
+
+Reviewer session `ses_e9f8b6cffffeSZiBfBvZkmXBQa` reported a reachable ownership error.
+Public measured stage prediction applies first `input_cast` / last `final_residual`
+through `_replace_operator_time_values`. This preserves numerical root duration
+in the stage-only owner but reconstructs attention without OperatorCost. The
+authoritative layer still retains its proof. The initial ledger recursively
+projected the whole owner and only then filtered stage fields; the new strict
+root projection therefore rejected irrelevant owner attention. The initial
+positive owner fixture incorrectly supplied a valid root proof and did not
+cover this producer pattern. It now supplies no proof.
+
+### RED before production edits
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_measured_public_predictor.py -q -p no:cacheprovider
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_measured_public_predictor.py tests/unit/test_measured_attention_root_metrics.py -q -p no:cacheprovider
+```
+
+- Shortest public-result RED: `/data/ycfeng/tmp/d23_root_metrics_p1_public_red01.log`, `1 failed in 11.51s`.
+- Expanded RED: `/data/ycfeng/tmp/d23_root_metrics_p1_callsites_red02.log`, `6 failed, 24 passed in 47.13s`.
+- Exact call stack: public normal constructor/training -> `predict_stage_execution_time` first/last -> Stage ledger -> `metrics_store.py:4370` owner recursion -> `4504` attention projection -> `trace_mapping.py:161`: `ValueError: Inclusive attention root step5_layer_e2e requires OperatorCost`.
+- Independently failing cases: first, last, dummy-first public results, and missing/invalid/overlapping owner layer payload. Authoritative missing-proof rejection already passed before the fix.
+
+### Correction and GREEN
+
+The existing scalar/canonical stage-owned field projection is reused before
+aggregation. Stage aggregation takes that owner-only result directly and runs
+strict layer projection only for authoritative layers. Owner recursion and the
+old later stage-field projection are removed. No root validation bypass,
+manufactured proof, predictor change, replacement change, extra flag, or
+alternative ledger is introduced. Existing ledger field naming and gap ownership
+are unchanged; `metrics_store.py` shrinks by 22 lines to 5,803.
+
+- First corrected focused command above: `/data/ycfeng/tmp/d23_root_metrics_p1_callsites_green01.log`, `30 passed in 46.72s`.
+- Same final affected command as the original report, with expanded regressions: `/data/ycfeng/tmp/d23_root_metrics_p1_affected_green01.log`, `167 passed, 1 deselected in 56.83s`.
+- Final source/tests: `/data/ycfeng/tmp/d23_root_metrics_p1_final_verified.log`, `167 passed, 1 deselected in 47.57s`. The one exclusion is still the inherited cache-order fixture, not a P1 failure.
+- Public first/last results now reach actual `on_replica_stage_schedule`, operation series, trace root/boundary events, and the pending component ledger. Public dummy-first is verified at its real Stage ledger without wrapping it in a fabricated request-bearing batch.
+- Mixed owner missing/invalid proof, physical child/model overlap, unrelated FFN/norm payload, and 99 ms owner layer gap are ignored by Stage aggregation. The identical owner payload raises if supplied as an authoritative layer. Genuine authoritative missing proof and all earlier malformed-root cases still reject.
+
+### Actual public values
+
+The following inspection command adds only an in-process diagnostic wrapper
+while running the existing public test. It writes no debug code into the repo:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B - <<'PY'
+import json
+import math
+import pytest
+from frontier.entities import StageExecutionTime
+from frontier.metrics.metrics_store import MetricsStore
+original = MetricsStore._build_frontier_stage_batch_component_ledger
+def inspect_stage(store, execution):
+    ledger = original(store, execution)
+    if isinstance(execution, StageExecutionTime) and hasattr(execution, '_step5_stage_operator_costs'):
+        layer = execution.layer_execution_times[0]
+        cost = layer.attention_operator_times.costs['step5_layer_e2e']
+        print('[D23-P1-EVIDENCE] ' + json.dumps({
+            'layer_id': layer.global_layer_id,
+            'owner_attention_costs': dict(execution.stage_execution_time.attention_operator_times.costs),
+            'root_ms': ledger['step5_layer_e2e'], 'root_kernels': cost.kernel_count,
+            'stage_boundary_ms': {name: ledger[name] for name in execution._step5_stage_operator_costs},
+            'gap_ms': ledger.get('kernel_gap_time', 0.),
+            'ledger_sum_ms': math.fsum(ledger.values()), 'stage_total_ms': execution.total_time * 1000,
+        }, sort_keys=True))
+    return ledger
+MetricsStore._build_frontier_stage_batch_component_ledger = inspect_stage
+raise SystemExit(pytest.main(['tests/unit/test_step5_measured_public_predictor.py', '-q', '-s', '-p', 'no:cacheprovider']))
+PY
+```
+
+Log `/data/ycfeng/tmp/d23_root_metrics_p1_public_values.log`: `3 passed in 33.63s`.
+
+| Public result | Owner root costs | Root duration / kernels | Boundary | Gap | Ledger / runtime total, ms | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| First layer 0 | {} | 1.016 ms / 23 | input_cast .16 ms once | .023 ms | 1.999 / 1.9989999999999999 | PASS |
+| Last layer 91 | {} | 1.016 ms / 23 | final_residual .16 ms once | .023 ms | 1.359 / 1.3589999999999998 | PASS |
+| Dummy-first 0 | {} | .321 ms / 17 | input_cast .01 ms once | 0 ms | .341 / .341 | PASS |
+
+First/last ledger-to-runtime absolute difference is floating-point epsilon
+`2.220446049250313e-16 ms`; this is an internal projection consistency check,
+not a native simulation accuracy measurement. The root proofs remain the
+original fixture predictions, with no scaling or reconstructed owner costs.
+`git diff --check` passes. Parent independently confirmed the inherited cache
+failure/error on both source trees; no old fixture repair is included.
+
+### Remaining ownership and validation limits
+
+Parent owns rereview, merge, full CLI and new77, which were not started here.
+Platform/native/admission/READ/readiness/source-release remain unverified.
+The generic trace kernel-gap-span limitation stated above is unchanged.
