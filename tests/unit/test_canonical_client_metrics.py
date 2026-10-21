@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -12,12 +13,13 @@ import pandas as pd
 import pytest
 
 from tests.comparison.calibration.client_metrics import native_client_rows
+from tests.comparison.calibration.pd_replay import canonical_workload
 from tests.comparison.e2e_gate import run_gate
 from tests.comparison.e2e_gate.gate import gate_reading
 from tests.comparison.e2e_gate.normalize import normalize_cell
 
 TRACE = Path(__file__).resolve().parents[2] / "data/processed_traces/canonical_fixed_6144_1024_req128_qps1"
-WORKLOAD = json.loads((TRACE / "manifest.json").read_text())
+WORKLOAD = canonical_workload(TRACE)
 IDS = json.loads((TRACE / "request_ids.json").read_text())
 CELL = {"cell_id": "canonical/fixed", "case_id": "canonical", "status": "claimed", "gate": "client"}
 CASE = {"routing": {"status": "NOT_APPLICABLE"}, "architecture": "pd-disaggregation"}
@@ -29,9 +31,12 @@ def write_jsonl(path, rows):
 
 
 def synthetic_run_check(root):
-    return dict(entry="groundtruth-run-check", mode="groundtruth_clean", case_id="canonical", runs={
+    receipt = root.parents[2] / "analysis/run_check_status.groundtruth_clean.json"
+    receipt.parent.mkdir(exist_ok=True)
+    receipt.write_text(json.dumps(dict(entry="groundtruth-run-check", mode="groundtruth_clean", case_id="canonical", runs={
         root.name: dict(status="PASS", checks={"synthetic_oracle": "PASS: fixture only, not native admission"},
-                        run_manifest=f"runs/groundtruth_clean/{root.name}/run_manifest.json")})
+                        run_manifest=f"runs/groundtruth_clean/{root.name}/run_manifest.json")})))
+    return receipt
 
 
 def export_simulator(root):
@@ -80,18 +85,20 @@ def simulator(tmp_path_factory):
 
 @pytest.fixture
 def native(tmp_path):
-    root = tmp_path / "native"
-    root.mkdir()
+    root = tmp_path / "canonical/runs/groundtruth_clean/native"
+    root.mkdir(parents=True)
     (root / "run_manifest.json").write_text(json.dumps(
         dict(mode="clean", groundtruth_tree_dirty=False, groundtruth_commit="synthetic-oracle-not-native")))
     records = []
     for repeat in (1, 2, 3):
-        for phase, templates in (("warmup", [dict(request_id=f"warmup-{i}", arrived_at=i) for i in range(16)]),
+        for phase, templates in (("warmup", WORKLOAD[2]),
                                  ("formal", IDS["rows"])):
             for template in templates:
-                arrival = repeat * 1000 + (100 if phase == "formal" else 0) + template["arrived_at"]
+                jitter = .013 if 0 < template["arrived_at"] < 15 else 0
+                arrival = repeat * 1000 + (100 if phase == "formal" else 0) + template["arrived_at"] + jitter
                 records.append(dict(template_request_id=template["request_id"],
                     request_id=f"{template['request_id']}-repeat{repeat:02d}", repeat=repeat,
+                    arrived_at=template["arrived_at"],
                     role=phase, segment=phase, status="completed", http_status=200, validation_errors=[],
                     stream_done=True, finish_reason="length", num_prefill_tokens=6144, num_decode_tokens=1024,
                     output_token_count=1024, usage=dict(prompt_tokens=6144, completion_tokens=1024, total_tokens=7168),
@@ -107,24 +114,31 @@ def native(tmp_path):
     return root, records, summary
 
 
-def test_canonical_run_gate_cli_preserves_three_windows_and_first_d(tmp_path, native, simulator):
+@pytest.mark.parametrize("run_location", ["bound", "same_name_other_case"])
+def test_canonical_run_gate_cli_preserves_three_windows_and_first_d(tmp_path, native, simulator, run_location):
     root, _, _ = native
     cell = copy.deepcopy(CELL)
     cell["trace"] = {key: dict(path=str(TRACE / name), sha256=hashlib.sha256((TRACE / name).read_bytes()).hexdigest())
                      for key, name in (("request_ids", "request_ids.json"), ("workload", "manifest.json"))}
     matrix = tmp_path / "matrix.json"
-    receipt = tmp_path / "run_check.json"
-    receipt.write_text(json.dumps(synthetic_run_check(root)))
+    receipt = synthetic_run_check(root)
     cell["run_check"] = dict(path=str(receipt), sha256=hashlib.sha256(receipt.read_bytes()).hexdigest())
     matrix.write_text(json.dumps(dict(cases={"canonical": CASE}, cells=[cell])))
+    selected = root
+    if run_location == "same_name_other_case":
+        selected = tmp_path / "other/runs/groundtruth_clean/native"
+        shutil.copytree(root, selected)
     common = [sys.executable, str(Path(run_gate.__file__)), "normalize", "--matrix", str(matrix),
-              "--cell", CELL["cell_id"], "--artifacts-root", str(tmp_path), "--vllm-run-dir", str(root),
+              "--cell", CELL["cell_id"], "--artifacts-root", str(tmp_path), "--vllm-run-dir", str(selected),
               "--frontier-run", f"sim={simulator}", "--output-dir", str(tmp_path / "rows")]
     subprocess.run(common, check=True, capture_output=True)
     subprocess.run([sys.executable, str(Path(run_gate.__file__)), "gate", "--matrix", str(matrix),
                     "--cell", CELL["cell_id"], "--rows", str(tmp_path / "rows"),
                     "--output", str(tmp_path / "reading.json")], check=True, capture_output=True)
     reading = json.loads((tmp_path / "reading.json").read_text())
+    if run_location != "bound":
+        assert reading["verdict"] == "INSUFFICIENT_EVIDENCE"
+        return
     assert reading["verdict"] == "PASS"  # Synthetic oracle only, not real native acceptance.
     assert len(reading["repetitions"]) == 3 and len(reading["metrics"]) == 4
     values = {r["metric"]: r for r in reading["metrics"]}
@@ -194,8 +208,30 @@ def test_gate_rejects_normalized_gaps_and_never_averages_away_a_bad_round(tmp_pa
         assert reading["repetitions"]["vllm/native-repeat01"]["metrics"][0]["status"] == "FAIL"
 
 
+@pytest.mark.parametrize("side", ["native-formal", "native-warmup", "simulator"])
+def test_swapped_intermediate_arrivals_preserving_latencies_and_windows_are_rejected(tmp_path, native, simulator, side):
+    root, records, _ = native
+    if side == "simulator":
+        simulator = shutil.copytree(simulator, tmp_path / "swapped-simulator")
+        path = simulator / "metrics/metrics_ground_truth.jsonl"
+        records = [json.loads(line) for line in path.read_text().splitlines()]
+        pair = records[1:3]
+        keys = [key for key in pair[0] if key.endswith("_at")]
+    else:
+        path = root / "run/client_requests.jsonl"
+        pair = records[17:19] if side == "native-formal" else records[1:3]
+        keys = ["arrived_at", "dispatch_monotonic", "first_token_monotonic", "last_token_monotonic"]
+    before = [(r.get("ttft_ms"), r.get("tpot_ms"), r.get("e2e_ms")) for r in pair]
+    for key in keys:
+        pair[0][key], pair[1][key] = pair[1][key], pair[0][key]
+    assert before == [(r.get("ttft_ms"), r.get("tpot_ms"), r.get("e2e_ms")) for r in pair]
+    write_jsonl(path, records)
+    with pytest.raises(ValueError, match="arrival"):
+        normalize_cell(CELL, CASE, IDS, {root.name: root}, {"sim": simulator}, tmp_path / "rows", WORKLOAD)
+
+
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="Native replay uses asyncio.timeout_at")
-def test_actual_streaming_http_records_reach_normalization_and_gate(tmp_path, monkeypatch, simulator):
+def test_compressed_streaming_http_arrivals_do_not_admit_the_frozen_qps1_trace(tmp_path, monkeypatch, simulator):
     from tests.comparison.calibration import pd_replay
     from tests.unit.test_native_streaming_replay import test_three_repetitions_use_existing_replay_and_observed_idle
 
@@ -216,9 +252,6 @@ def test_actual_streaming_http_records_reach_normalization_and_gate(tmp_path, mo
     (root / "run/replay_summary.json").write_text(json.dumps(dict(mode="clean", vllm_version="0.28.0",
         status=0, canonical_repetitions=repetitions)))
     output = tmp_path / "http-rows"
-    normalize_cell(CELL, CASE, IDS, {root.name: root}, {"sim": simulator}, output, WORKLOAD)
-    reading = gate_reading(CELL, CASE, output)
-    assert reading["verdict"] == "INSUFFICIENT_EVIDENCE"  # No native admission from HTTP fixtures.
-    assert len(reading["repetitions"]) == 3 and all(w["total_tokens"] == 917504
-                                                  for w in reading["formal_windows"].values())
+    with pytest.raises(ValueError, match="arrival"):
+        normalize_cell(CELL, CASE, IDS, {root.name: root}, {"sim": simulator}, output, WORKLOAD)
     assert all(r["output_token_count"] == 1024 for r in records)

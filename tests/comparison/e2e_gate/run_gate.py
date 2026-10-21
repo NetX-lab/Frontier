@@ -33,6 +33,7 @@ import pandas as pd
 from tests.comparison.e2e_gate import admission
 from tests.comparison.e2e_gate.gate import gate_reading
 from tests.comparison.e2e_gate.normalize import normalize_cell
+from tests.comparison.calibration.pd_replay import canonical_workload
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[2]
@@ -110,10 +111,14 @@ def command_normalize(args) -> None:
     cell, case = find_cell(load_matrix(args.matrix), args.cell)
     request_ids = json.loads(pinned(args.artifacts_root, cell["trace"]["request_ids"]).read_text())
     vllm_runs = {path.name: path for path in args.vllm_run_dir}
+    if cell["gate"] == "client" and len(vllm_runs) != len(args.vllm_run_dir):
+        raise ValueError("Duplicate native run basenames cannot identify independent sources")
     frontier_runs = dict(args.frontier_run)
-    workload = (json.loads(pinned(args.artifacts_root, cell["trace"]["workload"]).read_text())
+    if cell["gate"] == "client" and Path(cell["trace"]["workload"]["path"]).name != "manifest.json":
+        raise ValueError("Canonical workload must identify its frozen package manifest.json")
+    workload = (canonical_workload(pinned(args.artifacts_root, cell["trace"]["workload"]).parent)
                 if cell["gate"] == "client" else None)
-    run_check = (json.loads(pinned(args.artifacts_root, cell["run_check"]).read_text())
+    run_check = (pinned(args.artifacts_root, cell["run_check"])
                  if cell["gate"] == "client" and "run_check" in cell else None)
     normalize_cell(cell, case, request_ids, vllm_runs, frontier_runs, args.output_dir, workload, run_check)
     print(f"wrote {args.output_dir}")

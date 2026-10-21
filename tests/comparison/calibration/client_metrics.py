@@ -23,8 +23,11 @@ def endpoint_row(identity, arrival, first, last, prompt, output, **diagnostics):
                 ttft_semantic=TTFT_SEMANTIC, **diagnostics)
 
 
-def native_client_rows(run_dir: Path, workload: dict, request_ids: dict) -> dict:
+def native_client_rows(run_dir: Path, workload: tuple, request_ids: dict) -> dict:
     """Keep repeat-qualified transport IDs, joining only by the stable template ID."""
+    workload, formal_rows, warmup_rows = workload
+    if request_ids["rows"] != formal_rows:
+        raise ValueError("Pinned canonical formal identity/arrival mismatch")
     run = run_dir / "run"
     manifest = run_dir / "run_manifest.json"
     metadata = json.loads(manifest.read_text())
@@ -57,15 +60,16 @@ def native_client_rows(run_dir: Path, workload: dict, request_ids: dict) -> dict
     for repeat in repeats:
         selected = [r for r in records if r["repeat"] == repeat]
         rows = []
-        for phase, count in (("warmup", workload["warmup"]["num_requests_per_repetition"]),
-                             ("formal", len(formal))):
+        for phase, templates in (("warmup", warmup_rows), ("formal", formal_rows)):
+            arrivals = {r["request_id"]: r["arrived_at"] for r in templates}
             phase_rows = [r for r in selected if r["segment"] == phase and r["role"] == phase]
-            if len(phase_rows) != count:
+            if len(phase_rows) != len(templates):
                 raise ValueError("Native warmup/formal population mismatch")
             for r in phase_rows:
                 template = r["template_request_id"]
                 expected = workload["lengths"]
                 if (r["request_id"] != rule.format(request_id=template, repeat=repeat)
+                        or template not in arrivals or r.get("arrived_at") != arrivals[template]
                         or r["status"] != "completed" or r["http_status"] != 200
                         or r.get("error") or r["validation_errors"] or not r["stream_done"]
                         or r["finish_reason"] != "length"
@@ -75,7 +79,7 @@ def native_client_rows(run_dir: Path, workload: dict, request_ids: dict) -> dict
                         or any(r["usage"].get(key) != value for key, value in dict(
                             prompt_tokens=r["num_prefill_tokens"], completion_tokens=r["num_decode_tokens"],
                             total_tokens=r["num_prefill_tokens"] + r["num_decode_tokens"]).items())):
-                    raise ValueError(f"Invalid native client record: {r['request_id']}")
+                    raise ValueError(f"Invalid native client identity, scheduled arrival or tokens: {r['request_id']}")
                 row = endpoint_row(template, r["dispatch_monotonic"], r.get("first_token_monotonic"),
                                    r.get("last_token_monotonic"), r["usage"]["prompt_tokens"],
                                    r["output_token_count"], transport_request_id=r["request_id"], repeat=repeat)
@@ -101,12 +105,14 @@ def native_client_rows(run_dir: Path, workload: dict, request_ids: dict) -> dict
 def frontier_client_rows(run_dir: Path, trace_rows: pd.DataFrame) -> pd.DataFrame:
     [path] = (run_dir / "metrics").rglob("metrics_ground_truth.jsonl")
     require_written_after(path, path.with_name("config.json"))
-    mapping = {str(r["frontier_request_id"]): r["request_id"] for r in trace_rows.to_dict("records")}
+    mapping = {str(r["frontier_request_id"]): (r["request_id"], r["arrived_at"]) for r in trace_rows.to_dict("records")}
     rows = []
     for r in read_jsonl(path):
         if r["event_type"] != "request_completion":
             continue
-        identity = mapping.get(str(r["request_id"]), f"unmapped:{r['request_id']}")
+        identity, arrival = mapping.get(str(r["request_id"]), (f"unmapped:{r['request_id']}", None))
+        if r["arrived_at"] != arrival:
+            raise ValueError(f"Simulator arrival disagrees with pinned trace: {identity}")
         rows.append(endpoint_row(identity, r["arrived_at"], r.get("first_decode_token_completed_at"),
                                  r["completed_at"], r["num_prefill_tokens"], r["num_decode_tokens"],
                                  internal_ttft_ms=r["ttft_ms"]))

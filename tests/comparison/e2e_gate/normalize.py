@@ -61,8 +61,8 @@ def label_modes(sample: pd.DataFrame, arrival: dict[str, float], lanes: dp_pp_mo
 
 
 def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[str, Path],
-                   frontier_runs: dict[str, Path], output_dir: Path, workload: dict | None = None,
-                   run_check: dict | None = None) -> dict:
+                   frontier_runs: dict[str, Path], output_dir: Path, workload: tuple | None = None,
+                   run_check: Path | None = None) -> dict:
     """Write <output_dir>/sample.json, vllm/<run>.csv and frontier/<label>.csv; return the sample."""
     formal_ids = request_ids["formal_request_ids"]
     classified = set(formal_ids) | set(request_ids["warmup_request_ids"]) | set(request_ids["sizing_request_ids"])
@@ -72,17 +72,21 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
     output_dir.mkdir(parents=True, exist_ok=False)
     sides, written = {}, {}
     references = {}
+    receipt = json.loads(run_check.read_text()) if run_check is not None else None
     for run, run_dir in vllm_runs.items():
         if cell["gate"] == "client":
             repeats = native_client_rows(run_dir, workload, request_ids)
             references[run] = "UNVERIFIED"
-            if run_check is not None:
-                check = run_check["runs"][run]
-                if (run_check["entry"] != "groundtruth-run-check" or run_check["mode"] != "groundtruth_clean"
-                        or run_check["case_id"] != cell["case_id"]
+            if receipt is not None:
+                check = receipt["runs"][run]
+                if (receipt["entry"] != "groundtruth-run-check" or receipt["mode"] != "groundtruth_clean"
+                        or receipt["case_id"] != cell["case_id"]
                         or check["run_manifest"] != f"runs/groundtruth_clean/{run}/run_manifest.json"):
                     raise ValueError("Native run-check provenance mismatch")
-                if check["status"] == "PASS" and check["checks"] and all(
+                origin = run_check.resolve().parent.parent
+                bound = (run_check.resolve() == origin / "analysis/run_check_status.groundtruth_clean.json"
+                         and (origin / check["run_manifest"]).resolve() == (run_dir / "run_manifest.json").resolve())
+                if bound and check["status"] == "PASS" and check["checks"] and all(
                         value.startswith("PASS") for value in check["checks"].values()):
                     references[run] = "PASS"
             for repeat, rows in repeats.items():
@@ -126,6 +130,6 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
                          if key in value} for side, value in sides.items()},
     }
     if cell["gate"] == "client":
-        sample.update(client_workload=workload, reference_admission=references)
+        sample.update(client_workload=workload[0], reference_admission=references)
     (output_dir / "sample.json").write_text(json.dumps(sample, indent=1) + "\n")
     return sample
