@@ -40,8 +40,8 @@ MATRIX = HERE / "cases" / "scenario_matrix.json"
 ARTIFACTS = HERE / "artifacts.json"
 
 
-def load_matrix() -> dict:
-    return json.loads(MATRIX.read_text())
+def load_matrix(path: Path = MATRIX) -> dict:
+    return json.loads(path.read_text())
 
 
 def find_cell(matrix: dict, cell_id: str) -> tuple[dict, dict]:
@@ -84,14 +84,15 @@ def command_cells(args) -> None:
 
 
 def command_gate(args) -> None:
-    cell, case = find_cell(load_matrix(), args.cell)
+    cell, case = find_cell(load_matrix(args.matrix), args.cell)
     reading = gate_reading(cell, case, args.rows)
     text = json.dumps(reading, indent=1, default=str) + "\n"
     if args.output:
         args.output.write_text(text)
     for row in reading.get("metrics", []):
-        print(f"{row['metric']:24s} vllm {row['vllm']:.4f} frontier {row['frontier']:.4f} "
-              f"rel {row['relative_error']:.4f} {row['status']}")
+        vllm, frontier, error = [f"{row[key]:.4f}" if row[key] is not None else "undefined"
+                                 for key in ("vllm", "frontier", "relative_error")]
+        print(f"{row['metric']:24s} vllm {vllm} frontier {frontier} rel {error} {row['status']}")
     modes = reading.get("dp_pp_modes")
     if modes:
         for mode, metrics in modes["modes"].items():
@@ -106,11 +107,15 @@ def command_gate(args) -> None:
 
 
 def command_normalize(args) -> None:
-    cell, case = find_cell(load_matrix(), args.cell)
+    cell, case = find_cell(load_matrix(args.matrix), args.cell)
     request_ids = json.loads(pinned(args.artifacts_root, cell["trace"]["request_ids"]).read_text())
     vllm_runs = {path.name: path for path in args.vllm_run_dir}
     frontier_runs = dict(args.frontier_run)
-    normalize_cell(cell, case, request_ids, vllm_runs, frontier_runs, args.output_dir)
+    workload = (json.loads(pinned(args.artifacts_root, cell["trace"]["workload"]).read_text())
+                if cell["gate"] == "client" else None)
+    run_check = (json.loads(pinned(args.artifacts_root, cell["run_check"]).read_text())
+                 if cell["gate"] == "client" and "run_check" in cell else None)
+    normalize_cell(cell, case, request_ids, vllm_runs, frontier_runs, args.output_dir, workload, run_check)
     print(f"wrote {args.output_dir}")
 
 
@@ -186,12 +191,14 @@ def main() -> None:
 
     gate = commands.add_parser("gate", help="gate a cell from normalized rows")
     gate.add_argument("--cell", required=True, help="<case_id>/<cell>")
+    gate.add_argument("--matrix", type=Path, default=MATRIX, help="case matrix (default: published matrix)")
     gate.add_argument("--rows", type=Path, required=True)
     gate.add_argument("--output", type=Path, help="write the reading as JSON")
     gate.set_defaults(run=command_gate)
 
     normalize = commands.add_parser("normalize", help="normalized rows from raw runs")
     normalize.add_argument("--cell", required=True)
+    normalize.add_argument("--matrix", type=Path, default=MATRIX)
     normalize.add_argument("--artifacts-root", type=Path, required=True)
     normalize.add_argument("--vllm-run-dir", type=Path, action="append", required=True,
                            help="ground-truth run directory; repeat for each run of the cell")
