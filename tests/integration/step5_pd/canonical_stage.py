@@ -37,6 +37,8 @@ def case_definition(definition: dict, case_id: str) -> dict:
 RUNTIME_SOURCES = (
     "config/scheduler.py", "config/vllm.py", "config/compilation.py",
     "config/observability.py", "engine/arg_utils.py",
+    "entrypoints/cli/serve.py", "entrypoints/launchers/api_server/entry.py",
+    "entrypoints/launchers/utils/server_utils.py",
     "entrypoints/openai/completion/protocol.py", "entrypoints/openai/completion/serving.py",
     "v1/worker/gpu_worker.py", "v1/worker/gpu/model_runner.py",
     "v1/worker/gpu/dp_utils.py", "v1/worker/dp_utils.py", "v1/worker/gpu/cudagraph_utils.py",
@@ -80,7 +82,7 @@ def verify(stage: Path) -> dict:
     for key, expected in {"max_model_len": 7168, "max_num_batched_tokens": 8192, "max_num_seqs": 128,
                           "tensor_parallel_size": 8, "data_parallel_size": dp, "pipeline_parallel_size": 1,
                           "enable_expert_parallel": True, "enforce_eager": False,
-                          "cudagraph_metrics": True,
+                          "cudagraph_metrics": True, "api_server_count": 1,
                           "enable_chunked_prefill": False, "enable_prefix_caching": False}.items():
         if expected_engine.get(key) != expected:
             raise ValueError(f"D18 engine mismatch: {key}")

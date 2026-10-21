@@ -79,6 +79,10 @@ def test_each_priority_case_uses_native_node_plan_and_final_resource_policy(tmp_
     for row in rows:
         command = row["server_command"]
         assert command[command.index("--data-parallel-size") + 1] == str(case["data_parallel_size"])
+        if row["lane"] == 0:
+            assert command[command.index("--api-server-count") + 1] == "1"
+        else:
+            assert "--api-server-count" not in command
         assert not any(key.startswith("NCCL_") for key in row["server_env_set"])
 
 

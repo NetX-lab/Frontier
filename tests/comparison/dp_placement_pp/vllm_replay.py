@@ -433,6 +433,8 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
             if type(engine["cudagraph_metrics"]) is not bool:
                 raise ValueError("cudagraph_metrics must be boolean")
             command += ["--cudagraph-metrics" if engine["cudagraph_metrics"] else "--no-cudagraph-metrics"]
+        if "api_server_count" in engine and not engine.get("headless"):
+            command += ["--api-server-count", str(engine["api_server_count"])]
         if engine.get("headless"):
             command.append("--headless")
     return command
