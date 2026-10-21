@@ -28,6 +28,7 @@ import pandas as pd
 from tests.comparison.calibration.e2e_metrics_gap import VLLM_ROWS, formal_sample, frontier_rows
 from tests.comparison.calibration.pd_metrics import by_request_id, engine_request_id, read_jsonl
 from tests.comparison.e2e_gate import dp_pp_modes
+from tests.comparison.e2e_gate.admission import client_reference
 from tests.comparison.calibration.client_metrics import frontier_client_rows, native_client_rows
 
 
@@ -71,24 +72,12 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
     window_s = cell.get("dp_pp_gate", {}).get("mode_window_s")
     output_dir.mkdir(parents=True, exist_ok=False)
     sides, written = {}, {}
-    references = {}
-    receipt = json.loads(run_check.read_text()) if run_check is not None else None
+    references, reference_evidence = {}, {}
     for run, run_dir in vllm_runs.items():
         if cell["gate"] == "client":
-            repeats = native_client_rows(run_dir, workload, request_ids)
-            references[run] = "UNVERIFIED"
-            if receipt is not None:
-                check = receipt["runs"][run]
-                if (receipt["entry"] != "groundtruth-run-check" or receipt["mode"] != "groundtruth_clean"
-                        or receipt["case_id"] != cell["case_id"]
-                        or check["run_manifest"] != f"runs/groundtruth_clean/{run}/run_manifest.json"):
-                    raise ValueError("Native run-check provenance mismatch")
-                origin = run_check.resolve().parent.parent
-                bound = (run_check.resolve() == origin / "analysis/run_check_status.groundtruth_clean.json"
-                         and (origin / check["run_manifest"]).resolve() == (run_dir / "run_manifest.json").resolve())
-                if bound and check["status"] == "PASS" and check["checks"] and all(
-                        value.startswith("PASS") for value in check["checks"].values()):
-                    references[run] = "PASS"
+            repeats = native_client_rows(run_dir, workload, request_ids, case.get("native_client_source", "vllm028"))
+            reference_evidence[run] = client_reference(cell, case, run_dir, run_check)
+            references[run] = reference_evidence[run]["status"]
             for repeat, rows in repeats.items():
                 side = f"vllm/{run}-{repeat}"
                 sides[side] = formal_sample(rows, formal_ids, classified)
@@ -130,6 +119,7 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
                          if key in value} for side, value in sides.items()},
     }
     if cell["gate"] == "client":
-        sample.update(client_workload=workload[0], reference_admission=references)
+        sample.update(client_workload=workload[0], reference_admission=references,
+                      reference_evidence=reference_evidence)
     (output_dir / "sample.json").write_text(json.dumps(sample, indent=1) + "\n")
     return sample

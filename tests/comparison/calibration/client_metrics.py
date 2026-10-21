@@ -1,4 +1,4 @@
-"""Client output-token endpoints for the canonical native-v0.28 comparison."""
+"""Client output-token endpoints for supported canonical native artifact formats."""
 
 import json
 import math
@@ -10,6 +10,14 @@ from tests.comparison.calibration.e2e_metrics_gap import require_written_after
 from tests.comparison.calibration.pd_metrics import read_jsonl
 
 TTFT_SEMANTIC = "request_issue_to_first_output_token"
+NATIVE_CLIENT_FORMATS = {
+    "vllm028": dict(directory="run", summary="replay_summary.json", repetitions="canonical_repetitions",
+                    status=0, stream="stream_done", output="output_token_count", adapter="0.28.0",
+                    provenance="git"),
+    "step5": dict(directory="replay", summary="canonical_summary.json", repetitions=None,
+                  status="CLIENT_WORKLOAD_VERIFIED", stream="stream_completed", output="generated_token_count",
+                  adapter="step5", provenance="image"),
+}
 
 
 def endpoint_row(identity, arrival, first, last, prompt, output, **diagnostics):
@@ -23,29 +31,38 @@ def endpoint_row(identity, arrival, first, last, prompt, output, **diagnostics):
                 ttft_semantic=TTFT_SEMANTIC, **diagnostics)
 
 
-def native_client_rows(run_dir: Path, workload: tuple, request_ids: dict) -> dict:
+def native_client_rows(run_dir: Path, workload: tuple, request_ids: dict, source_format="vllm028") -> dict:
     """Keep repeat-qualified transport IDs, joining only by the stable template ID."""
     workload, formal_rows, warmup_rows = workload
     if request_ids["rows"] != formal_rows:
         raise ValueError("Pinned canonical formal identity/arrival mismatch")
-    run = run_dir / "run"
+    source = NATIVE_CLIENT_FORMATS[source_format]
+    run = run_dir / source["directory"]
     manifest = run_dir / "run_manifest.json"
-    metadata = json.loads(manifest.read_text())
-    if (metadata.get("mode") != "clean" or metadata.get("groundtruth_tree_dirty") is not False
-            or not metadata.get("groundtruth_commit")):
-        raise ValueError("Client metrics require recorded clean source provenance")
-    for name in ("client_requests.jsonl", "replay_summary.json"):
-        require_written_after(run / name, manifest)
-    summary = json.loads((run / "replay_summary.json").read_text())
-    repetitions = summary["canonical_repetitions"]
-    if (summary.get("vllm_version") != "0.28.0" or summary.get("mode") != "clean"
-            or summary.get("status") != 0 or not repetitions.get("client_workload_verified")
+    if source["provenance"] == "git":
+        metadata = json.loads(manifest.read_text())
+        if (metadata.get("mode") != "clean" or metadata.get("groundtruth_tree_dirty") is not False
+                or not metadata.get("groundtruth_commit")):
+            raise ValueError("Client metrics require recorded clean source provenance")
+        for name in ("client_requests.jsonl", source["summary"]):
+            require_written_after(run / name, manifest)
+    summary = json.loads((run / source["summary"]).read_text())
+    repetitions = summary[source["repetitions"]] if source["repetitions"] else summary
+    if (source["provenance"] == "git" and (
+            summary.get("vllm_version") != source["adapter"] or summary.get("mode") != "clean")
+            or summary.get("status") != source["status"] or not repetitions.get("client_workload_verified")
             or repetitions.get("observation_errors")):
         raise ValueError("Incomplete or unstable native client repetitions")
+    if source["provenance"] == "image" and summary.get("clock") != (
+            "prefill-head Linux monotonic; proxy and client on the same host"):
+        raise ValueError("Unbound native client clock")
     records = read_jsonl(run / "client_requests.jsonl")
     repeats = workload["repetitions"]["repeat_indices"]
     if [r["repeat"] for r in repetitions["repetitions"]] != repeats:
         raise ValueError("Native repetition population mismatch")
+    if source["provenance"] == "image" and not all(
+            r.get("client_workload_verified") is True for r in repetitions["repetitions"]):
+        raise ValueError("Unverified individual native repetition")
     formal = {r["request_id"]: r for r in request_ids["rows"] if r["role"] == "formal"}
     rule = workload["repetitions"]["runtime_request_id_rule"]
     if len({r["request_id"] for r in records}) != len(records):
@@ -65,27 +82,46 @@ def native_client_rows(run_dir: Path, workload: tuple, request_ids: dict) -> dic
             phase_rows = [r for r in selected if r["segment"] == phase and r["role"] == phase]
             if len(phase_rows) != len(templates):
                 raise ValueError("Native warmup/formal population mismatch")
+            phase_clock = None
+            if source["provenance"] == "image":
+                phase_clock = next(item for item in repetitions["repetitions"] if item["repeat"] == repeat)["phases"][phase]
+                if (phase_clock.get("planned_requests") != len(templates)
+                        or phase_clock.get("recorded_requests") != len(templates)
+                        or phase_clock.get("failed_request_ids") != []):
+                    raise ValueError("Native phase summary population mismatch")
             for r in phase_rows:
                 template = r["template_request_id"]
                 expected = workload["lengths"]
                 if (r["request_id"] != rule.format(request_id=template, repeat=repeat)
                         or template not in arrivals or r.get("arrived_at") != arrivals[template]
                         or r["status"] != "completed" or r["http_status"] != 200
-                        or r.get("error") or r["validation_errors"] or not r["stream_done"]
+                        or r.get("error") or r.get("stream_error") or r["validation_errors"]
+                        or not r.get(source["stream"])
                         or r["finish_reason"] != "length"
                         or r["num_prefill_tokens"] != expected["prompt_tokens_per_request"]
                         or r["num_decode_tokens"] != expected["output_tokens_per_request"]
-                        or r["output_token_count"] != r["num_decode_tokens"]
+                        or r.get(source["output"]) != r["num_decode_tokens"]
                         or any(r["usage"].get(key) != value for key, value in dict(
                             prompt_tokens=r["num_prefill_tokens"], completion_tokens=r["num_decode_tokens"],
                             total_tokens=r["num_prefill_tokens"] + r["num_decode_tokens"]).items())):
                     raise ValueError(f"Invalid native client identity, scheduled arrival or tokens: {r['request_id']}")
                 row = endpoint_row(template, r["dispatch_monotonic"], r.get("first_token_monotonic"),
                                    r.get("last_token_monotonic"), r["usage"]["prompt_tokens"],
-                                   r["output_token_count"], transport_request_id=r["request_id"], repeat=repeat)
-                for source, target in (("ttft_ms", "ttft_ms"), ("tpot_ms", "tpot_ms"),
+                                   r[source["output"]], transport_request_id=r["request_id"], repeat=repeat)
+                if source["provenance"] == "image":
+                    origin = phase_clock["origin_monotonic"]
+                    response = r.get("response_monotonic")
+                    if (not isinstance(origin, (int, float)) or not math.isfinite(origin)
+                            or r["dispatch_monotonic"] < origin + r["arrived_at"]
+                            or not isinstance(response, (int, float)) or not math.isfinite(response)
+                            or response < r["last_token_monotonic"]
+                            or r.get("accepted_prompt_token_count") != r["num_prefill_tokens"]
+                            or not r.get("prompt_sha256")
+                            or r.get("accepted_prompt_sha256") != r["prompt_sha256"]):
+                        raise ValueError("Step prompt identity, phase clock or response timestamp mismatch")
+                for metric_source, target in (("ttft_ms", "ttft_ms"), ("tpot_ms", "tpot_ms"),
                                        ("e2e_ms", "request_e2e_time_ms")):
-                    if not math.isclose(r[source], row[target], abs_tol=1e-3, rel_tol=0):
+                    if not math.isclose(r[metric_source], row[target], abs_tol=1e-3, rel_tol=0):
                         raise ValueError("Client metric provenance disagrees with token timestamps")
                 if phase == "formal":
                     rows.append(row)

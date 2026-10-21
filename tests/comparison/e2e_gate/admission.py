@@ -224,5 +224,90 @@ def observer_host(probe: Path, references: list[Path]) -> dict:
                 reasons=reasons, inputs=inputs, qualification_verified=False)
 
 
+def client_reference(cell: dict, case: dict, run_dir: Path, run_check: Path | None) -> dict:
+    """Bind the existing clean-run checker to the actual client input and runtime evidence."""
+    evidence = dict(status="UNVERIFIED", reasons=[], inputs={})
+    reasons = evidence["reasons"]
+    if run_check is None:
+        reasons.append("Missing pinned groundtruth-run-check receipt")
+        return evidence
+    receipt = json.loads(run_check.read_text())
+    origin = run_check.resolve().parent.parent
+    check = receipt.get("runs", {}).get(run_dir.name, {})
+    if (run_check.resolve() != origin / "analysis/run_check_status.groundtruth_clean.json"
+            or receipt.get("entry") != "groundtruth-run-check"
+            or receipt.get("mode") != "groundtruth_clean" or receipt.get("case_id") != cell["case_id"]
+            or check.get("status") != "PASS" or not check.get("checks")
+            or not all(value.startswith("PASS") for value in check["checks"].values())):
+        reasons.append("Missing passing case-bound clean-run check")
+        return evidence
+    if case.get("native_client_source", "vllm028") == "vllm028":
+        expected = f"runs/groundtruth_clean/{run_dir.name}/run_manifest.json"
+        if (check.get("run_manifest") == expected
+                and (origin / expected).resolve() == (run_dir / "run_manifest.json").resolve()):
+            evidence["status"] = "PASS"
+        else:
+            reasons.append("Native run-check origin does not identify the input manifest")
+        return evidence
+
+    # Image-native runs have no clean native Git checkout. The original stage declaration,
+    # actual worker receipts and the post-run check replace that unsupported claim.
+    expected_runtime = case.get("native_runtime")
+    pins = check.get("artifacts", [])
+    runtime_evidence = check.get("runtime_evidence", {})
+    required_checks = {"clean_runtime", "runtime_identity", "native_qualification", "artifact_integrity"}
+    if (not expected_runtime or not required_checks <= check["checks"].keys()
+            or set(runtime_evidence) != {"platform_image", "installed_sources", "native_qualification"}
+            or check.get("run_directory") is None
+            or (origin / check["run_directory"]).resolve() != run_dir.resolve() or not pins):
+        reasons.append("Missing Step runtime declaration, origin or required native checks")
+        return evidence
+    artifacts = {}
+    for pin in pins:
+        raw = observer_pin(pin | {"path": str(origin / pin["path"])}, run_check, reasons)
+        path = (origin / pin["path"]).resolve()
+        if path in artifacts or not path.is_relative_to(origin):
+            reasons.append("FAIL: duplicate or external native evidence pin")
+        artifacts[path] = raw
+    if any(pin not in pins for pin in runtime_evidence.values()):
+        reasons.append("Missing immutable actual platform/source/qualification receipts")
+    required = [run_dir / "config.json", run_dir / "replay/client_requests.jsonl",
+                run_dir / "replay/canonical_summary.json"]
+    nodes = sorted((run_dir / "nodes").glob("*/result.json"))
+    if any(artifacts.get(path.resolve()) is None for path in required + nodes) or not nodes:
+        reasons.append("Missing pinned stage, client population or native node receipts")
+    if reasons:
+        return evidence
+    config = json.loads(artifacts[required[0].resolve()])
+    identity = expected_runtime | {"source_hashes": config.get("expected_source_hashes"),
+                                   "harness_commit": config.get("source", {}).get("commit")}
+    if (config.get("mode") != "clean" or config.get("image") != expected_runtime.get("image")
+            or config.get("engine", {}).get("native_reference", {}).get("image") != config.get("image")
+            or config.get("engine", {}).get("vllm_version") != expected_runtime.get("adapter")
+            or not identity["source_hashes"] or not identity["harness_commit"]
+            or check.get("runtime_identity") != identity
+            or any(key in config for key in ("pd_state_observation", "serve_observers"))
+            or len(nodes) != config.get("replica")):
+        reasons.append("Step stage/source/image declaration disagrees with native run check")
+    lanes = []
+    for path in nodes:
+        node = json.loads(artifacts[path.resolve()])
+        plan = node.get("plan", {})
+        lanes.append((plan.get("role"), plan.get("lane")))
+        if (node.get("stage") != "finished" or node.get("workload_returncode") != 0
+                or node.get("observation_errors") or node.get("exception")
+                or node.get("versions", {}).get("vllm") != expected_runtime.get("vllm_version")
+                or plan.get("engine", {}).get("native_reference") != config["engine"].get("native_reference")):
+            reasons.append(f"Unverified actual native runtime: {path}")
+    expected_lanes = [(role, lane) for role in ("prefill", "decode")
+                      for lane in range(0, config["engine"]["data_parallel_size"], config["data_parallel_size_local"])]
+    if sorted(lanes) != sorted(expected_lanes):
+        reasons.append("Native role/lane runtime population mismatch")
+    evidence["inputs"] = dict(run_check=str(run_check.resolve()), runtime_identity=identity, artifacts=pins)
+    if not reasons:
+        evidence["status"] = "PASS"
+    return evidence
+
+
 RULES = {"client_e2e": client_e2e, "send_span": send_span,
          "isolated_prefill": isolated_prefill, "observer_host": observer_host}

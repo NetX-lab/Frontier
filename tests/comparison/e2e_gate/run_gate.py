@@ -114,6 +114,8 @@ def command_normalize(args) -> None:
     if cell["gate"] == "client" and len(vllm_runs) != len(args.vllm_run_dir):
         raise ValueError("Duplicate native run basenames cannot identify independent sources")
     frontier_runs = dict(args.frontier_run)
+    if len(frontier_runs) != len(args.frontier_run):
+        raise ValueError("Duplicate Frontier labels cannot identify independent sources")
     if cell["gate"] == "client" and Path(cell["trace"]["workload"]["path"]).name != "manifest.json":
         raise ValueError("Canonical workload must identify its frozen package manifest.json")
     workload = (canonical_workload(pinned(args.artifacts_root, cell["trace"]["workload"]).parent)

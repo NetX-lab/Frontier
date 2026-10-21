@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import csv
 import hashlib
 import json
 import math
@@ -21,6 +20,7 @@ import time
 CALIBRATION = Path(__file__).resolve().parents[2] / "comparison/calibration"
 sys.path[:0] = [str(CALIBRATION), str(CALIBRATION.parent / "dp_placement_pp")]
 from pd_proxy import build_app  # noqa: E402
+from pd_replay import canonical_workload as read_canonical_workload  # noqa: E402
 from serving_metrics import parse_prometheus, transfer_delta  # noqa: E402
 from vllm_replay import SERVED_MODEL_NAME, local_model_config, replay, runtime_version  # noqa: E402
 
@@ -35,33 +35,7 @@ def canonical_workload(directory: Path) -> tuple[dict, list[dict], list[dict]]:
     for name, expected in (("manifest.json", MANIFEST_SHA256), ("SHA256SUMS", SUMS_SHA256)):
         if hashlib.sha256((directory / name).read_bytes()).hexdigest() != expected:
             raise ValueError(f"D18 canonical pin mismatch: {name}")
-    members = {"manifest.json", "trace.csv", "request_ids.json", "warmup_pool.csv"}
-    checked = set()
-    for line in (directory / "SHA256SUMS").read_text().splitlines():
-        digest, name = line.split()
-        if name not in members or name in checked:
-            raise ValueError("Unexpected canonical checksum member")
-        checked.add(name)
-        if hashlib.sha256((directory / name).read_bytes()).hexdigest() != digest:
-            raise ValueError(f"Canonical workload checksum mismatch: {name}")
-    if checked != members:
-        raise ValueError("Incomplete canonical checksum manifest")
-    manifest = json.loads((directory / "manifest.json").read_text())
-    formal = json.loads((directory / "request_ids.json").read_text())["rows"]
-    with (directory / "warmup_pool.csv").open() as stream:
-        warmup = [row | {"arrived_at": float(row["arrived_at"]), "role": "warmup",
-                         "num_prefill_tokens": int(row["num_prefill_tokens"]),
-                         "num_decode_tokens": int(row["num_decode_tokens"])}
-                  for row in csv.DictReader(stream)]
-    for phase, rows, count in (("formal", formal, 128), ("warmup", warmup, 16)):
-        if len(rows) != count or any(
-                row["role"] != phase or row["arrived_at"] != index
-                or row["num_prefill_tokens"] != 6144 or row["num_decode_tokens"] != 1024
-                for index, row in enumerate(rows)):
-            raise ValueError(f"Canonical {phase} row/count mismatch")
-    if len({row["request_id"] for row in formal + warmup}) != 144:
-        raise ValueError("Canonical template IDs must be disjoint")
-    return manifest, formal, warmup
+    return read_canonical_workload(directory)
 
 
 def phase_rows(manifest: dict, templates: list[dict], repeat: int, phase: str) -> list[dict]:

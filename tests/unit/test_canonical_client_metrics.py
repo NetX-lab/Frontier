@@ -230,28 +230,14 @@ def test_swapped_intermediate_arrivals_preserving_latencies_and_windows_are_reje
         normalize_cell(CELL, CASE, IDS, {root.name: root}, {"sim": simulator}, tmp_path / "rows", WORKLOAD)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="Native replay uses asyncio.timeout_at")
-def test_compressed_streaming_http_arrivals_do_not_admit_the_frozen_qps1_trace(tmp_path, monkeypatch, simulator):
-    from tests.comparison.calibration import pd_replay
-    from tests.unit.test_native_streaming_replay import test_three_repetitions_use_existing_replay_and_observed_idle
-
-    saved = []
-    replay = pd_replay.replay_repetitions
-    async def retain(*args, **kwargs):
-        result, records = await replay(*args, **kwargs)
-        saved.extend([result, records])
-        return result, records
-    monkeypatch.setattr(pd_replay, "replay_repetitions", retain)
-    test_three_repetitions_use_existing_replay_and_observed_idle(tmp_path, monkeypatch, None)
-    repetitions, records = saved
-    root = tmp_path / "http-native"
-    root.mkdir()
-    (root / "run_manifest.json").write_text(json.dumps(dict(mode="clean", groundtruth_tree_dirty=False,
-        groundtruth_commit="local-http-fixture-not-native")))
+def test_compressed_native_arrivals_do_not_admit_the_frozen_qps1_trace(tmp_path, native, simulator):
+    root, records, _ = native
+    # The shared HTTP helper is not part of this branch. Exercise the same raw
+    # schedule rejection without importing its unrelated GLM replay implementation.
+    for record in records:
+        record["arrived_at"] *= .001
     write_jsonl(root / "run/client_requests.jsonl", records)
-    (root / "run/replay_summary.json").write_text(json.dumps(dict(mode="clean", vllm_version="0.28.0",
-        status=0, canonical_repetitions=repetitions)))
-    output = tmp_path / "http-rows"
+    output = tmp_path / "compressed-rows"
     with pytest.raises(ValueError, match="arrival"):
         normalize_cell(CELL, CASE, IDS, {root.name: root}, {"sim": simulator}, output, WORKLOAD)
     assert all(r["output_token_count"] == 1024 for r in records)

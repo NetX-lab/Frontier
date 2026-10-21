@@ -241,6 +241,9 @@ def client_reading(cell: dict, sample: dict, sides: dict[str, pd.DataFrame], che
 
     def four(reading):
         reading["metrics"] = [r for r in reading["metrics"] if r["metric"] != "request_throughput_rps"]
+        for row in reading["metrics"]:
+            row["signed_delta"] = row["absolute_error"]
+            row["absolute_error"] = abs(row["absolute_error"])
         reading["verdict"] = verdict([r["status"] for r in reading["metrics"]])
         return reading
 
@@ -250,10 +253,17 @@ def client_reading(cell: dict, sample: dict, sides: dict[str, pd.DataFrame], che
                    for side in vllm}
     windows = {side: dict(first_submission_s=float(rows["arrival_s"].min()),
                          last_token_s=float(rows["completion_s"].max()),
+                         window_s=float(rows["completion_s"].max() - rows["arrival_s"].min()),
                          total_tokens=int(rows[["request_num_prefill_tokens", "request_num_decode_tokens"]]
                                           .to_numpy().sum())) for side, rows in sides.items()}
+    diagnostics = {side: dict(output_token_throughput_tps=float(rows["request_num_decode_tokens"].sum()) / windows[side]["window_s"],
+                              request_throughput_rps=len(rows) / windows[side]["window_s"])
+                   for side, rows in sides.items()}
     return {**pooled, "repetitions": repetitions, "formal_windows": windows,
-            "verdict": verdict([pooled["verdict"], *(r["verdict"] for r in repetitions.values())])}
+            "pooled_diagnostic": pooled, "throughput_diagnostics": diagnostics,
+            "reference_admission": references,
+            "aggregation": "Every native repetition is gated independently against the same deterministic Frontier replay; pooled metrics are diagnostic, throughput is total tokens / summed formal windows",
+            "verdict": verdict([r["verdict"] for r in repetitions.values()])}
 
 
 def gate_reading(cell: dict, case: dict, rows_dir: Path) -> dict:
