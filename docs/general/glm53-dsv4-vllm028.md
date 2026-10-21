@@ -3,8 +3,8 @@
 This branch adds source-derived model representation, structural simulation and
 native comparison tooling for GLM-5.3 and the original DeepSeek-V4-Flash.
 **It does not yet provide a calibrated predictor for either model.** The target
-is one admitted H200 calibration result per model, with the trained GLM P/D path
-first and measured V4 integration following it. The fixed workload below replaces
+is prioritized calibration on H800 and H200 at 32 and 64 GPUs, starting with
+H80032 for both models. The fixed workload below replaces
 the earlier SharedGPT formal case; historical artifacts remain unchanged.
 
 This snapshot includes the W7 measured-DSA, sequence-parallel MoE and measured
@@ -15,12 +15,36 @@ branch tip. Step-5-Preview integration is outside this branch.
 
 ## Calibration contract (2026-10-21)
 
-Formal acceptance for each model is **one end-to-end calibration case** on
-**64 × NVIDIA H200** with prefill/decode disaggregation, online serving, thinking
-disabled, prefix caching and chunked prefill disabled, CUDA Graph and quantization
-enabled, and dummy-weight execution. The topology is P32/D32 with per-role
-TP8 × DP4 × EP32 × PP1; V4 may step down only if the locked runtime cannot support
-that layout, with the concrete refusal recorded. Each case has **128 requests**,
+The four priority tasks apply separately to each model:
+
+| Task | Hardware / GPUs | RJob class | Formal calibration dependency |
+| --- | --- | --- | --- |
+| P0, highest | H800 / 32 | Non-preemptible | Own runtime/coverage admission; final four errors ≤10% |
+| P1 | H800 / 64 | Non-preemptible | Basic running validation and same-model H80032 four errors ≤30% |
+| P2 | H200 / 32 | Non-preemptible | Own admission and personal non-preemptible budget; no H800 accuracy dependency |
+| P2 | H200 / 64 | Entire job preemptible | Basic environment validation and same-model H20032 four errors ≤30% |
+
+Both 64-GPU basic validations and preparation may run **before** the 30% gate;
+the formal native reference/calibration campaign may not. Promotion uses all
+four errors in each admitted repetition, never an average across metrics,
+repetitions, models or hardware. The 30% threshold governs entry, not final
+acceptance; every completed calibration still requires four independent errors ≤10%.
+Ready higher-priority work receives shared resources first. Both H200 tasks are
+P2 and do not wait for H800 accuracy results.
+
+Across all sessions, `i-fengyicheng` may reserve at most **32 non-preemptible
+H200 GPUs**, including queued jobs. Every additional H200 submission must be
+preemptible; H20064 is always wholly preemptible. H20032 non-preemptible cases
+wait for the required budget. The old 70/130-GPU limits no longer authorize runs.
+Preserve preempted attempts and restart complete clean repetitions rather than
+stitching partial samples together. H800 uses `codesign`; H200 uses `step_main`.
+
+The 32-GPU topology is P16/D16, per-role TP8 × DP2 × EP16 × PP1; 64 GPUs use
+P32/D32, per-role TP8 × DP4 × EP32 × PP1. Native refusal is a recorded blocker,
+not permission to silently downgrade a task. Common settings remain prefill/
+decode disaggregation, online serving, thinking/prefix/chunking disabled,
+native CUDA Graph and quantization enabled, and dummy weights.
+Each case has **128 requests**,
 each exactly **6144 input / 1024 output tokens** (`k=1024` interpretation of 6k/1k),
 at **QPS 1.0 with fixed one-second arrivals** from 0 through 127 s. No Poisson
 arrivals, SharedGPT sampling or tokenizer re-count defines this workload.
@@ -33,7 +57,8 @@ last-token completion**, not the 127 s arrival span. A complete repetition has
 786432 input + 131072 output = **917504 total tokens**. Internal TTFT, ITL, KV-ready time and
 percentiles are diagnostics and do not gate.
 
-Each model needs **3 clean repetitions in one job**, each with its own independent
+Each eligible formal model/hardware/size case needs **3 clean repetitions in one
+job**, each with its own independent
 16-request warmup of the same shape at QPS 1.0 and formal measurement window,
 and both roles idle between repetitions (no
 running/waiting requests and KV usage back to zero). Every repetition must finish
@@ -46,7 +71,7 @@ warmup completion counts alone do not prove all-lane graph coverage.
 The replacement artifact is
 [`data/processed_traces/canonical_fixed_6144_1024_req128_qps1/`](../../data/processed_traces/canonical_fixed_6144_1024_req128_qps1/),
 using the existing trace, request-ID, disjoint warmup-pool, manifest and checksum
-layout. The earlier
+layout, pinned to the exact `68f891b` package. The earlier
 [`canonical_sharegpt_req256_qps4/`](../../data/processed_traces/canonical_sharegpt_req256_qps4/)
 artifact is retained as deferred history, not a second formal workload. This
 document does not assert synchronization with the separate Step-5-Preview worktree.
@@ -58,18 +83,18 @@ sizes, quantization and memory budgets remain evidence to collect, not an actual
 freeze established by these requested settings.
 
 Without chunking, the serving configuration must satisfy `max_model_len >= 7168`
-and `max_num_batched_tokens >= max_model_len`. H200 profiling must cover the
+and `max_num_batched_tokens >= max_model_len`. Hardware-specific profiling must cover the
 6144-token unchunked prompt and the 1024-output decode progression through a
 7168-token total context, including reached graph/compression/page boundaries.
-The formal communication backend remains **measured**; every touched H200
-collective shape needs a matching curve, not extrapolation or an H800 substitute.
+The formal communication backend remains **measured**; every touched
+collective/NIXL shape needs a curve matching hardware, topology and actual lane
+widths. Reuse qualified rows first; no cross-hardware scaling or substitution.
 
-Multi-workload families, multi-QPS levels, large scenario matrices, multiple formal
-parallel layouts, broad hardware-generalization campaigns and extended holdout
-workloads are no longer acceptance scope. Their historical results remain recorded.
-Measured tables in this branch were collected on H800; they remain H800 evidence and
-are not blended into an H200 result, so the H200 tables for the shapes the two cases
-touch are being re-collected.
+The scope is one fixed workload across the four requested hardware/scale tasks,
+not a revival of multi-workload/QPS sweeps or the old 36-cell/holdout matrix.
+Existing H800/H200 measurements keep their actual scope and provenance. Memory,
+graph, compiled/phase and physical-TP qualification are case-specific; earlier
+primitive measurements or basic validations do not establish full calibration.
 
 ## Model and reference-runtime contract
 
