@@ -11,10 +11,10 @@ Dependency graph: `A -> {B, C} -> D -> E`.
 | Step | Scope and completion condition |
 | --- | --- |
 | A | Inspect existing provider, transfer events and C16/Q10 scheduler semantics; record the shared interface needed from the computation owner. |
-| B | Implement admitted measured transfer handling in existing start/end events; unsupported coverage fails before ownership changes. |
+| B | Implement measured transfer in existing events; geometry preflight precedes claims, while missing cost/READ validation unwinds temporary owners. |
 | C | Implement the admitted D computed frontier/first-step shape inside existing Request/scheduler owners, preserving output accounting and legacy paths. |
 | D | Exercise actual event/scheduler lifecycle with labelled CPU fixture costs, missing/wrong coverage and lifecycle negative controls; run affected existing tests. |
-| E | Commit verified code and task evidence; run a small actual `frontier.main` case when the computation/bundle interface is available, otherwise identify the exact missing input. |
+| E | Commit verified source/evidence and hand exact hooks/configuration to primary. Primary now owns production supplier and actual main; do not wait for compute or edit provider source further. |
 
 ## Test seams and limits
 
