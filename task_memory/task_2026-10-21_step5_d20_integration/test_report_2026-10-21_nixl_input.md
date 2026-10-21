@@ -30,4 +30,6 @@ The first long-output test stopped on the33rd scheduling call after32 completed 
 
 ## Limits
 
+Baseline prerequisite completed: the exact cleanb65609b worktree ran the existing77-case matrix, all return codes0. All451 artifacts match their recorded sizes/SHA256, verified against paths relative to the baseline results directory (`baseline_integrity02.json`). An initial inline integrity check mistakenly used shellcwd for those relative paths and reported missing files; only that path resolution was corrected. No baseline artifacts were modified or regenerated. The final candidate comparison remains pending.
+
 The file-backed execution provider is a test adapter, not yet the normal sklearn lazy-delegate path. Full FFN/manager integration, whole `frontier.main`, integrated77-case fidelity, immutable full bundle and actual canonical/native/profile admission are still pending. No GPU work or timing correction occurred in this step.
