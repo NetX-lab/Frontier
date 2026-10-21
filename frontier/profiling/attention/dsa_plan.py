@@ -178,10 +178,6 @@ class DsaMeasurementLimits:
                     "native_defaults disables chunking and requires token budget "
                     f">= max_context_len={self.max_context_len}"
                 )
-        elif max(self.chunk_budgets) >= self.max_context_len:
-            raise ValueError(
-                f"chunk budgets must stay below max_context_len={self.max_context_len}"
-            )
 
 
 @dataclass(frozen=True)
@@ -390,6 +386,11 @@ def _build_prefill_cases(
     whose budget exceeds it.
     """
 
+    if (limits.engine_policy == ENGINE_POLICY_EAGER_CHUNKED
+            and max(chunk_budgets) >= limits.max_context_len):
+        raise ValueError(
+            f"chunk budgets must stay below max_context_len={limits.max_context_len}"
+        )
     repeats = limits.prefill_warmup_repeats + limits.prefill_measured_repeats
     long_prompt = limits.max_context_len - 1
     cases = []

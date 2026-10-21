@@ -59,6 +59,10 @@ def _add_dsv4_plan_arguments(parser: argparse.ArgumentParser) -> None:
              "A positive bound uses an unmeasured local seed, not a NIXL first-tail.",
     )
     parser.add_argument(
+        "--prefill_prompt_len", type=int,
+        help="Exact ordinary prefill prompt length instead of the context grid.",
+    )
+    parser.add_argument(
         "--kv_cache_dtype",
         required=True,
         help="KV-cache dtype of the target deployment (vLLM --kv-cache-dtype).",
@@ -89,6 +93,7 @@ def build_plan(args: argparse.Namespace) -> Dsv4ProfilePlan:
         kv_cache_dtype=args.kv_cache_dtype,
         query_one_context_min=getattr(args, "query_one_context_min", 0),
         query_one_context_max=getattr(args, "query_one_context_max", None),
+        prefill_prompt_len=getattr(args, "prefill_prompt_len", None),
     )
 
 

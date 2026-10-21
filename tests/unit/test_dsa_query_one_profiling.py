@@ -304,7 +304,7 @@ def test_native_plan_does_not_increase_maxlen_or_invent_workload():
     with pytest.raises(ValueError, match="explicit prefill or q1 window"):
         _native_plan(minimum=0, maximum=None, prefill=None)
     with pytest.raises(ValueError, match="stay below"):
-        _native_plan(engine_policy="eager_chunked")
+        _native_plan(engine_policy="eager_chunked", minimum=0, maximum=None, prefill=None)
     assert _native_plan(chunk_budgets=(7168,)).engines[0].chunk_budget == 7168
 
 
