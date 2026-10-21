@@ -312,9 +312,14 @@ class ProfilingDataFrameLoaders:
             FileNotFoundError: If the input file does not exist
             ValueError: If no data matches filtering criteria
         """
-        resolve_runtime_attention_family(
-            replica_config.model_config
-        ).require_enabled_for_execution()
+        family = resolve_runtime_attention_family(replica_config.model_config)
+        if family.family_id == "step5_attention":
+            from frontier.execution_time_predictor.step5 import load_step5_attention_rows
+
+            return load_step5_attention_rows(
+                file_path, replica_config, replica_scheduler_config, self._active_measurement_type,
+            )
+        family.require_enabled_for_execution()
         # Check file existence
         if not os.path.exists(file_path):
             raise FileNotFoundError(

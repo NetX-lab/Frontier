@@ -7,12 +7,19 @@ estimators under it, and read and write the on-disk cache.
 """
 
 import hashlib
+import json
+import math
 import os
 import pandas as pd
 import pickle
+from pathlib import Path
 
 from fasteners import InterProcessReaderWriterLock
-from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
+from frontier.execution_time_predictor.cache_io import (
+    atomic_json_dump,
+    atomic_pickle_dump,
+    dataset_fingerprint,
+)
 from frontier.execution_time_predictor.prediction_model_identity import (
     MIGRATION_HELP_COMMAND,
     _build_exact_feature_lookup,
@@ -29,6 +36,13 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
 logger = init_logger(__name__)
+
+MODEL_BUNDLE_SCHEMA_VERSION = 1
+MODEL_BUNDLE_IDENTITY_FIELDS = (
+    "model_name", "model_architecture_profile", "device", "role", "topology",
+    "graph_policy", "runtime_stack_signature", "physical_scope",
+    "quant_signature", "evidence_kind", "coverage",
+)
 
 
 class PredictionModelRegistry:
@@ -544,14 +558,23 @@ class PredictionModelRegistry:
             )
         return None
 
-    def _load_model_from_cache(self, model_name: str, model_hash: str) -> BaseEstimator:
+    def _load_model_from_cache(
+        self,
+        model_name: str,
+        model_hash: str,
+        *,
+        expected_sha256: Optional[str] = None,
+    ) -> BaseEstimator:
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").read_lock():
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
             if not os.path.exists(cache_file):
                 return None
+            if expected_sha256 is not None and dataset_fingerprint(cache_file) != expected_sha256:
+                raise ValueError(f"Model bundle artifact SHA256 mismatch for {model_name!r}")
             logger.info(f"✓ Loaded pre-trained model '{model_name}' from cache (hash: {model_hash})")
             logger.info(f"  Cache file: {cache_file}")
-            return pickle.load(open(cache_file, "rb"))
+            with open(cache_file, "rb") as stream:
+                return pickle.load(stream)
 
     def _store_model_in_cache(self, model_name: str, model_hash: str, model: BaseEstimator) -> None:
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").write_lock():
@@ -570,7 +593,7 @@ class PredictionModelRegistry:
         feature_cols: List[str],
         target_col: str,
     ) -> None:
-        """Persist exact measured rows before an on-demand model cache is stored."""
+        """Migrate missing lookup metadata once; a warm hit never republishes it."""
         if hasattr(model, "_frontier_exact_lookup"):
             exact_lookup = getattr(model, "_frontier_exact_lookup")
             if not isinstance(exact_lookup, Mapping):
@@ -585,3 +608,240 @@ class PredictionModelRegistry:
             _build_exact_feature_lookup(df, feature_cols, target_col),
         )
         self._store_model_in_cache(model_name, model_hash, model)
+
+    @staticmethod
+    def _canonical_measurement_identity(identity: Mapping[str, Any]) -> str:
+        """Serialize explicit provenance without defaults or JSON coercions."""
+
+        if not isinstance(identity, Mapping) or not identity:
+            raise ValueError("measurement identity must be a nonempty mapping")
+        if any(value is None or isinstance(value, (str, Mapping, list, tuple)) and not value
+               for value in identity.values()):
+            raise ValueError("measurement identity fields must be explicit and nonempty")
+
+        def normalize(value, field):
+            if isinstance(value, Mapping):
+                result = {}
+                for key, item in value.items():
+                    if not isinstance(key, str) or not key.strip():
+                        raise ValueError(f"measurement identity {field} requires nonempty string keys")
+                    result[key] = normalize(item, f"{field}.{key}")
+                return result
+            if isinstance(value, (list, tuple)):
+                return [normalize(item, f"{field}[{index}]") for index, item in enumerate(value)]
+            if isinstance(value, str):
+                if not value.strip():
+                    raise ValueError(f"measurement identity {field} must be nonempty")
+            elif type(value) is float:
+                if not math.isfinite(value):
+                    raise ValueError(f"measurement identity {field} must be finite JSON")
+            elif type(value) not in (int, bool):
+                raise ValueError(f"measurement identity {field} must be nonempty finite JSON")
+            return value
+
+        return json.dumps(
+            normalize(identity, "identity"), sort_keys=True, separators=(",", ":"),
+            ensure_ascii=True, allow_nan=False,
+        )
+
+    @staticmethod
+    def _set_measurement_identity(model: BaseEstimator, identity: Mapping[str, Any]) -> str:
+        """Attach the canonical measurement identity before atomic cache storage."""
+
+        canonical = PredictionModelRegistry._canonical_measurement_identity(identity)
+        attached = getattr(model, "_frontier_measurement_identity", None)
+        if attached is not None and attached != canonical:
+            raise ValueError("model measurement identity conflicts with the requested identity")
+        model._frontier_measurement_identity = canonical
+        return canonical
+
+    @staticmethod
+    def _validate_cached_measurement_identity(
+        *, model_name: str, model: BaseEstimator, requested_identity: Mapping[str, Any],
+    ) -> None:
+        """Reject missing or mismatched provenance only on an explicit request."""
+
+        requested = PredictionModelRegistry._canonical_measurement_identity(requested_identity)
+        attached = getattr(model, "_frontier_measurement_identity", None)
+        if attached is None:
+            raise ValueError(f"Cached model {model_name!r} is missing measurement identity marker")
+        if not isinstance(attached, str) or attached != requested:
+            raise ValueError(f"Cached model {model_name!r} measurement identity mismatch")
+
+    @staticmethod
+    def _model_bundle_identity(identity: Mapping[str, Any]) -> Dict[str, Any]:
+        canonical = PredictionModelRegistry._canonical_measurement_identity(identity)
+        normalized = json.loads(canonical)
+        for field in MODEL_BUNDLE_IDENTITY_FIELDS:
+            if field not in normalized or normalized[field] in ("", [], {}):
+                raise ValueError(f"Model bundle identity requires explicit nonempty {field}")
+        return normalized
+
+    def _bundle_model_path(self, model_name: str, model_hash: str) -> Path:
+        """Resolve only existing-cache artifact names, never external paths."""
+
+        for label, value in (("model_name", model_name), ("model_hash", model_hash)):
+            if (
+                not isinstance(value, str) or not value.strip() or value in (".", "..")
+                or "/" in value or "\\" in value or "\x00" in value
+            ):
+                raise ValueError(f"Model bundle {label} must be a cache filename component")
+        cache = Path(self._cache_dir).resolve()
+        artifact = cache / f"{model_name}_{model_hash}.pkl"
+        if artifact.resolve().parent != cache:
+            raise ValueError(f"Model bundle artifact is outside existing cache: {artifact}")
+        return artifact
+
+    @staticmethod
+    def _bundle_model_metadata(model_name: str, model: BaseEstimator) -> Dict[str, Any]:
+        """Read persisted estimator metadata; never infer missing model contracts."""
+
+        model_hash = getattr(model, "_frontier_model_hash", None)
+        features = getattr(model, "_frontier_feature_names", None)
+        target = getattr(model, "_frontier_target_col", None)
+        marker = getattr(model, "_frontier_measurement_identity", None)
+        if not isinstance(model_hash, str) or not model_hash.strip():
+            raise ValueError(f"Model bundle {model_name!r} requires _frontier_model_hash")
+        if (
+            not isinstance(features, (list, tuple)) or not features
+            or any(not isinstance(name, str) or not name.strip() for name in features)
+            or len(set(features)) != len(features)
+        ):
+            raise ValueError(f"Model bundle {model_name!r} requires _frontier_feature_names")
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError(f"Model bundle {model_name!r} requires _frontier_target_col")
+        if not isinstance(marker, str):
+            raise ValueError(f"Model bundle {model_name!r} is missing measurement identity marker")
+        try:
+            measurement_identity = json.loads(marker)
+        except ValueError as exc:
+            raise ValueError(f"Model bundle {model_name!r} has invalid measurement identity marker") from exc
+        PredictionModelRegistry._validate_cached_measurement_identity(
+            model_name=model_name, model=model, requested_identity=measurement_identity,
+        )
+        typed_identity = getattr(model, "_frontier_layer_cache_identity", None)
+        if typed_identity is not None and (not isinstance(typed_identity, str) or not typed_identity):
+            raise ValueError(f"Model bundle {model_name!r} has invalid typed identity marker")
+        return {
+            "model_hash": model_hash, "feature_names": list(features), "target_column": target,
+            "typed_identity": typed_identity, "measurement_identity": measurement_identity,
+        }
+
+    @staticmethod
+    def _model_bundle_id(payload: Mapping[str, Any]) -> str:
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
+        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _validate_bundle_measurement_identity(model_name, identity, measurement_identity) -> None:
+        """Do not let a bundle relabel producer facts shared with its estimators."""
+
+        for field in identity.keys() & measurement_identity.keys():
+            declared = PredictionModelRegistry._canonical_measurement_identity({field: identity[field]})
+            measured = PredictionModelRegistry._canonical_measurement_identity({field: measurement_identity[field]})
+            if declared != measured:
+                raise ValueError(f"Model bundle measurement identity mismatch for {model_name!r}: {field}")
+
+    def publish_model_bundle(
+        self, identity: Mapping[str, Any], models: Mapping[str, BaseEstimator],
+    ) -> Dict[str, Any]:
+        """Snapshot existing cache artifacts; publication is not native admission.
+
+        The content-addressed manifest is written last. Estimator names, hashes,
+        files and legacy lookup behavior are unchanged; no estimator is copied.
+        The returned ``path`` locates the manifest and is not part of its content.
+        """
+
+        normalized_identity = self._model_bundle_identity(identity)
+        if not isinstance(models, Mapping) or not models:
+            raise ValueError("Model bundle requires a nonempty model mapping")
+        artifacts = {}
+        for model_name, model in models.items():
+            metadata = self._bundle_model_metadata(model_name, model)
+            self._validate_bundle_measurement_identity(
+                model_name, normalized_identity, metadata["measurement_identity"],
+            )
+            path = self._bundle_model_path(model_name, metadata["model_hash"])
+            sha256 = dataset_fingerprint(path)
+            cached = self._load_model_from_cache(
+                model_name, metadata["model_hash"], expected_sha256=sha256,
+            )
+            if cached is not None:
+                self._validate_cached_measurement_identity(
+                    model_name=model_name, model=cached,
+                    requested_identity=metadata["measurement_identity"],
+                )
+            if cached is None or self._bundle_model_metadata(model_name, cached) != metadata:
+                raise ValueError(f"Model bundle persisted metadata mismatch for {model_name!r}")
+            artifacts[model_name] = {**metadata, "artifact": path.name, "sha256": sha256}
+        payload = {
+            "schema_version": MODEL_BUNDLE_SCHEMA_VERSION,
+            "identity": normalized_identity, "models": artifacts,
+        }
+        bundle_id = self._model_bundle_id(payload)
+        manifest = {**payload, "bundle_id": bundle_id}
+        path = Path(self._cache_dir).resolve() / f"bundle_{bundle_id}.json"
+        expected_bytes = json.dumps(manifest, indent=2, sort_keys=True).encode("utf-8")
+        with InterProcessReaderWriterLock(f"{path}.lock").write_lock():
+            if path.exists():
+                if path.read_bytes() != expected_bytes:
+                    raise ValueError(f"Model bundle has conflicting existing content: {path}")
+            else:
+                atomic_json_dump(manifest, path)
+        return {**manifest, "path": str(path)}
+
+    def load_model_bundle(
+        self, path: str | os.PathLike[str], expected_identity: Mapping[str, Any],
+    ) -> Dict[str, BaseEstimator]:
+        """Validate the complete snapshot before returning any cached estimator."""
+
+        requested = self._model_bundle_identity(expected_identity)
+        cache = Path(self._cache_dir).resolve()
+        path = Path(path)
+        if not path.is_absolute() and path.parent == Path("."):
+            path = cache / path
+        if path.resolve().parent != cache:
+            raise ValueError("Model bundle path must be inside the existing cache")
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        fields = {"schema_version", "identity", "models", "bundle_id"}
+        if not isinstance(manifest, dict) or set(manifest) != fields:
+            raise ValueError("Model bundle has invalid manifest fields")
+        if type(manifest["schema_version"]) is not int or manifest["schema_version"] != MODEL_BUNDLE_SCHEMA_VERSION:
+            raise ValueError("Model bundle has unsupported schema_version")
+        if self._canonical_measurement_identity(manifest["identity"]) != self._canonical_measurement_identity(requested):
+            raise ValueError("Model bundle requested identity mismatch")
+        payload = {key: value for key, value in manifest.items() if key != "bundle_id"}
+        bundle_id = self._model_bundle_id(payload)
+        if manifest["bundle_id"] != bundle_id or path.name != f"bundle_{bundle_id}.json":
+            raise ValueError("Model bundle self identity mismatch")
+        entries = manifest["models"]
+        if not isinstance(entries, dict) or not entries:
+            raise ValueError("Model bundle requires nonempty models")
+        metadata_fields = {
+            "model_hash", "feature_names", "target_column", "typed_identity", "measurement_identity",
+        }
+        # Check every digest before unpickling even the first estimator. Recheck
+        # under its existing cache read lock to exclude concurrent replacements.
+        for name, entry in entries.items():
+            if not isinstance(entry, dict) or set(entry) != metadata_fields | {"artifact", "sha256"}:
+                raise ValueError(f"Model bundle has invalid metadata for {name!r}")
+            artifact = self._bundle_model_path(name, entry["model_hash"])
+            if entry["artifact"] != artifact.name:
+                raise ValueError(f"Model bundle artifact path mismatch for {name!r}")
+            if dataset_fingerprint(artifact) != entry["sha256"]:
+                raise ValueError(f"Model bundle artifact SHA256 mismatch for {name!r}")
+        models = {}
+        for name, entry in entries.items():
+            model = self._load_model_from_cache(
+                name, entry["model_hash"], expected_sha256=entry["sha256"],
+            )
+            if model is None:
+                raise ValueError(f"Model bundle artifact is missing for {name!r}")
+            self._validate_cached_measurement_identity(
+                model_name=name, model=model, requested_identity=entry["measurement_identity"],
+            )
+            self._validate_bundle_measurement_identity(name, requested, entry["measurement_identity"])
+            if self._bundle_model_metadata(name, model) != {key: entry[key] for key in metadata_fields}:
+                raise ValueError(f"Model bundle artifact metadata mismatch for {name!r}")
+            models[name] = model
+        return models

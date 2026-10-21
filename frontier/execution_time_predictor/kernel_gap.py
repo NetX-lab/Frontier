@@ -82,6 +82,7 @@ class LayerKernelCounts:
     """Kernels one layer launches: its attention operators' in total, the others' by operator."""
 
     attention: float = 0.0
+    attention_measurement_type: MeasurementType | None = None
     operators: dict[str, float] = field(default_factory=dict)
 
 
@@ -178,9 +179,12 @@ class KernelGapPricing:
             count = predicted[feature_key]
         self._kernel_count_scopes[-1].operators[count_model._frontier_operator_name] = float(count)
 
-    def _record_attention_kernels(self, kernel_count: float) -> None:
+    def _record_attention_kernels(
+        self, kernel_count: float, measurement_type: MeasurementType | None = None,
+    ) -> None:
         if self._kernel_count_scopes:
             self._kernel_count_scopes[-1].attention = kernel_count
+            self._kernel_count_scopes[-1].attention_measurement_type = measurement_type
 
     def _predict_layer_with_kernel_gap(self, predict_layer: Callable[..., Any], *args, **kwargs) -> Any:
         """Predict one layer; on a kernel-only step, add the gap before each of its kernels."""
@@ -188,10 +192,17 @@ class KernelGapPricing:
             return predict_layer(*args, **kwargs)
         with self._counting_kernels() as counts:
             layer = predict_layer(*args, **kwargs)
+        attention_type = counts.attention_measurement_type
+        attention_count = (
+            0.0 if attention_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT)
+            else counts.attention
+        )
         if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
             # An eager step's device stream runs eager launches; a graph step replays a CUDA graph.
             execution_mode = (
                 "eager" if self._is_event_measurement_type(self._step_measurement_type) else "cuda_graph"
             )
-            layer.add_kernel_gap(self._kernel_gap_ms[execution_mode], counts.attention, counts.operators)
+            layer.add_kernel_gap(self._kernel_gap_ms[execution_mode], attention_count, counts.operators)
+        elif attention_type is MeasurementType.KERNEL_ONLY:
+            layer.add_kernel_gap(self._kernel_gap_ms["eager"], attention_count, {})
         return layer

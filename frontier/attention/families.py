@@ -579,52 +579,67 @@ STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
     operators=(
         AttentionOperatorSpec(
             name="step5_qkv_projection", role=AttentionOperatorRole.PROJECTION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_qkv_projection_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
         AttentionOperatorSpec(
             name="step5_attention_prepare", role=AttentionOperatorRole.NORMALIZATION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_attention_prepare_time",
             resource_class=ResourceClass.MEMORY, tp_mode=TensorParallelMode.ATTENTION_TP,
         ),
         AttentionOperatorSpec(
             name="step5_indexer_weights", role=AttentionOperatorRole.PROJECTION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_indexer_weights_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
         AttentionOperatorSpec(
             name="step5_indexer_prepare", role=AttentionOperatorRole.NORMALIZATION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_indexer_prepare_time",
             resource_class=ResourceClass.MEMORY, tp_mode=TensorParallelMode.ATTENTION_TP,
         ),
         AttentionOperatorSpec(
             name="step5_sparse_attention", role=AttentionOperatorRole.ATTENTION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_sparse_attention_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
         ),
         AttentionOperatorSpec(
             name="step5_swa_attention", role=AttentionOperatorRole.ATTENTION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_swa_attention_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
         ),
         AttentionOperatorSpec(
             name="step5_gate_projection", role=AttentionOperatorRole.PROJECTION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_gate_projection_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
         AttentionOperatorSpec(
             name="step5_headwise_gate", role=AttentionOperatorRole.ACTIVATION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_headwise_gate_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
         ),
         AttentionOperatorSpec(
             name="step5_output_projection", role=AttentionOperatorRole.PROJECTION,
+            predictor_target=False,
             phases=_ALL_PHASES, execution_time_attr="step5_output_projection_time",
             resource_class=ResourceClass.COMP, tp_mode=TensorParallelMode.ATTENTION_TP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="step5_layer_e2e", role=AttentionOperatorRole.ATTENTION,
+            phases=_ALL_PHASES, resource_class=ResourceClass.COMP,
+            tp_mode=TensorParallelMode.ATTENTION_TP, predictor_target=True,
+            profiling_target=False, e2e_trace_target=False,
         ),
     ),
     memory_layout=AttentionMemoryLayout.DENSE_KV,
@@ -633,11 +648,9 @@ STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
     kv_factor=2,
     runtime_num_kv_heads_resolver=_dense_runtime_num_kv_heads,
     runtime_head_size_resolver=_dense_runtime_head_size,
-    execution_enabled=False,
-    disabled_reason=(
-        "Step attention requires complete physical-scope timing, mixed cache allocation, "
-        "per-layer precision and serving qualification before execution admission."
-    ),
+    # Measured CPU execution requires matching typed timing and real kernel counts.
+    # This enables the cost path, not native/profile or serving qualification.
+    execution_enabled=True,
     required_profiling_feature_columns=(
         "measurement_type", "attention_backend", "model_architecture_profile",
         "attention_variant", "global_layer_id", "quant_signature", "model_dtype",
