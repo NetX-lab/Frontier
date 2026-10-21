@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Established bounded implementation and verification sequence. |
+| 2026-10-21 | Added RED -> real metadata consumer repair -> GREEN -> committed strict77 follow-up. |
 
 Dependency: native rules -> existing allocation/transfer implementation -> CPU
 acceptance -> commit -> one clean strict 77-case comparison -> final receipt.
@@ -23,3 +24,15 @@ acceptance -> commit -> one clean strict 77-case comparison -> final receipt.
 No parallel agent work; no external operations. Native semantic contradiction
 requiring a material architecture change is escalated to the parent with one
 concrete blocker rather than expanding investigation.
+
+## P2 repair
+
+1. Extend the existing canonical6144 lifecycle with real MetricsStore and enabled
+   TraceStore. Capture RED through the actual start callback before changing code.
+2. Consume reservation-backed grouped metadata before scalar family binding;
+   thread only the existing transfer info needed by that consumer. Keep scalar
+   GLM metadata, timing and execution guards unchanged.
+3. Re-run the actual callback/full1024-output lifecycle and existing focused
+   regressions. Retain exact native source method bodies with pinned locations.
+4. Commit the fix and tests; run one new clean strict77 candidate comparison.
+   Update final receipts and records without rerunning the matrix for docs alone.

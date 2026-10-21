@@ -8,8 +8,10 @@ from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     GATED_DELTA_NET_ATTENTION_FAMILY,
+    get_attention_family,
 )
 from frontier.attention.memory import (
+    AttentionKVCacheSelection,
     get_attention_kv_cache_capacity,
     get_attention_runtime_kv_layout,
 )
@@ -816,12 +818,96 @@ def compute_op_trace_meta(
     raise ValueError(f"Unsupported op_type for tracing: {op_type}")
 
 
+def _build_grouped_kv_cache_transfer_meta(
+    batch, replica_config, transfer_size_bytes, transfer_info, block_size,
+) -> Dict[str, Any]:
+    """Describe the reserved component pages, not a scalar attention tensor."""
+    from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
+        get_grouped_nixl_payload,
+    )
+
+    if transfer_info.kv_connector != "nixl" or len(batch.requests) != 1:
+        raise ValueError("Grouped transfer tracing requires one NIXL request")
+    model_config = replica_config.model_config
+    families = {spec.family_id for spec in model_config.get_layer_attention_specs()}
+    if len(families) != 1:
+        raise ValueError("Grouped transfer tracing requires a single cache family")
+    capacity = get_attention_kv_cache_capacity(
+        get_attention_family(next(iter(families))), model_config,
+        block_size=block_size,
+        selection=AttentionKVCacheSelection.from_replica(replica_config, block_size=block_size),
+    )
+    request = batch.requests[0]
+    transferred, payload_bytes = get_grouped_nixl_payload(
+        capacity, request.num_prefill_tokens,
+        transfer_info.source_group_block_ids, transfer_info.target_group_block_ids,
+    )
+    if (
+        transferred != transfer_info.transferred_group_block_ids
+        or payload_bytes != transfer_size_bytes
+        or payload_bytes != transfer_info.kv_cache_size_bytes
+    ):
+        raise ValueError("Grouped NIXL trace snapshots or bytes do not match the payload")
+
+    component_pages = {component.component_id: 0 for component in capacity.components}
+    groups = []
+    for group in capacity.groups:
+        page_count = len(transferred[group.group_id])
+        for component_id, _ in group.component_owners:
+            component_pages[component_id] += page_count
+        groups.append({
+            "group_id": group.group_id,
+            "logical_block_size": group.logical_block_size,
+            "source_held_pages": sum(block is not None for block in transfer_info.source_group_block_ids[group.group_id]),
+            "target_reserved_pages": sum(block is not None for block in transfer_info.target_group_block_ids[group.group_id]),
+            "transferred_pages": page_count,
+            "page_size_bytes": capacity.get_group_size_bytes(group),
+            "payload_bytes": page_count * capacity.get_group_size_bytes(group),
+        })
+    components = [{
+        "component_id": component.component_id,
+        "owner_layer_ids": list(component.owner_layer_ids),
+        "precision": component.precision,
+        "stored_rows": component.stored_rows,
+        "compression_ratio": component.compression_ratio,
+        "page_size_bytes": component.page_size_bytes,
+        "content_size_bytes": component.content_size_bytes,
+        "page_count": component_pages[component.component_id],
+        "resident_bytes": component_pages[component.component_id] * component.page_size_bytes,
+    } for component in capacity.components]
+    tensor_size_bytes = {component["component_id"]: component["resident_bytes"] for component in components}
+    if sum(tensor_size_bytes.values()) != payload_bytes:
+        raise ValueError("Grouped NIXL trace component bytes do not conserve payload")
+    return {
+        "precision_op": "kv_cache_transfer", "dtype": "MIXED", "dtype_bytes": None,
+        # Packed pages include mixed row formats and alignment, not dense tensors.
+        "tensor_shape": {}, "tensor_size_bytes": tensor_size_bytes,
+        "transfer_size_bytes": payload_bytes, "total_tokens": request.num_prefill_tokens,
+        "num_layers": model_config.num_layers, "num_q_heads": model_config.num_q_heads,
+        "num_heads": None, "num_kv_heads": None, "head_dim": None,
+        "payload_kind": transfer_info.payload_kind,
+        "byte_scope": "per_worker_lane_resident_pages", "block_size": capacity.block_size,
+        "cache_groups": groups, "cache_components": components,
+        "source_group_block_ids": {key: list(value) for key, value in transfer_info.source_group_block_ids.items()},
+        "target_group_block_ids": {key: list(value) for key, value in transfer_info.target_group_block_ids.items()},
+        "transferred_group_block_ids": {key: list(value) for key, value in transferred.items()},
+        "native_wire_bytes_known": False,
+    }
+
+
 def build_kv_cache_transfer_meta(
     batch: Any,
     replica_config: Any,
     cluster_type: ClusterType,
     transfer_size_bytes: int,
+    *,
+    transfer_info: Any = None,
+    block_size: int | None = None,
 ) -> Dict[str, Any]:
+    if transfer_info is not None and transfer_info.payload_kind == "structural_grouped_prompt_pages_per_worker_lane":
+        return _build_grouped_kv_cache_transfer_meta(
+            batch, replica_config, transfer_size_bytes, transfer_info, block_size,
+        )
     model_config = replica_config.model_config
     num_layers = model_config.num_layers
     num_q_heads = model_config.num_q_heads

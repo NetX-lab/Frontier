@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Created task and isolated branch/worktree from 6d88700. |
+| 2026-10-21 | Reproduced real op-tracing RED; repaired grouped metadata;470 focused checks PASS. |
 
 - completed: read current parent requirements, plan, ticket07 and V4 bounded unit
   brief. Created v4-grouped-nixl worktree at exact 6d88700.
@@ -14,9 +15,9 @@
   allocator, structural payload selection, completion preflight and release.
 - completed: final supported/unsupported CPU checks and record consolidation.
 - completed: implementation commit1a65e4985091f5c85c14830f86385800a614e4e6.
-- completed: one clean strict77 matrix and final receipt; records-only commit next.
+- completed: original clean strict77 matrix and final records commit17e3b42.
 
-Observed: source currently restricts NIXL to ungrouped DSA/block64. Grouped
+Initial observation at6d88700: source restricted NIXL to ungrouped DSA/block64. Grouped
 capacity already exposes get_group_size_bytes and allocator block IDs, so no
 capacity schema extension has been demonstrated necessary.
 
@@ -79,3 +80,42 @@ Verification iterations (raw logs `/data/ycfeng/tmp/v4_grouped_nixl_focused_0N.l
 Remaining acceptance gaps: real multi-owner compute/DP synchronization, native
 wire descriptors/timing/lifetime, graphs, measured execution and formal four
 metrics are NOT verified by these component tests. Existing execution guards stay.
+
+## P2 real MetricsStore/op tracing repair
+
+- completed: original failure reproduced before the fix through real MetricsStore
+  and enabled TraceStore. Canonical6144 test fails at start callback with
+  ValueError: Mixed compression variants require an explicit global layer id;
+  no transfer-end event is returned. p2_red.xml,1 failed in2.22s;
+  /data/ycfeng/tmp/v4_grouped_nixl_p2_red.log.
+- Diagnosis predictions, before the fix: (1) grouped metadata incorrectly reaches
+  scalar binding, so early dispatch should eliminate this ValueError; (2) the
+  builder lacks snapshots, so forward existing transfer_info and actual scheduler
+  block size; (3) a later trace/completion error would fail the full output loop.
+- completed: dispatch existing grouped payload metadata before scalar binding;
+  reuse existing capacity selection and get_grouped_nixl_payload validation.
+  MetricsStore only forwards two existing inputs; no new allocation state,
+  timing, model binding or execution admission behavior. Groups, component page
+  bytes and P/D/selected block snapshots remain separate in the trace.
+- completed: same real callback test GREEN on first fix,1 PASS in5.40s;
+  p2_green.xml. It receives a transfer-end event, writes/reads actual TraceStore
+  JSONL, completes1024 outputs from6143 and returns both pools to3999+null.
+- completed:470 focused checks PASS in21.45s, no skips. p2_focused.xml includes
+  actual V4 trace/lifecycle properties; existing GLM metadata test now compares
+  every prior field to a real MetricsStore callback and completes the transfer.
+- completed: native_retention.md now retains12 exact executed native method
+  bodies and9 callsite/spec excerpts from pinned git show. Complete-file hashes
+  of the12 methods match native_rules.json. No extraction rule or native code
+  changed; no dependence on native working HEAD for review.
+- Module size: op_trace_utils.py1089 lines; MetricsStore5744 lines. Existing
+  docs/general/module-size-exceptions.md already records the metrics boundary
+  and future ledger split. The P2 change adds only two argument-forwarding lines
+  there; metadata logic remains in op_trace_utils, avoiding unrelated cleanup.
+- completed: p2_receipt.json and p2_source.diff retain current RED/GREEN and exact
+  repair delta; source.diff is the cumulative source/test delta from6d88700.
+- Artifact-only correction: raw RED JUnit includes traceback trailing spaces.
+  Replaced those lexical spaces with XML character references; parsed XML is
+  byte-identical before/after serialization. Raw log, failure text, production
+  source and whitespace check configuration are unchanged.
+- in-progress: commit the focused-tested P2 repair.
+- pending: one new post-commit clean strict77 candidate and final receipts.

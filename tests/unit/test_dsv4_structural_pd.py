@@ -90,13 +90,34 @@ def _conserves(lane):
     assert [block.ref_cnt for block in pool.blocks] == [int(i in ids) for i in range(lane._config.num_blocks)]
 
 
-@pytest.mark.parametrize("prompt", [191, 6144, 6145])
-def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
+@pytest.mark.parametrize(("prompt", "real_metrics"), [(191, False), (6144, False), (6145, False), (6144, True)])
+def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, record_property, tmp_path):
     source, target, scheduler, _ = _harness()
     request, initial = _prefill(source, prompt)
     if prompt == 6144:
         assert list(map(len, initial.values())) == [24, 96, 96, 1536, 768]
     metrics = _Metrics()
+    if real_metrics:
+        from frontier.config import ClusterConfig, MetricsConfig
+        from frontier.metrics.metrics_store import MetricsStore
+        from frontier.metrics.trace_store import TraceStore
+
+        cluster_configs = {
+            role: ClusterConfig(
+                cluster_type=role, replica_config=source._replica_config,
+                replica_scheduler_config=source._config,
+            )
+            for role in (ClusterType.PREFILL, ClusterType.DECODE)
+        }
+        traces = TraceStore(str(tmp_path), enabled=True)
+        traces.initialize({"case": "grouped_nixl_real_metrics"})
+        metrics = MetricsStore(
+            SimpleNamespace(metrics_config=MetricsConfig(
+                output_dir=str(tmp_path), write_metrics=True, store_plots=False,
+                enable_op_level_tracing=True,
+            )),
+            cluster_configs, traces,
+        )
     start = _start_event(request, source)
     [end] = start.handle_event(scheduler, metrics)
     info = end._transfer_info
@@ -141,7 +162,31 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
     _conserves(target)
     with pytest.raises(RuntimeError, match="no receiving"):
         end.handle_event(scheduler, metrics)
-    assert len(metrics.starts) == len(metrics.ends) == 1
+    if real_metrics:
+        assert metrics._kv_cache_transfer_metrics["transfer_count"] == 1
+        assert metrics._kv_cache_transfer_metrics["total_data_transferred"] == info.kv_cache_size_bytes
+        [trace] = traces._buffer
+        assert trace.name == "kv_cache_transfer" and trace.type == "TRANSFER"
+        assert trace.meta["transfer_size_bytes"] == info.kv_cache_size_bytes
+        assert trace.meta["payload_kind"] == info.payload_kind
+        assert trace.meta["block_size"] == 256
+        assert trace.meta["tensor_shape"] == {}
+        assert sum(trace.meta["tensor_size_bytes"].values()) == info.kv_cache_size_bytes
+        assert [group["source_held_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
+        assert [group["target_reserved_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
+        assert [group["transferred_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
+        assert sum(group["payload_bytes"] for group in trace.meta["cache_groups"]) == info.kv_cache_size_bytes
+        assert sum(component["resident_bytes"] for component in trace.meta["cache_components"]) == info.kv_cache_size_bytes
+        assert trace.meta["source_group_block_ids"] == {key: list(value) for key, value in info.source_group_block_ids.items()}
+        assert trace.meta["target_group_block_ids"] == {key: list(value) for key, value in info.target_group_block_ids.items()}
+        assert trace.meta["transferred_group_block_ids"] == {key: list(value) for key, value in info.transferred_group_block_ids.items()}
+        assert trace.meta["native_wire_bytes_known"] is False
+        traces.close()
+        written = [json.loads(line) for line in (tmp_path / "op_traces.jsonl").read_text().splitlines()]
+        assert len(written) == 2 and written[1]["meta"] == trace.meta
+        record_property("grouped_nixl_real_metrics_trace", json.dumps(written[1]))
+    else:
+        assert len(metrics.starts) == len(metrics.ends) == 1
     record_property("grouped_nixl_lifecycle", json.dumps({
         "prompt": prompt, "outputs": request.num_processed_decode_tokens,
         "initial_source_groups": list(map(len, initial.values())),
@@ -155,6 +200,7 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
         "target_free_blocks": target._kv_cache_manager.block_pool.get_num_free_blocks(),
         "pool_blocks": target._config.num_blocks, "reserved_null_blocks": 1,
         "native_wire_bytes_known": False,
+        "real_metrics_callback": real_metrics,
     }))
 
 

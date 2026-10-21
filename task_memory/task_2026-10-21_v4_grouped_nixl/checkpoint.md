@@ -4,31 +4,31 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-21 | Final checkpoint after371 CPU PASS and unique clean strict77/77 comparison. |
+| 2026-10-21 | P2 checkpoint after actual callback RED/GREEN and470 focused PASS. |
 
-**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
+**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 0｜TODO 2
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| Native rules | PASS | native_rules.json，三个 prompt 的实际 source bodies |
-| Existing-owner implementation | PASS | 23 项新组件检查，三次完整1024输出 |
-| Final CPU regression | PASS | 最终371 PASS，cpu_tests.xml，包含 unsupported-path 与真实 FIFO 回调 |
-| Commit and strict matrix | PASS | 1a65e49，唯一 clean77/77，零 cache/provenance 差异 |
-| Final records | PASS | CPU/fidelity receipt、报告和精确 source diff 已保留 |
+| P2 actual callback RED | PASS | p2_red.xml，原样复现 mixed compression ValueError |
+| Grouped metadata repair/GREEN | PASS | p2_green.xml，真实 MetricsStore/TraceStore 完整1024输出 |
+| Focused/native evidence | PASS |470 PASS；锁定 native12方法体和9段 callsite/spec |
+| Commit/new strict77 | TODO | 尚未提交，不运行 dirty matrix |
+| Final records/handoff | TODO | 当前 RED/GREEN receipt 已有，待 committed matrix |
 
 # 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 最终 CPU 验收至 clean matrix 完成｜**当前前沿：** records commit -> handoff
+**检测窗口：** P2 repair 请求至 focused 验收｜**当前前沿：** commit -> one new clean matrix
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | Native control 在证明规则后停止；测试直接覆盖验收 |
-| D2 细节反复重试 | CLEAR | 各失败定位不同原因；已通过363项，无重复绕过 |
-| D3 支线问题修补 | CLEAR | 只改 transfer/allocation owners 和测试 |
+| D1 工具打磨 | CLEAR | 只扩现有 canonical/GLM 场景，未新增框架 |
+| D2 细节反复重试 | CLEAR | 一次 RED，第一版修复 GREEN |
+| D3 支线问题修补 | CLEAR | 两个 metadata 模块和现有 B tests |
 | D4 可并行任务停滞 | CLEAR | 用户要求不 delegation，后续依赖当前代码 |
 | D5 超范围镀金 | CLEAR | 无 GPU、graph consumer 或泛化框架 |
-| D6 分析空转 | CLEAR | 唯一 matrix 已完成；仅补核实 async drain 的 source 引用 |
+| D6 分析空转 | CLEAR | 找到缺失的两个 callback inputs，已实际完成生命周期 |
 | D7 路线违背 | CLEAR | 保留 typed guards，未运行 dirty matrix |
 
 **文档检查：** S1–S6 均未发现明显缺陷。
@@ -39,11 +39,11 @@
 **分支：** A：spec/tickets 合理，无需改动。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. 仅提交 final records；确认 frontier/tests trees 与1a65e49一致。
-2. 返回 parent：两个 commits、已验证结果和保留的 full-path 门槛。
+1. 提交已通过470项检查的修复，然后运行唯一新 clean strict77。
+2. 保留新 source stamps/cache 对比，再做 records-only commit 和 handoff。
 
 # 4. 最值得关注的 3 点
 
-1. 初始2520页不能混同于 handoff 的46页；connector 列表还包含 null。
-2. 结构测试没有执行 multi-owner compute 或测量 native NIXL。
-3. clean77-case 已通过；不要为 records-only commit 重跑 matrix 或扩展诊断。
+1. 原 fixture 漏掉了真实 metrics callback；新 canonical 场景已覆盖。
+2. Metadata 修复不授予 graph/measured/full-path execution admission。
+3. 下一完成条件是 committed clean77，不再扩展测试工具或原生诊断。

@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Closed source/CPU acceptance with371 PASS and one clean strict77/77 identical comparison at1a65e49. |
+| 2026-10-21 | Added P2 real MetricsStore RED/GREEN,470 focused PASS and retained pinned bodies; new clean matrix pending. |
 
 ## Environment and commands
 
@@ -41,7 +42,8 @@ The component lifecycle tests use real TP8/DP4/EP32 H200 model configurations,
 Request/Batch objects, one-owner scheduling iterations, the actual grouped pool,
 target selection, transfer start/end and release callbacks. The max length is7169
 to include the6145+1024 boundary; the canonical6144+1024 request is unchanged.
-Metrics callbacks and non-owned cluster context are fixtures. No EP compute,
+The original371 tests used fixture metrics callbacks; P2 below exercises actual
+MetricsStore and TraceStore. Non-owned cluster context remains a fixture. No EP compute,
 four-owner busy-loop synchronization, native runtime process or GPU is executed.
 
 ## Preserved typed execution boundaries
@@ -68,7 +70,7 @@ timing error, native wire bytes, contention, release-notification delay,128-requ
 three-repetition completion and four-metric <=10% acceptance remain **UNVERIFIED**.
 Structural D-ready then P-release at one timestamp is the existing approximation.
 
-All eight touched production modules remain below2000 lines. No capacity schema,
+The original eight touched production modules remain below2000 lines. No capacity schema,
 model graph consumer, profiling/H5 file, generic allocation owner or runtime
 migration was added. The existing pool's new external-computed-token input is
 needed to match native destination window boundaries with zero scheduled work.
@@ -97,3 +99,36 @@ and result receipt: `fidelity_receipt.json`; CPU lifecycle observations:
 `cpu_receipt.json`. Full manifest/results remain under the absolute candidate
 label directory recorded in the fidelity receipt. The final records-only commit
 does not change `frontier/` or `tests/` from the measured1a65e49 commit.
+
+## P2: real MetricsStore/op-tracing callback repair
+
+The reviewer found a real unsupported scalar metadata consumer missed by the
+original _Metrics fixture. Before the fix, the real start callback rejected V4
+mixed compression variants after allocation/claim/reservation, and therefore
+returned no transfer-end event. This invalidates the original suite as evidence
+for enabled op tracing; its allocation/native-rule results remain unchanged.
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -m pytest 'tests/unit/test_dsv4_structural_pd.py::test_real_grouped_handoff_and_all_outputs_conserve[6144-True]' -q -p no:cacheprovider -o junit_family=legacy --basetemp=/data/ycfeng/tmp/v4_grouped_nixl_p2_red --junitxml=task_memory/task_2026-10-21_v4_grouped_nixl/p2_red.xml > /data/ycfeng/tmp/v4_grouped_nixl_p2_red.log 2>&1
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -m pytest 'tests/unit/test_dsv4_structural_pd.py::test_real_grouped_handoff_and_all_outputs_conserve[6144-True]' -q -p no:cacheprovider -o junit_family=legacy --basetemp=/data/ycfeng/tmp/v4_grouped_nixl_p2_green --junitxml=task_memory/task_2026-10-21_v4_grouped_nixl/p2_green.xml > /data/ycfeng/tmp/v4_grouped_nixl_p2_green.log 2>&1
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_dsv4_structural_pd.py tests/unit/test_glm53_structural_pd.py tests/unit/test_nixl_decode_context.py tests/unit/test_grouped_kv_cache_manager.py tests/unit/test_grouped_kv_cache_scheduler.py tests/unit/test_dsv4_structural_execution.py tests/unit/test_dsv4_source_execution.py tests/unit/test_dsv4_parameter_memory.py tests/unit/test_dsv4_cache_layout.py tests/unit/test_dsv4_cache_zero_execution.py tests/unit/test_dsv4_cache_zero_driver.py tests/unit/test_kv_cache_extract_pricing.py tests/unit/test_op_trace_utils.py tests/unit/test_transfer_metrics_contract.py tests/unit/test_metrics_stage_execution_time.py -q -p no:cacheprovider -o junit_family=legacy --basetemp=/data/ycfeng/tmp/v4_grouped_nixl_p2_focused --junitxml=task_memory/task_2026-10-21_v4_grouped_nixl/p2_focused.xml > /data/ycfeng/tmp/v4_grouped_nixl_p2_focused.log 2>&1
+```
+
+| Check | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| RED before code change | Fail in actual callback at whole-model binding | 1 failed in2.22s; ValueError: Mixed compression variants require an explicit global layer id; exact chain in p2_red.xml | EXPECTED FAIL |
+| Same scenario after fix | Actual MetricsStore/TraceStore accept grouped metadata and return end event | 1 PASS in5.40s; no fallback or exception suppression | PASS |
+| Callback metadata | Existing snapshots; component/group bytes sum to payload |39521664B; each component and group conserved; held/reserved/selected24/2/2/2/16; no fictitious dense tensor shape | PASS |
+| Trace persistence | Real enabled TraceStore JSONL, not a log_event fixture | Header plus one transfer event; loaded metadata equals buffered event exactly | PASS |
+| Completion/conservation |1024 outputs from6143; no leaked pages |6143..7166 contexts, final computed7167; both pools3999 free +1 null | PASS |
+| GLM metadata | Every original metadata field unchanged through actual callback |65-token,2-page callback has main/indexer/scale bytes11501568/344064/10752; transfer completes | PASS |
+| Focused regressions | Existing371 plus canonical real callback and existing shared metrics tests |470 PASS in21.45s,0 failures/skips | PASS |
+| Native review evidence | Exact pinned bodies available without working checkout |12 complete methods and9 spec/callsite excerpts retained in native_retention.md; hashes match prior extraction | PASS |
+| New strict77 | One committed, clean candidate; unchanged checks | Pending | TODO |
+
+The repair only adds grouped transfer metadata in op_trace_utils.py and forwards
+existing transfer_info/scheduler block size from MetricsStore. That caller is an
+existing oversized module covered by docs/general/module-size-exceptions.md; its
+two-line forwarding change adds no responsibility. No broad cleanup is needed;
+the existing future ledger split remains outside this repair. No model_binding,
+timing, graph/measured admission, native protocol or other-owner files changed.
