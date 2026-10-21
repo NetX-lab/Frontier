@@ -6,6 +6,7 @@
 | 2026-10-22 | Archive the scoped CPU implementation and parent integration contract. |
 | 2026-10-22 | Archive P2 correction,489 affected passes and explicit request-capacity handoff. |
 | 2026-10-22 | Record P2 source commit and clean-branch completion receipt. |
+| 2026-10-22 | Primary verifies fixed-capacity binding with242 passing affected checks. |
 
 ## Outcome
 
@@ -27,6 +28,14 @@ Correction/tests/records commit:
 The following docs-only commit records that completed receipt.
 
 ## Deliverables
+
+The fixed-capacity follow-up uses existing `_config.batch_size_cap` directly
+at the agreement boundary. Native graph capacity is fixed at initialization;
+current supported Step requests cannot use the thinking-dependent admission
+override. Therefore no reachable current-workload arrival-order defect is
+claimed. Primary inspected that constraint and verified242 stage/engine/public
+predictor/Step structural-PD checks in33.92s after the interrupted owner handoff.
+All pass without errors or skips; exact command/log/XML are in the test report.
 
 - `frontier/scheduler/utils/forward_start_agreement.py:14,23,83`: final descriptor,
   min-mode/capture binding and existing-event hold/resume. Timing is external.

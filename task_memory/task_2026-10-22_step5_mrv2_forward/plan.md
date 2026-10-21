@@ -5,6 +5,8 @@
 | --- | --- |
 | 2026-10-22 | Minimal core implementation and CPU acceptance plan. |
 | 2026-10-22 | Add source-backed P2 correction with RED-before-code acceptance. |
+| 2026-10-22 | Add minimal fixed-capacity follow-up with supported-state verification. |
+| 2026-10-22 | Primary verified F1-F3; source integration and strict77 remain parent-owned. |
 
 1. Implement existing-owner hold/resume, unified graph policy and truthful
    batch/workload binding. Acceptance: no first prediction before agreement;
@@ -32,3 +34,15 @@ after merging. Native qualification and accuracy are outside this deliverable.
 
 Dependency: P2.1 -> P2.2 -> P2.3. Independent CPU suites can run concurrently.
 Do not rerun producer/native/full CLI/strict77 or touch their fixtures.
+
+## Fixed capacity follow-up
+
+1. completed: Inspect native fixed capacity and mutable admission override reachability;
+   verify existing Step thinking rejection without constructing unsupported state.
+2. completed: Change only agreement's capacity source to existing scheduler config. Bind
+   focused harnesses to actual V1 config and retain supported arrival-order and
+   cap3 tests. No new behavior branch or policy/cost change.
+3. completed verification: Run affected stage/engine and direct public predictor tests, inspect artifacts,
+   update reachability/disposition records and commit for parent integration.
+
+Dependency: F1 -> F2 -> F3. No new native/producer/full CLI/strict77 work.

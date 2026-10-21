@@ -7,6 +7,7 @@ import pytest
 from frontier.attention.step5_inputs import MRv2DummyDescriptor
 from frontier.config import global_vars
 from frontier.config.model_config import BaseModelConfig
+from frontier.config.replica_scheduler_config import VllmV1SchedulerConfig
 from frontier.entities import Batch, DummyForwardBatch, EPBatchGroup
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.execution_time_predictor.step5 import step5_row_features
@@ -25,7 +26,9 @@ def _harness(role, *, dense_layers=frozenset(), request_capacity=32):
         cluster_type=role, dense_layers=dense_layers,
     )
     predictor.requires_forward_start_agreement = True
+    config = VllmV1SchedulerConfig(batch_size_cap=request_capacity)
     for engine in scheduler._replica_schedulers.values():
+        engine._config = config
         engine._max_num_running_reqs = request_capacity
     predictor._model_config = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     predictor._cluster_type = role
@@ -182,6 +185,8 @@ def test_stage_first_call_redispatch_uses_request_supported_graph_candidates(
     monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", policy)
     monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", [8, 2, 1, 4])
     scheduler, _, context, stages, observed = _harness(role, request_capacity=capacity)
+    assert all(engine._config.batch_size_cap == engine._max_num_running_reqs == capacity
+               for engine in scheduler._replica_schedulers.values())
     builders = {"decode": _decode_batch, "prefill": _prefill_batch,
                 "dummy": lambda _: DummyForwardBatch(0, 0, 0)}
     batches = [builders[kind](tokens) for kind, tokens in (left, right)]
@@ -318,6 +323,8 @@ def test_empty_lane_wakeup_runs_real_v1_engine_dummy_and_stage_arrival(
     # An already-dispatched real lane has started the native DP busy-loop wave.
     for engine in engines:
         engine._dp_wave_running = True
+        profile = engine._get_iteration_scheduler_profile()
+        assert profile["round_class"] is None and profile["max_num_running_reqs"] == 3
     assert all(engine._max_num_running_reqs == config.batch_size_cap == 3 for engine in engines)
     real = _decode_batch(requests)
     snapshot = (list(real.num_tokens), list(real.num_context_tokens), list(real.requests))

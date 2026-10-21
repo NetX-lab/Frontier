@@ -9,6 +9,8 @@
 | 2026-10-22 | Start reviewer P2 correction; record real first-event RED before code. |
 | 2026-10-22 | Finish P2 verification:221 stage +268 measured PASS; prepare scoped commit. |
 | 2026-10-22 | Record verified correction commit and completed scoped handoff. |
+| 2026-10-22 | Inspect fixed-capacity follow-up; classify it as invariant improvement. |
+| 2026-10-22 | Primary completed fixed-capacity verification after provider interruption:242 checks pass. |
 
 - completed: new worktree from 5c2319cd; primary approval/source inspected.
 - completed: pre-prediction hold in existing stage scheduler; generic readiness
@@ -149,3 +151,48 @@ or unrelated edits are needed after489 affected PASS.
 Post-commit checkpoint: P2.1/P2.2/P2.3 PASS, no local blocker. D1-D7 CLEAR and
 S1-S6 no defect. Only handoff response and this completion-receipt commit remain;
 parent independent acceptance is not included in the completed local scope.
+
+## Fixed capacity follow-up
+
+- completed F1: native locked `vllm/v1/worker/gpu/cudagraph_utils.py:158`
+  initializes graph request capacity from fixed `scheduler_config.max_num_seqs`;
+  Frontier V1 constructor `vllm_v1_engine_replica_scheduler.py:181-183` maps the
+  existing `_config.batch_size_cap` to `_max_num_running_reqs` initially. This
+  config field is the native-matched graph creation capacity.
+- completed F1 reachability: the only runtime reassignment found in scheduler
+  source is `vllm_v1_iteration_policy.py:362-367`. Its profile defaults to
+  config cap at335-346; hidden/final cap override at348-359 requires a non-null
+  round classification. Classification at319-333 requires phase-aware policy
+  and a waiting/preempted request with `is_thinking_mode_enabled=True`.
+  Step thinking is rejected by `config.py:388,591-597` before simulation;
+  `Request.is_thinking_mode_enabled` at402-403 requires depth>1 and the ordinary
+  request generator sets depth1 when thinking is off (`base_request_generator.py:67-68,143`).
+  Existing rejection test `test_step5_structural_pd.py:211-225` is GREEN for
+  co-location and PDD:2 passed,18 deselected in1.90s, log/XML
+  `/data/ycfeng/tmp/d23_forward_fixed_capacity_reachability.{log,xml}`.
+- disposition: accept fixed config source as the graph creation invariant.
+  No supported current Step workload counterexample was established; previous
+  mutable field equals config under reachable ordinary requests. Do not claim
+  a reproduced arrival-order bug or inject unsupported Step thinking/overrides.
+- completed F2: preserved interrupted work and inspected actual diff/status.
+  The supported-state baseline before the source substitution passed46 cases,
+  with29 deselected in12.90s, log/XML
+  `/data/ycfeng/tmp/d23_forward_fixed_capacity_supported_baseline.{log,xml}`.
+  This is GREEN baseline evidence, not RED or a reachable bug reproduction.
+  Substituted only agreement line109 with the existing `_config.batch_size_cap`.
+  The focused harness now uses an actual shared `VllmV1SchedulerConfig`; both
+  arrival orders assert configured and admission caps match in supported state.
+  Real engine tests assert the ordinary profile round is null and its cap is3.
+  No artificial thinking request, lane override, branch, cost or policy change.
+- completed F3 verification: primary resumed the saved change after provider
+  HTTP502, inspected the source/config/phase-classification path and ran the
+  affected stage/engine, direct public predictor and complete Step structural-PD
+  suites:242 passed in33.92s, zero failures/errors/skips. Log/XML:
+  `/data/ycfeng/tmp/d23_fixed_parent_takeover01.{log,xml}`.
+- completed F3 disposition: keep the one-line fixed config binding because it
+  directly expresses native graph creation capacity. Supported Step requests
+  cannot activate the thinking override; no reachable arrival-order defect was
+  demonstrated. This is an invariant clarification, not a claimed bug reproduction.
+- pending integration: primary records/commits this verified slice, then merges
+  the forward branch and checks clean strict77. Fresh actual-main verification
+  resumes independently in `step5-mrv2-main` with its existing fixture02.

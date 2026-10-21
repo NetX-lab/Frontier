@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-22 | Record the delegated approved CPU core scope. |
 | 2026-10-22 | Record reviewer P2 correction and exclusive forward ownership. |
+| 2026-10-22 | Record fixed native capacity follow-up and reachability constraint. |
 
 ## [Original Request]
 Implement approved pre-first-prediction agreement using existing stage group,
@@ -47,3 +48,19 @@ Parent independently passed444 affected+measured checks on `3cad8dbe`. Re-run
 affected scoped checks, not the costly unaffected producer suite. Commit the
 correction, tests and records; return exact commits/commands/logs/lines and
 outstanding acceptance. Parent owns re-review, merge, full CLI and strict77.
+
+## [Original Request] Fixed graph capacity follow-up
+
+Same forward worktree; source only, no main fixture changes, delegation or
+platform operations. Original cap3 P2 is resolved. Reviewer notes agreement
+uses the last arriving lane's mutable `_max_num_running_reqs`, while native
+graph creation uses fixed scheduler `max_num_seqs`. Inspect native/config
+mapping and actual override reachability first. Step thinking may be rejected;
+do not invent a reachable counterexample or add unsupported branches. If
+correct, use existing replica scheduler `_config.batch_size_cap`, distinguish
+invariant improvement from a reachable workload bug, and prove arrival-order
+invariance under supported configuration/state while preserving cap3 tests.
+Keep minimal; run affected tests only; record reviewer disposition, reachability,
+source/logs and an additional commit for parent integration. Parent main owner
+is already instructed to merge `c9e9388f`; submitted native H80032/64 jobs are
+independent and outside this correction.

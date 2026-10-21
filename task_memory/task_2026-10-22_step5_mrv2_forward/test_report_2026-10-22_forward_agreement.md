@@ -171,3 +171,26 @@ native CUDA graphs or establish native accuracy. Parent owns independent
 re-review, merge, complete fresh CLI and strict77. This correction introduces
 the required keyword `request_capacity` on `bind_forward_start`; direct callers
 must supply the existing scheduler capacity, never the max capture size.
+
+## Fixed-capacity primary verification
+
+Primary resumed the saved one-line change and focused config-fixture updates
+after the owner encountered provider HTTP502. This is a source invariant
+clarification: native captures use the fixed `max_num_seqs` at construction;
+the equivalent Frontier input is `_config.batch_size_cap`. The only mutable
+admission override requires thinking requests, which the current Step config
+rejects. Existing supported-state tests pass before and after; no artificial
+thinking state or RED counterexample is asserted.
+
+Environment: `/data/ycfeng/envs/frontier-py310/bin/python`, Python3.10.6,
+pytest9.1.1; CWD `/data/ycfeng/Frontier/.worktrees/step5-mrv2-forward`.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_mrv2_forward.py tests/unit/test_shared_forward_group_admission.py tests/unit/test_stage_execution_context.py tests/unit/test_monolithic_mixed_forward_sync.py tests/unit/test_forward_sync_state.py tests/unit/test_cuda_graph_activation_evidence.py tests/unit/test_stage_admission_pp_tools.py tests/unit/test_predictor_effective_tokens.py tests/unit/test_moe_routing_conservation.py tests/unit/test_vllm_v1_engine_idle_time.py tests/unit/test_step5_measured_public_predictor.py tests/unit/test_step5_structural_pd.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_fixed_parent_takeover01.xml > /data/ycfeng/tmp/d23_fixed_parent_takeover01.log 2>&1
+```
+
+Expected: supported arrival-order/cap3/wide-PIECEWISE behavior, first-call
+identity, owner completion, direct predictor and Step thinking rejection all
+pass. Observed: **242 passed in33.92s**, zero failures/errors/skips; PASS.
+Parent full CLI and clean77 remain separate integration gates. No GPU or
+measurement-table work was part of this verification.

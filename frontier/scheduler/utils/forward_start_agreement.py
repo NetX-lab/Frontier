@@ -106,7 +106,7 @@ def hold_forward_start(scheduler, stage, batch, *, time, replica_id, stage_id):
             raise ValueError("forward start lanes must hold the same admitted group")
         bind_forward_start(
             batches, group_id=group,
-            request_capacity=scheduler.get_replica_scheduler(replica_id, lane_id)._max_num_running_reqs,
+            request_capacity=scheduler.get_replica_scheduler(replica_id, lane_id)._config.batch_size_cap,
         )
         context.resolve_forward_start()
         return [
