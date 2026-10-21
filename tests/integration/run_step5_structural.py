@@ -26,7 +26,7 @@ PYTHON = "/data/ycfeng/envs/frontier-py310/bin/python"
 CASES = {"offline-none": ("offline", "none"),
          "online-piecewise": ("online", "piecewise"),
          "offline-full_decode_only": ("offline", "full_decode_only")}
-WEIGHT_BYTES = 40_599_958_208
+WEIGHT_BYTES = 41_909_084_704
 PARAMETERS = 37_750_873_536
 # Independent constructor arithmetic in test_step5_parameter_memory._source_oracle.
 WEIGHT_PARTS = {"attention_memory_bytes": 1_740_394_176,
@@ -501,7 +501,7 @@ def check_cache_lifetime(events, stages, completion):
             require(math.isclose(event["simulation_time"], event_time, rel_tol=0, abs_tol=1e-9),
                     "cache state uses wrong scheduling/completion time")
             state = event["grouped_cache_state"]
-            require(state["pool_num_blocks"] == 29967 and state["pool_reserved_blocks"] == 1 and
+            require(state["pool_num_blocks"] == 28898 and state["pool_reserved_blocks"] == 1 and
                     state["physical_block_size_bytes"] == 1224980 and
                     state["fixed_cache_reservation_bytes"] == 94484, "wrong pool/fixed scratch reservation")
             tables = state["group_block_ids"]
@@ -522,7 +522,7 @@ def check_cache_lifetime(events, stages, completion):
                     "duplicate/reserved/dangling cache owner")
             require(state["request_allocated_blocks"] == state["scheduler_allocated_blocks"] ==
                     state["pool_used_blocks"] == len(assigned) and
-                    state["pool_used_blocks"] + state["pool_free_blocks"] + 1 == 29967 and
+                    state["pool_used_blocks"] + state["pool_free_blocks"] + 1 == 28898 and
                     event["available_blocks"] == state["pool_free_blocks"], "cache pool conservation differs")
         initial = allocation["grouped_cache_state"]
         final = ended["grouped_cache_state"]
@@ -557,11 +557,11 @@ def check_cache_lifetime(events, stages, completion):
             "completed scheduler/KV state not released")
     require(state["group_block_ids"] == state["block_ref_counts"] == {} and not state["has_grouped_allocation"] and
             state["request_allocated_blocks"] == state["scheduler_allocated_blocks"] == state["pool_used_blocks"] == 0 and
-            state["pool_num_blocks"] == 29967 and state["pool_free_blocks"] == released["available_blocks"] == 29966 and
+            state["pool_num_blocks"] == 28898 and state["pool_free_blocks"] == released["available_blocks"] == 28897 and
             state["pool_reserved_blocks"] == 1 and state["physical_block_size_bytes"] == 1224980 and
             state["fixed_cache_reservation_bytes"] == 94484, "request release/fixed scratch conservation differs")
     return {"cache_state_events": len(rows), "kv_input_tokens": previous_frontier,
-            "pool_num_blocks": 29967, "released_free_blocks": 29966, "fixed_cache_reservation_bytes": 94484}
+            "pool_num_blocks": 28898, "released_free_blocks": 28897, "fixed_cache_reservation_bytes": 94484}
 
 
 def validate(output, case, log):

@@ -100,7 +100,9 @@ def test_nested_normalization_retains_the_entire_outer_fp8_policy(native: dict) 
     assert normalized["model_type"] == "step5"
     assert normalized["architectures"] == ["Step5ForCausalLM"]
     assert "text_config" not in normalized
-    assert "vision_config" not in normalized
+    assert normalized["vision_config"]["width"] == original["vision_config"]["width"]
+    assert normalized["vision_config"]["mlp_ratio"] == 8960 / 1536
+    assert normalized["projector_bias"] is False
     assert normalized["quantization_config"] == original["quantization_config"]
     quantization = QuantizationConfig.from_dict(normalized["quantization_config"])
     assert len(quantization.ignored_layers) == 1406
@@ -160,7 +162,11 @@ def test_nested_and_native_text_json_resolve_the_same_contract(
     text = deepcopy(native["text_config"])
     text["quantization_config"] = deepcopy(native["quantization_config"])
     unwrapped = raw_model_loader(text)
-    assert dataclass_to_dict(unwrapped) == dataclass_to_dict(nested)
+    text_payload = dataclass_to_dict(nested)
+    text_payload.pop("vision_config")
+    text_payload.pop("projector_bias")
+    assert dataclass_to_dict(unwrapped) == text_payload
+    assert unwrapped.vision_config is None
     assert unwrapped.get_layer_attention_specs() == nested.get_layer_attention_specs()
     assert unwrapped.get_model_architecture_profile().profile_id == "step5"
     assert unwrapped.get_name() == "unit/text_fixture"
@@ -268,7 +274,7 @@ def test_runtime_and_profiling_serialization_preserve_the_same_step_contract(
         "fp32_residual_connection", "norm_expert_weight", "moe_router_activation",
         "moe_router_scaling_factor", "need_fp32_gate", "use_moe_router_bias",
         "zero_centered", "yarn_only_types", "use_rope_layers", "tie_word_embeddings",
-        "fused_add_norm_capability",
+        "fused_add_norm_capability", "vision_config", "projector_bias",
     )
     assert model.quantization_config is not None
     runtime_quantization = QuantizationConfig.from_dict(runtime_payload["quantization_config"])
@@ -283,7 +289,8 @@ def test_runtime_and_profiling_serialization_preserve_the_same_step_contract(
         assert tuple(runtime_payload[target]) == tuple(native["text_config"][source])
         assert len(runtime_payload[target]) == 95
     assert "text_config" not in runtime_payload
-    assert "vision_config" not in runtime_payload
+    assert runtime_payload["vision_config"] == model.vision_config
+    assert runtime_payload["projector_bias"] is False
     assert not any(key.startswith("_") for key in runtime_payload)
     for config in (restored_runtime, profiling, restored):
         assert config.get_model_architecture_profile().profile_id == "step5"

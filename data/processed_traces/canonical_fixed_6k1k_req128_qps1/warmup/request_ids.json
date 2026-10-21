@@ -1,0 +1,171 @@
+{
+ "workload": "data/processed_traces/canonical_fixed_6k1k_req128_qps1/warmup_workload.json",
+ "request_id_namespace": "canonical-fixed-6k1k-h200",
+ "request_id_encoding": "x-request-id header <request_id>; vLLM completions name the engine request cmpl-<request_id>-0; Frontier numbers trace rows from 0",
+ "warmup_request_ids": [
+  "canonical-fixed-6k1k-h200-w0",
+  "canonical-fixed-6k1k-h200-w1",
+  "canonical-fixed-6k1k-h200-w2",
+  "canonical-fixed-6k1k-h200-w3",
+  "canonical-fixed-6k1k-h200-w4",
+  "canonical-fixed-6k1k-h200-w5",
+  "canonical-fixed-6k1k-h200-w6",
+  "canonical-fixed-6k1k-h200-w7",
+  "canonical-fixed-6k1k-h200-w8",
+  "canonical-fixed-6k1k-h200-w9",
+  "canonical-fixed-6k1k-h200-w10",
+  "canonical-fixed-6k1k-h200-w11",
+  "canonical-fixed-6k1k-h200-w12",
+  "canonical-fixed-6k1k-h200-w13",
+  "canonical-fixed-6k1k-h200-w14",
+  "canonical-fixed-6k1k-h200-w15"
+ ],
+ "formal_request_ids": [],
+ "sizing_request_ids": [],
+ "rows": [
+  {
+   "frontier_request_id": 0,
+   "request_id": "canonical-fixed-6k1k-h200-w0",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 0.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 1,
+   "request_id": "canonical-fixed-6k1k-h200-w1",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 1.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 2,
+   "request_id": "canonical-fixed-6k1k-h200-w2",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 2.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 3,
+   "request_id": "canonical-fixed-6k1k-h200-w3",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 3.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 4,
+   "request_id": "canonical-fixed-6k1k-h200-w4",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 4.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 5,
+   "request_id": "canonical-fixed-6k1k-h200-w5",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 5.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 6,
+   "request_id": "canonical-fixed-6k1k-h200-w6",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 6.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 7,
+   "request_id": "canonical-fixed-6k1k-h200-w7",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 7.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 8,
+   "request_id": "canonical-fixed-6k1k-h200-w8",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 8.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 9,
+   "request_id": "canonical-fixed-6k1k-h200-w9",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 9.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 10,
+   "request_id": "canonical-fixed-6k1k-h200-w10",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 10.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 11,
+   "request_id": "canonical-fixed-6k1k-h200-w11",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 11.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 12,
+   "request_id": "canonical-fixed-6k1k-h200-w12",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 12.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 13,
+   "request_id": "canonical-fixed-6k1k-h200-w13",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 13.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 14,
+   "request_id": "canonical-fixed-6k1k-h200-w14",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 14.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 15,
+   "request_id": "canonical-fixed-6k1k-h200-w15",
+   "segment": "warmup",
+   "role": "warmup",
+   "arrived_at": 15.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  }
+ ]
+}

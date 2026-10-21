@@ -1,0 +1,10 @@
+{
+  "request_id_namespace": "canonical-fixed-6k1k-h200",
+  "warmups": {
+    "count": 16,
+    "interval_s": 1.0,
+    "num_prefill_tokens": 6144,
+    "num_decode_tokens": 1024
+  },
+  "idle_gap_s": 0.0
+}
