@@ -439,6 +439,7 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         training_file_paths: Dict[str, str] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
     ) -> None:
+        self._replica_scheduler_config = replica_scheduler_config
         super().__init__(
             predictor_config=predictor_config,
             replica_config=replica_config,
@@ -1438,7 +1439,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             from frontier.execution_time_predictor.dsa_predictor import load_dsa_dataframe
 
             return load_dsa_dataframe(file_path, self._model_config, self._replica_config.attn_tensor_parallel_size,
-                                      self._block_size, self._active_measurement_type)
+                                      self._block_size, self._active_measurement_type,
+                                      replica_config=self._replica_config,
+                                      scheduler_config=self._replica_scheduler_config)
         df = pd.read_csv(file_path)
         df = df.drop_duplicates()
 
