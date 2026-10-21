@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded first runnable P0 package and formal-release interface. |
+| 2026-10-21 | Sealed all four basic packages and archived exact resource payloads. |
 
 ## P0 first runnable package
 
@@ -63,3 +64,17 @@ H80032/H80064 are codesign non-preemptible; H20032 is step_main non-preemptible;
 The accuracy matrix uses the existing matrix schema, matching same-hardware32 cell and immutable workload pins, case-bound run_check, and admitted routing. No supplied scalar error or published JSON reading releases a run: the implementation reads actual raw three-repeat client records, validates full populations, re-normalizes with the existing normalizer, and calls the existing comparator. Every one of all12 independent errors must be <=.30; exact equality passes. Pooled/diagnostic metrics cannot release. The four final10% gates and metric formulas are unchanged: a valid30% prerequisite may still have a final verdict of FAIL. Original Frontier config/truth files are pinned by the builder and must match resolved Step hardware/model/P/D TP/DP/EP/PP; no cross-case timing substitution.
 
 No formal package is sealed here because genuine case-bound native readiness/accuracy evidence has not yet been admitted. Missing evidence blocks only formal builds/submissions, never basic qualification. No cloud reads or writes were performed while preparing these local packages; cloud paths are future worker outputs only.
+
+## Other sealed basic packages
+
+All paths below are under `/data/ycfeng/tmp/step5_d21_priority_20261021/`; each ends in `/stage`. They bind source `90724ba202cc645dd4a118c42ecaefc2c457c8e0` and36 verified staged files, including the full standalone release-check dependency code.
+
+| Directory | GPU policy | Config SHA256 | Budget projection |
+| --- | --- | --- | --- |
+| `h800_64_qualification01` | codesign,64 H800, non-preemptible | `e672acd7ecd621d692c9904f7b3593bfb9e4a4ec27ee2bb6504c1def6a0f6229` |60 min /64 GPU-hours |
+| `h200_32_qualification01` | step_main,32 H200, non-preemptible | `0eea085215543c06e88523b6a48e99decd26aa8f1262180720082ce0dae213d0` |60 min /32 GPU-hours |
+| `h200_64_qualification01` | step_main,64 H200, **preemptible** | `cc5f34fe986cd909398950759347c5eb0db213f75da4aef2abef03f21ddcd864` |60 min /64 GPU-hours |
+
+Commands: `bash <directory>/stage/submit.sh` only after parent reconciles live resources and priority. **Do not run the H20064 wrapper before parent judges the already available old64 basic evidence.** These stages were built and dry-run locally only; none was submitted by D21-RUNS.
+
+Durable exact offline verification commands, dry-run payloads, source/config pins and stage budgets: `sealed_stages.json` in this task directory. Reproducible full build/dry-run command arrays for the other three packages are also retained at `/data/ycfeng/tmp/step5_d21_priority_20261021/other_stages_manifest.json`. All four wrappers passed `bash -n`; every staged Python source compiled without changing package bytes. No original frozen/native input, old stage or workload byte was changed.

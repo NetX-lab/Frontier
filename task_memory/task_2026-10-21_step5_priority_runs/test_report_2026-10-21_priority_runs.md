@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-21 | Recorded P0 code verification and retained-startup evidence. |
 | 2026-10-21 | Added formal dependency and legacy/R2 regression results. |
+| 2026-10-21 | Archived four standalone stage verifications and exact frozen dry-run payloads. |
 
 ## P0 source checks
 
@@ -49,3 +50,11 @@ Additional pytest option: `--tb=short`. Actual: **204 passed in86.23s — PASS**
 During initial equality-test construction, inverse floating-point endpoint arithmetic produced an error infinitesimally above.30;40 tests passed and that equality oracle failed. The test was corrected to binary-exact2.5/3.25-second endpoints, so the actual existing comparator returns exactly.30. No tolerance, scaling factor or comparator change was introduced.
 
 `git diff --check` passed. First sealed P0 package verified independently with the host `python3 -B .../canonical_stage.py verify --stage-dir ...`; all28 original tool pins and config SHA256 reproduced. Original native/runtime evidence remains unchanged.
+
+## Sealed package verification
+
+Environment: asyncopd Python**3.12.13**; simulator fixture exporter Frontier Python**3.10.6**. After placing formal-check scratch under the configured mounted workspace rather than a literal host path, reran `test_step5_priority_runs.py` with the same environment: **37 passed in12.87s — PASS**.
+
+Actual standalone commands and exact payloads are in `sealed_stages.json`. For each package, executed the staged `canonical_stage.py verify`, staged `submit_native_pd.py --dry-run`, `bash -n submit.sh`, and CPU `compile` of every staged Python source. Assertions checked original3-file model metadata allowlist,4/8 native node counts,32/64 GPUs, H20064 preemptible=true and the other three=false, no additional NCCL variables, native context/budget/seq policy and retained3600/1800/1200-second qualification/startup/replay timeouts. **All four packages PASS**; P0 retained28 sealed files, later cases36. Frozen P0 config SHA256 remains `df52565282a2ab800577776f581c128406f644f5e27260c3a090f8aa7780cdd8`.
+
+Reservation-budget projections: qualification60 minutes ->32 or64 GPU-hours at32 or64 GPUs; canonical90 minutes ->48 or96 GPU-hours. These are timeout-based allocation budgets, not observed native duration or performance estimates. Actual runtime, source/image/device evidence, collective transport, graph participation and final calibration metrics remain parent-owned native checks. No GPU/auth/platform/cloud/SSH/Docker/network operation occurred; CPU loopback HTTP tests are the only HTTP traffic.
