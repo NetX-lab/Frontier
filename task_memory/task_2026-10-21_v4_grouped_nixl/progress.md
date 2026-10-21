@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Completed primary merged strict77/77 identical; bounded B CPU structural acceptance is closed. |
+| 2026-10-21 | Primary closed P2 review, verified470 cases and28 merged checks, and committed2a84c58; merged strict comparison is running. |
 | 2026-10-21 | Created task and isolated branch/worktree from 6d88700. |
 | 2026-10-21 | Closed P2 actual callback RED/GREEN,470 focused PASS and one clean5428bd7 strict77/77 identical run. |
 
@@ -131,3 +133,11 @@ metrics are NOT verified by these component tests. Existing execution guards sta
   records-only changes do not alter the measured frontier/tests trees.
 - No unfinished P2 acceptance item remains. Native timing/protocol/full-path and
   formal accuracy gaps listed above are unchanged and are not claimed as passed.
+
+## Primary integration
+
+- completed: independent P2 re-review, no findings; original real tracing failure closed.
+- completed: primary 470 focused PASS in21.19s, exact source diffs/record-only tree and retained JUnit/comparison verification.
+- completed: 28 combined C26 plus actual V4/GLM callback checks PASS in5.76s; whitespace check passed. Existing module-size record now explicitly covers the two forwarding arguments.
+- completed: merged B and P2 into the main task branch as2a84c58.
+- completed: the merged clean strict comparison returned77/77 IDENTICAL from clean2a84c58, with zero failure, missing-evidence, provenance or cache-name findings. Primary retained the comparator/JUnit files and their hashes in `primary_receipt.json`. Source/CPU B acceptance is complete; native timing, full serving and four-metric acceptance remain open.

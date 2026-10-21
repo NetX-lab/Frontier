@@ -4,12 +4,18 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Closed primary integration at2a84c58 after clean merged strict77/77 identical; retained exact primary receipts. |
+| 2026-10-21 | Primary re-review and independent470/28 checks passed; merge2a84c58 is awaiting its clean merged strict result before publication. |
 | 2026-10-21 | Completed source/CPU implementation and clean strict77 comparison; retained final receipts. |
 | 2026-10-21 | Closed reviewed P2 metadata repair: actual callback RED/GREEN,470 focused PASS and clean strict77/77 identical. |
 
 TaskID: W128-V4-GROUPED-NIXL. Branch/worktree: `v4-grouped-nixl`, based on6d88700.
 Original implementation commit: `1a65e4985091f5c85c14830f86385800a614e4e6`.
 P2 repair commit: `5428bd7803137cac1de5c691409534af1e68888e`.
+Primary merge: `2a84c58`, accepted after independent P2 closure, 470 focused
+checks, 28 combined checks and a clean merged strict comparison with all
+77 cases identical. Failure, missing-evidence, provenance and cache-name
+findings are zero. This closes B's bounded CPU structural integration.
 
 ## Delivered
 
@@ -26,6 +32,8 @@ P2 repair commit: `5428bd7803137cac1de5c691409534af1e68888e`.
 ## Evidence paths
 
 All paths below are relative to this task directory:
+- `primary_receipt.json`, `primary_fidelity_comparison.json`, `primary_focused.xml`,
+  `primary_merged.xml`: primary acceptance, exact hashes and merged evidence.
 - `native_retention.md`, `native_rules.json`: pinned native callsites and actual
   CPU source-body controls at191/6144/6145 tokens.
 - `cpu_tests.xml`: **371 PASS**, including three complete V4 loops, actual FIFO
@@ -46,8 +54,9 @@ Reusable checks: `tests/unit/test_dsv4_structural_pd.py` and
 No unfinished item remains in this bounded CPU structural slice. Actual multi-owner
 execution, graph/measured consumption (slice A), native wire descriptors/timing,
 notification/readiness ordering, contention, formal128-request repetitions and
-four-metric accuracy remain outside this CPU structural acceptance. No GPU,
-network, cloud, Docker, platform, authentication, delegation, push or merge ran.
+four-metric accuracy remain outside this CPU structural acceptance. The owner
+performed no GPU, network, cloud, Docker, platform, authentication, delegation,
+push or merge operations; primary integration is recorded separately above.
 
 ## P2 repair
 

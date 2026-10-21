@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Accepted merged2a84c58: strict77/77 identical with zero missing, failure, provenance or cache findings; primary evidence retained. |
+| 2026-10-21 | Primary independently verified 470 cases, exact diffs and retained evidence; merged at2a84c58 after28 combined checks and began the required merged strict comparison. |
 | 2026-10-21 | Closed source/CPU acceptance with371 PASS and one clean strict77/77 identical comparison at1a65e49. |
 | 2026-10-21 | Closed P2 with actual MetricsStore RED/GREEN,470 focused PASS, retained native bodies and unique clean strict77/77. |
 
@@ -155,3 +157,37 @@ the checked manifest/results paths and final verdict. `source.diff` matches the
 cumulative6d88700->5428bd7 source/test delta; `p2_source.diff` matches
 17e3b42->5428bd7. Final records do not change the measured frontier/tests trees.
 No matrix or focused test was rerun solely for the records-only changes.
+
+## Primary integration verification
+
+P2 re-review returned no findings and closed the original callback defect.
+Primary independently ran the same 15-file focused selection above: **470 PASS
+in 21.19s**, no failures or skips. Result:
+`/data/ycfeng/tmp/glm53_dsv4/root_v4_grouped_p2_470.xml`. Exact cumulative and
+P2 source diffs match Git; `fc0918c` changes no `frontier/` or `tests/` tree
+relative to `5428bd7`. Retained RED/GREEN and strict receipts were checked.
+
+After merging into the published C26 source, primary ran:
+
+```bash
+PYTHONPATH="$PWD" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_dsv4_attention_profiling.py 'tests/unit/test_dsv4_structural_pd.py::test_real_grouped_handoff_and_all_outputs_conserve[6144-True]' tests/unit/test_glm53_structural_pd.py::test_structural_transfer_trace_uses_dsa_cache_components -q -p no:cacheprovider -o junit_family=legacy --junitxml=/data/ycfeng/tmp/glm53_dsv4/root_v4_grouped_merged_28.xml
+```
+
+Actual: **28 PASS in 5.76s**. `git diff --check HEAD` passed. Primary documented
+the exact two-line MetricsStore exception in the existing module-size record,
+then committed merge `2a84c58`. The following comparison runs from that commit's
+clean detached checkout, with a distinct output root to avoid another owner's
+comparison report overwriting this result:
+
+```bash
+PYTHONPATH="$PWD" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 2a84c58 --output-root /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/root_v4_grouped_2a84c58 --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --label candidate_2a84c58 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/glm53_dsv4/root_v4_grouped_merged_strict77.log 2>&1
+```
+
+Merged strict result: **PASS, 77/77 IDENTICAL**. Both source stamps and the
+detached checkout identify clean `2a84c58`. There are no failed cases, missing
+evidence, differing definitions, unexamined cases, provenance findings or
+predictor-cache filename differences. The original comparator and primary
+JUnit artifacts are retained as `primary_fidelity_comparison.json`,
+`primary_focused.xml` and `primary_merged.xml`; `primary_receipt.json` records
+their hashes and exact external paths. Native/full-serving and four-metric
+limitations remain unchanged. Record-only updates do not require another run.
