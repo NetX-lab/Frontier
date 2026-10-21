@@ -18,7 +18,7 @@ STEPMIND_ENV = Path("/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh")
 
 def describe_job(stage, run_id, *, worker_command, gpus=1,
                   cloud_root=CLOUD_ROOT, credential_env=STEPMIND_ENV,
-                  gpu_tag="H800", charged_group="codesign"):
+                  gpu_tag="H800", charged_group="codesign", timeout_seconds=3600):
     """Describe the existing personal RJob launcher without invoking it."""
     stage = Path(stage).resolve()
     if not run_id or Path(run_id).name != run_id or run_id in (".", ".."):
@@ -29,7 +29,7 @@ def describe_job(stage, run_id, *, worker_command, gpus=1,
         "gpus": gpus, "cpus": 8 * gpus, "mem_gb": 32 * gpus,
         "mounts": [f"local_nfs:{stage}:{stage}", CLOUD_MOUNT],
         "source_mount": str(stage), "cloud_output": str(Path(cloud_root) / run_id),
-        "timeout_seconds": 3600, "preemptible": False,
+        "timeout_seconds": timeout_seconds, "preemptible": False,
         "credential_env": str(credential_env),
         "submit_wrapper_command": f"bash {q(str(stage / 'submit_with_env.sh'))}",
         "worker_command": worker_command,
@@ -38,7 +38,7 @@ def describe_job(stage, run_id, *, worker_command, gpus=1,
             f"{q(str(stage / 'tests/integration/step5_profiling/submit_profiling_job.py'))} "
             f"--job-tag {q(run_id)} --gpus {gpus} --cpus {8*gpus} --mem-gb {32*gpus} "
             f"--gpu-tag {q(gpu_tag)} --charged-group {q(charged_group)} "
-            f"--timeout-seconds 3600 {q(worker_command)}"),
+             f"--timeout-seconds {timeout_seconds} {q(worker_command)}"),
     }
 
 
