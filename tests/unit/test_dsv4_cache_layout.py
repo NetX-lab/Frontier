@@ -50,11 +50,11 @@ def _capacity(replica_config, *, model=None, selection=None):
     )
 
 
-def _planner(replica_config):
+def _planner(replica_config, role=ClusterType.MONOLITHIC):
     return MemoryPlanner(
         replica_config,
-        Replica(replica_config, SyntheticRequestGeneratorConfig(), ClusterType.MONOLITHIC),
-        ClusterType.MONOLITHIC,
+        Replica(replica_config, SyntheticRequestGeneratorConfig(), role),
+        role,
     )
 
 
@@ -176,12 +176,46 @@ def test_alias_normalizes_once_without_changing_capacity(replica_config):
     assert _capacity(replica_config) == fp8
 
 
+@pytest.mark.parametrize("role", [ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE])
+def test_h200_tp8_dp4_capacity_matches_h800_without_enabling_execution(
+    replica_config, role, tmp_path,
+):
+    h800 = _capacity(replica_config)
+    h200 = ReplicaConfig(
+        model_name=replica_config.model_name, device="h200",
+        network_device="h200_dgx", attn_tensor_parallel_size=8, attn_dp=4,
+        moe_tensor_parallel_size=1, moe_expert_parallel_size=32,
+        attention_backend="FLASHMLA_SPARSE_DSV4", kv_cache_dtype="fp8",
+        indexer_kv_cache_dtype="fp8",
+    )
+    assert h200.world_size == 32
+    capacity = _capacity(h200)
+    planner = _planner(h200, role)
+    assert capacity == h800
+    assert planner._get_component_kv_cache_capacity(256) == h800
+    assert [group.logical_block_size for group in capacity.groups] == [256, 64, 64, 4, 8]
+    # Source-only budget: native non-weight overhead is deliberately not inferred.
+    budget = int(h200.device_config.total_memory_gb * 1024**3 * 0.85)
+    expected_blocks = (budget - 7_794_659_804) // 1_002_240
+    assert planner.get_num_blocks(block_size=256, gpu_memory_utilization=0.85) == expected_blocks
+    with pytest.raises(NotImplementedError, match="compressed cache, compressor"):
+        _predictor(h200, tmp_path, dummy_mode=False)
+    assert not (tmp_path / "cache").exists()
+
+
 @pytest.mark.parametrize("changes", [
-    {"device": "h200"}, {"gpu_platform": "rocm"},
+    {"device": "h100"}, {"device": "h20"}, {"gpu_platform": "rocm"},
     {"block_size": 64}, {"decode_context_parallel_size": 2},
+    {"attention_backend": None}, {"attention_backend": "FLASHMLA_SPARSE"},
+    {"kv_cache_dtype": None}, {"kv_cache_dtype": "bfloat16"},
+    {"indexer_kv_cache_dtype": None}, {"indexer_kv_cache_dtype": "mxfp4"},
 ])
-def test_selection_rejects_unrepresented_runtime_tuple(replica_config, changes):
-    selection = replace(AttentionKVCacheSelection.from_replica(replica_config, block_size=256), **changes)
+@pytest.mark.parametrize("device", ["h800", "h200"])
+def test_selection_rejects_unrepresented_runtime_tuple(replica_config, changes, device):
+    selection = replace(
+        AttentionKVCacheSelection.from_replica(replica_config, block_size=256), device=device,
+    )
+    selection = replace(selection, **changes)
     with pytest.raises((NotImplementedError, ValueError)):
         _capacity(replica_config, selection=selection)
 

@@ -24,9 +24,10 @@ RAW_CONFIG = json.loads(
 )
 
 
-def _replica(ep=16):
+def _replica(ep=16, *, device="h800"):
     return ReplicaConfig(
-        model_name="deepseek-ai/DeepSeek-V4-Flash", device="h800",
+        model_name="deepseek-ai/DeepSeek-V4-Flash", device=device,
+        network_device=f"{device}_dgx",
         attn_tensor_parallel_size=8, attn_dp=ep // 8,
         moe_tensor_parallel_size=1, moe_expert_parallel_size=ep,
         num_pipeline_stages=1,
@@ -148,14 +149,16 @@ def test_conditional_mhc_storage_uses_config_and_is_not_constructor_storage():
 @pytest.mark.parametrize(("attribute", "value"), [
     ("num_pipeline_stages", 2), ("attn_tensor_parallel_size", 4),
     ("attn_dp", 1), ("attn_dp", True), ("moe_tensor_parallel_size", 2),
-    ("moe_expert_parallel_size", 32), ("device", "h200"),
+    ("moe_expert_parallel_size", 32), ("device", "h100"), ("device", "h20"),
     ("speculative_decoding_config", SimpleNamespace(enabled=True)),
 ])
-def test_unrepresented_topologies_are_explicitly_rejected(attribute, value):
-    replica = _replica()
+@pytest.mark.parametrize("device", ["h800", "h200"])
+@pytest.mark.parametrize("role", [ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE])
+def test_unrepresented_topologies_are_explicitly_rejected(attribute, value, device, role):
+    replica = _replica(device=device)
     setattr(replica, attribute, value)
     with pytest.raises((ValueError, NotImplementedError), match="V4"):
-        ParamCounter(replica)
+        ParamCounter(replica, role)
 
 
 def test_dp8_real_replica_and_memory_planner_use_ep64_source_storage():
@@ -184,10 +187,37 @@ def test_dp16_parameter_storage_remains_unrepresented():
         ParamCounter(_replica(128))
 
 
-@pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_FFN])
-def test_v4_source_inventory_does_not_enable_pd_ownership(role):
-    with pytest.raises(NotImplementedError, match="MONOLITHIC"):
-        ParamCounter(_replica(), role)
+@pytest.mark.parametrize("device", ["h800", "h200"])
+@pytest.mark.parametrize("role", [ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE])
+def test_tp8_dp4_full_model_storage_is_identical_for_unified_roles(device, role):
+    reference = ParamCounter(_replica(32))
+    replica = _replica(32, device=device)
+    counter = ParamCounter(replica, role)
+    assert replica.world_size == 32
+    assert counter.get_parameter_memory_per_device_bytes() == 7_794_659_804
+    assert counter.get_attention_parameter_memory_per_device_bytes() == 1_612_866_432
+    assert (
+        counter.get_mlp_parameter_memory_per_device_bytes()
+        == reference.get_mlp_parameter_memory_per_device_bytes()
+    )
+    assert counter.get_num_parameters_per_device() == reference.get_num_parameters_per_device()
+    assert counter.get_conditional_mhc_broadcast_memory_bytes() == 393_216
+    assert counter.get_num_mtp_parameters_per_device() == 0
+
+
+@pytest.mark.parametrize("role", [ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN])
+@pytest.mark.parametrize("device", ["h800", "h200"])
+def test_v4_source_inventory_does_not_enable_split_pd_ownership(role, device):
+    with pytest.raises(NotImplementedError, match="MONOLITHIC/PREFILL/DECODE"):
+        ParamCounter(_replica(device=device), role)
+
+
+@pytest.mark.parametrize("device", ["h800", "h200"])
+def test_non_cuda_parameter_storage_rejects(device):
+    replica = _replica(32, device=device)
+    replica.device_config.gpu_platform = "rocm"
+    with pytest.raises(NotImplementedError, match="DeepSeek-V4 storage"):
+        ParamCounter(replica)
 
 
 @pytest.mark.parametrize(("field", "value"), [
@@ -198,8 +228,9 @@ def test_v4_source_inventory_does_not_enable_pd_ownership(role):
     ("q_lora_rank", 1000), ("head_dim", 500),
     ("o_lora_rank", 1000), ("share_expert_dim", 2000),
 ])
-def test_unsupported_source_metadata_is_rejected(field, value):
-    replica = _replica()
+@pytest.mark.parametrize("device", ["h800", "h200"])
+def test_unsupported_source_metadata_is_rejected(field, value, device):
+    replica = _replica(device=device)
     replica.model_config = replace(replica.model_config, **{field: value})
     with pytest.raises((ValueError, NotImplementedError), match="V4"):
         ParamCounter(replica)
@@ -220,8 +251,9 @@ def test_explicit_head_dimension_does_not_require_hidden_size_per_head():
     ("ignored_layers", ("model.layers.0.self_attn.wq_b",)),
     ("quantized_operations", ("moe_grouped_gemm",)),
 ])
-def test_unrepresented_quantized_storage_is_rejected(field, value):
-    replica = _replica()
+@pytest.mark.parametrize("device", ["h800", "h200"])
+def test_unrepresented_quantized_storage_is_rejected(field, value, device):
+    replica = _replica(device=device)
     quant = replace(replica.model_config.quantization_config, **{field: value})
     replica.model_config = replace(replica.model_config, quantization_config=quant)
     with pytest.raises(NotImplementedError, match="UE8M0"):

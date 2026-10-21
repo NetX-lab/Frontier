@@ -2,6 +2,7 @@ from math import ceil
 from types import SimpleNamespace
 from typing import Callable, Iterable, cast
 
+from frontier.attention.families import require_deepseek_v4_storage_device
 from frontier.config import ReplicaConfig
 from frontier.config.precision_type import PrecisionType
 from frontier.model_architectures import (
@@ -593,16 +594,18 @@ class ParamCounter:
         return endpoints + norms
 
     def _validate_v4_parameter_contract(self) -> None:
-        """Limit V4 constructor estimates to the represented H800 SP contract."""
+        """Limit V4 constructor estimates to full-model PP1 SP storage."""
 
         model = self._model_config
         replica = self._replica_config
         if (
-            self._cluster_type is not ClusterType.MONOLITHIC
+            self._cluster_type not in (
+                ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+            )
             or replica.num_pipeline_stages != 1
-            or getattr(replica, "device", None) != "h800"
         ):
-            raise NotImplementedError("V4 parameter estimates require H800 PP1 MONOLITHIC")
+            raise NotImplementedError("V4 parameter estimates require PP1 MONOLITHIC/PREFILL/DECODE")
+        require_deepseek_v4_storage_device(replica.device, replica.device_config.gpu_platform)
         for name in (
             "attn_tensor_parallel_size", "attn_dp", "moe_tensor_parallel_size",
             "moe_expert_parallel_size",
