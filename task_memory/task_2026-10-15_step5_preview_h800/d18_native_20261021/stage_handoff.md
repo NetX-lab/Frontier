@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Parent merged db5c99f, repeated585 tests and stage02 hashes; clarified Engine NNN logging context and pending resource dependency. |
 | 2026-10-21 | Recorded both offline-verified stages, exact parent commands and unverified runtime dependencies. |
 | 2026-10-21 | Superseded stage01 after MRv2 review; built and isolated-verified both stage02 packages and recorded graph evidence limitations. |
 
@@ -67,7 +68,7 @@ The wrappers source `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`; they 
 ## Required returned evidence and admission boundary
 
 1. Parent R2 content/lifetime disposition remains separate; this branch changes no R2 verdict or observation.
-2. Obtain native `nodes/*/result.json` and`nodes/*/server.log` plus platform terminal/creator/resource receipts. Verify all64 distinct H200 devices, both TP8/DP4/EP32 roles, installed hashes, native FP8 exclusions/cache capacity, effective MRv2 selection (Triton available, no MRv1 override) and resolved context/budget/concurrency/graph configuration. Native MRv2 FULL table rows require subsequent healthy serving to prove the replay path; config/capture/PIECEWISE alone is insufficient. The flag must be effective with log stats/INFO enabled and an active logging interval. Tables lack engine/rank prefixes and only the output TP rank reports; obtain explicit lane/rank attribution or leave that criterionUNVERIFIED. Do not infer every lane/rank from table count/order. See`source_contract.md` for the corrected source chain.
+2. Obtain native `nodes/*/result.json` and`nodes/*/server.log` plus platform terminal/creator/resource receipts. Verify all64 distinct H200 devices, both TP8/DP4/EP32 roles, installed hashes, native FP8 exclusions/cache capacity, effective MRv2 selection (Triton available, no MRv1 override) and resolved context/budget/concurrency/graph configuration. MRv2 FULL runtime rows require subsequent healthy serving; config/capture/PIECEWISE alone is insufficient. Enable effective log stats/INFO and retain complete raw process-labelled logs: native `metrics/loggers.py:329–338` prints **Engine NNN** before that engine's graph table. This context supplies lane attribution without additional hooks or table-order guesses. Output-rank statistics do not replace complete rank/forward accounting, but64 separate replay counters are not required. See`source_contract.md`.
 3. Obtain `replay/canonical_summary.json`, `replay/client_requests.jsonl` and`replay/proxy_requests.jsonl`. Qualification must retain all24 diagnostic requests. Canonical must retain all432 requests, all384 formal outputs, exact native prompt/output counts and repeated prompt identities. Record lane participation, D's actual recompute tail, transfer/failure deltas, fresh idle boundaries and repeat variation.
 4. Any client/observation error leaves reference admission **UNVERIFIED**. The consumer continues healthy requests and later repetitions; auxiliary checks never stop native workers. A non-clean boundary does not become clean merely because the next phase runs. Output metric candidates are not admitted ground truth until parent qualification and the existing ticket14/23 admission checks succeed.
 
