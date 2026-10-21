@@ -174,6 +174,9 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     assert first.cache_block_zeroing is None
     first.on_batch_end(end.time + 0.002, ClusterType.DECODE)
     target.on_batch_end(first)
+    target_cluster.on_replica_batch_end(
+        end.time + 0.002, info.target_replica_id, info.target_replica_local_id, first,
+    )
     assert request.num_emitted_decode_tokens == 1
     assert request.first_decode_token_completed_at == end.time + 0.002
     assert info.to_dict()["num_computed_tokens"] == 4080
@@ -184,8 +187,12 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
         assert batch.num_context_tokens == [4105 + step]
         batch.on_batch_end(now + 0.005, ClusterType.DECODE)
         target.on_batch_end(batch)
+        target_cluster.on_replica_batch_end(
+            now + 0.005, info.target_replica_id, info.target_replica_local_id, batch,
+        )
     assert request.completed and request.num_emitted_decode_tokens == 9
     assert target._allocation_map == {}
+    assert target_cluster._load_balancer.request_owners == {}
     assert len(metrics.starts) == len(metrics.ends) == 1
     assert costs.reads
 
@@ -326,3 +333,85 @@ def test_shared_legacy_glm_nixl_keeps_non_dummy_full_prompt_contract():
         target.on_batch_end(batch)
     assert request.completed and request.num_emitted_decode_tokens == 3
     assert source._allocation_map == target._allocation_map == {}
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners(monkeypatch, changed):
+    costs = _FixtureCosts()
+    source_cluster = _measured_cluster(ClusterType.PREFILL, costs)
+    target_cluster = _measured_cluster(ClusterType.DECODE, costs)
+    scheduler = _GlobalScheduler(source_cluster, target_cluster)
+    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
+    target = target_cluster.get_replica_scheduler(target_cluster._serving_replica_id, 0)
+    request = _request_owned_by_prefill(source, 4105)
+    metrics = _Metrics()
+    start = _start_event(request, source)
+    allocate = target._can_allocate_request
+    monkeypatch.setattr(target, "_can_allocate_request", lambda *args, **kwargs: False)
+    [wake] = start.handle_event(scheduler, metrics)
+    from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+
+    assert isinstance(wake, ReplicaScheduleEvent)
+    monkeypatch.setattr(target, "_can_allocate_request", allocate)
+    target._retry_pending_kv_transfer_starts(2)
+    [retry] = target.consume_popped_output_events()
+    assert target._allocation_map[request.id] == 1020
+    assert target._scheduled_num_computed_tokens_by_request[request.id] == 4080
+    if not changed:
+        [end] = retry.handle_event(scheduler, metrics)
+        end.handle_event(scheduler, metrics)
+        for step in range(9):
+            now = end.time + (step + 1) * 0.01
+            [batch] = target.on_schedule(now)
+            assert batch.num_tokens == [25 if step == 0 else 1]
+            batch.on_batch_end(now + 0.005, ClusterType.DECODE)
+            target.on_batch_end(batch)
+            target_cluster.on_replica_batch_end(
+                now + 0.005, target._replica_id, target._replica_local_id, batch,
+            )
+        assert request.completed and request.num_emitted_decode_tokens == 9
+        assert source._allocation_map == target._allocation_map == {}
+        assert target_cluster._load_balancer.request_owners == {}
+        assert len(metrics.starts) == len(metrics.ends) == 1
+        return
+    costs.changes = {"num_computed_tokens": 4096}
+    with pytest.raises(RuntimeError, match="coverage changed"):
+        retry.handle_event(scheduler, metrics)
+    assert retry._nixl_coverage.num_computed_tokens == 4080
+    assert source._kv_transfer_start_claimed_request_ids == set()
+    assert request.id in source._pending_kv_transfer_requests
+    assert target_cluster._load_balancer.request_owners == {}
+    assert target._allocation_map == target._scheduled_num_computed_tokens_by_request == {}
+    assert target._kv_transfer_receiving_request_ids == set()
+    assert metrics.starts == metrics.ends == []
+
+
+@pytest.mark.parametrize("mutation", ["missing_cost", "missing_coverage", "wrong_duration"])
+def test_measured_completion_failure_releases_transfer_owners_without_ready(mutation):
+    costs = _FixtureCosts()
+    source_cluster = _measured_cluster(ClusterType.PREFILL, costs)
+    target_cluster = _measured_cluster(ClusterType.DECODE, costs)
+    scheduler = _GlobalScheduler(source_cluster, target_cluster)
+    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
+    request = _request_owned_by_prefill(source, 4105)
+    metrics = _Metrics()
+    [end] = _start_event(request, source).handle_event(scheduler, metrics)
+    info = end._transfer_info
+    target = target_cluster.get_replica_scheduler(info.target_replica_id, info.target_replica_local_id)
+    if mutation == "missing_cost":
+        costs.duration = None
+    elif mutation == "missing_coverage":
+        costs.covered = False
+    else:
+        info.transfer_time_ms += 1
+    with pytest.raises((ValueError, RuntimeError)):
+        end.handle_event(scheduler, metrics)
+    assert source._kv_transfer_start_claimed_request_ids == set()
+    assert request.id in source._pending_kv_transfer_requests
+    assert request.id in source._allocation_map
+    assert target_cluster._load_balancer.request_owners == {}
+    assert target._allocation_map == target._scheduled_num_computed_tokens_by_request == {}
+    assert target._kv_transfer_receiving_request_ids == target._kv_transfer_ready_request_ids == set()
+    assert info.target_ready_time is info.source_release_time is None
+    assert len(metrics.starts) == 1 and metrics.ends == []
+    assert request.num_emitted_decode_tokens == 0

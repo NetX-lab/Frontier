@@ -89,6 +89,19 @@ class KVCacheTransferStartEvent(BaseEvent):
         self._time = time
         self._priority_number = self._get_priority_number()
 
+    def _abort_measured_transfer(self, request, source_replica_scheduler, target_cluster_scheduler):
+        if self._target_reserved_common_blocks is not None:
+            target_cluster_scheduler.get_replica_scheduler(
+                self._target_replica_id, self._target_replica_local_id,
+            ).abort_kv_transfer_target_reservation(request)
+        if self._target_replica_id is not None:
+            target_cluster_scheduler.abandon_kv_transfer_target_selection(request)
+        if self._source_claimed:
+            source_replica_scheduler.abandon_kv_transfer_start_claim(request)
+        self._source_claimed = False
+        self._target_reserved_common_blocks = None
+        self._target_replica_id = self._target_replica_local_id = None
+
     def handle_event(
         self,
         scheduler: "BaseGlobalScheduler",
@@ -150,17 +163,25 @@ class KVCacheTransferStartEvent(BaseEvent):
                 self._target_cluster_type
             )
             if measured:
-                self._nixl_coverage = predictor.get_measured_nixl_coverage(
-                    request=request, source_replica_config=replica_config,
-                    target_replica_config=target_cluster_scheduler._config.replica_config,
-                    cache_capacity=source_capacity,
-                    cost_provider=getattr(source_cluster_scheduler, "_predictor", None),
-                    target_cost_provider=getattr(target_cluster_scheduler, "_predictor", None),
-                )
-                target_cluster_scheduler.validate_kv_transfer_target_scope(
-                    source_capacity, replica_config.attn_tensor_parallel_size, request,
-                    num_computed_tokens=self._nixl_coverage.num_computed_tokens,
-                )
+                try:
+                    coverage = predictor.get_measured_nixl_coverage(
+                        request=request, source_replica_config=replica_config,
+                        target_replica_config=target_cluster_scheduler._config.replica_config,
+                        cache_capacity=source_capacity,
+                        cost_provider=getattr(source_cluster_scheduler, "_predictor", None),
+                        target_cost_provider=getattr(target_cluster_scheduler, "_predictor", None),
+                    )
+                    if self._nixl_coverage is not None and coverage != self._nixl_coverage:
+                        raise RuntimeError("Measured NIXL coverage changed during capacity retry")
+                    target_cluster_scheduler.validate_kv_transfer_target_scope(
+                        source_capacity, replica_config.attn_tensor_parallel_size, request,
+                        num_computed_tokens=coverage.num_computed_tokens,
+                    )
+                except Exception:
+                    self._abort_measured_transfer(request, source_replica_scheduler, target_cluster_scheduler)
+                    raise
+                if self._nixl_coverage is None:
+                    self._nixl_coverage = coverage
             else:
                 target_cluster_scheduler.validate_kv_transfer_target_scope(
                     source_capacity, replica_config.attn_tensor_parallel_size, request,
@@ -217,14 +238,13 @@ class KVCacheTransferStartEvent(BaseEvent):
                         predictor.get_structural_nixl_transfer_info_for_request(**transfer_args)
                     )
             except Exception:
-                target_replica_scheduler.abort_kv_transfer_target_reservation(
-                    request
-                )
-                source_replica_scheduler.abandon_kv_transfer_start_claim(request)
                 if measured:
-                    target_cluster_scheduler.abandon_kv_transfer_target_selection(request)
-                self._source_claimed = False
-                self._target_reserved_common_blocks = None
+                    self._abort_measured_transfer(request, source_replica_scheduler, target_cluster_scheduler)
+                else:
+                    target_replica_scheduler.abort_kv_transfer_target_reservation(request)
+                    source_replica_scheduler.abandon_kv_transfer_start_claim(request)
+                    self._source_claimed = False
+                    self._target_reserved_common_blocks = None
                 raise
             self._kv_cache_size_bytes = self._transfer_payload.transfer_bytes_per_rank
 
