@@ -379,3 +379,150 @@ def test_measured_composites_cannot_be_added_to_serve_attention(measured):
             prefix_caching=False, decode_context_parallel_size=1,
             prefill_context_parallel_size=1,
         )
+
+
+@pytest.fixture(scope="module")
+def decode_tables():
+    root = Path("/data/ycfeng/tmp/glm53_dsv4/v4_q1_warm_results/Q1_WARM_6143_7166/"
+                "compute/h800/deepseek-ai/DeepSeek-V4-Flash")
+    paths = {MeasurementType.CUDA_EVENT: root / "attention.csv",
+             MeasurementType.KERNEL_ONLY: root / "attention_kernel_only.csv"}
+    if not all(path.is_file() for path in paths.values()):
+        pytest.skip("Accepted local warmed V4 q1 tables are unavailable")
+    return {method: (path, pd.read_csv(path, float_precision="round_trip"))
+            for method, path in paths.items()}
+
+
+@pytest.fixture
+def decode_measured(predictor, decode_tables, monkeypatch):
+    from functools import lru_cache
+    from frontier.execution_time_predictor import deepseek_v4
+
+    p = predictor
+    p._enable_dummy_mode = False
+    p._block_size = 256
+    p._replica_config.model_config = p._model_config
+    p._replica_config.device = "h800"
+    p._replica_config.attn_dp = 2
+    p._replica_config.moe_expert_parallel_size = 16
+    p._replica_config.kv_cache_dtype = "fp8_ds_mla"
+    # Keep the existing model/schema reader; cache immutable input per test.
+    reader = deepseek_v4.load_attention_dataframe
+    @lru_cache(maxsize=2)
+    def read(path, precision):
+        return reader(path, p._model_config, 8, 256, p._active_measurement_type,
+                      float_precision=precision)
+    monkeypatch.setattr(deepseek_v4, "load_attention_dataframe",
+        lambda path, model, tp, block, method, **kwargs: read(path, kwargs.get("float_precision")))
+    return p
+
+
+def ongoing_batch(context, prompt=6141):
+    from frontier.entities import Batch, Request
+
+    return Batch(0, [Request(0, prompt, 1028)], [1], is_moe=True,
+                 num_context_tokens=[context], request_is_decoding=[True])
+
+
+def decode_layout(row):
+    from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
+
+    columns = set(_ENGINE_COLUMNS) | {
+        "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
+        "max_num_batched_tokens", "max_num_seqs",
+    } | {name for name in row.index if "_metadata." in name}
+    return {name: None if pd.isna(row[name]) else row[name] for name in columns}
+
+
+@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+@pytest.mark.parametrize("context", [6143, 6144, 6146, 6147, 6270, 6271, 6272,
+                                    6654, 6655, 6656, 6778, 7166])
+def test_real_ongoing_decode_exact_all_scopes_and_six_layer_roles(decode_measured, decode_tables, method, context):
+    p = decode_measured
+    path, table = decode_tables[method]
+    p._attention_input_file = str(path)
+    p._active_measurement_type = method
+    rows = table[table.decode_kv_cache_sizes == json.dumps([context])]
+    assert len(table) == 6144 and len(rows) == 6
+    seen = set()
+    for _, row in rows.iterrows():
+        layer = json.loads(row.global_layer_ids)[0]
+        seen.add((row.attention_variant, bool(row.plans_tile_schedule)))
+        layout = decode_layout(row)
+        for scope in json.loads(row.operator_scopes):
+            result = read_isolated_scope(p, ongoing_batch(context), layer, scope,
+                                        attention_layout=layout)
+            assert result["time_ms"] == row[f"time_stats.{scope}.median"]
+            assert result["source_revision"] == "d2878ed90ef4aecc1d2d80b597381b813420e2a8"
+            assert result["runtime_fingerprint"] == row.runtime_fingerprint == "6fba7d93f7a2ecdd"
+            assert result["model_config_sha256"] == row.model_config_sha256
+            assert result["input_file"] == str(path)
+            assert result["measurement_type"] == method.value
+            assert result["graph_mode"] == "eager" and result["serving_admission"] is False
+            assert result["physical_tensor_parallel_size"] == 1
+            assert result["target_tensor_parallel_size"] == 8
+            assert result["parallel_groups"] == json.loads(row.parallel_groups)
+            assert result["row_metadata"]["phase"] == "decode"
+            assert result["row_metadata"]["num_layers_sampled"] == 1
+            assert result["row_metadata"]["global_layer_ids"] == json.dumps([layer])
+            assert result["row_metadata"]["decode_kv_cache_sizes"] == json.dumps([context])
+            assert result["row_metadata"]["weight_source"] == "dummy"
+            assert result["attention_layout"] == layout
+            assert layout["max_num_seqs"] == 128  # Planner field, not native capacity1.
+        if method is MeasurementType.KERNEL_ONLY:
+            assert "dsv4_attention_layer" not in json.loads(row.operator_scopes)
+            with pytest.raises(DeepSeekV4CoverageError):
+                read_isolated_scope(p, ongoing_batch(context), layer, "dsv4_attention_layer",
+                                    attention_layout=layout)
+    assert seen == {(v, role) for v in ("uncompressed", "csa", "hca") for role in (False, True)}
+
+
+@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+@pytest.mark.parametrize("change", ["h200", "cache_dtype", "layout", "capacity_relabel",
+    "first_tail", "false_decode_flag", "missing_context", "outside_window", "mixed",
+    "linear_decode", "graph", "phase", "native_phase", "native_length", "duplicate", "serving"])
+def test_real_decode_cannot_promote_unqualified_cases(decode_measured, decode_tables, tmp_path, method, change):
+    p = decode_measured
+    path, table = decode_tables[method]
+    p._attention_input_file = str(path)
+    p._active_measurement_type = method
+    row = table[(table.decode_kv_cache_sizes == "[6143]")
+                & (table.global_layer_ids == "[2]")].iloc[0].copy()
+    layout, batch, scope = decode_layout(row), ongoing_batch(6143), "dsv4_sparse_attention"
+    if change == "h200":
+        p._replica_config.device = "h200"
+    elif change == "cache_dtype":
+        p._replica_config.kv_cache_dtype = "bfloat16"
+    elif change in ("layout", "capacity_relabel"):
+        layout["max_num_seqs" if change == "capacity_relabel" else "swa_metadata.block_size"] = 1
+    elif change == "first_tail":
+        batch = source_batch([1], [6143], [False])
+    elif change == "false_decode_flag":
+        batch = ongoing_batch(6143, prompt=6144)
+    elif change == "missing_context":
+        batch._num_context_tokens = []
+    elif change == "outside_window":
+        batch = ongoing_batch(7167)
+    elif change == "mixed":
+        batch = source_batch([1, 2], [6143, 0], [True, False])
+    elif change == "linear_decode":
+        scope = "share_expert_up_proj"
+    elif change == "graph":
+        batch.decode_cuda_graph_metadata = graph_batch([1], [6143], padded=8).decode_cuda_graph_metadata
+    elif change in ("phase", "native_phase", "native_length", "duplicate"):
+        if change != "duplicate":
+            column = {"phase": "phase", "native_phase": "swa_metadata.num_prefills",
+                      "native_length": "attention_metadata.max_seq_len"}[change]
+            row[column] = "first_tail" if change == "phase" else (1 if change == "native_phase" else 0)
+            if column in layout:
+                layout[column] = row[column]  # Explicit layout cannot override source phase/length.
+        p._attention_input_file = str(tmp_path / "changed.csv")
+        pd.DataFrame([row, row] if change == "duplicate" else [row]).to_csv(p._attention_input_file, index=False)
+    if change == "serving":
+        with pytest.raises(DeepSeekV4CoverageError, match="auxiliary streams"):
+            p._predict_dsv4_dummy_attention_time(batch, 2, ClusterType.MONOLITHIC,
+                execution_mode="eager", has_attention_metadata=True, prefix_caching=False,
+                decode_context_parallel_size=1, prefill_context_parallel_size=1)
+    else:
+        with pytest.raises(ValueError if change == "missing_context" else DeepSeekV4CoverageError):
+            read_isolated_scope(p, batch, 2, scope, attention_layout=layout)

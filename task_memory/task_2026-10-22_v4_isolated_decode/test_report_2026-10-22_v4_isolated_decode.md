@@ -1,0 +1,20 @@
+# V4 Isolated Decode Test Report
+
+## Modification History
+| Date | Change |
+| --- | --- |
+| 2026-10-22 | Recorded focused and existing P6144 regression validation; strict matrix pending. |
+
+## Environment and commands
+CPU only, Python3.10.6 `/data/ycfeng/envs/frontier-py310/bin/python`, no conda activation. Repository `/data/ycfeng/Frontier/.worktrees/v4-isolated-decode`. Common prefix: `env PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python -B`.
+
+1. Focused command: common prefix + `-m pytest tests/unit/test_dsv4_graph_measured.py tests/unit/test_dsv4_attention_workload.py tests/unit/test_dsv4_source_execution.py -q -p no:cacheprovider`. Expected: exact accepted q1 latencies/provenance for both methods/six roles/boundaries; negatives reject for both methods and prefill/source regressions pass. Final actual **PASS207 in60.28s**. Log `/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_isolated_decode_focused04.log`. Iteration1 native-phase fixture wrote its unchanged value0 (190PASS/1FAIL), corrected to1. Iterations2/3 passed191 before duplicating the required negative matrix across methods.
+2. Existing real P6144 integration: common prefix + `tests/integration/check_dsv4_measured_scopes.py --attention-root /data/ycfeng/tmp/glm53_dsv4/v4_attention_cwd02_results/P6144 --compute-root /data/ycfeng/tmp/glm53_dsv4/h200_dsv4_compute_results_20261021/9f58dbe --output task_memory/task_2026-10-22_v4_isolated_decode/prefill_scope_receipts.json`. Expected existing exact scalar comparisons and typed negatives unchanged. Final **PASS102 positives/72 typed negatives/two mixed-layout controls**; counts in compact `validation_receipt.json`, full generated receipt remains local. Log `/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_isolated_decode_prefill02.log`. Initial integration found round-trip parser affected old float least-significant-bit comparison; now default prefill parser unchanged and round-trip limited to decode. Original error log `/data/ycfeng/tmp/opencode-v2-tmp/opencode/v4_isolated_decode_prefill01.log`.
+3. Strict inventory: imported unchanged `tests.e2e.refactor_fidelity.cases.build_cases`, checked77 serialized case records and every referenced wrapper/default model. **PASS**, no GLM-specific cases or wrappers. `strict77_inventory.json` preserves case IDs/digests/model overrides and wrapper hashes. No simulator cases executed during audit. Strict77 execution awaits clean code commit.
+4. `git diff --check`: **PASS**, no whitespace errors.
+5. Direct uncached existing reader calls:12 sparse-attention receipts, both methods and all six roles atC6143, **PASS**, exact scalar equality and accepted file hashes/counts. `validation_receipt.json` preserves original paths, hashes and selected observations. No monkeypatch/cache or fitting on this direct check.
+
+## Exact data coverage and limits
+Both accepted local warmed CSVs contain6144 rows. Focused positives read all reachable scopes for each of six variant/planning roles at C6143,6144,6146,6147,6270,6271,6272,6654,6655,6656,6778,7166. Scalar receipt equals accepted CSV's round-tripped median exactly; source d2878ed90ef4aecc1d2d80b597381b813420e2a8, fingerprint6fba7d93f7a2ecdd, model hash/parallel groups/input path retained. Absolute and relative scalar errors0 for positive observations. KERNEL_ONLY has no enclosing attention-layer timing and rejects that scope.
+
+Native q1 SWA split is not semantic decode evidence. Existing semantic Batch snapshot plus computed context >= prompt length rejects prompt tails; pinned native scheduler.py:2759-2762 documents remote full-hit recomputation. No serving/native/full43-layer/P0 timing equivalence asserted. CUDA_EVENT has overlapping instrumented scopes; KERNEL_ONLY is a separate eager pass, not a graph or overhead-subtraction pair. Data remain physicalTP1, reduced six-layer dummy-weight observations; CSV planner max_num_seqs128 is unchanged and does not assert native effective capacity1. Higher event medians and non-first excursions remain unexplained; no filtering, independent reference/CV or E2E claim.

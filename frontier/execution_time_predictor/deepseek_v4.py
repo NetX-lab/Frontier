@@ -499,13 +499,13 @@ def source_physical_rows(predictor, source_batches):
                for batch in source_batches.values())
 
 
-def load_attention_dataframe(file_path, model, tp, block_size, measurement_type):
+def load_attention_dataframe(file_path, model, tp, block_size, measurement_type, *, float_precision=None):
     """Read the existing wide V4 schema without passing it to the dense loader."""
     import pandas as pd
     from frontier.profiling.attention.dsv4_attention_rows import DSV4_ROW_SCHEMA_VERSION
 
     try:
-        rows = pd.read_csv(file_path)
+        rows = pd.read_csv(file_path, float_precision=float_precision)
     except FileNotFoundError as exc:
         raise DeepSeekV4CoverageError(f"V4 attention table missing: {file_path}") from exc
     expected = {
@@ -597,8 +597,15 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     _validate_source_batch(batch)
     if batch.get_decode_cuda_graph_runtime_mode() != "NONE":
         raise DeepSeekV4CoverageError("V4 native graph/compiled scope requires qualified replay measurements")
+    phase = "prefill"
     if any(batch.request_is_decoding) or any(q == 1 for q in batch.num_tokens):
-        raise DeepSeekV4CoverageError("V4 decode/first-tail phase equivalence is unqualified")
+        # Native SWA classifies short prompt extends as decode kernels too.
+        # The scheduled semantic snapshot and prompt extent exclude first-tail.
+        if (scope not in DSV4_SCOPE_NAMES or len(batch.requests) != 1
+                or batch.request_is_decoding != [True] or batch.num_tokens != [1]
+                or batch.num_context_tokens[0] < batch.requests[0].num_prefill_tokens):
+            raise DeepSeekV4CoverageError("V4 isolated decode requires one ongoing decode, not first-tail or mixed phases")
+        phase = "decode"
     model, replica = predictor._model_config, predictor._replica_config
     if model.get_model_architecture_profile().profile_id != "deepseek_v4":
         raise ValueError("V4 measured scopes require the DeepSeek-V4 profile")
@@ -615,7 +622,9 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
 
         path = predictor._attention_input_file
-        rows = predictor._load_attention_df(path)
+        rows = (load_attention_dataframe(path, model, tp, predictor._block_size, measurement,
+                                        float_precision="round_trip")
+                if phase == "decode" else predictor._load_attention_df(path))
         layout_columns = set(_ENGINE_COLUMNS) | {
             "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
             "max_num_batched_tokens", "max_num_seqs",
@@ -633,7 +642,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
             "attention_kv_cache_dtype": replica.kv_cache_dtype,
         }, "attention source/cache layout")
         rows = _select_rows(rows, {
-            "phase": "prefill", "attention_variant": layer.variant_id,
+            "phase": phase, "attention_variant": layer.variant_id,
             "compress_ratio": max(1, model.compress_ratios[layer_id]),
             "plans_tile_schedule": not any(
                 model.get_layer_attention_spec(i).variant_id == layer.variant_id
@@ -642,6 +651,33 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
             "total_tokens": batch.total_num_tokens,
             "batch_size": len(batch.requests),
         }, scope)
+        if phase == "decode":
+            key_len = batch.num_context_tokens[0] + 1
+            native = {
+                "is_prefill": False, "is_mixed_batch": False,
+                "num_prefill_seqs": 0, "num_decode_seqs": 1,
+                "total_prefill_tokens": 0, "total_decode_tokens": 1,
+                "max_key_len": key_len,
+                "swa_metadata.num_decodes": 1, "swa_metadata.num_decode_tokens": 1,
+                "swa_metadata.num_prefills": 0, "swa_metadata.num_prefill_tokens": 0,
+                "swa_metadata.max_decode_query_len": 1,
+                "global_layer_ids": json.dumps([layer_id]),
+                "num_layers_sampled": 1, "num_steps_sampled": 1,
+            }
+            if layer.variant_id != "uncompressed":
+                native.update({
+                    "attention_metadata.max_query_len": 1,
+                    "attention_metadata.max_seq_len": key_len,
+                    "attention_metadata.num_actual_tokens": 1,
+                    "attention_metadata.num_reqs": 1,
+                })
+            if layer.variant_id == "csa":
+                native.update({
+                    "indexer_metadata.max_seq_len": key_len,
+                    "indexer_metadata.num_decodes": 1, "indexer_metadata.num_decode_tokens": 1,
+                    "indexer_metadata.num_prefills": 0, "indexer_metadata.num_prefill_tokens": 0,
+                })
+            rows = _select_rows(rows, native, "ongoing decode native metadata")
         for column in ("prefill_seq_lens", "prefill_kv_cache_sizes", "decode_kv_cache_sizes", "operator_scopes"):
             if column not in rows:
                 raise DeepSeekV4CoverageError(f"V4 {scope} missing {column}")
@@ -649,12 +685,17 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         def matches_geometry(row):
             queries = json.loads(row["prefill_seq_lens"])
             contexts = json.loads(row["prefill_kv_cache_sizes"])
+            if phase == "decode":
+                return (queries == contexts == []
+                        and json.loads(row["decode_kv_cache_sizes"]) == batch.num_context_tokens)
             return (len(queries) == len(contexts) == len(pairs)
                     and sorted(zip(queries, contexts)) == pairs
                     and json.loads(row["decode_kv_cache_sizes"]) == [])
 
         rows = rows[rows.apply(matches_geometry, axis=1)]
         rows = _select_rows(rows, {}, f"{scope} actual query/context")
+        if phase == "decode" and len(rows) != 1:
+            raise DeepSeekV4CoverageError("V4 isolated decode requires one exact measured observation")
         expected_operators = list(scope_operators(scope, layer.variant_id))
         if any(json.loads(value).get(scope) != expected_operators for value in rows.operator_scopes):
             raise DeepSeekV4CoverageError(f"V4 {scope} composite ownership is missing or mismatched")
@@ -736,7 +777,9 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         "scope": scope, "time_ms": float(rows[target].median()),
         "measurement_type": measurement.value, "graph_mode": "eager",
         "physical_tensor_parallel_size": 1, "target_tensor_parallel_size": tp,
-        "serving_admission": False, "qualification": "isolated eager scope only",
+        "serving_admission": False,
+        "qualification": ("isolated eager scope only; reduced-model layer observation, not full serving"
+                          if phase == "decode" else "isolated eager scope only"),
         "source_revision": rows.source_revision.iloc[0], "input_file": str(path),
         "runtime_fingerprint": rows.runtime_fingerprint.iloc[0],
         "model_config_sha256": rows.model_config_sha256.iloc[0],
@@ -745,9 +788,12 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         "row_metadata": {name: value.item() if hasattr(value, "item") else value
                          for name, value in row.items()
                          if (name.endswith(".block_size") or name in (
-                             "padded_heads", "attention_variant", "plans_tile_schedule",
-                             "attention_kv_cache_dtype", "max_model_len",
-                             "max_num_batched_tokens", "max_num_seqs",
+                              "phase", "padded_heads", "attention_variant", "plans_tile_schedule",
+                              "attention_kv_cache_dtype", "max_model_len",
+                              "max_num_batched_tokens", "max_num_seqs",
+                              "global_layer_ids", "num_layers_sampled", "num_steps_sampled",
+                              "prefill_seq_lens", "prefill_kv_cache_sizes", "decode_kv_cache_sizes",
+                              "weight_source",
                          )) and not pd.isna(value)},
     }
 
