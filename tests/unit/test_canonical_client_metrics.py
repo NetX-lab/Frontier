@@ -255,3 +255,26 @@ def test_compressed_streaming_http_arrivals_do_not_admit_the_frozen_qps1_trace(t
     with pytest.raises(ValueError, match="arrival"):
         normalize_cell(CELL, CASE, IDS, {root.name: root}, {"sim": simulator}, output, WORKLOAD)
     assert all(r["output_token_count"] == 1024 for r in records)
+
+
+def test_glm_p0_missing_native_receipt_and_routing_stay_insufficient(tmp_path, native, simulator):
+    """Exercise the existing CLI, not a P0 native or accuracy acceptance fixture."""
+    root, _, _ = native
+    cell = dict(CELL, cell_id="glm53_p0_h800_32/qps1", case_id="glm53_p0_h800_32")
+    cell["trace"] = {key: dict(path=str(TRACE / name), sha256=hashlib.sha256((TRACE / name).read_bytes()).hexdigest())
+                     for key, name in (("request_ids", "request_ids.json"), ("workload", "manifest.json"))}
+    case = dict(CASE, routing={"status": "UNSET"})
+    matrix = tmp_path / "matrix.json"
+    matrix.write_text(json.dumps(dict(cases={cell["case_id"]: case}, cells=[cell])))
+    subprocess.run([sys.executable, str(Path(run_gate.__file__)), "normalize", "--matrix", str(matrix),
+                    "--cell", cell["cell_id"], "--artifacts-root", str(tmp_path),
+                    "--vllm-run-dir", str(root), "--frontier-run", f"sim={simulator}",
+                    "--output-dir", str(tmp_path / "rows")], check=True, capture_output=True)
+    subprocess.run([sys.executable, str(Path(run_gate.__file__)), "gate", "--matrix", str(matrix),
+                    "--cell", cell["cell_id"], "--rows", str(tmp_path / "rows"),
+                    "--output", str(tmp_path / "reading.json")], check=True, capture_output=True)
+    reading = json.loads((tmp_path / "reading.json").read_text())
+    assert reading["verdict"] == "INSUFFICIENT_EVIDENCE"
+    assert reading["blocked_status"] == "INSUFFICIENT_EVIDENCE"
+    assert {r["status"] for r in reading["metrics"]} == {"INSUFFICIENT_EVIDENCE"}
+    assert len(reading["repetitions"]) == 3
