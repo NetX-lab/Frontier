@@ -36,6 +36,7 @@ import socket
 import statistics
 import time
 from pathlib import Path
+from unittest.mock import patch
 
 from frontier.profiling.collectives.vllm_forward_collectives import (
     CollectiveCall,
@@ -402,24 +403,42 @@ class CollectiveRunner:
             "per_rank_queue_held": [g["queue_held"] if g else None for g in gathered],
         }
 
-    def kernel_names(self, call: CollectiveCall) -> list[str] | None:
-        """CUDA kernels of one ``run`` of ``call``, merged over ranks on the first rank."""
+    def kernel_evidence(self, call: CollectiveCall, trace_dir: Path) -> dict | None:
+        """Retain per-rank traces and completed Reduce calls in the untimed pass."""
+        from vllm.distributed.device_communicators.pynccl_wrapper import NCCLLibrary
+
         torch = self.torch
         torch.distributed.barrier(group=self.instance_cpu)
-        names = []
+        local = {"rank": self.rank, "kernels": [], "reduce_calls": [], "trace": None}
+        original_reduce = NCCLLibrary.ncclReduce
+
+        def reduce(library, sendbuff, recvbuff, count, datatype, op, root, comm, stream):
+            with torch.profiler.record_function(f"ncclReduce_root_{root}"):
+                result = original_reduce(library, sendbuff, recvbuff, count, datatype,
+                                         op, root, comm, stream)
+            local["reduce_calls"].append({"root": root, "count": count,
+                                          "datatype": datatype, "op": op})
+            return result
+
         if self.participates(call) and call.op != "cpu_all_reduce":
             issue, run = self.prepare(call)
-            with torch.profiler.profile(
-                    activities=[torch.profiler.ProfilerActivity.CUDA]) as profile:
+            with patch.object(NCCLLibrary, "ncclReduce", reduce), torch.profiler.profile(
+                    activities=[torch.profiler.ProfilerActivity.CPU,
+                                torch.profiler.ProfilerActivity.CUDA]) as profile:
                 run()
                 torch.cuda.synchronize()
-            names = [event.name for event in profile.events()
-                     if event.device_type == torch.autograd.DeviceType.CUDA]
+            local["kernels"] = [event.name for event in profile.events()
+                                if event.device_type == torch.autograd.DeviceType.CUDA]
+            trace_dir.mkdir(parents=True, exist_ok=True)
+            trace = trace_dir / f"rank{self.rank}.json"
+            profile.export_chrome_trace(str(trace))
+            local["trace"] = str(trace)
             del issue, run
-        gathered = self.gather(names)
+        gathered = self.gather(local)
         if gathered is None:
             return None
-        return sorted({name for rank_names in gathered for name in rank_names})
+        return {"kernels": sorted({name for rank in gathered for name in rank["kernels"]}),
+                "per_rank": gathered}
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -472,15 +491,16 @@ def main() -> None:
             log.write(json.dumps(record) + "\n")
             log.flush()
             records.append(record)
-    kernels = {(s.name, c.name): runner.kernel_names(c) for s, c in plan}
+    evidence = {(s.name, c.name): runner.kernel_evidence(c, output / "traces" / s.name / c.name)
+                for s, c in plan}
     if runner.rank == 0:
         log.close()
         with (output / "kernels.jsonl").open("a") as kernel_log:
-            for (scenario, call), names in kernels.items():
+            for (scenario, call), record in evidence.items():
                 kernel_log.write(json.dumps({"scenario": scenario, "call": call,
-                                             "kernels": names}) + "\n")
-        summary = [summarize({**r, "kernels": kernels[(r["scenario"], r["call"])]})
-                   for r in records]
+                                             **record}) + "\n")
+        summary = [summarize({**r, "kernels": evidence[(r["scenario"], r["call"])]["kernels"]})
+                    for r in records]
         write_csv(output / "summary.csv", summary)
         write_csv(output / "forward_totals.csv", forward_totals(summary))
         write_csv(output / "all_reduce.csv",
