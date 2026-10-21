@@ -13,8 +13,8 @@
 - completed: grouped source snapshots, remote slot reservation through the existing
   allocator, structural payload selection, completion preflight and release.
 - completed: final supported/unsupported CPU checks and record consolidation.
-- in-progress: implementation commit.
-- pending: one clean strict matrix and final receipt.
+- completed: implementation commit1a65e4985091f5c85c14830f86385800a614e4e6.
+- completed: one clean strict77 matrix and final receipt; records-only commit next.
 
 Observed: source currently restricts NIXL to ungrouped DSA/block64. Grouped
 capacity already exposes get_group_size_bytes and allocator block IDs, so no
@@ -64,6 +64,17 @@ Verification iterations (raw logs `/data/ycfeng/tmp/v4_grouped_nixl_focused_0N.l
   --cached --binary --unified=0 -- frontier tests`. Zero context avoids Git's
   whitespace checker treating raw patch context markers as trailing whitespace;
   no production whitespace or check configuration was changed.
+- Post-commit clean matrix: one measure_commit invocation at1a65e49, label
+  candidate_v4_grouped_nixl_1a65e49, against the required absolute baseline.
+  Actual77/77 identical,0 failures/missing evidence/definition/provenance/cache
+  filename differences. Checked all77 clean per-case source stamps, retained
+  comparator JSON and candidate checkout cleanliness. Raw log:
+  /data/ycfeng/tmp/v4_grouped_nixl_strict77.log. No checks relaxed or matrix rerun.
+- cpu_receipt.json records the canonical actual39521664B payload,6143..7166
+  contexts,7167 final computed frontier,1024 outputs and3999+null free pools.
+- Final bounded source read confirmed native async P max_tokens1 avoids extra
+  speculative scheduling, drains in-flight6144 before finish and invokes the
+  pruning/connector hook; source/test code is unchanged after measured commit.
 
 Remaining acceptance gaps: real multi-owner compute/DP synchronization, native
 wire descriptors/timing/lifetime, graphs, measured execution and formal four

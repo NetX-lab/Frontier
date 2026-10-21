@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-21 | Recorded native-rule controls and final371-test component/regression acceptance; clean candidate comparison pending. |
+| 2026-10-21 | Closed source/CPU acceptance with371 PASS and one clean strict77/77 identical comparison at1a65e49. |
 
 ## Environment and commands
 
@@ -35,7 +35,7 @@ git diff --check
 | Unsupported execution | Non-NIXL grouped P/D rejects; dummy NIXL serving and non-dummy V4 pricing still reject | Exact NotImplementedError messages below | PASS |
 | Focused regression total | No failed/skipped cases | **371 passed in16.95s**, exit0; cpu_tests.xml | PASS |
 | Source whitespace | No patch errors | git diff --check exit0 | PASS |
-| Strict77 comparison | Clean committed source, all artifacts/cache identities checked | Pending one post-commit run | TODO |
+| Strict77 comparison | Clean committed source, all artifacts/cache identities checked | 77/77 identical; no failed/missing/differing cases, zero provenance or cache filename differences | PASS |
 
 The component lifecycle tests use real TP8/DP4/EP32 H200 model configurations,
 Request/Batch objects, one-owner scheduling iterations, the actual grouped pool,
@@ -72,3 +72,28 @@ All eight touched production modules remain below2000 lines. No capacity schema,
 model graph consumer, profiling/H5 file, generic allocation owner or runtime
 migration was added. The existing pool's new external-computed-token input is
 needed to match native destination window boundaries with zero scheduled work.
+
+## Clean strict77 comparison
+
+Implementation commit: `1a65e4985091f5c85c14830f86385800a614e4e6`.
+The command below was run **once**, after371 passing focused checks and commit.
+The unchanged driver created a clean detached checkout at
+`/data/ycfeng/Frontier/.worktrees/fidelity-candidate-1a65e49`.
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 1a65e49 --output-root /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity --baseline-label baseline --label candidate_v4_grouped_nixl_1a65e49 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/v4_grouped_nixl_strict77.log 2>&1
+```
+
+Actual: **VERDICT: IDENTICAL**,77/77 cases produced artifacts and compared exactly.
+No baseline/candidate failures, missing evidence, different definitions, skipped
+comparisons or provenance findings. Predictor cache compared cleanly with0
+baseline-only/0 candidate-only names. All77 per-case source stamps identify
+1a65e49 with source_dirty=false; detached checkout remains clean afterwards.
+Baseline is the required absolute
+`/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline` atbfa82de.
+
+Durable copied comparator: `fidelity_comparison.json`; checked source/cleanliness
+and result receipt: `fidelity_receipt.json`; CPU lifecycle observations:
+`cpu_receipt.json`. Full manifest/results remain under the absolute candidate
+label directory recorded in the fidelity receipt. The final records-only commit
+does not change `frontier/` or `tests/` from the measured1a65e49 commit.

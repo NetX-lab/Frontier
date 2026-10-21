@@ -24,6 +24,12 @@ Revision: `2cf0a6915ce544dc493a0990f2ea38d81601128a`, read with `git show` from
   with processed computed tokens before computed-token clipping and connector
   `request_finished_all_groups`. `kv_cache_manager.py:714-732` clips to computed
   logical coverage, not a guessed page count.
+- `sched/scheduler.py:530-544,1797-1807,1971-1978,2388-2394` and
+  `sched/async_scheduler.py:26-41`: the one-output P request gains a placeholder
+  after its full prefill, cannot schedule an extra decode step past max_tokens1,
+  then drains its6144 in-flight tokens before the finish/free/connector hook.
+  Thus the control's handoff in-flight count0 is reachable, not an assumption
+  that every async request always has no in-flight work.
 - `single_type_kv_cache_manager.py:597-661,1087-1098`: released whole pages become
   nulls; skipped count is floor(max(0,computed-window+1-extra)/group_block_size).
 - `nixl/base_scheduler.py:128-150,240-284`: SW groups exchange their last

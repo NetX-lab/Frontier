@@ -4,9 +4,10 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-21 | Recorded source/CPU implementation; post-commit fidelity comparison pending. |
+| 2026-10-21 | Completed source/CPU implementation and clean strict77 comparison; retained final receipts. |
 
 TaskID: W128-V4-GROUPED-NIXL. Branch/worktree: `v4-grouped-nixl`, based on6d88700.
+Implementation commit: `1a65e4985091f5c85c14830f86385800a614e4e6`.
 
 ## Delivered
 
@@ -28,15 +29,18 @@ All paths below are relative to this task directory:
 - `cpu_tests.xml`: **371 PASS**, including three complete V4 loops, actual FIFO
   release/readmission, invalid-group controls and unchanged GLM/context/P2P tests.
 - `test_report_2026-10-21_grouped_nixl.md`: exact commands, outputs and limits.
-- `source.diff`: pending exact source/test diff snapshot before implementation commit.
-- `fidelity_receipt.json`: pending unique clean-source strict77 comparison.
+- `source.diff`: exact zero-context production/test diff from6d88700 to1a65e49.
+- `cpu_receipt.json`: actual group, byte, context, output and free-pool observations.
+- `fidelity_comparison.json`, `fidelity_receipt.json`: the unique clean-source
+  strict77 run at1a65e49: **77/77 identical**,0 failures/missing/provenance/cache
+  differences. Every per-case source stamp is clean; reference worktree retained.
 
 Reusable checks: `tests/unit/test_dsv4_structural_pd.py` and
 `tests/integration/verify_dsv4_native_nixl_rules.py`.
 
 ## Open / deferred
 
-Clean strict77 comparison and final receipt are pending. Actual multi-owner
+No unfinished item remains in this bounded CPU structural slice. Actual multi-owner
 execution, graph/measured consumption (slice A), native wire descriptors/timing,
 notification/readiness ordering, contention, formal128-request repetitions and
 four-metric accuracy remain outside this CPU structural acceptance. No GPU,
