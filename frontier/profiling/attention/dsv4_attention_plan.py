@@ -385,6 +385,7 @@ def build_dsv4_profile_plan(
     kv_cache_dtype: str,
     query_one_context_min: int = 0,
     query_one_context_max: int | None = None,
+    prefill_prompt_len: int | None = None,
 ) -> Dsv4ProfilePlan:
     if type(query_one_context_min) is not int or query_one_context_min < 0:
         raise ValueError("query_one_context_min must be a non-negative int")
@@ -429,9 +430,9 @@ def build_dsv4_profile_plan(
         short_context_max_seq_len=(index_topk + 1) * csa_ratio - 1,
         layers=layers,
     )
-    if query_one_context_max is not None:
+    if query_one_context_max is not None or prefill_prompt_len is not None:
         engines, cases = _build_serving_cases(
-            limits, query_one_context_max, query_one_context_min, None
+            limits, query_one_context_max, query_one_context_min, prefill_prompt_len
         )
     else:
         chunk_budgets = tuple(sorted(limits.chunk_budgets))

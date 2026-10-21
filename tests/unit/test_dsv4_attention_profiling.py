@@ -442,7 +442,98 @@ def test_legacy_namespace_omits_q1_fields_without_changing_plan():
     expected = build_plan(args).to_json()
     del args.query_one_context_min
     del args.query_one_context_max
+    del args.prefill_prompt_len
     assert build_plan(args).to_json() == expected
+
+
+def _prefill_arguments():
+    arguments = _q1_arguments()
+    return [*arguments[:arguments.index("--chunk_budgets")],
+            "--chunk_budgets", "8192", "--prefill_prompt_len", "6144",
+            "--prefill_warmup_repeats", "2", "--prefill_measured_repeats", "3"]
+
+
+def _exact_prefill_plan():
+    from frontier.profiling.attention.dsv4_attention_main import build_parser, build_plan
+
+    return build_plan(build_parser().parse_args(["plan", *_prefill_arguments()]))
+
+
+def test_exact_prefill_cli_preserves_planner_and_effective_geometry(tmp_path, capsys, monkeypatch):
+    output = tmp_path / "prefill.json"
+    dsv4_main(["plan", *_prefill_arguments(), "--output", str(output)])
+    capsys.readouterr()
+    serialized = json.loads(output.read_text())
+    plan = _exact_prefill_plan()
+    case, = plan.cases
+    assert (case.case_id, case.phase, case.batch_size, case.prompt_len, case.max_tokens,
+            case.warmup, case.measured, case.estimated_steps) == (
+        "e0-prefill-p6144", PHASE_PREFILL, 1, 6144, 1, 2, 3, 5)
+    assert serialized["limits"]["max_num_seqs"] == 128
+    assert "engine_policy" not in serialized["limits"]
+    assert (plan.shape.heads_per_rank, plan.shape.o_groups_per_rank) == (8, 1)
+    assert len(plan.shape.layers) == 6
+    monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(LLM=lambda **kwargs: kwargs))
+    options = case_runner.build_engine(plan, 0, "CPU_FAKE_MODEL", 1234, 0.85)
+    assert (options["max_model_len"], options["max_num_batched_tokens"],
+            options["max_num_seqs"], options["tensor_parallel_size"]) == (7168, 8192, 1, 1)
+    assert options["enforce_eager"] and options["enable_chunked_prefill"]
+    assert case_runner._case_window(case, plan.engines[0]) == (2, 3)
+
+
+@pytest.mark.parametrize("budget", [7168, 8192])
+def test_legacy_grid_still_rejects_budget_at_or_above_model_length(hf_config, budget):
+    with pytest.raises(ValueError, match="chunk budgets must stay below max_context_len=7168"):
+        _build_plan(hf_config, max_context_len=7168, chunk_budgets=(budget,))
+
+
+@pytest.mark.parametrize("prefill", [0, -1, True, 1.5, 7168])
+def test_exact_prefill_reuses_shared_capacity_validation(hf_config, prefill):
+    with pytest.raises(ValueError, match="prefill_prompt_len"):
+        build_dsv4_profile_plan(
+            model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+            num_layers=None, kv_cache_dtype="fp8", prefill_prompt_len=prefill,
+            limits=_limits(max_context_len=7168, chunk_budgets=(8192,)))
+
+
+def test_native_defaults_timing_guards_remain_planning_only(hf_config, monkeypatch):
+    plan = build_dsv4_profile_plan(
+        model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+        num_layers=None, kv_cache_dtype="fp8", prefill_prompt_len=6144,
+        limits=_limits(max_context_len=7168, chunk_budgets=(8192,),
+                       engine_policy="native_defaults"))
+    assert plan.to_json()["limits"]["engine_policy"] == "native_defaults"
+    monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace())
+    with pytest.raises(ValueError, match="native_defaults supports planning"):
+        case_runner.run_engine(plan=plan, engine_index=0, model_dir="unused", vocab_size=128,
+                               seed=0, gpu_memory_utilization=0.85,
+                               expected_attention_backend="unused", raw_path=Path("unused"),
+                               trace_dir=Path("unused"), keep_traces=True)
+    with pytest.raises(ValueError, match="native_defaults supports planning"):
+        build_dsv4_rows(plan, [dict(_engine_record(), engine_policy="native_defaults")])
+
+
+def test_exact_prefill_rows_group_three_samples_by_variant_and_role():
+    plan = _exact_prefill_plan()
+    records = [_engine_record(engine_index=0, chunk_budget=8192)]
+    for measurement in (CUDA_EVENT, KERNEL_ONLY):
+        for repeat in range(3):
+            steps = _step_records(plan, measurement, repeat, _prefill_request(6144, 0, 6144),
+                                  "e0-prefill-p6144", PHASE_PREFILL, 1.0)
+            for record in steps:
+                record["engine_index"] = 0
+            records += steps
+    rows = build_dsv4_rows(plan, records)
+    for measurement, method_rows in rows.items():
+        assert len(method_rows) == 6
+        assert {(row["attention_variant"], row["plans_tile_schedule"])
+                for row in method_rows} == {(variant, role) for variant in VARIANTS
+                                           for role in (True, False)}
+        for row in method_rows:
+            assert (row["prefill_chunk_size"], row["kv_cache_size"], row["max_model_len"],
+                    row["max_num_batched_tokens"], row["max_num_seqs"]) == (6144, 0, 7168, 8192, 128)
+            assert row["time_stats.dsv4_sparse_attention.count"] == 3
+            assert (f"time_stats.{LAYER_SCOPE}.count" in row) is (measurement == CUDA_EVENT)
 
 
 # ---------------------------------------------------------------------------
