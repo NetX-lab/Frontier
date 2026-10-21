@@ -13,6 +13,8 @@ from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.parallel_utils import tensor_parallel_layers
 from frontier.profiling.linear_op import linear_op_impl as linear
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
+from frontier.profiling.common.utils import configure_quantization_manager_for_model_name
+from frontier.config import PrecisionType, get_quantization_manager
 
 
 STEP5 = "stepfun-ai/Step-5-Preview"
@@ -115,6 +117,43 @@ def test_mlp_uses_profile_activation_and_native_tp8_widths(config, shared, width
     assert isinstance(mlp.act, activation.SwigluStepAndMul)
     assert mlp.up_proj.weight.shape == (2 * width // 8, 4096)
     assert mlp.down_proj.weight.shape == (4096, width // 8)
+
+
+def test_actual_step_precision_dispatch_never_constructs_fp8_for_dense_shared_tp8(config, monkeypatch):
+    """Exercise the same layer filter as the failed native wrapper construction."""
+    import frontier.profiling.common.vllm_compat as compat
+
+    configure_quantization_manager_for_model_name(STEP5)
+    monkeypatch.setattr(torch.cuda, "current_device", lambda: "meta")
+    monkeypatch.setattr(tensor_parallel_layers, "_use_fp8_gemm_surrogate", lambda: False)
+    monkeypatch.setattr(tensor_parallel_layers, "has_legacy_block_fp8_op", lambda: False)
+    monkeypatch.setattr(compat, "ensure_vllm_single_rank_parallel_state", lambda: None)
+    monkeypatch.setattr(compat, "vllm_config_context", lambda **kwargs: nullcontext())
+    constructed = []
+
+    class NativeGuard:
+        backend_name = "cpu_guard_fixture_not_measurement"
+
+        def __init__(self, *, weight, block_size, **kwargs):
+            constructed.append(tuple(weight.shape))
+            block_k = block_size[1]
+            if weight.shape[1] % block_k:
+                raise ValueError(f"Weight input_size_per_partition = {weight.shape[1]} is not divisible "
+                                 f"by weight quantization block_k = {block_k}.")
+
+    monkeypatch.setattr(tensor_parallel_layers, "Fp8LinearMethodKernel", NativeGuard)
+    model = torch.nn.ModuleList([
+        linear.MLP(config, 8, mlp_hidden_dim=config.dense_mlp_hidden_dim),
+        linear.ShareExpertMLP(config, 8),
+    ])
+    tensor_parallel_layers.build_fp8_linear_method_kernels(
+        model, model_dtype=config.dtype, model_type=config.model_type)
+    assert constructed == []
+    assert model[0].down_proj.weight.shape == (4096, 1728)
+    assert model[1].down_proj.weight.shape == (4096, 192)
+    assert {layer._get_precision() for branch in model for layer in (branch.up_proj, branch.down_proj)} == {
+        PrecisionType.BF16}
+    assert get_quantization_manager().get_precision("moe_grouped_gemm") is PrecisionType.FP8
 
 
 def test_generic_profile_keeps_legacy_activation(config, monkeypatch):
