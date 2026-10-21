@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Recorded the delegated diagnosis-only scope. |
+| 2026-10-22 | Added authorized D23-MRV2-CONTRACT-REUSE implementation follow-up. |
 
 ## Original Request
 
@@ -25,3 +26,13 @@
 - Task: `D23-ACTUAL-MAIN/PERF`
 - Session: `ses_e9f519775ffe3Cv0bhEzJSKNhH`
 - Base: `ec5de154c19ceeae23a3652f511582858170f813`
+
+## Authorized follow-up: D23-MRV2-CONTRACT-REUSE
+
+[Original Request] Implement narrow predictor-lifetime reuse of fixed physical-layer metadata and fixed operator precision/contract identity in this worktree/branch. Share metadata between `_step5_measured_layer` and `step5_batch_features`. Keep each per-query measurement-family/model registry selection rather than adding a model cache or invalidation mechanism. Inspect supported config/manager lifetime first.
+
+[Original Request] Add real repeated-query regression before the fix: static construction elimination, dynamic feature/count failure, independent layers/precisions/families/nested scopes and isolated predictor instances. Exercise the existing measured FFN and attention query seams explicitly authorized by the parent. Preserve feature validation, bounds/coverage errors, paired counts/source proofs, role/layer/precision isolation, full lane population, nested restoration and unsupported-group rejection.
+
+[Original Request] Parent baseline `/data/ycfeng/tmp/d23_parent_red01/receipt.json`: source74980bb,64 queries0.532956s,loading1.468s,RED/source PASS. Do not modify committed diagnostic scripts to make the gate green. Run unchanged fast command with source truth and enabled trace, relevant measured/FFN/public-stage/root/forward tests, source-sensitive call counts, and report wall/proof deltas without claiming1024 completion.
+
+[Original Request] Own the small existing Step cost/binding module, minimal sklearn_moe wiring, meaningful tests, existing module-size exception and these records. No parent files, further delegation, GPU/platform/native, fixture/cache mutation, full CLI retry/timeout increase, initializer optimizations, broader cache redesign, fake output, arbitrary factor/fallback/default or extra mode flag. Parent owns review/reverification/integration/fullCLI/strict77.

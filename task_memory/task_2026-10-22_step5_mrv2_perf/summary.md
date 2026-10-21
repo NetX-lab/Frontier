@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archived measured diagnosis-only deliverables and parent follow-up. |
+| 2026-10-22 | Archived authorized fixed-binding implementation and bounded verification; retained parent acceptance limits. |
 
 ## Outcome
 
@@ -36,4 +37,22 @@ Preserve per-query feature coercion/bounds/exact coverage, exact duration/count 
 
 ## Remaining work
 
-Parent approval, production implementation, semantic regression review, and original full offline/online acceptance remain pending by design. Setup998/1004s attribution is incomplete. Public stage/scheduler/complete MetricsStore execution was not replayed, so extrapolated11.58s/round is not a full-round measurement. Use the non-profiled FFN RED command in the test report for the next edit; profile once only when the dominant boundary changes.
+The diagnosis-only scope initially left approval, production implementation, review and full acceptance to the parent. The follow-up below implements the explicitly authorized source correction; review/reverification/integration and original full offline/online acceptance still belong to the parent. Setup998/1004s attribution is incomplete. Extrapolated per-round costs are not full-round measurements.
+
+## Authorized follow-up: D23-MRV2-CONTRACT-REUSE
+
+Reused fixed physical-layer metadata within each predictor and fixed `(layer, operator)` precision/serialized contract identity. The parent specifically excluded model caching; every measurement-family registry selection remains dynamic. Source consumers share `frontier/execution_time_predictor/step5_cost.py`; `sklearn_moe_execution_time_predictor.py` preserves nested context/cost restoration and delegates only fixed construction. Model/TP/EP configuration remains the existing predictor lifetime boundary. No initializer, global cache, output/feature cache, fallback, factor, mode flag or original diagnostic-script change.
+
+Deliverables:
+
+- `frontier/execution_time_predictor/step5_cost.py`: shared predictor-instance layer metadata and fixed operator binding tables.
+- `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`: minimal delegates; per-query registry, feature validation, paired count queries and proofs unchanged.
+- `tests/unit/test_step5_contract_reuse.py`: seven actual fitted-estimator regressions, including source-sensitive fixed-work counts, dynamic features/errors, registry replacement/removal, count failures, nested contexts, independent predictors/TP, physical precisions and distinct fitted measurement families/proof hashes.
+- `docs/general/module-size-exceptions.md`: inspected source boundary and cleanup; Step cost 220->263 lines, sklearn_moe1814->1791; no over-limit module touched.
+- `task_memory/task_2026-10-22_step5_mrv2_perf/test_report_2026-10-22_contract_reuse.md`: exact bounded commands, measured deltas, observed test failures/timeouts and acceptance limits.
+
+Regression RED occurred before implementation: twelve layer descriptions/seventy-two precision resolutions for six real queries, with all output assertions passing. GREEN warm queries have zero repeated descriptions/precision/contract resolution, retaining every registry selection. The unchanged actual05 microbench measured0.073477s/64 lanes/456 operator queries against parent baseline0.532956s (7.253x improvement). Every cost dictionary and loaded artifact descriptor is exactly equal; source truth PASS. The maximum-query latency gate remains RED because first fixed binding and the slowest warm query exceed the unchanged0.96824ms/query budget. There is no1024 completion claim.
+
+Existing validation:91 measured/FFN/on-demand tests PASS,44 public/root/metrics tests PASS,75 MRv2 forward tests PASS,7 new regressions PASS. Structural tests:38 PASS/2 FAIL on an unchanged stale scheduler stub missing `take_forward_start_batch`, before cost queries. Optional broader PD tests did not finish within60s; no timeout increase or unrelated edits. Enabled trace preserves456 events/344788 bytes and persisted truth PASS. Remaining recurring profile cost is dynamic duration/count feature validation and source-proof JSON parsing; full initialization, scheduler/stage E2E and fullCLI remain unmeasured here.
+
+Code/tests/module-boundary commit: `ee28bf7ea43d3c7c73b7176eeb10b6f07d51492a`. Final source-sensitive unchanged command `/data/ycfeng/tmp/d23_contract_committed01/receipt.json` identifies that commit:0.074077174s64 lanes/456 operator queries,7.194605x speedup,sourceTruthPASS,exact proof/artifact equality,RED max-query gate. Enabled trace456 events/344787bytes0.068545761s,persisted truthPASS. Final focused regressions7 PASS9.15s (`d23_contract_green_final01.log`). Parent receives this source commit separately from the completion-record commit.
