@@ -57,4 +57,8 @@ The large canonical HTTP tests put their origin128 seconds in the past to exerci
 
 ## Native prerequisites and limits
 
-Source derivation is in`source_contract.md`. Staging receipts and parent-only commands will be appended after building from committed source. Native success requires source identity, real H200/cache capacity, exact accepted/generated lengths, per-lane actual graph evidence and the separate parent-owned R2 disposition. The stage's `reference_admission` remains`UNVERIFIED`; a process exit0 cannot close those gates. Auxiliary verdicts remain nonblocking for the64-GPU workload.
+Source derivation is in`source_contract.md`; staging receipts and parent-only commands are in`stage_handoff.md`. Native success requires source identity, real H200/cache capacity, exact accepted/generated lengths, per-lane actual graph evidence and the separate parent-owned R2 disposition. The stage's `reference_admission` remains`UNVERIFIED`; a process exit0 cannot close those gates. Auxiliary verdicts remain nonblocking for the64-GPU workload.
+
+## Final stage observations
+
+Both stages were built from clean source`4a708ff` and independently verified from their own workspace with no repository`PYTHONPATH`: **27 staged tool/input hashes,38 native-source bindings and3 unchanged metadata pins each PASS**. Build and verify receipts match; no `launcher/` directory exists. The isolated staged canonical CLI imports and accepts`--help`. Exact commands, config SHA-256 values, cloud output paths, resource estimates and parent-only submissions are in`stage_handoff.md`. These are local offline checks only; no cloud paths were accessed.

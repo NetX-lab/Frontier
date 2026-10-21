@@ -22,7 +22,9 @@ Run meaningful HTTP/consumer tests for counts, stable prompts, actual sends and 
 
 Question: the existing `tests/comparison/dp_placement_pp/vllm_replay.py` lacks opt-in `return_token_ids` and token-delta timestamps/counts. Is a minimal shared-client extension, preserving other adapters' defaults and reusing existing replay, authorized despite the initial ownership boundary?
 
-Answer: **Authorize minimal extension** — extend the existing shared client for opt-in canonical token-ID streaming and per-request failure retention, with regression tests. The same existing native `server_command` also passes the source-supported built-in graph-statistics flag; no new native observation hook is introduced.
+Answer: **Authorize minimal extension** — extend the existing shared client for opt-in canonical token-ID streaming and per-request failure retention, with regression tests.
+
+Implementation note under the original runtime-configuration scope: the same existing native `server_command` also passes the source-supported built-in graph-statistics flag; no new native observation hook is introduced.
 
 ## Acceptance and boundaries
 
