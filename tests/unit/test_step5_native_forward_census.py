@@ -116,6 +116,90 @@ def test_startup_capture_is_not_serving_census(host_runtime):
     assert events(observer) == [] and runner.calls == 1
 
 
+@pytest.fixture
+def worker_runtime(host_runtime, monkeypatch):
+    observer, runner, batch, _ = host_runtime
+    batch.req_ids = [f'_warmup_{index}' for index in range(batch.num_reqs)]
+    output = NS(num_scheduled_tokens=dict.fromkeys(batch.req_ids, 1), finished_req_ids=set(),
+                scheduled_new_reqs=[], scheduled_cached_reqs=NS(req_ids=[]))
+
+    class Worker:
+        def __init__(self):
+            self.model_runner = runner
+            self.compilations = 0
+            self.fail_compilation = False
+
+        def load_model(self):
+            return None
+
+        def compile_or_warm_up_model(self):
+            self.compilations += 1
+            result = self.execute_model(output)
+            if self.fail_compilation:
+                raise LookupError('native compilation failed')
+            return result
+
+        def execute_model(self, scheduler_output):
+            return runner.execute_model()
+
+        def execute_dummy_batch(self):
+            return runner.execute_model(dummy_run=True)
+
+    module = ModuleType('vllm.v1.worker.gpu_worker')
+    module.Worker = Worker
+    observer.config['source_hashes'][module.__name__] = 'fixture'
+    observer.config['resident_identity'] = {}
+    monkeypatch.setattr(observer, 'runner_info', lambda worker: None)
+    r2.instrument(module, observer)
+    return observer, Worker(), runner, batch, output
+
+
+@pytest.mark.parametrize('failed_compilation', [False, True])
+def test_startup_worker_execute_is_excluded_without_losing_later_serving(
+        worker_runtime, failed_compilation):
+    observer, worker, runner, batch, output = worker_runtime
+    worker.fail_compilation = failed_compilation
+    assert getattr(observer.local, 'worker_execution_kind', None) is None
+    if failed_compilation:
+        with pytest.raises(LookupError, match='native compilation failed'):
+            worker.compile_or_warm_up_model()
+    else:
+        assert worker.compile_or_warm_up_model() is batch
+    forwards = [row for row in events(observer)
+                if row['event'] in ('native_forward_start', 'native_forward_end')]
+    assert forwards == [], 'startup worker calls contaminated serving census'
+    assert worker.compilations == runner.calls == 1
+
+    # The same request labels outside compilation are not a filtering rule.
+    assert worker.execute_model(output) is batch
+    assert worker.execute_dummy_batch() is batch
+    starts = [row for row in events(observer) if row['event'] == 'native_forward_start']
+    ends = [row for row in events(observer) if row['event'] == 'native_forward_end']
+    assert [row['forward_index'] for row in starts] == [1, 2]
+    assert [row['forward_index'] for row in ends] == [1, 2]
+    assert [row['worker_execution_kind'] for row in starts] == ['scheduled', 'idle_dp']
+    assert [row['dummy_run'] for row in starts] == [False, True]
+    assert starts[0]['native_request_ids'] == batch.req_ids
+    assert runner.calls == 3 and not observer.disabled
+
+
+def test_locked_startup_method_uses_worker_execute_callback():
+    source = os.environ.get('STEP5_NATIVE_SOURCE_ROOT')
+    if not source:
+        pytest.skip('Requires the locked native source root')
+    path = Path(source) / 'v1/worker/gpu_worker.py'
+    if not path.exists():
+        path = Path(source) / 'vllm/v1/worker/gpu_worker.py'
+    tree = ast.parse(path.read_text())
+    worker = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == 'Worker')
+    method = next(node for node in worker.body if isinstance(node, ast.FunctionDef)
+                  and node.name == 'compile_or_warm_up_model')
+    calls = [node for node in ast.walk(method) if isinstance(node, ast.Call)]
+    warmup = next(call for call in calls if isinstance(call.func, ast.Name)
+                  and call.func.id == 'warmup_kernels')
+    assert ast.unparse(warmup.args[1]) == 'self.execute_model'
+
+
 def test_native_exception_is_not_swallowed_or_reported_as_completed(host_runtime):
     observer, runner, _, _ = host_runtime
     observer.local.worker_execution_kind = 'idle_dp'

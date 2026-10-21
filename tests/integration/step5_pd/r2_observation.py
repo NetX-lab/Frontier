@@ -492,6 +492,8 @@ class Observation:
                           cause='READ_completion_notification_not_lease_expiry')
 
     def worker_before(self, worker, arguments):
+        if getattr(self.local, 'worker_startup', False):
+            return []
         output = arguments['scheduler_output']
         self.runner_info(worker)
         self.local.worker_identity = self.identity(worker)
@@ -1067,7 +1069,7 @@ class Observation:
 
 
 def wrap(cls, name, observer, before=None, after=None, read_scope=False, worker_scope=False,
-         drain_scope=False, allocation_scope=False, runtime_scope=False):
+         drain_scope=False, allocation_scope=False, runtime_scope=False, startup_scope=False):
     """Only callbacks are guarded; the original is invoked exactly once."""
     original = getattr(cls, name)
     if getattr(original, '_step5_r2', False):
@@ -1085,9 +1087,13 @@ def wrap(cls, name, observer, before=None, after=None, read_scope=False, worker_
             arguments = observer.safe(name+'.arguments', prepare)
             if arguments is not None and before is not None:
                 token = observer.safe(name+'.before', before, owner, arguments)
+        if startup_scope:
+            observer.local.worker_startup = True
         try:
             result = original(owner, *args, **kwargs)
         finally:
+            if startup_scope:
+                observer.local.worker_startup = False
             if read_scope:
                 observer.local.read = None
             if worker_scope:
@@ -1125,6 +1131,7 @@ def instrument(module, observer):
         wrap(cls, '_get_new_notifs', observer, after=observer.notified)
     elif name == 'vllm.v1.worker.gpu_worker':
         if 'resident_identity' in observer.config:
+            wrap(module.Worker, 'compile_or_warm_up_model', observer, startup_scope=True)
             wrap(module.Worker, 'load_model', observer, after=observer.model_loaded)
             wrap(module.Worker, 'execute_dummy_batch', observer,
                  before=observer.dummy_before, worker_scope=True)

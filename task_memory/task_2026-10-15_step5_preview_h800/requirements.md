@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | D23: YC approved full pre-prediction DP agreement for measured Step P/D useful and dummy lanes, including FULL_AND_PIECEWISE. |
 | 2026-10-22 | Recorded requested native32/64 p90/throughput diagnostic and continued P0 execution; formal criteria unchanged. |
 | 2026-10-21 | User continues execution; repair the observed sequential event-logging blocker within D20 actual-main acceptance. |
 | 2026-10-21 | Record parent selection of the existing-D full-local G3 reference within the unchanged locked runtime and acceptance contract. |
@@ -102,6 +103,20 @@ Continue the active D20/D21 implementation and P0 calibration work. The parent o
 > 、continue
 
 The requested diagnostic statistics were recomputed from each retained run's eight concurrent requests, excluding16 warmups, for H800/H200 at32/64GPU. All client populations/counts/endpoints were verified. The existing nearest-rank percentile convention is used consistently; for eight rows p90 equals the maximum. Total throughput includes prompt and output tokens and ends at the last client token. These are completed basic tests, not the unexecuted128-request/QPS1 formal workload. H20064 retains its originalREFERENCE_UNSTABLE status. The current formal mean-based four-metric criteria remain unchanged. Parent receipts and source hashes: `../task_2026-10-21_step5_priority_runs/metrics_check_20261022/parent_receipt.json`. Continue P0 implementation and calibration under D20/D21.
+
+## [Original Request / Decision] D23 — MRv2 first-prediction agreement — 2026-10-22
+
+Parent question:
+
+> 为让 Step 的首层 attention 也使用正确的 DP 形状，需要修改共享执行流程：复用现有 stage forward group，等各 lane 就绪并统一 graph mode/physical padding 后，再开始计费；同时覆盖 P/D 的真实与 dummy lane。现有同步点太晚，无法完整修正。是否批准这项 CPU 核心协议修改？验收包括首个 predictor 调用的形状、请求/释放正确性及旧场景回归；原生判定和画像输入接入已在独立并行推进。
+
+YC selected:
+
+> 批准完整修正 (Recommended)
+
+Authorize the minimal CPU pre-prediction stage-group agreement and FULL_AND_PIECEWISE binding, reusing existing stage owners/events. It covers both P/D useful and dummy lanes, including the first predictor call. Native NONE preserves local physical widths; graph modes use actual DP-agreed mode/capture width. Preserve real query/context/ownership and zero dummy request credit. Match actual MRv2 metadata, including FULL/max_query_len=null and P-side FULL dummy execution; never substitute MRv1 metadata-free rows or mutate null into1.
+
+Acceptance includes first-call descriptor assertions, completion/release and empty-lane participation, strict missing coverage, correct mode/count binding, and unchanged legacy scenarios. The formal metric/workload/native configuration/resource contracts remain unchanged. The parent owns this core stream; typed profile input/cache identity and native disconnect diagnosis continue independently. Design and rejected late/dummy-only alternatives: `mrv2_consumer_20261022/design.md`.
 
 ## [Original Request] Follow-up: Step linear-op slice and Smoke 03 judgment — 2026-10-20
 

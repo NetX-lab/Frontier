@@ -25,7 +25,8 @@ def install(module, observer, wrap):
     sequence = 0
 
     def before(runner, arguments):
-        if not getattr(observer.local, 'worker_execution_kind', None):
+        if (getattr(observer.local, 'worker_startup', False)
+                or not getattr(observer.local, 'worker_execution_kind', None)):
             return None  # Startup capture/profiling is not serving execution.
         context = dict(identity=observer.identity(runner), runner=runner,
                        dummy_run=bool(arguments.get('dummy_run', False)),
