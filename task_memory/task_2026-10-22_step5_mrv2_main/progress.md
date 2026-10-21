@@ -301,4 +301,6 @@ Checkpoint after verified compute correction:
   after public first/last boundary replacement and must not be validated.
   Same owner is implementing the public-call-site RED and stage-owned-only fix;
   see `root_metrics_review.md`. No actual05 or candidate matrix has launched.
-  Only the clean pre-fix77 baseline is running independently.
+  The clean pre-fix baseline has now completed77/77 cases, all return codes0;
+  source0cdd6cb is clean and the fixed driver is32fb934. Strict comparison
+  remains pending the final candidate.

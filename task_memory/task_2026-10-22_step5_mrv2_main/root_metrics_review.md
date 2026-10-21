@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record parent verification of initial root repair and independent P1 owner finding. |
+| 2026-10-22 | Clean pre-fix baseline completes77/77 cases; final candidate/comparison still pending. |
 
 ## Scope and evidence
 
@@ -59,7 +60,7 @@ Source phase is not fully accepted. Full CLI and candidate legacy matrix have
 not started on this initial source. The existing generic trace gap-span limit
 and inherited test fixture issues are not new findings.
 
-## Independent work in progress
+## Clean baseline execution: PASS
 
 The new clean legacy baseline is `fidelity-baseline-0cdd6cb`. Both sides will
 use the unchanged driver from `fidelity-candidate-32fb934`, so harness identity
@@ -70,7 +71,11 @@ stays fixed while the owner correction completes. Baseline command:
 env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-baseline-0cdd6cb --label baseline --output-root /data/ycfeng/tmp/step5_d23_root_fidelity_20261022 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d23_root_fidelity_baseline01.log 2>&1
 ```
 
-Baseline is in progress; candidate/comparison wait for the final repair.
+Baseline completed: **77/77 cases produced artifacts**, all case return codes0.
+The log confirms source0cdd6cb, dirty=False and harness32fb934. Retained log:
+`/data/ycfeng/tmp/d23_root_fidelity_baseline01.log`; results:
+`/data/ycfeng/tmp/step5_d23_root_fidelity_20261022/baseline/results.jsonl`.
+This is baseline execution only; candidate/comparison wait for the final repair.
 Main worktree is prepared at
 f237362 but no new actual subprocess has launched; it will be fast-forwarded
 again before the unchanged-bound full6144/1024 verification.
