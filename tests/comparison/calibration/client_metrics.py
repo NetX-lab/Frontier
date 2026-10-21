@@ -70,6 +70,10 @@ def native_client_rows(run_dir: Path, workload: tuple, request_ids: dict, source
     boundaries = repetitions["idle_boundaries"]
     expected_boundaries = ["before_repeat01_warmup"] + [
         f"after_repeat{repeat:02d}_{phase}" for repeat in repeats for phase in ("warmup", "formal")]
+    if source["provenance"] == "image" and "startup_observation" in repetitions:
+        if repetitions["startup_observation"].get("diagnostic_only") is not True:
+            raise ValueError("Step startup observation must be explicitly diagnostic")
+        expected_boundaries = expected_boundaries[1:]
     if ([b["boundary"] for b in boundaries] != expected_boundaries
             or not all(b["verified"] for b in boundaries)):
         raise ValueError("Missing independently warmed idle boundaries")

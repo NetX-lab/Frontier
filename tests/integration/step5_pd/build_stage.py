@@ -108,7 +108,8 @@ def stage_canonical(definition: dict, stage: Path) -> None:
     (stage / "qualification_dependency.json").write_text(json.dumps({
         "status": "UNVERIFIED", "kind": settings["kind"],
         "required_before_reference_admission": [
-            "Parent-owned R2 content/lifetime verdict", "H200 TP8/DP4/EP32/PP1 native startup on both roles",
+            "Parent-owned R2 content/lifetime verdict",
+            f"{definition['resources']['gpu_type']} TP8/DP{plan['dp_size']}/EP{8 * plan['dp_size']}/PP1 native startup on both roles",
             "Effective MRv2 selection: Triton available, no explicit MRv1 override, no unsupported features",
             "Resolved 7168 context / 8192 token budget / 128 sequences and unchanged native FP8 exclusions",
             "6144 prompt token IDs accepted without expansion and 1024 real streamed output IDs per request",
@@ -211,6 +212,9 @@ def build(definition: dict, *, stage: Path, workspace: Path, output_dir: Path, m
         stage_observation(config, definition, stage, model_dir)
     if "canonical_replay" in definition:
         config["replay_script"] = str(stage / "tests/integration/step5_pd/canonical_replay.py")
+        if "case_id" in definition:
+            config["case_id"] = definition["case_id"]
+            config["canonical_replay"] = dict(definition["canonical_replay"])
     (stage / "preflight.json").write_text(json.dumps(preflight(config, model_dir), indent=1))
     config["tool_hashes"] = {str(path.relative_to(stage)): sha256(path)
                              for path in sorted(stage.rglob("*")) if path.is_file()}

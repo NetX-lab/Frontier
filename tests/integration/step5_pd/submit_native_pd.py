@@ -31,7 +31,7 @@ def resource_arguments(config: dict) -> dict:
     return dict(
         cpu=config["cpu"], gpu=config["gpu"], mem_gb=config["mem_gb"], replica=config["replica"],
         image=config["image"], positive_tags=[config["gpu_type"]], extra_requirements=[],
-        mounts=[config["cloud_mount"]], preemptible=False,
+        mounts=[config["cloud_mount"]], preemptible=config.get("preemptible", False),
         envs={"PYTHONDONTWRITEBYTECODE": "1", "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
               "HF_DATASETS_OFFLINE": "1", "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
               "DISTRIBUTED_JOB": "true"},
@@ -43,10 +43,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--launcher-scope", type=Path, required=True,
-                        help="launcher_scope.py providing own_submit_callback")
+                         help="launcher_scope.py providing own_submit_callback")
+    parser.add_argument("--dry-run", action="store_true", help="Print the exact payload without auth or SDK imports")
     args = parser.parse_args()
     config_path = args.config.resolve()
     config = json.loads(config_path.read_text())
+    if args.dry_run:
+        print(json.dumps({"resource_constructor_arguments": resource_arguments(config),
+                          "spawn_arguments": {"command": job_command(config, config_path),
+                              "charged_group": config["charged_group"], "use_image": True,
+                              "code_mount_point": config["workspace"]}}, indent=1))
+        return 0
     if os.environ.get("STEPMIND_BACKEND") != "rjob":
         raise ValueError("Initialize the personal Python RJob backend first")
     if any(not os.environ.get(name) for name in ("BRAINPP_ACCESS_KEY", "BRAINPP_SECRET_KEY")):
