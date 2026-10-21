@@ -23,11 +23,11 @@
 - completed: shared checked `dedicated_services` receipt from replay with `native_workers`; new-proof worker compares the complete fresh readiness object with the source-pinned receipt. Validation of all fields remains in the existing pinned validator. If receipt rebinding fails, new-proof worker fails. Legacy whole-object `{role,url}` comparison remains unchanged. No production harness/native changes for P1.
 - completed: targeted GREEN1 PASS in18.88s; seven expected predicates PASS, rank-runtime-graph FAIL as expected. All16 missing/wrong readiness-field cases rejected by both request/idle and worker predicates; legacy exact and extra-field verdicts identical to frozen checker. Final code/test count495 after formatting.
 - completed: affected+existing seams final241 PASS/21 SKIP,132.05s. Retained `p1_predicates_{red,green}.json`,16 new-proof/2 legacy cases in `p1_readiness_negatives.json`,JUnit,`p1_review_receipt.json`. Canonical/root checker/collector hashes unchanged; candidate5efd00ea6544d64440c535d06ad415b6a4d1a25b96ce8863cf4944568f37ec36. Exact code cumulative diff includes actual successor; P1 fix diff is against746b744. Report/test report/summary now withdraw earlier incomplete predicate proof.
-- in-progress: exact stage and P1 local commit; then sole writer stops and awaits primary acceptance, no freeze/package.
+- completed: P1 code/test/evidence commit `35fe8a08488d269fb9aa7325021e82cccb53f57d`. Source/document whitespace check passes; exact raw diffs/JUnit preserve captured whitespace. Sole writer has stopped successor edits; only this completion receipt update follows. Await primary acceptance, no freeze/package.
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 6｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -36,12 +36,12 @@
 | 后续严格 freshness | PASS | 失效初始 baseline 不再放行后续边界。 |
 | successor 与原回归 | PASS | 原241测试通过，但不作为完整predicate验收。 |
 | P1全checker校验 | PASS | 完整focused241 PASS;七预期predicate PASS，一预期native qualification FAIL。 |
-| 报告、归档及 commit | TODO | P1证据/diff已归档，commit待执行；parent接受前禁止冻结。 |
+| 报告、归档及 commit | PASS | P1证据/diff已归档，commit35fe8a0；parent接受前禁止冻结。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 定向GREEN至完整回归｜**当前前沿：** P1 commit/交付
+**检测窗口：** 完整回归至commit35fe8a0｜**当前前沿：** primary acceptance交付
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -63,7 +63,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. commit并交付cumulative/narrow diff、receipt → 完成标志：包含实际successor，parent可独立复核，不冻结。
+1. 交付commit35fe8a0、cumulative/narrow diff和receipt → 完成标志：parent可独立复核，sole writer停止，不冻结。
 
 ## 4. 最值得关注的 3 点
 

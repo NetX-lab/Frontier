@@ -17,4 +17,6 @@ Latest observed verification:241 passed,21 skipped,132.05s; all seven expected f
 
 Code/test/evidence commit: `1a2d6e9` (`fix(calibration): prove dedicated native cold start before warmup`). No merge or push.
 
+P1 correction code/test/evidence commit: `35fe8a08488d269fb9aa7325021e82cccb53f57d` (`fix(calibration): admit bound cold-start worker readiness`). Successor edits stop here pending primary acceptance.
+
 Open/deferred: primary acceptance is required before freeze/package/repoint. This agent stops successor edits on handoff; future native launch verification is not authorized in this slice. Old V4 remains unverified (missing initial proof,431/432 completions,repeat02 warmupHTTP502). No transport/native/core/metrics change or GPU/network/platform operation was performed.

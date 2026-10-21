@@ -1,5 +1,6 @@
 {
   "task_id": "W128-NATIVE-COLD-START",
+  "code_commit": "35fe8a08488d269fb9aa7325021e82cccb53f57d",
   "correction": "P1-new-readiness-rejected-by-native-workers",
   "parent_base": "e55c83c263f86f48972f137858723a07c6f5e691",
   "p1_fix_base": "746b744d3382ad1c49a1741c6dea7f5fdfee4c41",
