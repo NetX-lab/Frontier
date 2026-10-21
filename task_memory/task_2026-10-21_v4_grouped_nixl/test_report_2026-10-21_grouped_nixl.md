@@ -5,7 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Closed source/CPU acceptance with371 PASS and one clean strict77/77 identical comparison at1a65e49. |
-| 2026-10-21 | Added P2 real MetricsStore RED/GREEN,470 focused PASS and retained pinned bodies; new clean matrix pending. |
+| 2026-10-21 | Closed P2 with actual MetricsStore RED/GREEN,470 focused PASS, retained native bodies and unique clean strict77/77. |
 
 ## Environment and commands
 
@@ -97,8 +97,9 @@ Baseline is the required absolute
 Durable copied comparator: `fidelity_comparison.json`; checked source/cleanliness
 and result receipt: `fidelity_receipt.json`; CPU lifecycle observations:
 `cpu_receipt.json`. Full manifest/results remain under the absolute candidate
-label directory recorded in the fidelity receipt. The final records-only commit
-does not change `frontier/` or `tests/` from the measured1a65e49 commit.
+label directory recorded in the fidelity receipt. The original records-only
+commit17e3b42 did not change `frontier/` or `tests/` from measured1a65e49. P2 is
+separately measured below.
 
 ## P2: real MetricsStore/op-tracing callback repair
 
@@ -124,7 +125,7 @@ PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/p
 | GLM metadata | Every original metadata field unchanged through actual callback |65-token,2-page callback has main/indexer/scale bytes11501568/344064/10752; transfer completes | PASS |
 | Focused regressions | Existing371 plus canonical real callback and existing shared metrics tests |470 PASS in21.45s,0 failures/skips | PASS |
 | Native review evidence | Exact pinned bodies available without working checkout |12 complete methods and9 spec/callsite excerpts retained in native_retention.md; hashes match prior extraction | PASS |
-| New strict77 | One committed, clean candidate; unchanged checks | Pending | TODO |
+| New strict77 | One committed, clean candidate; unchanged checks |77/77 identical at5428bd7; zero cache/provenance or other findings | PASS |
 
 The repair only adds grouped transfer metadata in op_trace_utils.py and forwards
 existing transfer_info/scheduler block size from MetricsStore. That caller is an
@@ -132,3 +133,25 @@ existing oversized module covered by docs/general/module-size-exceptions.md; its
 two-line forwarding change adds no responsibility. No broad cleanup is needed;
 the existing future ledger split remains outside this repair. No model_binding,
 timing, graph/measured admission, native protocol or other-owner files changed.
+
+P2 implementation commit: `5428bd7`. Started exactly one new clean candidate
+after the passing focused checks and clean commit:
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 5428bd7 --output-root /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity --baseline-label baseline --label candidate_v4_grouped_nixl_p2_5428bd7 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/v4_grouped_nixl_p2_strict77.log 2>&1
+```
+
+Actual: **VERDICT: IDENTICAL**. All77 cases produced artifacts and compared
+identically. Baseline/candidate failures, missing evidence, differing definitions,
+not-compared cases and provenance findings are all0. Predictor cache comparison
+is complete, with0 baseline-only/0 candidate-only names. Every per-case source
+stamp is5428bd7803137cac1de5c691409534af1e68888e with source_dirty=false;
+the retained detached checkout at
+`/data/ycfeng/Frontier/.worktrees/fidelity-candidate-5428bd7` is still clean.
+
+The original exact comparator was copied to `p2_fidelity_comparison.json` before
+another run could replace the shared comparison.json. `p2_receipt.json` records
+the checked manifest/results paths and final verdict. `source.diff` matches the
+cumulative6d88700->5428bd7 source/test delta; `p2_source.diff` matches
+17e3b42->5428bd7. Final records do not change the measured frontier/tests trees.
+No matrix or focused test was rerun solely for the records-only changes.

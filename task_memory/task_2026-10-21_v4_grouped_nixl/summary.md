@@ -5,10 +5,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Completed source/CPU implementation and clean strict77 comparison; retained final receipts. |
-| 2026-10-21 | Added reviewed P2 real metadata callback repair; focused acceptance passed; new clean matrix pending. |
+| 2026-10-21 | Closed reviewed P2 metadata repair: actual callback RED/GREEN,470 focused PASS and clean strict77/77 identical. |
 
 TaskID: W128-V4-GROUPED-NIXL. Branch/worktree: `v4-grouped-nixl`, based on6d88700.
-Implementation commit: `1a65e4985091f5c85c14830f86385800a614e4e6`.
+Original implementation commit: `1a65e4985091f5c85c14830f86385800a614e4e6`.
+P2 repair commit: `5428bd7803137cac1de5c691409534af1e68888e`.
 
 ## Delivered
 
@@ -62,4 +63,11 @@ returns the end event, completes1024 outputs and frees both pools. An existing
 GLM test compares every prior metadata field to the real callback. The retained
 native record includes12 exact method bodies and9 callsite/spec excerpts.
 
-The P2 implementation commit and one new clean strict77 candidate are pending.
+The unique new clean strict77 candidate `candidate_v4_grouped_nixl_p2_5428bd7`
+compared **77/77 identical** against the same absolute baseline, with zero failed,
+missing, definition, provenance or cache identity findings. All77 source stamps
+are clean at5428bd7. `p2_fidelity_comparison.json` preserves the exact comparator;
+`p2_receipt.json` records all checked observations and external artifact paths.
+The cumulative and P2-only diff artifacts exactly match that commit. The final
+records-only commit leaves the measured frontier/tests trees unchanged. No P2
+acceptance blocker remains; the bounded native/full-path limits above still apply.

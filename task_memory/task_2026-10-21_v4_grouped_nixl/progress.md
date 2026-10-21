@@ -5,7 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Created task and isolated branch/worktree from 6d88700. |
-| 2026-10-21 | Reproduced real op-tracing RED; repaired grouped metadata;470 focused checks PASS. |
+| 2026-10-21 | Closed P2 actual callback RED/GREEN,470 focused PASS and one clean5428bd7 strict77/77 identical run. |
 
 - completed: read current parent requirements, plan, ticket07 and V4 bounded unit
   brief. Created v4-grouped-nixl worktree at exact 6d88700.
@@ -21,7 +21,7 @@ Initial observation at6d88700: source restricted NIXL to ungrouped DSA/block64. 
 capacity already exposes get_group_size_bytes and allocator block IDs, so no
 capacity schema extension has been demonstrated necessary.
 
-## Native-rule decision and implementation
+## Original slice: native-rule decision and implementation
 
 The native scheduler prunes before `_connector_finished` exchange. The full
 6144 prefill initially owns [24,96,96,1536,768] pages; after the hook's processed
@@ -117,5 +117,17 @@ metrics are NOT verified by these component tests. Existing execution guards sta
   Replaced those lexical spaces with XML character references; parsed XML is
   byte-identical before/after serialization. Raw log, failure text, production
   source and whitespace check configuration are unchanged.
-- in-progress: commit the focused-tested P2 repair.
-- pending: one new post-commit clean strict77 candidate and final receipts.
+- completed: focused-tested P2 commit5428bd7. Both exact diff artifacts match
+  that commit; source tree identities are recorded in p2_receipt.json.
+- completed: the unique new clean strict77 candidate_v4_grouped_nixl_p2_5428bd7
+  against the required absolute baseline. Actual77/77 identical; zero failures,
+  missing evidence, definition/provenance/cache filename differences. All77
+  source stamps are5428bd7/source_dirty=false; the detached checkout remains
+  clean. No dirty matrix, relaxed check or repeat was run.
+- completed: p2_fidelity_comparison.json preserves the exact comparator result;
+  p2_receipt.json records original failure, actual callback lifecycle and final
+  committed-source/cache evidence. Code/test diffs exactly match5428bd7; binding,
+  timing, profiling and strict fidelity harness files are unchanged. Final
+  records-only changes do not alter the measured frontier/tests trees.
+- No unfinished P2 acceptance item remains. Native timing/protocol/full-path and
+  formal accuracy gaps listed above are unchanged and are not claimed as passed.
