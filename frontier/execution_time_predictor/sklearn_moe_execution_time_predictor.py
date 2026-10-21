@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY, STEP5_ATTENTION_FAMILY
 from frontier.attention.model_binding import bind_layer_attention
-from frontier.attention.step5 import describe_step5_layer
+from frontier.execution_time_predictor.step5_cost import step5_layer_metadata, step5_operator_binding
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -35,8 +35,6 @@ from frontier.operators.families import (
     get_comm_operator,
     get_operator_family,
 )
-from frontier.operators.binding import bind_operator_query
-from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
 
 if TYPE_CHECKING:
     from frontier.entities import EPBatchGroup
@@ -96,12 +94,7 @@ class SklearnMoEExecutionTimePredictor(
         previous_costs = getattr(self, "_step5_ffn_costs", None)
         metadata = None
         if not self._enable_dummy_mode and bind_layer_attention(self._model_config, layer_id).family_id == STEP5_ATTENTION_FAMILY.family_id:
-            metadata = describe_step5_layer(
-                self._model_config, layer_id,
-                attention_tp_size=self._replica_config.attn_tensor_parallel_size,
-                moe_tp_size=self._replica_config.moe_tensor_parallel_size,
-                expert_parallel_size=self._replica_config.moe_expert_parallel_size,
-            )
+            metadata = step5_layer_metadata(self, layer_id)
         self._step5_layer_metadata = metadata
         self._step5_ffn_costs = {}
         try:
@@ -114,27 +107,11 @@ class SklearnMoEExecutionTimePredictor(
         metadata = self._step5_layer_metadata
         if metadata is None:
             raise ValueError("Step measured FFN coverage requires an explicit physical layer context")
-        binding = bind_operator_query(model_name)
-        projections = [p for p in metadata.projections if p.operator_name == model_name]
-        precision = metadata.model_precision
-        if projections:
-            precisions = {p.weight_precision for p in projections}
-            if len(precisions) != 1:
-                raise ValueError(f"Step {model_name} has heterogeneous source precision")
-            precision = precisions.pop()
-        contract = None
-        if binding.family_id in {"ffn", "share_expert", "moe"}:
-            contract = self._get_model_architecture_profile().resolve_layer_contract(
-                self._model_config, layer_id=metadata.attention_spec.global_layer_id, operator_name=model_name,
-                attention_tp_size=self._replica_config.attn_tensor_parallel_size,
-                ffn_tp_size=self._get_ffn_tp_key_for_linear_op(),
-                moe_tp_size=self._replica_config.moe_tensor_parallel_size,
-                expert_parallel_size=self._replica_config.moe_expert_parallel_size,
-            )
+        precision, identity = step5_operator_binding(self, metadata, model_name)
         family = self._measurement_family_name(self._active_measurement_type)
         model = self._model_manager._get_family_model(
             family, model_name, precision_key=precision.name,
-            requested_identity=None if contract is None else _serialize_selected_layer_cache_identity(contract),
+            requested_identity=identity,
         )
         if model is None:
             raise ValueError(f"Step measured {model_name} {precision.name} layer {metadata.attention_spec.global_layer_id} coverage is unavailable")

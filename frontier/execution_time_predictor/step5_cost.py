@@ -1,4 +1,4 @@
-"""Step attention cost lookup using the shared measured-model contract."""
+"""Step fixed layer bindings and cost queries through the measured-model contract."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from dataclasses import asdict
 import json
 
 from frontier.attention.step5 import Step5AttentionWorkload, describe_step5_layer
+from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.step5_inputs import (
     MRV2_DUMMY_ROW_IDENTITY, step5_input_kind, step5_workload_kind, step5_workload_label,
 )
@@ -17,7 +18,54 @@ from frontier.execution_time_predictor.step5 import (
     step5_measurement_type,
     step5_row_features,
 )
+from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
+from frontier.operators.binding import bind_operator_query
 from frontier.types import ClusterType, MeasurementType
+
+
+def step5_layer_metadata(predictor, layer_id):
+    """Reuse source geometry for a predictor's fixed model and parallel groups."""
+    bind_layer_attention(predictor._model_config, layer_id)
+    metadata_by_layer = getattr(predictor, "_step5_metadata_by_layer", None)
+    if metadata_by_layer is None:
+        metadata_by_layer = predictor._step5_metadata_by_layer = {}
+    if layer_id not in metadata_by_layer:
+        metadata_by_layer[layer_id] = describe_step5_layer(
+            predictor._model_config, layer_id,
+            attention_tp_size=predictor._replica_config.attn_tensor_parallel_size,
+            moe_tp_size=predictor._replica_config.moe_tensor_parallel_size,
+            expert_parallel_size=predictor._replica_config.moe_expert_parallel_size,
+        )
+    return metadata_by_layer[layer_id]
+
+
+def step5_operator_binding(predictor, metadata, model_name):
+    """Reuse fixed precision and contract identity, never a selected estimator."""
+    bindings = getattr(predictor, "_step5_operator_bindings", None)
+    if bindings is None:
+        bindings = predictor._step5_operator_bindings = {}
+    key = (metadata.attention_spec.global_layer_id, model_name)
+    if key not in bindings:
+        binding = bind_operator_query(model_name)
+        projections = [p for p in metadata.projections if p.operator_name == model_name]
+        precision = metadata.model_precision
+        if projections:
+            precisions = {p.weight_precision for p in projections}
+            if len(precisions) != 1:
+                raise ValueError(f"Step {model_name} has heterogeneous source precision")
+            precision = precisions.pop()
+        identity = None
+        if binding.family_id in {"ffn", "share_expert", "moe"}:
+            contract = predictor._get_model_architecture_profile().resolve_layer_contract(
+                predictor._model_config, layer_id=key[0], operator_name=model_name,
+                attention_tp_size=predictor._replica_config.attn_tensor_parallel_size,
+                ffn_tp_size=predictor._get_ffn_tp_key_for_linear_op(),
+                moe_tp_size=predictor._replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=predictor._replica_config.moe_expert_parallel_size,
+            )
+            identity = _serialize_selected_layer_cache_identity(contract)
+        bindings[key] = (precision, identity)
+    return bindings[key]
 
 
 def step5_measurements_for_role(role, decode_graph_mode):
@@ -126,12 +174,7 @@ def step5_batch_workload(predictor, batch):
 def step5_batch_features(predictor, batch, layer_id):
     """Bind actual batch extents to the same source geometry used by the producer."""
     config = predictor._model_config
-    metadata = describe_step5_layer(
-        config, layer_id,
-        attention_tp_size=predictor._replica_config.attn_tensor_parallel_size,
-        moe_tp_size=predictor._replica_config.moe_tensor_parallel_size,
-        expert_parallel_size=predictor._replica_config.moe_expert_parallel_size,
-    )
+    metadata = step5_layer_metadata(predictor, layer_id)
     workload = predictor._step5_attention_workload(batch)
     dummy_descriptor = getattr(batch, "mrv2_dummy_descriptor", None)
     kind = step5_input_kind(has_attention_metadata=workload.has_attention_metadata,
