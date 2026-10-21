@@ -24,6 +24,9 @@ proxy: P returns the native ``kv_transfer_params`` passed unchanged to D
 under the same client header. These HTTP records do not prove native READ
 completion or device readiness. An opt-in streaming client still prefills nonstreaming;
 the proxy relays D's SSE bytes immediately, without parsing or rewriting them.
+Step receipts also include bounded public aiohttp connection-selection events and
+redacted exception frames on the proxy monotonic clock. These do not identify a
+TCP socket or prove the cause of a native disconnect; capture errors are soft.
 """
 
 from __future__ import annotations
@@ -35,6 +38,7 @@ import logging
 import math
 import sys
 import time
+from functools import wraps
 from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parent),
@@ -42,6 +46,137 @@ sys.path[:0] = [str(Path(__file__).resolve().parent),
 from vllm_replay import RUNTIME_ADAPTERS, uses_nixl_pull  # noqa: E402
 
 logger = logging.getLogger("pd_proxy")
+
+HTTP_TRACE_EVENT_LIMIT = 16
+HTTP_EXCEPTION_LIMIT = 4
+HTTP_TRACEBACK_FRAME_LIMIT = 12
+HTTP_SYMBOL_LIMIT = 128
+HTTP_CAPTURE_ERROR_LIMIT = 4
+
+
+def _http_capture_soft_gate(method):
+    """Auxiliary evidence cannot change the HTTP operation it describes."""
+    @wraps(method)
+    def isolated(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as exc:
+            self.unverified(method.__name__, exc)
+    return isolated
+
+
+def _http_exception_chain(exc):
+    chain, seen = [], set()
+    while exc is not None and id(exc) not in seen and len(chain) < HTTP_EXCEPTION_LIMIT:
+        seen.add(id(exc))
+        frames, tb = [], exc.__traceback__
+        while tb is not None and len(frames) < HTTP_TRACEBACK_FRAME_LIMIT:
+            frames.append({"module": tb.tb_frame.f_globals.get("__name__", "<unknown>")[:HTTP_SYMBOL_LIMIT],
+                           "function": tb.tb_frame.f_code.co_name[:HTTP_SYMBOL_LIMIT], "line": tb.tb_lineno})
+            tb = tb.tb_next
+        cause = exc.__cause__
+        context = exc.__context__ if not exc.__suppress_context__ else None
+        chain.append({"type": type(exc).__name__[:HTTP_SYMBOL_LIMIT], "message": "[REDACTED]",
+                      "frames": frames, "frames_truncated": tb is not None,
+                      "next": "cause" if cause is not None else "context" if context is not None else None})
+        exc = cause if cause is not None else context
+    return chain, exc is not None
+
+
+class HttpCapture:
+    """Step-local public trace evidence; no request data or TCP socket claims."""
+
+    def __init__(self, record):
+        self.data = {"schema": "step_http_capture_v1", "status": "RECORDED", "clock": "proxy host time.monotonic",
+                     "attempts": {}}
+        self.phase, self.boundary = "request", "body_json"
+        record["http_capture"] = self.data
+
+    def unverified(self, operation, exc):
+        # Reporting a broken auxiliary recorder must itself remain non-blocking.
+        notify = False
+        try:
+            notify = self.data.get("status") != "UNVERIFIED"
+            errors = self.data.setdefault("capture_errors", [])
+            if len(errors) < HTTP_CAPTURE_ERROR_LIMIT:
+                errors.append({"operation": operation, "type": type(exc).__name__[:HTTP_SYMBOL_LIMIT]})
+            self.data["status"] = "UNVERIFIED"
+        except Exception:
+            pass
+        try:
+            if notify:
+                logger.warning("Step HTTP capture UNVERIFIED in %s (%s); HTTP outcome remains authoritative",
+                               operation, type(exc).__name__[:HTTP_SYMBOL_LIMIT])
+        except Exception:
+            pass
+
+    @_http_capture_soft_gate
+    def at(self, phase, boundary):
+        self.phase, self.boundary = phase, boundary
+
+    @_http_capture_soft_gate
+    def submit(self, phase):
+        self.phase, self.boundary = phase, "response_headers"
+        self.data["attempts"][phase] = {"submit_monotonic": time.monotonic(), "connection": "unknown",
+            "socket_identity": "UNAVAILABLE_PUBLIC_TRACE", "events": [], "events_truncated": False}
+
+    @_http_capture_soft_gate
+    def headers(self, phase):
+        self.boundary = "response_body"
+        self.data["attempts"][phase]["response_headers_monotonic"] = time.monotonic()
+
+    @_http_capture_soft_gate
+    def trace(self, phase, event):
+        attempt = self.data["attempts"][phase]
+        if event == "connection_create_start":
+            attempt["connection"] = "fresh_connecting"
+        elif event == "connection_create_end":
+            attempt["connection"] = "fresh"
+        elif event == "connection_reuseconn":
+            attempt["connection"] = "reused"
+        if len(attempt["events"]) < HTTP_TRACE_EVENT_LIMIT:
+            attempt["events"].append({"event": event, "monotonic": time.monotonic()})
+        else:
+            attempt["events_truncated"] = True
+
+    @_http_capture_soft_gate
+    def failure(self, exc):
+        timestamp = time.monotonic()
+        chain, truncated = _http_exception_chain(exc)
+        self.data["failure"] = {"phase": self.phase, "boundary": self.boundary, "monotonic": timestamp,
+                                "exceptions": chain, "chain_truncated": truncated}
+
+
+def _http_capture(record):
+    try:
+        return HttpCapture(record)
+    except Exception as exc:
+        record["http_capture"] = {"schema": "step_http_capture_v1", "status": "UNVERIFIED",
+            "capture_errors": [{"operation": "initialization", "type": type(exc).__name__[:HTTP_SYMBOL_LIMIT]}]}
+        try:
+            logger.warning("Step HTTP capture UNVERIFIED in initialization (%s); HTTP outcome remains authoritative",
+                           type(exc).__name__[:HTTP_SYMBOL_LIMIT])
+        except Exception:
+            pass
+        return None
+
+
+def _http_trace_config():
+    from aiohttp import TraceConfig
+
+    config = TraceConfig()
+    for event in ("request_start", "connection_create_start", "connection_create_end",
+                  "connection_reuseconn", "request_headers_sent", "request_end", "request_exception"):
+        async def callback(session, context, params, event=event):
+            capture = None
+            try:
+                capture, phase = context.trace_request_ctx
+                capture.trace(phase, event)
+            except Exception as exc:
+                if capture is not None:
+                    capture.unverified("trace_callback", exc)
+        getattr(config, "on_" + event).append(callback)
+    return config
 
 
 def proxied_request_id(client_request_id: str, prefill_kv_address: str, decode_kv_address: str) -> str:
@@ -65,23 +200,37 @@ def proxied_request_id(client_request_id: str, prefill_kv_address: str, decode_k
 def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
               decode_kv_address: str, log_path: Path, *, vllm_version: str = "0.10.2"):
     pull = uses_nixl_pull(vllm_version)
+    capture_http = RUNTIME_ADAPTERS[vllm_version] is RUNTIME_ADAPTERS["step5"]
     from aiohttp import ClientError, ClientSession, ClientTimeout, TCPConnector, web
 
     session = None
+    capture_setup_error = None
     log = log_path.open("a", buffering=1)
 
     async def client_session(app):
-        nonlocal session
-        session = ClientSession(timeout=ClientTimeout(total=None), connector=TCPConnector(limit=0))
+        nonlocal session, capture_setup_error
+        trace_configs = []
+        if capture_http:
+            try:
+                trace_configs = [_http_trace_config()]
+            except Exception as exc:
+                capture_setup_error = exc
+        session = ClientSession(timeout=ClientTimeout(total=None), connector=TCPConnector(limit=0),
+                                trace_configs=trace_configs)
         yield
         await session.close()
         log.close()
 
-    async def forward(url: str, body: bytes, request_id: str) -> tuple[int, bytes, str]:
+    async def forward(url: str, body: bytes, request_id: str, capture, phase) -> tuple[int, bytes, str]:
+        if capture is not None:
+            capture.submit(phase)
         async with session.post(
             url, data=body,
             headers={"Content-Type": "application/json", "X-Request-Id": request_id},
+            trace_request_ctx=(capture, phase) if capture is not None else None,
         ) as response:
+            if capture is not None:
+                capture.headers(phase)
             return response.status, await response.read(), response.content_type
 
     async def completions(request):
@@ -97,6 +246,9 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
         }
         body = await request.read()
         streamed = None
+        capture = _http_capture(record) if capture_http else None
+        if capture is not None and capture_setup_error is not None:
+            capture.unverified("trace_setup", capture_setup_error)
         try:
             original = json.loads(body)
             if pull:
@@ -121,7 +273,8 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     prefill["stream"] = False
                     prefill.pop("stream_options", None)
                 prefill_body = json.dumps(prefill).encode()
-            status, payload, _ = await forward(f"{prefill_url}/v1/completions", prefill_body, request_id)
+            status, payload, _ = await forward(f"{prefill_url}/v1/completions", prefill_body, request_id,
+                                               capture, "prefill")
             record.update(prefill_status=status, prefill_response_time=time.time(),
                           prefill_response_monotonic=time.monotonic())
             if status != 200:
@@ -132,6 +285,8 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     status=502,
                 )
             if pull:
+                if capture is not None:
+                    capture.at("handoff", "metadata_validation")
                 response = json.loads(payload)
                 params = response.get("kv_transfer_params") if type(response) is dict else None
                 if (type(params) is not dict or params.get("transfer_mode") != "pull"
@@ -151,6 +306,8 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                 record["kv_transfer_params"] = params
             cancel_delay = request.headers.get("X-Step5-Cancel-Decode-After-S")
             if cancel_delay is not None:
+                if capture is not None:
+                    capture.at("decode", "cancellation_control")
                 # Diagnostic control only: cancel this proxy's native D client
                 # while reading, without fencing or delaying a native READ.
                 delay = float(cancel_delay)
@@ -160,11 +317,13 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                 try:
                     async with asyncio.timeout(delay):
                         status, payload, content_type = await forward(
-                            f"{decode_url}/v1/completions", body, request_id)
+                            f"{decode_url}/v1/completions", body, request_id, capture, "decode")
                     record.update(decode_status=status, decode_response_monotonic=time.monotonic(),
                                   decode_response_time=time.time(), decode_cancelled=False)
                     return web.Response(body=payload, status=status, content_type=content_type)
-                except TimeoutError:
+                except TimeoutError as exc:
+                    if capture is not None:
+                        capture.failure(exc)
                     record.update(decode_cancelled=True, decode_cancel_monotonic=time.monotonic(),
                                   cancel_boundary="native_decode_client_deadline")
                     event = {"step5_decode_cancelled": True}
@@ -172,33 +331,55 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                                         content_type="text/event-stream")
             if original.get("stream"):
                 record["stream"] = True
+                if capture is not None:
+                    capture.submit("decode")
                 async with session.post(
                     f"{decode_url}/v1/completions", data=body,
                     headers={"Content-Type": "application/json", "X-Request-Id": request_id},
+                    trace_request_ctx=(capture, "decode") if capture is not None else None,
                 ) as response:
+                    if capture is not None:
+                        capture.headers("decode")
                     record["decode_status"] = response.status
                     streamed = web.StreamResponse(status=response.status, headers={
                         "Content-Type": response.headers["Content-Type"]})
+                    if capture is not None:
+                        capture.at("client", "response_headers")
                     await streamed.prepare(request)
+                    if capture is not None:
+                        capture.at("decode", "response_body")
                     async for chunk in response.content.iter_any():
+                        if capture is not None:
+                            capture.at("client", "stream_write")
                         await streamed.write(chunk)
+                        if capture is not None:
+                            capture.at("decode", "response_body")
                     record.update(decode_response_time=time.time(),
                                   decode_response_monotonic=time.monotonic())
+                    if capture is not None:
+                        capture.at("client", "stream_eof")
                     await streamed.write_eof()
                     return streamed
-            status, payload, content_type = await forward(f"{decode_url}/v1/completions", body, request_id)
+            status, payload, content_type = await forward(f"{decode_url}/v1/completions", body, request_id,
+                                                          capture, "decode")
             record.update(decode_status=status, decode_response_time=time.time(),
                           decode_response_monotonic=time.monotonic())
             if status != 200:
                 logger.error("decode of %s returned %d", client_request_id, status)
             return web.Response(body=payload, status=status, content_type=content_type)
         except (ClientError, ValueError) as exc:
+            if capture is not None:
+                capture.failure(exc)
             record["error"] = f"{type(exc).__name__}: {exc}"
             logger.error("request %s failed: %s", client_request_id, record["error"])
             if streamed is not None and streamed.prepared:
                 streamed.force_close()
                 raise
             return web.json_response({"error": record["error"]}, status=502)
+        except BaseException as exc:
+            if capture is not None:
+                capture.failure(exc)
+            raise
         finally:
             log.write(json.dumps(record) + "\n")
 
