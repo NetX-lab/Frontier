@@ -10,9 +10,16 @@ import sys
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
-from tests.integration.step5_pd import build_stage, canonical_replay, submit_native_pd  # noqa: E402
+from tests.integration.step5_pd import build_stage, canonical_replay, formal_release, submit_native_pd  # noqa: E402
 
 CASES = json.loads(Path(__file__).with_name("priority_cases.json").read_text())
+RELEASE_FILES = (
+    "tests/comparison/e2e_gate/admission.py", "tests/comparison/e2e_gate/gate.py",
+    "tests/comparison/e2e_gate/normalize.py", "tests/comparison/e2e_gate/dp_pp_modes.py",
+    "tests/comparison/e2e_gate/cases/step5_priority.json",
+    "tests/comparison/calibration/client_metrics.py", "tests/comparison/calibration/e2e_metrics_gap.py",
+    "tests/integration/step5_pd/formal_release.py",
+)
 
 
 def case_definition(definition: dict, case_id: str) -> dict:
@@ -56,6 +63,12 @@ def verify(stage: Path) -> dict:
     expected_engine = json.loads((stage / "engine.json").read_text())
     if expected_engine != config["engine"]:
         raise ValueError("Staged engine differs from worker configuration")
+    plan = json.loads((stage / "trace/replay_plan.json").read_text())
+    definition = json.loads((stage / "run_definition.json").read_text())
+    if (config.get("canonical_replay") != definition["canonical_replay"]
+            or plan["kind"] != config["canonical_replay"]["kind"]
+            or plan["dp_size"] != expected_engine["data_parallel_size"]):
+        raise ValueError("Staged replay kind/topology differs from the frozen run definition")
     case = CASES[config["case_id"]]
     if any(config.get(key) != case[key] for key in (
             "gpu_type", "charged_group", "replica", "gpu", "preemptible")):
@@ -87,11 +100,13 @@ def verify(stage: Path) -> dict:
         command = row["server_command"]
         if "--speculative-config" in command or any("PD_STATE" in key for key in row["server_env_set"]):
             raise ValueError("Speculation or R2 observation enabled")
+    release = formal_release.validate(config)
     return {"task_id": "D21-RUNS", "case_id": config["case_id"], "offline_verified": True,
             "stage": str(stage), "source": config["source"], "files_verified": len(config["tool_hashes"]),
             "manifest_sha256": canonical_replay.MANIFEST_SHA256,
             "config_sha256": build_stage.sha256(stage / "config.json"),
-            "runtime_qualification": "UNVERIFIED", "reference_admission": "UNVERIFIED",
+             "runtime_qualification": "UNVERIFIED", "reference_admission": "UNVERIFIED",
+             "formal_release": release,
             "resources": submit_native_pd.resource_arguments(config),
             "worker_command": submit_native_pd.job_command(config, stage / "config.json")}
 
@@ -130,6 +145,18 @@ def build(args) -> dict:
         "graph_metrics": "MRv2 source path verified; FULL rows plus healthy completion required, with explicit lane/rank attribution",
         "installed_identity": "Worker must confirm these exported bytes in the locked image before serving"}, indent=1))
     (stage / "run_definition.json").write_text(json.dumps(definition, indent=1))
+    for relative in RELEASE_FILES:
+        target = stage / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(REPO / relative, target)
+    if args.formal_inputs:
+        config["formal_inputs"] = json.loads(args.formal_inputs.read_text())
+        if "accuracy" in config["formal_inputs"]:
+            accuracy = config["formal_inputs"]["accuracy"]
+            [truth] = (Path(accuracy["frontier_run_directory"]) / "metrics").rglob("metrics_ground_truth.jsonl")
+            accuracy["frontier_artifacts"] = [formal_release.pin(path) for path in (truth, truth.with_name("config.json"))]
+        (stage / "formal_inputs.json").write_text(json.dumps(config["formal_inputs"], indent=1))
+    formal_release.validate(config)
     for name in ("build_stage.py", "canonical_stage.py", "submit_native_pd.py", "priority_cases.json"):
         shutil.copy2(Path(__file__).with_name(name), stage / "tests/integration/step5_pd" / name)
     shutil.copy2(args.launcher_scope, stage / "launcher_scope.py")
@@ -157,6 +184,7 @@ def main(argv=None):
         create.add_argument("--" + name, type=Path, required=True)
     create.add_argument("--job-tag", required=True)
     create.add_argument("--case", choices=tuple(CASES), required=True)
+    create.add_argument("--formal-inputs", type=Path, help="Explicit readiness and (for64) same-hardware32 accuracy artifact inputs")
     create.add_argument("--kind", choices=("qualification", "canonical"), required=True)
     args = parser.parse_args(argv)
     print(json.dumps(verify(args.stage_dir.resolve()) if args.action == "verify" else build(args), indent=1))

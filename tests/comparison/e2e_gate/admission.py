@@ -280,7 +280,19 @@ def client_reference(cell: dict, case: dict, run_dir: Path, run_check: Path | No
         return evidence
     config = json.loads(artifacts[required[0].resolve()])
     identity = expected_runtime | {"source_hashes": config.get("expected_source_hashes"),
-                                   "harness_commit": config.get("source", {}).get("commit")}
+                                    "harness_commit": config.get("source", {}).get("commit")}
+    topology = case.get("native_topology")
+    if topology is not None:
+        identity["topology"] = topology
+        engine = config.get("engine", {})
+        observed = {key: config.get(key) for key in ("gpu_type", "replica", "gpu", "data_parallel_size_local")}
+        observed.update({key: engine.get(key) for key in (
+            "tensor_parallel_size", "data_parallel_size", "pipeline_parallel_size")})
+        observed["expert_parallel_size"] = (engine.get("tensor_parallel_size", 0)
+                                            * engine.get("data_parallel_size", 0)
+                                            if engine.get("enable_expert_parallel") else 1)
+        if observed != topology or config.get("case_id", cell["case_id"]) != cell["case_id"]:
+            reasons.append("Step hardware/topology declaration disagrees with case")
     if (config.get("mode") != "clean" or config.get("image") != expected_runtime.get("image")
             or config.get("engine", {}).get("native_reference", {}).get("image") != config.get("image")
             or config.get("engine", {}).get("vllm_version") != expected_runtime.get("adapter")
@@ -294,6 +306,14 @@ def client_reference(cell: dict, case: dict, run_dir: Path, run_check: Path | No
         node = json.loads(artifacts[path.resolve()])
         plan = node.get("plan", {})
         lanes.append((plan.get("role"), plan.get("lane")))
+        if topology is not None:
+            devices = [line for line in node.get("nvidia_smi", "").splitlines() if line.startswith("GPU ")]
+            node_engine = plan.get("engine", {})
+            if (len(devices) != topology["gpu"] or any(topology["gpu_type"] not in line for line in devices)
+                    or any(node_engine.get(key) != topology[key] for key in (
+                        "tensor_parallel_size", "data_parallel_size", "pipeline_parallel_size"))
+                    or node_engine.get("enable_expert_parallel") is not True):
+                reasons.append(f"Step actual GPU/role topology mismatch: {path}")
         if (node.get("stage") != "finished" or node.get("workload_returncode") != 0
                 or node.get("observation_errors") or node.get("exception")
                 or node.get("versions", {}).get("vllm") != expected_runtime.get("vllm_version")
@@ -307,6 +327,30 @@ def client_reference(cell: dict, case: dict, run_dir: Path, run_check: Path | No
     if not reasons:
         evidence["status"] = "PASS"
     return evidence
+
+
+def step_frontier_runtime(case: dict, run_dir: Path) -> dict:
+    """Bind a Step case to its original resolved Frontier P/D shape, not a name switch."""
+    [truth] = (run_dir / "metrics").rglob("metrics_ground_truth.jsonl")
+    path = truth.with_name("config.json")
+    config = json.loads(path.read_text())
+    topology = case["native_topology"]
+    cluster = config.get("cluster_config", {})
+    if config.get("sys_arch") != case["architecture"]:
+        raise ValueError("Step Frontier architecture does not match the case")
+    expected = dict(device=topology["gpu_type"].lower(),
+                    model_name=case["frontier_model_name"],
+                    attn_tensor_parallel_size=topology["tensor_parallel_size"],
+                    attn_dp=topology["data_parallel_size"],
+                    moe_expert_parallel_size=topology["expert_parallel_size"],
+                    moe_tensor_parallel_size=1, num_pipeline_stages=topology["pipeline_parallel_size"])
+    for role in ("prefill", "decode"):
+        replica = cluster.get(f"{role}_replica_config", {})
+        if (cluster.get(f"{role}_cluster_num_replicas") != 1
+                or any(replica.get(key) != value for key, value in expected.items())):
+            raise ValueError(f"Step Frontier {role} hardware/model/topology does not match the case")
+    return dict(config_path=str(path.resolve()), sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                topology=topology, model_name=case["frontier_model_name"])
 
 
 RULES = {"client_e2e": client_e2e, "send_span": send_span,

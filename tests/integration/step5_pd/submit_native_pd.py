@@ -48,6 +48,12 @@ def main() -> int:
     args = parser.parse_args()
     config_path = args.config.resolve()
     config = json.loads(config_path.read_text())
+    if "case_id" in config:
+        # Preserve the stage's exact tools and rerun formal prerequisites before auth/SDK.
+        import sys
+        sys.path.insert(0, str(config_path.parent))
+        from tests.integration.step5_pd.canonical_stage import verify
+        verify(config_path.parent)
     if args.dry_run:
         print(json.dumps({"resource_constructor_arguments": resource_arguments(config),
                           "spawn_arguments": {"command": job_command(config, config_path),

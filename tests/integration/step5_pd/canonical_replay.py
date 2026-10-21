@@ -198,6 +198,7 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
                                   settings["idle_poll_s"], diagnostic_only=True)
     except Exception as error:
         idle = {"verified": False, "diagnostic_only": True, "error": f"{type(error).__name__}: {error}"}
+    idle["diagnostic_only"] = True
     result["startup_observation"] = idle
     # These are expected completions of this newly started run, not observed gauges.
     completed = {role: 0 for role in ROLES}

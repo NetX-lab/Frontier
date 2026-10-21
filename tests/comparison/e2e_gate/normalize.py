@@ -28,7 +28,7 @@ import pandas as pd
 from tests.comparison.calibration.e2e_metrics_gap import VLLM_ROWS, formal_sample, frontier_rows
 from tests.comparison.calibration.pd_metrics import by_request_id, engine_request_id, read_jsonl
 from tests.comparison.e2e_gate import dp_pp_modes
-from tests.comparison.e2e_gate.admission import client_reference
+from tests.comparison.e2e_gate.admission import client_reference, step_frontier_runtime
 from tests.comparison.calibration.client_metrics import frontier_client_rows, native_client_rows
 
 
@@ -72,7 +72,7 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
     window_s = cell.get("dp_pp_gate", {}).get("mode_window_s")
     output_dir.mkdir(parents=True, exist_ok=False)
     sides, written = {}, {}
-    references, reference_evidence = {}, {}
+    references, reference_evidence, frontier_runtime = {}, {}, {}
     for run, run_dir in vllm_runs.items():
         if cell["gate"] == "client":
             repeats = native_client_rows(run_dir, workload, request_ids, case.get("native_client_source", "vllm028"))
@@ -95,6 +95,8 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
         written[f"vllm/{run}"] = frame
     for label, run_dir in frontier_runs.items():
         if cell["gate"] == "client":
+            if case.get("native_client_source") == "step5" and "native_topology" in case:
+                frontier_runtime[label] = step_frontier_runtime(case, run_dir)
             rows = frontier_client_rows(run_dir, trace_rows)
         else:
             [metrics_csv] = (run_dir / "metrics").rglob("request_metrics.csv")
@@ -120,6 +122,8 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
     }
     if cell["gate"] == "client":
         sample.update(client_workload=workload[0], reference_admission=references,
-                      reference_evidence=reference_evidence)
+                       reference_evidence=reference_evidence)
+        if frontier_runtime:
+            sample["frontier_runtime"] = frontier_runtime
     (output_dir / "sample.json").write_text(json.dumps(sample, indent=1) + "\n")
     return sample
