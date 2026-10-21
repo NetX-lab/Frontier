@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record delegated scope and acceptance criteria. |
+| 2026-10-22 | Add blocking reviewer P1 owner-projection follow-up and public-result acceptance. |
 
 ## Original request
 [Original Request]
@@ -21,3 +22,14 @@
 
 ## Evidence limits
 CPU fixtures are structural regression evidence only. Full CLI completion, native accuracy, serving qualification, admission, and the parent's legacy77 matrix are not this task's PASS claims.
+
+## P1 follow-up
+
+[Original Request]
+> D23-ROOT-METRICS follow-up, blocking reviewer P1. Continue same worktree/branch, own same scoped files/task records; no further delegation or platform. Parent independently verified161PASS1deselected and inherited cache-order same failure/error on both trees; merged your source at f237362. FullCLI and new77 have NOT started yet because review arrived. Reviewer: metrics_store.py4370-72 recursively computes stage_execution_time owner ledger with newly moved4498-4506 attention projection. Real measured predictor at sklearn_moe_execution_time_predictor.py1469-1488 applies first input_cast/last final_residual via _replace_operator_time_values; execution_time.py620-622 retains root duration but drops OperatorCost there. Authoritative stage layers still have proofs; non-authoritative stage-only owner does not. New projection thus raises Inclusive attention root step5_layer_e2e requires OperatorCost on reachable first/last paths. Existing positive owner fixture supplies fake-valid proof and misses bug. Required: reproduce through existing public predictor first/last -> Stage ledger before source edits; this is shortest real call-site RED. Owner ledger must project ONLY stage-owned fields, ignoring its irrelevant attention payload; keep strict root validation for authoritative layers. Use smallest existing projection mechanism, no .get/default bypass on actual layers, don't manufacture owner proofs, don't change predictor cost or _replace semantics to mask ownership. Preserve canonical/scalar field naming, once-only boundaries, kernel-gap owner semantics and legacy stage totals. Add first/last public-result regressions through metrics and mixed owner proof absence/invalid-per-layer fields ignored. Rerun affected suite, record P1 cause/RED/GREEN, commit scoped fix and return. Parent has fixed source worktree for CLI staged at f237362; don't touch it. Reviewer session ses_e9f8b6cffffeSZiBfBvZkmXBQa. Exact review text summarized above; parent owns rereview/merge/fullCLI/77. Return compact commits/counts/logs and code delta gain.
+
+Acceptance additions:
+- Public non-dummy predictor first/last results with proof-free stage owners reach the Stage component ledger and actual metrics/trace publication.
+- Only authoritative layer roots require valid OperatorCost; malformed owner layer payload and owner layer kernel gap do not affect billing or acceptance.
+- Existing stage-only canonical/scalar field names and once-only counts remain unchanged; predictor and replacement semantics are untouched.
+- No rereview, full CLI, legacy77, platform, parent worktree edits, or further delegation in this follow-up.

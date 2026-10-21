@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record scoped diagnosis, fix, and verification sequence. |
+| 2026-10-22 | Add reviewer P1 owner correction at the public predictor/metrics seam. |
 
 Dependency: `baseline/repro -> regression tests -> projection fix -> focused checks -> code commit -> records commit`.
 
@@ -14,3 +15,12 @@ Dependency: `baseline/repro -> regression tests -> projection fix -> focused che
 5. Run a local check-progress self-check, inspect the diff/scope, commit verified source/tests/exception justification, then final task records. Return exact commits/files/logs and limitations.
 
 No parallel agent work is authorized. Public source reads and focused CPU tests are independent where useful.
+
+## P1 follow-up
+
+Dependency: `public predictor RED -> owner-only ledger projection -> affected GREEN -> code commit -> records / parent return`.
+
+1. Reproduce first/last public measured predictor results reaching Stage ledger before production changes; retain exact root proof error.
+2. Reuse existing scalar/canonical stage-owned projection, removing owner recursion into layer attention/FFN projections. Keep strict authoritative root validation, ledger names, once-only fields, and current gap ownership; do not change predictor/replacement semantics.
+3. Verify public first/last metrics/trace publication, dummy-first ledger, owner missing/invalid/overlapping layer payload ignored, authoritative missing proof rejected, and adjacent stage/legacy checks.
+4. Update the existing module-size exception, self-check, commit scoped code/tests, then P1 evidence/summary/progress. Return only follow-up commits and limits; parent owns rereview/merge/full CLI/new77.
