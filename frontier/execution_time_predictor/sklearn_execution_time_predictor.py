@@ -4004,6 +4004,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         ]:
             return predictions
 
+        if resolve_runtime_attention_family(self._model_config).family_id == STEP5_ATTENTION_FAMILY.family_id:
+            from frontier.execution_time_predictor.step5_cost import step5_predictions
+
+            return step5_predictions(self._models, self._active_measurement_type)
+
         if self._is_mla_attention_family():
             feature_columns = get_enabled_shared_predictor_feature_columns(
                 LATENT_MLA_ATTENTION_FAMILY
@@ -7496,8 +7501,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             return self._predict_attention_layer_time(batch, layer_id, cluster_type)
         with self._counting_kernels() as counts:
             attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
-        attention_time.kernel_count = math.fsum(counts.operators.values())
-        self._record_attention_kernels(attention_time.kernel_count)
+        if not attention_time.operator_costs:
+            attention_time.kernel_count = math.fsum(counts.operators.values())
+        self._record_attention_kernels(attention_time.kernel_count, attention_time.measurement_type)
         return attention_time
 
     def _predict_dsa_dummy_attention_time(self, layer_id: int) -> AttentionTime:
@@ -7703,6 +7709,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 layer_id=layer_id,
                 cluster_type=cluster_type,
             )
+
+        if attention_family.family_id == STEP5_ATTENTION_FAMILY.family_id:
+            from frontier.execution_time_predictor.step5_cost import predict_step5_attention_time
+
+            timing = predict_step5_attention_time(self, batch, layer_id)
+            timing.attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
+            return timing
 
         logger.debug(
             f"Predicting attention layer time for layer_id={layer_id}, cluster_type={cluster_type}"

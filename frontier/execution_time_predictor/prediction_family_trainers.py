@@ -643,6 +643,19 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
 
+        if resolve_runtime_attention_family(model_config).family_id == "step5_attention":
+            from frontier.execution_time_predictor.step5 import train_step5_attention_models
+
+            attention_df = self._load_attention_df(
+                attn_file, replica_config, replica_scheduler_config, cluster_type=cluster_type,
+            )
+            training_context["input_file"] = attn_file
+            models = train_step5_attention_models(
+                self, attention_df, execution_time_predictor_config, training_context,
+            )
+            trained_model_signatures.add(attention_signature)
+            return models
+
         # ========== Part 1: Linear operations from linear_op.csv ==========
         # These include: input_layernorm, attn_pre_proj, attn_post_proj, attn_rope
         if not os.path.exists(linear_ops_file):
@@ -1611,6 +1624,11 @@ class PredictionFamilyTrainers(KernelCountTraining):
         )
         cached_model = self._load_model_from_cache(model_name, model_hash)
         if cached_model is not None:
+            if training_context and "measurement_identity" in training_context:
+                self._validate_cached_measurement_identity(
+                    model_name=model_name, model=cached_model,
+                    requested_identity=training_context["measurement_identity"],
+                )
             if layer_contract is not None:
                 requested_identity = _serialize_selected_layer_cache_identity(
                     layer_contract
@@ -1722,6 +1740,13 @@ class PredictionFamilyTrainers(KernelCountTraining):
         setattr(best_estimator, "_frontier_model_hash", model_hash)
         if layer_contract is not None:
             self._model_contract_identity(best_estimator, layer_contract)
+
+        if training_context and "measurement_identity" in training_context:
+            self._set_measurement_identity(best_estimator, training_context["measurement_identity"])
+        if training_context and training_context.get("step5_training"):
+            from frontier.execution_time_predictor.step5 import set_step5_model_coverage
+
+            set_step5_model_coverage(best_estimator, df)
 
         if persist_exact_lookup:
             setattr(
