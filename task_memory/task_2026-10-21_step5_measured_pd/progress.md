@@ -9,8 +9,8 @@
 - completed: R2 P1 regression closed at `cb09a27`, 636 affected tests passed and independent follow-up review passed. Old worktree is clean at `b6ba7e5`; no further R2 work is authorized by this assignment.
 - completed: inspected primary D20 requirements/plan/ticket17, repository development rules, existing transfer events, transfer predictor and Step payload resolver. The current measured guard fails before ownership changes. Existing transfer duration is analytical; the Step payload explicitly assumes whole-prompt/open-tail state.
 - completed / A: focused scheduler/Q10 trace returned as D20-PD-trace, session `ses_ea308e44fffegeocAaodWhIRyC`; primary inspected the exact shared commit. `git merge-base --is-ancestor 6cc09dc HEAD` returned 1: this fix is not already present at base6db2250.
-- completed / B,C,D (CPU consumer): admitted coverage, zero-query remote reservation, READ-to-GPU-ready cost, recomputation and existing owners are connected. Final affected regression:196 passed in139.73s. This does not implement a production profile supplier or qualify native behavior.
-- blocked / E: small actual measured main requires the computation/bundle owner to expose the documented provider hooks with admitted inputs. Native T2 and P-side backoff remain outstanding; current P computation is unchanged whole-prompt execution.
+- completed / B,C,D (CPU consumer): admitted coverage, zero-query remote reservation, READ-to-GPU-ready cost, recomputation and existing owners are connected. Initial code a082c00 passed196; corrections9625984 passed201 in176.62s and independent follow-up review closed both findings. No production supplier/native qualification is claimed.
+- completed / E (stable handoff): exact hooks/configuration and missing inputs are archived. Primary now owns production transfer provider and small integrated main; no waiting for compute or further provider edits. Actual main is NOT_RUN here. T2/P backoff remain outstanding; P still computes the whole prompt.
 
 ## Verified computed-context slice
 
@@ -34,6 +34,14 @@
 - Compatibility: exact diff6db2250..9f58dbe confirms non-grouped GLM allowed non-dummy analytical transport. New coverage is limited to grouped measured transfers via the existing capacity classification; shared GLM's three-output lifecycle is tested.
 - Budget RED reproduced a lingering source claim. Prefix/budget checks now use the existing every-lane preflight before placement/claims, rather than waiting for reservation mutation.
 - green05:79 PASS/4 FAIL from accessing NIXL-only metadata on non-NIXL SimpleNamespace inputs; the access is now confined to NIXL. green06:194 PASS; final green07:196 PASS. The full77-case fidelity matrix was not repeated.
+
+## Independent review corrections
+
+- D20-PD-review, session `ses_ea2b31136ffeNlPFBrPWSNlz0s`, statically found coverage replacement after FIFO retry reservation and missing cleanup on measured completion-validation failure. It did not execute tests.
+- RED:3 completion mutations failed owner assertions in `d20_pd_review_red01` (31.56s total, plus1 fixture error because a capacity wait legitimately emits a ReplicaScheduleEvent). After fixing only that expectation, P1 failed DID NOT RAISE RuntimeError in `d20_pd_review_red02` (9.28s).
+- Fix9625984: freeze first accepted coverage; reject any changed retry coverage before overwriting it and unwind target reservation/selection/P claim. Keep P pending KV. One READ validation boundary performs measured cleanup before rethrowing, without ready/end metrics; legacy errors preserve their path.
+- GREEN:all4 reproduced negatives passed31.87s. Added unchanged-coverage capacity retry completing9 outputs, and actual cluster batch-end publication to assert normal frontend ownership release. Final affected command passed201 in176.62s (`d20_pd_review_green02`).
+- Follow-up review closed both findings with no new actionable blocker in this increment. Reviewer executed no tests;201-test evidence is the main agent's run. Exact independent6cc09dc/9f58dbe artifacts verified the historical comparisons. Supplier/main/T2/native and four10% gates remain open.
 
 ## Route correction
 

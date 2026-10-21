@@ -62,6 +62,20 @@ env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier
 | Legacy behavior |dummy Step and shared non-grouped GLM retain contracts | PASS |
 | Ordinary zero-token calls |rejected; only explicit positive remote frontier admits zero-query grouped planning | PASS |
 
+## Independent review regression
+
+Static review of a082c00 identified two lifecycle gaps. Primary reproduced them before changing source:
+
+```sh
+env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_step5_measured_pd.py::test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners -q -p no:cacheprovider --tb=short --basetemp=/data/ycfeng/tmp/d20_pd_review_red02
+```
+
+**RED:1 failed in9.28s, DID NOT RAISE RuntimeError.** The native FIFO retry had already reserved prefix4080/1020 blocks; changed4096 coverage was wrongly accepted. Three separate completion controls (missing cost, missing coverage, duration tampering) had already failed owner cleanup in red01; its fourth failure was a corrected fixture expectation, not product evidence.
+
+Commit9625984 freezes accepted coverage and cleans measured validation failures without losing P pending KV or publishing ready/end metrics. Four reproduced negatives passed31.87s. An unchanged-coverage capacity retry also completes all9 outputs and releases owners.
+
+Final command is the same8-suite command above with `--basetemp=/data/ycfeng/tmp/d20_pd_review_green02`: **PASS201 in176.62s**. Normal and retry positive cases call the actual cluster batch-end callback and assert the frontend owner table is empty. `git diff --check` passed. Independent follow-up closed both findings without a new actionable blocker; reviewer ran no tests and grants no supplier/native qualification.
+
 ## Unfinished acceptance
 
 Small actual `frontier.main` is **NOT_RUN**: the computation/bundle owner must supply the documented coverage/cost hooks and admitted inputs. Protected computation predictor/loader files are unchanged; missing supplier coverage fails rather than substituting analytical timing.

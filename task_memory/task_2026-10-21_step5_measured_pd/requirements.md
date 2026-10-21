@@ -22,6 +22,8 @@
 
 ## Acceptance
 
+**[Original Request] Stable handoff:** Primary inspected9625984 and201 passes. Close the existing follow-up review, commit records and hand back the source slice without waiting for compute or expanding scope. Primary now owns production transfer inputs/provider and small integrated main; computation owner finishes shared managers/FFN/bundle. Do not edit transfer-provider source further without coordination. Return exact hooks, actual-main configuration needs and open source findings; no GPU or77-case rerun.
+
 1. Supported measured costs are exercised through actual PD events and scheduler lifecycle, including correct first-D query/context shape, token counts, capacity and release balances.
 2. Wrong/missing profile, geometry or lifecycle coverage fails explicitly; no production analytical/dummy substitution or dependence on an R2 claimed PASS.
 3. Labelled CPU contract fixtures test actual owners and meaningful negative controls. Run a small actual `frontier.main` execution when the computation owner's interface is ready.
