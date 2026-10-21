@@ -6,6 +6,7 @@
 | 2026-10-21 | Archived CPU implementation621b198, measured scope evidence,686 affected checks and strict77 IDENTICAL; primary acceptance pending. |
 | 2026-10-21 | Applied H800-priority steering without runtime edits:688 tests,102 scopes/14 negatives; H200 data cannot qualify H800. |
 | 2026-10-21 | Implemented independent-review corrections with CPU red/green,208 affected passes and102 scope/68 typed-negative receipts; review strict pending. |
+| 2026-10-21 | Completed correction282cb11 sole clean strict77 IDENTICAL77/77; only task records changed after measurement. |
 
 ## Overview
 
@@ -92,6 +93,14 @@ negatives plus two exact mixed-layout controls PASS. No broad suite was repeated
 The test report records exact commands, raw artifact paths, native source and the
 one-line B assertion recommendation. B files and timers were not edited.
 
-One source correction and its fresh clean strict77 remain the final frontier;
-the original621b198 strict result is historical, not evidence for this correction.
-Native serving, compiled/TP/phase equivalence and H800 timings remain unqualified.
+Source correction `282cb110800b5641e9ab21d51ecf77dba601e233` is complete. Its sole
+fresh clean strict77 passed:77 executed/compared/IDENTICAL, zero cache/provenance,
+definition, missing-evidence or failure differences. Manifest source_dirty=false,
+clean cache and matched source/driver/harness revision; retained checkout is clean.
+`strict77_receipt.json.review_correction` preserves the selected result and original
+paths; the original621b198 strict result is explicitly historical. Only task
+records change afterward. Diff: `/data/ycfeng/tmp/v4_graph_measured_review.diff`.
+
+All R1–R5 work is complete; primary acceptance, B assertion adaptation,
+integration and timer audits are still root-owned. Native serving,
+compiled/physical-TP/phase equivalence and H800 timings remain unqualified.

@@ -1,5 +1,6 @@
 {
   "status": "PASS",
+  "receipt_scope": "Historical initial implementation fields; current review correction is recorded under review_correction.",
   "command": "PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 621b198 --output-root /data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_20261021/fidelity --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4",
   "invocation_count": 1,
   "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_20261021/fidelity/comparison.json",
@@ -148,5 +149,53 @@
   "post_run_changes": [
     "task documentation and receipts",
     "H800 CPU-only geometry and device-mismatch regression tests"
-  ]
+  ],
+  "review_correction": {
+    "status": "PASS",
+    "implementation_commit": "282cb110800b5641e9ab21d51ecf77dba601e233",
+    "command": "PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 282cb11 --output-root /data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/v4_review_strict77.log 2>&1",
+    "invocation_count_for_this_correction": 1,
+    "baseline": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline",
+    "baseline_revision": "bfa82de80413b5f4b38e4990a80b5108f9521f50",
+    "comparison_path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity/comparison.json",
+    "manifest_path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity/candidate_282cb11/manifest.json",
+    "results_path": "/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity/candidate_282cb11/results.jsonl",
+    "raw_log": "/data/ycfeng/tmp/v4_review_strict77.log",
+    "case_table_size": 77,
+    "executed_case_count": 77,
+    "compared_case_count": 77,
+    "identical_case_count": 77,
+    "complete_comparison": true,
+    "mismatched_cases": [],
+    "cases_with_missing_evidence": [],
+    "cases_missing_from_one_side": [],
+    "cases_with_differing_definitions": [],
+    "cases_not_compared": [],
+    "cases_dropped_as_stale": [],
+    "baseline_failures": [],
+    "candidate_only_failures": [],
+    "predictor_cache_compared": true,
+    "predictor_cache_populated_cleanly": true,
+    "predictor_cache_files_only_in_baseline": [],
+    "predictor_cache_files_only_in_candidate": [],
+    "predictor_cache_findings": [],
+    "provenance_findings": [],
+    "manifest": {
+      "source_revision": "282cb110800b5641e9ab21d51ecf77dba601e233",
+      "git_head": "282cb110800b5641e9ab21d51ecf77dba601e233",
+      "harness_revision": "282cb110800b5641e9ab21d51ecf77dba601e233",
+      "driver_checkout": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-282cb11",
+      "source_dirty": false,
+      "git_dirty_paths": "",
+      "cache_clean_before_run": true,
+      "cache_file_count": 519,
+      "case_filter": null,
+      "python_bin": "/data/ycfeng/envs/frontier-py310/bin/python",
+      "python_version": "3.10.6"
+    },
+    "retained_checkout_clean_after_run": true,
+    "runtime_and_tests_unchanged_after_measurement": true,
+    "post_run_changes": ["task records only"],
+    "qualification": "Legacy artifact/cache fidelity only; not V4 native timing or serving admission."
+  }
 }

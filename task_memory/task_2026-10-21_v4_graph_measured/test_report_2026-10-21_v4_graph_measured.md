@@ -6,6 +6,7 @@
 | 2026-10-21 | Recorded source evidence,686 affected passes, real isolated consumer comparisons, full-unit baseline comparison and clean strict77 IDENTICAL. |
 | 2026-10-21 | Applied H800-priority steering:688 affected passes,102 scopes/14 negatives and hardware-mismatch rejection; runtime code remains621b198. |
 | 2026-10-21 | Review correction:CPU red/green evidence, exact layout, typed coverage causes and padded embedding collective;208 affected passes/102 scopes/68 negatives. |
+| 2026-10-21 | Archived correction282cb11 sole clean strict77 IDENTICAL77/77, zero cache/provenance differences and clean retained checkout. |
 
 ## Scope and result
 
@@ -224,5 +225,32 @@ recommendation, not a claim that merged A+B tests were run here. B stays unedite
 
 ### Review clean strict77
 
-Pending the committed correction. The original621b198 strict receipt above does
-not certify these new source changes; a fresh clean committed run is required.
+The sole invocation for committed correction
+`282cb110800b5641e9ab21d51ecf77dba601e233` completed:
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 282cb11 --output-root /data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/v4_review_strict77.log 2>&1
+```
+
+Expected:77 executed and compared, all identical, no missing evidence,
+definition/failure/cache/provenance differences, clean committed source and cache.
+Actual: **PASS/IDENTICAL77/77**. Executed77, compared77, identical77; zero
+mismatches, missing cases/evidence, differing definitions, unaccounted cases or
+baseline/candidate failures. Predictor cache filenames:0 baseline-only,
+0 candidate-only; clean population and zero findings. Manifest source_dirty=false,
+empty git_dirty_paths, cache_clean_before_run=true, no case filter or stale
+drops, all77 listed executed, and matching source/driver/harness revision282cb11.
+Retained measured checkout is also clean after the run. No second invocation,
+dirty replay, source/test edits or new metric-admission claim followed.
+
+- Durable selected result: `strict77_receipt.json` under `review_correction`;
+  the initial621b198 result is explicitly historical.
+- Original comparison: `/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity/comparison.json`.
+- Manifest/results: `/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_review_20261021/fidelity/candidate_282cb11/{manifest.json,results.jsonl}`.
+- Retained checkout: `/data/ycfeng/Frontier/.worktrees/fidelity-candidate-282cb11`.
+- Review source/test diff: `/data/ycfeng/tmp/v4_graph_measured_review.diff`.
+
+Only task records are archived after correction282cb11. The review repair is
+complete; primary acceptance/integration and all native/measurement limits remain
+outside this CPU source correction. Inner-event reference timing validity was not
+audited or approved by these median-selection checks.
