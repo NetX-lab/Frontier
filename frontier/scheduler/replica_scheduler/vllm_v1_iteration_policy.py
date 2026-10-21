@@ -11,6 +11,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.config import global_vars
+from frontier.config.graph_policy import graph_policy, resolve_capture_size
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
@@ -91,12 +92,10 @@ class IterationSchedulingPolicy:
         )
         is_mixed_batch = not is_uniform_decode_batch
 
-        runtime_mode = "NONE"
-        if config_mode == "full_decode_only":
-            if is_uniform_decode_batch and capture_hit:
-                runtime_mode = "FULL"
-        elif config_mode == "piecewise" and capture_hit:
-            runtime_mode = "PIECEWISE"
+        policy = graph_policy(config_mode)
+        runtime_mode = (
+            policy.uniform_decode if is_uniform_decode_batch else policy.other
+        ) if capture_hit else "NONE"
 
         if runtime_mode == "NONE":
             capture_hit = False
@@ -131,10 +130,7 @@ class IterationSchedulingPolicy:
                 8 * i for i in range(1, max_num_seqs // 8 + 1)
             ]
 
-        for capture_size in sorted(cudagraph_capture_sizes):
-            if total_tokens <= capture_size:
-                return True, int(capture_size)
-        return False, int(total_tokens)
+        return resolve_capture_size(total_tokens, cudagraph_capture_sizes)
 
     def _build_spec_decode_batch_metadata(
         self, batch: Batch

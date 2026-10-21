@@ -932,6 +932,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     def _should_enable_measurement_family(
         self, measurement_type: MeasurementType
     ) -> bool:
+        if getattr(self, "requires_forward_start_agreement", False):
+            from frontier.execution_time_predictor.step5_cost import step5_measurements_for_role
+
+            if measurement_type in step5_measurements_for_role(
+                self._cluster_type, global_vars.get_decode_cuda_graph_mode(),
+            ):
+                return True
         event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:

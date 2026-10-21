@@ -12,15 +12,18 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import Ex
 from frontier.execution_time_predictor.step5_cost import step5_measurements_for_role
 from frontier.types import ClusterType, MeasurementType
 from test_step5_measured_training import _replica, _row, _scheduler, _write
+from test_step5_mrv2_inputs import producer_row
+from frontier.attention.step5_inputs import MRv2DummyDescriptor
+from frontier.profiling.step5.inputs import Step5ProfileInput
 
 
-@pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise"])
+@pytest.mark.parametrize("mode", ["none", "full_decode_only", "piecewise", "full_and_piecewise"])
 @pytest.mark.parametrize("role", [ClusterType.PREFILL, ClusterType.DECODE,
                                   ClusterType.MONOLITHIC, ClusterType.DECODE_FFN])
 def test_attention_policy_is_independent_from_generic_operator_family(mode, role):
     decode = MeasurementType.KERNEL_ONLY if mode == "none" else MeasurementType.CUDA_EVENT
     expected = {
-        ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+        ClusterType.PREFILL: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
         ClusterType.DECODE: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
         ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
         ClusterType.DECODE_FFN: (),
@@ -28,16 +31,22 @@ def test_attention_policy_is_independent_from_generic_operator_family(mode, role
     assert step5_measurements_for_role(role, mode) == expected[role]
 
 
-def test_normal_manager_fits_attention_without_loading_unrelated_event_diagnostics(tmp_path, monkeypatch):
+def test_normal_manager_fits_both_required_p_attention_families(tmp_path, monkeypatch):
     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     path = _write(tmp_path, [_row(model, layer, context=8176) for layer in (0, 3)])
+    event_dir = tmp_path / "event_attention"
+    event_dir.mkdir()
+    event_path = _write(event_dir, [producer_row(model, Step5ProfileInput.from_mrv2_dummy(
+        layer, MRv2DummyDescriptor(1, 1, "full", None, "CPU_P_FULL_DUMMY_FIXTURE", 1),
+        block_table_columns=512), duration=.321, count=17) for layer in (0, 3)],
+        MeasurementType.CUDA_EVENT)
     gap = tmp_path / "kernel_gap.csv"
     pd.DataFrame({"execution_mode": ["eager", "cuda_graph"],
                   "num_tensor_parallel_workers": [8, 8],
                   "kernel_gap_us": [1., 2.]}).to_csv(gap, index=False)
     predictor_config = RandomForrestExecutionTimePredictorConfig(
         enable_dummy_mode=False, skip_cpu_overhead_modeling=True,
-        atten_input_file=str(tmp_path / "unadmitted_event_diagnostics.csv"),
+        atten_input_file=str(event_path),
         atten_kernel_only_input_file=str(path), kernel_gap_input_file=str(gap),
         num_estimators=[2], max_depth=[3], min_samples_split=[2],
         k_fold_cv_splits=2, num_training_job_threads=1,
@@ -75,9 +84,10 @@ def test_normal_manager_fits_attention_without_loading_unrelated_event_diagnosti
     assert calls == [MeasurementType.CUDA_EVENT] * 4
     models = manager.get_models_for_cluster(ClusterType.PREFILL)
     assert set(models["kernel_only"]) == {"step5_layer_e2e", "step5_layer_e2e_kernel_count"}
-    assert models["eager"] == {}
-    assert set(manager._trained_models) == {"kernel_only:step5_layer_e2e",
-                                            "kernel_only:step5_layer_e2e_kernel_count"}
+    assert set(models["eager"]) == {"step5_layer_e2e", "step5_layer_e2e_kernel_count"}
+    assert set(manager._trained_models) == {f"{family}:{name}"
+        for family in ("eager", "kernel_only")
+        for name in ("step5_layer_e2e", "step5_layer_e2e_kernel_count")}
 
 
 def test_normal_manager_fits_and_binds_complete_cpu_fixture_bundle(tmp_path, monkeypatch):
@@ -90,6 +100,12 @@ def test_normal_manager_fits_and_binds_complete_cpu_fixture_bundle(tmp_path, mon
     attention_dir.mkdir()
     compute_dir.mkdir()
     path = _write(attention_dir, [_row(model, layer, context=8176) for layer in range(92)])
+    event_dir = tmp_path / "event_attention"
+    event_dir.mkdir()
+    event_path = _write(event_dir, [producer_row(model, Step5ProfileInput.from_mrv2_dummy(
+        layer, MRv2DummyDescriptor(1, 1, "full", None, "CPU_P_FULL_DUMMY_FIXTURE", 1),
+        block_table_columns=512), duration=.321, count=17) for layer in range(92)],
+        MeasurementType.CUDA_EVENT)
     metadata = ffn_fixture._metadata
     with monkeypatch.context() as context:
         # Construct distinct, labelled event fixtures; no measured rows are relabelled.
@@ -104,7 +120,7 @@ def test_normal_manager_fits_and_binds_complete_cpu_fixture_bundle(tmp_path, mon
     config = RandomForrestExecutionTimePredictorConfig(
         enable_dummy_mode=False, skip_cpu_overhead_modeling=True,
         linear_op_input_file=str(linear), moe_input_file=str(moe),
-        atten_input_file=str(tmp_path / "unadmitted_event_attention.csv"),
+        atten_input_file=str(event_path),
         atten_kernel_only_input_file=str(path), kernel_gap_input_file=str(gap),
         num_estimators=[2], max_depth=[3], min_samples_split=[2],
         k_fold_cv_splits=2, num_training_job_threads=1,

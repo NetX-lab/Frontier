@@ -29,6 +29,10 @@ from frontier.types import ClusterType, MeasurementType
 
 import test_step5_measured_ffn as ffn_fixture
 from test_step5_measured_training import _row, _write
+from test_step5_mrv2_inputs import producer_row
+from frontier.attention.step5_inputs import MRv2DummyDescriptor
+from frontier.profiling.step5.inputs import Step5ProfileInput
+from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
 
 
 def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
@@ -37,7 +41,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
         ("SYS_ARCH", "co-location"), ("SIMULATION_MODE", "offline"),
         ("USE_CUDA_GRAPH", False), ("DECODE_CUDA_GRAPH_MODE", "full_decode_only"),
         ("KV_CONNECTOR", "none"), ("QUANTIZATION_MANAGER", None),
-        ("CUDAGRAPH_CAPTURE_SIZES", None), ("IS_MOE", None),
+        ("CUDAGRAPH_CAPTURE_SIZES", [1, 2]), ("IS_MOE", None),
         ("_IS_MOE_INITIALIZED", False),
     ):
         monkeypatch.setattr(global_vars, name, value)
@@ -61,8 +65,14 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     compute_dir.mkdir()
     attention = _write(attention_dir, [
         _row(replica.model_config, layer, context=8176) for layer in range(92)
-    ] + [_row(replica.model_config, layer, query=1, context=0, phase="decode",
-              has_attention_metadata=False) for layer in range(92)])
+    ])
+    event_dir = tmp_path / "event_attention"
+    event_dir.mkdir()
+    event_attention = _write(event_dir, [producer_row(replica.model_config,
+        Step5ProfileInput.from_mrv2_dummy(layer,
+            MRv2DummyDescriptor(1, 1, "full", None, "CPU_P_FULL_DUMMY_FIXTURE", 1),
+            block_table_columns=512), duration=.321, count=17) for layer in range(92)],
+        MeasurementType.CUDA_EVENT)
     metadata = ffn_fixture._metadata
     with monkeypatch.context() as context:
         # Generate event-labelled CPU fixtures; never relabel existing measurements.
@@ -81,7 +91,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     config = RandomForrestExecutionTimePredictorConfig(
         enable_dummy_mode=False, skip_cpu_overhead_modeling=True,
         linear_op_input_file=str(linear), moe_input_file=str(moe),
-        atten_input_file=str(tmp_path / "unadmitted_event_attention.csv"),
+        atten_input_file=str(event_attention),
         atten_kernel_only_input_file=str(attention), kernel_gap_input_file=str(gap),
         prediction_max_tokens_per_request=32, prediction_max_batch_size=1,
         prediction_max_prefill_chunk_size=32,
@@ -113,6 +123,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
                       num_processed_tokens=8176)
     batch = Batch(replica_id=0, requests=[request], num_tokens=[16], is_moe=True,
                   request_is_decoding=[False], num_context_tokens=[8176])
+    bind_forward_start([batch], group_id=0)
     stage = predictor.predict_stage_execution_time(
         batch, stage_id=0, cluster_type=ClusterType.PREFILL,
         layer_id=1, num_layers=1, include_attention=False, include_moe=False,
@@ -134,6 +145,7 @@ def test_normal_public_constructor_and_dense_ffn_stage(tmp_path, monkeypatch):
     assert last.final_residual_time == last._step5_stage_operator_costs["final_residual"]["duration_ms"]
     assert last.final_residual_time > 0
     dummy = DummyForwardBatch(0, 0, 0)
+    bind_forward_start([dummy], group_id=1)
     idle = predictor.predict_stage_execution_time(
         dummy, 0, ClusterType.PREFILL, layer_id=1, num_layers=1, include_moe=False,
     ).layer_execution_times[0]
