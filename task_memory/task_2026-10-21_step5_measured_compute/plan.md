@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Close CPU steps1–4 and scoped verification; preserve independent-review and native limits. |
 | 2026-10-21 | Prioritize the executable CPU minimum before broader coverage;assign disjoint source responsibilities. |
 
 ## Mainline and steps
@@ -17,5 +18,12 @@
 Dependency:`1 -> {2,3,4} -> 5`. Shared cache/physical-cost foundations are included in completed1;3 now finishes normal full-manager bundle integration,not its already-tested primitives. First acceptance is executable code,not another command table. Both disjoint child implementations completed;primary now owns their runtime/typed-cost integration. Maximum3 concurrent children. Do not serialize2/4 behind completion of3;their source contracts are already defined.
 
 ## Verification
+
+Completed1–4: source commits `1ca09be` and `83af0a7`. Step5 required checks are complete:
+192 new CPU cases and97 profiling compatibility cases PASS;124 existing regression
+cases PASS with one unchanged baseline assertion conflict. Public constructor,
+first/last Stage ownership and four H80032 registered bundles were directly exercised.
+Final optional independent re-review failed to run because advisor quota was exhausted;
+do not report it as PASS. Parent integration/fidelity/native admission remain external.
 
 Use frontier-py310 and temporary artifacts under `/data/ycfeng/tmp`. Reuse current producer-shaped row builders and cache test fixtures;fixtures remain explicitly unadmitted. First run new real-seam CPU feedback tests,then relevant existing family/trainer/cache/typed cost regressions. Check unchanged IDs/verdicts against6db2250 where applicable. Broaden only for failures/new concerns;no redundant77-case matrix in this child. Keep source files below2000 lines where practical;large-predictor changes must be small routing calls into existing/domain compute modules,not a second predictor/framework.

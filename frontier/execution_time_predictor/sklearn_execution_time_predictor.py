@@ -369,6 +369,32 @@ def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
 
 
 class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseExecutionTimePredictor):
+    def _get_nixl_read_cost(self):
+        profile = getattr(self._config, "nixl_read_profile", None)
+        if not profile:
+            raise ValueError("Missing measured NIXL profile")
+        cost = getattr(self, "_nixl_read_cost_model", None)
+        if cost is None:
+            manager = getattr(self, "_model_manager", None)
+            role = getattr(self, "_cluster_type", None)
+            for receipt in getattr(manager, "_step5_model_bundles", {}).get(role, {}).values():
+                identity = receipt["identity"]
+                binding = identity.get("input_bindings", {}).get("nixl_read_profile")
+                if binding is None or os.path.abspath(profile) != binding["path"]:
+                    raise ValueError("NIXL profile conflicts with bound model input")
+                manager._validate_bundle_input_bindings(identity)
+            from frontier.kv_cache_transfer.nixl_read_cost import NixlReadCost
+
+            cost = NixlReadCost.from_file(profile)
+            self._nixl_read_cost_model = cost
+        return cost
+
+    def get_nixl_transfer_coverage(self, **kwargs):
+        return self._get_nixl_read_cost().get_coverage(**kwargs)
+
+    def get_nixl_transfer_time_ms(self, **kwargs):
+        return self._get_nixl_read_cost().get_time_ms(**kwargs)
+
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
         return get_enabled_predictor_metric_name_by_role(
@@ -2513,7 +2539,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         self._register_profiling_metadata_from_file(
             self._compute_input_file, self._get_compute_model_names()
         )
-        if self._cluster_type != ClusterType.DECODE_FFN:
+        # Step's composite root carries typed source identity, not GEMM quant metadata.
+        if (self._cluster_type != ClusterType.DECODE_FFN
+                and self._get_attention_family().family_id != STEP5_ATTENTION_FAMILY.family_id):
             self._register_profiling_metadata_from_file(
                 self._attention_input_file, self._get_attention_model_names()
             )
@@ -7503,6 +7531,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
         if not attention_time.operator_costs:
             attention_time.kernel_count = math.fsum(counts.operators.values())
+        else:
+            # Outside-root normalization retains the step family's own gap owner.
+            self._kernel_count_scopes[-1].operators.update({
+                name: count for name, count in counts.operators.items()
+                if name not in attention_time.operator_costs
+            })
         self._record_attention_kernels(attention_time.kernel_count, attention_time.measurement_type)
         return attention_time
 

@@ -9,11 +9,24 @@ from frontier.attention.step5 import describe_step5_layer
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime, OperatorCost
 from frontier.execution_time_predictor.step5 import (
     STEP5_FEATURE_COLUMNS,
+    STEP5_DURATION_STATISTICS,
     STEP5_OPERATOR_NAMES,
     step5_measurement_type,
     step5_row_features,
 )
-from frontier.types import MeasurementType
+from frontier.types import ClusterType, MeasurementType
+
+
+def step5_measurements_for_role(role, decode_graph_mode):
+    """Attention's measured modality is independent of the step's FFN family."""
+    decode = step5_measurement_type(decode_graph_mode)
+    return {
+        ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+        ClusterType.DECODE: (decode,),
+        ClusterType.DECODE_ATTN: (decode,),
+        ClusterType.DECODE_FFN: (),
+        ClusterType.MONOLITHIC: tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode))),
+    }[role]
 
 
 def step5_predictions(models, measurement_type):
@@ -106,9 +119,13 @@ def predict_step5_attention_time(predictor, batch, layer_id):
             "num_tensor_parallel_workers": predictor._replica_config.attn_tensor_parallel_size,
             "block_size": predictor._block_size,
             "physical_scope": "native_attention_layer_without_tp_allreduce",
+            "duration_statistic": STEP5_DURATION_STATISTICS[measurement],
         }
-        if any(identity[name] != value for name, value in expected.items()):
+        if any(identity.get(name) != value for name, value in expected.items()):
             raise ValueError("Step runtime query conflicts with measured physical identity")
+        targets = (f"time_stats.{root}.{expected['duration_statistic']}", f"time_stats.{root}.kernel_count")
+        if tuple(model._frontier_target_col for model in models) != targets:
+            raise ValueError("Step measurement target policy conflicts with fitted model")
         duration = predictor._get_on_demand_prediction(root, features)
         count = predictor._get_on_demand_prediction(names[1], features)
         proof = OperatorCost(

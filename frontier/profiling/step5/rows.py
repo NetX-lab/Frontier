@@ -12,7 +12,7 @@ from frontier.attention.step5 import describe_step5_layer
 from frontier.operators.typed_contracts import serialize_typed_operator_contracts
 
 
-OPERATOR_NAMES = tuple(op.name for op in STEP5_ATTENTION_FAMILY.operators)
+OPERATOR_NAMES = tuple(op.name for op in STEP5_ATTENTION_FAMILY.profiling_ops())
 
 
 @dataclass
@@ -70,6 +70,7 @@ def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
     return {
         "measurement_type": measurement_type, "attention_backend": evidence["attention_backend"],
         "model_architecture_profile": config.get_model_architecture_profile().profile_id,
+        "model_arch": config.model_arch, "profiling_precision": metadata.model_precision.name,
         "attention_variant": metadata.attention_spec.variant_id,
         "global_layer_id": cell.global_layer_id, "quant_signature": config.get_quant_signature(),
         "model_dtype": "bfloat16", "norm_dtype": config.norm_dtype,

@@ -121,6 +121,22 @@ def test_step_graph_policy_preserves_real_measurement_method(graph, expected):
     assert step5_measurement_type(graph) is expected
 
 
+@pytest.mark.parametrize("graph,statistic,expected", [("full", "mean", 1.25), ("none", "median", 1.5)])
+def test_root_target_selects_real_candidate_not_independent_event_median(model, tmp_path, graph, statistic, expected):
+    measurement = step5_measurement_type(graph)
+    rows = [_row(model, layer, query=1 if graph == "full" else 16,
+                 phase="decode" if graph == "full" else "prefill", graph_mode=graph)
+            for layer in (0, 3)]
+    for row in rows:
+        row["time_stats"]["step5_layer_e2e"].update(min=1., max=2., mean=1.25, median=1.5, std=.4)
+    path = _write(tmp_path, rows, measurement)
+    models = _train(_manager(tmp_path / "cache", measurement), model, path)
+    root = models["step5_layer_e2e"]
+    assert root._frontier_target_col == f"time_stats.step5_layer_e2e.{statistic}"
+    assert set(root._frontier_exact_lookup.values()) == {expected}
+    assert json.loads(root._frontier_measurement_identity)["duration_statistic"] == statistic
+
+
 def test_step_loader_derives_precision_and_context_features(model, tmp_path):
     source = [_row(model, 0), _row(model, 3, context=4120)]
     path = _write(tmp_path, source)
@@ -160,6 +176,33 @@ def test_step_loader_supports_every_source_layer_without_inventing_coverage(mode
     root = models["step5_layer_e2e"]
     assert root._frontier_step5_domains["global_layer_id"] == tuple(float(layer) for layer in range(92))
     assert len(root._frontier_step5_coverage) == 92
+
+
+def test_step_native_backend_identity_is_per_variant_but_runtime_is_not(model, tmp_path):
+    rows = [_row(model, 0), _row(model, 3)]
+    rows[0]["attention_backend"] = "FLASH_ATTN"
+    rows[1]["attention_backend"] = "STEP5_SPARSE_ATTN"
+    path = _write(tmp_path, rows)
+    frame = load_step5_attention_rows(path, _replica(model), _scheduler(), MeasurementType.KERNEL_ONLY)
+    assert frame.attrs["measurement_identity"]["attention_backend"] == {
+        "swa": "FLASH_ATTN", "sparse_gqa": "STEP5_SPARSE_ATTN",
+    }
+    models = _train(_manager(tmp_path / "cache"), model, path)
+    assert json.loads(models["step5_layer_e2e"]._frontier_measurement_identity)["attention_backend"] == {
+        "swa": "FLASH_ATTN", "sparse_gqa": "STEP5_SPARSE_ATTN",
+    }
+    rows[1]["runtime_stack_signature"] = "different_image_and_runtime_unadmitted"
+    path = _write(tmp_path, rows)
+    with pytest.raises(ValueError, match="runtime_stack_signature"):
+        load_step5_attention_rows(path, _replica(model), _scheduler(), MeasurementType.KERNEL_ONLY)
+
+
+def test_step_rejects_backend_changes_inside_one_variant(model, tmp_path):
+    rows = [_row(model, 0), _row(model, 1)]
+    rows[1]["attention_backend"] = "different_backend_same_variant"
+    path = _write(tmp_path, rows)
+    with pytest.raises(ValueError, match="attention_backend"):
+        load_step5_attention_rows(path, _replica(model), _scheduler(), MeasurementType.KERNEL_ONLY)
 
 
 def test_step_eager_event_diagnostics_cannot_be_relabelled_as_root_physical_cost(model, tmp_path):
