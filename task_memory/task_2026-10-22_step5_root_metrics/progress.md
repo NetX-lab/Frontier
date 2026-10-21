@@ -17,11 +17,11 @@
 - completed: source call-site audit: the predictor's `_assemble_stage` publishes StageExecutionTime; actual P/D reporting requests the full stage and preserves authoritative layers through the existing metrics adapters. Scalar aggregated metric/trace methods remain legacy adapters, not the measured root producer path. Stage attention aggregates intentionally have no individual proof; emitted Step root spans remain layer-scoped even with expansion disabled.
 - completed: final verification after the public layer identity adapter adjustment: `161 passed, 1 deselected in 27.48s`, `/data/ycfeng/tmp/d23_root_metrics_final_verified.log`.
 - completed: committed the seven scoped code/test/exception files as `3a189ba` (Preserve measured inclusive attention roots in metrics and traces). Net metrics store growth is eight lines. No unrelated files staged.
-- completed: English summary and exact test report written; final requirements reread. Parent retains full CLI/native/admission/legacy77 acceptance and two baseline fixture issues. Task records commit follows; no unfinished in-scope code work.
+- completed: English summary and exact test report written; final requirements reread. Records committed as `24b889d` after code commit `3a189ba`; final git status clean and baseline-to-HEAD diff check passes. Parent retains full CLI/native/admission/legacy77 acceptance and two baseline fixture issues; no unfinished in-scope work.
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -29,7 +29,7 @@
 | Call-site regression | PASS | Eight pre-fix failures match root blockers. |
 | Existing projection fix | PASS | Root-only registry projection and truthful proof serialization. |
 | Focused verification | PASS | 161 passing checks; exact original repro GREEN. |
-| Self-check / commits / archive | TODO | Code commit 3a189ba and summary/report complete; records commit and parent return remain. |
+| Self-check / commits / archive | PASS | Code 3a189ba and records 24b889d committed; clean worktree and diff check confirmed. |
 
 ## 2. 偏离检测
 
@@ -56,8 +56,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. Commit task records → 完成标志：All five records retained with exact evidence and no scope expansion.
-2. Return to parent → 完成标志：Exact commits, evidence paths, and pending parent acceptance returned.
+1. Return to parent → 完成标志：Exact commits, evidence paths, and pending parent acceptance returned.
 
 ## 4. 最值得关注的 3 点
 
