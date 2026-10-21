@@ -6,10 +6,11 @@
 | --- | --- |
 | 2026-10-21 | Archived runnable capture/abort code and explicit incomplete G3 boundary. |
 | 2026-10-21 | Parent completed reference/controls/MRv2 census implementation at1171ab6;685 broad and69 final checks passed. |
+| 2026-10-22 | Fresh P0 native capture01 verified and submitted; native judgment pending. |
 
 ## Outcome
 
-Case-aligned capture, independent full-local D reference, complete resident/cache comparison, reset/reuse/pressure controls and MRv2 useful/dummy forward accounting are implemented at `1171ab6`. Corrected c0a0e63 R2 retention checks remain. **Native G3/G4 are not qualified.** Fresh real-image sealing is the next step. The reference uses the existing D engine without transfer metadata; no runtime replacement or numerical waiver applies.
+Case-aligned capture, independent full-local D reference, complete resident/cache comparison, reset/reuse/pressure controls and MRv2 useful/dummy forward accounting are implemented at `1171ab6`. Corrected c0a0e63 R2 retention checks remain. Fresh49-file/50-source-pin capture01 is submitted as `exp-1021-235955-532667`,32×H800/codesign/non-preemptible; initial platform identity/mount/resource checks pass. **Native G3/G4 are not qualified.** The reference uses the existing D engine without transfer metadata; no runtime replacement or numerical waiver applies.
 
 ## Delivered code
 
@@ -46,4 +47,4 @@ Current primary evidence: `test_report_2026-10-21_parent_reference.md`, `/data/y
 
 See `reference_decision.md` for the selected existing-D full-local reference and unchanged numerical limits. Native resident identity, state/output equivalence and lifecycle outcomes still require actual evidence.
 
-Generate and verify a fresh complete package, then perform the parent-owned native run and judgment. Neither the128-request pressure attempt nor the frozen10ms abort deadline establishes success without actual allocator/READ/cleanup witnesses. Old maxlen2048 R2 packages remain unchanged. Formal timing and the four10% gates remain open.
+Inspect the submitted run and judge its native evidence, as specified in `native_run.md`. Neither the128-request pressure attempt nor the frozen10ms abort deadline establishes success without actual allocator/READ/cleanup witnesses. Old maxlen2048 R2 packages remain unchanged. Formal timing and the four10% gates remain open.

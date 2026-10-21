@@ -7,6 +7,7 @@
 | 2026-10-21 | Started canonical capture implementation and independent reference source inspection. |
 | 2026-10-21 | Implemented canonical capture and pending-READ abort caller/consumer; recorded612 CPU passes and explicit reference/remaining-control blockers. |
 | 2026-10-21 | Primary took over interrupted reference implementation, implemented native forward accounting and verified685 CPU tests. |
+| 2026-10-22 | Sealed and submitted P0 capture01; platform Starting and identity/local mounts verified. |
 
 - completed: moved session to clean requested worktree; initialb6755f7. Read primary contract and native replay judgment. No platform or other-owner overlap.
 - completed: restored c0a0e63 R2 region aliases, truncated-P attribution and strict native skipped-page-retention checks plus matching tests. The restored collector was byte-identical before the scoped abort extension; six critical verdict functions remain AST-identical to c0a0e63. Do not merge that branch's older unrelated canonical/simulator files.
@@ -31,3 +32,5 @@
 - completed: source/parent regression `/data/ycfeng/tmp/d21_g3_complete02.log`:685 PASS in41.97s. The first broad invocation had two test-module collection errors under importlib mode; qualified sibling imports fixed those test imports. See the parent test report for exact commands and limits.
 - in-progress: commit and fresh stage verification. No new GPU submission has occurred during this continuation; historical packages and verdicts remain unchanged.
 - completed: source commit `1171ab6`; final metadata-source-pin/stage/seam verification69 PASS in1.51s. New stage preparation now uses committed code; retained historical receipts are not rewritten.
+- completed: source025d9a9 stage capture01 sealed with49 files/50 installed source pins; offline verifier and actual StepMind Python dry-run passed. Fresh paginated personal reservation listing was empty.
+- in-progress: native job `exp-1021-235955-532667`,32×H800/codesign/non-preemptible, platform Starting at first identity read. Creator,4×8GPU, RDMA, pinned image and current-host NFS mount verified; launcher PID503604 alive. See `native_run.md` for commands, evidence and pending acceptance.
