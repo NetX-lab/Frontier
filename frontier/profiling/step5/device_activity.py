@@ -147,6 +147,7 @@ def parse_device_activity(path, operator_names, iteration_prefix="step5_iteratio
         owners_by_correlation[correlation].add((iteration, owners.pop()))
 
     per_iteration = {name: {"step5_layer_e2e": 0.} for name in roots}
+    per_iteration_kernel_counts = {name: {"step5_layer_e2e": 0} for name in roots}
     kernel_names, copy_names = set(), set()
     kernel_count = copy_count = 0
     kernel_time_ms = copy_time_ms = 0.
@@ -173,6 +174,9 @@ def parse_device_activity(path, operator_names, iteration_prefix="step5_iteratio
             if event["cat"] == "kernel":
                 kernel_names.add(event["name"])
                 kernel_count += 1
+                counts = per_iteration_kernel_counts[iteration]
+                counts[owner] = counts.get(owner, 0) + 1
+                counts["step5_layer_e2e"] += 1
                 kernel_time_ms += duration_ms
             else:
                 copy_names.add(event["name"])
@@ -183,7 +187,7 @@ def parse_device_activity(path, operator_names, iteration_prefix="step5_iteratio
         if missing:
             raise ValueError(f"Iteration {iteration!r} is missing GPU activity for active operators: {missing!r}")
 
-    return {"per_iteration": per_iteration,
+    return {"per_iteration": per_iteration, "per_iteration_kernel_counts": per_iteration_kernel_counts,
             "kernel_names": sorted(kernel_names), "kernel_count": kernel_count,
             "kernel_time_ms": kernel_time_ms,
             "memory_copy_names": sorted(copy_names), "memory_copy_count": copy_count,

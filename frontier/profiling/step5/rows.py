@@ -92,11 +92,22 @@ def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
         "batch_num_tokens": cell.num_tokens,
         "batch_num_prefill_tokens": cell.num_tokens if cell.phase == "prefill" else 0,
         "batch_num_decode_tokens": cell.num_tokens if cell.phase == "decode" else 0,
-        "physical_scope": "native_attention_layer_without_tp_allreduce",
+        "physical_scope": ("mrv2_dp_dummy_attention_layer_without_tp_allreduce" if cell.dummy_descriptor else
+                           "isolated_no_metadata_attention_layer_without_tp_allreduce" if not cell.has_attention_metadata else
+                           "native_attention_layer_without_tp_allreduce"),
+        "native_workload": ("mrv2_dp_dummy" if cell.dummy_descriptor else
+                            "isolated_no_metadata" if not cell.has_attention_metadata else "attention_workload"),
+        **({"native_runner": "MRv2", "dummy_descriptor": json.dumps(asdict(cell.dummy_descriptor)),
+            "dummy_is_padding": True, "dummy_has_prefill": False,
+            "dummy_owned_requests": 0, "dummy_local_num_tokens": 1,
+            "slot_mapping_kind": "PAD_SLOT_ID", "cache_policy": "live_pages_unchanged_scratch_updates_allowed",
+            "valid_token_semantics": "MRv2_InputBatch_physical_rows_not_owned_serving_tokens"}
+           if cell.dummy_descriptor else {}),
         "fusion": json.dumps(metadata.attention_scopes(workload)),
         "graph_mode": cell.graph_mode, "valid_tokens": cell.num_tokens, "padded_tokens": 0,
         "query_lens": json.dumps(cell.query_lens), "context_lens": json.dumps(cell.context_lens),
-        "phase": cell.phase, "max_model_len": max_model_len, "has_attention_metadata": 1,
+        "phase": cell.phase, "max_model_len": max_model_len,
+        "has_attention_metadata": int(cell.has_attention_metadata),
         "block_table_columns": workload.block_table_columns, "score_regions": workload.score_regions,
         "weight_source": "synthetic_bf16", "time_stats": time_stats,
         "typed_operator_contracts": serialize_typed_operator_contracts(

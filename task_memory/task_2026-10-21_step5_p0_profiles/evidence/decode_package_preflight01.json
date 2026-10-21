@@ -1,0 +1,67 @@
+{
+  "status": "PASS",
+  "staged_files": 3415,
+  "stage": "/data/ycfeng/tmp/step5_p0_profiles_20261021/decode_stage01",
+  "manifest_sha256": "f09b6fc0436889042dabb6fb0d322b9a9d9c17b9b4860f425342b8e9a50a5ca5",
+  "attention_event_rows": 20,
+  "attention_gpu_active_rows": 4,
+  "linear_rows": 28,
+  "linear_dry_runs": {
+    "cuda_event": "PASS",
+    "record_function": "PASS"
+  },
+  "moe_dry_runs": {
+    "cuda_event": {
+      "status": "PASS",
+      "profiled_steps": 48,
+      "routed_layer_groups": [
+        {
+          "moe_layer_ids": "3-87",
+          "moe_routed_precision": "fp8",
+          "moe_activation": "swiglustep"
+        },
+        {
+          "moe_layer_ids": "88-90",
+          "moe_routed_precision": "bf16",
+          "moe_activation": "swiglustep"
+        }
+      ]
+    },
+    "record_function": {
+      "status": "PASS",
+      "profiled_steps": 48,
+      "routed_layer_groups": [
+        {
+          "moe_layer_ids": "3-87",
+          "moe_routed_precision": "fp8",
+          "moe_activation": "swiglustep"
+        },
+        {
+          "moe_layer_ids": "88-90",
+          "moe_routed_precision": "bf16",
+          "moe_activation": "swiglustep"
+        }
+      ]
+    }
+  },
+  "measurement_role": "DECODE",
+  "dry_run_logs": {
+    "attention": [
+      "WARNING 21:57:45 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported"
+    ],
+    "cuda_event": [
+      "WARNING 21:57:50 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported"
+    ],
+    "record_function": [
+      "WARNING 21:57:54 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported"
+    ],
+    "moe_cuda_event": [
+      "WARNING 21:57:59 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported"
+    ],
+    "moe_record_function": [
+      "WARNING 21:58:04 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported"
+    ]
+  },
+  "platform_operations": 0,
+  "admitted": false
+}

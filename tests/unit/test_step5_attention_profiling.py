@@ -338,6 +338,8 @@ def test_eager_activity_windows_use_gpu_work_not_restore_or_host_gaps(tmp_path, 
     assert evidence["memory_copy_count"] == 0
     assert evidence["skipped_memory_copy_count"] == 2
     assert evidence["operator_sum_to_layer_ratio"] == pytest.approx(1.)
+    assert {item["step5_layer_e2e"] for item in evidence["per_replay_kernel_counts"].values()} == {1}
+    assert evidence["kernel_count"] >= 10
 
 
 def test_piecewise_scoped_replays_retain_their_own_operator_events(monkeypatch):
@@ -481,6 +483,27 @@ def test_main_separates_native_graph_policies_and_writes_complete_summary(tmp_pa
     assert summary["expected_gpu_active_rows"] == summary["gpu_active_rows"] == 2
     assert summary["complete"] and not summary["admitted"]
     assert set(fake_native_wrapper) == {(0, "none"), (0, "full"), (3, "none"), (3, "full")}
+
+
+def test_main_writes_isolated_no_metadata_identity_and_independent_role_output(tmp_path, fake_native_wrapper):
+    import pandas as pd
+    from frontier.profiling.step5.main import main
+
+    path = tmp_path / "idle.json"
+    path.write_text(json.dumps([dict(global_layer_id=0, query_lens=[1], context_lens=[0],
+                                     phase="decode", has_attention_metadata=False)]))
+    for role in ("PREFILL", "DECODE"):
+        output = tmp_path / role
+        main(["--model-path", str(tmp_path), "--max-model-len", "8192", "--input-file", str(path),
+              "--role", role, "--output-dir", str(output)])
+        summary = json.loads((output / "summary.json").read_text())
+        assert summary["complete"] and summary["actual_rows"] == summary["gpu_active_rows"] == 1
+        frame = pd.read_csv(summary["gpu_active_csv"])
+        assert frame.has_attention_metadata.tolist() == [0]
+        assert frame.graph_mode.tolist() == ["none"]
+        assert frame.measurement_role.tolist() == [role]
+        assert frame.block_table_columns.tolist() == [0]
+        assert frame.native_workload.tolist() == ["isolated_no_metadata"]
 
 
 def test_failed_csv_write_is_not_a_completed_row(tmp_path, fake_native_wrapper, monkeypatch):

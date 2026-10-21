@@ -157,24 +157,114 @@ def stage_probe(stage, run_id=PROBE_RUN_ID, *, dependency_site, gpus=1, preempti
                          additional_paths=(WORKLOAD,))
 
 
+def describe_p0_profiles(stage, run_id, *, role, gpus=1):
+    """Prepare independent role measurements, not a serving calibration job."""
+    from frontier.profiling.common.model_config import ModelConfig
+    from frontier.profiling.linear_op.step5_job import METHODS, planned_profile, profile_arguments
+    from frontier.profiling.step5.inputs import read_profile_inputs
+
+    if gpus != 1:
+        raise ValueError("P0 compute profiling measures one isolated TP-local rank per role package")
+    plan = json.loads((REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json").read_text())
+    if role not in plan["roles"]:
+        raise ValueError("P0 measurement role must be PREFILL or DECODE")
+    selected = plan["roles"][role]
+    describe_job(stage, run_id, worker_command="", gpus=gpus)
+    output = CLOUD_ROOT / run_id
+    temporary = Path("/data/ycfeng/tmp/step5_p0_profiles") / run_id
+    config = ModelConfig.from_model_name(plan["model"])
+    cells = read_profile_inputs(REPO_ROOT / selected["input_file"],
+                               cudagraph_capture_sizes=plan["cudagraph_capture_sizes"])
+    for cell in cells:
+        cell.workload(config, block_size=plan["block_size"], max_model_len=plan["max_model_len"])
+    attention_args = [
+        "--model-path", str(temporary / "model"), "--device", "h800", "--role", role,
+        "--tensor-parallel-size", str(plan["serving_topology_per_role"]["attention_tp"]),
+        "--block-size", str(plan["block_size"]), "--max-model-len", str(plan["max_model_len"]),
+        "--max-num-seqs", str(plan["max_num_seqs"]),
+        "--max-num-batched-tokens", str(plan["max_num_batched_tokens"]),
+        "--input-file", selected["input_file"], "--disable-chunked-prefill",
+        "--cudagraph-capture-sizes", *map(str, plan["cudagraph_capture_sizes"]),
+        "--warmup-iterations", "3", "--profile-iterations", "10", "--max-time-cv", "0.05",
+        "--min-timing-window-ms", "0.5", "--seed", "0", "--output-dir", str(output / "attention"),
+    ]
+    commands = [{"family": "attention", "method": "both_native_families",
+                 "arguments": ["-m", "frontier.profiling.step5.main", *attention_args]}]
+    for method in METHODS:
+        commands.append({"family": "linear", "method": method, "arguments": [
+            "-m", "frontier.profiling.linear_op.main", *profile_arguments(
+                output / "linear", method, tokens=selected["linear_tokens"], device="h800")]})
+        commands.append({"family": "moe", "method": method, "arguments": [
+            "-m", "frontier.profiling.moe.main", "--disable_ray", "--num_gpus", "1",
+            "--models", plan["model"], "--num_tensor_parallel_workers", "1",
+            "--expert_parallel_sizes", str(plan["serving_topology_per_role"]["expert_parallel"]),
+            "--num_tokens_list", *map(str, selected["moe_tokens"]),
+            "--max_tokens", str(max(selected["moe_tokens"])), "--precision", "BF16",
+            "--profile_method", method, "--device", "h800", "--load_distributions", "uniform",
+            "--routing_runtime_path", "standard_fused_topk", "--output_dir", str(output / "moe"), "--yes"]})
+    q = shlex.quote
+    worker = [
+        "set -euo pipefail", f"export TMPDIR={q(str(temporary))}",
+        'mkdir -p "$TMPDIR/model"', f"test ! -e {q(str(output))}",
+        f"mkdir -p {q(str(output.parent))}", f"mkdir {q(str(output))}",
+        'cp data/config/models/stepfun-ai__Step-5-Preview.json "$TMPDIR/model/config.json"',
+        'export PYTHONPATH="$PWD/offline_site${PYTHONPATH:+:$PYTHONPATH}"',
+        "export VLLM_USE_BREAKABLE_CUDAGRAPH=1", "nvidia-smi -L",
+        f"(cd {q(str(WORKLOAD))} && sha256sum -c SHA256SUMS)",
+    ]
+    for command in commands:
+        worker.append(shlex.join(["bash", "tests/integration/step5_profiling/run_on_worker.sh",
+                                  *command["arguments"]]) + " 2>&1 | tee " +
+                      q(str(output / f"{command['family']}_{command['method']}_worker.log")))
+    manifest = describe_job(stage, run_id, worker_command="\n".join(worker), gpus=gpus,
+                            gpu_tag=plan["gpu_tag"], charged_group=plan["charged_group"],
+                            preemptible=plan["preemptible"], timeout_seconds=plan["timeout_seconds"])
+    workload_hashes = {name: hashlib.sha256((REPO_ROOT / WORKLOAD / name).read_bytes()).hexdigest()
+                       for name in ("manifest.json", "SHA256SUMS")}
+    if (workload_hashes["manifest.json"] != WORKLOAD_MANIFEST_SHA256
+            or workload_hashes["SHA256SUMS"] != WORKLOAD_SUMS_SHA256):
+        raise ValueError("P0 profiles require the unchanged common workload identity")
+    return {**manifest, "purpose": "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION",
+            "verification_scripts": ["verify_fixed_probe.py", "judge_attention_smoke.py"],
+            "measurement_role": role, "measurement_plan": plan, "producer_commands": commands,
+            "attention_arguments": attention_args, "workload": {"path": str(WORKLOAD), "sha256": workload_hashes},
+            "expected_attention_event_rows": len(cells),
+            "expected_attention_gpu_active_rows": sum(c.graph_mode == "none" for c in cells),
+            "expected_attention_candidates": len(cells),
+            "linear_plan": planned_profile(output / "linear", tokens=selected["linear_tokens"], device="h800"),
+            "admitted": False, "blocks": plan["coverage_limits"]}
+
+
+def stage_p0_profiles(stage, run_id, *, role, dependency_site, gpus=1):
+    manifest = describe_p0_profiles(stage, run_id, role=role, gpus=gpus)
+    return stage_package(stage, manifest, repo_root=REPO_ROOT, dependency_site=dependency_site,
+                         additional_paths=(WORKLOAD,))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", type=Path, required=True)
     parser.add_argument("--run-id", default=PROBE_RUN_ID)
     parser.add_argument("--dependency-site", type=Path)
     parser.add_argument("--fixed-workload-probe", action="store_true")
+    parser.add_argument("--p0-role", choices=("PREFILL", "DECODE"),
+                        help="Prepare an independent bounded H800 P0 role profile package")
     parser.add_argument("--preemptible", action="store_true",
                         help="Use a preemptible H200 fixed-workload probe under the D21 reservation policy")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--gpus", type=int, default=1)
     args = parser.parse_args()
+    if args.p0_role and (args.fixed_workload_probe or args.preemptible):
+        parser.error("P0 role profiles are H800 non-preemptible and distinct from the fixed H200 probe")
     if args.preemptible and not args.fixed_workload_probe:
         parser.error("--preemptible requires --fixed-workload-probe")
     resources = {"gpus": args.gpus}
     if args.fixed_workload_probe:
         resources["preemptible"] = args.preemptible
-    describe = describe_probe if args.fixed_workload_probe else describe_smoke
-    stage = stage_probe if args.fixed_workload_probe else stage_smoke
+    if args.p0_role:
+        resources["role"] = args.p0_role
+    describe = describe_p0_profiles if args.p0_role else describe_probe if args.fixed_workload_probe else describe_smoke
+    stage = stage_p0_profiles if args.p0_role else stage_probe if args.fixed_workload_probe else stage_smoke
     if args.dry_run:
         manifest = describe(args.stage, args.run_id, **resources)
     else:

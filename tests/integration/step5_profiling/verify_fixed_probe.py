@@ -31,8 +31,12 @@ def verify(stage):
     actual_files = {str(path.relative_to(stage)) for path in stage.rglob("*") if path.is_file()}
     if actual_files != expected_files:
         raise ValueError("Staged file inventory differs from manifest")
-    assert manifest["purpose"] == "SMALL_OPERATOR_PROBE_ONLY_NOT_CANONICAL_SERVING_QUALIFICATION"
-    assert (manifest["gpu_tag"], manifest["charged_group"], manifest["gpus"]) == ("H200", "step_main", 1)
+    p0 = manifest["purpose"] == "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION"
+    assert p0 or manifest["purpose"] == "SMALL_OPERATOR_PROBE_ONLY_NOT_CANONICAL_SERVING_QUALIFICATION"
+    assert (manifest["gpu_tag"], manifest["charged_group"], manifest["gpus"]) == (
+        ("H800", "codesign", 1) if p0 else ("H200", "step_main", 1))
+    if p0:
+        assert manifest["preemptible"] is False
     assert type(manifest["preemptible"]) is bool and manifest["timeout_seconds"] == 3600
     assert ("--preemptible" in shlex.split(manifest["submission_command"])) == manifest["preemptible"]
     assert manifest["cloud_output"].startswith("/mnt/codesign-exp/ycfeng/")
@@ -46,10 +50,12 @@ def verify(stage):
     command = [sys.executable, "-B", "-m", "frontier.profiling.step5.main",
                *manifest["attention_arguments"], "--dry-run"]
     attention, attention_logs = dry_run(command, stage=stage, env=env)
-    assert (attention["rows"], attention["gpu_active_rows"]) == (18, 4)
-    assert attention["native_max_num_seqs"] == 2
-    assert attention["native_max_num_batched_tokens"] == 14336
-    assert attention["cudagraph_capture_sizes"] == [1, 2]
+    assert (attention["rows"], attention["gpu_active_rows"]) == (
+        manifest["expected_attention_event_rows"], manifest["expected_attention_gpu_active_rows"])
+    policy = manifest["measurement_plan"] if p0 else manifest["native_probe_policy"]
+    assert attention["native_max_num_seqs"] == policy["max_num_seqs"]
+    assert attention["native_max_num_batched_tokens"] == policy["max_num_batched_tokens"]
+    assert attention["cudagraph_capture_sizes"] == policy["cudagraph_capture_sizes"]
     assert not attention["enable_chunked_prefill"]
     dry_runs = {}
     logs = {"attention": attention_logs}
@@ -66,6 +72,25 @@ def verify(stage):
         dry_runs[method] = "PASS"
         logs[method] = messages
     assert set(dry_runs) == {"cuda_event", "record_function"}
+    moe_runs = {}
+    if p0:
+        role = manifest["measurement_role"]
+        assert attention["role"] == role
+        expected = manifest["measurement_plan"]["roles"][role]
+        for command in manifest["producer_commands"]:
+            if command["family"] != "moe":
+                continue
+            result, messages = dry_run([sys.executable, "-B", *command["arguments"], "--dry_run"],
+                                       stage=stage, env=env)
+            assert sorted(result["num_tokens"]) == sorted(expected["moe_tokens"])
+            model = result["models"]["stepfun-ai/Step-5-Preview"]
+            assert model["tensor_parallel_sizes"] == [1]
+            assert set(model["local_experts_by_expert_parallel_size"]) == {"16"}
+            assert len(model["routed_layer_groups"]) == 2
+            moe_runs[command["method"]] = {"status": "PASS", "profiled_steps": model["profiled_steps"],
+                                             "routed_layer_groups": model["routed_layer_groups"]}
+            logs["moe_" + command["method"]] = messages
+        assert set(moe_runs) == {"cuda_event", "record_function"}
     workload = stage / manifest["workload"]["path"]
     subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=workload, check=True,
                    stdout=subprocess.PIPE, text=True)
@@ -74,7 +99,8 @@ def verify(stage):
                 (stage / "manifest.json").read_bytes()).hexdigest(),
             "attention_event_rows": attention["rows"],
             "attention_gpu_active_rows": attention["gpu_active_rows"],
-            "linear_rows": manifest["expected_linear_rows"], "linear_dry_runs": dry_runs,
+            "linear_rows": 2 * manifest["linear_plan"]["expected_rows_per_method"], "linear_dry_runs": dry_runs,
+            **({"moe_dry_runs": moe_runs, "measurement_role": manifest["measurement_role"]} if p0 else {}),
             "dry_run_logs": logs,
             "platform_operations": 0, "admitted": False}
 
