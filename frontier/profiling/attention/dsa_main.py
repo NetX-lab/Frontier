@@ -11,6 +11,9 @@ the plan its dry run printed:
   canonical ``attention.csv`` (CUDA events) and ``attention_kernel_only.csv``
   (kernel-only) tables with runtime identity columns.
 
+``native_defaults`` supports planning and constructor configuration only;
+native compiled/graph scope timing collection and aggregation are not qualified.
+
 Example dry run for GLM-5.3 on H800 (values from the native deployment and
 target inventories, see the launch package):
 
@@ -30,10 +33,13 @@ import sys
 from pathlib import Path
 
 from frontier.profiling.attention.dsa_plan import (
+    ENGINE_POLICY_EAGER_CHUNKED,
+    ENGINE_POLICY_NATIVE_DEFAULTS,
     DsaMeasurementLimits,
     DsaProfilePlan,
     build_dsa_profile_plan,
     load_hf_config,
+    require_scope_timing,
 )
 from frontier.profiling.attention.dsa_rows import (
     CUDA_EVENT,
@@ -91,10 +97,29 @@ def _add_plan_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--prefill_measured_repeats", type=int, default=3)
     parser.add_argument(
         "--query_one_context_max", type=int,
-        help=("Measure only regular one-token serving queries at every cached context "
-              "from 0 through this value, on one reduced-model GPU engine. "
+        help=("Plan regular one-token serving queries through this inclusive cached "
+              "context (starting at 0 unless the ordinary CLI sets a lower endpoint), "
+              "on one reduced-model engine. "
               "These requests write valid KV slots; they do not measure DP dummy "
               "forwards or graph-padded capture widths."),
+    )
+
+
+def _add_ordinary_plan_arguments(parser: argparse.ArgumentParser) -> None:
+    """Keep native planning options out of the shared FULL dummy CLI."""
+    parser.add_argument(
+        "--engine_policy", default=ENGINE_POLICY_EAGER_CHUNKED,
+        choices=(ENGINE_POLICY_EAGER_CHUNKED, ENGINE_POLICY_NATIVE_DEFAULTS),
+        help="native_defaults supports planning only; compiled scope timing is pending.",
+    )
+    parser.add_argument(
+        "--prefill_prompt_len", type=int,
+        help="Exact context-zero prefill length, independent of engine max_model_len.",
+    )
+    parser.add_argument(
+        "--query_one_context_min", type=int, default=0,
+        help=("Inclusive cached-context lower endpoint. A positive window uses an "
+              "ordinary local decode seed, not the real remote-prefill tail phase."),
     )
 
 
@@ -109,6 +134,7 @@ def build_plan(args: argparse.Namespace) -> DsaProfilePlan:
         decode_measured_steps=args.decode_measured_steps,
         prefill_warmup_repeats=args.prefill_warmup_repeats,
         prefill_measured_repeats=args.prefill_measured_repeats,
+        engine_policy=getattr(args, "engine_policy", ENGINE_POLICY_EAGER_CHUNKED),
     )
     return build_dsa_profile_plan(
         model_name=args.model_name,
@@ -117,6 +143,8 @@ def build_plan(args: argparse.Namespace) -> DsaProfilePlan:
         num_layers=args.num_layers,
         limits=limits,
         query_one_context_max=args.query_one_context_max,
+        query_one_context_min=getattr(args, "query_one_context_min", 0),
+        prefill_prompt_len=getattr(args, "prefill_prompt_len", None),
     )
 
 
@@ -133,13 +161,14 @@ def _plan_command(args: argparse.Namespace) -> None:
 def _run_command(args: argparse.Namespace) -> None:
     from frontier.profiling.attention.dsa_vllm_runner import run_engine
 
+    plan = build_plan(args)
+    require_scope_timing(plan.limits.engine_policy)
     engine_config = Path(args.model_dir) / "config.json"
     if file_sha256(engine_config) != file_sha256(args.model_config_path):
         raise ValueError(
             f"{engine_config} differs from --model_config_path {args.model_config_path}; "
             "the engine must load the configuration the plan was built from"
         )
-    plan = build_plan(args)
     run_engine(
         plan=plan,
         engine_index=args.engine_index,
@@ -173,6 +202,7 @@ def _aggregate_command(args: argparse.Namespace) -> None:
     from frontier.profiling.utils import build_profile_method_output_path
 
     plan = build_plan(args)
+    require_scope_timing(plan.limits.engine_policy)
     raw_paths = sorted(Path(args.raw_dir).glob(_RAW_FILE_PATTERN))
     if not raw_paths:
         raise ValueError(f"No {_RAW_FILE_PATTERN} files under {args.raw_dir}")
@@ -230,11 +260,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     plan = commands.add_parser("plan", help="CPU-only dry run of the measurement plan")
     _add_plan_arguments(plan)
+    _add_ordinary_plan_arguments(plan)
     plan.add_argument("--output", help="Write the full plan JSON here.")
     plan.set_defaults(handler=_plan_command)
 
     run = commands.add_parser("run", help="Measure one engine's cases on the visible GPU")
     _add_plan_arguments(run)
+    _add_ordinary_plan_arguments(run)
     run.add_argument("--engine_index", type=int, required=True)
     run.add_argument("--model_dir", required=True, help="Model directory with config.json.")
     run.add_argument("--raw_dir", required=True)
@@ -248,6 +280,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     aggregate = commands.add_parser("aggregate", help="Write the profiling CSVs")
     _add_plan_arguments(aggregate)
+    _add_ordinary_plan_arguments(aggregate)
     aggregate.add_argument("--raw_dir", required=True)
     aggregate.add_argument("--output_root", required=True, help="Usually data/profiling.")
     aggregate.add_argument("--device", required=True, help="Device directory, e.g. h800.")
