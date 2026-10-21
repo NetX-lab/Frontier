@@ -299,6 +299,8 @@ def serving_counters(tmp_path, monkeypatch, request):
                     "vllm/v1/worker/gpu_model_runner.py", "vllm/v1/worker/gpu_worker.py",
                     "vllm/entrypoints/openai/completion/serving.py")
     run, stage = tmp_path / "run", tmp_path / "stage"
+    model = tmp_path / "model"
+    write(model / "config.json", {"architectures": ["GlmMoeDsaForCausalLM"]})
     module_name = "tests/comparison/calibration/native_full_structure.py"
     stage.mkdir()
     shutil.copyfile(REPO / module_name, stage / "native_full_structure.py")
@@ -311,7 +313,8 @@ def serving_counters(tmp_path, monkeypatch, request):
         worker_extension_cls="native_full_structure.FullModelInventory",
         compilation_config=dict(mode=3, cudagraph_mode="FULL_AND_PIECEWISE",
                                 cudagraph_capture_sizes=captures, max_cudagraph_capture_size=256))
-    config = dict(data_parallel_size_local=1, output_dir=str(run), script=str(stage / "native_pd_worker.py"), harness_dir=str(stage),
+    config = dict(data_parallel_size_local=1, output_dir=str(run), model_dir=str(model),
+        script=str(stage / "native_pd_worker.py"), harness_dir=str(stage),
         harness_files={module_name: "native_full_structure.py"},
         expected_source_hashes={name: digest(source / name) for name in source_names})
     manifest = dict(run_generation="cpu-fixture-not-native-qualification", groundtruth_checkout_path=str(source),
