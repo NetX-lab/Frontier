@@ -6,11 +6,14 @@ they do not claim that a CUDA graph has executed on an H200.
 """
 
 import ast
+import argparse
 from collections import Counter, namedtuple
 from collections.abc import Callable
 import copy
 import dataclasses
 import os
+import json
+import logging
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -18,6 +21,9 @@ from typing import Any
 import pytest
 
 from tests.integration.step5_pd import canonical_stage
+from tests.comparison.calibration import native_pd_worker
+from tests.comparison.dp_placement_pp import vllm_replay
+from tests.unit.test_step5_native_pd import stage_inputs
 
 
 @pytest.fixture(scope="module")
@@ -47,11 +53,74 @@ def test_bindings_cover_selected_mrv2_dispatch_dp_replay_and_observations(native
         "config/vllm.py", "v1/worker/gpu_worker.py", "v1/worker/gpu/model_runner.py",
         "v1/worker/gpu/dp_utils.py", "v1/worker/dp_utils.py", "v1/worker/gpu/cudagraph_utils.py",
         "v1/metrics/loggers.py", "compilation/cuda_graph.py",
+        "entrypoints/cli/serve.py", "entrypoints/launchers/api_server/entry.py",
+        "entrypoints/launchers/utils/server_utils.py",
     }
     assert required <= set(canonical_stage.RUNTIME_SOURCES)
     assert "v1/worker/gpu_model_runner.py" not in canonical_stage.RUNTIME_SOURCES
     assert "v1/cudagraph_dispatcher.py" not in canonical_stage.RUNTIME_SOURCES
     assert all((native_source / relative).is_file() for relative in canonical_stage.RUNTIME_SOURCES)
+
+
+@pytest.mark.parametrize("dp", [2, 4])
+def test_canonical_caller_keeps_native_per_engine_logging_with_all_dp_lanes(native_source, tmp_path, dp):
+    """Exercise the real caller, native CLI defaulting and native logger selection on CPU."""
+    inputs = stage_inputs(tmp_path)
+    definition = json.loads((canonical_stage.REPO / "tests/integration/step5_pd/canonical_run_h200.json").read_text())
+    definition["engine"]["data_parallel_size"] = dp
+    definition["resources"]["replica"] = 2 * dp
+    definition["probe_helpers"] = inputs["definition"]["probe_helpers"]
+    config = canonical_stage.build_stage.build(definition, stage=tmp_path / "workspace/stage",
+        workspace=tmp_path / "workspace", output_dir=Path("/mnt/codesign-exp/ycfeng/cpu_fixture"),
+        job_tag="fixture", source={"commit": "cpu-fixture"},
+        **{key: value for key, value in inputs.items() if key != "definition"})
+    peers = [{"host": f"node{index}", "ip": f"10.0.0.{index + 1}"} for index in range(2 * dp)]
+    cli_routes = []
+    serve = compile_methods([source_method(native_source, "entrypoints/cli/serve.py", "cmd")], {
+        "argparse": argparse,
+        "envs": SimpleNamespace(VLLM_USE_RUST_FRONTEND=False),
+        "logger": logging.getLogger("native-cpu-cli"),
+        "run_multi_api_server": lambda args: cli_routes.append(("multi", args.api_server_count)),
+        "run_headless": lambda args: cli_routes.append(("headless", args.api_server_count)),
+        "run_server": lambda args: cli_routes.append(("single", 1)),
+        "uvloop": SimpleNamespace(run=lambda result: result),
+    })
+    aggregate = type("AggregateStatLoggerBase", (), {})
+    text_logger = type("LoggingStatLogger", (), {})
+    prometheus = type("PrometheusStatLogger", (aggregate,), {
+        "__init__": lambda self, *args, **kwargs: None})
+    tree = ast.parse((native_source / "v1/metrics/loggers.py").read_text())
+    manager = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "StatLoggerManager")
+    constructor = next(node for node in manager.body if isinstance(node, ast.FunctionDef) and node.name == "__init__")
+    manager_class = compile_methods([constructor], {
+        "VllmConfig": object, "StatLoggerFactory": object, "AggregateStatLoggerBase": aggregate,
+        "LoggingStatLogger": text_logger, "AggregatedLoggingStatLogger": aggregate,
+        "PrometheusStatLogger": prometheus, "logging": logging,
+        "logger": SimpleNamespace(isEnabledFor=lambda level: True, warning=lambda *args: None),
+        "PerEngineStatLoggerAdapter": lambda **kwargs: SimpleNamespace(**kwargs),
+    })
+    for peer in peers:
+        plan = native_pd_worker.node_plan(config, peers, peer["host"], [str(i) for i in range(8)])
+        command = vllm_replay.server_command(plan["engine"], inputs["model_dir"], 8100)
+        count = int(command[command.index("--api-server-count") + 1]) if "--api-server-count" in command else None
+        args = SimpleNamespace(headless=plan["lane"] != 0, api_server_count=count,
+            data_parallel_size=dp, data_parallel_size_local=1, data_parallel_external_lb=False,
+            data_parallel_rank=None, data_parallel_start_rank=plan["lane"] or None,
+            data_parallel_hybrid_lb=False, data_parallel_multi_port_external_lb=False)
+        serve.cmd(args)
+        assert command[command.index("--data-parallel-size") + 1] == str(dp)
+        if plan["lane"]:
+            assert count is None and cli_routes[-1] == ("headless", 0)
+            continue
+        # Native CLI selects a single process only for an explicit frontend count of one;
+        # omitted counts default to DP and suppress the graph text logger, not Prometheus.
+        effective_clients = cli_routes[-1][1]
+        loggers = manager_class(object(), engine_idxs=list(range(dp)), client_count=effective_clients).stat_loggers
+        assert any(isinstance(item, prometheus) for item in loggers)
+        per_engine = [item for item in loggers if getattr(item, "per_engine_stat_logger_factory", None) is text_logger]
+        assert len(per_engine) == 1, "Multiple API clients disable native EngineNNN/FULL graph logging"
+        assert count == 1 and cli_routes[-1] == ("single", 1)
+        assert per_engine[0].engine_indexes == list(range(dp))
 
 
 @pytest.mark.parametrize("override,triton,backend,pp,expected", [

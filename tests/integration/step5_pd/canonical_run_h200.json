@@ -9,7 +9,7 @@
     "enable_chunked_prefill": false, "enable_prefix_caching": false, "enforce_eager": false,
     "max_model_len": 7168, "max_num_batched_tokens": 8192, "max_num_seqs": 128, "block_size": 16,
     "compilation_config": {"cudagraph_mode": "FULL_AND_PIECEWISE", "max_cudagraph_capture_size": 256},
-    "cudagraph_metrics": true,
+    "cudagraph_metrics": true, "api_server_count": 1,
     "gpu_memory_utilization": 0.92, "dtype": "auto", "seed": 0, "load_format": "dummy",
     "kv_transfer": {"kv_buffer_device": "cuda", "prefill_side_channel_port": 5600, "decode_side_channel_port": 5700}
   },
