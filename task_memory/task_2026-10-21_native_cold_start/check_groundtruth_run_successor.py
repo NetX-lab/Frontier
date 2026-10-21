@@ -769,6 +769,7 @@ def check_native_canonical(case_dir: Path, run_dir: Path, run_tag: str, mode: st
                            case: dict, manifest: dict, request_ids: dict, engine: dict) -> dict:
     """Admit native artifacts at the existing case-bound groundtruth-run-check boundary."""
     checks, nodes, summary, config, workload, records = {}, {}, {}, {}, None, []
+    dedicated = None
     manifest_path = run_dir / "run_manifest.json"
 
     def record(name, operation):
@@ -894,7 +895,7 @@ print(json.dumps({"workload": workload[0], "rows": {k: len(v) for k, v in rows.i
     record("harness_pinned_and_client_rows", harness_readers)
 
     def replay():
-        nonlocal summary, records
+        nonlocal summary, records, dedicated
         summary = read_output(run_dir / "run/replay_summary.json")
         repetitions = read_output(run_dir / "run/canonical_repetitions.json")
         finished = read_output(run_dir / "replay_finished.json")
@@ -973,7 +974,11 @@ print(json.dumps(dedicated_services(pathlib.Path(sys.argv[2]), json.loads(sys.ar
                 raise ValueError(f"Native node plan/lane mismatch: {host}")
             if lane == 0:
                 ready = read_output(node_dir / "server_ready.json")
-                if ready != dict(role=role, url=urls[role]):
+                cold = (summary["canonical_repetitions"]["idle_boundaries"][0].get("proof")
+                        == "dedicated_services_ready_client_zero_native_counters_zero")
+                if cold and (not dedicated or ready != dedicated["services"][role]):
+                    raise ValueError(f"Unbound dedicated head launch/readiness evidence: {host}")
+                if not cold and ready != dict(role=role, url=urls[role]):
                     raise ValueError(f"Head readiness endpoint mismatch: {host}")
             elif (node_dir / "server_ready.json").exists():
                 raise ValueError(f"Headless node unexpectedly claims API head readiness: {host}")

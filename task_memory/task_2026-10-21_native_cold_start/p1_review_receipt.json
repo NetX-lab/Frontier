@@ -1,0 +1,64 @@
+{
+  "task_id": "W128-NATIVE-COLD-START",
+  "correction": "P1-new-readiness-rejected-by-native-workers",
+  "parent_base": "e55c83c263f86f48972f137858723a07c6f5e691",
+  "p1_fix_base": "746b744d3382ad1c49a1741c6dea7f5fdfee4c41",
+  "successor_sha256": "5efd00ea6544d64440c535d06ad415b6a4d1a25b96ce8863cf4944568f37ec36",
+  "root_checker_sha256": "9116ab7c83da2b4e7cafb871c272af56c8322954eccd56abf2eeac1b55906b55",
+  "production_test_files": 5,
+  "changed_lines": 495,
+  "native_fixture_only": true,
+  "red_native_workers": "FAIL: UNVERIFIED: ValueError: Head readiness endpoint mismatch: host0",
+  "expected_predicates": {
+    "checkout": "PASS",
+    "inputs_unchanged": "PASS",
+    "harness_pinned_and_client_rows": "PASS",
+    "requests_and_idle_lanes": "PASS",
+    "native_workers": "PASS",
+    "native_lifecycle": "PASS",
+    "rank_runtime_graph": "FAIL",
+    "terminal_status": "PASS"
+  },
+  "actual_predicates": {
+    "checkout": "PASS: /data/ycfeng/tmp/native_cold_start_p1_final/test_successor_full_checker_re0/source: fixture-native 2cf0a6915ce544dc493a0990f2ea38d81601128a, actual dirty=''; case/run/mode/generation bound",
+    "inputs_unchanged": "PASS: changed since launch: []",
+    "harness_pinned_and_client_rows": "PASS: Actual clean pinned canonical_workload/native_client_rows: {'repeat01': 128, 'repeat02': 128, 'repeat03': 128}; native server commands/environments: {'host0': True, 'host1': True, 'host2': True, 'host3': True, 'host4': True, 'host5': True, 'host6': True, 'host7': True}",
+    "requests_and_idle_lanes": "PASS: 7 boundaries; both roles, all 4 DP lanes and fresh phase completion counts",
+    "native_workers": "PASS: 8 distinct native nodes; both roles and every configured DP lane; source/model/GPU verified",
+    "native_lifecycle": "PASS: Every node drained, heads stopped after all drains, headless stopped after heads, native return codes 0",
+    "rank_runtime_graph": "FAIL: UNVERIFIED: KeyError: 'vllm/v1/cudagraph_dispatcher.py'",
+    "terminal_status": "PASS: fixture-not-real: Succeeded, all containers exit 0, no restarts; launcher-bound retained platform receipt"
+  },
+  "overall_status": "FAIL",
+  "new_readiness_negative_cases": 16,
+  "legacy_verdict_cases": 2,
+  "final_tests": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "21",
+    "tests": "262",
+    "time": "132.045",
+    "timestamp": "2026-10-21T23:57:36.405631+08:00",
+    "hostname": "kun-workspace-vgen2"
+  },
+  "diffs": {
+    "cumulative_code_vs_parent.diff": {
+      "path": "/data/ycfeng/Frontier/.worktrees/native-cold-start/task_memory/task_2026-10-21_native_cold_start/cumulative_code_vs_parent.diff",
+      "sha256": "064086b11af00366b07ab865ca42d6e6f312fe2a55318002ca2e164952631ce9",
+      "command": "git diff --binary --full-index e55c83c263f86f48972f137858723a07c6f5e691 -- tests/comparison/calibration/pd_replay.py tests/comparison/calibration/native_pd_worker.py tests/unit/test_native_pd_worker.py tests/unit/test_native_cold_start.py task_memory/task_2026-10-21_native_cold_start/check_groundtruth_run_successor.py"
+    },
+    "p1_fix.diff": {
+      "path": "/data/ycfeng/Frontier/.worktrees/native-cold-start/task_memory/task_2026-10-21_native_cold_start/p1_fix.diff",
+      "sha256": "11887c51efeda851c9fb4b2e397e17e9eea0f6327a1bbf1e79d665f87b31d934",
+      "command": "git diff --binary --full-index 746b744d3382ad1c49a1741c6dea7f5fdfee4c41 -- tests/unit/test_native_cold_start.py task_memory/task_2026-10-21_native_cold_start/check_groundtruth_run_successor.py"
+    }
+  },
+  "closed_errors": [
+    "new metadata rejected by legacy whole-object equality in native_workers",
+    "native_lifecycle/terminal_status collateral failure from incomplete nodes",
+    "full-checker regression omitted expected predicate assertions"
+  ],
+  "open_native_qualification": "rank_runtime_graph: missing vllm/v1/cudagraph_dispatcher.py source hash and native rank/graph evidence; overall fixture intentionally FAIL",
+  "freeze_or_package_performed": false
+}

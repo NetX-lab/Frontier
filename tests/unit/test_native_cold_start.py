@@ -264,10 +264,43 @@ def test_successor_full_checker_rebinds_pinned_launch_receipts(native_case, monk
     (run / 'run/canonical_repetitions.json').write_text(json.dumps(repetitions))
     (run / 'run/replay_summary.json').write_text(json.dumps(summary))
     result = checker.check(case, 'native', 'clean')
+    (run / 'successor_predicates.json').write_text(json.dumps(result, indent=2))
     assert result['checks']['harness_pinned_and_client_rows'].startswith('PASS')
     assert result['checks']['requests_and_idle_lanes'].startswith('PASS: 7 boundaries;')
+    assert result['checks']['native_workers'].startswith('PASS'), result['checks']
     assert result['status'] == 'FAIL' and result['checks']['rank_runtime_graph'].startswith('FAIL')
+    assert set(result['checks']) == {'checkout', 'inputs_unchanged', 'harness_pinned_and_client_rows',
+        'requests_and_idle_lanes', 'native_workers', 'native_lifecycle', 'rank_runtime_graph', 'terminal_status'}
+    assert all(value.startswith('PASS') for key, value in result['checks'].items() if key != 'rank_runtime_graph'), result['checks']
     ready = run / 'nodes/host0/server_ready.json'
-    ready.write_text(json.dumps(json.loads(ready.read_text()) | {'server_pid': 999}))
-    result = checker.check(case, 'native', 'clean')
-    assert result['checks']['requests_and_idle_lanes'].startswith('FAIL')
+    bound = json.loads(ready.read_text())
+    faults = dict(role='decode', url=urls['decode'], server_pid=999, server_started_at_utc='2025-01-01T00:00:00+00:00',
+                  run_manifest_sha256='0' * 64, run_generation='old', ready_at_utc='2025-01-01T00:00:00+00:00', health_status=503)
+    rejected = {}
+    for key, value in [(key, None) for key in faults] + list(faults.items()):
+        changed = dict(bound)
+        if value is None:
+            changed.pop(key)
+        else:
+            changed[key] = value
+        ready.write_text(json.dumps(changed))
+        result = checker.check(case, 'native', 'clean')
+        assert result['checks']['requests_and_idle_lanes'].startswith('FAIL'), (key, value, result)
+        assert result['checks']['native_workers'].startswith('FAIL'), (key, value, result)
+        rejected[f'{key}_{"missing" if value is None else "wrong"}'] = result['checks']
+    for path in (run / 'nodes').glob('*/server_ready.json'):
+        receipt = json.loads(path.read_text())
+        path.write_text(json.dumps(dict(role=receipt['role'], url=receipt['url'])))
+    first.pop('proof')
+    for observed in first['observations'][-1]['roles'].values():
+        observed.update(idle=True, lanes={str(lane): dict(num_requests_running=0, num_requests_waiting=0,
+                          kv_cache_usage_perc=0) for lane in range(4)})
+    (run / 'run/canonical_repetitions.json').write_text(json.dumps(repetitions))
+    (run / 'run/replay_summary.json').write_text(json.dumps(summary))
+    for extra in ({}, {'server_pid': 101}):
+        ready.write_text(json.dumps(dict(role='prefill', url=urls['prefill']) | extra))
+        current, legacy = checker.check(case, 'native', 'clean'), previous.check(case, 'native', 'clean')
+        assert current['checks']['native_workers'] == legacy['checks']['native_workers']
+        assert current['checks']['native_workers'].startswith('FAIL' if extra else 'PASS')
+        rejected[f'legacy_{"extra_pid" if extra else "strict_role_url"}'] = current['checks']
+    (run / 'successor_readiness_negatives.json').write_text(json.dumps(rejected, indent=2))

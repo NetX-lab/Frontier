@@ -28,7 +28,12 @@
 +                        or any(set(values) != reasons or any(type(v) not in (int, float) or v != 0
 +                               for v in values.values()) for values in counters.values())):
 +                    return False, "Missing or nonzero cold-start native DP lane completion counters"
-@@ -894 +909,14 @@
+@@ -756,0 +772 @@
++    dedicated = None
+@@ -882 +898 @@
+-        nonlocal summary, records
++        nonlocal summary, records, dedicated
+@@ -894 +910,14 @@
 -        return native_idle_evidence(repetitions, records, workload, engine["data_parallel_size"])
 +        dedicated = None
 +        if repetitions["idle_boundaries"][0].get("proof") == "dedicated_services_ready_client_zero_native_counters_zero":
@@ -44,3 +49,10 @@
 +                                  check=True, capture_output=True, text=True)
 +            dedicated = json.loads(read.stdout)
 +        return native_idle_evidence(repetitions, records, workload, engine["data_parallel_size"], dedicated)
+@@ -948 +977,5 @@
+-                if ready != dict(role=role, url=urls[role]):
++                cold = (summary["canonical_repetitions"]["idle_boundaries"][0].get("proof")
++                        == "dedicated_services_ready_client_zero_native_counters_zero")
++                if cold and (not dedicated or ready != dedicated["services"][role]):
++                    raise ValueError(f"Unbound dedicated head launch/readiness evidence: {host}")
++                if not cold and ready != dict(role=role, url=urls[role]):

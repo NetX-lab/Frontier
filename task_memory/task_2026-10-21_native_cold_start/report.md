@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Completed approved first-boundary proof, successor artifact and CPU verification. |
+| 2026-10-22 | Closed primary P1 worker-readiness rejection with RED/GREEN and complete predicate receipts. |
 
 ## Outcome
 
@@ -23,7 +24,7 @@ Implemented D-NATIVE-COLD-START without inventing zero gauges. Only `before_repe
 
 `check_groundtruth_run_successor.py` was copied from the exact frozen root file. Before edits, both SHA256 values were `9116ab7c83da2b4e7cafb871c272af56c8322954eccd56abf2eeac1b55906b55`. AST comparison identifies only two changed top-level functions: `native_idle_evidence` and `check_native_canonical`.
 
-The successor rebinds node receipts through the already source-pinned harness in a fresh interpreter only when the new first-boundary proof is present; checks the retained proof/zero counters/zero client-dispatch declaration; and independently requires every client dispatch to follow that first observation. The six later gauge/completion/timestamp checks are unchanged. Old gauge-only artifacts produce the same predicate verdict as the frozen checker. Narrow diff: `checker_successor.diff`. Candidate SHA256: `48e311358aa23ae56e6f89b0b8686dced5d6ff5d7b3bcf10bb638dab9d091771`.
+The successor rebinds node receipts through the already source-pinned harness in a fresh interpreter only when the new first-boundary proof is present; checks the retained proof/zero counters/zero client-dispatch declaration; and independently requires every client dispatch to follow that first observation. `native_workers` reuses that validated receipt and compares the complete head readiness object, including every metadata field. A failed rebind rejects the new-proof worker predicate. It does not project to role/url. The six later gauge/completion/timestamp checks are unchanged. Old gauge-only artifacts retain the frozen checker's exact role/url whole-object comparison, including extra-field rejection. Frozen-to-current diff: `checker_successor.diff`. Candidate SHA256: `5efd00ea6544d64440c535d06ad415b6a4d1a25b96ce8863cf4944568f37ec36`.
 
 ## Observed verification
 
@@ -32,15 +33,32 @@ The successor rebinds node receipts through the already source-pinned harness in
 - Nine replay scenarios: healthy, missing lane, missing reason, wrong lane, nonzero counters, existing client, stale completion with explicitly idle gauges, failed repeat02 warmup HTTP502, and missing initial baseline. All expected verdicts observed. Stale completion is isolated from gauge failure and leaves all six later targets enforced.
 - Seven readiness mutations: missing PID, mismatched PID/URL/generation/manifest, readiness preceding launch, wrong role. All rejected.
 - Successor snapshot mutations: unbound proof, missing counter reason, existing-client declaration, missing later KV gauge, stale completion, first observation after a client dispatch. All rejected.
-- Successor complete native checker path: actual pinned reader subprocess admits seven boundaries with bound receipts; changing the recorded head PID rejects `requests_and_idle_lanes`. The overall CPU fixture correctly remains FAIL for missing native graph evidence.
-- Final focused regression: **241 PASS / 21 SKIP / 0 failures / 0 errors**, 113.62 s. Nineteen skips require the approved C26 source fixture; two require a legacy checker baseline, neither installed in this worktree. No new cold-start check is skipped.
-- Immutable checks: all five canonical files byte-identical to `68f891b`; root checker SHA unchanged; `native_full_structure.py` byte-identical to base; production/test scope is five files and **453 changed lines** counting only the narrow successor delta, not its unchanged frozen contents. `source_identity.json` records exact hashes.
+- Primary P1 RED: adding `native_workers` PASS to the previous complete-checker test exposed `Head readiness endpoint mismatch: host0`, despite passing request/idle. The previous241 PASS/21 SKIP result omitted worker/lifecycle/terminal assertions and did not establish complete checker admission; that claim is withdrawn.
+- P1 GREEN: the complete checker now passes all seven expected predicates. All eight readiness fields (`role`, `url`, `server_pid`, `server_started_at_utc`, `run_manifest_sha256`, `run_generation`, `ready_at_utc`, `health_status`) have separate missing/wrong negatives: all16 reject both `requests_and_idle_lanes` and `native_workers`. Two legacy controls retain identical strict verdicts with the frozen checker. `p1_predicates_{red,green}.json`, `p1_readiness_negatives.json` and `p1_review_receipt.json` retain exact outcomes.
+- Latest focused regression: **241 PASS / 21 SKIP / 0 failures / 0 errors**, 132.05 s. Nineteen skips require the approved C26 source fixture; two require a legacy checker baseline, neither installed in this worktree. No new cold-start check is skipped.
+- Immutable checks: all five canonical files byte-identical to `68f891b`; root checker SHA unchanged; `native_full_structure.py` byte-identical to base; cumulative production/test scope is five files and **495 changed lines** counting only the narrow successor delta, not its unchanged frozen contents. `source_identity.json` records exact hashes. P1 changes only the successor and existing cold-start test.
+
+### Every expected full-checker predicate
+
+| Predicate | Expected / observed | Limit |
+| --- | --- | --- |
+| `checkout` | PASS / PASS | CPU fixture provenance only. |
+| `inputs_unchanged` | PASS / PASS | Actual fixture input hashes checked. |
+| `harness_pinned_and_client_rows` | PASS / PASS | Real pinned reader subprocess, Git receipts fixture-backed. |
+| `requests_and_idle_lanes` | PASS / PASS | Seven retained boundaries and bound service evidence. |
+| `native_workers` | PASS / PASS | Complete new metadata bound to manifest/node receipt; native node/GPU facts fixture-backed. |
+| `native_lifecycle` | PASS / PASS | Retained fixture drain/stop ordering. |
+| `rank_runtime_graph` | FAIL / FAIL | `KeyError: 'vllm/v1/cudagraph_dispatcher.py'`: required native source hash/rank/graph evidence missing; no native qualification. |
+| `terminal_status` | PASS / PASS | Fixture platform receipt, no platform query performed. |
+| Overall status | FAIL / FAIL | Intentionally not qualified as native evidence. |
+
+P1 closed the worker's metadata rejection, collateral lifecycle/terminal failures from incomplete nodes, and missing complete-predicate assertions. Native qualification remains unresolved/out of scope; it is not forced to PASS.
 
 ## Old V4 and remaining decisions
 
 The actual retained `/data/ycfeng/tmp/glm53_dsv4/v4_p0_native03_results` remains UNVERIFIED: first boundary failed, six later boundaries were marked verified, and 431/432 requests completed. The one failure is repeat02 warmup HTTP502. Its old readiness/results lack the new launch-provenance fields, so `dedicated_services` refuses retroactive admission. Later historical verified labels had no initial baseline; this report does not promote them to a freshness proof.
 
-Parent must review/freeze the successor and repoint only new run generations; freeze the new harness and launch receipts for future authorized runs. No GPU, platform, auth, SSH, cloud access, external network, dependency install, run launch, merge or push was performed. Dedicated-service isolation is established by coordinator-owned fresh run directories, Popen and bound readiness, not by a network ACL or independent server identity endpoint. That is the approved harness trust boundary.
+Primary must accept the P1 fix before any freeze/package/repoint. This agent is the sole successor writer and stops editing after this handoff. Future authorized generations require newly bound receipts; no old generation is promoted. No GPU, platform, auth, SSH, cloud access, external network, dependency install, run launch, merge, push or metrics/P90 change was performed. Dedicated-service isolation is established by coordinator-owned fresh run directories, Popen and bound readiness, not by a network ACL or independent server identity endpoint. That is the approved harness trust boundary.
 
 ## Deliverables
 
@@ -48,3 +66,4 @@ Parent must review/freeze the successor and repoint only new run generations; fr
 - Tests: `tests/unit/{test_native_cold_start.py,test_native_pd_worker.py}`.
 - Candidate successor: `task_memory/task_2026-10-21_native_cold_start/check_groundtruth_run_successor.py`.
 - Evidence in this directory: `checker_successor.diff`, `source_identity.json`, `verification_evidence.json`, `captured_response_replay.json`, `focused_regressions.xml`, `test_report_2026-10-21_native_cold_start.md`.
+- Exact cumulative code/test Git diff against parent base `e55c83c263f86f48972f137858723a07c6f5e691`: `cumulative_code_vs_parent.diff` includes the actual successor file (not just its narrow frozen delta). P1-only Git diff against `746b744d3382ad1c49a1741c6dea7f5fdfee4c41`: `p1_fix.diff`. Exact commands and hashes are in `p1_review_receipt.json`; raw diff context whitespace is retained unchanged.
