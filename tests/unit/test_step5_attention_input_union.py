@@ -1,13 +1,15 @@
 """Declared Step roles share compatible measured coverage, not first-role data."""
 
 import json
+import gc
 from pathlib import Path
+import weakref
 
 import pandas as pd
 import pytest
 
 from frontier.config import (
-    ClusterConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig,
+    ClusterConfig, MetricsConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig,
     VllmV1SchedulerConfig, global_vars,
 )
 from frontier.config.quantization_manager import QuantizationManager
@@ -16,6 +18,8 @@ from frontier.execution_time_predictor.step5 import (
     STEP5_FEATURE_COLUMNS, load_step5_attention_input_union, step5_row_features,
 )
 from frontier.execution_time_predictor.step5_cost import predict_step5_attention_time
+from frontier.execution_time_predictor import step5, cache_io
+from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
 from frontier.types import ClusterType, MeasurementType
 from test_step5_measured_replay import _predictor
 from test_step5_measured_training import _manager, _row, _write
@@ -162,6 +166,179 @@ def test_union_deduplicates_a_shared_declared_input(declared, tmp_path):
     )
     assert len(frame) == 4
     assert len(frame.attrs["measurement_identity"]["attention_inputs"]) == 2
+
+
+@pytest.mark.parametrize("shared_source", [False, True])
+def test_same_manager_roles_reuse_validated_union_and_hash(declared, tmp_path, monkeypatch, shared_source):
+    configs, rows = declared
+    if shared_source:
+        path = Path(configs[ClusterType.PREFILL].execution_time_predictor_config.atten_kernel_only_input_file)
+        _write(path.parent, rows[ClusterType.PREFILL] + rows[ClusterType.DECODE])
+        configs[ClusterType.DECODE].execution_time_predictor_config.atten_kernel_only_input_file = str(path)
+    manager = _manager(tmp_path / "cache")
+    manager._cluster_configs = configs
+    signatures = set()
+    loads, fingerprints, hashes = [], [], []
+    load, fingerprint, model_hash = step5.load_step5_attention_rows, cache_io.dataset_fingerprint, manager._get_model_hash
+
+    def counted_load(path, *args):
+        loads.append(str(path))
+        return load(path, *args)
+
+    def counted_fingerprint(path):
+        fingerprints.append(str(path))
+        return fingerprint(path)
+
+    def counted_hash(*args, **kwargs):
+        hashes.append(args[0])
+        return model_hash(*args, **kwargs)
+
+    monkeypatch.setattr(step5, "load_step5_attention_rows", counted_load)
+    monkeypatch.setattr(cache_io, "dataset_fingerprint", counted_fingerprint)
+    monkeypatch.setattr(manager, "_get_model_hash", counted_hash)
+    models = _fit(manager, configs, ClusterType.PREFILL, signatures)
+    root = models["step5_layer_e2e"]
+    identity = json.loads(root._frontier_measurement_identity)
+    assert [item["role"] for item in identity["attention_inputs"]] == ["decode", "prefill"]
+    assert len(identity["attention_inputs"]) == 2
+    assert len(loads) == (1 if shared_source else 2)
+    assert len(fingerprints) == (1 if shared_source else 2)
+    loads.clear()
+    fingerprints.clear()
+    hashes.clear()
+    manager._cluster_configs = dict(reversed(tuple(configs.items())))
+    monkeypatch.setattr(manager, "_create_estimator_and_params", lambda *_: pytest.fail("unchanged roles refitted"))
+    assert _fit(manager, configs, ClusterType.DECODE, signatures) == {}
+    assert loads == []
+    assert hashes == []
+    assert len(fingerprints) == (1 if shared_source else 2)
+    assert root._frontier_measurement_identity == json.dumps(identity, sort_keys=True, separators=(",", ":"))
+    assert len(signatures) == 1
+
+
+def test_same_manager_source_content_restore_and_malformed_changes(declared, tmp_path, monkeypatch):
+    configs, _ = declared
+    manager = _manager(tmp_path / "cache")
+    manager._cluster_configs = configs
+    original = _fit(manager, configs, ClusterType.PREFILL, set())["step5_layer_e2e"]
+    path = Path(configs[ClusterType.DECODE].execution_time_predictor_config.atten_kernel_only_input_file)
+    original_bytes = path.read_bytes()
+    source = pd.read_csv(path)
+    for stat in ("min", "max", "mean", "median"):
+        source[f"time_stats.step5_layer_e2e.{stat}"] += .5
+    source.to_csv(path, index=False)
+    changed = _fit(manager, configs, ClusterType.PREFILL, set())["step5_layer_e2e"]
+    assert changed._frontier_model_hash != original._frontier_model_hash
+    assert changed._frontier_measurement_identity != original._frontier_measurement_identity
+    assert changed._frontier_step5_coverage == original._frontier_step5_coverage
+    path.write_bytes(original_bytes)
+    monkeypatch.setattr(manager, "_create_estimator_and_params", lambda *_: pytest.fail("restored source refitted"))
+    restored = _fit(manager, configs, ClusterType.DECODE, set())["step5_layer_e2e"]
+    assert restored._frontier_model_hash == original._frontier_model_hash
+    assert restored._frontier_measurement_identity == original._frontier_measurement_identity
+    assert restored._frontier_exact_lookup == original._frontier_exact_lookup
+    source = pd.read_csv(path)
+    source["time_stats.step5_layer_e2e.kernel_count"] = 0
+    source.to_csv(path, index=False)
+    with pytest.raises(ValueError, match="kernel coverage missing"):
+        _fit(manager, configs, ClusterType.PREFILL, set())
+
+
+@pytest.mark.parametrize("column,value,message", [
+    ("runtime_stack_signature", "changed_runtime", "runtime_stack_signature"),
+    ("attention_backend", "changed_backend", "attention_backend"),
+    ("measurement_type", "CUDA_EVENT", "measurement_type mismatch"),
+    ("physical_scope", "changed_scope", "physical_scope"),
+])
+def test_same_manager_changed_source_identity_is_not_reused(declared, tmp_path, column, value, message):
+    configs, _ = declared
+    manager = _manager(tmp_path / "cache")
+    manager._cluster_configs = configs
+    _fit(manager, configs, ClusterType.PREFILL, set())
+    path = configs[ClusterType.DECODE].execution_time_predictor_config.atten_kernel_only_input_file
+    frame = pd.read_csv(path)
+    frame[column] = value
+    frame.to_csv(path, index=False)
+    manager._train_single_model = lambda **_: pytest.fail("changed invalid identity reached fitting")
+    with pytest.raises(ValueError, match=message):
+        _fit(manager, configs, ClusterType.PREFILL, set())
+
+
+def test_same_manager_fit_config_change_rehashes_current_union(declared, tmp_path, monkeypatch):
+    configs, _ = declared
+    manager = _manager(tmp_path / "cache")
+    manager._cluster_configs = configs
+    signatures = set()
+    original = _fit(manager, configs, ClusterType.PREFILL, signatures)["step5_layer_e2e"]
+    config = configs[ClusterType.DECODE].execution_time_predictor_config
+    original_depth = config.max_depth
+    config.max_depth = [4]
+    changed = _fit(manager, configs, ClusterType.PREFILL, signatures)["step5_layer_e2e"]
+    assert changed._frontier_model_hash != original._frontier_model_hash
+    assert changed._frontier_step5_coverage == original._frontier_step5_coverage
+    assert changed._frontier_measurement_identity == original._frontier_measurement_identity
+    config.max_depth = original_depth
+    monkeypatch.setattr(manager, "_create_estimator_and_params", lambda *_: pytest.fail("restored config refitted"))
+    assert _fit(manager, configs, ClusterType.PREFILL, set())["step5_layer_e2e"]._frontier_model_hash == original._frontier_model_hash
+
+
+@pytest.mark.parametrize("change,message", [
+    ("attention_tp", "incompatible Step attention.*topology"),
+    ("max_model_len", "max_model_len differs"),
+    ("norm_dtype", "norm_dtype conflicts"),
+    ("rope", "geometry disagrees with rope_theta"),
+])
+def test_same_manager_revalidates_changed_validation_context(declared, tmp_path, change, message):
+    configs, _ = declared
+    manager = _manager(tmp_path / "cache")
+    manager._cluster_configs = configs
+    _fit(manager, configs, ClusterType.PREFILL, set())
+    decode = configs[ClusterType.DECODE]
+    if change == "attention_tp":
+        decode.replica_config.attn_tensor_parallel_size = 16
+    elif change == "max_model_len":
+        decode.replica_scheduler_config.max_model_len = 16384
+    elif change == "norm_dtype":
+        decode.replica_config.model_config.norm_dtype = "bfloat16"
+    else:
+        model = decode.replica_config.model_config
+        model.layer_rope_thetas = tuple(value * 2 for value in model.layer_rope_thetas)
+    with pytest.raises(ValueError, match=message):
+        _fit(manager, configs, ClusterType.PREFILL, set())
+
+
+@pytest.mark.parametrize("failure", [None, "training", "publication"])
+def test_real_manager_initialization_releases_validated_frames(declared, tmp_path, monkeypatch, failure):
+    configs, _ = declared
+    cls = ExecutionTimePredictionModelManager
+    manager = object.__new__(cls)
+    observed = []
+    monkeypatch.setattr(cls, "_uses_two_stream_eager_pricing", lambda *_: False)
+    monkeypatch.setattr(cls, "_analyze_cluster_requirements", lambda *_: {})
+
+    def training(self):
+        self._active_measurement_type = MeasurementType.KERNEL_ONLY
+        models = _fit(self, configs, ClusterType.PREFILL, set())
+        observed.extend(weakref.ref(entry.frame) for entry in self._step5_attention_inputs.values())
+        if failure == "training":
+            raise ValueError("training failed")
+        return models
+
+    def publication(self):
+        assert self._step5_attention_inputs
+        if failure == "publication":
+            raise ValueError("publication failed")
+
+    monkeypatch.setattr(cls, "_train_all_required_models", training)
+    monkeypatch.setattr(cls, "_publish_step5_model_bundles", publication)
+    if failure:
+        with pytest.raises(ValueError, match=f"{failure} failed"):
+            manager.__init__(configs, MetricsConfig(cache_dir=str(tmp_path / "cache")))
+    else:
+        manager.__init__(configs, MetricsConfig(cache_dir=str(tmp_path / "cache")))
+    gc.collect()
+    assert observed and all(frame() is None for frame in observed)
+    assert "_step5_attention_inputs" not in manager.__dict__
 
 
 def test_union_merges_only_observed_kinds_from_separate_role_sources(declared, tmp_path, monkeypatch):

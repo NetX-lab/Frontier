@@ -701,17 +701,14 @@ class PredictionFamilyTrainers(KernelCountTraining):
 
         if is_step5:
             from frontier.execution_time_predictor.step5 import (
-                load_step5_attention_input_union, train_step5_attention_models,
+                load_step5_attention_input_union, step5_attention_input_hash, train_step5_attention_models,
             )
 
             attention_df, fit_config = load_step5_attention_input_union(
                 self, cluster_type, replica_config, replica_scheduler_config,
                 execution_time_predictor_config, attn_file, self._active_measurement_type,
             )
-            union_hash = self._get_model_hash(
-                "step5_layer_e2e", attention_df, fit_config,
-                self._get_profiling_precision_from_df(attention_df), self._active_measurement_type,
-            )
+            union_hash = step5_attention_input_hash(self, attention_df, fit_config, self._active_measurement_type)
             attention_signature = f"{attention_signature}_inputs{union_hash}"
             if attention_signature in trained_model_signatures:
                 return models

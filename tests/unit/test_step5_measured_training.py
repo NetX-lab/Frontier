@@ -166,6 +166,24 @@ def test_step_loader_derives_precision_and_context_features(model, tmp_path):
     assert not set(STEP5_OPERATOR_NAMES) & set(STEP5_SCOPE_NAMES)
 
 
+def test_step_loader_derives_validated_features_once_per_source_row(model, tmp_path, monkeypatch):
+    from frontier.execution_time_predictor import step5
+
+    source = [_row(model, 0), _row(model, 3, context=4120)]
+    expected = pd.DataFrame([step5_row_features(row) for row in source])
+    path = _write(tmp_path, source)
+    feature_calls = []
+
+    def features(row):
+        feature_calls.append(row["global_layer_id"])
+        return step5_row_features(row)
+
+    monkeypatch.setattr(step5, "step5_row_features", features)
+    frame = load_step5_attention_rows(path, _replica(model), _scheduler(), MeasurementType.KERNEL_ONLY)
+    assert feature_calls == [0, 3]
+    pd.testing.assert_frame_equal(frame[list(STEP5_FEATURE_COLUMNS)], expected)
+
+
 @pytest.mark.parametrize("graph", ["full", "piecewise"])
 def test_step_loader_accepts_native_graph_event_rows(model, tmp_path, graph):
     row = _row(model, 3, query=1, phase="decode", graph_mode=graph)
