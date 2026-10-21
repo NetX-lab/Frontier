@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import pickle
-from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
@@ -54,12 +53,11 @@ def _scheduler():
 
 def _row(model, layer_id=0, *, query=16, context=4104, graph_mode="none", phase="prefill",
          has_attention_metadata=True):
-    cell = Step5ProfileInput(layer_id, (query,), (context,), phase, graph_mode=graph_mode)
+    cell = Step5ProfileInput(layer_id, (query,), (context,), phase, graph_mode=graph_mode,
+                             has_attention_metadata=has_attention_metadata)
     metadata = describe_step5_layer(model, layer_id, attention_tp_size=8, moe_tp_size=1,
                                    expert_parallel_size=1)
     workload = cell.workload(model, block_size=16, max_model_len=8192)
-    if not has_attention_metadata:
-        workload = replace(workload, has_attention_metadata=False, block_table_columns=0)
     scopes = metadata.attention_scopes(workload)
     active = {name for name, _ in scopes}
     stats = {}

@@ -117,6 +117,12 @@ def test_isolated_no_metadata_rows_do_not_claim_serving_idle_coverage(tmp_path, 
     assert frame.iloc[0].has_attention_metadata == 0
     assert frame.iloc[0]["time_stats.step5_layer_e2e.kernel_count"] == len(active)
     assert frame.iloc[0]["time_stats.step5_layer_e2e.mean"] > 0
+    loaded = load_step5_attention_rows(path, replica, scheduler, "KERNEL_ONLY")
+    assert loaded.attrs["measurement_identity"]["physical_scope"] == {
+        "isolated_no_metadata": "isolated_no_metadata_attention_layer_without_tp_allreduce",
+    }
+    frame["physical_scope"] = "native_attention_layer_without_tp_allreduce"
+    frame.to_csv(path, index=False)
     with pytest.raises(ValueError, match="physical_scope"):
         load_step5_attention_rows(path, replica, scheduler, "KERNEL_ONLY")
     regular = build_row(config, Step5ProfileInput(layer, (1,), (0,), "decode"), tp=8,

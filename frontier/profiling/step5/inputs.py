@@ -9,50 +9,8 @@ from math import ceil
 from pathlib import Path
 
 from frontier.attention.step5 import Step5AttentionWorkload
+from frontier.attention.step5_inputs import MRv2DummyDescriptor
 from frontier.profiling.step5.replay import choose_graph_mode
-
-
-@dataclass(frozen=True)
-class MRv2DummyDescriptor:
-    """Explicit post-DP-sync descriptor; never inferred from a local dummy token."""
-
-    num_tokens: int
-    num_reqs: int | None
-    graph_mode: str
-    max_query_len: int | None
-    evidence: str
-    uniform_token_count: int | None = None
-
-    def __post_init__(self):
-        if type(self.num_tokens) is not int or self.num_tokens <= 0:
-            raise ValueError("MRv2 dummy descriptor requires positive synchronized num_tokens")
-        if self.num_reqs is not None and (
-                type(self.num_reqs) is not int or not 0 < self.num_reqs <= self.num_tokens):
-            raise ValueError("MRv2 dummy descriptor num_reqs must fit num_tokens")
-        if self.graph_mode not in ("none", "piecewise", "full"):
-            raise ValueError("MRv2 dummy graph mode must come from the synchronized descriptor")
-        if self.max_query_len is not None and (
-                type(self.max_query_len) is not int or self.max_query_len <= 0):
-            raise ValueError("MRv2 descriptor max_query_len must be positive or None")
-        if self.uniform_token_count is not None and (
-                type(self.uniform_token_count) is not int or self.uniform_token_count <= 0):
-            raise ValueError("MRv2 uniform_token_count must be positive or None")
-        if not isinstance(self.evidence, str) or not self.evidence.strip():
-            raise ValueError("MRv2 dummy descriptor requires an explicit source evidence reference")
-        if self.max_query_len is not None and max(self.query_lens) > self.max_query_len:
-            raise ValueError("MRv2 dummy token split exceeds the descriptor max_query_len")
-        if self.graph_mode == "full" and (
-                self.max_query_len != 1 or max(self.query_lens) != 1
-                or self.uniform_token_count not in (None, 1)):
-            raise ValueError("This no-MTP producer supports FULL dummy descriptors only for single-token decode")
-
-    @property
-    def query_lens(self):
-        # execute_dummy_batch schedules one local request without MTP. MRv2
-        # uses that count only when PIECEWISE supplies no request dimension.
-        requests = self.num_reqs or 1
-        base, extra = divmod(self.num_tokens, requests)
-        return tuple(base + (index >= requests - extra) for index in range(requests))
 
 
 @dataclass(frozen=True)

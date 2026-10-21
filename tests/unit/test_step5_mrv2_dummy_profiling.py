@@ -181,12 +181,15 @@ def mrv2_wrapper(native_source, monkeypatch):
 
 @pytest.mark.parametrize("tokens,requests,mode,max_query,queries", [
     (8, 8, "full", 1, (1,) * 8),
+    (1, 1, "full", None, (1,)),
+    (2, 2, "full", None, (1, 1)),
     (16, None, "piecewise", None, (16,)),
     (8, 3, "none", 3, (2, 3, 3)),
 ])
 def test_real_mrv2_input_block_table_step_state_and_builder_path(
         mrv2_wrapper, tokens, requests, mode, max_query, queries):
-    descriptor = MRv2DummyDescriptor(tokens, requests, mode, max_query, "CPU_SOURCE_FIXTURE_NOT_P0_CENSUS")
+    descriptor = MRv2DummyDescriptor(tokens, requests, mode, max_query, "CPU_SOURCE_FIXTURE_NOT_P0_CENSUS",
+                                   1 if mode == "full" and max_query is None else None)
     cell = Step5ProfileInput.from_mrv2_dummy(3, descriptor, block_table_columns=448)
     positions, slots, metadata, graph, padding = mrv2_wrapper._metadata(cell)
     assert cell.query_lens == queries and not any(cell.context_lens)

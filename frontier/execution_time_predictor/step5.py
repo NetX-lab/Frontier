@@ -24,6 +24,7 @@ from frontier.attention.step5 import (
     Step5AttentionWorkload, describe_step5_layer, describe_step5_stage_operator_tensors,
     resolve_step5_model_precision,
 )
+from frontier.attention.step5_inputs import validate_step5_input_row
 from frontier.config.precision_type import PrecisionType
 from frontier.operators.typed_contracts import (
     parse_typed_operator_contracts,
@@ -112,6 +113,7 @@ def step5_row_features(row) -> dict[str, float]:
     if features["has_attention_metadata"] not in (0., 1.):
         raise ValueError("Step has_attention_metadata must be 0 or 1")
     workload = _row_workload(row)
+    kind = validate_step5_input_row(row, workload)
     queries = workload.query_lengths
     contexts = tuple(length - query for length, query in zip(workload.sequence_lengths, queries))
     if (len(queries) != row["batch_size"] or sum(queries) != row["valid_tokens"]
@@ -129,6 +131,7 @@ def step5_row_features(row) -> dict[str, float]:
             attention_variant_code=float(STEP5_VARIANTS[row["attention_variant"]]),
             phase_code=float(STEP5_PHASES[row["phase"]]),
             graph_mode_code=float(STEP5_GRAPH_MODES[row["graph_mode"]][0]),
+            native_workload_code=float(kind.code),
         )
     except KeyError as exc:
         raise ValueError(f"Unsupported Step variant/phase/graph label: {exc}") from exc
@@ -191,7 +194,7 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
     validate_attention_profiling_dataframe(frame, schema, measurement_type=measurement)
     required = {
         *STEP5_IDENTITY_COLUMNS, *STEP5_NUMERIC_COLUMNS,
-    "query_lens", "context_lens", "phase", "active_operators", "typed_operator_contracts",
+        "query_lens", "context_lens", "phase", "native_workload", "active_operators", "typed_operator_contracts",
         *(f"time_stats.step5_layer_e2e.{stat}" for stat in _TIME_STATS),
     }
     missing = sorted(required - set(frame.columns))
@@ -213,7 +216,7 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
     if frame.empty:
         raise ValueError(f"Step measured attention coverage is unavailable for {measurement.value}: {expected}")
     identity_columns = (
-        *(name for name in STEP5_IDENTITY_COLUMNS if name != "attention_backend"),
+        *(name for name in STEP5_IDENTITY_COLUMNS if name not in ("attention_backend", "physical_scope")),
         *(("evidence_kind",) if "evidence_kind" in frame else ()),
     )
     validate_attention_profiling_dataframe(
@@ -225,6 +228,12 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
             rows, schema, measurement_type=measurement, identity_columns=("attention_backend",),
         )
         backend_by_variant[variant] = rows.iloc[0]["attention_backend"]
+    scope_by_kind = {}
+    for kind, rows in frame.groupby("native_workload", sort=True, dropna=False):
+        validate_attention_profiling_dataframe(
+            rows, schema, measurement_type=measurement, identity_columns=("physical_scope",),
+        )
+        scope_by_kind[kind] = rows.iloc[0]["physical_scope"]
     metadata_by_layer = {}
     for _, row in frame.iterrows():
         features = step5_row_features(row)
@@ -252,8 +261,6 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
             raise ValueError("Step norm_dtype conflicts with source metadata")
         if PrecisionType.from_torch_dtype(row["residual_dtype"]) is not metadata.residual_precision:
             raise ValueError("Step residual_dtype conflicts with source metadata")
-        if row["physical_scope"] != "native_attention_layer_without_tp_allreduce":
-            raise ValueError("Step physical_scope must exclude TP allreduce")
         if row["max_model_len"] != scheduler_config.max_model_len:
             raise ValueError("Step measured max_model_len differs from requested serving context")
         scopes = metadata.attention_scopes(_row_workload(row))
@@ -291,6 +298,7 @@ def load_step5_attention_rows(path, replica_config, scheduler_config, measuremen
                else frame.iloc[0][name]) for name in identity_columns
     }
     frame.attrs["measurement_identity"]["attention_backend"] = backend_by_variant
+    frame.attrs["measurement_identity"]["physical_scope"] = scope_by_kind
     return frame
 
 
@@ -355,19 +363,20 @@ def load_step5_attention_input_union(
         frame = load_step5_attention_rows(resolved, replica, scheduler, measurement_type)
         actual = frame.attrs["measurement_identity"]
         if identity is None:
-            identity = {**actual, "attention_backend": dict(actual["attention_backend"])}
+            identity = {**actual, **{name: dict(actual[name]) for name in ("attention_backend", "physical_scope")}}
             canonical_config = config
         else:
             for name in identity.keys() | actual.keys():
-                if name == "attention_backend":
+                if name in ("attention_backend", "physical_scope"):
                     continue
                 if name not in identity or name not in actual or identity[name] != actual[name]:
                     raise ValueError(f"incompatible Step attention input identity: {name} for {role}")
-            for variant, backend in actual["attention_backend"].items():
-                previous = identity["attention_backend"].get(variant)
-                if previous is not None and previous != backend:
-                    raise ValueError(f"incompatible Step attention input identity: attention_backend/{variant}")
-                identity["attention_backend"][variant] = backend
+            for name in ("attention_backend", "physical_scope"):
+                for label, value in actual[name].items():
+                    previous = identity[name].get(label)
+                    if previous is not None and previous != value:
+                        raise ValueError(f"incompatible Step attention input identity: {name}/{label}")
+                    identity[name][label] = value
         frames.append(frame)
         inputs.append({
             "role": str(role), "path": str(Path(resolved).resolve()),
@@ -397,7 +406,7 @@ def set_step5_model_coverage(model, frame: pd.DataFrame) -> None:
     model._frontier_step5_domains = {
         name: tuple(sorted(float(value) for value in frame[name].unique()))
         for name in ("global_layer_id", "attention_variant_code", "phase_code", "graph_mode_code",
-                     "has_attention_metadata")
+                     "has_attention_metadata", "native_workload_code")
     }
 
 
