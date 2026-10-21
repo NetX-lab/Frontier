@@ -42,7 +42,10 @@ Do not rerun producer/native/full CLI/strict77 or touch their fixtures.
 2. completed: Change only agreement's capacity source to existing scheduler config. Bind
    focused harnesses to actual V1 config and retain supported arrival-order and
    cap3 tests. No new behavior branch or policy/cost change.
-3. completed verification: Run affected stage/engine and direct public predictor tests, inspect artifacts,
+3. completed: Run affected stage/engine and direct public predictor tests, inspect artifacts,
    update reachability/disposition records and commit for parent integration.
 
 Dependency: F1 -> F2 -> F3. No new native/producer/full CLI/strict77 work.
+
+F1-F3 closed in `ef476fe` and integrated by primary at `32fb934`; final independent
+source review has no findings. Parent-owned strict77 and full CLI remain active.

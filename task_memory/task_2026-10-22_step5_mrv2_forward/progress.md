@@ -193,6 +193,9 @@ parent independent acceptance is not included in the completed local scope.
   directly expresses native graph creation capacity. Supported Step requests
   cannot activate the thinking override; no reachable arrival-order defect was
   demonstrated. This is an invariant clarification, not a claimed bug reproduction.
-- pending integration: primary records/commits this verified slice, then merges
-  the forward branch and checks clean strict77. Fresh actual-main verification
-  resumes independently in `step5-mrv2-main` with its existing fixture02.
+- completed source integration: primary committed `ef476fe`, obtained final
+  independent Standards/Spec No findings and merged at `32fb934`. All16 changed
+  core/test files in the merged tree exactly match the reviewed source.
+- in-progress parent acceptance: clean strict77 baseline9dcd876 versus
+  candidate32fb934; fresh actual-main resumes independently in
+  `step5-mrv2-main` with its existing fixture02. Neither result is yet claimed.

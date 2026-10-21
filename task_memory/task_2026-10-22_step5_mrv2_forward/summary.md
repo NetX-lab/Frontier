@@ -16,6 +16,11 @@ branch `feat/step5-mrv2-forward`, worktree
 `/data/ycfeng/Frontier/.worktrees/step5-mrv2-forward`. Inputs worktree stayed clean.
 No GPU/native qualification or accuracy claim is made.
 
+Final fixed-capacity source `ef476fe` has independent Standards/Spec
+**No findings** and is integrated into `feat/step5-preview` at `32fb934`.
+All16 changed core/test files match the reviewed bytes. Parent's clean legacy
+matrix and fresh full CLI remain in progress; see the main task integration report.
+
 P2 review correction (follow-up to record HEAD `d8e3e941`) removes illegal
 uniform FULL captures above the existing V1 request capacity. With cap3 and
 capture sizes[1,2,4,8], decode3+dummy1 now binds PIECEWISE4 under
@@ -132,5 +137,5 @@ Task/session: `D23-MRV2-FORWARD` / `ses_ea08efc2cffe6Z1Rc7srkVdebh`.
 - Parent fresh fixture/direct agreement callers must add required keyword
   `request_capacity` from the existing role scheduler/config; do not infer it
   from captures. No parent fresh CLI fixture was read or edited here.
-- Scope remains CPU forward correction only. Parent independent re-review,
-  merge, full CLI and strict77 are unfinished acceptance, not passing claims.
+- Scope remains CPU forward correction only. Source re-review and merge are
+  complete at32fb934; full CLI and strict77 remain unfinished acceptance.

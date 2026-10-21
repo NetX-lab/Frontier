@@ -1,4 +1,4 @@
-# Forward Capacity Phase Checkpoint
+# Forward Agreement Source Review
 
 **Modification History**
 
@@ -7,8 +7,31 @@
 | 2026-10-22 | Record self-check after489 affected PASS; not a correctness re-review. |
 | 2026-10-22 | Advance local closure to PASS after verified correction commit. |
 | 2026-10-22 | Resume interrupted fixed-capacity follow-up; check route after source change. |
+| 2026-10-22 | Final independent source review No findings; primary integration32fb934 preserves all16 reviewed source files. |
 
-## 1. 规划完成情况
+## Current independent source review
+
+- Reviewer: native reviewer session `ses_ea077118cffeNBkYQnihHe1SZ7`.
+- Target: `ef476fe`; complete diff `5c2319cd..ef476fe`, retained at
+  `/data/ycfeng/tmp/d23_forward_final_ef476fe.diff`. Inspected task records,
+  D23 design, native candidate/DP semantics and first-event tests.
+- **Standards: No findings. Spec: No findings.** Original cap3 P2 is resolved:
+  FULL request buckets respect capacity; wider PIECEWISE remains valid; both
+  local selection and final DP dispatch use the same resolver.
+- The reviewer withdraws the hidden-phase example as a current Step bug:
+  Step thinking is rejected, ordinary requests have depth1, and no phase cap
+  override is reachable. The final fixed `_config.batch_size_cap` binding
+  states the native graph-creation invariant; it is not a reproduced bug fix.
+- Reviewer confirmed the primary242-PASS/33.92s XML and earlier221+268 records;
+  the reviewer did not execute tests. Existing hold/resume, promotion/reset,
+  NONE widths, ownership/null fields and strict coverage conclusions stand.
+- Primary merged at `32fb934`; all16 changed core/test files match reviewed
+  `ef476fe` bytes exactly. Clean strict77 and fresh full CLI remain pending;
+  source review does not establish native/profile/accuracy qualification.
+
+The following checkpoint is retained as the historical interrupted-owner state.
+
+## 1. Historical planning checkpoint
 
 **汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
 

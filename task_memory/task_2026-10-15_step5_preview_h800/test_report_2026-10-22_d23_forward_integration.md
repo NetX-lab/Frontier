@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Primary finishes fixed-capacity verification and resumes integration after provider interruptions. |
+| 2026-10-22 | Final source review passes; merge32fb934 and clean baseline/candidate matrix started. |
 
 ## Authority and scope
 
@@ -28,13 +29,42 @@ is implied by this CPU integration.
   `test_report_2026-10-22_forward_agreement.md`; raw log/XML:
   `/data/ycfeng/tmp/d23_fixed_parent_takeover01.{log,xml}`.
 
-## Remaining integration checks
+## Source review and merge: PASS
 
-Final source review targets `/data/ycfeng/tmp/d23_forward_final_ef476fe.diff`
-(`5c2319cd..ef476fe`). Merge, clean77 baseline/candidate comparison, and truthful
-MRv2 full offline/online CLI acceptance remain in progress. The CLI owner reuses
-fixture02 and existing caches; no duplicate fit or old isolated-shape run was
-started. Report each result here when available.
+Reviewer `ses_ea077118cffeNBkYQnihHe1SZ7` inspected the complete
+`/data/ycfeng/tmp/d23_forward_final_ef476fe.diff` (`5c2319cd..ef476fe`), task
+records, design and native/current code. Standards/Spec: **No findings**.
+The original cap3 finding is resolved; the hidden-phase example is withdrawn
+as unreachable for current supported Step requests. Full review is in
+`../task_2026-10-22_step5_mrv2_forward/review.md`.
+
+Merged source: `32fb934bafcd5d422555f23534b99609d03d540b`. Primary byte-compared
+all16 changed core/test files with `ef476fe`; all match. Independent fixture
+work remains isolated; no merge conflict or unrelated file overwrite occurred.
+
+## Clean legacy matrix: in progress
+
+Fresh detached worktrees were clean before running: baseline
+`/data/ycfeng/Frontier/.worktrees/fidelity-baseline-9dcd876`, candidate
+`/data/ycfeng/Frontier/.worktrees/fidelity-candidate-32fb934`.
+Both commands use the candidate's same driver/case table and separate caches:
+
+```bash
+# cwd=/data/ycfeng/Frontier/.worktrees/fidelity-candidate-32fb934
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-baseline-9dcd876 --label baseline --output-root /data/ycfeng/tmp/step5_d23_forward_fidelity_20261022 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d23_fidelity_baseline01.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-candidate-32fb934 --label candidate --output-root /data/ycfeng/tmp/step5_d23_forward_fidelity_20261022 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d23_fidelity_candidate01.log 2>&1
+```
+
+Expected:77 complete cases per side, zero strict artifact or cache-name
+differences, zero dirty-source/missing-evidence findings. Final comparison
+is pending both command completions.
+
+## Full CLI: in progress
+
+The owner reuses already-fitted fixture02 and existing caches in
+`step5-mrv2-main`. No duplicate fit or old isolated-shape run was started.
+Offline/online completion, actual tail/read/release evidence and final metrics
+remain unverified under the fresh MRv2 input contract.
 
 ## Legacy cancellation
 

@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-22 | Archive executable CPU results and original-source RED evidence. |
 | 2026-10-22 | Add P2 capacity correction RED/GREEN,489 affected passes and exact commands. |
+| 2026-10-22 | Primary verifies fixed config binding242PASS; source review closes and integration32fb934 matches reviewed bytes. |
 
 ## Environment and scope
 
