@@ -133,3 +133,54 @@ are emitted, but downstream admission still needs the option-A linear-profile
 ownership cleanup, full-grid/reproducibility measurements, physical-scope
 reconciliation thresholds and native GPU verification. A successful smoke is
 not full ticket-10 admission, trained prediction, or full-role qualification.
+
+## Fixed-workload H200 small probe
+
+This is a **small operator probe**, not the canonical 64-H200 serving run or a
+full grid. It pins the unchanged D18 workload from shared commit `68f891b`
+(local `958d81a`) under
+`data/processed_traces/canonical_fixed_6144_1024_req128_qps1/`.
+
+```bash
+python -m frontier.profiling.step5.job --fixed-workload-probe \
+  --stage /data/ycfeng/tmp/d18_profile_20261021/h200_small_probe_stage01 \
+  --dependency-site /data/ycfeng/tmp/step5_attention_20261020/offline_site01
+```
+
+The existing source packager creates a new stage only. The manifest requests
+one H200/step_main, eight CPUs, 32 GiB memory, non-preemptible, with the pinned
+Step image and a one-hour timeout. Only the parent submits `submit_with_env.sh`.
+The existing worker checks its host driver before Python, using CUDA 13 forward
+compatibility only below R580. Estimated runtime is 20–45 minutes, or
+0.33–0.75 GPU-hours, excluding queueing; this is not a measured cost.
+
+The existing attention producer consumes explicit cells from
+`fixed_probe_inputs.json`, rather than an infeasible Cartesian product:
+
+- Both SWA and DSA: 6144-token initial prefill; 16-token continuation after 6128
+  prefix tokens; one-token decode at contexts 6144, 6656 and 7160, batch 1/2.
+- SWA only: one-token decode at context 7167, batch 1/2, reaching sequence length
+  7168. Context excludes the current query token. Repeated DSA partial-region
+  contexts remain unsupported; they are not silently rounded or qualified.
+- Explicit isolated policy: `max_num_seqs=2`, `max_model_len=7168`,
+  `max_num_batched_tokens=14336`, prefix caching/chunked prefill off,
+  `FULL_AND_PIECEWISE`, exact capture buckets `[1,2]`, breakable graphs on.
+  Prefill/tail use NONE and decode uses FULL. These widths follow that probe's
+  configured capacity, not QPS or a claim about canonical DP4 batches.
+
+Expected attention output: 18 event rows and four eager GPU-active rows under
+`attention/compute/h200/stepfun-ai/Step-5-Preview/`. The existing linear producer
+measures tokens 1, 2, 16 and 6144, with eight rows per method under
+`linear/compute/h200/stepfun-ai/Step-5-Preview/`. Native command logs are retained
+in the output root; `pipefail` preserves failures. The two timing methods remain
+distinct. No new operator, endpoint or LM-head coverage is implied.
+
+The failed H800 linear smoke selected generic FP8 MLP defaults despite the
+native module exclusions. Profiling now derives the quantized-operation selector
+from the existing Step layer descriptions, preserving dense/shared BF16 and
+routed FP8. It does not pad TP8 widths 1728/192 or relax the native block guard.
+The precision correction and attention event priming are CPU-verified only until
+fresh native execution. All existing output/state, 5% CV/median-agreement,
+activity and phase-policy gates remain unchanged. Canonical P32/D32 runtime,
+capacity, transfer-tail behavior, reached batches and actual H200 timing still
+need their separate qualifications.

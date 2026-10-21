@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import product
+import json
 from math import ceil
+from pathlib import Path
 
 from frontier.attention.step5 import Step5AttentionWorkload
 from frontier.profiling.step5.replay import choose_graph_mode
@@ -77,4 +79,19 @@ def build_profile_inputs(config, *, prefill_tokens, prefixes, decode_batches,
         raise ValueError("The profile grid contains duplicate cells")
     if not result:
         raise ValueError("The profile grid must contain workloads")
+    return result
+
+
+def read_profile_inputs(path, *, cudagraph_capture_sizes):
+    """Read explicit reached shapes without forming an unrelated Cartesian grid."""
+    records = json.loads(Path(path).read_text())
+    result = []
+    for record in records:
+        values = {**record, "query_lens": tuple(record["query_lens"]),
+                  "context_lens": tuple(record["context_lens"])}
+        values["graph_mode"] = choose_graph_mode(
+            values["phase"], sum(values["query_lens"]), cudagraph_capture_sizes)
+        result.append(Step5ProfileInput(**values))
+    if not result or len(set(result)) != len(result):
+        raise ValueError("Explicit profile inputs must contain distinct cells")
     return result

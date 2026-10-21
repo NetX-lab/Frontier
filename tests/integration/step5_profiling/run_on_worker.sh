@@ -16,8 +16,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 EXTRA_SITE="${TMPDIR:-/tmp}/frontier_profiling_site"
 
-export VLLM_ENABLE_CUDA_COMPATIBILITY=1
-export LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+driver_version="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -n 1)"
+echo "WORKER_HOST_DRIVER $driver_version"
+if (( ${driver_version%%.*} < 580 )); then
+  export VLLM_ENABLE_CUDA_COMPATIBILITY=1
+  export LD_LIBRARY_PATH="/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+else
+  export VLLM_ENABLE_CUDA_COMPATIBILITY=0
+fi
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 export PYTHONPATH="$REPO_ROOT:$EXTRA_SITE${PYTHONPATH:+:$PYTHONPATH}"
@@ -55,5 +61,13 @@ if [ -n "$missing" ]; then
 fi
 
 cd "$REPO_ROOT"
-python3 -c 'import torch; assert torch.cuda.is_available(); print("WORKER_DEVICE", torch.cuda.get_device_name(0), torch.__version__)'
+python3 - <<'PY'
+from pathlib import Path
+import torch
+
+assert torch.cuda.is_available()
+print("WORKER_DEVICE", torch.cuda.get_device_name(0), torch.__version__)
+print("WORKER_LIBCUDA", sorted({line.split()[-1] for line in Path("/proc/self/maps").read_text().splitlines()
+                               if "/libcuda.so" in line}))
+PY
 exec python3 "$@"

@@ -23,19 +23,19 @@ ATTN_TP, FFN_TP, MOE_TP = 8, 8, 1
 METHODS = ("cuda_event", "record_function")
 
 
-def profile_arguments(output, method):
+def profile_arguments(output, method, *, tokens=TOKENS, device="h800"):
     """Use the canonical producer, including its TP=1 replicated-row writer."""
     return [
         "--disable_ray", "--num_gpus", "1", "--models", MODEL,
-        "--num_tokens_list", *map(str, TOKENS),
+        "--num_tokens_list", *map(str, tokens),
         "--num_tensor_parallel_workers", str(ATTN_TP),
         "--attn_tp", str(ATTN_TP), "--ffn_tp", str(FFN_TP), "--moe_tp", str(MOE_TP),
         "--precision", "BF16",
-        "--profile_method", method, "--device", "h800", "--output_dir", str(output), "--yes",
+        "--profile_method", method, "--device", device, "--output_dir", str(output), "--yes",
     ]
 
 
-def planned_profile(output):
+def planned_profile(output, *, tokens=TOKENS, device="h800"):
     """Derive work and output rows from the producer's plan and row writer."""
     from frontier.profiling.common.model_config import ModelConfig
     from frontier.profiling.linear_op.main import (
@@ -56,10 +56,10 @@ def planned_profile(output):
         if not plan["enabled_ops"]:
             continue
         replicated = set(plan["replicated_ops"])
-        for tokens in TOKENS:
+        for num_tokens in tokens:
             rows.extend(_materialize_profile_result_rows(
                 {"time_stats": dict.fromkeys(plan["enabled_ops"]),
-                 "num_tokens": tokens, "num_tensor_parallel_workers": plan["tp_size"],
+                  "num_tokens": num_tokens, "num_tensor_parallel_workers": plan["tp_size"],
                  "model_arch": config.model_arch,
                  "typed_operator_contracts": plan["typed_operator_contracts"]},
                 measurement_type="CUDA_EVENT",
@@ -69,7 +69,7 @@ def planned_profile(output):
     rows = deduplicate_tp1_rows(
         rows, tp1_key_fields=("num_tokens", "model_arch", "measurement_type"))
     return {
-        "model": MODEL, "num_tokens": list(TOKENS),
+        "model": MODEL, "num_tokens": list(tokens),
         "profiling_precision": ModelConfig._dtype_to_str(config.dtype),
         "planned_activation_variants": {
             "dense": profile.resolve_ffn_activation(config, share_expert=False),
@@ -80,9 +80,9 @@ def planned_profile(output):
             "norm_dtype": config.norm_dtype,
             "zero_centered": config.zero_centered,
         },
-        "csv_paths": {method: str(path) for method, path in csv_paths(output).items()},
-        "plans": [_plan_summary(plan, list(TOKENS)) for plan in plans],
-        "profiled_steps_per_method": sum(len(TOKENS) for p in plans if p["enabled_ops"]),
+        "csv_paths": {method: str(path) for method, path in csv_paths(output, device=device).items()},
+        "plans": [_plan_summary(plan, list(tokens)) for plan in plans],
+        "profiled_steps_per_method": sum(len(tokens) for p in plans if p["enabled_ops"]),
         "expected_rows_per_method": len(rows),
         "expected_rows_by_tp_per_method": dict(sorted(Counter(
             str(row["num_tensor_parallel_workers"]) for row in rows).items())),
@@ -95,11 +95,11 @@ def planned_profile(output):
     }
 
 
-def csv_paths(output):
+def csv_paths(output, *, device="h800"):
     from frontier.profiling.utils import build_profile_method_output_path
 
     return {method: build_profile_method_output_path(
-        output_root=output, profiling_type="compute", hardware="h800",
+        output_root=output, profiling_type="compute", hardware=device,
         model_name=MODEL, op_name="linear_op", profile_method=method)
         for method in METHODS}
 

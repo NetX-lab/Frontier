@@ -31,7 +31,7 @@ class VllmStep5AttentionWrapper:
 
     def __init__(self, *, config, model_path, device, tensor_parallel_size,
                   layer_id, block_size, max_model_len, max_batch_size, trace_dir, seed, graph_mode,
-                  cudagraph_capture_sizes=(1, 2)):
+                  cudagraph_capture_sizes=(1, 2), enable_chunked_prefill=True):
         # Native eager-break decorators bind at model import, before EngineArgs
         # can otherwise auto-enable the Step architecture's default.
         os.environ.setdefault("VLLM_USE_BREAKABLE_CUDAGRAPH", "1")
@@ -70,7 +70,7 @@ class VllmStep5AttentionWrapper:
             outer = EngineArgs(
                 model=model_path, load_format="dummy", skip_tokenizer_init=True,
                 tensor_parallel_size=1, block_size=block_size,
-                enable_prefix_caching=False, enable_chunked_prefill=True,
+                enable_prefix_caching=False, enable_chunked_prefill=enable_chunked_prefill,
                 enforce_eager=False, max_num_seqs=max_batch_size,
                 compilation_config={"mode": 0, "cudagraph_mode": "FULL_AND_PIECEWISE",
                                     "cudagraph_capture_sizes": list(self.cudagraph_capture_sizes),

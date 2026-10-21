@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 
 from frontier.profiling.common.model_config import ModelConfig
-from frontier.profiling.step5.inputs import build_profile_inputs
+from frontier.profiling.step5.inputs import build_profile_inputs, read_profile_inputs
 from frontier.profiling.step5.rows import rows_to_dataframe
 from frontier.profiling.utils import build_profile_method_output_path
 
@@ -22,6 +22,9 @@ def parse_args(argv=None):
     parser.add_argument("--block-size", type=int, default=16)
     parser.add_argument("--max-model-len", type=int, required=True)
     parser.add_argument("--prefill-tokens", nargs="+", type=int, default=[16, 64])
+    parser.add_argument("--input-file", type=Path,
+                        help="Explicit Step5ProfileInput shapes, instead of the Cartesian grid")
+    parser.add_argument("--disable-chunked-prefill", action="store_true")
     parser.add_argument("--prefixes", nargs="+", type=int, default=[0, 512])
     parser.add_argument("--prefill-batches", nargs="+", type=int, default=[1])
     parser.add_argument("--decode-batches", nargs="+", type=int, default=[1])
@@ -46,11 +49,13 @@ def main(argv=None):
         raise ValueError("max-time-cv must lie strictly between zero and one")
     if not math.isfinite(args.min_timing_window_ms) or args.min_timing_window_ms <= 0:
         raise ValueError("min-timing-window-ms must be positive and finite")
-    cells = build_profile_inputs(
+    cells = (read_profile_inputs(args.input_file,
+                                cudagraph_capture_sizes=args.cudagraph_capture_sizes)
+             if args.input_file else build_profile_inputs(
         config, prefill_tokens=args.prefill_tokens, prefixes=args.prefixes,
         prefill_batches=args.prefill_batches, decode_batches=args.decode_batches,
         decode_contexts=args.decode_contexts, cudagraph_capture_sizes=args.cudagraph_capture_sizes,
-    )
+    ))
     from frontier.attention.step5 import resolve_step5_attention_geometry
 
     for cell in cells:
@@ -62,7 +67,10 @@ def main(argv=None):
 
         print(json.dumps({"rows": len(cells),
                           "gpu_active_rows": sum(c.graph_mode == "none" for c in cells),
-                          "cudagraph_capture_sizes": args.cudagraph_capture_sizes,
+                           "cudagraph_capture_sizes": args.cudagraph_capture_sizes,
+                           "enable_chunked_prefill": not args.disable_chunked_prefill,
+                           "native_max_num_seqs": max(c.batch_size for c in cells),
+                           "native_max_num_batched_tokens": args.max_model_len * max(c.batch_size for c in cells),
                           "cells": [asdict(c) for c in cells]}, indent=2))
         return
     from frontier.profiling.step5.vllm_wrapper import VllmStep5AttentionWrapper
@@ -90,6 +98,7 @@ def main(argv=None):
                 seed=args.seed,
                 graph_mode=graph_mode,
                 cudagraph_capture_sizes=tuple(args.cudagraph_capture_sizes),
+                enable_chunked_prefill=not args.disable_chunked_prefill,
             ) as wrapper:
                 for cell in (c for c in cells if c.global_layer_id == layer_id and c.graph_mode == graph_mode):
                     result = wrapper.profile(
