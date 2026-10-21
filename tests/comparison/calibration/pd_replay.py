@@ -187,6 +187,10 @@ def instance_env(mode: str, engine: dict, role_dir: Path, inherited: dict,
         role_env = {"CUDA_VISIBLE_DEVICES": device,
                     "VLLM_NIXL_SIDE_CHANNEL_HOST": kv["side_channel_host"],
                     "VLLM_NIXL_SIDE_CHANNEL_PORT": str(kv[f"{role}_side_channel_port"])}
+        if engine.get("worker_extension_cls") == "native_full_structure.FullModelInventory":
+            # The server and its spawned workers do not inherit this process's sys.path.
+            role_env["PYTHONPATH"] = os.pathsep.join(
+                filter(None, (str(HARNESS_DIR), env.get("PYTHONPATH"))))
         return env | role_env, set_env | role_env
     role_env = {
         "CUDA_VISIBLE_DEVICES": device,
