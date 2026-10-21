@@ -311,9 +311,14 @@ def run(config):
             if plan['lane'] and not (node / 'failed.json').exists():
                 head_stopped = root / 'nodes' / plan['heads'][plan['role']]['host'] / 'native_stopped.json'
                 deadline = time.monotonic() + config['stop_timeout_s']
-                while server.poll() is None and not head_stopped.exists() and time.monotonic() < deadline:
+                while not head_stopped.exists() and time.monotonic() < deadline:
+                    if server.poll() not in (None, 0):
+                        break
                     time.sleep(1)
                 result['shutdown_order']['head_stopped_before_headless_stop'] = head_stopped.exists()
+                if not head_stopped.exists():
+                    result['observation_errors'].append('Head shutdown marker missing; native stop order unverified')
+            result['shutdown_order']['native_returned_before_requested_stop'] = server.poll() is not None
             result['server_stop'] = stop_server(server, config['stop_timeout_s'])
             if result['server_stop']['returncode'] != 0:
                 exit_code = 1

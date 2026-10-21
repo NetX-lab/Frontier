@@ -21,7 +21,10 @@ def exercise(worker, temporary, case):
     model.mkdir()
     scratch.mkdir()
     (model / "config.json").write_text("{}")
-    for index in (1, 2, 3):
+    own_host = "host1" if case == "canonical_clean_natural_headless_exit" else "host0"
+    for index in range(4):
+        if f"host{index}" == own_host:
+            continue
         node = root / "nodes" / f"host{index}"
         node.mkdir(parents=True)
         (node / "ready.json").write_text(json.dumps({
@@ -50,6 +53,9 @@ def exercise(worker, temporary, case):
             self.returncode = None
 
         def poll(self):
+            if (self.kind == "server" and case == "canonical_clean_natural_headless_exit"
+                    and (root / "nodes/host1/drained.json").exists()):
+                self.returncode = 0
             if self.kind == "replay":
                 self.returncode = 4 if case == "canonical_clean_admission_failure" else 0
                 if "replay_completed" not in events:
@@ -78,7 +84,7 @@ def exercise(worker, temporary, case):
         return {"signal": "SIGINT", "returncode": process.returncode}
 
     inventory = types.ModuleType("probe_runtime_inventory")
-    inventory.primary_ipv4 = lambda: "10.0.0.1"
+    inventory.primary_ipv4 = lambda: "10.0.0.2" if own_host == "host1" else "10.0.0.1"
     inventory.read_text = lambda path: ""
     inventory.sha256 = sha256
     inventory.weight_candidates = lambda *args: {}
@@ -111,6 +117,8 @@ def exercise(worker, temporary, case):
         config.update(mode="clean", idle_timeout_s=180, idle_poll_s=1)
     if case in ("canonical_clean_standard_layout", "canonical_clean_manifest_staging_failure"):
         config.update(case_dir=str(directory / "local-case"), run_tag="cpu-fixture")
+    if case == "canonical_clean_natural_headless_exit":
+        (root / "replay_finished.json").write_text('{"returncode":0}')
     original_relative = Path.is_relative_to
 
     def is_relative_to(path, other):
@@ -135,7 +143,8 @@ def exercise(worker, temporary, case):
             "probe_runtime_inventory": inventory, "probe_nixl_read": nixl,
             "pd_replay": pd, "vllm_replay": native}))
         stack.enter_context(patch.object(Path, "is_relative_to", is_relative_to))
-        stack.enter_context(patch.object(worker.socket, "gethostname", return_value="host0"))
+        stack.enter_context(patch.object(worker.socket, "gethostname",
+            return_value=own_host))
         stack.enter_context(patch.object(worker.os, "dup2"))
         stack.enter_context(patch.object(worker.tempfile, "mkdtemp", return_value=str(scratch)))
         stack.enter_context(patch.object(worker.subprocess, "Popen", side_effect=popen))
@@ -145,13 +154,18 @@ def exercise(worker, temporary, case):
         if case == "canonical_clean_standard_layout":
             stack.enter_context(patch.object(worker, "stage_run_manifest",
                 side_effect=lambda *args: events.append("prelaunch_manifest_staged")))
+        if case == "canonical_clean_natural_headless_exit":
+            def publish_head_stop(_):
+                events.append("head_native_stopped")
+                (root / "nodes/host0/native_stopped.json").write_text('{"returncode":0,"signal":"SIGINT"}')
+            stack.enter_context(patch.object(worker.time, "sleep", side_effect=publish_head_stop))
         code = worker.run(config)
-    result = json.loads((root / "nodes/host0/result.json").read_text())
+    result = json.loads((root / "nodes" / own_host / "result.json").read_text())
     return {
         "case": case, "worker_returncode": code, "events": events,
         "native_server_returncode": result.get("server_stop", {}).get("returncode"),
         "native_server_stop_signal": result.get("server_stop", {}).get("signal"),
-        "failed_sentinel": (root / "nodes/host0/failed.json").exists(),
+        "failed_sentinel": (root / "nodes" / own_host / "failed.json").exists(),
         "observation_errors": result["observation_errors"],
         "replay_commands": replay_commands,
         "shutdown_order": result.get("shutdown_order"),
@@ -215,3 +229,13 @@ def test_manifest_copy_failure_is_soft_and_native_work_still_completes(tmp_path)
     assert result["worker_returncode"] == result["native_server_returncode"] == 0
     assert not result["failed_sentinel"]
     assert result["events"].index("replay_completed") < result["events"].index("server_stop_called")
+
+
+def test_headless_natural_completion_still_waits_for_head_stop_evidence(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, "canonical_clean_natural_headless_exit")
+    assert result["worker_returncode"] == result["native_server_returncode"] == 0
+    assert result["native_server_stop_signal"] is None
+    assert not result["observation_errors"]
+    assert result["shutdown_order"]["native_returned_before_requested_stop"] is True
+    assert result["shutdown_order"]["head_stopped_before_headless_stop"] is True
+    assert result["events"].index("head_native_stopped") < result["events"].index("server_stop_called")
