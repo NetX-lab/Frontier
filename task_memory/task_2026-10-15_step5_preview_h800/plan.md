@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | D25 prioritizes full H80032/64 native workload collection; D23 CPU verification continues independently. |
+| 2026-10-22 | D25 completed on both scales; resume D23 core integration, fresh actual-main and clean legacy verification. |
 | 2026-10-22 | Record parallel D23 CPU agreement and D24 native-evidence completion paths after typed-input integration. |
 | 2026-10-22 | Integrated G3/reference and corrected MRv2 producer; primary685/465 tests pass, native P0 capture executing. |
 | 2026-10-21 | Add the parent-owned event logger repair before complete actual-main acceptance. |
@@ -114,7 +114,7 @@
 
 ## Current D21/D23/D24/D25 execution contract — 2026-10-22
 
-**Immediate D25 priority:** complete native H80032 and H80064 three-repeat fixed workload collection and p90/throughput analysis, including TTFT above5s. Use existing clean stager/client with explicit collection purpose, same per-role API count, isolated ports and non-preemptible resources. Detailed execution: `../task_2026-10-22_step5_full_workload/plan.md`. D23 CPU work continues in parallel; the next D24/G3 diagnostic follows this requested collection priority. Native performance data alone do not release calibration prerequisites.
+**D25 completed:** both native H80032/64 three-repeat fixed workloads, p90/throughput and TTFT analysis are archived in `../task_2026-10-22_step5_full_workload/summary.md`. Resume D23 first-call core integration, fresh actual-main and clean legacy verification. The next D24/G3 diagnostic remains a separate pending native step. Native performance data alone do not release calibration prerequisites.
 
 Authority: D21/D23/D24 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. Implementation continues P0-first; native/profile/predictive acceptance is unchanged.
 

@@ -1,0 +1,154 @@
+diff --git a/tests/integration/run_step5_measured_main.py b/tests/integration/run_step5_measured_main.py
+index 4dc6ac7..6c5e811 100644
+--- a/tests/integration/run_step5_measured_main.py
++++ b/tests/integration/run_step5_measured_main.py
+@@ -10,6 +10,7 @@ import argparse
+ import csv
+ from dataclasses import asdict
+ import json
++import math
+ import os
+ from pathlib import Path
+ import platform
+@@ -123,7 +124,7 @@ def command(mode, root, fixture, read_cost):
+         "--no-metrics_config_store_frontier_stage_batch_ledger",
+         "--metrics_config_store_frontier_stage_batch_ledger_summary",
+         "--no-metrics_config_enable_op_level_tracing", "--no-metrics_config_store_plots",
+-        "--no-metrics_config_enable_chrome_trace", "--no-metrics_config_write_json_trace",
++        "--no-metrics_config_enable_chrome_trace", "--metrics_config_write_json_trace",
+     ]
+     for role in ("prefill", "decode"):
+         prefix = f"--cluster_config_{role}_replica_config_"
+@@ -164,13 +165,34 @@ def validate(root, mode, document):
+         [request] = list(csv.DictReader(stream))
+     require(int(request["request_num_prefill_tokens"]) == 6144, "Wrong input count")
+     require(int(request["request_num_decode_tokens"]) == 1024, "Wrong output count")
++    with (run / "decode_batch_metrics.csv").open() as stream:
++        decode_batches = list(csv.DictReader(stream))
++    require(len(decode_batches) == 1024, "Wrong number of request-owned D batches")
++    first_decode = decode_batches[0]
++    require(int(first_decode["batch_num_prefill_tokens"]) == 16
++            and int(first_decode["batch_num_tokens"]) == 16, "Wrong first D prompt tail")
++    require(all(int(row["batch_num_decode_tokens"]) == 1 for row in decode_batches[1:]),
++            "D must advance one output token per subsequent batch")
++    cached = int(request["request_num_prefill_tokens"]) - int(first_decode["batch_num_prefill_tokens"])
++    require(cached == 6128, "Wrong D cached prefix")
+     [transfer] = [json.loads(line) for line in (run / "frontier_transfer_ledger.jsonl").read_text().splitlines()]
+     require(transfer["status"] == "completed" and transfer["target_bound"], "Incomplete READ")
+     require(transfer["bytes"] == document["measurements"][0]["transfer_bytes_per_rank"], "Wrong READ bytes")
+     require(abs(transfer["duration_ms"] - 3.5) < 1e-6, "Wrong READ cost")
++    completed_read = [event for event in json.loads((run / "event_trace.json").read_text())
++                      if event["event_type"] == "KV_CACHE_TRANSFER_END"]
++    require(len(completed_read) == 1, "Missing or duplicate completed READ event")
++    ready, released = (float(completed_read[0][key]) for key in ("target_ready_time", "source_release_time"))
++    require(ready == released == transfer["end_ts_s"], "READ ready/source release mismatch")
++    metrics = {name: float(request[name]) for name in ("request_e2e_time", "ttft", "tpot", "ttft_kv_transfer")}
++    require(all(math.isfinite(value) and value > 0 for value in metrics.values()), "Invalid final metrics")
++    require(abs(metrics["ttft_kv_transfer"] - 3.5) < 1e-6, "Wrong request READ metric")
+     return dict(mode=mode, status="PASS", evidence_kind="cpu_fixture", native_admitted=False,
+-                run_dir=str(run), request=request, transfer=transfer, system_metrics=system,
+-                limitations=LIMITATIONS)
++                 run_dir=str(run), request=request, transfer=transfer, system_metrics=system,
++                 first_decode_batch=first_decode, cached_prefix_tokens=cached,
++                 decode_batch_count=len(decode_batches), completed_read_event=completed_read[0],
++                 target_ready_time=ready, source_release_time=released, final_metrics_ms=metrics,
++                 limitations=LIMITATIONS)
+ 
+ 
+ def main():
+diff --git a/tests/integration/step5_measured_compute_fixture.py b/tests/integration/step5_measured_compute_fixture.py
+index ba827b7..7a7f32a 100644
+--- a/tests/integration/step5_measured_compute_fixture.py
++++ b/tests/integration/step5_measured_compute_fixture.py
+@@ -8,6 +8,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import json
++from math import gcd
+ from pathlib import Path
+ from types import SimpleNamespace
+ 
+@@ -25,7 +26,8 @@ from tests.unit import test_step5_measured_ffn as ffn
+ from tests.unit.test_step5_measured_training import _row, _scheduler
+ 
+ 
+-def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile: str | None = None):
++def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile: str | None = None,
++             decode_contexts=range(6144, 7168)):
+     if gpus_per_role <= 0 or gpus_per_role % 8:
+         raise ValueError("Fixture GPUs per role must be divisible by attention TP8")
+     output.mkdir(parents=True, exist_ok=False)
+@@ -34,14 +36,19 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+     # Explicit fixture topology and reached single-request cases, not native evidence.
+     ep, capacity, block = gpus_per_role, 8192, 16
+     cases = [(6144, 0, "prefill", "none"), (16, 6128, "prefill", "none"),
+-             (1, 6144, "decode", "full"), (1, 7167, "decode", "full")]
++             *((1, context, "decode", "full") for context in decode_contexts)]
++    templates = {}
+     for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT):
+         rows = []
+         for query, context, phase, graph in cases:
+             if (graph == "none") != (measurement is MeasurementType.KERNEL_ONLY):
+                 continue
+             for layer in range(model.num_layers):
+-                row = _row(model, layer, query=query, context=context, phase=phase, graph_mode=graph)
++                key = layer, query, phase, graph
++                if key not in templates:
++                    templates[key] = _row(model, layer, query=query, context=context,
++                                          phase=phase, graph_mode=graph)
++                row = {**templates[key], "context_lens": json.dumps([context])}
+                 # The serving fixture uses allocated capacity, not live-prefix allocation.
+                 workload = Step5AttentionWorkload.from_lengths(
+                     model, phase=phase, query_lengths=(query,), sequence_lengths=(context + query,),
+@@ -52,10 +59,18 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+                 row.update(device=device, block_table_columns=capacity // block,
+                            score_regions=workload.score_regions)
+                 rows.append(row)
++        if measurement is MeasurementType.KERNEL_ONLY:
++            for layer in range(model.num_layers):
++                row = _row(model, layer, query=1, context=0, phase="decode", graph_mode="none",
++                           has_attention_metadata=False)
++                row["device"] = device
++                rows.append(row)
+         path = output / f"fixture_attention_{measurement.value.lower()}.csv"
+         rows_to_dataframe(rows, measurement_type=measurement).to_csv(path, index=False)
+         inputs[f"attention_{measurement.value}"] = str(path)
+     compute = {}
++    experts_per_rank = model.num_experts // ep
++    uniform_tokens = experts_per_rank // gcd(experts_per_rank, model.num_experts_per_tok)
+     for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT):
+         directory = output / f"fixture_compute_{measurement.value.lower()}"
+         directory.mkdir()
+@@ -65,7 +80,8 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+                 **metadata(config), "device": device, "measurement_type": measurement.value,
+             })
+             compute[measurement] = ffn._tables(
+-                directory, model, token_counts=(1, 8, 16, 32, 6144), expert_parallel_size=ep,
++                directory, model, token_counts=tuple(sorted({1, 8, uniform_tokens, 16, 32, 6144, 6145})),
++                expert_parallel_size=ep,
+                 include_stage_boundaries=True,
+             )
+     gap = output / "fixture_kernel_gap.csv"
+@@ -109,6 +125,8 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+         "moe_tp": 1, "moe_ep": ep, "global_layer_ids": list(range(model.num_layers)),
+         "max_model_len": capacity, "block_size": block, "batch_width": 1,
+         "cases": cases, "predictor_config": {**options, "nixl_read_profile": nixl_read_profile},
++        "request_free_case": {"tokens": 1, "has_attention_metadata": False,
++                              "graph_mode": "none", "block_table_columns": 0},
+         "cache_dir": str(output / "cache"),
+         "bundles": {str(role.value): receipts for role, receipts in manager._step5_model_bundles.items()},
+         "limitations": ["Synthetic timings/counts; no native admission or accuracy claim",
+diff --git a/tests/integration/test_step5_measured_main.py b/tests/integration/test_step5_measured_main.py
+index c0f85c0..254a0e8 100644
+--- a/tests/integration/test_step5_measured_main.py
++++ b/tests/integration/test_step5_measured_main.py
+@@ -14,7 +14,8 @@ from tests.integration.step5_measured_compute_fixture import generate
+ 
+ 
+ def test_public_full_decode_only_initializes_real_main(tmp_path):
+-    fixture = generate(tmp_path / "fixture", device="h800", gpus_per_role=16)
++    fixture = generate(tmp_path / "fixture", device="h800", gpus_per_role=16,
++                       decode_contexts=(6144, 7167))
+     case = tmp_path / "online"
+     case.mkdir()
+     (case / "requests.csv").write_text(
