@@ -96,29 +96,52 @@ def test_preparation_rejects_wrong_hardware_group_pair(tmp_path, monkeypatch, ta
         prepare.prepare(spec, tmp_path / "stage", "invalid", repository=tmp_path)
 
 
-@pytest.mark.parametrize("driver,expected,code", [("570.124.06", "/usr/local/cuda-13.0/compat", 0),
-                                                 ("580.82.07", "/usr/local/nvidia/lib64", 0),
-                                                 ("590.1", "/usr/local/nvidia/lib64", 0),
-                                                 ("550.1", None, 1)])
-def test_wrapper_selects_qualified_driver_without_platform_calls(tmp_path, driver, expected, code):
+@pytest.mark.parametrize("driver,producer_code,expected,code", [
+    ("570.124.06", 0, "/usr/local/cuda-13.0/compat", 0),
+    ("580.82.07", 0, "/usr/local/nvidia/lib64", 0),
+    ("590.1", 0, "/usr/local/nvidia/lib64", 0),
+    ("550.1", 0, None, 1),
+    (None, 9, None, 9),
+    ("570.124.06", 9, None, 9),
+    ("580.82.07", 9, None, 9),
+])
+def test_wrapper_selects_qualified_driver_without_platform_calls(tmp_path, driver, producer_code, expected, code):
     # Only fake executables run. Ignore the image-only libcuda file existence test.
     env_script = tmp_path / "bash_env"
     env_script.write_text('test() { if [ "$1" = "-e" ]; then return 0; fi; builtin test "$@"; }\n')
-    for name, text in {"nvidia-smi": f"#!/bin/bash\necho {driver}\n",
-                       "python3": '#!/bin/bash\necho "$VLLM_ENABLE_CUDA_COMPATIBILITY|$LD_LIBRARY_PATH"\n'}.items():
+    producer = "#!/bin/bash\n"
+    if driver is not None:
+        # Close the old head reader before the remaining seven GPU rows arrive.
+        producer += (f"printf '%s\\n' '{driver}'\nsleep 0.05\n"
+                     f"for i in {{2..8}}; do printf '%s\\n' '{driver}'; done\n")
+    if producer_code:
+        producer += "echo 'nvidia-smi fixture failed' >&2\n"
+    producer += f"exit {producer_code}\n"
+    downstream = ('#!/bin/bash\necho "$VLLM_ENABLE_CUDA_COMPATIBILITY|$LD_LIBRARY_PATH"\n'
+                  'echo "STEP5_COMM_WORKER_LOG $*"\nenv | sed -n "/^NCCL_/p"\n')
+    for name, text in {"nvidia-smi": producer, "python3": downstream}.items():
         path = tmp_path / name
         path.write_text(text)
         path.chmod(0o755)
+    nccl = {name: value for name, value in os.environ.items() if name.startswith("NCCL_")}
+    nccl.update(NCCL_IB_HCA="=mlx5_bond100,mlx5_bond101", NCCL_SOCKET_IFNAME="bond0",
+                NCCL_IB_GID_INDEX="3", NCCL_NET_PLUGIN="stepfun")
     env = {**os.environ, "PATH": str(tmp_path) + ":/usr/bin:/bin", "BASH_ENV": str(env_script),
-           "LD_LIBRARY_PATH": "/existing", "NCCL_IB_HCA": "unchanged"}
+           "LD_LIBRARY_PATH": "/existing", **nccl}
     result = subprocess.run(["bash", str(PACKAGE / "run_on_worker.sh"), "unused.json"],
-                            env=env, text=True, capture_output=True)
-    assert result.returncode == code
+                            env=env, text=True, capture_output=True, timeout=5)
+    assert result.returncode != 141, result.stderr
+    assert result.returncode == code, result.stderr
     if expected:
         enabled = "1" if driver.startswith("570.") else "0"
-        assert result.stdout.strip() == f"{enabled}|{expected}:/existing"
+        lines = result.stdout.splitlines()
+        assert lines[0] == f"{enabled}|{expected}:/existing"
+        assert lines[1] == "STEP5_COMM_WORKER_LOG tests/integration/step5_comm/worker.py --config unused.json"
+        assert dict(line.split("=", 1) for line in lines[2:]) == nccl
     else:
-        assert "Unsupported observed driver branch" in result.stderr
+        assert "STEP5_COMM_WORKER_LOG" not in result.stdout
+        message = "nvidia-smi fixture failed" if producer_code else "Unsupported observed driver branch"
+        assert message in result.stderr
 
 
 @pytest.mark.parametrize("actual,expected", [("NVIDIA H200", "PASS"), ("NVIDIA H800", "UNVERIFIED")])
