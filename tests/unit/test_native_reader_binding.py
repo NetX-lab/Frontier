@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 
 import pytest
 
@@ -13,7 +15,9 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 TASK = REPO / 'task_memory/task_2026-10-22_v4_native_binding'
 FROZEN = REPO / 'task_memory/task_2026-10-21_native_cold_start/check_groundtruth_run_successor.py'
-CHECKER = Path(os.environ.get('NATIVE_READER_BINDING_CHECKER', TASK / 'check_groundtruth_run_successor.py'))
+PREVIOUS = TASK / 'check_groundtruth_run_successor.py'
+R2 = TASK / 'check_groundtruth_run_successor_r2.py'
+CHECKER = Path(os.environ.get('NATIVE_READER_BINDING_CHECKER', R2))
 PACKAGE = Path('/data/ycfeng/tmp/glm53_dsv4/v4_successor04_actual_binding')
 CHECKS = {'checkout', 'inputs_unchanged', 'harness_pinned_and_client_rows', 'requests_and_idle_lanes',
           'native_workers', 'native_lifecycle', 'rank_runtime_graph', 'terminal_status'}
@@ -37,12 +41,16 @@ def load(path):
 @pytest.fixture
 def v4_package(tmp_path):
     """Copy the retained candidate04 full-checker control, never its sealed package."""
-    if not PACKAGE.is_dir():
+    return copy_cpu_package(PACKAGE, tmp_path)
+
+
+def copy_cpu_package(source, tmp_path):
+    if not source.is_dir():
         pytest.skip('Retained DS-V4 CPU package is unavailable')
     stage = tmp_path / 'v4'
-    shutil.copytree(PACKAGE, stage)
+    shutil.copytree(source, stage)
     for path in stage.rglob('*.json'):
-        path.write_text(path.read_text().replace(str(PACKAGE), str(stage)))
+        path.write_text(path.read_text().replace(str(source), str(stage)))
     config = json.loads((stage / 'config.json').read_text())
     # The actual reviewed bootstrap overwrites inherited PYTHONPATH with staged_dir.
     for name in config['tool_hashes']:
@@ -212,3 +220,201 @@ def test_v4_no_extension_preserves_existing_strict_reader_behavior(v4_package):
         assert new['checks']['harness_pinned_and_client_rows'].startswith('FAIL' if extra else 'PASS')
         assert old['status'] == new['status'] == 'FAIL'
         write(stage.parent / f'legacy_{extra}_predicates.json', new)
+
+
+def import_origins(stage, phase, modules):
+    """Observe real CPU startup paths; resolve specs without importing their bodies."""
+    code = '''import importlib.machinery, json, pathlib, sys
+stage = pathlib.Path(sys.argv[1])
+if sys.argv[2] == "worker":
+    sys.path[:0] = [str(stage), str(stage / "tests/comparison/calibration")]
+print(json.dumps({name: importlib.machinery.PathFinder.find_spec(name, sys.path).origin
+                  for name in json.loads(sys.argv[3])}))
+assert not any(name.split(".")[0] in ("torch", "vllm") for name in sys.modules)
+'''
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1',
+               PYTHONPATH=(str(stage) if phase == 'worker'
+                           else str(stage / 'tests/comparison/calibration') + ':' + str(stage)))
+    result = subprocess.run([sys.executable, '-B', '-c', code, str(stage), phase, json.dumps(modules)],
+                            cwd=stage, env=env, capture_output=True, text=True, check=True)
+    return json.loads(result.stdout)
+
+
+@pytest.mark.parametrize('module,kind', [('native_full_structure', 'module'),
+    ('native_full_structure', 'package'), ('native_dummy_initialization', 'module'),
+    ('native_dummy_initialization', 'package'), ('pd_replay', 'module'), ('pd_replay', 'package')])
+def test_v4_real_import_shadow_is_rejected_with_unchanged_nested_pins(v4_package, module, kind):
+    stage, case, run, config, manifest = v4_package
+    nested = stage / f'tests/comparison/calibration/{module}.py'
+    pinned = digest(nested)
+    shadow = stage / (f'{module}.py' if kind == 'module' else f'{module}/__init__.py')
+    shadow.parent.mkdir(exist_ok=True)
+    shadow.write_bytes(nested.read_bytes() + b'\n# Root shadow fixture.\n')
+    phase = 'worker' if module == 'pd_replay' else 'server'
+    assert import_origins(stage, phase, [module])[module] == str(shadow)
+    assert digest(nested) == pinned == manifest['harness_sha256'][f'tests/comparison/calibration/{module}.py']
+    previous = check_package(load(PREVIOUS), v4_package, f'r2_previous_{module}_{kind}')
+    assert previous['checks']['harness_pinned_and_client_rows'].startswith('PASS')
+    current = check_package(load(R2), v4_package, f'r2_{module}_{kind}')
+    assert current['checks']['harness_pinned_and_client_rows'].startswith('FAIL'), current['checks']
+    assert 'Staged import resolves outside its verified owner:' in current['checks']['harness_pinned_and_client_rows']
+
+
+@pytest.mark.parametrize('location,module', [
+    ('tests/comparison/calibration', 'pd_replay'),
+    ('tests/comparison/calibration', 'pd_metrics'),
+    ('tests/comparison/calibration', 'pd_proxy'),
+    ('tests/comparison/calibration', 'vllm_replay'),
+    ('tests/comparison/stage_admission_pp', 'vllm_burst_driver'),
+    ('tests/comparison/calibration', 'native_full_structure'),
+    ('tests/comparison/calibration', 'native_dummy_initialization'),
+    ('', 'probe_nixl_read'), ('', 'probe_runtime_inventory')])
+def test_v4_package_before_verified_file_is_rejected(v4_package, location, module):
+    stage, case, run, config, manifest = v4_package
+    shadow = stage / location / module / '__init__.py'
+    shadow.parent.mkdir()
+    shadow.write_text('# Import package takes precedence over the verified .py file.\n')
+    result = check_package(load(R2), v4_package, f'r2_package_{module}')
+    assert 'Staged import resolves outside its verified owner:' in result['checks']['harness_pinned_and_client_rows']
+
+
+@pytest.mark.parametrize('collector_shadow', [None, 'module', 'package'])
+def test_v4_actual_worker_and_server_spawn_resolve_verified_owners(v4_package, collector_shadow):
+    stage, case, run, config, manifest = v4_package
+    code = '''import importlib, json, pathlib, sys
+stage = pathlib.Path(sys.argv[1])
+sys.path[:0] = [str(stage), str(stage / "tests/comparison/calibration")]
+modules = ["probe_nixl_read", "probe_runtime_inventory", "pd_replay", "pd_metrics", "pd_proxy",
+           "vllm_replay", "vllm_burst_driver"]
+origins = {name: importlib.import_module(name).__file__ for name in modules}
+assert not any(name.split(".")[0] in ("torch", "vllm") for name in sys.modules)
+print(json.dumps({"origins": origins, "path": sys.path}))
+'''
+    result = subprocess.run([sys.executable, '-B', '-c', code, str(stage)], cwd=stage,
+        env=dict(os.environ, PYTHONPATH=str(stage), PYTHONDONTWRITEBYTECODE='1'),
+        capture_output=True, text=True, check=True)
+    worker = json.loads(result.stdout)
+    expected = {
+        'probe_nixl_read': str(stage / 'probe_nixl_read.py'),
+        'probe_runtime_inventory': str(stage / 'probe_runtime_inventory.py'),
+        'pd_replay': str(stage / 'tests/comparison/calibration/pd_replay.py'),
+        'pd_metrics': str(stage / 'tests/comparison/calibration/pd_metrics.py'),
+        'pd_proxy': str(stage / 'tests/comparison/calibration/pd_proxy.py'),
+        'vllm_replay': str(stage / 'tests/comparison/dp_placement_pp/vllm_replay.py'),
+        'vllm_burst_driver': str(stage / 'tests/comparison/stage_admission_pp/vllm_burst_driver.py'),
+    }
+    assert worker['origins'] == expected
+    if collector_shadow:
+        nested = stage / 'tests/comparison/calibration/native_full_structure.py'
+        shadow = stage / ('native_full_structure.py' if collector_shadow == 'module'
+                          else 'native_full_structure/__init__.py')
+        shadow.parent.mkdir(exist_ok=True)
+        shadow.write_bytes(nested.read_bytes() + b'\n# Server and spawn shadow.\n')
+    # A non-isolated -m parent and real multiprocessing spawn inherit cwd and path.
+    script = stage / 'reader_resolution_probe.py'
+    script.write_text('''import importlib.machinery, json, multiprocessing, sys
+def observe():
+    names = ["native_full_structure", "native_dummy_initialization"]
+    assert not any(name.split(".")[0] in ("torch", "vllm") for name in sys.modules)
+    return {"origins": {name: importlib.machinery.PathFinder.find_spec(name, sys.path).origin
+                        for name in names}, "path": sys.path}
+def child(pipe):
+    pipe.send(observe())
+    pipe.close()
+if __name__ == "__main__":
+    context = multiprocessing.get_context("spawn")
+    receive, send = context.Pipe(duplex=False)
+    process = context.Process(target=child, args=(send,))
+    process.start()
+    assert receive.poll(30), "Spawn resolver did not return"
+    spawned = receive.recv()
+    process.join(30)
+    assert process.exitcode == 0
+    print(json.dumps({"server": observe(), "spawn": spawned}))
+''')
+    result = subprocess.run([sys.executable, '-B', '-m', 'reader_resolution_probe'], cwd=stage,
+        env=dict(os.environ, PYTHONPATH=config['harness_dir'] + ':' + str(stage),
+                 PYTHONDONTWRITEBYTECODE='1'), capture_output=True, text=True, check=True)
+    serving = json.loads(result.stdout)
+    expected = {name: str(stage / 'tests/comparison/calibration' / (name + '.py'))
+                for name in ('native_full_structure', 'native_dummy_initialization')}
+    if collector_shadow:
+        expected['native_full_structure'] = str(shadow)
+    assert serving['server']['origins'] == serving['spawn']['origins'] == expected
+    assert serving['server']['path'][:3] == serving['spawn']['path'][:3] == [
+        str(stage), config['harness_dir'], str(stage)]
+    write(stage.parent / 'r2_actual_resolution.json', {'worker': worker, **serving})
+    result = check_package(load(R2), v4_package, 'r2_actual_resolution_control')
+    if collector_shadow:
+        assert 'Staged import resolves outside its verified owner:' in result['checks']['harness_pinned_and_client_rows']
+    else:
+        assert {name for name, value in result['checks'].items() if value.startswith('FAIL')} == {
+            'rank_runtime_graph', 'terminal_status'}
+
+
+def test_v4_nonwinning_and_unrelated_root_files_remain_allowed(v4_package):
+    stage, case, run, config, manifest = v4_package
+    for name in ('pd_metrics', 'pd_proxy', 'vllm_replay', 'vllm_burst_driver', 'unrelated_notes'):
+        (stage / (name + '.py')).write_text('# Does not win any reachable import.\n')
+    (stage / 'native_full_structure').mkdir()  # A namespace portion loses to the verified module.
+    (stage / 'vllm').mkdir()  # A namespace portion also loses to installed vLLM's regular package.
+    result = check_package(load(R2), v4_package, 'r2_nonwinning_control')
+    assert {name for name, value in result['checks'].items() if value.startswith('FAIL')} == {
+        'rank_runtime_graph', 'terminal_status'}
+
+
+def test_v4_current_generation05_layout_keeps_only_missing_native_evidence_failures(tmp_path):
+    source = Path('/data/ycfeng/tmp/glm53_dsv4/v4_generation05_joint_d06f')
+    fixture = copy_cpu_package(source, tmp_path)
+    stage, case, run, config, manifest = fixture
+    assert len(config['expected_source_hashes']) == 67
+    result = check_package(load(R2), fixture, 'r2_generation05_control')
+    assert {name for name, value in result['checks'].items() if value.startswith('FAIL')} == {
+        'rank_runtime_graph', 'terminal_status'}, result['checks']
+    assert result['checks']['rank_runtime_graph'] == (
+        'FAIL: UNVERIFIED: ValueError: Missing or unexpected physical-rank serving files: cpu-v4-0')
+
+
+@pytest.mark.parametrize('fault', ['replaced', 'overridden'])
+def test_v4_bootstrap_cwd_must_match_observed_server_search_order(v4_package, fault):
+    stage, case, run, config, manifest = v4_package
+    path = Path(config['observer_bootstrap'])
+    replacement = ('os.chdir(staged.parent)' if fault == 'replaced'
+                   else 'os.chdir(staged)\n    os.chdir(staged.parent)')
+    path.write_text(path.read_text().replace('os.chdir(staged)', replacement))
+    config['retained_files'][path.name] = digest(path)
+    manifest['inputs_sha256'][str(path)] = digest(path)
+    write(case / manifest['execution_config'], config)
+    manifest['inputs_sha256'][manifest['execution_config']] = digest(case / manifest['execution_config'])
+    stamp = (run / 'run_manifest.json').stat()
+    write(run / 'run_manifest.json', manifest)
+    os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    result = check_package(load(R2), v4_package, 'r2_bootstrap_cwd')
+    assert 'Bootstrap no longer declares the reviewed server working directory' in (
+        result['checks']['harness_pinned_and_client_rows'])
+
+
+@pytest.mark.parametrize('location,kind', [('', 'module'), ('', 'package'),
+    ('tests/comparison/calibration', 'module'), ('tests/comparison/calibration', 'package')])
+def test_v4_server_entrypoint_cannot_resolve_stage_code_as_installed_vllm(v4_package, location, kind):
+    stage, case, run, config, manifest = v4_package
+    shadow = stage / location / ('vllm.py' if kind == 'module' else 'vllm/__init__.py')
+    shadow.parent.mkdir(exist_ok=True)
+    shadow.write_text('# This reachable server -m entrypoint is not the installed vLLM package.\n')
+    assert import_origins(stage, 'server', ['vllm'])['vllm'] == str(shadow)
+    previous = check_package(load(PREVIOUS), v4_package, f'r2_previous_vllm_{kind}')
+    assert previous['checks']['harness_pinned_and_client_rows'].startswith('PASS')
+    result = check_package(load(R2), v4_package, f'r2_vllm_{kind}')
+    assert 'Staged server import shadows the installed vLLM package:' in (
+        result['checks']['harness_pinned_and_client_rows'])
+
+
+def test_v4_collector_dependency_cannot_be_omitted_from_checkout_binding(v4_package):
+    stage, case, run, config, manifest = v4_package
+    module = 'tests/comparison/calibration/native_dummy_initialization.py'
+    manifest['harness_sha256'].pop(module)
+    stamp = (run / 'run_manifest.json').stat()
+    write(run / 'run_manifest.json', manifest)
+    os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    result = check_package(load(R2), v4_package, 'r2_missing_checkout_owner')
+    assert 'Staged import has no verified checkout owner:' in result['checks']['harness_pinned_and_client_rows']
