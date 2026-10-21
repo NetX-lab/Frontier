@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | User continues execution; repair the observed sequential event-logging blocker within D20 actual-main acceptance. |
 | 2026-10-21 | Record parent selection of the existing-D full-local G3 reference within the unchanged locked runtime and acceptance contract. |
 | 2026-10-21 | D22: user approves the independent outer-window reference cohort for attention mean-versus-median agreement; thresholds unchanged. |
 | 2026-10-21 | D21 replaces the H20064-only campaign with prioritized H800/H20032/64 tracks and a global H20032 non-preemptible cap. |
@@ -86,6 +87,12 @@
 | 2026-10-16 | Recorded the parallel two-step request: native Grok G1 implementation checkpoint plus a primary multi-GPU NCCL/P2P diagnostic. |
 | 2026-10-16 | Recorded the user's `/grok-implement` command for checkpoint 04A and option a for the queued eight-GPU job. |
 
+
+## [Original Request] Continue execution — 2026-10-21
+
+YC: "、continue"
+
+Continue the active D20/D21 implementation and P0 calibration work. The parent owns the observed sequential event logger failure in actual-main run08: legitimate request-free batches cannot supply request-owned AF layer state. Repair this caller precondition and verify the existing event path; native MRv2 producer correction and canonical G3 remain with their existing owners. No workload, resource, timing, or accuracy decision changes.
 
 ## [Original Request] Follow-up: Step linear-op slice and Smoke 03 judgment — 2026-10-20
 

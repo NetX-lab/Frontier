@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Add the parent-owned event logger repair before complete actual-main acceptance. |
 | 2026-10-21 | Integrate measured Step at bc8ae27; assign canonical G3/P0 producers and align the index with the existing milestone graph. |
 | 2026-10-21 | Record full compute delivery, actual-main graph mapping blocker, D21 native execution and approved D22 reference implementation. |
 | 2026-10-21 | D21: replace single-H20064 scheduling with four existing-ticket track milestones; separate basic runtime from formal work, enforce paired32-to64 release and global H200 non-preemptible cap32. |
@@ -111,6 +112,8 @@
 ## Current D21 execution contract — 2026-10-21
 
 Authority: final D21 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. D20 CPU implementation continues P0-first; native/profile/predictive acceptance is unchanged.
+
+Actual-main event-logging repair is complete at `b862e57`:36 affected checks and clean-commit77/77 strict fidelity PASS. Complete offline/online READ,release and metrics acceptance remains with the actual-main owner. After the two other owners hit provider usage limits,parent takes over G3/reference and MRv2 profiling. Producer correction `82f4452` is source/CPU verified (465PASS),pending primary integration and observed dummy descriptors. Continue saved G3/reference/state controls and passive descriptor collection in the existing observer,then consume those observations for compatible profiles;do not submit either old stage01 package.
 
 | Priority / track | Cluster and policy | Per-role topology | Basic runtime | Formal calibration | Final acceptance |
 | --- | --- | --- | --- | --- | --- |
