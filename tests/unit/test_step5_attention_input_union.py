@@ -243,10 +243,24 @@ def test_union_keeps_decode_eager_coverage_and_excludes_ffn_only_roles(
                        phase="decode", graph_mode=profile_mode) for layer in (0, 3)]
     event_path = _write(tmp_path, event_rows, MeasurementType.CUDA_EVENT)
     decode.execution_time_predictor_config.atten_input_file = str(event_path)
+    from test_step5_mrv2_inputs import producer_row
+    from frontier.attention.step5_inputs import MRv2DummyDescriptor
+    from frontier.profiling.step5.inputs import Step5ProfileInput
+
+    prefill_event_rows = [producer_row(decode.replica_config.model_config,
+        Step5ProfileInput.from_mrv2_dummy(layer,
+            MRv2DummyDescriptor(1, 1 if profile_mode == "full" else None, profile_mode,
+                                None, "CPU_P_DUMMY_EVENT_FIXTURE", 1),
+            block_table_columns=512), duration=.321, count=17) for layer in (0, 3)]
+    prefill_dir = tmp_path / "prefill_event"
+    prefill_dir.mkdir()
+    configs[ClusterType.PREFILL].execution_time_predictor_config.atten_input_file = str(
+        _write(prefill_dir, prefill_event_rows, MeasurementType.CUDA_EVENT))
     manager._active_measurement_type = MeasurementType.CUDA_EVENT
     event_models = _fit(manager, configs, ClusterType.DECODE, signatures)
     assert event_models["step5_layer_e2e"]._frontier_step5_coverage == {
-        tuple(step5_row_features(row)[name] for name in STEP5_FEATURE_COLUMNS) for row in event_rows
+        tuple(step5_row_features(row)[name] for name in STEP5_FEATURE_COLUMNS)
+        for row in event_rows + prefill_event_rows
     }
     assert json.loads(event_models["step5_layer_e2e"]._frontier_measurement_identity)["measurement_type"] == "CUDA_EVENT"
     assert manager._trained_models_kernel_only["step5_layer_e2e"] is models["step5_layer_e2e"]

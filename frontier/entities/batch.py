@@ -804,6 +804,9 @@ class Batch(BaseEntity):
         return self.total_num_tokens - self.num_prefill_tokens
 
     def get_decode_cuda_graph_runtime_mode(self) -> str:
+        descriptor = getattr(self, "forward_start_descriptor", None)
+        if descriptor is not None:
+            return descriptor.graph_mode
         if self.decode_cuda_graph_metadata is None:
             return "NONE"
         return self.decode_cuda_graph_metadata.runtime_mode
@@ -829,6 +832,12 @@ class Batch(BaseEntity):
         """
         # Import here to avoid circular imports
         from frontier.types import ClusterType
+
+        descriptor = getattr(self, "forward_start_descriptor", None)
+        if descriptor is not None and cluster_type in (
+            ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+        ):
+            return descriptor.num_tokens
 
         if cluster_type in (ClusterType.MONOLITHIC, ClusterType.DECODE):
             if self.decode_cuda_graph_metadata is not None:
@@ -1331,11 +1340,11 @@ class Batch(BaseEntity):
 class DummyForwardBatch(Batch):
     """One pipeline stage's part of vLLM's attention-DP dummy pass.
 
-    A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
-    ``_dummy_run(1)`` on every pipeline stage: one request slot with one token
-    and no attention metadata. Attention kernels and KV-cache writes are
-    skipped, while projections, norms and every MoE layer with its EP
-    collectives run. The forward carries no request.
+    The DES bookkeeping carries one token and no serving request. Legacy
+    runners execute it without attention metadata; measured Step binds an
+    MRv2 InputBatch descriptor before prediction, including physical query
+    rows, PAD_SLOT_ID slots and attention metadata. Neither path credits a
+    request or commits a KV update to live serving pages.
     """
 
     def __init__(

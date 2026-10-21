@@ -39,6 +39,9 @@ class BaseExecutionTimePredictor(ABC):
         family_ids = {
             spec.family_id for spec in self._model_config.get_layer_attention_specs()
         }
+        self.requires_forward_start_agreement = (
+            "step5_attention" in family_ids and not predictor_config.enable_dummy_mode
+        )
         for family_id in sorted(family_ids):
             family = get_attention_family(family_id)
             family.require_enabled_for_execution(

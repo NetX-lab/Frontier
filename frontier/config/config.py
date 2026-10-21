@@ -170,8 +170,9 @@ class SimulationConfig(ABC):
         metadata={
             "help": "Decode CUDA Graph mode for co-location and pd-disaggregation. "
             "Use full_decode_only to pad pure decode batches only, and piecewise "
-            "to model segmented CUDA graphs with eager attention.",
-            "choices": ["none", "full_decode_only", "piecewise"],
+            "to model segmented CUDA graphs with eager attention. full_and_piecewise "
+            "selects FULL for uniform decode and PIECEWISE for other captured batches.",
+            "choices": ["none", "full_decode_only", "piecewise", "full_and_piecewise"],
         },
     )
     allow_spec_decode_cuda_graph_diagnostic: bool = field(
@@ -626,7 +627,9 @@ class SimulationConfig(ABC):
             )
 
     def _validate_cuda_graph_config(self) -> None:
-        valid_decode_cuda_graph_modes = {"none", "full_decode_only", "piecewise"}
+        from frontier.config.graph_policy import GRAPH_POLICIES
+
+        valid_decode_cuda_graph_modes = set(GRAPH_POLICIES)
         if self.decode_cuda_graph_mode not in valid_decode_cuda_graph_modes:
             raise ValueError(
                 "decode_cuda_graph_mode must be one of "

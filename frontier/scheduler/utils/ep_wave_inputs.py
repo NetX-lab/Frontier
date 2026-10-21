@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, Callable, Mapping, NamedTuple
 
 from frontier.entities import Batch, DummyForwardBatch
@@ -70,13 +71,29 @@ def prepare_ep_wave_inputs(
         int(source_batch.get_effective_total_tokens_for_compute(cluster_type))
         for source_batch in lane_batches
     ]
-    if any(source_batch.decode_cuda_graph_metadata is not None for source_batch in lane_batches):
+    native_bound = [
+        getattr(source_batch, "forward_start_descriptor", None) is not None
+        for source_batch in lane_batches
+    ]
+    if any(native_bound) and not all(native_bound):
+        raise ValueError("EP wave cannot mix agreed and unagreed forward inputs")
+    shared_padding = (
+        any(source_batch.get_decode_cuda_graph_runtime_mode() != "NONE" for source_batch in lane_batches)
+        if all(native_bound) else
+        any(source_batch.decode_cuda_graph_metadata is not None for source_batch in lane_batches)
+    )
+    if shared_padding:
         lane_compute_tokens = [max(lane_compute_tokens)] * len(lane_batches)
     aggregate_batch = (
         sample_batch
         if len(lane_batches) == 1
         else aggregate_batch_builder(sample_batch, sum(lane_compute_tokens), total_prefill_tokens)
     )
+    if all(native_bound) and len(lane_batches) > 1:
+        aggregate_batch.forward_start_descriptor = replace(
+            sample_batch.forward_start_descriptor,
+            num_tokens=sum(lane_compute_tokens), num_reqs=None,
+        )
     return EPWaveInputs(
         source_batches=normalized,
         step_id=step_id,

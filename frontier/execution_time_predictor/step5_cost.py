@@ -6,7 +6,9 @@ from dataclasses import asdict
 import json
 
 from frontier.attention.step5 import Step5AttentionWorkload, describe_step5_layer
-from frontier.attention.step5_inputs import step5_input_kind, step5_workload_kind, step5_workload_label
+from frontier.attention.step5_inputs import (
+    MRV2_DUMMY_ROW_IDENTITY, step5_input_kind, step5_workload_kind, step5_workload_label,
+)
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime, OperatorCost
 from frontier.execution_time_predictor.step5 import (
     STEP5_FEATURE_COLUMNS,
@@ -20,14 +22,14 @@ from frontier.types import ClusterType, MeasurementType
 
 def step5_measurements_for_role(role, decode_graph_mode):
     """Attention's measured modality is independent of the step's FFN family."""
-    decode_profile_mode = {
-        "none": "none", "full_decode_only": "full", "piecewise": "piecewise",
-    }[decode_graph_mode]
-    decode = step5_measurement_type(decode_profile_mode)
+    from frontier.config.graph_policy import graph_policy
+
+    policy = graph_policy(decode_graph_mode)
+    decode = step5_measurement_type(policy.uniform_decode.lower())
     # D's initial prompt tail and graph misses still execute without a graph.
     decode_measurements = tuple(dict.fromkeys((MeasurementType.KERNEL_ONLY, decode)))
     return {
-        ClusterType.PREFILL: (MeasurementType.KERNEL_ONLY,),
+        ClusterType.PREFILL: decode_measurements,
         ClusterType.DECODE: decode_measurements,
         ClusterType.DECODE_ATTN: (decode,),
         ClusterType.DECODE_FFN: (),
@@ -58,11 +60,39 @@ def step5_predictions(models, measurement_type):
 
 
 def step5_batch_workload(predictor, batch):
-    """Bind request-owned work or the isolated no-metadata CPU diagnostic."""
+    """Bind real local history or MRv2's agreed metadata-bearing dummy input."""
     from frontier.entities.batch import DummyForwardBatch
 
     config = predictor._model_config
+    descriptor = getattr(batch, "forward_start_descriptor", None)
+    if getattr(predictor, "requires_forward_start_agreement", False):
+        from frontier.scheduler.utils.forward_start_agreement import ForwardStartDescriptor
+
+        if not isinstance(descriptor, ForwardStartDescriptor):
+            raise ValueError("Measured Step first-layer prediction requires a forward-start descriptor")
     if isinstance(batch, DummyForwardBatch):
+        dummy = getattr(batch, "mrv2_dummy_descriptor", None)
+        if descriptor is not None:
+            from frontier.attention.step5_inputs import MRv2DummyDescriptor
+
+            if not isinstance(dummy, MRv2DummyDescriptor) or (
+                dummy.num_tokens != descriptor.num_tokens
+                or dummy.num_reqs != descriptor.num_reqs
+                or dummy.graph_mode.upper() != descriptor.graph_mode
+                or dummy.max_query_len != descriptor.max_query_len
+                or dummy.uniform_token_count != descriptor.uniform_token_count
+            ):
+                raise ValueError("Step dummy forward requires its agreed MRv2 InputBatch descriptor")
+            queries = dummy.query_lens
+            return Step5AttentionWorkload.from_lengths(
+                config, phase="decode" if max(queries) == 1 else "prefill",
+                query_lengths=queries, sequence_lengths=queries,
+                physical_query_rows=dummy.num_tokens,
+                block_size_tokens=predictor._block_size,
+                block_table_columns=(predictor._step5_max_model_len + predictor._block_size - 1) // predictor._block_size,
+                max_model_len_tokens=predictor._step5_max_model_len, graph_mode=dummy.graph_mode,
+                has_attention_metadata=True,
+            )
         # This isolated diagnostic is not MRv2's metadata-bearing DP dummy path.
         return Step5AttentionWorkload.from_lengths(
             config, phase="decode", query_lengths=tuple(batch.num_tokens),
@@ -77,6 +107,10 @@ def step5_batch_workload(predictor, batch):
         "prefill" if batch.num_prefill_tokens else "decode"
     )
     queries = tuple(batch.num_tokens)
+    # MRv2 also runs a one-token prompt extension over existing context through
+    # its decode graph. Ownership and DES prefill credit remain on the batch.
+    if descriptor is not None and descriptor.graph_mode == "FULL":
+        phase = "decode"
     max_model_len = predictor._step5_max_model_len
     return Step5AttentionWorkload.from_lengths(
         config, phase=phase, query_lengths=queries,
@@ -99,7 +133,14 @@ def step5_batch_features(predictor, batch, layer_id):
         expert_parallel_size=predictor._replica_config.moe_expert_parallel_size,
     )
     workload = predictor._step5_attention_workload(batch)
-    kind = step5_input_kind(has_attention_metadata=workload.has_attention_metadata)
+    dummy_descriptor = getattr(batch, "mrv2_dummy_descriptor", None)
+    kind = step5_input_kind(has_attention_metadata=workload.has_attention_metadata,
+                           dummy_descriptor=dummy_descriptor)
+    uses_physical_phase = dummy_descriptor is not None or (
+        getattr(batch, "forward_start_descriptor", None) is not None and workload.graph_mode == "full"
+    )
+    prefill_tokens = workload.valid_tokens if workload.phase == "prefill" else 0
+    decode_tokens = workload.valid_tokens if workload.phase == "decode" else 0
     geometry = metadata.geometry
     row = {
         **asdict(geometry),
@@ -111,8 +152,8 @@ def step5_batch_features(predictor, batch, layer_id):
         "sliding_window": config.sliding_window, "rope_theta": metadata.rope_theta,
         "rotary_dim": metadata.rotary_dim, "block_size": workload.block_size_tokens,
         "batch_size": len(workload.query_lengths), "batch_num_tokens": workload.valid_tokens,
-        "batch_num_prefill_tokens": batch.num_prefill_tokens,
-        "batch_num_decode_tokens": batch.num_decode_tokens,
+        "batch_num_prefill_tokens": prefill_tokens if uses_physical_phase else batch.num_prefill_tokens,
+        "batch_num_decode_tokens": decode_tokens if uses_physical_phase else batch.num_decode_tokens,
         "valid_tokens": workload.valid_tokens, "padded_tokens": workload.padded_tokens,
         "max_model_len": workload.max_model_len_tokens,
         "block_table_columns": workload.block_table_columns, "score_regions": workload.score_regions,
@@ -122,8 +163,10 @@ def step5_batch_features(predictor, batch, layer_id):
         "phase": workload.phase, "graph_mode": workload.graph_mode,
         "query_lens": workload.query_lengths,
         "context_lens": tuple(length - query for length, query in
-                              zip(workload.sequence_lengths, workload.query_lengths)),
+                               zip(workload.sequence_lengths, workload.query_lengths)),
     }
+    if dummy_descriptor is not None:
+        row.update(MRV2_DUMMY_ROW_IDENTITY, dummy_descriptor=asdict(dummy_descriptor))
     return step5_row_features(row), workload
 
 
