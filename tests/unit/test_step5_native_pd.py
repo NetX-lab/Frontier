@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import asyncio
 import json
 from pathlib import Path
 import re
@@ -13,6 +14,7 @@ from tests.comparison.calibration import serving_metrics
 from tests.integration.step5_pd import build_stage, run_waves, submit_native_pd, verdict
 from tests.unit.test_native_pd_worker import exercise
 from tests.comparison.calibration import native_pd_worker
+from tests.comparison.dp_placement_pp import vllm_replay
 
 REPO = Path(__file__).resolve().parents[2]
 R1 = REPO / "tests/integration/step5_pd/r1_run.json"
@@ -365,3 +367,147 @@ def test_submit_command_runs_the_staged_worker_under_the_timeout_with_cuda_compa
     assert (arguments["replica"], arguments["gpu"], arguments["positive_tags"]) == (4, 8, ["H800"])
     assert arguments["envs"]["VLLM_ENABLE_CUDA_COMPATIBILITY"] == "1"
     assert "VLLM_USE_BREAKABLE_CUDAGRAPH" not in arguments["envs"]
+
+
+def test_warm_definition_keeps_cold_w1_engine_and_one_request_per_wave():
+    r1 = json.loads(R1.read_text())
+    warm = json.loads(R1.with_name("r1w_run.json").read_text())
+    assert warm["waves"][0] == r1["waves"][0] | {"prompt_id": "r1h20001-w1-0"}
+    assert warm["drain_seconds"] == 10
+    for field in ("description", "waves", "drain_seconds"):
+        r1.pop(field)
+        warm.pop(field)
+    assert warm == r1
+    traces = build_stage.wave_traces(json.loads(R1.with_name("r1w_run.json").read_text()), "warmtest")
+    assert len(traces) == 17 and all(len(rows) == 1 for rows in traces.values())
+    assert "stream" not in traces["w1"][0]
+    assert all(rows[0]["stream"] is True for name, rows in traces.items() if name != "w1")
+    assert len({rows[0]["request_id"] for rows in traces.values()}) == 17
+    baseline = [rows[0] for rows in traces.values() if rows[0]["num_prefill_tokens"] == 4105]
+    assert len(baseline) == 7 and {row["prompt_id"] for row in baseline} == {"r1h20001-w1-0"}
+    assert [row["role"] for row in baseline] == ["gating"] + ["recorded"] * 6
+
+
+@pytest.mark.parametrize("version", ["0.10.2", "0.28.0", "step5"])
+def test_replay_repeats_token_ids_without_reusing_request_identity(version):
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+
+    bodies = {}
+
+    async def exercise():
+        async def complete(request):
+            bodies[request.headers["X-Request-Id"]] = await request.json()
+            return web.json_response({"choices": [{"finish_reason": "length"}], "usage": {}})
+
+        app = web.Application()
+        app.router.add_post("/v1/completions", complete)
+        rows = [{"request_id": rid, "segment": "w1", "role": "recorded", "arrived_at": 0.0,
+                 "num_prefill_tokens": 4105, "num_decode_tokens": 9,
+                 **({"prompt_id": "r1h20001-w1-0"} if rid != "r1h20001-w1-0" else {})}
+                for rid in ("r1h20001-w1-0", "new-w1-0", "new-warm-0")]
+        async with TestServer(app) as server:
+            return await vllm_replay.replay(rows, server.port, 128896, 0.0, vllm_version=version)
+
+    _, records = asyncio.run(exercise())
+    assert len(records) == len(bodies) == 3
+    assert bodies["r1h20001-w1-0"] == bodies["new-w1-0"] == bodies["new-warm-0"]
+    assert bodies["new-w1-0"]["stream"] is False
+
+
+def test_warm_stage_freezes_sequential_boundary_traces_and_expected_splits(tmp_path):
+    inputs = stage_inputs(tmp_path)
+    definition = json.loads(R1.with_name("r1w_run.json").read_text())
+    definition["probe_helpers"] = inputs["definition"]["probe_helpers"]
+    stage = tmp_path / "workspace/stage"
+    config = build_stage.build(
+        definition, stage=stage, workspace=stage.parent,
+        output_dir=Path("/mnt/codesign-exp/ycfeng/step5-preview/native_pd_warmtest"),
+        model_dir=inputs["model_dir"], image_source_hashes=inputs["image_source_hashes"],
+        probe_dir=inputs["probe_dir"], job_tag="warmtest", source={"commit": "test"})
+    plan = json.loads((stage / "trace/waves.json").read_text())
+    assert plan["waves"][0] == plan["gating_wave"] == "w1"
+    assert config["drain_seconds"] == 10 and config["replay_timeout_s"] == 900
+    expected = {"short128": (112, 16), "block4095": (4064, 31), "block4096": (4080, 16),
+                "block4097": (4080, 17), "region4103": (4080, 23), "region4104": (4080, 24),
+                "block4111": (4080, 31), "block4112": (4096, 16), "block4113": (4096, 17),
+                "long7681": (7664, 17)}
+    for wave, (external, computed) in expected.items():
+        assert plan["expected_decode_prompt_sources"][wave] == {
+            "external_kv_transfer": external, "local_compute": computed, "local_cache_hit": 0}
+    for relative, digest in config["tool_hashes"].items():
+        assert hashlib.sha256((stage / relative).read_bytes()).hexdigest() == digest
+
+
+@pytest.mark.parametrize("fault", [None, "missing_sources", "multiple_requests", "missing_ttft"])
+@pytest.mark.parametrize("stream", [False, True])
+def test_warm_table_attributes_single_request_windows_without_inventing_client_ttft(staged, fault, stream):
+    stage, config, _ = staged
+    write_evidence(stage, config)
+    trace = stage / "trace/w2/request_ids.json"
+    trace.write_text(json.dumps({"rows": json.loads(trace.read_text())["rows"][:1]}))
+    replay = stage / "evidence/replay"
+    for name in ("client_requests.jsonl", "proxy_requests.jsonl"):
+        path = replay / "w2" / name
+        path.write_text(path.read_text().splitlines()[0] + "\n")
+    if stream:
+        path = replay / "w2/client_requests.jsonl"
+        record = json.loads(path.read_text())
+        record.update(stream=True, first_token_monotonic=1001.5, stream_completed=True)
+        path.write_text(json.dumps(record) + "\n")
+    cumulative = {name: 2 * value for name, value in SOURCES.items()}
+    text = page(sources=cumulative, requests=2 if fault != "multiple_requests" else 3)
+    text += ('vllm:time_to_first_token_seconds_count{engine="0"} 2\n'
+             'vllm:time_to_first_token_seconds_sum{engine="0"} 1.75\n')
+    if fault == "missing_ttft":
+        text = "\n".join(line for line in text.splitlines() if "time_to_first_token" not in line)
+    if fault == "missing_sources":
+        text = "\n".join(line for line in text.splitlines() if "prompt_tokens_by_source" not in line)
+    (replay / "metrics/w1_decode.prom").write_text(page(
+        reads=(4096.0, 0.0), descriptors=(30.0, 0.0), sources=SOURCES, requests=1)
+        + 'vllm:time_to_first_token_seconds_count{engine="0"} 1\n'
+          'vllm:time_to_first_token_seconds_sum{engine="0"} 1.25\n')
+    (replay / "metrics/w2_decode.prom").write_text(text)
+    result = verdict.judge(stage, "Succeeded")
+    assert result["all_pass"]
+    assert len(result["checks"]) == 9
+    warm, = result["observations"]["warm_requests"]
+    assert warm["client_send_monotonic"] == 1000
+    assert warm["proxy_prefill_response_monotonic"] == 1001
+    assert warm["client_completion_monotonic"] == 1003
+    assert warm["client_first_token_monotonic"] == (1001.5 if stream else None)
+    assert warm["client_first_token_status"] == ("PASS" if stream else "UNVERIFIED_NONSTREAMING")
+    assert warm["client_ttft_s"] == (1.5 if stream else None)
+    assert warm["post_prefill_first_token_s"] == (0.5 if stream else None)
+    assert warm["decode_engine_ttft_s"] == (0.5 if fault is None else None)
+    assert warm["output_tokens"] == 9
+    attributed = fault in (None, "missing_ttft")
+    assert warm["decode_prompt_attribution"] == ("single_request_window" if attributed else "UNVERIFIED")
+    assert warm["decode_external_tokens"] == (4080 if attributed else None)
+    assert warm["decode_computed_prompt_tokens"] == (25 if attributed else None)
+    assert "not client TTFT" in result["observations"]["client_first_token_note"]
+
+
+@pytest.mark.parametrize("fault", ["missing_first", "missing_done", "before_prefill", "stream_error", "missing_proxy"])
+def test_streaming_timing_gaps_are_unverified_without_changing_w1(staged, fault):
+    stage, config, _ = staged
+    write_evidence(stage, config)
+    path = stage / "evidence/replay/w2/client_requests.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    rows[0].update(stream=True, first_token_monotonic=1001.5, stream_completed=True)
+    if fault == "missing_first":
+        rows[0]["first_token_monotonic"] = None
+    if fault == "missing_done":
+        rows[0]["stream_completed"] = False
+    if fault == "before_prefill":
+        rows[0]["first_token_monotonic"] = 1000.5
+    if fault == "stream_error":
+        rows[0]["stream_error"] = {"message": "generation failed"}
+    if fault == "missing_proxy":
+        (path.parent / "proxy_requests.jsonl").write_text("")
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    result = verdict.judge(stage, "Succeeded")
+    assert result["all_pass"] and len(result["checks"]) == 9
+    row = result["observations"]["requests"][rows[0]["request_id"]]
+    assert row["client_first_token_status"] == "UNVERIFIED_STREAM"
+    assert row["client_ttft_s"] is None and row["post_prefill_first_token_s"] is None

@@ -24,6 +24,7 @@ from tests.comparison.calibration.pd_replay import (
     kv_transfer_config,
 )
 from tests.comparison.calibration import pd_replay
+from tests.comparison.dp_placement_pp import vllm_replay
 from tests.unit.test_dp_placement_harness import native_engine, native_observer, native_replay_inputs
 
 # P2pNcclConnector.parse_request_id, vLLM-BS ff328f82a
@@ -189,6 +190,153 @@ def test_legacy_proxy_preserves_address_id_and_unchanged_decode_body(tmp_path):
     assert "kv_transfer_params" not in observed[0][2]
 
 
+@pytest.mark.parametrize("version", ["0.10.2", "0.28.0", "step5"])
+def test_streaming_proxy_passes_bytes_before_decode_finishes_and_keeps_prefill_nonstreaming(tmp_path, version):
+    from aiohttp import web
+    from aiohttp.test_utils import TestClient, TestServer
+
+    params = {"do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
+              "remote_engine_id": "P", "remote_request_id": "p-request", "remote_host": "127.0.0.1",
+              "remote_port": 5600, "remote_block_ids": [[1]], "tp_size": 8}
+    first = b': keep-alive\r\n\r\ndata: {"choices":[{"text":"first"}]}\n\n'
+    last = b'data: {"choices":[],"usage":{"completion_tokens":9}}\n\ndata: [DONE]\n\n'
+    seen = []
+
+    async def exercise():
+        finish = asyncio.Event()
+
+        async def prefill(request):
+            seen.append(("P", request.headers["X-Request-Id"], await request.json()))
+            return web.json_response({"kv_transfer_params": params})
+
+        async def decode(request):
+            seen.append(("D", request.headers["X-Request-Id"], await request.json()))
+            response = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
+            await response.prepare(request)
+            await response.write(first)
+            await finish.wait()
+            await response.write(last)
+            await response.write_eof()
+            return response
+
+        p, d = web.Application(), web.Application()
+        p.router.add_post("/v1/completions", prefill)
+        d.router.add_post("/v1/completions", decode)
+        async with TestServer(p) as ps, TestServer(d) as ds:
+            app = build_app(str(ps.make_url("")).rstrip("/"), str(ds.make_url("")).rstrip("/"),
+                            "127.0.0.1:21001", "127.0.0.1:22001", tmp_path / "proxy.jsonl",
+                            vllm_version=version)
+            async with TestClient(TestServer(app)) as client:
+                body = {"prompt": [1, 2, 3], "stream": True, "max_tokens": 9, "min_tokens": 9,
+                        "stream_options": {"include_usage": True}}
+                response = await client.post("/v1/completions", json=body,
+                                             headers={"X-Request-Id": "stream-1"})
+                try:
+                    assert response.status == 200 and response.content_type == "text/event-stream"
+                    assert await asyncio.wait_for(response.content.readexactly(len(first)), 2) == first
+                    assert not finish.is_set()
+                finally:
+                    finish.set()
+                assert await response.read() == last
+                expected = body if version == "0.10.2" else body | {"kv_transfer_params": params}
+                assert seen[1][2] == expected
+
+    asyncio.run(exercise())
+    assert seen[0][2]["stream"] is False and seen[0][2]["max_tokens"] == 1
+    assert "stream_options" not in seen[0][2]
+    assert seen[0][1] == seen[1][1]
+    record = json.loads((tmp_path / "proxy.jsonl").read_text())
+    assert record["stream"] is True
+    assert record["proxy_arrival_monotonic"] < record["prefill_response_monotonic"] < record["decode_response_monotonic"]
+
+
+@pytest.mark.parametrize("version", ["0.10.2", "0.28.0", "step5"])
+def test_streaming_client_times_content_not_empty_events_and_reads_trailing_usage(version):
+    import time
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+
+    bodies, sent = {}, {}
+
+    async def exercise():
+        async def complete(request):
+            body = await request.json()
+            rid = request.headers["X-Request-Id"]
+            bodies[rid] = body
+            if not body["stream"]:
+                return web.json_response({"choices": [{"finish_reason": "length"}],
+                                          "usage": {"completion_tokens": 9}})
+            response = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
+            await response.prepare(request)
+            await response.write(b': heartbeat\n\ndata: {"choices":[{"text":""}]}\n\n')
+            await asyncio.sleep(0.01)
+            sent["content"] = time.monotonic()
+            content = 'data: {"choices":[{"text":"é"}]}\n\n'.encode()
+            split = content.index(b'\xc3') + 1
+            await response.write(content[:split])
+            await response.write(content[split:])
+            await response.write(b'data: {"choices":[{"text":"last","finish_reason":"length"}]}\n\n')
+            await response.write(b'data: {"choices":[],"usage":{"completion_tokens":9}}\n\ndata: [DONE]\n\n')
+            await response.write_eof()
+            return response
+
+        app = web.Application()
+        app.router.add_post("/v1/completions", complete)
+        async with TestServer(app) as server:
+            return await vllm_replay.replay([
+                {"request_id": rid, "segment": "test", "role": "recorded", "arrived_at": 0.0,
+                 "num_prefill_tokens": 33, "num_decode_tokens": 9,
+                 **({"stream": True} if rid == "warm" else {})}
+                for rid in ("cold", "warm")], server.port, 1024, 0.0, vllm_version=version)
+
+    _, records = asyncio.run(exercise())
+    cold, warm = ({row["request_id"]: row for row in records}[rid] for rid in ("cold", "warm"))
+    assert "stream_options" not in bodies["cold"] and "first_token_monotonic" not in cold
+    assert bodies["warm"]["stream_options"] == {"include_usage": True}
+    assert warm["dispatch_monotonic"] < sent["content"] <= warm["first_token_monotonic"] < warm["response_monotonic"]
+    assert warm["stream_completed"] is True and "stream_error" not in warm
+    assert warm["usage"]["completion_tokens"] == 9 and warm["finish_reason"] == "length"
+
+
+@pytest.mark.parametrize("fault", ["missing_usage", "missing_done", "empty_content", "error", "http_error"])
+def test_streaming_client_preserves_missing_evidence_and_server_errors(fault):
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+
+    async def exercise():
+        async def complete(request):
+            if fault == "http_error":
+                return web.json_response({"error": "unavailable"}, status=503)
+            content = "" if fault == "empty_content" else "first"
+            events = [{"choices": [{"text": content, "finish_reason": "length"}]}]
+            if fault != "missing_usage":
+                events.append({"choices": [], "usage": {"completion_tokens": 9}})
+            if fault == "error":
+                events.append({"error": {"message": "generation failed"}})
+            text = "".join("data: " + json.dumps(event) + "\n\n" for event in events)
+            if fault != "missing_done":
+                text += "data: [DONE]\n\n"
+            return web.Response(text=text, content_type="text/event-stream")
+
+        app = web.Application()
+        app.router.add_post("/v1/completions", complete)
+        async with TestServer(app) as server:
+            return await vllm_replay.replay([
+                {"request_id": "warm", "segment": "test", "role": "recorded", "arrived_at": 0.0,
+                 "num_prefill_tokens": 33, "num_decode_tokens": 9, "stream": True}],
+                server.port, 1024, 0.0, vllm_version="step5")
+
+    _, (record,) = asyncio.run(exercise())
+    if fault == "http_error":
+        assert record["http_status"] == 503 and record["error"] == {"error": "unavailable"}
+        assert "first_token_monotonic" not in record
+    else:
+        assert record["stream_completed"] is (fault != "missing_done")
+        assert (record["first_token_monotonic"] is None) is (fault == "empty_content")
+        assert (record["usage"] is None) is (fault == "missing_usage")
+        assert ("stream_error" in record) is (fault == "error")
+
+
 @pytest.mark.parametrize("fault", ["role", "nested", "same_output", "alias_output",
                                   "nested_output", "parent_output", "run", "devices", "pp",
                                   "missing_kv", "overlap", "side_http"])
@@ -310,8 +458,9 @@ def test_v028_pd_main_retains_plans_and_terminal_state_without_legacy_admission(
 
 
 @pytest.mark.parametrize("decode_status,health_status", [(200, 200), (503, 200), (200, 503)])
+@pytest.mark.parametrize("stream", [False, True])
 def test_v028_external_pd_replays_http_without_owning_native_servers(
-    tmp_path, monkeypatch, decode_status, health_status,
+    tmp_path, monkeypatch, decode_status, health_status, stream,
 ):
     import socket
     import threading
@@ -339,12 +488,19 @@ def test_v028_external_pd_replays_http_without_owning_native_servers(
             received.append((self.server.role, self.headers["X-Request-Id"], body))
             status = 200 if self.server.role == "prefill" else decode_status
             payload = ({"kv_transfer_params": params} if self.server.role == "prefill" else
-                       {"choices": [{"text": "native response", "finish_reason": "length"}],
-                        "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+                        {"choices": [{"text": "native response", "finish_reason": "length"}],
+                         "usage": {"prompt_tokens": 65, "completion_tokens": 3}})
+            streaming = body.get("stream") and status == 200
             self.send_response(status)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", "text/event-stream" if streaming else "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(payload).encode())
+            if streaming:
+                self.wfile.write(("data: " + json.dumps({"choices": payload["choices"]}) + "\n\n").encode())
+                self.wfile.flush()
+                self.wfile.write(("data: " + json.dumps({"choices": [], "usage": payload["usage"]})
+                                  + "\n\ndata: [DONE]\n\n").encode())
+            else:
+                self.wfile.write(json.dumps(payload).encode())
 
     servers, threads = [], []
     try:
@@ -363,6 +519,11 @@ def test_v028_external_pd_replays_http_without_owning_native_servers(
         engine = nixl_engine()
         del engine["role_devices"]
         argv, output = native_replay_inputs(tmp_path, engine)
+        if stream:
+            path = tmp_path / "trace/request_ids.json"
+            trace = json.loads(path.read_text())
+            trace["rows"][0]["stream"] = True
+            path.write_text(json.dumps(trace))
         argv += ["--prefill-url", urls[0], "--decode-url", urls[1],
                  "--proxy-port", str(proxy_port), "--origin-lead-s", "0",
                  "--startup-timeout-s", "0.01" if health_status != 200 else "10"]
@@ -409,6 +570,12 @@ def test_v028_external_pd_replays_http_without_owning_native_servers(
         assert received[1][2]["max_tokens"] == 3
         client = json.loads((output / "client_requests.jsonl").read_text())
         assert client["http_status"] == decode_status
+        if stream and decode_status == 200:
+            proxy = json.loads((output / "proxy_requests.jsonl").read_text())
+            assert client["stream_completed"] is True and client["usage"]["completion_tokens"] == 3
+            assert client["dispatch_monotonic"] < proxy["prefill_response_monotonic"] < client["first_token_monotonic"] < client["response_monotonic"]
+            assert received[0][2]["stream"] is False and "stream_options" not in received[0][2]
+            assert received[1][2]["stream_options"] == {"include_usage": True}
     finally:
         for server in servers:
             server.shutdown()

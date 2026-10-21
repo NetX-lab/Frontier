@@ -199,17 +199,38 @@ def judge(stage: Path, platform_status: str) -> dict:
 
     try:
         observations["requests"] = {}
+        single_request_waves = set()
         for wave in waves["waves"]:
+            trace_rows = json.loads((stage / "trace" / wave / "request_ids.json").read_text())["rows"]
+            if len(trace_rows) == 1:
+                single_request_waves.add(wave)
             client, proxy = wave_records(wave)
             for rid, record in client.items():
                 routed = proxy.get(rid, {})
                 params = routed.get("kv_transfer_params") or {}
+                first = record.get("first_token_monotonic")
+                prefill_response = routed.get("prefill_response_monotonic")
+                timed = (first is not None and record.get("stream_completed") is True
+                         and "stream_error" not in record and prefill_response is not None
+                         and record["dispatch_monotonic"] < prefill_response
+                         < first <= record["response_monotonic"])
 
                 def interval(start, end, source=routed):
                     return source[end] - source[start] if start in source and end in source else None
                 observations["requests"][rid] = {
                     "wave": wave, "num_prefill_tokens": record["num_prefill_tokens"],
                     "http_status": record["http_status"], "usage": record.get("usage"),
+                    "client_send_monotonic": record["dispatch_monotonic"],
+                    "client_first_token_monotonic": first,
+                    "client_first_token_status": ("PASS" if timed else "UNVERIFIED_STREAM"
+                                                  if record.get("stream") else "UNVERIFIED_NONSTREAMING"),
+                    "client_ttft_s": first - record["dispatch_monotonic"] if timed else None,
+                    "post_prefill_first_token_s": first - prefill_response if timed else None,
+                    "stream_completed": record.get("stream_completed"),
+                    "stream_error": record.get("stream_error"),
+                    "proxy_prefill_response_monotonic": prefill_response,
+                    "client_completion_monotonic": record["response_monotonic"],
+                    "output_tokens": (record.get("usage") or {}).get("completion_tokens"),
                     "client_e2e_s": record["response_monotonic"] - record["dispatch_monotonic"],
                     "prefill_phase_s": interval("proxy_arrival_monotonic", "prefill_response_monotonic"),
                     "decode_phase_s": interval("prefill_response_monotonic", "decode_response_monotonic"),
@@ -227,6 +248,34 @@ def judge(stage: Path, platform_status: str) -> dict:
                 "decode_nixl_transfers": delta["decode"]["nixl_transfers"],
                 "decode_requests": delta["decode"]["requests"],
                 "prefill_requests": delta["prefill"]["requests"]}
+        observations["warm_requests"] = []
+        for rid, row in observations["requests"].items():
+            wave = row["wave"]
+            window = observations["wave_changes"][wave]
+            sources = window["decode_prompt_sources"]
+            requests = window["decode_requests"]
+            completed = requests["vllm:e2e_request_latency_seconds"]["count"]
+            attributed = (wave in single_request_waves and completed["present"]
+                          and completed["total"] == 1
+                          and all(series["present"] for series in sources.values())
+                          and sum(series["total"] for series in sources.values()) == row["num_prefill_tokens"])
+            ttft = requests["vllm:time_to_first_token_seconds"]
+            row.update(
+                decode_external_tokens=sources["external_kv_transfer"]["total"] if attributed else None,
+                decode_computed_prompt_tokens=sources["local_compute"]["total"] if attributed else None,
+                decode_prompt_attribution="single_request_window" if attributed else "UNVERIFIED",
+                decode_prompt_sources_per_engine={name: series["per_engine"] for name, series in sources.items()},
+                decode_engine_ttft_s=(ttft["sum"]["total"] if attributed and ttft["sum"]["present"]
+                                      and ttft["count"]["total"] == 1 else None))
+            if wave != gating:
+                observations["warm_requests"].append({"request_id": rid, **row})
+        observations["timing_clock"] = "time.monotonic() / Linux CLOCK_MONOTONIC on the prefill head"
+        observations["client_first_token_note"] = (
+            "Streaming requests timestamp the first nonempty completion text chunk, not an empty "
+            "choice, usage event or response completion. Client and proxy run on the same prefill "
+            "head host and use time.monotonic(), so no cross-host clock alignment is needed. "
+            "Nonstreaming W1 has no client first-token timestamp and keeps the nine unchanged "
+            "conditions. decode_engine_ttft_s is a separate histogram delta, not client TTFT.")
         observations["observation_errors"] = {host: result.get("observation_errors")
                                               for host, result in results.items()}
     except Exception:

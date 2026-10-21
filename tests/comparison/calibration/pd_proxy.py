@@ -22,7 +22,8 @@ arrival and the prefill and decode response times, each on ``time.time()`` and
 ``GET /health``. The NIXL pull adapters (v0.28 and Step-5) follow the pinned native toy
 proxy: P returns the native ``kv_transfer_params`` passed unchanged to D
 under the same client header. These HTTP records do not prove native READ
-completion or device readiness.
+completion or device readiness. An opt-in streaming client still prefills nonstreaming;
+the proxy relays D's SSE bytes immediately, without parsing or rewriting them.
 """
 
 from __future__ import annotations
@@ -93,14 +94,15 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
             "proxy_arrival_monotonic": arrival_monotonic,
         }
         body = await request.read()
+        streamed = None
         try:
+            original = json.loads(body)
             if pull:
                 record["handoff_protocol"] = "nixl_pull"
-                original = json.loads(body)
-                if (type(original) is not dict or original.get("stream") is not False
+                if (type(original) is not dict or type(original.get("stream")) is not bool
                         or "kv_transfer_params" in original
                         or type(original.get("prompt")) is not list or not original["prompt"]):
-                    raise ValueError("NIXL replay requires nonstreaming token prompts without client transfer metadata")
+                    raise ValueError("NIXL replay requires token prompts without client transfer metadata")
                 prefill = original | {"stream": False, "max_tokens": 1,
                     "kv_transfer_params": {"do_remote_decode": True, "do_remote_prefill": False,
                         "remote_engine_id": None, "remote_block_ids": None,
@@ -112,7 +114,11 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     prefill["max_completion_tokens"] = 1
                 prefill_body = json.dumps(prefill).encode()
             else:
-                prefill_body = json.dumps(json.loads(body) | {"max_tokens": 1, "min_tokens": 1}).encode()
+                prefill = original | {"max_tokens": 1, "min_tokens": 1}
+                if original.get("stream"):
+                    prefill["stream"] = False
+                    prefill.pop("stream_options", None)
+                prefill_body = json.dumps(prefill).encode()
             status, payload, _ = await forward(f"{prefill_url}/v1/completions", prefill_body, request_id)
             record.update(prefill_status=status, prefill_response_time=time.time(),
                           prefill_response_monotonic=time.monotonic())
@@ -141,6 +147,22 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     raise ValueError("Prefill response lacks valid native NIXL pull metadata")
                 body = json.dumps(original | {"kv_transfer_params": params}).encode()
                 record["kv_transfer_params"] = params
+            if original.get("stream"):
+                record["stream"] = True
+                async with session.post(
+                    f"{decode_url}/v1/completions", data=body,
+                    headers={"Content-Type": "application/json", "X-Request-Id": request_id},
+                ) as response:
+                    record["decode_status"] = response.status
+                    streamed = web.StreamResponse(status=response.status, headers={
+                        "Content-Type": response.headers["Content-Type"]})
+                    await streamed.prepare(request)
+                    async for chunk in response.content.iter_any():
+                        await streamed.write(chunk)
+                    record.update(decode_response_time=time.time(),
+                                  decode_response_monotonic=time.monotonic())
+                    await streamed.write_eof()
+                    return streamed
             status, payload, content_type = await forward(f"{decode_url}/v1/completions", body, request_id)
             record.update(decode_status=status, decode_response_time=time.time(),
                           decode_response_monotonic=time.monotonic())
@@ -150,6 +172,9 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
         except (ClientError, ValueError) as exc:
             record["error"] = f"{type(exc).__name__}: {exc}"
             logger.error("request %s failed: %s", client_request_id, record["error"])
+            if streamed is not None and streamed.prepared:
+                streamed.force_close()
+                raise
             return web.json_response({"error": record["error"]}, status=502)
         finally:
             log.write(json.dumps(record) + "\n")
