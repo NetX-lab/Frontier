@@ -28,6 +28,7 @@ def profile_arguments(output, method, *, tokens=TOKENS, device="h800"):
     return [
         "--disable_ray", "--num_gpus", "1", "--models", MODEL,
         "--num_tokens_list", *map(str, tokens),
+        "--max_tokens", str(max(tokens)),
         "--num_tensor_parallel_workers", str(ATTN_TP),
         "--attn_tp", str(ATTN_TP), "--ffn_tp", str(FFN_TP), "--moe_tp", str(MOE_TP),
         "--precision", "BF16",

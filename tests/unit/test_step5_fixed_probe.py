@@ -83,6 +83,7 @@ def test_probe_manifest_uses_the_existing_producers_and_complete_native_policy(t
     worker = manifest["worker_command"]
     assert worker.count("-m frontier.profiling.step5.main") == 1
     assert worker.count("-m frontier.profiling.linear_op.main") == 2
+    assert worker.count("--max_tokens 6144") == 2
     assert "--max-time-cv 0.05" in worker and "--profile-iterations 10" in worker
     assert "--device h200" in worker and "tee" in worker and "set -euo pipefail" in worker
     assert "--gpu-tag H200 --charged-group step_main" in manifest["submission_command"]
@@ -181,3 +182,33 @@ def test_launcher_materializes_h200_resources_without_platform_imports(tmp_path,
     assert calls["resources"]["gpu"] == 1 and calls["resources"]["cpu"] == 8
     assert calls["resources"]["mem_gb"] == 32 and not calls["resources"]["preemptible"]
     assert calls["resources"]["image"] == manifest["image"]
+
+
+def test_dry_run_verifier_retains_normal_cli_log_prefix(monkeypatch):
+    path = job.REPO_ROOT / "tests/integration/step5_profiling/verify_fixed_probe.py"
+    spec = importlib.util.spec_from_file_location("step5_verify_cpu_fixture", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    text = 'WARNING native runtime remains unqualified\n{\n  "rows": 18\n}\n'
+    monkeypatch.setattr(module.subprocess, "check_output", lambda *args, **kwargs: text)
+    result, logs = module.dry_run(["CPU_FIXTURE_NOT_A_COMMAND"], stage=job.REPO_ROOT, env={})
+    assert result == {"rows": 18}
+    assert logs == ["WARNING native runtime remains unqualified"]
+
+
+@pytest.mark.parametrize("method", ["cuda_event", "record_function"])
+def test_actual_fixed_probe_linear_cli_accepts_6144_prefill(method, tmp_path):
+    from frontier.profiling.linear_op.step5_job import profile_arguments
+
+    tokens = tuple(sorted({cell.num_tokens for cell in probe_cells()}))
+    args = profile_arguments(tmp_path, method, tokens=tokens, device="h200")
+    result = subprocess.run(
+        [sys.executable, "-B", "-m", "frontier.profiling.linear_op.main", *args, "--dry_run"],
+        cwd=job.REPO_ROOT, env={**os.environ, "VLLM_TARGET_DEVICE": "cpu"},
+        text=True, capture_output=True, check=True,
+    )
+    lines = result.stdout.splitlines()
+    planned = json.loads("\n".join(lines[lines.index("{"):]))
+    assert sorted(planned["num_tokens"]) == [1, 2, 16, 6144]
+    plans = planned["models"]["stepfun-ai/Step-5-Preview"]["plans"]
+    assert [item["padded_n_expanded_embd"] for item in plans] == [1536, 13824]

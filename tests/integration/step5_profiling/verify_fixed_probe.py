@@ -13,6 +13,13 @@ import subprocess
 import sys
 
 
+def dry_run(command, *, stage, env):
+    text = subprocess.check_output(command, cwd=stage, env=env, text=True)
+    lines = text.splitlines()
+    json_start = lines.index("{")
+    return json.loads("\n".join(lines[json_start:])), lines[:json_start]
+
+
 def verify(stage):
     stage = Path(stage).resolve(strict=True)
     manifest = json.loads((stage / "manifest.json").read_text())
@@ -37,24 +44,26 @@ def verify(stage):
            "PYTHONDONTWRITEBYTECODE": "1", "VLLM_TARGET_DEVICE": "cpu"}
     command = [sys.executable, "-B", "-m", "frontier.profiling.step5.main",
                *manifest["attention_arguments"], "--dry-run"]
-    attention = json.loads(subprocess.check_output(command, cwd=stage, env=env, text=True))
+    attention, attention_logs = dry_run(command, stage=stage, env=env)
     assert (attention["rows"], attention["gpu_active_rows"]) == (18, 4)
     assert attention["native_max_num_seqs"] == 2
     assert attention["native_max_num_batched_tokens"] == 14336
     assert attention["cudagraph_capture_sizes"] == [1, 2]
     assert not attention["enable_chunked_prefill"]
     dry_runs = {}
+    logs = {"attention": attention_logs}
     for line in manifest["worker_command"].splitlines():
         if "-m frontier.profiling.linear_op.main" not in line:
             continue
         args = shlex.split(line.split(" 2>&1 | tee ", 1)[0])
         args = args[args.index("-m"):]
-        result = json.loads(subprocess.check_output(
-            [sys.executable, "-B", *args, "--dry_run"], cwd=stage, env=env, text=True))
+        result, messages = dry_run([sys.executable, "-B", *args, "--dry_run"], stage=stage, env=env)
         method = args[args.index("--profile_method") + 1]
         planned = result["models"]["stepfun-ai/Step-5-Preview"]["plans"]
+        assert sorted(result["num_tokens"]) == manifest["linear_plan"]["num_tokens"]
         assert planned == json.loads(json.dumps(manifest["linear_plan"]["plans"]))
         dry_runs[method] = "PASS"
+        logs[method] = messages
     assert set(dry_runs) == {"cuda_event", "record_function"}
     workload = stage / manifest["workload"]["path"]
     subprocess.run(["sha256sum", "-c", "SHA256SUMS"], cwd=workload, check=True,
@@ -65,6 +74,7 @@ def verify(stage):
             "attention_event_rows": attention["rows"],
             "attention_gpu_active_rows": attention["gpu_active_rows"],
             "linear_rows": manifest["expected_linear_rows"], "linear_dry_runs": dry_runs,
+            "dry_run_logs": logs,
             "platform_operations": 0, "admitted": False}
 
 

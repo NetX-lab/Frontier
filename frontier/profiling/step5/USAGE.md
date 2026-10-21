@@ -143,7 +143,8 @@ full grid. It pins the unchanged D18 workload from shared commit `68f891b`
 
 ```bash
 python -m frontier.profiling.step5.job --fixed-workload-probe \
-  --stage /data/ycfeng/tmp/d18_profile_20261021/h200_small_probe_stage01 \
+  --stage /data/ycfeng/tmp/d18_profile_20261021/h200_small_probe_stage02 \
+  --run-id fixed_h200_small_probe_20261021_02 \
   --dependency-site /data/ycfeng/tmp/step5_attention_20261020/offline_site01
 ```
 
