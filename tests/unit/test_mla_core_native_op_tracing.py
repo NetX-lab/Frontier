@@ -121,7 +121,9 @@ class _DummyBatchStage:
 
 def _build_metrics_store() -> MetricsStore:
     metrics_store = MetricsStore(
-        SimpleNamespace(metrics_config=MetricsConfig(output_dir=gettempdir())), {}
+        SimpleNamespace(
+            metrics_config=MetricsConfig(output_dir=gettempdir()), sys_arch="co-location"
+        ), {}
     )
     metrics_store._config = _DummyConfig()
     metrics_store._trace_store = None

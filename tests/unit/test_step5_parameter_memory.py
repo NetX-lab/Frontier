@@ -1,4 +1,4 @@
-"""Step source-required storage, distinct from native-observed unique allocations.
+"""Step source-required storage, distinct from native allocator consumption.
 
 The independent arithmetic follows the locked Step model constructors, FP8
 factories and vocabulary sharding. It is not calibrated or native fit evidence.
@@ -110,6 +110,20 @@ def _source_oracle(raw, *, tp, moe_tp, ep, norm_bytes=4, tied=False):
     return attention, ffn, (endpoints + norms, 2 * endpoints + norm_bytes * norms)
 
 
+def _frontend_oracle(tp):
+    # Locked step5.py:13-31 and step_vl.py:147-419. The unexecuted wrapper is
+    # still loaded. Convolutions, position embeddings and norms are replicated.
+    width, hidden, layers, grid = 1536, 8960, 47, 52
+    replicated = 3 * 14**2 * width + 90 * width**2 + 6 * width
+    replicated += grid**2 * width + 2 * width
+    block = (4 * width**2 + 2 * width * hidden + 3 * width + hidden) // tp + 8 * width
+    elements = replicated + layers * block + 4 * width * 4096 // tp
+    return elements, 2 * elements + layers * grid**2 * 96 * 4
+
+
+TEXT_ROTARY_BYTES = 1048576 * (192 + 64 + 32) * 2
+
+
 @pytest.fixture
 def replica(monkeypatch):
     monkeypatch.chdir(REPO_ROOT)
@@ -117,14 +131,14 @@ def replica(monkeypatch):
 
 
 @pytest.mark.parametrize(("tp", "dp", "moe_tp", "ep", "expected_storage"), [
-    (8, 4, 1, 32, 23_158_461_632),
-    (8, 2, 1, 16, 42_056_012_480),
-    (16, 2, 1, 32, 21_573_276_864),
-    (4, 2, 1, 8, 83_021_483_712),
-    (4, 1, 4, 1, 158_611_563_200),
-    (8, 1, 8, 1, 79_902_692_032),
-    (16, 1, 16, 1, 40_599_958_208),
-    (1, 1, 1, 1, 632_624_296_640),
+    (8, 4, 1, 32, 24_687_967_104),
+    (8, 2, 1, 16, 43_585_517_952),
+    (16, 2, 1, 32, 22_882_403_360),
+    (4, 2, 1, 8, 84_991_747_136),
+    (4, 1, 4, 1, 160_581_826_624),
+    (8, 1, 8, 1, 81_432_197_504),
+    (16, 1, 16, 1, 41_909_084_704),
+    (1, 1, 1, 1, 637_239_107_776),
 ])
 def test_all_92_backbone_layers_match_independent_source_storage(
     tp, dp, moe_tp, ep, expected_storage, monkeypatch,
@@ -145,9 +159,11 @@ def test_all_92_backbone_layers_match_independent_source_storage(
     assert counter.get_mlp_parameter_memory_per_device_bytes() == sum(memory for _, memory in ffn)
     assert counter.get_num_parameters_per_device() == (
         sum(count for count, _ in attention) + sum(count for count, _ in ffn) + other[0]
+        + _frontend_oracle(tp)[0]
     )
     assert counter.get_parameter_memory_per_device_bytes() == (
         sum(memory for _, memory in attention) + sum(memory for _, memory in ffn) + other[1]
+        + _frontend_oracle(tp)[1] + TEXT_ROTARY_BYTES
     ) == expected_storage
     assert counter.get_attention_stage_layer_counts() == ((0, 92),)
     assert counter.get_resident_attention_stage_id() == 0
@@ -213,7 +229,7 @@ def test_embedding_head_tie_and_final_norm_have_native_ownership(replica):
     model = replica.model_config
     backbone = sum(before.get_num_parameters_per_layer(i) for i in range(92))
     endpoint = 128896 * 4096 // 8
-    assert before.get_num_parameters_per_device() - backbone == 2 * endpoint + 4096
+    assert before.get_num_parameters_per_device() - backbone == 2 * endpoint + 4096 + _frontend_oracle(8)[0]
     assert before._get_step5_other_totals() == (132_747_264, 267_010_048)
     replica.model_config = replace(model, tie_word_embeddings=True)
     tied = ParamCounter(replica)
@@ -244,6 +260,7 @@ def test_shape_changes_are_config_driven_without_hidden_per_head_inference(repli
     attention, ffn, other = _source_oracle(raw, tp=8, moe_tp=1, ep=32)
     assert counter.get_parameter_memory_per_device_bytes() == (
         sum(memory for _, memory in attention) + sum(memory for _, memory in ffn) + other[1]
+        + counter._get_step5_vision_totals()[1] + TEXT_ROTARY_BYTES
     )
     assert counter._get_step5_layer(3).geometry.head_dim == 192
     assert replica.model_config.embedding_dim // replica.model_config.num_q_heads == 60
@@ -258,7 +275,9 @@ def test_topk_mtp_inventory_and_rotary_length_do_not_duplicate_storage(replica):
     )
     after = ParamCounter(replica)
     assert model.num_nextn_predict_layers == 3
-    assert before.get_parameter_memory_per_device_bytes() == after.get_parameter_memory_per_device_bytes()
+    assert before.get_parameter_memory_per_device_bytes() - after.get_parameter_memory_per_device_bytes() == (
+        (model.max_position_embeddings - 8192) * (192 + 64 + 32) * 2
+    )
     assert before.get_num_parameters_per_device() == after.get_num_parameters_per_device()
     for layer_id in (92, 93, 94, -1, True):
         for getter in (after.get_num_attention_params_per_layer, after.get_num_mlp_params_per_layer, after.get_num_parameters_per_layer):
@@ -395,11 +414,11 @@ def test_tp16_auto_refined_scales_match_retained_native_shapes(monkeypatch):
             non_scale_bytes + scale_bytes,
         )
     assert 85 * scale_bytes == 137_871_360
-    assert counter.get_num_parameters_per_device() == 37_750_873_536
+    assert counter.get_num_parameters_per_device() == 38_079_046_000
     assert counter.get_attention_parameter_memory_per_device_bytes() == 1_740_394_176
     assert counter.get_mlp_parameter_memory_per_device_bytes() == 38_724_543_488
     assert counter._get_step5_other_totals()[1] == 135_020_544
-    assert counter.get_parameter_memory_per_device_bytes() == 40_599_958_208
+    assert counter.get_parameter_memory_per_device_bytes() == 41_909_084_704
 
 
 def test_expert_shards_without_supported_unpadded_refinement_are_explicit(replica):
@@ -498,7 +517,7 @@ def test_mixed_step_inventory_uses_layer_metadata_without_homogeneous_api(replic
     assert metadata.geometry.local_provider_groups == 1
     assert metadata.geometry.provider_replication == 2
     assert metadata.router_precision is PrecisionType.FP32
-    assert counter.get_parameter_memory_per_device_bytes() == 23_158_461_632
+    assert counter.get_parameter_memory_per_device_bytes() == 24_687_967_104
 
 
 def test_h200_does_not_change_source_required_weight_storage(replica):

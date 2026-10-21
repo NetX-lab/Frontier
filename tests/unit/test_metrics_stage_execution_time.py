@@ -466,16 +466,16 @@ def test_stage_component_ledger_preserves_family_names_and_owner_once() -> None:
         },
     }),
     ("stepfun-ai/Step-5-Preview", 8, 16, {
-        "total_parameters": 38_543_465_920,
-        "total_memory_bytes": 42_056_012_480,
+        "total_parameters": 38_981_827_872,
+        "total_memory_bytes": 43_585_517_952,
         "memory_accounting": "source-defined weight storage estimate; native allocation unverified",
         "breakdown": {
             "attention_parameters": 1_450_480_832,
             "attention_memory_bytes": 2_901_036_736,
             "ffn_parameters": 36_960_237_824,
             "ffn_memory_bytes": 38_887_965_696,
-            "other_parameters": 132_747_264,
-            "other_memory_bytes": 267_010_048,
+            "other_parameters": 571_109_216,
+            "other_memory_bytes": 1_796_515_520,
         },
     }),
     ("qwen3-next-80b-a3b-instruct-reduced-l2", 1, 1, {

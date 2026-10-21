@@ -348,8 +348,19 @@ def _infer_share_expert_dim_from_hf_config(
     return share_expert_dim
 
 
+# Locked vLLM transformers_utils/configs/step5.py:13-31. These constructor
+# defaults are absent from the checkpoint JSON but affect resident storage.
+STEP5_VISION_DEFAULTS = {
+    "mlp_ratio": 8960 / 1536,
+    "use_abs_posemb": True,
+    "use_rope2d": True,
+    "use_ln_pre": True,
+    "use_ln_post": False,
+}
+
+
 def _normalize_hf_text_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Resolve the supported text backbone while retaining outer precision policy."""
+    """Resolve text execution while retaining the loaded wrapper's storage."""
     if "text_config" in cfg:
         text = cfg["text_config"]
         if (
@@ -360,6 +371,8 @@ def _normalize_hf_text_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
         ):
             raise ValueError("Unsupported nested text_config; expected step5_vl/step5")
         normalized = dict(text)
+        normalized["vision_config"] = {**STEP5_VISION_DEFAULTS, **cfg["vision_config"]}
+        normalized["projector_bias"] = cfg["projector_bias"]
         if "quantization_config" in cfg:
             if (
                 "quantization_config" in text
@@ -574,6 +587,9 @@ class BaseModelConfig(BaseFixedConfig):
     swiglu_limit: Optional[float] = field(default=None, metadata={"omit_if_none": True})
     expert_dtype: Optional[str] = field(default=None, metadata={"omit_if_none": True})
 
+    # The wrapper stays resident even for text-only requests; it is not executed.
+    vision_config: Optional[Dict[str, Any]] = field(default=None, metadata={"omit_if_none": True})
+    projector_bias: Optional[bool] = field(default=None, metadata={"omit_if_none": True})
     # Step text-only metadata; the existing layer binding remains the identity owner.
     sparse_config: Optional[Dict[str, Any]] = field(default=None, metadata={"omit_if_none": True})
     attention_other_setting: Optional[Dict[str, Any]] = field(default=None, metadata={"omit_if_none": True})
@@ -1199,6 +1215,7 @@ class BaseModelConfig(BaseFixedConfig):
             **{
                 field_name: cfg.get(field_name) if model_type_lower == "step5" else None
                 for field_name in (
+                    "vision_config", "projector_bias",
                     "sparse_config", "attention_other_setting", "att_impl_type",
                     "yarn_only_types", "use_rope_layers", "swa_num_attention_heads",
                     "num_nextn_predict_layers", "mtp_layer_types", "layer_rope_thetas",
