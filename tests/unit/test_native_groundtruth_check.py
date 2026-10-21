@@ -29,8 +29,10 @@ def original_checkout_root(repo):
 
 REPO = Path(__file__).resolve().parents[2]
 CHECKER = original_checkout_root(REPO) / "task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/check_groundtruth_run.py"
-BEFORE = REPO / "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py"
+BEFORE = Path(os.environ.get('NATIVE_CHECKER_LEGACY_BASELINE', str(REPO /
+    "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py")))
 TRACE = REPO / "data/processed_traces/canonical_fixed_6144_1024_req128_qps1"
+HARNESS_REF = '633f205'
 
 if not CHECKER.is_file():
     pytest.skip(f"External groundtruth checker is unavailable: {CHECKER}", allow_module_level=True)
@@ -62,17 +64,37 @@ def digest(path):
 def archived_harness(tmp_path_factory):
     """Use actual pinned reader bytes in a fresh subprocess, with fixture Git receipts."""
     root = tmp_path_factory.mktemp("native_checker_harness")
-    archive = subprocess.run(["git", "archive", "9f58dbe", "tests/comparison"],
+    archive = subprocess.run(["git", "archive", HARNESS_REF, "tests/comparison"],
                              cwd=REPO, capture_output=True)
     if archive.returncode:
-        pytest.skip(f"Pinned CPU fixture archive 9f58dbe is unavailable: {archive.stderr.decode().strip()}")
+        pytest.skip(f"Pinned CPU fixture archive {HARNESS_REF} is unavailable: {archive.stderr.decode().strip()}")
     with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as stream:
         stream.extractall(root, filter="data")
     return root
 
 
+@pytest.fixture(scope='module')
+def native_ready_exports(tmp_path_factory):
+    """Use the actual adopted worker/child export, not a fabricated timeout env."""
+    from tests.comparison.calibration import native_pd_worker
+    from tests.unit.test_native_pd_worker import exercise
+
+    directory = tmp_path_factory.mktemp('actual_ready_export')
+    exports = {}
+    for budget in (1800, 3600):
+        result = exercise(native_pd_worker, directory, 'canonical_clean_serving_staged_child',
+            startup_timeout_s=budget, child_code=(
+                'import json, os; print(json.dumps({"ready_timeout_s": '
+                'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+        assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+        assert not result['observation_errors']
+        assert result['child_imports'] == [{'ready_timeout_s': str(budget)}]
+        exports[budget] = {'VLLM_ENGINE_READY_TIMEOUT_S': result['server_env_set']['VLLM_ENGINE_READY_TIMEOUT_S']}
+    return exports
+
+
 @pytest.fixture
-def native_case(tmp_path, monkeypatch, archived_harness):
+def native_case(tmp_path, monkeypatch, archived_harness, native_ready_exports):
     checker = load_checker(CHECKER)
     root = tmp_path / "canonical"
     run = root / "runs/groundtruth_clean/native"
@@ -94,7 +116,7 @@ def native_case(tmp_path, monkeypatch, archived_harness):
         model_dir=str(model), model_hashes={"config.json": digest(model / "config.json")},
         expected_source_hashes={"vllm/__init__.py": "a" * 64},
         http_ports=dict(prefill=31000, decode=31100), dp_rpc_ports=dict(prefill=31200, decode=31300),
-        serve_observers=dict(prefill=None, decode=None))
+        serve_observers=dict(prefill=None, decode=None), startup_timeout_s=3600)
     write(root / "inputs/engine.json", engine)
     write(root / "inputs/native_config.json", config)
     case = dict(case_id="canonical", groundtruth_commit=V028_SOURCE, groundtruth_branch="fixture-native",
@@ -106,7 +128,7 @@ def native_case(tmp_path, monkeypatch, archived_harness):
         mode="clean", written_before_launch_utc="2026-01-01T00:00:00Z", authorization="CPU fixture only",
         groundtruth_checkout_path=str(tmp_path / "source"), groundtruth_commit=V028_SOURCE,
         groundtruth_branch="fixture-native", groundtruth_tree_dirty=False,
-        harness_worktree=str(harness), harness_commit="9f58dbe", harness_branch="fixture-harness",
+        harness_worktree=str(harness), harness_commit=HARNESS_REF, harness_branch="fixture-harness",
         harness_tree_dirty_paths=[], harness_sha256=modules,
         engine_config="inputs/engine.json", execution_config="inputs/native_config.json", trace_dir="inputs/trace",
         inputs_sha256={str(p.relative_to(root)): digest(p) for p in (root / "inputs").rglob("*") if p.is_file()},
@@ -155,6 +177,7 @@ def native_case(tmp_path, monkeypatch, archived_harness):
         command = server_command(plan["engine"], model, config["http_ports"][role]) + [
             "--kv-transfer-config", json.dumps(kv_transfer_config(plan["engine"], role, config["http_ports"][role]))]
         _, env = instance_env("clean", plan["engine"], directory, {}, "0,1,2,3,4,5,6,7", role=role)
+        env.update(native_ready_exports[config['startup_timeout_s']])
         order = dict(drained_before_stop=True, all_nodes_drained_before_head_stop=[p["host"] for p in peers],
                      head_stopped_before_headless_stop=True, native_returned_before_requested_stop=False)
         stop = dict(signal="SIGINT", returncode=0)
@@ -189,7 +212,7 @@ def native_case(tmp_path, monkeypatch, archived_harness):
         if args[:1] == ("status",):
             return ""
         if args == ("rev-parse", "HEAD"):
-            return "9f58dbe" if repo == str(harness) else V028_SOURCE
+            return HARNESS_REF if repo == str(harness) else V028_SOURCE
         if args == ("branch", "--show-current"):
             return "fixture-harness" if repo == str(harness) else "fixture-native"
         raise AssertionError(args)
@@ -209,6 +232,20 @@ def test_native_fixture_uses_actual_reader_and_never_fabricates_graph_pass(nativ
     result = checker.check(root, "native", "clean")
     assert result["status"] == "FAIL"
     assert [k for k, v in result["checks"].items() if v.startswith("FAIL")] == ["rank_runtime_graph"]
+
+
+@pytest.mark.parametrize('fault', ['missing', 'wrong'])
+def test_native_reader_rejects_missing_or_wrong_ready_timeout(native_case, fault):
+    checker, root, run, _, _, _ = native_case
+    path = run / 'nodes/host0/result.json'
+    node = json.loads(path.read_text())
+    if fault == 'missing':
+        node['server_env_set'].pop('VLLM_ENGINE_READY_TIMEOUT_S')
+    else:
+        node['server_env_set']['VLLM_ENGINE_READY_TIMEOUT_S'] = '600'
+    write(path, node)
+    result = checker.check(root, 'native', 'clean')
+    assert result['checks']['harness_pinned_and_client_rows'].startswith('FAIL')
     assert "UNVERIFIED" in result["checks"]["rank_runtime_graph"]
     assert "run_manifest" in result and result["derived_num_blocks"] == {}
 
@@ -270,12 +307,12 @@ def test_missing_pinned_archive_skips_native_fixture(tmp_path_factory, monkeypat
     original_run = subprocess.run
 
     def unavailable_archive(args, **kwargs):
-        if args[:3] == ["git", "archive", "9f58dbe"]:
+        if args[:3] == ["git", "archive", HARNESS_REF]:
             return subprocess.CompletedProcess(args, 128, stdout=b"", stderr=b"Fixture commit unavailable")
         return original_run(args, **kwargs)
 
     monkeypatch.setattr(subprocess, "run", unavailable_archive)
-    with pytest.raises(pytest.skip.Exception, match="Pinned CPU fixture archive 9f58dbe is unavailable"):
+    with pytest.raises(pytest.skip.Exception, match=f"Pinned CPU fixture archive {HARNESS_REF} is unavailable"):
         archived_harness.__wrapped__(tmp_path_factory)
 
 
@@ -298,29 +335,67 @@ def serving_counters(tmp_path, monkeypatch, request):
                     "vllm/config/vllm.py", "vllm/config/compilation.py",
                     "vllm/v1/worker/gpu_model_runner.py", "vllm/v1/worker/gpu_worker.py",
                     "vllm/entrypoints/openai/completion/serving.py")
-    run, stage = tmp_path / "run", tmp_path / "stage"
-    model = tmp_path / "model"
-    write(model / "config.json", {"architectures": ["GlmMoeDsaForCausalLM"]})
+    parameter = getattr(request, 'param', 'FULL')
+    v2 = isinstance(parameter, tuple) and len(parameter) == 5 and parameter[4] == 'V2'
+    run = (tmp_path / 'case/runs/groundtruth_clean/fixture') if v2 else tmp_path / 'run'
+    stage = tmp_path / "stage"
     module_name = "tests/comparison/calibration/native_full_structure.py"
     stage.mkdir()
     shutil.copyfile(REPO / module_name, stage / "native_full_structure.py")
     captures = [1, 2, 4, *range(8, 257, 8)]
-    parameter = getattr(request, 'param', 'FULL')
-    decode_mode, dp, gpu_type, randomized = (parameter if isinstance(parameter, tuple)
+    decode_mode, dp, gpu_type, randomized = (parameter[:4] if isinstance(parameter, tuple)
         else (parameter, 4, 'H200', False))
     engine = dict(tensor_parallel_size=8, data_parallel_size=dp, pipeline_parallel_size=1,
         enforce_eager=False, max_num_seqs=128, max_num_batched_tokens=8192,
         worker_extension_cls="native_full_structure.FullModelInventory",
         compilation_config=dict(mode=3, cudagraph_mode="FULL_AND_PIECEWISE",
                                 cudagraph_capture_sizes=captures, max_cudagraph_capture_size=256))
-    config = dict(data_parallel_size_local=1, output_dir=str(run), model_dir=str(model),
-        script=str(stage / "native_pd_worker.py"), harness_dir=str(stage),
+    config = dict(data_parallel_size_local=1, output_dir=str(run), script=str(stage / "native_pd_worker.py"), harness_dir=str(stage),
+        model_dir=str(tmp_path / 'model'), startup_timeout_s=1800 if v2 else 3600,
         harness_files={module_name: "native_full_structure.py"},
         expected_source_hashes={name: digest(source / name) for name in source_names})
+    write(Path(config['model_dir']) / 'config.json', dict(architectures=[
+        'DeepseekV4ForCausalLM' if v2 else 'GlmMoeDsaForCausalLM']))
     manifest = dict(run_generation="cpu-fixture-not-native-qualification", groundtruth_checkout_path=str(source),
+        groundtruth_commit=V028_SOURCE, harness_commit='CPU_FIXTURE_ONLY',
         harness_worktree=str(REPO), harness_sha256={module_name: digest(REPO / module_name)},
         inputs_sha256={str(stage / "native_full_structure.py"): digest(stage / "native_full_structure.py")},
         resources=dict(gpus=2 * 8 * dp, gpu_type=gpu_type))
+    dispatch, captured = None, None
+    if v2:
+        checker = load_checker(CHECKER)
+        retained = REPO / 'task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_02'
+        if not (retained / 'overlay_model.py').is_file():
+            pytest.skip('Approved C26 source fixture is unavailable')
+        engine.pop('compilation_config')
+        engine['native_reference'] = dict(source_sha=V028_SOURCE)
+        config.update(case_dir=str(tmp_path / 'case'), run_tag='fixture',
+            overlay_manifest=str(stage / 'overlay.json'), runtime_source_overlay=dict(
+                base_source_sha=V028_SOURCE,
+                approved_c26_model_sha256='d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee',
+                effective_runtime_source='CPU fixture of accepted base2cf plus C26, not native qualification'))
+        for name in ('vllm/v1/worker/gpu/model_runner.py', 'vllm/v1/worker/gpu/cudagraph_utils.py',
+                     'vllm/compilation/breakable_cudagraph.py'):
+            config['expected_source_hashes'][name] = digest(source / name)
+        leaf = 'vllm/models/deepseek_v4/nvidia/model.py'
+        shutil.copyfile(retained / 'overlay_model.py', stage / 'overlay_model.py')
+        config['expected_source_hashes'][leaf] = digest(stage / 'overlay_model.py')
+        overlay = json.loads((retained / 'overlay.json').read_text())
+        overlay['staged_dir'] = str(stage)
+        overlay['files'][leaf.removeprefix('vllm/')]['source'] = str(stage / 'overlay_model.py')
+        write(stage / 'overlay.json', overlay)
+        config['retained_files'] = {name: digest(stage / name) for name in ('overlay.json', 'overlay_model.py')}
+        manifest['inputs_sha256'].update({str(stage / name): value for name, value in config['retained_files'].items()})
+        manifest['execution_config'] = 'inputs/native_config.json'
+        write(stage / 'config.json', config)
+        write(tmp_path / 'case/inputs/native_config.json', config)
+        manifest['inputs_sha256'][manifest['execution_config']] = digest(stage / 'config.json')
+        lock = json.loads((retained / 'source_lock.json').read_text())
+        lock.update(native_commit=V028_SOURCE, harness_commit=manifest['harness_commit'], runtime_overlay=overlay)
+        write(stage / 'source_lock.json', lock)
+        write(stage / 'manifest.json', dict(fixture_only=True, files={
+            name: digest(stage / name) for name in ('overlay.json', 'overlay_model.py', 'source_lock.json', 'config.json')}))
+        dispatch, captured = checker.native_v2_graph_dispatch(manifest, engine)
     write(run / "run_manifest.json", manifest)
     workload, formal, warmup = canonical_workload(TRACE)
     records = [dict(request_id=workload["repetitions"]["runtime_request_id_rule"].format(
@@ -380,9 +455,52 @@ def serving_counters(tmp_path, monkeypatch, request):
                         return self.model(input_ids=SimpleNamespace(shape=(num_tokens,)),
                                           positions=SimpleNamespace(shape=(num_tokens,)), inputs_embeds=None)
 
+                class Tensor:
+                    def __init__(self, length): self.shape = (length,)
+                    def __getitem__(self, key): return Tensor(key.stop)
+
+                class ModelCudaGraphManager:
+                    def __init__(self):
+                        self.cudagraph_mode = dispatch.cudagraph_mode
+                        self._graphs_captured = True
+                        self.graphs = {desc: CUDAGraph() for desc in dispatch._capture_descs[
+                            type(dispatch.cudagraph_mode).FULL]}
+
+                    def capture(self):
+                        return worker.model_runner.model(input_ids=Tensor(1), positions=Tensor(1))
+
+                    def run_fullgraph(self, desc):
+                        state.native_calls += 1
+                        return self.graphs[desc].replay()
+
+                    def run_pw_graph(self, model, inputs):
+                        return model(**inputs)
+
+                class V2Runner:
+                    def __init__(self):
+                        self.model = Model()
+                        self.cudagraph_manager = ModelCudaGraphManager()
+                        self.input_buffers = SimpleNamespace(input_ids=Tensor(8192), positions=Tensor(8192))
+
+                    def execute_model(self, scheduler_output, dummy_run=False, is_profile=False):
+                        desc = dispatch.dispatch(1, state.tokens, 1 if state.tokens == 1 else None, 0,
+                                                 max_query_len=1 if state.tokens == 1 else None)
+                        if state.mode == 'FULL':
+                            return self.cudagraph_manager.run_fullgraph(desc)
+                        inputs = dict(input_ids=Tensor(state.tokens), positions=Tensor(state.tokens), inputs_embeds=None)
+                        if state.mode == 'PIECEWISE':
+                            return self.cudagraph_manager.run_pw_graph(self.model, inputs)
+                        return self.model(**inputs)
+
+                    def _dummy_run(self, tokens, is_profile=False):
+                        return self.execute_model(SimpleNamespace(total_num_scheduled_tokens=tokens),
+                                                  dummy_run=True, is_profile=is_profile)
+
                 class Worker:
                     def __init__(self):
-                        self.rank, self.device, self.model_runner = rank, f"cuda:{rank}", GPUModelRunner()
+                        self.rank, self.device = rank, f"cuda:{rank}"
+                        self.use_v2_model_runner = v2
+                        self.model_runner = V2Runner() if v2 else GPUModelRunner()
                         self.vllm_config = SimpleNamespace(compilation_config=SimpleNamespace(
                             cudagraph_mode=SimpleNamespace(name="FULL_AND_PIECEWISE"),
                             cudagraph_capture_sizes=captures, max_cudagraph_capture_size=256))
@@ -396,10 +514,18 @@ def serving_counters(tmp_path, monkeypatch, request):
 
                     def compile_or_warm_up_model(self):
                         self.model_runner._dummy_run(1, is_profile=True)
-                        self.model_runner._dummy_run(1, is_graph_capturing=True)
+                        if v2:
+                            self.model_runner.cudagraph_manager.capture()
+                        else:
+                            self.model_runner._dummy_run(1, is_graph_capturing=True)
                         self.model_runner._dummy_run(1)
 
+                    def load_model(self):
+                        return None
+
                     def execute_model(self, scheduler_output):
+                        if v2:
+                            return self.model_runner.execute_model(scheduler_output)
                         return self.model_runner._model_forward(input_ids=SimpleNamespace(shape=(state.tokens,)),
                             positions=SimpleNamespace(shape=(state.tokens,)), inputs_embeds=None)
 
@@ -408,6 +534,8 @@ def serving_counters(tmp_path, monkeypatch, request):
 
                 Worker.__module__ = "vllm.v1.worker.gpu_worker"
                 GPUModelRunner.__module__ = "vllm.v1.worker.gpu_model_runner"
+                V2Runner.__module__, V2Runner.__name__ = "vllm.v1.worker.gpu.model_runner", 'GPUModelRunner'
+                ModelCudaGraphManager.__module__ = 'vllm.v1.worker.gpu.cudagraph_utils'
                 CUDAGraph.__module__ = "torch.cuda.graphs"
                 for name in ("vllm", "vllm.v1", "vllm.v1.worker", "vllm.forward_context",
                              "vllm.v1.worker.gpu_worker", "vllm.v1.worker.gpu_model_runner", "torch"):
@@ -415,6 +543,11 @@ def serving_counters(tmp_path, monkeypatch, request):
                 sys.modules["vllm.v1.worker.gpu_worker"].Worker = Worker
                 sys.modules["vllm.v1.worker.gpu_model_runner"].GPUModelRunner = GPUModelRunner
                 sys.modules["vllm.forward_context"].get_forward_context = get_context
+                if v2:
+                    for name, cls in (('vllm.v1.worker.gpu.model_runner', V2Runner),
+                                      ('vllm.v1.worker.gpu.cudagraph_utils', ModelCudaGraphManager)):
+                        patch.setitem(sys.modules, name, ModuleType(name))
+                        setattr(sys.modules[name], cls.__name__, cls)
                 sys.modules["torch"].cuda = SimpleNamespace(CUDAGraph=CUDAGraph,
                      get_device_properties=lambda device: SimpleNamespace(name=f"NVIDIA {gpu_type}", uuid=f"GPU-fixture-{host}-{rank}"),
                     get_device_capability=lambda device: (9, 0))
@@ -423,6 +556,7 @@ def serving_counters(tmp_path, monkeypatch, request):
                     patch.setenv(name, value)
                 observer = collector._install_native_serving_inventory()
                 worker = Worker()
+                worker.load_model()
                 worker.compile_or_warm_up_model()
                 state.mode, state.tokens, state.replay = ("NONE", 6144, False) if role == "prefill" else (decode_mode, 1, True)
                 descriptor.num_tokens = state.tokens
@@ -464,6 +598,70 @@ def test_serving_counters_real_hooks_admit_prefill_none_and_actual_decode_replay
     assert observed["per_rank_phase_counts"][(f"decode/fixture-host{dp}/rank0")]["repeat03_formal"] == {"forwards": 128 // dp, "replays": 128 // dp}
     write(serving_counters.run.parent / "counter_predicate_cpu_only.json", dict(
         scope="CPU fake workers with actual collector hooks; not native qualification", predicate=observed))
+
+
+@pytest.mark.parametrize('serving_counters', [('FULL', 2, 'H800', False, 'V2')], indirect=True)
+def test_v2_native_auto_and_c26_actual_collector_cover_all32ranks(serving_counters):
+    fixture = serving_counters
+    assert 'compilation_config' not in fixture.engine
+    passed, evidence = check_serving_counters(fixture)
+    assert passed, evidence
+    observed = json.loads(evidence)
+    assert observed['physical_ranks'] == 32 and observed['phases_per_rank'] == 6
+    assert observed['serving_counts']['prefill'] == {'NONE_forwards': 3456, 'NONE_replays': 0}
+    assert observed['serving_counts']['decode'] == {'FULL_forwards': 3456, 'FULL_replays': 3456}
+    manager, captured = fixture.checker.native_v2_graph_dispatch(fixture.manifest,
+        fixture.engine | {'compilation_config': {'mode': 0}})
+    assert manager.cudagraph_mode.name == 'FULL_AND_PIECEWISE' and captured
+    assert manager.dispatch(1, 1, 1, 0, max_query_len=1).cg_mode.name == 'FULL'
+    assert manager.dispatch(1, 6144, None, 0).cg_mode.name == 'NONE'
+
+
+@pytest.mark.parametrize('serving_counters', [('FULL', 2, 'H800', True, 'V2')], indirect=True)
+@pytest.mark.parametrize('fault', ['missing_replay', 'wrong_runner', 'missing_hook', 'wrong_generation',
+    'wrong_capture', 'missing_descriptor', 'wrong_descriptor', 'wrong_full_uniform', 'missing_rank',
+    'no_graphs_from_mode0', 'wrong_overlay', 'extra_overlay_file', 'wrong_base', 'missing_overlay',
+    'wrong_source_lock', 'wrong_seal', 'wrong_observed_source', 'wrong_declared_c26'])
+def test_v2_native_binding_rejects_missing_or_mismatched_evidence(serving_counters, fault):
+    fixture = serving_counters
+    path = fixture.paths[16]
+    payload = json.loads(path.read_text())
+    rows = [r for r in payload['counters']['rows'] if r['kind'] == 'serving']
+    if fault == 'missing_replay':
+        for row in rows: row['successful_replays'] = 0
+        payload['counters']['successful_replays'] = 0
+    if fault == 'wrong_runner': payload['inventory']['model_runner'] = 'vllm.v1.worker.gpu_model_runner.GPUModelRunner'
+    if fault == 'missing_hook': payload['hooks'].remove('vllm.v1.worker.gpu.cudagraph_utils.ModelCudaGraphManager.run_fullgraph')
+    if fault == 'wrong_generation': payload['run_generation'] = 'other-run-not-native'
+    graph = payload['inventory']['effective_graph']
+    if fault == 'wrong_capture': graph['capture_sizes'].pop()
+    if fault == 'missing_descriptor': graph['captured_descriptors'].pop()
+    if fault == 'wrong_descriptor': graph['captured_descriptors'][0]['uniform_token_count'] = 2
+    if fault == 'wrong_full_uniform': rows[0]['batch_descriptor']['uniform'] = True
+    if fault == 'no_graphs_from_mode0': graph.update(configured_mode='NONE', dispatcher_mode='NONE', capture_sizes=[])
+    write(path, payload)
+    if fault == 'missing_rank': path.unlink()
+    stage = Path(fixture.config['script']).parent
+    if fault in ('wrong_overlay', 'extra_overlay_file', 'wrong_base'):
+        overlay = json.loads((stage / 'overlay.json').read_text())
+        row = overlay['files']['models/deepseek_v4/nvidia/model.py']
+        if fault == 'wrong_overlay': row['sha256'] = '0' * 64
+        if fault == 'wrong_base': row['base_sha256'] = '0' * 64
+        if fault == 'extra_overlay_file': overlay['files']['extra.py'] = dict(row)
+        write(stage / 'overlay.json', overlay)
+    if fault == 'missing_overlay': (stage / 'overlay.json').unlink()
+    if fault == 'wrong_source_lock':
+        lock = json.loads((stage / 'source_lock.json').read_text())
+        lock['native_commit'] = '0' * 40
+        write(stage / 'source_lock.json', lock)
+    if fault == 'wrong_seal':
+        seal = json.loads((stage / 'manifest.json').read_text())
+        seal['files']['overlay_model.py'] = '0' * 64
+        write(stage / 'manifest.json', seal)
+    if fault == 'wrong_observed_source': fixture.nodes['fixture-host2']['native_source_hashes'] = {}
+    if fault == 'wrong_declared_c26': fixture.config['runtime_source_overlay']['approved_c26_model_sha256'] = '0' * 64
+    passed, evidence = check_serving_counters(fixture)
+    assert not passed and 'UNVERIFIED' in evidence, evidence
 
 
 @pytest.mark.parametrize("fault", ["missing", "stale", "dummy_only", "capture_only", "failed_replay",

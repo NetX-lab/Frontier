@@ -46,11 +46,11 @@ def worker_probe(queue, expected_module, native_startup):
 
             observer = module._NATIVE_SERVING_INVENTORY
             assert observer is not None and observer.errors == []
-            assert len(observer.hooks) == 6
+            assert len(observer.hooks) == 7
             assert observer.forwards == observer.replays == 0
             assert module.FullModelInventory in Worker.__bases__
             targets = [(Worker, name) for name in
-                       ('execute_model', 'shutdown', 'compile_or_warm_up_model')]
+                       ('execute_model', 'shutdown', 'compile_or_warm_up_model', 'load_model')]
             from vllm.v1.worker.gpu_model_runner import GPUModelRunner
             targets += [(GPUModelRunner, name) for name in ('_model_forward', '_dummy_run')]
             targets += [(torch.cuda.CUDAGraph, 'replay')]

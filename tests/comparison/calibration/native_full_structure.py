@@ -378,6 +378,9 @@ class NativeServingInventory:
         return context | dict(kind='serving', repeat=repeat, phase=phase)
 
     def forward_metadata(self, shapes=None):
+        full = getattr(self.local, 'full_graph_metadata', None)
+        if full is not None:
+            return full
         from vllm.forward_context import get_forward_context
         ctx = get_forward_context()
         mode = ctx.cudagraph_runtime_mode.name
@@ -448,6 +451,21 @@ class NativeServingInventory:
         call._frontier_native_dummy_call = True
         cls.__call__ = call
 
+    def install_v2_model_call(self, runner):
+        cls = type(runner.model)
+        original = cls.__call__
+        if getattr(original, '_frontier_native_v2_call', False):
+            return
+        observer = self
+
+        def call(model, *args, **kwargs):
+            if model is runner.model and not getattr(observer.local, 'v2_managed_forward', False):
+                return observer.model_call(original, model, args, kwargs)
+            return original(model, *args, **kwargs)
+
+        call._frontier_native_v2_call = True
+        cls.__call__ = call
+
     def collect_inventory(self, worker):
         import torch
         row = json.loads(FullModelInventory.full_model_inventory(worker))
@@ -456,13 +474,23 @@ class NativeServingInventory:
             name=props.name, uuid=str(props.uuid),
             capability=list(torch.cuda.get_device_capability(worker.device)))
         runner, config = worker.model_runner, worker.vllm_config.compilation_config
-        dispatcher = runner.cudagraph_dispatcher
         row['model_runner'] = identity(runner)
-        row['effective_graph'] = dict(configured_mode=config.cudagraph_mode.name,
-            dispatcher_mode=dispatcher.cudagraph_mode.name,
-            keys_initialized=dispatcher.keys_initialized,
-            capture_sizes=list(config.cudagraph_capture_sizes or []),
-            max_capture_size=config.max_cudagraph_capture_size)
+        if worker.use_v2_model_runner:
+            manager = runner.cudagraph_manager
+            row['effective_graph'] = dict(configured_mode=config.cudagraph_mode.name,
+                dispatcher_mode=manager.cudagraph_mode.name,
+                keys_initialized=manager._graphs_captured,
+                capture_sizes=list(config.cudagraph_capture_sizes or []),
+                max_capture_size=config.max_cudagraph_capture_size,
+                captured_descriptors=[dataclasses.asdict(desc) | {'cg_mode': desc.cg_mode.name}
+                    for desc in manager.graphs])
+        else:
+            dispatcher = runner.cudagraph_dispatcher
+            row['effective_graph'] = dict(configured_mode=config.cudagraph_mode.name,
+                dispatcher_mode=dispatcher.cudagraph_mode.name,
+                keys_initialized=dispatcher.keys_initialized,
+                capture_sizes=list(config.cudagraph_capture_sizes or []),
+                max_capture_size=config.max_cudagraph_capture_size)
         return row
 
     def emit(self, worker, stage):
@@ -572,12 +600,112 @@ def _install_native_serving_inventory():
                 return result
             return call
 
+        def install_v2(runner):
+            from vllm.v1.worker.gpu.cudagraph_utils import ModelCudaGraphManager
+            cls = type(runner)
+            if getattr(cls.execute_model, '_frontier_native_serving_observer', None) is observer:
+                return
+            execute_signature = inspect.signature(cls.execute_model)
+
+            def v2_execute(original):
+                def arguments(model_runner, args, kwargs):
+                    bound = execute_signature.bind(model_runner, *args, **kwargs)
+                    bound.apply_defaults()
+                    return bound.arguments
+
+                def call(model_runner, *args, **kwargs):
+                    previous = getattr(observer.local, 'context', None)
+                    previous_runner = getattr(observer.local, 'runner', None)
+                    bound = observer.observe('v2_execution_arguments', arguments, model_runner, args, kwargs)
+                    if bound is not None and bound['dummy_run']:
+                        observer.local.context = dict(kind='profile' if bound['is_profile'] else 'dummy',
+                            repeat=None, phase=None, scheduled_num_requests=None, scheduled_num_tokens=None)
+                    observer.local.runner = model_runner
+                    try:
+                        return original(model_runner, *args, **kwargs)
+                    finally:
+                        observer.local.context = previous
+                        observer.local.runner = previous_runner
+                return call
+
+            def capture(original):
+                def call(manager, *args, **kwargs):
+                    previous = getattr(observer.local, 'context', None)
+                    observer.local.context = dict(kind='capture', repeat=None, phase=None,
+                        scheduled_num_requests=None, scheduled_num_tokens=None)
+                    try:
+                        return original(manager, *args, **kwargs)
+                    finally:
+                        observer.local.context = previous
+                return call
+
+            def full(original):
+                def metadata(desc):
+                    active = observer.local.runner
+                    buffers = active.input_buffers
+                    context = observer.local.context
+                    return context | dict(graph_mode=desc.cg_mode.name,
+                        batch_descriptor=dict(num_tokens=desc.num_tokens, num_reqs=desc.num_reqs,
+                            uniform=None, has_lora=desc.num_active_loras > 0,
+                            num_active_loras=desc.num_active_loras),
+                        input_shapes={key: list(getattr(buffers, key)[:desc.num_tokens].shape)
+                            if key in ('input_ids', 'positions') else None
+                            for key in ('input_ids', 'positions', 'inputs_embeds')})
+
+                def call(manager, desc, *args, **kwargs):
+                    previous = getattr(observer.local, 'full_graph_metadata', None)
+                    data = observer.observe('v2_full_context', metadata, desc)
+                    observer.local.full_graph_metadata = data
+                    try:
+                        result = original(manager, desc, *args, **kwargs)
+                        observer.observe('v2_full_forward', observer.count, 'forward', data)
+                        return result
+                    finally:
+                        observer.local.full_graph_metadata = previous
+                return call
+
+            def piecewise(original):
+                def call(manager, model, model_inputs):
+                    previous = getattr(observer.local, 'v2_managed_forward', False)
+                    previous_shapes = getattr(observer.local, 'shapes', None)
+
+                    def shapes():
+                        return {key: None if model_inputs.get(key) is None else list(model_inputs[key].shape)
+                            for key in ('input_ids', 'positions', 'inputs_embeds')}
+
+                    observer.local.shapes = observer.observe('v2_piecewise_shapes', shapes)
+                    data = observer.observe('v2_piecewise_context', observer.forward_metadata)
+                    observer.local.v2_managed_forward = True
+                    try:
+                        result = original(manager, model, model_inputs)
+                        observer.observe('v2_piecewise_forward', observer.count, 'forward', data)
+                        return result
+                    finally:
+                        observer.local.v2_managed_forward = previous
+                        observer.local.shapes = previous_shapes
+                return call
+
+            install(cls, 'execute_model', v2_execute)
+            install(ModelCudaGraphManager, 'capture', capture)
+            install(ModelCudaGraphManager, 'run_fullgraph', full)
+            install(ModelCudaGraphManager, 'run_pw_graph', piecewise)
+            observer.install_v2_model_call(runner)
+
+        def load(original):
+            def call(worker, *args, **kwargs):
+                result = original(worker, *args, **kwargs)
+                if worker.use_v2_model_runner:
+                    observer.observe('v2_installation', install_v2, worker.model_runner)
+                return result
+            return call
+
         install(Worker, 'execute_model', execute)
         install(GPUModelRunner, '_model_forward', forward)
         install(GPUModelRunner, '_dummy_run', dummy)
         install(torch.cuda.CUDAGraph, 'replay', replay)
         install(Worker, 'shutdown', shutdown)
         install(Worker, 'compile_or_warm_up_model', warmup)
+        install(Worker, 'load_model', load)
     except Exception as error:
         observer.error('installation', error)
     return observer
