@@ -94,14 +94,18 @@ def test_v028_command_uses_local_dummy_metadata_and_native_attention_args(tmp_pa
         server_command(engine, tmp_path / "absent", 8100)
 
 
-def test_v028_original_v4_preserves_requested_native_cache_dtype(tmp_path):
+@pytest.mark.parametrize('block_size', [None, 256])
+def test_v028_original_v4_preserves_requested_native_cache_dtype(tmp_path, block_size):
     (tmp_path / 'config.json').write_text(json.dumps({
         'architectures': ['DeepseekV4ForCausalLM'], 'model_type': 'deepseek_v4',
         'vocab_size': 129280}))
-    engine = native_engine() | {'kv_cache_dtype': 'fp8', 'block_size': 256}
+    engine = native_engine() | {'kv_cache_dtype': 'fp8', 'block_size': block_size}
     command = server_command(engine, tmp_path, 8100)
     assert command[command.index('--kv-cache-dtype') + 1] == 'fp8'
-    assert command[command.index('--block-size') + 1] == '256'
+    if block_size is None:
+        assert '--block-size' not in command
+    else:
+        assert command[command.index('--block-size') + 1] == '256'
     assert '--quantization' not in command
     # Effective fp8_ds_mla and grouped geometry belong to native configuration,
     # not a harness-side conversion or a dense-cache replacement.

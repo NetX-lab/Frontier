@@ -315,11 +315,12 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
         "--data-parallel-size", str(engine["data_parallel_size"]),
         "--max-num-batched-tokens", str(engine["max_num_batched_tokens"]),
         "--max-num-seqs", str(engine["max_num_seqs"]),
-        "--block-size", str(engine["block_size"]),
         "--max-model-len", str(engine["max_model_len"]),
         "--gpu-memory-utilization", str(engine["gpu_memory_utilization"]),
         "--seed", str(engine["seed"]),
     ]
+    if engine['block_size'] is not None:
+        command += ['--block-size', str(engine['block_size'])]
     flags = {
         "--skip-tokenizer-init": engine["skip_tokenizer_init"],
         "--enable-expert-parallel": engine["enable_expert_parallel"],
