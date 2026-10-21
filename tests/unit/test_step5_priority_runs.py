@@ -17,7 +17,9 @@ from tests.unit.test_step5_client_metrics import step_native, synthetic_step_che
 from tests.unit.test_canonical_client_metrics import native, simulator, TRACE
 
 
-def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch):
+@pytest.mark.parametrize("case_id,kind", [
+    ("h200_32", "qualification"), ("h800_32", "workload"), ("h800_64", "workload")])
+def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch, case_id, kind):
     inputs = stage_inputs(tmp_path)
     model_path = inputs["model_dir"] / "config.json"
     model = json.loads(model_path.read_text())
@@ -40,7 +42,7 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch):
     monkeypatch.setattr(build_stage, "committed_source", lambda: {"commit": "cpu-fixture"})
     stage = tmp_path / "workspace/stage"
     canonical_stage.build(SimpleNamespace(
-        run_definition=definition_path, case="h200_32", kind="qualification",
+        run_definition=definition_path, case=case_id, kind=kind,
         workspace=stage.parent, stage_dir=stage,
         output_dir=Path("/mnt/codesign-exp/ycfeng/d21_test"),
         runtime_source_root=runtime, launcher_scope=launcher, job_tag="fixture", formal_inputs=None,
@@ -54,7 +56,16 @@ def test_standalone_submission_uses_staged_tests_package(tmp_path, monkeypatch):
         "--dry-run"], cwd=tmp_path, env={**os.environ, "PYTHONPATH": str(installed.parent)},
         capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["resource_constructor_arguments"]["positive_tags"] == ["H200"]
+    assert json.loads(result.stdout)["resource_constructor_arguments"]["positive_tags"] == [canonical_stage.CASES[case_id]["gpu_type"]]
+    config = json.loads((stage / "config.json").read_text())
+    assert config["canonical_replay"]["kind"] == kind
+    assert formal_release.validate(config)["status"] == "NOT_REQUIRED"
+    if kind == "workload":
+        assert config["timeout_seconds"] == 5400
+        assert json.loads((stage / "trace/replay_plan.json").read_text())["kind"] == "workload"
+        config["canonical_replay"]["kind"] = "canonical"
+        with pytest.raises(ValueError, match="readiness"):
+            formal_release.validate(config)
 
 
 @pytest.mark.parametrize("case_id", canonical_stage.CASES)

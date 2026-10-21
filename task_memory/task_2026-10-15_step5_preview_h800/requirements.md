@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | D25: prioritize full native H80032/64 workload collection and p90/throughput reporting, including TTFT >5s analysis. |
+| 2026-10-22 | D24: YC approved bounded first-tail state-value capture before proposing a separately approved numerical agreement rule. |
 | 2026-10-22 | D23: YC approved full pre-prediction DP agreement for measured Step P/D useful and dummy lanes, including FULL_AND_PIECEWISE. |
 | 2026-10-22 | Recorded requested native32/64 p90/throughput diagnostic and continued P0 execution; formal criteria unchanged. |
 | 2026-10-21 | User continues execution; repair the observed sequential event-logging blocker within D20 actual-main acceptance. |
@@ -117,6 +119,26 @@ YC selected:
 Authorize the minimal CPU pre-prediction stage-group agreement and FULL_AND_PIECEWISE binding, reusing existing stage owners/events. It covers both P/D useful and dummy lanes, including the first predictor call. Native NONE preserves local physical widths; graph modes use actual DP-agreed mode/capture width. Preserve real query/context/ownership and zero dummy request credit. Match actual MRv2 metadata, including FULL/max_query_len=null and P-side FULL dummy execution; never substitute MRv1 metadata-free rows or mutate null into1.
 
 Acceptance includes first-call descriptor assertions, completion/release and empty-lane participation, strict missing coverage, correct mode/count binding, and unchanged legacy scenarios. The formal metric/workload/native configuration/resource contracts remain unchanged. The parent owns this core stream; typed profile input/cache identity and native disconnect diagnosis continue independently. Design and rejected late/dummy-only alternatives: `mrv2_consumer_20261022/design.md`.
+
+## [Original Request] D25 — complete native H800 workload first — 2026-10-22
+
+> 【并行】检查已有记录，当前是否以及完成了 step5-preview在workload上的vllm的测试运行（32卡，64卡）并完成p90 ttft,tpot,e2e以及吞吐的统计？如果完成，请简洁回报，并确认其数值是否正常（如果ttft的数值>5s，你需要进行分析，是否明显偏大）。如果没有完成，优先完成完整的workload运行（32卡,64卡，h800）
+
+Prioritize complete native performance collection for both non-preemptible H800 sizes, using the frozen three-repeat128-request6144/1024 QPS1 workload and existing clean client. This authorizes the requested native collection before calibration readiness; it does not assert G3/profile readiness or change the formal calibration30% dependency/final10% gates. Record collection purpose explicitly, preserve all failed/UNVERIFIED evidence, and analyze TTFT above5s. Execution and acceptance: `../task_2026-10-22_step5_full_workload/requirements.md` and `plan.md`.
+
+## [Original Request / Decision] D24 — independent-reference state values — 2026-10-22
+
+Parent question:
+
+> 独立 reference 的尾部 KV/summary 状态存在字节差异，但输出 token 和传输前缀完全一致。建议与下一次 H80032 诊断合并补采末尾两页原始值（新增约183MB，沿用90分钟/48 GPU-hour上限），据此提出数值判据再交你确认；在此之前仍为 UNVERIFIED。你选择哪条验收路线？
+
+YC selected:
+
+> 补采后定数值判据 (Recommended)
+
+Retain existing host-copied raw/mean values for the computed-token logical page and its predecessor at `first_local_tail_complete`, for actual and independent-reference requests. Combine this bounded capture with the next H80032 diagnostic; estimated extra serialized evidence is about183MB across eight TP ranks, within the existing90-minute/48GPU-hour ceiling. Preserve complete hashes and logical mapping for all other pages without retaining their values. No additional device copy or fence is needed at the existing capture seam.
+
+The collected values support a proposed numerical state-agreement rule that requires separate approval. This decision does not approve any tolerance, waive independent-reference state agreement, or modify bit-exact transferred-content checks. Current state mismatches remain UNVERIFIED. Source evidence and budget: `../task_2026-10-21_step5_priority_runs/canonical_g3/reference_followup/report.md`.
 
 ## [Original Request] Follow-up: Step linear-op slice and Smoke 03 judgment — 2026-10-20
 

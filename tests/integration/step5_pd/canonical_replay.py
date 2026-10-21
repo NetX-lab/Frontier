@@ -92,7 +92,8 @@ def formal_metrics(records: list[dict]) -> dict | None:
     for field in ("ttft_ms", "tpot_ms", "e2e_ms"):
         values = sorted(record[field] for record in records)
         result[field] = {"mean": statistics.mean(values), "p50": statistics.median(values),
-                         "p95": values[math.ceil(len(values) * .95) - 1]}
+                          "p90": values[math.ceil(len(values) * .90) - 1],
+                          "p95": values[math.ceil(len(values) * .95) - 1]}
     return result
 
 
@@ -167,7 +168,8 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
     manifest, formal, warmup = workload
     records = []
     result = {"repetitions": [], "idle_boundaries": [], "observation_errors": [],
-              "reference_admission": "UNVERIFIED", "runtime_qualification": "UNVERIFIED",
+               "replay_kind": settings["kind"],
+               "reference_admission": "UNVERIFIED", "runtime_qualification": "UNVERIFIED",
               "clock": "prefill-head Linux monotonic; proxy and client on the same host"}
 
     def persist():

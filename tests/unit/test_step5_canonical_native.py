@@ -56,6 +56,19 @@ def test_formal_diagnostic_throughputs_share_the_last_output_window():
     assert cr.formal_metrics(records) is None
 
 
+def test_native_workload_p90_uses_nearest_rank_and_keeps_mean():
+    records = [{"status": "completed", "dispatch_monotonic": 100.0,
+                "last_token_monotonic": 200.0, "num_prefill_tokens": 6144,
+                "num_decode_tokens": 1024, "ttft_ms": index, "tpot_ms": index * 2,
+                "e2e_ms": index * 3} for index in range(1, 129)]
+    result = cr.formal_metrics(records)
+    assert result["ttft_ms"]["mean"] == 64.5
+    assert result["ttft_ms"]["p90"] == 116
+    assert result["ttft_ms"]["p95"] == 122
+    assert result["tpot_ms"]["p90"] == 232
+    assert result["e2e_ms"]["p90"] == 348
+
+
 @pytest.mark.parametrize("member", ["manifest.json", "SHA256SUMS", "trace.csv", "request_ids.json", "warmup_pool.csv"])
 def test_modified_common_member_is_rejected(tmp_path, member):
     directory = tmp_path / "workload"
@@ -68,7 +81,8 @@ def test_modified_common_member_is_rejected(tmp_path, member):
 
 @pytest.mark.parametrize("kind,fault", [("canonical", fault) for fault in (
     None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only")]
-    + [("qualification", None), ("qualification", "startup_missing")])
+    + [("qualification", None), ("qualification", "startup_missing"),
+       ("workload", None), ("workload", "one_http_failure")])
 @pytest.mark.parametrize("dp", [2, 4])
 def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault, dp):
     workload = cr.canonical_workload(WORKLOAD)
@@ -173,6 +187,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                      "idle_poll_s": .001, "concurrent_requests": 8}, checkpoint=checkpoint)
 
     result, records = asyncio.run(exercise())
+    assert result["replay_kind"] == kind
     expected_count = 24 if kind == "qualification" else 432
     assert len(records) == len(bodies["prefill"]) == len(bodies["decode"]) == expected_count
     assert [len(rows) for rows in phase_calls] == ([16, 8] if kind == "qualification" else [16, 128] * 3)

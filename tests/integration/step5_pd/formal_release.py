@@ -16,6 +16,10 @@ CASES = json.loads(Path(__file__).with_name("priority_cases.json").read_text())
 MATRIX = Path(__file__).resolve().parents[2] / "comparison/e2e_gate/cases/step5_priority.json"
 METRICS = {"ttft_ms", "tpot_ms", "request_e2e_time_ms", "token_throughput_tps"}
 DEPENDENCY_ERROR_LIMIT = .30
+COLLECTION_KINDS = {
+    "qualification": "Basic qualification has no accuracy dependency",
+    "workload": "Full native workload collection; calibration readiness and accuracy remain unverified",
+}
 
 
 def pin(path: Path) -> dict:
@@ -105,8 +109,13 @@ def accuracy_dependency(config: dict, case_id: str, inputs: dict, output: Path) 
 
 def validate(config: dict, *, output: Path | None = None) -> dict:
     """Check before staging and again before SDK construction; never a training hard gate."""
-    if config.get("canonical_replay", {}).get("kind") != "canonical":
-        return {"status": "NOT_REQUIRED", "reason": "Basic qualification has no accuracy dependency"}
+    kind = config.get("canonical_replay", {}).get("kind")
+    if kind is None:
+        return {"status": "NOT_REQUIRED", "reason": "Non-canonical diagnostic run"}
+    if kind in COLLECTION_KINDS:
+        return {"status": "NOT_REQUIRED", "reason": COLLECTION_KINDS[kind]}
+    if kind != "canonical":
+        raise ValueError(f"Unsupported native replay kind: {kind}")
     inputs = config.get("formal_inputs")
     if not inputs or "readiness" not in inputs:
         raise ValueError("Formal submission requires explicit case-bound native readiness artifacts")

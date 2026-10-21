@@ -121,6 +121,8 @@ def build(args) -> dict:
         definition["description"] += " Qualification only: 16 warmups then eight concurrent completions; no formal reference admission."
         definition["resources"]["timeout_seconds"] = 3600
         definition["replay_timeout_s"] = 1200
+    elif args.kind == "workload":
+        definition["description"] += " D25 full native workload collection: three repeats of 16 warmups and 128 requests; calibration readiness and accuracy unverified."
     workspace = args.workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
     model = workspace / "reference_inputs"
@@ -189,7 +191,7 @@ def main(argv=None):
     create.add_argument("--job-tag", required=True)
     create.add_argument("--case", choices=tuple(CASES), required=True)
     create.add_argument("--formal-inputs", type=Path, help="Explicit readiness and (for64) same-hardware32 accuracy artifact inputs")
-    create.add_argument("--kind", choices=("qualification", "canonical"), required=True)
+    create.add_argument("--kind", choices=(*formal_release.COLLECTION_KINDS, "canonical"), required=True)
     args = parser.parse_args(argv)
     print(json.dumps(verify(args.stage_dir.resolve()) if args.action == "verify" else build(args), indent=1))
 

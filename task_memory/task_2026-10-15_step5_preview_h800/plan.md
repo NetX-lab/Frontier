@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | D25 prioritizes full H80032/64 native workload collection; D23 CPU verification continues independently. |
+| 2026-10-22 | Record parallel D23 CPU agreement and D24 native-evidence completion paths after typed-input integration. |
 | 2026-10-22 | Integrated G3/reference and corrected MRv2 producer; primary685/465 tests pass, native P0 capture executing. |
 | 2026-10-21 | Add the parent-owned event logger repair before complete actual-main acceptance. |
 | 2026-10-21 | Integrate measured Step at bc8ae27; assign canonical G3/P0 producers and align the index with the existing milestone graph. |
@@ -110,11 +112,24 @@
 | 2026-10-16 | CUDA forward-compatibility rerun passed on one H800; recorded the process-start launch requirement for native work. Ticket04's native work now waits only on the G1 implementation checkpoint. |
 
 
-## Current D21 execution contract — 2026-10-21
+## Current D21/D23/D24/D25 execution contract — 2026-10-22
 
-Authority: final D21 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. D20 CPU implementation continues P0-first; native/profile/predictive acceptance is unchanged.
+**Immediate D25 priority:** complete native H80032 and H80064 three-repeat fixed workload collection and p90/throughput analysis, including TTFT above5s. Use existing clean stager/client with explicit collection purpose, same per-role API count, isolated ports and non-preemptible resources. Detailed execution: `../task_2026-10-22_step5_full_workload/plan.md`. D23 CPU work continues in parallel; the next D24/G3 diagnostic follows this requested collection priority. Native performance data alone do not release calibration prerequisites.
 
-Actual-main event-logging repair is complete at `b862e57`:36 affected checks and clean-commit77/77 strict fidelity PASS. Complete offline/online READ,release and metrics acceptance remains open. The primary completed and integrated G3/reference1171ab6 and corrected MRv2 producer82f4452 at145a2f5; merged-tree685 native/reference and465 producer checks pass. P0 capture `exp-1021-235955-532667` is executing32 non-preemptible H800 with independent reference, lifecycle controls and post-DP useful/dummy forward census. Next use its actual descriptors to align consumer identity/FULL_AND_PIECEWISE and compatible H800 profiles. Neither withdrawn stage01 is submitted. The consolidated clean-tree comparison passes77/77 exact cases against retained clean5af7638 baseline evidence, including identical predictor cache names.
+Authority: D21/D23/D24 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. Implementation continues P0-first; native/profile/predictive acceptance is unchanged.
+
+Actual-main event-logging repair is complete at `b862e57`:36 affected checks and clean-commit77/77 strict fidelity PASS. Complete offline/online READ, release and metrics acceptance remains open. The G3/reference and corrected producer are integrated at145a2f5 with685/465 parent checks and77/77 clean legacy comparisons. P0 capture `exp-1021-235955-532667` finished, but native G3 is not qualified: two HTTP502s, independent-state disagreement and missing pressure/overlap witnesses remain. Typed inputs are integrated at0c9d1ef after467/264 parent checks and13/13 observed-descriptor execution. The withdrawn profiling stages remain unsubmitted.
+
+### Immediate parallel work and verification
+
+```text
+typed inputs (complete) -> D23 first-prediction agreement -> {CPU actual-main, clean legacy comparison}
+{startup census (complete), HTTP diagnostics (verified), D24 bounded state values}
+ -> combined native stage and preflight -> one H80032 diagnostic -> native evidence judgment
+ -> proposed numerical state rule, if needed -> separate YC approval
+```
+
+The D23 owner uses existing stage groups and events to bind P/D real and dummy descriptors before the first prediction, including FULL_AND_PIECEWISE and NONE local-width behavior. Verify first-call identity, request and release conservation, strict missing coverage, complete6144/1024 execution and unchanged legacy artifacts. The independent D24 owner retains only the last two logical pages at first local tail completion, using existing copies and caps. The parent integrates, checks the sealed package and submits within the approved90-minute/48GPU-hour ceiling. D24 leaves state disagreement UNVERIFIED and wire-content equality bit-exact. Native disconnect cause, pressure witnesses and all formal metric gates remain explicit prerequisites.
 
 | Priority / track | Cluster and policy | Per-role topology | Basic runtime | Formal calibration | Final acceptance |
 | --- | --- | --- | --- | --- | --- |
