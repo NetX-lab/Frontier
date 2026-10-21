@@ -512,7 +512,8 @@ def wait_until_ready(server: subprocess.Popen | None, port: int, timeout_s: floa
 
 
 async def read_completion_stream(response, *, cancel_after_first_content: bool = False,
-                                 return_token_ids: bool = False) -> tuple[dict, dict]:
+                                 return_token_ids: bool = False,
+                                 cancel_decode_client: bool = False) -> tuple[dict, dict]:
     """Read OpenAI completion SSE lines and time the first nonempty text choice.
 
     aiohttp's line iterator joins fragmented network reads, including UTF-8 bytes. Empty
@@ -533,6 +534,9 @@ async def read_completion_stream(response, *, cancel_after_first_content: bool =
             timing["stream_completed"] = True
             continue
         event = json.loads(data)
+        if cancel_decode_client and event.get("step5_decode_cancelled") is True:
+            timing.update(client_cancelled=True, cancel_origin="proxy_native_decode_client")
+            break
         if "error" in event:
             timing["stream_error"] = event["error"]
         if event.get("usage") is not None:
@@ -629,12 +633,16 @@ async def replay(rows: list[dict], port: int, vocab_size: int, origin_lead_s: fl
             try:
                 async with session.post(
                     url, data=bodies[row["request_id"]],
-                    headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"]},
+                    headers={"Content-Type": "application/json", "X-Request-Id": row["request_id"],
+                             **({"X-Step5-Cancel-Decode-After-S": str(row["cancel_after_decode_submit_s"])}
+                                if "cancel_after_decode_submit_s" in row else {})},
                 ) as response:
                     if record is not None:
                         record["http_status"] = response.status
                     if row.get("stream") and response.status == 200:
                         options = {"cancel_after_first_content": row.get("cancel_after_first_content", False)}
+                        if "cancel_after_decode_submit_s" in row:
+                            options["cancel_decode_client"] = True
                         if row.get("return_token_ids"):
                             options["return_token_ids"] = True
                         payload, timing = await read_completion_stream(response, **options)

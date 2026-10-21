@@ -28,7 +28,7 @@ import weakref
 
 ENV = 'STEP5_PD_STATE_OBSERVATION'
 NIXL = 'vllm.distributed.kv_transfer.kv_connector.v1.nixl.'
-# Every native file whose methods are instrumented must be independently pinned.
+# Native instrumentation and retention-policy implementations are independently pinned.
 NATIVE_SOURCE_PATHS = (
     'vllm/distributed/kv_transfer/kv_connector/v1/nixl/base_worker.py',
     'vllm/distributed/kv_transfer/kv_connector/v1/nixl/pull_worker.py',
@@ -38,6 +38,8 @@ NATIVE_SOURCE_PATHS = (
     'vllm/v1/worker/utils.py',
     'vllm/v1/core/sched/scheduler.py',
     'vllm/v1/core/kv_cache_manager.py',
+    'vllm/v1/core/kv_cache_coordinator.py',
+    'vllm/v1/core/single_type_kv_cache_manager.py',
     'vllm/v1/core/block_pool.py',
     'vllm/v1/engine/core_client.py',
 )
@@ -283,16 +285,39 @@ class Observation:
             semantics.append(dict(group_id=group_id, native_group_id=int(scheduler_group),
                                   block_size=block_size, sliding_window=window))
         storages, registrations = {}, []
+        bases = connector.kv_caches_base_addr[connector.engine_id][connector.tp_rank]
         for name, tensor in connector.device_kv_caches.items():
             main = expected_side.get(name, name)
             component = 'summary_mean' if name in expected_side else 'raw_kv'
             group = expected_raw[main]
-            index = connector.region_names.index(name) if name in connector.region_names else None
+            # Native registration deduplicates equal page addresses across groups.
+            # A backing allocation alone is not identity: sibling rows have offsets.
+            matches = [index for index, base in enumerate(bases)
+                       if base == tensor.data_ptr()]
+            if len(matches) != 1:
+                raise ValueError(f'Cache view has no unique native physical region: {name}')
+            index = matches[0]
+            region_name = connector.region_names[index]
+            region_tensor = connector.device_kv_caches[region_name]
+            if (tensor.shape != region_tensor.shape or tensor.stride() != region_tensor.stride()
+                    or tensor.dtype != region_tensor.dtype):
+                raise ValueError(f'Cache alias differs from its registered physical view: {name}')
             metadata = capacity.storage_record(name, component, tensor, storages)
-            wire = connector.block_len_per_layer[index] if index is not None else None
+            wire = connector.block_len_per_layer[index]
+            stride = connector.block_stride_per_layer[index]
+            row_bytes = tensor[0].numel()*tensor.element_size()
+            if (not tensor[0].is_contiguous() or wire != row_bytes or
+                    tensor.stride(0)*tensor.element_size() != stride or stride != wire or
+                    connector.region_num_blocks[index] != tensor.shape[0] or
+                    connector.region_group_ids[index] not in (group, -1)):
+                raise ValueError(f'Registered wire region differs from complete physical rows: {name}')
             registrations.append(dict(layer=main, registration_name=name, group_id=group,
                 scheduler_group_id=int(config.transfer_group_ids[group]),
                 component=component, region_index=index, tensor=metadata,
+                region_registration_name=region_name,
+                region_group_id=connector.region_group_ids[index],
+                wire_row_storage_offset_bytes=tensor.storage_offset()*tensor.element_size(),
+                wire_block_stride_bytes=stride,
                 resident_view_bytes=tensor.numel()*tensor.element_size(), wire_block_bytes=wire,
                 physical_stride_bytes=tensor.stride(0)*tensor.element_size(),
                 alias_storage=metadata['storage'], resident_and_wire_are_not_additive=True))
@@ -350,6 +375,9 @@ class Observation:
             fields = dict(group_id=group, layer=registration['layer'],
                           component=registration['component'],
                           registration_name=registration['registration_name'],
+                          region_index=registration['region_index'],
+                          region_registration_name=registration['region_registration_name'],
+                          wire_row_storage_offset_bytes=registration['wire_row_storage_offset_bytes'],
                           local_block_ids=list(ids), block_hashes=hashes,
                           block_bytes=row_bytes, digest_scope='complete_physical_wire_row',
                           observer_fence=True, **join)
@@ -680,6 +708,9 @@ class Observation:
     def scheduler_ready(self, scheduler, result, arguments, token):
         self.managers[scheduler.kv_cache_manager] = self.identity(scheduler)
         self.manager_schedulers[scheduler.kv_cache_manager] = weakref.ref(scheduler)
+        coordinator = scheduler.kv_cache_manager.coordinator
+        self.managers[coordinator] = self.identity(scheduler)
+        self.manager_schedulers[coordinator] = weakref.ref(scheduler)
 
     def release_guard(self, scheduler, request=None):
         fields = {}
@@ -713,6 +744,15 @@ class Observation:
             return None
         return dict(blocks=block_lists(manager.get_block_ids(req.request_id)),
                     pool_free_blocks=manager.block_pool.get_num_free_blocks())
+
+    def allocation_before(self, manager, arguments):
+        before = self.pool_before(manager, arguments)
+        if before is not None:
+            self.local.allocation = dict(
+                num_new_computed_tokens=arguments.get('num_new_computed_tokens', 0),
+                num_external_computed_tokens=arguments.get('num_external_computed_tokens', 0),
+                max_model_len=manager.max_model_len)
+        return before
 
     def allocated(self, manager, result, arguments, before):
         req = arguments['request'].request_id
@@ -749,6 +789,51 @@ class Observation:
                     reused.append(dict(group_id=group, block_id=block, previous_request_id=previous))
         if reused:
             self.emit('reuse', manager, req, blocks=reused, boundary='native_allocate_slots')
+
+    def skipped_before(self, coordinator, arguments):
+        req = arguments['request_id']
+        if self.selected_id(req):
+            scheduler = self.manager_schedulers[coordinator]()
+            manager = scheduler.kv_cache_manager
+            request = scheduler.requests[req]
+            native = sys.modules['vllm.v1.core.single_type_kv_cache_manager']
+            policies = []
+            for group, single in enumerate(manager.coordinator.single_type_managers):
+                prefix = (type(single).remove_skipped_blocks
+                          is native.SingleTypeKVCacheManager.remove_skipped_blocks)
+                spec = single.kv_cache_spec
+                window = getattr(spec, 'sliding_window', None)
+                retained = (spec.retained_window_size(
+                    scheduler_block_size=single.scheduler_block_size,
+                    retain_eagle_proof=single.enable_caching and single.use_eagle)
+                    if prefix and window is not None else None)
+                policies.append(dict(native_group_id=group, block_size=single.block_size,
+                                     prefix_retirement=prefix, sliding_window=window,
+                                     retained_window=retained,
+                                     num_skipped_tokens=single.get_num_skipped_tokens(
+                                         arguments['processed_computed_tokens']) if prefix else None))
+            return dict(blocks=block_lists(manager.get_block_ids(req)),
+                        pool_free_blocks=manager.block_pool.get_num_free_blocks(),
+                        request_num_computed_tokens=int(request.num_computed_tokens),
+                        request_num_in_flight_tokens=int(request.num_in_flight_tokens),
+                        allocation_prefix=copy.deepcopy(getattr(self.local, 'allocation', None)),
+                        retirement_group_specs=policies,
+                        **self.release_guard(scheduler, request))
+
+    def skipped(self, coordinator, result, arguments, before):
+        if before is None:
+            return
+        req = arguments['request_id']
+        manager = self.manager_schedulers[coordinator]().kv_cache_manager
+        blocks = block_lists(manager.get_block_ids(req))
+        if blocks != before['blocks']:
+            self.emit('block_remove_skipped', coordinator, req, blocks=blocks, before=before,
+                      pool_free_blocks_before=before['pool_free_blocks'],
+                      pool_free_blocks_after=manager.block_pool.get_num_free_blocks(),
+                      processed_computed_tokens=arguments['processed_computed_tokens'],
+                      num_prompt_tokens=arguments.get('num_prompt_tokens'),
+                      counts_scope='skipped_blocks_release',
+                      boundary='native_remove_skipped_blocks_return')
 
     def freed_blocks(self, manager, result, arguments, before):
         if before is None:
@@ -884,17 +969,25 @@ class Observation:
                   block_ids=copy.deepcopy(arguments['block_ids']),
                   block_ids_by_group=copy.deepcopy(arguments.get('block_ids_by_group')))
 
+    def abort_before(self, scheduler, arguments):
+        # Do not consume the native request_ids iterable. Snapshot selected live
+        # requests and join only the actual aborted results after the native call.
+        return {req: dict(request_status=getattr(request.status, 'name', str(request.status)),
+                          native_receive_completed=req in scheduler.finished_recving_kv_req_ids)
+                for req, request in scheduler.requests.items() if self.selected_id(req)}
+
     def abort(self, scheduler, result, arguments, token):
         for request in result:
             status = getattr(request.status, 'name', str(request.status))
             if self.selected_id(request.request_id) and 'ABORT' in status:
                 self.emit('abort', scheduler, request.request_id, status=status,
+                          before=(token or {}).get(request.request_id),
                           boundary='native_finish_requests_returned',
                           pool_free_blocks=scheduler.kv_cache_manager.block_pool.get_num_free_blocks())
 
 
 def wrap(cls, name, observer, before=None, after=None, read_scope=False, worker_scope=False,
-         drain_scope=False):
+         drain_scope=False, allocation_scope=False):
     """Only callbacks are guarded; the original is invoked exactly once."""
     original = getattr(cls, name)
     if getattr(original, '_step5_r2', False):
@@ -922,6 +1015,8 @@ def wrap(cls, name, observer, before=None, after=None, read_scope=False, worker_
                 observer.local.scheduled_request_ids = ()
             if drain_scope:
                 observer.local.drain = None
+            if allocation_scope:
+                observer.local.allocation = None
         if arguments is not None and after is not None:
             observer.safe(name+'.after', after, owner, result, arguments, token)
         return result
@@ -959,12 +1054,16 @@ def instrument(module, observer):
              before=observer.scheduler_free_before, after=observer.scheduler_free_after)
         wrap(module.Scheduler, '_drain_deferred_frees', observer,
              before=observer.drain_before, after=observer.drained, drain_scope=True)
-        wrap(module.Scheduler, 'finish_requests', observer, after=observer.abort)
+        wrap(module.Scheduler, 'finish_requests', observer,
+             before=observer.abort_before, after=observer.abort)
     elif name == 'vllm.v1.core.kv_cache_manager':
         wrap(module.KVCacheManager, 'allocate_slots', observer,
-             before=observer.pool_before, after=observer.allocated)
+              before=observer.allocation_before, after=observer.allocated, allocation_scope=True)
         wrap(module.KVCacheManager, 'free', observer,
-              before=observer.pool_before, after=observer.freed_blocks)
+               before=observer.pool_before, after=observer.freed_blocks)
+    elif name == 'vllm.v1.core.kv_cache_coordinator':
+        wrap(module.KVCacheCoordinator, 'remove_skipped_blocks', observer,
+              before=observer.skipped_before, after=observer.skipped)
     elif name == 'vllm.v1.core.block_pool':
         wrap(module.BlockPool, 'free_blocks', observer,
              before=observer.pool_free_before, after=observer.pool_freed)

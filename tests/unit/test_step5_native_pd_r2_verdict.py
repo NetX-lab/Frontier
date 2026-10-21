@@ -66,8 +66,8 @@ def observations(lengths=(63, 64, 65)):
             row.update(deepcopy(extra))
             rows.append(row)
 
-        event("source_hold", "prefill", 10, block_ids=source_blocks, num_computed_tokens=prompt,
-              num_matched_tokens=external, kv_xfer_params={"remote_num_tokens": prompt,
+        event("source_hold", "prefill", 10, block_ids=source_blocks, num_computed_tokens=external,
+              num_matched_tokens=external, kv_xfer_params={"remote_num_tokens": external,
                   "remote_block_ids": advertised, "remote_engine_id": p_engine, "remote_request_id": p_id})
         event("target_reserve", "decode", 10, block_ids=target_blocks,
               num_prompt_tokens=prompt, num_external_tokens=external, client_request_id=client, wave="wave")
@@ -86,7 +86,7 @@ def observations(lengths=(63, 64, 65)):
                     event("target_content", "decode", 45, rank, **common,
                           local_block_ids=local[group], remote_block_ids=wire[group],
                           block_hashes=[digest(rank, group, component, page) for page in wire[group]])
-            event("read_metadata", "decode", 15, rank, remote_num_tokens=prompt,
+            event("read_metadata", "decode", 15, rank, remote_num_tokens=external,
                   advertised_remote_block_ids=advertised, reserved_local_block_ids=target_blocks,
                   local_physical_block_ids=target_blocks)
             event("read_submit", "decode", 20, rank, local_block_ids=local, remote_block_ids=wire)
@@ -767,7 +767,7 @@ def test_cli_writes_diagnostic_and_never_returns_a_workload_control_failure(tmp_
 def test_actual_p_computation_advertised_prompt_and_d_prefix_are_distinct_native_counts(tmp_path, prompt):
     rows, trace = observations((prompt,))
     hold, reserve = first(rows, "source_hold"), first(rows, "target_reserve")
-    assert hold["num_computed_tokens"] == hold["kv_xfer_params"]["remote_num_tokens"] == prompt
+    assert hold["num_computed_tokens"] == hold["kv_xfer_params"]["remote_num_tokens"] == reserve["num_external_tokens"]
     assert reserve["num_external_tokens"] == 16 * ((prompt - 16) // 16)
     assert 16 <= prompt - reserve["num_external_tokens"] <= 31
     hold.pop("num_matched_tokens")
@@ -786,9 +786,9 @@ def test_native_prompt_and_loaded_token_attribution_faults(tmp_path, fault, stat
     rows, trace = observations()
     hold, reserve = first(rows, "source_hold"), first(rows, "target_reserve")
     if fault == "advertised_tokens":
-        hold["kv_xfer_params"]["remote_num_tokens"] = reserve["num_external_tokens"]
+        hold["kv_xfer_params"]["remote_num_tokens"] += 16
     elif fault == "received_tokens":
-        first(rows, "read_metadata", 7)["remote_num_tokens"] = reserve["num_external_tokens"]
+        first(rows, "read_metadata", 7)["remote_num_tokens"] += 16
     elif fault == "matched_tokens":
         hold["num_matched_tokens"] += 16
     elif fault == "loaded_prefix":

@@ -33,6 +33,10 @@ def stage_observation(config: dict, definition: dict, stage: Path, model_dir: Pa
     """Add diagnostic-only inputs before the canonical builder freezes tool hashes."""
     if definition["vllm_version"] != "step5":
         raise ValueError("R2 state observation requires the locked Step image")
+    if "canonical_g3" in definition:
+        from tests.integration.step5_pd.r2_canonical import prepare_traces
+        prepare_traces(definition, stage)
+        config["canonical_g3"] = dict(definition["canonical_g3"])
     observation = dict(definition["pd_state_observation"])
     source_root = Path(observation.pop("source_root"))
     observation["source_hashes"] = {
@@ -70,5 +74,6 @@ def stage_observation(config: dict, definition: dict, stage: Path, model_dir: Pa
                                          if len(wave["prompt_lengths"]) > 1]
     (stage / "r2_run.json").write_text(json.dumps(definition, indent=1, sort_keys=True))
     config.update(pd_state_observation=observation, diagnostic_only=True,
-                  clean_timing_eligible=False,
-                  role_num_gpu_blocks_override=definition["role_num_gpu_blocks_override"])
+                  clean_timing_eligible=False)
+    if "role_num_gpu_blocks_override" in definition:
+        config["role_num_gpu_blocks_override"] = dict(definition["role_num_gpu_blocks_override"])
