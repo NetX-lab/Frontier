@@ -1,0 +1,4911 @@
+{
+  "kind": "direct existing workload vs existing synthetic cache; not actual-main verdict",
+  "model_hidden": 4096,
+  "model_mlp_hidden": 1536,
+  "results": [
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 2,
+      "ep_id": 0,
+      "routed_tokens": 16,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 0,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 1,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 2,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 3,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 4,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 5,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 6,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 7,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 8,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 9,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 10,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 11,
+      "routed_tokens": 14,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 0,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 1,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 2,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 3,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 4,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 5,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 6,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 7,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 8,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 9,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 10,
+      "routed_tokens": 3070,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 11,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 12,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 13,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 14,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_ed14b830.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 15,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 2,
+      "ep_id": 0,
+      "routed_tokens": 16,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 0,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 1,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 2,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 3,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 4,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 5,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 6,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 7,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 8,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 9,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 10,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 11,
+      "routed_tokens": 14,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 0,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 1,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 2,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 3,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 4,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 5,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 6,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 7,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 8,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 9,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 10,
+      "routed_tokens": 3070,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 11,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 12,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 13,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 14,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_0fcecde8.pkl",
+      "measurement": "CUDA_EVENT",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 15,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 2,
+      "ep_id": 0,
+      "routed_tokens": 16,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 0,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 1,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 2,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 3,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 4,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 5,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 6,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 7,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 8,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 9,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 10,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 32,
+      "ep_id": 11,
+      "routed_tokens": 14,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 0,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 1,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 2,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 3,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 4,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 5,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 6,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 7,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 8,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 9,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 10,
+      "routed_tokens": 3070,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 11,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 12,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 13,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 14,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_c56193e6.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 88,
+      "source_tokens": 6145,
+      "ep_id": 15,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 2,
+      "ep_id": 0,
+      "routed_tokens": 16,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 0,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 1,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 2,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 3,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 4,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 5,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 6,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 7,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 8,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 9,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 10,
+      "routed_tokens": 22,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 32,
+      "ep_id": 11,
+      "routed_tokens": 14,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 0,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 1,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 2,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 3,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 4,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 5,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 6,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 7,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 8,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 9,
+      "routed_tokens": 3080,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 10,
+      "routed_tokens": 3070,
+      "exact": false,
+      "violations": {}
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 11,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 12,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 13,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 14,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    },
+    {
+      "cache": "moe_grouped_gemm_1eb9c3cb.pkl",
+      "measurement": "KERNEL_ONLY",
+      "layer": 3,
+      "source_tokens": 6145,
+      "ep_id": 15,
+      "routed_tokens": 3058,
+      "exact": false,
+      "violations": {
+        "min_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            0.0,
+            0.9999186197916667
+          ]
+        },
+        "load_imbalance_cv": {
+          "actual": 0.0,
+          "bounds": [
+            0.00017263349150062197,
+            1.322875655532295
+          ]
+        },
+        "max_load_ratio": {
+          "actual": 1.0,
+          "bounds": [
+            1.0003662109375,
+            2.75
+          ]
+        },
+        "load_entropy": {
+          "actual": 4.459431618671925,
+          "bounds": [
+            3.0000000005450005,
+            4.459431597176136
+          ]
+        },
+        "load_gini_coefficient": {
+          "actual": 0.0,
+          "bounds": [
+            6.658380681812126e-05,
+            0.6363636363636365
+          ]
+        }
+      }
+    }
+  ]
+}
