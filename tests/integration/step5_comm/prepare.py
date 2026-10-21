@@ -16,6 +16,7 @@ from frontier.profiling.collectives.vllm_forward_collectives import (
 REPO = Path(__file__).resolve().parents[3]
 CLOUD_ROOT = Path("/mnt/codesign-exp/ycfeng/frontier/step5_comm")
 MODEL_CONFIG = "data/config/models/stepfun-ai__Step-5-Preview.json"
+HARDWARE_GROUPS = {"H800": "codesign", "H200": "step_main"}
 
 
 def sha256(path: Path) -> str:
@@ -50,8 +51,9 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
         if not (0 < ports["master_port"] < 65536 and 0 < ports["probe_port"] < 65536
                 and ports["master_port"] != ports["probe_port"]):
             raise ValueError("Benchmark and probe require distinct valid rendezvous ports")
-    if (resources["positive_tags"], resources["charged_group"]) != (["H800"], "codesign"):
-        raise ValueError("Step communication stages use H800/codesign only")
+    if (len(resources["positive_tags"]) != 1 or
+            HARDWARE_GROUPS.get(resources["positive_tags"][0]) != resources["charged_group"]):
+        raise ValueError("Step communication stages require a supported hardware/charged-group pair")
     model = ModelShape.from_hf_config(json.loads((repository / MODEL_CONFIG).read_text()))
     scenarios = scenarios_from_grid(parallel, definition["grid"])
     cases = sum(len(forward_collectives(model, parallel, scenario)) for scenario in scenarios)
@@ -68,10 +70,13 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
     (model_path / "config.json").write_bytes((repository / MODEL_CONFIG).read_bytes())
     # Hash the existing producer and its native probe imports, not an independent
     # source snapshot or a copy of the image's vLLM package.
+    source_paths = [
+        "frontier/profiling", "frontier/config", "frontier/logger.py",
+        "frontier/model_architectures.py", MODEL_CONFIG, "tests/integration/step5_comm"]
+    if "canonical_workload" in definition:
+        source_paths.append(definition["canonical_workload"])
     names = subprocess.check_output([
-        "git", "ls-files", "frontier/profiling", "frontier/config", "frontier/logger.py",
-        "frontier/model_architectures.py",
-        MODEL_CONFIG, "tests/integration/step5_comm"], cwd=repository, text=True).splitlines()
+        "git", "ls-files", *source_paths], cwd=repository, text=True).splitlines()
     hashes = {name: sha256(repository / name) for name in names if (repository / name).is_file()}
     job = {"description": definition["description"], "run_id": run_id,
            "repository": str(repository), "image": definition["image"],
@@ -99,6 +104,9 @@ def prepare(definition: dict, stage: Path, run_id: str, *, repository: Path = RE
     launcher.write_text(script)
     job["submission_script"] = str(launcher)
     job["submission_script_sha256"] = sha256(launcher)
+    if "canonical_workload" in definition:
+        job["canonical_workload"] = definition["canonical_workload"]
+        job["coverage"] = definition["coverage"]
     (stage / "job.json").write_text(json.dumps(job, indent=2) + "\n")
     return job
 

@@ -195,9 +195,17 @@ def runtime_manifest(job: dict, node: dict) -> dict:
                                           ("RDMA_NETWORK_LINK_TYPE", "CUDA_VISIBLE_DEVICES",
                                            "NODE_RANK", "NODE_COUNT", "PROC_PER_NODE",
                                            "MASTER_ADDR", "MASTER_PORT")},
+                "cuda_driver_environment": {name: os.environ.get(name) for name in
+                                            ("VLLM_ENABLE_CUDA_COMPATIBILITY", "LD_LIBRARY_PATH")},
                 "nccl_environment": {k: v for k, v in os.environ.items() if k.startswith("NCCL_")}}
+    hardware = job["resources"]["positive_tags"][0]
+    manifest["hardware_matches"] = all(hardware in name.split() for name in manifest["devices"])
+    if not manifest["hardware_matches"]:
+        manifest["status"] = "UNVERIFIED"
     try:
         manifest["nvidia_smi"] = subprocess.check_output(["nvidia-smi", "-L"], text=True)
+        manifest["host_driver_versions"] = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"], text=True).splitlines()
     except Exception as error:
         manifest["status"] = "UNVERIFIED"
         manifest["nvidia_smi"] = {"status": "UNVERIFIED", "error": repr(error)}
