@@ -327,6 +327,7 @@ class ProfilingDataFrameLoaders:
             return load_dsa_dataframe(
                 file_path, replica_config.model_config, replica_config.attn_tensor_parallel_size,
                 replica_scheduler_config.block_size, self._active_measurement_type,
+                replica_config=replica_config, scheduler_config=replica_scheduler_config,
             )
         # Check file existence
         if not os.path.exists(file_path):

@@ -63,6 +63,7 @@ def _row_features(row: pd.Series) -> DSABatchFeatures:
 def load_dsa_dataframe(
     attention_file: str, model_config, tensor_parallel_size: int,
     block_size: int, measurement_type: MeasurementType,
+    *, replica_config=None, scheduler_config=None,
 ) -> pd.DataFrame:
     if measurement_type not in (MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY):
         raise ValueError(f"Unsupported DSA measurement type: {measurement_type}")
@@ -110,6 +111,13 @@ def load_dsa_dataframe(
     df["dsa_workload"] = [feature.workload for feature in features]
     for name in features[0].values:
         df[name] = [feature.values[name] for feature in features]
+    full_dummy = Path(path).with_name("dsa_full_dummy.json")
+    if measurement_type is MeasurementType.KERNEL_ONLY and full_dummy.exists():
+        from frontier.execution_time_predictor.dsa_full_dummy_input import load_full_dummy_rows
+
+        df.attrs["full_dummy"] = load_full_dummy_rows(
+            full_dummy, model_config, tensor_parallel_size, block_size, replica_config, scheduler_config, df,
+        )
     return df
 
 
@@ -136,6 +144,14 @@ def train_dsa_models(df: pd.DataFrame, train: Callable) -> dict:
                 for column in (*columns, *_GEOMETRY_COLUMNS)
             }
             models[name] = model
+    full_dummy = df.attrs.get("full_dummy")
+    if full_dummy is not None:
+        for (variant, operator), rows in pd.DataFrame(full_dummy).groupby(["attention_variant", "scope"]):
+            rows = rows.rename(columns={"time_ms": f"time_stats.{operator}.median",
+                                        "kernel_count": f"time_stats.{operator}.kernel_count"})
+            name = _model_name(operator, variant, "full_dummy")
+            models[name] = train(model_name=name, df=rows, feature_cols=["capture_width"],
+                                 target_col=f"time_stats.{operator}.median")
     return models
 
 
@@ -152,12 +168,25 @@ class DSAPredictor:
         dummy_capture_width: int | None = None,
     ) -> AttentionOperatorTimes:
         if dummy_capture_width is not None:
-            raise DSACoverageError(
-                "DSA coverage missing for native FULL DP dummy attention "
-                f"at capture width {dummy_capture_width}: requires measured replay "
-                "scopes with invalid KV slots and padded attention metadata; "
-                "regular serving rows do not qualify"
-            )
+            times = {}
+            for operator in DSA_FEATURE_COLUMNS:
+                if operator == "attn_dsa_indexer" and variant == "shared_index":
+                    times[operator] = 0.0
+                    continue
+                name = _model_name(operator, variant, "full_dummy")
+                model = self._models.get(name)
+                key = (float(dummy_capture_width),)
+                if model is None or key not in model._frontier_exact_lookup:
+                    raise DSACoverageError(
+                        "DSA coverage missing for native FULL DP dummy attention "
+                        f"at capture width {dummy_capture_width}: requires measured replay "
+                        "scopes with invalid KV slots and padded attention metadata; "
+                        "regular serving rows do not qualify"
+                    )
+                times[operator] = float(model._frontier_exact_lookup[key])
+                if record_kernel_count is not None:
+                    record_kernel_count(name, model, key, ("capture_width",))
+            return AttentionOperatorTimes(times)
         times = {}
         for operator, columns_by_path in DSA_FEATURE_COLUMNS.items():
             if operator == "attn_dsa_indexer" and variant == "shared_index":
