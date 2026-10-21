@@ -18,7 +18,7 @@ import pytest
 from tests.comparison.calibration import native_pd_worker
 
 
-def exercise(worker, temporary, case):
+def exercise(worker, temporary, case, *, startup_timeout_s=10, child_code=None, engine=None):
     directory = Path(tempfile.mkdtemp(prefix=case + "_", dir=temporary))
     root = directory / "output"
     model = directory / "model"
@@ -89,10 +89,11 @@ def exercise(worker, temporary, case):
                 for name in ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
                              'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE'):
                     child_env.pop(name, None)
-                with real_popen([sys.executable, '-P', '-c',
+                probe = child_code or (
                     'import importlib, json; '
                     'm = importlib.import_module("native_full_structure"); '
-                    'print(json.dumps({"path": m.__file__, "class": m.FullModelInventory.__name__}))'],
+                    'print(json.dumps({"path": m.__file__, "class": m.FullModelInventory.__name__}))')
+                with real_popen([sys.executable, '-P', '-c', probe],
                     cwd=directory, env=child_env, stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE, text=True) as child:
                     stdout, stderr = child.communicate(timeout=30)
@@ -136,7 +137,7 @@ def exercise(worker, temporary, case):
         "dp_rpc_ports": {"prefill": 30100, "decode": 30200},
         "http_ports": {"prefill": 30300, "decode": 30400},
         "proxy_port": 30500, "serve_observers": {"prefill": {}, "decode": {}},
-        "peer_wait_seconds": 10, "startup_timeout_s": 10, "replay_timeout_s": 10,
+        "peer_wait_seconds": 10, "startup_timeout_s": startup_timeout_s, "replay_timeout_s": 10,
         "drain_seconds": 0, "stop_timeout_s": 10, "weight_suffixes": [".bin"],
     }
     if case.startswith("canonical_clean"):
@@ -158,7 +159,9 @@ def exercise(worker, temporary, case):
                 if case == 'canonical_clean_serving' else None}))
     if case == 'canonical_clean_serving_staged_child':
         from tests.unit.test_native_pd_manifest import MODULES, REPO
-        from tests.unit.test_calibration_pd_harness import nixl_engine
+        if engine is None:
+            from tests.unit.test_calibration_pd_harness import nixl_engine
+            engine = nixl_engine()
 
         for name in (*MODULES, 'tests/comparison/calibration/native_full_structure.py'):
             target = directory / name
@@ -174,7 +177,7 @@ def exercise(worker, temporary, case):
         native.server_command = staged_pd.server_command
         config['harness_dir'] = str(harness)
         config['serve_observers'] = {'prefill': None, 'decode': None}
-        config['engine'] = nixl_engine() | {
+        config['engine'] = engine | {
             'worker_extension_cls': 'native_full_structure.FullModelInventory'}
         (model / 'config.json').write_text(json.dumps({
             'architectures': ['GlmMoeDsaForCausalLM'], 'vocab_size': 154880}))
@@ -234,6 +237,7 @@ def exercise(worker, temporary, case):
         "replay_commands": replay_commands,
         "shutdown_order": result.get("shutdown_order"),
         "server_environments": server_environments,
+        "server_env_set": result.get('server_env_set'),
         "serving_instrumentation": result.get('serving_instrumentation'),
         "child_imports": child_imports,
     }
@@ -331,6 +335,28 @@ def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
     assert result['child_imports'][0]['class'] == 'FullModelInventory'
     assert result['child_imports'][0]['path'].endswith(
         '/tests/comparison/calibration/native_full_structure.py')
+
+
+@pytest.mark.parametrize('budget,inherited', [(3600, None), (3600, '600'), (37, '7200')])
+def test_worker_child_ready_timeout_matches_configured_startup_budget(
+        tmp_path, monkeypatch, budget, inherited):
+    name = 'VLLM_ENGINE_READY_TIMEOUT_S'
+    if inherited is None:
+        monkeypatch.delenv(name, raising=False)
+    else:
+        monkeypatch.setenv(name, inherited)
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child',
+        startup_timeout_s=budget, child_code=(
+            'import json, os; print(json.dumps({"ready_timeout_s": '
+            'os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S")}))'))
+    assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+    assert not result['observation_errors']
+    assert result['server_environments'][0][name] == str(budget)
+    assert result['server_env_set'][name] == str(budget)
+    assert result['child_imports'] == [{'ready_timeout_s': str(budget)}]
+    assert result['server_environments'][0]['NCCL_IB_HCA'] == 'platform-value'
+    assert result['replay_commands'][0][
+        result['replay_commands'][0].index('--startup-timeout-s') + 1] == str(budget)
 
 
 @pytest.mark.parametrize('case', ['canonical_clean_serving_missing_provenance',
