@@ -5,41 +5,42 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded both offline-verified stages, exact parent commands and unverified runtime dependencies. |
+| 2026-10-21 | Superseded stage01 after MRv2 review; prepared new stage02 commands and explicit graph evidence limitations. |
 
 ## Outcome and identity
 
-Both stages were built from clean committed source **4a708ff6681f7b1031f7a2a1ed9fbf655aed6d45**. The primary task's frozen inputs, original Step metadata, historical Step/SharedGPT packages, environment tooling, simulator core and R2 verdict/observations were not edited.
+**Do not submit qualification01 or canonical01.** They remain immutable historical artifacts from`4a708ff`; their additional source proof incorrectly cited MRv1. The replacement qualification02/canonical02 stages will be built from the clean follow-up source commit; receipts are pending below. No native qualification is claimed. Frozen inputs, original Step metadata, historical Step/SharedGPT packages, environment tooling, simulator core and R2 verdict/observations remain unchanged.
 
 | Item | Qualification | Canonical |
 | --- | --- | --- |
-| Workspace | `/data/ycfeng/tmp/step5_d18_native_20261021/qualification01` | `/data/ycfeng/tmp/step5_d18_native_20261021/canonical01` |
+| Workspace | `/data/ycfeng/tmp/step5_d18_native_20261021/qualification02` | `/data/ycfeng/tmp/step5_d18_native_20261021/canonical02` |
 | Stage | workspace + `/stage` | workspace + `/stage` |
-| Cloud output, not accessed here | `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_qualification_h200_01` | `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_canonical_h200_01` |
-| Job tag | `d18qualh20001` | `d18canonicalh20001` |
+| Cloud output, not accessed here | `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_qualification_h200_02` | `/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_canonical_h200_02` |
+| Job tag | `d18qualh20002` | `d18canonicalh20002` |
 | Client population |16 same-shape warmups at QPS1, then8 concurrent same-shape diagnostic requests |Three repeats ×(16 warmups +128 formal requests at QPS1) |
 | Fixed shape |6144 prompt /1024 output tokens |6144 prompt /1024 output tokens |
-| Config SHA-256 | `ec9e95b18e6735041f8f85b7f2a7b5a6838cc1199d698cd3262ceec7aed480ad` | `9fa1200cc518ef2c0619afc151860155a436188816b6e947902d1e183d04564b` |
-| Offline result |27 staged tool/input hashes;38 installed native-source bindings;3 model metadata pins PASS |Same counts PASS |
+| Config SHA-256 |Pending new committed-source build |Pending new committed-source build |
+| Offline result |Pending isolated stage02 verification |Pending isolated stage02 verification |
 | Worker / replay deadlines |3600s /1200s |5400s /3000s |
 | Estimate, not measurement |20–35 active minutes plus queue;21.3–37.3 GPU-hours |35–60 active minutes plus queue;37.3–64.0 GPU-hours |
 | Timeout GPU budget |64 GPU-hours |96 GPU-hours |
 
 Each run requests **8 nodes ×8 H200 =64 GPUs**, `step_main`, non-preemptible,32 CPUs and128GiB per node. Each role is P32/D32 TP8/DP4/EP32/PP1. Run qualification and canonical sequentially; they cannot coexist under the70-GPU non-preemptible task cap. Other active jobs must leave the64 GPUs available. Parent checks live quota and creator/source mounts through the approved backend; no quota or authentication call occurred here. Estimates are planning allowances, not extrapolated R1 DP2/chunked throughput claims.
 
-## Offline verification executed
+## Offline verification
 
-Build receipts: `/data/ycfeng/tmp/d18_qualification_build01.json` and `/data/ycfeng/tmp/d18_canonical_build01.json`. Isolated verification ran from each stage's workspace, without the repository on the command's `PYTHONPATH`; output receipts are `/data/ycfeng/tmp/d18_qualification_verify01.json` and `/data/ycfeng/tmp/d18_canonical_verify01.json`. Build and isolated verify receipts match exactly. Neither stage has a `launcher/` directory: no submission attempt exists.
+Stage02 build receipts will be`/data/ycfeng/tmp/d18_qualification_build02.json` and`/data/ycfeng/tmp/d18_canonical_build02.json`; isolated verification receipts will be`/data/ycfeng/tmp/d18_qualification_verify02.json` and`/data/ycfeng/tmp/d18_canonical_verify02.json`. Verify from each stage's own workspace, without the repository on the command's`PYTHONPATH`.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python \
-  /data/ycfeng/tmp/step5_d18_native_20261021/qualification01/stage/tests/integration/step5_pd/canonical_stage.py \
-  verify --stage-dir /data/ycfeng/tmp/step5_d18_native_20261021/qualification01/stage
+  /data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/tests/integration/step5_pd/canonical_stage.py \
+  verify --stage-dir /data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage
 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python \
-  /data/ycfeng/tmp/step5_d18_native_20261021/canonical01/stage/tests/integration/step5_pd/canonical_stage.py \
-  verify --stage-dir /data/ycfeng/tmp/step5_d18_native_20261021/canonical01/stage
+  /data/ycfeng/tmp/step5_d18_native_20261021/canonical02/stage/tests/integration/step5_pd/canonical_stage.py \
+  verify --stage-dir /data/ycfeng/tmp/step5_d18_native_20261021/canonical02/stage
 ```
 
-The staged canonical CLI also passed isolated `--help`. All eight node plans regenerate exactly, including native graph statistics,7168/8192/128 limits, disabled chunk/prefix flags and omitted MTP flag. Frozen common manifest/SHA256SUMS bytes match D18. Metadata SHA-256 remains:
+Required stage02 checks include isolated CLI`--help`, all eight regenerated node plans, native graph statistics,7168/8192/128 limits, disabled chunk/prefix flags and omitted MTP flag. Frozen common manifest/SHA256SUMS pins and original metadata must remain unchanged. Metadata SHA-256:
 
 - `config.json`: `e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63`
 - `tokenizer_config.json`: `78202af487f4d4360e8d15cb0506d60718f8599770599c6f28f7f1fa045a591f`
@@ -50,15 +51,15 @@ The staged canonical CLI also passed isolated `--help`. All eight node plans reg
 The immutable submit wrapper verifies offline hashes **before** loading the existing personal credential environment, sets`STEPMIND_BACKEND=rjob`, and executes the original submitter/launcher callback. Do not background the Python launcher inside the wrapper or kill its process while the native run is healthy. Retain each outer launcher until terminal status. Read the current StepMind handbook and quota first.
 
 ```bash
-setsid nohup bash /data/ycfeng/tmp/step5_d18_native_20261021/qualification01/stage/submit.sh \
-  > /data/ycfeng/tmp/step5_d18_native_20261021/qualification01/launcher.log 2>&1 < /dev/null &
+setsid nohup bash /data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/submit.sh \
+  > /data/ycfeng/tmp/step5_d18_native_20261021/qualification02/launcher.log 2>&1 < /dev/null &
 ```
 
 After the parent has judged the separate R2 evidence and the H200 qualification, run the canonical package only if its prerequisites are satisfied:
 
 ```bash
-setsid nohup bash /data/ycfeng/tmp/step5_d18_native_20261021/canonical01/stage/submit.sh \
-  > /data/ycfeng/tmp/step5_d18_native_20261021/canonical01/launcher.log 2>&1 < /dev/null &
+setsid nohup bash /data/ycfeng/tmp/step5_d18_native_20261021/canonical02/stage/submit.sh \
+  > /data/ycfeng/tmp/step5_d18_native_20261021/canonical02/launcher.log 2>&1 < /dev/null &
 ```
 
 The wrappers source `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`; they contain no credentials. Both packages reuse the existing launcher callback copied from the primary task's `native_role_tp16/launch_capacity_20261018_03/launcher_scope.py`. No old frozen stage is modified.
@@ -66,13 +67,13 @@ The wrappers source `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`; they 
 ## Required returned evidence and admission boundary
 
 1. Parent R2 content/lifetime disposition remains separate; this branch changes no R2 verdict or observation.
-2. Obtain native `nodes/*/result.json` and`nodes/*/server.log` plus platform terminal/creator/resource receipts. Verify all64 distinct H200 devices, both TP8/DP4/EP32 roles, installed hashes, native FP8 exclusions/cache capacity and resolved context/budget/concurrency/graph configuration. Inspect native capture evidence and built-in graph dispatch tables per required lane; startup/capture alone is not replay. Aggregate lane tables do not fabricate a per-TP-rank census.
+2. Obtain native `nodes/*/result.json` and`nodes/*/server.log` plus platform terminal/creator/resource receipts. Verify all64 distinct H200 devices, both TP8/DP4/EP32 roles, installed hashes, native FP8 exclusions/cache capacity, effective MRv2 selection (Triton available, no MRv1 override) and resolved context/budget/concurrency/graph configuration. Native MRv2 FULL table rows require subsequent healthy serving to prove the replay path; config/capture/PIECEWISE alone is insufficient. The flag must be effective with log stats/INFO enabled and an active logging interval. Tables lack engine/rank prefixes and only the output TP rank reports; obtain explicit lane/rank attribution or leave that criterionUNVERIFIED. Do not infer every lane/rank from table count/order. See`source_contract.md` for the corrected source chain.
 3. Obtain `replay/canonical_summary.json`, `replay/client_requests.jsonl` and`replay/proxy_requests.jsonl`. Qualification must retain all24 diagnostic requests. Canonical must retain all432 requests, all384 formal outputs, exact native prompt/output counts and repeated prompt identities. Record lane participation, D's actual recompute tail, transfer/failure deltas, fresh idle boundaries and repeat variation.
 4. Any client/observation error leaves reference admission **UNVERIFIED**. The consumer continues healthy requests and later repetitions; auxiliary checks never stop native workers. A non-clean boundary does not become clean merely because the next phase runs. Output metric candidates are not admitted ground truth until parent qualification and the existing ticket14/23 admission checks succeed.
 
 ## Reproducible build record
 
-Do not rebuild or overwrite the existing stages. Both builds used the command below from the worktree, with`KIND=qualification`/`canonical`,`DIR=qualification01`/`canonical01`, and`TAG=d18qualh20001`/`d18canonicalh20001` respectively; the source commit was clean before either build. Substitute a **new** unused directory/tag/output for any future generation.
+Do not rebuild or overwrite existing stages. The stage02 build command below uses`KIND=qualification`/`canonical`,`DIR=qualification02`/`canonical02`, and`TAG=d18qualh20002`/`d18canonicalh20002` respectively. Source must be clean and committed first. Substitute a **new** unused directory/tag/output for any later generation.
 
 ```bash
 PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python \
@@ -80,7 +81,7 @@ PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/e
   --run-definition tests/integration/step5_pd/canonical_run_h200.json --kind "$KIND" \
   --workspace "/data/ycfeng/tmp/step5_d18_native_20261021/$DIR" \
   --stage-dir "/data/ycfeng/tmp/step5_d18_native_20261021/$DIR/stage" \
-  --output-dir "/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_${KIND}_h200_01" \
+  --output-dir "/mnt/codesign-exp/ycfeng/frontier/step5_native_pd/d18_${KIND}_h200_02" \
   --model-dir /data/ycfeng/tmp/step5_native_pd_h800_r1w/reference_inputs \
   --image-source-hashes /data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/native_pd_20261020/image_source/sha256_in_image.txt \
   --probe-dir /data/ycfeng/tmp/step5_native_pd_h800_r1w/stage02 \

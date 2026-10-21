@@ -16,7 +16,12 @@ RUNTIME_SOURCES = (
     "config/scheduler.py", "config/vllm.py", "config/compilation.py",
     "config/observability.py", "engine/arg_utils.py",
     "entrypoints/openai/completion/protocol.py", "entrypoints/openai/completion/serving.py",
-    "v1/cudagraph_dispatcher.py", "v1/worker/gpu_model_runner.py", "compilation/cuda_graph.py",
+    "v1/worker/gpu_worker.py", "v1/worker/gpu/model_runner.py",
+    "v1/worker/gpu/dp_utils.py", "v1/worker/dp_utils.py", "v1/worker/gpu/cudagraph_utils.py",
+    "v1/worker/gpu/async_utils.py", "v1/outputs.py", "v1/executor/multiproc_executor.py",
+    "v1/core/sched/scheduler.py", "v1/engine/core.py", "v1/engine/__init__.py",
+    "v1/engine/async_llm.py", "v1/metrics/stats.py", "v1/metrics/loggers.py",
+    "compilation/cuda_graph.py", "envs.py",
     "models/step5/nvidia/model.py", "models/step5/nvidia/sparse_attention.py",
     "distributed/kv_transfer/kv_connector/v1/base.py",
 )
@@ -103,6 +108,8 @@ def build(args) -> dict:
         bindings[key] = digest
     (stage / "runtime_source_bindings.json").write_text(json.dumps({
         "exported_source_root": str(args.runtime_source_root), "sha256": bindings,
+        "expected_runner": "MRv2; conditional on effective native environment and Triton availability",
+        "graph_metrics": "MRv2 source path verified; FULL rows plus healthy completion required, with explicit lane/rank attribution",
         "installed_identity": "Worker must confirm these exported bytes in the locked image before serving"}, indent=1))
     (stage / "run_definition.json").write_text(json.dumps(definition, indent=1))
     for name in ("build_stage.py", "canonical_stage.py", "submit_native_pd.py"):

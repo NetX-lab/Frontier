@@ -5,10 +5,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded HTTP/consumer, legacy regressions and native qualification limits. |
+| 2026-10-21 | Recorded MRv2 source-contract and throughput red/green, real qualification HTTP coverage and585-test follow-up PASS. |
 
 ## Result and environment
 
-**PASS, source/CPU harness only:** 574 affected tests and 9 narrow simulator client-metric tests (distinct commands). No native latency, H200 capacity, installed-image, per-rank graph or R2 verdict is admitted. No GPU, authentication, platform, cloud, SSH or Docker operation was executed. The tests use local aiohttp HTTP endpoints, not fake request-send counters.
+**Current follow-up PASS, source/CPU harness only:585 affected tests in59.09s.** Earlier verification was574 affected tests plus9 narrow simulator client-metric tests; those are historical, not additional unique current tests. No native latency, H200 capacity, installed-image, per-rank graph or R2 verdict is admitted. No GPU, authentication, platform, cloud, SSH or Docker operation was executed. The tests use local aiohttp HTTP endpoints, not fake request-send counters.
 
 - Workspace: `/data/ycfeng/Frontier/.worktrees/step5-native-pd`.
 - Harness Python: `/data/ycfeng/envs/asyncopd-py312/bin/python`, CPython **3.12.13**, Clang22.1.3.
@@ -16,6 +17,40 @@
 - `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR=/data/ycfeng/tmp`, pytest cache disabled. The new native consumer targets the locked image's Python3.12 (`asyncio.timeout`), not the simulator environment.
 
 ## Commands and observations
+
+Current follow-up command, executed from the worktree:
+
+```bash
+STEP5_NATIVE_SOURCE_ROOT=/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm \
+PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -m pytest \
+  tests/unit/test_step5_canonical_native.py tests/unit/test_step5_native_source_contract.py \
+  tests/unit/test_step5_native_pd.py tests/unit/test_native_pd_worker.py \
+  tests/unit/test_calibration_pd_harness.py tests/unit/test_dp_placement_harness.py \
+  tests/unit/test_step5_native_pd_r2_stage.py tests/unit/test_step5_native_pd_r2_observation.py \
+  tests/unit/test_step5_native_pd_r2_verdict.py tests/unit/test_canonical_fixed_manifest.py \
+  -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d18_followup_affected01
+```
+
+Observed **585 PASS,0 skipped**; stdout`/data/ycfeng/tmp/d18_followup_affected01.log`. The exported source is a prerequisite for the9 source-contract checks; without`STEP5_NATIVE_SOURCE_ROOT`, those checks explicitly skip rather than claim native evidence. No source/gate failure is hidden by this prerequisite.
+
+### Review follow-up red/green
+
+Each command below used the same Python/env/pytest options above, with the named`--basetemp` under`/data/ycfeng/tmp/`:
+
+| Slice | Exact test selection | Red | Green |
+| --- | --- | --- | --- |
+| Non-gating throughput |`tests/unit/test_step5_canonical_native.py -k formal_diagnostic_throughputs` |1FAIL, missing`output_tokens`;`d18_followup_metric_red01` |1PASS;`d18_followup_metric_green01` |
+| MRv2 source binding |`tests/unit/test_step5_native_source_contract.py -k bindings_cover` |1FAIL, six required MRv2/DP/logging bindings absent;`d18_followup_source_red01` |Full source-contract module9PASS;`d18_followup_source_green02` |
+| Qualification HTTP |`tests/unit/test_step5_canonical_native.py -k 'qualification or formal_diagnostic_throughputs'` |Coverage addition; existing qualification behavior needed no production fix |2PASS, including1 new qualification case;`d18_followup_qualification_green01` |
+
+The first expanded source-test run had6PASS/1FAIL because its AST fixture selected an earlier unrelated`if not dummy_run` in the same native method. Restricting the fixture to the branch containing the actual stat call fixed the test; native code was not edited. The final9 source checks execute native positive/negative runner selection, check post-DP MRv2 wiring and handoff, exercise the native FULL route with a CPU replay sentinel, and render the actual native Runtime Mode/Count table. None executes CUDA.
+
+New observed acceptance evidence:
+
+- Diagnostic worked example:128 formal requests,131072 output tokens,100s last-token window → output throughput1310.72 tokens/s; request throughput1.28 requests/s; total throughput9175.04 tokens/s. Response time900s does not change the100s window. A failed request removes the full-population metrics. The four gate-summary fields are unchanged.
+- Qualification:24 actual P HTTP sends and24 D HTTP sends,24 unique diagnostic transport IDs and24 exact6144/1024-token completions. Warmup offsets0..15, then both roles report a deliberately busy lane before fresh idle; only then do8 concurrent diagnostic requests arrive. The8 D requests wait on an all-arrived barrier, so a serialized client would fail this test. No formal/repeat metric is fabricated for qualification.
+
+### Earlier implementation verification
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python -m pytest \
@@ -59,6 +94,6 @@ The large canonical HTTP tests put their origin128 seconds in the past to exerci
 
 Source derivation is in`source_contract.md`; staging receipts and parent-only commands are in`stage_handoff.md`. Native success requires source identity, real H200/cache capacity, exact accepted/generated lengths, per-lane actual graph evidence and the separate parent-owned R2 disposition. The stage's `reference_admission` remains`UNVERIFIED`; a process exit0 cannot close those gates. Auxiliary verdicts remain nonblocking for the64-GPU workload.
 
-## Final stage observations
+## Stage observations
 
-Both stages were built from clean source`4a708ff` and independently verified from their own workspace with no repository`PYTHONPATH`: **27 staged tool/input hashes,38 native-source bindings and3 unchanged metadata pins each PASS**. Build and verify receipts match; no `launcher/` directory exists. The isolated staged canonical CLI imports and accepts`--help`. Exact commands, config SHA-256 values, cloud output paths, resource estimates and parent-only submissions are in`stage_handoff.md`. These are local offline checks only; no cloud paths were accessed.
+Historical stage01 packages from`4a708ff` passed their hash checks but their extra source contract cited MRv1; **they are superseded and must not be submitted**. Stage02 will bind the selected MRv2 path and its actual metrics chain. New committed-source build/isolated verification receipts will be recorded in`stage_handoff.md`. These are local offline checks only; no cloud paths were accessed.

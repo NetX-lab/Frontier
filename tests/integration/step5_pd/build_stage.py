@@ -109,10 +109,17 @@ def stage_canonical(definition: dict, stage: Path) -> None:
         "status": "UNVERIFIED", "kind": settings["kind"],
         "required_before_reference_admission": [
             "Parent-owned R2 content/lifetime verdict", "H200 TP8/DP4/EP32/PP1 native startup on both roles",
+            "Effective MRv2 selection: Triton available, no explicit MRv1 override, no unsupported features",
             "Resolved 7168 context / 8192 token budget / 128 sequences and unchanged native FP8 exclusions",
             "6144 prompt token IDs accepted without expansion and 1024 real streamed output IDs per request",
-            "Native per-lane graph capture and actual FULL decode graph replay at reached batches",
+            "MRv2 FULL runtime rows plus healthy continued serving at reached decode batches; capture alone is insufficient",
+            "DP lane and TP-rank attribution: built-in graph tables are unlabeled and only output-rank stats are returned",
             "Observed lane participation, D recompute tail, idle/KV release and no transfer failures"],
+        "native_graph_evidence": {
+            "source_runner": "MRv2 v1/worker/gpu/model_runner.py",
+            "builtin_metrics": "Source-wired on real MRv2 batches after DP synchronization; native observation pending",
+            "emission_prerequisites": "cudagraph_metrics=true, log_stats enabled, INFO output and an active log interval",
+            "limits": "FULL table rows require healthy completion; PIECEWISE/config/capture alone do not prove replay; unlabeled tables do not prove every lane or TP rank"},
         "auxiliary_policy": "Soft diagnostics only; never stop healthy native work on a validator verdict"
     }, indent=1))
 

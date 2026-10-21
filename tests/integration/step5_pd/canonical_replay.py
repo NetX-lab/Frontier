@@ -109,9 +109,12 @@ def formal_metrics(records: list[dict]) -> dict | None:
     start = min(record["dispatch_monotonic"] for record in records)
     stop = max(record["last_token_monotonic"] for record in records)
     total = sum(record["num_prefill_tokens"] + record["num_decode_tokens"] for record in records)
+    output = sum(record["num_decode_tokens"] for record in records)
     result = {"first_submission_monotonic": start, "last_output_monotonic": stop,
               "window_s": stop - start, "formal_requests": len(records), "total_tokens": total,
-              "total_thpt_tokens_s": total / (stop - start)}
+              "total_thpt_tokens_s": total / (stop - start), "output_tokens": output,
+              "output_thpt_tokens_s": output / (stop - start),
+              "request_thpt_requests_s": len(records) / (stop - start)}
     for field in ("ttft_ms", "tpot_ms", "e2e_ms"):
         values = sorted(record[field] for record in records)
         result[field] = {"mean": statistics.mean(values), "p50": statistics.median(values),

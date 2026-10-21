@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded the parent assignment, primary D18 decision and shared-client extension approval. |
+| 2026-10-21 | Added review follow-up: MRv2 source proof, diagnostic throughput and qualification HTTP coverage; stage02 replaces stage01 for submission. |
 
 ## [Original Request]
 
@@ -33,3 +34,13 @@ Implementation note under the original runtime-configuration scope: the same exi
 - Native usage and returned prompt/token deltas must corroborate exact lengths and prompt identity. A missing/broken request invalidates the full-population metric, not the remaining requests.
 - Both roles expose fresh running/waiting/KV and completion metrics for all four DP lanes at phase boundaries. Observation failure marks the reference unverified, continues subsequent work, and never silently accepts a clean boundary.
 - Offline/source checks do not qualify H200 capacity, NIXL content/lifetime, lane coverage, measured latency or actual CUDA graph replay. Those remain runtime dependencies owned by the parent.
+
+## [Original Request / Review follow-up]
+
+Independent review found that the additional native bindings and source contract incorrectly cited MRv1. With no MTP/DBO/PP and the native selection conditions met, locked Step selects MRv2 (`config/vllm.py:705–741,2941–2980`). Correct selection proof and bind the actual MRv2 runner, DP synchronization and replay files. Add a meaningful source-contract regression. Verify that built-in `--cudagraph-metrics` supplies useful evidence on the actual runner; do not infer MRv2 replay from MRv1 metrics or capture alone. If observations are unavailable, record the concrete prerequisite.
+
+Add spec-required non-gating output-token throughput (`131072/window`) and request throughput (`128/window`) on the same formal last-token window; test their formulas without changing the four admission metrics. Exercise qualification through real HTTP:16 warmups, observed idle, then8 concurrent requests,24 total. Preserve the valid Step-native0.92 memory utilization; do not copy GLM0.85.
+
+Fix all three findings, run affected checks, commit scoped source/task-local documentation, and generate **new qualification02/canonical02 stages** with new tags/cloud roots/hash receipts. Stage01 remains immutable and **must not be submitted**. Parent owns root task documents and the separate R2 agent owns`r2_*`; no GPU/auth/platform/SSH/Docker, push or main merge. Return source citations, commits, red/green counts, exact new commands/budgets and readiness limits. The reviewer findings in this request are complete; do not wait for its report file.
+
+Confirmed test seams from this request: (1) stage/source-binding output and locked native runner/graph contract, (2) public formal metric results, (3) qualification consumer and real P/D HTTP endpoint behavior. These are the test-first follow-up scope; no unrelated refactoring or simulator sweep.

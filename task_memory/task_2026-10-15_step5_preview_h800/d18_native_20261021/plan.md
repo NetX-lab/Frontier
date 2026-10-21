@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded scoped implementation and offline qualification sequence. |
+| 2026-10-21 | Added three focused review corrections and immutable stage02 generation. |
 
 Dependency: `primary D18 + locked source -> existing-client extension -> {canonical phases, H200 configuration} -> HTTP/regression tests -> source commit -> immutable stages -> stage checks -> evidence commit`.
 
@@ -16,3 +17,12 @@ Dependency: `primary D18 + locked source -> existing-client extension -> {canoni
 6. Record exact stage paths, parent-only commands, resource/runtime estimates and unverified runtime dependencies. Commit task-local evidence. No remote operations.
 
 Parent-only next steps: fresh H200 quota check and image/source identity -> qualified 64-H200 native startup, per-lane graph dispatch/capture and same-shape streaming -> parent R2 disposition plus qualification acceptance -> three-repetition canonical collection -> existing metric admission/comparison. Stages do not automatically close these dependencies.
+
+## Review follow-up sequence
+
+`MRv2 source investigation -> {source-contract red/green, throughput red/green, qualification real HTTP coverage} -> affected regressions -> source commit -> {qualification02, canonical02} -> isolated verification and stage01 immutability check -> evidence commit`.
+
+- Trace native runner selection, DP synchronization, actual FULL replay and graph-statistics propagation. Bind the real files and record native/environment selection prerequisites; do not add observation hooks.
+- Add non-gating output-token/request throughput on the existing formal last-output window, with a fixed worked-example test. Keep the four admission metrics unchanged.
+- Add real HTTP coverage of16 warmup requests, fresh idle,8 concurrent requests and24 retained completions. Keep the existing single client and proxy.
+- Freeze new source before stage02 builds. Use new local directories, job tags and cloud roots; stage01 is retained only as superseded evidence and must not be submitted.

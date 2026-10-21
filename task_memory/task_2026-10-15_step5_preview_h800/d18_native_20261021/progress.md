@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded source implementation, HTTP regressions and staging handoff pending verification. |
+| 2026-10-21 | Reopened for three review corrections and stage02; stage01 submission is prohibited. |
 
 - **completed:** read primary D18/spec/plan; preserved shared/historical workload bytes and parent R2 ownership.
 - **completed:** confirmed locked Step choice-level token-ID streaming. Obtained explicit authorization for the minimal shared-client extension; added stable prompt identity, exact native token counts/timestamps and per-request failure retention in the existing replay client.
@@ -27,3 +28,11 @@ Implementation/offline preparation is complete. Parent-only pending work:
 1. Judge the outstanding R2 evidence without changing its original observations.
 2. Check available H200 quota, submit qualification, collect the exact native/per-lane records in`stage_handoff.md`, and qualify capacity/graphs/streaming.
 3. If qualified, submit the three-repeat canonical package, judge full-population metrics and repeat stability, then use existing metric admission/comparison. Missing rank/lane or native evidence remainsUNVERIFIED; no native metric is claimed here.
+
+## Review follow-up — in progress
+
+- **completed:** corrected MRv1-only additional bindings to the selected MRv2 runner, DP synchronization, actual FULL replay and native metrics propagation. Read-only source trace`D18-NATIVE-FOLLOWUP-CGMETRICS-MRV2` session`ses_ea35fe41dffeP53916ufPpywc6` completed without edits; decisive citations were checked and incorporated in`source_contract.md`.
+- **completed:** throughput formula1FAIL→1PASS; source binding1FAIL→9 source-contract PASS. One AST-fixture selection error during expansion was corrected (6PASS/1FAIL intermediate), without native edits. Added real HTTP qualification16→observed busy→fresh idle→8 concurrent coverage,24 actual sends to each role; the existing production branch passed unchanged.
+- **completed:**585 affected tests PASS in59.09s,0 skipped, with the exported native source configured explicitly. Exact commands and limits are in the test report. Four gate metrics, native memory utilization0.92, frozen packages and R2 evidence remain unchanged.
+- **in-progress:** follow-up source/evidence commits and new qualification02/canonical02 builds/isolated receipts. Before-build stage01 hash snapshot saved at`/data/ycfeng/tmp/d18_stage01_snapshot_before02.json` for final immutability comparison.
+- **superseded:** stage01 packages remain immutable, but their source-contract claim is incomplete and **they must not be submitted**. No GPU/auth/platform/SSH/Docker operation is authorized for this follow-up.

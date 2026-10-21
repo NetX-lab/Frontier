@@ -40,6 +40,22 @@ def test_common_pins_and_disjoint_stable_template_repeat_ids():
     assert [row["arrived_at"] for row in rows if row["repeat"] == 2 and row["role"] == "formal"] == list(range(128))
 
 
+def test_formal_diagnostic_throughputs_share_the_last_output_window():
+    records = [{"status": "completed", "dispatch_monotonic": 100.0 + (index > 0),
+                "last_token_monotonic": 200.0, "response_monotonic": 900.0,
+                "num_prefill_tokens": 6144, "num_decode_tokens": 1024,
+                "ttft_ms": 1000.0, "tpot_ms": 1.0, "e2e_ms": 99000.0}
+               for index in range(128)]
+    result = cr.formal_metrics(records)
+    assert result["window_s"] == 100.0
+    assert result["total_thpt_tokens_s"] == 9175.04
+    assert result["output_tokens"] == 131072
+    assert result["output_thpt_tokens_s"] == 1310.72
+    assert result["request_thpt_requests_s"] == 1.28
+    records[-1]["status"] = "failed"
+    assert cr.formal_metrics(records) is None
+
+
 @pytest.mark.parametrize("member", ["manifest.json", "SHA256SUMS", "trace.csv", "request_ids.json", "warmup_pool.csv"])
 def test_modified_common_member_is_rejected(tmp_path, member):
     directory = tmp_path / "workload"
@@ -50,13 +66,18 @@ def test_modified_common_member_is_rejected(tmp_path, member):
         cr.canonical_workload(directory)
 
 
-@pytest.mark.parametrize("fault", [None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only"])
-def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, fault):
+@pytest.mark.parametrize("kind,fault", [("canonical", fault) for fault in (
+    None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only")]
+    + [("qualification", None)])
+def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault):
     workload = cr.canonical_workload(WORKLOAD)
     failure_id = workload[1][0]["request_id"] + "-repeat01"
     bodies = {role: {} for role in cr.ROLES}
     phase_calls = []
     checkpoint_counts = []
+    qualification_idle_roles = set()
+    warmup_busy_reads = {role: 0 for role in cr.ROLES}
+    qualification_sends = []
     shared_replay = cr.replay
 
     async def replay(rows, *args, **kwargs):
@@ -72,11 +93,26 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         monkeypatch.setattr(cr, "observe_idle", unavailable)
 
     async def exercise():
+        concurrent_arrivals = 0
+        all_concurrent_arrived = asyncio.Event()
+
         def native(role):
             async def complete(request):
+                nonlocal concurrent_arrivals
                 rid = request.headers["X-Request-Id"]
                 body = await request.json()
                 bodies[role][rid] = body
+                if kind == "qualification":
+                    is_concurrent = rid.removeprefix("qualification-").removesuffix("-repeat01") in {
+                        row["request_id"] for row in workload[1][:8]}
+                    qualification_sends.append((role, is_concurrent))
+                    if is_concurrent:
+                        assert qualification_idle_roles == set(cr.ROLES)
+                        if role == "decode":
+                            concurrent_arrivals += 1
+                            if concurrent_arrivals == 8:
+                                all_concurrent_arrived.set()
+                            await asyncio.wait_for(all_concurrent_arrived.wait(), timeout=2)
                 if role == "prefill":
                     return web.json_response({"choices": [{"finish_reason": "length"}],
                         "kv_transfer_params": {"transfer_mode": "pull", "do_remote_prefill": True,
@@ -108,7 +144,15 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
             apps[role].router.add_post("/v1/completions", native(role))
 
             async def page(request, role=role):
-                return web.Response(text=metrics(len(bodies[role])))
+                text = metrics(len(bodies[role]))
+                if kind == "qualification" and len(bodies[role]) == 16:
+                    warmup_busy_reads[role] += 1
+                    if warmup_busy_reads[role] == 1:
+                        text = text.replace('num_requests_running{engine="0",model_name="dp_pp_case"} 0',
+                                            'num_requests_running{engine="0",model_name="dp_pp_case"} 1')
+                    else:
+                        qualification_idle_roles.add(role)
+                return web.Response(text=text)
 
             apps[role].router.add_get("/metrics", page)
         async with TestServer(apps["prefill"]) as p, TestServer(apps["decode"]) as d:
@@ -122,14 +166,31 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                         raise OSError("injected auxiliary write failure")
 
                 return await cr.replay_repetitions(workload, proxy.port, 128896, 0, urls,
-                    {"dp_size": 4, "kind": "canonical", "idle_timeout_s": .1,
+                    {"dp_size": 4, "kind": kind, "idle_timeout_s": .1,
                      "idle_poll_s": .001, "concurrent_requests": 8}, checkpoint=checkpoint)
 
     result, records = asyncio.run(exercise())
-    assert len(records) == len(bodies["prefill"]) == len(bodies["decode"]) == 432
-    assert [len(rows) for rows in phase_calls] == [16, 128] * 3
-    assert all([row["arrived_at"] for row in rows] == list(range(len(rows))) for rows in phase_calls)
-    assert len(result["idle_boundaries"]) == 7
+    expected_count = 24 if kind == "qualification" else 432
+    assert len(records) == len(bodies["prefill"]) == len(bodies["decode"]) == expected_count
+    assert [len(rows) for rows in phase_calls] == ([16, 8] if kind == "qualification" else [16, 128] * 3)
+    for rows in phase_calls:
+        expected = [0.0] * 8 if rows[0]["segment"] == "concurrent" else list(range(len(rows)))
+        assert [row["arrived_at"] for row in rows] == expected
+    assert len(result["idle_boundaries"]) == (3 if kind == "qualification" else 7)
+    if kind == "qualification":
+        assert len({row["request_id"] for row in records}) == 24
+        assert {row["role"] for row in records} == {"diagnostic"}
+        assert all(row["request_id"].startswith("qualification-") for row in records)
+        assert qualification_idle_roles == set(cr.ROLES)
+        assert all(count >= 2 for count in warmup_busy_reads.values())
+        warmup_boundary = result["idle_boundaries"][1]
+        assert warmup_boundary["boundary"] == "after_repeat01_warmup" and warmup_boundary["verified"]
+        assert len(warmup_boundary["observations"]) >= 2
+        assert all(row["completed_requests"] == 16
+                   for row in warmup_boundary["observations"][-1]["roles"].values())
+        assert sum(is_concurrent for _, is_concurrent in qualification_sends) == 16
+        assert "metrics" not in result["repetitions"][0]
+        assert result["repeat_metric_means"] is None
     assert result["reference_admission"] == result["runtime_qualification"] == "UNVERIFIED"
     failures = [record for record in records if record["status"] != "completed"]
     if fault in ("one_http_failure", "bad_usage", "text_only"):
@@ -157,6 +218,8 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
             assert record["tpot_ms"] == pytest.approx((record["e2e_ms"] - record["ttft_ms"]) / 1023)
             assert record["accepted_prompt_sha256"] == record["prompt_sha256"]
     for repeat in result["repetitions"]:
+        if kind == "qualification":
+            continue
         population = [record for record in records if record["repeat"] == repeat["repeat"] and record["role"] == "formal"]
         actual = repeat["metrics"]
         if all(record["status"] == "completed" for record in population):
@@ -164,9 +227,12 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
             assert actual["window_s"] == max(row["last_token_monotonic"] for row in population) - min(
                 row["dispatch_monotonic"] for row in population)
             assert actual["total_thpt_tokens_s"] == 917504 / actual["window_s"]
+            assert actual["output_tokens"] == 131072
+            assert actual["output_thpt_tokens_s"] == 131072 / actual["window_s"]
+            assert actual["request_thpt_requests_s"] == 128 / actual["window_s"]
         else:
             assert actual is None
-    assert max(checkpoint_counts) == 432
+    assert max(checkpoint_counts) == expected_count
 
 
 def test_existing_client_dispatch_is_open_loop_and_isolates_a_broken_sse_response():
