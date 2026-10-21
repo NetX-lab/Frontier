@@ -11,6 +11,8 @@
 | 2026-10-22 | Final candidate comparison77/77 identical; full actual05 acceptance remains in progress. |
 | 2026-10-22 | Actual05 times out in both modes after entering decode; archive partial progress and begin CPU profiling. |
 | 2026-10-22 | Parent reproduces fixed-metadata/contract CPU bottleneck; scoped reuse implementation and initializer diagnosis launched. |
+| 2026-10-22 | Parent verifies contract reuse speedup and baseline structural failures; repeated input loading correction starts independently. |
+| 2026-10-22 | Contract reuse accepted: 255 PASS with two baseline-identical failures, exact short-query costs/proofs, independent No findings. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,

@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Parent reproduces runtime RED and verifies collective/trace controls; scopes fixed-contract reuse and independent initialization diagnosis. |
+| 2026-10-22 | Parent verifies 7.21x query improvement and repeated initializer loads; records source-change invalidation requirements and pending source review. |
 
 ## Diagnosis accepted at the measured boundary
 
@@ -37,7 +38,8 @@ The runtime profile in the author's report attributes most measured query work
 to repeated fixed metadata, precision and operator-contract construction.
 These controls support that diagnosis for this boundary. They do not establish
 the distribution of the entire original run's costs or all cold collective misses.
-Original initialization remains a separate unprofiled interval.
+The whole initialization interval has not been profiled. The later prefix and
+warm-cache controls below identify repeated input processing within that interval.
 
 ## Scoped source correction
 
@@ -62,11 +64,63 @@ source truth instead of changing behavior to satisfy a synthetic timing number.
 
 ## Independent initialization diagnosis
 
-Session `ses_e9f3e2ed0ffejPdfKHpqPHhXWY`, task `D23-MRV2-LOAD-DIAG`, owns a short
-profile of the original manager/typed input loader in a separate worktree.
-This assignment permits diagnosis only, with unchanged source rows and no broad
-fit, full retry, cache mutation or production change. Its result will determine
-whether an additional initializer correction is justified.
+Session `ses_e9f3e2ed0ffejPdfKHpqPHhXWY` completed `D23-MRV2-LOAD-DIAG` at
+`32a1f60`. The parent reproduced its existing command from `step5-mrv2-load`:
+
+```bash
+timeout 60s env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/performance/profile_step5_load.py --config /data/ycfeng/tmp/d23_main_actual05_offline/offline/metrics/stepfun_ai_step_5_preview/offline_batch/step5_measured_cpu_main_offline/config.json --output /data/ycfeng/tmp/d23_load_parent01 --rows 100 --event-cache-hash 23b7026a --assert-no-repeated-loads > /data/ycfeng/tmp/d23_load_parent01.log 2>&1
+```
+
+Observed: `RED_REPEATED_LOAD`, exit 1. The already-deduplicated DECODE role still
+loads twice, taking 4.655791s, with no fitting or cache read. Warm PREFILL takes
+5.101961s: loader time 4.600761s, two cache reads 0.003788s. The original event
+cache loads independently in 0.523899s. Source size/mtime and original model
+configuration checks pass. These are prefix measurements, not a complete
+attribution of the original 998/1004s initialization. The author's extrapolated
+747s is not a measured full-run value.
+
+The same owner now implements `D23-MRV2-LOAD-REUSE`: share completely validated
+inputs and union/hash results within manager initialization and reuse the first
+feature result where equivalent. Keep source records for both roles, all row
+checks, measurement and topology separation, and existing estimator hashes.
+`test_step5_attention_input_union.py:107-148` explicitly changes the second
+source and then its shape policy on the same manager. These supported changes
+must still invalidate the corresponding identity. Source content fingerprints
+remain authoritative; a path-only or mtime-only reuse key is insufficient.
+Release retained frames at initialization completion or failure. Runtime query
+reuse and loader reuse have separate file ownership.
+
+## Fixed-contract parent verification
+
+Target `ee28bf7`, records `7834dd5`, in `step5-mrv2-perf`. Parent command:
+
+```bash
+timeout 60s env PYTHONPATH=/data/ycfeng/Frontier/.worktrees/step5-mrv2-perf PYTHONDONTWRITEBYTECODE=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/performance/step5_mrv2_cpu.py --mode ffn --layers 3 88 --iterations 2 --no-profile --trace --output /data/ycfeng/tmp/d23_parent_contract_verify01 > /data/ycfeng/tmp/d23_parent_contract_verify01.log 2>&1
+```
+
+Observed: 64 lane queries take 0.073913s versus the parent's 0.532956s baseline,
+a 7.210579x improvement. Every corresponding cost dictionary and artifact
+descriptor is exactly equal. Source truth passes. Enabled trace retains 456
+events, 344788 bytes and passing persisted proof in 0.069498s. The unchanged
+maximum-query latency gate is still RED; this is not full CLI acceptance.
+
+The parent also reproduced both reported structural failures on the unchanged
+parent core before merging this optimization. Both fail at
+`replica_stage_schedule_event.py:81` because the old test's `SimpleNamespace`
+lacks `take_forward_start_batch`, before any cost lookup. Evidence:
+`/data/ycfeng/tmp/d23_contract_baseline_structural01.{log,xml}`. The combined parent
+run includes these tests: 255 PASS, 2 FAIL, zero errors/skips in 108.370s. Failure
+IDs and messages exactly equal the two baseline failures. The combined run is
+not described as all-pass; the optimization introduces no new failure in it.
+
+Independent reviewer `ses_e9f8b6cffffeSZiBfBvZkmXBQa` inspected the complete
+`74980bb..ee28bf7` diff and returned **No findings** for the source phase. It
+confirmed predictor-instance lifetime, fixed model/role/TP/EP inputs, dynamic
+registry/family selection, fresh batch features and nested context restoration.
+No estimator or prediction output is cached by this change. Parent cost/artifact
+equality and final test counts above were independently executed by the parent;
+the reviewer did not rerun them. Short-loop performance and source acceptance
+do not establish full CLI completion or native accuracy.
 
 Full offline/online completion, READ/readiness/release, final metrics and native
 qualification remain unverified. The full execution bound remains2400s.

@@ -12,6 +12,7 @@
 | 2026-10-22 | Root/owner clean comparison77/77 identical; zero cache/provenance findings. |
 | 2026-10-22 | Actual05 fails by2400s timeout after partial decode; retain phase timings and missing-artifact evidence. |
 | 2026-10-22 | Parent repeats real-cache CPU RED and collective/trace controls; source correction remains in progress. |
+| 2026-10-22 | Accept fixed-contract source with parent timings, exact costs/artifacts and 255 passing checks plus two baseline-identical failures. |
 
 ## Environment and scope
 
@@ -260,3 +261,33 @@ the repeated fixed metadata/contract cost at the real query boundary while exact
 source values remain intact. See `cpu_performance_review.md` for exact commands,
 timings, source review scope and the independent initializer diagnosis. These
 diagnostics do not change the failed full-workload verdict.
+
+## Fixed-contract correction: parent acceptance
+
+Target `ee28bf7`, records `7834dd5`, cwd
+`/data/ycfeng/Frontier/.worktrees/step5-mrv2-perf`. Python3.10.6. Exact command:
+
+```bash
+env PYTHONPATH=$PWD:$PWD/tests/unit PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_contract_reuse.py tests/unit/test_step5_measured_ffn.py tests/unit/test_step5_measured_ffn_replay.py tests/unit/test_step5_measured_replay.py tests/unit/test_step5_measured_training.py tests/unit/test_step5_measured_interfaces.py tests/unit/test_on_demand_prediction_contract.py tests/unit/test_step5_measured_public_predictor.py tests/unit/test_measured_attention_root_metrics.py tests/unit/test_metrics_stage_execution_time.py tests/unit/test_step5_mrv2_forward.py tests/unit/test_step5_structural_execution.py -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_contract_parent01.xml > /data/ycfeng/tmp/d23_contract_parent01.log 2>&1
+```
+
+Actual: 255 PASS, 2 FAIL, zero errors/skips, 108.370s, exit1. Before merging the
+optimization, the parent also ran the following from `step5-preview`:
+
+```bash
+env PYTHONPATH=$PWD:$PWD/tests/unit PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_structural_execution.py -k first_serving_event_includes_input_scope_and_preserves_launch_start -q --tb=short -p no:cacheprovider --junitxml=/data/ycfeng/tmp/d23_contract_baseline_structural01.xml > /data/ycfeng/tmp/d23_contract_baseline_structural01.log 2>&1
+```
+
+Baseline: the same two failures, 2.014s. XML comparison verifies identical test
+IDs and `AttributeError: 'types.SimpleNamespace' object has no attribute
+'take_forward_start_batch'` messages. No new failures were observed; the full
+selected suite is not all-pass. The original fixture failure remains recorded.
+
+The unchanged short feedback loop reports 0.532956s -> 0.073913s for 64 real lane
+queries (7.210579x). Parent comparison confirms all corresponding cost dictionaries
+and artifact descriptors exactly equal; trace persistence passes for 456 events.
+The original maximum-query gate remains RED. Exact benchmark/loader commands and
+source-review findings are in `cpu_performance_review.md`; the selected comparison
+is retained in `contract_parent_receipt.json`. Independent review accepts this
+source phase with No findings. Loader reuse, merged strict77 and the original
+6144/1024 offline/online terminal acceptance remain pending.
