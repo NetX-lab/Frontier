@@ -256,8 +256,8 @@ STEP5_FFN_FAMILY = OperatorFamilySpec(
     family_id="step5_ffn",
     display_name="Step FFN branch merge",
     supported_variants=("fp32_branch_merge",),
-    execution_enabled=False,
-    disabled_reason="Step FFN branch merge timing is not qualified",
+    # CPU costing consumes measured rows; native/profile qualification is separate.
+    execution_enabled=True,
     resource_class=ResourceClass.MEMORY,
     operators=(OperatorSpec(
         name="step5_ffn_merge",

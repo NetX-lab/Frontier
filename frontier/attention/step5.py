@@ -435,6 +435,8 @@ class Step5LayerMetadata:
         selected scope is evidence about the retained source, not a measured
         kernel inventory or a claim of native graph replay.
         """
+        if not workload.has_attention_metadata:
+            return self.request_free_attention_scopes()
         sparse = self.attention_spec.variant_id == "sparse_gqa"
         qkv_work = ("q_projection", "k_projection", "v_projection")
         preparation = ("qk_norm", "main_rope", "raw_kv_write")
@@ -722,11 +724,13 @@ def describe_step5_layer(
 
 @dataclass(frozen=True)
 class Step5AttentionWorkload:
-    """Query/token/region extents for the ordinary native cache-backed path.
+    """Physical token/region extents for cache-backed or request-free attention.
 
     Block-table width is an explicit physical extent. Decode scoring uses it
     independently of live lengths; neither padded query rows nor allocated
     history receives effective-token or state-progress credit.
+    The request-free slot is one physical eager token without a block table,
+    request-owned attention metadata, or scored history.
     """
 
     phase: str
@@ -739,17 +743,29 @@ class Step5AttentionWorkload:
     region_tokens: int
     topk_regions: int
     graph_mode: str
+    has_attention_metadata: bool = True
 
     def __post_init__(self) -> None:
         if self.phase not in ("prefill", "decode", "mixed"):
             raise ValueError("Step workload phase must be prefill, decode or mixed")
         if self.graph_mode not in ("none", "piecewise", "full"):
             raise ValueError("Step graph_mode must be none, piecewise or full")
+        if type(self.has_attention_metadata) is not bool:
+            raise ValueError("Step has_attention_metadata must be boolean")
         for name in (
-            "physical_query_rows", "block_size_tokens", "block_table_columns",
+            "physical_query_rows", "block_size_tokens",
             "max_model_len_tokens", "region_tokens", "topk_regions",
         ):
             _positive_int(getattr(self, name), name)
+        if self.has_attention_metadata:
+            _positive_int(self.block_table_columns, "block_table_columns")
+        elif not (
+            self.phase == "decode" and self.graph_mode == "none"
+            and tuple(self.query_lengths) == tuple(self.sequence_lengths) == (1,)
+            and self.physical_query_rows == 1
+            and type(self.block_table_columns) is int and self.block_table_columns == 0
+        ):
+            raise ValueError("Step request-free workload requires one eager token and no block table")
         if self.block_size_tokens % self.region_tokens:
             raise ValueError("Step cache blocks must contain an integer number of regions")
         queries, lengths = tuple(self.query_lengths), tuple(self.sequence_lengths)
@@ -760,7 +776,7 @@ class Step5AttentionWorkload:
             _positive_int(length, "sequence_tokens")
             if query > length or length > self.max_model_len_tokens:
                 raise ValueError("Step query/sequence tokens must fit the serving context limit")
-            if length > self.block_table_columns * self.block_size_tokens:
+            if self.has_attention_metadata and length > self.block_table_columns * self.block_size_tokens:
                 raise ValueError("Step live tokens exceed the supplied physical block-table extent")
         if sum(queries) > self.physical_query_rows:
             raise ValueError("Step physical query rows cannot be smaller than valid tokens")
@@ -783,6 +799,8 @@ class Step5AttentionWorkload:
 
     @property
     def score_regions(self) -> int:
+        if not self.has_attention_metadata:
+            return 0
         if self.is_single_token_step:
             return min(
                 (self.max_model_len_tokens + self.region_tokens - 1) // self.region_tokens,
@@ -798,6 +816,8 @@ class Step5AttentionWorkload:
     @property
     def selected_region_bounds(self) -> tuple[int, ...]:
         """Per-request maximum historical top-k plus the current region."""
+        if not self.has_attention_metadata:
+            return ()
         return tuple(
             min((length - 1) // self.region_tokens, self.topk_regions) + 1
             for length in self.sequence_lengths
@@ -809,6 +829,7 @@ class Step5AttentionWorkload:
         sequence_lengths: tuple[int, ...], physical_query_rows: int,
         block_size_tokens: int, block_table_columns: int,
         max_model_len_tokens: int, graph_mode: str,
+        has_attention_metadata: bool = True,
     ) -> Step5AttentionWorkload:
         validate_step5_config(config)
         if type(max_model_len_tokens) is not int or not 0 < max_model_len_tokens <= config.max_position_embeddings:
@@ -817,6 +838,7 @@ class Step5AttentionWorkload:
             phase, query_lengths, sequence_lengths, physical_query_rows,
             block_size_tokens, block_table_columns, max_model_len_tokens,
             config.sparse_config["region_block_size"], config.sparse_config["topk"], graph_mode,
+            has_attention_metadata,
         )
 
 

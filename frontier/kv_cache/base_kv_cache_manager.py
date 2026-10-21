@@ -136,7 +136,12 @@ class KVCacheManager:
         return max(0, settled - group.window_tokens + 1 - group.extra_retained_tokens) // group.logical_block_size
 
     def _group_allocation_plan(self, request: Request, num_tokens: int, scheduler_num_computed_tokens):
-        _require_positive_int(num_tokens, field="num_tokens")
+        if type(num_tokens) is int and num_tokens == 0 and scheduler_num_computed_tokens is not None:
+            # Remote READ reserves an already-computed prefix without
+            # scheduling a query or speculative lookahead.
+            _require_positive_int(scheduler_num_computed_tokens, field="scheduler_num_computed_tokens")
+        else:
+            _require_positive_int(num_tokens, field="num_tokens")
         frontier = self._resolve_scheduler_num_computed_tokens(request, scheduler_num_computed_tokens)
         settled = self._settled_tokens.get(request.id, 0)
         if frontier < settled:

@@ -369,6 +369,32 @@ def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
 
 
 class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseExecutionTimePredictor):
+    def _get_nixl_read_cost(self):
+        profile = getattr(self._config, "nixl_read_profile", None)
+        if not profile:
+            raise ValueError("Missing measured NIXL profile")
+        cost = getattr(self, "_nixl_read_cost_model", None)
+        if cost is None:
+            manager = getattr(self, "_model_manager", None)
+            role = getattr(self, "_cluster_type", None)
+            for receipt in getattr(manager, "_step5_model_bundles", {}).get(role, {}).values():
+                identity = receipt["identity"]
+                binding = identity.get("input_bindings", {}).get("nixl_read_profile")
+                if binding is None or os.path.abspath(profile) != binding["path"]:
+                    raise ValueError("NIXL profile conflicts with bound model input")
+                manager._validate_bundle_input_bindings(identity)
+            from frontier.kv_cache_transfer.nixl_read_cost import NixlReadCost
+
+            cost = NixlReadCost.from_file(profile)
+            self._nixl_read_cost_model = cost
+        return cost
+
+    def get_nixl_transfer_coverage(self, **kwargs):
+        return self._get_nixl_read_cost().get_coverage(**kwargs)
+
+    def get_nixl_transfer_time_ms(self, **kwargs):
+        return self._get_nixl_read_cost().get_time_ms(**kwargs)
+
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
         return get_enabled_predictor_metric_name_by_role(
@@ -2513,7 +2539,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         self._register_profiling_metadata_from_file(
             self._compute_input_file, self._get_compute_model_names()
         )
-        if self._cluster_type != ClusterType.DECODE_FFN:
+        # Step's composite root carries typed source identity, not GEMM quant metadata.
+        if (self._cluster_type != ClusterType.DECODE_FFN
+                and self._get_attention_family().family_id != STEP5_ATTENTION_FAMILY.family_id):
             self._register_profiling_metadata_from_file(
                 self._attention_input_file, self._get_attention_model_names()
             )
@@ -4003,6 +4031,11 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             ClusterType.MONOLITHIC,
         ]:
             return predictions
+
+        if resolve_runtime_attention_family(self._model_config).family_id == STEP5_ATTENTION_FAMILY.family_id:
+            from frontier.execution_time_predictor.step5_cost import step5_predictions
+
+            return step5_predictions(self._models, self._active_measurement_type)
 
         if self._is_mla_attention_family():
             feature_columns = get_enabled_shared_predictor_feature_columns(
@@ -7496,8 +7529,15 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
             return self._predict_attention_layer_time(batch, layer_id, cluster_type)
         with self._counting_kernels() as counts:
             attention_time = self._predict_attention_layer_time(batch, layer_id, cluster_type)
-        attention_time.kernel_count = math.fsum(counts.operators.values())
-        self._record_attention_kernels(attention_time.kernel_count)
+        if not attention_time.operator_costs:
+            attention_time.kernel_count = math.fsum(counts.operators.values())
+        else:
+            # Outside-root normalization retains the step family's own gap owner.
+            self._kernel_count_scopes[-1].operators.update({
+                name: count for name, count in counts.operators.items()
+                if name not in attention_time.operator_costs
+            })
+        self._record_attention_kernels(attention_time.kernel_count, attention_time.measurement_type)
         return attention_time
 
     def _predict_dsa_dummy_attention_time(self, layer_id: int) -> AttentionTime:
@@ -7523,22 +7563,9 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
         )
 
     def _step5_attention_workload(self, batch: Batch):
-        from frontier.attention.step5 import Step5AttentionWorkload
+        from frontier.execution_time_predictor.step5_cost import step5_batch_workload
 
-        phase = "mixed" if batch.num_prefill_tokens and batch.num_decode_tokens else (
-            "prefill" if batch.num_prefill_tokens else "decode"
-        )
-        queries = tuple(batch.num_tokens)
-        lengths = tuple(context + query for context, query in zip(batch.num_context_tokens, queries))
-        max_model_len = self._step5_max_model_len
-        return Step5AttentionWorkload.from_lengths(
-            self._model_config, phase=phase, query_lengths=queries, sequence_lengths=lengths,
-            physical_query_rows=batch.get_effective_total_tokens_for_compute(self._cluster_type),
-            block_size_tokens=self._block_size,
-            block_table_columns=(max_model_len + self._block_size - 1) // self._block_size,
-            max_model_len_tokens=max_model_len,
-            graph_mode=batch.get_decode_cuda_graph_runtime_mode().lower(),
-        )
+        return step5_batch_workload(self, batch)
 
     def _predict_step5_dummy_attention_time(self, batch: Batch, layer_id: int) -> AttentionTime:
         """Price exclusive source scopes with controlled durations, never native timings."""
@@ -7703,6 +7730,13 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
                 layer_id=layer_id,
                 cluster_type=cluster_type,
             )
+
+        if attention_family.family_id == STEP5_ATTENTION_FAMILY.family_id:
+            from frontier.execution_time_predictor.step5_cost import predict_step5_attention_time
+
+            timing = predict_step5_attention_time(self, batch, layer_id)
+            timing.attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
+            return timing
 
         logger.debug(
             f"Predicting attention layer time for layer_id={layer_id}, cluster_type={cluster_type}"

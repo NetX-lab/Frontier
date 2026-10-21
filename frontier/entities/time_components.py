@@ -10,6 +10,8 @@ from functools import cache
 from types import MappingProxyType
 from typing import Mapping
 
+from frontier.types import MeasurementType
+
 from frontier.attention.families import iter_attention_families, iter_execution_enabled_families
 from frontier.operators.families import (
     COMM_FAMILY,
@@ -267,11 +269,30 @@ class CommunicationOperatorTimes:
         return covered_time_ms
 
 
+@dataclass(frozen=True)
+class OperatorCost:
+    """One physical prediction and the measured inputs that identify it."""
+
+    duration_ms: float
+    kernel_count: float
+    measurement_type: MeasurementType
+    duration_model_hash: str
+    kernel_count_model_hash: str
+    evidence_kind: str | None
+    exact_lookup: bool
+
+    @property
+    def includes_kernel_gap(self) -> bool:
+        return self.measurement_type is not MeasurementType.KERNEL_ONLY
+
+
 @dataclass
 class AttentionOperatorTimes:
     """Single-layer timings keyed by physical attention operator name."""
 
     op_times: Mapping[str, float] = field(default_factory=dict)
+    costs: Mapping[str, OperatorCost] = field(default_factory=dict)
+    diagnostics: Mapping[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         normalized_op_times: dict[str, float] = {}
@@ -454,6 +475,21 @@ class AttentionTime:
     # additional physical charges in the same attention family.
     attn_dsa_indexer_time: float = 0.0
     attn_dsa_mla_time: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.operator_costs:
+            self.kernel_count = sum(cost.kernel_count for cost in self.operator_costs.values())
+
+    @property
+    def operator_costs(self) -> Mapping[str, OperatorCost]:
+        return self.operator_times.costs if self.operator_times is not None else {}
+
+    @property
+    def measurement_type(self) -> MeasurementType | None:
+        methods = {cost.measurement_type for cost in self.operator_costs.values()}
+        if len(methods) > 1:
+            raise ValueError("One attention physical scope cannot mix measurement methods")
+        return next(iter(methods)) if methods else None
 
     def total_time(self) -> float:
         """Calculate total attention time for this layer."""

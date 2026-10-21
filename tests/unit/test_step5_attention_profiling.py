@@ -43,14 +43,14 @@ def test_native_shape_boundaries(config, layer, tokens, prefix):
         assert geometry.local_fused_indexer_width == 1544
 
 
-def test_smoke_grid_and_runtime_stays_disabled(config):
+def test_smoke_grid_and_shared_cpu_runtime(config):
     cells = build_profile_inputs(config, prefill_tokens=[16, 64], prefixes=[0, 4104],
                                 decode_batches=[1], decode_contexts=[512, 4104])
     assert len(cells) == 12
     assert {c.global_layer_id for c in cells} == {0, 3}
     assert {c.graph_mode for c in cells if c.phase == "prefill"} == {"none"}
     assert {c.graph_mode for c in cells if c.phase == "decode"} == {"full"}
-    assert STEP5_ATTENTION_FAMILY.execution_enabled is False
+    assert STEP5_ATTENTION_FAMILY.execution_enabled is True
     assert config.get_model_architecture_profile().attention_linear_ops.profiling_enabled is True
 
 
@@ -87,7 +87,9 @@ def test_typed_row_has_complete_family_schema(config):
     assert {c["operator_family_id"] for c in contracts.values()} == {"step5_attention"}
     assert frame.iloc[0].local_index_q_heads == 4
     assert frame.iloc[0].has_attention_metadata == 1
-    assert STEP5_ATTENTION_FAMILY.execution_enabled is False
+    assert STEP5_ATTENTION_FAMILY.execution_enabled is True
+    assert frame.iloc[0].profiling_precision == "BF16"
+    assert frame.iloc[0].model_arch == config.model_arch
 
 
 def test_gpu_active_rows_use_separate_kernel_only_measurement(config):

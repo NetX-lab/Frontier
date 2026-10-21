@@ -380,10 +380,15 @@ def test_full_expert_parallel_layout_is_admitted_only_on_pd_roles(inputs):
         RandomForrestExecutionTimePredictor(**{**inputs, "cluster_type": role})
 
 
-def test_real_predictor_rejects_measured_mode_before_training(inputs):
-    inputs["predictor_config"] = replace(inputs["predictor_config"], enable_dummy_mode=False)
-    with pytest.raises(NotImplementedError, match="Step attention"):
+def test_real_predictor_requires_measured_profiles(inputs, tmp_path):
+    missing = str(tmp_path / "missing_linear_op.csv")
+    inputs["predictor_config"] = replace(
+        inputs["predictor_config"], enable_dummy_mode=False,
+        linear_op_input_file=missing, linear_op_kernel_only_input_file=missing,
+    )
+    with pytest.raises(FileNotFoundError) as error:
         RandomForrestExecutionTimePredictor(**inputs)
+    assert error.value.filename == missing
 
 
 def test_missing_explicit_layer_is_not_silently_aggregated(inputs):

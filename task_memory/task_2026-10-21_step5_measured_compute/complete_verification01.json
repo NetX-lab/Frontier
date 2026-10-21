@@ -1,0 +1,210 @@
+{
+  "attention_dp": 2,
+  "attention_tp": 8,
+  "bundles": [
+    {
+      "artifact_count": 34,
+      "bundle_sha256": "8e7843839ea05983dd83c9c8c7e5babf65be97765ad1067c3f7e24cd3c44fc2d",
+      "duration_statistics": [
+        "mean"
+      ],
+      "family": "eager",
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/cache/bundle_9256fa7967b6c684a9bb283dbd04cd07f1a9450624f95e3b5dac0b98b2b69af3.json",
+      "precisions": [
+        "BF16",
+        "FP32",
+        "FP8"
+      ],
+      "role": "2",
+      "stage_targets_present": true
+    },
+    {
+      "artifact_count": 34,
+      "bundle_sha256": "d8234451bbe79796bd6bef3447412c6b6d8575c7124b1e7d00dd68a9b88ffc7b",
+      "duration_statistics": [
+        "median"
+      ],
+      "family": "kernel_only",
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/cache/bundle_6367ad1183e6d675150cda607e5d536160c692c19231c55ea145792364d39ae3.json",
+      "precisions": [
+        "BF16",
+        "FP32",
+        "FP8"
+      ],
+      "role": "2",
+      "stage_targets_present": true
+    },
+    {
+      "artifact_count": 34,
+      "bundle_sha256": "ff51b48711d396aabb60a164d1373822d19fb9b02157588611af3f6959fa0054",
+      "duration_statistics": [
+        "median"
+      ],
+      "family": "kernel_only",
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/cache/bundle_6d1ab07b16cacf885fa5c2638f03ba6b48f23ffff808962a47f4e7226a39df44.json",
+      "precisions": [
+        "BF16",
+        "FP32",
+        "FP8"
+      ],
+      "role": "5",
+      "stage_targets_present": true
+    },
+    {
+      "artifact_count": 34,
+      "bundle_sha256": "41ec5f3f49bf50b024e3c823512ec8442671af9ca3cdbc017ff1651197a09652",
+      "duration_statistics": [
+        "mean"
+      ],
+      "family": "eager",
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/cache/bundle_79981bc26386c56fb7238f608efb7b7006aa790f7b2ca9e2c4a327334c148dc8.json",
+      "precisions": [
+        "BF16",
+        "FP32",
+        "FP8"
+      ],
+      "role": "5",
+      "stage_targets_present": true
+    }
+  ],
+  "cases": [
+    [
+      6144,
+      0,
+      "prefill",
+      "none"
+    ],
+    [
+      16,
+      6128,
+      "prefill",
+      "none"
+    ],
+    [
+      1,
+      6144,
+      "decode",
+      "full"
+    ],
+    [
+      1,
+      7167,
+      "decode",
+      "full"
+    ]
+  ],
+  "current_regression": "d20_compute_regression03",
+  "device": "h800",
+  "evidence_kind": "cpu_fixture",
+  "fixture_manifest": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_manifest.json",
+  "fixture_manifest_sha256": "bcdc7df8b5b11807a415a6b921669788929548b606afcdb053f238af7fbd5820",
+  "global_layers": 92,
+  "inputs": {
+    "atten_input_file": {
+      "bytes": 10922116,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_attention_cuda_event.csv",
+      "rows": 184,
+      "sha256": "a1b6e306f6d11c41e35d38d72e70b5feb07033c848fde56b0c002b755650e43d"
+    },
+    "atten_kernel_only_input_file": {
+      "bytes": 10945484,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_attention_kernel_only.csv",
+      "rows": 184,
+      "sha256": "225087fe2b9d7de366891185a4a7485e618079bb3bc14305be9628134b07f19a"
+    },
+    "kernel_gap_input_file": {
+      "bytes": 86,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_kernel_gap.csv",
+      "rows": 2,
+      "sha256": "8a7d7ed0fe08428b52ccb350324fe6ddbd5c7181e5545844a931549060752555"
+    },
+    "linear_op_input_file": {
+      "bytes": 1131558,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_compute_cuda_event/linear_op.csv",
+      "rows": 20,
+      "sha256": "1888054d21b1a0a6e14a26c4acce11b84c2b3c6a327f34cf791ce01482344d81"
+    },
+    "linear_op_kernel_only_input_file": {
+      "bytes": 1131578,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_compute_kernel_only/linear_op.csv",
+      "rows": 20,
+      "sha256": "f6e1ac57d9383db0c2debc02ae241eb6ba0f126a65e038a16191eb106c79997b"
+    },
+    "moe_input_file": {
+      "bytes": 561534,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_compute_cuda_event/moe.csv",
+      "rows": 10,
+      "sha256": "b49b1aa9b9190c121d9bc01fb35fa617a8daf120bdebd6d0006072aae5e778d2"
+    },
+    "moe_kernel_only_input_file": {
+      "bytes": 561544,
+      "path": "/data/ycfeng/tmp/d20_measured_compute_fixture_h80032_03/fixture_compute_kernel_only/moe.csv",
+      "rows": 10,
+      "sha256": "c05b10c1601ae204bebf3742b969ea1aebb55945d43662c2d95fb6bbfc69a20d"
+    }
+  },
+  "known_legacy_failure_source_equality": {
+    "COMM_FAMILY": {
+      "ast_identical": true,
+      "baseline_ast_sha256": "5e696034c35689b000b1fe81fe16e1fb12f3df84fe360c7019018e04e258e30c",
+      "current_ast_sha256": "5e696034c35689b000b1fe81fe16e1fb12f3df84fe360c7019018e04e258e30c"
+    },
+    "frontier/operators/spec.py": {
+      "baseline_sha256": "3ad986630cd7609ab066e1f6000ffb5dd3655ed5b9c1082339d4a94912ec6251",
+      "current_sha256": "3ad986630cd7609ab066e1f6000ffb5dd3655ed5b9c1082339d4a94912ec6251",
+      "identical": true
+    },
+    "tests/unit/test_kernel_gap_pricing.py": {
+      "baseline_sha256": "8f2ac5456200df94ea596d50906871ad5f6739d2015ad5b8d04a779bb8647483",
+      "current_sha256": "8f2ac5456200df94ea596d50906871ad5f6739d2015ad5b8d04a779bb8647483",
+      "identical": true
+    }
+  },
+  "moe_ep": 16,
+  "native_admitted": false,
+  "profiling_cpu_environment": {
+    "gpu_used": false,
+    "python": "3.12.13",
+    "torch_package": "2.13.0"
+  },
+  "review_final": "failed_to_run_advisor_quota; previous3findings_fixed_with_tests",
+  "source_branch": "feat/step5-measured-compute",
+  "source_revision": "83af0a78336b4ad3ced1bac7fc57d7378fe6c826",
+  "tests": {
+    "d20_compute_complete02": {
+      "failures": [],
+      "passed": 192,
+      "sha256": "7e9bb755807db1936c74c022cdc98573c90ffa0c40302e6f5db09f0f226df7f3",
+      "tests": 192
+    },
+    "d20_compute_public07": {
+      "failures": [],
+      "passed": 1,
+      "sha256": "7fda93703fd897c0e76fcde45475cb37cb72357a436fed5a0826a2c3099ffbe3",
+      "tests": 1
+    },
+    "d20_compute_regression02": {
+      "failures": [
+        "test_every_collective_launches_one_kernel_by_default",
+        "test_attention_family_accessors_are_thin_registry_views"
+      ],
+      "passed": 123,
+      "sha256": "149cf7d2438f5dc5faf69a560eb831a5fcd29b2e276e72a8983b6246c168ef5b",
+      "tests": 125
+    },
+    "d20_compute_regression03": {
+      "failures": [
+        "test_every_collective_launches_one_kernel_by_default"
+      ],
+      "passed": 124,
+      "sha256": "79c640ca46ebfafe032fbecd833d60a9025203435f414bf05ba23f5e453c70da",
+      "tests": 125
+    },
+    "d20_rows_regression02": {
+      "failures": [],
+      "passed": 97,
+      "sha256": "c1e39c91280b3a46b1e2d3295030467b3f18a52e1b2c8a984b5ebcc7cee487cb",
+      "tests": 97
+    }
+  }
+}
