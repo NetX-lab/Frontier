@@ -3,7 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | Recorded the delegated scope and accepted measurement constraints. |
+| 2026-10-22 | Recorded original scope and R1 independently bound accepted-input requirement. |
 
 ## Original request
 [Original Request] Implement the smallest existing-reader extension for exact measured ongoing q1 DECODE in `read_isolated_scope`, under D-Q10-V4-GRAPH-MEASURED-AND-NIXL approval. Start at 2c150a7 in clean branch/worktree `v4-isolated-decode`. Own only `frontier/execution_time_predictor/deepseek_v4.py`, focused existing V4 tests/fixtures and these records; maximum 500 changed lines. No GPU, platform, SSH, cloud, new diagnostics, GLM5.3 tests, merge or push.

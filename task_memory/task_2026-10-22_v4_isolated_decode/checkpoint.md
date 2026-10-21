@@ -1,20 +1,20 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | Final self-check after focused/P6144 and clean strict77 deliverables. |
+| 2026-10-22 | Final R1 self-check after verified repair, separate clean strict77 and archive. |
 
 ## 1. 规划完成情况
-**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | A source/layout | PASS | progress.md records pinned source and existing semantic distinction. |
 | B reader | PASS | Only isolated reader changed; serving interfaces untouched. |
-| C CPU verification | PASS |207 focused checks,12 uncached q1 observations and102/72 real P6144 integration pass. |
-| D commit/strict/archive | TODO |R1 CPU repair225 PASS; separate fixed-source strict/archive pending. Original631250b strict retained. |
+| C CPU verification | PASS |R1 225 focused checks,12 uncached accepted observations/two old-input rejections andP6144 102/72 pass. |
+| D commit/strict/archive | PASS |R1 repair102c0c9 clean strict77 IDENTICAL77/77; separate original/R1 receipts and full diff retained. |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** R1 review至今｜**当前前沿：** R1 commit/strict/archive
+**检测窗口：** R1 verified repair commit至今｜**当前前沿：** assigned slice complete; primary acceptance only
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | Existing reader/tests/strict harness reused; no new CLI/framework. |
@@ -31,9 +31,9 @@
 **分支：** A：spec合理，无需改动。
 **需停止的偏离行为：** 无
 **接下去的路线：**
-1. Commit verified R1 repair; separately run audited strict77; archive complete original-base code+record diff, return to primary. No merge/push/diagnostic expansion.
+1. Return completed repair/validation/full-diff receipt and stop; primary performs independent rereview/merge. No merge/push/diagnostic expansion.
 
 ## 4. 最值得关注的 3 点
 1. Prompt-tail is rejected with existing semantic snapshot and prompt extent, not q1 kernel metadata alone.
 2. PhysicalTP1, six-layer dummy measurements and planner128 remain distinct from serving/capacity qualification.
-3. Original631250b strict result remains historical; fixed-source strict pending.
+3. Original631250b strict remains historical; separate102c0c9 strict passed77/77 with clean provenance. No unfinished assigned subtask.
