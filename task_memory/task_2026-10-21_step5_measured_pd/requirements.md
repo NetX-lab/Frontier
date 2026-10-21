@@ -16,6 +16,10 @@
 
 **[Original Request] Semantics:** Preserve the existing reservation -> READ -> ready -> first decode -> release ownership and all legacy dummy/GLM/DS behavior. Inspect `6cc09dc` before reusing its model-agnostic computed-frontier correction. Preserve Step transfer bytes and emitted-token accounting. Do not inject native future batches/routing. The R1 candidate rule is `16 * floor((prompt - 16) / 16)` transferred tokens and 16..31 recomputed tokens for prompts 128..7681; canonical 6144 -> 6128 + 16 remains pending fresh proof. T2 assessment remains required.
 
+**[Original Request] Shared-interface approval, 2026-10-21:** The user selected “PD owner 扩展 (Recommended)”: permit minimal extensions to the existing transfer predictor and transfer info for admitted prompt-prefix geometry, READ-to-GPU-ready cost and coverage. Profile fit/cache/admission remain with the computation owner; no new backend or loader.
+
+**[Original Request] Allocator approval, 2026-10-21:** The user selected “最小扩展 (Recommended)”: permit zero-query READ reservation in the existing grouped allocation plan only with an explicit positive computed frontier. Ordinary zero-token calls still fail. Do not invent a one-token computation or create another allocator.
+
 ## Acceptance
 
 1. Supported measured costs are exercised through actual PD events and scheduler lifecycle, including correct first-D query/context shape, token counts, capacity and release balances.

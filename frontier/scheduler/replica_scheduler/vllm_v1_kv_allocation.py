@@ -182,7 +182,9 @@ class KvBlockAllocation:
             )
         self._kv_transfer_start_claimed_request_ids.remove(request.id)
 
-    def validate_kv_transfer_target_scope(self, request: Request) -> None:
+    def validate_kv_transfer_target_scope(
+        self, request: Request, *, num_computed_tokens: Optional[int] = None,
+    ) -> None:
         """Reject unsupported structural NIXL targets without mutating state."""
         if self._cluster_type != ClusterType.DECODE:
             raise RuntimeError("KV transfer target reservation requires DECODE")
@@ -206,8 +208,19 @@ class KvBlockAllocation:
             )
         self._check_request_fits_max_model_len(request)
         self._check_request_fits_kv_pool(request)
+        if num_computed_tokens is not None:
+            if (
+                type(num_computed_tokens) is not int
+                or not 0 < num_computed_tokens < request.num_prefill_tokens
+                or num_computed_tokens % self._config.block_size
+            ):
+                raise ValueError("Measured NIXL reservation requires complete prefix blocks")
+            if request.num_prefill_tokens - num_computed_tokens > self._max_num_scheduled_tokens:
+                raise ValueError("Measured NIXL prompt tail exceeds the D token budget")
 
-    def reserve_kv_transfer_target(self, request: Request) -> Optional[int]:
+    def reserve_kv_transfer_target(
+        self, request: Request, *, num_computed_tokens: Optional[int] = None,
+    ) -> Optional[int]:
         """Reserve the prompt's DECODE blocks before structural NIXL READ.
 
         vLLM's async remote load schedules no new tokens and no lookahead, so
@@ -217,7 +230,7 @@ class KvBlockAllocation:
         Seeding that frontier sizes the reservation, and the first D step,
         to exactly the prompt's blocks.
         """
-        self.validate_kv_transfer_target_scope(request)
+        self.validate_kv_transfer_target_scope(request, num_computed_tokens=num_computed_tokens)
         receiving = self._kv_transfer_receiving_request_ids
         ready = self._kv_transfer_ready_request_ids
         if request.id in receiving or request.id in ready:
@@ -230,12 +243,17 @@ class KvBlockAllocation:
             )
         self._check_request_fits_kv_pool(request)
         frontiers = self._scheduled_num_computed_tokens_by_request
-        frontiers[request.id] = int(request.num_prefill_tokens) - 1
-        if not self._can_allocate_request(request, 1):
-            del frontiers[request.id]
-            return None
-        self._allocate_request(request, 1)
+        if num_computed_tokens is None:
+            frontier, scheduled_tokens = int(request.num_prefill_tokens) - 1, 1
+        else:
+            frontier, scheduled_tokens = num_computed_tokens, 0
+        frontiers[request.id] = frontier
         receiving.add(request.id)
+        if not self._can_allocate_request(request, scheduled_tokens):
+            del frontiers[request.id]
+            receiving.remove(request.id)
+            return None
+        self._allocate_request(request, scheduled_tokens)
         return int(self._allocation_map[request.id])
 
     def mark_kv_transfer_target_ready(self, request: Request) -> None:
@@ -469,6 +487,8 @@ class KvBlockAllocation:
         self, request: Request, scheduled_tokens: int
     ) -> int:
         reserved_tokens = int(scheduled_tokens)
+        if reserved_tokens == 0 and request.id in self._kv_transfer_receiving_request_ids:
+            return 0
         if reserved_tokens <= 0:
             raise ValueError(
                 f"scheduled_tokens must be > 0, got={scheduled_tokens}"
@@ -629,7 +649,11 @@ class KvBlockAllocation:
             request: The request to allocate for
             num_new_tokens: Number of new tokens being processed
         """
-        if type(num_new_tokens) is not int or num_new_tokens <= 0:
+        read_reservation = (
+            num_new_tokens == 0 and self._is_grouped_kv_allocation()
+            and request.id in self._kv_transfer_receiving_request_ids
+        )
+        if type(num_new_tokens) is not int or (num_new_tokens <= 0 and not read_reservation):
             raise ValueError(
                 "num_new_tokens must be a positive integer, "
                 f"got {num_new_tokens!r}"

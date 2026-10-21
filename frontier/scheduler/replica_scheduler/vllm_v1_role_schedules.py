@@ -388,6 +388,14 @@ class DisaggregatedRoleScheduling:
 
             num_new_tokens = self._get_request_next_num_tokens(request)
 
+            # Keep an admitted transfer tail in one first-D step. Its profile
+            # and sampling boundary do not cover a partially scheduled tail.
+            if (
+                request.id in ready_request_ids and request.is_recomputing
+                and num_new_tokens > token_budget
+            ):
+                break
+
             # Keep draft tokens within max_model_len; the request itself fits
             # (checked on arrival).
             scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(

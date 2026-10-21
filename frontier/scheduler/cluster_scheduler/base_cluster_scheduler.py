@@ -465,7 +465,8 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         return None
 
     def validate_kv_transfer_target_scope(
-        self, source_capacity, source_attention_tp: int, request: Request
+        self, source_capacity, source_attention_tp: int, request: Request,
+        *, num_computed_tokens: Optional[int] = None,
     ) -> None:
         """Validate every selectable NIXL lane before advancing placement.
 
@@ -482,7 +483,10 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         for replica_id in replica_ids:
             for replica_local_id in range(self._replica_dp_size):
                 lane = self.get_replica_scheduler(replica_id, replica_local_id)
-                lane.validate_kv_transfer_target_scope(request)
+                if num_computed_tokens is None:
+                    lane.validate_kv_transfer_target_scope(request)
+                else:
+                    lane.validate_kv_transfer_target_scope(request, num_computed_tokens=num_computed_tokens)
                 target_attention_tp = lane._replica_config.attn_tensor_parallel_size
                 if target_attention_tp != source_attention_tp:
                     raise NotImplementedError(
@@ -505,6 +509,14 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             "NIXL structural PD needs a DECODE cluster scheduler that selects "
             f"transfer targets; {type(self).__name__} does not."
         )
+
+    def abandon_kv_transfer_target_selection(self, request: Request) -> None:
+        """Release frontend ownership after a rejected measured cost.
+
+        Policies without frontend request ownership retain no selection token.
+        """
+
+        return None
 
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]

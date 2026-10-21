@@ -80,20 +80,30 @@ class VllmLoadBalancingClusterScheduler(BaseClusterScheduler):
             or replica.num_pipeline_stages != 1
             or replica.moe_tensor_parallel_size != 1
             or replica.moe_expert_parallel_size != replica.attn_tensor_parallel_size * replica.attn_dp
-            or not self._config.execution_time_predictor_config.enable_dummy_mode
             or self._kv_cache_transfer_predictor is None
             or self._kv_cache_transfer_predictor._config.kv_connector != "nixl"
         ):
             raise ValueError(
                 "vllm_load_balancing PD requires paired Step PREFILL/DECODE endpoints, "
-                "v0.28.0, PP1, MoE TP1/EP=attention TP*DP, dummy timing and NIXL"
+                "v0.28.0, PP1, MoE TP1/EP=attention TP*DP and NIXL"
             )
+        if not self._config.execution_time_predictor_config.enable_dummy_mode:
+            if not all(callable(getattr(self._predictor, name, None)) for name in (
+                "get_nixl_transfer_coverage", "get_nixl_transfer_time_ms",
+            )):
+                raise ValueError(
+                    "vllm_load_balancing requires measured NIXL coverage from "
+                    "the configured cost provider"
+                )
 
     def select_kv_transfer_target(self, time: float, request: Request) -> tuple[int, int]:
         """Place the proxy's D request once, before C16 attempts reservation."""
         if self._cluster_type != ClusterType.DECODE:
             raise ValueError("NIXL transfer target selection requires DECODE")
         return self._serving_replica_id, self._load_balancer.select(time, request.id)
+
+    def abandon_kv_transfer_target_selection(self, request: Request) -> None:
+        self._load_balancer.finish_requests([request.id])
 
     def schedule_at(self, time: float) -> List[Tuple[int, int, Request]]:
         """Route every queued request at this simulation time.

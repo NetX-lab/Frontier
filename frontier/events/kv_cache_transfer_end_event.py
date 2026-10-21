@@ -66,18 +66,40 @@ class KVCacheTransferEndEvent(BaseEvent):
                     f"{source_blocks} prompt blocks"
                 )
             source_capacity = source_replica_scheduler._kv_cache_capacity
-            expected_payload, _ = (
-                source_cluster_scheduler._kv_cache_transfer_predictor
-                .get_structural_nixl_transfer_info_for_request(
-                    request=request,
-                    replica_config=source_cluster_scheduler._config.replica_config,
-                    cache_capacity=source_capacity,
-                    source_prompt_common_blocks=source_blocks,
-                    target_reserved_common_blocks=(
-                        self._transfer_info.target_reserved_common_blocks
-                    ),
-                )
+            predictor = source_cluster_scheduler._kv_cache_transfer_predictor
+            transfer_args = dict(
+                request=request,
+                replica_config=source_cluster_scheduler._config.replica_config,
+                cache_capacity=source_capacity,
+                source_prompt_common_blocks=source_blocks,
+                target_reserved_common_blocks=self._transfer_info.target_reserved_common_blocks,
             )
+            if self._transfer_info.nixl_coverage is None:
+                expected_payload, _ = predictor.get_structural_nixl_transfer_info_for_request(
+                    **transfer_args,
+                )
+            else:
+                expected_coverage = predictor.get_measured_nixl_coverage(
+                    request=request,
+                    source_replica_config=source_cluster_scheduler._config.replica_config,
+                    target_replica_config=target_cluster_scheduler._config.replica_config,
+                    cache_capacity=source_capacity,
+                    cost_provider=source_cluster_scheduler._predictor,
+                    target_cost_provider=target_cluster_scheduler._predictor,
+                )
+                if expected_coverage != self._transfer_info.nixl_coverage:
+                    raise RuntimeError("Measured NIXL coverage changed during READ")
+                expected_payload, expected_time_ms = (
+                    predictor.get_measured_nixl_transfer_info_for_request(
+                        **transfer_args, coverage=expected_coverage,
+                        cost_provider=source_cluster_scheduler._predictor,
+                    )
+                )
+                if (
+                    self._transfer_info.transfer_time_ms != expected_time_ms
+                    or self.time != self._transfer_info.transfer_start_time + expected_time_ms * 1e-3
+                ):
+                    raise RuntimeError("Measured NIXL READ-to-ready duration changed")
             if (
                 self._transfer_info.transfer_payload != expected_payload
                 or self._transfer_info.kv_cache_size_bytes
@@ -101,7 +123,13 @@ class KVCacheTransferEndEvent(BaseEvent):
         )
 
         for request in batch.requests:
-            request.on_kv_cache_transfer_complete(self.time, transfer_duration_s)
+            if not is_structural_nixl or self._transfer_info.nixl_coverage is None:
+                request.on_kv_cache_transfer_complete(self.time, transfer_duration_s)
+            else:
+                request.on_kv_cache_transfer_complete(
+                    self.time, transfer_duration_s,
+                    num_computed_tokens=self._transfer_info.nixl_coverage.num_computed_tokens,
+                )
 
         if is_structural_nixl:
             from frontier.logger import get_cluster_logger

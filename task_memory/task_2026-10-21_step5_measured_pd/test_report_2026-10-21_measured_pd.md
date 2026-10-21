@@ -28,6 +28,42 @@ env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier
 
 GREEN:70 passed in74.19s, including offline/online Step lifecycle. Transfer bytes, output counts and final ownership balances meet expectations. No native timing or full-matrix fidelity claim.
 
+## Measured transfer and recomputation
+
+- Request RED:1 failed (`d20_pd_request_red_tail`), then14 failed/1 passed (`d20_pd_request_red_validation_fixed`). GREEN:26 dedicated and84 affected. Delegated command:
+
+```sh
+env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_pd_transfer_prompt_recompute.py tests/unit/test_pd_client_ttft.py tests/unit/test_request_preempted_step.py tests/unit/test_request_spec_decode_zero_commit.py tests/unit/test_vllm_v1_recompute_pricing.py tests/unit/test_kv_transfer_completion_contract.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d20_pd_request_green_regression
+```
+
+- Measured constructor RED:1 failed in5.52s (`d20_pd_measured_red01`), rejected by the original dummy-only scope.
+- Integrated attempts exposed the max-token attribute name and shared zero-query guards. After approval and inspection of the allocation call chain, the measured route passed1/1 in9.03s (`d20_pd_measured_green04`).
+- Lifetime RED: missing cost released the D pool but left a frontend owner. A second failure was an invalid zeroing assumption: this fixture has no zeroing prologue. Only the observed frontend defect was fixed.
+- Budget RED:1 passed/1 failed in10.99s (`d20_pd_budget_red01`), proving budget rejection left a source claim. Existing prefix/budget validation was moved into preflight.
+
+Final command:
+
+```sh
+env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -m pytest tests/unit/test_step5_measured_pd.py tests/unit/test_pd_transfer_prompt_recompute.py tests/unit/test_kv_transfer_completion_contract.py tests/unit/test_step5_pd_placement.py tests/unit/test_step5_structural_pd.py tests/unit/test_glm53_structural_pd.py tests/unit/test_pd_client_ttft.py tests/unit/test_step5_cache_scheduler.py -q -p no:cacheprovider --tb=short --basetemp=/data/ycfeng/tmp/d20_pd_measured_green07
+```
+
+**PASS:196 tests in139.73s.** Previous run:194 in132.35s; two compatibility/budget cases were then added. `git diff --check` passed.
+
+| CPU expectation | Observed | Result |
+| --- | --- | --- |
+| No analytical substitution in grouped measured mode | Analytical timing patched to raise; measured route succeeds | PASS |
+|4105 tokens, prefix4080, full D tail |first-D query25/context4080, prefill phase, eager | PASS |
+| Covered READ completion means GPU-ready |3.5ms; D cannot schedule beforehand | PASS |
+| Prefix-only reservation without invented query |1020 modeled blocks; no compute-token mutation | PASS |
+| Step component bytes and units |103051776 bytes/worker lane, explicit prefix label | PASS |
+| Sampling |tail emits1, then8 single-token steps; TTFT at tail completion | PASS |
+| Ownership |P holds until READ; final allocations/frontiers empty | PASS |
+| Wrong/missing coverage |prompt/TP/device/alignment/readiness/identity/duration/budget rejected; cost failure unwinds owners | PASS |
+| Legacy behavior |dummy Step and shared non-grouped GLM retain contracts | PASS |
+| Ordinary zero-token calls |rejected; only explicit positive remote frontier admits zero-query grouped planning | PASS |
+
 ## Unfinished acceptance
 
-Measured admission/provider consumption, native prompt-prefix/first-D recomputation and their negative controls are in progress. Small actual `frontier.main` measured execution depends on the computation owner's integrated provider/bundle interface. Real H200 inputs, native tail/readiness/content qualification, early T2 pricing and formal four-metric accuracy remain outstanding. No R2 claimed PASS is used as admission.
+Small actual `frontier.main` is **NOT_RUN**: the computation/bundle owner must supply the documented coverage/cost hooks and admitted inputs. Protected computation predictor/loader files are unchanged; missing supplier coverage fails rather than substituting analytical timing.
+
+P compute remains whole-prompt execution. CPU results do not resolve P-side native backoff or T2 pricing. The6144->6128+16 candidate, H200 computation/tail/mixed costs, READ-to-GPU-ready calibration, native content/readiness/reference qualification and formal four-metric accuracy remain outstanding. No R2 verdict is read as admission.

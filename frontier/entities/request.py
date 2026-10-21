@@ -152,7 +152,7 @@ class Request(BaseEntity):
 
         self._scheduled = False
         self._preempted = False
-        # Recompute cursor after a vLLM v1 preemption; None when no recompute is pending.
+        # Recompute cursor for retained tokens; None when no recompute is pending.
         self._num_recomputed_tokens: Optional[int] = None
         self._preempted_step: Optional[PreemptedStep] = None
         self._completed = False
@@ -693,7 +693,7 @@ class Request(BaseEntity):
         return self._num_processed_tokens > self._num_prefill_tokens + 1
 
     # A request decodes once its prefill is complete, except while it
-    # recomputes the tokens it kept after a preemption.
+    # recomputes retained tokens after preemption or KV transfer.
     @property
     def is_decoding(self) -> bool:
         return self._is_prefill_complete and self._num_recomputed_tokens is None
@@ -990,6 +990,8 @@ class Request(BaseEntity):
         self,
         transfer_end_time: float,
         transfer_time: float,
+        *,
+        num_computed_tokens: int | None = None,
     ) -> None:
         """
         Record KV cache transfer time for this request.
@@ -998,7 +1000,29 @@ class Request(BaseEntity):
             transfer_end_time: End timestamp of the request-level transfer window in
                 seconds.
             transfer_time: Duration of the KV cache transfer in seconds
+            num_computed_tokens: Computed prompt prefix at the destination, with
+                the remaining prompt tail recomputed before the first output.
         """
+        if num_computed_tokens is not None:
+            if type(num_computed_tokens) is not int or not (
+                0 <= num_computed_tokens < self._num_prefill_tokens
+            ):
+                raise ValueError(
+                    "num_computed_tokens must be an int in [0, num_prefill_tokens), "
+                    f"got={num_computed_tokens!r}, "
+                    f"num_prefill_tokens={self._num_prefill_tokens}"
+                )
+            if not self._is_prefill_complete:
+                raise ValueError(
+                    "KV transfer prompt recompute requires completed source prefill"
+                )
+            if self.num_emitted_decode_tokens != 0:
+                raise ValueError(
+                    "KV transfer prompt recompute cannot follow emitted decode outputs"
+                )
+            if self._num_recomputed_tokens is not None:
+                raise ValueError("KV transfer prompt recompute is already active")
+
         end_time = float(transfer_end_time)
         if self._kv_cache_transfer_end_time is None:
             self._kv_cache_transfer_end_time = end_time
@@ -1008,6 +1032,8 @@ class Request(BaseEntity):
                 end_time,
             )
         self._kv_cache_transfer_time += transfer_time
+        if num_computed_tokens is not None:
+            self._num_recomputed_tokens = num_computed_tokens
 
     def on_m2n_transfer_complete(self, transfer_time: float, is_attn_to_ffn: bool) -> None:
         """

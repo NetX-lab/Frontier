@@ -4,8 +4,45 @@ from typing import TYPE_CHECKING, Optional
 from frontier.types import ClusterType
 
 if TYPE_CHECKING:
-    from frontier.attention.memory import AttentionKVTransferPayload
+    from frontier.attention.memory import AttentionKVCacheCapacity, AttentionKVTransferPayload
     from frontier.entities import Batch
+
+
+@dataclass(frozen=True)
+class NixlTransferCoverage:
+    """A cost provider's admitted request geometry and completion boundary.
+
+    The provider owns profile admission and immutable profile identity. This
+    declaration does not qualify native execution or accept observer verdicts.
+    """
+
+    num_prefill_tokens: int
+    num_computed_tokens: int
+    cache_capacity: "AttentionKVCacheCapacity"
+    source_attention_tp: int
+    target_attention_tp: int
+    source_device: str
+    target_device: str
+    profile_identity: str
+    duration_scope: str
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.num_prefill_tokens) is not int
+            or type(self.num_computed_tokens) is not int
+            or not 0 < self.num_computed_tokens < self.num_prefill_tokens
+        ):
+            raise ValueError("Measured NIXL requires a nonempty prompt prefix and tail")
+        if self.num_computed_tokens % self.cache_capacity.block_size:
+            raise ValueError("Measured NIXL prefix must contain complete cache blocks")
+        if any(type(tp) is not int or tp <= 0 for tp in (
+            self.source_attention_tp, self.target_attention_tp,
+        )):
+            raise ValueError("Measured NIXL attention TP must be a positive integer")
+        if not isinstance(self.profile_identity, str) or not self.profile_identity.strip():
+            raise ValueError("Measured NIXL requires admitted profile identity")
+        if self.duration_scope != "read_to_gpu_ready":
+            raise ValueError("Measured NIXL cost must cover READ through GPU readiness")
 
 
 @dataclass
@@ -37,6 +74,7 @@ class KVCacheTransferInfo:
     transfer_payload: Optional["AttentionKVTransferPayload"] = None
     target_ready_time: Optional[float] = None
     source_release_time: Optional[float] = None
+    nixl_coverage: Optional[NixlTransferCoverage] = None
 
     def __post_init__(self) -> None:
         if (
@@ -58,8 +96,12 @@ class KVCacheTransferInfo:
         if self.transfer_end_time is None:
             self.transfer_end_time = self.transfer_start_time + (self.transfer_time_ms * 1e-3)
         if self.kv_connector == "nixl":
-            if self.payload_kind != "structural_whole_prompt_pages_per_worker_lane":
-                raise ValueError("NIXL transfer requires the structural payload label")
+            expected_kind = (
+                "prefix_pages_per_worker_lane" if self.nixl_coverage is not None
+                else "structural_whole_prompt_pages_per_worker_lane"
+            )
+            if self.payload_kind != expected_kind:
+                raise ValueError("NIXL transfer requires its declared page payload label")
             if (
                 type(self.source_prompt_common_blocks) is not int
                 or self.source_prompt_common_blocks <= 0
@@ -129,4 +171,10 @@ class KVCacheTransferInfo:
                     "source_release_time": self.source_release_time,
                 }
             )
+            if self.nixl_coverage is not None:
+                payload.update(
+                    num_computed_tokens=self.nixl_coverage.num_computed_tokens,
+                    transfer_profile_identity=self.nixl_coverage.profile_identity,
+                    transfer_duration_scope=self.nixl_coverage.duration_scope,
+                )
         return payload
