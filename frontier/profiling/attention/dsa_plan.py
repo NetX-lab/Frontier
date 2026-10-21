@@ -588,10 +588,12 @@ def _build_serving_cases(
 ) -> tuple[tuple[DsaEngineSpec, ...], tuple[DsaCase, ...]]:
     """Exact ordinary prefill and inclusive cached-context q1 fixtures.
 
-    A positive q1 window seeds a prompt at its lower endpoint; its prefill
-    sample is unmeasured, then every decode in the window is recorded. The
-    local seed does not reproduce the request phase of a remote-prefill tail.
-    The legacy zero endpoint retains its separate real one-token prefill.
+    Seed below the q1 window so decode warmup precedes its lower endpoint.
+    The setup prefill and warmup decodes are unmeasured; every decode in the
+    window is recorded. The local seed does not reproduce the request phase
+    of a remote-prefill tail. The legacy zero endpoint retains its separate
+    real one-token prefill, but decoding from context 1 requires zero warmup
+    because a native request needs a positive prompt.
     """
     capacity = min(limits.max_context_len, limits.max_kv_tokens_per_lane)
     if prefill_prompt_len is not None:
@@ -603,7 +605,14 @@ def _build_serving_cases(
             raise ValueError("query_one_context_max must be a non-negative int")
         if min_context > max_context:
             raise ValueError("query_one_context_min must not exceed query_one_context_max")
-        # The seed prefill samples one setup output before the measured decodes.
+        lower = max(1, min_context)
+        if max_context >= lower and lower <= limits.decode_warmup_steps:
+            raise ValueError(
+                f"query_one_context_min={min_context} starts decode at context {lower}, "
+                f"which cannot hold decode_warmup_steps={limits.decode_warmup_steps} "
+                "and a positive prompt"
+            )
+        # Seed + warmup + measured decodes + one setup output = max_context + 2.
         request_len = max_context + 2
         if request_len > capacity:
             raise ValueError(
@@ -633,12 +642,15 @@ def _build_serving_cases(
     lower = max(1, min_context)
     if max_context is not None and max_context >= lower:
         count = max_context - lower + 1
+        prompt = lower - limits.decode_warmup_steps
         cases.append(DsaCase(
             case_id=f"e0-decode-q1-c{lower}-{max_context}",
             engine_index=0, phase=PHASE_DECODE,
-            batch_size=1, prompt_len=lower, max_tokens=count + 1,
-            warmup=0, measured=count,
-            estimated_steps=_prefill_steps(lower, engine.chunk_budget) + count,
+            batch_size=1, prompt_len=prompt,
+            max_tokens=limits.decode_warmup_steps + count + 1,
+            warmup=limits.decode_warmup_steps, measured=count,
+            estimated_steps=_prefill_steps(prompt, engine.chunk_budget)
+            + limits.decode_warmup_steps + count,
         ))
     return (engine,), tuple(cases)
 

@@ -46,7 +46,7 @@ def _native_plan(*, maximum=7166, minimum=6143, prefill=6144, **overrides):
 
 
 def test_query_one_plan_keeps_zero_prefill_and_dense_decode_separate():
-    plan = build_plan(65)
+    plan = build_plan(65, decode_warmup_steps=0)
     assert len(plan.engines) == 1
     assert plan.engines[0].max_num_seqs == 1
     assert plan.engines[0].chunk_budget == 256
@@ -78,7 +78,7 @@ def test_query_one_plan_rejects_invalid_context_limit(maximum):
 @pytest.mark.parametrize("limit", ["max_context_len", "max_kv_tokens_per_lane"])
 def test_query_one_request_fits_native_capacity(limit):
     with pytest.raises(ValueError, match="capacity for 33025"):
-        build_plan(33023, **{limit: 33024})
+        build_plan(33023, min_context=6143, **{limit: 33024})
 
 
 def test_exact_zero_only_plan_is_regular_prefill():
@@ -89,7 +89,7 @@ def test_exact_zero_only_plan_is_regular_prefill():
 
 @pytest.mark.parametrize("maximum", range(66))
 def test_each_small_context_endpoint_is_in_the_recorded_window(maximum):
-    plan = build_plan(maximum)
+    plan = build_plan(maximum, decode_warmup_steps=0)
     assert len(plan.cases) == (2 if maximum else 1)
     if maximum:
         case = plan.cases[1]
@@ -106,7 +106,7 @@ def test_query_one_cli_dry_run(tmp_path, capsys):
         "--target_tensor_parallel_size", "8", "--block_size", "64",
         "--max_context_len", "33024", "--max_kv_tokens_per_lane", "205632",
         "--max_num_seqs", "1024", "--chunk_budgets", "256", "512", "1024", "2048", "4096", "8192",
-        "--query_one_context_max", "65", "--output", str(output),
+        "--query_one_context_max", "65", "--decode_warmup_steps", "0", "--output", str(output),
     ])
     capsys.readouterr()
     plan = json.loads(output.read_text())
@@ -180,8 +180,10 @@ def _check_runner_contexts(plan, case, monkeypatch, tmp_path):
         collective_rpc=rpc,
     )
     records = runner.run_case(llm, plan, case, CUDA_EVENT, random.Random(1234), 100, tmp_path, False)
-    contexts = list(range(case.prompt_len, case.prompt_len + case.measured))
-    assert steps == [0, *contexts], "Only the setup prefill is unmeasured"
+    contexts = list(range(case.prompt_len + case.warmup,
+                          case.prompt_len + case.warmup + case.measured))
+    assert steps == [0, *range(case.prompt_len, contexts[-1] + 1)]
+    assert steps[1:1 + case.warmup] == list(range(case.prompt_len, contexts[0]))
     assert len(aborted) == 1
     recorded_steps = [record for record in records if record["kind"] == "step"]
     assert [record["requests"][0]["num_computed_tokens"] for record in recorded_steps] == contexts
@@ -191,7 +193,7 @@ def _check_runner_contexts(plan, case, monkeypatch, tmp_path):
 
 
 def test_existing_runner_schedules_every_small_context_without_injected_cache(monkeypatch, tmp_path):
-    plan = build_plan(65)
+    plan = build_plan(65, decode_warmup_steps=0)
     _check_runner_contexts(plan, plan.cases[1], monkeypatch, tmp_path)
 
 
@@ -210,10 +212,10 @@ def test_native_plan_preserves_limits_and_exact_workload():
     assert (engine.max_model_len, engine.chunk_budget, engine.max_num_seqs) == (7168, 8192, 128)
     prefill, decode = plan.cases
     assert (prefill.phase, prefill.prompt_len, prefill.max_tokens) == (PHASE_PREFILL, 6144, 1)
-    assert (decode.phase, decode.prompt_len, decode.max_tokens) == (PHASE_DECODE, 6143, 1025)
-    assert decode.warmup == 0 and decode.measured == 1024
-    assert runner._case_window(decode, engine) == (0, 1024)
-    assert decode.estimated_steps == 1025
+    assert (decode.phase, decode.prompt_len, decode.max_tokens) == (PHASE_DECODE, 6141, 1027)
+    assert decode.warmup == 2 and decode.measured == 1024
+    assert runner._case_window(decode, engine) == (2, 1024)
+    assert decode.estimated_steps == 1027
     assert decode.prompt_len + decode.max_tokens == engine.max_model_len
     assert not StepRequest(1, decode.prompt_len, decode.prompt_len).is_prefill
     assert StepRequest(1, 6143, 6144).is_prefill, "Actual remote tail is a different phase"
@@ -222,17 +224,42 @@ def test_native_plan_preserves_limits_and_exact_workload():
     assert plan.summary()["timing_collection"] == "pending_native_scope_instrumentation"
 
 
-@pytest.mark.parametrize("minimum,maximum", [(0, 0), (0, 65), (1, 1), (6143, 6143), (6143, 7166)])
-def test_native_window_includes_both_cached_endpoints(minimum, maximum):
-    plan = _native_plan(minimum=minimum, maximum=maximum)
+@pytest.mark.parametrize("measurement", [CUDA_EVENT, KERNEL_ONLY])
+@pytest.mark.parametrize("native", [False, True])
+def test_q1_window_skips_decode_warmup_before_first_recorded_context(measurement, native):
+    plan = (_native_plan(prefill=None) if native else build_plan(
+        7166, min_context=6143, max_context_len=7168,
+        max_kv_tokens_per_lane=7168, max_num_seqs=128, chunk_budgets=(6144,),
+    ))
+    case, = plan.cases
+    skip, count = runner._case_window(case, plan.engines[0])
+    decode_contexts = list(range(case.prompt_len, case.prompt_len + case.max_tokens - 1))
+    assert decode_contexts[:skip] == [6141, 6142], measurement
+    recorded = decode_contexts[skip:skip + count]
+    assert recorded == list(range(6143, 7167)), measurement
+    assert len(recorded) == len(set(recorded)) == 1024
+
+
+@pytest.mark.parametrize("minimum,warmup", [(0, 2), (1, 1), (2, 2), (1, 2)])
+def test_q1_window_rejects_insufficient_context_for_decode_warmup(minimum, warmup):
+    with pytest.raises(ValueError, match="query_one_context_min.*decode_warmup_steps.*positive prompt"):
+        _native_plan(minimum=minimum, decode_warmup_steps=warmup)
+
+
+@pytest.mark.parametrize("minimum,maximum,warmup", [
+    (0, 0, 2), (0, 65, 0), (1, 1, 0), (3, 3, 2), (6143, 6143, 2), (6143, 7166, 2),
+])
+def test_native_window_includes_both_cached_endpoints(minimum, maximum, warmup):
+    plan = _native_plan(minimum=minimum, maximum=maximum, decode_warmup_steps=warmup)
     decodes = [case for case in plan.cases if case.phase == PHASE_DECODE]
     if maximum == 0:
         assert not decodes
     else:
         case, = decodes
-        assert case.prompt_len == max(1, minimum)
-        assert case.prompt_len + case.measured - 1 == maximum
-        assert case.max_tokens == case.measured + 1 and case.warmup == 0
+        assert case.prompt_len + case.warmup == max(1, minimum)
+        assert case.prompt_len + case.warmup + case.measured - 1 == maximum
+        assert case.max_tokens == case.warmup + case.measured + 1
+        assert case.warmup == warmup
     assert any(case.phase == PHASE_PREFILL and case.prompt_len == 1
                for case in plan.cases) == (minimum == 0)
 
@@ -359,7 +386,7 @@ def test_native_engine_record_cannot_be_aggregated_under_legacy_plan(policy):
 
 @pytest.mark.parametrize("measurement", [CUDA_EVENT, KERNEL_ONLY])
 def test_scope_aggregation_keeps_every_serving_context_and_both_variants(measurement):
-    plan = build_plan(65)
+    plan = build_plan(65, decode_warmup_steps=0)
     records = [{
         "kind": "engine", "engine_index": 0, "chunk_budget": 256,
         "attention_backend": "FLASH_ATTN_MLA_SPARSE", "attention_impl": "FlashAttnMLASparseImpl",
