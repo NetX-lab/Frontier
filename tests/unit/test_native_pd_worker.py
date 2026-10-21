@@ -2,8 +2,13 @@
 
 import contextlib
 import hashlib
+import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
+import subprocess
+import sys
 import tempfile
 import types
 from unittest.mock import patch
@@ -34,6 +39,8 @@ def exercise(worker, temporary, case):
     events = []
     replay_commands = []
     server_environments = []
+    child_imports = []
+    real_popen = subprocess.Popen
     injected = False
 
     def write_json(path, value):
@@ -70,11 +77,27 @@ def exercise(worker, temporary, case):
     replay = Process("replay")
 
     def popen(command, **kwargs):
-        kind = "server" if command[0] == "fake-native-server" else "replay"
+        kind = ("server" if command[0] == "fake-native-server"
+                or '--worker-extension-cls' in command else "replay")
         if kind == "replay":
             replay_commands.append(command)
         else:
             server_environments.append(dict(kwargs['env']))
+            if case == 'canonical_clean_serving_staged_child':
+                assert '--worker-extension-cls' in command
+                child_env = dict(kwargs['env'])
+                for name in ('FRONTIER_NATIVE_SERVING_EVIDENCE_DIR',
+                             'FRONTIER_NATIVE_RUN_GENERATION', 'FRONTIER_NATIVE_ROLE'):
+                    child_env.pop(name, None)
+                with real_popen([sys.executable, '-P', '-c',
+                    'import importlib, json; '
+                    'm = importlib.import_module("native_full_structure"); '
+                    'print(json.dumps({"path": m.__file__, "class": m.FullModelInventory.__name__}))'],
+                    cwd=directory, env=child_env, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, text=True) as child:
+                    stdout, stderr = child.communicate(timeout=30)
+                assert child.returncode == 0, stderr
+                child_imports.append(json.loads(stdout))
         events.append(kind + "_launch")
         return server if kind == "server" else replay
 
@@ -125,12 +148,38 @@ def exercise(worker, temporary, case):
     if case.startswith('canonical_clean_serving'):
         config.update(case_dir=str(directory / 'local-case'), run_tag='cpu-fixture')
         config['engine']['worker_extension_cls'] = 'native_full_structure.FullModelInventory'
-        (directory / 'native_full_structure.py').write_text('CPU fixture module, not executed\n')
-        if case in ('canonical_clean_serving', 'canonical_clean_serving_invalid_generation'):
+        if case != 'canonical_clean_serving_staged_child':
+            (directory / 'native_full_structure.py').write_text('CPU fixture module, not executed\n')
+        if case in ('canonical_clean_serving', 'canonical_clean_serving_invalid_generation',
+                    'canonical_clean_serving_staged_child'):
             metadata = Path(config['case_dir']) / 'runs/groundtruth_clean/cpu-fixture/run_manifest.json'
             metadata.parent.mkdir(parents=True)
             metadata.write_text(json.dumps({'run_generation': 'cpu-serving-generation'
                 if case == 'canonical_clean_serving' else None}))
+    if case == 'canonical_clean_serving_staged_child':
+        from tests.unit.test_native_pd_manifest import MODULES, REPO
+        from tests.unit.test_calibration_pd_harness import nixl_engine
+
+        for name in (*MODULES, 'tests/comparison/calibration/native_full_structure.py'):
+            target = directory / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPO / name, target)
+        harness = directory / 'tests/comparison/calibration'
+        spec = importlib.util.spec_from_file_location('staged_pd_replay', harness / 'pd_replay.py')
+        staged_pd = importlib.util.module_from_spec(spec)
+        with patch('sys.path', list(sys.path)):
+            spec.loader.exec_module(staged_pd)
+        pd.instance_env = staged_pd.instance_env
+        pd.kv_transfer_config = staged_pd.kv_transfer_config
+        native.server_command = staged_pd.server_command
+        config['harness_dir'] = str(harness)
+        config['serve_observers'] = {'prefill': None, 'decode': None}
+        config['engine'] = nixl_engine() | {
+            'worker_extension_cls': 'native_full_structure.FullModelInventory'}
+        (model / 'config.json').write_text(json.dumps({
+            'architectures': ['GlmMoeDsaForCausalLM'], 'vocab_size': 154880}))
+        config['model_hashes']['config.json'] = sha256(model / 'config.json')
+        metadata.write_text(json.dumps({'run_generation': 'cpu-serving-generation'}))
     original_relative = Path.is_relative_to
 
     def is_relative_to(path, other):
@@ -150,6 +199,9 @@ def exercise(worker, temporary, case):
 
     with contextlib.ExitStack() as stack:
         stack.enter_context(patch.dict("os.environ"))
+        if case == 'canonical_clean_serving_staged_child':
+            os.environ['PYTHONPATH'] = str(directory)
+            os.environ['NCCL_IB_HCA'] = 'platform-value'
         stack.enter_context(patch("sys.path", list(__import__("sys").path)))
         stack.enter_context(patch.dict("sys.modules", {
             "probe_runtime_inventory": inventory, "probe_nixl_read": nixl,
@@ -183,6 +235,7 @@ def exercise(worker, temporary, case):
         "shutdown_order": result.get("shutdown_order"),
         "server_environments": server_environments,
         "serving_instrumentation": result.get('serving_instrumentation'),
+        "child_imports": child_imports,
     }
 
 
@@ -265,6 +318,19 @@ def test_serving_extension_receives_actual_generation_role_and_node_directory(tm
     assert Path(env['FRONTIER_NATIVE_SERVING_EVIDENCE_DIR']).parts[-2:] == ('nodes', 'host0')
     assert result['serving_instrumentation']['native_python_callables_wrapped'] is True
     assert result['serving_instrumentation']['overhead_measured'] is False
+
+
+def test_worker_launch_exports_staged_extension_path_to_real_child(tmp_path):
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean_serving_staged_child')
+    assert result['worker_returncode'] == 0 and not result['failed_sentinel']
+    assert not result['observation_errors']
+    env = result['server_environments'][0]
+    assert env['NCCL_IB_HCA'] == 'platform-value'
+    assert env['PYTHONPATH'].split(os.pathsep)[0].endswith('/tests/comparison/calibration')
+    assert len(result['child_imports']) == 1
+    assert result['child_imports'][0]['class'] == 'FullModelInventory'
+    assert result['child_imports'][0]['path'].endswith(
+        '/tests/comparison/calibration/native_full_structure.py')
 
 
 @pytest.mark.parametrize('case', ['canonical_clean_serving_missing_provenance',
