@@ -25,23 +25,28 @@ class Step5ProfileResult:
         return self.gpu_active_row if self.gpu_active_row is not None else self.event_row
 
 
-def summarize_replays(window_times, per_replay_times, active, *, max_time_cv):
+def summarize_replays(window_times, per_replay_times, active, *, max_time_cv, layer_reference_times=None):
     from frontier.profiling.common.timer_stats_store import TimerStatsStore
 
     stats = TimerStatsStore.get_stats_from_times(window_times)
     singles = TimerStatsStore.get_stats_from_times(per_replay_times)
+    references = dict(singles)
+    if layer_reference_times is not None:
+        references.update(TimerStatsStore.get_stats_from_times({"step5_layer_e2e": layer_reference_times}))
     targets = (*active, "step5_layer_e2e")
-    if any(stats[name]["mean"] <= 0 or singles[name]["median"] <= 0 for name in targets):
+    if any(stats[name]["mean"] <= 0 or references[name]["median"] <= 0 for name in targets):
         raise ValueError("Every active timing target must have positive measured work")
     cv = {name: float(stats[name]["std"] / stats[name]["mean"]) for name in targets}
-    disagreement = {name: float(abs(stats[name]["mean"] - singles[name]["median"])
-                                / singles[name]["median"]) for name in targets}
+    disagreement = {name: float(abs(stats[name]["mean"] - references[name]["median"])
+                                / references[name]["median"]) for name in targets}
     return stats, {
         "time_cv": cv["step5_layer_e2e"],
         "max_operator_time_cv": max(cv[name] for name in active),
         "max_time_cv": max_time_cv,
         "time_cv_by_target": json.dumps(cv),
         "per_iteration_time_stats": json.dumps(singles),
+        **({"layer_reference_time_stats": json.dumps(references["step5_layer_e2e"])}
+           if layer_reference_times is not None else {}),
         "median_relative_error_by_target": json.dumps(disagreement),
         "max_median_relative_error": max(disagreement.values()),
         "stability_pass": all(value <= max_time_cv for value in (*cv.values(), *disagreement.values())),

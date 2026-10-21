@@ -58,7 +58,7 @@ def stage_smoke(stage, run_id, *, dependency_site, gpus=1):
     return stage_package(stage, manifest, repo_root=REPO_ROOT, dependency_site=dependency_site)
 
 
-def describe_probe(stage, run_id=PROBE_RUN_ID, *, gpus=1):
+def describe_probe(stage, run_id=PROBE_RUN_ID, *, gpus=1, preemptible=False):
     """Describe an isolated operator probe, not qualified canonical serving."""
     from frontier.profiling.common.model_config import ModelConfig
     from frontier.profiling.linear_op.step5_job import METHODS, planned_profile, profile_arguments
@@ -68,7 +68,7 @@ def describe_probe(stage, run_id=PROBE_RUN_ID, *, gpus=1):
         raise ValueError("The small probe measures one isolated TP-local GPU")
     # Reuse path validation before reading any model or workload inputs.
     manifest = describe_job(stage, run_id, worker_command="", gpus=gpus,
-                            gpu_tag="H200", charged_group="step_main")
+                            gpu_tag="H200", charged_group="step_main", preemptible=preemptible)
     hashes = {"SHA256SUMS": hashlib.sha256(
         (REPO_ROOT / WORKLOAD / "SHA256SUMS").read_bytes()).hexdigest()}
     if hashes["SHA256SUMS"] != WORKLOAD_SUMS_SHA256:
@@ -122,7 +122,7 @@ def describe_probe(stage, run_id=PROBE_RUN_ID, *, gpus=1):
             *profile_arguments(linear_output, method, tokens=tokens, device="h200"),
         ]) + f" 2>&1 | tee {q(str(output / ('linear_' + method + '_worker.log')))}")
     manifest = describe_job(stage, run_id, worker_command="\n".join(worker), gpus=gpus,
-                            gpu_tag="H200", charged_group="step_main")
+                            gpu_tag="H200", charged_group="step_main", preemptible=preemptible)
     return {
         **manifest, "purpose": "SMALL_OPERATOR_PROBE_ONLY_NOT_CANONICAL_SERVING_QUALIFICATION",
         "verification_scripts": ["verify_fixed_probe.py", "judge_attention_smoke.py"],
@@ -151,8 +151,8 @@ def describe_probe(stage, run_id=PROBE_RUN_ID, *, gpus=1):
     }
 
 
-def stage_probe(stage, run_id=PROBE_RUN_ID, *, dependency_site, gpus=1):
-    manifest = describe_probe(stage, run_id, gpus=gpus)
+def stage_probe(stage, run_id=PROBE_RUN_ID, *, dependency_site, gpus=1, preemptible=False):
+    manifest = describe_probe(stage, run_id, gpus=gpus, preemptible=preemptible)
     return stage_package(stage, manifest, repo_root=REPO_ROOT, dependency_site=dependency_site,
                          additional_paths=(WORKLOAD,))
 
@@ -163,17 +163,24 @@ def main():
     parser.add_argument("--run-id", default=PROBE_RUN_ID)
     parser.add_argument("--dependency-site", type=Path)
     parser.add_argument("--fixed-workload-probe", action="store_true")
+    parser.add_argument("--preemptible", action="store_true",
+                        help="Use a preemptible H200 fixed-workload probe under the D21 reservation policy")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--gpus", type=int, default=1)
     args = parser.parse_args()
+    if args.preemptible and not args.fixed_workload_probe:
+        parser.error("--preemptible requires --fixed-workload-probe")
+    resources = {"gpus": args.gpus}
+    if args.fixed_workload_probe:
+        resources["preemptible"] = args.preemptible
     describe = describe_probe if args.fixed_workload_probe else describe_smoke
     stage = stage_probe if args.fixed_workload_probe else stage_smoke
     if args.dry_run:
-        manifest = describe(args.stage, args.run_id, gpus=args.gpus)
+        manifest = describe(args.stage, args.run_id, **resources)
     else:
         if args.dependency_site is None:
             parser.error("staging requires --dependency-site")
-        manifest = stage(args.stage, args.run_id, dependency_site=args.dependency_site, gpus=args.gpus)
+        manifest = stage(args.stage, args.run_id, dependency_site=args.dependency_site, **resources)
     print(json.dumps({**{k: v for k, v in manifest.items() if k != "sha256"},
                        "staged_files": len(manifest.get("sha256", {}))}, indent=2))
 

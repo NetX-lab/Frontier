@@ -125,6 +125,17 @@ def test_timing_quality_retains_single_replay_stats():
     assert json.loads(quality["per_iteration_time_stats"])["step5_layer_e2e"]["count"] == 2
 
 
+def test_independent_layer_reference_is_not_labelled_as_per_iteration_work():
+    candidates = {"step5_qkv_projection": [1., 1.], "step5_layer_e2e": [3., 3.]}
+    raw = {"step5_qkv_projection": [1., 1., 1., 1.]}
+    _, quality = summarize_replays(candidates, raw, ("step5_qkv_projection",),
+                                  max_time_cv=.05, layer_reference_times=[3.1, 3.1])
+    assert quality["stability_pass"]
+    assert "step5_layer_e2e" not in json.loads(quality["per_iteration_time_stats"])
+    assert json.loads(quality["layer_reference_time_stats"])["count"] == 2
+    assert json.loads(quality["median_relative_error_by_target"])["step5_layer_e2e"] == pytest.approx(.1 / 3.1)
+
+
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -1.])
 def test_nonfinite_or_negative_timing_rejected(config, bad):
     result = row(config)
@@ -482,6 +493,27 @@ def test_failed_csv_write_is_not_a_completed_row(tmp_path, fake_native_wrapper, 
     summary = json.loads((tmp_path / "output/summary.json").read_text())
     assert summary["actual_rows"] == 0
     assert not summary["complete"]
+
+
+def test_main_does_not_retry_failed_quality(tmp_path, fake_native_wrapper, monkeypatch):
+    from frontier.profiling.step5 import main as producer, vllm_wrapper
+
+    calls = []
+    original = vllm_wrapper.VllmStep5AttentionWrapper.profile
+
+    def unstable(self, cell, **kwargs):
+        calls.append(cell)
+        result = original(self, cell, **kwargs)
+        for row in (result.event_row, result.gpu_active_row):
+            if row is not None:
+                row["stability_pass"] = False
+        return result
+
+    monkeypatch.setattr(vllm_wrapper.VllmStep5AttentionWrapper, "profile", unstable)
+    producer.main(small_main_args(tmp_path))
+    assert len(calls) == len(set(calls)) == 4
+    summary = json.loads((tmp_path / "output/summary.json").read_text())
+    assert summary["stable_rows"] == 0 and summary["actual_rows"] == 4
 
 
 @pytest.mark.parametrize("fail_workspace", [False, True])

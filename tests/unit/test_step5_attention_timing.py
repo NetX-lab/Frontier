@@ -199,9 +199,9 @@ def test_singleton_boundaries_are_queued_before_first_sync_and_final_window_outp
     assert sum(call[0] == "prepare" for call in queued) == 1
     assert clock.calls[first_sync] == ("synchronize", 5)
     assert clock.calls[first_sync + 1:first_sync + 6] == [("elapsed_time", i, i + 1) for i in range(5)]
-    assert sum(call[0] == "synchronize" for call in clock.calls) == 12
+    assert sum(call[0] == "synchronize" for call in clock.calls) == 22
     assert result.last_output is clock.outputs[-1]
-    assert result.last_output.invocation == 5 + sum(result.window_replays)
+    assert result.last_output.invocation == 5 + 2 * sum(result.window_replays)
     assert result.last_output.state == clock.state == result.window_replays[-1]
 
 
@@ -210,6 +210,33 @@ def collect(clock, *, sample_count=3, min_window_ms=0.5):
         clock.torch, clock.run, clock.prepare,
         sample_count=sample_count, min_window_ms=min_window_ms,
     )
+
+
+def test_independent_outer_windows_ignore_internal_boundary_event_overhead():
+    class BoundaryCostEvent(FakeEvent):
+        def record(self):
+            self.clock.time_ms += Fraction("0.00333")
+            super().record()
+
+    class BoundaryCostClock(FakeCudaClock):
+        def event(self, *, enable_timing):
+            event = BoundaryCostEvent(self, len(self.events))
+            self.events.append(event)
+            self.calls.append(("event", event.index))
+            return event
+
+    clock = BoundaryCostClock(replay_ms="0.0347")
+    result = collect(clock)
+    assert len(clock.windows) >= 1 + 2 * 3, "Each cohort must execute its own measured windows"
+    assert result.reference_window_replays == result.window_replays
+    assert result.reference_times is not result.amortized_times
+    assert min(result.reference_window_durations_ms) >= .5
+    assert median(result.single_replay_times) == pytest.approx(.03803)
+    assert abs(mean(result.amortized_times) - median(result.reference_times)) / median(result.reference_times) <= .05
+    assert median(result.single_replay_times) / mean(result.amortized_times) - 1 > .05
+    # Each candidate/reference window has its own event pair and native invocations.
+    assert clock.windows[-6::2] == clock.windows[-5::2] == list(result.window_replays)
+    assert_window_calls(clock)
 
 
 def assert_window_calls(clock, *, single_samples_read=None):
@@ -244,7 +271,8 @@ def test_fifty_ten_microsecond_replays_reach_half_millisecond():
     assert result.amortized_times == (0.01,) * 3
     assert result.window_durations_ms == (0.5,) * 3
     assert result.window_replays == (50,) * 3
-    assert clock.windows == [3, 50, 50, 50]
+    assert clock.windows == [3, 50, 50, 50, 50, 50, 50]
+    assert result.reference_times == (0.01,) * 3
     assert_window_calls(clock)
 
 
@@ -260,7 +288,7 @@ def test_clean_last_output_is_the_last_measured_invocation_reference():
 
     result = collect_replay_timings(clock.torch, run, clock.prepare, sample_count=2, min_window_ms=0.5)
 
-    assert len(outputs) == sum(clock.windows) == 102
+    assert len(outputs) == sum(clock.windows) == 202
     assert result.last_output is outputs[-1]
     assert_window_calls(clock)
 
@@ -288,7 +316,7 @@ def test_preparation_cost_is_excluded_from_singles_and_amortized_windows():
     assert result.single_replay_times == (0.01, 0.01)
     assert result.window_durations_ms == (0.5, 0.5)
     assert result.amortized_times == (0.01, 0.01)
-    assert clock.time_ms == Fraction("3001.02")
+    assert clock.time_ms == Fraction("5002.02")
     assert_window_calls(clock)
 
 
@@ -298,10 +326,10 @@ def test_each_short_window_increases_replays_until_it_meets_the_target():
     )
     result = collect(clock, sample_count=2)
 
-    assert clock.windows == [2, 50, 100, 100, 200]
-    assert result.window_replays == (100, 200)
-    assert result.window_durations_ms == (0.5, 2.0)
-    assert result.amortized_times == (0.005, 0.01)
+    assert clock.windows == [2, 50, 50, 100, 100, 200, 200, 200, 200]
+    assert result.window_replays == result.reference_window_replays == (200, 200)
+    assert result.window_durations_ms == result.reference_window_durations_ms == (2.0, 2.0)
+    assert result.amortized_times == result.reference_times == (0.01, 0.01)
     assert result.single_replay_times == (0.01, 0.01)
     assert_window_calls(clock)
 
@@ -315,8 +343,19 @@ def test_noise_between_single_and_amortized_samples_is_not_corrected():
 
     assert result.single_replay_times == (0.04, 0.01, 0.02)
     assert result.window_replays == (25, 25, 25)
-    assert result.window_durations_ms == (0.75, 1.0, 0.75)
-    assert result.amortized_times == (0.03, 0.04, 0.03)
+    assert result.window_durations_ms == (0.75, 0.75, 0.75)
+    assert result.amortized_times == (0.03, 0.03, 0.03)
+    assert result.reference_times == (0.04, 0.03, 0.03)
+    assert len(clock.windows) == 7, "Disagreement must not cause a quality retry"
+    assert_window_calls(clock)
+
+
+def test_short_reference_increases_both_cohorts_counts_without_reusing_candidate_samples():
+    clock = FakeCudaClock(window_replay_ms=("0.01", "0.01", "0.005"))
+    result = collect(clock, sample_count=2)
+    assert clock.windows == [2, 50, 50, 100, 100, 100, 100]
+    assert result.window_replays == result.reference_window_replays == (100, 100)
+    assert result.window_durations_ms == result.reference_window_durations_ms == (1., 1.)
     assert_window_calls(clock)
 
 
@@ -335,7 +374,7 @@ def test_parent_warmup_and_capture_costs_do_not_enter_collected_samples():
 
     assert parent_calls == ["warmup", "capture"]
     assert result.single_replay_times == result.amortized_times == (0.01, 0.01)
-    assert clock.time_ms == Fraction("7001.02")
+    assert clock.time_ms == Fraction("7002.02")
     assert_window_calls(clock)
 
 
@@ -356,11 +395,12 @@ def test_invalid_target_fails_before_preparation_or_events(target):
 
 
 @pytest.mark.parametrize("duration", [0.0, -0.01, float("nan"), float("inf"), -float("inf")])
-@pytest.mark.parametrize("interval", ["single", "first_window", "last_window"])
+@pytest.mark.parametrize("interval", ["single", "first_window", "last_window", "first_reference", "last_reference"])
 def test_invalid_single_or_window_duration_is_rejected(monkeypatch, duration, interval):
     clock = FakeCudaClock()
     elapsed_time = FakeEvent.elapsed_time
-    start_index = {"single": 0, "first_window": 3, "last_window": 5}[interval]
+    start_index = {"single": 0, "first_window": 3, "last_window": 7,
+                   "first_reference": 5, "last_reference": 9}[interval]
 
     def measured(self, end):
         actual = elapsed_time(self, end)
@@ -369,7 +409,8 @@ def test_invalid_single_or_window_duration_is_rejected(monkeypatch, duration, in
     monkeypatch.setattr(FakeEvent, "elapsed_time", measured)
     with pytest.raises(ValueError, match="duration must be positive and finite"):
         collect(clock, sample_count=2)
-    assert len(clock.windows) == {"single": 1, "first_window": 2, "last_window": 3}[interval]
+    assert len(clock.windows) == {"single": 1, "first_window": 2, "last_window": 4,
+                                  "first_reference": 3, "last_reference": 5}[interval]
     assert_window_calls(clock, single_samples_read=1 if interval == "single" else 2)
 
 

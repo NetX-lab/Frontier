@@ -33,7 +33,8 @@ def verify(stage):
         raise ValueError("Staged file inventory differs from manifest")
     assert manifest["purpose"] == "SMALL_OPERATOR_PROBE_ONLY_NOT_CANONICAL_SERVING_QUALIFICATION"
     assert (manifest["gpu_tag"], manifest["charged_group"], manifest["gpus"]) == ("H200", "step_main", 1)
-    assert manifest["preemptible"] is False and manifest["timeout_seconds"] == 3600
+    assert type(manifest["preemptible"]) is bool and manifest["timeout_seconds"] == 3600
+    assert ("--preemptible" in shlex.split(manifest["submission_command"])) == manifest["preemptible"]
     assert manifest["cloud_output"].startswith("/mnt/codesign-exp/ycfeng/")
     assert manifest["source_mount"] == str(stage)
     assert shlex.split(manifest["submission_command"])[-1] == manifest["worker_command"]

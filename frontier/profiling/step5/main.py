@@ -105,21 +105,12 @@ def main(argv=None):
                         cell, warmup_iterations=args.warmup_iterations,
                         profile_iterations=args.profile_iterations, max_time_cv=args.max_time_cv,
                         min_timing_window_ms=args.min_timing_window_ms)
-                    first = result
-                    if not result.calibration_row["stability_pass"]:
-                        # Retain the first outcome, then make the one configured
-                        # stability retry explicit rather than hiding it.
-                        result = wrapper.profile(
-                            cell, warmup_iterations=args.warmup_iterations,
-                            profile_iterations=args.profile_iterations, max_time_cv=args.max_time_cv,
-                            min_timing_window_ms=args.min_timing_window_ms)
-                    for current, initial in ((result.event_row, first.event_row),
-                                             (result.gpu_active_row, first.gpu_active_row)):
+                    for current in (result.event_row, result.gpu_active_row):
                         if current is not None:
-                            current["initial_time_cv"] = initial["time_cv"]
-                            current["initial_trace_path"] = initial["trace_path"]
-                            current["initial_time_stats"] = json.dumps(initial["time_stats"])
-                            current["stability_attempts"] = 1 if result is first else 2
+                            current["initial_time_cv"] = current["time_cv"]
+                            current["initial_trace_path"] = current["trace_path"]
+                            current["initial_time_stats"] = json.dumps(current["time_stats"])
+                            current["stability_attempts"] = 1
                     rows.append(result.event_row)
                     if result.gpu_active_row is not None:
                         gpu_active_rows.append(result.gpu_active_row)

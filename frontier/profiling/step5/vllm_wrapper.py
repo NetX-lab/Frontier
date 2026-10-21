@@ -460,8 +460,8 @@ class VllmStep5AttentionWrapper:
             samples["step5_layer_e2e"] = clean.amortized_times
             raw = {name: scoped.per_replay_times[name] if name in active
                    else [0.] * profile_iterations for name in OPERATOR_NAMES}
-            raw["step5_layer_e2e"] = clean.single_replay_times
-            stats, quality = summarize_replays(samples, raw, active, max_time_cv=max_time_cv)
+            stats, quality = summarize_replays(samples, raw, active, max_time_cv=max_time_cv,
+                layer_reference_times=clean.reference_times)
             scoped_stats = TimerStatsStore.get_stats_from_times(scoped.amortized_times)
             outer_stats = TimerStatsStore.get_stats_from_times({"layer": [duration / count
                 for duration, count in zip(scoped.window_durations_ms, clean.window_replays)]})["layer"]
@@ -500,6 +500,14 @@ class VllmStep5AttentionWrapper:
                 "calibration_candidate": cell.graph_mode == "full",
                 "window_replays": json.dumps(clean.window_replays),
                 "window_durations_ms": json.dumps(clean.window_durations_ms),
+                "layer_reference_timing_basis": "independent_outer_only_normalized_clean_replay_windows",
+                "layer_reference_times_ms": json.dumps(clean.reference_times),
+                "reference_window_replays": json.dumps(clean.reference_window_replays),
+                "reference_window_durations_ms": json.dumps(clean.reference_window_durations_ms),
+                "boundary_single_replay_role": "instrumentation_diagnostics_only",
+                "boundary_single_replay_times_ms": json.dumps(clean.single_replay_times),
+                "boundary_single_replay_time_stats": json.dumps(TimerStatsStore.get_stats_from_times(
+                    {"layer": clean.single_replay_times})["layer"]),
                 "scoped_layer_time_stats": json.dumps(scoped_stats["step5_layer_scoped"]),
                 "scoped_outer_time_stats": json.dumps(outer_stats),
                 "operator_ratio_definition": "exclusive_scope_window_sum / matching_instrumented_layer_window_sum",
