@@ -14,6 +14,15 @@ The parent alone checks quota/auth/priority, submits and monitors. This task ran
 
 ## New stages and resource budget
 
+Source commit `a7551a3a26ec84c66af9a88d282019f47e5ab52b`. Each stage passed its sealed verifier,all3415 payload hashes/exact inventory,all5 producer CLI dry-runs,shell syntax and533 committed source payload matches. No source changes followed sealing.
+
+| Role | Sealed manifest SHA256 |
+| --- | --- |
+| PREFILL | `82dfc1146321e92a8fffdffc41e27e2572d5d5993bf95c0d5be44a4cf1c0496c` |
+| DECODE | `f09b6fc0436889042dabb6fb0d322b9a9d9c17b9b4860f425342b8e9a50a5ca5` |
+
+Retained preflight/audit:`evidence/{prefill,decode}_package_preflight01.json`,`evidence/source_stage_audit01.json`. Original D18 and passed D22 stages each retain all3407 original payload hashes and unchanged manifest;no verdict was recomputed.
+
 Both new packages use one isolated H800 TP-local rank, codesign, **non-preemptible**,8CPU/32GiB,3600s cap. They feed the32-GPU serving case(P16/D16,eachTP8/DP2/EP16/PP1) but do not reserve or emulate32 serving GPUs. Parent can run the two packages independently if that does not delay P0 serving. Expected planning range30–60minutes per role; hard maximum1GPUh per role,2GPUh total. This is an unmeasured planning estimate,not a runtime claim; no automatic expanded-budget retry is authorized.
 
 ```bash

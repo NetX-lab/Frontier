@@ -12,7 +12,7 @@
 - completed C source: configured P0 native35 capture buckets from retained H800 init log,7168 context,128seq,8192budget,448columns. Independent P/D command packages include attention,linear and EP16 MoE;all10 actual CPU CLI dry-runs returned0. Prepared P4event+4GPU-active;D20event+4GPU-active. These are representative layers0/3 and widths1/2,not full admission or an observed-width census.
 - completed verification checkpoint: initial meaningful native forward RED absent `has_attention_metadata` constructor; initial GREEN143PASS. Expanded producer/consumer/native helpers281PASS;latest focused seams70PASS including explicit cache-mutation and budget/page-offset fault checks. Counts overlap,not additive. First combined broad run hit120s shell timeout;rerun uses unlimited background timeout,not a quality retry.
 - completed D CPU:448 final focused PASS;latest-result union998PASS/4 confirmed inherited failures/1002IDs. All980 starting bc8ae27 IDs retained,22 added. Actual starting-source comparison reproduces4 execution-disabled assertion failures;one archive-no-git environment failure is reported separately. A new dataclass-default mismatch in the old boundary CPU matcher/expected description was corrected narrowly;no native boundary experiment was run. Original D18 one renamed runtime-disabled test already predates this task;no new test removal.
-- in-progress C/D: source commit,sealed new role stages,full hash/CLI preflight and final parent-only receipt. Exact commands/counts/limits recorded in test report and evidence/.
+- completed C/D:source commit a7551a3;fresh `prefill_stage01` and `decode_stage01` sealed. Both actual preflights PASS,3415 payload hashes/exact inventory and533 committed source matches each,all10 sealed CLI dry-runs PASS. Original D18 and D22 each retain all3407 payload hashes/manifest with no verdict recomputation. Native H800 execution is deliberately pending parent submission,not a failed CPU deliverable. Final archive/handoff completed;requirements reread before closure.
 - limits: native H200 D22 PASS reused as protocol evidence only;not H800 time. Actual variable widths/arrays remain unobserved;DSA partial-summary contexts remain unsupported by repeated timing. No further causal experiment is needed.
 
 ## 1. 规划完成情况
@@ -59,3 +59,48 @@
 1. 新 idle-DP 是真实无 metadata 调用，不是普通 q1 替代。
 2. 两个 role 的所有 producer CLI 已可执行；native H800 时间仍需 parent 实测。
 3. 其他90个 global layers、variable widths/contexts、DSA partial contexts 和线性质量仍是明确准入缺口。
+
+## 1. 规划完成情况
+
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| A native idle-DP | PASS | 原生 None metadata/slot seam、positive scopes、cache mutation 拒绝均已验证。 |
+| B consumer-shaped rows | PASS | 不改 consumer；物理448列、per-replay root count、128/8192预算验证通过。 |
+| C sealed P0 package | PASS | 两个 role 的 sealed preflight、3415 hashes、533 committed payloads 全通过。 |
+| D regression/handoff | PASS | 448 focused PASS，998PASS/4起点继承FAIL，无新增失败；commands/budget/limits 已归档。 |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** 首次 producer 里程碑至 source a7551a3 和两个 sealed role stages｜**当前前沿：** parent-only GPU submission
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | 在10条实际 sealed CLI 与 source/hash preflight 通过后停止扩展。 |
+| D2 细节反复重试 | CLEAR | 只修复已观察到的 input-default 匹配；没有 native quality retry 或参数扫描。 |
+| D3 支线问题修补 | CLEAR | 起点 execution-disabled 断言仅报告，不修 consumer。 |
+| D4 可并行任务停滞 | CLEAR | 两个独立 role stage/preflight 并行；无 delegation 或挂起子任务。 |
+| D5 超范围镀金 | CLEAR | 未扩展 predictor/admission/simulator/canonical/G3。 |
+| D6 分析空转 | CLEAR | 可调用 producer、两个实际封存包和 source commit 已交付。 |
+| D7 路线违背 | CLEAR | H800/codesign/nonpreemptible，D22三文件 byte-identical，旧 stages/receipts 不变。 |
+
+**文档检查：** S1–S6 均未发现明显缺陷；native full admission 明确不在本次 CPU/package 完成声明内。
+**归因：** 无。
+
+## 3. 纠正建议
+
+**分支：** A：spec/tickets 合理，无需改动。
+
+**需停止的偏离行为：** 无。
+
+**接下去的路线：**
+1. Parent：检查 P0 优先级/quota/auth，按 handoff 提交两个独立包 → 取得真实 H800 输出与严格 receipt。
+2. Parent：依据真实 reached shape census 补齐剩余 global layers/widths/contexts 和独立 owners → unchanged admission 全部满足后再声明 qualification。
+
+## 4. 最值得关注的 3 点
+
+1. 本次交付是可执行 producer 和 sealed packages，不是完整准入或准确率结论。
+2. 两包最多2GPUh；每包1H800、3600s，均 non-preemptible；不预留32-serving-GPU allocation。
+3. 未执行任何 GPU/platform/auth/network/cloud/SSH/Docker 操作；后续启动权完全交回 parent。

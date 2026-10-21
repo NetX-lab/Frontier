@@ -70,4 +70,41 @@ Actual retained H800 initialization policy was parsed and compared with the comm
 
 PREFILL:4event+4GPU-active,12linear rows/method,42MoE steps/method. DECODE:20event+4GPU-active,14linear rows/method,48MoE steps/method. Each role is one H800/codesign/non-preemptible worker with3600s cap. All no-metadata cells have one slot;normal physical table width448;all logical shapes remain independently sampled. Prepared layers0/3 and widths1/2 are bounded measurement points,not complete92-layer/variable-shape admission.
 
-Sealed stage/preflight/hash results are appended after source commit. See `handoff.md` for exact parent commands,budget and full remaining gaps. No serving accuracy or canonical/G3 qualification is claimed.
+## Sealed package verification
+
+Source commit `a7551a3a26ec84c66af9a88d282019f47e5ab52b`. Both actual sealed preflights **PASS**:3415 payload hashes and exact inventory,common workload identity,attention shapes/capacity/policy,both linear and both MoE dry-runs,launcher shell syntax. Each stage's533 tracked payloads match that committed source;remaining payloads are reused offline dependencies and generated launch wrappers. The manifest is hashed separately. No source edits followed sealing.
+
+| Role | Stage | Manifest SHA256 | Linear rows | MoE steps/method |
+| --- | --- | --- | --- | --- |
+| PREFILL | `/data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01` | `82dfc1146321e92a8fffdffc41e27e2572d5d5993bf95c0d5be44a4cf1c0496c` | 24 | 42 |
+| DECODE | `/data/ycfeng/tmp/step5_p0_profiles_20261021/decode_stage01` | `f09b6fc0436889042dabb6fb0d322b9a9d9c17b9b4860f425342b8e9a50a5ca5` | 28 | 48 |
+
+Actual stage commands differed only by role/run ID/stage:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 VLLM_TARGET_DEVICE=cpu TMPDIR=/data/ycfeng/tmp \
+  PYTHONPATH=/data/ycfeng/Frontier/.worktrees/step5-p0-profiles:/data/ycfeng/tmp/step5_profiling_20261020/extra_site \
+  /data/ycfeng/envs/oneshot-opd-py312/bin/python -B -m frontier.profiling.step5.job \
+  --p0-role PREFILL --stage /data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01 \
+  --run-id p0_h800_prefill_20261021_01 \
+  --dependency-site /data/ycfeng/tmp/d22_timing_20261021/h200_full_probe_stage01/offline_site
+```
+
+DECODE exact substitutions:`--p0-role DECODE --stage /data/ycfeng/tmp/step5_p0_profiles_20261021/decode_stage01 --run-id p0_h800_decode_20261021_01`.
+
+Actual sealed verification commands used the role-specific stage on both PYTHONPATH entries and script path:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 VLLM_TARGET_DEVICE=cpu TMPDIR=/data/ycfeng/tmp \
+  PYTHONPATH=/data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01:/data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01/offline_site \
+  /data/ycfeng/envs/oneshot-opd-py312/bin/python -B \
+  /data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01/tests/integration/step5_profiling/verify_fixed_probe.py \
+  --stage /data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_stage01 \
+  --output /data/ycfeng/tmp/step5_p0_profiles_20261021/prefill_package_preflight01.json
+```
+
+The DECODE command replaces every `prefill_stage01` with `decode_stage01` and output basename with `decode_package_preflight01.json`. Both commands returned0;retained result JSONs are in `evidence/`. The verifier executes all5 actual producer dry-runs from each sealed stage,not mutable workspace code. Logs remain in the temporary evidence directory;do not overwrite existing results when rerunning.
+
+Additional original-stage hash-only audit PASS:all3407 D18 stage02 payloads,manifest `42545748def4f40947037a61ca68541d4f3736cd5e8faaa60a8ec3698be91077`;all3407 D22 stage01 payloads,manifest `a1dc28ceca71235b000e7f7448464a5ff76d27e76d2d51ee63fe0811908b5312`. No old receipt/verdict was recomputed. Full source/hash/resource audit:`evidence/source_stage_audit01.json`.
+
+`git diff --check` and staged whitespace check PASS before source commit. See `handoff.md` for exact parent-only submission/judgment commands,budget and remaining gaps. Native H800 timing/full admission remains UNVERIFIED;no serving accuracy or canonical/G3 qualification is claimed.
