@@ -44,7 +44,17 @@ def inspect_row(row, kind, max_time_cv):
         raise ValueError("query_lens/context_lens must contain matching valid request lengths")
     tokens, batch = num("batch_num_tokens", positive=True, integer=True), num("batch_size", positive=True, integer=True)
     max_seqs = num("native_max_num_seqs", positive=True, integer=True)
-    expected_mode = choose_graph_mode(row["phase"], tokens, json.loads(row["native_cudagraph_capture_sizes"]))
+    metadata = number(row["has_attention_metadata"], "has_attention_metadata", integer=True)
+    if metadata not in (0, 1):
+        raise ValueError("has_attention_metadata must be zero or one")
+    if not metadata:
+        if queries != [1] or contexts != [0] or row["phase"] != "decode":
+            raise ValueError("Request-free input must have one physical slot and no history")
+        expected_mode = "none"
+    elif row.get("graph_dispatch_basis") == "independent_eager_profile":
+        expected_mode = "none"
+    else:
+        expected_mode = choose_graph_mode(row["phase"], tokens, json.loads(row["native_cudagraph_capture_sizes"]))
     layer = num("global_layer_id", integer=True)
     prefix_status = row["prefix_continuation_validation"]
     checks = {
@@ -107,8 +117,8 @@ def inspect_row(row, kind, max_time_cv):
     if row["stability_pass"] not in ("True", "False"):
         raise ValueError("stability_pass must be True or False")
     result = {
-        "cell": f"layer{layer}_{row['phase']}_q{queries}_c{contexts}",
-        "kind": kind, "candidate": kind == "KERNEL_ONLY" or expected_mode == "full",
+        "cell": f"layer{layer}_{row['phase']}_q{queries}_c{contexts}_metadata{metadata}_mode{expected_mode}",
+        "kind": kind, "candidate": kind == "KERNEL_ONLY" or expected_mode != "none",
         "checks": checks, "prefix_required": any(contexts), "expected_graph_mode": expected_mode,
         "actual_graph_mode": row["graph_mode"],
         "cv_by_target": cv, "median_relative_error_by_target": median_error,

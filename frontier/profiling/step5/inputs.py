@@ -19,6 +19,8 @@ class Step5ProfileInput:
     context_lens: tuple[int, ...]
     phase: str
     graph_mode: str = "none"
+    has_attention_metadata: bool = True
+    block_table_columns: int | None = None
 
     def __post_init__(self):
         if type(self.global_layer_id) is not int or self.global_layer_id < 0:
@@ -39,6 +41,17 @@ class Step5ProfileInput:
             raise ValueError("graph_mode must be none, piecewise or full")
         if self.graph_mode == "full" and self.phase != "decode":
             raise ValueError("Full graph capture is decode-only")
+        if type(self.has_attention_metadata) is not bool:
+            raise ValueError("has_attention_metadata must be boolean")
+        if not self.has_attention_metadata and not (
+                self.phase == "decode" and self.graph_mode == "none"
+                and self.query_lens == (1,) and self.context_lens == (0,)
+                and self.block_table_columns in (None, 0)):
+            raise ValueError("Request-free profiling requires one eager slot without history or block table")
+        if self.block_table_columns is not None and (
+                type(self.block_table_columns) is not int
+                or self.block_table_columns < int(self.has_attention_metadata)):
+            raise ValueError("block_table_columns must be an integral physical extent")
 
     @property
     def num_tokens(self):
@@ -54,12 +67,17 @@ class Step5ProfileInput:
 
     def workload(self, config, *, block_size, max_model_len):
         # Use the physical table width actually allocated by this producer.
+        columns = (self.block_table_columns if self.block_table_columns is not None else
+                   ceil(max(self.sequence_lens) / block_size) if self.has_attention_metadata else 0)
+        if columns > ceil(max_model_len / block_size):
+            raise ValueError("Physical block table exceeds the producer's allocated serving capacity")
         return Step5AttentionWorkload.from_lengths(
             config, phase=self.phase, query_lengths=self.query_lens,
             sequence_lengths=self.sequence_lens, physical_query_rows=self.num_tokens,
             block_size_tokens=block_size,
-            block_table_columns=ceil(max(self.sequence_lens) / block_size),
+            block_table_columns=columns,
             max_model_len_tokens=max_model_len, graph_mode=self.graph_mode,
+            has_attention_metadata=self.has_attention_metadata,
         )
 
 
@@ -89,8 +107,14 @@ def read_profile_inputs(path, *, cudagraph_capture_sizes):
     for record in records:
         values = {**record, "query_lens": tuple(record["query_lens"]),
                   "context_lens": tuple(record["context_lens"])}
-        values["graph_mode"] = choose_graph_mode(
-            values["phase"], sum(values["query_lens"]), cudagraph_capture_sizes)
+        # Explicit eager inputs collect the independent GPU-active family even
+        # when serving could dispatch a graph. Never label them graph timings.
+        mode = (choose_graph_mode(values["phase"], sum(values["query_lens"]), cudagraph_capture_sizes)
+                if values.get("has_attention_metadata", True) and values.get("graph_mode") != "none"
+                else "none")
+        if "graph_mode" in values and values["graph_mode"] != mode:
+            raise ValueError("Explicit graph mode must match native dispatch, or request independent eager work")
+        values["graph_mode"] = mode
         result.append(Step5ProfileInput(**values))
     if not result or len(set(result)) != len(result):
         raise ValueError("Explicit profile inputs must contain distinct cells")

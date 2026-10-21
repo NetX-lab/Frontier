@@ -1,0 +1,41 @@
+{
+  "commit": "bc8ae27",
+  "cwd": "/data/ycfeng/tmp/step5_p0_profiles_20261021/bc8ae27_source",
+  "command": [
+    "/data/ycfeng/envs/oneshot-opd-py312/bin/python",
+    "-B",
+    "-c",
+    "import sys,types,pathlib; p=types.ModuleType('tests'); p.__path__=[str(pathlib.Path.cwd()/'tests')]; sys.modules['tests']=p; import pytest; raise SystemExit(pytest.main(['tests/unit/test_step5_attention_profiling.py', 'tests/unit/test_step5_attention_timing.py', 'tests/unit/test_step5_attention_replay.py', 'tests/unit/test_step5_device_activity.py', 'tests/unit/test_step5_moe_profiling.py', 'tests/unit/test_gdn_profiler_cpu_increment7.py', 'tests/unit/test_gdn_profile_samples.py', 'tests/unit/test_dsa_attention_profiling.py', 'tests/unit/test_step5_linear_op_ownership.py', 'tests/unit/test_step5_linear_op_activation.py', 'tests/unit/test_step5_linear_op_job.py', 'tests/unit/test_linear_op_profiling_output_metadata.py', 'tests/unit/test_glm_linear_op_profiling.py', 'tests/unit/test_native_profiling_model_type_policy.py', 'tests/unit/test_ffn_memory_operator_families.py', 'tests/unit/test_moe_share_expert_operator_families.py', 'tests/unit/test_profiling_plan_target_embedded_mtp.py', 'tests/unit/test_profiling_governance_minimal_red.py', 'tests/unit/test_step5_attention_judgment.py', 'tests/unit/test_step5_fixed_probe.py', 'tests/unit/test_step5_boundary_probe.py', 'tests/unit/test_step5_measured_training.py', 'tests/unit/test_step5_measured_interfaces.py', 'tests/unit/test_step5_measured_public_predictor.py', 'tests/unit/test_step5_measured_pd.py', 'tests/unit/test_step5_measured_replay.py', 'tests/unit/test_step5_measured_ffn_replay.py', 'tests/unit/test_step5_measured_manager.py', 'tests/unit/test_step5_attention_input_union.py', '-q', '--tb=short', '--durations=5', '-p', 'no:cacheprovider', '--junitxml=/data/ycfeng/tmp/step5_p0_profiles_20261021/bc8ae27_baseline01.xml']))"
+  ],
+  "files": [
+    "test_step5_attention_profiling",
+    "test_step5_attention_timing",
+    "test_step5_attention_replay",
+    "test_step5_device_activity",
+    "test_step5_moe_profiling",
+    "test_gdn_profiler_cpu_increment7",
+    "test_gdn_profile_samples",
+    "test_dsa_attention_profiling",
+    "test_step5_linear_op_ownership",
+    "test_step5_linear_op_activation",
+    "test_step5_linear_op_job",
+    "test_linear_op_profiling_output_metadata",
+    "test_glm_linear_op_profiling",
+    "test_native_profiling_model_type_policy",
+    "test_ffn_memory_operator_families",
+    "test_moe_share_expert_operator_families",
+    "test_profiling_plan_target_embedded_mtp",
+    "test_profiling_governance_minimal_red",
+    "test_step5_attention_judgment",
+    "test_step5_fixed_probe",
+    "test_step5_boundary_probe",
+    "test_step5_measured_training",
+    "test_step5_measured_interfaces",
+    "test_step5_measured_public_predictor",
+    "test_step5_measured_pd",
+    "test_step5_measured_replay",
+    "test_step5_measured_ffn_replay",
+    "test_step5_measured_manager",
+    "test_step5_attention_input_union"
+  ]
+}

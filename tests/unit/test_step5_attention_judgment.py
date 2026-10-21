@@ -25,6 +25,7 @@ def make_row(kind="CUDA_EVENT", phase="decode"):
     means[judgment.LAYER] = .6
     row = {
         "measurement_type": kind, "global_layer_id": "0", "phase": phase,
+        "has_attention_metadata": "1",
         "batch_size": "1", "batch_num_tokens": "1" if phase == "decode" else "16",
         "query_lens": "[1]" if phase == "decode" else "[16]", "context_lens": "[512]",
         "native_max_num_seqs": "1", "native_cudagraph_capture_sizes": "[1, 2]",
@@ -61,6 +62,33 @@ def make_row(kind="CUDA_EVENT", phase="decode"):
             "boundary_single_replay_time_stats": json.dumps({"median": .9, "count": 2}),
         })
     return row
+
+
+def test_request_free_judgment_keeps_positive_work_and_distinct_identity():
+    idle = make_row("KERNEL_ONLY")
+    idle.update(has_attention_metadata="0", context_lens="[0]", graph_mode="none",
+                prefix_continuation_validation="not_applicable")
+    result = judgment.inspect_row(idle, "KERNEL_ONLY", .05)
+    assert result["candidate"] and all(result["checks"].values())
+    ordinary = {**idle, "has_attention_metadata": "1", "graph_mode": "full"}
+    assert judgment.inspect_row(ordinary, "KERNEL_ONLY", .05)["cell"] != result["cell"]
+    idle[f"time_stats.{OP}.std"] = ".02"
+    assert not judgment.inspect_row(idle, "KERNEL_ONLY", .05)["checks"]["cv"]
+    idle["context_lens"] = "[8]"
+    with pytest.raises(ValueError, match="no history"):
+        judgment.inspect_row(idle, "KERNEL_ONLY", .05)
+
+
+def test_independent_eager_profile_and_piecewise_graph_are_separate_cells():
+    eager = make_row("KERNEL_ONLY", "prefill")
+    eager.update(native_cudagraph_capture_sizes="[1, 2, 4, 8, 16]",
+                 graph_dispatch_basis="independent_eager_profile")
+    graph = make_row("CUDA_EVENT", "prefill")
+    graph.update(native_cudagraph_capture_sizes="[1, 2, 4, 8, 16]", graph_mode="piecewise")
+    a = judgment.inspect_row(eager, "KERNEL_ONLY", .05)
+    b = judgment.inspect_row(graph, "CUDA_EVENT", .05)
+    assert a["checks"]["graph_dispatch"] and b["checks"]["graph_dispatch"]
+    assert a["candidate"] and b["candidate"] and a["cell"] != b["cell"]
 
 
 @pytest.fixture

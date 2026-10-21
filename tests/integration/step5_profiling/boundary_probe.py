@@ -46,9 +46,9 @@ def describe(settings):
         raise ValueError("warmup_iterations must be a positive integer")
     cells = read_profile_inputs(REPO_ROOT / PROBE_INPUTS,
                                cudagraph_capture_sizes=native["cudagraph_capture_sizes"])
-    selected = [cell for cell in cells if {k: v for k, v in asdict(cell).items() if k != "graph_mode"}
-                == {**settings["cell"], "query_lens": tuple(settings["cell"]["query_lens"]),
-                    "context_lens": tuple(settings["cell"]["context_lens"])}]
+    selected = [cell for cell in cells if cell == Step5ProfileInput(
+        **{**settings["cell"], "query_lens": tuple(settings["cell"]["query_lens"]),
+           "context_lens": tuple(settings["cell"]["context_lens"]), "graph_mode": cell.graph_mode})]
     if len(selected) != 1:
         raise ValueError("The diagnostic must select exactly one existing fixed-probe input")
     cell = selected[0]

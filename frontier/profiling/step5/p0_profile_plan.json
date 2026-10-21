@@ -1,0 +1,33 @@
+{
+  "case_id": "h800_32",
+  "model": "stepfun-ai/Step-5-Preview",
+  "serving_topology_per_role": {"gpus": 16, "attention_tp": 8, "attention_dp": 2, "expert_parallel": 16, "pipeline_parallel": 1},
+  "gpu_tag": "H800",
+  "charged_group": "codesign",
+  "preemptible": false,
+  "timeout_seconds": 3600,
+  "block_size": 16,
+  "max_model_len": 7168,
+  "max_num_seqs": 128,
+  "max_num_batched_tokens": 8192,
+  "cudagraph_capture_sizes": [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256],
+  "native_policy_evidence": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0216.host.platform.shaipower.com/server.log:29",
+  "lengths": {"accepted_prompt": 6144, "observed_prefill_compute_and_transfer": 6128, "decode_prompt_tail": 16, "output": 1024},
+  "roles": {
+    "PREFILL": {"input_file": "frontier/profiling/step5/p0_prefill_inputs.json", "linear_tokens": [1, 2, 6128, 6129, 6144, 6145], "moe_tokens": [1, 2, 11, 6128, 6129, 6144, 6145]},
+    "DECODE": {"input_file": "frontier/profiling/step5/p0_decode_inputs.json", "linear_tokens": [1, 2, 3, 4, 16, 17, 32], "moe_tokens": [1, 2, 3, 4, 11, 16, 17, 32]}
+  },
+  "coverage_status": "PREPARED_BOUNDED_INDEPENDENT_PRODUCERS_NOT_COMPLETE_ADMISSION",
+  "coverage_limits": [
+    "Prepared attention layers 0 and 3 are representatives, not coverage for the other 90 global layers required by exact consumer lookup",
+    "Measured request-free width is exactly one physical slot; no wider no-metadata workload is native-proven or accepted by the consumer",
+    "Live decode widths 1 and 2 and equal contexts are prepared measurement points, not observed P0 width distributions",
+    "Other exact widths, heterogenous contexts, graph padding and all reached decode context arrays require a native census and explicit compatible inputs",
+    "Repeated DSA partial-region contexts remain unsupported; these are not rounded to the aligned prepared contexts",
+    "Independent eager D-tail rows and separate PIECEWISE graph rows preserve both measurement families; actual role dispatch remains separately evidence-gated",
+    "Linear quality and independent reference admission remain unqualified; positive duration alone does not admit a row",
+    "MoE EP16 uniform load points use the existing source groups and do not qualify actual routing distributions or EP communication",
+    "First unfused input norm, input cast, final residual, native sharded embedding, sampler, host, graph launch and gaps require their existing separate measured owners",
+    "No full-path, serving-capacity, G3, canonical clean-reference or predictive accuracy admission is claimed"
+  ]
+}

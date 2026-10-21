@@ -177,7 +177,8 @@ def test_cpu_dry_run_binds_existing_cell_and_never_imports_native_wrapper(module
     probe.main(["--dry-run"])
     result = json.loads(capsys.readouterr().out)
     assert result["cell"] == {"global_layer_id": 0, "query_lens": [1], "context_lens": [6144],
-                               "phase": "decode", "graph_mode": "full"}
+                                "phase": "decode", "graph_mode": "full", "has_attention_metadata": True,
+                                "block_table_columns": None}
     assert (result["measured_replays"], result["trace_replays"], result["event_handles"], result["native_graphs"]) == (300, 30, 18, 1)
     assert result["total_graph_replays"] == 331
 

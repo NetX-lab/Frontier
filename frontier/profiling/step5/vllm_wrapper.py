@@ -31,7 +31,8 @@ class VllmStep5AttentionWrapper:
 
     def __init__(self, *, config, model_path, device, tensor_parallel_size,
                   layer_id, block_size, max_model_len, max_batch_size, trace_dir, seed, graph_mode,
-                  cudagraph_capture_sizes=(1, 2), enable_chunked_prefill=True):
+                  cudagraph_capture_sizes=(1, 2), enable_chunked_prefill=True,
+                  max_num_batched_tokens=None):
         # Native eager-break decorators bind at model import, before EngineArgs
         # can otherwise auto-enable the Step architecture's default.
         os.environ.setdefault("VLLM_USE_BREAKABLE_CUDAGRAPH", "1")
@@ -75,7 +76,8 @@ class VllmStep5AttentionWrapper:
                 compilation_config={"mode": 0, "cudagraph_mode": "FULL_AND_PIECEWISE",
                                     "cudagraph_capture_sizes": list(self.cudagraph_capture_sizes),
                                     "max_cudagraph_capture_size": max(self.cudagraph_capture_sizes)},
-                max_num_batched_tokens=max_model_len * max_batch_size,
+                max_num_batched_tokens=(max_model_len * max_batch_size
+                                        if max_num_batched_tokens is None else max_num_batched_tokens),
                 max_model_len=max_model_len,
             ).create_engine_config()
             self.native = outer.with_hf_config(outer.model_config.hf_text_config)
@@ -202,14 +204,18 @@ class VllmStep5AttentionWrapper:
         for tensor, value in zip(self.state, state):
             tensor.copy_(value)
 
-    def _metadata(self, cell):
+    def _metadata(self, cell, *, request_offset=0):
+        if not cell.has_attention_metadata:
+            return self.torch.zeros(1, dtype=self.torch.int64, device="cuda"), None, None, "none"
         from vllm.v1.attention.backend import CommonAttentionMetadata
 
         torch = self.torch
-        width = ceil(max(cell.sequence_lens) / self.block_size)
+        width = (cell.block_table_columns if cell.block_table_columns is not None
+                 else ceil(max(cell.sequence_lens) / self.block_size))
         # Reserve block zero and give each live request disjoint physical pages.
         stride = ceil(self.max_model_len / self.block_size)
-        table = torch.arange(1, 1 + cell.batch_size * stride, dtype=torch.int32,
+        table = torch.arange(1 + request_offset * stride,
+                             1 + (request_offset + cell.batch_size) * stride, dtype=torch.int32,
                              device="cuda").reshape(cell.batch_size, stride)[:, :width]
         positions = torch.cat([torch.arange(c, c + q, device="cuda")
                                for q, c in zip(cell.query_lens, cell.context_lens)])
@@ -235,7 +241,8 @@ class VllmStep5AttentionWrapper:
         graph_mode = runtime_mode if runtime_mode is not None else graph_mode
         name = self.layer.attn.layer_name
         with self._set_current(self.native), set_forward_context(
-                {name: metadata}, self.native, num_tokens=len(hidden), slot_mapping={name: slots},
+                {name: metadata} if metadata is not None else None,
+                self.native, num_tokens=len(hidden), slot_mapping={name: slots} if slots is not None else None,
                 cudagraph_runtime_mode=CUDAGraphMode[graph_mode.upper()],
                 batch_descriptor=BatchDescriptor(num_tokens=len(hidden))):
             return (self.layer if layer is None else layer)(positions, hidden)
@@ -362,7 +369,9 @@ class VllmStep5AttentionWrapper:
             if shortest >= min_window_ms:
                 break
             replays = max(replays + 1, ceil(replays * min_window_ms / shortest))
-        evidence = {key: value for key, value in activity.items() if key != "per_iteration"}
+        evidence = {key: value for key, value in activity.items()
+                    if key not in ("per_iteration", "per_iteration_kernel_counts")}
+        evidence["per_replay_kernel_counts"] = activity["per_iteration_kernel_counts"]
         evidence["kernel_names"] = json.dumps(evidence["kernel_names"])
         evidence["memory_copy_names"] = json.dumps(evidence["memory_copy_names"])
         evidence.update({"trace_path": str(trace), "timing_basis": "correlated_kernel_plus_memcpy_duration_sum",
@@ -390,16 +399,26 @@ class VllmStep5AttentionWrapper:
         torch.manual_seed(self.seed)
         with torch.no_grad(), self._set_current(self.native):
             self._restore(self.empty_state)
-            if len(set(cell.context_lens)) != 1:
-                raise ValueError("This producer grid requires equal prefix lengths within a batch")
-            prefix = cell.context_lens[0]
+            prefix = max(cell.context_lens)
             # Keep the same physical page assignments for prefix and continuation.
             if prefix:
-                prefix_cell = Step5ProfileInput(cell.global_layer_id, (prefix,) * cell.batch_size,
-                    (0,) * cell.batch_size, "decode" if prefix == 1 else "prefill")
+                if 0 in cell.context_lens:
+                    raise ValueError("Mixed zero/nonzero prefixes require independent request-page preparation")
+                prefix_cell = Step5ProfileInput(cell.global_layer_id, cell.context_lens,
+                    (0,) * cell.batch_size, "decode" if prefix == 1 else "prefill",
+                    block_table_columns=cell.block_table_columns)
                 prefix_hidden = torch.randn((prefix_cell.num_tokens, self.config.embedding_dim),
                                             dtype=torch.bfloat16, device="cuda")
-                self._forward(prefix_hidden, self._metadata(prefix_cell))
+                if prefix_cell.num_tokens <= self.native.scheduler_config.max_num_batched_tokens:
+                    self._forward(prefix_hidden, self._metadata(prefix_cell))
+                else:
+                    # Preparation may span more history than one serving step.
+                    # Preserve each request's pages without inflating its budget.
+                    for index, (length, values) in enumerate(zip(
+                            cell.context_lens, prefix_hidden.split(cell.context_lens))):
+                        part = Step5ProfileInput(cell.global_layer_id, (length,), (0,),
+                            "decode" if length == 1 else "prefill", block_table_columns=cell.block_table_columns)
+                        self._forward(values, self._metadata(part, request_offset=index))
             prepared = self._metadata(cell)
             initial = self._snapshot()
             hidden = torch.randn((cell.num_tokens, self.config.embedding_dim),
@@ -411,15 +430,29 @@ class VllmStep5AttentionWrapper:
             self._restore(initial)
             expected = self._forward(hidden, prepared).clone()
             expected_state = self._snapshot()
+            if not cell.has_attention_metadata:
+                for actual_state, reference in zip(expected_state, initial):
+                    torch.testing.assert_close(actual_state, reference, rtol=0, atol=0)
             if prefix:
                 full_lens = cell.sequence_lens
                 full_cell = Step5ProfileInput(cell.global_layer_id, full_lens,
-                                              (0,) * cell.batch_size, "prefill")
+                    (0,) * cell.batch_size, "prefill", block_table_columns=cell.block_table_columns)
                 full_hidden = torch.cat([torch.cat((p, h)) for p, h in zip(
-                    prefix_hidden.split(prefix), hidden.split(cell.query_lens))])
+                    prefix_hidden.split(cell.context_lens), hidden.split(cell.query_lens))])
                 self._restore(self.empty_state)
-                full_output = self._forward(full_hidden, self._metadata(full_cell))
-                full_tail = torch.cat([part[prefix:] for part in full_output.split(full_lens)])
+                if full_cell.num_tokens <= self.native.scheduler_config.max_num_batched_tokens:
+                    full_output = self._forward(full_hidden, self._metadata(full_cell))
+                    full_tail = torch.cat([part[context:] for part, context in
+                                           zip(full_output.split(full_lens), cell.context_lens)])
+                else:
+                    tails = []
+                    for index, (length, context, values) in enumerate(zip(
+                            full_lens, cell.context_lens, full_hidden.split(full_lens))):
+                        part = Step5ProfileInput(cell.global_layer_id, (length,), (0,), "prefill",
+                                                block_table_columns=cell.block_table_columns)
+                        output = self._forward(values, self._metadata(part, request_offset=index))
+                        tails.append(output[context:].clone())
+                    full_tail = torch.cat(tails)
                 torch.testing.assert_close(expected, full_tail, rtol=2e-2, atol=2e-2)
                 for actual_state, reference in zip(self.state, expected_state):
                     torch.testing.assert_close(actual_state, reference, rtol=2e-2, atol=2e-2)
@@ -478,6 +511,7 @@ class VllmStep5AttentionWrapper:
             signature = trace_signature(trace)
             if not signature["kernel_count"]:
                 raise RuntimeError("Native Step kernel observation was empty")
+            stats["step5_layer_e2e"]["kernel_count"] = signature["kernel_count"]
             common = {
                     "attention_backend": self.layer.attn.attn_backend.get_name(),
                     "native_impl": type(self.layer.attn.impl).__name__,
@@ -490,6 +524,8 @@ class VllmStep5AttentionWrapper:
                     "native_max_num_seqs": self.native.scheduler_config.max_num_seqs,
                     "native_max_num_batched_tokens": self.native.scheduler_config.max_num_batched_tokens,
                     "native_breakable_cudagraph": os.environ["VLLM_USE_BREAKABLE_CUDAGRAPH"],
+                    "graph_dispatch_basis": ("independent_eager_profile" if cell.graph_mode == "none"
+                                             else "native_dispatch"),
                     "prefix_continuation_validation": "PASS" if prefix else "not_applicable",
                     "active_operators": json.dumps(sorted(active)),
                     "min_timing_window_ms": min_timing_window_ms}
@@ -497,7 +533,7 @@ class VllmStep5AttentionWrapper:
                 max_model_len=self.max_model_len, runtime_signature=self.runtime_signature, device=self.device)
             event_row = build_row(**row_args, time_stats=stats, evidence={**common, **signature, **quality,
                 "trace_path": str(trace), "timing_basis": "cuda_event_native_runtime_latency",
-                "calibration_candidate": cell.graph_mode == "full",
+                "calibration_candidate": cell.graph_mode != "none",
                 "window_replays": json.dumps(clean.window_replays),
                 "window_durations_ms": json.dumps(clean.window_durations_ms),
                 "layer_reference_timing_basis": "independent_outer_only_normalized_clean_replay_windows",
@@ -522,6 +558,11 @@ class VllmStep5AttentionWrapper:
                     min_window_ms=min_timing_window_ms)
                 self._validate_output_state(actual, expected, expected_state)
                 gpu_stats, gpu_quality = summarize_replays(activity, raw_activity, active, max_time_cv=max_time_cv)
+                counts = evidence.pop("per_replay_kernel_counts")
+                root_counts = [entry["step5_layer_e2e"] for entry in counts.values()]
+                if len(set(root_counts)) != 1:
+                    raise ValueError("A fixed profile cell has varying measured per-replay root kernel counts")
+                gpu_stats["step5_layer_e2e"]["kernel_count"] = root_counts[0]
                 gpu_active_row = build_row(**row_args, time_stats=gpu_stats,
                     measurement_type="KERNEL_ONLY", evidence={**common, **evidence, **gpu_quality})
             return Step5ProfileResult(event_row=event_row, gpu_active_row=gpu_active_row)

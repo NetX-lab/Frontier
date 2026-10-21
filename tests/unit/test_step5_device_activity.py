@@ -55,6 +55,7 @@ def test_all_graph_launch_activity_and_runtime_driver_aliases_count_once(tmp_pat
     result = parse_device_activity(path, [QKV])
     assert result["per_iteration"][ROOT] == pytest.approx({QKV: .013, "step5_layer_e2e": .013})
     assert result["kernel_count"] == 2
+    assert result["per_iteration_kernel_counts"][ROOT] == {QKV: 2, "step5_layer_e2e": 2}
     assert result["kernel_names"] == ["first", "second"]
     assert result["memory_copy_count"] == 1
     assert result["memory_copy_names"] == ["Memcpy DtoD"]
@@ -84,6 +85,9 @@ def test_two_windows_and_replays_use_cpu_launches_not_gpu_timestamps(tmp_path):
     assert result["per_iteration"] == {
         name: {QKV: (index + 1) / 100, "step5_layer_e2e": (index + 1) / 100}
         for index, name in enumerate(names)}
+    assert result["per_iteration_kernel_counts"] == {
+        name: {QKV: 1, "step5_layer_e2e": 1} for name in names}
+    assert result["kernel_count"] == 3
 
 
 @pytest.mark.parametrize("pid,tid", [(9, 2), (1, 9)])

@@ -1,0 +1,22 @@
+[
+  {"global_layer_id": 0, "query_lens": [1], "context_lens": [0], "phase": "decode", "has_attention_metadata": false},
+  {"global_layer_id": 3, "query_lens": [1], "context_lens": [0], "phase": "decode", "has_attention_metadata": false},
+  {"global_layer_id": 0, "query_lens": [16], "context_lens": [6128], "phase": "prefill", "graph_mode": "none", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [16], "context_lens": [6128], "phase": "prefill", "graph_mode": "none", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [16], "context_lens": [6128], "phase": "prefill", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [16], "context_lens": [6128], "phase": "prefill", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1], "context_lens": [6144], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1], "context_lens": [6144], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1, 1], "context_lens": [6144, 6144], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1, 1], "context_lens": [6144, 6144], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1], "context_lens": [6656], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1], "context_lens": [6656], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1, 1], "context_lens": [6656, 6656], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1, 1], "context_lens": [6656, 6656], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1], "context_lens": [7160], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1], "context_lens": [7160], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1, 1], "context_lens": [7160, 7160], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 3, "query_lens": [1, 1], "context_lens": [7160, 7160], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1], "context_lens": [7167], "phase": "decode", "block_table_columns": 448},
+  {"global_layer_id": 0, "query_lens": [1, 1], "context_lens": [7167, 7167], "phase": "decode", "block_table_columns": 448}
+]

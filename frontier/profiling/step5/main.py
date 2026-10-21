@@ -21,6 +21,12 @@ def parse_args(argv=None):
     parser.add_argument("--tensor-parallel-size", type=int, default=8)
     parser.add_argument("--block-size", type=int, default=16)
     parser.add_argument("--max-model-len", type=int, required=True)
+    parser.add_argument("--max-num-seqs", type=int,
+                        help="Explicit native serving request capacity; defaults to the input grid's maximum width")
+    parser.add_argument("--max-num-batched-tokens", type=int,
+                        help="Explicit native serving token budget; defaults to max-model-len times request capacity")
+    parser.add_argument("--role", choices=("PREFILL", "DECODE"),
+                        help="Label independently collected role-specific observations")
     parser.add_argument("--prefill-tokens", nargs="+", type=int, default=[16, 64])
     parser.add_argument("--input-file", type=Path,
                         help="Explicit Step5ProfileInput shapes, instead of the Cartesian grid")
@@ -58,6 +64,13 @@ def main(argv=None):
     ))
     from frontier.attention.step5 import resolve_step5_attention_geometry
 
+    max_num_seqs = max(c.batch_size for c in cells) if args.max_num_seqs is None else args.max_num_seqs
+    max_num_batched_tokens = (args.max_model_len * max_num_seqs
+                             if args.max_num_batched_tokens is None else args.max_num_batched_tokens)
+    if max_num_seqs < max(c.batch_size for c in cells):
+        raise ValueError("max-num-seqs must cover every prepared input width")
+    if max_num_batched_tokens < max(c.num_tokens for c in cells):
+        raise ValueError("max-num-batched-tokens must cover every prepared input")
     for cell in cells:
         cell.workload(config, block_size=args.block_size, max_model_len=args.max_model_len)
         resolve_step5_attention_geometry(config, cell.global_layer_id,
@@ -69,8 +82,9 @@ def main(argv=None):
                           "gpu_active_rows": sum(c.graph_mode == "none" for c in cells),
                            "cudagraph_capture_sizes": args.cudagraph_capture_sizes,
                            "enable_chunked_prefill": not args.disable_chunked_prefill,
-                           "native_max_num_seqs": max(c.batch_size for c in cells),
-                           "native_max_num_batched_tokens": args.max_model_len * max(c.batch_size for c in cells),
+                           "native_max_num_seqs": max_num_seqs,
+                           "native_max_num_batched_tokens": max_num_batched_tokens,
+                           "role": args.role,
                           "cells": [asdict(c) for c in cells]}, indent=2))
         return
     from frontier.profiling.step5.vllm_wrapper import VllmStep5AttentionWrapper
@@ -93,7 +107,8 @@ def main(argv=None):
                 config=config, model_path=args.model_path, device=args.device,
                 tensor_parallel_size=args.tensor_parallel_size, layer_id=layer_id,
                 block_size=args.block_size, max_model_len=args.max_model_len,
-                max_batch_size=max(c.batch_size for c in cells),
+                max_batch_size=max_num_seqs,
+                max_num_batched_tokens=max_num_batched_tokens,
                 trace_dir=Path(args.output_dir) / "traces",
                 seed=args.seed,
                 graph_mode=graph_mode,
@@ -107,6 +122,8 @@ def main(argv=None):
                         min_timing_window_ms=args.min_timing_window_ms)
                     for current in (result.event_row, result.gpu_active_row):
                         if current is not None:
+                            if args.role is not None:
+                                current["measurement_role"] = args.role
                             current["initial_time_cv"] = current["time_cv"]
                             current["initial_trace_path"] = current["trace_path"]
                             current["initial_time_stats"] = json.dumps(current["time_stats"])
