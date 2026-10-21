@@ -29,8 +29,10 @@ the proxy relays D's SSE bytes immediately, without parsing or rewriting them.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import logging
+import math
 import sys
 import time
 from pathlib import Path
@@ -147,6 +149,27 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
                     raise ValueError("Prefill response lacks valid native NIXL pull metadata")
                 body = json.dumps(original | {"kv_transfer_params": params}).encode()
                 record["kv_transfer_params"] = params
+            cancel_delay = request.headers.get("X-Step5-Cancel-Decode-After-S")
+            if cancel_delay is not None:
+                # Diagnostic control only: cancel this proxy's native D client
+                # while reading, without fencing or delaying a native READ.
+                delay = float(cancel_delay)
+                if not pull or not original.get("stream") or not math.isfinite(delay) or delay <= 0:
+                    raise ValueError("Decode cancellation requires a positive NIXL streaming deadline")
+                record["decode_submit_monotonic"] = time.monotonic()
+                try:
+                    async with asyncio.timeout(delay):
+                        status, payload, content_type = await forward(
+                            f"{decode_url}/v1/completions", body, request_id)
+                    record.update(decode_status=status, decode_response_monotonic=time.monotonic(),
+                                  decode_response_time=time.time(), decode_cancelled=False)
+                    return web.Response(body=payload, status=status, content_type=content_type)
+                except TimeoutError:
+                    record.update(decode_cancelled=True, decode_cancel_monotonic=time.monotonic(),
+                                  cancel_boundary="native_decode_client_deadline")
+                    event = {"step5_decode_cancelled": True}
+                    return web.Response(text="data: " + json.dumps(event) + "\n\n",
+                                        content_type="text/event-stream")
             if original.get("stream"):
                 record["stream"] = True
                 async with session.post(

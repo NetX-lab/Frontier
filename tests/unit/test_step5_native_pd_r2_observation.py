@@ -70,6 +70,7 @@ def release_runtime(observer, pool_hook=True):
     class Manager:
         def __init__(self):
             self.block_pool = BlockPool()
+            self.coordinator = Owner()
             self.groups = {}
             self.calls = 0
 
@@ -148,6 +149,9 @@ class Bytes:
     def contiguous(self):
         return self
 
+    def is_contiguous(self):
+        return True
+
     def detach(self):
         return self
 
@@ -201,6 +205,9 @@ class Tensor:
 
     def numel(self):
         return len(self.rows)*4
+
+    def data_ptr(self):
+        return id(self)
 
     def stride(self, index=None):
         values = (4, 4, 2, 1) if len(self.shape) == 4 else (4, 1)
@@ -304,11 +311,15 @@ def connector(torch):
     value.region_names = ['full', 'swa', 'summary']
     value.region_group_ids = [0, 1, 0]
     value.block_len_per_layer = [4, 4, 4]
+    value.block_stride_per_layer = [4, 4, 4]
+    value.region_num_blocks = [4, 4, 4]
     value._physical_blocks_per_logical_kv_block = 1
     value.device_kv_caches = {
         'full': Tensor([b'ABCD', b'EFGH', b'IJKL', b'MNOP'], torch.uint8),
         'swa': Tensor([b'QRST', b'UVWX', b'YZ12', b'3456'], torch.uint8),
         'summary': Tensor([b'abcd', b'efgh', b'ijkl', b'mnop'], torch.uint8, False)}
+    value.kv_caches_base_addr = {value.engine_id: {value.tp_rank: [
+        value.device_kv_caches[name].data_ptr() for name in value.region_names]}}
     value._recving_transfers = {}
     value._recv_failures = set()
     return value
@@ -381,6 +392,7 @@ def test_registration_and_full_wire_row_sha256_use_frozen_primitives(tmp_path, t
     observer = r2.Observation(configuration(tmp_path))
     source, target = connector(torch), connector(torch)
     source.engine_id = 'prefill_dp0'
+    source.kv_caches_base_addr[source.engine_id] = source.kv_caches_base_addr['decode_dp1']
     observer.register(source, None, {}, None)
     observer.register(target, None, {}, None)
     target.device_kv_caches['full'].rows[2] = source.device_kv_caches['full'].rows[0]
@@ -425,6 +437,25 @@ def test_source_capture_retains_full_sparse_history_but_clips_native_swa(tmp_pat
     assert groups[1] == request['blocks'][1][-33:]
     assert len(request['blocks'][1]) == 97
     assert not torch.syncs
+
+
+def test_grouped_native_raw_alias_capture_has_a_registered_physical_row(tmp_path, torch):
+    """R2 stage02: SWA layer views alias a named full-history registration."""
+    observer = r2.Observation(configuration(tmp_path))
+    value = connector(torch)
+    value.device_kv_caches['swa'] = value.device_kv_caches['full']
+    value.region_names = ['full', 'summary']
+    value.region_group_ids = [-1, 0]
+    value.block_len_per_layer = [4, 4]
+    value.block_stride_per_layer = [4, 4]
+    value.region_num_blocks = [4, 4]
+    value.kv_caches_base_addr[value.engine_id][value.tp_rank] = [
+        value.device_kv_caches[name].data_ptr() for name in value.region_names]
+    observer.register(value, None, {}, None)
+    observer.capture(value, 'case', [[1], [2]], 'source_content')
+    raw = [row for row in events(observer) if row['event'] == 'source_content' and row['component'] == 'raw_kv']
+    assert {row['layer'] for row in raw} == {'full', 'swa'}
+    assert raw[1]['block_hashes'] == [hashlib.sha256(b'IJKL').hexdigest()]
 
 
 def test_capture_budget_prevents_copy_and_preserves_native(tmp_path, torch):
@@ -519,6 +550,7 @@ def test_actual_collector_native_ready_records_satisfy_offline_verdict(tmp_path,
     for rank in range(8):
         value = connector(torch)
         value.tp_rank = rank
+        value.kv_caches_base_addr[value.engine_id][rank] = value.kv_caches_base_addr[value.engine_id][3]
         observer.register(value, None, {}, None)
         observer.connector_states[value]['reads']['case'] = dict(metadata={}, plans=[])
         observer.transfer_results(value, NS(finished_recving={'case'}, failed_recving=set()), {}, None)
@@ -752,8 +784,7 @@ def test_missing_or_partial_wire_evidence_is_error_not_success(tmp_path, torch, 
         observer.safe('register', observer.register, value, None, {}, None)
     else:
         value.block_len_per_layer[0] = 3
-        observer.register(value, None, {}, None)
-        observer.safe('capture', observer.capture, value, 'case', [[0], []], 'source_content')
+        observer.safe('register', observer.register, value, None, {}, None)
     assert observer.disabled
     assert events(observer)[-1]['event'] == 'observer_error'
     assert not any(r['event'] == 'source_content' for r in events(observer))
@@ -901,7 +932,7 @@ def test_instrumented_source_inventory_includes_both_runners_and_common_zeroer()
     assert {'vllm.v1.worker.gpu_model_runner', 'vllm.v1.worker.gpu.model_runner',
             'vllm.v1.worker.utils', 'vllm.v1.core.kv_cache_manager'} <= r2.MODULES
     assert 'vllm.v1.core.block_pool' in r2.MODULES
-    assert len(r2.NATIVE_SOURCE_PATHS) == 10
+    assert len(r2.NATIVE_SOURCE_PATHS) == 12
 
 
 @pytest.mark.parametrize('role', ['prefill', 'decode'])
@@ -1026,6 +1057,7 @@ def test_tail_exact_bytes_are_limited_to_three_decode_checkpoints(tmp_path, torc
         value.device_kv_caches[name].rows = [bytes([index])*4 for index in range(20)]
         tensor = value.device_kv_caches[name]
         tensor.shape = (20, *tensor.shape[1:])
+        value.region_num_blocks[value.region_names.index(name)] = 20
     observer.register(value, None, {}, None)
     observer.connector_states[value]['reads']['case'] = dict(metadata=dict(
         remote_request_id='source-case', remote_engine_id='prefill_dp1',

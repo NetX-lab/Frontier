@@ -27,9 +27,10 @@ Contract (JSONL in evidence/nodes/<host>/pd_state/):
   positions), or num_computed_tokens and num_scheduled_tokens (a contiguous
   range). If both forms are present they must agree. target_reserve additionally
   gives num_prompt_tokens, num_external_tokens, client_request_id and wave.
-   source_hold.num_computed_tokens is the actual P computed prompt N, NOT the
-   loaded prefix M. Its kv_xfer_params gives remote_num_tokens=N and advertised
-   remote_block_ids. M = B * floor((N-B)/B), with engine.block_size B. An explicit
+   source_hold.num_computed_tokens is P's already truncated prompt M. Native
+   _truncate_request_for_prefill applies M = B * floor((N-B)/B) to original
+   prompt N before computation. kv_xfer_params gives remote_num_tokens=M and
+   advertised remote_block_ids; D loads M without a second backoff. An explicit
    num_matched_tokens, if supplied, describes M separately. Each D read_metadata
    gives remote_num_tokens, advertised_remote_block_ids, reserved_local_block_ids,
    and local_physical_block_ids. Missing source metadata is never reconstructed
@@ -78,7 +79,19 @@ Contract (JSONL in evidence/nodes/<host>/pd_state/):
    still requires native_read_ready; it cannot establish no-fence wave coverage.
 * native_error is an explicit runtime failure (message); observation_error is
    an instrumentation gap. Unknown events/invalid JSON are gaps, not success.
-   observer_started/hook_installed are lifecycle metadata, not worker witnesses.
+    observer_started/hook_installed are lifecycle metadata, not worker witnesses.
+* block_remove_skipped needs the native request computed/in-flight snapshot and
+   per-native-group prefix-retirement policy in before, including the exact
+   retained window and skipped-token count. Logical table slots are never
+   compacted around nulls. Full-history prefix managers retire no pages. A
+   retired READ destination needs native completion first; pre-READ retirement
+   is allowed only for pages absent from the READ and no longer needed by
+   in-flight/later compute. Missing or unsupported semantics are UNVERIFIED.
+   before.allocation_prefix explicitly distinguishes adopted local/external
+   prefixes inside allocate_slots (including its native model-length cap) from
+   the null finish-path context. The common coordinator seam covers both paths.
+   Ownership lost inside an allocation without its retirement history cannot PASS;
+   unsupported retention policy cannot excuse a concrete READ use-after-free.
 * Cancellation is planned by trace cancel_after_first_content=true. The matching
    evidence/waves/<wave>/client_requests.jsonl row must have client_cancelled=true
    (the historical evidence/replay/<wave> path is also read)
@@ -111,11 +124,14 @@ WORKER_EVENTS = {
     "read_gpu_visible", "native_read_ready", "read_metadata", "tail_state",
     "target_compute", "source_notified", "state_registration",
 }
-SCHEDULER_EVENTS = {"source_hold", "source_free", "target_reserve", "target_free", "block_allocate"}
+SCHEDULER_EVENTS = {"source_hold", "source_free", "target_reserve", "target_free", "block_allocate", "block_remove_skipped"}
 EVENTS = WORKER_EVENTS | SCHEDULER_EVENTS | {"frontend_select"}
 AUXILIARY_EVENTS = {"source_compute", "pressure", "reuse", "reset", "abort", "free_deferred"}
 METADATA_EVENTS = {"observer_started", "hook_installed", "provenance", "runner_created",
-                   "runner_abi", "capture_elapsed"}
+                    "runner_abi", "capture_elapsed"}
+CANONICAL_EVENTS = {'resident_identity', 'reference_start', 'state_checkpoint', 'reset_content', 'pool_snapshot', 'component_inventory'}
+FORWARD_EVENTS = {'native_forward_start', 'native_forward_end'}
+CANONICAL_EVENTS |= FORWARD_EVENTS
 UNVERIFIED_CRITERIA = [
     "Open-tail accumulator reset/continuity and local output equivalence beyond scheduled token positions.",
     "Page reset/reuse with explicit component and alias ownership.",
@@ -251,34 +267,41 @@ def load(stage, instrumentation, config, expected, content_check):
                 if row.get("event") in AUXILIARY_EVENTS | METADATA_EVENTS:
                     # These events do not close the unsupported criteria listed
                     # in UNVERIFIED_CRITERIA. Keep allocation snapshots separately.
-                    continue
+                    if not (('canonical_g3' in config or row.get('event') == 'abort')
+                            and row.get('event') in AUXILIARY_EVENTS-{'reset'}):
+                        continue
                 row = normalize(row, expected)
                 if row.get("event") == "registration":
                     row = registration_record(row, config, content_check)
-                if row.get("event") not in EVENTS:
+                extra = CANONICAL_EVENTS | AUXILIARY_EVENTS if 'canonical_g3' in config else {'abort'}
+                if row.get("event") not in EVENTS | extra:
                     raise ValueError(f"Unknown event: {row.get('event')!r}")
                 if (row.get("role") not in ("prefill", "decode")
                         or not isinstance(row.get("host"), str) or not row["host"]
                         or not all(integer(row.get(key)) for key in ("pid", "dp_rank", "monotonic_ns"))):
                     raise ValueError("Missing/invalid role, host, pid, dp_rank or monotonic_ns")
                 event = row["event"]
-                if event != "state_registration" and (not isinstance(row.get("request_id"), str) or not row["request_id"]):
+                requestless = {'state_registration', 'resident_identity', 'reset', 'reset_content', 'pool_snapshot', 'component_inventory'} | FORWARD_EVENTS
+                if event not in requestless and (not isinstance(row.get("request_id"), str) or not row["request_id"]):
                     raise ValueError("Missing native request_id")
-                if event != "frontend_select" and (not isinstance(row.get("engine_id"), str) or not row["engine_id"]):
+                if event not in {'frontend_select', 'resident_identity', 'pool_snapshot'} and (not isinstance(row.get("engine_id"), str) or not row["engine_id"]):
                     raise ValueError("Missing native engine_id")
                 if event == "frontend_select" and row.get("engine_id") is not None and not isinstance(row["engine_id"], str):
                     raise ValueError("Invalid frontend engine_id")
                 for key in ("remote_engine_id", "remote_request_id", "wave"):
+                    if (event == "block_allocate" and row["role"] == "prefill"
+                            and key != "wave" and row.get(key) is None):
+                        continue  # Local P allocation has no remote owner.
                     if key in row and not isinstance(row[key], str):
                         raise ValueError(f"Invalid {key}")
-                if event in WORKER_EVENTS and not integer(row.get("tp_rank")):
+                if event in WORKER_EVENTS | (CANONICAL_EVENTS-{'pool_snapshot'}) and not integer(row.get("tp_rank")):
                     raise ValueError("Worker record is missing tp_rank")
                 instrumentation.expect(row["host"] == path.parents[1].name,
                                        f"{where}: host disagrees with node directory")
-                if event in WORKER_EVENTS:
+                if event in WORKER_EVENTS | (CANONICAL_EVENTS-{'pool_snapshot'}):
                     instrumentation.expect(row["tp_rank"] in TP_RANKS,
                                            f"{where}: TP rank is outside 0..7")
-                if event not in ("state_registration", "frontend_select", "block_allocate", "tail_state"):
+                if event not in {'state_registration', 'frontend_select', 'block_allocate', 'block_remove_skipped', 'tail_state'} | extra:
                     expected_role = "prefill" if event.startswith("source_") else "decode"
                     instrumentation.expect(row["role"] == expected_role,
                                            f"{where}: event belongs to {expected_role}")
@@ -489,17 +512,16 @@ def token_attribution(source, target, reserve, config, check, *, frozen_prompt=N
         check.require(integer(value), f"{name}: missing {description} token attribution")
     check.require(integer(size) and size > 0, f"{name}: no frozen native block size for matched-token rule")
     if integer(computed) and integer(external):
-        check.expect(computed >= external, f"{name}: D loaded more tokens than P actually computed")
-        if integer(size) and size > 0 and computed >= size:
-            expected = size * ((computed - size) // size)
-            check.expect(external == expected, f"{name}: loaded prefix {external} != native backoff {expected}")
-    if integer(computed) and integer(prompt):
-        check.expect(computed == prompt, f"{name}: actual P computed prompt differs from frozen/observed prompt")
+        check.expect(computed == external, f"{name}: D loaded prefix differs from actual truncated P computation")
     if integer(frozen_prompt):
-        if integer(computed):
-            check.expect(computed == frozen_prompt, f"{name}: actual P computation differs from independent frozen prompt")
         if integer(prompt):
             check.expect(prompt == frozen_prompt, f"{name}: target prompt differs from independent frozen prompt")
+        if integer(size) and size > 0 and frozen_prompt >= size:
+            expected = size * ((frozen_prompt - size) // size)
+            if integer(computed):
+                check.expect(computed == expected, f"{name}: actual P computation differs from native backoff {expected}")
+            if integer(external):
+                check.expect(external == expected, f"{name}: loaded prefix {external} != native backoff {expected}")
     if integer(prompt) and integer(external):
         check.expect(0 < external < prompt, f"{name}: no positive locally computed prompt tail")
         if integer(size) and size > 0:
@@ -675,6 +697,178 @@ def check_native_readiness(source, target, check, *, no_fence):
     return outcome["status"] == "PASS"
 
 
+def null_replacements(before, after):
+    """Native remove_skipped_blocks retains table slots and inserts null IDs."""
+    return (len(before) == len(after)
+            and all(len(a) == len(b) and all(y == x or y == 0 for x, y in zip(a, b))
+                    for a, b in zip(before, after)))
+
+
+def check_retirement(row, before, after, rows, initial, config, registrations, check):
+    """Validate the pinned prefix-retirement rule and every actual consumer."""
+    name = label(row)
+    processed = row.get('processed_computed_tokens')
+    snapshot = row.get('before')
+    check.require(isinstance(snapshot, dict), f'{name}: missing native retirement snapshot')
+    snapshot = snapshot if isinstance(snapshot, dict) else {}
+    computed, inflight = (snapshot.get('request_num_computed_tokens'),
+                          snapshot.get('request_num_in_flight_tokens'))
+    check.require(integer(processed), f'{name}: missing processed-token retirement attribution')
+    check.require(integer(computed) and integer(inflight),
+                  f'{name}: missing native computed/in-flight retirement snapshot')
+    prefix = snapshot.get('allocation_prefix')
+    known_origin = 'allocation_prefix' in snapshot
+    check.require(known_origin, f'{name}: missing native retirement call-origin attribution')
+    total = computed if known_origin else None
+    if prefix is not None:
+        if not isinstance(prefix, dict):
+            check.missing.append(f'{name}: invalid native allocation-prefix attribution')
+            total = None
+        else:
+            new, external, limit = (prefix.get('num_new_computed_tokens'),
+                                     prefix.get('num_external_computed_tokens'), prefix.get('max_model_len'))
+            valid = integer(new) and integer(external) and integer(limit) and limit > 0
+            check.require(valid, f'{name}: missing native adopted-prefix retirement attribution')
+            frozen_limit = config.get('engine', {}).get('max_model_len')
+            check.require(integer(frozen_limit), f'{name}: missing frozen allocation model limit')
+            if integer(limit) and integer(frozen_limit):
+                check.expect(limit == frozen_limit,
+                             f'{name}: allocation retirement model limit differs from frozen engine')
+            total = min(computed+new+external, limit) if valid and integer(computed) else None
+    if integer(processed) and integer(total) and integer(inflight):
+        check.expect(processed == max(0, total-inflight),
+                     f'{name}: retirement is not on the native processed-token boundary')
+    policies = snapshot.get('retirement_group_specs')
+    check.require(isinstance(policies, list) and policies,
+                  f'{name}: missing native per-group retirement policy')
+    policies = policies if isinstance(policies, list) else []
+    policy = {}
+    for spec in policies:
+        if not isinstance(spec, dict) or not integer(spec.get('native_group_id')):
+            check.missing.append(f'{name}: invalid native retirement group')
+            continue
+        group = spec['native_group_id']
+        check.expect(group not in policy, f'{name}: duplicate native retirement group')
+        policy[group] = spec
+    removed = {g: [(i, a) for i, (a, b) in enumerate(zip(old, new)) if a and b == 0]
+               for g, (old, new) in enumerate(zip(before, after))}
+    for rank in sorted(TP_RANKS):
+        groups = registered_groups(config, registrations, row['engine_id'], rank, check)
+        by_native = {native: (transfer, size, window)
+                     for transfer, (native, size, window) in groups.items()}
+        check.expect(len(by_native) == len(groups), f'{name}/TP{rank}: duplicate native group mapping')
+        worker = [r for r in rows if r.get('tp_rank') == rank]
+        same_host = all(r['host'] == row['host'] for r in worker)
+        check.require(worker and same_host, f'{name}/TP{rank}: missing same-host retirement lifecycle')
+        compute = [(r, positions(r, check)) for r in worker if r['event'] == 'target_compute']
+        if same_host and integer(processed):
+            prior = [interval[1] for r, interval in compute if interval is not None
+                     and r['monotonic_ns'] <= row['monotonic_ns']]
+            external = initial.get('num_external_tokens') if initial else None
+            check.require(integer(external), f'{name}: missing reserved external-token boundary')
+            if integer(external):
+                check.expect(processed <= max([external, *prior]),
+                             f'{name}/TP{rank}: processed prefix exceeds prior native READ/compute scheduling')
+        for native, retired in removed.items():
+            if not retired:
+                continue
+            semantics, native_policy = by_native.get(native), policy.get(native)
+            check.require(semantics is not None,
+                          f'{name}/group{native}: missing independent native retirement semantics')
+            if semantics is None:
+                continue
+            transfer, size, window = semantics
+            if same_host:
+                retired_ids = {page for _, page in retired}
+                read = one(worker, 'read_submit', check, f'{name}/TP{rank}')
+                if read:
+                    local = blocks(read, 'local_block_ids', check)
+                    if local is not None and transfer < len(local) and retired_ids & set(local[transfer]):
+                        ready = one(worker, 'native_read_ready', check, f'{name}/TP{rank}')
+                        check.require(ready is not None, f'{name}/TP{rank}: missing native READ completion before retirement')
+                        ordered(read, row, check, f'{name}/TP{rank}: READ uses an already retired physical page')
+                        ordered(ready, row, check, f'{name}/TP{rank}: retirement precedes native READ completion')
+            check.require(native_policy is not None, f'{name}/group{native}: missing native retirement policy')
+            if native_policy is None:
+                continue
+            supported = native_policy.get('prefix_retirement') is True
+            check.require(supported, f'{name}/group{native}: unsupported native retirement implementation')
+            if not supported:
+                continue
+            check.expect((native_policy.get('block_size'), native_policy.get('sliding_window')) == (size, window),
+                         f'{name}/group{native}: retirement policy disagrees with registered native group')
+            retained, skipped = native_policy.get('retained_window'), native_policy.get('num_skipped_tokens')
+            check.require(integer(skipped), f'{name}/group{native}: missing native skipped-token count')
+            if window is None:
+                check.expect(not retired, f'{name}/group{native}: full-history page was retired')
+            elif integer(processed):
+                check.require(integer(retained) and retained >= window,
+                              f'{name}/group{native}: missing exact native retained window')
+                if integer(retained) and retained >= window:
+                    expected = max(0, processed-retained+1)
+                    if integer(skipped):
+                        check.expect(skipped == expected, f'{name}/group{native}: native skipped-token boundary disagrees')
+                    check.expect(all(index < expected//size for index, _ in retired),
+                                 f'{name}/group{native}: retired an in-window logical page')
+            if not same_host:
+                continue
+            for event, interval in compute:
+                if interval is None or not integer(processed):
+                    continue
+                start, end = interval
+                if event['monotonic_ns'] >= row['monotonic_ns'] or end > processed:
+                    first_needed = max(0, start-window+1)//size if window is not None else 0
+                    check.expect(not any(first_needed <= index <= (end-1)//size for index, _ in retired),
+                                 f'{name}/TP{rank}/group{native}: retired page is needed by in-flight or later compute')
+
+
+def final_ownership(rows, initial, freed, config, registrations, check, *, prefix_caching_disabled):
+    """Follow allocation and observed skipped-block retirement, not a stale table."""
+    changes = [r for r in rows if r["event"] in ("target_reserve", "block_allocate", "block_remove_skipped")]
+    if freed:
+        for row in changes:
+            ordered(row, freed, check, f'{label(row)}: ownership changed after final release')
+        changes = [r for r in changes if r["host"] == freed["host"]
+                   and r["monotonic_ns"] <= freed["monotonic_ns"]]
+    latest = None
+    for row in sorted(changes, key=lambda r: r["monotonic_ns"]):
+        if row['event'] in ('block_allocate', 'target_reserve') and latest is not None:
+            previous, after = blocks(latest, 'block_ids', check), blocks(row, 'block_ids', check)
+            if previous is not None and after is not None:
+                lost = any(page and (g >= len(after) or i >= len(after[g]) or after[g][i] != page)
+                           for g, group in enumerate(previous) for i, page in enumerate(group))
+                if lost:
+                    check.missing.append(f'{label(row)}: missing skipped-block retirement history inside allocation')
+                    check_retirement(row, previous, after, rows, initial, config, registrations, check)
+        if row["event"] == "block_remove_skipped":
+            snapshot = row.get("before")
+            before = blocks({**row, "block_ids": snapshot.get("blocks") if isinstance(snapshot, dict) else None},
+                            "block_ids", check)
+            after = blocks(row, "block_ids", check)
+            if before is not None and after is not None:
+                check_retirement(row, before, after, rows, initial, config, registrations, check)
+                check.expect(null_replacements(before, after),
+                             f"{label(row)}: skipped-block retirement changed a non-null owner or table extent")
+                if latest is not None:
+                    previous = blocks(latest, "block_ids", check)
+                    if previous is not None:
+                        check.expect(previous == before, f"{label(row)}: skipped-block before table differs from ownership history")
+                else:
+                    check.missing.append(f"{label(row)}: no allocation before skipped-block retirement")
+                removed = ({v for group in before for v in group}
+                           - {v for group in after for v in group} - {0})
+                free_before, free_after = row.get("pool_free_before"), row.get("pool_free_after")
+                check.require(integer(free_before) and integer(free_after), f"{label(row)}: missing skipped-block pool counts")
+                check.require(row.get("counts_scope") == "skipped_blocks_release",
+                              f"{label(row)}: missing skipped-block release attribution")
+                check.require(prefix_caching_disabled, f"{label(row)}: skipped-block pool accounting requires disabled prefix caching")
+                if integer(free_before) and integer(free_after) and prefix_caching_disabled:
+                    check.expect(free_after-free_before == len(removed),
+                                 f"{label(row)}: skipped-block pool delta differs from retired physical pages")
+        latest = row
+    return latest
+
+
 def check_free(held, freed, check, *, prefix_caching_disabled):
     if freed is None:
         return
@@ -696,8 +890,11 @@ def check_free(held, freed, check, *, prefix_caching_disabled):
     released = blocks(freed, "block_ids", check)
     check.require(allocated is not None, f"{label(freed)}: no ownership snapshot for release accounting")
     if allocated is not None and released is not None:
-        check.expect([set(g) - {0} for g in allocated] == [set(g) - {0} for g in released],
-                     f"{label(freed)}: freed pages differ from held/reserved pages")
+        same = [set(g) - {0} for g in allocated] == [set(g) - {0} for g in released]
+        if not same and null_replacements(allocated, released):
+            check.missing.append(f"{label(freed)}: missing skipped-block retirement history before final release")
+        else:
+            check.expect(same, f"{label(freed)}: freed pages differ from held/reserved pages")
     before, after = freed.get("pool_free_before"), freed.get("pool_free_after")
     check.require(integer(before) and integer(after), f"{label(freed)}: missing pool free counts")
     exact_scope = freed.get("counts_scope") == "request_release"
@@ -716,18 +913,64 @@ def check_free(held, freed, check, *, prefix_caching_disabled):
                 check.expect(count == delta == expected, f"{label(freed)}: release count/pool delta/owned pages disagree")
 
 
-def check_lifetime(source, target, check, *, prefix_caching_disabled, content_selected=True, explicit_mask=False):
+def check_pending_read_abort(source, target, config, registrations, check):
+    """A client deadline is not proof: require observed in-flight READ and conserved pages."""
+    name = label(target[0])
+    hold = one(source, 'source_hold', check, name)
+    p_free = one(source, 'source_free', check, name)
+    reserve = one(target, 'target_reserve', check, name)
+    d_free = one(target, 'target_free', check, name)
+    abort = one(target, 'abort', check, name)
+    if abort:
+        check.require(abort.get('status') == 'FINISHED_ABORTED', f'{name}: missing native FINISHED_ABORTED outcome')
+    check.expect(not any(row.get('observer_fence') is True for row in source + target),
+                 f'{name}: pending-READ abort control contains an observer fence')
+    snapshot = abort.get('before') if abort else None
+    check.require(isinstance(snapshot, dict), f'{name}: missing pre-abort native request status')
+    if isinstance(snapshot, dict):
+        check.require(snapshot.get('request_status') == 'WAITING_FOR_REMOTE_KVS'
+                      and snapshot.get('native_receive_completed') is False,
+                      f'{name}: deadline did not observe native pending READ')
+    check.require(not any(row['event'] == 'target_compute' for row in target),
+                  f'{name}: abort control reached D computation, not pending READ')
+    check_free(hold, p_free, check, prefix_caching_disabled=True)
+    final = final_ownership(target, reserve, d_free, config, registrations, check,
+                            prefix_caching_disabled=True)
+    check_free(final, d_free, check, prefix_caching_disabled=True)
+    overlap = False
+    for rank in sorted(TP_RANKS):
+        p = [row for row in source if row.get('tp_rank') == rank]
+        d = [row for row in target if row.get('tp_rank') == rank]
+        submit = one(d, 'read_submit', check, f'{name}/TP{rank}')
+        done = one(d, 'read_network_done', check, f'{name}/TP{rank}')
+        ready = one(d, 'native_read_ready', check, f'{name}/TP{rank}')
+        if ready:
+            check.require(ready.get('observer_fence') is False
+                          and ready.get('boundary') == 'native_get_transfer_results_finished_recving',
+                          f'{name}/TP{rank}: missing unfenced native READ readiness boundary')
+        notice = one(p, 'source_notified', check, f'{name}/TP{rank}')
+        for before, after, reason in ((reserve, submit, 'READ before reservation'),
+                                     (submit, done, 'completion before READ'),
+                                     (done, ready, 'native readiness before network completion'),
+                                     (ready, d_free, 'target free before native READ readiness'),
+                                     (hold, notice, 'notification before source hold'),
+                                     (notice, p_free, 'source free before notification')):
+            ordered(before, after, check, f'{name}/TP{rank}: {reason}')
+        if submit and done and abort and submit['host'] == done['host'] == abort['host']:
+            overlap |= submit['monotonic_ns'] <= abort['monotonic_ns'] < done['monotonic_ns']
+    check.require(overlap, f'{name}: no same-host observed READ-submit < abort < network-completion interval')
+    return reserve
+
+
+def check_lifetime(source, target, config, registrations, check, *, prefix_caching_disabled, content_selected=True, explicit_mask=False):
     name = label(target[0])
     hold = one(source, "source_hold", check, name)
     p_free = one(source, "source_free", check, name)
     reserve = one(target, "target_reserve", check, name)
     d_free = one(target, "target_free", check, name)
     check_free(hold, p_free, check, prefix_caching_disabled=prefix_caching_disabled)
-    allocations = [r for r in target if r["event"] == "block_allocate"]
-    if d_free:
-        allocations = [r for r in allocations if r["host"] == d_free["host"]
-                       and r["monotonic_ns"] <= d_free["monotonic_ns"]]
-    final_allocation = max(allocations, key=lambda r: r["monotonic_ns"]) if allocations else reserve
+    final_allocation = final_ownership(target, reserve, d_free, config, registrations, check,
+                                      prefix_caching_disabled=prefix_caching_disabled)
     check_free(final_allocation, d_free, check, prefix_caching_disabled=prefix_caching_disabled)
     for rank in sorted(TP_RANKS):
         p = [row for row in source if row.get("tp_rank") == rank]
@@ -858,7 +1101,8 @@ def request_disposition(target, reserve, expected, clients, check):
     client = reserve.get("client_request_id") if reserve else None
     trace = expected.get(client) if isinstance(client, str) else None
     local.require(trace is not None, f"{client}: no frozen client request for outcome attribution")
-    planned = bool(trace and trace.get("cancel_after_first_content") is True)
+    planned = bool(trace and (trace.get("cancel_after_first_content") is True
+                             or "cancel_after_decode_submit_s" in trace))
     captured = clients.get((trace["wave"], client), []) if trace else []
     local.expect(len(captured) <= 1, f"{client}: duplicate captured client outcomes")
     observed = captured[0] if captured else {}
@@ -891,6 +1135,41 @@ def request_disposition(target, reserve, expected, clients, check):
                                 if planned or observed_cancel or aborted else
                                 "normal_compute" if any(r["event"] == "target_compute" for r in target) else "UNVERIFIED",
             "client_cancelled": observed.get("client_cancelled"), "native_terminal_statuses": terminal}
+
+
+def check_canonical_requests(expected, clients, check):
+    """Require observed native prompt/output IDs, not requested lengths or SSE chunks."""
+    for client, trace in expected.items():
+        matches = clients.get((trace['wave'], client), [])
+        check.require(len(matches) == 1, f'{client}: missing unique canonical client receipt')
+        if len(matches) != 1:
+            continue
+        row = matches[0]
+        check.expect(row.get('http_status') == 200, f'{client}: native completion HTTP failure')
+        if trace.get('cancel_after_first_content') or 'cancel_after_decode_submit_s' in trace:
+            continue  # Existing native/client cancellation and release checks own aborted outcomes.
+        prompt, output = trace['num_prefill_tokens'], trace['num_decode_tokens']
+        usage = row.get('usage')
+        check.require(isinstance(usage, dict), f'{client}: missing native usage receipt')
+        usage = usage if isinstance(usage, dict) else {}
+        check.expect(usage.get('prompt_tokens') == row.get('accepted_prompt_token_count') == prompt,
+                     f'{client}: actual accepted canonical prompt count mismatch')
+        check.require(isinstance(row.get('prompt_sha256'), str), f'{client}: missing submitted prompt identity')
+        check.expect(row.get('accepted_prompt_sha256') == row.get('prompt_sha256'),
+                     f'{client}: accepted canonical prompt identity mismatch')
+        check.expect(usage.get('completion_tokens') == row.get('generated_token_count') == output,
+                     f'{client}: actual native output count mismatch')
+        deltas = row.get('token_id_deltas')
+        check.require(isinstance(deltas, list), f'{client}: missing native output token-ID deltas')
+        if isinstance(deltas, list):
+            valid = all(isinstance(chunk, dict) and isinstance(chunk.get('token_ids'), list) for chunk in deltas)
+            check.expect(valid, f'{client}: malformed native token-ID delta')
+            ids = [token for chunk in deltas for token in chunk['token_ids']] if valid else []
+            check.expect(len(ids) == output and all(integer(token) for token in ids),
+                         f'{client}: native token-ID population differs from the fixed output length')
+        check.expect(row.get('stream_completed') is True and not row.get('stream_error')
+                     and row.get('finish_reason') == 'length', f'{client}: incomplete canonical stream')
+    check.details['frozen_requests'] = len(expected)
 
 
 def frozen_masks(observation, expected, check):
@@ -1025,8 +1304,16 @@ def judge(stage: Path, platform_status: str) -> dict:
             config[field] = {}
     observation = config.get("pd_state_observation", {})
     expected = trace_requests(stage, checks["placement_and_requests"])
+    reference_ids = {client for client, trace in expected.items() if trace.get('local_prefill_reference')}
+    pd_expected = {key: value for key, value in expected.items() if key not in reference_ids}
+    abort_ids = {client for client, trace in expected.items() if 'cancel_after_decode_submit_s' in trace}
+    if abort_ids:
+        checks["pending_read_abort"] = Check()
     content_ids, readiness_ids, explicit_mask = frozen_masks(observation, expected, checks["instrumentation"])
     clients = client_records(stage, checks["instrumentation"])
+    if "canonical_g3" in config:
+        checks["canonical_requests"] = Check()
+        check_canonical_requests(expected, clients, checks["canonical_requests"])
     records, native_errors = load(stage, checks["instrumentation"], config, expected, checks["content"])
     registrations = [r for r in records if r["event"] == "state_registration"]
     reference_census = None
@@ -1043,7 +1330,9 @@ def judge(stage: Path, platform_status: str) -> dict:
             checks["content"].missing.append(f"Invalid complete registration: {error}")
     native = defaultdict(list)
     for row in records:
-        if row["event"] not in ("frontend_select", "state_registration"):
+        client = row.get('client_request_id')
+        if (row['event'] in (EVENTS | {'abort'})-{'frontend_select', 'state_registration'}
+                and not (isinstance(client, str) and client in reference_ids)):
             native[identity(row)].append(row)
     transfers, summaries, reserves = {}, [], {}
     content_seen, native_qualified = set(), set()
@@ -1084,34 +1373,44 @@ def judge(stage: Path, platform_status: str) -> dict:
             summary["content_status"] = "CHECKED"
         else:
             summary.update(compared_rows=0, different_local_page_ids=False, content_status="NOT_SELECTED_BY_FROZEN_MASK")
-        reserves[key] = check_lifetime(source, target, checks["lifetime"],
-                                      prefix_caching_disabled=config.get("engine", {}).get("enable_prefix_caching") is False,
-                                      content_selected=content_selected, explicit_mask=explicit_mask)
+        pending_abort = client in abort_ids
+        if pending_abort:
+            reserves[key] = check_pending_read_abort(source, target, config, registrations,
+                                                     checks["pending_read_abort"])
+        else:
+            reserves[key] = check_lifetime(source, target, config, registrations, checks["lifetime"],
+                                          prefix_caching_disabled=config.get("engine", {}).get("enable_prefix_caching") is False,
+                                          content_selected=content_selected, explicit_mask=explicit_mask)
         tokens = token_attribution(source, target, reserves[key], config, checks["tail_and_decode"],
                                    frozen_prompt=expected.get(client, {}).get("num_prefill_tokens"))
         summary["tokens"] = {name: value for name, value in tokens.items() if name != "source_transfer_metadata"}
         check_mapping(source, target, reserves[key], config, registrations, tokens, checks["mapping"])
-        ready = check_native_readiness(source, target, checks["native_readiness"], no_fence=client in readiness_ids)
+        ready = (check_native_readiness(source, target, checks["native_readiness"], no_fence=client in readiness_ids)
+                 if not pending_abort else False)
         summary.update(native_completion_witness=ready, independent_no_fence_witness=ready and client in readiness_ids)
         if ready and client in readiness_ids:
             native_qualified.add(client)
         summary["disposition"] = request_disposition(target, reserves[key], expected, clients, checks["cancellation"])
         summary["release_timing"] = release_timing(source, target)
-        check_tail(source, target, reserves[key], observation.get("region_size"), checks["tail_and_decode"],
-                   cancellation_expected=summary["disposition"]["expected_outcome"] == "cancelled")
+        if not pending_abort:
+            check_tail(source, target, reserves[key], observation.get("region_size"), checks["tail_and_decode"],
+                       cancellation_expected=summary["disposition"]["expected_outcome"] == "cancelled")
         summaries.append(summary)
     checks["instrumentation"].require(transfers, "No native transfers identified")
     for name in ("content", "mapping", "native_readiness", "lifetime", "tail_and_decode", "cancellation"):
         checks[name].require(transfers, "No native transfers identified for this check")
-    checks["content"].require(content_ids and content_ids <= content_seen, "Missing frozen content-selected transfer evidence")
+    checks["content"].require(content_ids-reference_ids and content_ids-reference_ids <= content_seen, "Missing frozen content-selected transfer evidence")
+    if abort_ids:
+        checks["pending_read_abort"].require(abort_ids <= {row['client_request_id'] for row in summaries},
+                                            'Missing frozen pending-READ abort transfer evidence')
     for key, rows in native.items():
         if any(r["event"] == "source_hold" for r in rows):
             uses = list(transfers.values()).count(key)
             checks["lifetime"].require(uses > 0, f"{key}: held source has no observed target transfer")
             checks["lifetime"].expect(uses <= 1, f"{key}: more than one target claims the source pending owner")
-    placement(records, transfers, reserves, expected, checks["placement_and_requests"])
+    placement(records, transfers, reserves, pd_expected, checks["placement_and_requests"])
     if explicit_mask:
-        readiness_coverage(expected, readiness_ids, native_qualified,
+        readiness_coverage(pd_expected, readiness_ids - abort_ids, native_qualified,
                            checks["placement_and_requests"].details.get("waves", {}), checks["native_readiness"])
     checks["native_readiness"].details["explicit_selection_masks"] = explicit_mask
     lengths = {r["num_prompt_tokens"] for r in reserves.values() if r and integer(r.get("num_prompt_tokens"))}
@@ -1126,6 +1425,22 @@ def judge(stage: Path, platform_status: str) -> dict:
     checks["boundaries"].require(any(r["different_local_page_ids"] for r in summaries), "No unequal source/target local page IDs exercised")
     checks["runtime"].require(platform_status == "Succeeded", f"Platform status is {platform_status}, not Succeeded")
     checks["runtime"].details.update(platform_status=platform_status, native_errors=native_errors)
+    if 'canonical_g3' in config:
+        try:
+            from . import r2_controls, r2_runtime
+        except ImportError:
+            import r2_controls
+            import r2_runtime
+        for name, callback in (
+                ('resident_identity', lambda check: r2_controls.resident(records, observation, check)),
+                ('independent_reference', lambda check: r2_controls.reference(stage, records, config, expected, clients, check)),
+                ('component_alias_conservation', lambda check: r2_controls.ownership(records, config, check)),
+                ('runtime_forward_census', lambda check: r2_runtime.judge(records, config, check))):
+            checks[name] = Check()
+            try:
+                callback(checks[name])
+            except Exception as error:
+                checks[name].missing.append(f'{name}: {type(error).__name__}: {error}')
     results = {name: check.result() for name, check in checks.items()}
     if native_errors:
         results["runtime"]["status"] = "BLOCKED_ON_RUNTIME"

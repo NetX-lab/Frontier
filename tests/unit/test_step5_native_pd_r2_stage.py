@@ -10,8 +10,9 @@ import pytest
 
 from tests.comparison.calibration import native_pd_worker
 from tests.comparison.dp_placement_pp import vllm_replay
-from tests.integration.step5_pd import build_stage, r2_stage
+from tests.integration.step5_pd import build_stage, r2_stage, verify_r2_stage
 from tests.unit.test_native_pd_worker import exercise
+from tests.unit.test_step5_native_pd import stage_inputs
 
 
 def definition():
@@ -105,6 +106,39 @@ def test_r2_stage_freezes_runtime_and_unchanged_library_bytes(tmp_path, monkeypa
         assert (repo / source).read_bytes() == (stage / destination).read_bytes()
     for name, digest in observation["frozen_environment_hashes"].items():
         assert hashlib.sha256((stage / name).read_bytes()).hexdigest() == digest
+
+
+@pytest.mark.parametrize('gpu_type,charged_group', [('H800', 'codesign'), ('H200', 'step_main')])
+def test_offline_verifier_uses_the_frozen_resource_definition(tmp_path, gpu_type, charged_group):
+    inputs = stage_inputs(tmp_path)
+    run = definition()
+    run['probe_helpers'] = inputs['definition']['probe_helpers']
+    run['resources'].update(gpu_type=gpu_type, charged_group=charged_group)
+    source_root = tmp_path / 'native'
+    for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES:
+        path = source_root / (module.replace('.', '/')+'.py')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f'"""{module}"""\n')
+    run['pd_state_observation']['source_root'] = str(source_root)
+    model_config = inputs['model_dir'] / 'config.json'
+    model = json.loads(model_config.read_text())
+    model['text_config'].update(num_hidden_layers=2, layer_types=['full_attention', 'sliding_attention'],
+                                sparse_config={'apply_to_layer_types': ['full_attention']})
+    model_config.write_text(json.dumps(model))
+    workspace = tmp_path / 'workspace'
+    stage = workspace / 'stage'
+    config = build_stage.build(run, stage=stage, workspace=workspace,
+        output_dir=Path('/mnt/codesign-exp/ycfeng/step5-preview/r2_resource_test'),
+        model_dir=inputs['model_dir'], image_source_hashes=inputs['image_source_hashes'],
+        probe_dir=inputs['probe_dir'], job_tag='r2test',
+        source={'repository': str(r2_stage.REPO), 'commit': 'unit'})
+    receipt = verify_r2_stage.verify(stage)
+    assert receipt['status'] == 'PASS_OFFLINE_STAGE'
+    assert receipt['resources']['gpu_type'] == gpu_type
+    config['charged_group'] = 'not_the_frozen_group'
+    (stage / 'config.json').write_text(json.dumps(config))
+    with pytest.raises(AssertionError):
+        verify_r2_stage.verify(stage)
 
 
 def test_state_archive_error_does_not_stop_healthy_native_work(tmp_path, monkeypatch):
