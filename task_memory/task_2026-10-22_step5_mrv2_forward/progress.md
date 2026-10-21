@@ -196,6 +196,9 @@ parent independent acceptance is not included in the completed local scope.
 - completed source integration: primary committed `ef476fe`, obtained final
   independent Standards/Spec No findings and merged at `32fb934`. All16 changed
   core/test files in the merged tree exactly match the reviewed source.
-- in-progress parent acceptance: clean strict77 baseline9dcd876 versus
-  candidate32fb934; fresh actual-main resumes independently in
-  `step5-mrv2-main` with its existing fixture02. Neither result is yet claimed.
+- completed parent legacy acceptance: clean strict77 baseline9dcd876 versus
+  candidate32fb934 gives77/77 identical, zero failures/missing evidence/cache-name
+  differences/provenance findings. Full comparison receipt is in the main task's
+  `d23_forward_fidelity.json`.
+- in-progress parent actual-main acceptance: `step5-mrv2-main` reuses existing
+  fixture02. Full offline/online MRv2 completion is not yet claimed.

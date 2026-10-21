@@ -48,4 +48,4 @@ Do not rerun producer/native/full CLI/strict77 or touch their fixtures.
 Dependency: F1 -> F2 -> F3. No new native/producer/full CLI/strict77 work.
 
 F1-F3 closed in `ef476fe` and integrated by primary at `32fb934`; final independent
-source review has no findings. Parent-owned strict77 and full CLI remain active.
+source review has no findings. Parent-owned strict77 passes77/77; full CLI remains active.

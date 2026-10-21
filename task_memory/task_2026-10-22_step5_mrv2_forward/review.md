@@ -26,8 +26,9 @@
   the reviewer did not execute tests. Existing hold/resume, promotion/reset,
   NONE widths, ownership/null fields and strict coverage conclusions stand.
 - Primary merged at `32fb934`; all16 changed core/test files match reviewed
-  `ef476fe` bytes exactly. Clean strict77 and fresh full CLI remain pending;
-  source review does not establish native/profile/accuracy qualification.
+  `ef476fe` bytes exactly. Subsequent primary clean strict77 passes77/77 with
+  no cache/provenance findings. Fresh full CLI remains pending; source review
+  does not establish native/profile/accuracy qualification.
 
 The following checkpoint is retained as the historical interrupted-owner state.
 

@@ -19,7 +19,8 @@ No GPU/native qualification or accuracy claim is made.
 Final fixed-capacity source `ef476fe` has independent Standards/Spec
 **No findings** and is integrated into `feat/step5-preview` at `32fb934`.
 All16 changed core/test files match the reviewed bytes. Parent's clean legacy
-matrix and fresh full CLI remain in progress; see the main task integration report.
+matrix passes77/77 against9dcd876 with zero cache/provenance findings. Fresh full
+CLI remains in progress; see the main task integration report.
 
 P2 review correction (follow-up to record HEAD `d8e3e941`) removes illegal
 uniform FULL captures above the existing V1 request capacity. With cap3 and
@@ -138,4 +139,4 @@ Task/session: `D23-MRV2-FORWARD` / `ses_ea08efc2cffe6Z1Rc7srkVdebh`.
   `request_capacity` from the existing role scheduler/config; do not infer it
   from captures. No parent fresh CLI fixture was read or edited here.
 - Scope remains CPU forward correction only. Source re-review and merge are
-  complete at32fb934; full CLI and strict77 remain unfinished acceptance.
+  complete at32fb934; strict77 passes, while full CLI remains unfinished.
