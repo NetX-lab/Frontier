@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-22 | Archive the scoped CPU implementation and parent integration contract. |
 | 2026-10-22 | Archive P2 correction,489 affected passes and explicit request-capacity handoff. |
+| 2026-10-22 | Record P2 source commit and clean-branch completion receipt. |
 
 ## Outcome
 
@@ -21,6 +22,9 @@ capture sizes[1,2,4,8], decode3+dummy1 now binds PIECEWISE4 under
 Legal wider PIECEWISE prefill captures remain supported. Two real-engine
 controls and four exact RED failures became6 PASS; the affected suites now
 pass221 stage +268 measured =489 checks. No producer/full CLI/strict77 rerun.
+Correction/tests/records commit:
+`c9e9388f117c625c6d546d1d083f8aaf3f824f51`; post-commit branch is clean.
+The following docs-only commit records that completed receipt.
 
 ## Deliverables
 

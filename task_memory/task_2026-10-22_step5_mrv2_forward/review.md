@@ -5,21 +5,22 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record self-check after489 affected PASS; not a correctness re-review. |
+| 2026-10-22 | Advance local closure to PASS after verified correction commit. |
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | P2.1 source mapping、真实 first-event RED | PASS | `progress.md` 记录4失败、2通过及 native capacity 映射。 |
 | P2.2 capacity candidate 与交互验证 | PASS |75 focused PASS，两个 policy 的精确 case 已正确绑定。 |
-| P2.3 affected suites、记录、commit、handoff | TODO |221 stage +268 measured PASS；记录完成，commit/handoff 待执行。 |
+| P2.3 affected suites、记录、commit、handoff | PASS |221+268 PASS，`c9e9388f117c625c6d546d1d083f8aaf3f824f51` 已提交并核对 clean branch；handoff 证据完整。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** P2 correction 开始至今｜**当前前沿：** P2.3 commit 与 parent handoff
+**检测窗口：** P2 correction 开始至今｜**当前前沿：** 无本地未完成切片；parent acceptance 另有 owner
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -41,7 +42,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. P2.3：只 commit 已验证的修正、tests、records → 完成标志：branch clean，commit ID 与精确验证证据返回 parent。
+1. 发送 parent handoff：精确 source commit、commands/logs/counts 已在本任务记录；提交本 completion receipt 后返回。
 2. Parent：独立 re-review、merge、full CLI、strict77 → 不在本子任务执行或声明通过。
 
 ## 4. 最值得关注的 3 点

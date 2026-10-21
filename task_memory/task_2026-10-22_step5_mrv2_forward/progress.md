@@ -8,6 +8,7 @@
 | 2026-10-22 | Complete CPU verification and code commit; archive handoff contract. |
 | 2026-10-22 | Start reviewer P2 correction; record real first-event RED before code. |
 | 2026-10-22 | Finish P2 verification:221 stage +268 measured PASS; prepare scoped commit. |
+| 2026-10-22 | Record verified correction commit and completed scoped handoff. |
 
 - completed: new worktree from 5c2319cd; primary approval/source inspected.
 - completed: pre-prediction hold in existing stage scheduler; generic readiness
@@ -109,8 +110,14 @@ remains clean. Final task record commit follows the verified code commit.
   `/data/ycfeng/tmp/d23_forward_p2_{stage,measured}.{log,xml}`. Exact commands,
   RED errors and environment are archived in the existing test report. No
   producer or inherited selector suite was rerun.
-- in-progress P2.3 closure: requirements re-read; records updated; scoped commit
-  pending. Parent-owned re-review/merge/full CLI/strict77 remain outstanding.
+- completed P2.3 closure: requirements re-read; records updated; correction,
+  regression tests and records committed as
+  `c9e9388f117c625c6d546d1d083f8aaf3f824f51`. Post-commit
+  `git status --short --branch` prints only `## feat/step5-mrv2-forward`.
+  No unrelated file is committed. The task directory is ignored by default;
+  explicit `git add -f` was used only for the approved task records after normal
+  `git add` reported that ignore rule. Parent-owned re-review/merge/full CLI/
+  strict77 remain outstanding. This completion receipt is a docs-only commit.
 
 RED command (CWD is this worktree):
 
@@ -138,3 +145,7 @@ phase checkpoint is in `review.md` (planning only, not parent code re-review).
 Next: commit the2 core modules,2 focused tests and this task's records, inspect
 clean branch/commit, and return precise parent handoff. No expanded testing
 or unrelated edits are needed after489 affected PASS.
+
+Post-commit checkpoint: P2.1/P2.2/P2.3 PASS, no local blocker. D1-D7 CLEAR and
+S1-S6 no defect. Only handoff response and this completion-receipt commit remain;
+parent independent acceptance is not included in the completed local scope.
