@@ -54,6 +54,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import csv
 import hashlib
 import ipaddress
 import json
@@ -206,6 +207,48 @@ def connector_check(server_log: Path) -> dict:
         and all("send_type:PUT_ASYNC" in line for line in init_lines)
         and not any(faults.values()),
     }
+
+
+def canonical_workload(trace_dir):
+    """Read the existing frozen artifact layout without rewriting any input."""
+    path = trace_dir / "manifest.json"
+    if not path.exists():
+        return None
+    manifest = json.loads(path.read_text())
+    if manifest.get("schema") != "frontier.canonical_fixed_workload.v1":
+        return None
+    members = {"manifest.json", "trace.csv", "request_ids.json", "warmup_pool.csv"}
+    checked = set()
+    for line in (trace_dir / "SHA256SUMS").read_text().splitlines():
+        expected, name = line.split()
+        if name not in members or name in checked:
+            raise ValueError("Unexpected canonical checksum member")
+        checked.add(name)
+        if hashlib.sha256((trace_dir / name).read_bytes()).hexdigest() != expected:
+            raise ValueError(f"Canonical workload checksum mismatch: {name}")
+    if checked != members:
+        raise ValueError("Incomplete canonical checksum manifest")
+    formal = json.loads((trace_dir / "request_ids.json").read_text())["rows"]
+    with (trace_dir / "warmup_pool.csv").open() as stream:
+        warmup = [row | {"arrived_at": float(row["arrived_at"]),
+                         "num_prefill_tokens": int(row["num_prefill_tokens"]),
+                         "num_decode_tokens": int(row["num_decode_tokens"]), "role": "warmup"}
+                  for row in csv.DictReader(stream)]
+    for phase, rows, count in (
+        ("formal", formal, manifest["selection"]["num_formal_requests"]),
+        ("warmup", warmup, manifest["warmup"]["num_requests_per_repetition"]),
+    ):
+        if len(rows) != count or any(
+            row["role"] != phase or row["arrived_at"] != index * manifest["arrivals"]["inter_arrival_s"]
+            or row["num_prefill_tokens"] != manifest["lengths"]["prompt_tokens_per_request"]
+            or row["num_decode_tokens"] != manifest["lengths"]["output_tokens_per_request"]
+            for index, row in enumerate(rows)
+        ):
+            raise ValueError(f"Canonical {phase} row/count mismatch")
+    ids = [row["request_id"] for row in formal + warmup]
+    if len(set(ids)) != len(ids):
+        raise ValueError("Canonical formal/warmup template IDs must be disjoint")
+    return manifest, formal, warmup
 
 
 def main(argv: list[str] | None = None) -> int:
