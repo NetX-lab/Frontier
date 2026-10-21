@@ -121,13 +121,29 @@ defines the separation between native random weights and simulator dummy timing.
 Equal seeds alone do not establish P/D parameter or auxiliary-state identity, so
 token-content equality is not asserted without that identity evidence.
 
+## DS-V4 measurement update (October 22, 2026)
+
+The warmed single-H800 decode collection completed with 6,144 rows per method
+(`CUDA_EVENT` and `KERNEL_ONLY`), covering every cached context from 6,143 through
+7,166 after two unrecorded warmup forwards. Raw/summary/CSV consistency and exact
+reconstruction with the frozen row builder passed. The completed profiler trace
+was archived and hash-verified; the container exited0 with no restarts.
+
+The historical first CSA-layer event fell from 2,838.84ms to 2.175ms. Other
+millisecond-scale excursions and 20–25% higher event medians remain unexplained;
+no samples were removed or timing corrections applied. These are isolated eager,
+six-layer, physical-TP1 measurements with TP8-local dimensions. They do not qualify
+steady-state timing, compiled graphs, physical TP8, first-tail or full serving.
+CUDA-event scope time includes instrumentation; kernel-only values come from a
+separate pass. Planning/reuse roles are not different native tile sizes.
+
 ## Historical implementation snapshot (October 20, 2026)
 
 The following implementation and validation tables retain their original scope.
 Subsequent V4 work includes source/CPU grouped NIXL and graph-padded measured
 consumption, H800/H200 isolated kernel measurements, and an initial H80032 native
 collection. Full measured serving and calibration remain unaccepted. The native
-reference successor and warmed H800 decode measurements are the active V4 work;
+reference successor and isolated ongoing-decode timing consumer are the active V4 work;
 the GLM follow-ups in the historical tables are paused.
 
 | Area | Implemented and exercised scope | Current boundary |
