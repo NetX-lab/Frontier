@@ -47,6 +47,9 @@ class KVCacheTransferStartEvent(BaseEvent):
         self._target_replica_local_id: int | None = None
         self._source_prompt_common_blocks: int | None = None
         self._target_reserved_common_blocks: int | None = None
+        self._source_group_block_ids = None
+        self._target_group_block_ids = None
+        self._transferred_group_block_ids = None
         self._source_claimed = False
         self._started = False
         if kv_connector == "nixl":
@@ -64,7 +67,7 @@ class KVCacheTransferStartEvent(BaseEvent):
         """Commit one real D reservation without making the request runnable."""
         if self._kv_connector != "nixl":
             raise RuntimeError("Only structural NIXL transfers reserve before start")
-        if self._target_reserved_common_blocks is not None:
+        if self._has_target_reservation():
             return True
         request = self._batch.requests[0]
         reserved_blocks = target_replica_scheduler.reserve_kv_transfer_target(
@@ -72,12 +75,25 @@ class KVCacheTransferStartEvent(BaseEvent):
         )
         if reserved_blocks is None:
             return False
-        self._target_reserved_common_blocks = int(reserved_blocks)
+        if target_replica_scheduler._kv_cache_capacity.is_grouped:
+            self._target_group_block_ids = target_replica_scheduler._kv_cache_manager.get_group_block_ids(request.id)
+        else:
+            self._target_reserved_common_blocks = int(reserved_blocks)
         return True
+
+    def _has_target_reservation(self) -> bool:
+        return self._target_reserved_common_blocks is not None or self._target_group_block_ids is not None
+
+    def _payload_kind(self):
+        return (
+            "structural_grouped_prompt_pages_per_worker_lane"
+            if self._source_group_block_ids is not None
+            else "structural_whole_prompt_pages_per_worker_lane"
+        )
 
     def set_capacity_retry_time(self, time: float) -> None:
         """Move a newly reserved deferred start to its capacity-release time."""
-        if self._started or self._target_reserved_common_blocks is None:
+        if self._started or not self._has_target_reservation():
             raise RuntimeError("Only a reserved deferred NIXL start can be retried")
         self._time = time
         self._priority_number = self._get_priority_number()
@@ -101,31 +117,30 @@ class KVCacheTransferStartEvent(BaseEvent):
             source_config = source_cluster_scheduler._config
             replica_config = source_config.replica_config
             if int(replica_config.num_pipeline_stages) != 1:
-                raise NotImplementedError("NIXL structural GLM PD supports PP1 only")
+                raise NotImplementedError("NIXL structural PD supports PP1 only")
             source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
                 self._source_replica_id,
                 self._source_replica_local_id,
             )
             if source_replica_scheduler._is_prefix_caching_enabled():
                 raise NotImplementedError(
-                    "NIXL structural GLM PD excludes source prefix caching"
+                    "NIXL structural PD excludes source prefix caching"
                 )
+            if source_replica_scheduler._spec_decode_enabled:
+                raise NotImplementedError("NIXL structural PD excludes source speculative decoding and MTP")
             request = self._batch.requests[0]
-            self._source_prompt_common_blocks = (
-                source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(
-                    request
-                )
-            )
             source_capacity = source_replica_scheduler._kv_cache_capacity
-            if (
-                source_capacity is None
-                or source_capacity.family_id != "dsa_attention"
-                or source_capacity.is_grouped
-                or source_capacity.block_size != 64
+            if source_capacity is None or not (
+                (source_capacity.family_id == "dsa_attention" and not source_capacity.is_grouped and source_capacity.block_size == 64)
+                or (source_capacity.family_id == "deepseek_v4_attention" and source_capacity.is_grouped and source_capacity.block_size == 256)
             ):
                 raise NotImplementedError(
-                    "NIXL currently supports only GLM DSA block64 structural payloads"
+                    "NIXL supports GLM DSA block64 or grouped V4 block256 structural payloads"
                 )
+            if source_capacity.is_grouped:
+                self._source_group_block_ids = source_replica_scheduler.get_kv_transfer_source_group_block_ids(request)
+            else:
+                self._source_prompt_common_blocks = source_replica_scheduler.get_kv_transfer_source_prompt_common_blocks(request)
             predictor = source_cluster_scheduler._kv_cache_transfer_predictor
             if not hasattr(
                 predictor, "get_structural_nixl_transfer_info_for_request"
@@ -156,7 +171,7 @@ class KVCacheTransferStartEvent(BaseEvent):
                 self._target_replica_local_id,
             )
             has_older_pending = (
-                self._target_reserved_common_blocks is None
+                not self._has_target_reservation()
                 and target_replica_scheduler.has_pending_kv_transfer_starts()
             )
             if has_older_pending or not self.try_reserve_target(target_replica_scheduler):
@@ -184,7 +199,18 @@ class KVCacheTransferStartEvent(BaseEvent):
                     target_reserved_common_blocks=(
                         self._target_reserved_common_blocks
                     ),
+                    **(dict(
+                        source_group_block_ids=self._source_group_block_ids,
+                        target_group_block_ids=self._target_group_block_ids,
+                    ) if source_capacity.is_grouped else {}),
                 )
+                if source_capacity.is_grouped:
+                    from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import get_grouped_nixl_payload
+
+                    self._transferred_group_block_ids, _ = get_grouped_nixl_payload(
+                        source_capacity, request.num_prefill_tokens,
+                        self._source_group_block_ids, self._target_group_block_ids,
+                    )
             except Exception:
                 target_replica_scheduler.abort_kv_transfer_target_reservation(
                     request
@@ -192,6 +218,7 @@ class KVCacheTransferStartEvent(BaseEvent):
                 source_replica_scheduler.abandon_kv_transfer_start_claim(request)
                 self._source_claimed = False
                 self._target_reserved_common_blocks = None
+                self._target_group_block_ids = None
                 raise
 
         transfer_info = KVCacheTransferInfo(
@@ -208,12 +235,15 @@ class KVCacheTransferStartEvent(BaseEvent):
             target_replica_local_id=self._target_replica_local_id,
             kv_connector=self._kv_connector,
             payload_kind=(
-                "structural_whole_prompt_pages_per_worker_lane"
+                self._payload_kind()
                 if self._kv_connector == "nixl"
                 else None
             ),
             source_prompt_common_blocks=self._source_prompt_common_blocks,
             target_reserved_common_blocks=self._target_reserved_common_blocks,
+            source_group_block_ids=self._source_group_block_ids,
+            target_group_block_ids=self._target_group_block_ids,
+            transferred_group_block_ids=self._transferred_group_block_ids,
         )
         if self._kv_connector == "nixl":
             self._started = True
@@ -255,9 +285,15 @@ class KVCacheTransferStartEvent(BaseEvent):
                     "kv_connector": self._kv_connector,
                     "target_replica_id": self._target_replica_id,
                     "target_replica_local_id": self._target_replica_local_id,
-                    "payload_kind": "structural_whole_prompt_pages_per_worker_lane",
+                    "payload_kind": self._payload_kind(),
                     "source_prompt_common_blocks": self._source_prompt_common_blocks,
                     "target_reserved_common_blocks": self._target_reserved_common_blocks,
                 }
             )
+            if self._source_group_block_ids is not None:
+                payload.update(
+                    source_group_block_ids=self._source_group_block_ids,
+                    target_group_block_ids=self._target_group_block_ids,
+                    transferred_group_block_ids=self._transferred_group_block_ids,
+                )
         return payload

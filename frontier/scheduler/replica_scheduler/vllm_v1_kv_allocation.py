@@ -35,6 +35,10 @@ class KvBlockAllocation:
         if request.is_recomputing:
             return int(request.num_context_tokens)
         processed_tokens = int(request.num_processed_tokens)
+        if self._cluster_type == ClusterType.DECODE and self._is_grouped_kv_allocation():
+            # The remote prompt is present, but D replays its final token before
+            # sampling. Its scheduler frontier can therefore trail the prompt.
+            return min(processed_tokens, self._get_scheduler_num_computed_tokens(request))
         if (
             self._cluster_type == ClusterType.MONOLITHIC
             and request.is_prefill_complete
@@ -111,7 +115,10 @@ class KvBlockAllocation:
 
     def validate_kv_transfer_source_release(self, request: Request) -> None:
         """Preflight P ownership before any transfer-end mutation or metric."""
-        self.get_kv_transfer_source_prompt_common_blocks(request)
+        if self._is_grouped_kv_allocation():
+            self.get_kv_transfer_source_group_block_ids(request)
+        else:
+            self.get_kv_transfer_source_prompt_common_blocks(request)
         if request.id not in self._kv_transfer_start_claimed_request_ids:
             raise RuntimeError(
                 f"Request {request.id} has no active NIXL transfer start claim"
@@ -119,12 +126,27 @@ class KvBlockAllocation:
 
     def claim_kv_transfer_start(self, request: Request) -> None:
         """Claim one P-owned request before target placement and reservation."""
-        self.get_kv_transfer_source_prompt_common_blocks(request)
+        if self._is_grouped_kv_allocation():
+            self.get_kv_transfer_source_group_block_ids(request)
+        else:
+            self.get_kv_transfer_source_prompt_common_blocks(request)
         if request.id in self._kv_transfer_start_claimed_request_ids:
             raise RuntimeError(
                 f"Duplicate NIXL transfer start for request {request.id}"
             )
         self._kv_transfer_start_claimed_request_ids.add(request.id)
+
+    def get_kv_transfer_source_group_block_ids(self, request: Request):
+        """Snapshot actual P ownership after the native pre-handoff pruning."""
+        if self._cluster_type != ClusterType.PREFILL or request.id not in self._pending_kv_transfer_requests:
+            raise RuntimeError("Grouped KV transfer requires pending PREFILL ownership")
+        if self._is_request_active_in_batch(request):
+            raise RuntimeError("Grouped KV handoff cannot prune an in-flight request")
+        self._kv_cache_manager.reclaim_skipped_blocks(
+            request, settled_num_computed_tokens=int(request.num_prefill_tokens),
+        )
+        self._sync_prefix_cache_allocation_state(request)
+        return self._kv_cache_manager.get_group_block_ids(request.id)
 
     def abandon_kv_transfer_start_claim(self, request: Request) -> None:
         """Release a start claim when target reservation setup fails."""
@@ -139,22 +161,20 @@ class KvBlockAllocation:
         if self._cluster_type != ClusterType.DECODE:
             raise RuntimeError("KV transfer target reservation requires DECODE")
         capacity = getattr(self, "_kv_cache_capacity", None)
-        if (
-            capacity is None
-            or capacity.family_id != "dsa_attention"
-            or capacity.is_grouped
-            or capacity.block_size != 64
+        if capacity is None or not (
+            (capacity.family_id == "dsa_attention" and not capacity.is_grouped and capacity.block_size == 64)
+            or (capacity.family_id == "deepseek_v4_attention" and capacity.is_grouped and capacity.block_size == 256)
         ):
             raise NotImplementedError(
-                "NIXL target reservation currently supports GLM DSA block64 only"
+                "NIXL target reservation supports GLM DSA block64 or grouped V4 block256 only"
             )
         if int(self._replica_config.num_pipeline_stages) != 1:
-            raise NotImplementedError("GLM NIXL target reservation supports PP1 only")
+            raise NotImplementedError("NIXL target reservation supports PP1 only")
         if self._is_prefix_caching_enabled():
-            raise NotImplementedError("GLM NIXL target reservation excludes prefix caching")
+            raise NotImplementedError("NIXL target reservation excludes prefix caching")
         if getattr(self, "_spec_decode_enabled", False):
             raise NotImplementedError(
-                "GLM NIXL target reservation excludes speculative decoding and MTP"
+                "NIXL target reservation excludes speculative decoding and MTP"
             )
         self._check_request_fits_max_model_len(request)
         self._check_request_fits_kv_pool(request)
@@ -182,6 +202,23 @@ class KvBlockAllocation:
             )
         self._check_request_fits_kv_pool(request)
         frontiers = self._scheduled_num_computed_tokens_by_request
+        if self._is_grouped_kv_allocation():
+            manager = self._kv_cache_manager
+            remote = dict(
+                scheduler_num_computed_tokens=0,
+                num_external_computed_tokens=int(request.num_prefill_tokens),
+            )
+            admission = self._get_grouped_admission_blocks(request)
+            if (
+                self._get_available_kv_blocks() - admission < self._watermark_blocks
+                or not manager.can_allocate_slots(request, 0, **remote)
+            ):
+                return None
+            manager.allocate_slots(request, 0, **remote)
+            self._sync_prefix_cache_allocation_state(request)
+            frontiers[request.id] = int(request.num_prefill_tokens) - 1
+            receiving.add(request.id)
+            return int(self._allocation_map[request.id])
         frontiers[request.id] = int(request.num_prefill_tokens) - 1
         if not self._can_allocate_request(request, 1):
             del frontiers[request.id]
