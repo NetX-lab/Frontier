@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -11,6 +13,8 @@ from frontier.attention.ops import (
     ProjectionOwnership,
 )
 from frontier.entities.execution_time import ExecutionTime
+from frontier.entities.time_components import OperatorCost
+from frontier.types import MeasurementType
 
 
 _MODEL_PROJECTION_EXECUTION_TIME_ATTRS = (
@@ -138,6 +142,34 @@ def _validate_projection_ownership(
     )
 
 
+def _measured_attention_roots(
+    execution_time: ExecutionTime,
+    family: AttentionFamilySpec,
+) -> tuple[AttentionOperatorSpec, ...]:
+    timings = execution_time.attention_operator_times
+    if timings is None:
+        return ()
+    roots = tuple(operator for operator in family.operators
+                  if operator.is_inclusive_root and operator.name in timings.op_times)
+    if not roots:
+        return ()
+    if len(roots) != 1 or set(timings.op_times) != {roots[0].name}:
+        raise ValueError(f"Inclusive attention root must be the only physical scope for {family.family_id}")
+    root = roots[0]
+    cost = timings.costs.get(root.name)
+    if not isinstance(cost, OperatorCost):
+        raise ValueError(f"Inclusive attention root {root.name} requires OperatorCost")
+    if (not math.isfinite(cost.duration_ms) or cost.duration_ms < 0
+            or cost.duration_ms != timings.op_times[root.name]
+            or not math.isfinite(cost.kernel_count) or cost.kernel_count < 0
+            or cost.duration_ms > 0 and cost.kernel_count == 0
+            or not isinstance(cost.measurement_type, MeasurementType)):
+        raise ValueError(f"Invalid measured attention root cost for {root.name}")
+    if set(timings.costs) != {root.name}:
+        raise ValueError(f"Inclusive attention root {root.name} has unrelated physical costs")
+    return roots
+
+
 def get_attention_trace_op_times(
     execution_time: ExecutionTime,
     family: AttentionFamilySpec,
@@ -152,12 +184,13 @@ def get_attention_trace_op_times(
         raise ValueError(f"per_layer_count must be positive: {per_layer_count}")
     _validate_projection_ownership(execution_time, family)
 
-    inclusive_scopes = any(
+    measured_roots = _measured_attention_roots(execution_time, family)
+    inclusive_scopes = bool(measured_roots) or any(
         operator.role in (AttentionOperatorRole.INDEXING, AttentionOperatorRole.ATTENTION)
         for operator in family.e2e_trace_ops()
     )
     if inclusive_scopes and execution_time.attention_operator_times is not None:
-        allowed_names = {operator.name for operator in family.e2e_trace_ops()}
+        allowed_names = {operator.name for operator in (*family.e2e_trace_ops(), *measured_roots)}
         unknown_names = set(execution_time.attention_operator_times.op_times).difference(
             allowed_names
         )
@@ -174,6 +207,9 @@ def get_attention_trace_op_times(
             for operator in child_family.e2e_trace_ops()
             if operator.execution_time_attr is not None
         }
+        if measured_roots:
+            child_attrs.update(_MODEL_PROJECTION_EXECUTION_TIME_ATTRS)
+            child_attrs.add("attention_rope_execution_time")
         nonzero_child_attrs = sorted(
             attr for attr in child_attrs if getattr(component, attr) != 0.0
         )
@@ -190,7 +226,7 @@ def get_attention_trace_op_times(
             for operator in family.e2e_trace_ops()
         )
     )
-    operators = family.e2e_trace_ops()
+    operators = measured_roots or family.e2e_trace_ops()
     if family.structural_execution_enabled and execution_time.attention_operator_times is not None:
         by_name = {operator.name: operator for operator in operators}
         names = tuple(execution_time.attention_operator_times.op_times)

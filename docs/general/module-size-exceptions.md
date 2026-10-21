@@ -175,3 +175,22 @@ attention family modules (`memory.py`, `step5_memory.py`, `families.py`),
 all below the limit, so the large modules only route to it. Moving the role
 routing alone would separate it from the stage pricing it selects. The
 functional splits planned above are unchanged and are not performed here.
+
+## Measured inclusive attention root projection, 2026-10-22
+
+D23-ROOT-METRICS touches the existing metrics/trace projection at baseline
+`61cbac9`. `frontier/metrics/metrics_store.py` grows from 5,817 to 5,825 lines.
+The cleanup moves the per-family ledger projection from the stage loop to the
+existing layer ledger, removing the duplicate projection and allowing both
+layer and stage consumers to retain a scalar-free measured root. Stage-owned
+work keeps its existing owner filter; the scalar-attribute map is not a total
+operator registry.
+
+The remaining wiring serializes the existing per-layer OperatorCost into trace
+metadata and excludes absent structural operators through the family registry.
+Root classification, validation, and source tensor boundaries live in the
+existing attention modules below 2,000 lines. No separate Step ledger, scalar,
+predictor, or child cost is introduced. Moving this wiring alone would split
+the same ledger/trace owner, while a broad store split would expand the fix's
+regression surface. The planned movement-only ledger split (step 3 above)
+remains deferred; this exception authorizes only this root projection fix.

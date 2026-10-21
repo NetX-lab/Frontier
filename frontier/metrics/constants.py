@@ -32,6 +32,7 @@ class OperationMetrics(enum.Enum):
     STEP5_GATE_PROJECTION = "step5_gate_projection"
     STEP5_HEADWISE_GATE = "step5_headwise_gate"
     STEP5_OUTPUT_PROJECTION = "step5_output_projection"
+    STEP5_LAYER_E2E = "step5_layer_e2e"
     STEP5_FFN_MERGE = "step5_ffn_merge"
     EMBEDDING = "emb"
     INPUT_CAST = "input_cast"
