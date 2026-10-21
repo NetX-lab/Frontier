@@ -211,7 +211,6 @@ def test_linear_profiling_plan_uses_family_derived_ffn_memory_lists() -> None:
     assert plan["enabled_ops"] == [
         "input_layernorm",
         "post_attention_layernorm",
-        "add",
         "emb",
         "attn_pre_proj",
         "attn_rope",
@@ -223,7 +222,6 @@ def test_linear_profiling_plan_uses_family_derived_ffn_memory_lists() -> None:
     assert plan["replicated_ops"] == [
         "input_layernorm",
         "post_attention_layernorm",
-        "add",
         "emb",
     ]
 

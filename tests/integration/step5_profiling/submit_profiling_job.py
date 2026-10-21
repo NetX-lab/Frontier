@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Submit one Step-5-Preview profiling job to an H800 worker in the Step image.
+"""Submit one Step-5-Preview profiling job in the pinned Step image.
 
 Run this launcher with the StepMind Python after setting up the personal
 authentication environment described in
@@ -36,6 +36,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cpus", type=int, required=True)
     parser.add_argument("--mem-gb", type=int, required=True)
     parser.add_argument("--timeout-seconds", type=int, required=True)
+    parser.add_argument("--gpu-tag", choices=("H800", "H200"), default=GPU_TAG)
+    parser.add_argument("--charged-group", default=CHARGED_GROUP)
     parser.add_argument(
         "worker_command",
         help="Shell command the worker runs from the repository root.",
@@ -66,7 +68,7 @@ def main() -> int:
         mem_gb=args.mem_gb,
         replica=1,
         image=STEP_IMAGE,
-        positive_tags=[GPU_TAG],
+        positive_tags=[args.gpu_tag],
         extra_requirements=[],
         mounts=[CLOUD_MOUNT],
         custom_resources=[],
@@ -78,7 +80,7 @@ def main() -> int:
     workers = spawn_tasks(
         resources,
         command=command,
-        charged_group=CHARGED_GROUP,
+        charged_group=args.charged_group,
         use_image=True,
         code_mount_point=str(REPO_ROOT),
     )

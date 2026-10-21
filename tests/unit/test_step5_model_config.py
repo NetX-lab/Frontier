@@ -589,7 +589,8 @@ def test_step_generic_profiler_and_attention_execution_remain_guarded(
     for config in (model, profiling):
         with pytest.raises(ValueError, match="explicit global layer id"):
             bind_attention_family(config)
-        with pytest.raises(NotImplementedError, match="Step native.*producer"):
-            build_profiling_plan(
-                config, tp_size=8, attn_tp=[8], ffn_tp=[8], moe_tp=[1], is_moe=True,
-            )
+        plan = build_profiling_plan(
+            config, tp_size=8, attn_tp=[8], ffn_tp=[8], moe_tp=[1], is_moe=True,
+        )
+        assert plan["attn_sharded_enabled"] is False
+        assert "step5_ffn_merge" in plan["enabled_ops"]

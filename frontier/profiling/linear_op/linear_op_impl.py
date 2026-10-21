@@ -1,4 +1,5 @@
 from contextlib import nullcontext
+from functools import cache
 from typing import Optional
 
 import torch
@@ -6,8 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from frontier.attention.model_binding import resolve_attention_head_partition
-from frontier.profiling.common.layers.activation import SiluAndMul
-from frontier.profiling.common.layers.layernorm import GemmaRMSNorm, RMSNorm
+from frontier.profiling.common.layers.activation import get_act_fn
+from frontier.profiling.common.layers.layernorm import GemmaRMSNorm, RMSNorm, Step5RMSNorm
 from frontier.profiling.common.layers.rotary_embedding import get_rope
 from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
     ColumnParallelLinear,
@@ -27,6 +28,7 @@ from frontier.profiling.linear_op.profiling_plan import memory_operator_enabled
 from frontier.attention.families import DSA_ATTENTION_FAMILY
 from frontier.model_architectures import (
     AttentionLinearOpImplementation,
+    LinearNormImplementation,
     MODEL_ARCHITECTURE_REGISTRY,
     get_model_architecture_profile,
 )
@@ -53,17 +55,52 @@ def _uses_gemma_rms_norm(config: ModelConfig) -> bool:
     )
 
 
-def _build_untimed_norm(config: ModelConfig, hidden_dim: int) -> torch.nn.Module:
+def _build_norm(
+    config: ModelConfig, hidden_dim: int, norm_name: str | None = None,
+) -> torch.nn.Module:
+    """Build the profile-selected native norm under the existing scope timer."""
     if config.norm == "layer_norm":
         return torch.nn.LayerNorm(hidden_dim)
     if config.norm == "rms_norm":
+        profile = config.get_model_architecture_profile()
+        if profile.linear_norm_impl is LinearNormImplementation.STEP5:
+            return Step5RMSNorm(
+                hidden_dim,
+                eps=config.rms_norm_eps,
+                zero_centered=config.zero_centered,
+                dtype=ModelConfig._parse_dtype(config.norm_dtype),
+                fp32_residual_connection=config.fp32_residual_connection,
+                norm_name=norm_name,
+            )
         norm_cls = GemmaRMSNorm if _uses_gemma_rms_norm(config) else RMSNorm
         return norm_cls(
             hidden_dim,
             eps=getattr(config, "rms_norm_eps", 1e-6),
-            norm_name=None,
+            norm_name=norm_name,
         )
     raise ValueError(f"Unknown norm: {config.norm}")
+
+
+def _build_untimed_norm(config: ModelConfig, hidden_dim: int) -> torch.nn.Module:
+    return _build_norm(config, hidden_dim)
+
+
+@cache
+def _load_step5_add_fp32():
+    try:
+        from vllm.models.step5.nvidia.ops.add import add_fp32
+    except ImportError as exc:
+        raise ImportError(
+            "Step FFN merge profiling requires native add_fp32 from the Step vLLM image."
+        ) from exc
+    return add_fp32
+
+
+def step5_ffn_merge(routed: torch.Tensor, shared: torch.Tensor) -> torch.Tensor:
+    """Sum the native BF16 FFN branches into FP32 without CUDA surrogates."""
+    if routed.is_cuda:
+        return _load_step5_add_fp32()(routed, shared)
+    return routed.float() + shared.float()
 
 
 class DummyAttention(nn.Module):
@@ -567,7 +604,12 @@ class MLP(torch.nn.Module):
                 linear_metric_name="mlp_up_proj",
                 fp8_weight_block_size=fp8_block_size,
             )
-            self.act = SiluAndMul()
+            self.activation_name, self.activation_limit = (
+                config.get_model_architecture_profile().resolve_ffn_activation(
+                    config, share_expert=False,
+                )
+            )
+            self.act = get_act_fn(self.activation_name, limit=self.activation_limit)
         else:
             self.up_proj = ColumnParallelLinear(
                 self.embedding_dim,
@@ -650,7 +692,12 @@ class ShareExpertMLP(torch.nn.Module):
             linear_metric_name="share_expert_up_proj",  # Distinct timer name
             fp8_weight_block_size=fp8_block_size,
         )
-        self.act = SiluAndMul()
+        self.activation_name, self.activation_limit = (
+            config.get_model_architecture_profile().resolve_ffn_activation(
+                config, share_expert=True,
+            )
+        )
+        self.act = get_act_fn(self.activation_name, limit=self.activation_limit)
 
         self.down_proj = RowParallelLinear(
             config.share_expert_dim,  # Use share_expert_dim
@@ -688,7 +735,7 @@ def build_linear_op_attention_module(
     attention_linear_ops = get_model_architecture_profile(config).attention_linear_ops
     attention_linear_ops.require_enabled_for_profiling()
 
-    if attn_sharded_enabled:
+    if attn_sharded_enabled and attention_linear_ops.sharded_ops:
         if config.get_attention_family().family_id in MLA_PROJECTION_FAMILY_IDS:
             return MlaAttentionLinearOps(config, world_size)
         if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP3_TEXT:
@@ -741,6 +788,9 @@ class GPTBlock(torch.nn.Module):
         enabled_ops = (
             set(profiling_plan.get("enabled_ops", [])) if profiling_plan else None
         )
+        self._profile_ffn_merge = (
+            enabled_ops is not None and "step5_ffn_merge" in enabled_ops
+        )
         self._profile_input_layernorm = (
             memory_operator_enabled(enabled_ops, "input_layernorm")
         )
@@ -771,13 +821,12 @@ class GPTBlock(torch.nn.Module):
         if config.norm == "layer_norm":
             self.input_layernorm = torch.nn.LayerNorm(config.embedding_dim)
         elif config.norm == "rms_norm":
-            norm_cls = GemmaRMSNorm if _uses_gemma_rms_norm(config) else RMSNorm
-            self.input_layernorm = norm_cls(
+            self.input_layernorm = _build_norm(
+                config,
                 config.embedding_dim,
                 norm_name=(
                     "input_layernorm" if self._profile_input_layernorm else None
                 ),
-                eps=getattr(config, "rms_norm_eps", 1e-6),
             )
             self._use_inner_input_layernorm_timer = self._profile_input_layernorm
         else:
@@ -789,15 +838,14 @@ class GPTBlock(torch.nn.Module):
                 self._padded_n_embd if self._ffn_enabled else config.embedding_dim
             )
             if config.norm == "rms_norm":
-                norm_cls = GemmaRMSNorm if _uses_gemma_rms_norm(config) else RMSNorm
-                self.post_attention_layernorm = norm_cls(
+                self.post_attention_layernorm = _build_norm(
+                    config,
                     post_attn_dim,
                     norm_name=(
                         "post_attention_layernorm"
                         if self._profile_post_attention_layernorm
                         else None
                     ),
-                    eps=getattr(config, "rms_norm_eps", 1e-6),
                 )
                 self._use_inner_post_attention_layernorm_timer = (
                     self._profile_post_attention_layernorm
@@ -814,7 +862,10 @@ class GPTBlock(torch.nn.Module):
             attn_sharded_enabled=self._attn_sharded_enabled,
         )
 
-        if self._ffn_sharded_enabled:
+        regular_mlp_enabled = enabled_ops is None or bool(
+            {"mlp_up_proj", "mlp_act", "mlp_down_proj"}.intersection(enabled_ops)
+        )
+        if self._ffn_sharded_enabled and regular_mlp_enabled:
             self.mlp = MLP(
                 config,
                 world_size,
@@ -825,7 +876,15 @@ class GPTBlock(torch.nn.Module):
             self.mlp = DummyMLP()
 
         # Add the shared-expert branch for models whose MoE FFN includes it.
-        if self._ffn_sharded_enabled and config.is_moe and _supports_share_expert(config):
+        shared_mlp_enabled = enabled_ops is None or bool(
+            {
+                "share_expert_up_proj", "share_expert_act", "share_expert_down_proj",
+            }.intersection(enabled_ops)
+        )
+        if (
+            self._ffn_sharded_enabled and shared_mlp_enabled
+            and config.is_moe and _supports_share_expert(config)
+        ):
             self.share_expert = ShareExpertMLP(
                 config,
                 world_size,
@@ -833,6 +892,10 @@ class GPTBlock(torch.nn.Module):
             )
         else:
             self.share_expert = None
+
+        self.ffn_merge_timer = CudaTimer(
+            "step5_ffn_merge" if self._profile_ffn_merge else None
+        )
 
         self.input_layernorm_timer = CudaTimer(
             (
@@ -892,6 +955,21 @@ class GPTBlock(torch.nn.Module):
         pad_size = self._padded_n_embd - current_dim
         return F.pad(tensor, (0, pad_size))
 
+    def _forward_ffn(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        mlp_output = self.mlp(hidden_states)
+        if self.share_expert is not None:
+            shared_output = self.share_expert(hidden_states)
+        else:
+            return mlp_output
+        if self._profile_ffn_merge:
+            # Routed experts belong to the MoE producer, not this dense MLP.
+            # Keep this BF16 surrogate outside the native merge timer even
+            # when a separate dense-layer MLP is measured in the same plan.
+            routed_output = hidden_states.to(torch.bfloat16)
+            with self.ffn_merge_timer:
+                return step5_ffn_merge(routed_output, shared_output)
+        return mlp_output + shared_output
+
     def _forward_with_post_attn_norm(
         self,
         positions: torch.Tensor,
@@ -928,13 +1006,7 @@ class GPTBlock(torch.nn.Module):
                 hidden_states, residual = self.post_attention_layernorm(
                     hidden_states, residual
                 )
-        mlp_output = self.mlp(hidden_states)
-        # Profile the shared-expert branch alongside the routed FFN path.
-        if self.share_expert is not None:
-            share_expert_output = self.share_expert(hidden_states)
-            hidden_states = mlp_output + share_expert_output
-        else:
-            hidden_states = mlp_output
+        hidden_states = self._forward_ffn(hidden_states)
         return hidden_states, residual
 
     def _forward_without_post_attn_norm(
@@ -966,11 +1038,7 @@ class GPTBlock(torch.nn.Module):
             hidden_states = self._maybe_pad_tensor(hidden_states)
             residual = self._maybe_pad_tensor(residual)
             attn_outputs = self._maybe_pad_tensor(attn_outputs)
-        feed_forward_hidden_states = self.mlp(hidden_states)
-        # Profile the shared-expert branch alongside the routed FFN path.
-        if self.share_expert is not None:
-            share_expert_output = self.share_expert(hidden_states)
-            feed_forward_hidden_states = feed_forward_hidden_states + share_expert_output
+        feed_forward_hidden_states = self._forward_ffn(hidden_states)
         if self._attn_enabled or self._ffn_enabled:
             with self.add_timer if self._profile_add else nullcontext():
                 hidden_states = attn_outputs + feed_forward_hidden_states + residual
@@ -989,6 +1057,11 @@ class GPTModel(torch.nn.Module):
         super().__init__()
 
         self.num_repeat_steps = num_repeat_steps
+        self._fp32_block_input = (
+            config.get_model_architecture_profile().linear_norm_impl
+            is LinearNormImplementation.STEP5
+            and config.fp32_residual_connection
+        )
         enabled_ops = (
             set(profiling_plan.get("enabled_ops", [])) if profiling_plan else None
         )
@@ -1081,9 +1154,19 @@ class GPTModel(torch.nn.Module):
         # input_layernorm. Passing that one tensor to every repeat gives the
         # fused add-norm the engine's two input buffers; a residual aliased
         # to the hidden states reads one buffer and times too short.
-        residual = torch.zeros_like(hidden_states)
+        residual_dtype = (
+            torch.float32
+            if self._fp32_block_input
+            else hidden_states.dtype
+        )
+        residual = torch.zeros_like(hidden_states, dtype=residual_dtype)
         for _ in range(self.num_repeat_steps):
             hidden_states = self.embed_tokens(input_ids)
+            # Step casts the residual stream before input RMSNorm. This input
+            # dtype selects a native JIT specialization; do not time the cast
+            # as part of either embedding or normalization.
+            if self._fp32_block_input:
+                hidden_states = hidden_states.float()
             hidden_states, _ = self.block(
                 positions,
                 hidden_states,
