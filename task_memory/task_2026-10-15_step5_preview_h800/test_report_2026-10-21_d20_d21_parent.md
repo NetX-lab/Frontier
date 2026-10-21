@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Record parent-run suites, actual bundle output, initial fidelity audit, prioritized submissions and remaining actual-main defects. |
+| 2026-10-21 | Reverify the native API-front-end correction and explicit request-owned profile identity. |
 
 ## CPU integration checks
 
@@ -85,6 +86,12 @@ The parent used `setsid`, redirected each output to the enclosing run directory'
 Original staged identity/config/output files remain under the exact run directories. Selected P0 judgment is `../task_2026-10-21_step5_priority_runs/p0_judgment/`; parent source/identity/status receipts are retained beside each run. D22 strict native PASS is separately documented in `../task_2026-10-21_step5_d22_timing/test_report_2026-10-21_d22_native.md`.
 
 ## Remaining work and limits
+
+### Parent follow-up verification
+
+- Native replay correction `6838bc1`: parent independently ran the five-file suite from `native_replay/test_report_2026-10-21_native_replay.md` in `step5-priority-runs`, using `asyncopd-py312`, `STEP5_NATIVE_SOURCE_ROOT=/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm`, and `FRONTIER_SIMULATOR_PYTHON=/data/ycfeng/envs/frontier-py310/bin/python`. Expected no failures, errors or skips; observed **125 PASS, 75.373s**. Logs/JUnit: `/data/ycfeng/tmp/d21_native_replay_parent01.{log,xml}`. The real StepMind Python also executed qualification03 `submit_native_pd.py --dry-run`, preserving its resource/spawn arguments in `h800_32_qualification03/parent_stepmind_dryrun01.json`.
+- The native profile producer now writes `has_attention_metadata=1` for its existing request-owned cells. This keeps them distinct from measured request-free idle-DP input (`0`), without changing timings or old sealed tables. Parent command from `step5-preview`: `env PYTHONDONTWRITEBYTECODE=1 VLLM_TARGET_DEVICE=cpu PYTHONPATH=$PWD:/data/ycfeng/tmp/step5_profiling_20261020/extra_site TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/oneshot-opd-py312/bin/python -m pytest tests/unit/test_step5_attention_profiling.py -q --tb=short -p no:cacheprovider`. Expected complete typed-row validation and explicit identity; observed **99 PASS, 3.67s**. Log: `/data/ycfeng/tmp/d20_profile_metadata_parent01.log`.
+- Before integration, parent independently ran `test_step5_measured_replay.py`, `test_step5_measured_training.py`, and `test_step5_measured_public_predictor.py` at `acc3a88` in `step5-d20-integration`, with the Python3.10 environment above: **41 PASS, 22.50s**. Log: `/data/ycfeng/tmp/d20_request_free_parent01.log`. Complete CLI execution and combined-tree checks remain pending.
 
 The real CLI first rejected `full_decode_only` at a phase-specific mapping. Correction7e41b80 reuses the existing policy (pure decode FULL; prefill/tail NONE) and passes100 affected checks plus an initialization-only CLI regression. Full execution then reached a separate missing capability: request-free idle-DP attention coverage. The same owner is implementing its source-derived physical scopes; no regular decode substitution or zero-cost fallback is accepted. Exact CLI/error/config artifacts are in `../task_2026-10-21_step5_d20_integration/actual_main/` in the integration worktree.
 

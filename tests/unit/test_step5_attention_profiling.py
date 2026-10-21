@@ -86,6 +86,7 @@ def test_typed_row_has_complete_family_schema(config):
     assert {c["selected_tensor_parallel_size"] for c in contracts.values()} == {8}
     assert {c["operator_family_id"] for c in contracts.values()} == {"step5_attention"}
     assert frame.iloc[0].local_index_q_heads == 4
+    assert frame.iloc[0].has_attention_metadata == 1
     assert STEP5_ATTENTION_FAMILY.execution_enabled is False
 
 

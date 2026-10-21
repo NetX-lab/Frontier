@@ -95,7 +95,7 @@ def build_row(config, cell, *, tp, block_size, max_model_len, runtime_signature,
         "fusion": json.dumps(metadata.attention_scopes(workload)),
         "graph_mode": cell.graph_mode, "valid_tokens": cell.num_tokens, "padded_tokens": 0,
         "query_lens": json.dumps(cell.query_lens), "context_lens": json.dumps(cell.context_lens),
-        "phase": cell.phase, "max_model_len": max_model_len,
+        "phase": cell.phase, "max_model_len": max_model_len, "has_attention_metadata": 1,
         "block_table_columns": workload.block_table_columns, "score_regions": workload.score_regions,
         "weight_source": "synthetic_bf16", "time_stats": time_stats,
         "typed_operator_contracts": serialize_typed_operator_contracts(
