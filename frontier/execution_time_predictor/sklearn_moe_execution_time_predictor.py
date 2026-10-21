@@ -1,10 +1,13 @@
 import math
+import json
 from collections import OrderedDict
+from contextlib import contextmanager
 from dataclasses import replace
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY, STEP5_ATTENTION_FAMILY
 from frontier.attention.model_binding import bind_layer_attention
+from frontier.attention.step5 import describe_step5_layer
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -30,7 +33,10 @@ from frontier.moe_ep_workload import (
 )
 from frontier.operators.families import (
     get_comm_operator,
+    get_operator_family,
 )
+from frontier.operators.binding import bind_operator_query
+from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
 
 if TYPE_CHECKING:
     from frontier.entities import EPBatchGroup
@@ -44,12 +50,18 @@ from frontier.config import (
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_size,
 )
-from frontier.types import ClusterType
+from frontier.types import ClusterType, MeasurementType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
 
 logger = init_logger(__name__)
+
+_STEP5_FFN_OPERATORS = frozenset(
+    operator.profiling_name()
+    for family_id in ("ffn", "share_expert", "moe", "step5_ffn")
+    for operator in get_operator_family(family_id).profiling_ops()
+) | {"input_layernorm", "post_attention_layernorm"}
 
 
 from frontier.execution_time_predictor.moe_dataset_training import (
@@ -77,6 +89,112 @@ class SklearnMoEExecutionTimePredictor(
     # replica/layer/token shape is revisited across EP waves, while a
     # long-lived predictor must not retain an unbounded request history.
     _LAYER_WORKLOAD_CACHE_CAPACITY = 256
+
+    @contextmanager
+    def _step5_measured_layer(self, layer_id):
+        previous = getattr(self, "_step5_layer_metadata", None)
+        previous_costs = getattr(self, "_step5_ffn_costs", None)
+        metadata = None
+        if not self._enable_dummy_mode and bind_layer_attention(self._model_config, layer_id).family_id == STEP5_ATTENTION_FAMILY.family_id:
+            metadata = describe_step5_layer(
+                self._model_config, layer_id,
+                attention_tp_size=self._replica_config.attn_tensor_parallel_size,
+                moe_tp_size=self._replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=self._replica_config.moe_expert_parallel_size,
+            )
+        self._step5_layer_metadata = metadata
+        self._step5_ffn_costs = {}
+        try:
+            yield metadata
+        finally:
+            self._step5_layer_metadata = previous
+            self._step5_ffn_costs = previous_costs
+
+    def _predict_step5_ffn_operator(self, model_name, features):
+        metadata = self._step5_layer_metadata
+        if metadata is None:
+            raise ValueError("Step measured FFN coverage requires an explicit physical layer context")
+        binding = bind_operator_query(model_name)
+        projections = [p for p in metadata.projections if p.operator_name == model_name]
+        precision = metadata.model_precision
+        if projections:
+            precisions = {p.weight_precision for p in projections}
+            if len(precisions) != 1:
+                raise ValueError(f"Step {model_name} has heterogeneous source precision")
+            precision = precisions.pop()
+        contract = None
+        if binding.family_id in {"ffn", "share_expert", "moe"}:
+            contract = self._get_model_architecture_profile().resolve_layer_contract(
+                self._model_config, layer_id=metadata.attention_spec.global_layer_id, operator_name=model_name,
+                attention_tp_size=self._replica_config.attn_tensor_parallel_size,
+                ffn_tp_size=self._get_ffn_tp_key_for_linear_op(),
+                moe_tp_size=self._replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=self._replica_config.moe_expert_parallel_size,
+            )
+        family = self._measurement_family_name(self._active_measurement_type)
+        model = self._model_manager._get_family_model(
+            family, model_name, precision_key=precision.name,
+            requested_identity=None if contract is None else _serialize_selected_layer_cache_identity(contract),
+        )
+        if model is None:
+            raise ValueError(f"Step measured {model_name} {precision.name} layer {metadata.attention_spec.global_layer_id} coverage is unavailable")
+        names = tuple(model._frontier_feature_names)
+        exact = model._frontier_exact_lookup
+        if not exact:
+            raise ValueError(f"Step measured {model_name} has no physical feature coverage")
+        bounds = getattr(model, "_frontier_feature_bounds", None)
+        if bounds is None:
+            bounds = {name: (min(key[i] for key in exact), max(key[i] for key in exact))
+                      for i, name in enumerate(names)}
+            model._frontier_feature_bounds = bounds
+        count_model = getattr(model, "_frontier_kernel_count_model", None)
+        if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
+            if self._kernel_gap_ms is None:
+                raise ValueError("Step GPU-active FFN requires measured kernel_gap.csv coverage")
+            if count_model is None:
+                raise ValueError(f"Step {model_name} requires actual per-operator kernel-count coverage")
+        alias = f"{model_name}:{model._frontier_model_hash}"
+        predictions = self._predictions
+        self._predictions = dict(predictions)
+        self._predictions[alias] = {
+            "_on_demand_prediction": True, "_model": model, "_feature_names": names,
+            "_feature_bounds": bounds, "_exact_lookup": exact,
+        }
+        try:
+            value = super()._get_on_demand_prediction(alias, features)
+            count = None
+            if count_model is not None:
+                count_alias = f"{alias}_kernel_count"
+                self._predictions[count_alias] = {
+                    "_on_demand_prediction": True, "_model": count_model,
+                    "_feature_names": names, "_feature_bounds": bounds,
+                    "_exact_lookup": count_model._frontier_exact_lookup,
+                }
+                count = super()._get_on_demand_prediction(count_alias, features)
+                if not math.isfinite(count) or count <= 0:
+                    raise ValueError(f"Step {model_name} has invalid measured kernel-count coverage")
+        finally:
+            self._predictions = predictions
+        self._step5_ffn_costs[model_name] = dict(
+            duration_ms=value, kernel_count=count, precision=precision.name,
+            measurement_type=self._active_measurement_type.value,
+            global_layer_id=metadata.attention_spec.global_layer_id,
+            duration_model_hash=model._frontier_model_hash,
+            kernel_count_model_hash=None if count_model is None else count_model._frontier_model_hash,
+            evidence_kind=json.loads(model._frontier_measurement_identity).get("evidence_kind"),
+            exact_lookup=tuple(float(features[name]) for name in names) in exact,
+        )
+        return value
+
+    def _get_prediction_for_features(self, model_name, features, *, feature_names=None):
+        if getattr(self, "_step5_layer_metadata", None) is not None and model_name in _STEP5_FFN_OPERATORS:
+            return self._predict_step5_ffn_operator(model_name, features)
+        return super()._get_prediction_for_features(model_name, features, feature_names=feature_names)
+
+    def _get_on_demand_prediction(self, model_name, features):
+        if getattr(self, "_step5_layer_metadata", None) is not None and model_name in _STEP5_FFN_OPERATORS:
+            return self._predict_step5_ffn_operator(model_name, features)
+        return super()._get_on_demand_prediction(model_name, features)
 
     def _predict_dsv4_dummy_source_execution(
         self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
@@ -490,6 +608,8 @@ class SklearnMoEExecutionTimePredictor(
             )
         spec = self._model_config.get_layer_attention_spec(layer_id)
         key = (spec.family_id, spec.variant_id)
+        if not self._enable_dummy_mode and spec.family_id == STEP5_ATTENTION_FAMILY.family_id:
+            key = (*key, layer_id)
         cached = cache.get(key)
         if cached is not None:
             self._attention_query_cache_hits += 1
@@ -514,10 +634,26 @@ class SklearnMoEExecutionTimePredictor(
             )
         operator_times = value.operator_times
         if operator_times is not None:
-            operator_times = type(operator_times)(dict(operator_times.op_times))
+            operator_times = replace(operator_times, op_times=dict(operator_times.op_times),
+                                     costs=dict(operator_times.costs), diagnostics=dict(operator_times.diagnostics))
         return replace(value, operator_times=operator_times)
 
     def _get_execution_time_internal(
+        self, batch, pipeline_stage, moe_tokens_input=None, lane_workload=None,
+        include_moe=True, include_ffn=True, include_attention=True, layer_id=0,
+        attention_query_cache=None, include_stage_owned=True, stage_num_layers=1,
+    ):
+        with self._step5_measured_layer(layer_id) as metadata:
+            result = self._get_layer_execution_time(
+                batch, pipeline_stage, moe_tokens_input, lane_workload, include_moe,
+                include_ffn, include_attention, layer_id, attention_query_cache,
+                include_stage_owned, stage_num_layers,
+            )
+            if metadata is not None:
+                result._step5_ffn_operator_costs = dict(self._step5_ffn_costs)
+            return result
+
+    def _get_layer_execution_time(
         self,
         batch: Batch,
         pipeline_stage: int,
@@ -676,7 +812,7 @@ class SklearnMoEExecutionTimePredictor(
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            if self._model_config.supports_share_expert():
+            if self._model_config.supports_share_expert() and self._step5_layer_metadata is None:
                 # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
                 # those profiled operations into the dense MLP component
                 # fields so the layer remains a FULL_STAGE_WORLD operation and
@@ -792,7 +928,22 @@ class SklearnMoEExecutionTimePredictor(
         mlp_norm_time = (
             self._get_mlp_norm_layer_act_execution_time(batch) if include_ffn else 0.0
         )
-
+        moe_operator_times = None
+        if include_ffn and include_moe:
+            moe_operator_times = _build_moe_operator_times(
+                mlp_norm_time=mlp_norm_time, moe_gating_linear_time=moe_gating_linear_time,
+                moe_gating_routing_topk_time=moe_gating_routing_topk_time,
+                moe_shuffling_time=moe_shuffling_time, moe_grouped_gemm_time=moe_grouped_gemm_time,
+                share_expert_up_proj_time=share_expert_up_proj_time,
+                share_expert_act_time=share_expert_act_time,
+                share_expert_down_proj_time=share_expert_down_proj_time,
+                include_share_expert=self._model_config.supports_share_expert(),
+            )
+            if self._step5_layer_metadata is not None:
+                merge = self._get_prediction_for_features("step5_ffn_merge", {
+                    "num_tokens": batch.get_effective_total_tokens_rounded(self._cluster_type),
+                })
+                moe_operator_times = MoEOperatorTimes({**moe_operator_times.op_times, "step5_ffn_merge": merge})
 
         return ExecutionTime(
             num_layers_per_pipeline_stage=1,
@@ -853,21 +1004,7 @@ class SklearnMoEExecutionTimePredictor(
             communication_operator_times=CommunicationOperatorTimes(
                 communication_operator_times
             ),
-            moe_operator_times=(
-                _build_moe_operator_times(
-                    mlp_norm_time=mlp_norm_time,
-                    moe_gating_linear_time=moe_gating_linear_time,
-                    moe_gating_routing_topk_time=moe_gating_routing_topk_time,
-                    moe_shuffling_time=moe_shuffling_time,
-                    moe_grouped_gemm_time=moe_grouped_gemm_time,
-                    share_expert_up_proj_time=share_expert_up_proj_time,
-                    share_expert_act_time=share_expert_act_time,
-                    share_expert_down_proj_time=share_expert_down_proj_time,
-                    include_share_expert=self._model_config.supports_share_expert(),
-                )
-                if include_ffn and include_moe
-                else None
-            ),
+            moe_operator_times=moe_operator_times,
         )
 
     def predict_moe_lane_phase_times(
@@ -950,6 +1087,22 @@ class SklearnMoEExecutionTimePredictor(
         return phase_times
 
     def predict_moe_layer_time(
+        self, batch_or_group, layer_id, cluster_type, lane_workload=None, ep_size=None, router_topk=None,
+    ):
+        with self._step5_measured_layer(layer_id) as metadata:
+            result = self._predict_moe_layer_time(
+                batch_or_group, layer_id, cluster_type, lane_workload, ep_size, router_topk,
+            )
+            if metadata is not None:
+                merge = self._get_prediction_for_features("step5_ffn_merge", {
+                    "num_tokens": batch_or_group.get_effective_total_tokens_rounded(self._cluster_type),
+                })
+                result.operator_times = MoEOperatorTimes({**result.operator_times.op_times, "step5_ffn_merge": merge})
+                result.step5_ffn_merge_time = merge
+                result._step5_ffn_operator_costs = dict(self._step5_ffn_costs)
+            return result
+
+    def _predict_moe_layer_time(
         self,
         batch_or_group: "Batch | EPBatchGroup",
         layer_id: int,
@@ -1282,6 +1435,23 @@ class SklearnMoEExecutionTimePredictor(
         """Predict layer-specific routing with a shared stage-local attention cache."""
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
+        scopes = {}
+        if (not self._enable_dummy_mode and include_attention
+                and bind_layer_attention(self._model_config, layer_id).family_id == STEP5_ATTENTION_FAMILY.family_id):
+            if layer_id == 0 and self._model_config.fp32_residual_connection:
+                scopes["input_cast"] = 0
+            if layer_id + num_layers == self._model_config.num_layers:
+                scopes["final_residual"] = self._model_config.num_layers - 1
+            if scopes:
+                self._activate_measurement_type_for_batch(batch)
+                for name, physical_layer in scopes.items():
+                    with self._step5_measured_layer(physical_layer) as metadata:
+                        model = self._model_manager._get_family_model(
+                            self._measurement_family_name(self._active_measurement_type), name,
+                            precision_key=metadata.model_precision.name,
+                        )
+                        if model is None:
+                            raise ValueError(f"Step measured stage has unavailable source boundary coverage: {name}")
         cache: dict[tuple[str, str], AttentionTime] = {}
         layers = [
             self._predict_layer_with_kernel_gap(
@@ -1293,6 +1463,31 @@ class SklearnMoEExecutionTimePredictor(
             )
             for offset in range(num_layers)
         ]
+        if scopes:
+            proofs = {}
+
+            def predict_owner():
+                owner = layers[0].as_single_layer(
+                    global_layer_id=layer_id,
+                    attention_family_id=STEP5_ATTENTION_FAMILY.family_id,
+                    attention_variant_id=self._model_config.get_layer_attention_spec(layer_id).variant_id,
+                )
+                values = {}
+                tokens = self._step5_attention_workload(batch).physical_query_rows
+                for name, physical_layer in scopes.items():
+                    with self._step5_measured_layer(physical_layer):
+                        values[name] = self._predict_step5_ffn_operator(name, {"num_tokens": tokens})
+                        proofs[name] = dict(self._step5_ffn_costs[name])
+                        if proofs[name]["kernel_count"] is None:
+                            raise ValueError(f"Step {name} has unavailable actual kernel-count coverage")
+                owner._replace_operator_time_values(values)
+                return owner
+
+            owner = self._predict_layer_with_kernel_gap(predict_owner)
+            assembled = self._assemble_stage(layers, first_layer_id=layer_id)
+            stage = StageExecutionTime(assembled.layer_execution_times, stage_execution_time=owner)
+            stage._step5_stage_operator_costs = proofs
+            return stage
         if (
             self._enable_dummy_mode
             and self._model_config.get_layer_attention_spec(layer_id).family_id
@@ -1355,7 +1550,10 @@ class SklearnMoEExecutionTimePredictor(
 
         if include_moe is not None and type(include_moe) is not bool:
             raise ValueError("include_moe must be a bool or None")
-        if not include_attention and include_moe is False:
+        measured_step = (not self._enable_dummy_mode
+                         and bind_layer_attention(self._model_config, layer_id).family_id
+                         == STEP5_ATTENTION_FAMILY.family_id)
+        if not include_attention and include_moe is False and not measured_step:
             raise ValueError(
                 "Post-attention-only prediction requires a MoE layer; "
                 "include_moe=False selects a dense FFN branch"
@@ -1370,7 +1568,7 @@ class SklearnMoEExecutionTimePredictor(
             include_ffn=include_ffn,
         )
 
-        if not include_attention and not include_moe_for_layer:
+        if not include_attention and not include_moe_for_layer and not measured_step:
             raise ValueError(
                 "Post-attention-only prediction requires a MoE layer; "
                 f"layer_id={layer_id} is dense"

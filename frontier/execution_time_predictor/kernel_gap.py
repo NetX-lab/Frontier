@@ -107,11 +107,11 @@ class KernelCountTraining:
         models stay the same with and without kernel_gap.csv.
         """
         count_column = kernel_count_column(target_column)
-        if (
+        typed_measurement = getattr(model, "_frontier_measurement_identity", None) is not None
+        if count_column is None or (not typed_measurement and (
             self._kernel_gap_ms is None
             or self._active_measurement_type is not MeasurementType.KERNEL_ONLY
-            or count_column is None
-        ):
+        )):
             return model
         measured = rows.dropna(subset=[*feature_columns, target_column])
         if count_column not in measured or measured[count_column].isna().any():

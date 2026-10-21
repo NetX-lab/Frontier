@@ -121,6 +121,7 @@ def test_attention_family_accessors_are_thin_registry_views() -> None:
         DENSE_ATTENTION_FAMILY,
         LATENT_MLA_ATTENTION_FAMILY,
         GATED_DELTA_NET_ATTENTION_FAMILY,
+        STEP5_ATTENTION_FAMILY,
     )
 
 

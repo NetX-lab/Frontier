@@ -1,0 +1,227 @@
+"""Real shared-cache fitting of explicitly labelled CPU Step compute fixtures."""
+
+import json
+from types import SimpleNamespace
+
+import pandas as pd
+import pytest
+
+from frontier.attention.step5 import describe_step5_layer
+from frontier.config.config import RandomForrestExecutionTimePredictorConfig
+from frontier.config.model_config import BaseModelConfig
+from frontier.config.precision_type import PrecisionType
+from frontier.operators.families import MOE_FAMILY
+from frontier.moe_gating_runtime import DEFAULT_MOE_GATING_RUNTIME_CONTEXT
+from frontier.moe_load_imbalance import MoELoadImbalanceInput
+from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
+from frontier.profiling.utils.replicated_ops import split_replicated_result
+from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+from frontier.types import ClusterType, MeasurementType
+from tests.unit.test_step5_measured_training import _manager
+
+
+@pytest.fixture(scope="module")
+def model():
+    return BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+
+
+def _replica(model):
+    return SimpleNamespace(
+        model_config=model, device="h800", model_name="stepfun-ai/Step-5-Preview",
+        attn_tensor_parallel_size=8, moe_tensor_parallel_size=1, moe_expert_parallel_size=8,
+        moe_routing_distribution_type="balanced", speculative_decoding_config=None,
+    )
+
+
+def _stats(tokens, *, scale=1.):
+    value = scale * tokens / 100
+    return dict(min=value, max=value, mean=value, median=value, std=0., count=10, kernel_count=7)
+
+
+def _metadata(model):
+    return dict(
+        model_architecture_profile="step5", model_arch=model.model_arch,
+        quant_signature=model.get_quant_signature(),
+        profiling_precision="BF16", measurement_type="KERNEL_ONLY",
+        runtime_stack_signature="cpu_fixture_unadmitted", evidence_kind="cpu_fixture",
+    )
+
+
+def _tables(tmp_path, model, token_counts=(16, 32), *, expert_parallel_size=8,
+            include_stage_boundaries=False):
+    linear = []
+    for is_moe in (False, True):
+        plan = build_profiling_plan(model, tp_size=8, attn_tp=[8], ffn_tp=[8], moe_tp=[1], is_moe=is_moe)
+        for tokens in token_counts:
+            row = dict(
+                num_tokens=tokens, num_tensor_parallel_workers=8, n_embd=model.embedding_dim,
+                n_expanded_embd=plan["padded_n_expanded_embd"],
+                padded_n_embd=plan["padded_n_embd"],
+                padded_n_expanded_embd=plan["padded_n_expanded_embd"],
+                time_stats={name: _stats(tokens) for name in plan["enabled_ops"]},
+                typed_operator_contracts=plan["typed_operator_contracts"], **_metadata(model),
+            )
+            for physical in split_replicated_result(row, set(plan["replicated_ops"]),
+                                                    unpadded_n_embd=model.embedding_dim):
+                if include_stage_boundaries and physical["num_tensor_parallel_workers"] == 1:
+                    for name in ("input_cast", "final_residual"):
+                        physical["time_stats"][name] = _stats(tokens)
+                        physical["typed_operator_contracts"][name] = dict(
+                            physical["typed_operator_contracts"]["input_layernorm"])
+                physical["typed_operator_contracts"] = json.dumps(physical["typed_operator_contracts"])
+                linear.append(physical)
+    linear_path = tmp_path / "linear_op.csv"
+    pd.json_normalize(linear).drop_duplicates().to_csv(linear_path, index=False)
+    routed = []
+    replica = _replica(model)
+    replica.moe_expert_parallel_size = expert_parallel_size
+    manager = _manager(tmp_path / "contracts")
+    for group in resolve_routed_layer_groups(model):
+        for tokens in token_counts:
+            contracts = {}
+            for operator in MOE_FAMILY.profiling_ops():
+                contract = manager._resolve_typed_layer_contract(
+                    operator.name, ClusterType.MONOLITHIC, replica, is_moe_model=True,
+                    layer_id=group.layer_ids[0],
+                )
+                contracts[operator.name] = contract.typed_metadata_identity()
+            routed.append(dict(
+                num_tokens=tokens, num_tensor_parallel_workers=1, expert_parallel_size=expert_parallel_size,
+                num_experts=model.num_experts, router_topk=model.num_experts_per_tok,
+                hidden_dim=model.embedding_dim,
+                expert_hidden_dim=contracts["moe_grouped_gemm"]["effective_ffn_width"],
+                typed_operator_contracts=json.dumps(contracts),
+                time_stats={op.name: _stats(tokens, scale=2. if group.precision is PrecisionType.FP8 else 3.)
+                            for op in MOE_FAMILY.profiling_ops()},
+                routing_runtime_path="standard_fused_topk", gating_runtime_context=DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+                moe_quantization_mode=group.precision.value,
+                **group.row_metadata(), **_metadata(model),
+            ))
+            routed[-1].update(MoELoadImbalanceInput(
+                num_tokens=tokens, num_experts_per_device=model.num_experts // expert_parallel_size,
+                hidden_dim=model.embedding_dim,
+                expert_hidden_dim=contracts["moe_grouped_gemm"]["effective_ffn_width"],
+                router_topk=model.num_experts_per_tok,
+            ).to_features_dict())
+    moe_path = tmp_path / "moe.csv"
+    pd.json_normalize(routed).to_csv(moe_path, index=False)
+    return linear_path, moe_path
+
+
+def _config():
+    return RandomForrestExecutionTimePredictorConfig(
+        num_estimators=[2], max_depth=[3], min_samples_split=[2],
+        k_fold_cv_splits=2, num_training_job_threads=1,
+    )
+
+
+def _ffn(manager, model, paths):
+    manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=_replica(model))}
+    return manager._train_ffn_models_for_cluster(
+        ClusterType.MONOLITHIC, _replica(model), _config(), str(paths[0]), str(paths[1]), True, set(),
+    )
+
+
+def test_step_existing_ffn_loop_fits_dense_shared_and_both_routed_precisions(model, tmp_path):
+    manager = _manager(tmp_path / "cache")
+    paths = _tables(tmp_path, model)
+    models = _ffn(manager, model, paths)
+    assert {"mlp_up_proj", "mlp_down_proj", "mlp_act", "share_expert_up_proj",
+            "share_expert_down_proj", "share_expert_act", "moe_grouped_gemm",
+            "post_attention_layernorm"} <= set(models)
+    contract = manager._resolve_typed_layer_contract(
+        "moe_grouped_gemm", ClusterType.MONOLITHIC, _replica(model), is_moe_model=True, layer_id=3,
+    )
+    for precision, expected in ((PrecisionType.FP8, .32), (PrecisionType.BF16, .48)):
+        estimator = manager.get_model("moe_grouped_gemm", precision=precision.name, layer_contract=contract)
+        assert estimator is not None
+        row = pd.read_csv(paths[1], float_precision="round_trip").query("num_tokens == 16").iloc[0]
+        key = tuple(float(row[name]) for name in estimator._frontier_feature_names)
+        assert estimator._frontier_exact_lookup[key] == pytest.approx(expected)
+        assert estimator._frontier_kernel_count_model._frontier_exact_lookup[key] == 7
+        identity = json.loads(estimator._frontier_measurement_identity)
+        assert identity["operator_precision"] == precision.name
+        assert identity["source_profiling_precision"] == "BF16"
+        assert identity["moe_layer_ids"] == ["3-87" if precision is PrecisionType.FP8 else "88-90"]
+        assert identity["evidence_kind"] == "cpu_fixture"
+    for name in ("mlp_up_proj", "share_expert_up_proj"):
+        assert manager.get_model(name, precision="BF16") is not None
+        with pytest.raises(ValueError, match="not available for precision"):
+            manager.get_model(name, precision="FP8")
+    assert manager.get_model("moe_gating_linear", precision="FP32") is not None
+    assert "step5_ffn_merge" in models
+    assert manager._models_view_for_family("kernel_only", ClusterType.MONOLITHIC)["step5_ffn_merge"] is models["step5_ffn_merge"]
+
+
+def test_step_outside_root_norm_is_explicit_shared_cache_helper(model, tmp_path):
+    manager = _manager(tmp_path / "cache")
+    linear, _ = _tables(tmp_path, model)
+    manager._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(replica_config=_replica(model))}
+    models = manager._train_step5_input_layernorm_for_cluster(
+        ClusterType.MONOLITHIC, _replica(model), _config(), str(linear), set(),
+    )
+    assert set(models) == {"input_layernorm"}
+    assert models["input_layernorm"]._frontier_exact_lookup[(16.,)] == .16
+    assert models["input_layernorm"]._frontier_kernel_count_model._frontier_exact_lookup[(16.,)] == 7
+
+
+def test_step_ffn_warm_cache_registers_both_precisions_without_refitting(model, tmp_path, monkeypatch):
+    paths = _tables(tmp_path, model)
+    cold = _manager(tmp_path / "cache")
+    models = _ffn(cold, model, paths)
+    warm = _manager(tmp_path / "cache")
+    monkeypatch.setattr(warm, "_create_estimator_and_params", lambda *_: pytest.fail("warm cache refitted"))
+    loaded = _ffn(warm, model, paths)
+    for name in models:
+        assert loaded[name]._frontier_model_hash == models[name]._frontier_model_hash
+    for precision in ("BF16", "FP8"):
+        estimator = warm.get_model("moe_grouped_gemm", precision=precision)
+        assert estimator._frontier_kernel_count_model._frontier_exact_lookup
+
+
+@pytest.mark.parametrize("mutation, message", [
+    ({"time_stats.moe_grouped_gemm.kernel_count": None}, "actual positive integral kernel coverage"),
+    ({"time_stats.moe_grouped_gemm.kernel_count": 0}, "actual positive integral kernel coverage"),
+    ({"time_stats.moe_grouped_gemm.kernel_count": True}, "actual positive integral kernel coverage"),
+    ({"moe_routed_precision": "bf16"}, "exclusion metadata conflicts"),
+    ({"moe_activation": "silu"}, "exclusion metadata conflicts"),
+    ({"measurement_type": "CUDA_EVENT"}, "do not relabel"),
+])
+def test_step_ffn_rejects_unmeasured_counts_and_false_source_contracts(model, tmp_path, mutation, message):
+    paths = _tables(tmp_path, model)
+    frame = pd.read_csv(paths[1])
+    for name, value in mutation.items():
+        frame[name] = value
+    frame.to_csv(paths[1], index=False)
+    with pytest.raises(ValueError, match=message):
+        _ffn(_manager(tmp_path / "cache"), model, paths)
+
+
+def test_step_input_norm_refuses_sample_count_as_launch_count(model, tmp_path):
+    linear, _ = _tables(tmp_path, model)
+    frame = pd.read_csv(linear).drop(columns=["time_stats.input_layernorm.kernel_count"])
+    frame.to_csv(linear, index=False)
+    manager = _manager(tmp_path / "cache")
+    with pytest.raises(ValueError, match="actual positive integral kernel coverage"):
+        manager._train_step5_input_layernorm_for_cluster(
+            ClusterType.MONOLITHIC, _replica(model), _config(), str(linear), set(),
+        )
+    assert not list((tmp_path / "cache").glob("*.pkl"))
+
+
+def test_step_all_layer_source_precision_and_native_activation_exclusions(model):
+    for layer in range(92):
+        metadata = describe_step5_layer(model, layer, attention_tp_size=8,
+                                       moe_tp_size=1, expert_parallel_size=8)
+        assert metadata.model_precision is PrecisionType.BF16
+        for projection in metadata.projections:
+            if projection.operator_name == "moe_grouped_gemm":
+                assert projection.weight_precision is (PrecisionType.FP8 if layer < 88 else PrecisionType.BF16)
+            elif projection.operator_name == "moe_gating_linear":
+                assert projection.weight_precision is PrecisionType.FP32
+            else:
+                assert projection.weight_precision is PrecisionType.BF16
+        assert metadata.dense_swiglu_limit == 7.
+        if layer in model.get_moe_layer_ids():
+            assert metadata.routed_swiglu_limit == 7.
+        assert metadata.geometry.head_dim == 192
