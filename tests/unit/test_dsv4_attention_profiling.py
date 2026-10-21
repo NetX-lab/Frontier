@@ -369,12 +369,24 @@ def test_q1_cli_selects_exact_positive_window(tmp_path, capsys):
     case = plan["cases"][0]
     assert case["case_id"] == "e0-decode-q1-c6143-7166"
     assert (case["phase"], case["batch_size"], case["prompt_len"], case["max_tokens"]) == (
-        PHASE_DECODE, 1, 6143, 1025,
+        PHASE_DECODE, 1, 6141, 1027,
     )
-    assert (case["warmup"], case["measured"], case["estimated_steps"]) == (0, 1024, 1025)
+    assert (case["warmup"], case["measured"], case["estimated_steps"]) == (2, 1024, 1027)
     assert plan["engines"][0]["max_model_len"] == 7168
     assert plan["engines"][0]["chunk_budget"] == 6144
     assert "engine_policy" not in plan["limits"], "Keep the implicit legacy serialization"
+
+
+@pytest.mark.parametrize("plan", ["q1"], indirect=True)
+@pytest.mark.parametrize("measurement", [CUDA_EVENT, KERNEL_ONLY])
+def test_q1_window_skips_decode_warmup_before_first_recorded_context(plan, measurement):
+    case, = plan.cases
+    skip, count = case_runner._case_window(case, plan.engines[0])
+    decode_contexts = list(range(case.prompt_len, case.prompt_len + case.max_tokens - 1))
+    assert decode_contexts[:skip] == [6141, 6142], measurement
+    recorded = decode_contexts[skip:skip + count]
+    assert recorded == list(range(6143, 7167)), measurement
+    assert len(recorded) == len(set(recorded)) == 1024
 
 
 @pytest.mark.parametrize("minimum,maximum", [
@@ -392,15 +404,35 @@ def test_q1_rejects_invalid_window_or_capacity(hf_config, minimum, maximum):
         )
 
 
+@pytest.mark.parametrize("minimum,warmup", [(0, 2), (1, 1), (2, 2), (1, 2)])
+def test_q1_window_rejects_insufficient_context_for_decode_warmup(hf_config, minimum, warmup):
+    with pytest.raises(ValueError, match="query_one_context_min.*decode_warmup_steps.*positive prompt"):
+        build_dsv4_profile_plan(
+            model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+            num_layers=None, kv_cache_dtype="fp8",
+            limits=_limits(decode_warmup_steps=warmup),
+            query_one_context_min=minimum, query_one_context_max=65,
+        )
+
+
 def test_q1_zero_endpoint_keeps_real_prefill_separate(hf_config):
     plan = build_dsv4_profile_plan(
         model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
-        num_layers=None, kv_cache_dtype="fp8", limits=_limits(),
+        num_layers=None, kv_cache_dtype="fp8", limits=_limits(decode_warmup_steps=0),
         query_one_context_min=0, query_one_context_max=2,
     )
     assert [(case.phase, case.prompt_len, case.measured) for case in plan.cases] == [
         (PHASE_PREFILL, 1, plan.limits.prefill_measured_repeats), (PHASE_DECODE, 1, 2),
     ]
+
+
+def test_q1_zero_only_prefill_needs_no_decode_warmup_context(hf_config):
+    plan = build_dsv4_profile_plan(
+        model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+        num_layers=None, kv_cache_dtype="fp8", limits=_limits(),
+        query_one_context_min=0, query_one_context_max=0,
+    )
+    assert [case.case_id for case in plan.cases] == ["e0-prefill-p1"]
 
 
 def test_legacy_namespace_omits_q1_fields_without_changing_plan():
@@ -853,8 +885,8 @@ def test_q1_cli_runs_native_shaped_schedule_and_metadata(
         dsv4_runner.install_dsv4_hooks(worker, 0, layers)
 
         def add(request_id, prompt, params):
-            assert len(prompt["prompt_token_ids"]) == case.prompt_len == 6143
-            assert params["max_tokens"] == 1025
+            assert len(prompt["prompt_token_ids"]) == case.prompt_len == 6141
+            assert params["max_tokens"] == 1027
             pending[request_id] = {"prompt": prompt, "outputs": 0}
 
         def step():
@@ -875,7 +907,7 @@ def test_q1_cli_runs_native_shaped_schedule_and_metadata(
                 ),
             ))
             request["outputs"] += 1
-            if request["outputs"] == 1025:
+            if request["outputs"] == case.max_tokens:
                 del pending[request_id]
 
         def abort(request_ids):
@@ -899,11 +931,11 @@ def test_q1_cli_runs_native_shaped_schedule_and_metadata(
         "--gpu_memory_utilization", "0.85", "--seed", "1234",
         "--case_ids", "e0-decode-q1-c6143-7166",
     ])
-    assert steps == [(6143, 0), *((1, context) for context in range(6143, 7167))]
+    assert steps == [(6141, 0), *((1, context) for context in range(6141, 7167))]
     recorded = observed["steps"]
     assert len(recorded) == 1024
     assert [row["requests"][0]["num_computed_tokens"] for row in recorded] == list(range(6143, 7167))
-    assert all(row["phase"] == PHASE_DECODE and row["requests"][0]["prompt_len"] == 6143
+    assert all(row["phase"] == PHASE_DECODE and row["requests"][0]["prompt_len"] == 6141
                for row in recorded), "The local decode is not a NIXL first-tail prefill"
     assert [row[metadata_key("csa", "indexer")]["max_seq_len"] for row in recorded] == list(range(6144, 7168))
     assert all(row[metadata_key("csa", "indexer")]["num_decodes"] == 1
