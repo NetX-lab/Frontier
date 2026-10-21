@@ -267,6 +267,19 @@ def test_serving_extension_receives_actual_generation_role_and_node_directory(tm
     assert result['serving_instrumentation']['overhead_measured'] is False
 
 
+def test_serving_subprocess_can_import_deployed_harness_outside_its_directory(tmp_path):
+    import subprocess
+    import sys
+    result = exercise(native_pd_worker, tmp_path, 'canonical_clean')
+    env = result['server_environments'][0]
+    directory = Path(env['PYTHONPATH'].split(__import__('os').pathsep)[0])
+    (directory / 'native_extension_import_probe.py').write_text('VALUE = "deployed-harness"\n')
+    child = subprocess.run([sys.executable, '-c',
+        'import native_extension_import_probe as p; print(p.VALUE)'],
+        cwd=tmp_path, env=env, text=True, capture_output=True, check=True)
+    assert child.stdout.strip() == 'deployed-harness'
+
+
 @pytest.mark.parametrize('case', ['canonical_clean_serving_missing_provenance',
                                 'canonical_clean_serving_invalid_generation'])
 def test_missing_serving_provenance_is_soft_and_does_not_enable_stale_emission(tmp_path, monkeypatch, case):

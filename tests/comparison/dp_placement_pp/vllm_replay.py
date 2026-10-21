@@ -336,7 +336,7 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
         for name in ("attention_backend", "quantization", "shutdown_timeout",
                       "distributed_executor_backend", "data_parallel_size_local",
                       "data_parallel_start_rank", "data_parallel_address", "data_parallel_rpc_port",
-                      "num_gpu_blocks_override", "worker_extension_cls"):
+                      "num_gpu_blocks_override", "worker_extension_cls", "kv_cache_dtype"):
             if name in engine:
                 command += ["--" + name.replace("_", "-"), str(engine[name])]
         if "async_scheduling" in engine:
@@ -349,12 +349,14 @@ def server_command(engine: dict, model_dir: Path, port: int) -> list[str]:
 
 
 def local_model_config(model_dir: Path) -> dict:
-    """Read local GLM metadata only; this adapter does not prepare or download weights."""
+    """Read supported original-model metadata without preparing or downloading weights."""
     if not model_dir.is_absolute() or not (model_dir / "config.json").is_file():
         raise ValueError("v0.28 requires an absolute local metadata directory with config.json")
     config = json.loads((model_dir / "config.json").read_text())
-    if type(config) is not dict or config.get("architectures") != ["GlmMoeDsaForCausalLM"]:
-        raise ValueError("Only the GLM native workflow is prepared; original V4 remains blocked")
+    supported = {"GlmMoeDsaForCausalLM", "DeepseekV4ForCausalLM"}
+    if (type(config) is not dict or type(config.get("architectures")) is not list
+            or len(config["architectures"]) != 1 or config["architectures"][0] not in supported):
+        raise ValueError("Native metadata must identify original GLM or DeepSeek V4")
     if type(config.get("vocab_size")) is not int or config["vocab_size"] <= 200:
         raise ValueError("Local metadata requires an integer vocab_size above the prompt generator's 200-token margin")
     return config

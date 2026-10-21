@@ -71,11 +71,15 @@ def native(monkeypatch, tmp_path):
     class Worker:
         def __init__(self):
             self.rank, self.device = 7, 'cuda:0'
+            self.use_v2_model_runner = False
             self.model_runner = GPUModelRunner()
             self.vllm_config = SimpleNamespace(compilation_config=SimpleNamespace(
                 cudagraph_mode=SimpleNamespace(name='FULL_DECODE_ONLY'),
                 cudagraph_capture_sizes=[1, 8], max_cudagraph_capture_size=8))
             self.noop = False
+
+        def load_model(self, *, load_dummy_weights=False):
+            return state.result
 
         def compile_or_warm_up_model(self):
             self.model_runner._dummy_run(8)
@@ -85,6 +89,8 @@ def native(monkeypatch, tmp_path):
         def execute_model(self, scheduler_output):
             if self.noop:
                 return state.result
+            if self.use_v2_model_runner:
+                return self.model_runner.execute_model(scheduler_output)
             if scheduler_output.total_num_scheduled_tokens == 0:
                 return self.model_runner._dummy_run(1)
             return self.model_runner._model_forward(
@@ -138,7 +144,7 @@ def test_import_installs_once_without_extension_native_name_collisions(native):
     again = load_collector()
     assert again._NATIVE_SERVING_INVENTORY is native.observer
     assert type(worker).execute_model is original
-    assert len(native.observer.hooks) == 6
+    assert len(native.observer.hooks) == 7
     extension = native.module.FullModelInventory
     assert not hasattr(type(worker), 'full_model_inventory')
     assert '__init_subclass__' not in vars(extension)
@@ -393,6 +399,8 @@ def test_pinned_native_collector_imports_and_hook_signatures(pinned_native):
             'vllm/v1/worker/gpu_worker.py', 'Worker'),
         'vllm.v1.worker.gpu_model_runner': native_class(pinned_native,
             'vllm/v1/worker/gpu_model_runner.py', 'GPUModelRunner'),
+        'vllm.v1.worker.gpu.cudagraph_utils': native_class(pinned_native,
+            'vllm/v1/worker/gpu/cudagraph_utils.py', 'ModelCudaGraphManager'),
     }
     collector = ast.parse(SOURCE.read_text())
     imports = {node.module: node.names for node in ast.walk(collector)
@@ -401,14 +409,24 @@ def test_pinned_native_collector_imports_and_hook_signatures(pinned_native):
     for module, aliases in imports.items():
         assert [(alias.name, alias.asname) for alias in aliases] == [(classes[module].name, None)]
     by_name = {cls.name: cls for cls in classes.values()}
+    by_name['cls'] = native_class(pinned_native,
+        'vllm/v1/worker/gpu/model_runner.py', 'GPUModelRunner')
     hooks = {(node.args[0].id, node.args[1].value) for node in ast.walk(collector)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         and node.func.id == 'install' and isinstance(node.args[0], ast.Name)}
     assert hooks == {('Worker', 'execute_model'), ('Worker', 'shutdown'),
         ('Worker', 'compile_or_warm_up_model'), ('GPUModelRunner', '_model_forward'),
-        ('GPUModelRunner', '_dummy_run')}
+        ('GPUModelRunner', '_dummy_run'), ('Worker', 'load_model'),
+        ('ModelCudaGraphManager', 'capture'), ('ModelCudaGraphManager', 'run_fullgraph'),
+        ('ModelCudaGraphManager', 'run_pw_graph'),
+        ('cls', 'execute_model')}
     for owner, name in hooks:
-        assert native_method(by_name[owner], name).args.args[0].arg == 'self'
+        cls = by_name[owner]
+        if (owner, name) == ('ModelCudaGraphManager', 'run_pw_graph'):
+            assert [ast.unparse(base) for base in cls.bases] == ['CudaGraphManager']
+            cls = native_class(pinned_native,
+                'vllm/v1/worker/gpu/cudagraph_utils.py', 'CudaGraphManager')
+        assert native_method(cls, name).args.args[0].arg == 'self'
     worker, runner = by_name['Worker'], by_name['GPUModelRunner']
     assert any(isinstance(base, ast.Name) and base.id == 'WorkerBase' for base in worker.bases)
     for name, arguments in (
