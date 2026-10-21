@@ -28,8 +28,8 @@ if TYPE_CHECKING:
 
 
 _FIXED_CACHE_SCRATCH_BLOCKS_ERROR = (
-    "Fixed cache scratch requires automatic memory_planner blocks "
-    "and source accounting without profiled overhead"
+    "Fixed cache scratch requires automatic memory_planner or memory_planner_profiled blocks "
+    "without runtime overhead profiling; measured overhead requires memory_planner_profiled"
 )
 
 
@@ -92,9 +92,10 @@ class BaseReplicaScheduler(ABC):
             and self._kv_cache_capacity.fixed_bytes_per_request_slot
         )
         if has_fixed_cache_scratch and (
-            num_blocks_mode != "memory_planner"
+            num_blocks_mode not in {"memory_planner", "memory_planner_profiled"}
             or getattr(self._config, "enable_runtime_non_kv_cache_overhead_profiling", False)
-            or getattr(self._config, "non_kv_cache_overhead_bytes", 0)
+            or (num_blocks_mode == "memory_planner"
+                and getattr(self._config, "non_kv_cache_overhead_bytes", 0))
         ):
             raise NotImplementedError(_FIXED_CACHE_SCRATCH_BLOCKS_ERROR)
         if num_blocks_mode not in {

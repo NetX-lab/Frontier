@@ -7,7 +7,7 @@ contract from `vllm/v1/engine/coordinator.py`.
 What is modeled: which engine a request is routed to, given counts the frontend
 observes with a delay, and when the coordinator publishes a new snapshot of
 those counts. What is not modeled: IPC transport latency, more than one
-frontend, elastic scaling, and the coordinator's warm-start publication phase.
+frontend execution, elastic scaling, and the coordinator's warm-start publication phase.
 
 Timers advance lazily. This object creates no events, so it cannot keep a
 drained simulation alive; a deadline that has passed is applied the next time
@@ -47,11 +47,17 @@ class VllmDPLoadBalancer:
     `self.lb_engines = sliced_counts`.
     """
 
-    def __init__(self, num_engines: int, *, policy_version: str = "v0.10.2"):
+    def __init__(
+        self, num_engines: int, *, policy_version: str = "v0.10.2",
+        client_count: int = 1, client_index: int = 0,
+    ):
+        if client_count < 1 or not 0 <= client_index < client_count:
+            raise ValueError("DP client_index must be in [0, client_count), client_count > 0")
         self.policy_version = policy_version
+        self.client_count = client_count
         self.request_owners: dict[int, int] = {}
         self.engine_inflight = [0] * num_engines
-        self.eng_start_index = 0
+        self.eng_start_index = num_engines * client_index // client_count
         self.engine_counts = [RequestLoad(0, 0) for _ in range(num_engines)]
         self.frontend_counts = list(self.engine_counts)
         self.last_step_counts: list[RequestLoad] | None = None
@@ -153,6 +159,9 @@ class VllmDPLoadBalancer:
 
         if self.policy_version == "v0.28.0" and request_id is None:
             raise ValueError("v0.28.0 DP selection requires request_id")
+        if request_id in self.request_owners:
+            # Native streaming-input affinity neither reserves nor rotates again.
+            return self.request_owners[request_id]
         self._advance(time)
         if self.policy_version == "v0.28.0":
             num_engines = len(self.frontend_counts)
@@ -173,13 +182,14 @@ class VllmDPLoadBalancer:
             )
         load = self.frontend_counts[engine]
         self.frontend_counts[engine] = RequestLoad(
-            load.waiting + 1, load.running, load.kv_cache_usage
+            load.waiting + (self.client_count if self.policy_version == "v0.28.0" else 1),
+            load.running, load.kv_cache_usage,
         )
         return engine
 
     def _v028_score(self, engine: int) -> float:
         load = self.frontend_counts[engine]
-        return max(self.engine_inflight[engine], load.waiting + load.running) + (
+        return max(self.client_count * self.engine_inflight[engine], load.waiting + load.running) + (
             load.waiting
             * KV_PRESSURE_WAITING_WEIGHT
             * max(0.0, load.kv_cache_usage - KV_PRESSURE_THRESHOLD)

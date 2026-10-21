@@ -287,6 +287,11 @@ class MetricsStore:
             RequestMetricsTimeDistributions, DataSeries
         ] = {}
         for metric_name in RequestMetricsTimeDistributions:
+            if (
+                metric_name == RequestMetricsTimeDistributions.CLIENT_TTFT
+                and self._simulation_config.sys_arch != "pd-disaggregation"
+            ):
+                continue
             self._request_metrics_time_distributions[metric_name] = DataSeries(
                 REQUEST_ID_STR,
                 metric_name.value,
@@ -3122,6 +3127,11 @@ class MetricsStore:
             RequestCompletionMetricsTimeSeries.REQUEST_COMPLETION
         ].put(request.completed_at, 1)
         request_waiting_time_total = request.get_total_waiting_time()
+        client_ttft_series = self._request_metrics_time_distributions.get(
+            RequestMetricsTimeDistributions.CLIENT_TTFT
+        )
+        if client_ttft_series is not None:
+            client_ttft_series.put(request.id, request.client_ttft)
         self._write_metrics_ground_truth_record(
             {
                 "event_type": "request_completion",
@@ -3158,6 +3168,10 @@ class MetricsStore:
                 * 1000.0,
                 "ttft_s": float(request.ttft),
                 "ttft_ms": float(request.ttft) * 1000.0,
+                **({
+                    "client_ttft_s": float(request.client_ttft),
+                    "client_ttft_ms": float(request.client_ttft) * 1000.0,
+                } if client_ttft_series is not None else {}),
                 "tpot_s": float(request.tpot),
                 "tpot_ms": float(request.tpot) * 1000.0,
             }

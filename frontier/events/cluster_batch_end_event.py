@@ -554,6 +554,10 @@ class ClusterBatchEndEvent(BaseEvent):
         )
         replica_scheduler.on_batch_end(self._batch)
 
+        cluster_scheduler.on_replica_batch_end(
+            time, self._replica_id, self._replica_local_id, self._batch
+        )
+
         memory_usage_percent = replica_scheduler.memory_usage_percent
         metrics_store.on_batch_end(
             time,

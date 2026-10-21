@@ -94,6 +94,8 @@ class ModelConfig:
         compress_rope_theta: Optional[float] = None,
         swiglu_limit: Optional[float] = None,
         expert_dtype: Optional[str] = None,
+        vision_config: Optional[Dict[str, Any]] = None,
+        projector_bias: Optional[bool] = None,
         sparse_config: Optional[Dict[str, Any]] = None,
         attention_other_setting: Optional[Dict[str, Any]] = None,
         att_impl_type: Optional[str] = None,
@@ -234,6 +236,8 @@ class ModelConfig:
         self.compress_rope_theta = compress_rope_theta
         self.swiglu_limit = swiglu_limit
         self.expert_dtype = expert_dtype
+        self.vision_config = vision_config
+        self.projector_bias = projector_bias
         self.sparse_config = sparse_config
         self.attention_other_setting = attention_other_setting
         self.att_impl_type = att_impl_type
@@ -731,7 +735,8 @@ class ModelConfig:
                     "compress_ratios", "sliding_window", "num_hash_layers",
                     "hc_mult", "hc_sinkhorn_iters", "hc_eps", "o_groups",
                     "o_lora_rank", "compress_rope_theta", "swiglu_limit",
-                    "expert_dtype", "sparse_config", "attention_other_setting", "att_impl_type",
+                    "expert_dtype", "vision_config", "projector_bias",
+                    "sparse_config", "attention_other_setting", "att_impl_type",
                     "num_nextn_predict_layers", "mtp_layer_types", "layer_rope_thetas",
                     "partial_rotary_factors", "swiglu_limits", "swiglu_limits_shared",
                     "norm_dtype", "fp32_residual_connection", "need_fp32_gate",

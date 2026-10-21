@@ -407,7 +407,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         return request_mapping
 
-    def select_kv_transfer_target(self) -> tuple[int, int]:
+    def select_kv_transfer_target(self, time: float, request: Request) -> tuple[int, int]:
         """Select the DECODE lane that must reserve before a NIXL READ."""
         if self._cluster_type != ClusterType.DECODE:
             raise ValueError("NIXL transfer target selection requires DECODE")

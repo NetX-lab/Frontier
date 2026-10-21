@@ -1,0 +1,1293 @@
+{
+ "workload": "data/processed_traces/canonical_fixed_6k1k_req128_qps1/workload.json",
+ "request_id_namespace": "canonical-fixed-6k1k-h200",
+ "request_id_encoding": "x-request-id header <request_id>; vLLM completions name the engine request cmpl-<request_id>-0; Frontier numbers trace rows from 0",
+ "warmup_request_ids": [],
+ "formal_request_ids": [
+  "canonical-fixed-6k1k-h200-b1",
+  "canonical-fixed-6k1k-h200-s00",
+  "canonical-fixed-6k1k-h200-s01",
+  "canonical-fixed-6k1k-h200-s02",
+  "canonical-fixed-6k1k-h200-s03",
+  "canonical-fixed-6k1k-h200-s04",
+  "canonical-fixed-6k1k-h200-s05",
+  "canonical-fixed-6k1k-h200-s06",
+  "canonical-fixed-6k1k-h200-s07",
+  "canonical-fixed-6k1k-h200-s08",
+  "canonical-fixed-6k1k-h200-s09",
+  "canonical-fixed-6k1k-h200-s10",
+  "canonical-fixed-6k1k-h200-s11",
+  "canonical-fixed-6k1k-h200-s12",
+  "canonical-fixed-6k1k-h200-s13",
+  "canonical-fixed-6k1k-h200-s14",
+  "canonical-fixed-6k1k-h200-s15",
+  "canonical-fixed-6k1k-h200-s16",
+  "canonical-fixed-6k1k-h200-s17",
+  "canonical-fixed-6k1k-h200-s18",
+  "canonical-fixed-6k1k-h200-s19",
+  "canonical-fixed-6k1k-h200-s20",
+  "canonical-fixed-6k1k-h200-s21",
+  "canonical-fixed-6k1k-h200-s22",
+  "canonical-fixed-6k1k-h200-s23",
+  "canonical-fixed-6k1k-h200-s24",
+  "canonical-fixed-6k1k-h200-s25",
+  "canonical-fixed-6k1k-h200-s26",
+  "canonical-fixed-6k1k-h200-s27",
+  "canonical-fixed-6k1k-h200-s28",
+  "canonical-fixed-6k1k-h200-s29",
+  "canonical-fixed-6k1k-h200-s30",
+  "canonical-fixed-6k1k-h200-s31",
+  "canonical-fixed-6k1k-h200-s32",
+  "canonical-fixed-6k1k-h200-s33",
+  "canonical-fixed-6k1k-h200-s34",
+  "canonical-fixed-6k1k-h200-s35",
+  "canonical-fixed-6k1k-h200-s36",
+  "canonical-fixed-6k1k-h200-s37",
+  "canonical-fixed-6k1k-h200-s38",
+  "canonical-fixed-6k1k-h200-s39",
+  "canonical-fixed-6k1k-h200-s40",
+  "canonical-fixed-6k1k-h200-s41",
+  "canonical-fixed-6k1k-h200-s42",
+  "canonical-fixed-6k1k-h200-s43",
+  "canonical-fixed-6k1k-h200-s44",
+  "canonical-fixed-6k1k-h200-s45",
+  "canonical-fixed-6k1k-h200-s46",
+  "canonical-fixed-6k1k-h200-s47",
+  "canonical-fixed-6k1k-h200-s48",
+  "canonical-fixed-6k1k-h200-s49",
+  "canonical-fixed-6k1k-h200-s50",
+  "canonical-fixed-6k1k-h200-s51",
+  "canonical-fixed-6k1k-h200-s52",
+  "canonical-fixed-6k1k-h200-s53",
+  "canonical-fixed-6k1k-h200-s54",
+  "canonical-fixed-6k1k-h200-s55",
+  "canonical-fixed-6k1k-h200-s56",
+  "canonical-fixed-6k1k-h200-s57",
+  "canonical-fixed-6k1k-h200-s58",
+  "canonical-fixed-6k1k-h200-s59",
+  "canonical-fixed-6k1k-h200-s60",
+  "canonical-fixed-6k1k-h200-s61",
+  "canonical-fixed-6k1k-h200-s62",
+  "canonical-fixed-6k1k-h200-s63",
+  "canonical-fixed-6k1k-h200-s64",
+  "canonical-fixed-6k1k-h200-s65",
+  "canonical-fixed-6k1k-h200-s66",
+  "canonical-fixed-6k1k-h200-s67",
+  "canonical-fixed-6k1k-h200-s68",
+  "canonical-fixed-6k1k-h200-s69",
+  "canonical-fixed-6k1k-h200-s70",
+  "canonical-fixed-6k1k-h200-s71",
+  "canonical-fixed-6k1k-h200-s72",
+  "canonical-fixed-6k1k-h200-s73",
+  "canonical-fixed-6k1k-h200-s74",
+  "canonical-fixed-6k1k-h200-s75",
+  "canonical-fixed-6k1k-h200-s76",
+  "canonical-fixed-6k1k-h200-s77",
+  "canonical-fixed-6k1k-h200-s78",
+  "canonical-fixed-6k1k-h200-s79",
+  "canonical-fixed-6k1k-h200-s80",
+  "canonical-fixed-6k1k-h200-s81",
+  "canonical-fixed-6k1k-h200-s82",
+  "canonical-fixed-6k1k-h200-s83",
+  "canonical-fixed-6k1k-h200-s84",
+  "canonical-fixed-6k1k-h200-s85",
+  "canonical-fixed-6k1k-h200-s86",
+  "canonical-fixed-6k1k-h200-s87",
+  "canonical-fixed-6k1k-h200-s88",
+  "canonical-fixed-6k1k-h200-s89",
+  "canonical-fixed-6k1k-h200-s90",
+  "canonical-fixed-6k1k-h200-s91",
+  "canonical-fixed-6k1k-h200-s92",
+  "canonical-fixed-6k1k-h200-s93",
+  "canonical-fixed-6k1k-h200-s94",
+  "canonical-fixed-6k1k-h200-s95",
+  "canonical-fixed-6k1k-h200-s96",
+  "canonical-fixed-6k1k-h200-s97",
+  "canonical-fixed-6k1k-h200-s98",
+  "canonical-fixed-6k1k-h200-s99",
+  "canonical-fixed-6k1k-h200-s100",
+  "canonical-fixed-6k1k-h200-s101",
+  "canonical-fixed-6k1k-h200-s102",
+  "canonical-fixed-6k1k-h200-s103",
+  "canonical-fixed-6k1k-h200-s104",
+  "canonical-fixed-6k1k-h200-s105",
+  "canonical-fixed-6k1k-h200-s106",
+  "canonical-fixed-6k1k-h200-s107",
+  "canonical-fixed-6k1k-h200-s108",
+  "canonical-fixed-6k1k-h200-s109",
+  "canonical-fixed-6k1k-h200-s110",
+  "canonical-fixed-6k1k-h200-s111",
+  "canonical-fixed-6k1k-h200-s112",
+  "canonical-fixed-6k1k-h200-s113",
+  "canonical-fixed-6k1k-h200-s114",
+  "canonical-fixed-6k1k-h200-s115",
+  "canonical-fixed-6k1k-h200-s116",
+  "canonical-fixed-6k1k-h200-s117",
+  "canonical-fixed-6k1k-h200-s118",
+  "canonical-fixed-6k1k-h200-s119",
+  "canonical-fixed-6k1k-h200-s120",
+  "canonical-fixed-6k1k-h200-s121",
+  "canonical-fixed-6k1k-h200-s122",
+  "canonical-fixed-6k1k-h200-s123",
+  "canonical-fixed-6k1k-h200-s124",
+  "canonical-fixed-6k1k-h200-s125",
+  "canonical-fixed-6k1k-h200-s126"
+ ],
+ "sizing_request_ids": [],
+ "rows": [
+  {
+   "frontier_request_id": 0,
+   "request_id": "canonical-fixed-6k1k-h200-b1",
+   "segment": "burst",
+   "role": "formal",
+   "arrived_at": 0.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024,
+   "burst": "",
+   "probe": false
+  },
+  {
+   "frontier_request_id": 1,
+   "request_id": "canonical-fixed-6k1k-h200-s00",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 1.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 2,
+   "request_id": "canonical-fixed-6k1k-h200-s01",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 2.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 3,
+   "request_id": "canonical-fixed-6k1k-h200-s02",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 3.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 4,
+   "request_id": "canonical-fixed-6k1k-h200-s03",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 4.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 5,
+   "request_id": "canonical-fixed-6k1k-h200-s04",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 5.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 6,
+   "request_id": "canonical-fixed-6k1k-h200-s05",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 6.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 7,
+   "request_id": "canonical-fixed-6k1k-h200-s06",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 7.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 8,
+   "request_id": "canonical-fixed-6k1k-h200-s07",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 8.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 9,
+   "request_id": "canonical-fixed-6k1k-h200-s08",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 9.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 10,
+   "request_id": "canonical-fixed-6k1k-h200-s09",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 10.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 11,
+   "request_id": "canonical-fixed-6k1k-h200-s10",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 11.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 12,
+   "request_id": "canonical-fixed-6k1k-h200-s11",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 12.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 13,
+   "request_id": "canonical-fixed-6k1k-h200-s12",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 13.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 14,
+   "request_id": "canonical-fixed-6k1k-h200-s13",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 14.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 15,
+   "request_id": "canonical-fixed-6k1k-h200-s14",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 15.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 16,
+   "request_id": "canonical-fixed-6k1k-h200-s15",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 16.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 17,
+   "request_id": "canonical-fixed-6k1k-h200-s16",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 17.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 18,
+   "request_id": "canonical-fixed-6k1k-h200-s17",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 18.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 19,
+   "request_id": "canonical-fixed-6k1k-h200-s18",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 19.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 20,
+   "request_id": "canonical-fixed-6k1k-h200-s19",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 20.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 21,
+   "request_id": "canonical-fixed-6k1k-h200-s20",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 21.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 22,
+   "request_id": "canonical-fixed-6k1k-h200-s21",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 22.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 23,
+   "request_id": "canonical-fixed-6k1k-h200-s22",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 23.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 24,
+   "request_id": "canonical-fixed-6k1k-h200-s23",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 24.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 25,
+   "request_id": "canonical-fixed-6k1k-h200-s24",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 25.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 26,
+   "request_id": "canonical-fixed-6k1k-h200-s25",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 26.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 27,
+   "request_id": "canonical-fixed-6k1k-h200-s26",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 27.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 28,
+   "request_id": "canonical-fixed-6k1k-h200-s27",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 28.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 29,
+   "request_id": "canonical-fixed-6k1k-h200-s28",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 29.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 30,
+   "request_id": "canonical-fixed-6k1k-h200-s29",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 30.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 31,
+   "request_id": "canonical-fixed-6k1k-h200-s30",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 31.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 32,
+   "request_id": "canonical-fixed-6k1k-h200-s31",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 32.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 33,
+   "request_id": "canonical-fixed-6k1k-h200-s32",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 33.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 34,
+   "request_id": "canonical-fixed-6k1k-h200-s33",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 34.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 35,
+   "request_id": "canonical-fixed-6k1k-h200-s34",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 35.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 36,
+   "request_id": "canonical-fixed-6k1k-h200-s35",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 36.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 37,
+   "request_id": "canonical-fixed-6k1k-h200-s36",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 37.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 38,
+   "request_id": "canonical-fixed-6k1k-h200-s37",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 38.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 39,
+   "request_id": "canonical-fixed-6k1k-h200-s38",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 39.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 40,
+   "request_id": "canonical-fixed-6k1k-h200-s39",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 40.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 41,
+   "request_id": "canonical-fixed-6k1k-h200-s40",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 41.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 42,
+   "request_id": "canonical-fixed-6k1k-h200-s41",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 42.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 43,
+   "request_id": "canonical-fixed-6k1k-h200-s42",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 43.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 44,
+   "request_id": "canonical-fixed-6k1k-h200-s43",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 44.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 45,
+   "request_id": "canonical-fixed-6k1k-h200-s44",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 45.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 46,
+   "request_id": "canonical-fixed-6k1k-h200-s45",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 46.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 47,
+   "request_id": "canonical-fixed-6k1k-h200-s46",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 47.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 48,
+   "request_id": "canonical-fixed-6k1k-h200-s47",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 48.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 49,
+   "request_id": "canonical-fixed-6k1k-h200-s48",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 49.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 50,
+   "request_id": "canonical-fixed-6k1k-h200-s49",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 50.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 51,
+   "request_id": "canonical-fixed-6k1k-h200-s50",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 51.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 52,
+   "request_id": "canonical-fixed-6k1k-h200-s51",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 52.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 53,
+   "request_id": "canonical-fixed-6k1k-h200-s52",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 53.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 54,
+   "request_id": "canonical-fixed-6k1k-h200-s53",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 54.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 55,
+   "request_id": "canonical-fixed-6k1k-h200-s54",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 55.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 56,
+   "request_id": "canonical-fixed-6k1k-h200-s55",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 56.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 57,
+   "request_id": "canonical-fixed-6k1k-h200-s56",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 57.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 58,
+   "request_id": "canonical-fixed-6k1k-h200-s57",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 58.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 59,
+   "request_id": "canonical-fixed-6k1k-h200-s58",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 59.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 60,
+   "request_id": "canonical-fixed-6k1k-h200-s59",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 60.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 61,
+   "request_id": "canonical-fixed-6k1k-h200-s60",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 61.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 62,
+   "request_id": "canonical-fixed-6k1k-h200-s61",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 62.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 63,
+   "request_id": "canonical-fixed-6k1k-h200-s62",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 63.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 64,
+   "request_id": "canonical-fixed-6k1k-h200-s63",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 64.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 65,
+   "request_id": "canonical-fixed-6k1k-h200-s64",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 65.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 66,
+   "request_id": "canonical-fixed-6k1k-h200-s65",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 66.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 67,
+   "request_id": "canonical-fixed-6k1k-h200-s66",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 67.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 68,
+   "request_id": "canonical-fixed-6k1k-h200-s67",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 68.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 69,
+   "request_id": "canonical-fixed-6k1k-h200-s68",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 69.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 70,
+   "request_id": "canonical-fixed-6k1k-h200-s69",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 70.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 71,
+   "request_id": "canonical-fixed-6k1k-h200-s70",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 71.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 72,
+   "request_id": "canonical-fixed-6k1k-h200-s71",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 72.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 73,
+   "request_id": "canonical-fixed-6k1k-h200-s72",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 73.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 74,
+   "request_id": "canonical-fixed-6k1k-h200-s73",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 74.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 75,
+   "request_id": "canonical-fixed-6k1k-h200-s74",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 75.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 76,
+   "request_id": "canonical-fixed-6k1k-h200-s75",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 76.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 77,
+   "request_id": "canonical-fixed-6k1k-h200-s76",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 77.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 78,
+   "request_id": "canonical-fixed-6k1k-h200-s77",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 78.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 79,
+   "request_id": "canonical-fixed-6k1k-h200-s78",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 79.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 80,
+   "request_id": "canonical-fixed-6k1k-h200-s79",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 80.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 81,
+   "request_id": "canonical-fixed-6k1k-h200-s80",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 81.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 82,
+   "request_id": "canonical-fixed-6k1k-h200-s81",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 82.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 83,
+   "request_id": "canonical-fixed-6k1k-h200-s82",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 83.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 84,
+   "request_id": "canonical-fixed-6k1k-h200-s83",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 84.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 85,
+   "request_id": "canonical-fixed-6k1k-h200-s84",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 85.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 86,
+   "request_id": "canonical-fixed-6k1k-h200-s85",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 86.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 87,
+   "request_id": "canonical-fixed-6k1k-h200-s86",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 87.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 88,
+   "request_id": "canonical-fixed-6k1k-h200-s87",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 88.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 89,
+   "request_id": "canonical-fixed-6k1k-h200-s88",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 89.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 90,
+   "request_id": "canonical-fixed-6k1k-h200-s89",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 90.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 91,
+   "request_id": "canonical-fixed-6k1k-h200-s90",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 91.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 92,
+   "request_id": "canonical-fixed-6k1k-h200-s91",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 92.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 93,
+   "request_id": "canonical-fixed-6k1k-h200-s92",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 93.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 94,
+   "request_id": "canonical-fixed-6k1k-h200-s93",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 94.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 95,
+   "request_id": "canonical-fixed-6k1k-h200-s94",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 95.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 96,
+   "request_id": "canonical-fixed-6k1k-h200-s95",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 96.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 97,
+   "request_id": "canonical-fixed-6k1k-h200-s96",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 97.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 98,
+   "request_id": "canonical-fixed-6k1k-h200-s97",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 98.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 99,
+   "request_id": "canonical-fixed-6k1k-h200-s98",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 99.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 100,
+   "request_id": "canonical-fixed-6k1k-h200-s99",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 100.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 101,
+   "request_id": "canonical-fixed-6k1k-h200-s100",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 101.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 102,
+   "request_id": "canonical-fixed-6k1k-h200-s101",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 102.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 103,
+   "request_id": "canonical-fixed-6k1k-h200-s102",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 103.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 104,
+   "request_id": "canonical-fixed-6k1k-h200-s103",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 104.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 105,
+   "request_id": "canonical-fixed-6k1k-h200-s104",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 105.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 106,
+   "request_id": "canonical-fixed-6k1k-h200-s105",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 106.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 107,
+   "request_id": "canonical-fixed-6k1k-h200-s106",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 107.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 108,
+   "request_id": "canonical-fixed-6k1k-h200-s107",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 108.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 109,
+   "request_id": "canonical-fixed-6k1k-h200-s108",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 109.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 110,
+   "request_id": "canonical-fixed-6k1k-h200-s109",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 110.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 111,
+   "request_id": "canonical-fixed-6k1k-h200-s110",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 111.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 112,
+   "request_id": "canonical-fixed-6k1k-h200-s111",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 112.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 113,
+   "request_id": "canonical-fixed-6k1k-h200-s112",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 113.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 114,
+   "request_id": "canonical-fixed-6k1k-h200-s113",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 114.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 115,
+   "request_id": "canonical-fixed-6k1k-h200-s114",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 115.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 116,
+   "request_id": "canonical-fixed-6k1k-h200-s115",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 116.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 117,
+   "request_id": "canonical-fixed-6k1k-h200-s116",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 117.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 118,
+   "request_id": "canonical-fixed-6k1k-h200-s117",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 118.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 119,
+   "request_id": "canonical-fixed-6k1k-h200-s118",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 119.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 120,
+   "request_id": "canonical-fixed-6k1k-h200-s119",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 120.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 121,
+   "request_id": "canonical-fixed-6k1k-h200-s120",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 121.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 122,
+   "request_id": "canonical-fixed-6k1k-h200-s121",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 122.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 123,
+   "request_id": "canonical-fixed-6k1k-h200-s122",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 123.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 124,
+   "request_id": "canonical-fixed-6k1k-h200-s123",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 124.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 125,
+   "request_id": "canonical-fixed-6k1k-h200-s124",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 125.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 126,
+   "request_id": "canonical-fixed-6k1k-h200-s125",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 126.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  },
+  {
+   "frontier_request_id": 127,
+   "request_id": "canonical-fixed-6k1k-h200-s126",
+   "segment": "steady",
+   "role": "formal",
+   "arrived_at": 127.0,
+   "num_prefill_tokens": 6144,
+   "num_decode_tokens": 1024
+  }
+ ]
+}
