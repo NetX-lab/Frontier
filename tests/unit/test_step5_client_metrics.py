@@ -52,20 +52,29 @@ def step_native(native):
     return root, records, summary
 
 
-def synthetic_step_check(root):
+def synthetic_step_check(root, cell=CELL, case=CASE):
     """An explicit synthetic oracle of the receipt contract, never an actual native receipt."""
     origin = root.parents[2]
-    runtime = CASE["native_runtime"]
-    engine = dict(vllm_version="step5", native_reference=dict(image=runtime["image"]), data_parallel_size=4)
+    runtime = case["native_runtime"]
+    topology = case.get("native_topology")
+    dp = topology["data_parallel_size"] if topology else 4
+    engine = dict(vllm_version="step5", native_reference=dict(image=runtime["image"]), data_parallel_size=dp)
+    if topology:
+        engine.update(tensor_parallel_size=8, pipeline_parallel_size=1, enable_expert_parallel=True)
     config = dict(mode="clean", image=runtime["image"], engine=engine, replica=8,
                   data_parallel_size_local=1, source=dict(commit="fixture-not-native"),
                   expected_source_hashes={"vllm/models/step5/nvidia/model.py": "b" * 64})
+    if topology:
+        config.update({key: topology[key] for key in ("gpu_type", "replica", "gpu")})
+        config.update(case_id=cell["case_id"], model_hashes={"config.json": "c" * 64})
     (root / "config.json").write_text(json.dumps(config))
     for role in ("prefill", "decode"):
-        for lane in range(4):
+        for lane in range(dp):
             path = root / f"nodes/{role}{lane}/result.json"
-            path.parent.mkdir(parents=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(dict(stage="finished", workload_returncode=0, observation_errors=[],
+                nvidia_smi="\n".join(f"GPU {i}: NVIDIA {topology['gpu_type']} (UUID: fixture-{role}-{lane}-{i})"
+                                     for i in range(8)) if topology else "",
                 versions=dict(vllm=runtime["vllm_version"]), plan=dict(role=role, lane=lane, engine=engine))))
     receipt = origin / "analysis/run_check_status.groundtruth_clean.json"
     receipt.parent.mkdir(exist_ok=True)
@@ -80,11 +89,12 @@ def synthetic_step_check(root):
     check = dict(status="PASS", run_directory=str(root.relative_to(origin)),
                  checks=dict.fromkeys(("clean_runtime", "runtime_identity", "native_qualification", "artifact_integrity"),
                                       "PASS: synthetic fixture only"),
-                 runtime_identity=runtime | dict(source_hashes=config["expected_source_hashes"], harness_commit="fixture-not-native"),
+                  runtime_identity=runtime | dict(source_hashes=config["expected_source_hashes"], harness_commit="fixture-not-native")
+                      | ({"topology": topology} if topology else {}),
                  runtime_evidence=actual_receipts,
                  artifacts=[pin(path, origin) for path in files])
     receipt.write_text(json.dumps(dict(entry="groundtruth-run-check", mode="groundtruth_clean",
-                                      case_id=CELL["case_id"], runs={root.name: check})))
+                                      case_id=cell["case_id"], runs={root.name: check})))
     return receipt
 
 

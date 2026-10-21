@@ -68,8 +68,9 @@ def test_modified_common_member_is_rejected(tmp_path, member):
 
 @pytest.mark.parametrize("kind,fault", [("canonical", fault) for fault in (
     None, "one_http_failure", "idle_failure", "checkpoint_failure", "bad_usage", "text_only")]
-    + [("qualification", None)])
-def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault):
+    + [("qualification", None), ("qualification", "startup_missing")])
+@pytest.mark.parametrize("dp", [2, 4])
+def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path, monkeypatch, kind, fault, dp):
     workload = cr.canonical_workload(WORKLOAD)
     failure_id = workload[1][0]["request_id"] + "-repeat01"
     bodies = {role: {} for role in cr.ROLES}
@@ -144,7 +145,9 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
             apps[role].router.add_post("/v1/completions", native(role))
 
             async def page(request, role=role):
-                text = metrics(len(bodies[role]))
+                text = metrics(len(bodies[role]), dp)
+                if fault == "startup_missing" and not bodies[role]:
+                    text = "\n".join(line for line in text.splitlines() if "request_success_total" in line)
                 if kind == "qualification" and len(bodies[role]) == 16:
                     warmup_busy_reads[role] += 1
                     if warmup_busy_reads[role] == 1:
@@ -166,7 +169,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
                         raise OSError("injected auxiliary write failure")
 
                 return await cr.replay_repetitions(workload, proxy.port, 128896, 0, urls,
-                    {"dp_size": 4, "kind": kind, "idle_timeout_s": .1,
+                    {"dp_size": dp, "kind": kind, "idle_timeout_s": .1,
                      "idle_poll_s": .001, "concurrent_requests": 8}, checkpoint=checkpoint)
 
     result, records = asyncio.run(exercise())
@@ -176,14 +179,15 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
     for rows in phase_calls:
         expected = [0.0] * 8 if rows[0]["segment"] == "concurrent" else list(range(len(rows)))
         assert [row["arrived_at"] for row in rows] == expected
-    assert len(result["idle_boundaries"]) == (3 if kind == "qualification" else 7)
+    assert len(result["idle_boundaries"]) == (2 if kind == "qualification" else 6)
+    assert result["startup_observation"]["diagnostic_only"]
     if kind == "qualification":
         assert len({row["request_id"] for row in records}) == 24
         assert {row["role"] for row in records} == {"diagnostic"}
         assert all(row["request_id"].startswith("qualification-") for row in records)
         assert qualification_idle_roles == set(cr.ROLES)
         assert all(count >= 2 for count in warmup_busy_reads.values())
-        warmup_boundary = result["idle_boundaries"][1]
+        warmup_boundary = result["idle_boundaries"][0]
         assert warmup_boundary["boundary"] == "after_repeat01_warmup" and warmup_boundary["verified"]
         assert len(warmup_boundary["observations"]) >= 2
         assert all(row["completed_requests"] == 16
@@ -199,7 +203,7 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         assert result["repetitions"][-1]["metrics"]["formal_requests"] == 128
     else:
         assert not failures
-        assert result["client_workload_verified"] is (fault is None)
+        assert result["client_workload_verified"] is (fault in (None, "startup_missing"))
     prompts = {}
     for record in records:
         body = bodies["decode"][record["request_id"]]
@@ -233,6 +237,32 @@ def test_all_repetitions_use_existing_client_and_real_http_token_deltas(tmp_path
         else:
             assert actual is None
     assert max(checkpoint_counts) == expected_count
+
+
+def test_actual_qualification02_startup_snapshot_is_diagnostic_but_warmed_idle_is_strict():
+    evidence = json.loads((REPO / "tests/fixtures/step5_pd/startup_metrics_qualification02.json").read_text())
+    snapshots = evidence["boundaries"]
+    for page in snapshots["before_repeat01_warmup"].values():
+        with pytest.raises(ValueError, match="Missing native"):
+            cr.idle_metrics(page, 4)
+    for boundary, expected in (("after_repeat01_warmup", 16), ("after_repeat01_concurrent", 24)):
+        for page in snapshots[boundary].values():
+            row = cr.idle_metrics(page, 4)
+            assert row["idle"] and row["completed_requests"] == expected
+
+    async def exercise():
+        async def page(request):
+            return web.Response(text=snapshots["before_repeat01_warmup"]["prefill"])
+        app = web.Application()
+        app.router.add_get("/metrics", page)
+        async with TestServer(app) as server:
+            urls = dict.fromkeys(cr.ROLES, str(server.make_url("")).rstrip("/"))
+            diagnostic = await cr.observe_idle(urls, 4, .1, .001, diagnostic_only=True)
+            assert not diagnostic["verified"] and len(diagnostic["observations"]) == 1
+            assert diagnostic["observations"][0]["errors"]
+            strict = await cr.observe_idle(urls, 4, .02, .001, dict.fromkeys(cr.ROLES, 16))
+            assert not strict["verified"]
+    asyncio.run(exercise())
 
 
 def test_existing_client_dispatch_is_open_loop_and_isolates_a_broken_sse_response():

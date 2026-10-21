@@ -125,7 +125,7 @@ def idle_metrics(text: str, dp_size: int) -> dict:
 
 
 async def observe_idle(urls: dict, dp_size: int, timeout_s: float, poll_s: float,
-                       completed_after: dict | None = None) -> dict:
+                       completed_after: dict | None = None, *, diagnostic_only=False) -> dict:
     """Observe fresh per-lane native gauges; a timeout never stops subsequent work."""
     import aiohttp
 
@@ -148,6 +148,10 @@ async def observe_idle(urls: dict, dp_size: int, timeout_s: float, poll_s: float
                             sample["errors"].append(f"{role}: {type(error).__name__}: {error}")
 
                     await asyncio.gather(*(read(role) for role in ROLES))
+                    if diagnostic_only:
+                        return {"verified": not sample["errors"] and all(
+                            sample["roles"][role]["idle"] for role in ROLES),
+                            "diagnostic_only": True, "observations": observations}
                     if (not sample["errors"] and all(
                             sample["roles"][role]["idle"]
                             and (completed_after is None
@@ -187,13 +191,21 @@ async def replay_repetitions(workload, port, vocab_size, origin_lead_s, urls, se
         persist()
         return observed
 
-    idle = await boundary("before_repeat01_warmup")
-    completed = ({role: idle["observations"][-1]["roles"][role]["completed_requests"] for role in ROLES}
-                 if idle["verified"] else None)
+    # Native mostrecent gauges may not exist before the first scheduler update.
+    # Retain one truthful startup snapshot, never infer idle from missing series.
+    try:
+        idle = await observe_idle(urls, settings["dp_size"], settings["idle_timeout_s"],
+                                  settings["idle_poll_s"], diagnostic_only=True)
+    except Exception as error:
+        idle = {"verified": False, "diagnostic_only": True, "error": f"{type(error).__name__}: {error}"}
+    idle["diagnostic_only"] = True
+    result["startup_observation"] = idle
+    # These are expected completions of this newly started run, not observed gauges.
+    completed = {role: 0 for role in ROLES}
     qualification = settings["kind"] == "qualification"
     repeats = [1] if qualification else manifest["repetitions"]["repeat_indices"]
     for repeat in repeats:
-        current = {"repeat": repeat, "phases": {}, "client_workload_verified": idle["verified"]}
+        current = {"repeat": repeat, "phases": {}, "client_workload_verified": repeat == 1 or idle["verified"]}
         result["repetitions"].append(current)
         phases = (("warmup", warmup), ("concurrent", formal[:settings["concurrent_requests"]])) if qualification else (
             ("warmup", warmup), ("formal", formal))
