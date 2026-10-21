@@ -8,6 +8,7 @@
 | 2026-10-21 | Added the approved review-correction frontier; original completion remains historical. |
 | 2026-10-21 | Correction282cb11 clean strict77 IDENTICAL77/77; review frontier complete, records-only archive. |
 | 2026-10-21 | Reopened only final P2 known unknown-operator coverage conversion. |
+| 2026-10-21 | Final P2e3ce166 sole clean77 IDENTICAL77/77;U1–U3 complete and prior receipts preserved. |
 
 1. Inspect pinned native V2 padding/metadata and existing measured schema/readers.
 2. Implement graph-aware physical workloads without changing request geometry; implement exact, scope-qualified measured consumption through existing interfaces.
@@ -46,5 +47,6 @@ share the same predictor/test files. No broad unit sweep or GPU work is needed.
    baseline, preserve282cb11 receipts exactly and archive the new result separately
    within the existing receipt file. No B/timer/consumption-scope changes.
 
-Dependency: U1 -> U2 -> U3. Status: U1/U2 completed; U3 pending the final
-frozen source commit and its own clean77. No broad test sweep is required.
+Dependency: U1 -> U2 -> U3. Status: U1/U2/U3 completed. Final sourcee3ce166's
+sole clean77 is IDENTICAL77/77 with clean source/cache; the282cb11 receipt is
+unchanged. Only records are archived afterward. No broad test sweep was repeated.

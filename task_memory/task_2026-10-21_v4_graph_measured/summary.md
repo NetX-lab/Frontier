@@ -8,6 +8,7 @@
 | 2026-10-21 | Implemented independent-review corrections with CPU red/green,208 affected passes and102 scope/68 typed-negative receipts; review strict pending. |
 | 2026-10-21 | Completed correction282cb11 sole clean strict77 IDENTICAL77/77; only task records changed after measurement. |
 | 2026-10-21 | Reopened final P2:only known Unknown typed operator error conversion;two real-reader red/green cases and9/102/72 checks PASS, final strict pending. |
+| 2026-10-21 | Final P2e3ce166 clean77 IDENTICAL77/77; all requested repairs complete with exact prior receipts retained. |
 
 ## Overview
 
@@ -118,6 +119,13 @@ propagation remains unchanged (9 focused controls PASS). The existing real-data
 checker passes102 exact scopes/72 typed negatives/2 mixed-layout controls, adding
 only four negative cases across the two measurement methods.
 
-The final P2 source freeze/commit and its own clean77 are pending. Existing282cb11
-strict receipts are preserved exactly, not relabelled as P2 evidence. No B/timers,
-native paths, consumption scopes or qualification limits changed.
+Final source `e3ce1660ccb58579980540b1eadce356c75da3aa` passed its sole final
+clean77:77 executed/compared/IDENTICAL, zero cache/provenance, missing-evidence,
+definition or failure differences. Manifest source/cache are clean and source,
+driver and harness revisions match. Retained measured checkout is clean.
+`strict77_receipt.json.p2_unknown_operator` records this run; all prior receipt
+fields, including282cb11, are preserved exactly and not relabelled as P2 evidence.
+Only records change afterward. Diff: `/data/ycfeng/tmp/v4_graph_measured_p2.diff`.
+
+U1–U3 are complete. Root owns independent acceptance and A+B assertions. No
+B/timers, native paths, consumption scopes or qualification limits changed.

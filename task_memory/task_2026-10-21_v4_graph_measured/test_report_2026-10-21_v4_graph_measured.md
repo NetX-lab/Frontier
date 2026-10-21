@@ -8,6 +8,7 @@
 | 2026-10-21 | Review correction:CPU red/green evidence, exact layout, typed coverage causes and padded embedding collective;208 affected passes/102 scopes/68 negatives. |
 | 2026-10-21 | Archived correction282cb11 sole clean strict77 IDENTICAL77/77, zero cache/provenance differences and clean retained checkout. |
 | 2026-10-21 | Final P2:two real-reader unknown-operator red/green cases;single-prefix repair,9 controls/102 scopes/72 typed negatives PASS; final strict pending. |
+| 2026-10-21 | Final P2e3ce166 sole clean77 IDENTICAL77/77 with clean source/cache; prior282cb11 exact receipts preserved. |
 
 ## Scope and result
 
@@ -344,6 +345,30 @@ is negative coverage only, not new measurement admission. No broad suite repeate
 
 ### Final P2 strict77
 
-Pending the final frozen source commit and its own clean77. Do not substitute
-the prior282cb11 result. All native/compiled/physical-TP/phase/H800 and timer
-qualification limits remain unchanged.
+Final frozen source is `e3ce1660ccb58579980540b1eadce356c75da3aa`. Its sole
+clean77 invocation, after a verified clean commit:
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha e3ce166 --output-root /data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_p2_20261021/fidelity --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/v4_p2_strict77.log 2>&1
+```
+
+Expected/actual **PASS/IDENTICAL77/77**:77 executed/compared/identical, zero
+mismatches, missing cases/evidence, differing definitions or baseline/candidate
+failures. Predictor cache filenames0 baseline-only/0 candidate-only, zero cache
+or provenance findings and clean population. Manifest source_dirty=false, empty
+dirty paths, cache_clean_before_run=true, no filters/stale drops and matching
+source/driver/harness revisione3ce166. Retained checkout is clean after execution.
+No source/test changes or repeated invocation followed; only task records.
+
+- Selected durable result: `strict77_receipt.json.p2_unknown_operator`.
+- Original comparison: `/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_p2_20261021/fidelity/comparison.json`.
+- Manifest/results: `/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_p2_20261021/fidelity/candidate_e3ce166/{manifest.json,results.jsonl}`.
+- Raw strict log: `/data/ycfeng/tmp/v4_p2_strict77.log`.
+- Red/green raw logs: `/data/ycfeng/tmp/v4_p2_unknown_{red,green}.log`.
+- Final source/test diff: `/data/ycfeng/tmp/v4_graph_measured_p2.diff`.
+
+The previous receipt object, including `review_correction` for282cb11, is
+preserved without changing any existing field; P2 is only an appended object.
+All native/compiled/physical-TP/phase/H800 and timer qualification limits remain
+unchanged. This final CPU repair is complete; root owns independent acceptance
+and A+B integration assertions. No new native data was qualified.
