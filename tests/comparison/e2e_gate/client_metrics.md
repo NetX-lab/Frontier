@@ -15,7 +15,6 @@ export PYTHONPATH=$PWD
 PY=/data/ycfeng/envs/frontier-py310/bin/python
 CELL=step5_canonical/fixed6144_1024_req128_qps1
 MATRIX=tests/comparison/e2e_gate/cases/step5_canonical.json
-$PY tests/comparison/e2e_gate/run_gate.py cells --matrix "$MATRIX"
 $PY tests/comparison/e2e_gate/run_gate.py normalize --matrix "$MATRIX" \
   --cell "$CELL" --artifacts-root "$PWD" \
   --vllm-run-dir "$NATIVE_RETURNED_EVIDENCE" \
