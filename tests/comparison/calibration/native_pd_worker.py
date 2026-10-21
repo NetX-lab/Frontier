@@ -96,6 +96,21 @@ def write_run_manifest(config, authorization):
     return path
 
 
+def write_launcher_receipt(config, rjob_name, config_path):
+    """Bind the controller's actual submission identity to its prelaunch inputs."""
+    if not rjob_name:
+        raise ValueError('The actual submitted RJob name is required')
+    root = Path(config['case_dir']) / 'runs' / 'groundtruth_clean' / config['run_tag']
+    manifest_path = root / 'run_manifest.json'
+    manifest = json.loads(manifest_path.read_text())
+    path = root / 'launcher_receipt.json'
+    path.write_text(json.dumps(dict(rjob_name=rjob_name, run_generation=manifest['run_generation'],
+        run_manifest_sha256=hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+        execution_config_sha256=hashlib.sha256(Path(config_path).read_bytes()).hexdigest(),
+        recorded_at_utc=datetime.now(timezone.utc).isoformat()), indent=2, sort_keys=True) + '\n')
+    return path
+
+
 def stage_run_manifest(config, root):
     """Retain the already-written pre-launch evidence alongside native outputs."""
     case_dir = Path(config['case_dir'])
@@ -107,6 +122,11 @@ def stage_run_manifest(config, root):
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(case_dir / name, destination)
     shutil.copy2(source, root / 'run_manifest.json')
+    receipt = source.parent / 'launcher_receipt.json'
+    # The controller can record submission after the worker starts. Admission
+    # still requires the receipt; a missing copy must not stop native work.
+    if receipt.is_file():
+        shutil.copy2(receipt, root / receipt.name)
 
 
 def node_plan(config, peers, host, devices):

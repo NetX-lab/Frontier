@@ -19,10 +19,25 @@ from tests.comparison.calibration.pd_replay import canonical_workload, instance_
 from tests.comparison.dp_placement_pp.vllm_replay import V028_IMAGE, V028_SOURCE, server_command
 
 
+def original_checkout_root(repo):
+    common = subprocess.run(["git", "-C", str(repo), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                            check=True, capture_output=True, text=True).stdout.strip()
+    return Path(common).parent
+
+
 REPO = Path(__file__).resolve().parents[2]
-CHECKER = REPO.parents[1] / "task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/check_groundtruth_run.py"
+CHECKER = original_checkout_root(REPO) / "task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/check_groundtruth_run.py"
 BEFORE = REPO / "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/h200_glm_canonical_integration_20261021/check_groundtruth_run.before.py"
 TRACE = REPO / "data/processed_traces/canonical_fixed_6144_1024_req128_qps1"
+
+if not CHECKER.is_file():
+    pytest.skip(f"External groundtruth checker is unavailable: {CHECKER}", allow_module_level=True)
+
+
+def legacy_snapshot():
+    if not BEFORE.is_file():
+        pytest.skip(f"External legacy checker baseline is unavailable: {BEFORE}")
+    return BEFORE
 
 
 def load_checker(path):
@@ -46,8 +61,10 @@ def archived_harness(tmp_path_factory):
     """Use actual pinned reader bytes in a fresh subprocess, with fixture Git receipts."""
     root = tmp_path_factory.mktemp("native_checker_harness")
     archive = subprocess.run(["git", "archive", "9f58dbe", "tests/comparison"],
-                             cwd=REPO, check=True, capture_output=True).stdout
-    with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
+                             cwd=REPO, capture_output=True)
+    if archive.returncode:
+        pytest.skip(f"Pinned CPU fixture archive 9f58dbe is unavailable: {archive.stderr.decode().strip()}")
+    with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as stream:
         stream.extractall(root, filter="data")
     return root
 
@@ -160,6 +177,10 @@ def native_case(tmp_path, monkeypatch, archived_harness):
             phase="Succeeded", containers=[dict(state=dict(terminated=dict(exitCode=0)), restartCount=0,
                                                 imageID=V028_IMAGE)]) for i, p in enumerate(peers)])
     write(run / "platform_terminal_receipt.json", receipt)
+    write(run / "launcher_receipt.json", dict(rjob_name=receipt["job"],
+        run_generation=manifest["run_generation"], run_manifest_sha256=digest(run / "run_manifest.json"),
+        execution_config_sha256=digest(root / manifest["execution_config"]),
+        recorded_at_utc="2026-01-01T00:00:01Z"))
     original_run = subprocess.run
 
     def fixture_git(repo, *args):
@@ -188,6 +209,72 @@ def test_native_fixture_uses_actual_reader_and_never_fabricates_graph_pass(nativ
     assert [k for k, v in result["checks"].items() if v.startswith("FAIL")] == ["rank_runtime_graph"]
     assert "UNVERIFIED" in result["checks"]["rank_runtime_graph"]
     assert "run_manifest" in result and result["derived_num_blocks"] == {}
+
+
+@pytest.mark.parametrize("fault", ["control", "wrong_job", "wrong_generation", "wrong_manifest_hash",
+                                  "wrong_execution_hash", "missing_launcher_receipt", "stale_launcher_receipt"])
+def test_native_terminal_receipt_binds_actual_launcher(native_case, fault):
+    checker, root, run, _, _, _ = native_case
+    launcher_path = run / "launcher_receipt.json"
+    launcher = json.loads(launcher_path.read_text())
+    if fault == "wrong_job":
+        platform_path = run / "platform_terminal_receipt.json"
+        platform = json.loads(platform_path.read_text())
+        platform["job"] = "other-fixture-job-not-real"
+        write(platform_path, platform)
+    if fault == "wrong_generation": launcher["run_generation"] = "earlier-fixture-generation"
+    if fault == "wrong_manifest_hash": launcher["run_manifest_sha256"] = "0" * 64
+    if fault == "wrong_execution_hash": launcher["execution_config_sha256"] = "0" * 64
+    write(launcher_path, launcher)
+    if fault == "missing_launcher_receipt": launcher_path.unlink()
+    if fault == "stale_launcher_receipt": os.utime(launcher_path, ns=(0, 0))
+    result = checker.check(root, "native", "clean")
+    expected = ["rank_runtime_graph"] + ([] if fault == "control" else ["terminal_status"])
+    assert [k for k, v in result["checks"].items() if v.startswith("FAIL")] == expected, result
+    assert result["status"] == "FAIL"  # CPU fixtures cannot establish native graph admission.
+    assert result["rjob_name"] == ("fixture-not-real" if fault == "control" else None)
+
+
+@pytest.mark.parametrize("layout", ["main_checkout", "worktree"])
+def test_checker_path_resolves_from_both_git_layouts(layout):
+    root = original_checkout_root(REPO)
+    selected = root if layout == "main_checkout" else REPO
+    assert original_checkout_root(selected) == root
+    assert CHECKER == root / "task_memory/task_2026-09-27_pr_stack_vllm_e2e_accuracy_gate/calibration/check_groundtruth_run.py"
+
+
+def test_missing_external_checker_skips_module(tmp_path, monkeypatch):
+    original_run = subprocess.run
+
+    def git_common_dir(args, **kwargs):
+        if args[-3:] == ["rev-parse", "--path-format=absolute", "--git-common-dir"]:
+            return subprocess.CompletedProcess(args, 0, stdout=str(tmp_path / ".git") + "\n")
+        return original_run(args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", git_common_dir)
+    with pytest.raises(pytest.skip.Exception, match="External groundtruth checker is unavailable"):
+        load_checker(Path(__file__))
+
+
+def test_missing_legacy_snapshot_does_not_skip_native_checker(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), "BEFORE", tmp_path / "missing-before.py")
+    with pytest.raises(pytest.skip.Exception, match="External legacy checker baseline is unavailable"):
+        legacy_snapshot()
+    checker = load_checker(CHECKER)
+    assert checker.native_rank_graph_evidence({}, {}, {})[0] is False
+
+
+def test_missing_pinned_archive_skips_native_fixture(tmp_path_factory, monkeypatch):
+    original_run = subprocess.run
+
+    def unavailable_archive(args, **kwargs):
+        if args[:3] == ["git", "archive", "9f58dbe"]:
+            return subprocess.CompletedProcess(args, 128, stdout=b"", stderr=b"Fixture commit unavailable")
+        return original_run(args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", unavailable_archive)
+    with pytest.raises(pytest.skip.Exception, match="Pinned CPU fixture archive 9f58dbe is unavailable"):
+        archived_harness.__wrapped__(tmp_path_factory)
 
 
 def test_capture_inventory_and_claimed_replay_boolean_cannot_prove_runtime_coverage():
@@ -295,7 +382,7 @@ def test_native_negative_admission(native_case, fault, failed_check):
 
 
 def test_legacy_function_bodies_and_cli_remain_unchanged():
-    before, after = ast.parse(BEFORE.read_text()), ast.parse(CHECKER.read_text())
+    before, after = ast.parse(legacy_snapshot().read_text()), ast.parse(CHECKER.read_text())
     old = {n.name: n for n in before.body if isinstance(n, ast.FunctionDef)}
     new = {n.name: n for n in after.body if isinstance(n, ast.FunctionDef)}
     body = new["check"].body
@@ -312,7 +399,7 @@ def test_legacy_missing_artifacts_keep_original_exception(tmp_path):
     write(tmp_path / "inputs/trace/request_ids.json", {})
     write(tmp_path / "inputs/engine.json", {})
     errors = []
-    for module in (load_checker(BEFORE), load_checker(CHECKER)):
+    for module in (load_checker(legacy_snapshot()), load_checker(CHECKER)):
         with pytest.raises(FileNotFoundError) as error:
             module.check(tmp_path, "legacy", "clean")
         errors.append((type(error.value), str(error.value)))

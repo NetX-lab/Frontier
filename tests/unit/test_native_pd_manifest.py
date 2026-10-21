@@ -104,9 +104,19 @@ def test_actual_clean_provenance_and_prelaunch_snapshot_are_preserved(tmp_path):
         assert sha(target) == digest
     output = tmp_path / 'retained/case/runs/groundtruth_clean/cpu-http-fixture'
     output.mkdir(parents=True)
+    execution_config = Path(config['case_dir']) / 'inputs/native_config.json'
+    receipt = worker.write_launcher_receipt(config, 'CPU_FIXTURE_ONLY', execution_config)
+    submission = json.loads(receipt.read_text())
+    assert submission['run_manifest_sha256'] == sha(path)
+    assert submission['execution_config_sha256'] == sha(execution_config)
+    assert submission['run_generation'] == manifest['run_generation']
+    with pytest.raises(ValueError, match='actual submitted RJob name'):
+        worker.write_launcher_receipt(config, '', execution_config)
     worker.stage_run_manifest(config, output)
     assert (output / 'run_manifest.json').read_bytes() == path.read_bytes()
     assert (output / 'run_manifest.json').stat().st_mtime_ns == path.stat().st_mtime_ns
+    assert (output / 'launcher_receipt.json').read_bytes() == receipt.read_bytes()
+    assert (output / 'launcher_receipt.json').stat().st_mtime_ns == receipt.stat().st_mtime_ns
     assert (output.parents[2] / 'inputs/trace/request_ids.json').read_bytes() == (TRACE / 'request_ids.json').read_bytes()
     with pytest.raises(FileExistsError):
         worker.write_run_manifest(config, 'Do not overwrite an existing run')
