@@ -31,12 +31,15 @@
 | D6 分析空转 | CLEAR | 产生可执行loader及完整1024输出结果 |
 | D7 路线违背 | CLEAR | D20允许CPU实现；正式证据门槛保留 |
 
-**文档检查：** S1–S6均未发现明显缺陷；发现的输入owner缺口已纳入本任务requirements/plan，未新增验收范围。
+**文档检查：** S5：父plan§6的旧R2复跑建议与D17/D20的6144/1024目标不符，ticket08状态也未记录已完成P1修复。其余S1–S4/S6未发现明显缺陷；输入owner缺口已纳入本任务。旧包核查证明maxlen2048且无独立referenceG3。
 **归因：** 无。
 
 ## 3. 纠正建议
 
-**分支：** A：spec/tickets合理，无需改动。
+**分支：** B：已直接修正文档，保留全部验收要求。
+
+**文档更新（先执行）：**
+1. 父plan§6、ticket08和progress：记录P1已关闭、暂停旧非canonical capture，保留case-aligned content/lifetime/reference作为正式前置（可直接执行，已完成）。
 
 **需停止的偏离行为：** 无。
 
