@@ -337,8 +337,8 @@
   ],
   "targeted_rerun": "/data/ycfeng/tmp/v4_graph_measured_affected.xml",
   "targeted_counts": {
-    "skipped": 8,
-    "passed": 686
+    "passed": 688,
+    "skipped": 8
   },
   "resolved_by_targeted_rerun": [
     [
@@ -346,5 +346,6 @@
       "test_runtime_predictors_use_only_allowlisted_profiling_helpers"
     ]
   ],
-  "unresolved_baseline_passing_regressions": []
+  "unresolved_baseline_passing_regressions": [],
+  "h800_followup": "CPU-only TP8/DP2/EP16 P16/D16 geometry and rejection of H200 observations; no runtime change"
 }

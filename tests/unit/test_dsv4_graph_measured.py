@@ -83,6 +83,32 @@ def test_global_graph_setting_does_not_override_batch_state(predictor, monkeypat
     assert serving_context(predictor, graph_batch([17], [0]), 0)["execution_mode"] == "cuda_graph"
 
 
+def test_h800_tp8_dp2_ep16_reuses_source_geometry_not_h200_capacity(predictor):
+    from frontier.entities import Batch, Request
+    from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+
+    replica = predictor._replica_config
+    replica.device = "h800"
+    replica.attn_dp = 2
+    replica.moe_expert_parallel_size = 16
+    prefill = Batch(0, [Request(0, 16, 16)], [16], is_moe=True,
+                    num_context_tokens=[0], request_is_decoding=[False])
+    decode = Batch(1, [Request(0, 16, 16)], [1], is_moe=True,
+                   num_context_tokens=[16], request_is_decoding=[True])
+    for batch, mode, width in ((prefill, "PIECEWISE", 32), (decode, "FULL", 8)):
+        batch.decode_cuda_graph_metadata = DecodeCudaGraphMetadata(
+            "full_and_piecewise", mode, True, False,
+            batch.total_num_tokens, width, 1, width,
+        )
+        result = component(predictor, batch, layer=0, rank=0, execution_mode="cuda_graph")
+        assert result["compute_rows"] == width
+        assert result["source_rows"] == batch.total_num_tokens
+        assert result["physical_local_rows"] == width // 8
+        assert batch.requests[0].num_decode_tokens == 16
+    assert source_physical_rows(predictor, {0: prefill, 1: decode}) == 40
+    assert prefill.num_context_tokens == [0] and decode.num_context_tokens == [16]
+
+
 @pytest.fixture
 def measured(predictor, tmp_path):
     p = predictor
@@ -143,6 +169,16 @@ def test_exact_isolated_math_preserves_scope_and_provenance(measured):
     rows = loader._load_attention_df(p._attention_input_file, p._replica_config,
                                     SimpleNamespace(block_size=256))
     assert rows["time_stats.dsv4_sparse_attention.median"].iloc[0] == 0.125
+
+
+def test_h800_missing_coverage_cannot_consume_h200_observations(measured):
+    p, row = measured
+    p._replica_config.device = "h800"
+    p._replica_config.attn_dp = 2
+    p._replica_config.moe_expert_parallel_size = 16
+    write_row(p, row)
+    with pytest.raises(DeepSeekV4CoverageError, match="device does not match"):
+        read_isolated_scope(p, source_batch([6144], [0]), 0, "dsv4_sparse_attention")
 
 
 @pytest.mark.parametrize("column,value", [

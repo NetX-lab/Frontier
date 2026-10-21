@@ -92,6 +92,21 @@ def main():
                     "query": query, "context": context, "scope": scope, "error": str(exc)})
             else:
                 raise AssertionError("Unqualified scope did not raise a typed coverage error")
+        p._replica_config.device = "h800"
+        p._replica_config.attn_dp = 2
+        p._replica_config.moe_expert_parallel_size = 16
+        try:
+            read_isolated_scope(p, source_batch(), 0, "dsv4_sparse_attention")
+        except DeepSeekV4CoverageError as exc:
+            assert "device does not match" in str(exc)
+            negative.append({"measurement_type": measurement.value,
+                "device": "h800", "topology": "TP8/DP2/EP16", "scope": "dsv4_sparse_attention",
+                "error": str(exc)})
+        else:
+            raise AssertionError("H200 rows must not qualify missing H800 coverage")
+        p._replica_config.device = "h200"
+        p._replica_config.attn_dp = 4
+        p._replica_config.moe_expert_parallel_size = 32
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({"status": "PASS", "positive_count": len(receipts),
         "typed_negative_count": len(negative), "serving_admission": False,

@@ -3,7 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-21 | Recorded source evidence,686 affected passes, real isolated consumer comparisons and full-unit baseline comparison; strict77 pending. |
+| 2026-10-21 | Recorded source evidence,686 affected passes, real isolated consumer comparisons, full-unit baseline comparison and clean strict77 IDENTICAL. |
+| 2026-10-21 | Applied H800-priority steering:688 affected passes,102 scopes/14 negatives and hardware-mismatch rejection; runtime code remains621b198. |
 
 ## Scope and result
 
@@ -52,16 +53,33 @@ All commands use `PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1` and
 Expected affected suite: existing supported V4/GLM/reader behavior remains passing;
 new graph widths preserve request/context and distinguish FULL capture branches;
 bad measurement/graph/TP/tile-planning/context/phase/scope identity and relabelled
-CUDA-event rows produce typed coverage errors. Actual: **686 PASS/8 SKIP**.
+CUDA-event rows produce typed coverage errors. Final actual:
+**688 PASS/8 SKIP** (11.59s).
 Earlier failures were obsolete blanket-rejection expectations, changed only where
 Q10 authorizes typed coverage errors. Existing test node IDs were preserved.
 
 Expected real rows: every applicable scope of the12 accepted P6144 rows, three
 shared kernels per method, and a matched MARLIN histogram per method return the
 exact selected CSV median, retaining provenance and `serving_admission=false`.
-Actual: **102 positive exact scope comparisons and12 typed negatives PASS**;
+Final actual: **102 positive exact scope comparisons and14 typed negatives PASS**;
 `real_scope_receipts.json` contains each input path, source revision, runtime
 fingerprint, physical/target TP, measured value and retained metadata.
+
+The102 comparisons comprise attention50 CUDA_EVENT/44 KERNEL_ONLY and
+compute4 CUDA_EVENT/4 KERNEL_ONLY. The enclosing attention-layer scope exists
+only in the CUDA-event table and is not fabricated for kernel-only rows.
+
+H800-priority follow-up uses the existing source interfaces at TP8/DP2/EP16,
+with explicit P16/D16 requests. P16 prefill PIECEWISE width32 and decode-at-C16
+FULL width8 preserve real16/1 rows and contexts0/16; per-rank compute4/1 and
+two-source total40 are CPU geometry fixtures only, not observed native capture
+sizes or hardware capacity. A test-only mistaken helper method name was corrected
+to the existing `source_physical_rows` function; no runtime code change resulted.
+Both actual H200 measurement methods are additionally rejected by the H800
+consumer with `DeepSeekV4CoverageError` for device mismatch. The original H200
+tables/provenance are not rewritten or admitted as H800 evidence. No H800 timing,
+capacity, compiled/phase equivalence or calibration result was produced. Root's
+common68f891b workload, platform actions, gates and B integration remain root-owned.
 
 The MARLIN check uses an explicit reachable synthetic lane: source32/topk6,
 local8 experts with counts[1,1,0,0,0,0,0,0], global192 assignments. It matches the
@@ -108,4 +126,28 @@ full-sweep failures and targeted correction are both preserved in
 `unit_baseline_comparison.json`; raw XML/log paths are recorded above. No broad
 rerun is needed for a helper allowlist-only correction.
 
-One clean committed strict77 is pending.
+The sole strict77 invocation completed on committed code
+`621b198476c677ae32464387149402c1c4952c9c`:
+
+```bash
+PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp/opencode-v2-tmp/opencode /data/ycfeng/envs/frontier-py310/bin/python tests/e2e/refactor_fidelity/measure_commit.py --sha 621b198 --output-root /data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_20261021/fidelity --baseline-label /data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 > /data/ycfeng/tmp/v4_graph_measured_strict77.log 2>&1
+```
+
+Expected all77 cases execute and compare, with no missing evidence, differences,
+failures or predictor cache filename differences. Actual **PASS/IDENTICAL**:
+77/77 executed and compared;77 identical;0 mismatched, missing evidence, missing
+cases, differing definitions, baseline failures or candidate-only failures;
+predictor cache filenames0 baseline-only/0 candidate-only. Provenance findings0.
+Manifest `source_dirty=false`, empty git_dirty_paths, clean cache and identical
+driver/source/harness revision. Retained checkout was also clean after the run.
+
+- Selected durable receipt: `strict77_receipt.json`.
+- Original comparison: `/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_20261021/fidelity/comparison.json`.
+- Manifest/results: `/data/ycfeng/tmp/glm53_dsv4/v4_graph_measured_20261021/fidelity/candidate_621b198/{manifest.json,results.jsonl}`.
+- Retained checkout: `/data/ycfeng/Frontier/.worktrees/fidelity-candidate-621b198`.
+- Review diff: `/data/ycfeng/tmp/v4_graph_measured_final.diff`.
+
+This verifies legacy artifact/cache fidelity, not native V4 timing accuracy.
+Only task records and H800 CPU regression checks change after the measured code
+commit. Runtime and strict77 case definitions remain byte-identical to621b198;
+the requested sole strict invocation was not repeated.

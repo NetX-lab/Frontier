@@ -3,7 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
-| 2026-10-21 | Archived implemented CPU capabilities and measured-scope evidence; final regression status pending. |
+| 2026-10-21 | Archived CPU implementation621b198, measured scope evidence,686 affected checks and strict77 IDENTICAL; primary acceptance pending. |
+| 2026-10-21 | Applied H800-priority steering without runtime edits:688 tests,102 scopes/14 negatives; H200 data cannot qualify H800. |
 
 ## Overview
 
@@ -34,15 +35,30 @@ linear/MoE readers. It does not admit a complete native V4 serving forward.
 
 ## Observed validation
 
-Affected tests:686 PASS/8 SKIP. Real rows:102 exact positive isolated scope
-comparisons and12 typed negatives PASS. Both measurement methods retain their
+Affected tests:688 PASS/8 SKIP. Real rows:102 exact positive isolated scope
+comparisons and14 typed negatives PASS. Both measurement methods retain their
 identities and remain separate. Source9f58dbe compute and source5e051e4 attention
 are not relabelled or rewritten. The MARLIN matching lane is synthetic, not
 native routing evidence. Full sweep:5581 PASS/108 FAIL/72 SKIP/20 ERROR;
 the only historical baseline-passing regression was the new CPU-helper allowlist
 and passed on the686-test rerun. Zero unresolved regressions among historical
 passing IDs present in the sweep; unrelated missing-dependency failures and64
-absent historical IDs remain explicitly recorded. Clean strict77 is pending.
+absent historical IDs remain explicitly recorded. The sole clean strict77 on
+`621b198476c677ae32464387149402c1c4952c9c` passed:77 executed/77 compared/77 identical,
+zero failures/missing evidence/definition or predictor-cache filename differences.
+Manifest `source_dirty=false`, clean cache and matching source/driver/harness
+revision. `strict77_receipt.json` records original paths. The detached measured
+checkout is retained clean. Subsequent changes are task records and H800 CPU-only
+regression checks; runtime and strict case definitions remain identical.
+
+Review diff: `/data/ycfeng/tmp/v4_graph_measured_final.diff`.
+
+H800 TP8/DP2/EP16/P16D16 source geometry passes the existing interfaces without
+H200 capacity constants; the test uses explicit illustrative descriptors, not an
+H800 capture/capacity observation. Both actual H200 table methods typed-reject on
+H800. No H800 qualified timing/calibration or gate waiver follows. No solely old
+H20064 execution/package work existed in this slice. Root owns the68f891b common
+workload, GPU/platform actions and integration with published B2a84c58/2ffd2cb.
 
 ## Open scope and handoff
 

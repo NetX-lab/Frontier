@@ -1,7 +1,7 @@
 {
   "status": "PASS",
   "positive_count": 102,
-  "typed_negative_count": 12,
+  "typed_negative_count": 14,
   "serving_admission": false,
   "receipts": [
     {
@@ -2999,6 +2999,13 @@
       "error": "V4 dsv4_compressor_projection has no qualified native measurement; generic routing columns do not qualify"
     },
     {
+      "measurement_type": "CUDA_EVENT",
+      "device": "h800",
+      "topology": "TP8/DP2/EP16",
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 measured device does not match the selected replica"
+    },
+    {
       "measurement_type": "KERNEL_ONLY",
       "query": 6145,
       "context": 0,
@@ -3039,6 +3046,13 @@
       "context": 0,
       "scope": "dsv4_compressor_projection",
       "error": "V4 dsv4_compressor_projection has no qualified native measurement; generic routing columns do not qualify"
+    },
+    {
+      "measurement_type": "KERNEL_ONLY",
+      "device": "h800",
+      "topology": "TP8/DP2/EP16",
+      "scope": "dsv4_sparse_attention",
+      "error": "V4 measured device does not match the selected replica"
     }
   ]
 }
