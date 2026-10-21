@@ -10,6 +10,20 @@ also the only Python files under `frontier/` above 2,000 lines on `main` at
 
 ## Inventory
 
+D5 T1 (2026-10-20) extends the existing request metric exporter in
+`frontier/metrics/metrics_store.py` with PD-only `client_ttft`. The CSV is in
+milliseconds, from request arrival to `first_decode_token_completed_at` (the
+first D output); optional ground-truth rows expose `client_ttft_s` and
+`client_ttft_ms`. Historical `ttft`, `ttft_statistics` and trace `ttft_ms` remain
+arrival to P-prefill completion for existing comparison/gate consumers. No
+proxy/HTTP delivery or host overhead is invented; this is the simulator's
+client endpoint, not evidence of native client accuracy. Non-PD exports are
+unchanged. The existing request distributions own its storage and unit
+conversion; moving this field alone would introduce a second metrics owner.
+The planned metrics-ledger split below remains independent. `request.py` stays
+below 2,000 lines by replacing the old TTFT docstring rather than growing its
+lifecycle logic. There is no execution, token-accounting or event-order change.
+
 "Before" is PR 42's head (`17f8088`). "After" is PR 44 with the review fixes.
 
 | Module | Before | After | What PR 44 adds |
@@ -88,3 +102,76 @@ Steps 1 and 2 were scheduled after PR 44's merge, so the split would not mix
 with the calibration review. PR 44 is merged (`9a650fb`), but no step has
 started: the target modules named above do not exist yet. Steps 3 and 4 can
 run at any time.
+
+
+## Step controlled request path on `feat/step5-preview`
+
+The Step structural slice extends two modules covered above. Counts use baseline
+`1bde1999af07a41651bb025d92e95bf14ad9e1ca` and the current source on
+2026-10-19.
+
+| Module | Baseline | Current | Added responsibility |
+| --- | ---: | ---: | --- |
+| `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` | 8,491 | 8,536 | Select existing Step attention scopes for the actual phase, context, graph policy and padded rows in controlled timing mode |
+| `frontier/metrics/metrics_store.py` | 5,658 | 5,763 | Preserve source layer/tensor identity and the existing stage and EP-wave cost owners; include model input and terminal scopes once |
+
+The cleanup inspection found no dead copy of the new Step pricing or ledger
+paths. Layer geometry uses the existing metadata caches in the predictor and
+metrics store; stage and EP-wave traces share the store cache instead of
+rebuilding each layer for every operator. FFN merge trace enumeration uses the
+existing operator-family contract. The new once-only scopes use the existing
+operator-to-time attribute map rather than a second timing registry. No second
+scheduler, event path or model graph is introduced.
+
+Step pricing reads the predictor's resolved batch, block, parallel and dummy
+policy state and returns the existing attention component. Moving this small
+extension alone would split that state from all adjacent family pricing. The
+metrics changes extend the store's existing trace emitter, catalogs and stage
+component ledger; a separate Step ledger would create two cost owners. The
+functional split above remains the appropriate later sequence: measurement
+binding moves with its pricing state, and the stage ledger moves with its
+consumers. This capability does not require that core refactor. Any such future
+refactor follows the task's material-architecture approval policy and must
+preserve legacy numeric/intermediate fidelity and the same operator ownership.
+
+## Scoped V4 cache-zero metric admission, 2026-10-19
+
+At `b5120e6`, `frontier/metrics/metrics_store.py` has 5,703 lines. The
+cache-zero change adds two lines to the existing operation-metric admission
+filter, bringing it to 5,705 lines. The corresponding enum entry is required
+by actual structural execution; excluding that entry for models without the
+V4 structural attention family preserves their existing output files instead
+of creating an empty cache-zero table.
+
+The cleanup inspection found this filter already owns the exclusion of absent
+structural operations. Extending it avoids a second metrics owner or an
+additional model classifier. Cache allocation metadata and timing remain in
+their existing scheduler, Batch and V4 predictor modules; no cache algorithm
+or new ledger responsibility is added to the metrics store. Moving unrelated
+ledger code during this correction would expand the regression surface
+without improving cache-zero representation.
+
+The functional split remains step 3 above, as a separate movement-only change.
+This exception covers only the two-line filter extension, with focused metric
+checks and the unchanged 77-case artifact and predictor-cache filename
+comparison required before acceptance. It does not authorize further growth
+of the metrics store or claim that the planned split has been performed.
+
+## Step structural PD handoff on `feat/step5-pd-structural`, 2026-10-20
+
+The Step PD slice touches three modules above the limit. Counts use the merge
+base `c14e642` and the current source on 2026-10-20.
+
+| Module | Baseline | Current | Added responsibility |
+| --- | ---: | ---: | --- |
+| `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` | 8,628 | 8,639 | Price the request-free attention-DP dummy forward of Step layers from existing scopes |
+| `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py` | 3,006 | 3,019 | Route Step PREFILL and unified DECODE stages to the existing co-location structural pricing |
+| `frontier/metrics/metrics_store.py` | 5,802 | 5,803 | Pass the resolved transfer payload to the existing transfer trace builder |
+
+The cleanup inspection found no duplicate Step role pricing to remove: PD
+roles run complete Step layers, so the disaggregation predictor delegates to
+the base pricing instead of copying it. The page payload itself lives in the
+attention family modules (`memory.py`, `step5_memory.py`, `families.py`),
+all below the limit, so the large modules only route to it. Moving the role
+routing alone would separate it from the stage pricing it selects. The
+functional splits planned above are unchanged and are not performed here.

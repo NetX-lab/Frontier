@@ -5,10 +5,12 @@ columns its consumers require, applies the typed operator contract filter
 when the file carries one, and derives the feature columns training needs.
 """
 
+from dataclasses import replace
 import os
 import pandas as pd
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_column_by_role,
@@ -157,6 +159,12 @@ class ProfilingDataFrameLoaders:
         )
         if parsed_typed_contracts is not None and layer_contract is not None:
             selected_layer_contract = layer_contract
+            if layer_contract.profile_id == "step5":
+                # A shared layer also owns the separate branch merge; each
+                # producer row labels only the queried operator's family.
+                selected_layer_contract = replace(
+                    layer_contract, operator_family_ids=(layer_contract.operator_family_id,),
+                )
             if not isinstance(operator_name, str) or not operator_name:
                 raise ValueError(
                     "typed profiling loading requires a non-empty operator_name "
@@ -311,6 +319,14 @@ class ProfilingDataFrameLoaders:
             FileNotFoundError: If the input file does not exist
             ValueError: If no data matches filtering criteria
         """
+        family = resolve_runtime_attention_family(replica_config.model_config)
+        if family.family_id == "step5_attention":
+            from frontier.execution_time_predictor.step5 import load_step5_attention_rows
+
+            return load_step5_attention_rows(
+                file_path, replica_config, replica_scheduler_config, self._active_measurement_type,
+            )
+        family.require_enabled_for_execution()
         # Check file existence
         if not os.path.exists(file_path):
             raise FileNotFoundError(
@@ -670,13 +686,14 @@ class ProfilingDataFrameLoaders:
                 f"Suggested command: bash frontier/profiling/example/test_profiling_moe.sh"
             )
 
-        df = pd.read_csv(file_path)
-        logger.info(f"Original MoE data: {len(df)} rows, {len(df.columns)} columns")
         expected_profile = (
             layer_contract.profile_id
             if layer_contract is not None
             else infer_single_runtime_profile(self)
         )
+        csv_options = {"float_precision": "round_trip"} if expected_profile == "step5" else {}
+        df = pd.read_csv(file_path, **csv_options)
+        logger.info(f"Original MoE data: {len(df)} rows, {len(df.columns)} columns")
         if expected_profile is not None and "model_architecture_profile" in df.columns:
             validate_model_architecture_profile(
                 df,

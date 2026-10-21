@@ -38,7 +38,16 @@ def event_runtime(monkeypatch):
     monkeypatch.setattr(kernel, "VLLM_AVAILABLE", True)
     monkeypatch.setattr(kernel, "VLLM_API_VERSION", "functional_fused_experts")
     functional = Mock()
-    monkeypatch.setattr(kernel, "_functional_fused_experts", functional)
+    monkeypatch.setattr(
+        kernel,
+        "get_native_routed_experts",
+        Mock(return_value=SimpleNamespace(
+            apply=functional,
+            backend="TRITON",
+            experts_class="TritonExperts",
+            triton_tuning_config="default",
+        )),
+    )
     monkeypatch.setattr(
         "frontier.profiling.common.vllm_compat.vllm_config_context",
         lambda **kwargs: nullcontext(),

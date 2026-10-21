@@ -11,6 +11,30 @@ logger = init_logger(__name__)
 
 
 @dataclass(frozen=True)
+class KVCacheBlockZeroing:
+    """One scheduler step's assignments, shared by its physical TP workers.
+
+    IDs retain allocation order and repeated assignments. The unique physical
+    reservation extent is not native store traffic or a zeroed segment span.
+    """
+
+    block_ids: tuple[int, ...]
+    physical_block_size_bytes: int
+
+    def __post_init__(self) -> None:
+        block_ids = tuple(self.block_ids)
+        if not block_ids or any(type(block) is not int or block <= 0 for block in block_ids):
+            raise ValueError("cache zeroing requires non-null positive physical block IDs")
+        if type(self.physical_block_size_bytes) is not int or self.physical_block_size_bytes <= 0:
+            raise ValueError("cache zeroing requires a positive physical block stride")
+        object.__setattr__(self, "block_ids", block_ids)
+
+    @property
+    def physical_reservation_extent_bytes(self) -> int:
+        return len(set(self.block_ids)) * self.physical_block_size_bytes
+
+
+@dataclass(frozen=True)
 class AFDStageMetadata:
     """Minimal AFD metadata for simulation.
 
@@ -538,6 +562,7 @@ class Batch(BaseEntity):
         self._is_idle = is_idle
         self._is_moe = is_moe
         self.decode_cuda_graph_metadata: Optional[DecodeCudaGraphMetadata] = None
+        self.cache_block_zeroing: Optional[KVCacheBlockZeroing] = None
         self._request_runtime_epochs = [
             int(getattr(request, "runtime_epoch", 0)) for request in self._requests
         ]

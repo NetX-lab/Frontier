@@ -1,0 +1,474 @@
+[
+ {
+  "case_id": "h800_32",
+  "verification": {
+   "task_id": "D21-RUNS",
+   "case_id": "h800_32",
+   "offline_verified": true,
+   "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage",
+   "source": {
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-priority-runs",
+    "commit": "2033376877ac713670cdd5574b5e95fc00b0cdb4"
+   },
+   "files_verified": 28,
+   "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+   "config_sha256": "df52565282a2ab800577776f581c128406f644f5e27260c3a090f8aa7780cdd8",
+   "runtime_qualification": "UNVERIFIED",
+   "reference_admission": "UNVERIFIED",
+   "resources": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 4,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H800"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": false,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "worker_command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/config.json'"
+  },
+  "dry_run": {
+   "resource_constructor_arguments": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 4,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H800"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": false,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "spawn_arguments": {
+    "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/config.json'",
+    "charged_group": "codesign",
+    "use_image": true,
+    "code_mount_point": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01"
+   }
+  },
+  "verify_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/tests/integration/step5_pd/canonical_stage.py",
+   "verify",
+   "--stage-dir",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage"
+  ],
+  "dry_run_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/tests/integration/step5_pd/submit_native_pd.py",
+   "--config",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/config.json",
+   "--launcher-scope",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/launcher_scope.py",
+   "--dry-run"
+  ],
+  "shell_syntax": "PASS",
+  "python_sources_compiled": 15,
+  "projected_budget_minutes": 60,
+  "projected_budget_gpu_hours": 32,
+  "actual_native_readiness": "UNVERIFIED",
+  "submitted_by_D21_RUNS": false
+ },
+ {
+  "case_id": "h800_64",
+  "verification": {
+   "task_id": "D21-RUNS",
+   "case_id": "h800_64",
+   "offline_verified": true,
+   "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage",
+   "source": {
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-priority-runs",
+    "commit": "90724ba202cc645dd4a118c42ecaefc2c457c8e0"
+   },
+   "files_verified": 36,
+   "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+   "config_sha256": "e672acd7ecd621d692c9904f7b3593bfb9e4a4ec27ee2bb6504c1def6a0f6229",
+   "runtime_qualification": "UNVERIFIED",
+   "reference_admission": "UNVERIFIED",
+   "formal_release": {
+    "status": "NOT_REQUIRED",
+    "reason": "Basic qualification has no accuracy dependency"
+   },
+   "resources": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 8,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H800"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": false,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "worker_command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/config.json'"
+  },
+  "dry_run": {
+   "resource_constructor_arguments": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 8,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H800"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": false,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "spawn_arguments": {
+    "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/config.json'",
+    "charged_group": "codesign",
+    "use_image": true,
+    "code_mount_point": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01"
+   }
+  },
+  "verify_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/tests/integration/step5_pd/canonical_stage.py",
+   "verify",
+   "--stage-dir",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage"
+  ],
+  "dry_run_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/tests/integration/step5_pd/submit_native_pd.py",
+   "--config",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/config.json",
+   "--launcher-scope",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage/launcher_scope.py",
+   "--dry-run"
+  ],
+  "shell_syntax": "PASS",
+  "python_sources_compiled": 22,
+  "projected_budget_minutes": 60,
+  "projected_budget_gpu_hours": 64,
+  "actual_native_readiness": "UNVERIFIED",
+  "submitted_by_D21_RUNS": false
+ },
+ {
+  "case_id": "h200_32",
+  "verification": {
+   "task_id": "D21-RUNS",
+   "case_id": "h200_32",
+   "offline_verified": true,
+   "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage",
+   "source": {
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-priority-runs",
+    "commit": "90724ba202cc645dd4a118c42ecaefc2c457c8e0"
+   },
+   "files_verified": 36,
+   "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+   "config_sha256": "0eea085215543c06e88523b6a48e99decd26aa8f1262180720082ce0dae213d0",
+   "runtime_qualification": "UNVERIFIED",
+   "reference_admission": "UNVERIFIED",
+   "formal_release": {
+    "status": "NOT_REQUIRED",
+    "reason": "Basic qualification has no accuracy dependency"
+   },
+   "resources": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 4,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H200"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": false,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "worker_command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/config.json'"
+  },
+  "dry_run": {
+   "resource_constructor_arguments": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 4,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H200"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": false,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "spawn_arguments": {
+    "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/config.json'",
+    "charged_group": "step_main",
+    "use_image": true,
+    "code_mount_point": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01"
+   }
+  },
+  "verify_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/tests/integration/step5_pd/canonical_stage.py",
+   "verify",
+   "--stage-dir",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage"
+  ],
+  "dry_run_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/tests/integration/step5_pd/submit_native_pd.py",
+   "--config",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/config.json",
+   "--launcher-scope",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage/launcher_scope.py",
+   "--dry-run"
+  ],
+  "shell_syntax": "PASS",
+  "python_sources_compiled": 22,
+  "projected_budget_minutes": 60,
+  "projected_budget_gpu_hours": 32,
+  "actual_native_readiness": "UNVERIFIED",
+  "submitted_by_D21_RUNS": false
+ },
+ {
+  "case_id": "h200_64",
+  "verification": {
+   "task_id": "D21-RUNS",
+   "case_id": "h200_64",
+   "offline_verified": true,
+   "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage",
+   "source": {
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-priority-runs",
+    "commit": "90724ba202cc645dd4a118c42ecaefc2c457c8e0"
+   },
+   "files_verified": 36,
+   "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+   "config_sha256": "cc5f34fe986cd909398950759347c5eb0db213f75da4aef2abef03f21ddcd864",
+   "runtime_qualification": "UNVERIFIED",
+   "reference_admission": "UNVERIFIED",
+   "formal_release": {
+    "status": "NOT_REQUIRED",
+    "reason": "Basic qualification has no accuracy dependency"
+   },
+   "resources": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 8,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H200"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": true,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "worker_command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/config.json'"
+  },
+  "dry_run": {
+   "resource_constructor_arguments": {
+    "cpu": 32,
+    "gpu": 8,
+    "mem_gb": 128,
+    "replica": 8,
+    "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+    "positive_tags": [
+     "H200"
+    ],
+    "extra_requirements": [],
+    "mounts": [
+     "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+    ],
+    "preemptible": true,
+    "envs": {
+     "PYTHONDONTWRITEBYTECODE": "1",
+     "HF_HUB_OFFLINE": "1",
+     "TRANSFORMERS_OFFLINE": "1",
+     "HF_DATASETS_OFFLINE": "1",
+     "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+     "DISTRIBUTED_JOB": "true"
+    },
+    "task_anti_affinities": [
+     "hard/default"
+    ],
+    "command": "{COMMAND}",
+    "task_specs": {
+     "default": {
+      "is_critical": true
+     }
+    }
+   },
+   "spawn_arguments": {
+    "command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/config.json'",
+    "charged_group": "step_main",
+    "use_image": true,
+    "code_mount_point": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01"
+   }
+  },
+  "verify_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/tests/integration/step5_pd/canonical_stage.py",
+   "verify",
+   "--stage-dir",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage"
+  ],
+  "dry_run_command": [
+   "/data/ycfeng/envs/asyncopd-py312/bin/python",
+   "-B",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/tests/integration/step5_pd/submit_native_pd.py",
+   "--config",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/config.json",
+   "--launcher-scope",
+   "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage/launcher_scope.py",
+   "--dry-run"
+  ],
+  "shell_syntax": "PASS",
+  "python_sources_compiled": 22,
+  "projected_budget_minutes": 60,
+  "projected_budget_gpu_hours": 64,
+  "actual_native_readiness": "UNVERIFIED",
+  "submitted_by_D21_RUNS": false
+ }
+]

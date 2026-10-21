@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Mapping, Sequence
 
-from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.model_binding import resolve_attention_head_partition, resolve_runtime_attention_family
 from frontier.operators.families import (
     FFN_FAMILY,
     MEMORY_FAMILY,
@@ -13,7 +13,7 @@ from frontier.operators.families import (
     get_family_profiling_names,
 )
 from frontier.model_architectures import get_model_architecture_profile
-from frontier.operators.spec import TensorParallelMode
+from frontier.operators.spec import OperatorRole, TensorParallelMode
 from frontier.spec_decode.mtp_registry import (
     get_target_embedded_mtp_linear_ops,
     get_target_embedded_mtp_same_tp_linear_ops,
@@ -32,6 +32,11 @@ def _memory_profiling_names(model_config) -> List[str]:
         if (
             operator.name == "post_attention_layernorm"
             and not getattr(model_config, "post_attn_norm", False)
+        ):
+            continue
+        if (
+            operator.role is OperatorRole.RESIDUAL
+            and getattr(model_config, "uses_fused_add_norm", False)
         ):
             continue
         operators.append(operator)
@@ -239,11 +244,21 @@ def _typed_operator_contracts(
             family = get_operator_family(family_id)
             metadata = dict(layer_contract)
             metadata["operator_family_id"] = str(family_id)
+            metadata["operator_family_ids"] = [str(family_id)]
             for operator in family.profiling_ops():
                 if operator.profiling_name() not in producer_names:
                     continue
+                operator_metadata = metadata
+                if operator.tp_mode is TensorParallelMode.REPLICATED:
+                    operator_metadata = _non_layer_contract(
+                        profile_id=profile.profile_id,
+                        family_id=family.family_id,
+                        mode=TensorParallelMode.REPLICATED,
+                        tensor_parallel_sizes=[1],
+                        selected_tensor_parallel_size=1,
+                    )
                 _add_typed_operator_contract(
-                    contracts, operator.profiling_name(), metadata
+                    contracts, operator.profiling_name(), operator_metadata
                 )
 
     normalized_attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
@@ -330,6 +345,10 @@ def build_profiling_plan(
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
 ) -> Dict[str, object]:
+    architecture_profile = get_model_architecture_profile(model_config)
+    # Producer admission is separate from attention execution.
+    attention_linear_ops = architecture_profile.attention_linear_ops
+    attention_linear_ops.require_enabled_for_profiling()
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tp_size must be a positive int, got {tp_size!r}")
     attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
@@ -345,7 +364,7 @@ def build_profiling_plan(
         attn_sharded_enabled = False
         ffn_sharded_enabled = False
     else:
-        attn_sharded_enabled = tp_size in attn_tp_set
+        attn_sharded_enabled = bool(attention_linear_ops.sharded_ops) and tp_size in attn_tp_set
         if attn_sharded_enabled:
             if model_config.embedding_dim % tp_size != 0:
                 attn_sharded_enabled = False
@@ -357,28 +376,15 @@ def build_profiling_plan(
                 skip_reasons.append(
                     f"num_q_heads={model_config.num_q_heads} not divisible by TP={tp_size}"
                 )
-            if model_config.num_kv_heads <= 0:
+            try:
+                resolve_attention_head_partition(model_config.num_kv_heads, tp_size)
+            except ValueError as error:
                 attn_sharded_enabled = False
-                skip_reasons.append(
-                    f"num_kv_heads must be positive, got {model_config.num_kv_heads}"
-                )
-            elif model_config.num_kv_heads >= tp_size:
-                if model_config.num_kv_heads % tp_size != 0:
-                    attn_sharded_enabled = False
-                    skip_reasons.append(
-                        f"num_kv_heads={model_config.num_kv_heads} not divisible by TP={tp_size}"
-                    )
-            else:
-                if tp_size % model_config.num_kv_heads != 0:
-                    attn_sharded_enabled = False
-                    skip_reasons.append(
-                        f"TP={tp_size} must be divisible by num_kv_heads={model_config.num_kv_heads} for KV-head replication"
-                    )
+                skip_reasons.append(str(error))
 
         ffn_sharded_enabled = tp_size in ffn_tp_set
 
     padded_n_embd = model_config.embedding_dim
-    architecture_profile = get_model_architecture_profile(model_config)
     typed_layer_contracts = _typed_layer_contracts(
         model_config,
         profile=architecture_profile,
@@ -427,8 +433,21 @@ def build_profiling_plan(
     attn_enabled = attn_sharded_enabled or replicated_enabled
     ffn_enabled = ffn_sharded_enabled or replicated_enabled
 
-    attention_linear_ops = architecture_profile.attention_linear_ops
     memory_ops = _memory_profiling_names(model_config)
+    shared_operators = [
+        operator
+        for contract in typed_layer_contracts
+        if contract["layer_kind"] == "shared"
+        for family_id in _typed_family_ids(contract)
+        for operator in get_operator_family(family_id).profiling_ops()
+    ]
+    shared_ops = _dedupe_preserving_order([
+        operator.profiling_name() for operator in shared_operators
+    ])
+    shared_replicated_ops = _dedupe_preserving_order([
+        operator.profiling_name() for operator in shared_operators
+        if operator.tp_mode is TensorParallelMode.REPLICATED
+    ])
 
     # MEMORY_FAMILY declaration order keeps the pre-attention normalization
     # ahead of architecture-specific attention projections. Preserve that
@@ -439,6 +458,12 @@ def build_profiling_plan(
     replicated_ops.extend(memory_pre_attention_ops)
     replicated_ops.extend(attention_linear_ops.replicated_ops)
     replicated_ops.extend(memory_post_attention_ops)
+    if (
+        ffn_sharded_enabled
+        and getattr(model_config, "is_moe", False)
+        and _supports_share_expert(model_config)
+    ):
+        replicated_ops.extend(shared_replicated_ops)
     target_embedded_same_tp_ops: List[str] = []
     if include_target_embedded_mtp:
         target_embedded_same_tp_ops.extend(
@@ -469,7 +494,9 @@ def build_profiling_plan(
         if not is_moe:
             enabled_ops.extend(_ffn_profiling_names())
         if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-            enabled_ops.extend(_share_expert_profiling_names())
+            enabled_ops.extend(
+                name for name in shared_ops if name not in shared_replicated_ops
+            )
 
     all_ops: List[str] = []
     all_ops.extend(replicated_ops)
@@ -479,7 +506,7 @@ def build_profiling_plan(
     if not is_moe:
         all_ops.extend(_ffn_profiling_names())
     if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-        all_ops.extend(_share_expert_profiling_names())
+        all_ops.extend(shared_ops)
     # Remove duplicates while preserving order.
     all_ops = list(dict.fromkeys(all_ops))
     enabled_ops = list(dict.fromkeys(enabled_ops))
@@ -512,4 +539,74 @@ def build_profiling_plan(
         "typed_layer_contracts": typed_layer_contracts,
         "typed_operator_contracts": typed_operator_contracts,
         "skip_reasons": skip_reasons,
+    }
+
+
+def build_sequence_parallel_shared_expert_plan(
+    model_config,
+    *,
+    attention_tp_size: int,
+    attention_dp_size: int,
+    expert_parallel_size: int,
+) -> Dict[str, object]:
+    """Plan the shared-expert rows of a sequence-parallel MoE deployment.
+
+    With attention TP > 1, attention DP > 1, EP > 1 and one pipeline stage, an
+    architecture profile that sets ``replicate_shared_expert_in_sequence_parallel``
+    keeps the full shared expert on every rank and gives it only that rank's
+    token slice. The rows are measured at TP=1 and carry the replicated typed
+    contract that ``resolve_layer_contract`` selects for that topology.
+    """
+
+    profile = model_config.get_model_architecture_profile()
+    if not profile.replicate_shared_expert_in_sequence_parallel:
+        raise ValueError(
+            f"profile {profile.profile_id!r} does not replicate the shared expert "
+            "under sequence-parallel MoE"
+        )
+    if not (getattr(model_config, "is_moe", False) and _supports_share_expert(model_config)):
+        raise ValueError("sequence-parallel shared-expert rows require an MoE model with a shared expert")
+    operator_names = _share_expert_profiling_names()
+    contracts: Dict[str, Dict[str, object]] = {}
+    for operator_name in operator_names:
+        resolved = profile.resolve_layer_contract(
+            model_config,
+            operator_name=operator_name,
+            attention_tp_size=attention_tp_size,
+            attention_dp_size=attention_dp_size,
+            expert_parallel_size=expert_parallel_size,
+            num_pipeline_stages=1,
+        )
+        if resolved.tensor_parallel_mode is not TensorParallelMode.REPLICATED:
+            raise ValueError(
+                f"{operator_name} resolves to {resolved.tensor_parallel_mode.value} for "
+                f"attention TP={attention_tp_size}, DP={attention_dp_size}, "
+                f"EP={expert_parallel_size}; sequence-parallel replication needs "
+                "attention TP > 1, attention DP > 1 and EP > 1"
+            )
+        contracts[operator_name] = resolved.typed_metadata_identity()
+    widths = {contract["selected_padded_ffn_width"] for contract in contracts.values()}
+    if len(widths) != 1:
+        raise ValueError(f"shared-expert operators resolve to different widths {sorted(widths)}")
+    return {
+        "tp_size": 1,
+        "attn_enabled": False,
+        "ffn_enabled": True,
+        "attn_sharded_enabled": False,
+        "ffn_sharded_enabled": True,
+        "replicated_enabled": False,
+        "disable_replicated": True,
+        "enabled_ops": operator_names,
+        "disabled_ops": [],
+        "replicated_ops": [],
+        "padded_n_embd": model_config.embedding_dim,
+        "padded_n_expanded_embd": widths.pop(),
+        "typed_layer_contracts": [],
+        "typed_operator_contracts": contracts,
+        "skip_reasons": [],
+        "sequence_parallel_moe_topology": {
+            "attention_tp_size": attention_tp_size,
+            "attention_dp_size": attention_dp_size,
+            "expert_parallel_size": expert_parallel_size,
+        },
     }

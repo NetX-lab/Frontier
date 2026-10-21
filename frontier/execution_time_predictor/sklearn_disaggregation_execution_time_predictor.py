@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from enum import Enum
 from dataclasses import dataclass
 from frontier.logger import init_logger
+from frontier.attention.families import STEP5_ATTENTION_FAMILY
 from frontier.model_architectures import (
     ModelArchitectureProfile,
     ResidualAddPolicy,
@@ -1373,6 +1374,18 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
 
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError("num_layers must be a positive int")
+        if (
+            self._model_config.get_layer_attention_spec(layer_id).family_id
+            == STEP5_ATTENTION_FAMILY.family_id
+        ):
+            # PREFILL and unified DECODE run complete Step layers, so they keep
+            # the co-location structural pricing. The Step role guard rejects
+            # every other role at construction.
+            return super().predict_stage_execution_time(
+                batch, stage_id, cluster_type, num_layers=num_layers,
+                layer_id=layer_id, include_moe=include_moe,
+                include_ffn=include_ffn, include_attention=include_attention,
+            )
         if (
             not self._model_config.is_moe
             and include_moe is not True

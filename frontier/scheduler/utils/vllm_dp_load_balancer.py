@@ -1,18 +1,20 @@
 """vLLM V1 internal DP selection and coordinator count publication.
 
-Reference: vLLM v0.10.2, `vllm/v1/engine/core_client.py` (the frontend's engine
-selection) and `vllm/v1/engine/coordinator.py` (the coordinator's count
-publication). Every constant below is cited against that source.
+References: vLLM v0.10.2 and the explicitly selected v0.28.0 internal policy in
+`vllm/v1/engine/core_client.py`; publication uses the existing coordinator
+contract from `vllm/v1/engine/coordinator.py`.
 
 What is modeled: which engine a request is routed to, given counts the frontend
 observes with a delay, and when the coordinator publishes a new snapshot of
 those counts. What is not modeled: IPC transport latency, more than one
-frontend, elastic scaling, and the coordinator's warm-start publication phase.
+frontend execution, elastic scaling, and the coordinator's warm-start publication phase.
 
 Timers advance lazily. This object creates no events, so it cannot keep a
 drained simulation alive; a deadline that has passed is applied the next time
 the balancer is consulted.
 """
+
+from collections.abc import Iterable
 
 from frontier.logger import init_logger
 from frontier.scheduler.request_load import RequestLoad
@@ -21,6 +23,10 @@ logger = init_logger(__name__)
 
 # `score = waiting * 4 + running` (reference `core_client.py:1146`).
 WAITING_SCORE_WEIGHT = 4
+# v0.28.0 `core_client.py:1503-1507` ramps the waiting penalty from zero at
+# half-full KV capacity to three times waiting at full capacity.
+KV_PRESSURE_THRESHOLD = 0.5
+KV_PRESSURE_WAITING_WEIGHT = 6.0
 # `wait_for = stats_update_interval_ms if stats_changed else 5000`
 # (reference `coordinator.py:195-198`), whose default is 100
 # (`coordinator.py:116`, `:122`, `:130`).
@@ -41,7 +47,17 @@ class VllmDPLoadBalancer:
     `self.lb_engines = sliced_counts`.
     """
 
-    def __init__(self, num_engines: int):
+    def __init__(
+        self, num_engines: int, *, policy_version: str = "v0.10.2",
+        client_count: int = 1, client_index: int = 0,
+    ):
+        if client_count < 1 or not 0 <= client_index < client_count:
+            raise ValueError("DP client_index must be in [0, client_count), client_count > 0")
+        self.policy_version = policy_version
+        self.client_count = client_count
+        self.request_owners: dict[int, int] = {}
+        self.engine_inflight = [0] * num_engines
+        self.eng_start_index = num_engines * client_index // client_count
         self.engine_counts = [RequestLoad(0, 0) for _ in range(num_engines)]
         self.frontend_counts = list(self.engine_counts)
         self.last_step_counts: list[RequestLoad] | None = None
@@ -133,23 +149,56 @@ class VllmDPLoadBalancer:
         self.stats_changed = True
         self.next_publish_ms = self._poll_deadline(now_ms)
 
-    def select(self, time: float) -> int:
-        """Choose the first minimum-score engine and reserve local waiting load.
+    def select(self, time: float, request_id: int | None = None) -> int:
+        """Choose a minimum-score engine and reserve local waiting load.
 
-        The reference scans from the frontend's own start index with a strict
-        `<`, so the lowest-index minimum wins, then increments that engine's
-        waiting estimate by the frontend count (`core_client.py:1139-1153`).
-        One modeled frontend means that reservation is exactly one request.
+        The legacy policy keeps the lowest-index tie. v0.28 rotates the scan
+        and retains each assigned request until terminal output; snapshot
+        replacement cannot erase that client's unfinished-request floor.
         """
 
+        if self.policy_version == "v0.28.0" and request_id is None:
+            raise ValueError("v0.28.0 DP selection requires request_id")
+        if request_id in self.request_owners:
+            # Native streaming-input affinity neither reserves nor rotates again.
+            return self.request_owners[request_id]
         self._advance(time)
-        engine = min(
-            range(len(self.frontend_counts)),
-            key=lambda index: (
-                WAITING_SCORE_WEIGHT * self.frontend_counts[index].waiting
-                + self.frontend_counts[index].running
-            ),
-        )
+        if self.policy_version == "v0.28.0":
+            num_engines = len(self.frontend_counts)
+            engine = min(
+                ((self.eng_start_index + i) % num_engines for i in range(num_engines)),
+                key=self._v028_score,
+            )
+            self.eng_start_index = (self.eng_start_index + 1) % num_engines
+            self.request_owners[request_id] = engine
+            self.engine_inflight[engine] += 1
+        else:
+            engine = min(
+                range(len(self.frontend_counts)),
+                key=lambda index: (
+                    WAITING_SCORE_WEIGHT * self.frontend_counts[index].waiting
+                    + self.frontend_counts[index].running
+                ),
+            )
         load = self.frontend_counts[engine]
-        self.frontend_counts[engine] = RequestLoad(load.waiting + 1, load.running)
+        self.frontend_counts[engine] = RequestLoad(
+            load.waiting + (self.client_count if self.policy_version == "v0.28.0" else 1),
+            load.running, load.kv_cache_usage,
+        )
         return engine
+
+    def _v028_score(self, engine: int) -> float:
+        load = self.frontend_counts[engine]
+        return max(self.client_count * self.engine_inflight[engine], load.waiting + load.running) + (
+            load.waiting
+            * KV_PRESSURE_WAITING_WEIGHT
+            * max(0.0, load.kv_cache_usage - KV_PRESSURE_THRESHOLD)
+        )
+
+    def finish_requests(self, request_ids: Iterable[int]) -> None:
+        """Apply terminal output IDs once, including finished-only output."""
+
+        for request_id in request_ids:
+            engine = self.request_owners.pop(request_id, None)
+            if engine is not None:
+                self.engine_inflight[engine] -= 1

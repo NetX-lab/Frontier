@@ -36,6 +36,10 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default="./data/profiling/network/{NETWORK_DEVICE}/send_recv.csv",
         metadata={"help": "Path to the send recv input file."},
     )
+    nixl_read_profile: Optional[str] = field(
+        default=None,
+        metadata={"help": "Explicit NIXL prefix geometry and READ-to-GPU-ready cost JSON; required for grouped measured NIXL."},
+    )
     cpu_overhead_input_file: str = field(
         default="./data/profiling/cpu_overhead/{NETWORK_DEVICE}/{MODEL}/cpu_overheads.csv",
         metadata={"help": "Path to the cpu overhead input file."},

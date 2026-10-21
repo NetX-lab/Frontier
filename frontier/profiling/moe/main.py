@@ -25,6 +25,8 @@ Multi-GPU modes:
 
 from __future__ import annotations
 
+import itertools
+import json
 import os
 import sys
 import argparse
@@ -72,6 +74,10 @@ from frontier.profiling.utils import (
     require_profiling_dependencies,
 )
 from frontier.profiling.moe.moe_input import resolve_moe_expert_parallel_sizes
+from frontier.profiling.moe.routed_layer_groups import (
+    RoutedLayerGroup,
+    resolve_routed_layer_groups,
+)
 
 MoEWrapper = None
 
@@ -157,6 +163,7 @@ def _worker_profile_task(
         gating_runtime_context=wrapper_args.get(
             "gating_runtime_context", DEFAULT_MOE_GATING_RUNTIME_CONTEXT
         ),
+        routed_layer_group=wrapper_args["routed_layer_group"],
     )
 
     result = wrapper.profile(
@@ -349,7 +356,24 @@ def parse_args():
             "prefill_hot enables a prefill-only hot-context prefix before timing."
         ),
     )
+    parser.add_argument(
+        "--source_revision",
+        default=None,
+        help="Frontier source revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--model_config_revision",
+        default=None,
+        help="Upstream model config revision; attaches runtime identity columns.",
+    )
+    parser.add_argument(
+        "--dry_run",
+        action="store_true",
+        help="Print the profiling grid as JSON and exit without torch or GPUs.",
+    )
     args = parser.parse_args()
+    if (args.source_revision is None) != (args.model_config_revision is None):
+        parser.error("--source_revision and --model_config_revision must be given together")
     args.profile_method = normalize_profile_method(args.profile_method)
 
     return args, args.enable_load_imbalance
@@ -551,17 +575,29 @@ def _get_moe_cases_per_parallel_point(args: argparse.Namespace) -> int:
     return len(args.load_distributions) * args.num_samples_per_distribution
 
 
+def _routed_layer_groups_to_profile(
+    model_config: ModelConfig,
+) -> Tuple[Optional[RoutedLayerGroup], ...]:
+    """Return the routed layer groups measured separately.
+
+    ``None`` stands for the single model-wide setting of a model without groups.
+    """
+    return resolve_routed_layer_groups(model_config) or (None,)
+
+
 def _count_moe_configurations(
     *,
     num_tokens_count: int,
     tensor_parallel_count: int,
     expert_parallel_count: int,
+    routed_layer_group_count: int,
     cases_per_parallel_point: int,
 ) -> int:
     return (
         num_tokens_count
         * tensor_parallel_count
         * expert_parallel_count
+        * routed_layer_group_count
         * cases_per_parallel_point
     )
 
@@ -602,12 +638,19 @@ def _build_moe_confirmation_sections(
     for model in args.models:
         model_config = model_configs[model]
         ep_sizes = resolved_ep_sizes_by_model[model]
+        layer_groups = _routed_layer_groups_to_profile(model_config)
         model_configurations = _count_moe_configurations(
             num_tokens_count=num_tokens_count,
             tensor_parallel_count=len(args.num_tensor_parallel_workers),
             expert_parallel_count=len(ep_sizes),
+            routed_layer_group_count=len(layer_groups),
             cases_per_parallel_point=cases_per_parallel_point,
         )
+        layer_group_text = ""
+        if layer_groups != (None,):
+            layer_group_text = (
+                f"routed layer groups={[group.layer_range for group in layer_groups]}; "
+            )
         total_configurations += model_configurations
         _, model_precision = _resolve_precision_for_model(
             model_config,
@@ -618,7 +661,7 @@ def _build_moe_confirmation_sections(
             (
                 model,
                 f"{model_config.num_experts} experts; EP={ep_sizes}; "
-                f"precision={model_precision}; "
+                f"precision={model_precision}; {layer_group_text}"
                 f"{model_configurations:,} configurations",
             )
         )
@@ -690,6 +733,7 @@ def profile_model(
         model_config.num_experts,
         args.expert_parallel_sizes,
     )
+    routed_layer_groups = _routed_layer_groups_to_profile(model_config)
 
     all_results = []
     measurement_type = profile_method_to_measurement_type(args.profile_method).value
@@ -733,6 +777,7 @@ def profile_model(
                     num_tokens_count=len(num_tokens_to_profile),
                     tensor_parallel_count=1,
                     expert_parallel_count=len(expert_parallel_sizes),
+                    routed_layer_group_count=len(routed_layer_groups),
                     cases_per_parallel_point=cases_per_parallel_point,
                 )
             )
@@ -744,7 +789,9 @@ def profile_model(
             result["measurement_type"] = measurement_type
             all_results.append(result)
 
-        for expert_parallel_size in expert_parallel_sizes:
+        for expert_parallel_size, routed_layer_group in itertools.product(
+            expert_parallel_sizes, routed_layer_groups
+        ):
             # Validate EP size
             if model_config.num_experts % expert_parallel_size != 0:
                 raise ValueError(
@@ -779,6 +826,7 @@ def profile_model(
                 "use_fp8": resolved_use_fp8,
                 "per_channel_quant": args.per_channel_quant,
                 "block_shape": resolved_block_shape,
+                "routed_layer_group": routed_layer_group,
             }
             if hasattr(args, "routing_runtime_path"):
                 wrapper_args["routing_runtime_path"] = args.routing_runtime_path
@@ -808,8 +856,12 @@ def profile_model(
                         ray_wrapper_init_args.append(args.routing_runtime_path)
                     if hasattr(args, "gating_runtime_context"):
                         ray_wrapper_init_args.append(args.gating_runtime_context)
+                    # Ray appends positional init args, so the group goes by keyword.
                     model_wrappers.append(
-                        moe_wrapper_actor.remote(*ray_wrapper_init_args)
+                        moe_wrapper_actor.remote(
+                            *ray_wrapper_init_args,
+                            routed_layer_group=routed_layer_group,
+                        )
                     )
 
                 for test_case in test_cases:
@@ -874,6 +926,7 @@ def profile_model(
                     "use_fp8": resolved_use_fp8,
                     "per_channel_quant": args.per_channel_quant,
                     "block_shape": resolved_block_shape,
+                    "routed_layer_group": routed_layer_group,
                 }
                 if hasattr(args, "routing_runtime_path"):
                     wrapper_kwargs["routing_runtime_path"] = args.routing_runtime_path
@@ -919,6 +972,77 @@ def profile_model(
     return df
 
 
+MOE_SCHEMA_VERSION = "moe.v1"
+
+
+def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict[str, Any]:
+    cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
+    models = {}
+    for model in args.models:
+        model_config = ModelConfig.from_model_name(model)
+        if not model_config.is_moe:
+            raise ValueError(f"Model {model} is not a MoE model (is_moe=False)")
+        use_fp8, block_shape = _resolve_fp8_settings(
+            model_config, args.use_fp8, args.block_shape, model
+        )
+        expert_parallel_sizes = resolve_moe_expert_parallel_sizes(
+            model_config.num_experts, args.expert_parallel_sizes
+        )
+        routed_layer_groups = _routed_layer_groups_to_profile(model_config)
+        models[model] = {
+            "num_experts": model_config.num_experts,
+            "num_experts_per_tok": model_config.num_experts_per_tok,
+            "hidden_dim": model_config.embedding_dim,
+            "use_fp8": use_fp8,
+            "block_shape": block_shape,
+            "local_experts_by_expert_parallel_size": {
+                str(size): model_config.num_experts // size for size in expert_parallel_sizes
+            },
+            "tensor_parallel_sizes": list(args.num_tensor_parallel_workers),
+            "routed_layer_groups": [
+                group.row_metadata()
+                for group in routed_layer_groups
+                if group is not None
+            ],
+            "profiled_steps": _count_moe_configurations(
+                num_tokens_count=len(num_tokens_to_profile),
+                tensor_parallel_count=len(args.num_tensor_parallel_workers),
+                expert_parallel_count=len(expert_parallel_sizes),
+                routed_layer_group_count=len(routed_layer_groups),
+                cases_per_parallel_point=cases_per_parallel_point,
+            ),
+        }
+    return {
+        "profile_method": args.profile_method,
+        "load_distributions": (
+            list(args.load_distributions) if args.enable_load_imbalance else ["uniform"]
+        ),
+        "cases_per_parallel_point": cases_per_parallel_point,
+        "num_tokens": list(num_tokens_to_profile),
+        "models": models,
+    }
+
+
+def _attach_runtime_identity(
+    df: pd.DataFrame, args: argparse.Namespace, model: str, quant_signature: str
+) -> pd.DataFrame:
+    from frontier.profiling.common.runtime_identity import (
+        attach_identity_columns,
+        measure_runtime_identity,
+    )
+
+    identity = measure_runtime_identity(
+        model_name=model,
+        source_revision=args.source_revision,
+        model_config_revision=args.model_config_revision,
+        schema_version=MOE_SCHEMA_VERSION,
+        quant_signature=quant_signature,
+        parallel_groups={"engine_tensor_parallel": 1},
+        graph_mode="eager",
+    )
+    return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
+
+
 def _get_available_gpus(num_gpus: int) -> List[int]:
     """Discover GPUs without initializing torch in the parent process."""
     return get_available_gpu_ids(num_gpus)
@@ -926,6 +1050,14 @@ def _get_available_gpus(num_gpus: int) -> List[int]:
 
 def main():
     args, use_vllm_kernel_default = parse_args()
+    if args.dry_run:
+        num_tokens_to_profile = get_num_tokens_to_profile(
+            args.max_tokens,
+            extra_num_tokens=args.extra_num_tokens,
+            num_tokens_list=args.num_tokens_list,
+        )
+        print(json.dumps(_dry_run(args, num_tokens_to_profile), indent=2))
+        return
     require_profiling_dependencies("moe", ("torch", "vllm", "triton"))
     ray_initialized_by_main = False
 
@@ -1026,6 +1158,9 @@ def main():
                 num_tokens_count=len(num_tokens_to_profile),
                 tensor_parallel_count=len(args.num_tensor_parallel_workers),
                 expert_parallel_count=len(resolved_ep_sizes_by_model[model]),
+                routed_layer_group_count=len(
+                    _routed_layer_groups_to_profile(model_configs[model])
+                ),
                 cases_per_parallel_point=cases_per_parallel_point,
             )
             for model in args.models
@@ -1067,6 +1202,10 @@ def main():
                     args.profile_method
                 ).value,
             )
+            if args.source_revision is not None:
+                result_df = _attach_runtime_identity(
+                    result_df, args, model, quant_signature
+                )
             result_df.to_csv(output_file, index=False)
             print(f"✓ Saved MoE profiling data to: {output_file}")
     finally:

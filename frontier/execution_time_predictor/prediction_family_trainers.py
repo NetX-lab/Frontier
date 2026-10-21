@@ -64,6 +64,7 @@ from frontier.moe_routing_runtime import (
 from frontier.operators.families import (
     FFN_FAMILY,
     SHARE_EXPERT_FAMILY,
+    STEP5_FFN_FAMILY,
     get_family_profiling_names,
 )
 from frontier.profiling.cpu_overhead.validation import cpu_overhead_feature_columns, cpu_overhead_model_names
@@ -79,6 +80,46 @@ logger = init_logger(__name__)
 
 class PredictionFamilyTrainers(KernelCountTraining):
     """Per-family model training for the execution-time predictor."""
+
+    def _train_step5_input_layernorm_for_cluster(
+        self, cluster_type, replica_config, execution_time_predictor_config,
+        linear_ops_file: str, trained_model_signatures: set,
+    ) -> Dict[str, BaseEstimator]:
+        """Fit the outside-root norm and explicitly measured optional stage scopes."""
+        config = replica_config.model_config
+        if _resolve_model_architecture_profile_id(config) != "step5":
+            raise ValueError("Step input normalization requires the Step architecture profile")
+        tp_size = self._get_linear_op_tp_key("input_layernorm", cluster_type, replica_config, config.is_moe)
+        signature = ("step5_input_layernorm", replica_config.device, config.get_quant_signature(),
+                     self._active_measurement_type, linear_ops_file, tp_size)
+        if signature in trained_model_signatures:
+            return {}
+        frame = self._load_linear_op_df(
+            linear_ops_file, tp_size, required_columns=["time_stats.input_layernorm.median"],
+        )
+        context = {
+            "cluster_type": str(cluster_type), "device": replica_config.device,
+            "model_name": replica_config.model_name, "model_architecture_profile": "step5",
+            "input_file": linear_ops_file, "tensor_parallel_size": tp_size,
+            "step5_generic_compute": config,
+        }
+        from frontier.execution_time_predictor.step5 import (
+            STEP5_STAGE_BOUNDARY_NAMES, step5_operator_training_rows,
+        )
+
+        names = ["input_layernorm", *(name for name in STEP5_STAGE_BOUNDARY_NAMES
+                                     if f"time_stats.{name}.median" in frame)]
+        # Validate optional explicit targets before publishing any part of this fit.
+        for name in names:
+            step5_operator_training_rows(name, frame, context, self._active_measurement_type)
+        models = {
+            name: self._train_single_model(
+                name, frame, ["num_tokens"], f"time_stats.{name}.median",
+                execution_time_predictor_config, training_context=context,
+            ) for name in names
+        }
+        trained_model_signatures.add(signature)
+        return models
 
     def _train_ffn_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config,
                                         linear_ops_file: str, moe_file: str,
@@ -139,6 +180,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'model_architecture_profile': architecture_profile_id,
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
+        if architecture_profile_id == "step5":
+            training_context["step5_generic_compute"] = model_config
 
         # Choose input file based on model type
         if is_moe_model:
@@ -496,6 +539,17 @@ class PredictionFamilyTrainers(KernelCountTraining):
             trained_model_signatures.add(layernorm_signature)
             logger.info(f"Trained {layernorm_model_name} for {cluster_type}")
 
+        if architecture_profile_id == "step5":
+            for name in get_family_profiling_names(STEP5_FFN_FAMILY):
+                signature = f"{name}_{ffn_signature}"
+                if signature in trained_model_signatures:
+                    continue
+                models[name] = self._train_single_model(
+                    name, linear_ops_df, ["num_tokens"], f"time_stats.{name}.median",
+                    execution_time_predictor_config, training_context=layernorm_context,
+                )
+                trained_model_signatures.add(signature)
+
         # Mark this FFN configuration as trained
         trained_model_signatures.add(ffn_signature)
         return models
@@ -617,6 +671,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
         tp_size = replica_config.attn_tensor_parallel_size
 
         model_config = replica_config.model_config
+        if model_config is not None:
+            resolve_runtime_attention_family(model_config).require_enabled_for_execution()
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
         architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
         attention_signature = (
@@ -625,7 +681,9 @@ class PredictionFamilyTrainers(KernelCountTraining):
             f"_family{self._measurement_family_name(self._active_measurement_type)}"
         )
 
-        if attention_signature in trained_model_signatures:
+        is_step5 = (model_config is not None
+                    and resolve_runtime_attention_family(model_config).family_id == "step5_attention")
+        if not is_step5 and attention_signature in trained_model_signatures:
             logger.info(f"Skipping attention models training for {cluster_type} - already trained")
             return models
 
@@ -640,6 +698,30 @@ class PredictionFamilyTrainers(KernelCountTraining):
             'model_architecture_profile': architecture_profile_id,
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
+
+        if is_step5:
+            from frontier.execution_time_predictor.step5 import (
+                load_step5_attention_input_union, train_step5_attention_models,
+            )
+
+            attention_df, fit_config = load_step5_attention_input_union(
+                self, cluster_type, replica_config, replica_scheduler_config,
+                execution_time_predictor_config, attn_file, self._active_measurement_type,
+            )
+            union_hash = self._get_model_hash(
+                "step5_layer_e2e", attention_df, fit_config,
+                self._get_profiling_precision_from_df(attention_df), self._active_measurement_type,
+            )
+            attention_signature = f"{attention_signature}_inputs{union_hash}"
+            if attention_signature in trained_model_signatures:
+                return models
+            inputs = attention_df.attrs["measurement_identity"].get("attention_inputs")
+            training_context["input_file"] = [source["path"] for source in inputs] if inputs else attn_file
+            models = train_step5_attention_models(
+                self, attention_df, fit_config, training_context,
+            )
+            trained_model_signatures.add(attention_signature)
+            return models
 
         # ========== Part 1: Linear operations from linear_op.csv ==========
         # These include: input_layernorm, attn_pre_proj, attn_post_proj, attn_rope
@@ -1522,26 +1604,46 @@ class PredictionFamilyTrainers(KernelCountTraining):
             training_context,
             explicit_layer_contract=layer_contract,
         )
-        fit = functools.partial(
-            self._fit_single_model,
-            execution_time_predictor_config=execution_time_predictor_config,
-            training_context=training_context,
-            persist_exact_lookup=persist_exact_lookup,
-            layer_contract=layer_contract,
-        )
-        model, profiling_precision = fit(model_name, df, feature_cols, target_col)
-        self._store_model_precision(
-            model_name,
-            profiling_precision,
-            model,
-            **_layer_contract_kwargs(layer_contract),
-        )
-        if not count_kernels:
-            return model
-        return self._paired_with_kernel_count_model(
-            model, model_name, df, feature_cols, target_col,
-            train=lambda *count_model_args: fit(*count_model_args)[0],
-        )
+        frames = [(df, training_context)]
+        step5_compute = training_context.get("step5_generic_compute")
+        if step5_compute is not None:
+            from frontier.execution_time_predictor.step5 import (
+                STEP5_STAGE_BOUNDARY_NAMES, step5_operator_training_rows,
+            )
+
+            frames = step5_operator_training_rows(
+                model_name, df, training_context, self._active_measurement_type,
+            )
+        for frame, context in frames:
+            fit = functools.partial(
+                self._fit_single_model,
+                execution_time_predictor_config=execution_time_predictor_config,
+                training_context=context,
+                persist_exact_lookup=persist_exact_lookup,
+                layer_contract=layer_contract,
+            )
+            model, profiling_precision = fit(model_name, frame, feature_cols, target_col)
+            self._store_model_precision(
+                model_name, profiling_precision, model, **_layer_contract_kwargs(layer_contract),
+            )
+            if not count_kernels:
+                continue
+            if step5_compute is not None and (self._active_measurement_type is MeasurementType.KERNEL_ONLY
+                                             or model_name in STEP5_STAGE_BOUNDARY_NAMES):
+                count_name = f"{model_name}_kernel_count"
+                count_target = f"time_stats.{model_name}.kernel_count"
+                count_model, count_precision = fit(count_name, frame, feature_cols, count_target)
+                self._store_model_precision(
+                    count_name, count_precision, count_model, **_layer_contract_kwargs(layer_contract),
+                )
+                count_model._frontier_operator_name = model_name
+                model._frontier_kernel_count_model = count_model
+            else:
+                model = self._paired_with_kernel_count_model(
+                    model, model_name, frame, feature_cols, target_col,
+                    train=lambda *count_model_args: fit(*count_model_args)[0],
+                )
+        return model
 
     def _fit_single_model(
         self,
@@ -1609,6 +1711,12 @@ class PredictionFamilyTrainers(KernelCountTraining):
         )
         cached_model = self._load_model_from_cache(model_name, model_hash)
         if cached_model is not None:
+            if training_context and "measurement_identity" in training_context:
+                self._validate_cached_measurement_identity(
+                    model_name=model_name, model=cached_model,
+                    requested_identity=training_context["measurement_identity"],
+                )
+                cached_model._frontier_cache_model_name = model_name
             if layer_contract is not None:
                 requested_identity = _serialize_selected_layer_cache_identity(
                     layer_contract
@@ -1720,6 +1828,18 @@ class PredictionFamilyTrainers(KernelCountTraining):
         setattr(best_estimator, "_frontier_model_hash", model_hash)
         if layer_contract is not None:
             self._model_contract_identity(best_estimator, layer_contract)
+
+        if training_context and "measurement_identity" in training_context:
+            self._set_measurement_identity(best_estimator, training_context["measurement_identity"])
+            best_estimator._frontier_cache_model_name = model_name
+        if training_context and training_context.get("step5_training"):
+            from frontier.execution_time_predictor.step5 import set_step5_model_coverage
+
+            set_step5_model_coverage(best_estimator, df)
+        if training_context and training_context.get("step5_stage_boundary"):
+            best_estimator._frontier_feature_bounds = {
+                name: (float(df[name].min()), float(df[name].max())) for name in feature_cols
+            }
 
         if persist_exact_lookup:
             setattr(

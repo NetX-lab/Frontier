@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from frontier.attention.model_binding import (
     resolve_runtime_attention_family,
     resolve_attention_topology,
+    resolve_attention_head_partition,
 )
 from frontier.attention.gdn import (
     GatedDeltaNetConfig,
@@ -20,7 +21,9 @@ from frontier.config.model_config import (
     _infer_attn_output_gate_from_hf_config,
     _infer_share_expert_dim_from_hf_config,
     _infer_use_qk_norm_from_hf_config,
+    _normalize_hf_text_config,
 )
+from frontier.config.utils import dataclass_to_dict
 from frontier.model_architectures import get_model_architecture_profile
 from frontier.profiling.common.parallel_config import ParallelConfig
 from frontier.types import ActivationType, NormType
@@ -73,6 +76,46 @@ class ModelConfig:
         qk_rope_head_dim: Optional[int] = None,
         qk_head_dim: Optional[int] = None,
         v_head_dim: Optional[int] = None,
+        index_topk: Optional[int] = None,
+        index_n_heads: Optional[int] = None,
+        index_head_dim: Optional[int] = None,
+        index_topk_freq: Optional[int] = None,
+        index_topk_pattern: Optional[str] = None,
+        index_skip_topk_offset: Optional[int] = None,
+        indexer_rope_interleave: Optional[bool] = None,
+        compress_ratios: Optional[tuple[int, ...] | list[int]] = None,
+        sliding_window: Optional[int] = None,
+        num_hash_layers: Optional[int] = None,
+        hc_mult: Optional[int] = None,
+        hc_sinkhorn_iters: Optional[int] = None,
+        hc_eps: Optional[float] = None,
+        o_groups: Optional[int] = None,
+        o_lora_rank: Optional[int] = None,
+        compress_rope_theta: Optional[float] = None,
+        swiglu_limit: Optional[float] = None,
+        expert_dtype: Optional[str] = None,
+        vision_config: Optional[Dict[str, Any]] = None,
+        projector_bias: Optional[bool] = None,
+        sparse_config: Optional[Dict[str, Any]] = None,
+        attention_other_setting: Optional[Dict[str, Any]] = None,
+        att_impl_type: Optional[str] = None,
+        num_nextn_predict_layers: Optional[int] = None,
+        mtp_layer_types: Optional[tuple[str, ...]] = None,
+        layer_rope_thetas: Optional[tuple[float, ...]] = None,
+        partial_rotary_factors: Optional[tuple[float, ...]] = None,
+        swiglu_limits: Optional[tuple[float, ...]] = None,
+        swiglu_limits_shared: Optional[tuple[float, ...]] = None,
+        norm_dtype: Optional[str] = None,
+        fp32_residual_connection: Optional[bool] = None,
+        need_fp32_gate: Optional[bool] = None,
+        use_moe_router_bias: Optional[bool] = None,
+        moe_router_activation: Optional[str] = None,
+        moe_router_scaling_factor: Optional[float] = None,
+        zero_centered: Optional[bool] = None,
+        yarn_only_types: Optional[tuple[str, ...]] = None,
+        use_rope_layers: Optional[tuple[bool, ...]] = None,
+        swa_num_attention_heads: Optional[int] = None,
+        norm_expert_weight: bool = False,
         layer_types: Optional[tuple[str, ...] | list[str]] = None,
         full_attention_interval: Optional[int] = None,
         linear_conv_kernel_dim: Optional[int] = None,
@@ -84,11 +127,15 @@ class ModelConfig:
         # Quantization config for metadata tracking
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
-        tie_word_embeddings: bool = True,
+        tie_word_embeddings: Optional[bool] = True,
         # Typed FFN widths. Keep the legacy scalar for compatibility while
         # preserving dense and routed domains independently.
         dense_mlp_hidden_dim: Optional[int] = None,
         routed_mlp_hidden_dim: Optional[int] = None,
+        topk_method: Optional[str] = None,
+        scoring_func: Optional[str] = None,
+        norm_topk_prob: Optional[bool] = None,
+        routed_scaling_factor: Optional[float] = None,
     ):
         self.name = name
         self.num_layers = num_layers
@@ -165,6 +212,52 @@ class ModelConfig:
         self.qk_rope_head_dim = qk_rope_head_dim
         self.qk_head_dim = qk_head_dim
         self.v_head_dim = v_head_dim
+        self.index_topk = index_topk
+        self.index_n_heads = index_n_heads
+        self.index_head_dim = index_head_dim
+        self.index_topk_freq = index_topk_freq
+        self.index_topk_pattern = index_topk_pattern
+        self.index_skip_topk_offset = index_skip_topk_offset
+        self.indexer_rope_interleave = indexer_rope_interleave
+        self.topk_method = topk_method
+        self.scoring_func = scoring_func
+        self.norm_topk_prob = norm_topk_prob
+        self.routed_scaling_factor = routed_scaling_factor
+        self.compress_ratios = (
+            tuple(compress_ratios) if compress_ratios is not None else None
+        )
+        self.sliding_window = sliding_window
+        self.num_hash_layers = num_hash_layers
+        self.hc_mult = hc_mult
+        self.hc_sinkhorn_iters = hc_sinkhorn_iters
+        self.hc_eps = hc_eps
+        self.o_groups = o_groups
+        self.o_lora_rank = o_lora_rank
+        self.compress_rope_theta = compress_rope_theta
+        self.swiglu_limit = swiglu_limit
+        self.expert_dtype = expert_dtype
+        self.vision_config = vision_config
+        self.projector_bias = projector_bias
+        self.sparse_config = sparse_config
+        self.attention_other_setting = attention_other_setting
+        self.att_impl_type = att_impl_type
+        self.num_nextn_predict_layers = num_nextn_predict_layers
+        self.mtp_layer_types = tuple(mtp_layer_types) if mtp_layer_types is not None else None
+        self.layer_rope_thetas = tuple(layer_rope_thetas) if layer_rope_thetas is not None else None
+        self.partial_rotary_factors = tuple(partial_rotary_factors) if partial_rotary_factors is not None else None
+        self.swiglu_limits = tuple(swiglu_limits) if swiglu_limits is not None else None
+        self.swiglu_limits_shared = tuple(swiglu_limits_shared) if swiglu_limits_shared is not None else None
+        self.norm_dtype = norm_dtype
+        self.fp32_residual_connection = fp32_residual_connection
+        self.need_fp32_gate = need_fp32_gate
+        self.use_moe_router_bias = use_moe_router_bias
+        self.moe_router_activation = moe_router_activation
+        self.moe_router_scaling_factor = moe_router_scaling_factor
+        self.zero_centered = zero_centered
+        self.yarn_only_types = tuple(yarn_only_types) if yarn_only_types is not None else None
+        self.use_rope_layers = tuple(use_rope_layers) if use_rope_layers is not None else None
+        self.swa_num_attention_heads = swa_num_attention_heads
+        self.norm_expert_weight = norm_expert_weight
         self.layer_types = (
             tuple(str(value) for value in layer_types)
             if layer_types is not None
@@ -200,7 +293,9 @@ class ModelConfig:
         self.quantization_config = quantization_config
 
         # Whether lm_head shares weights with embed_tokens
-        self.tie_word_embeddings = bool(tie_word_embeddings)
+        self.tie_word_embeddings = (
+            True if tie_word_embeddings is None else bool(tie_word_embeddings)
+        )
 
         if self.use_mla and self.use_mfa:
             raise ValueError("use_mla and use_mfa are mutually exclusive")
@@ -328,8 +423,7 @@ class ModelConfig:
 
     def get_qk_head_dim(self) -> int:
         """Return the full QK head dimension."""
-        family = self.get_attention_family()
-        if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
+        if self.use_mla:
             if self.qk_head_dim is None:
                 raise ValueError("MLA qk_head_dim is not configured")
             return self.qk_head_dim
@@ -383,11 +477,14 @@ class ModelConfig:
             '_moe_layer_ids_cache',
             '_layer_attention_specs_cache',
             '_gdn_config_cache',
-            'norm_expert_weight',  # Expert normalization field not used in profiling
             'torch_dtype',
         ]
         for field in unsupported_fields:
             model_config_dict.pop(field, None)
+        if model_config_dict.get("rms_norm_eps") is None:
+            model_config_dict.pop("rms_norm_eps", None)
+        if model_config_dict.get("tie_word_embeddings") is None:
+            model_config_dict.pop("tie_word_embeddings", None)
 
         # Read additional fields from JSON config that are not in BaseModelConfig
         # These fields are needed for profiling but not part of the core model config
@@ -397,7 +494,7 @@ class ModelConfig:
         json_path = os.path.join("data", "config", "models", f"{safe_name}.json")
         if os.path.exists(json_path):
             with open(json_path, "r", encoding="utf-8") as f:
-                json_cfg = json.load(f)
+                json_cfg = _normalize_hf_text_config(json.load(f))
             # QK-norm support (for Qwen3, Gemma3, OLMo2, etc.)
             model_config_dict['use_qk_norm'] = _infer_use_qk_norm_from_hf_config(
                 json_cfg
@@ -469,6 +566,9 @@ class ModelConfig:
             model_config_dict['tie_word_embeddings'] = json_cfg.get(
                 'tie_word_embeddings', True
             )
+            # Only Step opts into this source routing field; legacy payloads stay unchanged.
+            if model_config_dict.get("model_type") == "step5":
+                model_config_dict["norm_expert_weight"] = json_cfg["norm_expert_weight"]
             # Load quantization_config from JSON if not already loaded from BaseModelConfig
             if quantization_config is None and 'quantization_config' in json_cfg:
                 quantization_config = QuantizationConfig.from_dict(json_cfg['quantization_config'])
@@ -505,33 +605,10 @@ class ModelConfig:
         if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
             return family.resolve_runtime_num_kv_heads(self)
 
-        tp_size = parallel_config.tensor_parallel_size
-        if tp_size <= 0:
-            raise ValueError(
-                f"tensor_parallel_size must be positive, got {tp_size}"
-            )
-        if self.num_kv_heads <= 0:
-            raise ValueError(
-                f"num_kv_heads must be positive, got {self.num_kv_heads}"
-            )
-
-        # Match vLLM v1 semantics:
-        # - total_num_kv_heads >= tp_size: partition KV heads, require divisibility
-        # - total_num_kv_heads < tp_size: replicate KV heads, require tp_size % total_num_kv_heads == 0
-        if self.num_kv_heads >= tp_size:
-            if self.num_kv_heads % tp_size != 0:
-                raise ValueError(
-                    f"KV heads must be divisible by tensor_parallel_size when KV heads are partitioned. "
-                    f"num_kv_heads={self.num_kv_heads}, tensor_parallel_size={tp_size}"
-                )
-        else:
-            if tp_size % self.num_kv_heads != 0:
-                raise ValueError(
-                    f"KV heads replication requires tensor_parallel_size to be divisible by num_kv_heads. "
-                    f"num_kv_heads={self.num_kv_heads}, tensor_parallel_size={tp_size}"
-                )
-
-        return max(1, self.num_kv_heads // tp_size)
+        local_heads, _ = resolve_attention_head_partition(
+            self.num_kv_heads, parallel_config.tensor_parallel_size,
+        )
+        return local_heads
 
     def get_head_size(self):
         family = self.get_attention_family()
@@ -647,6 +724,27 @@ class ModelConfig:
             "qk_rope_head_dim": self.qk_rope_head_dim,
             "qk_head_dim": self.qk_head_dim,
             "v_head_dim": self.v_head_dim,
+            **{
+                name: getattr(self, name)
+                for name in (
+                    "index_topk", "index_n_heads", "index_head_dim",
+                    "index_topk_freq", "index_topk_pattern", "index_skip_topk_offset",
+                    "indexer_rope_interleave",
+                    "topk_method", "scoring_func", "norm_topk_prob",
+                    "routed_scaling_factor",
+                    "compress_ratios", "sliding_window", "num_hash_layers",
+                    "hc_mult", "hc_sinkhorn_iters", "hc_eps", "o_groups",
+                    "o_lora_rank", "compress_rope_theta", "swiglu_limit",
+                    "expert_dtype", "vision_config", "projector_bias",
+                    "sparse_config", "attention_other_setting", "att_impl_type",
+                    "num_nextn_predict_layers", "mtp_layer_types", "layer_rope_thetas",
+                    "partial_rotary_factors", "swiglu_limits", "swiglu_limits_shared",
+                    "norm_dtype", "fp32_residual_connection", "need_fp32_gate",
+                    "use_moe_router_bias", "moe_router_activation", "moe_router_scaling_factor",
+                    "zero_centered", "yarn_only_types", "use_rope_layers", "swa_num_attention_heads",
+                )
+                if getattr(self, name) is not None
+            },
             "layer_types": list(self.layer_types) if self.layer_types is not None else None,
             "full_attention_interval": self.full_attention_interval,
             "linear_conv_kernel_dim": self.linear_conv_kernel_dim,
@@ -655,8 +753,12 @@ class ModelConfig:
             "linear_num_key_heads": self.linear_num_key_heads,
             "linear_num_value_heads": self.linear_num_value_heads,
             "gdn_output_gate_type": self.gdn_output_gate_type,
+            **({"norm_expert_weight": self.norm_expert_weight} if self.model_type == "step5" else {}),
             # Quantization config
-            "quantization_config": asdict(self.quantization_config) if self.quantization_config else None,
+            "quantization_config": (
+                dataclass_to_dict(self.quantization_config)
+                if self.quantization_config else None
+            ),
             # LM head weight sharing
             "tie_word_embeddings": self.tie_word_embeddings,
         }

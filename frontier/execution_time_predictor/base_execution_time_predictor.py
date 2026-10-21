@@ -10,6 +10,11 @@ from frontier.config import (
 from frontier.entities import Batch, ExecutionTime, StageExecutionTime
 from frontier.types import ClusterType
 from frontier.logger import init_logger
+from frontier.attention.families import get_attention_family
+from frontier.attention.memory import (
+    AttentionKVCacheSelection,
+    get_attention_kv_cache_capacity,
+)
 
 if TYPE_CHECKING:
     from frontier.entities.time_components import AttentionTime, MLPTime, MoETime
@@ -30,6 +35,57 @@ class BaseExecutionTimePredictor(ABC):
         self._config = predictor_config
         self._replica_config = replica_config
         self._model_config = replica_config.model_config
+
+        family_ids = {
+            spec.family_id for spec in self._model_config.get_layer_attention_specs()
+        }
+        for family_id in sorted(family_ids):
+            family = get_attention_family(family_id)
+            family.require_enabled_for_execution(
+                structural=predictor_config.enable_dummy_mode,
+            )
+            if family.kv_cache_capacity_resolver is not None:
+                get_attention_kv_cache_capacity(
+                    family, self._model_config,
+                    block_size=replica_scheduler_config.block_size,
+                    selection=AttentionKVCacheSelection.from_replica(
+                        replica_config, block_size=replica_scheduler_config.block_size,
+                    ),
+                )
+
+        if "step5_attention" in family_ids:
+            from frontier.types import ReplicaSchedulerType
+
+            cluster_type = getattr(self, "_cluster_type", None)
+            attention_tp = replica_config.attn_tensor_parallel_size
+            tensor_parallel_ffn = (
+                replica_config.attn_dp == 1
+                and replica_config.moe_expert_parallel_size == 1
+                and replica_config.moe_tensor_parallel_size == attention_tp
+            )
+            # PD roles also accept vLLM's full EP over the flattened TP x DP ranks.
+            expert_parallel_ffn = cluster_type in (ClusterType.PREFILL, ClusterType.DECODE) and (
+                replica_config.moe_tensor_parallel_size == 1
+                and replica_config.moe_expert_parallel_size
+                == attention_tp * replica_config.attn_dp
+            )
+            if (
+                replica_config.num_pipeline_stages != 1
+                or cluster_type not in (
+                    ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE,
+                )
+                or replica_scheduler_config.get_type() != ReplicaSchedulerType.VLLM_V1
+                or replica_scheduler_config.enable_prefix_caching
+                or replica_config.speculative_decoding_config.enabled
+                or not (tensor_parallel_ffn or expert_parallel_ffn)
+            ):
+                raise NotImplementedError(
+                    "Step structural execution requires MONOLITHIC, PREFILL or DECODE "
+                    "with vllm_v1/PP1, prefix and MTP off, and either DP1/EP1 with equal "
+                    "attention and MoE TP, or on PD roles MoE TP1 with EP equal to "
+                    "attention TP x DP"
+                )
+            self._step5_max_model_len = replica_scheduler_config.max_model_len
 
         # get configs
         self._replica_scheduler_provider = str(replica_scheduler_config.get_type())

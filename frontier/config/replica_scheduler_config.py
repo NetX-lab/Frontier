@@ -95,6 +95,15 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
     names: --vllm_v1_scheduler_config_* instead of --v_l_l_mv1_scheduler_config_*
     """
 
+    max_concurrent_batches: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "Optional EngineCore queue capacity. Explicit 2 supports "
+            "ordinary-cache MONOLITHIC PP1/DP1 admission only; None retains "
+            "the pipeline-stage capacity.",
+            "omit_if_none": True,
+        },
+    )
     max_tokens_in_batch: int = field(
         default=16384,
         metadata={
@@ -321,6 +330,11 @@ class VllmV1SchedulerConfig(BaseReplicaSchedulerConfig):
     )
 
     def __post_init__(self) -> None:
+        if self.max_concurrent_batches is not None and (
+            type(self.max_concurrent_batches) is not int
+            or self.max_concurrent_batches != 2
+        ):
+            raise ValueError("max_concurrent_batches must be None or 2")
         allowed_modes = {"memory_planner", "memory_planner_profiled", "explicit"}
         if self.num_blocks_mode not in allowed_modes:
             raise ValueError(

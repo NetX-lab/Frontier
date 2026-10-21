@@ -1,0 +1,60 @@
+WARNING 20:06:50 model_architectures.py:1404] Experimental model architecture profile selected: step5 (name=stepfun-ai/Step-5-Preview, _model_name=stepfun-ai/Step-5-Preview, model_type=step5, model_arch=generic). Runtime limitations: Step attention timing and complete request execution remain unqualified; PD summary/tail transfer and graph replay remain unqualified; MTP and multimodal execution are unsupported
+WARNING 20:06:50 cluster_config.py:1565] Both disaggregated and monolithic configuration fields are set. The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'.
+Traceback (most recent call last):
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/step5.py", line 70, in step5_measurement_type
+    return STEP5_GRAPH_MODES[graph_mode][1]
+KeyError: 'full_decode_only'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/main.py", line 97, in <module>
+    main()
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/main.py", line 77, in main
+    simulator = Simulator(config)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/simulator.py", line 157, in __init__
+    ExecutionTimePredictionModelManager(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/shared_prediction_model_manager.py", line 112, in __init__
+    self._trained_models = self._train_all_required_models()
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/shared_prediction_model_manager.py", line 465, in _train_all_required_models
+    attention_types = step5_measurements_for_role(
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/step5_cost.py", line 22, in step5_measurements_for_role
+    decode = step5_measurement_type(decode_graph_mode)
+  File "/data/ycfeng/Frontier/.worktrees/step5-d20-integration/frontier/execution_time_predictor/step5.py", line 72, in step5_measurement_type
+    raise ValueError(f"Unsupported Step graph_mode={graph_mode!r}") from exc
+ValueError: Unsupported Step graph_mode='full_decode_only'
+Total world size: 32
+
+======================================================================
+CLUSTER CONFIGURATION SUMMARY
+======================================================================
+Simulation mode:  online
+System architecture:  pd-disaggregation
+======================================================================
+Total Clusters: 2
+Total World Size: 32
+Prefill server count: 2
+Decode server count: 2
+
+Cluster Type: PREFILL
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+Cluster Type: DECODE
+   Cluster World Size: 16
+   Num Replicas (Instances): 1
+   Replica World Size: 16
+   Configuration: PP1 × (Attn_TP8 x Attn_DP2) | (MoE_TP1 x MoE_EP16)
+   Total Expert Num: 352
+   Local Expert Num: 22
+--------------------------------------------------
+======================================================================
+

@@ -26,13 +26,19 @@ from frontier.profiling.moe.moe_impl import (
     MoEGatingNetwork,
     MoETokenShuffler,
     MoEGroupedGEMM,
+    SigmoidBiasGatingNetwork,
     get_routing_runtime_metadata,
 )
 from frontier.profiling.moe.moe_vllm_kernel import (
+    KERNEL_IDENTITY_COLUMNS,
     check_fp8_available,
     check_vllm_available,
     validate_moe_quantization_mode,
     validate_mxfp4_runtime,
+)
+from frontier.profiling.moe.routed_layer_groups import (
+    SILU_ACTIVATION,
+    RoutedLayerGroup,
 )
 from frontier.profiling.utils import ProfileMethod, normalize_profile_method
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
@@ -83,7 +89,12 @@ class MoEWrapper:
         block_shape: Optional[List[int]] = None,  # Block-wise quantization shape (e.g., [128, 128])
         routing_runtime_path: str = "standard_fused_topk",
         gating_runtime_context: str = DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+        routed_layer_group: Optional[RoutedLayerGroup] = None,
     ):
+        """``routed_layer_group`` selects the expert precision, activation and
+        router of one group of routed layers; without it every routed layer
+        uses the model-wide precision, SiLU experts and softmax top-k routing.
+        """
         super().__init__()
 
         # Validate that this is a MoE model
@@ -92,6 +103,17 @@ class MoEWrapper:
                 f"MoEWrapper requires a MoE model (is_moe=True), "
                 f"but got model {model_config.name} with is_moe=False"
             )
+        if routed_layer_group is not None:
+            if not use_vllm_kernel:
+                raise ValueError(
+                    "Routed layer groups require vLLM fused kernel profiling "
+                    "(use_vllm_kernel=True); the per-expert loop runs SiLU experts only."
+                )
+            if routing_runtime_path != "standard_fused_topk":
+                raise ValueError(
+                    "Routed layer groups time their own router; "
+                    f"routing_runtime_path={routing_runtime_path!r} replaces it."
+                )
 
         self.profile_method = normalize_profile_method(profile_method)
         self.timer_stats_store = TimerStatsStore(profile_method=self.profile_method)
@@ -104,9 +126,11 @@ class MoEWrapper:
         self.rank = rank
         self.output_dir = output_dir
         self.use_vllm_kernel = use_vllm_kernel  # Flag for using vLLM kernel
-        self.use_fp8 = use_fp8  # Flag for FP8 W8A8 quantization
         self.per_channel_quant = per_channel_quant  # Per-channel quantization flag
-        self.block_shape = block_shape  # Block-wise quantization shape
+        self.routed_layer_group = routed_layer_group
+        self.activation = (
+            SILU_ACTIVATION if routed_layer_group is None else routed_layer_group.activation
+        )
         self.routing_runtime_path = routing_runtime_path
         self.routing_runtime_metadata = get_routing_runtime_metadata(
             routing_runtime_path
@@ -126,7 +150,10 @@ class MoEWrapper:
         self.router_topk = model_config.num_experts_per_tok
         self.use_gated = model_config.use_gated_mlp
         self._dtype = model_config.dtype
-        precision = get_operation_precision("moe_grouped_gemm")
+        if routed_layer_group is None:
+            precision = get_operation_precision("moe_grouped_gemm")
+        else:
+            precision = routed_layer_group.precision
         use_fp8_from_manager = precision == PrecisionType.FP8
         use_mxfp4_from_manager = precision == PrecisionType.FP4
         quantization_mode = validate_moe_quantization_mode(
@@ -154,6 +181,8 @@ class MoEWrapper:
         self.use_fp8 = use_fp8_from_manager
         self.use_mxfp4 = use_mxfp4_from_manager
         self.quantization_mode = quantization_mode
+        # The model's weight block shape applies only to its FP8 experts.
+        self.block_shape = block_shape if self.use_fp8 else None
 
         # Calculate num_experts_per_device based on EP
         # EP is a distribution parameter: it determines how experts are distributed across devices
@@ -168,14 +197,27 @@ class MoEWrapper:
         os.makedirs(f"{self.output_dir}/profiler_traces/", exist_ok=True)
 
         # Initialize MoE components (convert to float16 for profiling)
-        self.gating = MoEGatingNetwork(
-            hidden_dim=self.hidden_dim,
-            num_experts=self.num_experts,
-            router_topk=self.router_topk,
-            tensor_parallel_size=num_tensor_parallel_workers,
-            use_vllm_fused_topk=self.use_vllm_kernel,
-            routing_runtime_path=self.routing_runtime_path,
-        ).to(dtype=self._dtype).cuda().eval()
+        if routed_layer_group is None:
+            self.gating = MoEGatingNetwork(
+                hidden_dim=self.hidden_dim,
+                num_experts=self.num_experts,
+                router_topk=self.router_topk,
+                tensor_parallel_size=num_tensor_parallel_workers,
+                use_vllm_fused_topk=self.use_vllm_kernel,
+                routing_runtime_path=self.routing_runtime_path,
+            ).to(dtype=self._dtype).cuda().eval()
+        else:
+            # The router keeps its own FP32 gate; see SigmoidBiasGatingNetwork.
+            self.gating = SigmoidBiasGatingNetwork(
+                hidden_dim=self.hidden_dim,
+                num_experts=self.num_experts,
+                router_topk=self.router_topk,
+                router=routed_layer_group.router,
+            ).cuda().eval()
+            self.routing_runtime_metadata = {
+                **self.routing_runtime_metadata,
+                **self.gating.routing_policy_metadata(),
+            }
 
         self.shuffler = MoETokenShuffler(
             num_experts=self.num_experts,
@@ -607,9 +649,9 @@ class MoEWrapper:
         profiling_global_num_experts = routing_inputs["global_num_experts"]
         profiling_expert_map = routing_inputs["expert_map"]
 
-        native_backend = None
+        kernel_identity = {}
         if self.use_vllm_kernel:
-            time_stats, native_backend = self._profile_with_vllm_kernel(
+            time_stats, kernel_identity = self._profile_with_vllm_kernel(
                 num_tokens=num_tokens,
                 topk_weights=topk_weights,
                 topk_ids=topk_ids,
@@ -648,9 +690,8 @@ class MoEWrapper:
             "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
             "moe_grouped_gemm_backend": grouped_gemm_backend,
             "moe_quantization_mode": self.quantization_mode,
+            **kernel_identity,
         }
-        if native_backend is not None:
-            stats["moe_native_backend"] = native_backend
 
         return stats
     
@@ -661,8 +702,12 @@ class MoEWrapper:
         topk_ids: torch.Tensor,
         global_num_experts: Optional[int] = None,
         expert_map: Optional[torch.Tensor] = None,
-    ) -> tuple[dict, Optional[str]]:
-        """Profile using vLLM fused MoE kernel with optional EP-local expert mapping."""
+    ) -> tuple[dict, dict]:
+        """Profile using vLLM fused MoE kernel with optional EP-local expert mapping.
+
+        Returns the timing stats and the row columns that identify the kernel
+        vLLM selected.
+        """
         from frontier.profiling.moe.moe_vllm_kernel import profile_fused_moe_kernel
 
         stats = profile_fused_moe_kernel(
@@ -686,9 +731,14 @@ class MoEWrapper:
             global_num_experts=global_num_experts,
             expert_map=expert_map,
             model_type=self.model_config.model_type,
+            activation=self.activation,
         )
-        native_backend = stats.pop("native_backend") if self.use_mxfp4 else None
-        return {"moe_grouped_gemm": stats}, native_backend
+        kernel_identity = {
+            column: stats.pop(key)
+            for key, column in KERNEL_IDENTITY_COLUMNS.items()
+            if key in stats
+        }
+        return {"moe_grouped_gemm": stats}, kernel_identity
     
     def _profile_with_loop(
         self,
@@ -784,6 +834,8 @@ class MoEWrapper:
             "use_gated": self.use_gated,
             "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
         }
+        if self.routed_layer_group is not None:
+            stats.update(self.routed_layer_group.row_metadata())
 
         measured_names = set(time_stats)
         moe_operator_names = tuple(
@@ -866,7 +918,8 @@ class MoEWrapper:
 
         # Combine all stats (including load imbalance features from grouped_gemm_stats)
         stats = self._build_profile_result(combined_time_stats, num_tokens=num_tokens)
-        
+        stats["moe_gating_linear_backend"] = gating_stats["moe_gating_linear_backend"]
+
         # Add load imbalance features from grouped_gemm_stats (if present)
         # These are added by profile_grouped_gemm when load imbalance is enabled
         for key in grouped_gemm_stats:

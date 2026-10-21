@@ -1160,3 +1160,43 @@ def test_forward_launch_stall_time_ends_the_forward_no_earlier_than_launch_plus_
         **_base_execution_kwargs(forward_launch_time=launch_ms, forward_drain_time=drain_ms)
     )
     assert execution_time.forward_launch_stall_time(device_span) == pytest.approx(expected)
+
+
+
+def test_warm_moe_execution_reuses_operator_catalog_metadata(monkeypatch):
+    from frontier.operators.spec import OperatorFamilySpec
+
+    values = _base_execution_kwargs(
+        is_moe=True,
+        num_layers_per_pipeline_stage=1,
+        op_times={"moe_grouped_gemm": 7.0},
+    )
+    first = ExecutionTime(**values)
+    phases = ("pre_dispatch", "routed_compute", "post_combine")
+    expected = tuple(first.moe_phase_operator_times(phase) for phase in phases)
+    scans = []
+    original = OperatorFamilySpec.e2e_trace_ops
+
+    def record_catalog_scan(family):
+        scans.append(family.family_id)
+        return original(family)
+
+    monkeypatch.setattr(OperatorFamilySpec, "e2e_trace_ops", record_catalog_scan)
+    second = ExecutionTime(**values)
+    assert tuple(second.moe_phase_operator_times(phase) for phase in phases) == expected
+    assert scans == [], "Warm layer construction and phase queries must reuse catalog metadata"
+
+
+def test_canonical_execution_mapping_copies_cannot_change_operator_validation():
+    from frontier.entities.time_components import canonical_operator_execution_time_attrs
+
+    first = canonical_operator_execution_time_attrs()
+    expected = dict(first)
+    first.clear()
+    assert canonical_operator_execution_time_attrs() == expected
+    execution = ExecutionTime(
+        **_base_execution_kwargs(num_layers_per_pipeline_stage=1, op_times={"attn_prefill": 3.0})
+    )
+    assert execution.attention_prefill_execution_time == 3.0
+    with pytest.raises(ValueError, match="Unsupported ExecutionTime operator timing"):
+        ExecutionTime(**_base_execution_kwargs(op_times={"unregistered_timing": 1.0}))

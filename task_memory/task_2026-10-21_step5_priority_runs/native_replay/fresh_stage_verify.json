@@ -1,0 +1,52 @@
+{
+ "task_id": "D21-RUNS",
+ "case_id": "h800_32",
+ "offline_verified": true,
+ "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage",
+ "source": {
+  "repository": "/data/ycfeng/Frontier/.worktrees/step5-priority-runs",
+  "commit": "6838bc10135faf5bea1bc48321837caa938f85a1"
+ },
+ "files_verified": 37,
+ "manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+ "config_sha256": "7708e7c55d2361872f5054305cb427d77cd6bd22affa457b99370f14de595579",
+ "runtime_qualification": "UNVERIFIED",
+ "reference_admission": "UNVERIFIED",
+ "formal_release": {
+  "status": "NOT_REQUIRED",
+  "reason": "Basic qualification has no accuracy dependency"
+ },
+ "resources": {
+  "cpu": 32,
+  "gpu": 8,
+  "mem_gb": 128,
+  "replica": 4,
+  "image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+  "positive_tags": [
+   "H800"
+  ],
+  "extra_requirements": [],
+  "mounts": [
+   "juicefs+s3://oss.i.shaipower.com/codesign-exp:/mnt/codesign-exp"
+  ],
+  "preemptible": false,
+  "envs": {
+   "PYTHONDONTWRITEBYTECODE": "1",
+   "HF_HUB_OFFLINE": "1",
+   "TRANSFORMERS_OFFLINE": "1",
+   "HF_DATASETS_OFFLINE": "1",
+   "VLLM_ENABLE_CUDA_COMPATIBILITY": "1",
+   "DISTRIBUTED_JOB": "true"
+  },
+  "task_anti_affinities": [
+   "hard/default"
+  ],
+  "command": "{COMMAND}",
+  "task_specs": {
+   "default": {
+    "is_critical": true
+   }
+  }
+ },
+ "worker_command": "bash -c 'export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}; export PYTHONPATH=/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage${PYTHONPATH:+:$PYTHONPATH}; timeout 3600 python3 -B /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/native_pd_worker.py --config /data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/config.json'"
+}

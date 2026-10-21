@@ -1,0 +1,63 @@
+# 10: Full-path exclusive compute and host profiles
+
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-10-21 | Assign step5-p0-profiles native request-free/P0 producer implementation after D22 PASS; keep quality and formal admission separate. |
+| 2026-10-21 | D22 independent reference implemented and parent-verified; unchanged full probe submitted on one preemptible H200. |
+| 2026-10-21 | D21: profile coverage/quality is hardware/scale-specific across four tracks; prioritize P0 and preserve failed/unadmitted measurements. |
+| 2026-10-21 | D20: the one-shape experiment has executed; finish its existing judgment and move the agent to measured compute/bundle code instead of another diagnostic package. |
+| 2026-10-21 | Native BF16 dispatch correction passed; attention strict timing12/18 passes and linear variability remain unqualified; authorize minimal causal diagnostic. |
+| 2026-10-21 | Integrated all37 profiling files after787 CPU passes and77/77 fidelity; fresh single-H200 probe succeeded, native judgment pending. |
+| 2026-10-21 | Recorded linear source/CPU and one-H800 package completion, strict Smoke 03 FAIL, one CPU-only attention correction and remaining role/grid/admission work. |
+| 2026-10-20 | Recorded the MoE slice and H800 pilot; status in-progress. |
+| 2026-10-20 | Changed the native prerequisite to `06.simulation_scope` (decision D2); operator profiling with the existing profilers does not wait for 07. |
+| 2026-10-18 | Documentation-only audit: reconciled evidence, execution authority, shared ownership and stage-specific prerequisites; no new implementation acceptance. |
+| 2026-10-15 | Approved planning ticket created. |
+
+**What to build:** A complete independently measured compute/host profile set for the qualified text-role census, with validated trace coverage and exactly one owner for each physical cost that later prediction must consume.
+
+**Blocked by:** `05.coverage_disposition`; `06.simulation_scope` (decision D2); `15.controlled_structural_path`. Operator profiles collected with the existing `frontier/profiling` linear-op, attention and MoE profilers do not wait for `07`; only native graph, host and kernel-gap observations use the `07` observer. Complete 05 is required at final30, not before starting10.
+
+**External prerequisites:** Measure the represented path after G2 and observer validation. Consume05.coverage_disposition, not complete 05 acceptance; independently measure/admit every missing required row. Native profiling has no GLM trained-integration barrier. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
+
+**Status:** in-progress; D22 approved small-probe step complete. Source74df010 is integrated,873 author checks and264 overlapping parent checks pass. New18-event/4-GPU-active probe `exp-1021-201658-886733` Succeeded on one preemptible H200:18/18 strict candidates,22/22 output/cache and18/18 prefix comparisons PASS. Full per-track profiles and linear quality remain open; historical six-cell SWA FAIL receipts remain unchanged. Exact report: `../../task_2026-10-21_step5_d22_timing/test_report_2026-10-21_d22_native.md`.
+
+**Current D21 scope:** serve P0 H80032 first, then P1 H80064 and equal-priority P2 H20032/H20064.32 uses P16/D16 TP8/DP2/EP16/PP1;64 uses P32/D32 TP8/DP4/EP32/PP1. Each requires actual hardware/scale/runtime/physical-scope-compatible measurements; inspect existing artifacts before repeating, never rescale times or promote failed rows. Profile/basic preparation has no30% gate;64 formal calibration needs own readiness and matching32 four clean errors<=30%. Final10% remains. Use `../plan.md` policy: H800 codesign non-preemptible; all personal nonterminal H200 non-preemptible reservations across sessions<=32, every additional job preemptible, H20064 wholly preemptible. Lower-priority H800 work cannot starve P0. D20 CPU compute/bundle implementation continues while native admission stays open. Dated D18/D20 probes below are historical, not a single-H20064-only instruction.
+
+**Historical D18 execution:** profiling5fa1926 merged as f0ab2eb, archived at3cdc996. Independent37-file review has zero actionable findings;787 affected CPU tests pass and77 legacy cases are identical with clean cache identities. Metadata-derived precision fixes erroneous FP8 for dense K1728/shared K192 without padding/guard changes. One-H200 stage02 `exp-1021-120711-905260` Succeeded, exit0/restart0, actual container150s. This functional fix does not qualify timing, DP2/DP4 occupancy, transfer tail or full serving. Subsequent coverage follows D21 above. See `../test_report_2026-10-21_h200_profile_launch.md` and `../review_2026-10-21_d18_profile.md`.
+
+**Native judgment completed:** parent repeated the existing strict judge: FAIL, zero parsing errors;18 event+4 GPU-active rows,22/22 output/cache,18/18 prefix,18/18 candidate CVs pass; only12/18 candidates pass independent-median agreement. Six SWA decode layer failures are5.330351%–5.908502%; example context6144/batch1 mean33.598720us versus median35.551999us, CV0.215906%. Linear initialization/GEMM/activation/merge traces confirm the original BF16-dispatch failure is fixed; timing CV screens pass18/40 event and34/40 kernel cells, without an independent linear median cohort. No producer is admitted as a complete canonical profile. Report and14 hashed evidence files: `../d18_profile_20261021/native_judgment01/`, `../d18_profile_20261021/test_report_2026-10-21_d18_native_probe.md`.
+
+**Current D22 method:** use a second independently executed cohort of primed outer-only normalized clean-replay windows, with matching counts/minimum durations. Candidate/reference samples are disjoint; boundary-instrumented singles are labelled diagnostics. Keep5% agreement and candidate CV<=5%, with no overhead subtraction or quality-dependent retry. Judge only the fresh unminimized D18 probe; the one-shape causal experiment is completed history. See `../requirements.md` D22 and `../../task_2026-10-21_step5_d22_timing/handoff.md`.
+
+**Current producer implementation:** `step5-p0-profiles` owns existing native producer extensions for request-free idle-DP and P0 inputs, based on integratedbc8ae27. Ordinary native rows carry `has_attention_metadata=1`; request-free rows require0 and their own positive physical scopes. No ordinary-q1 substitution, fabricated zero cost, H200-to-H800 relabeling or new boundary diagnostic is authorized. Full-case grid/serving coverage remains evidence-dependent.
+
+**Progress — 2026-10-20:** Commits `173a5e0`, `9d1282c` and `621ca0e` (merged into `feat/step5-preview` at `0d2ffda`) let the existing MoE profiler measure the Step routed layer groups: block-FP8 layers 3–87 and BF16 layers 88–90, with the native FP32 router and biased-sigmoid top-8. The H800 pilot `exp-1020-152802-841686` succeeded with 14 CUDA-event and 14 kernel-only rows at EP32/TP1. The image selects DeepGEMM for the FP8 layers and Triton for the BF16 layers; there is no tuned Triton file for E=11, N=1536 on H800. Details: [progress](../progress.md) section "Ticket 10 MoE H800 pilot" and [design](../step5_profiling_20261020/design01.md). The attention-projection ownership question is decided as option A: the new Step attention profiler under `frontier/profiling/step5/` measures all attention-side operators, including projections. Next: the attention profiler, the linear-op slice, the §6.4 grids and typed admission. Simulator lookup by `moe_layer_ids` is not implemented.
+
+**Earlier delivery — 2026-10-21:** Linear commit `019b707` removed the generic Step attention projection plan through existing family ownership contracts and prepared dense/shared BF16 MLPs, native clamp-7 activation, normalization and FP32 merge. CPU results were profiler364 PASS, simulator470 PASS and extended405 PASS; focused registry133 PASS/1 inherited failure. The3399-hash H800 package later failed at runtime because the generic quantization selector still chose FP8 for the dense partition. D18 fixes that specific dispatch error; it does not erase the failed run. Final norm, LM head/logits, first unfused norm, boundary casts, native sharded embedding and collectives remain explicit gaps.
+
+The parent-run attention `exp-1020-224317-364507` completed Succeeded, but strict quality is FAIL: 20/20 output-state and 12/12 prefix checks pass, all 12 calibration candidates satisfy CV <=5%, and only 10/12 satisfy all gates because two SWA decode median errors are 5.0374% and 5.3061%. FULL instrumentation overhead is 65.42%-133.51%. The single permitted repair, `0bf3824`, initializes CUDA event handles before timing; its tests pass but no post-fix H800 result exists. Full grids remain pending phase-quality and per-role serving/capture/capacity freeze. See [linear report](../test_report_2026-10-21_step5_linear_op_slice.md), [attention report](../test_report_2026-10-20_step5_attention_profiler_implementation.md) and `../step5_profiling_20261020/attention_smoke_20261020_03/judgment02.json`.
+
+The 2026-10-18 phase below was documentation review only. Current routine in-scope implementation and measurement use the standing authorization in `../requirements.md`; evidence prerequisites still apply. This implementation agent did not submit, stop or delete any job.
+
+**Source workstreams:** S05.
+**Shared owners:** C04, with C01 identity and existing producer/trainer boundaries.
+
+## Review disposition — 2026-10-18
+
+NOT STARTED. The revised prerequisites prevent full-path work from waiting indefinitely on the local05 collector. Every required scope is still independently measured/admitted; raw05 rows remain excluded until qualified. One producer owns fused durations, copies, kernel counts, gaps and host scopes without double charging.
+
+## Acceptance
+
+- [ ] Deliver the full-path compute/host dataset, physical-scope ownership table, independent fit/holdout manifest, and complete census-to-profile coverage report under §§4 and 7, using G2's resolved inventory and ticket `07`-validated observations.
+- [ ] Reconcile early measurements with the complete full-role shape census; every required reachable scope/precision/phase has compatible measurement support or an explicit blocking gap, never a guessed latency or implicit fallback.
+- [ ] Cover packed QKV/indexer/gate projection, norms/RoPE/residual/casts, KV writes, summaries, selector scoring/selection, sparse attention/SWA, staging/gather/packing, output projection, and dense/routed/shared FFN, including actual quantization exclusions.
+- [ ] Attribute each fused physical duration and kernel count exactly once; preserve included communication/activation/gating ownership and reject duplicate indexer, decode-gate, summary, or auxiliary charges without overwriting another family's timing meaning.
+- [ ] Separate device durations, kernel counts, device gaps, host preparation, and graph launch; charge planning once per actual reused step/metadata group while retaining layer-specific staging and state costs.
+- [ ] Cover independently sampled locked region/page/window/K×r boundaries, new/subsequent and long-prefix short prefill chunks, selector bypass, valid/padded rows, physical table extent, graph-bucket edges, reachable precision classes, and KV/provider replication.
+- [ ] Preserve actual image/runtime/model/metadata/hardware, role, TP/DP/EP/PP, phase, precision/exclusions, graph, backend, shape/layout, and physical-scope identities; verify exclusive GPU/NIC conditions and separately report interference-contaminated measurements.
+- [ ] Define required features through existing contracts and retain compatibility with existing producer/trainer identity and legacy table meanings; full-path scope completeness is measured coverage, not merely successful CSV admission.
+- [ ] Reject wrong identities/backends, missing features or reachable coverage, duplicate fused cost, and held-out native timings used as fit inputs; trace-conditioned cost replay remains diagnostic and cannot replace independent predictive evidence.
+- [ ] Profiling-tool changes satisfy §10's ≥50-scenario fidelity comparisons and preregistered wall-time/memory budgets, recording measured deltas and over-budget dispositions; ≥32-GPU auxiliary harness errors leave evidence unverified without stopping healthy work solely for those errors.

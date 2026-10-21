@@ -20,6 +20,8 @@ class OperatorRole(Enum):
     CACHE_EXTRACT = "cache_extract"
     PREFILL_KERNEL = "prefill_kernel"
     DECODE_KERNEL = "decode_kernel"
+    INDEXING = "indexing"
+    ATTENTION = "attention"
     PROJECTION = "projection"
     ACTIVATION = "activation"
     NORMALIZATION = "normalization"
@@ -187,7 +189,9 @@ class CommOperatorSpec(OperatorSpec):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        valid_collectives = {"allreduce", "allgather", "alltoall", "send_recv"}
+        valid_collectives = {
+            "allreduce", "allgather", "reduce_scatter", "alltoall", "send_recv",
+        }
         if self.collective_alias not in valid_collectives:
             raise ValueError(
                 f"CommOperator {self.name} collective_alias must be one of "

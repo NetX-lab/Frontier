@@ -1,0 +1,246 @@
+{
+  "task_id": "D21-NATIVE-REPLAY",
+  "observed_utc": "2026-10-21T12:47:00.233883+00:00",
+  "code_commit": "6838bc10135faf5bea1bc48321837caa938f85a1",
+  "ready_for_formal": false,
+  "root_cause": "Native CLI defaults API count to full DP; client_count > 1 suppresses the text graph logger while retaining Prometheus. Actual logs explicitly confirm this.",
+  "actual_native_replay": "UNVERIFIED",
+  "old64": {
+    "job": "exp-1021-125354-923219",
+    "original_status": "REFERENCE_UNSTABLE",
+    "original_client_workload_verified": false,
+    "runtime_qualification": "UNVERIFIED",
+    "reference_admission": "UNVERIFIED",
+    "basic_reuse": "PARTIAL",
+    "requests": 24,
+    "segments": {
+      "warmup": 16,
+      "concurrent": 8
+    },
+    "unique_h200_gpu_uuids": 64,
+    "nodes": [
+      {
+        "node": "gpu-h200-0024.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "lane": 0
+      },
+      {
+        "node": "gpu-h200-0052.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "lane": 1
+      },
+      {
+        "node": "gpu-h200-0057.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "lane": 2
+      },
+      {
+        "node": "gpu-h200-0760.lgcm.sh.istep.fun",
+        "role": "prefill",
+        "lane": 3
+      },
+      {
+        "node": "gpu-h200-0878.lgcm.sh.istep.fun",
+        "role": "decode",
+        "lane": 0
+      },
+      {
+        "node": "gpu-h200-0938.lgcm.sh.istep.fun",
+        "role": "decode",
+        "lane": 1
+      },
+      {
+        "node": "gpu-h200-1080.lgcm.sh.istep.fun",
+        "role": "decode",
+        "lane": 2
+      },
+      {
+        "node": "gpu-h200-1192.lgcm.sh.istep.fun",
+        "role": "decode",
+        "lane": 3
+      }
+    ],
+    "postwarm_and_postrun_idle": true,
+    "initial_gauges": "DIAGNOSTIC_ONLY; original summary unchanged",
+    "concurrent_nixl_rank_reads": 64.0,
+    "concurrent_nixl_bytes": 8952774656.0,
+    "observed_prompt_split_per_request": {
+      "P_local": 6128,
+      "D_external": 6128,
+      "D_local": 16
+    },
+    "original_historical_preemptible": false,
+    "new_h20064_requires_wholly_preemptible": true
+  },
+  "fresh_stage": {
+    "path": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage",
+    "submitted": false,
+    "offline_build_verify_dry_run": "PASS",
+    "api_frontends_per_role": 1,
+    "request_owner_dp_lanes_per_role": 2,
+    "case_id": "h800_32"
+  },
+  "cpu_tests": {
+    "passed": 125,
+    "duration_s": 86.13,
+    "gpu_replay_claim": false
+  },
+  "package_pin_checks": [
+    {
+      "stage": "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage",
+      "config_sha256": "b8c6b1e500b5bc44343a59ae56bfad2c03388e39fff10c6b62d5c2c3dbf0b2af",
+      "tool_pins_verified": 27,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification01/stage",
+      "config_sha256": "0eea085215543c06e88523b6a48e99decd26aa8f1262180720082ce0dae213d0",
+      "tool_pins_verified": 36,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_32_qualification02/stage",
+      "config_sha256": "84e303751a9e3eeaf60049684e4d80fdcf67b9f778a31dbb425d99e299731723",
+      "tool_pins_verified": 37,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h200_64_qualification01/stage",
+      "config_sha256": "cc5f34fe986cd909398950759347c5eb0db213f75da4aef2abef03f21ddcd864",
+      "tool_pins_verified": 36,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage",
+      "config_sha256": "df52565282a2ab800577776f581c128406f644f5e27260c3a090f8aa7780cdd8",
+      "tool_pins_verified": 28,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification01/stage",
+      "config_sha256": "e672acd7ecd621d692c9904f7b3593bfb9e4a4ec27ee2bb6504c1def6a0f6229",
+      "tool_pins_verified": 36,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_64_qualification02/stage",
+      "config_sha256": "a2faa9019091d287d61b6a8667f9428c8f4b61a1f97b189549cc3cf2ffef4c1b",
+      "tool_pins_verified": 37,
+      "native_pins_verified_against_export": 47,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    },
+    {
+      "stage": "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage",
+      "config_sha256": "7708e7c55d2361872f5054305cb427d77cd6bd22affa457b99370f14de595579",
+      "tool_pins_verified": 37,
+      "native_pins_verified_against_export": 50,
+      "metadata_pins_verified": 3,
+      "mismatches": []
+    }
+  ],
+  "sha256": {
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/config.json": "df52565282a2ab800577776f581c128406f644f5e27260c3a090f8aa7780cdd8",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/preflight.json": "c3a3a2caa83ae22f1510915823fc6c738de10646446c514947d2e667f0a80160",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/run_definition.json": "cabbb6ff6ef04ad596c91d6ced231288a658260e1d85e86af892119727fe1322",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/replay/canonical_summary.json": "b6b372131f27b2ac4339bdc68aa7a6cbe758bc151ad91b52c099c14729307a54",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/replay/client_requests.jsonl": "1110515ac7bd2822122e20622ce1175c430d2a48ffba062b68d6caf8f2e1c394",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/replay/proxy_requests.jsonl": "e441774153a7678562b4e416b84d2b2c96800ce6ed9d471202199b7a823c86b8",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0083.host.platform.shaipower.com/drained.json": "4cf4bcb68ab9be0acf9086bd6ebccd79a3ed60c9683a2199c2047487a24741c2",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0083.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0083.host.platform.shaipower.com/result.json": "d17c509ec1b5fd348afdc309b64739a324865ded76a105e9d41a12604591b47d",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0083.host.platform.shaipower.com/server.log": "1b7a08ae59f19eae03e603df46674476f73468edcaa10a50b524dbe7657d8263",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/drained.json": "b44dec70c25f8d73ae879053f9b22b0d6eb9de3e6d8ee63ff0746591d21906a4",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/result.json": "6439a30b271fa70dbca1aa893c1eccadc8d2abd356b6f62253d1968e394be826",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/server.log": "c4be0fbc61b625db92fbbd0c57812cb7907e8b3d2db1cc125fa06d81de10ff5b",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0216.host.platform.shaipower.com/drained.json": "3e8e345436b8d5cc6947c726aa0ab5210a5982fc33d9726f71e477c04c09a148",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0216.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0216.host.platform.shaipower.com/result.json": "b26e1dcfc477030eb845999fca9850a2d71223322096b70e37a2bf0bc9779699",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0216.host.platform.shaipower.com/server.log": "0faf38c3df0b32977616d5664a11be038840f82e490b1fd313a428a0b1f87943",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0434.host.platform.shaipower.com/drained.json": "c373beb62b2b66293594f09ee9257f8e24e9da8803a33e948c2dfbb1de95ae38",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0434.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0434.host.platform.shaipower.com/result.json": "07fb6afc6dfd2153a2bed576172a015af7ac21b82a64ba4936e3139867d153cf",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/stage/evidence/nodes/gpu-h800-0434.host.platform.shaipower.com/server.log": "fd0c7d1a7077e3083166a12f6918e15d59b048c96a6dcc17a9390462d2a02c78",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/reference_inputs/config.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/reference_inputs/tokenizer_config.json": "78202af487f4d4360e8d15cb0506d60718f8599770599c6f28f7f1fa045a591f",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification01/reference_inputs/tokenizer.json": "b564c620eb77fa11d0926011c2202347d6cfc358d79724ee04ae7007e13636f0",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/config.json": "b8c6b1e500b5bc44343a59ae56bfad2c03388e39fff10c6b62d5c2c3dbf0b2af",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/preflight.json": "9cfeaabb3913679d19e0b1f62c6417170181b0fb42ea22153a671f525de1db0e",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/run_definition.json": "1115afc598c275cbbff0eb7a542b8b77b5089346e5f4f979ba7f4e31ca4bc2b1",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/replay/canonical_summary.json": "fedf79d95b3817f1867fb55f4151490c84ca74d94c27e71110d710310735b44a",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/replay/client_requests.jsonl": "7ad5bcd3631873979725eda58bc4aa062c4a9513898f0c37077a27c70617ecf4",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/replay/proxy_requests.jsonl": "fde4d93a9f8fa584f2e6c8264c400280cecf34244c7b42df1e1e908f4547e4ce",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0024.lgcm.sh.istep.fun/drained.json": "4cf4bcb68ab9be0acf9086bd6ebccd79a3ed60c9683a2199c2047487a24741c2",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0024.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0024.lgcm.sh.istep.fun/result.json": "cac0a7c7db1cee96a2f0a2881332f5d2794a1240cb64898ebf3cef45f302e051",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0024.lgcm.sh.istep.fun/server.log": "dca7f916df3a6e109b34707b3720bd940735ed6d37497f88e8bd761fae8d2804",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0052.lgcm.sh.istep.fun/drained.json": "b44dec70c25f8d73ae879053f9b22b0d6eb9de3e6d8ee63ff0746591d21906a4",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0052.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0052.lgcm.sh.istep.fun/result.json": "36d5ed01f755ec28add4f583cac77a7315a2577aea5a541ec404ef9c4569a601",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0052.lgcm.sh.istep.fun/server.log": "d44bd6cd6f15035c035ad7fd1985568c0577900f66e0fef5dca4f0a0aef57ef2",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0057.lgcm.sh.istep.fun/drained.json": "b9e77f69d1d7037f1094876555a1dc7f1267ccfc0b0f070e90027023efa47f8d",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0057.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0057.lgcm.sh.istep.fun/result.json": "3412c27c8c202881c537d03d308c305dc271d84b01a919b898c3e7fc0d2caaf4",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0057.lgcm.sh.istep.fun/server.log": "d3dbe85260965cb3734097ee63eee20ddb4d6c1673d1f5fec00cf8623cc5e9ee",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0760.lgcm.sh.istep.fun/drained.json": "bf48ce093e6d8568f76c0779b71d3bd8b5eb4f9d9a711530c4369c02e805d475",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0760.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0760.lgcm.sh.istep.fun/result.json": "185c04936b5bb46160bf66dec5fe202c736e1121280a166bc7d75e3498fc7221",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0760.lgcm.sh.istep.fun/server.log": "58bfd0fa279a6112f758c2090b2f0a1f720fa3b30aa6c08510004ca657433d20",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0878.lgcm.sh.istep.fun/drained.json": "3e8e345436b8d5cc6947c726aa0ab5210a5982fc33d9726f71e477c04c09a148",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0878.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0878.lgcm.sh.istep.fun/result.json": "828bac1867b156f0c0b42743d2edb5ffaadcde6483a166cd7bfe8c136230a05e",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0878.lgcm.sh.istep.fun/server.log": "26bbb7e1643260311c745e719b137f86edd4329f8091d98e8dcee14625dacaeb",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0938.lgcm.sh.istep.fun/drained.json": "c373beb62b2b66293594f09ee9257f8e24e9da8803a33e948c2dfbb1de95ae38",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0938.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0938.lgcm.sh.istep.fun/result.json": "fb47ac122075f672e01ec7b82dbd2222d17eb2bd9bf66d0570c7a438db154a3c",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-0938.lgcm.sh.istep.fun/server.log": "adc7221e543106508ebe188eda1b56e858aab411d4c2762cc0b40f8c10221adf",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1080.lgcm.sh.istep.fun/drained.json": "cfe54ef67abe0514bc2e71d8b7018eefb13096ed3304e1f87fa038cda5032fce",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1080.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1080.lgcm.sh.istep.fun/result.json": "aaefd42d72eedbe5621fef491f6e315801ac8d7f2fe9112c3532580691ac5dbd",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1080.lgcm.sh.istep.fun/server.log": "828b6b7309e1fdc239bf1f5bf61c6fd21b4990ef6a8f99fb0d81b7cb5242f0fd",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1192.lgcm.sh.istep.fun/drained.json": "9753e843ccac1e61ccd580af744ca9574916825c9b55640ef12a5190867c4f0a",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1192.lgcm.sh.istep.fun/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1192.lgcm.sh.istep.fun/result.json": "3b9c1f5dc3bfd9c1546a21508b7b49436d0e18d180a81c4bfec3107697eeece2",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/stage/evidence/nodes/gpu-h200-1192.lgcm.sh.istep.fun/server.log": "f7eb49caab05f7628e6899991e566ce6c19dd674ff8f66b67e17074775dd6f60",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/reference_inputs/config.json": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/reference_inputs/tokenizer_config.json": "78202af487f4d4360e8d15cb0506d60718f8599770599c6f28f7f1fa045a591f",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/reference_inputs/tokenizer.json": "b564c620eb77fa11d0926011c2202347d6cfc358d79724ee04ae7007e13636f0",
+    "/data/ycfeng/tmp/step5_d18_native_20261021/qualification02/launch_receipt_d19.json": "03721db33ed90a040c35984c119148ba510241458bc0de0120c4810c6cd90c07",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/entrypoints/cli/serve.py": "fc1692aa4caec2328ed8d0138074d65651dbef6d768f60cb0c834ed2d7376080",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/entrypoints/launchers/cli_args.py": "76221e2c10a0c5cffb7820a25c176a436777eb2008737cc5b1effaa014ebad28",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/entrypoints/launchers/api_server/entry.py": "0630e130bff19e36d7296194072403bcb730586226770101c741a10674cb4f69",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/entrypoints/launchers/utils/server_utils.py": "2ed259aad281aa83f784435ff920bff18e602b524d4fa52be1c66e3536909a88",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/worker/gpu/model_runner.py": "71642a34ca3cee5954ba8834916807810a2252d5e749151369fa31f5bf943624",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/worker/gpu/cudagraph_utils.py": "dfa356ffe5b88656945de785945115cc69b99578e77046101dc2611ba89f707d",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/core/sched/scheduler.py": "1521d0efd48a79f0a8ed1bb6f16a1015e1105ca256cbbc4c864c2113bf2c508e",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/engine/async_llm.py": "8a5f542482edd44363d982347cf8f719a2c25218fffb845ca9b02f4ef2c1a51d",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/engine/core_client.py": "386b528a69029507f80a2df4d6df2a4fa6ba2ba811501dc3449ceea58b5cd90a",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/metrics/loggers.py": "ea496be83251b8baa88ba6e28c648f737d9d22f72f151e955fe887ead6f236b3",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/v1/metrics/stats.py": "6b604c680421cfecb0a36be93513b94ed72623b91d4f975ea17ec1508f56b65a",
+    "/data/ycfeng/tmp/step5_profiling_20261020/image_src/vllm/compilation/cuda_graph.py": "6e34824d2e62cd3bbd2eaee615ebfae3db542ce2d6be9b14d1b012398087fe2e",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/config.json": "7708e7c55d2361872f5054305cb427d77cd6bd22affa457b99370f14de595579",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/preflight.json": "1440b06574b7ceeefebabfb1b7ce5c4354a5e7795296fabc2c18aeba69053cce",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/runtime_source_bindings.json": "b735bef235f8b23c7e189898232eca0119b888ed6f17826d4c616ea01c137200",
+    "/data/ycfeng/tmp/step5_d21_priority_20261021/h800_32_qualification03/stage/run_definition.json": "8a7720e536fc00b0bf6566b6a8376a8db038c1a2fc0225b8a29a41e4fdc50e34",
+    "/data/ycfeng/Frontier/.worktrees/step5-priority-runs/task_memory/task_2026-10-21_step5_priority_runs/native_replay/fresh_stage_build.json": "86e27284bde43458f16eec7421c6b095f763fe04a633a5167ca2e5370453fe59",
+    "/data/ycfeng/Frontier/.worktrees/step5-priority-runs/task_memory/task_2026-10-21_step5_priority_runs/native_replay/fresh_stage_verify.json": "86e27284bde43458f16eec7421c6b095f763fe04a633a5167ca2e5370453fe59",
+    "/data/ycfeng/Frontier/.worktrees/step5-priority-runs/task_memory/task_2026-10-21_step5_priority_runs/native_replay/fresh_stage_dry_run.json": "0e6d57f302d03a00b11405fbfe641613ef096d350b43974ab78c2675729c0502",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/spec.md": "6fac2b7636df92f24388339d6e25a1d8ed8776f43b210e6054836facc31f4fe7",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/requirements.md": "49f4bb0963d08390f95ba642f6701168a87ae33a41d871c10c547d074fc24bf7",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/tickets/08-native-pd-state-qualification.md": "3e0fe124cb8a6fbb183c77028e9d1b79e9b1508e57dc8b2e67f4adc56ef48e16",
+    "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/tickets/09-native-h20064-qualification.md": "47d46cf691ec48ddfb440a4128270b33b59d50292f386d13e9ebeaf1b4787c85"
+  }
+}

@@ -83,6 +83,7 @@ def test_ep_context_is_built_only_once_per_traced_positive_phase(
 
     positive_phases = 3 if tracing and not zero_work else 0
     assert context_spy.call_count == positive_phases
+    assert all(call.kwargs["global_layer_id"] == 7 for call in context_spy.call_args_list)
     assert store._push_metric.call_count == (5 if operations and not zero_work else 0)
     assert len(store._frontier_ep_wave_lane_ledger_rows) == int(ledger)
     events = [call.args[0] for call in store.trace_store.log_event.call_args_list]

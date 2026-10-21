@@ -7,11 +7,394 @@ the pieces that decide them are checked here.
 from __future__ import annotations
 
 import json
+import asyncio
+import hashlib
 import random
 from pathlib import Path
 
+import pytest
+
 from tests.comparison.dp_placement_pp.make_trace import build_rows
 from tests.comparison.dp_placement_pp.vllm_replay import OP_TIMING_SCOPES, server_command, server_env
+from tests.comparison.dp_placement_pp import vllm_replay
+
+
+def native_engine() -> dict:
+    return {
+        "vllm_version": "0.28.0",
+        "native_reference": {
+            "source_sha": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+            "instrumentation_sha": "6c523e85331b6fcaa1016bc97da8fdb3c1b3b9d2",
+            "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:"
+                     "2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+        },
+        "load_format": "dummy", "skip_tokenizer_init": True,
+        "tensor_parallel_size": 8, "pipeline_parallel_size": 1,
+        "data_parallel_size": 2, "enable_expert_parallel": True,
+        "enable_chunked_prefill": True, "enable_prefix_caching": False,
+        "enforce_eager": False, "dtype": "bfloat16", "seed": 0,
+        "max_num_batched_tokens": 64, "max_num_seqs": 8, "block_size": 64,
+        "max_model_len": 4096, "gpu_memory_utilization": 0.8,
+    }
+
+
+def native_observer(role="MONOLITHIC") -> dict:
+    return {
+        "run_id": "glm-observer-01", **{
+            key: value for key, value in native_engine()["native_reference"].items()
+            if key != "image"
+        },
+        "config_id": "glm-full", "replica_id": "pod", "role": role,
+        "expected_ranks": list(range(16)),
+        "output_dir": f"/mnt/codesign-exp/ycfeng/glm-observer-01/{role}/trace",
+        "mode": "light", "capacity_bytes": 4194304,
+    }
+
+
+def test_v028_installs_only_explicit_observer_after_sanitizing_inherited_switches():
+    inherited = {"PATH": "/usr/bin", "VLLM_FRONTIER_OBSERVER": '{"mode":"light"}',
+                 "VLLM_FRONTIER_MOE_ROUTING_LOG_PATH": "/old/routing",
+                 "VLLM_MOE_UNIFORM_ROUTING": "1", "VLLM_ATTENTION_BACKEND": "OLD"}
+    clean, changed = server_env("clean", native_engine(), Path("/run"), inherited)
+    assert clean == {"PATH": "/usr/bin"}
+    assert changed == {}
+    observer = native_observer()
+    light, changed = server_env("light", native_engine(), Path("/run"), inherited,
+                                observer=observer)
+    assert json.loads(changed["VLLM_FRONTIER_OBSERVER"]) == observer
+    assert light == {"PATH": "/usr/bin", **changed}
+    assert set(changed) == {"VLLM_FRONTIER_OBSERVER"}
+    assert observer["mode"] == "light"
+    explicit_clean = observer | {"mode": "clean"}
+    clean, changed = server_env("clean", native_engine(), Path("/run"), inherited,
+                                observer=explicit_clean)
+    assert json.loads(changed["VLLM_FRONTIER_OBSERVER"]) == explicit_clean
+
+
+def test_v028_command_uses_local_dummy_metadata_and_native_attention_args(tmp_path):
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {"attention_backend": "FLASHMLA_SPARSE",
+                                "async_scheduling": True, "quantization": "fp8",
+                                "shutdown_timeout": 30,
+                                "distributed_executor_backend": "mp"}
+    command = server_command(engine, tmp_path, 8100)
+    assert command[command.index("--load-format") + 1] == "dummy"
+    assert command[command.index("--attention-backend") + 1] == "FLASHMLA_SPARSE"
+    assert command[command.index("--quantization") + 1] == "fp8"
+    assert command[command.index("--shutdown-timeout") + 1] == "30"
+    assert command[command.index("--distributed-executor-backend") + 1] == "mp"
+    assert "--async-scheduling" in command
+    assert "--enable-return-routed-experts" not in command
+    assert "--trust-remote-code" not in command
+    with pytest.raises(ValueError, match="local"):
+        server_command(engine, tmp_path / "absent", 8100)
+
+
+@pytest.mark.parametrize("headless", [False, True])
+def test_v028_command_preserves_internal_dp_head_and_secondary_node(tmp_path, headless):
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {
+        "host": "0.0.0.0", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    }
+    if headless:
+        engine.update(headless=True, data_parallel_start_rank=1)
+    command = server_command(engine, tmp_path, 8100)
+    for flag, value in {
+        "--host": "0.0.0.0", "--tensor-parallel-size": "8",
+        "--data-parallel-size": "2", "--data-parallel-size-local": "1",
+        "--data-parallel-address": "192.0.2.10", "--data-parallel-rpc-port": "24461",
+    }.items():
+        assert command[command.index(flag) + 1] == value
+    assert ("--headless" in command) is headless
+    if headless:
+        assert command[command.index("--data-parallel-start-rank") + 1] == "1"
+    else:
+        assert "--data-parallel-start-rank" not in command
+    assert "--data-parallel-rank" not in command
+    assert "--data-parallel-hybrid-lb" not in command
+    assert "--data-parallel-external-lb" not in command
+
+
+@pytest.mark.parametrize("changes", [
+    {"data_parallel_start_rank": 0}, {"headless": True},
+    {"data_parallel_size_local": 0}, {"data_parallel_size_local": 3},
+    {"data_parallel_size_local": True}, {"data_parallel_address": "127.0.0.1"},
+    {"data_parallel_address": "0.0.0.0"}, {"data_parallel_address": "224.0.0.1"},
+    {"data_parallel_address": None}, {"data_parallel_rpc_port": 65536},
+    {"data_parallel_rpc_port": 8100}, {"host": "127.0.0.1"}, {"host": "not-an-ip"},
+    {"headless": "true"}, {"headless": True, "data_parallel_start_rank": 2},
+    {"headless": True, "data_parallel_start_rank": -1}, {"pipeline_parallel_size": 2},
+    {"data_parallel_rank": 0}, {"data_parallel_hybrid_lb": True},
+    {"data_parallel_external_lb": True},
+])
+def test_v028_rejects_invalid_or_external_dp_node_options(tmp_path, changes):
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {
+        "host": "0.0.0.0", "data_parallel_size_local": 1,
+        "data_parallel_address": "192.0.2.10", "data_parallel_rpc_port": 24461,
+    } | changes
+    with pytest.raises(ValueError):
+        server_command(engine, tmp_path, 8100)
+
+
+@pytest.mark.parametrize("blocks", [0, -1, True, None, "17", 17.5])
+def test_v028_rejects_invalid_native_gpu_block_override(tmp_path, blocks):
+    with pytest.raises(ValueError, match="num_gpu_blocks_override"):
+        server_command(native_engine() | {"num_gpu_blocks_override": blocks}, tmp_path, 8100)
+
+
+@pytest.mark.parametrize("block_counts", [{}, {"decode": 17}, {"prefill": 19, "decode": 17},
+                                          {"other": 17}, {"decode": True}, {"decode": 0}, None])
+def test_native_pd_node_capacity_reaches_only_its_selected_role(tmp_path, block_counts):
+    from tests.comparison.calibration.native_pd_worker import node_plan
+
+    (tmp_path / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    engine = native_engine() | {"kv_transfer": {}}
+    config = {"engine": engine, "data_parallel_size_local": 1,
+              "dp_rpc_ports": {"prefill": 24471, "decode": 24571},
+              "http_ports": {"prefill": 8100, "decode": 8200},
+              "role_num_gpu_blocks_override": block_counts}
+    peers = [{"host": f"node{index}", "ip": f"192.0.2.{10 + index}"} for index in range(4)]
+    before = json.dumps(config, sort_keys=True)
+    for index, peer in enumerate(peers):
+        if block_counts in ({"other": 17}, {"decode": True}, {"decode": 0}, None):
+            with pytest.raises(ValueError, match="Role GPU block overrides"):
+                node_plan(config, peers, peer["host"], [str(n) for n in range(8)])
+            continue
+        plan = node_plan(config, peers, peer["host"], [str(n) for n in range(8)])
+        command = server_command(plan["engine"], tmp_path, config["http_ports"][plan["role"]])
+        flag = "--num-gpu-blocks-override"
+        if plan["role"] in block_counts:
+            assert command[command.index(flag) + 1] == str(block_counts[plan["role"]])
+        else:
+            assert flag not in command
+        assert ("--headless" in command) is bool(index % 2)
+    assert json.dumps(config, sort_keys=True) == before
+
+
+@pytest.mark.parametrize("fault", ["version", "source", "image", "mode", "no_observer",
+                                  "clean_light", "capacity", "ranks", "role", "output",
+                                  "observer_source", "startup", "routing", "weights",
+                                  "boolean", "rank_count"])
+def test_v028_rejects_incompatible_inputs_before_launch(fault):
+    engine, observer, mode = native_engine(), native_observer(), "light"
+    if fault == "version":
+        engine["vllm_version"] = "0.29.0"
+    elif fault in ("source", "image"):
+        engine["native_reference"]["source_sha" if fault == "source" else "image"] = "wrong"
+    elif fault == "mode":
+        mode = "instrumented"
+    elif fault == "no_observer":
+        observer = None
+    elif fault == "clean_light":
+        mode = "clean"
+    elif fault == "capacity":
+        observer["capacity_bytes"] = True
+    elif fault == "ranks":
+        observer["expected_ranks"] = [0, True]
+    elif fault == "role":
+        observer["role"] = "DECODE_ATTN"
+    elif fault == "output":
+        observer["output_dir"] = "/mnt/codesign-exp/other/trace"
+    elif fault == "observer_source":
+        observer["source_sha"] = "a" * 40
+    elif fault == "startup":
+        observer["startup_memory"] = {"records": 12, "bytes": 65536}
+    elif fault == "routing":
+        engine["enable_return_routed_experts"] = True
+    elif fault == "weights":
+        engine["load_format"] = "auto"
+    elif fault == "boolean":
+        engine["enforce_eager"] = "false"
+    elif fault == "rank_count":
+        observer["expected_ranks"] = [0]
+    with pytest.raises(ValueError):
+        server_env(mode, engine, Path("/run"), {}, observer=observer)
+
+
+@pytest.mark.parametrize("version", ["0.10.2", "0.28.0"])
+def test_replay_keeps_client_identity_and_only_legacy_internal_id_contract(version):
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+
+    async def exercise():
+        async def complete(request):
+            assert request.headers["X-Request-Id"] == "request-7"
+            return web.json_response({"choices": [{"finish_reason": "length"}], "usage": {}})
+
+        app = web.Application()
+        app.router.add_post("/v1/completions", complete)
+        async with TestServer(app) as server:
+            _, records = await vllm_replay.replay([
+                {"request_id": "request-7", "segment": "formal", "role": "formal",
+                 "arrived_at": 0.0, "num_prefill_tokens": 3, "num_decode_tokens": 1},
+            ], server.port, 1024, 0.0, vllm_version=version)
+        return records
+
+    records = asyncio.run(exercise())
+    assert records[0]["request_id"] == "request-7"
+    assert records[0]["http_status"] == 200
+    if version == "0.10.2":
+        assert records[0]["engine_request_id"] == "cmpl-request-7-0"
+    else:
+        assert "engine_request_id" not in records[0]
+
+
+def native_replay_inputs(tmp_path, engine, observer=None):
+    engine_path = tmp_path / "engine.json"
+    engine_path.write_text(json.dumps(engine))
+    model = tmp_path / "metadata"
+    model.mkdir()
+    (model / "config.json").write_text(json.dumps({
+        "architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": 154880,
+    }))
+    trace = tmp_path / "trace"
+    trace.mkdir()
+    (trace / "request_ids.json").write_text(json.dumps({"rows": [
+        {"request_id": "request-7", "arrived_at": 0.0, "role": "formal", "segment": "formal",
+         "num_prefill_tokens": 65, "num_decode_tokens": 3},
+    ]}))
+    output = tmp_path / "output"
+    argv = ["--engine-config", str(engine_path), "--trace-dir", str(trace),
+            "--output-dir", str(output), "--model-dir", str(model),
+            "--mode", "clean" if observer is None else "light", "--drain-s", "0"]
+    if observer is not None:
+        observer_path = tmp_path / "observer.json"
+        observer_path.write_text(json.dumps(observer))
+        argv += ["--observer-config", str(observer_path)]
+    return argv, output
+
+
+@pytest.mark.parametrize("failure", ["spawn", "startup"])
+def test_v028_main_retains_terminal_evidence_on_launch_failure(tmp_path, monkeypatch, failure):
+    monkeypatch.setattr(vllm_replay.os, "environ", {
+        "PATH": "/usr/bin", "VLLM_FRONTIER_OBSERVER": '{"mode":"inherited"}',
+        "VLLM_MOE_UNIFORM_ROUTING": "1",
+    })
+    argv, output = native_replay_inputs(tmp_path, native_engine(), native_observer())
+    error = OSError("fixture spawn failed") if failure == "spawn" else RuntimeError("fixture startup failed")
+
+    class ExitedServer:
+        returncode = 23
+
+        def poll(self):
+            return self.returncode
+
+    def spawn(*args, **kwargs):
+        if failure == "spawn":
+            raise error
+        return ExitedServer()
+
+    def ready(*args):
+        raise error
+
+    monkeypatch.setattr(vllm_replay.subprocess, "Popen", spawn)
+    monkeypatch.setattr(vllm_replay, "wait_until_ready", ready)
+    with pytest.raises(type(error)) as raised:
+        vllm_replay.main(argv)
+    assert raised.value is error
+    summary = json.loads((output / "replay_summary.json").read_text())
+    assert summary["error"] == {"type": type(error).__name__, "message": str(error)}
+    assert summary["qualification_verified"] is False
+    assert "VLLM_MOE_UNIFORM_ROUTING" in summary["server_env_removed"]
+    assert summary["observer_evidence"]["process_expectations"] == {
+        "declared_dp_size": 2, "declared_worker_ranks": list(range(16)),
+        "engine_owner_inventory": None, "worker_inventory": None, "inventory_verified": False,
+    }
+    assert summary["observer_evidence"]["installed_runtime_verified"] is False
+    assert summary["observer_evidence"]["native_close_and_device_completion"] == "unverified"
+    if failure == "startup":
+        assert summary["server_stop"] == {"signal": None, "returncode": 23}
+    else:
+        assert "server_stop" not in summary
+
+
+def test_v028_retains_nested_trace_file_identities_without_admitting_contents(tmp_path):
+    trace = tmp_path / "worker" / "rank0.jsonl"
+    trace.parent.mkdir()
+    payload = b'{"fixture":"not native qualification"}\n'
+    trace.write_bytes(payload)
+    observer = native_observer() | {"output_dir": str(tmp_path)}
+    evidence = vllm_replay.observer_evidence(native_engine(), observer)
+    assert evidence["trace_files"] == [{
+        "path": str(trace), "bytes": len(payload), "sha256": hashlib.sha256(payload).hexdigest(),
+    }]
+    assert evidence["collection_errors"] == []
+    assert evidence["qualification_verified"] is False
+    assert evidence["process_expectations"]["inventory_verified"] is False
+
+
+def test_v028_collector_selects_only_the_configured_root_and_retains_partial_bytes(tmp_path):
+    trace = tmp_path / "persisted" / "engine" / "EngineCore.jsonl"
+    trace.parent.mkdir(parents=True)
+    payload = b'{"kind":"manifest"}\n{"kind":"incomplete'
+    trace.write_bytes(payload)
+    observer = native_observer() | {"output_dir": str(tmp_path / "wrong-root")}
+    excluded = vllm_replay.observer_evidence(native_engine(), observer)
+    assert excluded["trace_files"] == []
+    assert excluded["trace_directory_exists"] is False
+    assert excluded["collection_errors"] == []
+
+    included = vllm_replay.observer_evidence(
+        native_engine(), observer | {"output_dir": str(trace.parents[1])})
+    assert included["trace_files"] == [{
+        "path": str(trace), "bytes": len(payload),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+    }]
+    assert included["qualification_verified"] is False
+    assert included["process_expectations"]["inventory_verified"] is False
+    assert included["native_close_and_device_completion"] == "unverified"
+
+
+@pytest.mark.parametrize("failed_index", [0, 1, 2])
+def test_v028_collector_read_failure_preserves_only_preceding_file_identities(
+        tmp_path, monkeypatch, failed_index):
+    traces = [tmp_path / name for name in ("a_engine.jsonl", "b_worker.jsonl", "c.jsonl")]
+    payloads = [b"engine fixture\n", b"worker fixture\n", b"unclassified fixture\n"]
+    for trace, payload in zip(traces, payloads):
+        trace.write_bytes(payload)
+    original_open, reads = Path.open, []
+
+    def open_trace(path, mode="r", *args, **kwargs):
+        if path in traces and mode == "rb":
+            reads.append(path)
+            if path == traces[failed_index]:
+                raise OSError("injected collector read failure")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_trace)
+    observer = native_observer() | {"output_dir": str(tmp_path)}
+    evidence = vllm_replay.observer_evidence(native_engine(), observer)
+    assert reads == traces[:failed_index + 1]
+    assert evidence["trace_files"] == [{
+        "path": str(trace), "bytes": len(payload),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+    } for trace, payload in zip(traces[:failed_index], payloads)]
+    assert evidence["collection_errors"] == ["OSError: injected collector read failure"]
+    assert evidence["trace_directory_exists"] is True
+    assert evidence["qualification_verified"] is False
+    assert evidence["process_expectations"]["inventory_verified"] is False
+
+
+@pytest.mark.parametrize("config", [[], {"architectures": ["DeepseekV4ForCausalLM"]},
+                                    {"architectures": ["GlmMoeDsaForCausalLM"], "vocab_size": True}])
+def test_v028_main_rejects_invalid_local_metadata_before_launch(tmp_path, monkeypatch, config):
+    monkeypatch.setattr(vllm_replay.os, "environ", {"PATH": "/usr/bin"})
+    argv, output = native_replay_inputs(tmp_path, native_engine())
+    (tmp_path / "metadata" / "config.json").write_text(json.dumps(config))
+    monkeypatch.setattr(vllm_replay.subprocess, "Popen", lambda *a, **k: pytest.fail("launched"))
+    with pytest.raises(ValueError):
+        vllm_replay.main(argv)
+    assert not output.exists()
 
 
 def workload(bursts: list[dict]) -> dict:

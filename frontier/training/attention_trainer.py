@@ -16,6 +16,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.string_coercion import coerce_truthy_bool
 from frontier.attention.profiling_mapping import (
@@ -104,6 +105,11 @@ class AttentionTrainer(BaseTrainer):
             predictor_type: Type of predictor ("random_forest" or "linear_regression")
             **kwargs: Additional training parameters
         """
+        from frontier.config.model_config import BaseModelConfig
+
+        self.model_config = BaseModelConfig.create_from_name(model_name)
+        resolve_runtime_attention_family(self.model_config).require_enabled_for_execution()
+
         # Use layer dataset path as the primary dataset path for base class
         # (compute_dataset_path is now optional)
         super().__init__(layer_dataset_path, output_dir, predictor_type, **kwargs)
@@ -117,10 +123,6 @@ class AttentionTrainer(BaseTrainer):
 
         # Track whether compute models should be trained
         self.train_compute_models = compute_dataset_path is not None
-
-        # Load model configuration
-        from frontier.config.model_config import BaseModelConfig
-        self.model_config = BaseModelConfig.create_from_name(model_name)
 
         logger.info(f"Attention Configuration:")
         logger.info(f"  - model_name: {self.model_name}")

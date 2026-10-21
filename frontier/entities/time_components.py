@@ -7,29 +7,46 @@ to form complete ExecutionTime objects for different cluster types.
 
 from dataclasses import dataclass, field
 from functools import cache
+from types import MappingProxyType
 from typing import Mapping
 
-from frontier.attention.families import iter_execution_enabled_families
+from frontier.types import MeasurementType
+
+from frontier.attention.families import iter_attention_families, iter_execution_enabled_families
 from frontier.operators.families import (
     COMM_FAMILY,
     FFN_FAMILY,
     MEMORY_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
+    STEP5_FFN_FAMILY,
+    iter_operator_families,
 )
 
 
-def _attention_operator_execution_time_attrs() -> dict[str, str]:
-    return {
+@cache
+def _attention_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
         operator.name: operator.execution_time_attr
-        for family in iter_execution_enabled_families()
+        for family in iter_execution_enabled_families(include_structural=True)
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
-    }
+    })
 
 
-def _mlp_operator_execution_time_attrs() -> dict[str, str]:
-    return {
+@cache
+def _canonical_operator_names() -> tuple[str, ...]:
+    """Registered physical keys are independent of runtime admission and scalars."""
+    return tuple(dict.fromkeys(
+        operator.name
+        for family in (*iter_operator_families(), *iter_attention_families())
+        for operator in family.operators
+    ))
+
+
+@cache
+def _mlp_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
         operator.name: operator.execution_time_attr
         for family in (MEMORY_FAMILY, FFN_FAMILY)
         for operator in family.e2e_trace_ops()
@@ -40,13 +57,14 @@ def _mlp_operator_execution_time_attrs() -> dict[str, str]:
             "mlp_layer_act_execution_time",
             "mlp_layer_down_proj_execution_time",
         }
-    }
+    })
 
 
-def _moe_operator_execution_time_attrs() -> dict[str, str]:
-    return {
+@cache
+def _moe_operator_execution_time_attrs() -> Mapping[str, str]:
+    return MappingProxyType({
         operator.name: operator.execution_time_attr
-        for family in (MEMORY_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY)
+        for family in (MEMORY_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY, STEP5_FFN_FAMILY)
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr
         in {
@@ -58,27 +76,29 @@ def _moe_operator_execution_time_attrs() -> dict[str, str]:
             "share_expert_up_proj_time",
             "share_expert_act_time",
             "share_expert_down_proj_time",
+            "step5_ffn_merge_time",
         }
-    }
-
-
-def _communication_operator_execution_time_attrs() -> dict[str, str]:
-    return {
-        operator.name: operator.execution_time_attr
-        for operator in COMM_FAMILY.e2e_trace_ops()
-        if operator.execution_time_attr is not None
-    }
+    })
 
 
 @cache
-def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ...]:
+def _communication_operator_execution_time_attrs() -> Mapping[str, str | None]:
+    return MappingProxyType({
+        operator.name: operator.execution_time_attr
+        for operator in COMM_FAMILY.operators
+    })
+
+
+@cache
+def _canonical_operator_execution_time_attrs() -> Mapping[str, str]:
     operator_attrs: dict[str, str] = {}
     for family in (
-        *tuple(iter_execution_enabled_families()),
+        *tuple(iter_execution_enabled_families(include_structural=True)),
         MEMORY_FAMILY,
         FFN_FAMILY,
         MOE_FAMILY,
         SHARE_EXPERT_FAMILY,
+        STEP5_FFN_FAMILY,
         COMM_FAMILY,
     ):
         for operator in family.e2e_trace_ops():
@@ -89,25 +109,25 @@ def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ..
                     f"Duplicate ExecutionTime operator timing key: {operator.name}"
                 )
             operator_attrs[operator.name] = operator.execution_time_attr
-    return tuple(operator_attrs.items())
+    return MappingProxyType(operator_attrs)
 
 
 def canonical_operator_execution_time_attrs() -> dict[str, str]:
     """Return the canonical op_id -> ExecutionTime attribute mapping."""
 
-    return dict(_canonical_operator_execution_time_attr_items())
+    return dict(_canonical_operator_execution_time_attrs())
 
 
 def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, float]:
     """Validate and return op timings in canonical operator order."""
 
-    operator_attrs = canonical_operator_execution_time_attrs()
+    operator_names = _canonical_operator_names()
     normalized_by_name: dict[str, float] = {}
     for op_name, time_ms in op_times.items():
         normalized_op_name = str(op_name)
         if not normalized_op_name:
             raise ValueError("Execution operator name must be non-empty")
-        if normalized_op_name not in operator_attrs:
+        if normalized_op_name not in operator_names:
             raise ValueError(
                 f"Unsupported ExecutionTime operator timing: {normalized_op_name}"
             )
@@ -120,7 +140,7 @@ def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, flo
         normalized_by_name[normalized_op_name] = normalized_time_ms
     return {
         op_name: normalized_by_name[op_name]
-        for op_name in operator_attrs
+        for op_name in operator_names
         if op_name in normalized_by_name
     }
 
@@ -128,10 +148,12 @@ def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, flo
 def execution_op_time_values_by_attr(op_times: Mapping[str, float]) -> dict[str, float]:
     """Aggregate canonical op timings by the legacy ExecutionTime attribute they replace."""
 
-    operator_attrs = canonical_operator_execution_time_attrs()
+    operator_attrs = _canonical_operator_execution_time_attrs()
     attr_values: dict[str, float] = {}
     for op_name, time_ms in normalize_execution_op_times(op_times).items():
-        attr_name = operator_attrs[op_name]
+        attr_name = operator_attrs.get(op_name)
+        if attr_name is None:
+            continue
         attr_values[attr_name] = attr_values.get(attr_name, 0.0) + float(time_ms)
     return attr_values
 
@@ -153,7 +175,8 @@ def build_attention_operator_times_from_op_times(
 ) -> "AttentionOperatorTimes | None":
     subset = _build_operator_times_subset(
         op_times,
-        _attention_operator_execution_time_attrs(),
+        {operator.name: operator.execution_time_attr
+         for family in iter_attention_families() for operator in family.operators},
     )
     return AttentionOperatorTimes(subset) if subset else None
 
@@ -239,11 +262,28 @@ class CommunicationOperatorTimes:
         covered_attrs: set[str] = set()
         for op_name in self.op_times:
             attr_name = communication_operator_attrs[op_name]
-            if attr_name in covered_attrs:
+            if attr_name is None or attr_name in covered_attrs:
                 continue
             covered_time_ms += float(getattr(communication_time, attr_name))
             covered_attrs.add(attr_name)
         return covered_time_ms
+
+
+@dataclass(frozen=True)
+class OperatorCost:
+    """One physical prediction and the measured inputs that identify it."""
+
+    duration_ms: float
+    kernel_count: float
+    measurement_type: MeasurementType
+    duration_model_hash: str
+    kernel_count_model_hash: str
+    evidence_kind: str | None
+    exact_lookup: bool
+
+    @property
+    def includes_kernel_gap(self) -> bool:
+        return self.measurement_type is not MeasurementType.KERNEL_ONLY
 
 
 @dataclass
@@ -251,6 +291,8 @@ class AttentionOperatorTimes:
     """Single-layer timings keyed by physical attention operator name."""
 
     op_times: Mapping[str, float] = field(default_factory=dict)
+    costs: Mapping[str, OperatorCost] = field(default_factory=dict)
+    diagnostics: Mapping[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         normalized_op_times: dict[str, float] = {}
@@ -283,7 +325,7 @@ class AttentionOperatorTimes:
         attention_operator_attrs = _attention_operator_execution_time_attrs()
         for op_name in self.op_times:
             attr_name = attention_operator_attrs.get(op_name)
-            if attr_name is not None:
+            if attr_name is not None and hasattr(attention_time, attr_name):
                 covered_time_ms += float(getattr(attention_time, attr_name))
         return covered_time_ms
 
@@ -429,6 +471,26 @@ class AttentionTime:
     kernel_count: float = 0.0
     operator_times: AttentionOperatorTimes | None = None
 
+    # Inclusive native sparse-indexer and MLA scopes; their children are not
+    # additional physical charges in the same attention family.
+    attn_dsa_indexer_time: float = 0.0
+    attn_dsa_mla_time: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.operator_costs:
+            self.kernel_count = sum(cost.kernel_count for cost in self.operator_costs.values())
+
+    @property
+    def operator_costs(self) -> Mapping[str, OperatorCost]:
+        return self.operator_times.costs if self.operator_times is not None else {}
+
+    @property
+    def measurement_type(self) -> MeasurementType | None:
+        methods = {cost.measurement_type for cost in self.operator_costs.values()}
+        if len(methods) > 1:
+            raise ValueError("One attention physical scope cannot mix measurement methods")
+        return next(iter(methods)) if methods else None
+
     def total_time(self) -> float:
         """Calculate total attention time for this layer."""
         legacy_total_time = (
@@ -445,6 +507,8 @@ class AttentionTime:
             + self.attn_mla_decode_q_latent_proj_time
             + self.attn_mla_decode_time
             + self.attn_mla_v_up_proj_time
+            + self.attn_dsa_indexer_time
+            + self.attn_dsa_mla_time
             + self.attn_norm_time
             # Step2Mini-specific operations (0.0 for non-Step2Mini models)
             + self.attn_inter_norm_time
@@ -519,6 +583,7 @@ class MoETime:
     share_expert_up_proj_time: float = 0.0    # Shared expert up projection
     share_expert_down_proj_time: float = 0.0  # Shared expert down projection
     share_expert_act_time: float = 0.0        # Shared expert activation
+    step5_ffn_merge_time: float = 0.0         # Routed/shared BF16 branches summed into FP32
     operator_times: MoEOperatorTimes | None = None
 
     @property
@@ -543,6 +608,7 @@ class MoETime:
             + self.share_expert_up_proj_time
             + self.share_expert_down_proj_time
             + self.share_expert_act_time
+            + self.step5_ffn_merge_time
         )
         if self.operator_times is None:
             return legacy_total_time
@@ -564,6 +630,7 @@ class CommunicationTime:
     # Tensor parallelism (TP)
     attn_tensor_parallel_allreduce_time: float = 0.0  # TP all-reduce for attention output
     moe_tensor_parallel_allreduce_time: float = 0.0  # TP all-reduce for MLP/MoE output
+    embedding_allreduce_time: float = 0.0  # Stage-owned vocabulary embedding reduction
     # Legacy fallback: used when attn/moe fields are not populated
     tensor_parallel_allreduce_time: float = 0.0  # TP all-reduce for attention/MLP output
     tensor_parallel_allgather_time: float = 0.0  # TP all-gather for FFN input (Step3)
@@ -608,6 +675,7 @@ class CommunicationTime:
             tp_allreduce_time = self.tensor_parallel_allreduce_time
         legacy_total_time = (
             tp_allreduce_time
+            + self.embedding_allreduce_time
             + self.tensor_parallel_allgather_time
             + self.share_expert_tensor_parallel_allreduce_time
             + self.dp_input_allreduce_time

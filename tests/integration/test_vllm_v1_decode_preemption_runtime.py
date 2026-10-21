@@ -372,9 +372,21 @@ def _assert_every_request_completes(simulator, num_requests):
         assert request.num_processed_decode_tokens == request.num_decode_tokens
 
 
-def test_a_request_preempted_during_decode_resumes_and_completes(tmp_path, monkeypatch):
+@pytest.mark.parametrize("max_concurrent_batches", [None, 2])
+def test_a_request_preempted_during_decode_resumes_and_completes(
+    tmp_path, monkeypatch, max_concurrent_batches
+):
     victims = _observe_preemptions(monkeypatch)
-    simulator = Simulator(_trace_config(tmp_path))
+    config = _trace_config(tmp_path)
+    config.cluster_config.replica_scheduler_config = dataclasses.replace(
+        config.cluster_config.replica_scheduler_config,
+        max_concurrent_batches=max_concurrent_batches,
+    )
+    simulator = Simulator(config)
+    original_lengths = {
+        request.id: (request.num_prefill_tokens, request.num_decode_tokens)
+        for request in simulator._all_requests
+    }
     simulator.run()
 
     # The run has to reach a preemption after prefill, or it proves nothing.
@@ -383,6 +395,15 @@ def test_a_request_preempted_during_decode_resumes_and_completes(tmp_path, monke
     for victim in decode_victims:
         assert victim["processed_after"] == victim["processed_before"], victim
     _assert_every_request_completes(simulator, 3)
+    for request in simulator._all_requests:
+        prompt, output = original_lengths[request.id]
+        assert request.num_processed_tokens == prompt + output
+        assert request.num_emitted_decode_tokens == output
+    cluster = simulator.scheduler.get_cluster_scheduler(ClusterType.MONOLITHIC)
+    for lane in cluster._replica_schedulers.values():
+        assert lane._allocation_map == {}
+        assert lane._num_allocated_blocks == 0
+        assert lane.num_running_batches == 0
 
 
 @pytest.mark.parametrize("name", PIPELINED_CASES)
@@ -1538,6 +1559,37 @@ def test_the_engine_stays_blocked_until_its_step_runs_every_stage(
     _assert_every_request_completes(
         simulator, BLOCKING_PREEMPTED_STEP_CASE["num_requests"]
     )
+
+
+def test_pp1_capacity_two_retires_preempted_queued_steps_and_releases_every_request(
+    tmp_path, monkeypatch
+):
+    victims = _observe_preemptions(monkeypatch)
+    rescheduled = _observe_rescheduling(monkeypatch)
+    steps = _observe_blocking_steps(monkeypatch)
+    case = dict(BLOCKING_PREEMPTED_STEP_CASE, num_pipeline_stages=1)
+    config = _pipelined_config(tmp_path, case)
+    config.cluster_config.replica_scheduler_config = dataclasses.replace(
+        config.cluster_config.replica_scheduler_config, max_concurrent_batches=2
+    )
+    simulator = Simulator(config)
+    simulator.run()
+
+    assert any(victim["in_flight"] and victim["decoding"] for victim in victims)
+    assert any(step["live_rows"] == 0 for step in steps)
+    assert all(step["stages"] == [0] for step in steps)
+    assert rescheduled == []
+    _assert_every_request_completes(simulator, 6)
+    cluster = simulator.scheduler.get_cluster_scheduler(ClusterType.MONOLITHIC)
+    for lane in cluster._replica_schedulers.values():
+        assert lane.is_empty()
+        assert lane.num_running_batches == 0
+        assert lane._allocation_map == {}
+        assert lane._num_allocated_blocks == 0
+        assert lane._get_active_batch_request_counts() == {}
+        assert not lane._in_flight_batch_ids
+    for context in cluster._stage_execution_contexts.values():
+        assert context.is_idle and context.queued_tickets == ()
 
 
 def _scale_stage_time_with_tokens(monkeypatch):

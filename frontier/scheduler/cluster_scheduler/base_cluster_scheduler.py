@@ -464,6 +464,60 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
         return None
 
+    def validate_kv_transfer_target_scope(
+        self, source_capacity, source_attention_tp: int, request: Request,
+        *, num_computed_tokens: Optional[int] = None,
+    ) -> None:
+        """Validate every selectable NIXL lane before advancing placement.
+
+        The structural page payload is resolved with the source attention TP,
+        and each DECODE rank reads the pages of its PREFILL peer rank, so both
+        roles need the same attention TP. Equal capacity does not imply it:
+        Step holds one local KV head per rank at both TP4 and TP8.
+        """
+        if self._cluster_type != ClusterType.DECODE:
+            raise ValueError("NIXL transfer target validation requires DECODE")
+        replica_ids = list(self._cluster.replicas.keys())
+        if not replica_ids:
+            raise ValueError("DECODE cluster has no replicas")
+        for replica_id in replica_ids:
+            for replica_local_id in range(self._replica_dp_size):
+                lane = self.get_replica_scheduler(replica_id, replica_local_id)
+                if num_computed_tokens is None:
+                    lane.validate_kv_transfer_target_scope(request)
+                else:
+                    lane.validate_kv_transfer_target_scope(request, num_computed_tokens=num_computed_tokens)
+                target_attention_tp = lane._replica_config.attn_tensor_parallel_size
+                if target_attention_tp != source_attention_tp:
+                    raise NotImplementedError(
+                        "NIXL structural PD requires equal PREFILL and DECODE "
+                        f"attention TP; got PREFILL={source_attention_tp}, "
+                        f"DECODE={target_attention_tp}"
+                    )
+                if lane._kv_cache_capacity != source_capacity:
+                    raise ValueError(
+                        "PREFILL and DECODE cache capacities must match"
+                    )
+
+    def select_kv_transfer_target(self, time: float, request: Request) -> tuple[int, int]:
+        """Select the DECODE lane that reserves before a NIXL READ.
+
+        A NIXL request reaches its reserved lane directly, so this is the only
+        placement the DECODE policy makes for it.
+        """
+        raise ValueError(
+            "NIXL structural PD needs a DECODE cluster scheduler that selects "
+            f"transfer targets; {type(self).__name__} does not."
+        )
+
+    def abandon_kv_transfer_target_selection(self, request: Request) -> None:
+        """Release frontend ownership after a rejected measured cost.
+
+        Policies without frontend request ownership retain no selection token.
+        """
+
+        return None
+
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
 
@@ -848,6 +902,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         batch: Batch,
         target_replica_id: int,
         global_layer_id: int,
+        routing_token_count: int | None = None,
     ):
         """Materialize one canonical per-layer workload for a full-model MoE batch."""
 
@@ -856,6 +911,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             batch=batch,
             target_replica_id=target_replica_id,
             global_layer_id=global_layer_id,
+            routing_token_count=routing_token_count,
         )
 
     def _build_prefill_ep_lane_batch(

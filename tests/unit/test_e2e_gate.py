@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -293,3 +294,61 @@ def test_isolated_prefill_admission_against_the_probe_cohort_median(tmp_path):
     assert not admission.isolated_prefill(cohort[1], cohort)["passed"]
     with pytest.raises(ValueError):
         admission.isolated_prefill(prefill_run(tmp_path, "outside", 0.028), cohort)
+
+
+@pytest.mark.parametrize("damage, status", [
+    ("identity", "FAIL"), ("sequence", "FAIL"), ("count", "FAIL"),
+    ("malformed", "FAIL"), ("truncated", "INSUFFICIENT_EVIDENCE"),
+    ("missing", "INSUFFICIENT_EVIDENCE"), ("digest", "FAIL"),
+    ("valid", "INSUFFICIENT_EVIDENCE"), ("tail_conflict", "FAIL"),
+    ("final_count", "FAIL"), ("manifest_type", "FAIL"),
+    ("observer_null", "FAIL"), ("observer_json", "FAIL"),
+    ("tail_capacity", "INSUFFICIENT_EVIDENCE"),
+])
+def test_observer_envelope_admission(tmp_path, capsys, damage, status):
+    observer = dict(run_id="r", source_sha="s", instrumentation_sha="i",
+                    config_id="c", replica_id="pod", role="MONOLITHIC",
+                    expected_ranks=[0], output_dir="unused")
+    (tmp_path / "observer.json").write_text(json.dumps(observer))
+    pin = dict(path="observer.json", sha256=run_gate.sha256(tmp_path / "observer.json"))
+    probe, reference = tmp_path / "trace_index.json", tmp_path / "expected.json"
+    reference.write_text(json.dumps(dict(observer=pin, artifacts=[],
+                                        engine_owners=None, worker_ranks=None)))
+    identity = dict(run_id="r", source_sha="s", instrumentation_sha="i",
+                    process_instance="p", clock_domain="p:monotonic", clock_unit="ns")
+    manifest = dict(observer, **identity, kind="manifest", schema_version=1,
+                    mode="light", capacity_bytes=4096,
+                    node="n", pid=1, engine_request_owner=0)
+    manifest["coverage"] = "engine_transport_only"
+    row = dict(identity, kind="consume", sequence=1, time_ns=1)
+    footer = dict(identity, kind="footer", final_sequence=1, step_count=0,
+                  record_count=1, drop_count=0, pending_steps=0, observer_error=None)
+    row.update({"identity": {"run_id": "other"}, "tail_conflict": {"run_id": "other"},
+                "sequence": {"sequence": 2}}.get(damage, {}))
+    footer.update({"final_count": {"final_sequence": 0, "drop_count": 1},
+                   "count": {"record_count": 2}}.get(damage, {}))
+    manifest.update({"manifest_type": {"mode": []}}.get(damage, {}))
+    if damage == "tail_capacity":
+        manifest["capacity_bytes"] = len((json.dumps(row) + "\n").encode())
+    path = tmp_path / "trace.jsonl"
+    write_jsonl(path, [manifest, row, footer])
+    if damage in ("malformed", "truncated"):
+        path.write_bytes(b"{}\nnot-json\n" if damage == "malformed" else b'{"kind":')
+    if damage in ("tail_conflict", "tail_capacity"):
+        path.write_bytes(path.read_bytes().rsplit(b"\n", 2)[0] + b'\n{"kind":')
+    if damage.startswith("observer_"):
+        (tmp_path / "observer.json").write_text(
+            "null" if damage == "observer_null" else "not-json")
+        expected = json.loads(reference.read_text())
+        expected["observer"]["sha256"] = run_gate.sha256(tmp_path / "observer.json")
+        reference.write_text(json.dumps(expected))
+    pin = dict(path=path.name, sha256=run_gate.sha256(path))
+    pin.update({"missing": {"path": "absent.jsonl"},
+                "digest": {"sha256": "0" * 64}}.get(damage, {}))
+    probe.write_text(json.dumps({"files": [pin]}))
+    run_gate.command_admit(SimpleNamespace(rule="observer_host", probe=probe,
+                                          reference=[reference]))
+    reading = json.loads(capsys.readouterr().out)
+    assert (reading["status"], reading["qualification_verified"]) == (status, False)
+    assert set(reading) == {"rule", "status", "structural_status", "coverage_status",
+                           "files", "reasons", "inputs", "qualification_verified"}

@@ -1,0 +1,12 @@
+{
+  "expected_rows": 18,
+  "actual_rows": 18,
+  "complete": true,
+  "csv": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/compute/h200/stepfun-ai/Step-5-Preview/step5_attention.csv",
+  "gpu_active_csv": "/mnt/codesign-exp/ycfeng/frontier/step5_profiling/fixed_h200_d22_probe_20261021_01/attention/compute/h200/stepfun-ai/Step-5-Preview/step5_attention_kernel_only.csv",
+  "gpu_active_rows": 4,
+  "expected_gpu_active_rows": 4,
+  "stable_rows": 18,
+  "admitted": false,
+  "limits": "Development measurements; full-grid qualification and typed admission remain open."
+}
