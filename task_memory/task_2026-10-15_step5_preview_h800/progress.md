@@ -4,7 +4,7 @@
 
 | Date | Change |
 | --- | --- |
-| 2026-10-22 | D25 full H80032/64 workload collection prioritized;121 CPU checks pass and historical64-GPU TTFT localized mainly before P response. |
+| 2026-10-22 | D25 complete: both432-request workloads verified, p90/throughput reported, no measured TTFT>5s; JIT/decode stability limits retained. |
 | 2026-10-22 | Merge typed inputs at0c9d1ef, verify13 observed groups and196 HTTP checks; record D24 bounded capture approval. |
 | 2026-10-22 | Record D23 approval, native G3 not-qualified judgment, parent467/264 input checks, startup census181 checks and active core/HTTP/reference follow-up. |
 | 2026-10-22 | Integrated G3/reference and MRv2 producer; merged-tree685/465 checks pass; P0 native capture submitted and replicas Running. |
@@ -177,13 +177,14 @@
 | 2026-10-16 | User selected the CUDA forward-compatibility switch; one-H800 rerun exp-1016-132434-466356 passed all five compute checks with the compatibility path set at process start. |
 | 2026-10-16 | Parallel two-step request: wrote the G1 04A Grok spec (dispatch blocked: the tool requires the user's `/grok-implement` command) and submitted the 8-H800 NCCL/P2P diagnostic. |
 
-## Current D21/D23/D24 handoff — 2026-10-22
+## Current D21/D23/D24/D25 handoff — 2026-10-22
 
-Authority is D20/D21/D23/D24 in [requirements.md](requirements.md), owned by the parent. Current normative contract is [spec §0](spec.md); executable dependencies/owners are in [plan.md](plan.md). Earlier chronological evidence below does not override the current table or D23's approved first-prediction agreement.
+Authority is D20/D21/D23/D24/D25 in [requirements.md](requirements.md), owned by the parent. Current normative contract is [spec §0](spec.md); executable dependencies/owners are in [plan.md](plan.md). Earlier chronological evidence below does not override the current table or D23's approved first-prediction agreement.
 
 | Work | Status | Evidence / next action |
 | --- | --- | --- |
 | D21 decision and dependency synchronization | completed | Four existing-ticket tracks in09/23/28/30; supporting active tickets updated, no new ticket or revived W1–W6 sweep |
+| D25 complete H80032/64 workload | completed; performance stability unverified | Both432/432 requests, three complete128-request measurement windows, all12 containers exit0/restarts0. Pooled p90 TTFT1.761/1.912s, TPOT87.793/93.557ms, E2E91.640/97.516s; mean total throughput5101.4/4999.1tok/s. [Report](../task_2026-10-22_step5_full_workload/summary.md) |
 | P0 H80032 | basic PARTIAL; per-lane replay observed | qualification03 exp-1021-205523-285491 Succeeded13:09:48UTC;24 exact requests/two idle boundaries PASS; decode lanes0/1 log2224/2152 FULL forwards |
 | P1 H80064 | basic PARTIAL; formal blocked | exp-1021-202325-579469 Succeeded;24/24 requests,64 GPUs, every lane idle; replay/G3/G4 and same-hardware30% release remain open |
 | P2 H20032 | basic PARTIAL; formal blocked | exp-1021-201544-965435 Succeeded;24/24 requests,32 GPUs, every lane idle; post-terminal parent API identity verified13:09UTC |
@@ -192,10 +193,10 @@ Authority is D20/D21/D23/D24 in [requirements.md](requirements.md), owned by the
 | D22 independent timing reference | completed within approved probe scope | `exp-1021-201658-886733`,one preemptible H200;18/18 strict candidates,22/22 output/cache,18/18 prefix PASS; full-grid/linear-quality/serving admission remains open |
 | Canonical G3/G4 capture01 | completed; G3 NOT QUALIFIED |160/163 complete,1 actual abort,2 HTTP502. Resident identity/content and scoped lifetime PASS; independent state equivalence, pressure and transfer overlap unresolved. [Judgment](../task_2026-10-21_step5_priority_runs/canonical_g3/native_judgment/report.md) |
 | Typed MRv2 profile ingestion | integrated at0c9d1ef; parent verification PASS |Parent467 producer and264 measured checks; merged-tree13/13 observed groups and26 synthetic rows, preserving5 raw-null FULL groups. Independent static review has no findings; comparative review was not completed. [Review](../task_2026-10-22_step5_mrv2_inputs/inputs_review.md) |
-| D23 first-prediction agreement | approved; implementation in progress |Existing stage forward group must bind P/D useful and dummy descriptors before the first predictor call; shared core owner at `step5-mrv2-forward` |
+| D23 first-prediction agreement | CPU core verified; final acceptance pending |Parent444 checks; first FULL-capacity finding corrected inc9e9388f/b2b830d5. Fixed-capacity plumbing review, fresh full CLI and clean strict77 remain. Capacity owner `ses_ea04c3231ffe1jcTz79saP3Mbt` and CLI owner `ses_ea08efc2cffe6Z1Rc7srkVdebh` twice hit provider HTTP502; inspect saved artifacts before resuming/primary takeover |
 | Startup census correction | committed e8d2f1a; native validation pending |Actual nested worker startup seam RED02;181 affected and19 final focused checks PASS. Original native gate FAIL unchanged. [Report](../task_2026-10-21_step5_priority_runs/canonical_g3/startup_census/test_report_2026-10-22_startup_census.md) |
 | HTTP502 failure context | integrated d063573; parent196 and merged100 checks PASS |Public connection-selection events and redacted exception frames preserve healthy200, EOF502, oneP/oneD and existing transport policy. Native root cause and socket identity remain unverified. [Parent report](test_report_2026-10-22_d23_parent_integration.md) |
-| D24 reference values | approved; implementation in progress |Retain two logical pages at first local tail completion, both actual/reference; about183MB extra. Numerical acceptance rule remains separately gated. Owner `step5-reference-values`; scope in requirements |
+| D24 reference values | CPU capability complete; native capture pending |34a72b8f/4393201f; parent550 checks. Two-page raw/mean retention, unchanged acceptance and soft caps. New diagnostic deferred behind completed D25; numerical acceptance rule remains separately gated |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.

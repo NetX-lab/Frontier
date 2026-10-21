@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | D25 full H80032/64 workloads complete, both432/432 verified; p90/throughput and remaining decode instability archived. |
 | 2026-10-22 | Consolidated clean145a2f5 passes77/77 exact fidelity; P0 G3 capture finishesSucceeded4/4, native judgment pending. Four-track8-request diagnostic p90/throughput independently recomputed. |
 | 2026-10-22 | Integrated G3/reference1171ab6 and MRv2 producer82f4452 at145a2f5; parent merged suites685/465PASS. Submitted32-H800 capture exp-1021-235955-532667; native judgment and consumer alignment pending. |
 | 2026-10-21 | Record bc8ae27 integration,323/197 parent checks, final-source fidelity limits and native generation03 per-lane FULL replay. |
@@ -83,6 +84,10 @@
 | 2026-10-16 | Added82planned G1 CPU/source reference cases and local mathematical/source verification; phase review is pending. |
 | 2026-10-16 | Archived the passing CUDA forward-compatibility rerun and the process-start launch requirement for native work. |
 
+
+## D25 full H800 workload completion — 2026-10-22
+
+Both requested H80032/64 workloads completed successfully: three128-request measured windows after16 warmups per round,432/432 requests per size. Pooled p90 TTFT1.760660/1.911773s, TPOT87.792540/93.557086ms, E2E91.639790/97.515587s; three-window mean total throughput5101.423/4999.053tok/s. All measured TTFT values are below5s. Native/accuracy qualification remains unverified; in-measurement JIT and first-round decode slowdown prevent a fully steady-state claim. Complete evidence, commands, definitions and warmup/historical TTFT analysis: [D25 summary](../task_2026-10-22_step5_full_workload/summary.md).
 
 ## Current D21 documentation delivery — 2026-10-21
 

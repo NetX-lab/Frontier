@@ -1,0 +1,284 @@
+{
+  "32": {
+    "gpu_hours_from_container_times": 12.966666666666667,
+    "gpus": 32,
+    "all_unique": true,
+    "native_pins_checked_before_worker_rendezvous": 50,
+    "nodes": [
+      {
+        "host": "gpu-h800-0024.host.platform.shaipower.com",
+        "role": "prefill",
+        "lane": 0,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0201.host.platform.shaipower.com",
+        "role": "prefill",
+        "lane": 1,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0398.host.platform.shaipower.com",
+        "role": "decode",
+        "lane": 0,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0471.host.platform.shaipower.com",
+        "role": "decode",
+        "lane": 1,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      }
+    ],
+    "sha256": {
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/config.json": "d9424e11d3da6e2a5189af35848001a8071d2a25b644073208e95682fe0d8b00",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/parent_terminal01.json": "25416c5d5409d0d7a2d1e557459d70f045776b937b39e9b219a5663a8e42deb0",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/drained.json": "4cf4bcb68ab9be0acf9086bd6ebccd79a3ed60c9683a2199c2047487a24741c2",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/ready.json": "36c52debc1907f517ee7d94638d52c718d5f780a10be7df7ee5cdeedff7636e0",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/replay.log": "95290952c4fb8e2a14ce6e04308c1f8fd1cb0fef6256a3235487d746c6155d56",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/result.json": "d0745564e1dec60f66791131d4e506f7121c2d07895faec771f580e0aa420cce",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/server.log": "1b15f1f53462da90835ccca3133a69c614cc9ea3412ea56861e7e3c7d72a33bb",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/server_ready.json": "7779700110806bacda4ce0cbc898d14433a75d58c5af26b99df4c3a44f765d11",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0024.host.platform.shaipower.com/worker.log": "e66045c046539ca0d8b947e0ea99648df267f6f7689c07f5c9895f92c63bb51e",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/drained.json": "b44dec70c25f8d73ae879053f9b22b0d6eb9de3e6d8ee63ff0746591d21906a4",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/ready.json": "e1539f02df608c7d94e463bd3d357db0ec4a6d55f5d09d68a98fdb3fd91cfe99",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/result.json": "4fbe39760ad23c7ac42b8ffb790624d0b6c5553de9a3d2fa3adaa0cdc0859df5",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/server.log": "7c53f3622e4195bccb05f269c08470d09330b9b13fc5e7364d8cf1b1b82af2b3",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0201.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/drained.json": "3e8e345436b8d5cc6947c726aa0ab5210a5982fc33d9726f71e477c04c09a148",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/ready.json": "005fd0a4295ad06fdb55749f25667c762a88b14dfead2c2ea77268c1d53fd724",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/result.json": "4d38c22a773de3bf92ce351d259ea61cad4f6f02491c50ec0857065685c8563a",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/server.log": "76280b3a6ebc71f7ca60c46a249b909a52ca0cb7e520264606328388d34bbcb9",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/server_ready.json": "da138f41ebeefe8cf5d97adc5138e6e05f321d62ac75f3b616859c13aacc69cb",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0398.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/drained.json": "c373beb62b2b66293594f09ee9257f8e24e9da8803a33e948c2dfbb1de95ae38",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/ready.json": "85288564d3135b83a62fc6a90428c23e8fbaed3c204565a52cb0fe323baf0ac6",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/result.json": "ce46d3eea4ab560edca14feaa4a17d00d07297284ba71824069c62c187e4e271",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/server.log": "36139088f6f4214150b1d632757f03cd0097f4eda58b6dc66b297694ab8aa68c",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_32_workload01/stage/evidence/nodes/gpu-h800-0471.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7"
+    }
+  },
+  "64": {
+    "gpu_hours_from_container_times": 26.564444444444444,
+    "gpus": 64,
+    "all_unique": true,
+    "native_pins_checked_before_worker_rendezvous": 50,
+    "nodes": [
+      {
+        "host": "gpu-h800-0064.host.platform.shaipower.com",
+        "role": "prefill",
+        "lane": 0,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0071.host.platform.shaipower.com",
+        "role": "prefill",
+        "lane": 1,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0114.host.platform.shaipower.com",
+        "role": "prefill",
+        "lane": 2,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0180.host.platform.shaipower.com",
+        "role": "prefill",
+        "lane": 3,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0390.host.platform.shaipower.com",
+        "role": "decode",
+        "lane": 0,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0399.host.platform.shaipower.com",
+        "role": "decode",
+        "lane": 1,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0566.host.platform.shaipower.com",
+        "role": "decode",
+        "lane": 2,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      },
+      {
+        "host": "gpu-h800-0575.host.platform.shaipower.com",
+        "role": "decode",
+        "lane": 3,
+        "versions": {
+          "torch": "2.13.0+cu130",
+          "vllm": "0.1.dev22912+g8224bb82f",
+          "aiohttp": "3.14.5"
+        },
+        "server_stop": {
+          "signal": "SIGINT",
+          "returncode": 0
+        },
+        "weight_audit": {}
+      }
+    ],
+    "sha256": {
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/config.json": "ac80f263f803bd5fbf43610d9232e1c99757bb71c38ac87a13945fd5a1ae046d",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/parent_terminal01.json": "b47befa1d78d8ac3340b68d4eb7b88b80bc31852d80ca7b4ee14af50a4fdb4b8",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/drained.json": "4cf4bcb68ab9be0acf9086bd6ebccd79a3ed60c9683a2199c2047487a24741c2",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/ready.json": "c5a0afd2d0ecc063fd20fc48540a48cde427269edd08cf29bded521aa94119df",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/replay.log": "95290952c4fb8e2a14ce6e04308c1f8fd1cb0fef6256a3235487d746c6155d56",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/result.json": "39480b403a652c1f468677c3159b7d505ac54f90ae32466164c744310a6f044c",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/server.log": "b75f3ca34b398afc15fe6f59bc6024931deb02f868e3524fbd248367c7e92a7f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/server_ready.json": "354bf26d41b6c24e86380b1fa55973393de98e599fce8ed5943f66decf2fac62",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0064.host.platform.shaipower.com/worker.log": "e66045c046539ca0d8b947e0ea99648df267f6f7689c07f5c9895f92c63bb51e",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/drained.json": "b44dec70c25f8d73ae879053f9b22b0d6eb9de3e6d8ee63ff0746591d21906a4",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/ready.json": "2fbaa860e76242a357265aa6600a7e5b1b1be239715aa2fe8e1b0d1f5e473ce8",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/result.json": "2fce10f767e47ba9d0ed00529b5f3e738c83c8e73467074ba5bd14af3c01e30c",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/server.log": "d70da5efc051b97edc10a2856c73c9464fe162ad0a5c4f95974bfae3dd531130",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0071.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/drained.json": "b9e77f69d1d7037f1094876555a1dc7f1267ccfc0b0f070e90027023efa47f8d",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/ready.json": "3691db3eb2280bb20dbc877b0ab215cd637e7620909674c189125602c5c2935b",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/result.json": "71f8b6a9c247b49486e22fb0720bbad2bdf3034ab6ad3f4264691813461d0bf1",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/server.log": "c33451b4de314d91794feedd986e3a26b5d2c412e9138712e2aca2c434d11ba2",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0114.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0180.host.platform.shaipower.com/drained.json": "bf48ce093e6d8568f76c0779b71d3bd8b5eb4f9d9a711530c4369c02e805d475",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0180.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0180.host.platform.shaipower.com/ready.json": "d90771623dd7bbf366331adf40d6370118a8b1dcb72f0d8499556abc5177e4aa",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0180.host.platform.shaipower.com/result.json": "32108fcc9a654b974d896093ab680ec2e75343309047c294813344f68dacea3e",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0180.host.platform.shaipower.com/server.log": "2d5a4c28bfc56e257685663d36769d1aee101c39b66e2a5cdbba27e01c16b5fa",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0180.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/drained.json": "3e8e345436b8d5cc6947c726aa0ab5210a5982fc33d9726f71e477c04c09a148",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/ready.json": "34c4efea6926962a84bd3838d685bd14c075ef00e30c0a974c170c5194b0acd7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/result.json": "76e7e5eae766c1cf866de96aa6d6e681a428ec85bafa486c6483b5e25ec591b6",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/server.log": "9bc9ceaad17fc3636c1ce920b9fc855a59f689dac6b86096a96b8bf94ff97fb3",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/server_ready.json": "e4eb1d7ae1356fefa61dbcff560b5786167248fb8e6fd95f35eba742684ecbac",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0390.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0399.host.platform.shaipower.com/drained.json": "c373beb62b2b66293594f09ee9257f8e24e9da8803a33e948c2dfbb1de95ae38",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0399.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0399.host.platform.shaipower.com/ready.json": "48114d761d8dfaba59a8ee02db37735760b598bc9e631f2e113bbabdd7dc970a",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0399.host.platform.shaipower.com/result.json": "531515cbe8ef0317d49a5b5609ab90abfaf50e11d47207852cdcba64cb98338d",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0399.host.platform.shaipower.com/server.log": "3ae68aa12e065dd51f6fd736328679dbd2fc97c3bdee01077a6539d94e8e6fd2",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0399.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/drained.json": "cfe54ef67abe0514bc2e71d8b7018eefb13096ed3304e1f87fa038cda5032fce",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/ready.json": "0940be90bb5fe43d6349824a3d74ca44ff3da6f3cebdbb105fd1adb1ab757145",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/result.json": "a6658287c9929a97e36b8ec6aeeaf70bf1b1500be034b7ae3a447111bac9140c",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/server.log": "93021a1534070c51708bbe2f9f578aa50489a5c9f98431ec025efd88315f1d80",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0566.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0575.host.platform.shaipower.com/drained.json": "9753e843ccac1e61ccd580af744ca9574916825c9b55640ef12a5190867c4f0a",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0575.host.platform.shaipower.com/native_stopped.json": "b17577fa7b2d3ebfe2a9a1f85b701c22b2426dd8b4e0d8f6673e4035ed7fda0f",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0575.host.platform.shaipower.com/ready.json": "18d658e5388d36ca61a4218691bfbdf2abb310ae507a8d31ea97c643e552c2b8",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0575.host.platform.shaipower.com/result.json": "ec057ebbecc0851900f182dce0874592ef22f328ab7be73c220cc8dae94986e4",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0575.host.platform.shaipower.com/server.log": "2bf4b17709b25ecee013ff3258e23283ba6636d2d1ba07b5798859481f779e23",
+      "/data/ycfeng/tmp/step5_d25_workload_20261022/h800_64_workload01/stage/evidence/nodes/gpu-h800-0575.host.platform.shaipower.com/worker.log": "906fa0f3ce4e12f76d4034640da6e726700ed1746fc16174b27c79c879871ae7"
+    }
+  }
+}

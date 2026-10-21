@@ -1,0 +1,35 @@
+[
+  {
+    "repeat": 1,
+    "start_utc": "2026-10-21T18:58:30.207541+00:00",
+    "window_s": 182.00544640049338,
+    "peak_client_inflight": 97,
+    "p90_tpot_ms": 91.91152197422636,
+    "p90_e2e_ms": 95665.25117307901,
+    "nixl_rank_reads": 1024.0,
+    "read_bytes": 143244394496.0,
+    "native_source_tokens_verified": true
+  },
+  {
+    "repeat": 2,
+    "start_utc": "2026-10-21T19:02:32.839698+00:00",
+    "window_s": 178.49720222130418,
+    "peak_client_inflight": 74,
+    "p90_tpot_ms": 69.46872551274556,
+    "p90_e2e_ms": 72556.13361671567,
+    "nixl_rank_reads": 1024.0,
+    "read_bytes": 143244394496.0,
+    "native_source_tokens_verified": true
+  },
+  {
+    "repeat": 3,
+    "start_utc": "2026-10-21T19:06:32.469803+00:00",
+    "window_s": 179.09400037303567,
+    "peak_client_inflight": 73,
+    "p90_tpot_ms": 68.62020288627751,
+    "p90_e2e_ms": 71837.17766031623,
+    "nixl_rank_reads": 1024.0,
+    "read_bytes": 143244394496.0,
+    "native_source_tokens_verified": true
+  }
+]

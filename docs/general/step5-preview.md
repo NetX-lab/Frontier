@@ -27,6 +27,17 @@ The Step native reference is the official `vllm/vllm-openai:step-5-preview` imag
 
 Use the locked official model configuration and tokenizer with native dummy weights; model checkpoint downloads are excluded. Dummy weights preserve the full model structure, expert count, quantization exclusions, actual kernels, communication and allocations. Vision/video/multimodal execution, MTP, prefix caching, offload and PD-AF are outside this Step scope. Any wrapper-associated native residency must still be accounted for truthfully.
 
+## Completed H800 workload measurements — October 22, 2026
+
+D25 completed the frozen workload on32 and64 H800 GPUs: each432/432 successful requests (48 warmups plus384 measured across three repetitions), all role/lane idle checks passed, and all containers exited0 without restart. Pooled nearest-rank p90 excludes warmups; throughput is the three-window mean and includes input plus output tokens.
+
+| GPUs | p90 TTFT(s) | p90 TPOT(ms/token) | p90 E2E(s) | Total tok/s |
+| --- | ---: | ---: | ---: | ---: |
+|32|1.761|87.793|91.640|5101.4|
+|64|1.912|93.557|97.516|4999.1|
+
+Every measured TTFT is below5s. Both runs retain first-measurement JIT and repeat-dependent decode latency;64 GPUs provide no gain at this fixed offered load. Complete workload collection does not establish steady-state, native reference or simulator accuracy qualification. [Full report and evidence](../../task_memory/task_2026-10-22_step5_full_workload/summary.md).
+
 ## Implemented representation
 
 [Model configuration](../../data/config/models/stepfun-ai__Step-5-Preview.json) records 92 backbone layers, 69 SWA and 23 sparse-GQA layers, 88 MoE layers and 4 dense layers. Configured geometry includes hidden size 4096, 64 query heads, 4 KV groups and explicit head dimension 192. Routed/shared FFN width is 1536, with 352 experts and top-8 routing; dense width is 13824. Sparse selection uses 256-wide proxies, 16 index heads, 4 provider groups and top-512 regions of 8 tokens. These are source-derived contracts, not native measurements.

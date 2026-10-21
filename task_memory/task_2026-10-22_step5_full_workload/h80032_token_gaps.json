@@ -1,0 +1,167 @@
+[
+  {
+    "repeat": 1,
+    "max_delta_gap_s": 1.0422558635473251,
+    "requests_with_gap_over_1s": 93,
+    "largest_gaps": [
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r007-repeat01",
+        "largest_delta_gap_s": 1.0422558635473251,
+        "start_utc": "2026-10-21T19:00:11.479623+00:00",
+        "end_utc": "2026-10-21T19:00:12.521879+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r009-repeat01",
+        "largest_delta_gap_s": 1.0421320647001266,
+        "start_utc": "2026-10-21T19:00:11.479827+00:00",
+        "end_utc": "2026-10-21T19:00:12.521959+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r011-repeat01",
+        "largest_delta_gap_s": 1.0420528501272202,
+        "start_utc": "2026-10-21T19:00:11.479979+00:00",
+        "end_utc": "2026-10-21T19:00:12.522032+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r013-repeat01",
+        "largest_delta_gap_s": 1.0418844632804394,
+        "start_utc": "2026-10-21T19:00:11.480178+00:00",
+        "end_utc": "2026-10-21T19:00:12.522063+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r017-repeat01",
+        "largest_delta_gap_s": 1.0418772101402283,
+        "start_utc": "2026-10-21T19:00:11.480317+00:00",
+        "end_utc": "2026-10-21T19:00:12.522194+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r015-repeat01",
+        "largest_delta_gap_s": 1.0418687500059605,
+        "start_utc": "2026-10-21T19:00:11.480261+00:00",
+        "end_utc": "2026-10-21T19:00:12.522130+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r021-repeat01",
+        "largest_delta_gap_s": 1.0417239665985107,
+        "start_utc": "2026-10-21T19:00:11.480561+00:00",
+        "end_utc": "2026-10-21T19:00:12.522285+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r019-repeat01",
+        "largest_delta_gap_s": 1.0416905879974365,
+        "start_utc": "2026-10-21T19:00:11.480533+00:00",
+        "end_utc": "2026-10-21T19:00:12.522223+00:00"
+      }
+    ]
+  },
+  {
+    "repeat": 2,
+    "max_delta_gap_s": 0.6186922118067741,
+    "requests_with_gap_over_1s": 0,
+    "largest_gaps": [
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r001-repeat02",
+        "largest_delta_gap_s": 0.6186922118067741,
+        "start_utc": "2026-10-21T19:03:22.936155+00:00",
+        "end_utc": "2026-10-21T19:03:23.554847+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r003-repeat02",
+        "largest_delta_gap_s": 0.6186271980404854,
+        "start_utc": "2026-10-21T19:03:22.936293+00:00",
+        "end_utc": "2026-10-21T19:03:23.554920+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r047-repeat02",
+        "largest_delta_gap_s": 0.6185825765132904,
+        "start_utc": "2026-10-21T19:03:22.937926+00:00",
+        "end_utc": "2026-10-21T19:03:23.556508+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r005-repeat02",
+        "largest_delta_gap_s": 0.6185666657984257,
+        "start_utc": "2026-10-21T19:03:22.936422+00:00",
+        "end_utc": "2026-10-21T19:03:23.554988+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r045-repeat02",
+        "largest_delta_gap_s": 0.6185325272381306,
+        "start_utc": "2026-10-21T19:03:22.937906+00:00",
+        "end_utc": "2026-10-21T19:03:23.556438+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r009-repeat02",
+        "largest_delta_gap_s": 0.6184841357171535,
+        "start_utc": "2026-10-21T19:03:22.936656+00:00",
+        "end_utc": "2026-10-21T19:03:23.555140+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r043-repeat02",
+        "largest_delta_gap_s": 0.6184839867055416,
+        "start_utc": "2026-10-21T19:03:22.937885+00:00",
+        "end_utc": "2026-10-21T19:03:23.556369+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r007-repeat02",
+        "largest_delta_gap_s": 0.6184635572135448,
+        "start_utc": "2026-10-21T19:03:22.936596+00:00",
+        "end_utc": "2026-10-21T19:03:23.555059+00:00"
+      }
+    ]
+  },
+  {
+    "repeat": 3,
+    "max_delta_gap_s": 3.6731113232672215,
+    "requests_with_gap_over_1s": 30,
+    "largest_gaps": [
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r000-repeat03",
+        "largest_delta_gap_s": 3.6731113232672215,
+        "start_utc": "2026-10-21T19:07:03.703784+00:00",
+        "end_utc": "2026-10-21T19:07:07.376895+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r004-repeat03",
+        "largest_delta_gap_s": 3.6730229817330837,
+        "start_utc": "2026-10-21T19:07:03.703985+00:00",
+        "end_utc": "2026-10-21T19:07:07.377008+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r002-repeat03",
+        "largest_delta_gap_s": 3.673022720962763,
+        "start_utc": "2026-10-21T19:07:03.703901+00:00",
+        "end_utc": "2026-10-21T19:07:07.376924+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r006-repeat03",
+        "largest_delta_gap_s": 3.6729606539011,
+        "start_utc": "2026-10-21T19:07:03.704074+00:00",
+        "end_utc": "2026-10-21T19:07:07.377035+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r010-repeat03",
+        "largest_delta_gap_s": 3.672947082668543,
+        "start_utc": "2026-10-21T19:07:03.704221+00:00",
+        "end_utc": "2026-10-21T19:07:07.377168+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r008-repeat03",
+        "largest_delta_gap_s": 3.6729141548275948,
+        "start_utc": "2026-10-21T19:07:03.704145+00:00",
+        "end_utc": "2026-10-21T19:07:07.377059+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r012-repeat03",
+        "largest_delta_gap_s": 3.6728954426944256,
+        "start_utc": "2026-10-21T19:07:03.704303+00:00",
+        "end_utc": "2026-10-21T19:07:07.377199+00:00"
+      },
+      {
+        "request_id": "fixed-6144-1024-req128-qps1-formal-r014-repeat03",
+        "largest_delta_gap_s": 3.6727914698421955,
+        "start_utc": "2026-10-21T19:07:03.704437+00:00",
+        "end_utc": "2026-10-21T19:07:07.377229+00:00"
+      }
+    ]
+  }
+]

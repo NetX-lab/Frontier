@@ -22,4 +22,4 @@
 
 ## Existing evidence
 
-The native metrics audit in `../task_2026-10-21_step5_priority_runs/metrics_check_20261022/` covers only 16 warmups plus 8 simultaneous requests. H80032 p90 TTFT was 4.791508s; H80064 was 9.093689s. Different historical API frontend counts confound that scale comparison. No complete three-repeat canonical workload has been established.
+At the start of D25, the native metrics audit in `../task_2026-10-21_step5_priority_runs/metrics_check_20261022/` covered only 16 warmups plus 8 simultaneous requests. H80032 p90 TTFT was 4.791508s; H80064 was 9.093689s. Different historical API frontend counts confound that scale comparison. No complete three-repeat canonical workload had then been established. D25 completion and current metrics are recorded in `summary.md`.
