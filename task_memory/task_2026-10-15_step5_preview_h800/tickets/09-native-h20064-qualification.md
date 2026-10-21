@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Reconcile completed basic runs, verified P0 useful-token totals and the remaining MRv2 dummy/rank evidence. |
 | 2026-10-21 | P0 H80032 finished; H20032 and H80064 basic validation launched. Fix staged-package shadowing before generation02;204+38 parent checks retain formal gates. |
 | 2026-10-21 | D21: own all four native tracks in this existing ticket, distinguish basic readiness from formal clean qualification, and supersede H20064 non-preemptible staging. |
 | 2026-10-21 | D19 cap130: qualification02 submitted as exp-1021-125354-923219;96 total reserved GPUs, Pending with identity/mount checks complete. |
@@ -25,7 +26,9 @@
 
 **External prerequisites:** D21 policy below; original personal local StepMind Python RJobBackend and current host/storage rules. Basic native validation has no GLM simulator barrier; predictive acceptance retains existing prerequisites. G3, actual capacity/placement and required runtime are not waived. TP16/DP1 startup does not qualify TP8/DP2/EP16 or TP8/DP4/EP32 roles. Each scale is its own target, never a reduced substitute for another.
 
-**Status:** all four formal track records remain open. D21 source is integrated after204 parent checks. P0 H80032 `exp-1021-195639-166258` Succeeded12:10:22UTC, with business/runtime judgment in progress. H20032 `exp-1021-201544-965435` is Running12:21UTC, and H80064 generation02 has been submitted for basic validation. H20032 generation01 failed locally before allocation because an installed `tests` package shadowed staged imports; correction42dda4c passes38 checks and actual StepMind-Python dry-run. Historical H20064 `exp-1021-125354-923219` remains the first basic evidence to assess before any repeat. No basic result establishes G4, four-metric accuracy or a30% release.
+**Status:** all four formal track records remain open. P0 H80032 generation03 `exp-1021-205523-285491` Succeeded;24 exact requests, both idle boundaries and actual FULL runtime rows on both D lanes are verified. H20032 `exp-1021-201544-965435` and H80064 `exp-1021-202325-579469` also Succeeded with24 exact requests and every lane idle, but their old multi-API logs lack runtime replay rows. Historical H20064 `exp-1021-125354-923219` provides retained basic startup/capacity/completion evidence with its original REFERENCE_UNSTABLE result. Every full basic/G4 result remains PARTIAL or open. No basic result establishes four-metric accuracy or a30% release.
+
+**G4 useful-token checkpoint:** P0 generation03 logs account for147072 P tokens and24936 D tokens, exactly24x6128 and24x(16+1023). This closes aggregate useful-token conservation for the basic run, not request/rank/forward or dummy coverage. MRv2 only emits these graph statistics for non-dummy runs. Use the existing observer for the remaining real dummy/rank evidence; do not infer it from lane-count differences. Native FULL_AND_PIECEWISE and actual MRv2 dummy metadata/descriptor semantics must also bind the producer/consumer. Report: `../../task_2026-10-21_step5_priority_runs/native_replay/test_report_2026-10-21_g4_useful_accounting.md`.
 
 ## Current D21 milestones
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Verify the canonical capture/abort partial slice and select existing-D independent full-local execution within the locked native reference. |
 | 2026-10-21 | Assign case-aligned capture/reference implementation in step5-canonical-g3, reusing corrected R2 mechanisms. |
 | 2026-10-21 | D21: case-aligned native evidence serves P0 H80032 first and the other independent tracks; obsolete R2 capture stays paused, no G3 waiver. |
 | 2026-10-21 | R2 P1 review closed; old2048-length capture paused because canonical6144/1024 and independent referenceG3 remain uncovered. |
@@ -27,6 +28,8 @@
 **External prerequisites:** Accepted `06.simulation_scope` evidence and the locked native reference are required. Native PD evidence may precede D-PD/D-ASYNC/D-DP-PD dispositions and has no GLM simulator barrier. A different native functional reference requires the applicable conditional decision. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in progress (R1/D5 evidence complete; R2 collector P1 correction/review closed; canonical content/readiness/lifetime and independent reference qualification remain open).
+
+**Latest implementation:** capture/abort source7d46abe and recordse14e7df pass658 parent CPU checks on an immutable snapshot. Existing-D full-local6144/1024 execution without transfer metadata is the selected independent functional path; this retains the locked image/model/connector and does not activate conditionalD-S5-REF. Full resident identity, actual state/output comparison, reset/reuse and explicit capacity-pressure/component/alias conservation are still being implemented. No complete stage, native G3 or formal admission is claimed. See the implementation disposition in requirements and `../../task_2026-10-21_step5_priority_runs/canonical_g3_parent/`.
 
 **Current D21 scope:** qualify content/readiness/retention/lifetime and independent native reference for6144/1024, **P0 H80032 first**.32 total=P16/D16, each TP8/DP2/EP16/PP1;64=P32/D32 TP8/DP4/EP32/PP1. Bind distinct hardware/scale evidence and assess existing observations before repeating. G3 remains required before formal work; basic64 runtime may proceed now. H80064 formal waits for own readiness and H80032 four clean errors<=30%; H20064 waits for H20032, which is independent of H800. Final10% remains. Follow `../plan.md` D21 policy: H800 non-preemptible codesign; all personal nonterminal H200 non-preemptible reservations across sessions<=32, every additional job preemptible, H20064 wholly preemptible. Lower-priority work cannot starve P0. Dated records below do not restore old caps or complete06 waiting;06.simulation_scope is the live prerequisite.
 
