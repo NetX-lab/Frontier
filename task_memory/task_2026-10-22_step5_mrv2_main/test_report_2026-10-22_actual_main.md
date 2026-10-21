@@ -9,6 +9,7 @@
 | 2026-10-22 | Record paired actual04 core rejection and demonstrated blocker. |
 | 2026-10-22 | Primary passes8 fixture checks, verifies merged bytes and reproduces the root ledger failure. |
 | 2026-10-22 | Parent167 PASS and accepted root/owner repair; start actual05 at26db654 with8 unchanged input hashes. |
+| 2026-10-22 | Root/owner clean comparison77/77 identical; zero cache/provenance findings. |
 
 ## Environment and scope
 
@@ -209,5 +210,8 @@ env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfen
 
 Both commands run independently, each with the existing2400s child timeout.
 Expected acceptance remains the complete list above; no terminal result yet.
-The new clean77 candidate is also running from26db654 against0cdd6cb, both using
-the fixed32fb934 driver. Baseline77/77 execution alone is not strict comparison.
+The new clean77 candidate26db654 and baseline0cdd6cb, both using the fixed32fb934
+driver, completed and passed strict comparison:77/77 identical; zero failures,
+missing evidence, differing definitions or predictor cache/provenance findings.
+Full report `root_metrics_fidelity.json` and exact commands in
+`root_metrics_review.md`. Full actual05 acceptance remains pending.

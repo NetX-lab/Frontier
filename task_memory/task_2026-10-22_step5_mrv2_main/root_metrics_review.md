@@ -7,6 +7,7 @@
 | 2026-10-22 | Record parent verification of initial root repair and independent P1 owner finding. |
 | 2026-10-22 | Clean pre-fix baseline completes77/77 cases; final candidate/comparison still pending. |
 | 2026-10-22 | P1 corrected and independently accepted; parent167 PASS; merged26db654; paired CLI and candidate matrix launched. |
+| 2026-10-22 | Final clean comparison passes77/77, including predictor cache names and provenance. |
 
 ## Scope and evidence
 
@@ -84,7 +85,7 @@ the previously compared inherited cache fixture. The author public-call-site
 RED and expanded RED are retained in its test report; no remaining source
 review blocker. This acceptance does not establish full CLI or native accuracy.
 
-## Clean baseline execution: PASS
+## Clean legacy comparison: PASS
 
 The new clean legacy baseline is `fidelity-baseline-0cdd6cb`. Both sides will
 use the unchanged driver from `fidelity-candidate-32fb934`, so harness identity
@@ -99,10 +100,24 @@ Baseline completed: **77/77 cases produced artifacts**, all case return codes0.
 The log confirms source0cdd6cb, dirty=False and harness32fb934. Retained log:
 `/data/ycfeng/tmp/d23_root_fidelity_baseline01.log`; results:
 `/data/ycfeng/tmp/step5_d23_root_fidelity_20261022/baseline/results.jsonl`.
-This is baseline execution only. The final candidate was launched from clean
+The final candidate completed from clean
 `fidelity-candidate-26db654`, with the same driver/environment and command above
 except `--label candidate`, the candidate repo path, and log
-`/data/ycfeng/tmp/d23_root_fidelity_candidate01.log`. Comparison is pending.
+`/data/ycfeng/tmp/d23_root_fidelity_candidate01.log`.
+
+The comparison command, same fixed driver cwd/environment, is:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/step5_d23_root_fidelity_20261022 > /data/ycfeng/tmp/d23_root_fidelity_compare01.log 2>&1
+```
+
+Exit0: **77/77 identical**, no mismatched/failed/missing/uncompared cases or
+differing definitions. Predictor cache names match, both sides populated cleanly,
+and provenance findings are empty. `root_metrics_fidelity.json` is a byte-exact
+copy of the full comparison report, SHA256
+`7498f82e1e3525307e9c3cbd8d2a48eed8a6d72e2d6207dbbd6264d94fc67f32`.
+This closes legacy fidelity for the root/owner change, not full Step CLI or native
+qualification.
 
 The stable main worktree was fast-forwarded to26db654 before actual05 launch.
 Both modes reuse fixture02/cache at unchanged6144/1024 and2400s child bounds;

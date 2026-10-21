@@ -8,6 +8,7 @@
 | 2026-10-22 | Correct exact compute coverage; scoped8 PASS; actual04 pending. |
 | 2026-10-22 | Actual04 paired core ledger failure; archive exact blocker without bypass. |
 | 2026-10-22 | Parent167 PASS and final No findings; merge26db654; actual05 and candidate77 running. |
+| 2026-10-22 | Final candidate comparison77/77 identical; full actual05 acceptance remains in progress. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -307,4 +308,6 @@ Checkpoint after verified compute correction:
  46.71s, and final No findings; merge26db654. See `root_metrics_review.md`.
   The clean pre-fix baseline has now completed77/77 cases, all return codes0;
   source0cdd6cb is clean and the fixed driver is32fb934. Clean candidate26db654
-  is running with the same driver; strict comparison remains pending.
+  completed; strict comparison is77/77 identical, zero failures/missing evidence,
+  equal predictor cache filenames and no provenance findings. Byte-exact report:
+  `root_metrics_fidelity.json`; command/evidence in `root_metrics_review.md`.

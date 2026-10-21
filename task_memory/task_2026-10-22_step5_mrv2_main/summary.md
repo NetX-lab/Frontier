@@ -7,6 +7,7 @@
 | 2026-10-23 | Exact compute coverage repaired; actual04 pending on retained output. |
 | 2026-10-22 | Archive paired actual04 core ledger blocker and verified integration slice. |
 | 2026-10-22 | Parent accepts root/owner repair26db654 and launches paired actual05 with existing inputs. |
+| 2026-10-22 | Final root/owner clean legacy comparison77/77 identical. |
 
 ## Status
 
@@ -88,8 +89,9 @@ source and factor-injection controls in `quantization_warning.md`; it does not
 rescale this typed Step path.
 
 Inspect actual05 completion, READ/readiness/source release, useful forward
-census and final metrics in both modes. Compare the clean77 candidate against
-the completed baseline. Native/profile/accuracy qualification and the real
+census and final metrics in both modes. The clean77 comparison is complete:
+77/77 identical, including predictor cache names and clean provenance; see
+`root_metrics_fidelity.json`. Native/profile/accuracy qualification and the real
 additional-padding producer gap remain open.
 
 ## Commit and final scope
