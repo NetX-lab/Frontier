@@ -5,11 +5,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Recorded both offline-verified stages, exact parent commands and unverified runtime dependencies. |
-| 2026-10-21 | Superseded stage01 after MRv2 review; prepared new stage02 commands and explicit graph evidence limitations. |
+| 2026-10-21 | Superseded stage01 after MRv2 review; built and isolated-verified both stage02 packages and recorded graph evidence limitations. |
 
 ## Outcome and identity
 
-**Do not submit qualification01 or canonical01.** They remain immutable historical artifacts from`4a708ff`; their additional source proof incorrectly cited MRv1. The replacement qualification02/canonical02 stages will be built from the clean follow-up source commit; receipts are pending below. No native qualification is claimed. Frozen inputs, original Step metadata, historical Step/SharedGPT packages, environment tooling, simulator core and R2 verdict/observations remain unchanged.
+**Do not submit qualification01 or canonical01.** They remain immutable historical artifacts from`4a708ff`; their additional source proof incorrectly cited MRv1. Both replacement qualification02/canonical02 packages were built from clean source **2a1070be38ed6fb75dc223c46b0ea407ee908ce6** and independently verified. No native qualification is claimed. Frozen inputs, original Step metadata, historical Step/SharedGPT packages, environment tooling, simulator core and R2 verdict/observations remain unchanged.
 
 | Item | Qualification | Canonical |
 | --- | --- | --- |
@@ -19,8 +19,8 @@
 | Job tag | `d18qualh20002` | `d18canonicalh20002` |
 | Client population |16 same-shape warmups at QPS1, then8 concurrent same-shape diagnostic requests |Three repeats ×(16 warmups +128 formal requests at QPS1) |
 | Fixed shape |6144 prompt /1024 output tokens |6144 prompt /1024 output tokens |
-| Config SHA-256 |Pending new committed-source build |Pending new committed-source build |
-| Offline result |Pending isolated stage02 verification |Pending isolated stage02 verification |
+| Config SHA-256 |`b8c6b1e500b5bc44343a59ae56bfad2c03388e39fff10c6b62d5c2c3dbf0b2af` |`8b5cabad51548bff837f9b641e2e6b3cdadd9701c9cf74f334fc7cf87d6bb746` |
+| Offline result |27 staged file hashes;47 native-source identity pins, including26 additional proof bindings;3 unchanged model metadata pins PASS |Same counts PASS |
 | Worker / replay deadlines |3600s /1200s |5400s /3000s |
 | Estimate, not measurement |20–35 active minutes plus queue;21.3–37.3 GPU-hours |35–60 active minutes plus queue;37.3–64.0 GPU-hours |
 | Timeout GPU budget |64 GPU-hours |96 GPU-hours |
@@ -29,7 +29,7 @@ Each run requests **8 nodes ×8 H200 =64 GPUs**, `step_main`, non-preemptible,32
 
 ## Offline verification
 
-Stage02 build receipts will be`/data/ycfeng/tmp/d18_qualification_build02.json` and`/data/ycfeng/tmp/d18_canonical_build02.json`; isolated verification receipts will be`/data/ycfeng/tmp/d18_qualification_verify02.json` and`/data/ycfeng/tmp/d18_canonical_verify02.json`. Verify from each stage's own workspace, without the repository on the command's`PYTHONPATH`.
+Stage02 build receipts:`/data/ycfeng/tmp/d18_qualification_build02.json` and`/data/ycfeng/tmp/d18_canonical_build02.json`; isolated verification receipts:`/data/ycfeng/tmp/d18_qualification_verify02.json` and`/data/ycfeng/tmp/d18_canonical_verify02.json`. Each build/verify pair matches exactly. Verification ran from each stage's own workspace without repository`PYTHONPATH`. The durable receipt is this task's`stage_receipts02.json`, including source/config/bindings hashes, resources and unchanged-stage01 evidence. Neither new stage has a`launcher/` directory.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python \
@@ -40,7 +40,7 @@ PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py3
   verify --stage-dir /data/ycfeng/tmp/step5_d18_native_20261021/canonical02/stage
 ```
 
-Required stage02 checks include isolated CLI`--help`, all eight regenerated node plans, native graph statistics,7168/8192/128 limits, disabled chunk/prefix flags and omitted MTP flag. Frozen common manifest/SHA256SUMS pins and original metadata must remain unchanged. Metadata SHA-256:
+Both isolated CLI`--help` checks and both`bash -n submit.sh` checks passed. All eight regenerated node plans match, including native graph statistics,7168/8192/128 limits, disabled chunk/prefix flags and omitted MTP flag. Both stages contain the same26-source MRv2 proof manifest, SHA-256`c8184dcefd0ed30d213f4c6f34edcb8ac771f65cf680a36a567723d68203f914`. Frozen common manifest/SHA256SUMS pins and original metadata match. Stage01 workspace file-name/hash maps are byte-identical before/after new builds; original snapshot SHA-256`9c6ae1c1b4fcc9a955188f54e0bd6bc105c9634d5b4bdc0db549f512918dbc01`. Metadata SHA-256:
 
 - `config.json`: `e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63`
 - `tokenizer_config.json`: `78202af487f4d4360e8d15cb0506d60718f8599770599c6f28f7f1fa045a591f`
@@ -73,7 +73,7 @@ The wrappers source `/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh`; they 
 
 ## Reproducible build record
 
-Do not rebuild or overwrite existing stages. The stage02 build command below uses`KIND=qualification`/`canonical`,`DIR=qualification02`/`canonical02`, and`TAG=d18qualh20002`/`d18canonicalh20002` respectively. Source must be clean and committed first. Substitute a **new** unused directory/tag/output for any later generation.
+Do not rebuild or overwrite existing stages. Both executed stage02 builds used the command below with`KIND=qualification`/`canonical`,`DIR=qualification02`/`canonical02`, and`TAG=d18qualh20002`/`d18canonicalh20002` respectively. Source`2a1070b` was clean and committed before both builds. Substitute a **new** unused directory/tag/output for any later generation.
 
 ```bash
 PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp /data/ycfeng/envs/asyncopd-py312/bin/python \
