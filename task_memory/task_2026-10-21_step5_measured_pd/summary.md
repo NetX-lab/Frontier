@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Parent clarified that READ duration must be strictly positive, matching the consumer and file loader. |
 | 2026-10-21 | Archive the verified consumer and remaining supplier/native dependencies. |
 
 ## Outcome
@@ -35,7 +36,7 @@ One existing page resolver sizes legacy and measured payloads. Only grouped meas
 
 ## Verified CPU behavior
 
-Exact coverage fields: `num_prefill_tokens`, `num_computed_tokens`, `cache_capacity`, `source_attention_tp`, `target_attention_tp`, `source_device`, `target_device`, `profile_identity`, `duration_scope`. Prefix must be positive, complete-block aligned and smaller than the prompt. Coverage must match live configs and remain equal during retry/READ. Cost is finite nonnegative milliseconds through GPU readiness; identity is not native proof.
+Exact coverage fields: `num_prefill_tokens`, `num_computed_tokens`, `cache_capacity`, `source_attention_tp`, `target_attention_tp`, `source_device`, `target_device`, `profile_identity`, `duration_scope`. Prefix must be positive, complete-block aligned and smaller than the prompt. Coverage must match live configs and remain equal during retry/READ. Cost is finite and strictly positive milliseconds through GPU readiness; identity is not native proof.
 
 Actual-main requirements:
 - Paired PREFILL/DECODE under `SYS_ARCH="pd-disaggregation"`, NIXL, one serving Replica per role, `vllm_v1`, `vllm_load_balancing`, policy `v0.28.0`.

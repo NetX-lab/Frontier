@@ -2,6 +2,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-21 | Rechecked after stable PD handoff; same route, finalcompute/main remains the frontier. |
 | 2026-10-21 | Self-check after the verified transfer-input deliverable. |
 
 ## 1. 规划完成情况
@@ -10,7 +11,7 @@
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| 合并已提交 foundation | PASS | PD9625984、attention1ca09be，隔离工作树无冲突 |
+| 合并已提交 foundation | PASS | PD9625984及d4b2401最终review/201PASS记录、attention1ca09be，隔离工作树无冲突 |
 | 显式 transfer input | PASS | 独立审查无发现；文件输入驱动6144/1024，合并160检查通过 |
 | 完整compute/FFN与delegates | TODO | compute owner正在实现 |
 | 实际main路径与fidelity | TODO | 等待完整compute接口，尚不宣称整链运行 |
@@ -19,7 +20,7 @@
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 用户continue后至本输入验收｜**当前前沿：** 完整compute、provider连接、整链运行
+**检测窗口：** 用户continue后至stable PD交付复查｜**当前前沿：** 完整compute、provider连接、整链运行
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
