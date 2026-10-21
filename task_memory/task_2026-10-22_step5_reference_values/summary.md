@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archived bounded first-tail value capture, passing CPU verification and parent-only staging handoff. |
+| 2026-10-22 | Recorded verified implementation commit 34a72b8. |
 
 ## Outcome
 
@@ -15,6 +16,8 @@ The complete hash/geometry census remains intact, later checkpoints remain hash-
 ## Deliverables
 
 Worktree `/data/ycfeng/Frontier/.worktrees/step5-reference-values`, branch `feat/step5-reference-values`, exact base `0c9d1ef299e27d0e9bddbe4eb888527f966ba718`.
+
+Verified implementation and task records: commit `34a72b8` (`feat(step5): retain bounded first-tail reference values`). The subsequent documentation-only commit records this completed receipt; no code changed after the 550-test final run.
 
 - `tests/integration/step5_pd/r2_reference.py`: keep raw_hex only for selected first-tail logical pages; complete original census unchanged.
 - `tests/integration/step5_pd/r2_observation.py`: keep existing mean wire raw_hex only at first-tail; no other edits.

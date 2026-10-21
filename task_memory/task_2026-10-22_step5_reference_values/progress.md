@@ -7,6 +7,7 @@
 | 2026-10-22 | Created requested worktree, inspected real collector/caller/source pins and recorded exact payload budget. |
 | 2026-10-22 | Completed retention and 235 passing focused checks; recorded the milestone self-check and final handoff verification scope. |
 | 2026-10-22 | Final 550-test superset PASS; completed source-pin/budget handoff and prepared the verified commit. |
+| 2026-10-22 | Committed verified code/tests/records at 34a72b8 and finalized the completion receipt. |
 
 ## Status
 
@@ -16,7 +17,7 @@
 - completed: first run 83 PASS in 22.29 s; combined reference/observer/canonical regression 235 PASS in 36.18 s. No failures occurred in either run. Raw logs: `/data/ycfeng/tmp/d24_reference_values_first01.log`, `/data/ycfeng/tmp/d24_reference_values_iteration02.log`.
 - completed: final source-pin/stage handoff check, cap matrix on both client kinds, 539 PASS/41.09 s followed by stage superset 550 PASS/41.21 s. Raw logs `/data/ycfeng/tmp/d24_reference_values_final03.log` and `d24_reference_values_final04.log`.
 - completed: final records, source hashes, exact budget, requirement reread and whitespace check.
-- in-progress: commit of only four owned code/test files and five task records.
+- completed: commit `34a72b8` contains only four owned code/test files and five task records. Completion receipt finalized separately; no pending CPU implementation work.
 
 ## Evidence and design
 
