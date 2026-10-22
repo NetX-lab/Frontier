@@ -1,5 +1,4 @@
 import math
-import json
 from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import replace
@@ -8,6 +7,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING
 from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY, STEP5_ATTENTION_FAMILY
 from frontier.attention.model_binding import bind_layer_attention
 from frontier.execution_time_predictor.step5_cost import step5_layer_metadata, step5_operator_binding
+from frontier.execution_time_predictor.prediction_model_registry import PredictionModelRegistry
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -125,6 +125,8 @@ class SklearnMoEExecutionTimePredictor(
                       for i, name in enumerate(names)}
             model._frontier_feature_bounds = bounds
         count_model = getattr(model, "_frontier_kernel_count_model", None)
+        if count_model is not None and model._frontier_measurement_identity != count_model._frontier_measurement_identity:
+            raise ValueError("Step duration and kernel-count measurement identities differ")
         if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
             if self._kernel_gap_ms is None:
                 raise ValueError("Step GPU-active FFN requires measured kernel_gap.csv coverage")
@@ -158,7 +160,7 @@ class SklearnMoEExecutionTimePredictor(
             global_layer_id=metadata.attention_spec.global_layer_id,
             duration_model_hash=model._frontier_model_hash,
             kernel_count_model_hash=None if count_model is None else count_model._frontier_model_hash,
-            evidence_kind=json.loads(model._frontier_measurement_identity).get("evidence_kind"),
+            evidence_kind=PredictionModelRegistry._measurement_identity(model).get("evidence_kind"),
             exact_lookup=tuple(float(features[name]) for name in names) in exact,
         )
         return value

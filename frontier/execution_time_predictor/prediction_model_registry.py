@@ -654,6 +654,19 @@ class PredictionModelRegistry:
         )
 
     @staticmethod
+    def _measurement_identity(model: BaseEstimator) -> Dict[str, Any]:
+        """Read fixed provenance; the selected estimator's current marker wins."""
+        marker = model._frontier_measurement_identity
+        cached = getattr(model, "_frontier_parsed_measurement_identity", None)
+        if cached is None or cached[0] != marker:
+            if not isinstance(marker, str):
+                raise ValueError("model measurement identity marker must be a string")
+            identity = json.loads(marker)
+            PredictionModelRegistry._canonical_measurement_identity(identity)
+            cached = model._frontier_parsed_measurement_identity = (marker, identity)
+        return cached[1]
+
+    @staticmethod
     def _set_measurement_identity(model: BaseEstimator, identity: Mapping[str, Any]) -> str:
         """Attach the canonical measurement identity before atomic cache storage."""
 
@@ -662,6 +675,7 @@ class PredictionModelRegistry:
         if attached is not None and attached != canonical:
             raise ValueError("model measurement identity conflicts with the requested identity")
         model._frontier_measurement_identity = canonical
+        PredictionModelRegistry._measurement_identity(model)
         return canonical
 
     @staticmethod
@@ -676,6 +690,7 @@ class PredictionModelRegistry:
             raise ValueError(f"Cached model {model_name!r} is missing measurement identity marker")
         if not isinstance(attached, str) or attached != requested:
             raise ValueError(f"Cached model {model_name!r} measurement identity mismatch")
+        PredictionModelRegistry._measurement_identity(model)
 
     @staticmethod
     def _model_bundle_identity(identity: Mapping[str, Any]) -> Dict[str, Any]:

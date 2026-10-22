@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import json
+from frontier.execution_time_predictor.prediction_model_registry import PredictionModelRegistry
 
 from frontier.attention.step5 import Step5AttentionWorkload, describe_step5_layer
 from frontier.attention.model_binding import bind_layer_attention
@@ -234,7 +235,7 @@ def predict_step5_attention_time(predictor, batch, layer_id):
                 )
         if models[0]._frontier_measurement_identity != models[1]._frontier_measurement_identity:
             raise ValueError("Step duration and kernel-count measurement identities differ")
-        identity = json.loads(models[0]._frontier_measurement_identity)
+        identity = PredictionModelRegistry._measurement_identity(models[0])
         expected = {
             "model_architecture_profile": predictor._model_config.get_model_architecture_profile().profile_id,
             "quant_signature": predictor._model_config.get_quant_signature(),
