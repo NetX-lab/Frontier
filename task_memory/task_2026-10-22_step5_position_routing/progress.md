@@ -27,6 +27,41 @@
   receipts and fresh GPU/native qualification. Additional collection resources
   and run approval follow readiness. D30 remains integrated4ec5b23.
 
+## Active implementation dispatch — 2026-10-23
+
+Common baseline1aee0af. Disjoint worktrees and background sessions:
+
+| Stream | Worktree under /data/ycfeng/Frontier/.worktrees | Session |
+| --- | --- | --- |
+| native19/1582 | step5-position-native | ses_e9b3f65b5ffeMAo4OpbcxD9LIV |
+| core-source44/4404 | step5-position-core | ses_e9b3efeebffem2dcbXlVGNr8O2 |
+| pricing44/3956 | step5-position-pricing | ses_e9b3e99a6ffe3r2973GDLkFpEm |
+
+Root supplies integration/review/image operations; no peer file writes or extra
+agents. Early interface commits precede dependent consumers. All three streams
+are active, with source/native qualification still pending.
+
+Parent prerequisite check: Docker29.1.3 works; locked base digest is pulled under
+the exact mirror reference and all2907 installed Python files equal the frozen
+image_src export. Actual interpreter is python3/3.12.3; the design command's
+python entrypoint failed127 and is corrected to python3. A broader binary/package
+inventory timed out after50s and supplies no such evidence; the narrowed Python
+source check passes. No new derived image or GPU job exists from these checks.
+Receipt `/data/ycfeng/tmp/d29_base_python_sources01.json`; detailed prerequisite
+report is retained under repairs. Approval arithmetic/chronology/hashes PASS;
+normal git-add rejected ignored task records, then exact-path force-add committed
+only the authorized records at1aee0af. Scope arithmetic uses python3 because this
+host has no unversioned python command.
+
+Parent regression preparation PASS: reparse retained full+affected unit outcomes
+(7647 pass/267 baseline failures/31 baseline errors/179 skipped), preserve exact
+failure/error IDs, and re-audit the clean D30 strict77 candidate with451 artifact
+hash checks and matching dependencies/definitions/cache inventory. Runtime,
+matrix/examples/data inputs are unchanged from that certified source to1aee0af.
+Full commands, failed image attempts and current evidence limits are recorded in
+`repairs/test_report_2026-10-23_parent_prerequisites.md`; selected raw receipts are
+retained in `repairs/evidence/`. D29 candidate verification remains pending.
+
 ## Earlier execution record
 
 - completed: `design.md` traces actual Batch context/query snapshots, source
