@@ -98,8 +98,12 @@ are retained in evidence/ alongside dependency versions/hashes.
 
 ## Remaining acceptance
 
-Receive complete peer implementations and independently review native repairs,
-then source review,
-full-unit failure/error comparison, strict77, actual-main and new GPU/native
+Foundation review identifies F1 missing actual _select_experts provenance and
+F2 mutable sequence inputs to frozen collective dataclasses. Owners are repairing
+these within existing allocations;306 PASS is test evidence, not source acceptance
+with open findings. Exact37-path diff review is being completed separately.
+
+Receive complete peer implementations, close foundation findings and source review,
+then full-unit failure/error comparison, strict77, actual-main and new GPU/native
 evidence. Synthetic source/timer fixtures and these CPU checks provide no
 collective-model, G3 state, CUDA graph or E2E numerical qualification.

@@ -1,0 +1,2882 @@
+diff --git a/frontier/cc_backend/base_cc_backend.py b/frontier/cc_backend/base_cc_backend.py
+index 03fc73921756f4a07de31c74d7e53d54effd642e..fd0f281230d6a906fc87c998ce4e0b7cd6c48af0 100644
+--- a/frontier/cc_backend/base_cc_backend.py
++++ b/frontier/cc_backend/base_cc_backend.py
+@@ -105,6 +105,12 @@ class BaseCCBackend(ABC):
+         """Get the number of devices."""
+         return self._num_devices
+ 
++    def predict_collective_plan(self, plan):
++        """Price a lossless joint plan or reject this backend's capability."""
++        raise NotImplementedError(
++            f"{type(self).__name__} does not support collective plans"
++        )
++
+     def predict_comm_cost(self, comm_op: str, **kwargs) -> float:
+         """
+         Unified interface for predicting communication cost.
+diff --git a/frontier/cc_backend/collective_plan.py b/frontier/cc_backend/collective_plan.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..a314d27dec89b301ce98f2f27ec1df3e86d539fb
+--- /dev/null
++++ b/frontier/cc_backend/collective_plan.py
+@@ -0,0 +1,102 @@
++"""Immutable workload and evidence for the selected Step TP8/DP2 model."""
++from __future__ import annotations
++
++from dataclasses import asdict, dataclass
++import json
++import math
++
++
++@dataclass(frozen=True)
++class CollectiveTensor:
++    name: str
++    dtype: str
++    element_size: int
++    columns: int
++    row_stride: int
++
++    def __post_init__(self):
++        if not self.name or not self.dtype or any(type(v) is not int or v <= 0
++                for v in (self.element_size, self.columns, self.row_stride)):
++            raise ValueError("Collective tensor requires positive integer geometry")
++        if self.row_stride != self.columns:
++            raise ValueError("Selected Step collectives require contiguous row layout")
++
++
++@dataclass(frozen=True)
++class CollectivePlan:
++    phase: str
++    sizes: tuple[int, int]
++    tensors: tuple[CollectiveTensor, ...]
++    groups: tuple[tuple[int, ...], ...]
++    graph_mode: str
++    context_json: str
++    buffer_json: str
++
++    def __post_init__(self):
++        if self.phase not in ("dispatch", "combine", "shared_tp", "routed_tp"):
++            raise ValueError("Unsupported Step collective phase")
++        if len(self.sizes) != 2 or any(type(n) is not int or n <= 0 for n in self.sizes):
++            raise ValueError("Step DP2 requires two positive physical row counts")
++        expected = (tuple((t, 8 + t) for t in range(8)) if self.phase in
++                    ("dispatch", "combine") else (tuple(range(8)), tuple(range(8, 16))))
++        if self.groups != expected:
++            raise ValueError("Step collective groups must match native TP8/DP2 rank order")
++        if not self.tensors or len({t.name for t in self.tensors}) != len(self.tensors):
++            raise ValueError("Collective requires distinct ordered tensors")
++        if self.phase != "dispatch" and len(self.tensors) != 1:
++            raise ValueError("Step combine/TP reduction requires one output tensor")
++        if self.graph_mode not in ("none", "full"):
++            raise ValueError("Step plan requires actual eager/full graph modality")
++        if self.graph_mode == "full" and self.sizes[0] != self.sizes[1]:
++            raise ValueError("Captured Step DP input must have uniform physical sizes")
++        for value in (self.context_json, self.buffer_json):
++            if not isinstance(json.loads(value), dict) or not json.loads(value):
++                raise ValueError("Collective context and buffer receipts must be nonempty objects")
++
++    @property
++    def stages(self):
++        if self.phase in ("shared_tp", "routed_tp"):
++            return (("AllReduce", 0, None),)
++        uniform = self.sizes[0] == self.sizes[1]
++        primitive = ("AllGather" if self.phase == "dispatch" else "ReduceScatter") if uniform else (
++            "Broadcast" if self.phase == "dispatch" else "Reduce")
++        return tuple((primitive, j, root) for j in range(len(self.tensors))
++                     for root in ((None,) if uniform else (0, 1)))
++
++    def to_dict(self):
++        return {**asdict(self), "context": json.loads(self.context_json),
++                "buffers": json.loads(self.buffer_json), "stages": self.stages,
++                "native_grouping": "outer_tensor_group/nested_root_group"}
++
++    def cache_key(self):
++        return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"))
++
++    def endpoint_bytes(self, rank):
++        own = self.sizes[rank // 8] * sum(t.columns * t.element_size for t in self.tensors)
++        total = sum(self.sizes) * sum(t.columns * t.element_size for t in self.tensors)
++        return (own, total) if self.phase == "dispatch" else (
++            (total, own) if self.phase == "combine" else (own, own))
++
++
++@dataclass(frozen=True)
++class CollectivePlanCost:
++    duration_ms: float
++    network_ms: float
++    local_rank_ms: tuple[float, ...]
++    remainder_ms: float
++    kernel_counts: tuple[int, ...]
++    count_receipt_json: str
++    plan_key: str
++    model_identity: str
++
++    def __post_init__(self):
++        values = (self.duration_ms, self.network_ms, self.remainder_ms, *self.local_rank_ms)
++        if len(self.local_rank_ms) != 16 or any(not math.isfinite(v) or v < 0 for v in values):
++            raise ValueError("Collective model requires finite nonnegative per-rank service")
++        if len(self.kernel_counts) != 16 or any(type(n) is not int or n < 1 for n in self.kernel_counts):
++            raise ValueError("Actual paired native per-rank kernel counts are required")
++        if not math.isclose(self.duration_ms, self.network_ms + max(self.local_rank_ms)
++                            + self.remainder_ms, rel_tol=1e-12, abs_tol=1e-12):
++            raise ValueError("Step collective composition must be network+max(local)+remainder")
++        if not json.loads(self.count_receipt_json) or not self.plan_key or not self.model_identity:
++            raise ValueError("Collective cost requires actual count/plan/model identities")
+diff --git a/frontier/config/quantization_manager.py b/frontier/config/quantization_manager.py
+index 53d23b7b5fb71fbc35259182b99aece34c83e993..8ea4e46d59c7e9767792036e98491e8f462dca86 100644
+--- a/frontier/config/quantization_manager.py
++++ b/frontier/config/quantization_manager.py
+@@ -46,7 +46,7 @@ def _family_precision_and_profiling_operations(
+ ) -> List[str]:
+     operation_names: List[str] = []
+     seen: Set[str] = set()
+-    for operator in family.profiling_ops():
++    for operator in family.operators:
+         for operation_name in (
+             operator.precision_name(),
+             operator.profiling_name(),
+diff --git a/frontier/config/replica_config.py b/frontier/config/replica_config.py
+index ac7d954dc8cb2322b4fb2d3267b203546c8e9e7c..7c3b7e0767d1c01746a3d2edbbb8a866d92cca68 100644
+--- a/frontier/config/replica_config.py
++++ b/frontier/config/replica_config.py
+@@ -4,6 +4,7 @@ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
+ from typing import Optional
++from frontier.moe_routing_policy import resolve_routing_count_policy
+ 
+ from frontier.config.device_sku_config import BaseDeviceSKUConfig
+ from frontier.config.model_config import BaseModelConfig
+@@ -92,7 +93,7 @@ class ReplicaConfig:
+         default="balanced",
+         metadata={
+             "help": "MoE expert-load distribution for disaggregated routing simulation. "
+-            "Valid values: 'balanced', 'random', 'skewed', or 'zipf'. This controls "
++            "Valid values: 'balanced', 'random', 'skewed', 'zipf', or 'position_cyclic'. This controls "
+             "token-to-expert load skew without changing router_topk/model semantics."
+         },
+     )
+@@ -175,21 +176,10 @@ class ReplicaConfig:
+             if self.router_topk is None or int(self.router_topk) <= 0:
+                 self.router_topk = 1
+ 
+-        valid_moe_routing_distribution_types = {
+-            "balanced",
+-            "random",
+-            "skewed",
+-            "zipf",
+-        }
+         self.moe_routing_distribution_type = str(
+             self.moe_routing_distribution_type
+         ).strip().lower()
+-        if self.moe_routing_distribution_type not in valid_moe_routing_distribution_types:
+-            raise ValueError(
+-                "moe_routing_distribution_type must be one of "
+-                f"{sorted(valid_moe_routing_distribution_types)}, "
+-                f"got {self.moe_routing_distribution_type!r}"
+-            )
++        resolve_routing_count_policy(self.moe_routing_distribution_type)
+ 
+         # Validate pipeline parallelism configuration early
+         if self.model_config.num_layers % self.num_pipeline_stages != 0:
+diff --git a/frontier/execution_time_predictor/moe_routing_workload.py b/frontier/execution_time_predictor/moe_routing_workload.py
+index b68e9b9f43e48d3b172240a00b0eed9e43078a53..ec75ba1ffd73e04c448a5f2dd77f38e034a22ca0 100644
+--- a/frontier/execution_time_predictor/moe_routing_workload.py
++++ b/frontier/execution_time_predictor/moe_routing_workload.py
+@@ -28,6 +28,7 @@ from frontier.moe_load_imbalance import (
+     num_tokens_post_padded,
+ )
+ from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
++from frontier.moe_routing_policy import WaveRoutingSource, resolve_routing_count_policy
+ from frontier.types import ClusterType
+ from typing import Dict, List, Mapping, Optional
+ 
+@@ -93,14 +94,21 @@ def _normalize_routing_details_for_trace(
+ class MoeRoutingWorkload:
+     """Expert-load distribution and per-lane routed workload."""
+ 
+-    @staticmethod
+-
+     def _emit_routing_details_snapshot(
++        self,
+         cluster_type: ClusterType,
+         routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
+     ) -> None:
+         """Emit the exact predictor-owned routing map for external validation."""
+ 
++        policy = resolve_routing_count_policy(getattr(self, "_moe_routing_distribution_type", "balanced"))
++        if policy.requires_source:
++            logger.info("[ROUTING-POLICY-SNAPSHOT] %s", json.dumps({
++                "policy_id": self._moe_routing_distribution_type, "router_topk": self._replica_config.router_topk,
++                "total_expert_num": self._replica_config.total_expert_num,
++                "interval_contract": "(logical_position * top_k + slot) % num_experts",
++            }, sort_keys=True))
++            return
+         normalized = _normalize_routing_details_for_trace(routing_details)
+         payload = {
+             "schema_version": 1,
+@@ -271,6 +279,8 @@ class MoeRoutingWorkload:
+         Monolithic decode with EP enabled needs a global view across all experts to
+         derive per-lane post-MoE arrival skew before the shared-domain all-reduce.
+         """
++        if resolve_routing_count_policy(self._moe_routing_distribution_type).requires_source:
++            return {}
+         total_experts = self._replica_config.total_expert_num
+         if self._cluster_type == ClusterType.DECODE_ATTN or not self._model_config.is_moe:
+             return {}
+@@ -390,19 +400,25 @@ class MoeRoutingWorkload:
+         return self._replica_config
+ 
+     def _materialize_layer_ep_workload(
+-        self, batch: Batch, cluster_type: ClusterType, layer_id: int
++        self, batch: Batch, cluster_type: ClusterType, layer_id: int, routing_source: WaveRoutingSource | None = None,
+     ) -> LayerEPWorkload:
+         """Materialize one exact Replica-local EP workload for a MoE layer."""
+         # Routing tables are built once by the constructor and have no runtime
+         # mutation API. Topology and exact replica/layer/token identity are in
+         # the key; the frozen workload can be shared across repeated EP waves.
++        policy_id = getattr(self, "_moe_routing_distribution_type", "balanced")
++        policy = resolve_routing_count_policy(policy_id)
++        if policy.requires_source and (
++            not isinstance(routing_source, WaveRoutingSource) or routing_source.policy_id != policy_id
++        ):
++            raise ValueError("source-based prediction requires an explicitly matching routing_source")
+         workload_cache = self._layer_workload_cache
+         cache_capacity = self._layer_workload_cache_capacity
+         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
+-        routing_details = self._get_routing_details_for_cluster(cluster_type)
++        routing_details = None if policy.requires_source else self._get_routing_details_for_cluster(cluster_type)
+         target_replica_id = int(batch.replica_id)
+         global_layer_id = int(layer_id)
+-        # A decode CUDA-graph step routes its padding tokens too.
++        # Physical rows include padding even when source assignments are masked.
+         routing_token_count = int(batch.get_effective_total_tokens_for_compute(cluster_type))
+         router_topk = int(cluster_replica_config.router_topk)
+         total_expert_num = int(cluster_replica_config.total_expert_num)
+@@ -416,12 +432,14 @@ class MoeRoutingWorkload:
+             total_expert_num,
+             moe_ep_size,
+         )
++        if policy.requires_source:
++            cache_key += (policy_id, routing_source)
+         cached_workload = workload_cache.get(cache_key)
+         if cached_workload is not None:
+             workload_cache.move_to_end(cache_key)
+             return cached_workload
+         workload = materialize_layer_ep_workload(
+-            routing_ratios=resolve_routing_details(
++            routing_ratios=None if policy.requires_source else resolve_routing_details(
+                 routing_details,
+                 target_replica_id=target_replica_id,
+                 global_layer_id=global_layer_id,
+@@ -436,6 +454,8 @@ class MoeRoutingWorkload:
+                 total_expert_num,
+                 moe_ep_size,
+             ),
++            policy_id=policy_id,
++            routing_source=routing_source,
+         )
+         workload_cache[cache_key] = workload
+         workload_cache.move_to_end(cache_key)
+diff --git a/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py b/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py
+index f3e992767911f7d2cf2ca830688a6c4330bceefa..1029fbe1edbd05517cf1edf0621a68cd8099b6b5 100644
+--- a/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py
++++ b/frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py
+@@ -1,5 +1,5 @@
+ from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
+-from enum import Enum
++from frontier.moe_routing_policy import WorkloadDistributionType, resolve_routing_count_policy, validate_position_routing_scope
+ from dataclasses import dataclass
+ from frontier.logger import init_logger
+ from frontier.attention.families import STEP5_ATTENTION_FAMILY
+@@ -56,15 +56,6 @@ class CommunicationTime:
+     pipeline_parallel_time: float = 0.0
+ 
+ 
+-class WorkloadDistributionType(Enum):
+-    """Enum for different workload distribution types."""
+-
+-    BALANCED = "balanced"
+-    RANDOM = "random"
+-    SKEWED = "skewed"
+-    ZIPF = "zipf"
+-
+-
+ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredictor):
+     # The disaggregated ClusterConfig owns role availability through these
+     # attributes. Keep this tuple as the single source of truth for routed
+@@ -80,14 +71,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
+         distribution_type: str,
+     ) -> WorkloadDistributionType:
+         normalized_type = str(distribution_type).strip().lower()
+-        try:
+-            return WorkloadDistributionType(normalized_type)
+-        except ValueError as exc:
+-            valid_values = [item.value for item in WorkloadDistributionType]
+-            raise ValueError(
+-                "moe_routing_distribution_type must be one of "
+-                f"{valid_values}, got {distribution_type!r}"
+-            ) from exc
++        resolve_routing_count_policy(normalized_type)
++        return WorkloadDistributionType(normalized_type)
+ 
+     def __init__(
+         self,
+@@ -102,6 +87,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
+         actual_replica_ids: Optional[list] = None,
+         cc_backend: Optional["BaseCCBackend"] = None,
+     ) -> None:
++        role_attribute = dict(self._ROUTED_ROLE_CONFIG_ATTRIBUTES).get(cluster_type, "replica_config")
++        role_config = getattr(cluster_config, role_attribute, replica_config)
++        if role_config is not None and resolve_routing_count_policy(role_config.moe_routing_distribution_type).requires_source:
++            validate_position_routing_scope(role_config, cluster_type)
++            replica_config = role_config
+         # We still call super() with one of the configs to set up the basic models.
+         # The prefill config is a good representative as it's a full model.
+         super().__init__(
+@@ -359,6 +349,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
+                 start_id = 0
+                 replica_ids = list(range(num_replicas))
+ 
++            if resolve_routing_count_policy(self._workload_distribution_type.value).requires_source:
++                validate_position_routing_scope(cluster_replica_config, cluster_type)
++                return {replica_id: {} for replica_id in replica_ids}
+             num_layers = cluster_replica_config.model_config.num_layers
+             total_expert_num = max(1, cluster_replica_config.total_expert_num)
+             uniform_ratio = 1.0 / float(total_expert_num)
+@@ -460,6 +453,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
+         else:
+             actual_replica_ids = list(range(num_replicas))
+ 
++        if resolve_routing_count_policy(self._workload_distribution_type.value).requires_source:
++            validate_position_routing_scope(cluster_replica_config, cluster_type)
++            return {replica_id: {} for replica_id in actual_replica_ids}
+         for replica_id in actual_replica_ids:
+             routing_details[replica_id] = {}
+ 
+diff --git a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+index 28fe372ff149cdcff286747b3b2d103d1cdb40fe..ee27b2f58a0e09b277bfb1ce4474d0911f7526b6 100644
+--- a/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
++++ b/frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py
+@@ -28,6 +28,7 @@ from frontier.model_architectures import ResidualAddPolicy
+ from frontier.moe_routing_runtime import (
+     resolve_moe_gating_routing_runtime_path,
+ )
++from frontier.moe_routing_policy import resolve_routing_count_policy, validate_position_routing_scope
+ from frontier.moe_ep_workload import (
+     EPLaneWorkload,
+ )
+@@ -516,24 +517,16 @@ class SklearnMoEExecutionTimePredictor(
+         self._moe_routing_distribution_type = str(
+             getattr(replica_config, "moe_routing_distribution_type", "balanced")
+         ).strip().lower()
+-        valid_distribution_types = {"balanced", "random", "skewed", "zipf"}
+-        if self._moe_routing_distribution_type not in valid_distribution_types:
+-            raise ValueError(
+-                "moe_routing_distribution_type must be one of "
+-                f"{sorted(valid_distribution_types)}, got "
+-                f"{self._moe_routing_distribution_type!r}"
+-            )
++        policy = resolve_routing_count_policy(self._moe_routing_distribution_type)
++        if policy.requires_source:
++            validate_position_routing_scope(replica_config, cluster_type)
+         self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
+         if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
+             raise ValueError(
+                 "moe_routing_seed must be an exact non-negative int, "
+                 f"got {self._moe_routing_seed}."
+             )
+-        self._moe_gating_routing_runtime_path = (
+-            resolve_moe_gating_routing_runtime_path(
+-                self._moe_routing_distribution_type
+-            )
+-        )
++        self._moe_gating_routing_runtime_path = policy.runtime_path
+ 
+         super().__init__(
+             predictor_config,
+diff --git a/frontier/execution_time_predictor/step5_cost.py b/frontier/execution_time_predictor/step5_cost.py
+index 386cf55731a0e0c31aea8ab4034bf500f3c29c98..d99ff381624185d61c64fbacd1a4f3bdaddae86f 100644
+--- a/frontier/execution_time_predictor/step5_cost.py
++++ b/frontier/execution_time_predictor/step5_cost.py
+@@ -22,6 +22,7 @@ from frontier.execution_time_predictor.step5 import (
+ from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
+ from frontier.operators.binding import bind_operator_query
+ from frontier.types import ClusterType, MeasurementType
++from frontier.config.precision_type import PrecisionType
+ 
+ 
+ def step5_layer_metadata(predictor, layer_id):
+@@ -40,16 +41,25 @@ def step5_layer_metadata(predictor, layer_id):
+     return metadata_by_layer[layer_id]
+ 
+ 
+-def step5_operator_binding(predictor, metadata, model_name):
++def step5_operator_binding(predictor, metadata, model_name, *, context=None):
+     """Reuse fixed precision and contract identity, never a selected estimator."""
+     bindings = getattr(predictor, "_step5_operator_bindings", None)
+     if bindings is None:
+         bindings = predictor._step5_operator_bindings = {}
+-    key = (metadata.attention_spec.global_layer_id, model_name)
++    key = (metadata.attention_spec.global_layer_id, model_name,
++           json.dumps(context, sort_keys=True) if context is not None else None)
+     if key not in bindings:
+         binding = bind_operator_query(model_name)
+         projections = [p for p in metadata.projections if p.operator_name == model_name]
+         precision = metadata.model_precision
++        if context is not None:
++            from frontier.operators.families import get_moe_profiling_operators, is_step5_position_context
++            if is_step5_position_context(context) and binding.family_id == "moe":
++                if binding.operator not in get_moe_profiling_operators(context):
++                    raise ValueError(f"Step {model_name} is not an applicable physical scope")
++                precision = (PrecisionType.FP8 if model_name == "moe_input_quantize" else
++                             PrecisionType.FP32 if binding.operator.precision_name() == "moe_gating"
++                             else precision)
+         if projections:
+             precisions = {p.weight_precision for p in projections}
+             if len(precisions) != 1:
+diff --git a/frontier/moe_ep_workload.py b/frontier/moe_ep_workload.py
+index 78e87e031900657f33ab46028f824622959f3fc9..55aae4e6f932e909834247f3d5a5ff17e5c9b742 100644
+--- a/frontier/moe_ep_workload.py
++++ b/frontier/moe_ep_workload.py
+@@ -17,6 +17,9 @@ from types import MappingProxyType
+ from typing import TypeAlias
+ 
+ import numpy as np
++from frontier.moe_routing_policy import (
++    RATIO_COUNT_POLICY, WaveRoutingSource, resolve_routing_count_policy,
++)
+ 
+ 
+ ExpertTokenMap: TypeAlias = Mapping[int, int]
+@@ -47,6 +50,8 @@ def generate_moe_routing_ratios(
+         raise ValueError("layer_id must be a non-negative int")
+ 
+     normalized_distribution = str(distribution_type).strip().lower()
++    if resolve_routing_count_policy(normalized_distribution).requires_source:
++        raise ValueError("source-based routing has no ratio table")
+     rng = np.random.default_rng(seed + layer_id)
+     if normalized_distribution == "balanced":
+         weights = np.ones(total_expert_num, dtype=float)
+@@ -144,6 +149,8 @@ class LayerEPWorkload:
+     per_ep_routed_tokens: Mapping[int, int]
+     participant_ep_ids: tuple[int, ...]
+     expert_to_ep: ExpertOwnership
++    live_routing_token_count: int | None = None
++    routing_source: WaveRoutingSource | None = None
+     _lane_descriptors: tuple["EPLaneWorkload", ...] = field(
+         init=False,
+         repr=False,
+@@ -172,10 +179,19 @@ class LayerEPWorkload:
+             "total_routed_assignments",
+             minimum=0,
+         )
+-        expected_assignments = routing_token_count * router_topk
++        live_rows = routing_token_count if self.live_routing_token_count is None else self.live_routing_token_count
++        _require_int(live_rows, "live_routing_token_count", minimum=0)
++        if live_rows > routing_token_count:
++            raise ValueError("live_routing_token_count exceeds physical rows")
++        if self.routing_source is not None and (
++            self.routing_source.gathered_physical_rows != routing_token_count or self.routing_source.live_rows != live_rows
++        ):
++            raise ValueError("routing source differs from physical/live rows")
++        object.__setattr__(self, "live_routing_token_count", live_rows)
++        expected_assignments = live_rows * router_topk
+         if total_routed_assignments != expected_assignments:
+             raise ValueError(
+-                "total_routed_assignments must equal routing_token_count * "
++                "total_routed_assignments must equal live_routing_token_count * "
+                 f"router_topk: expected={expected_assignments}, "
+                 f"got={total_routed_assignments}"
+             )
+@@ -353,6 +369,7 @@ class LayerEPWorkload:
+                     per_expert_tokens=per_ep_tokens[ep_id],
+                     global_token_counts=domain_token_counts,
+                     router_topk=router_topk,
++                    routing_source=self.routing_source,
+                 )
+                 for ep_id in participant_ep_ids
+             ),
+@@ -369,6 +386,10 @@ class LayerEPWorkload:
+             )
+         return self._lane_descriptors[ep_id]
+ 
++    @property
++    def padding_row_count(self) -> int:
++        return self.routing_token_count - self.live_routing_token_count
++
+ 
+ @dataclass(frozen=True)
+ class EPLaneWorkload:
+@@ -385,6 +406,7 @@ class EPLaneWorkload:
+     global_token_counts: tuple[int, ...]
+     routed_token_count: int
+     router_topk: int
++    routing_source: WaveRoutingSource | None = None
+ 
+     def __post_init__(self) -> None:
+         if type(self.ep_id) is not int or self.ep_id < 0:
+@@ -485,6 +507,7 @@ def _build_lane_descriptor(
+     per_expert_tokens: Mapping[int, int],
+     global_token_counts: tuple[int, ...],
+     router_topk: int,
++    routing_source: WaveRoutingSource | None = None,
+ ) -> EPLaneWorkload:
+     """Build one descriptor and densify its canonical local expert map."""
+ 
+@@ -535,6 +558,7 @@ def _build_lane_descriptor(
+         global_token_counts=global_token_counts,
+         routed_token_count=sum(local_token_counts),
+         router_topk=router_topk,
++        routing_source=routing_source,
+     )
+ 
+ 
+@@ -809,7 +833,7 @@ def materialize_expert_token_counts(
+ 
+ def materialize_layer_ep_workload(
+     *,
+-    routing_ratios: Mapping[int, Real],
++    routing_ratios: Mapping[int, Real] | None = None,
+     target_replica_id: int,
+     global_layer_id: int,
+     routing_token_count: int,
+@@ -817,6 +841,8 @@ def materialize_layer_ep_workload(
+     total_expert_num: int,
+     moe_expert_parallel_size: int,
+     expert_to_ep: ExpertOwnership,
++    policy_id: str | None = None,
++    routing_source: WaveRoutingSource | None = None,
+ ) -> LayerEPWorkload:
+     """Materialize one exact aggregate workload for a Replica-local EP wave."""
+ 
+@@ -847,10 +873,18 @@ def materialize_layer_ep_workload(
+         total_expert_num=total_expert_num,
+         moe_expert_parallel_size=moe_expert_parallel_size,
+     )
+-    total_routed_assignments = routing_token_count * router_topk
+-    global_per_expert_tokens = materialize_expert_token_counts(
++    policy = RATIO_COUNT_POLICY if policy_id is None else resolve_routing_count_policy(policy_id)
++    if policy.requires_source and (
++        routing_source is None or routing_source.policy_id != policy_id
++    ):
++        raise ValueError("routing policy requires an explicitly matching source")
++    live_rows = routing_source.live_rows if policy.requires_source else routing_token_count
++    total_routed_assignments = live_rows * router_topk
++    global_per_expert_tokens = policy.count_experts(
+         routing_ratios=routing_ratios,
+-        total_routed_assignments=total_routed_assignments,
++        routing_source=routing_source,
++        routing_token_count=routing_token_count,
++        router_topk=router_topk,
+         total_expert_num=total_expert_num,
+     )
+ 
+@@ -879,6 +913,8 @@ def materialize_layer_ep_workload(
+         per_ep_routed_tokens=per_ep_routed_tokens,
+         participant_ep_ids=tuple(range(moe_expert_parallel_size)),
+         expert_to_ep=ownership,
++        live_routing_token_count=live_rows,
++        routing_source=routing_source,
+     )
+ 
+ 
+diff --git a/frontier/moe_routing_policy.py b/frontier/moe_routing_policy.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b3336a8b6410f34bfdd418fbba0b0773f601973
+--- /dev/null
++++ b/frontier/moe_routing_policy.py
+@@ -0,0 +1,196 @@
++"""Routing-count policies and immutable request-owner source frames."""
++
++from dataclasses import dataclass
++from enum import Enum
++from types import MappingProxyType
++from typing import Callable
++
++
++class WorkloadDistributionType(Enum):
++    BALANCED = "balanced"
++    RANDOM = "random"
++    SKEWED = "skewed"
++    ZIPF = "zipf"
++    POSITION_CYCLIC = "position_cyclic"
++
++
++def _integer(value, name, minimum=0):
++    if type(value) is not int or value < minimum:
++        raise ValueError(f"{name} must be an exact int >= {minimum}")
++
++
++@dataclass(frozen=True)
++class TokenInterval:
++    start: int
++    length: int
++
++    def __post_init__(self):
++        _integer(self.start, "interval start")
++        _integer(self.length, "interval length", 1)
++
++
++@dataclass(frozen=True)
++class SourceLaneRouting:
++    lane_id: int
++    source_batch_id: int
++    source_global_id: int
++    forward_group_id: int
++    graph_mode: str
++    gating_runtime_context: str
++    physical_rows: int
++    live_rows: int
++    intervals: tuple[TokenInterval, ...]
++
++    def __post_init__(self):
++        from frontier.moe_gating_runtime import validate_moe_gating_runtime_context
++        for name in ("lane_id", "source_batch_id", "forward_group_id", "live_rows"):
++            _integer(getattr(self, name), name)
++        _integer(self.source_global_id, "source_global_id", -1)
++        _integer(self.physical_rows, "physical_rows", 1)
++        if self.graph_mode not in ("NONE", "PIECEWISE", "FULL"):
++            raise ValueError("source graph_mode must be NONE, PIECEWISE or FULL")
++        validate_moe_gating_runtime_context(self.gating_runtime_context)
++        intervals = tuple(self.intervals)
++        if any(not isinstance(interval, TokenInterval) for interval in intervals):
++            raise ValueError("source intervals must be TokenInterval values")
++        if sum(interval.length for interval in intervals) != self.live_rows or self.live_rows > self.physical_rows:
++            raise ValueError("source live rows must equal interval lengths and fit physical rows")
++        object.__setattr__(self, "intervals", intervals)
++
++
++@dataclass(frozen=True)
++class WaveRoutingSource:
++    policy_id: str
++    source_lanes: tuple[SourceLaneRouting, ...]
++    gathered_physical_rows: int
++
++    def __post_init__(self):
++        policy = resolve_routing_count_policy(self.policy_id)
++        if not policy.requires_source:
++            raise ValueError("WaveRoutingSource requires a source-based policy")
++        lanes = tuple(self.source_lanes)
++        if not lanes or any(not isinstance(lane, SourceLaneRouting) for lane in lanes):
++            raise ValueError("source_lanes must contain immutable source lanes")
++        if tuple(lane.lane_id for lane in lanes) != tuple(range(len(lanes))):
++            raise ValueError("source lanes must be in contiguous DP order")
++        if len({lane.forward_group_id for lane in lanes}) != 1:
++            raise ValueError("source lanes must belong to one admitted forward group")
++        _integer(self.gathered_physical_rows, "gathered_physical_rows", 1)
++        if self.gathered_physical_rows != sum(lane.physical_rows for lane in lanes):
++            raise ValueError("gathered physical rows must equal source widths in no-SP scope")
++        object.__setattr__(self, "source_lanes", lanes)
++
++    @property
++    def live_rows(self):
++        return sum(lane.live_rows for lane in self.source_lanes)
++
++
++def build_wave_routing_source(source_batches, *, policy_id, cluster_type, gathered_physical_rows, model_config=None):
++    """Freeze only explicit, forward-bound request-owner batches, never EP copies."""
++    from frontier.entities.batch import Batch, DummyForwardBatch
++    from frontier.moe_gating_runtime import (
++        DEFAULT_MOE_GATING_RUNTIME_CONTEXT, PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
++        should_use_prefill_hot_moe_gating_context,
++    )
++    lanes = []
++    for lane_id, batch in sorted(source_batches.items()):
++        if not isinstance(batch, Batch) or getattr(batch, "lane_workload", None) is not None:
++            raise ValueError("routing source must contain actual request-owner batches")
++        binding = getattr(batch, "forward_start_descriptor", None)
++        if binding is None:
++            raise ValueError("routing source requires admitted forward_start_descriptor")
++        if batch.get_effective_total_tokens_for_compute(cluster_type) != binding.num_tokens:
++            raise ValueError("source physical width differs from its forward binding")
++        intervals = ()
++        if not isinstance(batch, DummyForwardBatch):
++            queries, contexts = tuple(batch.num_tokens), tuple(batch.num_context_tokens)
++            if len(batch.requests) != len(queries) or len(queries) != len(contexts) or sum(queries) != batch.total_num_tokens:
++                raise ValueError("source request/query/context arrays disagree")
++            intervals = tuple(TokenInterval(context, query) for context, query in zip(contexts, queries))
++        hot = should_use_prefill_hot_moe_gating_context(batch=batch, model_config=model_config)
++        lanes.append(SourceLaneRouting(
++            lane_id, batch.id, batch.global_id, binding.group_id, binding.graph_mode,
++            PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT if hot else DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
++            binding.num_tokens, sum(interval.length for interval in intervals), intervals,
++        ))
++    return WaveRoutingSource(policy_id, tuple(lanes), gathered_physical_rows)
++
++
++def position_cyclic_expert_counts(intervals, top_k, total_expert_num):
++    """Count the consecutive assignment residues of each logical interval."""
++    _integer(top_k, "top_k", 1)
++    _integer(total_expert_num, "total_expert_num", 1)
++    if top_k > total_expert_num:
++        raise ValueError("top_k must not exceed total_expert_num")
++    counts = dict.fromkeys(range(total_expert_num), 0)
++    for interval in intervals:
++        if not isinstance(interval, TokenInterval):
++            raise ValueError("counts require TokenInterval values")
++        base, remainder = divmod(interval.length * top_k, total_expert_num)
++        start = interval.start * top_k % total_expert_num
++        for expert in counts:
++            counts[expert] += base
++        for offset in range(remainder):
++            counts[(start + offset) % total_expert_num] += 1
++    return counts
++
++
++def _ratio_counts(*, routing_ratios, routing_source, routing_token_count, router_topk, total_expert_num):
++    from frontier.moe_ep_workload import materialize_expert_token_counts
++    if routing_source is not None:
++        raise ValueError("ratio counts do not accept a routing source")
++    return materialize_expert_token_counts(
++        routing_ratios=routing_ratios, total_routed_assignments=routing_token_count * router_topk,
++        total_expert_num=total_expert_num,
++    )
++
++
++def _position_counts(*, routing_ratios, routing_source, routing_token_count, router_topk, total_expert_num):
++    if not isinstance(routing_source, WaveRoutingSource) or routing_ratios is not None:
++        raise ValueError("position counts require an explicit source, not ratios")
++    if routing_source.gathered_physical_rows != routing_token_count:
++        raise ValueError("routing source and gathered physical width disagree")
++    return position_cyclic_expert_counts(
++        (interval for lane in routing_source.source_lanes for interval in lane.intervals),
++        router_topk, total_expert_num,
++    )
++
++
++@dataclass(frozen=True)
++class RoutingCountPolicy:
++    runtime_path: str
++    requires_source: bool
++    count_experts: Callable
++
++
++RATIO_COUNT_POLICY = RoutingCountPolicy("standard_fused_topk", False, _ratio_counts)
++ROUTING_COUNT_POLICIES = MappingProxyType({
++    "balanced": RATIO_COUNT_POLICY,
++    "random": RoutingCountPolicy("uniform_topk", False, _ratio_counts),
++    "skewed": RATIO_COUNT_POLICY,
++    "zipf": RATIO_COUNT_POLICY,
++    "position_cyclic": RoutingCountPolicy("position_cyclic", True, _position_counts),
++})
++
++
++def resolve_routing_count_policy(distribution_type):
++    name = str(distribution_type).strip().lower()
++    if name not in ROUTING_COUNT_POLICIES:
++        raise ValueError(f"Unsupported moe_routing_distribution_type={distribution_type!r}; expected {sorted(ROUTING_COUNT_POLICIES)}")
++    return ROUTING_COUNT_POLICIES[name]
++
++
++def validate_position_routing_scope(replica_config, cluster_type):
++    """Admit the approved Step P/D geometry without expanding count mathematics."""
++    from frontier.config import global_vars
++    from frontier.types import ClusterType
++    if global_vars.SYS_ARCH != "pd-disaggregation" or cluster_type not in (ClusterType.PREFILL, ClusterType.DECODE):
++        raise ValueError("source-based routing supports only Step P/D")
++    if replica_config.model_config.get_model_architecture_profile().profile_id != "step5":
++        raise ValueError("source-based serving routing requires the Step architecture")
++    geometry = tuple(getattr(replica_config, name) for name in (
++        "num_pipeline_stages", "attn_tensor_parallel_size", "attn_dp",
++        "moe_tensor_parallel_size", "moe_expert_parallel_size",
++    ))
++    if geometry != (1, 8, 2, 1, 16) or replica_config.speculative_decoding_config.enabled:
++        raise ValueError("source-based routing requires PP1/TP8/DP2/MoE-TP1/EP16 without MTP")
+diff --git a/frontier/moe_routing_runtime.py b/frontier/moe_routing_runtime.py
+index 70b14630d2b12abb90d5cc2ced7928ff02c28afa..1410fae5abaa7e6ac80b96906b3cc129b64a80d6 100644
+--- a/frontier/moe_routing_runtime.py
++++ b/frontier/moe_routing_runtime.py
+@@ -1,14 +1,12 @@
+ from __future__ import annotations
+ 
+ import pandas as pd
++from frontier.moe_routing_policy import ROUTING_COUNT_POLICIES, resolve_routing_count_policy
+ 
+ 
+ STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH = "standard_fused_topk"
+ UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH = "uniform_topk"
+-SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
+-    STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
+-    UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
+-}
++SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {policy.runtime_path for policy in ROUTING_COUNT_POLICIES.values()}
+ 
+ 
+ def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str:
+@@ -25,15 +23,7 @@ def resolve_moe_gating_routing_runtime_path(
+     moe_routing_distribution_type: str,
+ ) -> str:
+     """Map the canonical routing distribution to profiling runtime metadata."""
+-    normalized_distribution = str(moe_routing_distribution_type).strip().lower()
+-    if normalized_distribution in {"balanced", "skewed", "zipf"}:
+-        return STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH
+-    if normalized_distribution == "random":
+-        return UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH
+-    raise ValueError(
+-        f"Unsupported moe_routing_distribution_type={moe_routing_distribution_type!r}. "
+-        "Expected 'balanced', 'random', 'skewed', or 'zipf'."
+-    )
++    return resolve_routing_count_policy(moe_routing_distribution_type).runtime_path
+ 
+ 
+ def filter_moe_gating_routing_topk_rows(
+diff --git a/frontier/operators/families.py b/frontier/operators/families.py
+index fed753364739cdc1c01a00c45bbc882e575db743..aa3e3783f667784d302b550e538d6515d8921284 100644
+--- a/frontier/operators/families.py
++++ b/frontier/operators/families.py
+@@ -35,6 +35,23 @@ from frontier.types import ClusterType
+ _ALL_PHASES = (OperatorPhase.PREFILL, OperatorPhase.DECODE, OperatorPhase.MIXED)
+ 
+ 
++def is_step5_position_context(context) -> bool:
++    return context is not None and (
++        context["model_architecture_profile"] == "step5"
++        and context["routing_runtime_path"] == "position_cyclic"
++    )
++
++
++def _source_prepare_applicable(context) -> bool:
++    if not is_step5_position_context(context):
++        return False
++    if context["quant_dtype"] not in (None, "float8_e4m3fn"):
++        raise ValueError("Step prepare requires the reached native quant_dtype")
++    if type(context["defer_input_quant"]) is not bool:
++        raise ValueError("Step prepare requires native defer_input_quant")
++    return context["quant_dtype"] is not None and not context["defer_input_quant"]
++
++
+ FFN_FAMILY = OperatorFamilySpec(
+     family_id="ffn",
+     display_name="Dense FFN",
+@@ -85,6 +102,7 @@ MOE_FAMILY = OperatorFamilySpec(
+     profiling_order=(
+         "moe_gating_linear",
+         "moe_gating_routing_topk",
++        "moe_input_quantize",
+         "moe_shuffling",
+         "moe_grouped_gemm",
+     ),
+@@ -121,6 +139,18 @@ MOE_FAMILY = OperatorFamilySpec(
+             resource_class=ResourceClass.MEMORY,
+             tp_mode=TensorParallelMode.MOE_TP,
+             ep_agnostic=True,
++            applicability=lambda context: not is_step5_position_context(context),
++        ),
++        OperatorSpec(
++            name="moe_input_quantize",
++            role=OperatorRole.RESHAPE,
++            phases=_ALL_PHASES,
++            trace_kind=TraceKind.COMPUTE,
++            execution_time_attr="moe_input_quantize_time",
++            resource_class=ResourceClass.MEMORY,
++            tp_mode=TensorParallelMode.MOE_TP,
++            ep_agnostic=True,
++            applicability=_source_prepare_applicable,
+         ),
+         OperatorSpec(
+             name="moe_grouped_gemm",
+@@ -154,6 +184,11 @@ _DEFERRED_DISAGGREGATED_LEGACY_MOE_TP_OPS = frozenset(
+ )
+ 
+ 
++def get_moe_profiling_operators(context=None) -> tuple[OperatorSpec, ...]:
++    """Select charged targets from the one registry using native prepare facts."""
++    return MOE_FAMILY.profiling_ops(context)
++
++
+ def get_moe_family_operator_by_profiling_name(
+     op_name: str,
+     family: OperatorFamilySpec | None = None,
+@@ -161,7 +196,7 @@ def get_moe_family_operator_by_profiling_name(
+     family = family or MOE_FAMILY
+     moe_ops = {
+         operator.profiling_name(): operator
+-        for operator in family.profiling_ops()
++        for operator in family.operators if operator.profiling_target
+     }
+     if op_name not in moe_ops:
+         raise ValueError(f"Unsupported MoE op: {op_name}")
+diff --git a/frontier/operators/spec.py b/frontier/operators/spec.py
+index 1cca23ece66efa0cb7cc33a03d789c0b55f0a942..e54f792e1b6020c6ce02d607db27f13f9888edd4 100644
+--- a/frontier/operators/spec.py
++++ b/frontier/operators/spec.py
+@@ -90,6 +90,7 @@ class OperatorSpec:
+     tp_mode: TensorParallelMode | None = None
+     ep_agnostic: bool = False
+     projection_ownership: ProjectionOwnership = ProjectionOwnership.NOT_PROJECTION
++    applicability: Callable[[Any], bool] | None = None
+ 
+     _operator_label: ClassVar[str] = "Operator"
+ 
+@@ -129,6 +130,9 @@ class OperatorSpec:
+ 
+         return self.profiling_key or self.name
+ 
++    def is_applicable(self, context: Any = None) -> bool:
++        return self.applicability is None or self.applicability(context)
++
+     def precision_name(self) -> str:
+         """Return the quantization/precision-facing key for this physical operator."""
+ 
+@@ -184,6 +188,7 @@ class CommOperatorSpec(OperatorSpec):
+     zero_payload_policy: ZeroPayloadPolicy = ZeroPayloadPolicy.PREDICT
+     # Kernels one call launches; a kernel-only step pays the kernel gap before each.
+     kernel_count: int = 1
++    plan_builder: Callable[[CommPayloadContext], Any] | None = None
+ 
+     _operator_label: ClassVar[str] = "CommOperator"
+ 
+@@ -192,14 +197,17 @@ class CommOperatorSpec(OperatorSpec):
+         valid_collectives = {
+             "allreduce", "allgather", "reduce_scatter", "alltoall", "send_recv",
+         }
+-        if self.collective_alias not in valid_collectives:
++        if self.plan_builder is not None:
++            if self.payload_builder is not None or self.collective_alias:
++                raise ValueError(f"CommOperator {self.name} must declare scalar or plan, not both")
++        elif self.collective_alias not in valid_collectives:
+             raise ValueError(
+                 f"CommOperator {self.name} collective_alias must be one of "
+                 f"{sorted(valid_collectives)}, got {self.collective_alias!r}"
+             )
+         if not self.comm_group:
+             raise ValueError(f"CommOperator {self.name} comm_group must be non-empty")
+-        if self.payload_builder is None:
++        if self.payload_builder is None and self.plan_builder is None:
+             raise ValueError(f"CommOperator {self.name} must declare payload_builder")
+         if self.trace_kind is not TraceKind.COMM:
+             raise ValueError(f"CommOperator {self.name} trace_kind must be COMM")
+@@ -345,14 +353,15 @@ class OperatorFamilySpec:
+                 f"{self.disabled_reason}"
+             )
+ 
+-    def profiling_ops(self) -> tuple[OperatorSpec, ...]:
+-        operators = tuple(operator for operator in self.operators if operator.profiling_target)
++    def profiling_ops(self, context: Any = None) -> tuple[OperatorSpec, ...]:
++        operators = tuple(operator for operator in self.operators
++                          if operator.profiling_target and operator.is_applicable(context))
+         if not self.profiling_order:
+             return operators
+ 
+         by_name = {operator.name: operator for operator in operators}
+         ordered_names = set(self.profiling_order)
+-        ordered = tuple(by_name[name] for name in self.profiling_order)
++        ordered = tuple(by_name[name] for name in self.profiling_order if name in by_name)
+         remaining = tuple(operator for operator in operators if operator.name not in ordered_names)
+         return ordered + remaining
+ 
+diff --git a/frontier/profiling/collectives/vllm_forward_collectives.py b/frontier/profiling/collectives/vllm_forward_collectives.py
+index 921fca967db6304712a7bd9e9c09ba5ea4120c42..3aa8619b1731b2a84de0862ca624cc11860dbaf4 100644
+--- a/frontier/profiling/collectives/vllm_forward_collectives.py
++++ b/frontier/profiling/collectives/vllm_forward_collectives.py
+@@ -53,7 +53,7 @@ DTYPE_BYTES = {"bfloat16": 2, "float16": 2, "float32": 4, "int32": 4,
+ # torch.distributed all-reduces on the group's NCCL and gloo process groups,
+ # as dp_utils._run_ar issues them.
+ OPS = ("all_reduce", "reduce_scatter", "all_gather", "all_gatherv",
+-       "reduce_scatterv", "device_group_all_reduce", "cpu_all_reduce")
++       "reduce_scatterv", "reduce_scatterv_into_output", "device_group_all_reduce", "cpu_all_reduce")
+ 
+ 
+ def _ceil_div(a: int, b: int) -> int:
+@@ -297,18 +297,29 @@ def call_bytes(call: CollectiveCall, parallel: ServingParallelism,
+         return own, total
+     if call.op == "reduce_scatter":
+         return own * len(members), own
+-    if call.op == "reduce_scatterv":
++    if call.op in ("reduce_scatterv", "reduce_scatterv_into_output"):
+         return total, own
+     raise ValueError(f"Unknown op {call.op!r}")
+ 
+ 
+ def forward_collectives(model: ModelShape, parallel: ServingParallelism,
+-                        scenario: ForwardScenario) -> list[CollectiveCall]:
++                        scenario: ForwardScenario, *, native_call_names=None) -> list[CollectiveCall]:
+     """List the distinct collectives of one forward pass for ``scenario``."""
+     if model.model_type == "step5":
+         parallel.validate_step5_moe()
+         scenario.validate(parallel)
+-        return _step5_collectives(model, parallel, scenario)
++        calls = _step5_collectives(model, parallel, scenario, into_output=native_call_names is not None)
++        if native_call_names is None:
++            return calls
++        names = tuple(native_call_names)
++        if isinstance(native_call_names, str) or not names or len(set(names)) != len(names):
++            raise ValueError("native_call_names requires nonempty distinct call names")
++        unknown = set(names) - {call.name for call in calls}
++        if unknown:
++            raise ValueError(f"Unknown or unreached native call names: {sorted(unknown)}")
++        return [call for call in calls if call.name in names]
++    if native_call_names is not None:
++        raise ValueError("native_call_names is supported only for Step5")
+     parallel.validate_sequence_parallel_moe()
+     tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
+     scenario.validate(parallel)
+@@ -371,7 +382,7 @@ def forward_collectives(model: ModelShape, parallel: ServingParallelism,
+ 
+ 
+ def _step5_collectives(model: ModelShape, parallel: ServingParallelism,
+-                      scenario: ForwardScenario) -> list[CollectiveCall]:
++                      scenario: ForwardScenario, *, into_output=False) -> list[CollectiveCall]:
+     tp, dp = parallel.tensor_parallel_size, parallel.data_parallel_size
+     hidden, act = model.hidden_size, parallel.activation_dtype
+     n_moe = len(model.moe_layer_ids())
+@@ -409,9 +420,9 @@ def _step5_collectives(model: ModelShape, parallel: ServingParallelism,
+                 (act, TOPK_WEIGHTS_DTYPE, TOPK_IDS_DTYPE), dp_tokens, n_moe - n_fp8,
+                 "naive_dp_ep.py:prepare; all2all.py:AgRsAll2AllManager.dispatch"))
+         calls += [
+-            CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv", "dp", 0,
++            CollectiveCall("moe_combine_reduce_scatterv", "reduce_scatterv_into_output" if into_output else "reduce_scatterv", "dp", 0,
+                            (hidden,), (act,), dp_tokens, n_moe,
+-                           "all2all.py:AgRsAll2AllManager.combine"),
++                            "all2all.py:AgRsAll2AllManager.combine_into_output" if into_output else "all2all.py:AgRsAll2AllManager.combine"),
+             CollectiveCall("routed_expert_all_reduce", "all_reduce", "tp", 0,
+                            (hidden,), (act,), tokens, n_moe,
+                            "moe_runner.py:_maybe_reduce_final_output"),
+diff --git a/frontier/profiling/common/layers/layernorm.py b/frontier/profiling/common/layers/layernorm.py
+index 5defc2fdfe65028104687c01a10f6e1c1f1ffd0a..044ca3031d73a02acb780112a561a05e85a61046 100644
+--- a/frontier/profiling/common/layers/layernorm.py
++++ b/frontier/profiling/common/layers/layernorm.py
+@@ -162,13 +162,21 @@ class Step5RMSNorm(nn.Module):
+                     "Step RMSNorm profiling requires make_step5_rms_norm "
+                     "from the Step vLLM image."
+                 ) from exc
+-            self._impl = make_step5_rms_norm(
++            impl = make_step5_rms_norm(
+                 self.hidden_size,
+                 eps=self.variance_epsilon,
+                 zero_centered=self.zero_centered,
+                 dtype=self._weight_dtype,
+             )
+-            self._impl.weight = self.weight
++            impl.weight = self.weight
++            import os
++            manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
++            if manifest:
++                from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++                self.native_facts = verify_step5_profile_runtime(
++                    manifest, callables=(make_step5_rms_norm, type(impl), impl.forward),
++                )
++            self._impl = impl
+         return self._impl
+ 
+     def forward(self, x: torch.Tensor, residual: Optional[torch.Tensor] = None):
+diff --git a/frontier/profiling/common/runtime_identity.py b/frontier/profiling/common/runtime_identity.py
+index 5eae103eaf0d6fbdab77ef19bf6db77fbfada514..9dc9ad3845867f0f7f7b51736d7f0169e2fb2456 100644
+--- a/frontier/profiling/common/runtime_identity.py
++++ b/frontier/profiling/common/runtime_identity.py
+@@ -22,7 +22,12 @@ from __future__ import annotations
+ 
+ import hashlib
+ import importlib
++import importlib.util
++import inspect
+ import json
++import os
++import re
++import sys
+ from dataclasses import dataclass
+ from pathlib import Path
+ from typing import Any, Iterable, Mapping
+@@ -92,6 +97,123 @@ def canonical_json(value: Any) -> str:
+     return json.dumps(value, sort_keys=True, separators=(",", ":"))
+ 
+ 
++def verify_step5_profile_runtime(manifest_path, *, callables=()):
++    """Verify installed Python origins against the sealed full-image receipt.
++
++    The image digest is declared; only a separate platform receipt proves which
++    image was launched. Compiled libraries retain their separate native receipt.
++    """
++    manifest_path = Path(manifest_path).resolve(strict=True)
++    stage = manifest_path.parent
++    manifest = json.loads(manifest_path.read_text())
++    binding = manifest["native_binding"]
++
++    def sealed(relative):
++        path = (stage / relative).resolve(strict=True)
++        path.relative_to(stage)
++        if file_sha256(path) != manifest["sha256"][relative]:
++            raise ValueError(f"sealed profile artifact hash mismatch: {relative}")
++        return path
++
++    registry_path = stage / "tests/comparison/dp_placement_pp/vllm_replay.py"
++    sealed("tests/comparison/dp_placement_pp/vllm_replay.py")
++    sealed("tests/comparison/stage_admission_pp/vllm_burst_driver.py")
++    sys.path.insert(0, str(stage / "tests/comparison/stage_admission_pp"))
++    try:
++        spec = importlib.util.spec_from_file_location("step5_profile_runtime_registry", registry_path)
++        registry = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(registry)
++    finally:
++        sys.path.pop(0)
++    adapter = registry.adapter_record(binding["native_runtime_adapter"])
++    reference = binding["native_reference"]
++    registry.check_native_reference(reference, adapter["native_reference"])
++    if reference["routing_strategy"] != "position_cyclic" or manifest["image"] != reference["image"]:
++        raise ValueError("profile adapter/image/routing identity mismatch")
++    for image in (reference["image"], reference["base_image"]):
++        if re.fullmatch(r".+@sha256:[0-9a-f]{64}", image) is None:
++            raise ValueError("profile native reference requires immutable image digests")
++    if reference["image"] == reference["base_image"]:
++        raise ValueError("position runtime requires a derived image, not the base image")
++    if os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") != reference["routing_strategy"] or os.environ.get("VLLM_MOE_SKIP_PADDING", "1") != "1":
++        raise ValueError("effective native routing/mask environment differs from binding")
++
++    receipt_path = sealed(binding["native_source_receipt"])
++    derivation_path = sealed(binding["native_derivation_manifest"])
++    receipt = json.loads(receipt_path.read_text())
++    derivation = json.loads(derivation_path.read_text())
++    root = Path(binding["installed_package"]).resolve(strict=True)
++    if (receipt["schema_version"] != "native_installed_sources.v1"
++            or receipt["image"] != reference["image"] or receipt["base_image"] != reference["base_image"]
++            or receipt["installed_package"] != str(root)
++            or receipt["python_version"] != sys.version.split()[0]
++            or receipt["derivation_manifest_sha256"] != file_sha256(derivation_path)):
++        raise ValueError("full installed-source receipt differs from native binding")
++    pins = binding["installed_source_hashes"]
++    if len(pins) != 53 or binding["serving_pin_count"] != 53:
++        raise ValueError("serving pin inventory count differs from binding")
++    for key, digest in pins.items():
++        path = root.parent / key
++        path.resolve(strict=True).relative_to(root)
++        if receipt["sources"][key] != digest or file_sha256(path) != digest:
++            raise ValueError(f"installed serving pin mismatch: {key}")
++    if derivation["base_image"] != reference["base_image"]:
++        raise ValueError("derivation base image differs from native reference")
++    for key, digest in derivation["derived_source_sha256"].items():
++        if pins[key] != digest or receipt["sources"][key] != digest:
++            raise ValueError(f"derived native source mismatch: {key}")
++    config_path = sealed("data/config/models/stepfun-ai__Step-5-Preview.json")
++    if file_sha256(config_path) != binding["model_config_sha256"] or not binding["model_config_revision"]:
++        raise ValueError("staged effective model configuration identity mismatch")
++
++    imports = {}
++
++    def verify_module(module):
++        path = Path(module.__file__).resolve(strict=True)
++        origin = Path(module.__spec__.origin).resolve(strict=True)
++        relative = path.relative_to(root)
++        key = "vllm/" + relative.as_posix()
++        expected_relative = Path(*module.__name__.split(".")[1:])
++        expected = root / (expected_relative / "__init__.py" if path.name == "__init__.py" else expected_relative.with_suffix(".py"))
++        if path != expected or origin != path or file_sha256(path) != receipt["sources"][key]:
++            raise ValueError(f"native module origin/spec/hash mismatch: {module.__name__}")
++        fact = {"path": str(path), "spec_origin": str(origin), "sha256": receipt["sources"][key]}
++        imports[module.__name__] = fact
++        return fact
++
++    for name in (
++        "vllm", "vllm.models.step5.nvidia.model", "vllm.forward_context",
++        "vllm.model_executor.layers.fused_moe.router.router_factory",
++        "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
++    ):
++        verify_module(importlib.import_module(name))
++    for name, module in tuple(sys.modules.items()):
++        if (name == "vllm" or name.startswith("vllm.")) and str(getattr(module, "__file__", "")).endswith(".py"):
++            verify_module(module)
++    callable_facts = {}
++    for supplied in callables:
++        function = inspect.unwrap(getattr(supplied, "__func__", supplied))
++        if not inspect.isclass(function) and not inspect.isfunction(function):
++            function = inspect.unwrap(getattr(function, "fn", function))
++        if not inspect.isclass(function) and not inspect.isfunction(function):
++            raise ValueError("native callable has no inspectable Python source")
++        module = sys.modules[function.__module__]
++        fact = verify_module(module)
++        source = Path(inspect.getsourcefile(function)).resolve(strict=True)
++        code = getattr(function, "__code__", None)
++        if source != Path(fact["path"]) or code is not None and Path(code.co_filename).resolve(strict=True) != source:
++            raise ValueError("bound native callable code/source differs from its installed module")
++        name = function.__module__ + "." + function.__qualname__
++        callable_facts[name] = {**fact, "qualified_name": name, "code_filename": str(source)}
++    shared = {key: binding[key] for key in (
++        "native_runtime_adapter", "native_reference", "profile_generation", "installed_package",
++        "model_config_revision", "model_config_sha256",
++    )}
++    shared.update(installed_source_hashes=pins, native_source_receipt_sha256=file_sha256(receipt_path),
++                  native_derivation_manifest_sha256=file_sha256(derivation_path))
++    return {"shared": shared, "imports": imports, "callables": callable_facts}
++
++
+ @dataclass(frozen=True)
+ class RuntimeIdentity:
+     """Table-wide runtime facts written as identical columns on every row."""
+@@ -106,6 +228,7 @@ class RuntimeIdentity:
+     quant_signature: str
+     parallel_groups: Mapping[str, int]
+     graph_mode: str
++    native_facts: Mapping[str, Any] | None = None
+ 
+     def __post_init__(self) -> None:
+         for name in (
+@@ -138,10 +261,12 @@ class RuntimeIdentity:
+             "device_capability": self.device_capability,
+             "graph_mode": self.graph_mode,
+         }
++        if self.native_facts is not None:
++            payload["native_facts"] = self.native_facts["shared"]
+         return hashlib.sha256(canonical_json(payload).encode()).hexdigest()[:16]
+ 
+     def columns(self) -> dict[str, str]:
+-        return {
++        columns = {
+             "runtime_fingerprint": self.fingerprint,
+             "runtime_versions": canonical_json(dict(self.runtime_versions)),
+             "source_revision": self.source_revision,
+@@ -155,6 +280,9 @@ class RuntimeIdentity:
+             "parallel_groups": canonical_json(dict(self.parallel_groups)),
+             "graph_mode": self.graph_mode,
+         }
++        if self.native_facts is not None:
++            columns["native_facts"] = canonical_json(self.native_facts)
++        return columns
+ 
+     def to_json(self) -> dict[str, Any]:
+         return {**self.columns(), "parallel_groups": dict(self.parallel_groups)}
+@@ -180,6 +308,7 @@ def measure_runtime_identity(
+     quant_signature: str,
+     parallel_groups: Mapping[str, int],
+     graph_mode: str,
++    native_facts: Mapping[str, Any] | None = None,
+ ) -> RuntimeIdentity:
+     """Collect the identity of a table measured on the current CUDA device."""
+ 
+@@ -195,6 +324,7 @@ def measure_runtime_identity(
+         quant_signature=quant_signature,
+         parallel_groups=parallel_groups,
+         graph_mode=graph_mode,
++        native_facts=native_facts,
+     )
+ 
+ 
+@@ -228,4 +358,5 @@ __all__ = [
+     "file_sha256",
+     "measure_runtime_identity",
+     "model_config_json_path",
++    "verify_step5_profile_runtime",
+ ]
+diff --git a/frontier/profiling/common/step5_job.py b/frontier/profiling/common/step5_job.py
+index 06d7630ed8840687e344ada08bb2a75c36771fb0..de6d60dec5c41a69df5f59deeec66f58deae25ec 100644
+--- a/frontier/profiling/common/step5_job.py
++++ b/frontier/profiling/common/step5_job.py
+@@ -6,6 +6,7 @@ import hashlib
+ import json
+ import shlex
+ import shutil
++import subprocess
+ from pathlib import Path
+ 
+ 
+@@ -18,14 +19,14 @@ STEPMIND_ENV = Path("/data/ycfeng/tmp/step5_native_pd_r1/stepmind_env.sh")
+ 
+ def describe_job(stage, run_id, *, worker_command, gpus=1,
+                   cloud_root=CLOUD_ROOT, credential_env=STEPMIND_ENV,
+-                  gpu_tag="H800", charged_group="codesign", timeout_seconds=3600, preemptible=False):
++                  gpu_tag="H800", charged_group="codesign", timeout_seconds=3600, preemptible=False, image=IMAGE):
+     """Describe the existing personal RJob launcher without invoking it."""
+     stage = Path(stage).resolve()
+     if not run_id or Path(run_id).name != run_id or run_id in (".", ".."):
+         raise ValueError("run_id must be a single nonempty path component")
+     q = shlex.quote
+     return {
+-        "image": IMAGE, "gpu_tag": gpu_tag, "charged_group": charged_group,
++        "image": image, "gpu_tag": gpu_tag, "charged_group": charged_group,
+         "gpus": gpus, "cpus": 8 * gpus, "mem_gb": 32 * gpus,
+         "mounts": [f"local_nfs:{stage}:{stage}", CLOUD_MOUNT],
+         "source_mount": str(stage), "cloud_output": str(Path(cloud_root) / run_id),
+@@ -39,11 +40,12 @@ def describe_job(stage, run_id, *, worker_command, gpus=1,
+             f"--job-tag {q(run_id)} --gpus {gpus} --cpus {8*gpus} --mem-gb {32*gpus} "
+             f"--gpu-tag {q(gpu_tag)} --charged-group {q(charged_group)} "
+              f"--timeout-seconds {timeout_seconds} "
++             f"--image {q(image)} "
+              f"{'--preemptible ' if preemptible else ''}{q(worker_command)}"),
+     }
+ 
+ 
+-def stage_package(stage, manifest, *, repo_root, dependency_site, additional_paths=()):
++def stage_package(stage, manifest, *, repo_root, dependency_site, additional_paths=(), additional_files=()):
+     """Copy sources and offline dependencies once, hashing every payload file."""
+     stage = Path(stage).resolve()
+     repo_root = Path(repo_root)
+@@ -53,7 +55,20 @@ def stage_package(stage, manifest, *, repo_root, dependency_site, additional_pat
+                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".git"))
+     shutil.copytree(repo_root / "data/config", stage / "data/config")
+     for relative_path in additional_paths:
+-        shutil.copytree(repo_root / relative_path, stage / relative_path)
++        target = stage / relative_path
++        target.resolve().relative_to(stage)
++        if (repo_root / relative_path).is_dir():
++            shutil.copytree(repo_root / relative_path, target)
++        else:
++            target.parent.mkdir(parents=True, exist_ok=True)
++            shutil.copy2(repo_root / relative_path, target)
++    for source, relative in additional_files:
++        target = stage / relative
++        target.resolve().relative_to(stage)
++        if target.exists():
++            raise ValueError(f"external profile artifact duplicates staged source: {relative}")
++        target.parent.mkdir(parents=True, exist_ok=True)
++        shutil.copy2(source, target)
+     shutil.copytree(dependency_site, stage / "offline_site",
+                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+     scripts = stage / "tests/integration/step5_profiling"
+@@ -72,8 +87,52 @@ def stage_package(stage, manifest, *, repo_root, dependency_site, additional_pat
+         f"exec bash {shlex.quote(str(stage / 'submit.sh'))}", "",
+     ]))
+     manifest = dict(manifest)
++    if "native_binding" in manifest:
++        source = manifest["source"]
++        for path in stage.rglob("*"):
++            if path.is_file() and path.relative_to(stage).parts[0] in ("frontier", "data", "tests"):
++                relative = str(path.relative_to(stage))
++                committed = subprocess.check_output(["git", "show", f"{source['commit']}:{relative}"], cwd=source["repository"])
++                if path.read_bytes() != committed:
++                    raise ValueError(f"staged source differs from committed payload: {relative}")
+     manifest["sha256"] = {
+         str(path.relative_to(stage)): hashlib.sha256(path.read_bytes()).hexdigest()
+         for path in sorted(stage.rglob("*")) if path.is_file()}
+     (stage / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+     return manifest
++
++
++def profile_native_binding(plan, run_id, repo_root):
++    """Bind an explicit generation to the existing native adapter and receipts."""
++    from tests.integration.step5_pd.build_stage import adapter_record, committed_source, installed_source_hashes
++    from vllm_replay import check_native_reference
++    adapter = adapter_record(plan["vllm_version"])
++    check_native_reference(plan["native_reference"], adapter["native_reference"])
++    reference = plan["native_reference"]
++    if plan["generation"] != run_id or reference["routing_strategy"] != "position_cyclic":
++        raise ValueError("explicit profile generation/runtime must match selected position adapter")
++    source = committed_source()
++    if source != plan["source"] or Path(source["repository"]).resolve() != Path(repo_root).resolve():
++        raise ValueError("profile plan must use the current committed Frontier source")
++    config_relative = "data/config/models/stepfun-ai__Step-5-Preview.json"
++    config = (Path(repo_root) / config_relative).read_bytes()
++    committed_config = subprocess.check_output(["git", "show", f"{plan['model_config_revision']}:{config_relative}"], cwd=repo_root)
++    if config != committed_config or hashlib.sha256(config).hexdigest() != plan["model_config_sha256"]:
++        raise ValueError("effective local model configuration differs from its real revision/hash")
++    pins = installed_source_hashes(Path(plan["image_source_hashes"]), plan["image_paths"]["installed_package"])
++    receipt = json.loads(Path(plan["native_source_receipt"]).read_text())
++    derivation = json.loads(Path(plan["native_derivation_manifest"]).read_text())
++    if len(pins) != 53 or any(receipt["sources"].get(key) != digest for key, digest in pins.items()):
++        raise ValueError("profile serving53 pins differ from full installed-source receipt")
++    if receipt["image"] != reference["image"] or receipt["base_image"] != reference["base_image"] or receipt["installed_package"] != plan["image_paths"]["installed_package"]:
++        raise ValueError("installed receipt image/root differs from selected adapter")
++    if (receipt["derivation_manifest_sha256"] != hashlib.sha256(Path(plan["native_derivation_manifest"]).read_bytes()).hexdigest()
++            or derivation["base_image"] != reference["base_image"]
++            or any(pins.get(key) != digest for key, digest in derivation["derived_source_sha256"].items())):
++        raise ValueError("native derivation differs from installed image sources")
++    return {"native_runtime_adapter": plan["vllm_version"], "native_reference": reference,
++            "profile_generation": run_id, "installed_package": receipt["installed_package"],
++            "installed_source_hashes": pins, "serving_pin_count": 53,
++            "model_config_revision": plan["model_config_revision"], "model_config_sha256": plan["model_config_sha256"],
++            "native_source_receipt": "profile_artifacts/native_installed_sources.json",
++            "native_derivation_manifest": "profile_artifacts/derivation_manifest.json"}
+diff --git a/frontier/profiling/linear_op/main.py b/frontier/profiling/linear_op/main.py
+index b6c4b90c6d1542d32b790369a7fd83c7cbca4769..ae9680cc214deda04d3c596b79c1519903a4e79d 100644
+--- a/frontier/profiling/linear_op/main.py
++++ b/frontier/profiling/linear_op/main.py
+@@ -383,6 +383,13 @@ def parse_args():
+     args = parser.parse_args()
+     if (args.source_revision is None) != (args.model_config_revision is None):
+         parser.error("--source_revision and --model_config_revision must be given together")
++    manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
++    if manifest:
++        binding = json.loads(Path(manifest).read_text())
++        if args.source_revision != binding["source"]["commit"] or args.model_config_revision != binding["native_binding"]["model_config_revision"]:
++            parser.error("bound profiling requires the staged source/config revisions")
++        if not args.disable_ray or args.num_gpus != 1:
++            parser.error("bound profiling requires --disable_ray --num_gpus 1")
+     args.profile_method = normalize_profile_method(args.profile_method)
+     if not args.dry_run:
+         os.makedirs(args.output_dir, exist_ok=True)
+@@ -664,6 +671,7 @@ def _attach_runtime_identity(
+ ) -> pd.DataFrame:
+     from frontier.profiling.common.runtime_identity import (
+         attach_identity_columns,
++        canonical_json,
+         measure_runtime_identity,
+     )
+ 
+@@ -675,8 +683,16 @@ def _attach_runtime_identity(
+         quant_signature=model_config.get_quant_signature(),
+         parallel_groups={"engine_tensor_parallel": 1},
+         graph_mode="eager",
++        native_facts=(json.loads(df.iloc[0]["native_facts"]) if "native_facts" in df else None),
+     )
+-    return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
++    records = df.to_dict("records")
++    if "native_facts" in df:
++        from dataclasses import replace
++        records = [{**row, "native_facts": canonical_json(json.loads(row["native_facts"]))} for row in records]
++        if any(json.loads(row["native_facts"])["shared"] != identity.native_facts["shared"] for row in records):
++            raise ValueError("linear producer rows have incompatible shared native identity")
++        return pd.DataFrame(attach_identity_columns([row], replace(identity, native_facts=json.loads(row["native_facts"])))[0] for row in records)
++    return pd.DataFrame(attach_identity_columns(records, identity))
+ 
+ 
+ def _resolve_fp8_settings(
+@@ -728,6 +744,9 @@ def profile_model(
+     # Determine available GPUs for non-Ray mode
+     available_gpus = _get_available_gpus(args.num_gpus)
+     actual_num_gpus = len(available_gpus)
++    if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST"):
++        from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++        verify_step5_profile_runtime(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"])
+ 
+     if actual_num_gpus < args.num_gpus:
+         raise RuntimeError(
+@@ -931,6 +950,14 @@ def profile_model(
+ 
+             for num_tokens in num_tokens_to_profile:
+                 result = wrapper.profile(num_tokens)
++                manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
++                if manifest:
++                    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++                    facts = verify_step5_profile_runtime(manifest)
++                    for module in wrapper.model.modules():
++                        if getattr(module, "native_facts", None) is not None:
++                            facts["callables"].update(module.native_facts["callables"])
++                    result["native_facts"] = json.dumps(facts, sort_keys=True)
+                 _collect_result(result)
+                 pbar.update(1)
+ 
+diff --git a/frontier/profiling/moe/inputs.py b/frontier/profiling/moe/inputs.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4398259fcc50912af439d570fe0fbc1855515e31
+--- /dev/null
++++ b/frontier/profiling/moe/inputs.py
+@@ -0,0 +1,123 @@
++"""Explicit source-local positions and physical gathered MoE profiling cells."""
++
++from dataclasses import asdict, dataclass
++import json
++from pathlib import Path
++
++from frontier.moe_gating_runtime import validate_moe_gating_runtime_context
++from frontier.moe_routing_policy import TokenInterval
++
++SCHEMA_VERSION = "moe.position_cyclic.inputs.v1"
++
++
++@dataclass(frozen=True)
++class MoESourceFrame:
++    source_lane_id: int
++    query_lens: tuple[int, ...]
++    context_lens: tuple[int, ...]
++    physical_rows: int
++    gating_runtime_context: str
++
++    def __post_init__(self):
++        if type(self.source_lane_id) is not int or self.source_lane_id < 0:
++            raise ValueError("source_lane_id must be a non-negative int")
++        queries, contexts = tuple(self.query_lens), tuple(self.context_lens)
++        if len(queries) != len(contexts):
++            raise ValueError("source query/context arrays must be aligned")
++        for context, query in zip(contexts, queries):
++            TokenInterval(context, query)
++        if type(self.physical_rows) is not int or self.physical_rows <= 0 or sum(queries) > self.physical_rows:
++            raise ValueError("source physical_rows must be positive and contain all live queries")
++        validate_moe_gating_runtime_context(self.gating_runtime_context)
++        object.__setattr__(self, "query_lens", queries)
++        object.__setattr__(self, "context_lens", contexts)
++
++    @property
++    def live_rows(self):
++        return sum(self.query_lens)
++
++
++@dataclass(frozen=True)
++class MoERoutingProfileInput:
++    moe_input_id: str
++    source_frames: tuple[MoESourceFrame, ...]
++    gathered_physical_rows: int
++
++    def __post_init__(self):
++        if not isinstance(self.moe_input_id, str) or not self.moe_input_id.strip():
++            raise ValueError("moe_input_id must retain a nonblank census/forward identity")
++        frames = tuple(self.source_frames)
++        if not frames or any(not isinstance(frame, MoESourceFrame) for frame in frames):
++            raise ValueError("source_frames must contain explicit MoESourceFrame values")
++        if tuple(frame.source_lane_id for frame in frames) != tuple(range(len(frames))):
++            raise ValueError("source frames must be in contiguous DP order")
++        if type(self.gathered_physical_rows) is not int or self.gathered_physical_rows != sum(frame.physical_rows for frame in frames):
++            raise ValueError("gathered_physical_rows must equal the supplied source widths")
++        object.__setattr__(self, "source_frames", frames)
++
++
++@dataclass(frozen=True)
++class MoERoutingProfileCell:
++    routing_input: MoERoutingProfileInput
++    moe_frame_scope: str
++    source_lane_id: int
++    ep_id: int | None = None
++
++    def __post_init__(self):
++        if not isinstance(self.routing_input, MoERoutingProfileInput):
++            raise ValueError("cell requires an explicit routing input")
++        if type(self.source_lane_id) is not int or not 0 <= self.source_lane_id < len(self.routing_input.source_frames):
++            raise ValueError("cell source lane is outside its input")
++        if self.moe_frame_scope == "source_local":
++            if self.ep_id is not None:
++                raise ValueError("source_local cells cannot declare an EP owner")
++        elif self.moe_frame_scope == "dp_gathered":
++            if type(self.ep_id) is not int or self.ep_id < 0:
++                raise ValueError("dp_gathered cells require an explicit EP owner")
++        else:
++            raise ValueError("cell scope must be source_local or dp_gathered")
++
++    def to_json(self):
++        return asdict(self)
++
++
++def source_frame_tensors(frame: MoESourceFrame, *, device):
++    """Return (signed int64 positions, bool is_padding), once before native timing.
++
++    Padding positions are inert storage, never logical position-zero requests.
++    Both the profiler adapter and native dispatch probe consume this interface.
++    """
++    import torch
++    if not isinstance(frame, MoESourceFrame):
++        raise ValueError("source_frame_tensors requires a validated MoESourceFrame")
++    positions = torch.zeros(frame.physical_rows, dtype=torch.int64, device=device)
++    is_padding = torch.ones(frame.physical_rows, dtype=torch.bool, device=device)
++    offset = 0
++    for context, query in zip(frame.context_lens, frame.query_lens):
++        positions[offset:offset + query] = torch.arange(context, context + query, dtype=torch.int64, device=device)
++        is_padding[offset:offset + query] = False
++        offset += query
++    return positions, is_padding
++
++
++def routing_profile_cell(value):
++    """Reconstruct the same immutable cell at executor serialization boundaries."""
++    if isinstance(value, MoERoutingProfileCell):
++        return value
++    record = dict(value)
++    source = dict(record.pop("routing_input"))
++    source["source_frames"] = tuple(MoESourceFrame(**frame) for frame in source["source_frames"])
++    return MoERoutingProfileCell(MoERoutingProfileInput(**source), **record)
++
++
++def read_routing_profile_inputs(path):
++    payload = json.loads(Path(path).read_text())
++    if payload["schema_version"] != SCHEMA_VERSION or payload["routing_runtime_path"] != "position_cyclic":
++        raise ValueError("routing input schema/policy mismatch")
++    inputs = tuple(MoERoutingProfileInput(
++        item["moe_input_id"], tuple(MoESourceFrame(**frame) for frame in item["source_frames"]),
++        item["gathered_physical_rows"],
++    ) for item in payload["inputs"])
++    if not inputs or len({item.moe_input_id for item in inputs}) != len(inputs):
++        raise ValueError("routing inputs must retain distinct census/forward identities")
++    return inputs
+diff --git a/frontier/profiling/moe/load_distribution.py b/frontier/profiling/moe/load_distribution.py
+index f30e03d3597bbcffc63a1bed437c86c062645f78..eb41971f582eca414eb53b6681982b8c5a5bdb24 100644
+--- a/frontier/profiling/moe/load_distribution.py
++++ b/frontier/profiling/moe/load_distribution.py
+@@ -177,6 +177,7 @@ def compute_expert_token_counts(
+     """
+     # Flatten topk_ids and count occurrences of each expert
+     topk_ids_flat = topk_ids.flatten().cpu()
++    topk_ids_flat = topk_ids_flat[topk_ids_flat >= 0]
+     counts = torch.bincount(topk_ids_flat, minlength=num_experts)
+     return counts.numpy().astype(int).tolist()
+ 
+diff --git a/frontier/profiling/moe/moe_impl.py b/frontier/profiling/moe/moe_impl.py
+index 1a7f631c739068d9ad56d8d2c8995e47920abf8c..bec568eacf9cdfe5cb5428608256333677ad7c38 100644
+--- a/frontier/profiling/moe/moe_impl.py
++++ b/frontier/profiling/moe/moe_impl.py
+@@ -12,6 +12,7 @@ not a compute parameter. We profile operations per-device, using num_experts_per
+ Implementation: Uses Frontier profiling operators for consistency with MLP profiling.
+ """
+ 
++import os
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
+@@ -253,7 +254,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
+     linear_backend = "vllm_gate_linear"
+     routing_assignment_policy = "biased_score_topk"
+ 
+-    def __init__(self, *, hidden_dim: int, num_experts: int, router_topk: int, router):
++    def __init__(self, *, hidden_dim: int, num_experts: int, router_topk: int, router,
++                 routing_runtime_path="standard_fused_topk"):
+         super().__init__()
+         if (
+             router.scoring_func != "sigmoid"
+@@ -272,6 +274,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
+         self._fused_topk_bias = fused_topk_bias
+         self.router = router
+         self.router_topk = router_topk
++        self.routing_runtime_path = routing_runtime_path
++        get_routing_runtime_metadata(routing_runtime_path)
+         ensure_vllm_single_rank_parallel_state()
+         self.gate = GateLinear(
+             hidden_dim,
+@@ -284,6 +288,30 @@ class SigmoidBiasGatingNetwork(nn.Module):
+         self.selection_bias = nn.Parameter(
+             torch.zeros(num_experts, dtype=torch.float32), requires_grad=False
+         )
++        native_callables = (GateLinear, type(self.gate), self.gate.forward)
++        self.native_router = None
++        self.routing_positions = self.routing_is_padding = None
++        if routing_runtime_path == "position_cyclic":
++            if os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") != "position_cyclic":
++                raise ValueError("position profiler requires the selected native routing environment")
++            from vllm.forward_context import set_forward_context, set_routing_positions
++            from vllm.model_executor.layers.fused_moe.router.router_factory import create_fused_moe_router
++            self.native_router = create_fused_moe_router(
++                top_k=router_topk, global_num_experts=num_experts, scoring_func=router.scoring_func,
++                renormalize=router.renormalize, routed_scaling_factor=router.routed_scaling_factor,
++                e_score_correction_bias=self.selection_bias,
++            )
++            if self.native_router.routing_method_type.name != "Simulated":
++                raise ValueError("position profiling must execute the native Simulated router")
++            native_callables += (create_fused_moe_router, type(self.native_router),
++                                 self.native_router.select_experts, set_forward_context, set_routing_positions)
++            self.routing_assignment_policy = "position_modulo_experts"
++        manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
++        if routing_runtime_path == "position_cyclic" and not manifest:
++            raise ValueError("position profiling requires the full installed-source manifest")
++        if manifest:
++            from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++            self.native_facts = verify_step5_profile_runtime(manifest, callables=native_callables)
+         self.gating_linear_timer = CudaTimer("moe_gating_linear")
+         self.gating_routing_topk_timer = CudaTimer("moe_gating_routing_topk")
+ 
+@@ -298,10 +326,25 @@ class SigmoidBiasGatingNetwork(nn.Module):
+             "routing_weight_policy": self.routing_weight_policy,
+         }
+ 
++    def bind_source_frame(self, frame, *, device):
++        from frontier.profiling.moe.inputs import source_frame_tensors
++        self.routing_positions, self.routing_is_padding = source_frame_tensors(frame, device=device)
++
+     def forward(self, hidden_states: torch.Tensor):
++        if self.native_router is not None:
++            positions, mask = self.routing_positions, self.routing_is_padding
++            if positions is None or positions.shape[0] != hidden_states.shape[0]:
++                raise ValueError("source frame and native router physical rows disagree")
++            from vllm.config import VllmConfig, get_current_vllm_config_or_none
++            from vllm.forward_context import set_forward_context, set_routing_positions
++            native = get_current_vllm_config_or_none() or VllmConfig()
+         with self.gating_linear_timer:
+             logits, _ = self.gate(hidden_states)
+         with self.gating_routing_topk_timer:
++            if self.native_router is not None:
++                with set_forward_context(None, native, num_tokens=hidden_states.shape[0], is_padding=mask):
++                    with set_routing_positions(positions):
++                        return self.native_router.select_experts(hidden_states, logits)
+             routing_weights, selected_experts = self._fused_topk_bias(
+                 hidden_states=hidden_states,
+                 gating_output=logits,
+@@ -331,6 +374,13 @@ def get_routing_runtime_metadata(
+             "routing_weight_policy": "uniform_1_over_topk",
+             "routing_uses_router_logits": False,
+         }
++    if routing_runtime_path == "position_cyclic":
++        return {
++            "routing_runtime_path": "position_cyclic", "routing_assignment_policy": "position_modulo_experts",
++            "routing_weight_policy": "sigmoid_renorm_scaled", "routing_uses_router_logits": True,
++            "routing_assignment_uses_positions": True, "routing_assignment_uses_scores": False,
++            "routing_weight_uses_scores": True, "moe_router_routing_method": "Simulated",
++        }
+     raise ValueError(
+         f"Unsupported routing_runtime_path for MoE profiling: {routing_runtime_path}"
+     )
+diff --git a/frontier/profiling/moe/moe_wrapper.py b/frontier/profiling/moe/moe_wrapper.py
+index e2d473ba560fc37396e27386080f31894a691839..5c6e68e2e6d49ab97bb424b93960d9f37ff5ff7d 100644
+--- a/frontier/profiling/moe/moe_wrapper.py
++++ b/frontier/profiling/moe/moe_wrapper.py
+@@ -6,6 +6,7 @@ This module wraps MoE operations for profiling, following the same pattern as th
+ 
+ import operator
+ import os
++import math
+ from collections.abc import Mapping
+ from typing import List, Optional
+ 
+@@ -305,6 +306,43 @@ class MoEWrapper:
+         """Use a fixed representative EP rank for deterministic profiling rows."""
+         return 0
+ 
++    def _profile_cell_callable(self, run, operator_names):
++        """Replay the same physical callable for paired duration/kernel counts."""
++        store = self.timer_stats_store
++        original_method = store.profile_method
++        if original_method not in (ProfileMethod.CUDA_EVENT, ProfileMethod.RECORD_FUNCTION):
++            raise ValueError("position cells require CUDA_EVENT or RECORD_FUNCTION")
++        try:
++            for _ in range(WARMUP_STEPS):
++                run()
++            torch.cuda.synchronize()
++            store.clear_stats()
++            if original_method is ProfileMethod.CUDA_EVENT:
++                for _ in range(ACTIVE_STEPS):
++                    run()
++                torch.cuda.synchronize()
++                durations = store.get_stats()
++                store.clear_stats()
++                store.profile_method = ProfileMethod.RECORD_FUNCTION
++            tracer = RecordFunctionTracer(self.output_dir)
++            with tracer:
++                run()
++            counts = tracer.get_operation_time_stats()
++            if original_method is ProfileMethod.RECORD_FUNCTION:
++                durations = counts
++            result = {}
++            for name in operator_names:
++                if name not in durations or name not in counts:
++                    raise ValueError(f"missing applicable physical scope: {name}")
++                median, kernels = float(durations[name]["median"]), counts[name]["kernel_count"]
++                if not math.isfinite(median) or median <= 0 or type(kernels) is not int or kernels <= 0:
++                    raise ValueError(f"invalid duration/count pair for physical scope: {name}")
++                result[name] = {**durations[name], "kernel_count": kernels}
++            return result
++        finally:
++            store.profile_method = original_method
++            store.clear_stats()
++
+     def _build_local_expert_map(self, device: torch.device) -> torch.Tensor:
+         if self.expert_parallel_size <= 1:
+             raise ValueError("Local expert map is only valid when expert_parallel_size > 1")
+@@ -334,7 +372,8 @@ class MoEWrapper:
+             raise ValueError("Local expert token counting is only valid when expert_parallel_size > 1")
+ 
+         expert_map = self._build_local_expert_map(global_topk_ids.device)
+-        local_ids = expert_map[global_topk_ids.long()]
++        valid_global_ids = global_topk_ids[global_topk_ids >= 0]
++        local_ids = expert_map[valid_global_ids.long()]
+         valid_local_ids = local_ids[local_ids >= 0]
+         if valid_local_ids.numel() == 0:
+             return [0] * self.num_experts_per_device
+diff --git a/frontier/profiling/step5/job.py b/frontier/profiling/step5/job.py
+index 46090b52fcb9008d9ce7e643ffe7cc47cf035ef7..be6d7a6403b165603a2b496288fba0bc3726e483 100644
+--- a/frontier/profiling/step5/job.py
++++ b/frontier/profiling/step5/job.py
+@@ -9,7 +9,7 @@ import shlex
+ from pathlib import Path
+ 
+ from frontier.profiling.common.step5_job import (
+-    CLOUD_MOUNT, CLOUD_ROOT, IMAGE, STEPMIND_ENV, describe_job, stage_package,
++    CLOUD_MOUNT, CLOUD_ROOT, IMAGE, STEPMIND_ENV, describe_job, stage_package, profile_native_binding,
+ )
+ 
+ 
+@@ -157,7 +157,7 @@ def stage_probe(stage, run_id=PROBE_RUN_ID, *, dependency_site, gpus=1, preempti
+                          additional_paths=(WORKLOAD,))
+ 
+ 
+-def describe_p0_profiles(stage, run_id, *, role, gpus=1):
++def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
+     """Prepare independent role measurements, not a serving calibration job."""
+     from frontier.profiling.common.model_config import ModelConfig
+     from frontier.profiling.linear_op.step5_job import METHODS, planned_profile, profile_arguments
+@@ -165,7 +165,8 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
+ 
+     if gpus != 1:
+         raise ValueError("P0 compute profiling measures one isolated TP-local rank per role package")
+-    plan = json.loads((REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json").read_text())
++    plan = json.loads((REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json" if profile_plan is None else Path(profile_plan)).read_text())
++    binding = None if profile_plan is None else profile_native_binding(plan, run_id, REPO_ROOT)
+     if role not in plan["roles"]:
+         raise ValueError("P0 measurement role must be PREFILL or DECODE")
+     selected = plan["roles"][role]
+@@ -202,6 +203,15 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
+             "--max_tokens", str(max(selected["moe_tokens"])), "--precision", "BF16",
+             "--profile_method", method, "--device", "h800", "--load_distributions", "uniform",
+             "--routing_runtime_path", "standard_fused_topk", "--output_dir", str(output / "moe"), "--yes"]})
++    if binding is not None:
++        for command in commands:
++            if command["family"] in ("linear", "moe"):
++                command["arguments"] += ["--source_revision", plan["source"]["commit"],
++                                         "--model_config_revision", plan["model_config_revision"]]
++            if command["family"] == "moe":
++                args = command["arguments"]
++                args[args.index("--routing_runtime_path") + 1] = binding["native_reference"]["routing_strategy"]
++                args += ["--routing_input_file", "profile_artifacts/moe_inputs.json"]
+     q = shlex.quote
+     worker = [
+         "set -euo pipefail", f"export TMPDIR={q(str(temporary))}",
+@@ -212,19 +222,28 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
+         "export VLLM_USE_BREAKABLE_CUDAGRAPH=1", "nvidia-smi -L",
+         f"(cd {q(str(WORKLOAD))} && sha256sum -c SHA256SUMS)",
+     ]
++    if binding is not None:
++        worker[1:1] = [
++            f"export FRONTIER_STEP5_PROFILE_MANIFEST={q(str(Path(stage).resolve() / 'manifest.json'))}",
++            "unset VLLM_MOE_ROUTING_SIMULATION_STRATEGY",
++            f"export VLLM_MOE_ROUTING_SIMULATION_STRATEGY={q(binding['native_reference']['routing_strategy'])}",
++            "export VLLM_MOE_SKIP_PADDING=1",
++        ]
+     for command in commands:
+         worker.append(shlex.join(["bash", "tests/integration/step5_profiling/run_on_worker.sh",
+                                   *command["arguments"]]) + " 2>&1 | tee " +
+                       q(str(output / f"{command['family']}_{command['method']}_worker.log")))
+     manifest = describe_job(stage, run_id, worker_command="\n".join(worker), gpus=gpus,
+                             gpu_tag=plan["gpu_tag"], charged_group=plan["charged_group"],
+-                            preemptible=plan["preemptible"], timeout_seconds=plan["timeout_seconds"])
++                             preemptible=plan["preemptible"], timeout_seconds=plan["timeout_seconds"],
++                             image=IMAGE if binding is None else binding["native_reference"]["image"])
+     workload_hashes = {name: hashlib.sha256((REPO_ROOT / WORKLOAD / name).read_bytes()).hexdigest()
+                        for name in ("manifest.json", "SHA256SUMS")}
+     if (workload_hashes["manifest.json"] != WORKLOAD_MANIFEST_SHA256
+             or workload_hashes["SHA256SUMS"] != WORKLOAD_SUMS_SHA256):
+         raise ValueError("P0 profiles require the unchanged common workload identity")
+-    return {**manifest, "purpose": "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION",
++    return {**manifest, **({"native_binding": binding, "source": plan["source"]} if binding is not None else {}),
++             "purpose": "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION",
+             "verification_scripts": ["verify_fixed_probe.py", "judge_attention_smoke.py"],
+             "measurement_role": role, "measurement_plan": plan, "producer_commands": commands,
+             "attention_arguments": attention_args, "workload": {"path": str(WORKLOAD), "sha256": workload_hashes},
+@@ -235,10 +254,18 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
+             "admitted": False, "blocks": plan["coverage_limits"]}
+ 
+ 
+-def stage_p0_profiles(stage, run_id, *, role, dependency_site, gpus=1):
+-    manifest = describe_p0_profiles(stage, run_id, role=role, gpus=gpus)
++def stage_p0_profiles(stage, run_id, *, role, dependency_site, gpus=1, profile_plan=None):
++    manifest = describe_p0_profiles(stage, run_id, role=role, gpus=gpus, profile_plan=profile_plan)
++    paths, files = (WORKLOAD,), ()
++    if profile_plan is not None:
++        plan = manifest["measurement_plan"]
++        paths += ("tests/comparison/dp_placement_pp/vllm_replay.py", "tests/comparison/stage_admission_pp/vllm_burst_driver.py")
++        files = tuple((plan[key], "profile_artifacts/" + name) for key, name in (
++            ("image_source_hashes", "installed_source_pins.txt"), ("native_source_receipt", "native_installed_sources.json"),
++            ("native_derivation_manifest", "derivation_manifest.json")))
++        files += ((profile_plan, "profile_artifacts/profile_plan.json"), (plan["roles"][role]["moe_input_file"], "profile_artifacts/moe_inputs.json"))
+     return stage_package(stage, manifest, repo_root=REPO_ROOT, dependency_site=dependency_site,
+-                         additional_paths=(WORKLOAD,))
++                         additional_paths=paths, additional_files=files)
+ 
+ 
+ def main():
+@@ -248,12 +275,15 @@ def main():
+     parser.add_argument("--dependency-site", type=Path)
+     parser.add_argument("--fixed-workload-probe", action="store_true")
+     parser.add_argument("--p0-role", choices=("PREFILL", "DECODE"),
+-                        help="Prepare an independent bounded H800 P0 role profile package")
++                         help="Prepare an independent bounded H800 P0 role profile package")
++    parser.add_argument("--profile-plan", type=Path)
+     parser.add_argument("--preemptible", action="store_true",
+                         help="Use a preemptible H200 fixed-workload probe under the D21 reservation policy")
+     parser.add_argument("--dry-run", action="store_true")
+     parser.add_argument("--gpus", type=int, default=1)
+     args = parser.parse_args()
++    if args.profile_plan is not None and not args.p0_role:
++        parser.error("--profile-plan requires --p0-role")
+     if args.p0_role and (args.fixed_workload_probe or args.preemptible):
+         parser.error("P0 role profiles are H800 non-preemptible and distinct from the fixed H200 probe")
+     if args.preemptible and not args.fixed_workload_probe:
+@@ -263,6 +293,7 @@ def main():
+         resources["preemptible"] = args.preemptible
+     if args.p0_role:
+         resources["role"] = args.p0_role
++        resources["profile_plan"] = args.profile_plan
+     describe = describe_p0_profiles if args.p0_role else describe_probe if args.fixed_workload_probe else describe_smoke
+     stage = stage_p0_profiles if args.p0_role else stage_probe if args.fixed_workload_probe else stage_smoke
+     if args.dry_run:
+diff --git a/frontier/profiling/step5/vllm_wrapper.py b/frontier/profiling/step5/vllm_wrapper.py
+index a944f4c19c229b574f818c49db431c0d3bd20f75..c485bd6925c812c1e9b696470cb5b17c8114cf8d 100644
+--- a/frontier/profiling/step5/vllm_wrapper.py
++++ b/frontier/profiling/step5/vllm_wrapper.py
+@@ -121,8 +121,17 @@ class VllmStep5AttentionWrapper:
+                 vllm_config=self.native, device=torch.device("cuda"))
+             self.layer.eval().requires_grad_(False)
+             self._check_shapes()
++            manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
++            image = IMAGE
++            self.native_facts = None
++            if manifest:
++                from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
++                self.native_facts = verify_step5_profile_runtime(manifest, callables=(type(self.layer), self.layer.forward))
++                if file_sha256(Path(model_path) / "config.json") != self.native_facts["shared"]["model_config_sha256"]:
++                    raise ValueError("native attention effective config differs from sealed local configuration")
++                image = self.native_facts["shared"]["native_reference"]["image"]
+             self.scopes = NativeScopes(torch)
+-            self.runtime_signature = ";".join((f"declared_image={IMAGE}", f"vllm={vllm.__version__}",
++            self.runtime_signature = ";".join((f"declared_image={image}", f"vllm={vllm.__version__}",
+                 f"torch={torch.__version__}", f"cuda={torch.version.cuda}",
+                 f"triton={importlib.metadata.version('triton')}",
+                 f"flashinfer={importlib.metadata.version('flashinfer-python')}"))
+@@ -582,6 +591,10 @@ class VllmStep5AttentionWrapper:
+                     "prefix_continuation_validation": "PASS" if prefix else "not_applicable",
+                     "active_operators": json.dumps(sorted(active)),
+                     "min_timing_window_ms": min_timing_window_ms}
++            if self.native_facts is not None:
++                from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++                facts = verify_step5_profile_runtime(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"], callables=(type(self.layer), self.layer.forward))
++                common["native_facts"] = json.dumps(facts, sort_keys=True)
+             row_args = dict(config=self.config, cell=cell, tp=self.tp, block_size=self.block_size,
+                 max_model_len=self.max_model_len, runtime_signature=self.runtime_signature, device=self.device)
+             event_row = build_row(**row_args, time_stats=stats, evidence={**common, **signature, **quality,
+diff --git a/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py b/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py
+index 9375ddfb3672dae227d9348738ae352f8b5ae45d..b710d37c79943d23a840185e1c6363abed3010d0 100644
+--- a/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py
++++ b/frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py
+@@ -903,6 +903,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
+         target_replica_id: int,
+         global_layer_id: int,
+         routing_token_count: int | None = None,
++        source_batches=None,
+     ):
+         """Materialize one canonical per-layer workload for a full-model MoE batch."""
+ 
+@@ -912,6 +913,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
+             target_replica_id=target_replica_id,
+             global_layer_id=global_layer_id,
+             routing_token_count=routing_token_count,
++            source_batches=source_batches,
+         )
+ 
+     def _build_prefill_ep_lane_batch(
+diff --git a/frontier/scheduler/utils/ep_trace.py b/frontier/scheduler/utils/ep_trace.py
+index 24267de2205db3d613f22015f12628ca9d85fdb2..b4cccfd0dce01b3c116e4995dd9a86500a936f8c 100644
+--- a/frontier/scheduler/utils/ep_trace.py
++++ b/frontier/scheduler/utils/ep_trace.py
+@@ -504,6 +504,7 @@ def log_conservation_trace(
+     per_ep_routed_tokens: Dict[int, int],
+     trace_identity: Dict[str, Any],
+     format_identity: Callable[[Dict[str, Any]], str],
++    live_routing_token_count: int | None = None,
+ ) -> None:
+     """Validate and emit EP routing token conservation."""
+ 
+@@ -518,9 +519,12 @@ def log_conservation_trace(
+     ):
+         if type(value) is not int or value < minimum:
+             raise ValueError(f"EP conservation {name} is invalid: {value!r}")
+-    if routing_token_count * router_topk != total_routed_assignments:
++    live_rows = routing_token_count if live_routing_token_count is None else live_routing_token_count
++    if type(live_rows) is not int or not 0 <= live_rows <= routing_token_count:
++        raise ValueError("EP conservation live rows must fit physical routing rows")
++    if live_rows * router_topk != total_routed_assignments:
+         raise ValueError(
+-            "EP conservation total must equal routing_token_count * router_topk"
++            "EP conservation total must equal live routing rows * router_topk"
+         )
+     if not isinstance(per_ep_routed_tokens, dict) or not per_ep_routed_tokens:
+         raise ValueError("EP conservation requires a non-empty per-EP map")
+@@ -532,6 +536,9 @@ def log_conservation_trace(
+     if sum(normalized.values()) != total_routed_assignments:
+         raise ValueError("EP conservation per-EP total does not match routed assignments")
+     cluster_name = getattr(cluster_type, "name", str(cluster_type))
++    if live_routing_token_count is not None:
++        logger.info("[EP-POSITION-SOURCE][%s] batch_id=%d, layer_id=%d, physical_rows=%d, live_rows=%d, padding_rows=%d",
++                    cluster_name, batch_id, layer_id, routing_token_count, live_rows, routing_token_count - live_rows)
+     logger.info(
+         "[EP-CONSERVATION][%s] batch_id=%d, layer_id=%d, "
+         "routing_token_count=%d, router_topk=%d, total_routed_assignments=%d, "
+diff --git a/frontier/scheduler/utils/ep_wave.py b/frontier/scheduler/utils/ep_wave.py
+index c7ec14b14e3b87746b62e092936b88d2f7739a10..11bd91aaab0786291cd8efc58f9f580854890148 100644
+--- a/frontier/scheduler/utils/ep_wave.py
++++ b/frontier/scheduler/utils/ep_wave.py
+@@ -110,6 +110,7 @@ def prepare_moe_wave_from_inputs(
+         batch=aggregate_batch,
+         target_replica_id=replica_id,
+         global_layer_id=layer_id,
++        source_batches=wave_inputs.source_batches,
+         **physical_rows,
+     )
+     trace_identity = trace_identity_builder(
+@@ -119,6 +120,9 @@ def prepare_moe_wave_from_inputs(
+         operation_id=int(cohort_id),
+         operation_kind="ep_ffn",
+     )
++    source_counts = {}
++    if layer_workload.routing_source is not None:
++        source_counts = {"live_routing_token_count": layer_workload.live_routing_token_count}
+     conservation_logger(
+         cluster_type=cluster_type,
+         batch_id=int(cohort_id),
+@@ -128,6 +132,7 @@ def prepare_moe_wave_from_inputs(
+         total_routed_assignments=int(layer_workload.total_routed_assignments),
+         per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
+         trace_identity=trace_identity,
++        **source_counts,
+     )
+     phase_times = predict_ep_wave_phase_times(
+         layer_workload=layer_workload,
+diff --git a/frontier/scheduler/utils/layer_workload.py b/frontier/scheduler/utils/layer_workload.py
+index d592c30591db4771c72e2208a935df0559e186e9..472671a7505b9c9ec3fead1fa22a88e750acca96 100644
+--- a/frontier/scheduler/utils/layer_workload.py
++++ b/frontier/scheduler/utils/layer_workload.py
+@@ -8,11 +8,13 @@ from frontier.moe_ep_workload import (
+     resolve_routing_details,
+ )
+ from frontier.types import ClusterType
++from frontier.moe_routing_policy import build_wave_routing_source, resolve_routing_count_policy, validate_position_routing_scope
+ 
+ 
+ def materialize_layer_workload(
+     *, scheduler: Any, batch: Any, target_replica_id: int, global_layer_id: int,
+     routing_token_count: int | None = None,
++    source_batches=None,
+ ) -> Any:
+     """Validate scheduler inputs and build a canonical per-layer EP workload."""
+ 
+@@ -49,12 +51,24 @@ def materialize_layer_workload(
+         raise ValueError("moe_expert_parallel_size must be an exact positive int")
+     if type(router_topk) is not int or router_topk <= 0:
+         raise ValueError("router_topk must be an exact positive int")
+-    # A decode CUDA-graph step routes its padding tokens too, so routing uses
+-    # the same compute width as every other operator of the step.
++    # Physical routing width includes graph padding; a source policy masks it.
+     if routing_token_count is None:
+         routing_token_count = batch.get_effective_total_tokens_for_compute(scheduler._cluster_type)
++    policy_id = getattr(replica_config, "moe_routing_distribution_type", "balanced")
++    policy = resolve_routing_count_policy(policy_id)
++    routing_source = None
++    if policy.requires_source:
++        validate_position_routing_scope(replica_config, scheduler._cluster_type)
++        if source_batches is None:
++            raise ValueError("source-based layer materialization requires explicit source_batches")
++        if len(source_batches) != replica_config.attn_dp:
++            raise ValueError("routing sources must match the admitted attention DP lanes")
++        routing_source = build_wave_routing_source(
++            source_batches, policy_id=policy_id, cluster_type=scheduler._cluster_type,
++            gathered_physical_rows=routing_token_count, model_config=model_config,
++        )
+     return materialize_layer_ep_workload(
+-        routing_ratios=resolve_routing_details(
++        routing_ratios=None if policy.requires_source else resolve_routing_details(
+             routing_details, target_replica_id, global_layer_id
+         ),
+         target_replica_id=target_replica_id,
+@@ -64,4 +78,6 @@ def materialize_layer_workload(
+         total_expert_num=total_expert_num,
+         moe_expert_parallel_size=moe_ep_size,
+         expert_to_ep=build_contiguous_expert_ownership(total_expert_num, moe_ep_size),
++        policy_id=policy_id,
++        routing_source=routing_source,
+     )
+diff --git a/tests/integration/step5_profiling/run_on_worker.sh b/tests/integration/step5_profiling/run_on_worker.sh
+index 2b5f4637a2e9d55cc2e921b6c0ecd59cf4b3af98..400160f692f5d0ae156783d9407ddbc88566ab9d 100755
+--- a/tests/integration/step5_profiling/run_on_worker.sh
++++ b/tests/integration/step5_profiling/run_on_worker.sh
+@@ -26,6 +26,27 @@ else
+ fi
+ export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+ export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
++if [ -n "${FRONTIER_STEP5_PROFILE_MANIFEST-}" ]; then
++  neutral="${TMPDIR:?bound profiling requires TMPDIR}/native_source_preflight"
++  mkdir -p "$neutral"
++  (
++    cd "$neutral"
++    python3 -I -B - "$REPO_ROOT" <<'PY'
++import json
++import os
++from pathlib import Path
++import sys
++
++sys.path.insert(0, sys.argv[1])
++from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
++manifest = Path(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"])
++facts = verify_step5_profile_runtime(manifest)
++if file_sha256(Path(os.environ["TMPDIR"]) / "model/config.json") != facts["shared"]["model_config_sha256"]:
++    raise ValueError("worker effective model config copy differs from sealed source")
++print("NATIVE_SOURCE_PREFLIGHT", json.dumps(facts, sort_keys=True))
++PY
++  )
++fi
+ export PYTHONPATH="$REPO_ROOT:$EXTRA_SITE${PYTHONPATH:+:$PYTHONPATH}"
+ 
+ # Import name -> distribution name.
+diff --git a/tests/integration/step5_profiling/submit_profiling_job.py b/tests/integration/step5_profiling/submit_profiling_job.py
+index faa958f56f68ffa0ff47c93dab3261e13783d418..d7bf2318e68418ecc1051047e2776d26b7ac8e64 100755
+--- a/tests/integration/step5_profiling/submit_profiling_job.py
++++ b/tests/integration/step5_profiling/submit_profiling_job.py
+@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
+     parser.add_argument("--timeout-seconds", type=int, required=True)
+     parser.add_argument("--gpu-tag", choices=("H800", "H200"), default=GPU_TAG)
+     parser.add_argument("--charged-group", default=CHARGED_GROUP)
++    parser.add_argument("--image", default=STEP_IMAGE)
+     parser.add_argument("--preemptible", action="store_true")
+     parser.add_argument(
+         "worker_command",
+@@ -68,7 +69,7 @@ def main() -> int:
+         gpu=args.gpus,
+         mem_gb=args.mem_gb,
+         replica=1,
+-        image=STEP_IMAGE,
++        image=args.image,
+         positive_tags=[args.gpu_tag],
+         extra_requirements=[],
+         mounts=[CLOUD_MOUNT],
+diff --git a/tests/integration/step5_profiling/verify_fixed_probe.py b/tests/integration/step5_profiling/verify_fixed_probe.py
+index 2fcf62e7f37c972863280b45598a4e9a99c2615d..c0fb0a05980d1ec51202d5e8adb8a3007a75fdd4 100644
+--- a/tests/integration/step5_profiling/verify_fixed_probe.py
++++ b/tests/integration/step5_profiling/verify_fixed_probe.py
+@@ -5,6 +5,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import hashlib
++import importlib.util
+ import json
+ import os
+ from pathlib import Path
+@@ -42,11 +43,49 @@ def verify(stage):
+     assert manifest["cloud_output"].startswith("/mnt/codesign-exp/ycfeng/")
+     assert manifest["source_mount"] == str(stage)
+     assert shlex.split(manifest["submission_command"])[-1] == manifest["worker_command"]
++    binding = manifest.get("native_binding")
++    if binding is not None:
++        plan = json.loads((stage / "profile_artifacts/profile_plan.json").read_text())
++        if plan != manifest["measurement_plan"]:
++            raise ValueError("sealed profile plan differs from measurement plan")
++        sys.path.insert(0, str(stage / "tests/comparison/stage_admission_pp"))
++        spec = importlib.util.spec_from_file_location("profile_stage_registry", stage / "tests/comparison/dp_placement_pp/vllm_replay.py")
++        registry = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(registry)
++        registry.check_native_reference(binding["native_reference"], registry.adapter_record(binding["native_runtime_adapter"])["native_reference"])
++        receipt = json.loads((stage / binding["native_source_receipt"]).read_text())
++        derivation_path = stage / binding["native_derivation_manifest"]
++        derivation = json.loads(derivation_path.read_text())
++        pins = binding["installed_source_hashes"]
++        if (len(pins) != 53 or binding["serving_pin_count"] != 53
++                or any(receipt["sources"].get(key) != value for key, value in pins.items())
++                or any(pins.get(key) != value for key, value in derivation["derived_source_sha256"].items())
++                or receipt["derivation_manifest_sha256"] != hashlib.sha256(derivation_path.read_bytes()).hexdigest()
++                or receipt["installed_package"] != binding["installed_package"]
++                or receipt["image"] != binding["native_reference"]["image"]
++                or receipt["base_image"] != binding["native_reference"]["base_image"]
++                or derivation["base_image"] != binding["native_reference"]["base_image"]):
++            raise ValueError("profile installed-source/derivation/serving-pin identity mismatch")
++        relative = "data/config/models/stepfun-ai__Step-5-Preview.json"
++        committed = subprocess.check_output(["git", "show", f"{binding['model_config_revision']}:{relative}"], cwd=manifest["source"]["repository"])
++        if ((stage / relative).read_bytes() != committed or hashlib.sha256(committed).hexdigest() != binding["model_config_sha256"]
++                or plan["source"] != manifest["source"] or plan["generation"] != binding["profile_generation"]
++                or plan["model_config_revision"] != binding["model_config_revision"]):
++            raise ValueError("profile source/config revision differs from committed bytes")
++        if manifest["image"] != binding["native_reference"]["image"]:
++            raise ValueError("profile ResourceConfig image differs from native binding")
++        submission = shlex.split(manifest["submission_command"])
++        if submission[submission.index("--image") + 1] != manifest["image"]:
++            raise ValueError("profile launcher image differs from manifest")
+     for name in ("submit.sh", "submit_with_env.sh"):
+         subprocess.run(["bash", "-n", str(stage / name)], check=True)
+     subprocess.run(["bash", "-n"], input=manifest["worker_command"], text=True, check=True)
+     env = {**os.environ, "PYTHONPATH": f"{stage}:{stage / 'offline_site'}",
+-           "PYTHONDONTWRITEBYTECODE": "1", "VLLM_TARGET_DEVICE": "cpu"}
++            "PYTHONDONTWRITEBYTECODE": "1", "VLLM_TARGET_DEVICE": "cpu"}
++    if binding is not None:
++        env.update(FRONTIER_STEP5_PROFILE_MANIFEST=str(stage / "manifest.json"),
++                   VLLM_MOE_ROUTING_SIMULATION_STRATEGY=binding["native_reference"]["routing_strategy"],
++                   VLLM_MOE_SKIP_PADDING="1")
+     command = [sys.executable, "-B", "-m", "frontier.profiling.step5.main",
+                *manifest["attention_arguments"], "--dry-run"]
+     attention, attention_logs = dry_run(command, stage=stage, env=env)
+diff --git a/tests/unit/test_moe_position_routing.py b/tests/unit/test_moe_position_routing.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4d5f4df0ae4721bfb31cc9a80a35038a1de0a0a6
+--- /dev/null
++++ b/tests/unit/test_moe_position_routing.py
+@@ -0,0 +1,159 @@
++"""Actual count/materializer and request-owner source/tensor contracts."""
++
++from dataclasses import FrozenInstanceError, replace
++from types import SimpleNamespace
++
++import pytest
++
++from frontier.entities import Batch, Request
++from frontier.entities.batch import DummyForwardBatch
++from frontier.moe_ep_workload import build_contiguous_expert_ownership, materialize_layer_ep_workload
++from frontier.moe_routing_policy import (
++    SourceLaneRouting, TokenInterval, WaveRoutingSource, build_wave_routing_source,
++    position_cyclic_expert_counts, resolve_routing_count_policy,
++)
++from frontier.profiling.moe.inputs import MoESourceFrame, source_frame_tensors
++from frontier.types import ClusterType
++
++
++def source(start=6128, length=16, padding=1):
++    return WaveRoutingSource("position_cyclic", (
++        SourceLaneRouting(0, 2, -1, 7, "NONE", "standalone_legacy", length, length, (TokenInterval(start, length),)),
++        SourceLaneRouting(1, 3, -1, 7, "NONE", "standalone_legacy", padding, 0, ()),
++    ), length + padding)
++
++
++def materialize(routing_source):
++    return materialize_layer_ep_workload(
++        policy_id="position_cyclic", routing_source=routing_source,
++        target_replica_id=0, global_layer_id=3, routing_token_count=routing_source.gathered_physical_rows,
++        router_topk=8, total_expert_num=352, moe_expert_parallel_size=16,
++        expert_to_ep=build_contiguous_expert_ownership(352, 16),
++    )
++
++
++def test_full_pd_chunk_counts_use_logical_positions_not_wave_hamilton():
++    full = position_cyclic_expert_counts((TokenInterval(0, 6144),), 8, 352)
++    split = position_cyclic_expert_counts((TokenInterval(0, 6128), TokenInterval(6128, 16)), 8, 352)
++    chunks = position_cyclic_expert_counts(tuple(TokenInterval(a, n) for a, n in ((0, 2048), (2048, 2048), (4096, 2032), (6128, 16))), 8, 352)
++    assert full == split == chunks
++    tail = materialize(source())
++    assert tail.routing_token_count == 17 and tail.live_routing_token_count == 16
++    assert tail.padding_row_count == 1 and tail.total_routed_assignments == 128
++    assert [e for e, count in tail.global_per_expert_tokens.items() if count] == list(range(96, 224))
++    assert sum(tail.per_ep_routed_tokens.values()) == 128
++    assert tail.lane(0).routed_token_count == 0 and tail.lane(0).routing_source == source()
++    q1 = position_cyclic_expert_counts((TokenInterval(6144, 1),), 8, 352)
++    assert [e for e, count in q1.items() if count] == list(range(224, 232))
++
++
++def test_source_immutable_padding_and_repeated_positions():
++    original = source()
++    padded = replace(original, source_lanes=(original.source_lanes[0], replace(original.source_lanes[1], physical_rows=8)), gathered_physical_rows=24)
++    assert materialize(original).global_per_expert_tokens == materialize(padded).global_per_expert_tokens
++    with pytest.raises(FrozenInstanceError):
++        original.source_lanes[0].physical_rows = 5
++    repeated = position_cyclic_expert_counts((TokenInterval(6144, 1),) * 4, 8, 352)
++    assert max(repeated.values()) == 4 and sum(repeated.values()) == 32
++    all_padding = replace(original, source_lanes=tuple(replace(lane, live_rows=0, intervals=()) for lane in original.source_lanes))
++    assert materialize(all_padding).total_routed_assignments == 0
++    assert materialize(all_padding).routing_token_count == 17
++
++
++def test_actual_batches_freeze_schedule_context_not_later_request_progress():
++    from frontier.scheduler.utils.forward_start_agreement import ForwardStartDescriptor
++    request = Request(arrived_at=0, num_prefill_tokens=6144, num_decode_tokens=1024)
++    real = Batch(0, [request], [16], is_moe=True, num_context_tokens=[6128])
++    dummy = DummyForwardBatch(0, 0, 0)
++    for batch, width in ((real, 16), (dummy, 1)):
++        batch.forward_start_descriptor = ForwardStartDescriptor(9, "NONE", width, 1, None, None)
++    frozen = build_wave_routing_source({0: real, 1: dummy}, policy_id="position_cyclic", cluster_type=ClusterType.DECODE, gathered_physical_rows=17)
++    assert frozen.source_lanes[0].intervals == (TokenInterval(6128, 16),)
++    assert frozen.source_lanes[1].intervals == ()
++    real._num_context_tokens[0] = 7000
++    assert frozen.source_lanes[0].intervals[0].start == 6128
++    real.forward_start_descriptor = None
++    with pytest.raises(ValueError, match="forward_start_descriptor"):
++        build_wave_routing_source({0: real}, policy_id="position_cyclic", cluster_type=ClusterType.DECODE, gathered_physical_rows=16)
++    with pytest.raises(ValueError, match="request-owner"):
++        build_wave_routing_source({0: SimpleNamespace()}, policy_id="position_cyclic", cluster_type=ClusterType.DECODE, gathered_physical_rows=1)
++
++
++def test_registry_owns_the_complete_count_call_and_strict_source():
++    policy = resolve_routing_count_policy(" position_cyclic ")
++    assert policy.requires_source and policy.runtime_path == "position_cyclic"
++    with pytest.raises(ValueError, match="matching source"):
++        materialize_layer_ep_workload(policy_id="position_cyclic", target_replica_id=0, global_layer_id=0,
++                                     routing_token_count=17, router_topk=8, total_expert_num=352,
++                                     moe_expert_parallel_size=16, expert_to_ep=build_contiguous_expert_ownership(352, 16))
++    with pytest.raises(ValueError, match="explicit source"):
++        policy.count_experts(routing_source=None, routing_ratios=None, routing_token_count=1, router_topk=8, total_expert_num=352)
++
++
++def test_one_source_tensor_interface_preserves_masks_and_request_intervals():
++    pytest.importorskip("torch")
++    frame = MoESourceFrame(0, (2, 1), (6128, 6144), 5, "standalone_legacy")
++    positions, mask = source_frame_tensors(frame, device="cpu")
++    assert positions.tolist()[:3] == [6128, 6129, 6144]
++    assert mask.tolist() == [False, False, False, True, True]
++    positions, mask = source_frame_tensors(MoESourceFrame(1, (), (), 2, "standalone_legacy"), device="cpu")
++    assert mask.tolist() == [True, True]
++    assert str(positions.dtype) == "torch.int64" and str(mask.dtype) == "torch.bool"
++
++
++def test_actual_predictor_constructor_and_whole_source_cache(monkeypatch):
++    from frontier.config import BaseModelConfig, global_vars
++    from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import SklearnDisaggregationExecutionTimePredictor
++    from tests.unit.predictor_cache_fixtures import predictor_fixture_config
++    monkeypatch.setattr(global_vars, "SYS_ARCH", "pd-disaggregation")
++    kwargs = predictor_fixture_config(model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"), total_experts=352, ep_size=16, router_topk=8)
++    config = kwargs["replica_config"]
++    from frontier.config import BaseDeviceSKUConfig
++    config.device, config.device_config = "h800", BaseDeviceSKUConfig.create_from_type_string("h800")
++    config.attention_backend, config.kv_cache_dtype = "STEP5_DSA", "auto"
++    config.attn_tensor_parallel_size, config.attn_dp = 8, 2
++    config.moe_routing_distribution_type = "position_cyclic"
++    kwargs["cluster_type"] = ClusterType.DECODE
++    from frontier.config import ClusterConfig
++    kwargs["cluster_config"] = ClusterConfig(replica_config=config)
++    kwargs["cluster_config"].decode_replica_config = config
++    kwargs["cluster_config"].decode_cluster_num_replicas = 1
++    class SourcePredictor(SklearnDisaggregationExecutionTimePredictor):
++        def _get_estimator(self):
++            pytest.fail("Dummy constructor must not train")
++        def _get_grid_search_params(self):
++            return {}
++    predictor = SourcePredictor(**kwargs)
++    assert predictor._global_routing_allocations == {}
++    assert predictor._decode_routing_details == {0: {}}
++    batch = Batch(0, [Request(0, 6144, 1024)], [17], is_moe=True, num_context_tokens=[6128])
++    first = predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3, source())
++    assert predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3, source()) is first
++    moved = replace(source(), source_lanes=tuple(replace(lane, lane_id=index) for index, lane in enumerate(reversed(source().source_lanes))))
++    assert predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3, moved) is not first
++    assert len(predictor._layer_workload_cache) == 2
++    with pytest.raises(ValueError, match="explicitly matching"):
++        predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3)
++
++
++def test_scheduler_materializes_actual_bound_dp_sources_and_live_trace(monkeypatch):
++    from frontier.config import BaseModelConfig, global_vars
++    from tests.unit.predictor_cache_fixtures import predictor_fixture_config
++    from frontier.scheduler.utils.layer_workload import materialize_layer_workload
++    from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
++    from frontier.scheduler.utils.batch_builders import build_virtual_global_batch
++    from frontier.scheduler.utils.forward_start_agreement import ForwardStartDescriptor
++    from frontier.scheduler.utils.ep_trace import log_conservation_trace
++    monkeypatch.setattr(global_vars, "SYS_ARCH", "pd-disaggregation")
++    config = predictor_fixture_config(model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"), total_experts=352, ep_size=16, router_topk=8)["replica_config"]
++    config.attn_tensor_parallel_size, config.attn_dp, config.moe_routing_distribution_type = 8, 2, "position_cyclic"
++    batches = {0: Batch(0, [Request(0, 6144, 1024)], [16], is_moe=True, num_context_tokens=[6128]), 1: DummyForwardBatch(0, 0, 0)}
++    for lane, batch in batches.items():
++        batch.forward_start_descriptor = ForwardStartDescriptor(8, "NONE", 16 if lane == 0 else 1, 1, None, None)
++    wave = prepare_ep_wave_inputs(source_batches=batches, batch=batches[0], step_id_getter=lambda b: b.forward_start_descriptor.group_id, aggregate_batch_builder=build_virtual_global_batch, cluster_type=ClusterType.DECODE)
++    scheduler = SimpleNamespace(_config=SimpleNamespace(replica_config=config), _cluster_type=ClusterType.DECODE, _predictor=SimpleNamespace(_decode_routing_details={0: {}}))
++    workload = materialize_layer_workload(scheduler=scheduler, batch=wave.aggregate_batch, target_replica_id=0, global_layer_id=3, source_batches=batches)
++    assert workload.routing_token_count == 17 and workload.total_routed_assignments == 128
++    log_conservation_trace(cluster_type=ClusterType.DECODE, batch_id=0, layer_id=3, routing_token_count=17, live_routing_token_count=16, router_topk=8, total_routed_assignments=128, per_ep_routed_tokens=dict(workload.per_ep_routed_tokens), trace_identity={}, format_identity=str)
++    with pytest.raises(ValueError, match="source_batches"):
++        materialize_layer_workload(scheduler=scheduler, batch=wave.aggregate_batch, target_replica_id=0, global_layer_id=3)
+diff --git a/tests/unit/test_moe_profiling_output_metadata.py b/tests/unit/test_moe_profiling_output_metadata.py
+index 54a04d96b1a18c6a017ca3ff79fda52ff8e5ec73..677a039ba1c5f3ac8865d6d50cefa2ca7df96e85 100644
+--- a/tests/unit/test_moe_profiling_output_metadata.py
++++ b/tests/unit/test_moe_profiling_output_metadata.py
+@@ -2,6 +2,8 @@
+ 
+ from __future__ import annotations
+ 
++import json
++from types import SimpleNamespace
+ import pandas as pd
+ import pytest
+ 
+@@ -85,3 +87,51 @@ def test_attach_moe_output_metadata_rejects_conflicting_metadata(
+             df,
+             **kwargs,
+         )
++
++
++def test_linear_actual_identity_attachment_keeps_per_row_imports_and_rejects_shared_mismatch(monkeypatch):
++    from frontier.profiling.common import runtime_identity
++    from frontier.profiling.linear_op.main import _attach_runtime_identity
++    monkeypatch.setattr(runtime_identity, "collect_device_identity", lambda: ("CPU_FIXTURE_ONLY", "sm00"))
++    monkeypatch.setattr(runtime_identity, "collect_runtime_versions", lambda: {"vllm": "CPU_FIXTURE_ONLY"})
++    args = SimpleNamespace(source_revision="source", model_config_revision="local-config")
++    config = SimpleNamespace(get_quant_signature=lambda: "CPU_FIXTURE_ONLY")
++    facts = {"shared": {"image": "CPU_IDENTITY_ONLY"}, "imports": {}, "callables": {}}
++    second = {**facts, "imports": {"norm": "CPU_IMPORT_ONLY"}}
++    frame = pd.DataFrame([{"native_facts": json.dumps(item)} for item in (facts, second)])
++    output = _attach_runtime_identity(frame, args, "stepfun-ai/Step-5-Preview", config)
++    assert output["runtime_fingerprint"].nunique() == 1
++    assert [json.loads(value) for value in output["native_facts"]] == [facts, second]
++    legacy = _attach_runtime_identity(pd.DataFrame([{"num_tokens": 1}]), args, "stepfun-ai/Step-5-Preview", config)
++    assert "native_facts" not in legacy
++    frame.loc[1, "native_facts"] = json.dumps({**second, "shared": {"image": "OTHER_CPU_IDENTITY"}})
++    with pytest.raises(ValueError, match="shared native identity"):
++        _attach_runtime_identity(frame, args, "stepfun-ai/Step-5-Preview", config)
++
++
++def test_explicit_source_input_parser_preserves_one_cell_protocol_and_rejects_missing_geometry(tmp_path):
++    from frontier.profiling.moe.inputs import (
++        SCHEMA_VERSION, MoERoutingProfileCell, read_routing_profile_inputs, routing_profile_cell,
++    )
++    path = tmp_path / "moe_inputs.json"
++    record = {"moe_input_id": "D26-tail", "gathered_physical_rows": 17, "source_frames": [
++        {"source_lane_id": 0, "query_lens": [16], "context_lens": [6128],
++         "physical_rows": 16, "gating_runtime_context": "standalone_legacy"},
++        {"source_lane_id": 1, "query_lens": [], "context_lens": [],
++         "physical_rows": 1, "gating_runtime_context": "standalone_legacy"}]}
++    payload = {"schema_version": SCHEMA_VERSION, "routing_runtime_path": "position_cyclic", "inputs": [record]}
++    path.write_text(json.dumps(payload))
++    source, = read_routing_profile_inputs(path)
++    assert tuple(frame.live_rows for frame in source.source_frames) == (16, 0)
++    assert source.source_frames[0].context_lens == (6128,) and source.gathered_physical_rows == 17
++    for cell in (MoERoutingProfileCell(source, "source_local", 0), MoERoutingProfileCell(source, "dp_gathered", 1, 15)):
++        assert routing_profile_cell(json.loads(json.dumps(cell.to_json()))) == cell
++    record["gathered_physical_rows"] = 16
++    path.write_text(json.dumps(payload))
++    with pytest.raises(ValueError, match="source widths"):
++        read_routing_profile_inputs(path)
++    record["gathered_physical_rows"] = 17
++    payload["inputs"].append(record)
++    path.write_text(json.dumps(payload))
++    with pytest.raises(ValueError, match="distinct"):
++        read_routing_profile_inputs(path)
+diff --git a/tests/unit/test_moe_routing_runtime.py b/tests/unit/test_moe_routing_runtime.py
+index 64ca203ee4afd81167024e6d75b2b1074c8057da..2fd6f3e5f5dcddf9d223ade8bf0e4c49d7c6d76d 100644
+--- a/tests/unit/test_moe_routing_runtime.py
++++ b/tests/unit/test_moe_routing_runtime.py
+@@ -29,3 +29,22 @@ def test_random_distribution_uses_uniform_runtime_path() -> None:
+ def test_removed_routing_mode_values_fail_fast() -> None:
+     with pytest.raises(ValueError, match="moe_routing_distribution_type"):
+         resolve_moe_gating_routing_runtime_path("simulation")
++
++
++def test_position_policy_resolves_before_parent_initialization(monkeypatch):
++    from frontier.config import global_vars
++    from frontier.execution_time_predictor.sklearn_execution_time_predictor import SklearnExecutionTimePredictor
++    from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import SklearnMoEExecutionTimePredictor
++    from tests.unit.predictor_cache_fixtures import predictor_fixture_config
++    assert resolve_moe_gating_routing_runtime_path("position_cyclic") == "position_cyclic"
++    kwargs = predictor_fixture_config()
++    kwargs["replica_config"].moe_routing_distribution_type = "position_cyclic"
++    monkeypatch.setattr(global_vars, "SYS_ARCH", "co-location")
++    monkeypatch.setattr(SklearnExecutionTimePredictor, "__init__", lambda *a, **k: pytest.fail("Unsupported scope reached parent init"))
++    with pytest.raises(ValueError, match="only Step P/D"):
++        class SourcePredictor(SklearnMoEExecutionTimePredictor):
++            def _get_estimator(self):
++                pytest.fail("Unsupported scope must not train")
++            def _get_grid_search_params(self):
++                return {}
++        SourcePredictor(**kwargs)
+diff --git a/tests/unit/test_step5_fixed_probe.py b/tests/unit/test_step5_fixed_probe.py
+index f21f8380f262d7706ad4dbdc9e000e3adbe9d4c7..19b02648220fe5c5c30e14975b67110add001dcd 100644
+--- a/tests/unit/test_step5_fixed_probe.py
++++ b/tests/unit/test_step5_fixed_probe.py
+@@ -217,3 +217,153 @@ def test_actual_fixed_probe_linear_cli_accepts_6144_prefill(method, tmp_path):
+     assert sorted(planned["num_tokens"]) == [1, 2, 16, 6144]
+     plans = planned["models"]["stepfun-ai/Step-5-Preview"]["plans"]
+     assert [item["padded_n_expanded_embd"] for item in plans] == [1536, 13824]
++
++
++@pytest.fixture
++def installed_profile_receipt(tmp_path, monkeypatch):
++    """A generated installed-package receipt, not native runtime qualification."""
++    from frontier.profiling.common.runtime_identity import file_sha256
++    for name in tuple(sys.modules):
++        if name == "vllm" or name.startswith("vllm."):
++            monkeypatch.delitem(sys.modules, name)
++    root = tmp_path / "installed/vllm"
++    names = ("vllm", "vllm.models.step5.nvidia.model", "vllm.forward_context",
++              "vllm.model_executor.layers.fused_moe.router.router_factory",
++              "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
++              "vllm.model_executor.layers.fused_moe.router.gate_linear",
++              "vllm.models.step5.nvidia.layernorm", "vllm.model_executor.layers.fused_moe.oracle.fp8",
++              "vllm.model_executor.layers.fused_moe.oracle.unquantized")
++    modules = {}
++    for name in names:
++        relative = Path(*name.split(".")[1:])
++        path = root / ("__init__.py" if name == "vllm" else relative.with_suffix(".py"))
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_text("class GateLinear:\n    def forward(self, x):\n        return x\n"
++                        "def make_step5_rms_norm(*args, **kwargs):\n    return GateLinear()\n")
++        spec = importlib.util.spec_from_file_location(name, path)
++        module = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(module)
++        monkeypatch.setitem(sys.modules, name, module)
++        modules[name] = module
++    sources = {"vllm/" + p.relative_to(root).as_posix(): file_sha256(p) for p in root.rglob("*.py")}
++    pins = {key: value for key, value in sources.items() if not key.endswith("gate_linear.py")}
++    for index in range(53 - len(pins)):
++        path = root / f"pin_{index}.py"
++        path.write_text("# CPU source inventory fixture\n")
++        sources["vllm/" + path.name] = file_sha256(path)
++        pins["vllm/" + path.name] = file_sha256(path)
++    reference = {"image": "cpu-fixture@sha256:" + "a" * 64,
++                 "base_image": "cpu-fixture@sha256:" + "b" * 64, "routing_strategy": "position_cyclic"}
++    stage = tmp_path / "stage"
++    registry = stage / "tests/comparison/dp_placement_pp/vllm_replay.py"
++    registry.parent.mkdir(parents=True)
++    registry.write_text(f"def adapter_record(version):\n    assert version == 'step5_position_cyclic'\n    return {{'native_reference': {reference!r}}}\n"
++                        "def check_native_reference(reference, expected):\n    if reference != expected:\n        raise ValueError('native reference mismatch')\n")
++    driver = stage / "tests/comparison/stage_admission_pp/vllm_burst_driver.py"
++    driver.parent.mkdir(parents=True)
++    driver.write_text("# CPU registry dependency fixture\n")
++    config = stage / "data/config/models/stepfun-ai__Step-5-Preview.json"
++    config.parent.mkdir(parents=True)
++    config.write_text('{"local_effective_config":true}')
++    derivation = stage / "derivation.json"
++    derivation.write_text(json.dumps({"base_image": reference["base_image"], "derived_source_sha256": {key: pins[key] for key in list(pins)[:4]}}))
++    receipt = stage / "native_installed_sources.json"
++    receipt.write_text(json.dumps({"schema_version": "native_installed_sources.v1", **{key: reference[key] for key in ("image", "base_image")},
++                                   "installed_package": str(root), "python_version": sys.version.split()[0],
++                                   "derivation_manifest_sha256": file_sha256(derivation), "sources": sources}))
++    binding = {"native_runtime_adapter": "step5_position_cyclic", "native_reference": reference,
++               "profile_generation": "cpu-source-fixture", "installed_package": str(root),
++               "installed_source_hashes": pins, "serving_pin_count": 53,
++               "model_config_revision": "actual-local-config-revision", "model_config_sha256": file_sha256(config),
++               "native_source_receipt": receipt.name, "native_derivation_manifest": derivation.name}
++    manifest = {"image": reference["image"], "native_binding": binding,
++                "sha256": {p.relative_to(stage).as_posix(): file_sha256(p) for p in stage.rglob("*") if p.is_file()}}
++    path = stage / "manifest.json"
++    path.write_text(json.dumps(manifest))
++    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY", "position_cyclic")
++    monkeypatch.setenv("VLLM_MOE_SKIP_PADDING", "1")
++    return path, modules, manifest
++
++
++def test_installed_source_verifier_checks_actual_bound_gate_outside_serving_subset(installed_profile_receipt):
++    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++    path, modules, manifest = installed_profile_receipt
++    gate = modules["vllm.model_executor.layers.fused_moe.router.gate_linear"].GateLinear()
++    facts = verify_step5_profile_runtime(path, callables=(type(gate), gate.forward))
++    assert len(facts["shared"]["installed_source_hashes"]) == 53
++    assert len(facts["callables"]) == 2
++    assert facts["shared"]["profile_generation"] == "cpu-source-fixture"
++    assert "vllm.model_executor.layers.fused_moe.router.gate_linear" in facts["imports"]
++
++
++@pytest.mark.parametrize("change", ["root", "spec", "hash", "receipt", "callable"])
++def test_installed_source_verifier_rejects_wrong_origin_or_missing_full_receipt(installed_profile_receipt, tmp_path, change):
++    from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
++    path, modules, manifest = installed_profile_receipt
++    gate_module = modules["vllm.model_executor.layers.fused_moe.router.gate_linear"]
++    gate = gate_module.GateLinear()
++    foreign = tmp_path / "foreign.py"
++    foreign.write_text(Path(gate_module.__file__).read_text())
++    if change == "root":
++        gate_module.__file__ = str(foreign)
++    elif change == "spec":
++        gate_module.__spec__.origin = str(foreign)
++    elif change == "hash":
++        Path(gate_module.__file__).write_text("# changed bytes, unchanged versions\n")
++    elif change == "receipt":
++        receipt_path = path.parent / "native_installed_sources.json"
++        receipt = json.loads(receipt_path.read_text())
++        del receipt["sources"]["vllm/model_executor/layers/fused_moe/router/gate_linear.py"]
++        receipt_path.write_text(json.dumps(receipt))
++        manifest["sha256"][receipt_path.name] = file_sha256(receipt_path)
++        path.write_text(json.dumps(manifest))
++    else:
++        namespace = {"__name__": gate_module.__name__}
++        exec(compile(foreign.read_text(), str(foreign), "exec"), namespace)
++        gate_module.GateLinear.forward = namespace["GateLinear"].forward
++    with pytest.raises((ValueError, KeyError)):
++        verify_step5_profile_runtime(path, callables=(gate.forward,))
++
++
++def test_legacy_identity_omits_native_facts_and_bound_fingerprint_uses_shared_only():
++    from dataclasses import replace
++    from frontier.profiling.common.runtime_identity import RuntimeIdentity, canonical_json
++    identity = RuntimeIdentity({"vllm": "same-version"}, "source", "config", "hash", "CPU", "sm00", "schema", "quant", {"tp": 1}, "NONE")
++    old = {"runtime_versions": {"vllm": "same-version"}, "source_revision": "source", "device_name": "CPU", "device_capability": "sm00", "graph_mode": "NONE"}
++    assert identity.fingerprint == hashlib.sha256(canonical_json(old).encode()).hexdigest()[:16]
++    assert "native_facts" not in identity.columns() and "native_facts" not in identity.to_json()
++    first = replace(identity, native_facts={"shared": {"image": "derived"}, "imports": {"gate": 1}, "callables": {}})
++    second = replace(first, native_facts={"shared": {"image": "derived"}, "imports": {"norm": 2}, "callables": {}})
++    assert first.fingerprint == second.fingerprint != identity.fingerprint
++    assert first.columns()["native_facts"] != second.columns()["native_facts"]
++
++
++def test_source_job_seals_file_artifacts_and_propagates_actual_image(tmp_path):
++    from frontier.profiling.common.step5_job import describe_job, stage_package
++    repo, dependency = tmp_path / "repo", tmp_path / "dependencies"
++    for name in ("frontier", "data/config", "tests/integration/step5_profiling"):
++        (repo / name).mkdir(parents=True)
++    dependency.mkdir()
++    for name in ("submit_profiling_job.py", "run_on_worker.sh"):
++        (repo / "tests/integration/step5_profiling" / name).write_text("# source fixture\n")
++    artifact = tmp_path / "full_receipt.json"
++    artifact.write_text('{"schema_version":"native_installed_sources.v1"}')
++    stage = tmp_path / "stage"
++    image = "explicit-cpu-test@sha256:" + "d" * 64
++    manifest = describe_job(stage, "source-fixture", worker_command="true", image=image)
++    args = shlex.split(manifest["submission_command"])
++    assert args[args.index("--image") + 1] == manifest["image"] == image
++    result = stage_package(stage, manifest, repo_root=repo, dependency_site=dependency,
++                           additional_files=((artifact, "profile_artifacts/full_receipt.json"),))
++    assert result["sha256"]["profile_artifacts/full_receipt.json"] == hashlib.sha256(artifact.read_bytes()).hexdigest()
++    assert "--image " + image in (stage / "submit.sh").read_text()
++
++
++def test_missing_native_adapter_cannot_describe_a_new_generation(tmp_path):
++    plan = json.loads((job.REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json").read_text())
++    plan.update(generation="new-source", vllm_version="missing-derived-adapter", native_reference={})
++    path = tmp_path / "profile_plan.json"
++    path.write_text(json.dumps(plan))
++    with pytest.raises(ValueError, match="Unsupported|Unknown|adapter|version"):
++        job.describe_p0_profiles(tmp_path / "stage", "new-source", role="PREFILL", profile_plan=path)
++    assert not (tmp_path / "stage").exists()
+diff --git a/tests/unit/test_step5_moe_pricing.py b/tests/unit/test_step5_moe_pricing.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..adc8663ff3d98cf51303fd40aa78ef8eb181d788
+--- /dev/null
++++ b/tests/unit/test_step5_moe_pricing.py
+@@ -0,0 +1,72 @@
++"""Selected Step physical contracts; CPU fixtures do not qualify GPU prices."""
++import json
++from dataclasses import replace
++from types import SimpleNamespace
++
++import pytest
++
++from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor, CollectivePlanCost
++from frontier.config.model_config import BaseModelConfig
++from frontier.config.precision_type import PrecisionType
++from frontier.execution_time_predictor.step5_cost import step5_operator_binding
++from frontier.attention.step5 import describe_step5_layer
++from frontier.operators.families import get_moe_profiling_operators
++
++
++def context(quant_dtype=None):
++    return dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic",
++                quant_dtype=quant_dtype, defer_input_quant=False)
++
++
++@pytest.mark.parametrize("quant,names", [
++    (None, ("moe_gating_linear", "moe_gating_routing_topk", "moe_grouped_gemm")),
++    ("float8_e4m3fn", ("moe_gating_linear", "moe_gating_routing_topk", "moe_input_quantize", "moe_grouped_gemm")),
++])
++def test_selected_registry_and_real_routed_binding(quant, names):
++    assert tuple(op.name for op in get_moe_profiling_operators(context(quant))) == names
++    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
++    profile = model.get_model_architecture_profile()
++    prepare = next(op for op in get_moe_profiling_operators(context("float8_e4m3fn"))
++                   if op.name == "moe_input_quantize")
++    assert prepare.ep_agnostic
++    contract = profile.resolve_layer_contract(model, layer_id=3, operator_name=prepare.name,
++        attention_tp_size=8, ffn_tp_size=8, moe_tp_size=1, expert_parallel_size=16)
++    assert contract.operator_family_id == "moe"
++    metadata = describe_step5_layer(model, 3, attention_tp_size=8, moe_tp_size=1, expert_parallel_size=16)
++    predictor = SimpleNamespace(_model_config=model, _get_model_architecture_profile=lambda: profile,
++        _get_ffn_tp_key_for_linear_op=lambda: 8,
++        _replica_config=SimpleNamespace(attn_tensor_parallel_size=8, moe_tensor_parallel_size=1,
++                                      moe_expert_parallel_size=16))
++    assert step5_operator_binding(predictor, metadata, prepare.name, context=context("float8_e4m3fn"))[0] is PrecisionType.FP8
++    assert step5_operator_binding(predictor, metadata, "moe_gating_linear", context=context(quant))[0] is PrecisionType.FP32
++
++
++def test_legacy_and_deferred_prepare_target_selection():
++    assert tuple(op.name for op in get_moe_profiling_operators()) == (
++        "moe_gating_linear", "moe_gating_routing_topk", "moe_shuffling", "moe_grouped_gemm")
++    assert "moe_input_quantize" not in [op.name for op in get_moe_profiling_operators(
++        {**context("float8_e4m3fn"), "defer_input_quant": True})]
++    with pytest.raises(ValueError, match="quant_dtype"):
++        get_moe_profiling_operators(context("int8"))
++
++
++def plan(sizes=(16, 1), phase="dispatch"):
++    return CollectivePlan(phase, sizes, (CollectiveTensor("activation", "bfloat16", 2, 4096, 4096),),
++        tuple((t, 8 + t) for t in range(8)), "none", json.dumps(context()), '{"supplied_output": true}')
++
++
++def test_lossless_plan_order_identity_and_count_separation():
++    p = plan()
++    assert p.stages == (("Broadcast", 0, 0), ("Broadcast", 0, 1))
++    assert p.endpoint_bytes(8) == (8192, 17 * 8192)
++    assert p.cache_key() != plan((1, 16)).cache_key()
++    assert plan((1, 1)).stages == (("AllGather", 0, None),)
++    with pytest.raises(ValueError, match="rank order"):
++        replace(p, groups=((0, 8),))
++    with pytest.raises(ValueError, match="uniform"):
++        replace(p, graph_mode="full")
++    cost = CollectivePlanCost(6., 1., (2.,) * 16, 3., (7,) * 16,
++                             '{"evidence_kind":"cpu_fixture"}', p.cache_key(), "cpu_fixture")
++    assert cost.kernel_counts[0] == 7 and len(p.stages) == 2
++    with pytest.raises(ValueError, match="composition"):
++        replace(cost, duration_ms=5.)
+diff --git a/tests/unit/test_step5_moe_profiling.py b/tests/unit/test_step5_moe_profiling.py
+index cf6ffa178fc085f6085e7fd7c27fc503f43e043b..27fb383d0c0e180172b68aeb0167b1dc3fda4bf8 100644
+--- a/tests/unit/test_step5_moe_profiling.py
++++ b/tests/unit/test_step5_moe_profiling.py
+@@ -26,6 +26,7 @@ from frontier.profiling.moe.routed_layer_groups import (
+     RoutedLayerRouter,
+     resolve_routed_layer_groups,
+ )
++from tests.unit.test_step5_fixed_probe import installed_profile_receipt
+ 
+ REPO_ROOT = Path(__file__).resolve().parents[2]
+ STEP5 = "stepfun-ai/Step-5-Preview"
+@@ -304,3 +305,205 @@ def test_profile_row_records_the_measured_layer_group():
+     assert row["moe_activation"] == "swiglustep"
+     assert row["routing_assignment_policy"] == "biased_score_topk"
+     assert row["expert_hidden_dim"] == 1536
++
++
++def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract(monkeypatch):
++    torch = pytest.importorskip("torch")
++    from contextlib import contextmanager, nullcontext
++    from types import ModuleType, SimpleNamespace
++    from frontier.profiling.moe import moe_impl
++    from frontier.profiling.moe.inputs import MoESourceFrame
++    calls, state = {}, SimpleNamespace(routing_positions=None, is_padding=None)
++    gate_module = ModuleType("vllm.model_executor.layers.fused_moe.router.gate_linear")
++    class GateLinear(torch.nn.Module):
++        def __init__(self, hidden, experts, **kwargs):
++            super().__init__()
++            calls["gate"] = kwargs
++            self.experts = experts
++        def forward(self, x):
++            return torch.zeros((len(x), self.experts), dtype=torch.float32), None
++    gate_module.GateLinear = GateLinear
++    bias_module = ModuleType("vllm.model_executor.layers.fused_moe.router.fused_topk_bias_router")
++    bias_module.fused_topk_bias = lambda **kwargs: pytest.fail("position path reached legacy top-k")
++    context = ModuleType("vllm.forward_context")
++    @contextmanager
++    def set_forward_context(metadata, native, **kwargs):
++        old = state.is_padding
++        state.is_padding = kwargs["is_padding"]
++        try:
++            yield
++        finally:
++            state.is_padding = old
++    @contextmanager
++    def set_routing_positions(positions):
++        old = state.routing_positions
++        state.routing_positions = positions
++        try:
++            yield
++        finally:
++            state.routing_positions = old
++    context.set_forward_context, context.set_routing_positions = set_forward_context, set_routing_positions
++    config = ModuleType("vllm.config")
++    config.get_current_vllm_config_or_none = lambda: object()
++    config.VllmConfig = lambda: pytest.fail("an active config must be retained")
++    factory = ModuleType("vllm.model_executor.layers.fused_moe.router.router_factory")
++    class Router:
++        routing_method_type = SimpleNamespace(name="Simulated")
++        def select_experts(self, x, logits):
++            calls["inputs"] = (state.routing_positions, state.is_padding, logits.dtype)
++            if calls.get("fail"):
++                raise RuntimeError("native routing failure")
++            return "native-weights", "native-ids"
++    def create_fused_moe_router(**kwargs):
++        calls["factory"] = kwargs
++        return Router()
++    factory.create_fused_moe_router = create_fused_moe_router
++    for module in (gate_module, bias_module, context, config, factory):
++        monkeypatch.setitem(sys.modules, module.__name__, module)
++    monkeypatch.setattr(moe_impl, "ensure_vllm_single_rank_parallel_state", lambda: None)
++    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY", "position_cyclic")
++    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", "CPU_FACTORY_CONTRACT_ONLY")
++    monkeypatch.setattr("frontier.profiling.common.runtime_identity.verify_step5_profile_runtime",
++                        lambda path, **kwargs: calls.setdefault("provenance", kwargs))
++    gate = moe_impl.SigmoidBiasGatingNetwork(hidden_dim=4, num_experts=352, router_topk=8,
++                                           router=STEP5_ROUTER, routing_runtime_path="position_cyclic")
++    gate.gating_linear_timer = gate.gating_routing_topk_timer = nullcontext()
++    gate.bind_source_frame(MoESourceFrame(0, (2,), (6128,), 3, "standalone_legacy"), device="cpu")
++    positions, mask = gate.routing_positions, gate.routing_is_padding
++    assert gate(torch.zeros((3, 4))) == ("native-weights", "native-ids")
++    assert calls["inputs"][0] is positions and calls["inputs"][1] is mask
++    assert positions.tolist() == [6128, 6129, 0] and mask.tolist() == [False, False, True]
++    assert calls["inputs"][2] is torch.float32
++    assert calls["factory"]["top_k"] == 8 and calls["factory"]["global_num_experts"] == 352
++    assert calls["factory"]["scoring_func"] == "sigmoid" and calls["factory"]["routed_scaling_factor"] == 3.
++    assert gate.gate.forward in calls["provenance"]["callables"]
++    calls["fail"] = True
++    with pytest.raises(RuntimeError, match="native routing failure"):
++        gate(torch.zeros((3, 4)))
++    assert state.routing_positions is None and state.is_padding is None
++
++
++@pytest.mark.parametrize("failure", [None, "call", "parser"])
++@pytest.mark.parametrize("record_function", [False, True])
++def test_real_device_timer_annotations_parser_replay_and_event_preservation(tmp_path, monkeypatch, failure, record_function):
++    torch = pytest.importorskip("torch")
++    from frontier.profiling.common.device_timer import DeviceTimer
++    from frontier.profiling.common.timer_stats_store import TimerStatsStore
++    from frontier.profiling.moe.moe_wrapper import MoEWrapper, ACTIVE_STEPS
++    from frontier.profiling.utils import ProfileMethod
++    from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
++    store = TimerStatsStore.get_existing() or TimerStatsStore("cuda_event")
++    previous_method = store.profile_method
++    previous_disabled = store.disabled
++    method = ProfileMethod.RECORD_FUNCTION if record_function else ProfileMethod.CUDA_EVENT
++    store.profile_method, store.disabled = method, False
++    class Event:
++        def __init__(self, **kwargs):
++            pass
++        def record(self):
++            pass
++        def elapsed_time(self, end):
++            return 2.5
++    monkeypatch.setattr(torch.cuda, "Event", Event)
++    monkeypatch.setattr(torch.cuda, "synchronize", lambda: None)
++    captured = []
++    tracing = []
++    def transport_enter(tracer):
++        tracing.append(True)
++        tracer.profiler = torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU])
++        tracer.profiler.__enter__()
++        return tracer
++    def transport_exit(tracer, *exc):
++        tracer.profiler.__exit__(*exc)
++        annotations = [event for event in tracer.profiler.events() if event.name.startswith("vidur_")]
++        captured.extend(event.name for event in annotations)
++        events = []
++        for index, annotation in enumerate(annotations):
++            name = annotation.name
++            events.append(dict(cat="user_annotation", name=name, ts=100*index, dur=80))
++            for kernel in range(3):
++                correlation = 10*index + kernel
++                events.append(dict(cat="cuda_runtime", name="cudaLaunchKernel", ts=100*index+2+kernel, dur=1,
++                                   args={"correlation": correlation}))
++                if failure != "parser":
++                    events.append(dict(cat="kernel", name="cpu_transport_only", dur=100,
++                                       args={"correlation": correlation}))
++        Path(tracer.trace_path).parent.mkdir(parents=True, exist_ok=True)
++        Path(tracer.trace_path).write_text(json.dumps({"traceEvents": events}))
++    monkeypatch.setattr(RecordFunctionTracer, "__enter__", transport_enter)
++    monkeypatch.setattr(RecordFunctionTracer, "__exit__", transport_exit)
++    wrapper = object.__new__(MoEWrapper)
++    wrapper.timer_stats_store, wrapper.output_dir = store, str(tmp_path)
++    timer = DeviceTimer("moe_grouped_gemm")
++    methods = []
++    def run():
++        methods.append(store.profile_method)
++        with timer:
++            torch.ones(1).add_(1)
++            if failure == "call" and tracing:
++                raise RuntimeError("replay call failure")
++    try:
++        if failure:
++            with pytest.raises((ValueError, RuntimeError)):
++                wrapper._profile_cell_callable(run, ("moe_grouped_gemm",))
++        else:
++            row = wrapper._profile_cell_callable(run, ("moe_grouped_gemm",))["moe_grouped_gemm"]
++            assert row["median"] == (pytest.approx(.3) if record_function else 2.5)
++            assert row["count"] == (1 if record_function else ACTIVE_STEPS)
++            assert row["std"] == 0 and row["kernel_count"] == 3
++        assert captured == ["vidur_moe_grouped_gemm"]
++        assert methods[-1] is ProfileMethod.RECORD_FUNCTION
++        assert set(methods[:-1]) == {method}
++        assert store.profile_method is method and store.TIMING_STATS == {}
++        assert TimerStatsStore.get_existing() is store
++    finally:
++        store.profile_method = previous_method
++        store.disabled = previous_disabled
++        store.clear_stats()
++
++
++def test_masked_expert_sentinel_is_filtered_before_local_map_and_bincount():
++    torch = pytest.importorskip("torch")
++    from frontier.profiling.moe.load_distribution import compute_expert_token_counts
++    from frontier.profiling.moe.moe_wrapper import MoEWrapper
++    wrapper = object.__new__(MoEWrapper)
++    wrapper.num_experts, wrapper.num_experts_per_device, wrapper.expert_parallel_size = 4, 2, 2
++    wrapper._get_profiling_ep_rank = lambda: 1
++    ids = torch.tensor([[-1, -1], [2, 3]], dtype=torch.int32)
++    assert wrapper._compute_local_expert_token_counts(ids) == [1, 1]
++    assert compute_expert_token_counts(ids, 4) == [0, 0, 1, 1]
++
++
++@pytest.mark.parametrize("module_name", ["vllm.models.step5.nvidia.layernorm",
++    "vllm.model_executor.layers.fused_moe.oracle.fp8", "vllm.model_executor.layers.fused_moe.oracle.unquantized"])
++@pytest.mark.parametrize("change", [None, "spec", "hash"])
++def test_norm_and_both_oracle_callable_receipts_use_full_installed_sources(installed_profile_receipt, tmp_path, module_name, change):
++    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
++    path, modules, manifest = installed_profile_receipt
++    module = modules[module_name]
++    if change == "spec":
++        module.__spec__.origin = str(tmp_path / "byte_identical_shadow.py")
++    elif change == "hash":
++        Path(module.__file__).write_text("# same version, different oracle bytes\n")
++    if change:
++        with pytest.raises((ValueError, FileNotFoundError)):
++            verify_step5_profile_runtime(path, callables=(module.make_step5_rms_norm, module.GateLinear().forward))
++    else:
++        facts = verify_step5_profile_runtime(path, callables=(module.make_step5_rms_norm, module.GateLinear().forward))
++        assert module_name + ".make_step5_rms_norm" in facts["callables"]
++
++
++def test_lazy_norm_verifies_factory_instance_and_bound_method_before_caching(installed_profile_receipt, monkeypatch):
++    torch = pytest.importorskip("torch")
++    from frontier.profiling.common.layers.layernorm import Step5RMSNorm
++    path, modules, _ = installed_profile_receipt
++    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", str(path))
++    norm = Step5RMSNorm(4, eps=1e-6, zero_centered=True, dtype=torch.float32, fp32_residual_connection=True)
++    impl = norm._native_impl()
++    assert impl is norm._native_impl() and impl.weight is norm.weight
++    assert len(norm.native_facts["callables"]) == 3
++    modules["vllm.models.step5.nvidia.layernorm"].__spec__.origin = str(path.parent / "foreign.py")
++    other = Step5RMSNorm(4, eps=1e-6, zero_centered=True, dtype=torch.float32, fp32_residual_connection=True)
++    with pytest.raises(FileNotFoundError):
++        other._native_impl()
++    assert other._impl is None

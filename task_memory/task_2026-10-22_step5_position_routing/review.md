@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Assign two foundation implementation findings and supply the exact37-path diff for review completion. |
 | 2026-10-23 | Record four native implementation findings and repair assignment; model/scope is approved. |
 | 2026-10-23 | Final producer delta has No findings; all design findings closed, parent107-path union awaits model/scope decision. |
 | 2026-10-22 | Record source-proof delta review and parent communication-model/minimality findings. |
@@ -10,6 +11,34 @@
 | 2026-10-22 | Record six findings and assign disjoint design corrections before scope approval. |
 
 ## Current implementation review
+
+### CORE/SOURCE and initial PRICING contracts
+
+Reviewer: `ses_e9abd8364ffee5sQKdpiQh3yH4`, D29-FOUNDATION-SOURCE-REVIEW.
+Frozen sourcebd97ac5 combines CORE02f061d and PRICING7b86614; native19 is excluded
+from this review. Inspected29 CORE/SOURCE and8 PRICING paths, approved designs,
+requirements/plan/interface/accounting and parent306-case receipts. Declared
+unfinished consumers/schema/model/fixture were not treated as regressions.
+
+| ID | Finding and evidence | Required correction | Owner/status |
+| --- | --- | --- | --- |
+| F1 P2 | moe_impl.py:306–307 checks the router class/inherited select_experts, but not actual _select_experts; replacing only the implementation bypasses provenance. | Add actual bound _select_experts to existing verifier; preserve module/file/class/base method in a foreign-implementation negative test. | CORE/SOURCE, assigned |
+| F2 P2 | collective_plan.py:35–54,92–102 accepts externally mutable sizes/tensors/cost arrays despite frozen dataclasses. | Normalize relevant nested sequences to tuples before validation; original-list mutation must not change plan/cost invariants. | PRICING, assigned |
+
+Both corrections remain within their existing ownership/quotas. No numerical,
+native or gate change is approved by these findings. Parent306 checks remain
+valid test observations, not acceptance despite known source findings.
+
+The first review did not obtain the exact diff and therefore did not establish
+deleted-hunk/baseline/change-attribution completeness. Parent supplies
+`repairs/review_evidence/foundation.diff`, changed-file list and diff receipt:
+exact1aee0af11cd58691e64603b99eca0ac459a5b350 to
+bd97ac520fd0ba796ecd9d1905fdff352e859680,37 paths,158722 bytes,
+SHA25625299e3a077042e2d17a38ac6409524472be93f826b4ea2d1c4b1d1ca27eb069.
+The same reviewer continues only that missing portion while both authors repair
+their owned findings and continue the remaining implementation.
+
+### Native19
 
 Component: native19 at2c4cc9e, compared with1aee0af. Reviewer:
 `ses_e9afdb7c4ffejb3hbkjZCeHFKS`, D29-NATIVE-IMPLEMENTATION-REVIEW. Artifacts:
