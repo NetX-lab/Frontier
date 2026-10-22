@@ -421,3 +421,45 @@ def test_v4_collector_dependency_cannot_be_omitted_from_checkout_binding(v4_pack
     os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
     result = check_package(load(CHECKER), v4_package, 'r2_missing_checkout_owner')
     assert 'Staged import has no verified checkout owner:' in result['checks']['harness_pinned_and_client_rows']
+
+
+@pytest.mark.parametrize('shadow', [None, 'module', 'package'])
+def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypatch, shadow):
+    from types import SimpleNamespace
+    from tests.comparison.calibration.native_full_structure import balanced_routing_inventory
+    from tests.comparison.dp_placement_pp.vllm_replay import server_env
+    checker = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py')
+    path = tmp_path / 'balanced_routing.py'
+    shutil.copyfile(REPO / checker.BALANCED_MODULE, path)
+    module = load(path)
+    registry = SimpleNamespace(_routing_strategies={}, register_strategy=lambda n, s: registry._routing_strategies.update({n: s}))
+    monkeypatch.setitem(sys.modules, 'vllm.distributed', SimpleNamespace(get_ep_group=lambda: None))
+    monkeypatch.setitem(sys.modules, 'vllm.forward_context', SimpleNamespace(get_forward_context=lambda: None))
+    monkeypatch.setitem(sys.modules, 'vllm.model_executor.layers.fused_moe.router.routing_simulator_router',
+                        SimpleNamespace(RoutingSimulator=registry, RoutingStrategy=object))
+    module.__name__ = 'balanced_routing'
+    monkeypatch.setitem(sys.modules, 'balanced_routing', module)
+    module.register_balanced_topk()
+    envs = SimpleNamespace(VLLM_MOE_ROUTING_SIMULATION_STRATEGY='balanced_topk')
+    monkeypatch.setitem(sys.modules, 'vllm', SimpleNamespace(envs=envs))
+    monkeypatch.setitem(sys.modules, 'vllm.envs', envs)
+    monkeypatch.setenv('VLLM_MOE_ROUTING_SIMULATION_STRATEGY', 'balanced_topk')
+    router = type('RoutingSimulatorRouter', (), {'__module__': 'vllm.model_executor.layers.fused_moe.router.routing_simulator_router'})()
+    row = balanced_routing_inventory(SimpleNamespace(named_modules=lambda: [('experts', SimpleNamespace(router=router))]))
+    inventory = dict(moe_routing=row, moe_backends={'experts.routed_experts': {}})
+    config = dict(script=str(tmp_path / 'worker.py'), harness_files={checker.BALANCED_MODULE: path.name})
+    manifest = dict(harness_sha256={checker.BALANCED_MODULE: checker.BALANCED_SHA256})
+    engine, env = dict(moe_gating_routing_runtime_path='balanced_topk'), {'VLLM_MOE_ROUTING_SIMULATION_STRATEGY': 'balanced_topk'}
+    monkeypatch.setattr(sys.modules[server_env.__module__], 'runtime_version', lambda engine: '0.28.0')
+    assert server_env('clean', engine | {'worker_extension_cls': 'native_full_structure.FullModelInventory'}, tmp_path, {})[1] == env
+    assert server_env('clean', {}, tmp_path, env)[0] == {}
+    checker.verify_balanced_runtime(inventory, env, engine, config, manifest)
+    if shadow:
+        target = tmp_path / ('balanced_routing.py' if shadow == 'module' else 'balanced_routing/__init__.py')
+        target.parent.mkdir(exist_ok=True)
+        target.write_text('# Same-name unapproved strategy.\n')
+        inventory['moe_routing'] = row | {'origin': importlib.machinery.PathFinder.find_spec('balanced_routing', [str(tmp_path)]).origin, 'sha256': digest(target)}
+    else:
+        inventory.pop('moe_routing')
+    with pytest.raises((ValueError, KeyError)):
+        checker.verify_balanced_runtime(inventory, env, engine, config, manifest)

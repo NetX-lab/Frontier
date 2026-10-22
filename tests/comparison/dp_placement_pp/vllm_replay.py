@@ -233,7 +233,7 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         if not key.startswith(("VLLM_FRONTIER_", "VLLM_TORCH_PROFILER_"))
         and key != "VLLM_CUSTOM_SCOPES_FOR_PROFILING"
         and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL",
-                        "VLLM_MOE_UNIFORM_ROUTING")
+                         "VLLM_MOE_UNIFORM_ROUTING", "VLLM_MOE_ROUTING_SIMULATION_STRATEGY")
     }
     if runtime_version(engine) == "0.28.0":
         if mode not in ("clean", "light"):
@@ -241,6 +241,11 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         if mode == "light" and observer is None:
             raise ValueError("Light mode requires explicitly supplied observer JSON")
         mode_env = {}
+        if engine.get("moe_gating_routing_runtime_path") is not None:
+            if (engine["moe_gating_routing_runtime_path"] != "balanced_topk"
+                    or engine.get("worker_extension_cls") != "native_full_structure.FullModelInventory"):
+                raise ValueError("Native balanced routing requires the registered worker extension")
+            mode_env["VLLM_MOE_ROUTING_SIMULATION_STRATEGY"] = "balanced_topk"
         if observer is not None:
             validate_observer(observer, engine, mode)
             mode_env["VLLM_FRONTIER_OBSERVER"] = json.dumps(observer, sort_keys=True)

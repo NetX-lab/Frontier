@@ -16,6 +16,26 @@ SOURCE_PINS = ('vllm/v1/worker/gpu/dp_utils.py', 'vllm/v1/worker/utils.py',
 DISPATCH_HOOKS = {'vllm.v1.worker.gpu.model_runner.' + name for name in
     ('get_uniform_decode_token_count', 'dispatch_cg_and_sync_dp')}
 DISPATCH_HOOKS.add('vllm.v1.worker.gpu.dp_utils.dist.all_reduce')
+BALANCED_MODULE = 'frontier/profiling/moe/balanced_routing.py'
+BALANCED_SHA256 = '6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea'
+
+
+def verify_balanced_runtime(inventory, env, engine, config, manifest):
+    selected = engine.get('moe_gating_routing_runtime_path')
+    actual = inventory.get('moe_routing')
+    variable = 'VLLM_MOE_ROUTING_SIMULATION_STRATEGY'
+    if selected is None and actual is None and variable not in env:
+        return
+    origin = Path(config['script']).parent / config['harness_files'][BALANCED_MODULE]
+    expected = dict(environment='balanced_topk', runtime_path='balanced_topk',
+        strategy='balanced_routing.BalancedTopKRouting', origin=str(origin), sha256=BALANCED_SHA256)
+    routers = {name.removesuffix('.routed_experts') for name in inventory['moe_backends']}
+    if (selected != 'balanced_topk' or env.get(variable) != selected or not actual or not routers
+            or actual != expected | {'routers': {name: 'vllm.model_executor.layers.fused_moe.router.'
+                'routing_simulator_router.RoutingSimulatorRouter' for name in routers}}
+            or manifest['harness_sha256'][BALANCED_MODULE] != BALANCED_SHA256
+            or sha(origin) != BALANCED_SHA256):
+        raise ValueError('Actual balanced routing strategy/source/environment identity mismatch')
 
 
 def native_dispatch_oracle(manifest, manager):
@@ -117,6 +137,16 @@ def successor_source(path=R2_PATH):
         raise ValueError('Frozen R2 dependency hash mismatch')
     text = content.decode()
     edits = [
+        ('                            else stage / name)\n',
+         '                            else stage / ("tests/comparison/calibration/balanced_routing.py"\n'
+         '                                if name == BALANCED_MODULE else name))\n'),
+        ('            for search, path in imports:\n',
+         '            if engine.get("moe_gating_routing_runtime_path") == "balanced_topk":\n'
+         '                imports += [(server_path, staged_harness / "balanced_routing.py")]\n'
+         '            for search, path in imports:\n'),
+        ('                inventory, counters = payload["inventory"], payload["counters"]\n',
+         '                inventory, counters = payload["inventory"], payload["counters"]\n'
+         '                verify_balanced_runtime(inventory, env, engine, config, manifest)\n'),
         ('            native_v4_source_binding(manifest, engine, config)\n',
          '            source_files += SOURCE_PINS\n            native_v4_source_binding(manifest, engine, config)\n'),
         ('            dispatch, captured = native_v2_graph_dispatch(manifest, engine)\n',

@@ -495,7 +495,10 @@ def test_frozen_r2_non_graph_predicates_and_reader_guards_remain_identical():
     old, new = ast.parse(checker.R2_PATH.read_text()), ast.parse(checker.successor_source())
     funcs = lambda tree: {n.name: ast.dump(n) for n in tree.body if isinstance(n, ast.FunctionDef)}
     before, after = funcs(old), funcs(new)
-    assert {n for n in before if before[n] != after[n]} == {'native_rank_graph_evidence'}
+    assert {n for n in before if before[n] != after[n]} == {'native_rank_graph_evidence', 'check_native_canonical'}
+    predicates = lambda tree: {n.name: ast.dump(n) for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
+        and n.name in ('provenance', 'inputs', 'replay', 'workers', 'lifecycle', 'terminal')}
+    assert predicates(old) == predicates(new)
 
 
 @pytest.mark.parametrize('fault', ['snapshot', 'ambiguous', 'capacity'])
