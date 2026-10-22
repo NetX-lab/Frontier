@@ -11,7 +11,7 @@ TaskID: **D29-CORE-SOURCE-IMPLEMENTATION**. Branch `feat/step5-position-core`, w
 
 1. `c995fdc`: registry-owned interval position counts; frozen source/lane descriptors; physical/live workload separation; canonical `inputs.py` source tensors and one cell schema; full installed-source module/callable verifier; legacy identity omission.713 gross code/test lines.
 2. `ac48363`: policy resolved before parent initialization; shared scheduler actual admitted DP source map; complete immutable-source cache; no per-wave Hamilton/ratio reset in position mode; legacy paths retained.230 additional gross lines.
-3. Source/timer follow-up: existing image/launcher/copy/seal propagation, GateLinear/router/lazy native norm callable evidence, per-row shared-native identity attachment, real singleton RECORD_FUNCTION replay/parser/restore/clear and preserved CUDA_EVENT duration fields, masked sentinel filtering.622 additional gross lines; commit recorded in progress after creation.
+3. `04294dc`: existing image/launcher/copy/seal propagation, GateLinear/router/lazy native norm callable evidence, per-row shared-native identity attachment, real singleton RECORD_FUNCTION replay/parser/restore/clear and preserved CUDA_EVENT duration fields, masked sentinel filtering.622 additional gross lines.
 
 Interface contracts and root size-note proposal: [interface_receipt.md](interface_receipt.md). Test evidence: [interface report](test_report_2026-10-23_interfaces.md), [runtime/source report](test_report_2026-10-23_runtime_source.md), [source/timer report](test_report_2026-10-23_source_timer.md).
 

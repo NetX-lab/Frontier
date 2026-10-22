@@ -14,7 +14,7 @@
 - completed: singleton timer `_profile_cell_callable` switches to RECORD_FUNCTION through tracer parser, restores/clears on call/parser failure, retains original event durations and carries paired kernel_count. Real CPU DeviceTimer/record_function annotations and parser executed; transport alone is synthetic. Mask sentinel is excluded before map/bincount.
 - observed: selected consumer check 215 PASS/19 SKIP/4 deselected; Py3.12 timer/router/norm/oracle check 18 PASS; actual linear attachment/legacy source test 34 PASS. Actual old fixed-probe stage/verifier PASS, 540 sealed files/18 attention rows/16 linear rows. Exact commands in dated reports.
 - completed: runtime commit `ac48363`,11 code/test paths,+176/-54=230 gross beyond first interface commit.
-- in-progress: commit source/timer step and archive partial handoff. Current29/44 changed paths,+1470/-95=1565/4404; no file allowance exceeded. Canonical input parser/executor serialization test added to the existing output-metadata file and verified; latest source identity suite35 PASS.
+- completed: source/timer commit `04294dc`,15 code/test paths,622 additional gross lines; partial handoff archived in summary.md. Final29/44 changed paths,+1470/-95=1565/4404; no file allowance exceeded. Canonical input parser/executor serialization test verified; latest source identity suite35 PASS. Final branch whitespace/AST/path/quota checks PASS; worktree clean before documentation closure.
 - blocked: selected trainers/preflight/schema/physical price consumers and new fixture/main. PRICING `7b86614` provides the selected registry context contract, but import/merge is root-only and not authorized. Its uncommitted `NativeRoutedExperts.prepare_source/prepared_context/apply_prepared` does not yet provide the complete schema/range/numerical plan fixture receipt. No replacement registry/schema/plan is created.
 - pending root-owned: import/coordinate peers, selected integration qualification, full-unit/strict77/review, actual image/source receipt and runtime/E2E runs. Native actual setter/factory candidate is readable; published derived image/full receipt remain unavailable.
 
@@ -53,9 +53,9 @@
 **分支：** A：spec/plan合理，无需改动。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. Commit verified runtime/source slices → 完成标志：scoped clean commits with dated tests/receipt/quota.
-2. Root supplies registry import authorization and completed PRICING numerical/schema/finite-plan payload → 完成标志：one actual selected contract available, without alternate registry/fallback.
-3. Resume selected trainers/preflight/wrapper/main, then new fixture/main → 完成标志：all selected source/gathered/empty physical exact pairs and preserved workflow actual-main checks pass.
+1. Root supplies registry import authorization and completed PRICING numerical/schema/finite-plan payload → 完成标志：one actual selected contract available, without alternate registry/fallback.
+2. Resume selected trainers/preflight/wrapper/main → 完成标志：all selected source/gathered/empty physical exact pairs, both actual pre-loader paths and schema/cache checks pass.
+3. Finish new fixture/main → 完成标志：retained6144/1024,D26/D27/D30,offline+online actual-main checks within original2400s limit; root separately qualifies native/image/E2E.
 
 ## 4. 最值得关注的 3 点
 
