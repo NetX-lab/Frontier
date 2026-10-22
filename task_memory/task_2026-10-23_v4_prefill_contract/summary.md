@@ -5,8 +5,9 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Archived scoped implementation, final CPU validation and remaining qualification boundaries. |
+| 2026-10-23 | Recorded completed source/evidence commit2f87828 and pending root acceptance. |
 
-Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base `b62c155abd981a71e12e62aa0c0fe3990741d2f8`; worktree `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract`. Primary source remains untouched pending root review.
+Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base `b62c155abd981a71e12e62aa0c0fe3990741d2f8`; source/evidence commit `2f87828`; worktree `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract`. Primary source remains untouched pending root review.
 
 ## Deliverables
 

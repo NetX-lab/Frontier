@@ -3,10 +3,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Recorded source/CPU milestone self-check and bounded root handoff route. |
+| 2026-10-23 | Finalized all delegated steps at committed source2f87828; root acceptance remains independent. |
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -14,12 +15,12 @@
 | b 独立 contract 与显式 checker | PASS | 三文件197 changed lines，core55 |
 | c affected unit 验证 | PASS | 最后完整144PASS；prefill 子集27PASS |
 | d accepted/legacy 验证及回归范围 | PASS | 94exact；旧102positive/72negative |
-| e 归档与 commit/root handoff | TODO | 报告和 commit 尚待完成 |
+| e 归档与 commit/root handoff | PASS | source2f87828 和记录已提交；root acceptance 尚待独立执行 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 本任务开始至今｜**当前前沿：** e
+**检测窗口：** 本任务开始至今｜**当前前沿：** root review/acceptance
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -41,7 +42,7 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. e：保留 exact commands、diff、source hashes 和输入比较证据，重读 requirements，commit → 完成标志：root 可独立审查并决定集成。
+1. root review/acceptance：依据已提交 exact commands、diff、source hashes 和输入比较证据独立审查 → 完成标志：root 决定是否集成；本子任务不修改 primary source。
 
 ## 4. 最值得关注的 3 点
 
