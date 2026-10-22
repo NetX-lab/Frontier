@@ -125,11 +125,12 @@ class AttentionKVCacheGroup:
         object.__setattr__(self, "component_owners", owners)
 
     def transfer_page_count(self, prompt_pages: int) -> int:
-        """Return the prompt pages a P/D handoff reads for this group.
+        """Return the conservative page cap for a P/D handoff group.
 
         A sliding-window group sends only its in-window tail plus one page for
         a window that is not page aligned (vLLM NIXL ``blocks_per_sw``:
-        ``cdiv(sliding_window, block_size) + 1``).
+        ``cdiv(sliding_window, block_size) + 1``). The family payload resolver
+        selects live pages within this cap; null slots carry no KV payload.
         """
         if type(prompt_pages) is not int or prompt_pages <= 0:
             raise ValueError("prompt_pages must be a positive int")

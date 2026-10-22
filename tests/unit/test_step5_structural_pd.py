@@ -51,8 +51,6 @@ SUMMARY_PAGE_BYTES = 512
 OPEN_REGION_PAGE_BYTES = 2060
 SWA_LAYERS = 69
 SPARSE_LAYERS = 23
-# cdiv(512-token window, 16-token page) + 1, as vLLM NIXL clips window groups.
-SWA_TRANSFER_PAGES = 33
 NUM_CACHE_GROUPS = 4
 
 
@@ -135,20 +133,20 @@ def _payload(step_config, capacity, prompt_tokens, *, tensor_parallel_size=TENSO
 
 
 @pytest.mark.parametrize(
-    ("prompt_tokens", "pages", "open_pages", "per_rank_bytes", "logical_unique_bytes"),
+    ("prompt_tokens", "pages", "swa_pages", "open_pages", "per_rank_bytes", "logical_unique_bytes"),
     [
         # 4105 = 256 full pages + 9 tokens; 4105 % 8 = 1 leaves one open region.
-        (4105, 257, 1,
+        (4105, 257, 33, 1,
          69 * 33 * 12288 + 23 * 257 * 12288 + 23 * 257 * 512 + 23 * 2060,
          4 * 69 * 33 * 12288 + 4 * 23 * 257 * 12288 + 23 * 257 * 512 + 23 * 2060),
         # 4096 = 256 full pages; every region is closed.
-        (4096, 256, 0,
-         69 * 33 * 12288 + 23 * 256 * 12288 + 23 * 256 * 512,
-         4 * 69 * 33 * 12288 + 4 * 23 * 256 * 12288 + 23 * 256 * 512),
+        (4096, 256, 32, 0,
+         69 * 32 * 12288 + 23 * 256 * 12288 + 23 * 256 * 512,
+         4 * 69 * 32 * 12288 + 4 * 23 * 256 * 12288 + 23 * 256 * 512),
     ],
 )
 def test_component_bytes_match_hand_computation(
-    step_config, capacity, prompt_tokens, pages, open_pages, per_rank_bytes,
+    step_config, capacity, prompt_tokens, pages, swa_pages, open_pages, per_rank_bytes,
     logical_unique_bytes,
 ):
     payload = _payload(step_config, capacity, prompt_tokens)
@@ -159,7 +157,7 @@ def test_component_bytes_match_hand_computation(
         for name, c in components.items()
     } == {
         # KV heads 4 at TP8: one local head, repeated on 2 ranks.
-        "swa_raw_kv": (SWA_LAYERS, SWA_TRANSFER_PAGES, RAW_PAGE_BYTES, 2),
+        "swa_raw_kv": (SWA_LAYERS, swa_pages, RAW_PAGE_BYTES, 2),
         # Full history is never divided by the 8-token region size.
         "sparse_raw_kv": (SPARSE_LAYERS, pages, RAW_PAGE_BYTES, 2),
         "region_summary": (SPARSE_LAYERS, pages, SUMMARY_PAGE_BYTES, TENSOR_PARALLEL_SIZE),
@@ -184,7 +182,8 @@ def test_component_bytes_match_hand_computation(
     [
         (7, 1, 1, 1), (8, 1, 1, 0), (9, 1, 1, 1),
         (15, 1, 1, 1), (16, 1, 1, 0), (17, 2, 2, 1),
-        (527, 33, 33, 1), (528, 33, 33, 0), (529, 33, 34, 1),
+        (511, 32, 32, 1), (512, 32, 32, 0), (513, 33, 33, 1),
+        (527, 33, 33, 1), (528, 32, 33, 0), (529, 33, 34, 1),
     ],
 )
 def test_window_clip_and_open_region_follow_page_and_region_boundaries(
@@ -198,6 +197,22 @@ def test_window_clip_and_open_region_follow_page_and_region_boundaries(
         "swa_raw_kv": swa_pages, "sparse_raw_kv": sparse_pages,
         "region_summary": sparse_pages, "open_region_state": open_pages,
     }
+
+
+@pytest.mark.parametrize(("source_tokens", "descriptors", "per_rank_bytes"), [
+    (6112, 19_780, 139_592_704),
+    (6128, 19_826, 139_887_104),
+])
+def test_native_prefix_payload_excludes_null_swa_slots(
+    step_config, capacity, source_tokens, descriptors, per_rank_bytes,
+):
+    # G3 exports 33 SWA slots with a leading null, leaving 32 live pages.
+    payload = _payload(step_config, capacity, source_tokens)
+    assert payload.transfer_bytes_per_rank == per_rank_bytes
+    assert sum(c.page_count * len(c.owner_layer_ids) for c in payload.components) == descriptors
+    assert [g.transfer_page_count(source_tokens // BLOCK_SIZE) for g in capacity.groups] == [
+        33, 33, 33, source_tokens // BLOCK_SIZE,
+    ]
 
 
 # Step checks its 64 Q heads first; every TP that divides them also divides

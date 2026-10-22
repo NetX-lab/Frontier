@@ -293,21 +293,27 @@ def resolve_step5_kv_transfer_components(
 ) -> tuple[AttentionKVTransferComponent, ...]:
     """Return the pages one TP rank sends in the structural Step P/D handoff.
 
-    SWA groups send their in-window tail (NIXL get_exchange_clipped_blocks).
+    SWA groups send live pages within the NIXL window clip, excluding null slots.
     Sparse raw KV keeps its full history and sends every prompt page, as do
     its FP8 region summaries. Raw KV shards repeat on ``kv_replication``
     ranks; summary side storage is identical on every TP rank.
 
     Native NIXL sends only full pages, which hold closed regions, and D
-    recomputes the open tail. Frontier's D starts from the whole prompt, so
-    one page of open-region accumulators per sparse layer accompanies a
-    prompt that ends inside a region. That tail page is a modeled assumption.
+    recomputes the open tail. Structural callers supplying an incomplete region
+    include one modeled accumulator page per sparse layer; native-aligned
+    callers supply a full-page prefix and need no open-region transfer.
     """
     prompt_pages = ceil(prompt_tokens / capacity.block_size)
-    group_pages = {
-        component_id: group.transfer_page_count(prompt_pages)
-        for group in capacity.groups for component_id, _ in group.component_owners
-    }
+    group_pages = {}
+    for group in capacity.groups:
+        pages = group.transfer_page_count(prompt_pages)
+        if group.retention == "sliding_window":
+            first_live_page = (
+                max(0, prompt_tokens - group.window_tokens) // group.logical_block_size
+            )
+            pages = min(pages, prompt_pages - first_live_page)
+        for component_id, _ in group.component_owners:
+            group_pages[component_id] = pages
     group_pages["open_region_state"] = int(
         prompt_tokens % config.sparse_config["region_block_size"] != 0
     )

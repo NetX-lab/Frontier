@@ -1,0 +1,17 @@
+{
+  "case_id": "step5_h80032_canonical_pd",
+  "ticket": "17",
+  "decision_id": "D27",
+  "requesting_user": "YC",
+  "reviewer_identity": "YC",
+  "analysis_artifact": "task_memory/task_2026-10-22_step5_mrv2_main/prefill_census/report.md",
+  "analysis_artifact_sha256": "3d503159d387dd2473ee18d9d33528ade5be3bbfa5034777d5ce759ddd4943b4",
+  "analysis_timestamp_utc": "2026-10-22T02:14:48.516182+00:00",
+  "archive_identity_verified_at_utc": "2026-10-22T02:53:24.307067+00:00",
+  "record_kind": "archive_of_preimplementation_user_decision",
+  "verbatim_answer": "批准有效页修正 (Recommended)",
+  "decision_record": "task_memory/task_2026-10-15_step5_preview_h800/requirements.md",
+  "approved_scope": "Step-only live retained-window transfer pages; preserve conservative capacity, other families, historical evidence and native settings; source6128 yields32 SWA pages,19826 descriptors,139887104 bytes/rank.",
+  "status": "APPROVED",
+  "remaining": "Integrated regression, corrected lifecycle/input generation and fresh acceptance are not established by this receipt."
+}
