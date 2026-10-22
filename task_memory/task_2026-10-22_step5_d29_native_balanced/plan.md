@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Accept four design corrections after independent follow-up; update the native-facing scope estimate. |
 | 2026-10-22 | Integrate native design; distinguish the completed investigation from current implementation dependencies. |
 |2026-10-22|Established route/evidence and CPU contract probe followed by proposal-only handoff.|
 |2026-10-22|Started approved position-policy design and coordinated native/Frontier/profile implementation scope.|
@@ -17,10 +18,11 @@ diagnostic -> workflow and GPU/operator-gap judgment. D30 finish-sync alignment
 and the already merged D26/D27 verification proceed independently. Preserve
 both variants' exact identity; no original-label reuse or CPU-gap campaign.
 
-Native design is complete in `native_design.md` (commit `651415a`): four native
-source files, two focused tests and ten image/package files, estimated at
-716–1143 changed lines. Its independent design review and the Frontier/profile
-design feed one combined scope proposal before implementation.
+Native design is complete in `native_design.md` (commit `c9e9274`): four native
+source files, two focused tests and thirteen image/package/client files,
+estimated at 1003–1582 changed lines. Independent follow-up resolved all four
+design findings. Combine this with the reviewed Frontier/profile/fixture and
+required pricing scope before requesting implementation approval.
 
 ## Completed investigation (historical)
 

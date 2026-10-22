@@ -206,8 +206,8 @@ Authority includes D20–D30 in [requirements.md](requirements.md), owned by the
 | D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
 | D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
 | Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
-| D29 policy/order | design review and complete scope pending |Native review found missing adapter propagation/import-origin and graph-test checks. Frontier/profile draft delivered (32 files including fixture), with source-local router/physical communication pricing still unbounded. Correct/review these before the combined scope proposal |
-| D30 finish sync | candidate delivered; integration blocked |Source cf1a53f: author 27/128/3 checks pass. Review confirms fixture peer-driving gaps and finds counter events rejected by the R2 verdict loader. Complete correction scope is being revised; native observation remains unverified |
+| D29 policy/order | native design reviewed; Frontier corrections active |Native c9e9274 resolves four findings (19 files/1003–1582 lines); parent budget/path checks pass. Frontier review reports six findings and rejects32files/1699lines as complete/minimal. Three disjoint designs now cover contract fixes, physical/source-local pricing and derived profile-source entry before combined approval |
+| D30 finish sync | candidate delivered; scope approval pending |Source cf1a53f: author 27/128/3 checks pass. Review confirms fixture peer-driving gaps and counter rejection by R2 verdict. Complete proposal at0a0b9fe is7 files/≤750 lines; no further source/test edit or merge. Native observation remains unverified |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
@@ -233,9 +233,10 @@ modules remain `tests/unit/test_step5_measured_pd.py` and
 `tests/unit/test_step5_pd_placement.py`. The review also finds that
 `r2_verdict.py` rejects both new host-counter events; they must be accepted as
 diagnostic metadata without granting native PASS. The initial six-file estimate
-is therefore incomplete. The author is revising the exact scope and consumer
-regression coverage before the next consolidated decision; no extra code edit
-has been authorized by the review itself.
+is superseded by records-only `0a0b9fe`: seven files / at most750 changed lines,
+including actual event-driven fixtures and emitter-to-verdict checks. Detailed
+scope is in the finish-sync worktree's `issues.md`; user approval is pending.
+No extra code edit has been authorized by the review itself.
 
 **Actual-main logger repair completed:** commit `b862e57`. Parent reproduced run08's `Batch has no requests` at the actual `BatchStageEndEvent`/`DummyForwardBatch` seam and restricted request-owned AF-state lookup to batches with requests. Reproduction2FAIL/2PASS -> affected logging/lifecycle36PASS. Clean detached5af7638/b862e57 runs at `/data/ycfeng/tmp/step5_event_logging_clean_fidelity_20261021` both exit0;strict comparator exits0 with77/77 identical,zero cache-name differences and no missing evidence. Earlier dirty-source receipts are preserved. Complete measured CLI acceptance remains with its owner. Details: [event-logging test report](test_report_2026-10-21_request_free_event_logging.md).
 

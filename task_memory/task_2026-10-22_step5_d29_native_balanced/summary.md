@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Close native design findings; update its 19-file estimate and validation limits. |
 | 2026-10-22 | Record approved semantics and native design; retain implementation and live-validation boundaries. |
 |2026-10-22|Archived actual native route and reference-invariance policy decision; no implementation or launch.|
 
@@ -24,9 +25,11 @@ decision; no production/native/image/package change has been made by this task.
 Root: `/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_d29_native_balanced/`.
 
 - `proposal.md`: exact files/lines, actual route/evidence tier, aggregate and independent-reference contracts, options/costs/minimum complete extension and ready-to-ask semantic decision.
-- `native_design.md` (`651415a`): four native source files, two tests and ten
-  image/package files; 716–1143 changed lines, graph/weight/mask verification,
+- `native_design.md` (`c9e9274`): four native source files, two tests and thirteen
+  image/package/client files; 1003–1582 changed lines, graph/weight/mask verification,
   derived-image recipe and a minimum 53-pin installed-source binding.
+- `review.md`: all four native design findings resolved in independent follow-up;
+  parent confirms path uniqueness and budget arithmetic. Runtime remains unverified.
 - `cpu_receipt.json`, `semantic_receipt.json`: actual frozen CPU method-seam and hypothetical assignment math evidence; seven count cases, independent/chunk/q1/padding counterexamples,16-rank native witness/source hashes.
 - `contract_probe.py`, `semantic_probe.py`, `preservation_check.py`: bounded task-scoped read-only CPU/evidence checks, no installed strategy.
 - `preservation_receipt.json`: all57 capture03 manifest entries and50 native pins unchanged,3 probe sources compile, no launch markers.

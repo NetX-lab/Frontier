@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Integrate c9e9274 and independent follow-up resolving all four native design findings. |
 | 2026-10-22 | Record YC policy approval and integrate native design; numerical implementation scope remains pending. |
 |2026-10-22|Recorded read-only native path findings and proposal investigation.|
 
@@ -12,11 +13,14 @@
 - completed: YC approved `position_cyclic`, necessary native/Frontier/profiling
   changes and internal derived-image publication; exact authority is recorded
   in `requirements.md` and the parent D29 decision.
-- completed: `native_design.md`, commit `651415a`, is integrated on the parent
-  branch. Estimated native-facing scope: 16 files, 716–1143 added/deleted lines;
-  existing device positions are bound at the uncompiled Step outer forward.
-- in-progress: independent native design review and Frontier/profile design,
-  followed by a single combined numerical scope proposal. D30 proceeds in parallel.
+- completed: `native_design.md`, commit `c9e9274`, is integrated on the parent
+  branch. Estimated native-facing scope: 19 files, 1003–1582 added/deleted lines;
+  the planned binding uses existing device positions at the uncompiled Step outer forward.
+- completed: independent delta review resolves the four initial design findings
+  with no new actionable issue. Parent recomputed 19 unique paths and the exact
+  1003–1582 line range; the corrected proxy and reference-test paths exist.
+- in-progress: Frontier/profile design review and complete pricing scope,
+  followed by one combined numerical scope proposal. D30 proceeds in parallel.
 - pending: approved bounded implementation, source/CPU/GPU graph verification,
   derived image, new source pins/package, and actual native/G3/profile evidence.
   Capture03 is a historical sealed pressure candidate, not a position-policy run.
