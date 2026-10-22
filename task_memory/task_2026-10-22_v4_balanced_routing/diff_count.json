@@ -1,0 +1,37 @@
+{
+  "base": "a71fcd3",
+  "files": [
+    {
+      "file": "tests/comparison/calibration/profile_dsv4_prefill.py",
+      "added": 51,
+      "deleted": 0,
+      "sha256": "09b7323d6dd9f8084edd93c5d794468eb40f3998ef2daafab24e04d89fd9b4ed"
+    },
+    {
+      "file": "frontier/profiling/attention/dsv4_attention_runner.py",
+      "added": 70,
+      "deleted": 2,
+      "sha256": "263da4a89174bc501842092d1298451edd078c81eefc5c0cf519fa3a257ee91a"
+    },
+    {
+      "file": "frontier/profiling/attention/dsv4_attention_rows.py",
+      "added": 28,
+      "deleted": 0,
+      "sha256": "dc5317170a30ab00c78e0f06f6c82b52fd79e857859f117e3da61261a1ab5272"
+    },
+    {
+      "file": "frontier/execution_time_predictor/deepseek_v4.py",
+      "added": 15,
+      "deleted": 0,
+      "sha256": "05ac06cd8dc879dc819e2b0fadb4de272a1eccf963b295e57e594beacbaca503"
+    },
+    {
+      "file": "task_memory/task_2026-10-22_v4_h800_prefill/configured_capacity/prepare_package.py",
+      "added": 18,
+      "deleted": 5,
+      "sha256": "c9a993833abd8ceb167bc2763adbd6f43ec2f7a6a52ada87c0848e4f47f9d11e"
+    }
+  ],
+  "total_files": 5,
+  "cumulative_routing_changed_lines": 189
+}

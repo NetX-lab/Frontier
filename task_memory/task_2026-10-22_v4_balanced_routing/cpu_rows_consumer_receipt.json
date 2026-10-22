@@ -1,0 +1,23 @@
+{
+  "passed": [
+    "explicit balanced real isolated consumer positive and retained identity",
+    "consumer missing routing_runtime_path",
+    "consumer missing routing_strategy_sha256",
+    "consumer missing moe_routing",
+    "consumer balanced/unbalanced mix",
+    "consumer old unbalanced row",
+    "consumer strategy hash mismatch",
+    "consumer receipt environment mismatch",
+    "consumer receipt routers mismatch",
+    "consumer receipt native_sources mismatch",
+    "consumer receipt runners mismatch",
+    "missing-selector legacy rows preserved",
+    "six rows per method exact constructed identity retained",
+    "historical raw rows not relabeled",
+    "unbalanced raw receipt rejected",
+    "mixed raw engine receipts rejected"
+  ],
+  "count": 16,
+  "expected_rows_per_method": 6,
+  "hardware_qualification": false
+}
