@@ -6,6 +6,8 @@
 | 2026-10-23 | Record owned CPU, D30, source/image-context and static graph results. |
 | 2026-10-23 | Record reviewer repair red/green/affected checks, exact quota and narrower graph evidence. |
 | 2026-10-23 | Append documentation/input-only T2 static conformance and resource proposal evidence. |
+| 2026-10-23 | Begin two-file engine-limit regression; record red constructor-flow and preserved old controls. |
+| 2026-10-23 | Verify engine-limit actual-entrypoint/helper-body flow and affected175 PASS/15 SKIP; refresh input provenance and exact native budget. |
 
 ## Environment and exact commands
 All commands ran in /data/ycfeng/Frontier/.worktrees/step5-position-native.
@@ -259,3 +261,134 @@ current T2/helper. Node/mount/rendezvous/output/retention and all actual GPU/
 backend/import/library/G3 witnesses remain unresolved; no substituted data or
 tolerance is introduced. Thin graph/eager modules is not real MRv2/full backend
 graph, state/transfer/E2E or CPU/gap qualification.
+
+## D29-T2-ENGINE-LIMITS
+Actual preserved engine source:
+`/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/engine.json`,
+SHA2567947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e.
+Triple:max_model_len7168,max_num_batched_tokens8192,max_num_seqs128.
+Published vllm/model_executor/layers/fused_moe/layer.py SHA256
+ddc92bf76eabaf0465e2dc515b844293c16691bb6e66f92a45e47c4956b6e328,
+lines274/361 bind MoE max_num_tokens to scheduler max_num_batched_tokens.
+Existing full metadata SHAe535c5c9... remains unchanged.
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest tests/unit/test_step5_native_position_cyclic.py -k entrypoint -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-t2-limits-red > /data/ycfeng/tmp/d29-t2-limits-red.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 STEP5_NATIVE_SOURCE_ROOT=/data/ycfeng/tmp/d29_published_sources01/source/vllm /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest tests/unit/test_step5_native_position_cyclic.py -k 'not entrypoint' -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d29-t2-limits-existing > /data/ycfeng/tmp/d29-t2-limits-existing.log 2>&1
+git diff --numstat 6ebb038 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff --check
+```
+Red:3 FAIL at real helper EngineArgs fixture KeyError:max_model_len, confirming
+old path lacked constructor inputs. Old actual-source controls:13 PASS/1.97s,
+3 new entrypoint cases deselected. AST2/whitespace PASS. Native two-file delta
+87 incremental gross at draft (script17add+5del;test65add), within root100 reserve.
+No helper edits/copied builder. The final result below supersedes draft labels.
+
+### Verified helper delivery and final affected check
+PRICING delivers3f54bc640392d2a029e371e85ab212f0e2ac20ee with verified
+`create_native_config(args, *, engine_limits=None)`.
+Source SHA2562a6da8cb8184e267aab32e8c1cdc45744c2acf7cefc1439acc6a692d500b7323.
+Its mixed commit also changes producer behavior and central task records. Native
+does not import that broad commit, copy a second production builder or edit a peer
+file. Read-only AST execution of the actual delivered helper body supplies the
+dependency to this host check; root must integrate it before a bare entrypoint run.
+
+Environment: asyncopd-py312 Python3.12.13, existing CPU Torch2.9.1+cu128 controls,
+OMP_NUM_THREADS=1,OPENBLAS_NUM_THREADS=1,PYTHONDONTWRITEBYTECODE=1,no pytest cache,
+all scratch/logs under/data/ycfeng/tmp. No CUDA initialization/native import/image
+operation. Exact final command (run from this worktree):
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 STEP5_NATIVE_SOURCE_ROOT=/data/ycfeng/tmp/d29_published_sources01/source/vllm /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-limits-affected-final.log 2>&1
+import ast
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+from types import SimpleNamespace
+import pytest
+from frontier.profiling.collectives import step5_dispatch_probe as probe
+source = subprocess.check_output(['git', 'show', '3f54bc6:frontier/profiling/collectives/step5_dispatch_probe.py'], text=True)
+print('verified_helper_commit=3f54bc640392d2a029e371e85ab212f0e2ac20ee sha256='+hashlib.sha256(source.encode()).hexdigest())
+function = next(node for node in ast.parse(source).body if isinstance(node, ast.FunctionDef) and node.name == 'create_native_config')
+exec(compile(ast.Module(body=[function], type_ignores=[]), '3f54bc6:frontier/profiling/collectives/step5_dispatch_probe.py', 'exec'), probe.__dict__)
+inputs = Path('task_memory/task_2026-10-22_step5_d29_native_balanced/t2_preparation')
+cases = json.loads((inputs/'cases.json').read_text())
+args = SimpleNamespace(model_path=inputs/'model_metadata', tensor_parallel_size=8, data_parallel_size=2, gpus_per_node=8, tokens_per_dp_rank=[len(row['positions']) for row in cases['modules'][0]['dp']], disable_custom_all_reduce=False, routing_input_file=None)
+latest_plan = next(node for node in ast.parse(source).body if isinstance(node, ast.FunctionDef) and node.name == 'probe_plan')
+ns = probe.__dict__.copy()
+exec(compile(ast.Module(body=[latest_plan], type_ignores=[]), '3f54bc6:probe_plan', 'exec'), ns)
+assert ns['probe_plan'](args) == probe.probe_plan(args)
+print('actual current/peer controlled probe plans identical: PASS,2 layers/16 ranks')
+raise SystemExit(pytest.main(['tests/unit/test_step5_native_position_cyclic.py', 'tests/unit/test_step5_dispatch_probe.py', '-q', '-p', 'no:cacheprovider', '--basetemp=/data/ycfeng/tmp/d29-t2-limits-affected-final']))
+PY
+git diff --numstat 6ebb038 a5e5189 -- tests/integration/step5_environment/test_position_cyclic_graph.py tests/unit/test_step5_native_position_cyclic.py
+git diff --check
+```
+
+Focused previous run, identical read-only helper installation with only the
+native_position_cyclic suite:/data/ycfeng/tmp/d29-t2-limits-helper-focused.log,
+**16 PASS/1.96s**. Final affected command above:**175 PASS/15 SKIP/5.12s**;
+skips are existing actual-vllm-import dependent tests in test_step5_dispatch_probe,
+not skipped new constructor regressions. No accepted418/485 or CPU-gap suite rerun.
+
+Expected/pass conditions and observations:
+- Real T2 main invokes the actual PRICING helper body and direct EngineArgs;
+  both constructor kwargs contain7168/8192/128 before create_engine_config. PASS.
+- Both entered configurations are the post-with_hf_config returned objects;
+  modules enforce_eager=True,graph/default does not set eager. PASS.
+- Final report modules/graph values observed exactly match, or record deliberate
+  max_num_seqs129 drift. Either drift remains soft UNVERIFIED and both paths run.
+  No config value is assigned after creation by T2. PASS host flow.
+- Missing cases.engine_limits raises KeyError before construction; original
+  LookupError constructor instance propagates unchanged with one attempted call.
+  PASS. Host dependency fixtures are not native/GPU config qualification.
+- Current/PRICING controlled probe plans agree on actual retained metadata,
+  TP8/DP2/EP16/2nodes/16ranks and layers3/88. PASS. T2 supplies existing
+  routing_input_file=None; no observed profiling frame/substitute family added.
+- AST2/whitespace/owned2 paths PASS. a5e5189 diff15add+2del script,68add test:
+  **85 incremental gross<=100**. Native19 baseline1aee0af total**1350/1582**,
+  +81 from accepted1269,232 remaining; native4 gross99 and bytes unchanged.
+- cases graph/modules remain byte-value identical to aa872fa; only engine_limits
+  added from the hash-bound actual sealed engine file. Metadata bytes unchanged.
+
+Closed: supported pre-construction engine-limit interface gap. Still pending:
+root dependency integration/source+input sealing/actual-image CPU config check,
+resource/run authorization and GPU NONE/PW/FULL/native backend/full-serving/G3.
+The16H800/30min8GPUh finite-unit proposal remains unapproved; no state tolerance
+or numeric/qualification criterion changed.
+
+### Final artifact/static check
+Same capped Python3.12.13 environment, no torch/vllm import; exact command:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/asyncopd-py312/bin/python -B - <<'PY' > /data/ycfeng/tmp/d29-t2-limits-static-final02.log 2>&1
+import ast, hashlib, json, subprocess
+from pathlib import Path
+repo=Path.cwd();task=repo/'task_memory/task_2026-10-22_step5_d29_native_balanced';inputs=task/'t2_preparation'
+cases=json.loads((inputs/'cases.json').read_text());provenance=json.loads((inputs/'provenance.json').read_text());receipt=json.loads((task/'scope_receipt.json').read_text())
+old=json.loads(subprocess.check_output(['git','show','aa872fa:'+str((inputs/'cases.json').relative_to(repo))]))
+engine_path=Path(provenance['frozen_serving_limits']['path']);engine=json.loads(engine_path.read_text())
+assert cases['engine_limits']=={key:engine[key] for key in ('max_model_len','max_num_batched_tokens','max_num_seqs')}
+assert hashlib.sha256(engine_path.read_bytes()).hexdigest()==provenance['frozen_serving_limits']['sha256']
+assert {key:cases[key] for key in old}==old
+assert (inputs/'model_metadata/config.json').read_bytes()==Path(provenance['model_metadata']['retained_original_path']).read_bytes()
+for name in ('tests/integration/step5_environment/test_position_cyclic_graph.py','tests/unit/test_step5_native_position_cyclic.py'):ast.parse((repo/name).read_text())
+interface=json.loads((task/'interface_receipt.json').read_text())
+assert hashlib.sha256((task/'native_source.patch').read_bytes()).hexdigest()==interface['patch_sha256']
+for row in interface['native_changes']:
+    path=row['path'].removeprefix('native-image/')
+    assert hashlib.sha256((Path(interface['candidate_root'])/path).read_bytes()).hexdigest()==row['derived_sha256']
+    assert hashlib.sha256((task/'native_source'/path).read_bytes()).hexdigest()==row['derived_sha256']
+assert receipt['gross']==sum(row['added']+row['deleted'] for row in receipt['rows'])==1350
+for block in (inputs/'execution_proposal.md').read_text().split('```bash\n')[1:]:subprocess.run(['bash','-n'],input=block.split('```')[0],text=True,check=True)
+subprocess.run(['sha256sum','-c','hashes.sha256'],cwd=inputs,check=True)
+print('PASS: frozen engine hash/triple,unchanged metadata+graph/modules,AST2,native4+patch hashes,budget1350/1582,bash-n2,checksums6/6')
+PY
+```
+
+Expected/observed: PASS unchanged graph/modules/metadata/native4, actual engine
+triple/hash,AST2,total1350/1582,bash-n2,checksums6/6. First ad-hoc static command
+failed FileNotFoundError on native_source/forward_context.py because it removed
+vllm/ twice. Inspected actual native_source/vllm path; correcting only this read
+path passed final02. No test/production/artifact byte modification for this error.

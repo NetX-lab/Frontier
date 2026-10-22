@@ -4,15 +4,21 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Prepare existing-schema inputs and exact commands; no run/resource approval or execution. |
+| 2026-10-23 | Bind retained serving triple through both pre-construction paths; host flow PASS, root integration/image check pending. |
 
-TaskID: D29-T2-INPUT-PREPARATION. Status: **PROPOSAL ONLY / NOT RUN**.
+TaskID: D29-T2-ENGINE-LIMITS, following D29-T2-INPUT-PREPARATION.
+Status: **PROPOSAL ONLY / NOT RUN**.
 Root must independently accept/seal this package and obtain actual run/resource
-authorization after remaining implementation readiness. No new semantics,
-numerical state tolerance, mode extension, production/test code or harness.
+authorization after remaining implementation readiness. Only root-directed
+two-file limit binding is added; no new numerical state tolerance, mode or harness.
 
 ## Identity and controlled inputs
 
 - Repository baseline: accepted9090407; native6827507 accepted9495cfb.
+  Native engine-limit source commit a5e5189. Verified helper source3f54bc6 is a
+  root integration prerequisite: its mixed producer/central-record commit was
+  read, not imported into this native worktree. Do not launch from the legacy
+  local helper or infer root acceptance from these owner commits.
 - Accepted linux/amd64 image:
   `hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee`.
 - Actual source export: `/data/ycfeng/tmp/d29_published_sources01/source`.
@@ -26,7 +32,7 @@ numerical state tolerance, mode extension, production/test code or harness.
   exclusions are preserved. T2 uses dummy loading, language_model_only and
   skip_tokenizer_init; no checkpoint, tokenizer or network download is needed.
 - `cases.json` SHA256:
-  `7383a897d21ef2201b7f8bfb40bd855aeb89a5da7fecbedec657df96c8ecaef0`.
+   `ea35310017b9057a305266a90988db72ab81aaeed0fcf5457ada401e8ec60002`.
   This is **controlled probe input**, not observed native/Frontier traces.
   Construction/provenance and source/file hashes are in `provenance.json`.
 
@@ -48,14 +54,19 @@ E352/K8, configured sigmoid, normalization and scale3.0 come from retained
 metadata plus the existing Step5Config default sigmoid; no hardcoded replacement
 formula/backend is introduced into production code.
 
-**7168 limitation:** every supplied position, including stale padding, is in
-`[0,7168)`. Original metadata max_position_embeddings remains1048576. Existing
-T2/helper EngineArgs calls omit max_model_len, and T2 CLI has no override. Thus
-this package does not claim actual engine max_model_len7168. Root must distinguish
-the controlled-input bound from the frozen full-serving7168 context. If exact
-engine context7168 is required for T2 acceptance, that dependency is blocked on
-a root-directed supported seam; this task cannot modify code/metadata or invent
-an environment override. Original G3/state criteria remain unchanged.
+**Required engine limits:** cases.json now supplies max_model_len7168,
+max_num_batched_tokens8192 and max_num_seqs128 from retained
+`/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/engine.json`, SHA256
+`7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e`.
+Native fused_moe/layer.py:274,361 derives MoE max_num_tokens from the scheduler's
+max_num_batched_tokens; positions alone cannot supply this capacity. Full metadata
+max_position_embeddings1048576 remains unchanged. T2 passes the same required
+mapping before helper/module and direct graph constructors, then records the final
+post-with_hf_config values in rank_N.json.engine_limits.modules/graph. A mismatch
+stays diagnostic-only UNVERIFIED; original construction/native errors propagate.
+Host actual-entrypoint/verified-helper flow PASS, including final-value drift.
+This closes the supported interface gap, not actual-image/GPU config acceptance
+or full-serving parity. Original G3/state criteria remain unchanged.
 
 ## Minimum topology and proposed ceiling
 
@@ -94,7 +105,9 @@ actual memory fit remains UNVERIFIED. See `resource_proposal.json` for formulas.
 
 Use the published image above, not a mutable tag/local index digest. Mount this
 accepted source worktree at its absolute local path, read-only, on both workers.
-Root must merge/seal the input commit before selecting the actual launched source.
+Root must integrate/seal native a5e5189, inputs and the PRICING helper before
+selecting the actual launched source. T2 sets existing routing_input_file=None to
+preserve its controlled plan, not substitute observed profiling inputs.
 The repository mount includes existing script/helper and controlled inputs. It
 does not contain a top-level vllm package. Do not put source exports,
 native_source snapshots, extra_site, a local conda or inherited PYTHONPATH first.
@@ -170,7 +183,8 @@ stop command, RJobBackend instantiation or cancellation policy is introduced her
 
 ## Qualification and remaining prerequisites
 
-Expected future reports:16 `rank_N.json` files, real native FP8 layer3/BF16 layer88
+Expected future reports:16 `rank_N.json` files with final modules/graph engine
+limits7168/8192/128, real native FP8 layer3/BF16 layer88
 module calls under explicit positions/masks, actual backend/expert/collective
 observations, and thin graph NONE/PW/FULL address/counter checks. Any diagnostic
 failure stays UNVERIFIED under the existing soft boundary; native errors remain
@@ -180,7 +194,7 @@ original-router semantics, numerical fitting or op-gap/CPU overhead qualificatio
 
 Unfinished: root input acceptance/sealing; implementation readiness; explicit
 resource/run approval and finite-collection coordination; real node/mount/output/
-rendezvous/retention identities; exact-engine7168 dependency if required; actual
+rendezvous/retention identities; scoped helper integration/actual-image config check; actual
 worker source/import/library/config/backend/memory/runtime receipts. No runtime
 receipt is generated, no numerical state tolerance is selected, and no GPU action
 is authorized or performed by this document.

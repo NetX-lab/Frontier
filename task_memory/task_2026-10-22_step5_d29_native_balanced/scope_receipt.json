@@ -68,7 +68,7 @@
     },
     {
       "path": "tests/unit/test_step5_native_position_cyclic.py",
-      "added": 245,
+      "added": 313,
       "deleted": 0
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "path": "tests/integration/step5_environment/test_position_cyclic_graph.py",
-      "added": 293,
+      "added": 306,
       "deleted": 0
     },
     {
@@ -97,7 +97,7 @@
       "deleted": 0
     }
   ],
-  "gross": 1269,
+  "gross": 1350,
   "ceiling": 1582,
   "path_count": 19,
   "immutable_base": "PASS byte inventory and hashes",
@@ -106,7 +106,18 @@
   "previous_gross": 1017,
   "repair_gross_increase": 252,
   "repair_changed_paths": 7,
-  "remaining": 313,
+  "remaining": 232,
+  "engine_limits_task_id": "D29-T2-ENGINE-LIMITS",
+  "engine_limits_source_commit": "a5e5189",
+  "engine_limits_previous_accepted_gross": 1269,
+  "engine_limits_baseline_gross_increase": 81,
+  "engine_limits_incremental_gross": 85,
+  "engine_limits_incremental_reserve": 100,
+  "engine_limits_changed_paths": 2,
+  "engine_limits_delta": {
+    "tests/integration/step5_environment/test_position_cyclic_graph.py": {"added": 15, "deleted": 2},
+    "tests/unit/test_step5_native_position_cyclic.py": {"added": 68, "deleted": 0}
+  },
   "native_patch_unchanged": "PASS interface receipt source, snapshot and patch hashes",
   "candidate_python_inventory": 2907,
   "candidate_python_differences": 4,

@@ -5,7 +5,8 @@
 | --- | --- |
 | 2026-10-23 | Record actual interface, sparse context and pending live inputs. |
 | 2026-10-23 | Narrow thin-graph qualification and document checked backend-source staging. |
-| 2026-10-23 | Bind accepted publication and prepared controlled T2 metadata/cases; engine7168 remains an explicit limit. |
+| 2026-10-23 | Bind accepted publication and prepared controlled T2 metadata/cases; retain historical input-only engine gap. |
+| 2026-10-23 | Close engine-limit interface gap with required cases mapping and final-value diagnostics; root integration/image check pending. |
 
 ## Native interface
 Early commit e48cdc0 retains native_source.patch, four source snapshots in
@@ -82,10 +83,14 @@ not converted into success. Actual expert classes/E8M0 are reported, not forced.
 
 Static preparation passes2 same-shape17-row graph cases,3 module frames with
 physical/live DP counts[6129/6128,1/0],[1/0,17/16],[4/1,4/0]. All positions are
-within[0,7168). Actual metadata retains max_position_embeddings1048576: both
-existing EngineArgs calls omit max_model_len and no T2 CLI override exists.
-An exact engine7168 requirement cannot be silently satisfied by rewriting config
-or adding a wrapper. Root must resolve that dependency if needed; full-serving
+within[0,7168). Actual metadata retains max_position_embeddings1048576. The
+root-directed correction a5e5189 requires cases.json.engine_limits7168/8192/128
+from capture03/stage/engine.json and passes it before both constructors. Final
+model/scheduler limits are recorded after with_hf_config under soft diagnostics.
+Verified PRICING3f54bc6 helper body passed host flow; its mixed commit was not
+imported here. Root must integrate the helper and independently check actual-image
+configuration before launch. T2 uses routing_input_file=None for the existing
+controlled plan. No new CLI/wrapper/metadata replacement or full-serving parity;
 G3's frozen7168/state criteria are unchanged. No state tolerance is selected.
 
 ## Still UNVERIFIED

@@ -1,5 +1,6 @@
 {
-  "task_id": "D29-T2-INPUT-PREPARATION",
+  "task_id": "D29-T2-ENGINE-LIMITS",
+  "preparation_task_id": "D29-T2-INPUT-PREPARATION",
   "status": "CONTROLLED_INPUTS_NOT_OBSERVED_NOT_RUN_NOT_LAUNCH_AUTHORIZATION",
   "accepted_repo_commit": "90904073935c39fb8203ed71cbaf389ba9115443",
   "accepted_native_commit": "6827507",
@@ -24,12 +25,16 @@
   },
   "script_sources": {
     "tests/integration/step5_environment/test_position_cyclic_graph.py": {
-      "sha256": "e11bb6aef9e3c5e3a4ba0088ab67711a3e5c4d4f7e2d2a1a2ad9092709057cfd",
-      "accepted_commit": "9090407"
+      "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+      "source_commit": "a5e5189",
+      "root_acceptance": "PENDING"
     },
     "frontier/profiling/collectives/step5_dispatch_probe.py": {
-      "sha256": "4d5460c14c54ec8bacf42b0395303c39b5a719217a0f721e3ec1b89c7da14805",
-      "accepted_commit": "9090407"
+      "sha256": "2a6da8cb8184e267aab32e8c1cdc45744c2acf7cefc1439acc6a692d500b7323",
+      "source_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
+      "verification": "Actual create_native_config body from verified PRICING commit executed with host constructor dependencies; not copied to production",
+      "local_worktree_sha256": "4d5460c14c54ec8bacf42b0395303c39b5a719217a0f721e3ec1b89c7da14805",
+      "integration": "ROOT_REQUIRED: mixed commit includes unrelated producer changes and central records; not imported by native owner"
     },
     "tests/integration/step5_profiling/run_on_worker.sh": {
       "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
@@ -42,7 +47,8 @@
     "vllm/config/vllm.py": "02ddc04019a0cc3dd60cdf564aa069638667950905019d734d8672521d412511",
     "vllm/model_executor/layers/fused_moe/config.py": "575248839aa351e8a1ab47a0965882b32c35932eb3e6e780271606e5b3451d9d",
     "vllm/model_executor/layers/quantization/fp8.py": "37db0145189cd8870d8ac53a6eeb59ac070af51fe78e933597f51e8948250403",
-    "vllm/model_executor/layers/fused_moe/unquantized_fused_moe_method.py": "1ab96e74cce2d1a8540af0eb5518cf8ff77d02c7b770d55c2556cdb34c74bc1c"
+    "vllm/model_executor/layers/fused_moe/unquantized_fused_moe_method.py": "1ab96e74cce2d1a8540af0eb5518cf8ff77d02c7b770d55c2556cdb34c74bc1c",
+    "vllm/model_executor/layers/fused_moe/layer.py": "ddc92bf76eabaf0465e2dc515b844293c16691bb6e66f92a45e47c4956b6e328"
   },
   "publication_artifacts": {
     "task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
@@ -58,7 +64,7 @@
   },
   "inputs": {
     "path": "cases.json",
-    "sha256": "7383a897d21ef2201b7f8bfb40bd855aeb89a5da7fecbedec657df96c8ecaef0",
+    "sha256": "ea35310017b9057a305266a90988db72ab81aaeed0fcf5457ada401e8ec60002",
     "origin": "Deterministic controlled construction from approved intervals; NOT native/Frontier traces",
     "graph": [
       {
@@ -127,10 +133,27 @@
     "position_cycle": "expert_id=(position*top_k+slot)%num_experts; no DP/request/wave reset",
     "position_limit_exclusive": 7168,
     "original_model_max_position_embeddings": 1048576,
-    "engine_max_model_len": "NOT_BOUND: both existing EngineArgs calls omit max_model_len; no T2 CLI/env override identified. Input bound7168 only.",
+    "engine_limits": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    },
+    "engine_binding": "Supplied BEFORE both constructors; final with_hf_config model/scheduler values observed under soft diagnostics. PASS host entrypoint/constructor flow; actual image/GPU config UNVERIFIED",
     "runtime_receipts": null,
     "backend_evidence": null,
     "numerical_state_tolerance": null
+  },
+  "frozen_serving_limits": {
+    "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/engine.json",
+    "sha256": "7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e",
+    "source": "Retained sealed capture03; only the three approved fields copied, no source edit or serving-parity claim",
+    "moe_capacity_source": "Published fused_moe/layer.py:274,361 sets max_num_tokens from scheduler_config.max_num_batched_tokens",
+    "configuration_paths": [
+      "create_native_config(args, engine_limits=limits), enforce_eager=True",
+      "EngineArgs(..., **limits).create_engine_config().with_hf_config(...), default graph/eager mode"
+    ],
+    "report": "rank_N.json.engine_limits.modules and .graph; differences append engine_limits:<role> diagnostic and mark UNVERIFIED",
+    "runtime_config_receipts": null
   },
   "settings": {
     "tp": 8,

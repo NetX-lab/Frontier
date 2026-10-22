@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
 | 2026-10-23 | Prepare controlled T2 metadata/cases and bounded execution/resource proposal; static-only, no code change or launch. |
+| 2026-10-23 | Close two-file T2 engine-limit interface gap with175 affected CPU PASS/15 SKIP; native19 now1350/1582, root integration pending. |
 | 2026-10-23 | Complete approved native19 implementation and CPU verification; retain historical design archive below. |
 | 2026-10-23 | Repair four implementation findings,485 CPU PASS and1269/1582; narrow thin graph qualification. |
 | 2026-10-22 | Close native design findings; update its 19-file estimate and validation limits. |
@@ -22,7 +23,7 @@ The final documentation commit records this handoff. No peer files, historical
 captures, original native source, GPU/platform/auth/cloud/SSH/Docker or publication
 operations were modified/executed by this stream.
 
-Actual scope after reviewer repair: **19 code/test/Dockerfile paths;1269 added+deleted lines of1582**,
+Actual current scope after engine-limit correction: **19 code/test/Dockerfile paths;1350 added+deleted lines of1582**,
 including **99 gross lines in4 actual native files** against the locked base.
 Task records/generated receipts/sparse source snapshots are evidence, not a way
 to exclude additional native changes. Committed per-path diff matches scope_receipt.json.
@@ -97,9 +98,10 @@ are in the parent's `repairs/test_report_2026-10-23_image_publication.md`.
 Controlled T2 metadata and explicit positions/masks are now prepared in the local
 `t2_preparation/` directory. Root independently accepts/seals them and still
 supplies actual resource/run approval and worker/rendezvous/output identities.
-Exact T2 engine max_model_len7168 is not expressible by existing script/helper;
-all input positions are bounded below7168 while original metadata1048576 remains.
-Do not claim full-serving7168 engine binding from these inputs.
+The root-directed engine-limit correction below makes7168/8192/128 expressible
+before both constructors. Verified PRICING helper integration and actual-image
+config acceptance remain root-owned; unchanged original metadata1048576 and
+controlled inputs do not prove full-serving parity.
 
 Still **UNVERIFIED**: CUDA selected-score arithmetic, NONE/PW/FULL replay,
 actual auto FP8/BF16 dispatch/E8M0/collectives, all-rank imported provenance,
@@ -128,7 +130,53 @@ Repair code diff:267 additions+23 deletions (290); baseline native19 gross
 increases252 from1017 to1269 because final baseline diff differs from commit
 churn. Code diff command: `git diff 2c4cc9e 74d5c48 -- tests`.
 
-## D29-T2-INPUT-PREPARATION outcome
+## D29-T2-ENGINE-LIMITS outcome
+
+Source/test commit **a5e5189**, based on6ebb038, changes exactly the two authorized
+owned paths: tests/integration/step5_environment/test_position_cyclic_graph.py
+(15 additions/2 deletions) and tests/unit/test_step5_native_position_cyclic.py
+(68 additions). **85 incremental gross<=100**, native19 baseline total**1350/1582**
+(+81 over1269),232 remaining. Native4 patch99gross/source bytes are unchanged.
+
+Existing cases.json now requires the retained7168/8192/128 triple, supplied before
+helper/native module and direct graph EngineArgs creation. Both final
+post-with_hf_config configs record model/scheduler values in T2 reports; drift is
+soft UNVERIFIED. Native errors/missing required input do not default or retry.
+Module eager versus graph/default modes, topology/backend and original G3/state
+criteria are preserved. No full-serving parity or numerical tolerance is inferred.
+
+Verified helper source: PRICING3f54bc640392d2a029e371e85ab212f0e2ac20ee,
+SHA2562a6da8cb8184e267aab32e8c1cdc45744c2acf7cefc1439acc6a692d500b7323.
+Its mixed commit also changes producer code and central records. Native consumes
+the actual helper body read-only for host flow checks and does not edit/copy the
+builder/import that commit. Root must integrate it before running bare T2/main.
+Current/peer controlled plans are equal with actual retained metadata;
+routing_input_file=None preserves that existing branch without observed data.
+
+Observed checks: focused16 PASS/1.96s,affected175 PASS/15 SKIP/5.12s;
+AST2/whitespace/owned paths/quota PASS. Actual main/constructor/helper bodies run
+with host dependency fixtures, not actual vllm configs or GPU. New tests cover
+both constructor kwargs/final returned values, module/graph drift, missing input
+and constructor exception identity. Existing actual-source controls preserved.
+
+Updated artifacts in t2_preparation/: cases.json SHA256
+ea35310017b9057a305266a90988db72ab81aaeed0fcf5457ada401e8ec60002;
+provenance.json binds actual capture03/stage/engine.json SHA256
+7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e and native
+fused_moe/layer.py scheduler-derived capacity. Full metadata78447bytes/SHAe535c5c9…
+and all graph/module values remain unchanged. Execution/resource proposals,
+static_review_receipt.json and hashes.sha256 are refreshed without changing
+16H800/30min8GPUh proposal or commands. Exact commands/logs are in the existing
+test_report_2026-10-23_native_integration.md; dispositions in review.md and exact
+path/gross accounting in scope_receipt.json.
+
+Remaining: root helper/native integration, independent actual-image config check,
+source/input acceptance/sealing and resource/run authorization. Worker/mount/
+rendezvous/output/retention identities and GPU/PW/FULL/backend/MRv2/full-serving/
+G3/state evidence remain unverified. No platform/GPU/auth/cloud/SSH/Docker/push or
+additional subagent action, peer edit or native image/source rebuild occurred.
+
+## D29-T2-INPUT-PREPARATION outcome (historical, before limit correction)
 
 Authorized clean fast-forward6827507 -> accepted9090407. No source/test edits or
 source/CPU acceptance rerun. Native19 remains1269/1582 gross; no native patch change.

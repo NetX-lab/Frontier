@@ -6,6 +6,7 @@
 | 2026-10-23 | Establish approved implementation milestones. |
 | 2026-10-23 | Add the explicitly requested four-finding repair and affected verification milestone. |
 | 2026-10-23 | Add input-only T2 preparation; actual launch remains root-owned and unapproved. |
+| 2026-10-23 | Add root-directed two-file engine-limit correction with PRICING helper dependency. |
 
 1. Native scoped context, outer Step forward and registered factory strategy ->
    actual-source CPU tests, four-file receipt and early interface commit.
@@ -46,6 +47,26 @@ inputs entirely within7168 positions, no new numeric state tolerance. Graph
 and eager-module evidence limits remain as accepted. Actual GPU/backend/G3 and
 finite-collection coordination are prerequisites for root's later work, not
 claims this input-only task can close.
+
+## D29-T2-ENGINE-LIMITS follow-through
+L1 -> {L2, L3} -> L4; only2 explicitly authorized native source/test paths, <=100
+additional gross and native19<=1582. No extra tests/suite/native image changes.
+- L1: retain actual capture03 engine triple/source/hash and required input contract.
+- L2: T2 passes same limits before both constructors and observes/checks final
+  model/scheduler configs under existing soft diagnostics. Eager/graph controls stay.
+- L3: PRICING supplies verified scoped optional helper keyword commit; read/import
+  only after delivery. Native test executes actual entry-point/helper body and
+  constructor flow with host dependency fixtures, not native/GPU qualification.
+- L4: affected existing checks -> exact per-owner/path budget -> source/test commit
+  -> update existing T2 inputs/provenance/hashes/proposal and local records/commit.
+  Acceptance: final config limits observed7168/8192/128, missing required input
+  cannot default, construction errors propagate; mismatch diagnostics remain soft.
+  Actual-image verification/root sealing/runtime approval remain external.
+
+Status at a5e5189: L1/L2 PASS; L3 actual verified PRICING3f54bc6 helper-body flow
+PASS with host dependencies, mixed-commit integration deferred to root to avoid
+peer/central writes. L4 affected175 PASS/15 SKIP, two-path85 incremental gross,
+native19 total1350; local records/input hash refresh follows. No new source slice.
 
 ## Preserved pre-allocation record (historical)
 

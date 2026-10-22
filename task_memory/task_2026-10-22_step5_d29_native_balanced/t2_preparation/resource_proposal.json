@@ -56,6 +56,8 @@
     "reason": "Four CPUs and16GiB host RAM per image process are proposed reserves for8 processes/node, native loading and first-use compilation; not measured minima or fit guarantees"
   },
   "workload": {
+    "engine_limits": {"max_model_len": 7168, "max_num_batched_tokens": 8192, "max_num_seqs": 128},
+    "moe_max_num_tokens": "8192 from native scheduler max_num_batched_tokens; actual workspace/fit UNVERIFIED",
     "module_layers": [
       3,
       88
@@ -110,7 +112,7 @@
     "Root independent acceptance/sealing and implementation readiness",
     "Root explicit16-H800 resource/run authorization and existing launcher lifecycle/finite-collection coordination",
     "Root fresh output/rendezvous/node placement and retained-output location",
-    "Resolve actual engine7168 requirement if it is mandatory; existing T2 only supports7168 input bounds",
+    "Root integrate native a5e5189 and PRICING verified optional helper keyword; seal source/inputs and actual-image config check",
     "Actual worker import/backend/CUDA compatibility/rank reports remain UNVERIFIED"
   ],
   "no_cloud_access_in_preparation": true
