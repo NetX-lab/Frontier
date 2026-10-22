@@ -12,7 +12,7 @@ from tests.integration.step5_pd import build_stage, canonical_replay, r2_canonic
 from tests.unit.test_step5_native_pd import stage_inputs
 
 
-def stage_capture(tmp_path):
+def stage_capture(tmp_path, role_overrides=None):
     inputs = stage_inputs(tmp_path)
     source = tmp_path / "native"
     for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES:
@@ -20,6 +20,8 @@ def stage_capture(tmp_path):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f'"""{module}"""\n')
     run = r2_canonical.definition(source)
+    if role_overrides is not None:
+        run["role_num_gpu_blocks_override"] = role_overrides
     run["probe_helpers"] = inputs["definition"]["probe_helpers"]
     model_path = inputs["model_dir"] / "config.json"
     model = json.loads(model_path.read_text())
@@ -34,6 +36,66 @@ def stage_capture(tmp_path):
         probe_dir=inputs["probe_dir"], job_tag="g3cpu",
         source={"repository": str(r2_stage.REPO), "commit": "unit"})
     return run, config, stage
+
+
+def test_d28_decode_only_control_preserves_golden_prefill_and_base_engine(tmp_path):
+    (tmp_path / "baseline").mkdir()
+    (tmp_path / "d28").mkdir()
+    baseline_run, baseline, baseline_stage = stage_capture(tmp_path / "baseline")
+    run, config, stage = stage_capture(tmp_path / "d28", {"decode": 32000})
+    assert verify_r2_stage.verify(stage)["status"] == "PASS_OFFLINE_STAGE"
+    assert config["engine"] == baseline["engine"]
+    assert run["resources"] == baseline_run["resources"]
+    assert run["waves"] == baseline_run["waves"]
+    assert config["role_num_gpu_blocks_override"] == {"decode": 32000}
+    assert "role_num_gpu_blocks_override" not in baseline
+    golden = json.loads((baseline_stage / "preflight.json").read_text())
+    plans = json.loads((stage / "preflight.json").read_text())
+    for original, plan in zip(golden, plans):
+        command = plan["server_command"][:]
+        if plan["role"] == "decode":
+            index = command.index("--num-gpu-blocks-override")
+            assert command[index + 1] == "32000"
+            del command[index:index + 2]
+        else:
+            assert "--num-gpu-blocks-override" not in command
+        assert [value.replace(config["model_dir"], baseline["model_dir"])
+                for value in command] == original["server_command"]
+        assert (plan["role"], plan["lane"], plan["headless"], plan["urls"]) == (
+            original["role"], original["lane"], original["headless"], original["urls"])
+    assert config["pd_state_observation"]["local_reference_client_request_ids"] == (
+        baseline["pd_state_observation"]["local_reference_client_request_ids"])
+
+
+@pytest.mark.parametrize("overrides", [{"prefill": 32000}, {"decode": 31999},
+    {"prefill": 32000, "decode": 32000}, {"decode": True}, {"decode": 32000.0}, {}, None])
+def test_d28_definition_rejects_every_unapproved_pool_control(overrides):
+    run = r2_canonical.definition(Path("native"))
+    run["role_num_gpu_blocks_override"] = overrides
+    with pytest.raises(ValueError, match="D28 decode-only"):
+        r2_canonical.validate_definition(run)
+
+
+@pytest.mark.parametrize("fault", ["prefill_flag", "missing_decode_flag", "wrong_count", "definition_map"])
+def test_d28_offline_verifier_rejects_role_or_definition_drift(tmp_path, fault):
+    _, config, stage = stage_capture(tmp_path, {"decode": 32000})
+    plans = json.loads((stage / "preflight.json").read_text())
+    if fault == "prefill_flag":
+        plans[0]["server_command"] += ["--num-gpu-blocks-override", "32000"]
+    elif fault == "missing_decode_flag":
+        command = plans[2]["server_command"]
+        index = command.index("--num-gpu-blocks-override")
+        del command[index:index + 2]
+    elif fault == "wrong_count":
+        command = plans[3]["server_command"]
+        command[command.index("--num-gpu-blocks-override") + 1] = "31999"
+    else:
+        config["role_num_gpu_blocks_override"] = {"decode": 31999}
+    (stage / "preflight.json").write_text(json.dumps(plans))
+    config["tool_hashes"]["preflight.json"] = build_stage.sha256(stage / "preflight.json")
+    (stage / "config.json").write_text(json.dumps(config))
+    with pytest.raises(AssertionError):
+        verify_r2_stage.verify(stage)
 
 
 def test_actual_canonical_capture_stage_preserves_native_case_and_original_prompts(tmp_path):
