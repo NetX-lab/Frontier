@@ -35,12 +35,22 @@ without a recorded answer, or one that predates the analysis it cites, returns
 
 ## Scope Limits
 
-A decision covers the scope it names. Ask again before going past it: another
-module or domain, a shared interface or config schema, a gate-rule change, or
-more than 5 files or 500 changed lines. Add a configuration field only when the
-analysis measured its fidelity effect; a field whose default leaves every
-existing run unchanged and whose effect is below 0.5% of a gate metric stays
-out.
+The code-change approval requirements in this file apply only to core modules
+under `frontier/`. Within the current calibration task, edits to `tests/` and
+other non-core files are directly authorized and require no additional user
+approval. They do not count toward the file or changed-line limits below,
+including when they accompany a core-module change.
+
+For core modules under `frontier/`, a decision covers the scope it names. Ask
+again before going past it: another core module or domain, a shared interface
+or config schema, a gate-rule change, or more than 5 core files or 500 changed
+lines in core files. Add a configuration field only when the analysis measured
+its fidelity effect; a field whose default leaves every existing run unchanged
+and whose effect is below 0.5% of a gate metric stays out.
+
+Direct authorization of non-core file edits does not resolve decisions that
+change calibration semantics; those still follow `contract.md`, Decisions and
+Approval.
 
 ## Regression Set
 
