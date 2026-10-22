@@ -1,0 +1,275 @@
+diff --git a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py
+new file mode 100644
+index 0000000..3de7db3
+--- /dev/null
++++ b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py
+@@ -0,0 +1,52 @@
++#!/usr/bin/env python3
++"""Hash-bound R3 successor; replace only the incomplete routing-owner census."""
++from __future__ import annotations
++
++import hashlib
++from pathlib import Path
++
++R3_PATH = Path(__file__).with_name('check_groundtruth_run_successor_r3.py')
++R3_SHA256 = 'ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917'
++RUNNER_CLASS = 'vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner'
++CHILD_CLASS = 'vllm.model_executor.layers.fused_moe.routed_experts.RoutedExperts'
++CHILD_SUFFIX = '.routed_experts'
++BACKEND_RECORDS = (
++    dict(quant_method='Mxfp4MoEMethod', backend='MARLIN', experts='MarlinExperts',
++         prepare_finalize='MoEPrepareAndFinalizeNaiveDPEPModular', input_dtype='None'),
++    dict(quant_method='Fp8MoEMethod', backend='TRITON', experts='TritonExperts',
++         prepare_finalize='MoEPrepareAndFinalizeNaiveDPEPModular', block_shape=[128, 128]),
++)
++
++
++def independent_routing_owners(inventory):
++    initialization = inventory['initialization']
++    modules, backends = initialization['modules'], initialization['backends']
++    if type(modules) is not dict or type(backends) is not dict:
++        raise ValueError('Independent routing module/backend inventories must be maps')
++    owners = {name for name, cls in modules.items() if cls == RUNNER_CLASS}
++    children = {name for name, cls in modules.items()
++                if cls == CHILD_CLASS or name.endswith(CHILD_SUFFIX)}
++    consumers = {name for name, row in backends.items()
++                 if name.endswith(CHILD_SUFFIX) or name in children
++                 or 'experts' in row or 'prepare_finalize' in row
++                 or row.get('quant_method') in {r['quant_method'] for r in BACKEND_RECORDS}}
++    expected = {name + CHILD_SUFFIX for name in owners}
++    if (not owners or children != expected or consumers != expected
++            or any(modules[name] != CHILD_CLASS for name in children)
++            or any(backends[name] not in BACKEND_RECORDS for name in consumers)):
++        raise ValueError('Independent routing owner/child/backend completeness or consumer mismatch')
++    return owners
++
++
++def routing_successor_source(path=R3_PATH):
++    content = path.read_bytes()
++    if hashlib.sha256(content).hexdigest() != R3_SHA256:
++        raise ValueError('Frozen R3 dependency hash mismatch')
++    text = content.decode()
++    old = "    routers = {name.removesuffix('.routed_experts') for name in inventory['moe_backends']}\n"
++    if text.count(old) != 1:
++        raise ValueError('Frozen R3 routing-owner replacement boundary is not unique')
++    return text.replace(old, '    routers = independent_routing_owners(inventory)\n')
++
++
++exec(compile(routing_successor_source(), __file__ + ':frozen_r3_with_independent_owners', 'exec'), globals())
+diff --git a/tests/unit/test_native_reader_binding.py b/tests/unit/test_native_reader_binding.py
+index 357ce42..dbd9076 100644
+--- a/tests/unit/test_native_reader_binding.py
++++ b/tests/unit/test_native_reader_binding.py
+@@ -373,7 +373,7 @@ def test_v4_current_generation05_layout_keeps_only_missing_native_evidence_failu
+     assert {name for name, value in result['checks'].items() if value.startswith('FAIL')} == {
+         'rank_runtime_graph', 'terminal_status'}, result['checks']
+     expected = ("FAIL: UNVERIFIED: KeyError: 'vllm/v1/worker/gpu/dp_utils.py'"
+-        if CHECKER.name.endswith('_r3.py') else
++        if CHECKER.name.endswith(('_r3.py', '_r4.py')) else
+         'FAIL: UNVERIFIED: ValueError: Missing or unexpected physical-rank serving files: cpu-v4-0')
+     assert result['checks']['rank_runtime_graph'] == expected
+ 
+@@ -424,11 +424,18 @@ def test_v4_collector_dependency_cannot_be_omitted_from_checkout_binding(v4_pack
+ 
+ 
+ @pytest.mark.parametrize('shadow', [None, 'module', 'package', 'native_origin', 'native_bytes', 'callable_origin', 'missing_env'])
+-def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypatch, shadow):
++@pytest.mark.parametrize('quantization', ['mxfp4', 'fp8'])
++def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypatch, shadow, quantization):
++    import ast
++    import inspect
++    import torch
+     from types import SimpleNamespace, ModuleType
+-    from tests.comparison.calibration.native_full_structure import balanced_routing_inventory
++    from tests.comparison.calibration.native_full_structure import balanced_routing_inventory, FullModelInventory, identity
++    from tests.comparison.calibration.native_dummy_initialization import inspect_model
++    from tests.unit.test_native_dummy_initialization import config_fixture
+     from tests.comparison.dp_placement_pp.vllm_replay import server_env
+-    checker = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py')
++    frozen = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py')
++    checker = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py')
+     path = tmp_path / 'balanced_routing.py'
+     shutil.copyfile(REPO / checker.BALANCED_MODULE, path)
+     module = load(path)
+@@ -437,7 +444,7 @@ def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypa
+     bodies = ('def __getattr__(name): return "balanced_topk"\nenvironment_variables = {"VLLM_MOE_ROUTING_SIMULATION_STRATEGY": __getattr__}',
+         'def create_fused_moe_router(): pass',
+         'class RoutingSimulator:\n _routing_strategies = {}\n register_strategy = classmethod(lambda cls, n, s: cls._routing_strategies.update({n: s}))\n simulate_routing = staticmethod(lambda: None)\nclass RoutingSimulatorRouter:\n def _compute_routing(self): pass',
+-        'class MoERunner:\n def _forward_impl(self): pass')
++        'from torch.nn import Module\nclass MoERunner(Module):\n def _forward_impl(self): pass')
+     for name, body in zip(checker.ROUTING_PINS, bodies):
+         key = name[:-3].replace('/', '.')
+         stub = ModuleType(key)
+@@ -462,9 +469,41 @@ def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypa
+     monkeypatch.setenv('VLLM_MOE_ROUTING_SIMULATION_STRATEGY', 'balanced_topk')
+     runner = sys.modules[checker.ROUTING_PINS[3][:-3].replace('/', '.')].MoERunner()
+     runner.router = simulator.RoutingSimulatorRouter()
+-    model = SimpleNamespace(named_modules=lambda: [('experts', runner)])
++    child = type('RoutedExperts', (torch.nn.Module,), {'__module__':
++        'vllm.model_executor.layers.fused_moe.routed_experts'})()
++    method = type('Mxfp4MoEMethod', (), {})()
++    experts = type('MarlinExperts', (), {})()
++    method.mxfp4_backend, method.experts_cls = SimpleNamespace(name='MARLIN'), type(experts)
++    method.num_experts, method.intermediate_size, method.hidden_size = 1, 32, 32
++    method.moe_quant_config = SimpleNamespace(use_mxfp4_w4a16=True, a1_scale=None, a2_scale=None)
++    experts.quant_config, experts.input_dtype = method.moe_quant_config, None
++    method.moe_kernel = SimpleNamespace(fused_experts=experts,
++        prepare_finalize=type('MoEPrepareAndFinalizeNaiveDPEPModular', (), {})())
++    if quantization == 'fp8':
++        method = type('Fp8MoEMethod', (), {})()
++        method.fp8_backend, method.block_quant = SimpleNamespace(name='TRITON'), True
++        method.moe_quant_config = SimpleNamespace(block_shape=[128, 128],
++            w1_scale=None, w2_scale=None, a1_scale=None, a2_scale=None)
++        method.moe_kernel = SimpleNamespace(fused_experts=type('TritonExperts', (), {})(),
++            prepare_finalize=type('MoEPrepareAndFinalizeNaiveDPEPModular', (), {})())
++        child.w13_weight_scale_inv = child.w2_weight_scale_inv = None
++        child.weight_block_size = [128, 128]
++    child.quant_method, runner.routed_experts = method, child
++    model = torch.nn.Module()
++    model.experts = runner
+     row = balanced_routing_inventory(model)
+-    inventory = dict(moe_routing=row, moe_backends={'experts.routed_experts': {}})
++    inventory = dict(moe_routing=row, initialization=inspect_model(model, config_fixture()))
++    assert digest(Path(inspect.getfile(FullModelInventory))) == 'e6a9025c9af92237cd0d25dd937ecd00177a36a0cddf512bb9aa5d81176378aa'
++    assert digest(Path(inspect.getfile(inspect_model))) == '118b5feb8b3fb15f72f3736fbf0af166eaeebe99cba46245b2ddf5ddc2b6a8ca'
++    tree = ast.parse(inspect.getsource(FullModelInventory))
++    assignment = next(n for n in ast.walk(tree) if isinstance(n, ast.Assign)
++        and isinstance(n.targets[0], ast.Subscript) and isinstance(n.targets[0].slice, ast.Constant)
++        and n.targets[0].slice.value == 'moe_backends')
++    # Execute the unchanged real comprehension, not a hand-filled backend map.
++    exec(compile(ast.Module(body=[assignment], type_ignores=[]), inspect.getfile(FullModelInventory), 'exec'),
++        {'self': SimpleNamespace(get_model=lambda: model), 'result': inventory, 'identity': identity})
++    assert set(inventory['moe_backends']) == (set() if quantization == 'mxfp4' else {'experts.routed_experts'})
++    assert checker.independent_routing_owners(inventory) == {'experts'}
+     config = dict(script=str(tmp_path / 'worker.py'), harness_files={checker.BALANCED_MODULE: path.name},
+         installed_package=str(native / 'vllm'), expected_source_hashes=sources)
+     manifest = dict(harness_sha256={checker.BALANCED_MODULE: checker.BALANCED_SHA256}, groundtruth_checkout_path=str(native))
+@@ -472,6 +511,11 @@ def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypa
+     monkeypatch.setattr(sys.modules[server_env.__module__], 'runtime_version', lambda engine: '0.28.0')
+     assert server_env('clean', engine | {'worker_extension_cls': 'native_full_structure.FullModelInventory'}, tmp_path, {})[1] == env
+     assert server_env('clean', {}, tmp_path, env)[0] == {}
++    if quantization == 'mxfp4':
++        with pytest.raises(ValueError, match='Actual balanced routing strategy/source/environment identity mismatch'):
++            frozen.verify_balanced_runtime(inventory, env, engine, config, manifest)
++    else:
++        frozen.verify_balanced_runtime(inventory, env, engine, config, manifest)
+     checker.verify_balanced_runtime(inventory, env, engine, config, manifest)
+     if shadow in ('module', 'package'):
+         target = tmp_path / ('balanced_routing.py' if shadow == 'module' else 'balanced_routing/__init__.py')
+@@ -533,3 +577,116 @@ def test_balanced_real_frontier_input_binding(tmp_path, monkeypatch, fault):
+     else:
+         receipt = checker.verify_balanced_frontier(config, engine, manifest)
+         assert receipt['sources']['frontier/config/config.py']['origin'] == config['harness_worktree'] + '/frontier/config/config.py'
++
++
++R4 = REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r4.py'
++NATIVE06 = Path('/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023')
++NATIVE06_RANKS = sorted(NATIVE06.glob('runs/groundtruth_clean/*/nodes/*/serving/rank*.json'))
++
++
++def native06_operands(path):
++    run = path.parents[3]
++    manifest = json.loads((run / 'run_manifest.json').read_text())
++    config = json.loads((NATIVE06 / manifest['execution_config']).read_text())
++    engine = json.loads((NATIVE06 / manifest['engine_config']).read_text())
++    node = json.loads((path.parents[1] / 'result.json').read_text())
++    return json.loads(path.read_text())['inventory'], node['server_env_set'], engine, config, manifest
++
++
++@pytest.mark.parametrize('path', NATIVE06_RANKS, ids=lambda p: p.parent.parent.name + '-' + p.stem)
++def test_r4_actual_native06_rank_owner_identity(path):
++    checker = load(R4)
++    operands = native06_operands(path)
++    assert len(NATIVE06_RANKS) == 32
++    assert operands[0]['moe_backends'] == {}
++    assert len(checker.independent_routing_owners(operands[0])) == 43
++    checker.verify_balanced_runtime(*operands)
++    with pytest.raises(ValueError, match='Actual balanced routing strategy/source/environment identity mismatch'):
++        load(R4.with_name('check_groundtruth_run_successor_r3.py')).verify_balanced_runtime(*operands)
++
++
++@pytest.mark.parametrize('kind', ['owner', 'child', 'backend', 'router', 'runner'])
++@pytest.mark.parametrize('fault', ['missing', 'extra', 'wrong'])
++def test_r4_rejects_incomplete_or_wrong_independent_identity(kind, fault):
++    if not NATIVE06_RANKS:
++        pytest.skip('Retained native06 ranks are unavailable')
++    checker = load(R4)
++    operands = native06_operands(NATIVE06_RANKS[0])
++    inventory = operands[0]
++    owner = sorted(checker.independent_routing_owners(inventory))[0]
++    if kind in ('owner', 'child'):
++        mapping = inventory['initialization']['modules']
++    elif kind == 'backend':
++        mapping = inventory['initialization']['backends']
++    else:
++        mapping = inventory['moe_routing'][kind + 's']
++    name = owner + (checker.CHILD_SUFFIX if kind in ('child', 'backend') else '')
++    if fault == 'missing':
++        del mapping[name]
++    elif fault == 'extra':
++        mapping['unexpected' + (checker.CHILD_SUFFIX if kind in ('child', 'backend') else '')] = mapping[name]
++    else:
++        mapping[name] = mapping[name] | {'experts': 'WrongExperts'} if kind == 'backend' else 'wrong.Class'
++    with pytest.raises((ValueError, KeyError)):
++        checker.verify_balanced_runtime(*operands)
++
++
++@pytest.mark.parametrize('fault', ['empty', 'quant_method', 'backend', 'experts', 'prepare_finalize',
++    'input_dtype', 'strategy', 'origin', 'sha256', 'native_origin', 'native_hash', 'selector',
++    'environment', 'runtime_path', 'manifest_hash', 'missing_initialization', 'wrong_owner_name', 'wrong_child_name'])
++def test_r4_rejects_empty_coverage_consumer_and_source_mismatch(fault):
++    if not NATIVE06_RANKS:
++        pytest.skip('Retained native06 ranks are unavailable')
++    checker = load(R4)
++    operands = native06_operands(NATIVE06_RANKS[0])
++    inventory, env, engine, config, manifest = operands
++    initialization, actual = inventory['initialization'], inventory['moe_routing']
++    if fault == 'empty':
++        initialization['modules'].clear()
++        initialization['backends'].clear()
++        actual['routers'].clear()
++        actual['runners'].clear()
++    elif fault in checker.BACKEND_RECORDS[0]:
++        name = sorted(checker.independent_routing_owners(inventory))[0] + checker.CHILD_SUFFIX
++        initialization['backends'][name][fault] = None if fault == 'input_dtype' else 'unverified'
++    elif fault in ('native_origin', 'native_hash'):
++        actual['native_sources'][checker.ROUTING_PINS[0]]['origin' if fault == 'native_origin' else 'sha256'] = 'unverified'
++    elif fault == 'selector':
++        engine['moe_gating_routing_runtime_path'] = 'uniform_topk'
++    elif fault == 'manifest_hash':
++        manifest['harness_sha256'][checker.BALANCED_MODULE] = '0' * 64
++    elif fault == 'missing_initialization':
++        del inventory['initialization']
++    elif fault in ('wrong_owner_name', 'wrong_child_name'):
++        name = sorted(checker.independent_routing_owners(inventory))[0]
++        name += checker.CHILD_SUFFIX if fault == 'wrong_child_name' else ''
++        initialization['modules']['wrong.' + name] = initialization['modules'].pop(name)
++    else:
++        actual[fault] = 'unverified'
++    with pytest.raises((ValueError, KeyError)):
++        checker.verify_balanced_runtime(*operands)
++
++
++def test_r4_only_replaces_owner_seam_and_preserves_legacy_controls():
++    checker = load(R4)
++    frozen = load(checker.R3_PATH)
++    text = checker.routing_successor_source()
++    assert text.replace('    routers = independent_routing_owners(inventory)\n',
++        "    routers = {name.removesuffix('.routed_experts') for name in inventory['moe_backends']}\n") == checker.R3_PATH.read_text()
++    assert checker.successor_source() == frozen.successor_source()
++    checker.verify_balanced_runtime({}, {}, {}, {}, {})
++    frozen.verify_balanced_runtime({}, {}, {}, {}, {})
++    for verify in (checker.verify_balanced_runtime, frozen.verify_balanced_runtime):
++        with pytest.raises(KeyError):
++            verify({}, {'VLLM_MOE_ROUTING_SIMULATION_STRATEGY': 'balanced_topk'}, {}, {}, {})
++
++
++@pytest.mark.parametrize('generation', ['r3', 'r2'])
++def test_r4_rejects_frozen_dependency_tamper(tmp_path, generation):
++    checker = load(R4)
++    original = checker.R3_PATH if generation == 'r3' else checker.R2_PATH
++    changed = tmp_path / original.name
++    changed.write_bytes(original.read_bytes() + b'\n# Unapproved dependency bytes.\n')
++    source = checker.routing_successor_source if generation == 'r3' else checker.successor_source
++    with pytest.raises(ValueError, match='Frozen ' + generation.upper() + ' dependency hash mismatch'):
++        source(changed)
