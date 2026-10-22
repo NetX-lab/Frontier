@@ -38,3 +38,9 @@ Reviewer `ses_e9b6e7bcfffevLPIR9BYvjfRmy`, task `W128-V4-BALANCED-BC-SPEC`: REQU
 | Wrong runner class admitted to CSV | `dsv4_attention_rows.routing_columns` compares runner keys only | Exact runner key/class mapping and direct row/consumer negative | C, in-progress |
 
 Both reviewers were read-only: no independent test execution, full hash recomputation, build or platform operations. They distinguished source/CPU reports from actual native GPU/backend/capture qualification. Root confirmed these corrections are on the existing acceptance path. The874-line delivered total leaves26 lines before final constants; owners must report exact minimum scope before exceeding their revised allocations. Optional new C persistence must not displace mandatory P2 controls or expand a harness.
+
+### C targeted recheck
+
+`W128-V4-BALANCED-PREFILL-R1-REVIEW`, same Spec reviewer, APPROVE for8c2502c: exact runner names-to-MoERunner mapping closes the original P2; existing consumer converts the rejection to `DeepSeekV4CoverageError`. No new actionable finding in the narrow change. B's two findings remain independently open.
+
+Root verified every one of C's five source files against8c2502c and recomputed190 cumulative routing lines. Exact report-command execution passed all five actual producer/consumer controls, including balanced and legacy positives; root affected XML records22PASS/0failure/0error/0skip. A warning-prefix parsing error occurred only in the outer receipt reader and was corrected by inspecting the retained output, without rerunning controls. Evidence and exact commands: `test_report_2026-10-23_prefill_acceptance.md`. C is accepted for source integration; package/image/runtime acceptance remains pending.
