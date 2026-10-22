@@ -106,7 +106,8 @@ def test_actual_canonical_capture_stage_preserves_native_case_and_original_promp
     assert receipt["g3_qualified"] is False and receipt["clean_timing_eligible"] is False
     assert "role_num_gpu_blocks_override" not in config
     assert config["engine"]["api_server_count"] == 1
-    assert len(config["pd_state_observation"]["source_hashes"]) == 12
+    assert len(config["pd_state_observation"]["source_hashes"]) == 13
+    assert "vllm.v1.engine.core" in config["pd_state_observation"]["source_hashes"]
     assert config["pd_state_observation"]["max_capture_bytes_per_request"] > 139887104
     abort = json.loads((stage / "trace/abort_read6144/request_ids.json").read_text())["rows"][0]
     assert abort["cancel_after_decode_submit_s"] == 0.01 and abort["return_token_ids"] is True

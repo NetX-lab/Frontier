@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves the eighth test file; the total750-line ceiling remains unchanged. |
 | 2026-10-22 | Merge b8be287 approval; retire the five-file limit and D29 dependency while retaining child evidence. |
 | 2026-10-22 | Reference parent approval and record isolated child scope. |
 | 2026-10-22 | YC approves D30-SCOPE-7-750 independently of D29. |
@@ -54,6 +55,25 @@ request/transfer evidence; metadata-only evidence remains UNVERIFIED. Complete
 affected checks, parent verification, independent review and strict77 before
 accepting integration. Native image/package/submission remain parent-owned.
 D29 proceeds in parallel under its own unresolved numerical scope.
+
+## [Original Request / Decision] D30-SCOPE-8-750
+
+Parent question:
+
+> 是否批准 D30 从七个文件扩至八个文件，总改动上限仍为750行？仅在 tests/unit/test_step5_canonical_g3.py 将来源数量断言12改为13，并确认新增的 vllm.v1.engine.core 在校验集合内。生产代码不增加改动；补验消除唯一新增失败后合并。
+
+YC's verbatim answer:
+
+> 批准，继续
+
+Add only `tests/unit/test_step5_canonical_g3.py` to the seven paths above. The
+complete change remains bounded by750 insertions+deletions. Parent full-unit
+comparison found one new failure: the old twelve-source assertion, after the
+approved engine-core observation added its required thirteenth source. The
+isolated RED reproduces the same mismatch. Correct that expectation and assert
+engine-core membership; rerun the affected module. Preserve the completed
+independent production review,420 parent checks and77-case/902-artifact strict
+fidelity evidence, since this amendment changes only the unit assertion.
 
 ## [Decision] Isolated execution and existing ticket
 

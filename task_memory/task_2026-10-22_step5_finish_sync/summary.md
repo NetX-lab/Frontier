@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent review/420 checks/strict77 pass; approved eighth assertion file closes the sole new full-unit failure; merge pending. |
 | 2026-10-22 | Archive independently approved seven-file consumer/lifecycle completion and remaining parent acceptance. |
 | 2026-10-22 | Archive bounded source/CPU candidate and explicit integration blockers. |
 
@@ -13,8 +14,11 @@ first-step/every16 finish synchronization, records native host counters through
 the existing R2 install/pin/soft-error path, admits those rows as diagnostic
 metadata only, and repairs all six affected PD fixture instances through real
 DES events. Legacy32 and DP1 remain unchanged in focused checks. Source/CPU
-acceptance is completed including the final fixture-only rerun; parent
-review/integration/strict77/live-native acceptance is not completed.
+acceptance is completed including the final fixture-only rerun. Parent review,
+420 affected checks and strict77/902 artifact checks pass. The approved eighth
+test-file amendment leaves the unit failure/error sets equal to the baseline;
+the complete affected module passes65/65 in the existing full environment.
+Main-branch integration and live-native acceptance remain pending.
 
 Original candidate code: `cf1a53f63eef0492c369517f38505d7d7283c4df`.
 Parent baseline/approval: `b8be2871f5f8e2ea762b7471599240dcfff5fa97`, merged as
@@ -26,6 +30,12 @@ this archive; its hash is returned in the parent handoff. Branch `feat/step5-fin
 Parent d581625 READ fix is retained. YC's D30-SCOPE-7-750 approval is independent
 of D29, with exactly seven source/test paths and at most750 added+deleted lines
 against b8be287, including the original candidate.
+
+YC subsequently approves **D30-SCOPE-8-750**: add only the canonical-stage source
+assertion file, keep750 lines. Current complete scope is eight files/603 gross
+lines. The original seven-file600-line receipt is retained as historical evidence;
+`evidence/canonical_source_amendment/outcomes_and_budget.json` records the amended
+scope and latest test outcomes.
 
 ## Exact deliverables
 
@@ -66,6 +76,15 @@ native scheduling/routing edit or workload/profile/distribution edit.
 
 ## Observed validation
 
+- Parent review of the seven-file production/lifecycle repair: No findings.
+  Parent420 affected checks and77/77 strict cases pass;902 artifacts rehashed.
+- Full-unit run plus the assertion-only affected-module rerun:267 failure IDs
+  and31 error IDs match the baseline; no additional failure/error. Actual full
+  raw capture initially had one extra obsolete assertion, retained with its RCA.
+- Approved canonical source test amendment:65/65 pass in Python3.12.13; its
+  source13/core-membership assertions pass in Python3.10.6 as well. See
+  `test_report_2026-10-23_canonical_source_assertion.md`.
+
 - Scheduler RED9FAIL/7PASS → focused GREEN27PASS65.58s.
 - Observer RED5FAIL/1PASS → included fault-isolation checks pass.
 - Follow-up lifecycle RED6FAIL/1PASS, metadata RED2FAIL → GREEN2PASS.
@@ -89,8 +108,7 @@ matrix) are resolved in approved source/CPU scope. No observed source defect is
 left open by these matrices; this does not imply live-driver/native correctness.
 There is no D29 approval dependency. No regression is suppressed or waived.
 
-Parent independent phase review, common-branch integration, strict77, fresh
-native staging, loaded core/config pins, all-DP scalar counter completeness,
+Common-branch integration, fresh native staging, loaded core/config pins, all-DP scalar counter completeness,
 active-peer continuation, first idle boundary and wave reset remain pending.
 Raw counters are not request/transfer evidence and grant no D30/native PASS.
 No native scheduling/routing, package/image change, GPU fence/collective/readback,
