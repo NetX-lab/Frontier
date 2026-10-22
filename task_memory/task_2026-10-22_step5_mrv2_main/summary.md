@@ -9,15 +9,17 @@
 | 2026-10-22 | Parent accepts root/owner repair26db654 and launches paired actual05 with existing inputs. |
 | 2026-10-22 | Final root/owner clean legacy comparison77/77 identical. |
 | 2026-10-22 | Actual05 both exceed2400s after partial decode; CPU bottleneck diagnosis is active. |
+| 2026-10-22 | Both CPU reuse corrections accepted; merged224 PASS and frozen-checkout actual06/candidate77 launched. |
 
 ## Status
 
-BLOCKED BY RUNTIME: actual05 offline and online both exceeded2400s on26db654.
-Both passed the former ledger error and entered decode; emitted-token counters
-reached42/41, with no terminal request metrics. CPU bottleneck diagnosis is active.
-Parent accepted the metrics root/owner repair after167 passing checks,
-independent No findings and a clean77/77 exact comparison. Full6144/1024
-acceptance has not passed.
+IN PROGRESS: actual06 offline/online run from immutable source7e8bea3 with the
+original fixture/cache and2400s bound. Fixed-contract reuse and validated-input
+reuse are merged after parent verification and independent No findings. The
+combined224 checks pass; input checks187, CPU torch helpers19 and frozen fixture8
+also pass as separate, overlapping suites. The new candidate77 run is pending.
+Actual05 remains a historical timeout at42/41 emitted tokens. Full6144/1024
+acceptance has not yet passed.
 
 Historical attempts: shared fit generation02 is complete and retained. Actual01 rejected
 mutually exclusive runner graph flags (fixed); actual02 rejected an uninitialized
@@ -91,9 +93,10 @@ is integrated at32fb934. The generic mixed-precision warning was checked by
 source and factor-injection controls in `quantization_warning.md`; it does not
 rescale this typed Step path.
 
-Measure and isolate the CPU bottleneck before selecting a source correction or
-another unchanged-workload run. Preserve the2400s execution bound. Full
-READ/readiness/source release,1024 outputs and final metrics remain outstanding.
+Inspect actual06 terminal outputs, READ/readiness/source release,1024 outputs
+and final metrics, and compare the new candidate77 with the retained clean
+26db654 baseline. The execution bound remains2400s. Parent source/proof checks
+are in `test_report_2026-10-22_cpu_reuse.md`; full acceptance is outstanding.
 Actual05 phase evidence and hashes are in `actual05_timeout_receipt.json`.
 The clean77 comparison is complete:
 77/77 identical, including predictor cache names and clean provenance; see

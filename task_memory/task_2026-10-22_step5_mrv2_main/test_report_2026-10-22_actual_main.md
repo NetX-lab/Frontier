@@ -13,6 +13,7 @@
 | 2026-10-22 | Actual05 fails by2400s timeout after partial decode; retain phase timings and missing-artifact evidence. |
 | 2026-10-22 | Parent repeats real-cache CPU RED and collective/trace controls; source correction remains in progress. |
 | 2026-10-22 | Accept fixed-contract source with parent timings, exact costs/artifacts and 255 passing checks plus two baseline-identical failures. |
+| 2026-10-22 | Accept loader reuse and merged224 checks; launch actual06 on frozen7e8bea3 with unchanged inputs and execution bound. |
 
 ## Environment and scope
 
@@ -289,5 +290,23 @@ and artifact descriptors exactly equal; trace persistence passes for 456 events.
 The original maximum-query gate remains RED. Exact benchmark/loader commands and
 source-review findings are in `cpu_performance_review.md`; the selected comparison
 is retained in `contract_parent_receipt.json`. Independent review accepts this
-source phase with No findings. Loader reuse, merged strict77 and the original
-6144/1024 offline/online terminal acceptance remain pending.
+source phase with No findings. Loader reuse has since been accepted as detailed
+below; merged strict77 and original6144/1024 terminal acceptance remain pending.
+
+## Actual06 launch after CPU reuse corrections
+
+Source `7e8bea3` combines both independently reviewed corrections. Parent
+verification:187 loader/bundle/manager checks,19 CPU torch-helper checks,224
+combined checks and8 frozen-checkout fixture checks pass. These overlapping
+suites are reported separately. The original input probe is GREEN; baseline
+frame/attrs/JSON and four root/count hashes match exactly. Commands and limits
+are in `test_report_2026-10-22_cpu_reuse.md`, with selected evidence in
+`load_parent_receipt.json`.
+
+The full offline/online commands are recorded in `progress.md` under Actual06.
+Both run in `/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3`, whose
+HEAD remains fixed. Each generated input-hash receipt matches actual05 at all8
+shared fixture/source paths. No fixture regeneration, timeout change or weakened
+terminal validation is used. The retained clean26db654 matrix is the baseline
+for the new77-case candidate run. All three runs are in progress at this entry;
+no full-workload or new fidelity PASS is claimed.

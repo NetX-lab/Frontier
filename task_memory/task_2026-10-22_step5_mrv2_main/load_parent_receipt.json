@@ -1,0 +1,109 @@
+{
+  "task_id": "D23-MRV2-LOAD-REUSE/PARENT",
+  "source_commit": "02f566aadd1dfc38724314d11636787694cf78a5",
+  "integrated_source": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+  "probe": {
+    "path": "/data/ycfeng/tmp/d23_load_reuse_parent01/receipt.json",
+    "sha256": "cdcae71034f58fcbe7699e68f2fcbfd2b6941477a3f7453d484f7770218fe0b4",
+    "regression_verdict": "GREEN_NO_REPEATED_LOAD",
+    "deduplicated_decode_loader_calls": 0,
+    "profiles": [
+      {
+        "label": "event_load_100",
+        "wall_s": 0.48740304494276643
+      },
+      {
+        "label": "kernel_load_full184",
+        "wall_s": 2.142618879210204
+      },
+      {
+        "label": "event_union_two_roles",
+        "wall_s": 0.5511450478807092
+      },
+      {
+        "label": "kernel_warm_prefill",
+        "wall_s": 2.5742554208263755
+      },
+      {
+        "label": "kernel_warm_decode_deduplicated",
+        "wall_s": 0.028413893654942513
+      },
+      {
+        "label": "event_cache_read",
+        "wall_s": 0.5285118171013892
+      }
+    ],
+    "source_size_and_mtime_unchanged": true,
+    "model_equals_actual_config": true
+  },
+  "frame_comparison": {
+    "path": "/data/ycfeng/tmp/d23_load_frame_parent02.json",
+    "sha256": "f04668c0af0e3c046bf898054f7e6c14f8f385754b9f94a9e98d1549edcb907c",
+    "results": {
+      "CUDA_EVENT": {
+        "rows": 100,
+        "frame_exact": true,
+        "attrs_equal": true,
+        "json_equal": true,
+        "hashes": {
+          "step5_layer_e2e": "9688c187",
+          "step5_layer_e2e_kernel_count": "008badcf"
+        },
+        "reused_frame_and_hash": true
+      },
+      "KERNEL_ONLY": {
+        "rows": 184,
+        "frame_exact": true,
+        "attrs_equal": true,
+        "json_equal": true,
+        "hashes": {
+          "step5_layer_e2e": "b1bedbbb",
+          "step5_layer_e2e_kernel_count": "664eca75"
+        },
+        "reused_frame_and_hash": true
+      }
+    }
+  },
+  "tests": {
+    "loader": {
+      "path": "/data/ycfeng/tmp/d23_load_reuse_parent02.xml",
+      "sha256": "b794b69ebd1af9113054363dc2b9ab8f1e51125b6b931f99a7928dffb6fb8a0b",
+      "tests": "187",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "53.285"
+    },
+    "torch_cpu_helpers": {
+      "path": "/data/ycfeng/tmp/d23_load_native_helpers_parent01.xml",
+      "sha256": "392e118ede436bd6ba933d02b414c49cd4b5fa33f4e739d2e948575edd932f33",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "7.956"
+    },
+    "merged": {
+      "path": "/data/ycfeng/tmp/d23_perf_merged01.xml",
+      "sha256": "34da59e7e8a5326bb2dc2df662ef5c13f1edc7bcd8127cfd9ff15163fee8af73",
+      "tests": "224",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "96.594"
+    },
+    "frozen_fixture": {
+      "path": "/data/ycfeng/tmp/d23_actual06_fixture_check.xml",
+      "sha256": "c4f7a4e1b181de0dfea52f10f3870015b8221ed4f6835459831ccebcb63137d1",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "5.529"
+    }
+  },
+  "cpu_python": "Python 3.10.6",
+  "torch_cpu_python": "Python 3.12.13",
+  "native_admitted": false,
+  "full_cli_accepted": false
+}

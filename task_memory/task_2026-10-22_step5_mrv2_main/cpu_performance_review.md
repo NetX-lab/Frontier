@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Parent reproduces runtime RED and verifies collective/trace controls; scopes fixed-contract reuse and independent initialization diagnosis. |
 | 2026-10-22 | Parent verifies 7.21x query improvement and repeated initializer loads; records source-change invalidation requirements and pending source review. |
+| 2026-10-22 | Loader reuse independently accepted with parent206 checks and exact frame/hash proof; merged224 PASS and actual06 launched. |
 
 ## Diagnosis accepted at the measured boundary
 
@@ -79,7 +80,7 @@ configuration checks pass. These are prefix measurements, not a complete
 attribution of the original 998/1004s initialization. The author's extrapolated
 747s is not a measured full-run value.
 
-The same owner now implements `D23-MRV2-LOAD-REUSE`: share completely validated
+The same owner completed `D23-MRV2-LOAD-REUSE`: share completely validated
 inputs and union/hash results within manager initialization and reuse the first
 feature result where equivalent. Keep source records for both roles, all row
 checks, measurement and topology separation, and existing estimator hashes.
@@ -89,6 +90,13 @@ must still invalidate the corresponding identity. Source content fingerprints
 remain authoritative; a path-only or mtime-only reuse key is insufficient.
 Release retained frames at initialization completion or failure. Runtime query
 reuse and loader reuse have separate file ownership.
+
+Parent acceptance:187 input/bundle/manager checks plus19 CPU torch-helper checks
+pass. The unchanged probe returns GREEN, DECODE0 loads/0.028414s and warm
+PREFILL2.574255s. Exact frame/attrs/JSON and all four archived root/count hashes
+match. Independent source review returns No findings. Detailed commands,
+reproduction setup corrections and evidence are in
+`test_report_2026-10-22_cpu_reuse.md` and `load_parent_receipt.json`.
 
 ## Fixed-contract parent verification
 

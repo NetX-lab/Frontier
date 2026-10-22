@@ -12,6 +12,7 @@
 | 2026-10-22 | Actual05 timeout requires measured CPU diagnosis before the next full run. |
 | 2026-10-22 | Runtime fixed-contract bottleneck reproduced; implement reuse while separately profiling initialization. |
 | 2026-10-22 | Fixed-contract source accepted after parent comparison and review; initializer reuse remains in progress. |
+| 2026-10-22 | Both reuse corrections accepted; frozen-source actual06 and candidate77 in progress. |
 
 1. Generate exact supported synthetic CPU attention/compute/count coverage through
    producer-shaped rows and shared manager caches, retaining truthful kinds and padding.
@@ -32,8 +33,9 @@ offline/online actual05 timed out after partial decode. The final77 strict
 comparison passed. Runtime fixed-contract reuse is accepted after parent exact
 cost/artifact comparison, 255 passing checks with two baseline-identical failures,
 and independent No findings. Initialization profiling confirms repeated input
-loads; preserving same-manager source/policy invalidation is required. Next:
-implement validated-input reuse -> parent review and merged affected verification ->
-unchanged full6144/1024 execution and tail/READ/release/metrics acceptance.
+loads; validated-input reuse now preserves same-manager source/policy invalidation
+and passes parent187 checks plus19 CPU helpers. The combined224 checks pass.
+Next: inspect unchanged full6144/1024 actual06 execution and
+tail/READ/release/metrics acceptance, in parallel with the new strict77 comparison.
 Reuse fixture02 and initialized `step5-mrv2-main`; keep2400s bounds and immutable
 old outputs. All validation remains CPU/synthetic, without native admission.

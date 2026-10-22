@@ -13,6 +13,7 @@
 | 2026-10-22 | Parent reproduces fixed-metadata/contract CPU bottleneck; scoped reuse implementation and initializer diagnosis launched. |
 | 2026-10-22 | Parent verifies contract reuse speedup and baseline structural failures; repeated input loading correction starts independently. |
 | 2026-10-22 | Contract reuse accepted: 255 PASS with two baseline-identical failures, exact short-query costs/proofs, independent No findings. |
+| 2026-10-22 | Accept input reuse and merged224 checks; launch actual06 and candidate77 from immutable7e8bea3. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -354,10 +355,45 @@ Checkpoint after verified compute correction:
 - supported measured cause: repeated fixed layer metadata, precision and operator
   contract construction before exact cache lookup. This explains substantial
   query cost; the profile is not an allocation of all original wall time.
-- in-progress: same owner implements predictor-lifetime fixed metadata/contract
-  reuse, preserving per-query model selection and all dynamic coverage/proof checks.
-- in-progress independently: `D23-MRV2-LOAD-DIAG` profiles the original input
-  initialization through a short real loader call. No initializer change is
-  authorized by that diagnosis-only assignment.
-- pending: parent source review, repeated real-path validation, and complete
-  unchanged6144/1024 CLI acceptance. No full retry or timeout increase yet.
+- completed: predictor-lifetime fixed metadata/contract reuse at97c2234,
+  preserving per-query model selection and all dynamic coverage/proof checks.
+  Parent measures7.21x short-query speedup with exact cost/artifact equality;
+  the diagnostic maximum-query gate remains RED.
+- completed: initializer diagnosis justifies validated-input reuse. Parent187
+  input checks and19 CPU torch-helper checks pass; frame/attrs/JSON and four
+  root/count hashes exactly match. Independent source review: No findings.
+- completed: both changes merged at7e8bea3, with224 combined checks passing.
+  Details and harness setup corrections are in `test_report_2026-10-22_cpu_reuse.md`.
+
+## Actual06: frozen-source complete acceptance
+
+- in-progress: offline and online actual main run from the clean detached
+  `/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3` checkout.
+  HEAD remains7e8bea3 throughout both subprocesses; parent task-record commits
+  occur only in `step5-preview`, so the runner's source-identity guard is retained.
+- completed prerequisite:8 fixture tests pass; locally initialized collective-sim
+  atd28fe917 and copied parent binary pass real TP8/EP16 miss/hit controls.
+- completed input check: each actual06 `input_hashes.json` matches actual05 for
+  all8 shared fixture/source paths. Reuse the original fixture02/cache. The
+  unchanged runner caps each subprocess at2400s and validates1024 outputs,
+  cached6128/local16, READ/readiness/release and positive finite final metrics.
+- in-progress independently: candidate77 runs on the same frozen source. Its
+  generated cache is checkout-local, separate from actual06's fixture cache.
+  Reuse the retained clean26db654 result as baseline rather than rerun it.
+
+Commands, cwd=frozen checkout:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json --output-root /data/ycfeng/tmp/d23_main_actual06_offline --mode offline > /data/ycfeng/tmp/d23_main_actual06_offline.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfeng/tmp WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/integration/run_step5_measured_main.py --fixture-manifest /data/ycfeng/tmp/d23_main_fixture02/fixture_manifest.json --output-root /data/ycfeng/tmp/d23_main_actual06_online --mode online > /data/ycfeng/tmp/d23_main_actual06_online.log 2>&1
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3 --label candidate --output-root /data/ycfeng/tmp/step5_d23_perf_fidelity_20261022 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d23_perf_fidelity_candidate01.log 2>&1
+```
+
+Pending comparison after candidate completion:
+
+```bash
+env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/step5_d23_perf_fidelity_20261022 --baseline-label /data/ycfeng/tmp/step5_d23_root_fidelity_20261022/candidate --candidate-label candidate > /data/ycfeng/tmp/d23_perf_fidelity_compare01.log 2>&1
+```
+
+No terminal/full CLI, new strict77, native/profile or accuracy PASS is claimed
+at launch. Preserve original failed attempts and inspect terminal artifacts next.
