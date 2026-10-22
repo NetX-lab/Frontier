@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.788" timestamp="2026-10-22T19:26:12.201419+08:00" hostname="kun-workspace-vgen2"><testcase classname="tests.unit.test_step5_canonical_g3" name="test_actual_canonical_capture_stage_preserves_native_case_and_original_prompts" time="0.494"><failure message="AssertionError: assert 13 == 12&#10; +  where 13 = len({'vllm.distributed.kv_transfer.kv_connector.v1.nixl.base_worker': '1ff7f4a483e1ea9bd6d2da3c7f090b1d2d562a8d1fa70698898...2dbd24ae0', 'vllm.v1.worker.gpu_model_runner': '6addd7a72b74ba0884aa7e787c05ff40a0607f92c43cdc12bf7308353d42799a', ...})">tmp_path = PosixPath('/data/ycfeng/tmp/d30_canonical_count_red01/test_actual_canonical_capture_0')
+
+    def test_actual_canonical_capture_stage_preserves_native_case_and_original_prompts(tmp_path):
+        run, config, stage = stage_capture(tmp_path)
+        receipt = verify_r2_stage.verify(stage)
+        assert receipt["requests"] == 163 and receipt["content_requests"] == 8
+        assert receipt["native_readiness_only_requests"] == 155
+        assert receipt["g3_qualified"] is False and receipt["clean_timing_eligible"] is False
+        assert "role_num_gpu_blocks_override" not in config
+        assert config["engine"]["api_server_count"] == 1
+&gt;       assert len(config["pd_state_observation"]["source_hashes"]) == 12
+E       AssertionError: assert 13 == 12
+E        +  where 13 = len({'vllm.distributed.kv_transfer.kv_connector.v1.nixl.base_worker': '1ff7f4a483e1ea9bd6d2da3c7f090b1d2d562a8d1fa70698898...2dbd24ae0', 'vllm.v1.worker.gpu_model_runner': '6addd7a72b74ba0884aa7e787c05ff40a0607f92c43cdc12bf7308353d42799a', ...})
+
+tests/unit/test_step5_canonical_g3.py:109: AssertionError</failure></testcase></testsuite></testsuites>

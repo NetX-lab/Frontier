@@ -1,8 +1,11 @@
-# D30 Step finish-sync requirements
+# D30-STEP-FINISH-SYNC requirements
 
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves the eighth test file; the total750-line ceiling remains unchanged. |
+| 2026-10-22 | Merge b8be287 approval; retire the five-file limit and D29 dependency while retaining child evidence. |
+| 2026-10-22 | Reference parent approval and record isolated child scope. |
 | 2026-10-22 | YC approves D30-SCOPE-7-750 independently of D29. |
 | 2026-10-22 | Record approved Step workflow correction and observation scope. |
 
@@ -52,3 +55,34 @@ request/transfer evidence; metadata-only evidence remains UNVERIFIED. Complete
 affected checks, parent verification, independent review and strict77 before
 accepting integration. Native image/package/submission remain parent-owned.
 D29 proceeds in parallel under its own unresolved numerical scope.
+
+## [Original Request / Decision] D30-SCOPE-8-750
+
+Parent question:
+
+> 是否批准 D30 从七个文件扩至八个文件，总改动上限仍为750行？仅在 tests/unit/test_step5_canonical_g3.py 将来源数量断言12改为13，并确认新增的 vllm.v1.engine.core 在校验集合内。生产代码不增加改动；补验消除唯一新增失败后合并。
+
+YC's verbatim answer:
+
+> 批准，继续
+
+Add only `tests/unit/test_step5_canonical_g3.py` to the seven paths above. The
+complete change remains bounded by750 insertions+deletions. Parent full-unit
+comparison found one new failure: the old twelve-source assertion, after the
+approved engine-core observation added its required thirteenth source. The
+isolated RED reproduces the same mismatch. Correct that expectation and assert
+engine-core membership; rerun the affected module. Preserve the completed
+independent production review,420 parent checks and77-case/902-artifact strict
+fidelity evidence, since this amendment changes only the unit assertion.
+
+## [Decision] Isolated execution and existing ticket
+
+Worktree `/data/ycfeng/Frontier/.worktrees/step5-finish-sync`, branch
+`feat/step5-finish-sync`, original base `fa5bae2`, integrated baseline `b8be287`.
+No parent edits, native routing/scheduling, profile/workload/distribution changes,
+child agents, Docker/platform/auth/cloud/SSH/push, full CLI or CPU-overhead suites.
+Commit verified source/tests separately from task records. Existing ticket19
+`../task_2026-10-15_step5_preview_h800/tickets/19-graph-host-scheduling.md`
+and live native qualification remain open. No new GPU fence, collective or
+tensor readback. Missing first-idle step1 sync can cause31 extra iterations;
+the retained P snapshot at step11 does not establish the first idle boundary.
