@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Recorded D-V4-NATIVE-DISPATCH-EVIDENCE approval and bounded execution ownership. |
+| 2026-10-22 | Recorded balanced-routing and deferred CPU-overhead steering; dispatch scope unchanged. |
 
 ## [Original Request]
 
@@ -23,3 +24,18 @@ Decision: `D-V4-NATIVE-DISPATCH-EVIDENCE`. Evidence/design basis is `../task_202
 - No metric/gate/model/engine change or GLM resumption. Root alone performs GPU/platform/auth/SSH/cloud operations and submission. Full calibration still needs a qualified predictor and comparison.
 
 Maintained code/test changes must stay within the approved bound. Report both the successor delta against frozenR2 and physical additions/copies; do not hide new logic in generated task artifacts. Stop for root scope review if the bound cannot be met.
+
+## [Original Request] Follow-up steering
+
+YC's request relayed by root:
+
+> 1.routing暂时统一采用balanced distribution方案对齐（frontier和vllm的routing都采用均衡分布的设定） 2.校准过程中，先进行workflow和gpu侧的对齐（包括op gap计算），最后再进行cpu overhead（gap）的计算测量，不要在当前阶段就引入cpu overhead的大批分析、测量和suits，推迟到矫正最后。
+
+Dispatch scope is unchanged. Necessary CPU correctness controls remain authorized;
+CPU-overhead analysis, measurements and suites are deferred until workflow/GPU
+alignment, including op gap, is complete. Root owns balanced-routing binding and
+coordinates any shared-collector write. `uniform_random` is not balanced. No
+freeze/package/launch before balanced runtime binding is reviewed and incorporated.
+Native05 remains historical old-routing evidence. The explicit balanced policy
+change supersedes the earlier same-engine constraint only for routing; it grants
+this agent no routing implementation or platform ownership.

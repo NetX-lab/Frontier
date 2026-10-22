@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Recorded approval and began implementation assignment. |
 | 2026-10-22 | W128 completed host-operand source/CPU slice; review/freeze/build remain root-owned. |
+| 2026-10-22 | Recorded root balanced-routing prerequisite and CPU-overhead deferral after completed dispatch slice. |
 
 - completed: native05 RCA and bounded proposal; explicit user approval recorded in requirements.
 - completed: W128 source/ownership inspection, collector and successor implementation, CPU controls.
@@ -42,3 +43,16 @@
 - Remaining: independent review, root affected/full package checks, authority
   dependency binding, final writer freeze, actual source/image pins and fresh run.
   Cardinality, host overhead and device completion remain UNVERIFIED.
+
+## Follow-up steering after source/CPU handoff
+
+- completed: source/CPU slice committed as `64db6ad31d3f9170dc47c29e7baf6edcd0f45811`;
+  72 correctness controls and43 reader controls PASS. No code changes after this
+  steering and no further CPU suite or overhead work added.
+- pending/root-owned: reviewed balanced-routing module/hook/source pins before
+  freeze/package/launch. This observer slice does not implement routing or use
+  uniform_random as a substitute for balanced. Native05 remains old-routing
+  historical UNVERIFIED evidence.
+- deferred: CPU-overhead analysis/measurement/suites until workflow/GPU alignment,
+  including op gap, is complete. Actual overhead remains unknown, not a requested
+  current-phase measurement or acceptance blocker for this correctness slice.

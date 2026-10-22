@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archived completed source/CPU slice and root-owned remaining acceptance. |
+| 2026-10-22 | Added reviewed balanced-routing prerequisite and deferred CPU-overhead work. |
 
 ## Outcome
 
@@ -63,10 +64,15 @@ small generation06 pin/checker changes after final code acceptance.
 
 Independent review, root affected/full package checks, freeze, builder updates,
 image/source startup checks and the single authorized fresh32H800 run are pending.
+Root must incorporate reviewed balanced-routing binding before freeze/package/launch;
+this dispatch slice contains no routing implementation and does not treat
+uniform_random as balanced. Native05 retains its historical old-routing identity.
 No GPU/platform/auth/SSH/cloud/build/package action occurred in this slice.
 
 CPU fixtures are not native-run qualification. Actual row cardinality, observer
 overhead, device completion and full four-metric calibration remain UNVERIFIED.
+CPU-overhead analysis, measurements and suites are deferred until workflow/GPU
+alignment, including op gap, is complete; no such work was added to this slice.
 The existing4096-row limit remains; the fresh run must report retained row totals,
 dropped rows and full counter reconciliation. No auxiliary verdict may stop healthy
 native execution. Unrelated GLM/runtime/workload/metric/gate/native source untouched.
