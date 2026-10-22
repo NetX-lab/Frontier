@@ -237,25 +237,13 @@ def run_phase(job: dict, node: dict, output: Path, coordination: Path,
 
 def run_job(job: dict, node: dict, output: Path, coordination: Path, deadline: float) -> dict | None:
     root = Path(job["output_dir"])
+    if node["node_rank"] == 0:
+        advisory("job",root/"job.json",lambda:job)
     if "profile_manifest" in job:
         manifest_path=Path(job["profile_manifest"])
-        manifest=json.loads(manifest_path.read_text());binding=manifest["native_binding"]
-        sys.path.insert(0,str(manifest_path.parent/"tests/comparison/stage_admission_pp"))
-        try:
-            spec=importlib.util.spec_from_file_location("pricing_worker_registry",manifest_path.parent/"tests/comparison/dp_placement_pp/vllm_replay.py")
-            registry=importlib.util.module_from_spec(spec);spec.loader.exec_module(registry)
-        finally:
-            sys.path.pop(0)
-        reference=binding["native_reference"]
-        registry.check_native_reference(reference,registry.adapter_record(binding["native_runtime_adapter"])["native_reference"])
-        if job["image"] != reference["image"] or reference["routing_strategy"] != "position_cyclic":
-            raise ValueError("Worker image/reference differs from prepared position collection")
         os.environ.update(job["native_environment"])
-        os.environ["VLLM_MOE_ROUTING_SIMULATION_STRATEGY"]=reference["routing_strategy"]
         os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"]=str(manifest_path)
-        benchmark=json.loads(Path(job["benchmark"]).read_text())
-        if benchmark["profile_manifest"] != str(manifest_path) or benchmark["native_environment"] != job["native_environment"]:
-            raise ValueError("Worker and collector must retain one frozen binding/environment")
+        advisory("native_binding",output/"native_binding.json",lambda:verify_native_binding(job,manifest_path))
     def source_integrity():
         verify_sources(job)
         return {"status": "PASS"}
@@ -293,6 +281,25 @@ def run_job(job: dict, node: dict, output: Path, coordination: Path, deadline: f
     advisory("result", root / "result.json", lambda: verdict)
     print("STEP5_COMM_DONE", json.dumps(verdict), flush=True)
     return verdict
+
+
+def verify_native_binding(job,manifest_path):
+    """Check the sealed prepared binding as advisory evidence, not workload control."""
+    manifest=json.loads(manifest_path.read_text());binding=manifest["native_binding"]
+    sys.path.insert(0,str(manifest_path.parent/"tests/comparison/stage_admission_pp"))
+    try:
+        spec=importlib.util.spec_from_file_location("pricing_worker_registry",manifest_path.parent/"tests/comparison/dp_placement_pp/vllm_replay.py")
+        registry=importlib.util.module_from_spec(spec);spec.loader.exec_module(registry)
+    finally:
+        sys.path.pop(0)
+    reference=binding["native_reference"]
+    registry.check_native_reference(reference,registry.adapter_record(binding["native_runtime_adapter"])["native_reference"])
+    if job["image"] != reference["image"] or reference["routing_strategy"] != "position_cyclic":
+        raise ValueError("Worker image/reference differs from prepared position collection")
+    benchmark=json.loads(Path(job["benchmark"]).read_text())
+    if benchmark["profile_manifest"] != str(manifest_path) or benchmark["native_environment"] != job["native_environment"]:
+        raise ValueError("Worker and collector must retain one frozen binding/environment")
+    return {"status":"PASS"}
 
 
 def main() -> None:

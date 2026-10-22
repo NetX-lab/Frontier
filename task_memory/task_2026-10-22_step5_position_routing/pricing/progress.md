@@ -9,6 +9,7 @@
 | 2026-10-23 | Repair foundation P2 after RED→GREEN; import authentic dependencies. |
 | 2026-10-23 | Correct native prepare tuple seam; validate published original methods. |
 | 2026-10-23 | Verify T2 optional serving-limit seam without default or metadata changes. |
+| 2026-10-23 | Close final producer/selection and legacy trace checks; archive scoped budget/dependencies. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -280,3 +281,67 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Native now needs7168/8192/128 at both actual constructor call sites.
 2. CORE exact estimator/main remains peer-owned; no duplicate lookup.
 3. CPU tests cannot qualify source/GPU/backend/graph/G3 or native coefficients.
+
+## Final owned delivery
+
+- completed: selected prepare/benchmark/validator/fixture planning and exact keys;
+  bound worker/probe with CORE materializer and actual callable verifier; advisory
+  provenance on all ranks with native exceptions retained; independent local
+  layout/queue/repeat evidence and separate parent model qualification selection.
+- completed: exporter preserves distinct equal-byte physical cells/raw passes,
+  actual paired counts and signed residuals; TP node iteration no longer shadows
+  grouped models. Production importer rejects CPU/candidate evidence.
+- completed: legacy trace regression diagnosis. Registry added prepare attr but
+  ExecutionTime lacked getter; repaired in owned entity file. Explicit prepare1ms
+  and legacy0ms checks and original failing legacy test now pass.
+- verification:438 PASS/89 SKIP in29.71s, real HTSIM7 PASS in1.70s, published native
+  original methods through actual adapter PASS. AST/JSON/whitespace PASS.
+  Exact commands/errors/limits in test_report_2026-10-23_delivery.md.
+- budget:43 changed owned paths of44; +2555/-71=2626 versus3956, remaining1330.
+  Isolated submodule312 included; no repeated H11 subtraction or peer quota.
+- blocked acceptance: CORE newer exact-query/layer/main tip not authorized here;
+  no replacement API. Real local/protocol/TP parameters, network/device freeze,
+  actual counts and parent qualification remain runtime inputs. Root owns full
+  regression/review/actual-main, gitlink and GPU/native/G3/E2E acceptance.
+- in-progress: final scoped commit and archive; no further code work is pending
+  inside this allocation unless root delivers another concrete dependency/repair.
+
+## 1. 规划完成情况
+
+**汇总：** PASS3｜BLOCKED1｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Selected registry/immutable contracts | PASS |7b86614/f03286f |
+| Joint finite model and native adapter | PASS |409093c/06bae09, actual HTSIM/source methods |
+| Physical integrated layer pricing | BLOCKED |Owned H04/reporting done; CORE exact estimator/main acceptance not integrated |
+| Selected producer/parent selection | PASS |Final438 affected passes and strict evidence negatives |
+| Final commit/archive | TODO |Verification/budget/report complete; commit next |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：**3f54bc6至今｜**当前前沿：**5最终提交归档
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Producer/evidence negatives and final affected checks settle step4/5 |
+| D2 细节反复重试 | CLEAR |Distinct environment/legacy accessor failures diagnosed; affected rerun438 PASS |
+| D3 支线问题修补 | CLEAR |Missing registry accessor blocks required legacy consumer verification |
+| D4 可并行任务停滞 | CLEAR |Explicit no-extra-delegation; peer acceptance outside authority |
+| D5 超范围镀金 | CLEAR |43/44 paths,2626/3956; no new backend/fallback |
+| D6 分析空转 | CLEAR |Verified delivery with exact report/receipts; final commit next |
+| D7 路线违背 | CLEAR |Frozen finite model retained; CPU evidence never production qualification |
+**文档检查：** S5 plan/progress still described completed producer as pending; updated latest milestone and exact acceptance boundary. S1-S4/S6 no defect identified.
+**归因：** 无
+
+## 3. 纠正建议
+
+**分支：** B：先更新过期交付记录，再提交归档。
+**文档更新（先执行）：** plan/progress/summary/receipt记录已验证producer、438结果及CORE/runtime未完成验收（可直接执行，已完成）。
+**需停止的偏离行为：** 无
+**接下去的路线：** Scoped commit → English summary/precise receipt → root integration and separately approved runtime inputs。完成标志为owned commits、43-path budget、exact tests、真实依赖交付。
+
+## 4. 最值得关注的 3 点
+
+1. CORE actual estimator/layer/main尚未与H04共同验收；不得写替代lookup。
+2. No measured coefficients/counts or independent GPU qualification supplied。
+3. Root owns gitlink1a16426/full regression/strict77/image-native/T2/G3/E2E。

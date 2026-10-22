@@ -1,6 +1,7 @@
 """CPU-only RDMA channel interpretation and post-run identity checks."""
 
 import csv
+from copy import deepcopy
 import importlib.util
 import json
 from pathlib import Path
@@ -206,3 +207,66 @@ def test_selected_duplicate_kernel_or_summary_keys_are_unverified(tmp_path,monke
     report=load("validate_result").validate(job,tmp_path)
     key="kernel_keys" if collection == "kernels" else "summary_keys"
     assert report["status"] == "UNVERIFIED" and report["checks"][key] is False
+
+
+@pytest.mark.parametrize("defect",[None,"rank","repeat","queue"])
+def test_local_proxy_evidence_requires_every_rank_and_repeat(tmp_path,monkeypatch,defect):
+    job,_=fixture_result(tmp_path,monkeypatch,"s2",["moe_combine_reduce_scatterv"])
+    config_path=Path(job["benchmark"]);config=json.loads(config_path.read_text())
+    definition=dict(name="bf16_copy",kind="copy",dtype="bfloat16",columns=4096,rows=16,
+                    cuda_graph=False,split="calibration")
+    config["grid"]["local_work"]=[definition];config_path.write_text(json.dumps(config))
+    rows=[dict(definition,**{"pass":p},scope="independent_preallocated_operand",row_stride=4096,
+        per_rank_call_us=[[1.]*config["repeats"] for _ in range(16)],
+        per_rank_queue_held=[[True]*config["repeats"] for _ in range(16)]) for p in range(config["passes"])]
+    if defect == "rank": rows[0]["per_rank_queue_held"].pop()
+    if defect == "repeat": rows[0]["per_rank_call_us"][0].pop()
+    if defect == "queue": rows[0]["per_rank_queue_held"][0][0]=False
+    job["expected"]["local_work_rows"]=len(rows)
+    (tmp_path/"collectives/local_work.jsonl").write_text("".join(json.dumps(row)+"\n" for row in rows))
+    report=load("validate_result").validate(job,tmp_path)
+    assert report["checks"]["local_layout_queue"] is (defect is None)
+    assert report["status"] == ("PASS" if defect is None else "UNVERIFIED")
+
+
+@pytest.mark.parametrize("defect",[None,"source","generation","count","duplicate_probe","extra_probe"])
+def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tmp_path,monkeypatch,defect):
+    from dataclasses import asdict
+    from tests.unit.test_step5_fixed_probe import installed_profile_receipt
+    from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
+    manifest_path,_,manifest=installed_profile_receipt.__wrapped__(tmp_path,monkeypatch)
+    job,records=fixture_result(tmp_path,monkeypatch,"s2",["moe_combine_reduce_scatterv"])
+    binding=manifest["native_binding"]
+    keys=("native_runtime_adapter","native_reference","profile_generation","installed_package",
+          "model_config_revision","model_config_sha256","installed_source_hashes")
+    shared={k:binding[k] for k in keys}
+    job.update(profile_manifest=str(manifest_path),image=manifest["image"])
+    inp=MoERoutingProfileInput("tail16",(MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
+        MoESourceFrame(1,(),(),1,"standalone_legacy")),17)
+    path=tmp_path/"routing.json";path.write_text(json.dumps(dict(schema_version="moe.position_cyclic.inputs.v1",
+        routing_runtime_path="position_cyclic",inputs=[asdict(inp)])))
+    job["native_probe"].update(moe_input_ids=["tail16"],routing_input_file=str(path))
+    for r in records: r.update(evidence_kind="native_measurement",native_context=dict(shared=shared))
+    if defect == "generation": records[0]["native_context"]=dict(shared={**shared,"profile_generation":"different"})
+    (tmp_path/"collectives/measurements.jsonl").write_text("".join(json.dumps(r)+"\n" for r in records))
+    (tmp_path/"collectives/plan.json").write_text(json.dumps(dict(evidence_kind="native_measurement",runtime=dict(native_facts=dict(shared=shared)))))
+    (tmp_path/"collectives/native_identity.json").write_text('{"status":"PASS"}')
+    for i in range(job["resources"]["replica"]):
+        (tmp_path/f"node_{i}/native_binding.json").write_text('{"status":"PASS"}')
+    kernel_path=tmp_path/"collectives/kernels.jsonl"
+    kernels=[json.loads(line) for line in kernel_path.read_text().splitlines()]
+    for k in kernels: k.update(profiled_calls=5,per_rank_kernel_counts=[2]*16,per_rank_events=[["cpu_fixture"]*10 for _ in range(16)])
+    if defect == "count": kernels[0]["per_rank_kernel_counts"][0]=3
+    kernel_path.write_text("".join(json.dumps(k)+"\n" for k in kernels))
+    probe_path=tmp_path/"native_dispatch/dispatch_probe.json";probe=json.loads(probe_path.read_text())
+    probe.update(verification_scope="eager_native_moe_module",full_model_verified=False,model_runner_verified=False)
+    for r in probe["ranks"]:
+        for layer in r["layers"]:
+            layer.update(moe_input_id="tail16",source_frame=asdict(inp.source_frames[r["rank"]//8]),
+                native_facts=dict(shared=shared,callables={"cpu_fixture":"explicit_schema_test"}))
+    if defect == "source": probe["ranks"][0]["layers"][0]["source_frame"]["context_lens"]=[0]
+    if defect == "duplicate_probe": probe["ranks"][0]["layers"][-1]=deepcopy(probe["ranks"][0]["layers"][0])
+    if defect == "extra_probe": probe["ranks"][0]["layers"][0]["moe_input_id"]="extra"
+    probe_path.write_text(json.dumps(probe))
+    report=load("validate_result").validate(job,tmp_path)
+    assert report["status"] == ("PASS" if defect is None else "UNVERIFIED"),report

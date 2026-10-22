@@ -195,6 +195,32 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
     group=SimpleNamespace(device_communicator=SimpleNamespace(reduce_scatterv_into_output=into_output))
     assert namespace["reduce_scatterv_into_output"](group,activation,target,0,[16,1]) is target
 
+    # Native capacity is physical M, not a sum rounded from local live routes.
+    tree=ast.parse((source/"deep_gemm_utils.py").read_text())
+    fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name == "compute_aligned_M_and_alignment")
+    fn.returns=None
+    for arg in fn.args.args: arg.annotation=None
+    capacity_scope={"round_up":lambda x,a:((x+a-1)//a)*a}
+    exec(compile(ast.Module(body=[fn],type_ignores=[]),str(source/"deep_gemm_utils.py"),"exec"),capacity_scope)
+    align_module=ModuleType("vllm.utils.deep_gemm")
+    align_module.get_theoretical_mk_alignment_for_contiguous_layout=lambda **kw:128
+    with patch.dict(sys.modules,{align_module.__name__:align_module}):
+        compute=capacity_scope["compute_aligned_M_and_alignment"]
+        assert compute(17,8,22,128,None) == (2944,128)
+        assert compute(1,8,22,128,None) == (1024,128)
+
+    context_scope=native.prepared_context(activation,scales,source_tensors=(activation[:16],scales[:16]))
+    assert context_scope["activation_layout"]["shape"][0] == 17
+    assert context_scope["source_activation_layout"]["shape"][0] == 16
+    seen=[]
+    with patch.dict(os.environ,{"FRONTIER_STEP5_PROFILE_MANIFEST":"cpu_fixture"}), patch(
+        "frontier.profiling.common.runtime_identity.verify_step5_profile_runtime",
+        side_effect=lambda path,**kw:seen.append((path,kw["callables"])) or {"evidence_kind":"cpu_fixture"}):
+        selected=impl.fused_experts.experts
+        selected.apply=lambda:None
+        assert native.prepared_context(activation,scales)["native_facts"]["evidence_kind"] == "cpu_fixture"
+    assert seen == [("cpu_fixture",[selected.apply])]
+
 
 @pytest.mark.parametrize("ep_id",[0,8,15])
 def test_h04_calls_all_physical_scopes_including_empty_lanes(ep_id):

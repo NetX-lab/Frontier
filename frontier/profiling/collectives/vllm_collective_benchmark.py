@@ -674,19 +674,24 @@ def main() -> None:
     runner = CollectiveRunner(parallel, settings, engine=config["engine"],
                                dp_rail_isolation=args.dp_rail_isolation)
     native_facts = None
+    identity_errors = []
     if "profile_manifest" in config:
         from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
-        if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") != config["profile_manifest"] or any(
-                os.environ.get(name) != value for name,value in config["native_environment"].items()):
-            raise ValueError("Actual collector binding/environment differs from prepared input")
-        native_callables = [getattr(group,name) for group in runner.groups.values()
-            for name in ("all_gatherv","reduce_scatterv_into_output","all_reduce")]
-        for group in runner.groups.values():
-            communicator=getattr(group,"device_communicator",None)
-            pynccl=getattr(communicator,"pynccl_comm",None)
-            if pynccl is not None:
-                native_callables += [pynccl.all_gatherv,pynccl.reduce_scatterv]
-        native_facts=verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
+        try:
+            if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") != config["profile_manifest"] or any(
+                    os.environ.get(name) != value for name,value in config["native_environment"].items()):
+                raise ValueError("Actual collector binding/environment differs from prepared input")
+            native_callables = [getattr(group,name) for group in runner.groups.values()
+                for name in ("all_gatherv","reduce_scatterv_into_output","all_reduce")]
+            for group in runner.groups.values():
+                communicator=getattr(group,"device_communicator",None)
+                pynccl=getattr(communicator,"pynccl_comm",None)
+                if pynccl is not None:
+                    native_callables += [pynccl.all_gatherv,pynccl.reduce_scatterv]
+            native_facts=verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
+        except Exception as error:
+            identity_errors.append(repr(error))
+            print("STEP5_COMM_ADVISORY native_identity",repr(error),flush=True)
     output = Path(config["output_dir"])
     log = None
     if runner.rank == 0:
@@ -695,7 +700,8 @@ def main() -> None:
         if native_facts is not None: runtime["native_facts"]=native_facts
         (output / "plan.json").write_text(json.dumps(
             {"config": config, "cases": len(plan), "runtime": runtime,
-             **({"evidence_kind":"native_measurement"} if native_facts is not None else {})},
+              **({"evidence_kind":"native_measurement"} if native_facts is not None else {}),
+              **({"identity_errors":identity_errors} if "profile_manifest" in config else {})},
             indent=2))
         log = (output / "measurements.jsonl").open("a")
     records = []
@@ -718,15 +724,26 @@ def main() -> None:
         if runner.rank == 0:
             evidence[s.name,c.name] = runner._last_kernel_evidence
     if native_facts is not None:
-        verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
+        try:
+            verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
+        except Exception as error:
+            identity_errors.append(repr(error))
+            print("STEP5_COMM_ADVISORY native_identity",repr(error),flush=True)
     local_records = []
     for definition in config["grid"].get("local_work", []):
         for p in range(settings["passes"]):
             record = runner.measure_local_work(definition)
             if record is not None:
                 local_records.append({"pass":p, **record})
+    if "profile_manifest" in config:
+        gathered_identity = runner.gather(identity_errors)
+        if gathered_identity is not None:
+            identity_errors = [error for errors in gathered_identity for error in errors]
     if runner.rank == 0:
         log.close()
+        if "profile_manifest" in config:
+            (output/"native_identity.json").write_text(json.dumps(dict(
+                status="UNVERIFIED" if identity_errors else "PASS",errors=identity_errors)))
         with (output / "kernels.jsonl").open("a") as kernel_log:
             for scenario, call in plan:
                 names = kernels[(scenario.name, call.name)]

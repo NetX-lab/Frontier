@@ -8,6 +8,7 @@
 | 2026-10-23 | Publish immutable-list P2 repair and completed authentic dependency import. |
 | 2026-10-23 | Correct the native prepare triple-return seam using published source execution. |
 | 2026-10-23 | Deliver T2 optional constructor-limit binding and CPU invariants. |
+| 2026-10-23 | Close selected producer/parent selection; archive model payload and real dependencies. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -153,7 +154,8 @@ Source scopes query actual ni, expert queries use gathered M and independent
 total_routed_tokens; no live0 early return. It calls CORE's
 `_predict_step5_ffn_operator(name, features, *, context)` and requires paired
 positive integer kernel counts and exact_lookup. That keyword/context-aware
-CORE implementation is NOT yet imported; do not treat H04 CPU fixtures as
+CORE implementation is NOT yet imported; peer b39fc51/e255ede now provides it,
+but only02f061d is authorized/imported here. Do not treat H04 CPU fixtures as
 verification of the real shared estimator. CORE must wire this H04 method into
 the existing measured layer path and pass its return objects through the existing
 ExecutionTime constructor/setters (component accessors return copies).
@@ -207,3 +209,85 @@ Focused CPU checks assert final post-with_hf_config model/scheduler limits,
 unmodified HF metadata, excluded unrelated key, and exact legacy kwargs.
 Three affected suites187 PASS/71 SKIP; parent must validate actual image config.
 This helper delivery does not qualify T2 graphs or their case evidence.
+
+## Final selected producer and qualification selection
+
+prepare, benchmark, validator and fixture all use the selected
+`forward_collectives(..., native_call_names=...)` owner. Valid complete subsets
+pass; missing, duplicated, extra measurement/kernel/summary/probe keys fail even
+when superficial counts are reduced. Selected worker persists job.json, forwards
+one sealed profile manifest and effective environment, and supplies exact
+moe_input_ids/layers/source inputs to the probe. CORE's source_frame_tensors is
+called once before native timing; native exceptions are not converted to soft
+success. Native source verification errors are advisory and mark artifacts
+UNVERIFIED; collector gathers errors from all16 ranks. Auxiliary validation never
+controls healthy workload execution. Legacy unbound plan metadata is unchanged.
+
+Local copy/add observations require every rank, every repeat, correct source
+layout and held queue. Native count receipts require actual per-rank events and
+profiled_calls; graph launches and device events remain separate. The original
+into-output native coordinator takes `(input_,output,dim,sizes)`; collector retains
+supplied storage/registration/alias/lifetime/branch receipts and zero staging copy.
+
+`export_finite_parameters(directory,output)` validates complete selected producer
+evidence for native_measurement inputs before fitting. Raw CPU fixtures can be
+exported but remain candidate_only/cpu_fixture. Cell identity, not equal aggregate
+bytes, controls pass aggregation. Signed residuals and raw passes are retained.
+
+`qualify_finite_parameters(candidate_path,receipt_path,output_path)` uses a
+separate `step5.collective_qualification.v1` parent receipt with candidate_sha256,
+status=PASS, independent=true, observations and exact one-row-per-model
+model_checks(model_index,status,independent,observations). Every selected affine
+fit has held-out observations and rank2. It changes qualification flags only,
+preserving coefficients/ranges/raw/signed evidence. CLI:
+`export_costs.py CANDIDATE_DIR --finite-model --qualification-receipt RECEIPT
+--output-dir OUTPUT`. No CPU test receipt is runtime qualification. Production
+import rejects candidate_only, CPU evidence and incompatible frozen scenario,
+model/context/count/range; it never uses native full-plan duration lookup.
+
+### Precise CORE actual-main CPU payload
+
+Reuse `CollectivePlan`, `CollectivePlanCost` and existing ExecutionTime setters,
+not a second pricing backend. CPU fixture cost fields are explicit:
+`duration_ms=network_ms+max(local_rank_ms)+remainder_ms`,16 local_rank_ms entries,
+16 positive kernel_counts, exact plan.cache_key(), model_identity and receipt
+`{evidence_kind:cpu_fixture,kernel_counts,per_rank_events,source_receipt}`. Test
+`test_step5_real_wave_metrics_trace_and_ledger_share_physical_proofs` in
+tests/unit/test_ep_wave_trace_context.py is the actual metrics/trace/ledger
+consumer example; test_step5_moe_pricing.py supplies H04 physical vectors/features.
+The existing fixture may create explicit CPU costs, never relabel them native.
+
+For real finite parameters, frozen_model_config contains device_type,
+collective_sim_root and scenario. Scenario fixes cluster2x8, attention TP8/CP1/DP2/
+EP1, placement TP,DP, kind=plan,tensor_bytes=0,no participant override,sum rule,
+use_triggers=true and supported ring_steps/nccl_ring selectors/channels; network
+and local inputs are frozen before fitting. Independent copy/add fits have
+a_ms,b_ms_per_byte,range_bytes,design_matrix_rank2,distinct_sizes>=3,
+signed_residuals_ms,calibration_receipt,qualification. Models retain actual
+context/phase/graph/uniform/tensors; exact per-plan counts remain separate.
+DP equations are the frozen N_joint+max(local rank)+effective remainder; TP uses
+the separately fitted effective NVLink fields and observed counts. Existing
+tests/unit/test_step5_comm_cost_export.py executes real HTSIM with explicit CPU
+fixture records; tests/unit/test_collective_sim_cc_backend.py gives schema and
+strict import negatives, not a production parameter bundle.
+
+Remaining CORE-owned seams: import tested pricing commits via root, canonical
+native_context JSON CSV equality/schema/range classification, wrapper source
+prepare/gathered inclusive calls, shared norm/expert source-width exact pairs,
+actual layer/main H04 invocation and H14/H15 fresh CPU fixture/reporting. The
+context-aware exact lookup exists in peer b39fc51/e255ede but is not imported or
+verified together with H04 here. Root owns final gitlink1a16426, integrated
+full-unit/strict77/review, actual source/backend/T2/G3 and fresh native/E2E runs.
+
+Final observed checks:399 PASS/89 SKIP across13 affected suites; isolated
+collective-sim7 PASS with actual HTSIM completed flows. Published original native
+prepare/modular/finalizer/selector/coordinator/capacity methods executed with CPU
+tensors under Python3.12.13. Native capacity M17/K8/local22/alignment128 gives2944;
+M1 gives1024, independently from live-route rounding. These are source-method
+facts, not actual device-selected alignment/GPU durations or qualification.
+
+Final delivery rerun:438 PASS/89 SKIP across14 affected suites, including legacy
+ExecutionTime operation tests. Added the registry's missing source-prepare
+ExecutionTime accessor; legacy MoE trace now retains zero without AttributeError.
+Submodule7 PASS; published original source-method checks PASS. Exact commands,
+limits and43-path/2626 gross budget are in test_report_2026-10-23_delivery.md.

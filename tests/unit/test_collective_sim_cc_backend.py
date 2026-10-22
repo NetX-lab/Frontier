@@ -31,7 +31,7 @@ def setup_model(tmp_path, monkeypatch):
     params=dict(context=context,model_identity="cpu_fixture",evidence_kind="cpu_fixture",
         tp_nvlink=dict(nvlink_one_way_bw_GBps=250.,nvlink_efficiency=.8,nvlink_latency_us=.5,
                       nvlink_allreduce_launch_overhead_us=.5,fit=fit))
-    artifact=dict(schema_version="step5.collective_local.v1",device_type="h800",
+    artifact=dict(schema_version="step5.collective_local.v1",device_type="h800",candidate_only=False,
         evidence_kind="cpu_fixture",frozen_scenario=scenario,
         qualification=dict(status="PASS",independent=True,observations=["cpu_fixture"],parent_receipt="cpu_fixture"),
         models=[dict(context=context,phase=plan.phase,graph_mode="none",uniform=False,
@@ -42,11 +42,12 @@ def setup_model(tmp_path, monkeypatch):
     return backend,plan,artifact,path,params
 
 
-@pytest.mark.parametrize("defect", ["fixture","qualification","network","context","count"])
+@pytest.mark.parametrize("defect", ["fixture","candidate","qualification","network","context","count"])
 def test_importer_rejects_unqualified_mismatched_or_incomplete_input(tmp_path,monkeypatch,defect):
     backend,plan,artifact,path,_=setup_model(tmp_path,monkeypatch)
     artifact["evidence_kind"]="native_measurement"
     if defect == "fixture": artifact["evidence_kind"]="cpu_fixture"
+    elif defect == "candidate": artifact["candidate_only"]=True
     elif defect == "qualification": artifact["qualification"]["independent"]=False
     elif defect == "network": artifact["frozen_scenario"]["network"]["cwnd"]+=1
     elif defect == "context": artifact["models"][0]["context"]={"changed":True}

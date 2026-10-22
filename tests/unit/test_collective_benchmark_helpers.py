@@ -518,6 +518,50 @@ def test_pass_order_is_a_seeded_permutation():
     assert pass_order(items, 6, 1) == pass_order(items, 7, 0)
 
 
+@pytest.mark.parametrize("native_error",[False,True,None])
+def test_collector_identity_fault_is_soft_and_native_failure_is_original(tmp_path,monkeypatch,native_error):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    from frontier.profiling.common import runtime_identity
+    definition=json.loads((Path(__file__).parents[1]/"integration/step5_comm/step5_position_model_run.json").read_text())
+    definition.update(model_config=str(Path(__file__).parents[2]/"data/config/models/stepfun-ai__Step-5-Preview.json"),
+        output_dir=str(tmp_path/"output"),profile_manifest="cpu_fixture",passes=1)
+    definition["grid"]=dict(scenarios=definition["grid"]["scenarios"][:1],native_call_names=["moe_combine_reduce_scatterv"])
+    if native_error is None: definition.pop("profile_manifest")
+    config=tmp_path/"config.json";config.write_text(json.dumps(definition))
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    for k,v in definition["native_environment"].items(): monkeypatch.setenv(k,v)
+    monkeypatch.setattr(runtime_identity,"verify_step5_profile_runtime",lambda *a,**kw:(_ for _ in ()).throw(ValueError("bad_source")))
+    error=RuntimeError("native_collective_failed");calls=[]
+    class Runner:
+        rank=0;instance_cpu=None
+        groups={"dp":types.SimpleNamespace(all_gatherv=lambda:None,reduce_scatterv_into_output=lambda:None,all_reduce=lambda:None)}
+        torch=types.SimpleNamespace(distributed=types.SimpleNamespace(barrier=lambda **kw:None))
+        def __init__(self,*a,**kw): pass
+        def communicators(self): return {"evidence_kind":"cpu_fixture"}
+        def gather(self,value): return [value,["rank8_bad_source"]]
+        def measure(self,s,c):
+            calls.append(c.name)
+            if native_error: raise error
+            return None
+        def kernel_names(self,*a):
+            self._last_kernel_evidence={};return []
+    monkeypatch.setattr(benchmark,"CollectiveRunner",Runner)
+    monkeypatch.setattr(sys,"argv",["benchmark","--config",str(config)])
+    if native_error:
+        with pytest.raises(RuntimeError) as caught: benchmark.main()
+        assert caught.value is error
+    else:
+        benchmark.main()
+        if native_error is None:
+            assert set(json.loads((tmp_path/"output/plan.json").read_text())) == {"config","cases","runtime"}
+            assert not (tmp_path/"output/native_identity.json").exists()
+        else:
+            result=json.loads((tmp_path/"output/native_identity.json").read_text())
+            assert result["status"] == "UNVERIFIED" and "bad_source" in result["errors"][0]
+            assert "rank8_bad_source" in result["errors"]
+    assert calls == ["moe_combine_reduce_scatterv"]
+
+
 def test_network_rows_keep_eager_single_node_tp_all_reduce():
     rows = [summarize(_record(nbytes=4096)),
             summarize(_record(nbytes=2048, timings=[[1.0, 1.0, 1.0]])),

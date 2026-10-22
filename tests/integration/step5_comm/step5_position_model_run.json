@@ -1,7 +1,7 @@
 {
   "description": "D29 finite Step TP8/DP2 model collection; required authentic fields remain null until root package readiness.",
   "credential_environment": null,
-  "image": null,
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
   "profile_manifest": null,
   "routing_input_file": null,
   "frozen_model_config": null,

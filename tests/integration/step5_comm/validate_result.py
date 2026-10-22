@@ -95,15 +95,47 @@ def validate(job: dict, root: Path) -> dict:
             all(c["completed"] for c in layer["collectives"]) for layer in r["layers"])
         for r in ranks)
     if selected:
+        native=json.loads((root/"collectives/plan.json").read_text())
+        shared=native["runtime"]["native_facts"]["shared"]
+        binding=json.loads(Path(job["profile_manifest"]).read_text())["native_binding"]
+        binding_keys=("native_runtime_adapter","native_reference","profile_generation","installed_package",
+                      "model_config_revision","model_config_sha256","installed_source_hashes")
+        checks["native_binding_identity"] = all(shared[k] == binding[k] for k in binding_keys)
+        checks["native_measurement_identity"] = native["evidence_kind"] == "native_measurement" and all(
+            r["evidence_kind"] == "native_measurement" and r["native_context"]["shared"] == shared for r in records)
+        checks["native_identity_final"] = json.loads((root/"collectives/native_identity.json").read_text())["status"] == "PASS"
         checks["native_selected_source"] = (probe["verification_scope"] == "eager_native_moe_module" and
             not probe["full_model_verified"] and not probe["model_runner_verified"] and all(
             layer["source_frame"]["source_lane_id"] == r["rank"] // parallel.tensor_parallel_size and
-            layer["native_facts"]["shared"]["native_reference"]["image"] == job["image"] for r in ranks for layer in r["layers"]))
+            layer["native_facts"]["shared"] == shared and
+            layer["native_facts"]["callables"] for r in ranks for layer in r["layers"]))
+        from dataclasses import asdict
+        from frontier.profiling.moe.inputs import read_routing_profile_inputs
+        inputs={i.moe_input_id:i for i in read_routing_profile_inputs(job["native_probe"]["routing_input_file"])}
+        checks["native_source_frames"] = all(layer["moe_input_id"] in inputs and layer["source_frame"] ==
+            json.loads(json.dumps(asdict(inputs[layer["moe_input_id"]].source_frames[r["rank"]//parallel.tensor_parallel_size])))
+            for r in ranks for layer in r["layers"])
+        checks["native_actual_counts"] = all(type(k["profiled_calls"]) is int and k["profiled_calls"] > 0 and
+            len(k["per_rank_kernel_counts"]) == parallel.world_size and all(type(n) is int and n > 0 and
+            len(e) == n*k["profiled_calls"] for n,e in zip(k["per_rank_kernel_counts"],k["per_rank_events"])) and
+            len(k["per_rank_events"]) == parallel.world_size for k in kernels)
+        reached={tuple((t["dtype"],t["shape"][1]) for t in call["inputs"]) for r in ranks for layer in r["layers"]
+            for call in layer["collectives"] if call.get("op") == "all_gatherv"}
+        checks["native_reached_dispatch"] = all(tuple(zip(r["dtypes"],r["columns"])) in reached
+            for r in records if r["op"] == "all_gatherv")
     if "local_work" in config["grid"]:
         local=read_jsonl(root/"collectives/local_work.jsonl")
         local_keys={(p,row["name"]) for p in range(config["passes"]) for row in config["grid"]["local_work"]}
         checks["local_evidence_keys"] = len(local) == job["expected"]["local_work_rows"] == len(local_keys) and {
             (row["pass"],row["name"]) for row in local} == local_keys
+        definitions={row["name"]:row for row in config["grid"]["local_work"]}
+        checks["local_layout_queue"] = all(row["name"] in definitions and all(row[k] == v for k,v in
+            definitions[row["name"]].items()) and row["scope"] == "independent_preallocated_operand" and
+            row["row_stride"] == row["columns"] and len(row["per_rank_call_us"]) == parallel.world_size and
+            len(row["per_rank_queue_held"]) == parallel.world_size and
+            all(len(held) == len(times) == config["repeats"] and all(held) and
+                all(math.isfinite(t) and t > 0 for t in times) for held,times in
+                zip(row["per_rank_queue_held"],row["per_rank_call_us"])) for row in local)
     checks["native_groups"] = all(r["group_ranks"] == {
         group: group_members(parallel, group, r["rank"]) for group in ("tp", "dp", "ep")}
         for r in ranks)
@@ -119,6 +151,8 @@ def validate(job: dict, root: Path) -> dict:
         checks[name] = all((path / f"{name}.json").is_file() and
                            json.loads((path / f"{name}.json").read_text())["status"] == "PASS"
                            for path in outputs)
+    if selected:
+        checks["worker_native_binding"] = all(json.loads((path/"native_binding.json").read_text())["status"] == "PASS" for path in outputs)
     for phase in ("collective", "native_probe"):
         checks[phase + "_exits"] = all((path / f"{phase}_exit.json").is_file() and
                                       json.loads((path / f"{phase}_exit.json").read_text())["returncode"] == 0

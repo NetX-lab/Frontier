@@ -333,6 +333,11 @@ def export_finite_parameters(directory, output):
     directory,output = Path(directory),Path(output)
     source = json.loads((directory/"collectives/plan.json").read_text())
     config = source["config"]
+    if source["evidence_kind"] == "native_measurement":
+        from validate_result import validate
+        report=validate(json.loads((directory/"job.json").read_text()),directory)
+        if report["status"] != "PASS":
+            raise ValueError("Finite export requires complete selected producer evidence")
     frozen_path = Path(config["frozen_model_config"])
     frozen = json.loads(frozen_path.read_text())
     if config["frozen_model_config_sha256"] != sha256(frozen_path):
@@ -367,7 +372,7 @@ def export_finite_parameters(directory, output):
                 from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
                 cells.append(dict(operand_bytes=r["rows"]*r["columns"]*DTYPE_BYTES[r["dtype"]],
                     duration_ms=float(__import__("statistics").median(r["per_rank_call_us"][rank]))/1000,
-                    split=r["split"],quality="PASS",source=dict(name=r["name"],pass_id=r["pass"])))
+                    split=r["split"],quality="PASS",cell_id=r["name"],source=dict(name=r["name"],pass_id=r["pass"])))
             cells = cell_medians(cells)
             fit = fit_affine(cells,positive_slope=True,supported_range=(min(c["operand_bytes"] for c in cells),
                 max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory/"collectives/local_work.jsonl"))
@@ -393,6 +398,8 @@ def export_finite_parameters(directory, output):
             json.dumps(context,sort_keys=True),json.dumps(record["buffer_receipt"],sort_keys=True))
         grouped[phase,plan.graph_mode,plan.sizes[0]==plan.sizes[1],tuple(tensors),plan.context_json].append((record,plan))
         evidence = kernels[record["scenario"],record["call"]]
+        if plan.cache_key() in counts and counts[plan.cache_key()]["kernel_counts"] != evidence["per_rank_kernel_counts"]:
+            raise ValueError("Identical native plan has inconsistent paired kernel counts")
         counts[plan.cache_key()] = dict(evidence,plan_key=plan.cache_key(),context=context,
             kernel_counts=evidence["per_rank_kernel_counts"],source_receipt=source["runtime"]["native_facts"],
             evidence_kind=evidence_kind)
@@ -411,19 +418,19 @@ def export_finite_parameters(directory, output):
             native=float(__import__("statistics").median(queue_held_analysis(record,"device",.01)["critical_path_repeats_us"]))/1000
             if phase in ("shared_tp","routed_tp"):
                 import statistics
-                for node,rows in enumerate(plan.sizes):
+                for node,node_rows in enumerate(plan.sizes):
                     samples = record["per_rank_call_us"][node*8:(node+1)*8]
                     node_ms=statistics.median(max(values) for values in zip(*samples))/1000
-                    cells.append(dict(operand_bytes=rows*tensors[0].columns*tensors[0].element_size,
+                    cells.append(dict(operand_bytes=node_rows*tensors[0].columns*tensors[0].element_size,
                         duration_ms=node_ms,split=anchors[record["scenario"]],quality="PASS",
-                        source=dict(record,node=node)))
+                        cell_id=(record["scenario"],node),source=dict(record,node=node)))
                 continue
             network=run_htsim_runner(repo_root=Path(frozen["collective_sim_root"]),spec=sc.to_runner_spec(),
                 out_dir=str(output/record["scenario"]/record["call"]))
             local_ms = plan_memory_service_ms(plan.to_dict(),copy,reduce)
             cells.append(dict(operand_bytes=sum(plan.sizes)*sum(t.columns*t.element_size for t in tensors),
                 duration_ms=native-network["makespan_us"]/1000-max(local_ms),split=anchors[record["scenario"]],
-                quality="PASS",source=dict(scenario=record["scenario"],pass_id=record["pass"],native_ms=native,
+                quality="PASS",cell_id=record["scenario"],source=dict(scenario=record["scenario"],pass_id=record["pass"],native_ms=native,
                 network_ms=network["makespan_us"]/1000,local_ms=local_ms)))
         cells=cell_medians(cells)
         fit=fit_affine(cells,positive_slope=phase in ("shared_tp","routed_tp"),supported_range=(min(c["operand_bytes"] for c in cells),
@@ -440,9 +447,9 @@ def export_finite_parameters(directory, output):
             parameters.update(copy=copy,reduce=reduce,protocol=fit)
             for error in fit["qualification"]["observations"]:
                 src=error["source"];prediction=error["predicted_ms"]+src["network_ms"]+max(src["local_ms"])
-                error.update(full_plan_predicted_ms=prediction,full_plan_native_ms=src["native_ms"],
-                    full_plan_signed_error_ms=prediction-src["native_ms"],
-                    full_plan_relative_error=(prediction-src["native_ms"])/src["native_ms"])
+                native=error["duration_ms"]+src["network_ms"]+max(src["local_ms"])
+                error.update(full_plan_predicted_ms=prediction,full_plan_native_ms=native,
+                    full_plan_signed_error_ms=prediction-native,full_plan_relative_error=(prediction-native)/native)
         models.append(dict(context=context,phase=phase,graph_mode=mode,uniform=uniform,tensors=[vars(t) for t in tensors],
             parameters=parameters))
     artifact=dict(schema_version="step5.collective_local.v1",device_type=frozen["device_type"],
@@ -457,9 +464,39 @@ def cell_medians(cells):
     """Equal weight per cell, retaining all passes/raw medians."""
     import statistics
     groups=defaultdict(list)
-    for cell in cells: groups[cell["operand_bytes"],cell["split"]].append(cell)
+    for cell in cells: groups[cell.get("cell_id",cell["operand_bytes"]),cell["split"]].append(cell)
     return [dict(group[0],duration_ms=statistics.median(c["duration_ms"] for c in group),raw_passes=group)
-            for group in groups.values()]
+             for group in groups.values()]
+
+
+def qualify_finite_parameters(candidate_path, receipt_path, output_path):
+    """Select frozen measured parameters only through a separate parent receipt."""
+    candidate_path,receipt_path,output_path=map(Path,(candidate_path,receipt_path,output_path))
+    artifact=json.loads(candidate_path.read_text());receipt=json.loads(receipt_path.read_text())
+    if (artifact["evidence_kind"] != "native_measurement" or not artifact["candidate_only"] or
+            receipt["schema_version"] != "step5.collective_qualification.v1" or
+            receipt["candidate_sha256"] != sha256(candidate_path) or receipt["status"] != "PASS" or
+            not receipt["independent"] or not receipt["observations"]):
+        raise ValueError("Candidate selection needs independent native parent qualification")
+    checks=receipt["model_checks"]
+    if (len(checks) != len(artifact["models"]) or {row["model_index"] for row in checks} != set(range(len(artifact["models"]))) or
+            any(row["status"] != "PASS" or not row["independent"] or not row["observations"] for row in checks)):
+        raise ValueError("Parent qualification must cover every frozen model exactly once")
+    def select(value):
+        if isinstance(value,dict):
+            if "a_ms" in value and "b_ms_per_byte" in value:
+                if not value["qualification"]["observations"] or value["design_matrix_rank"] != 2:
+                    raise ValueError("Every selected fit needs held-out evidence and identified parameters")
+                value["qualification"].update(status="PASS",parent_receipt=str(receipt_path))
+                value["candidate_only"]=False
+            for nested in value.values(): select(nested)
+        elif isinstance(value,list):
+            for nested in value: select(nested)
+    select(artifact)
+    artifact.update(candidate_only=False,qualification={**receipt,"parent_receipt":str(receipt_path)})
+    output_path.parent.mkdir(parents=True,exist_ok=True)
+    output_path.write_text(json.dumps(artifact,indent=2)+"\n")
+    return artifact
 
 
 
@@ -470,8 +507,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path, help="Defaults to DIRECTORY/costs")
     parser.add_argument("--environment-note", default="", help="Parent-reported context, not a causal attribution")
     parser.add_argument("--finite-model",action="store_true",help="Export a candidate from frozen native/local model evidence")
+    parser.add_argument("--qualification-receipt",type=Path,help="Separate parent receipt selecting DIRECTORY/collective_local.json")
     args = parser.parse_args(argv)
     if args.finite_model:
+        if args.qualification_receipt:
+            artifact=qualify_finite_parameters(args.directory/"collective_local.json",args.qualification_receipt,
+                (args.output_dir or args.directory/"qualified")/"collective_local.json")
+            print(json.dumps({"candidate_only":artifact["candidate_only"],"models":len(artifact["models"])}))
+            return 0
         artifact=export_finite_parameters(args.directory,args.output_dir or args.directory/"costs")
         print(json.dumps({"candidate_only":True,"models":len(artifact["models"])}))
         return 0

@@ -162,6 +162,51 @@ def test_nnls_affine_preserves_negative_remainder_and_independent_errors():
         EXPORT.fit_affine(corrupted,positive_slope=False,supported_range=(1,256),calibration_receipt="cpu_fixture")
 
 
+def test_equal_bytes_preserve_distinct_physical_cells_and_all_passes():
+    cells=[dict(operand_bytes=17,duration_ms=t,split="qualification",cell_id=key,source=key)
+           for key,t in (("tail",1.),("tail",3.),("tail_swap",8.))]
+    values=EXPORT.cell_medians(cells)
+    assert len(values) == 2 and [c["duration_ms"] for c in values] == [2.,8.]
+    assert [len(c["raw_passes"]) for c in values] == [2,1]
+
+
+@pytest.mark.parametrize("defect",["fixture","hash","independence","coverage","heldout"])
+def test_parent_selection_never_qualifies_fixtures_or_missing_model_evidence(tmp_path,defect):
+    fit=EXPORT.fit_affine([dict(operand_bytes=x,duration_ms=x,split=split,quality="PASS")
+        for x,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))],
+        positive_slope=True,supported_range=(1,256),calibration_receipt="cpu_schema_negative_test")
+    artifact=dict(evidence_kind="native_measurement",candidate_only=True,models=[dict(parameters=dict(protocol=fit))])
+    if defect == "fixture": artifact["evidence_kind"]="cpu_fixture"
+    if defect == "heldout": fit["qualification"]["observations"]=[]
+    candidate=tmp_path/"candidate.json";candidate.write_text(json.dumps(artifact))
+    receipt=dict(schema_version="step5.collective_qualification.v1",candidate_sha256=EXPORT.sha256(candidate),
+        status="PASS",independent=True,observations=["cpu_schema_negative_test"],
+        model_checks=[dict(model_index=0,status="PASS",independent=True,observations=["cpu_schema_negative_test"])])
+    if defect == "hash": receipt["candidate_sha256"]="wrong"
+    if defect == "independence": receipt["independent"]=False
+    if defect == "coverage": receipt["model_checks"]=[]
+    path=tmp_path/"receipt.json";path.write_text(json.dumps(receipt));output=tmp_path/"selected.json"
+    with pytest.raises(ValueError): EXPORT.qualify_finite_parameters(candidate,path,output)
+    assert not output.exists()
+
+
+def test_parent_selection_preserves_frozen_parameters_and_signed_evidence(tmp_path):
+    fit=EXPORT.fit_affine([dict(operand_bytes=x,duration_ms=x,split=split,quality="PASS")
+        for x,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))],
+        positive_slope=True,supported_range=(1,256),calibration_receipt="cpu_schema_only")
+    artifact=dict(evidence_kind="native_measurement",candidate_only=True,models=[dict(parameters=dict(protocol=fit))])
+    candidate=tmp_path/"candidate.json";candidate.write_text(json.dumps(artifact));before=candidate.read_bytes()
+    receipt=dict(schema_version="step5.collective_qualification.v1",candidate_sha256=EXPORT.sha256(candidate),
+        status="PASS",independent=True,observations=["cpu_schema_only"],
+        model_checks=[dict(model_index=0,status="PASS",independent=True,observations=["cpu_schema_only"])])
+    path=tmp_path/"receipt.json";path.write_text(json.dumps(receipt))
+    selected=EXPORT.qualify_finite_parameters(candidate,path,tmp_path/"selected.json")
+    result=selected["models"][0]["parameters"]["protocol"]
+    assert candidate.read_bytes() == before and selected["candidate_only"] is False
+    assert result["qualification"]["parent_receipt"] == str(path)
+    assert all(result[key] == fit[key] for key in ("a_ms","b_ms_per_byte","signed_residuals_ms","raw_cells","range_bytes"))
+
+
 def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,monkeypatch):
     submodule=Path(__file__).parents[2]/"frontier/cc_backend/backends/collective-sim"
     if not (submodule/"sim/datacenter/htsim_ndp").exists():
@@ -191,17 +236,23 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
             per_rank_call_us=[[1000+rows]*3 for _ in range(16)],per_rank_launch_call_us=[[1000+rows]*3 for _ in range(16)],
             per_rank_queue_held=[[True]*3 for _ in range(16)]))
         kernels.append(dict(scenario=name,call=records[-1]["call"],per_rank_kernel_counts=[7]*16,
-                            per_rank_events=[["cpu_fixture"]*35 for _ in range(16)],profiled_calls=5))
+                             per_rank_events=[["cpu_fixture"]*35 for _ in range(16)],profiled_calls=5))
+        records.append({**records[-1],"call":"shared_expert_down_proj_all_reduce","op":"all_reduce",
+            "group_ranks":[list(range(8)),list(range(8,16))],
+            "per_rank_call_us":[[14.+1.75*rows*8/200e9*1e6]*3 for _ in range(16)]})
+        kernels.append({**kernels[-1],"call":records[-1]["call"]})
     for name,values in (("measurements",records),("kernels",kernels),("local_work",local)):
         (root/f"{name}.jsonl").write_text("".join(json.dumps(r)+"\n" for r in values))
     artifact=EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
     assert artifact["evidence_kind"] == "cpu_fixture" and artifact["candidate_only"]
     assert artifact["qualification"]["status"] == "UNVERIFIED"
-    fit=artifact["models"][0]["parameters"]["protocol"]
+    fit=next(m["parameters"]["protocol"] for m in artifact["models"] if m["phase"] == "dispatch")
     assert fit["design_matrix_rank"] == 2 and fit["qualification"]["status"] == "UNVERIFIED"
     error=fit["qualification"]["observations"][0]
     assert error["source"]["network_ms"] > 0 and error["full_plan_native_ms"] == pytest.approx(1.064)
-    assert len(artifact["counts"]) == 4
+    assert len(artifact["counts"]) == 8 and len(artifact["models"]) == 2
+    tp=next(m["parameters"]["tp_nvlink"] for m in artifact["models"] if m["phase"] == "shared_tp")
+    assert tp["fit"]["design_matrix_rank"] == 2 and tp["nvlink_efficiency"] > 0
     assert all(c["evidence_kind"] == "cpu_fixture" for c in artifact["counts"].values())
     config["frozen_model_config_sha256"]="changed";(root/"plan.json").write_text(json.dumps(source))
     with pytest.raises(ValueError,match="receipt"):

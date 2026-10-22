@@ -136,6 +136,8 @@ def test_step5_real_wave_metrics_trace_and_ledger_share_physical_proofs():
     times={"moe_gating_linear":1.,"moe_gating_routing_topk":1.,"moe_input_quantize":1.,"moe_grouped_gemm":2.}
     layer=_layer(3,is_moe=True,op_times={**times,"moe_tensor_parallel_allreduce":3.},
         communication_operator_times=CommunicationOperatorTimes({name:3. for name in plans},plans=plans,costs=costs))
+    assert layer.moe_input_quantize_time == 1.
+    assert _layer(3,is_moe=True).moe_input_quantize_time == 0.
     layer.moe_operator_times=replace(layer.moe_operator_times,physical_frame=dict(routing_source=src,ep_id=0,
         live_local_assignments=0,operator_costs={name:dict(kernel_count=3,evidence_kind="cpu_fixture") for name in times},
         native_context=dict(activation_layout=dict(shape=[17,4096],dtype="float8_e4m3fn",element_size=1),

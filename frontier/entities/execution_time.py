@@ -1688,6 +1688,15 @@ class ExecutionTime(BaseEntity):
         return 0.0
 
     @property
+    def moe_input_quantize_time(self) -> float:
+        """Source-local MoE activation prepare time for one physical layer."""
+        if isinstance(self._moe_or_mlp_time, MoETime):
+            return self._time_attr_value(
+                "moe_input_quantize_time", self._moe_or_mlp_time.moe_input_quantize_time,
+            )
+        return 0.0
+
+    @property
     def moe_shuffling_time(self) -> float:
         """MoE shuffling time (one physical layer)."""
         if isinstance(self._moe_or_mlp_time, MoETime):

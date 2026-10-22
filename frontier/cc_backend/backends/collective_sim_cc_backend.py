@@ -812,6 +812,7 @@ class CollectiveSimCCBackend(BaseCCBackend):
         qualification = artifact["qualification"]
         if (artifact["schema_version"] != "step5.collective_local.v1" or
                 artifact["device_type"] != self._device_type or
+                artifact.get("candidate_only",True) or
                 artifact["evidence_kind"] != "native_measurement" or
                 qualification["status"] != "PASS" or not qualification["independent"] or
                 not qualification["observations"] or not qualification["parent_receipt"]):
@@ -823,7 +824,9 @@ class CollectiveSimCCBackend(BaseCCBackend):
         collective.pop("participant_ranks")
         collective["intra_server_combine_rule"] = "sum"
         frozen = {k:v for k,v in scenario.items() if k != "runner"}
-        if artifact["frozen_scenario"] != frozen:
+        from dataclasses import asdict
+        from collective_sim_core.schema import Scenario
+        if asdict(Scenario.from_dict(artifact["frozen_scenario"])) != asdict(Scenario.from_dict(frozen)):
             raise ValueError("Collective model differs from the frozen network/local configuration")
         context = json.loads(plan.context_json)
         matching = [r for r in artifact["models"] if r["context"] == context and
