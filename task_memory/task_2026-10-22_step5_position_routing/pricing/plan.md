@@ -15,7 +15,7 @@
 4. **completed implementation / pending runtime inputs:** Close selected collector,
    prepare/validator/probe/exporter and qualified import. Native measurement,
    frozen device/network parameters and parent qualification are not fabricated.
-5. **completed verification / in-progress commit/archive:** Verify scoped consumers,
+5. **completed:** Verify scoped consumers,
    source methods and budget; commit and archive receipts.
 
 Dependencies: approval -> {1, peer source/native APIs} -> 2 -> {3,4} -> 5.

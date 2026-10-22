@@ -345,3 +345,44 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. CORE actual estimator/layer/main尚未与H04共同验收；不得写替代lookup。
 2. No measured coefficients/counts or independent GPU qualification supplied。
 3. Root owns gitlink1a16426/full regression/strict77/image-native/T2/G3/E2E。
+
+## Completed archive checkpoint
+
+- completed:940cc84 final scoped code commit; only unstaged change is root-owned
+  gitlink. Isolated submodule checkout clean at1a16426; retained patch exactly
+  matches pinned d28fe917-to-tip diff (sha256 in summary). No peer work staged.
+- completed:English summary, precise interface receipt, exact dated report and
+  43-path2626/3956 budget. Owned implementation finished; parent acceptance open.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED1｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Selected registry/immutable interfaces | PASS |7b86614/f03286f |
+| Finite model/native adapter | PASS |409093c/06bae09/1a16426 |
+| Integrated physical layer pricing | BLOCKED |Owned H04 done; CORE exact-query/main joint acceptance outside current authority |
+| Selected producer/parent qualification selection | PASS |940cc84 and438 affected passes |
+| Scoped verification/commit/archive | PASS |Budget/report/summary/receipt delivered; gitlink intentionally root-owned |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**940cc84至今｜**当前前沿：**Root接收与独立验收
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |No further tests; archive only |
+| D2 细节反复重试 | CLEAR |No code retries after final PASS |
+| D3 支线问题修补 | CLEAR |No unrelated work |
+| D4 可并行任务停滞 | CLEAR |Explicit single-worker/no-peer-write boundary |
+| D5 超范围镀金 | CLEAR |2626/3956 and43/44 unchanged |
+| D6 分析空转 | CLEAR |940cc84 committed delivery |
+| D7 路线违背 | CLEAR |No fabricated runtime inputs or alternate APIs |
+**文档检查：**S5 final commit status was pending; updated in place. S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新归档中的最终提交事实。
+**文档更新（先执行）：**plan/summary/receipt/progress记录940cc84和root gitlink边界（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Root整合tested commits/gitlink → CORE joint estimator/main acceptance → 提供真实参数并独立qualification；本worker不越权替代。
+## 4. 最值得关注的 3 点
+1. Owned scope finished at2626/3956; no quota exhaustion。
+2. CORE newer exact-query/main interfaces not jointly verified here。
+3. Native/GPU/local parameters/T2/G3/E2E acceptance remains root work。

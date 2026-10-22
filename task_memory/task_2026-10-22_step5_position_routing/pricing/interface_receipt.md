@@ -291,3 +291,6 @@ ExecutionTime operation tests. Added the registry's missing source-prepare
 ExecutionTime accessor; legacy MoE trace now retains zero without AttributeError.
 Submodule7 PASS; published original source-method checks PASS. Exact commands,
 limits and43-path/2626 gross budget are in test_report_2026-10-23_delivery.md.
+Final producer/qualified-import/legacy-trace code commit:940cc84. Complete code
+sequence:7b86614,409093c,511a3db,f03286f,06bae09,3f54bc6,940cc84.
+Isolated submodule commits:ae75af0,1a16426. Root integrates gitlink separately.

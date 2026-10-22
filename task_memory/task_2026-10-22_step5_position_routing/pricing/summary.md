@@ -21,11 +21,15 @@ Actual production parameters and GPU qualification were not manufactured.
 
 Early interface commits:7b86614,409093c,511a3db. Review/seam repairs:f03286f,
 06bae09. T2 existing constructor seam:3f54bc6 (48/60 additional gross).
+Final selected producer/qualified import/legacy trace repair:940cc84.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:
 ae75af0,1a16426; final tip1a16426. Retained diff: `collective_sim.patch` in this
 directory. Parent owns the gitlink integration; unstaged gitlink is intentional.
+The retained submodule diff is byte-identical to pinned baseline-to-tip diff:
+sha25690e9b1056371c48e0334effdb3c1ac4c0e68334004cdde079e20dd79cce3f81e.
+Isolated checkout is clean; no gitlink or peer changes were staged.
 
 ## Interface and validation artifacts
 
