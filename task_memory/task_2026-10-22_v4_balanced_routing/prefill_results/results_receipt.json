@@ -1,0 +1,1656 @@
+{
+  "Modification History": [
+    {
+      "change": "Verified original H800 bounded measurements, exact CSV rebuild, actual balanced identity, raw scope coverage and trace; retained anomalies and verification limits.",
+      "date": "2026-10-23"
+    }
+  ],
+  "aggregate_command_receipt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_receipt.json",
+  "artifacts": {
+    "PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv": {
+      "bytes": 43114,
+      "sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv": {
+      "bytes": 41635,
+      "sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/logs/accepted_c26_prefill.log": {
+      "bytes": 23136,
+      "sha256": "bb76b180d2c00b95e77f84bb7fe631f90257f2c6c6b1de3091b3411e8d600b82"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/logs/aggregate_prefill.log": {
+      "bytes": 689,
+      "sha256": "f20683afd1279ea54b81b76514c7fe1727f4c24f86eee68ff9e71be295cd120e"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/profiler_traces/e0-prefill-p6144.json": {
+      "bytes": 7702607,
+      "sha256": "990dd2a7a4a4dd9adcd427dd047cb5bb34b65b791563bca7d0d76a3f4f54cdff"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/raw/dsv4_aggregate_summary.json": {
+      "bytes": 2390,
+      "sha256": "38a62d2b1209caa0e209eedde91789766afb09b507c0aa232646c9c2829648ce"
+    },
+    "PREFILL_WARM_6144_C0_BALANCED/raw/dsv4_raw_e0.jsonl": {
+      "bytes": 78669,
+      "sha256": "0330db5625e5d7a8b014ffa804d962b1798ddf05222109896c0f79e4fce61ec4"
+    },
+    "status.json": {
+      "bytes": 1208,
+      "sha256": "976182d88ce111639d8fde98acffa90002f8474471950be85aa2bf7c41cd75da"
+    }
+  },
+  "balanced_identity": {
+    "environment": "balanced_topk",
+    "native_sources": {
+      "vllm/distributed/parallel_state.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/distributed/parallel_state.py",
+        "sha256": "c6d65b96a260ea0d779da1073d1799392813eee74c9ed44753dfa56f4e7a9e4c"
+      },
+      "vllm/envs.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/envs.py",
+        "sha256": "f596585ba92c05504b6815d24c7e75f6910f925aa5b6c5d57ce898dbed40c4d9"
+      },
+      "vllm/forward_context.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/forward_context.py",
+        "sha256": "985adacc9e7ed2a7695819ac2e2ad9cb264a7d886806d3091ad75bfda7392242"
+      },
+      "vllm/model_executor/layers/fused_moe/layer.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/layer.py",
+        "sha256": "688711dd909e107c1712b81038cb1ed055fc4ecc9dce89bb4beef2d30f0541c5"
+      },
+      "vllm/model_executor/layers/fused_moe/router/base_router.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/base_router.py",
+        "sha256": "47fa2324bcd9b6ebdc138d69ae6b6ecc0f2463d34bda8c5988bdb0a2a76d3fae"
+      },
+      "vllm/model_executor/layers/fused_moe/router/fused_moe_router.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/fused_moe_router.py",
+        "sha256": "f182f30712983f61815f8df947af597277d660cd2891066fcb13789d55f7353e"
+      },
+      "vllm/model_executor/layers/fused_moe/router/router_factory.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+        "sha256": "64fb057329d35b585d8790d3b3ac33dbefd029343064588fa9c9cb1ad113162e"
+      },
+      "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+        "sha256": "a7345df5add00cf3bd93024492d6fc1189fd3ecf2754a11cef1b03a295d791f7"
+      },
+      "vllm/model_executor/layers/fused_moe/runner/moe_runner.py": {
+        "origin": "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/runner/moe_runner.py",
+        "sha256": "a19ecf2417c80b93c0fe5594e74528f686665847732196f9b29ef967b38110b0"
+      }
+    },
+    "origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/balanced_routing.py",
+    "routers": {
+      "model.layers.0.ffn.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter",
+      "model.layers.1.ffn.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter",
+      "model.layers.2.ffn.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter",
+      "model.layers.3.ffn.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter",
+      "model.layers.4.ffn.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter",
+      "model.layers.5.ffn.experts": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter"
+    },
+    "runners": {
+      "model.layers.0.ffn.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner",
+      "model.layers.1.ffn.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner",
+      "model.layers.2.ffn.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner",
+      "model.layers.3.ffn.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner",
+      "model.layers.4.ffn.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner",
+      "model.layers.5.ffn.experts": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner"
+    },
+    "runtime_path": "balanced_topk",
+    "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+    "strategy": "balanced_routing.BalancedTopKRouting"
+  },
+  "checkpoint": {
+    "D1": "CLEAR",
+    "D2": "CLEAR_HYPOTHESES_NARROWED_ERRORS",
+    "D3": "CLEAR",
+    "D4": "CLEAR_ROOT_OWNS_PLATFORM",
+    "D5": "CLEAR",
+    "D6": "CLEAR",
+    "D7": "CLEAR",
+    "S1_to_S6": "No delegated-scope doc defect found.",
+    "delegated_validation_subtasks": "PASS"
+  },
+  "collected_originals_unchanged": true,
+  "configured_and_effective_max_num_seqs": {
+    "configured": 128,
+    "effective": 128,
+    "evidence": "Sealed engine_spec128 and actual LLM startup kwargs max_num_seqs128; successful initialization/measurements. Raw engine/CSV do not independently query scheduler capacity."
+  },
+  "constructed_router_count": 6,
+  "constructed_runner_count": 6,
+  "csv_exact_byte_comparisons": [
+    {
+      "byte_equal": true,
+      "bytes": 43114,
+      "original": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "original_sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f",
+      "rebuilt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention.csv",
+      "rebuilt_sha256": "52571225ce8ddd0d2e87615f80f2aaadd980cbd8b2c10d460a1c75dff7c2af5f"
+    },
+    {
+      "byte_equal": true,
+      "bytes": 41635,
+      "original": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "original_sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43",
+      "rebuilt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_rebuild_py312/out/compute/h800/deepseek-ai/DeepSeek-V4-Flash/attention_kernel_only.csv",
+      "rebuilt_sha256": "fe22f22cf4c21bcad93c8ccd463115a607ace65193d900925b8eaa2e6cf69b43"
+    }
+  ],
+  "initial_std_interpreter_difference_receipt": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/aggregate_iteration_receipt.json",
+  "limits": [
+    "Isolated data only; no serving/E2E or TP8/DP2/EP16 admission.",
+    "No per-expert assignment histogram is serialized; strategy/router/native binding verified, not actual assignment-count capture.",
+    "Remote/local result hash comparison remains root-owned; this task verifies collected local files.",
+    "9 native actual routing sources reported by model identity,60 native source/20 binaries by root image gate; no direct installed-image inspection by this task.",
+    "Warmup exclusions verified from frozen recorder semantics plus measured counts, not a separately captured skipped-request audit.",
+    "No deletion/normalization, CPU overhead analysis, source/package/Git changes, matrix/full-suite rerun or external operations."
+  ],
+  "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+  "method_counts": {
+    "CUDA_EVENT": {
+      "call": 150,
+      "step": 3
+    },
+    "KERNEL_ONLY": {
+      "call": 132,
+      "step": 3
+    }
+  },
+  "model_config_revision": "0d992cbeef1f2d4bd92a8ae67a97a43df0c1bce5",
+  "model_config_sha256": "b628e63398a645abc711d92207f8737dd8140f7a4ef1e0a5b3616019e0ddd818",
+  "native_C26_sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+  "native_actual_routing_source_origins_and_hashes_checked": 9,
+  "native_git": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "no_platform_gpu_ssh_cloud_docker_download_delegation_operations": true,
+  "original_artifact_count": 8,
+  "original_artifact_root": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results",
+  "original_total_bytes": 7893448,
+  "physical_geometry": {
+    "dp": 1,
+    "ep": 1,
+    "graph_mode": "eager",
+    "layers": 6,
+    "pp": 1,
+    "tp": 1
+  },
+  "platform_receipts_read_only": {
+    "GPU_hours": 0.1388888888888889,
+    "container_exit": 0,
+    "container_seconds": 500,
+    "image": "hub.i.basemind.com/vllm-openai/vllm-openai@sha256:2286e8533ca8b6bc777594bae30524f1426ba46ca21797524e06df6a94b06635",
+    "job": "exp-1023-023708-916112",
+    "node": "gpu-h800-0570.host.platform.shaipower.com",
+    "phase": "Succeeded",
+    "platform_inspected_by_this_task": false,
+    "restarts": 0,
+    "root_image_gate": {
+      "binary_pins": 20,
+      "cuda_initialized": false,
+      "launch_executable": "/usr/bin/python3",
+      "python": "3.12.3",
+      "source_pins": 60,
+      "stage": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+      "status": "PASS",
+      "tool_pins": 519,
+      "torch_vllm_imported": false
+    }
+  },
+  "prefill": {
+    "cached_tokens": 0,
+    "evidence": "Sealed run_case uses5 sequential requests/drains and _case_window2/3; begin_step skips2. Raw3 measured steps per method; kernel annotations only3/4/5. Request/repeat IDs and skipped warmups are not independently serialized.",
+    "measured_per_method": 3,
+    "prompt_tokens": 6144,
+    "sequential": true,
+    "warmup_per_method": 2
+  },
+  "python_verifier": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "raw_call_keys_unique_and_exact_scope_coverage": true,
+  "raw_calls_all_finite_positive": true,
+  "raw_record_counts": {
+    "call": 282,
+    "engine": 1,
+    "step": 6
+  },
+  "raw_records_total": 289,
+  "retained_anomalies": {
+    "first_uncompressed_layer_event_vs_kernel_observation": "Layer0 CUDA_EVENT projection/rmsnorm/q-projection means exceed layer1 and kernel-only counterparts; independent method runs, all samples retained, no gap attribution/normalization.",
+    "previous_startup_cap1_failure": "Did not recur: startup max_num_seqs128, successful engine initialization and both measurements; no CUDA invalid-configuration error. Does not prove exact old CUDA kernel/root cause.",
+    "runtime_deep_gemm_version_null": "Raw deep_gemm=null; log uses vendored vllm.third_party.deep_gemm. Version unavailable, not missing CUDA kernels.",
+    "timing_variability_max_min_above_1_1_observation_not_rejection": [
+      {
+        "layer": 2,
+        "max_ms": 0.2651520073413849,
+        "max_to_min_ratio": 1.6548831517576783,
+        "mean_ms": 0.19591467082500458,
+        "method": "CUDA_EVENT",
+        "min_ms": 0.16022400557994843,
+        "samples_ms": [
+          0.16022400557994843,
+          0.2651520073413849,
+          0.16236799955368042
+        ],
+        "scope": "dsv4_compressor",
+        "std_ms": 0.048966013747303805,
+        "variant": "csa"
+      },
+      {
+        "layer": 0,
+        "max_ms": 0.2882240116596222,
+        "max_to_min_ratio": 1.1454915838666457,
+        "mean_ms": 0.26706133286158246,
+        "method": "CUDA_EVENT",
+        "min_ms": 0.2516160011291504,
+        "samples_ms": [
+          0.2882240116596222,
+          0.2516160011291504,
+          0.26134398579597473
+        ],
+        "scope": "dsv4_parallel_input_projections",
+        "std_ms": 0.015482304993147141,
+        "variant": "uncompressed"
+      },
+      {
+        "kernel_count_per_sample": 2,
+        "layer": 2,
+        "max_ms": 0.104415,
+        "max_to_min_ratio": 1.116308159425248,
+        "mean_ms": 0.09821866666666668,
+        "method": "KERNEL_ONLY",
+        "min_ms": 0.09353600000000001,
+        "samples_ms": [
+          0.09353600000000001,
+          0.104415,
+          0.096705
+        ],
+        "scope": "dsv4_compressor",
+        "std_ms": 0.004568482631635531,
+        "variant": "csa"
+      },
+      {
+        "kernel_count_per_sample": 2,
+        "layer": 4,
+        "max_ms": 0.09510400000000001,
+        "max_to_min_ratio": 1.1253313138962515,
+        "mean_ms": 0.08819166666666667,
+        "method": "KERNEL_ONLY",
+        "min_ms": 0.084512,
+        "samples_ms": [
+          0.09510400000000001,
+          0.084959,
+          0.084512
+        ],
+        "scope": "dsv4_compressor",
+        "std_ms": 0.004891163210889161,
+        "variant": "csa"
+      }
+    ],
+    "warnings": [
+      "Chat template warmup warning traceback: tokenizer unavailable with skip_tokenizer_init=True; token-ID profiling completed.",
+      "Experimental Frontier architecture limitations warning; no E2E-support inference.",
+      "Balanced routing warning: dummy performance testing only, model outputs not valid.",
+      "TileLang serial-vectorization warning.",
+      "ProcessGroupNCCL shutdown warning on clean exit.",
+      "Engine initialization411.45s and startup JIT/warmup; not per-request latency."
+    ]
+  },
+  "routing_strategy_sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+  "row_statistics": [
+    {
+      "global_layer_id": 2,
+      "method": "CUDA_EVENT",
+      "plans_tile_schedule": true,
+      "statistics": {
+        "dsv4_attention_layer": {
+          "max_ms": 3.4087040424346924,
+          "max_to_min_ratio": 1.027837537274649,
+          "mean_ms": 3.3509227434794107,
+          "min_ms": 3.3163840770721436,
+          "samples_ms": [
+            3.3276801109313965,
+            3.3163840770721436,
+            3.4087040424346924
+          ],
+          "std_ms": 0.0411169792742371
+        },
+        "dsv4_compressor": {
+          "max_ms": 0.2651520073413849,
+          "max_to_min_ratio": 1.6548831517576783,
+          "mean_ms": 0.19591467082500458,
+          "min_ms": 0.16022400557994843,
+          "samples_ms": [
+            0.16022400557994843,
+            0.2651520073413849,
+            0.16236799955368042
+          ],
+          "std_ms": 0.048966013747303805
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "max_ms": 0.2980160117149353,
+          "max_to_min_ratio": 1.013604729188671,
+          "mean_ms": 0.2965440054734548,
+          "min_ms": 0.2940160036087036,
+          "samples_ms": [
+            0.2980160117149353,
+            0.2940160036087036,
+            0.29760000109672546
+          ],
+          "std_ms": 0.0017956171232113888
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "max_ms": 0.022943999618291855,
+          "max_to_min_ratio": 1.0622221769975058,
+          "mean_ms": 0.02211200011273225,
+          "min_ms": 0.02160000056028366,
+          "samples_ms": [
+            0.02179200015962124,
+            0.022943999618291855,
+            0.02160000056028366
+          ],
+          "std_ms": 0.0005935112155497518
+        },
+        "dsv4_index_prepare": {
+          "max_ms": 0.46297600865364075,
+          "max_to_min_ratio": 1.0063996037344118,
+          "mean_ms": 0.4618453284104665,
+          "min_ms": 0.46003198623657227,
+          "samples_ms": [
+            0.4625279903411865,
+            0.46003198623657227,
+            0.46297600865364075
+          ],
+          "std_ms": 0.0012952058991504572
+        },
+        "dsv4_index_scores_topk": {
+          "max_ms": 1.461408019065857,
+          "max_to_min_ratio": 1.043481269618719,
+          "mean_ms": 1.4217173258463542,
+          "min_ms": 1.4005119800567627,
+          "samples_ms": [
+            1.4032319784164429,
+            1.4005119800567627,
+            1.461408019065857
+          ],
+          "std_ms": 0.02808751732178879
+        },
+        "dsv4_o_proj": {
+          "max_ms": 0.18035200238227844,
+          "max_to_min_ratio": 1.008228959399502,
+          "mean_ms": 0.17973333597183228,
+          "min_ms": 0.1788800060749054,
+          "samples_ms": [
+            0.1788800060749054,
+            0.18035200238227844,
+            0.179967999458313
+          ],
+          "std_ms": 0.0006234278873804274
+        },
+        "dsv4_parallel_input_projections": {
+          "max_ms": 0.32019200921058655,
+          "max_to_min_ratio": 1.013265805297853,
+          "mean_ms": 0.31812267502148944,
+          "min_ms": 0.3160000145435333,
+          "samples_ms": [
+            0.3160000145435333,
+            0.3181760013103485,
+            0.32019200921058655
+          ],
+          "std_ms": 0.0017117900167102416
+        },
+        "dsv4_q_projection": {
+          "max_ms": 0.13145600259304047,
+          "max_to_min_ratio": 1.0423750592710848,
+          "mean_ms": 0.12902399897575378,
+          "min_ms": 0.12611199915409088,
+          "samples_ms": [
+            0.12950399518013,
+            0.12611199915409088,
+            0.13145600259304047
+          ],
+          "std_ms": 0.0022079236786383613
+        },
+        "dsv4_sparse_attention": {
+          "max_ms": 0.931551992893219,
+          "max_to_min_ratio": 1.0254685302654585,
+          "mean_ms": 0.9173226555188497,
+          "min_ms": 0.9084159731864929,
+          "samples_ms": [
+            0.9120000004768372,
+            0.9084159731864929,
+            0.931551992893219
+          ],
+          "std_ms": 0.010167492135549796
+        }
+      },
+      "table": "attention.csv",
+      "variant": "csa"
+    },
+    {
+      "global_layer_id": 4,
+      "method": "CUDA_EVENT",
+      "plans_tile_schedule": false,
+      "statistics": {
+        "dsv4_attention_layer": {
+          "max_ms": 3.4035840034484863,
+          "max_to_min_ratio": 1.0303100550899669,
+          "mean_ms": 3.339690685272217,
+          "min_ms": 3.3034560680389404,
+          "samples_ms": [
+            3.3120319843292236,
+            3.3034560680389404,
+            3.4035840034484863
+          ],
+          "std_ms": 0.045314851617948224
+        },
+        "dsv4_compressor": {
+          "max_ms": 0.16208000481128693,
+          "max_to_min_ratio": 1.0081608437070568,
+          "mean_ms": 0.16143999993801117,
+          "min_ms": 0.16076800227165222,
+          "samples_ms": [
+            0.16076800227165222,
+            0.16147199273109436,
+            0.16208000481128693
+          ],
+          "std_ms": 0.0005361003140637808
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "max_ms": 0.3036800026893616,
+          "max_to_min_ratio": 1.0137806096068995,
+          "mean_ms": 0.3014826675256093,
+          "min_ms": 0.29955199360847473,
+          "samples_ms": [
+            0.3036800026893616,
+            0.29955199360847473,
+            0.3012160062789917
+          ],
+          "std_ms": 0.001695768441013652
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "max_ms": 0.022143999114632607,
+          "max_to_min_ratio": 1.0581039752629893,
+          "mean_ms": 0.02139733297129472,
+          "min_ms": 0.020927999168634415,
+          "samples_ms": [
+            0.02112000063061714,
+            0.020927999168634415,
+            0.022143999114632607
+          ],
+          "std_ms": 0.0005337595510815583
+        },
+        "dsv4_index_prepare": {
+          "max_ms": 0.4642559885978699,
+          "max_to_min_ratio": 1.0079899751306525,
+          "mean_ms": 0.4630079964796702,
+          "min_ms": 0.46057599782943726,
+          "samples_ms": [
+            0.4641920030117035,
+            0.46057599782943726,
+            0.4642559885978699
+          ],
+          "std_ms": 0.0017198811228028592
+        },
+        "dsv4_index_scores_topk": {
+          "max_ms": 1.462015986442566,
+          "max_to_min_ratio": 1.046593694075095,
+          "mean_ms": 1.4190079768498738,
+          "min_ms": 1.3969279527664185,
+          "samples_ms": [
+            1.3980799913406372,
+            1.3969279527664185,
+            1.462015986442566
+          ],
+          "std_ms": 0.03041489180278789
+        },
+        "dsv4_o_proj": {
+          "max_ms": 0.17948800325393677,
+          "max_to_min_ratio": 1.0200036192694513,
+          "mean_ms": 0.17787733674049377,
+          "min_ms": 0.1759680062532425,
+          "samples_ms": [
+            0.17817600071430206,
+            0.1759680062532425,
+            0.17948800325393677
+          ],
+          "std_ms": 0.0014524679797187478
+        },
+        "dsv4_parallel_input_projections": {
+          "max_ms": 0.3240639865398407,
+          "max_to_min_ratio": 1.0277044363617667,
+          "mean_ms": 0.3187413314978282,
+          "min_ms": 0.3153280019760132,
+          "samples_ms": [
+            0.3153280019760132,
+            0.3168320059776306,
+            0.3240639865398407
+          ],
+          "std_ms": 0.003813441099708275
+        },
+        "dsv4_q_projection": {
+          "max_ms": 0.12867200374603271,
+          "max_to_min_ratio": 1.0095406203852562,
+          "mean_ms": 0.12813866635163626,
+          "min_ms": 0.12745599448680878,
+          "samples_ms": [
+            0.12828800082206726,
+            0.12745599448680878,
+            0.12867200374603271
+          ],
+          "std_ms": 0.0005075399607740394
+        },
+        "dsv4_sparse_attention": {
+          "max_ms": 0.9207680225372314,
+          "max_to_min_ratio": 1.021550064366303,
+          "mean_ms": 0.9089280168215433,
+          "min_ms": 0.9013440012931824,
+          "samples_ms": [
+            0.9046720266342163,
+            0.9013440012931824,
+            0.9207680225372314
+          ],
+          "std_ms": 0.008481675922374683
+        }
+      },
+      "table": "attention.csv",
+      "variant": "csa"
+    },
+    {
+      "global_layer_id": 3,
+      "method": "CUDA_EVENT",
+      "plans_tile_schedule": true,
+      "statistics": {
+        "dsv4_attention_layer": {
+          "max_ms": 1.3390400409698486,
+          "max_to_min_ratio": 1.0176808595474585,
+          "mean_ms": 1.3265066941579182,
+          "min_ms": 1.315775990486145,
+          "samples_ms": [
+            1.315775990486145,
+            1.3247040510177612,
+            1.3390400409698486
+          ],
+          "std_ms": 0.009582663267420112
+        },
+        "dsv4_compressor": {
+          "max_ms": 0.33395200967788696,
+          "max_to_min_ratio": 1.0108485003262426,
+          "mean_ms": 0.3317546745141347,
+          "min_ms": 0.3303680121898651,
+          "samples_ms": [
+            0.3309440016746521,
+            0.3303680121898651,
+            0.33395200967788696
+          ],
+          "std_ms": 0.001571443569469985
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "max_ms": 0.24902400374412537,
+          "max_to_min_ratio": 1.0067270283358802,
+          "mean_ms": 0.24841600159804025,
+          "min_ms": 0.2473600059747696,
+          "samples_ms": [
+            0.24886399507522583,
+            0.2473600059747696,
+            0.24902400374412537
+          ],
+          "std_ms": 0.0007495535385840735
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "max_ms": 0.021695999428629875,
+          "max_to_min_ratio": 1.0462962904741993,
+          "mean_ms": 0.021130666136741638,
+          "min_ms": 0.020735999569296837,
+          "samples_ms": [
+            0.021695999428629875,
+            0.020959999412298203,
+            0.020735999569296837
+          ],
+          "std_ms": 0.00041007745658924163
+        },
+        "dsv4_o_proj": {
+          "max_ms": 0.1834239959716797,
+          "max_to_min_ratio": 1.028161441390031,
+          "mean_ms": 0.18063999712467194,
+          "min_ms": 0.17839999496936798,
+          "samples_ms": [
+            0.18009600043296814,
+            0.17839999496936798,
+            0.1834239959716797
+          ],
+          "std_ms": 0.00208679911479212
+        },
+        "dsv4_parallel_input_projections": {
+          "max_ms": 0.18998399376869202,
+          "max_to_min_ratio": 1.0284080812601135,
+          "mean_ms": 0.18682666619618735,
+          "min_ms": 0.1847359985113144,
+          "samples_ms": [
+            0.1847359985113144,
+            0.1857600063085556,
+            0.18998399376869202
+          ],
+          "std_ms": 0.002271370517591588
+        },
+        "dsv4_q_projection": {
+          "max_ms": 0.08211199939250946,
+          "max_to_min_ratio": 1.024760386208764,
+          "mean_ms": 0.08109866579373677,
+          "min_ms": 0.08012799918651581,
+          "samples_ms": [
+            0.08012799918651581,
+            0.08105599880218506,
+            0.08211199939250946
+          ],
+          "std_ms": 0.0008105263962272787
+        },
+        "dsv4_sparse_attention": {
+          "max_ms": 0.5885440111160278,
+          "max_to_min_ratio": 1.01962520334925,
+          "mean_ms": 0.5845546722412109,
+          "min_ms": 0.5772160291671753,
+          "samples_ms": [
+            0.5772160291671753,
+            0.5879039764404297,
+            0.5885440111160278
+          ],
+          "std_ms": 0.005195778589237004
+        }
+      },
+      "table": "attention.csv",
+      "variant": "hca"
+    },
+    {
+      "global_layer_id": 5,
+      "method": "CUDA_EVENT",
+      "plans_tile_schedule": false,
+      "statistics": {
+        "dsv4_attention_layer": {
+          "max_ms": 1.327232003211975,
+          "max_to_min_ratio": 1.0127707607868366,
+          "mean_ms": 1.3162026405334473,
+          "min_ms": 1.3104959726333618,
+          "samples_ms": [
+            1.3108799457550049,
+            1.3104959726333618,
+            1.327232003211975
+          ],
+          "std_ms": 0.007800512361822269
+        },
+        "dsv4_compressor": {
+          "max_ms": 0.3344320058822632,
+          "max_to_min_ratio": 1.0094658824953904,
+          "mean_ms": 0.332586665948232,
+          "min_ms": 0.33129599690437317,
+          "samples_ms": [
+            0.33129599690437317,
+            0.3320319950580597,
+            0.3344320058822632
+          ],
+          "std_ms": 0.0013390003546564408
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "max_ms": 0.2508479952812195,
+          "max_to_min_ratio": 1.0047423801380235,
+          "mean_ms": 0.2502720008293788,
+          "min_ms": 0.24966399371623993,
+          "samples_ms": [
+            0.2503040134906769,
+            0.24966399371623993,
+            0.2508479952812195
+          ],
+          "std_ms": 0.0004838963624104158
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "max_ms": 0.02054399996995926,
+          "max_to_min_ratio": 1.0110236142520586,
+          "mean_ms": 0.020447999859849613,
+          "min_ms": 0.020320000126957893,
+          "samples_ms": [
+            0.020479999482631683,
+            0.02054399996995926,
+            0.020320000126957893
+          ],
+          "std_ms": 9.420532295578371e-05
+        },
+        "dsv4_o_proj": {
+          "max_ms": 0.17919999361038208,
+          "max_to_min_ratio": 1.010101003313637,
+          "mean_ms": 0.17843199769655863,
+          "min_ms": 0.17740799486637115,
+          "samples_ms": [
+            0.17740799486637115,
+            0.17868800461292267,
+            0.17919999361038208
+          ],
+          "std_ms": 0.0007536442708837504
+        },
+        "dsv4_parallel_input_projections": {
+          "max_ms": 0.18745599687099457,
+          "max_to_min_ratio": 1.0260991368341101,
+          "mean_ms": 0.18500266472498575,
+          "min_ms": 0.18268799781799316,
+          "samples_ms": [
+            0.18486399948596954,
+            0.18268799781799316,
+            0.18745599687099457
+          ],
+          "std_ms": 0.0019489954299141115
+        },
+        "dsv4_q_projection": {
+          "max_ms": 0.08108799904584885,
+          "max_to_min_ratio": 1.0300812446406362,
+          "mean_ms": 0.07986133297284444,
+          "min_ms": 0.07872000336647034,
+          "samples_ms": [
+            0.07872000336647034,
+            0.07977599650621414,
+            0.08108799904584885
+          ],
+          "std_ms": 0.0009686115901266549
+        },
+        "dsv4_sparse_attention": {
+          "max_ms": 0.5839999914169312,
+          "max_to_min_ratio": 1.0167697214780451,
+          "mean_ms": 0.5776853362719218,
+          "min_ms": 0.5743680000305176,
+          "samples_ms": [
+            0.5743680000305176,
+            0.5746880173683167,
+            0.5839999914169312
+          ],
+          "std_ms": 0.004467046374986338
+        }
+      },
+      "table": "attention.csv",
+      "variant": "hca"
+    },
+    {
+      "global_layer_id": 0,
+      "method": "CUDA_EVENT",
+      "plans_tile_schedule": true,
+      "statistics": {
+        "dsv4_attention_layer": {
+          "max_ms": 1.5870399475097656,
+          "max_to_min_ratio": 1.0447430333754484,
+          "mean_ms": 1.5434133211771648,
+          "min_ms": 1.5190720558166504,
+          "samples_ms": [
+            1.5870399475097656,
+            1.5190720558166504,
+            1.5241279602050781
+          ],
+          "std_ms": 0.03091765877476841
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "max_ms": 0.20614400506019592,
+          "max_to_min_ratio": 1.0248170949698654,
+          "mean_ms": 0.20322133600711823,
+          "min_ms": 0.2011519968509674,
+          "samples_ms": [
+            0.2011519968509674,
+            0.20236800611019135,
+            0.20614400506019592
+          ],
+          "std_ms": 0.0021254278667275682
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "max_ms": 0.11027199774980545,
+          "max_to_min_ratio": 1.051892520088217,
+          "mean_ms": 0.10701866696278255,
+          "min_ms": 0.1048320010304451,
+          "samples_ms": [
+            0.11027199774980545,
+            0.1048320010304451,
+            0.10595200210809708
+          ],
+          "std_ms": 0.002345452552043169
+        },
+        "dsv4_o_proj": {
+          "max_ms": 0.18016000092029572,
+          "max_to_min_ratio": 1.0193735502361105,
+          "mean_ms": 0.17868799964586893,
+          "min_ms": 0.1767359972000122,
+          "samples_ms": [
+            0.18016000092029572,
+            0.1767359972000122,
+            0.1791680008172989
+          ],
+          "std_ms": 0.0014384601054737716
+        },
+        "dsv4_parallel_input_projections": {
+          "max_ms": 0.2882240116596222,
+          "max_to_min_ratio": 1.1454915838666457,
+          "mean_ms": 0.26706133286158246,
+          "min_ms": 0.2516160011291504,
+          "samples_ms": [
+            0.2882240116596222,
+            0.2516160011291504,
+            0.26134398579597473
+          ],
+          "std_ms": 0.015482304993147141
+        },
+        "dsv4_q_projection": {
+          "max_ms": 0.15353600680828094,
+          "max_to_min_ratio": 1.0241195647215013,
+          "mean_ms": 0.15225600202878317,
+          "min_ms": 0.1499200016260147,
+          "samples_ms": [
+            0.15353600680828094,
+            0.1499200016260147,
+            0.15331199765205383
+          ],
+          "std_ms": 0.0016543313728551437
+        },
+        "dsv4_sparse_attention": {
+          "max_ms": 0.5888000130653381,
+          "max_to_min_ratio": 1.0334756158163718,
+          "mean_ms": 0.5803946852684021,
+          "min_ms": 0.5697280168533325,
+          "samples_ms": [
+            0.5888000130653381,
+            0.5826560258865356,
+            0.5697280168533325
+          ],
+          "std_ms": 0.007948605996068517
+        }
+      },
+      "table": "attention.csv",
+      "variant": "uncompressed"
+    },
+    {
+      "global_layer_id": 1,
+      "method": "CUDA_EVENT",
+      "plans_tile_schedule": false,
+      "statistics": {
+        "dsv4_attention_layer": {
+          "max_ms": 1.045375943183899,
+          "max_to_min_ratio": 1.0253608538654972,
+          "mean_ms": 1.0329920053482056,
+          "min_ms": 1.0195200443267822,
+          "samples_ms": [
+            1.0195200443267822,
+            1.0340800285339355,
+            1.045375943183899
+          ],
+          "std_ms": 0.010583626419045495
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "max_ms": 0.17615999281406403,
+          "max_to_min_ratio": 1.0134388546515252,
+          "mean_ms": 0.1752959986527761,
+          "min_ms": 0.1738239973783493,
+          "samples_ms": [
+            0.1738239973783493,
+            0.17615999281406403,
+            0.17590400576591492
+          ],
+          "std_ms": 0.0010460953290341397
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "max_ms": 0.022048000246286392,
+          "max_to_min_ratio": 1.0207407256658352,
+          "mean_ms": 0.021802666907509167,
+          "min_ms": 0.02160000056028366,
+          "samples_ms": [
+            0.02175999991595745,
+            0.022048000246286392,
+            0.02160000056028366
+          ],
+          "std_ms": 0.00018536681434512883
+        },
+        "dsv4_o_proj": {
+          "max_ms": 0.18038399517536163,
+          "max_to_min_ratio": 1.0202714792698127,
+          "mean_ms": 0.17854932943979898,
+          "min_ms": 0.17679999768733978,
+          "samples_ms": [
+            0.17679999768733978,
+            0.17846399545669556,
+            0.18038399517536163
+          ],
+          "std_ms": 0.001464404524039483
+        },
+        "dsv4_parallel_input_projections": {
+          "max_ms": 0.11635199934244156,
+          "max_to_min_ratio": 1.0317820430360085,
+          "mean_ms": 0.11416533341010411,
+          "min_ms": 0.11276800185441971,
+          "samples_ms": [
+            0.11337599903345108,
+            0.11276800185441971,
+            0.11635199934244156
+          ],
+          "std_ms": 0.001566002568572055
+        },
+        "dsv4_q_projection": {
+          "max_ms": 0.06592000275850296,
+          "max_to_min_ratio": 1.033617683446127,
+          "mean_ms": 0.06465066721041997,
+          "min_ms": 0.06377600133419037,
+          "samples_ms": [
+            0.06425599753856659,
+            0.06377600133419037,
+            0.06592000275850296
+          ],
+          "std_ms": 0.0009186978608422714
+        },
+        "dsv4_sparse_attention": {
+          "max_ms": 0.46515199542045593,
+          "max_to_min_ratio": 1.0359916902478694,
+          "mean_ms": 0.4582186738650004,
+          "min_ms": 0.4489920139312744,
+          "samples_ms": [
+            0.4489920139312744,
+            0.4605120122432709,
+            0.46515199542045593
+          ],
+          "std_ms": 0.006793663769553141
+        }
+      },
+      "table": "attention.csv",
+      "variant": "uncompressed"
+    },
+    {
+      "global_layer_id": 2,
+      "method": "KERNEL_ONLY",
+      "plans_tile_schedule": true,
+      "statistics": {
+        "dsv4_compressor": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.104415,
+          "max_to_min_ratio": 1.116308159425248,
+          "mean_ms": 0.09821866666666668,
+          "min_ms": 0.09353600000000001,
+          "samples_ms": [
+            0.09353600000000001,
+            0.104415,
+            0.096705
+          ],
+          "std_ms": 0.004568482631635531
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.198687,
+          "max_to_min_ratio": 1.007137100248886,
+          "mean_ms": 0.19792966666666667,
+          "min_ms": 0.197279,
+          "samples_ms": [
+            0.198687,
+            0.197823,
+            0.197279
+          ],
+          "std_ms": 0.0005797409383125816
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.016543,
+          "max_to_min_ratio": 1.0077363547758285,
+          "mean_ms": 0.016469,
+          "min_ms": 0.016416,
+          "samples_ms": [
+            0.016416,
+            0.016543,
+            0.016448
+          ],
+          "std_ms": 5.3932056021132636e-05
+        },
+        "dsv4_index_prepare": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.2288,
+          "max_to_min_ratio": 1.0334003297125176,
+          "mean_ms": 0.22562033333333334,
+          "min_ms": 0.22140500000000002,
+          "samples_ms": [
+            0.2288,
+            0.22665600000000002,
+            0.22140500000000002
+          ],
+          "std_ms": 0.0031065479591054434
+        },
+        "dsv4_index_scores_topk": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 1.391389,
+          "max_to_min_ratio": 1.0134959038096356,
+          "mean_ms": 1.3850953333333333,
+          "min_ms": 1.3728609999999999,
+          "samples_ms": [
+            1.3910360000000002,
+            1.391389,
+            1.3728609999999999
+          ],
+          "std_ms": 0.008652180316095113
+        },
+        "dsv4_o_proj": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 0.18687900000000002,
+          "max_to_min_ratio": 1.0810752961865977,
+          "mean_ms": 0.18174866666666667,
+          "min_ms": 0.172864,
+          "samples_ms": [
+            0.18687900000000002,
+            0.172864,
+            0.185503
+          ],
+          "std_ms": 0.006307472834309766
+        },
+        "dsv4_parallel_input_projections": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.30179200000000006,
+          "max_to_min_ratio": 1.004901438465637,
+          "mean_ms": 0.30097033333333334,
+          "min_ms": 0.30032,
+          "samples_ms": [
+            0.30079900000000004,
+            0.30179200000000006,
+            0.30032
+          ],
+          "std_ms": 0.0006130319911899062
+        },
+        "dsv4_q_projection": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.06691200000000001,
+          "max_to_min_ratio": 1.0361744301288405,
+          "mean_ms": 0.065696,
+          "min_ms": 0.06457600000000001,
+          "samples_ms": [
+            0.06457600000000001,
+            0.06559999999999999,
+            0.06691200000000001
+          ],
+          "std_ms": 0.0009560808891859892
+        },
+        "dsv4_sparse_attention": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.899966,
+          "max_to_min_ratio": 1.0115091612473952,
+          "mean_ms": 0.8962003333333334,
+          "min_ms": 0.889726,
+          "samples_ms": [
+            0.899966,
+            0.898909,
+            0.889726
+          ],
+          "std_ms": 0.004598337114895143
+        }
+      },
+      "table": "attention_kernel_only.csv",
+      "variant": "csa"
+    },
+    {
+      "global_layer_id": 4,
+      "method": "KERNEL_ONLY",
+      "plans_tile_schedule": false,
+      "statistics": {
+        "dsv4_compressor": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.09510400000000001,
+          "max_to_min_ratio": 1.1253313138962515,
+          "mean_ms": 0.08819166666666667,
+          "min_ms": 0.084512,
+          "samples_ms": [
+            0.09510400000000001,
+            0.084959,
+            0.084512
+          ],
+          "std_ms": 0.004891163210889161
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.196384,
+          "max_to_min_ratio": 1.0512217969649118,
+          "mean_ms": 0.19081533333333334,
+          "min_ms": 0.186815,
+          "samples_ms": [
+            0.196384,
+            0.18924700000000003,
+            0.186815
+          ],
+          "std_ms": 0.004060885973391625
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.016448,
+          "max_to_min_ratio": 1.0019493177387915,
+          "mean_ms": 0.016437333333333335,
+          "min_ms": 0.016416,
+          "samples_ms": [
+            0.016448,
+            0.016448,
+            0.016416
+          ],
+          "std_ms": 1.5084944665313381e-05
+        },
+        "dsv4_index_prepare": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.23494299999999999,
+          "max_to_min_ratio": 1.039938916430595,
+          "mean_ms": 0.2317433333333333,
+          "min_ms": 0.22591999999999998,
+          "samples_ms": [
+            0.22591999999999998,
+            0.23436699999999996,
+            0.23494299999999999
+          ],
+          "std_ms": 0.004124427421540538
+        },
+        "dsv4_index_scores_topk": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 1.391548,
+          "max_to_min_ratio": 1.0132574502618068,
+          "mean_ms": 1.380263,
+          "min_ms": 1.373341,
+          "samples_ms": [
+            1.391548,
+            1.373341,
+            1.3759
+          ],
+          "std_ms": 0.008047796344341766
+        },
+        "dsv4_o_proj": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 0.176224,
+          "max_to_min_ratio": 1.0141804788213626,
+          "mean_ms": 0.17465566666666668,
+          "min_ms": 0.17376000000000003,
+          "samples_ms": [
+            0.173983,
+            0.176224,
+            0.17376000000000003
+          ],
+          "std_ms": 0.0011127097055786228
+        },
+        "dsv4_parallel_input_projections": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.30377499999999996,
+          "max_to_min_ratio": 1.006360669858044,
+          "mean_ms": 0.302591,
+          "min_ms": 0.30185500000000004,
+          "samples_ms": [
+            0.30185500000000004,
+            0.30377499999999996,
+            0.30214300000000005
+          ],
+          "std_ms": 0.0008454300680718277
+        },
+        "dsv4_q_projection": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.071104,
+          "max_to_min_ratio": 1.0876162506118452,
+          "mean_ms": 0.06833066666666666,
+          "min_ms": 0.065376,
+          "samples_ms": [
+            0.068512,
+            0.071104,
+            0.065376
+          ],
+          "std_ms": 0.0023419589141476307
+        },
+        "dsv4_sparse_attention": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.897502,
+          "max_to_min_ratio": 1.0056664556359216,
+          "mean_ms": 0.8948670000000001,
+          "min_ms": 0.892445,
+          "samples_ms": [
+            0.897502,
+            0.892445,
+            0.8946540000000001
+          ],
+          "std_ms": 0.002069998228662678
+        }
+      },
+      "table": "attention_kernel_only.csv",
+      "variant": "csa"
+    },
+    {
+      "global_layer_id": 3,
+      "method": "KERNEL_ONLY",
+      "plans_tile_schedule": true,
+      "statistics": {
+        "dsv4_compressor": {
+          "kernel_count_per_sample": 3,
+          "max_ms": 0.14627199999999999,
+          "max_to_min_ratio": 1.0097264311798044,
+          "mean_ms": 0.14543933333333334,
+          "min_ms": 0.144863,
+          "samples_ms": [
+            0.145183,
+            0.14627199999999999,
+            0.144863
+          ],
+          "std_ms": 0.0006031032710535978
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.17088,
+          "max_to_min_ratio": 1.0069771827267584,
+          "mean_ms": 0.17029333333333332,
+          "min_ms": 0.169696,
+          "samples_ms": [
+            0.169696,
+            0.17088,
+            0.170304
+          ],
+          "std_ms": 0.0004834248189279817
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.016640000000000002,
+          "max_to_min_ratio": 1.0216110019646367,
+          "mean_ms": 0.01642666666666667,
+          "min_ms": 0.016288,
+          "samples_ms": [
+            0.016288,
+            0.016640000000000002,
+            0.016352000000000002
+          ],
+          "std_ms": 0.00015309546767367863
+        },
+        "dsv4_o_proj": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 0.173696,
+          "max_to_min_ratio": 1.0092971364819634,
+          "mean_ms": 0.17290666666666665,
+          "min_ms": 0.172096,
+          "samples_ms": [
+            0.172928,
+            0.172096,
+            0.173696
+          ],
+          "std_ms": 0.0006533714274608411
+        },
+        "dsv4_parallel_input_projections": {
+          "kernel_count_per_sample": 3,
+          "max_ms": 0.17888,
+          "max_to_min_ratio": 1.007933645870898,
+          "mean_ms": 0.178293,
+          "min_ms": 0.177472,
+          "samples_ms": [
+            0.17888,
+            0.178527,
+            0.177472
+          ],
+          "std_ms": 0.0005981543836391025
+        },
+        "dsv4_q_projection": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.064,
+          "max_to_min_ratio": 1.0282776349614398,
+          "mean_ms": 0.06298666666666666,
+          "min_ms": 0.06224,
+          "samples_ms": [
+            0.064,
+            0.06224,
+            0.06272
+          ],
+          "std_ms": 0.000742847374783155
+        },
+        "dsv4_sparse_attention": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.571294,
+          "max_to_min_ratio": 1.0037670209962224,
+          "mean_ms": 0.5700996666666667,
+          "min_ms": 0.5691499999999999,
+          "samples_ms": [
+            0.571294,
+            0.569855,
+            0.5691499999999999
+          ],
+          "std_ms": 0.0008922183340167206
+        }
+      },
+      "table": "attention_kernel_only.csv",
+      "variant": "hca"
+    },
+    {
+      "global_layer_id": 5,
+      "method": "KERNEL_ONLY",
+      "plans_tile_schedule": false,
+      "statistics": {
+        "dsv4_compressor": {
+          "kernel_count_per_sample": 3,
+          "max_ms": 0.150047,
+          "max_to_min_ratio": 1.04198581954292,
+          "mean_ms": 0.147392,
+          "min_ms": 0.14400100000000002,
+          "samples_ms": [
+            0.148128,
+            0.14400100000000002,
+            0.150047
+          ],
+          "std_ms": 0.0025225385362104293
+        },
+        "dsv4_fused_q_kv_prepare": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.170464,
+          "max_to_min_ratio": 1.0033904690148803,
+          "mean_ms": 0.17008,
+          "min_ms": 0.169888,
+          "samples_ms": [
+            0.169888,
+            0.169888,
+            0.170464
+          ],
+          "std_ms": 0.00027152900397563103
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.016384,
+          "max_to_min_ratio": 1.005893909626719,
+          "mean_ms": 0.016341333333333333,
+          "min_ms": 0.016288,
+          "samples_ms": [
+            0.016288,
+            0.016384,
+            0.016352000000000002
+          ],
+          "std_ms": 3.991101212558844e-05
+        },
+        "dsv4_o_proj": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 0.175904,
+          "max_to_min_ratio": 1.0217472118959108,
+          "mean_ms": 0.17452800000000002,
+          "min_ms": 0.17216,
+          "samples_ms": [
+            0.17552,
+            0.17216,
+            0.175904
+          ],
+          "std_ms": 0.0016817514679642765
+        },
+        "dsv4_parallel_input_projections": {
+          "kernel_count_per_sample": 3,
+          "max_ms": 0.183744,
+          "max_to_min_ratio": 1.0303247801902027,
+          "mean_ms": 0.18044800000000003,
+          "min_ms": 0.17833600000000002,
+          "samples_ms": [
+            0.179264,
+            0.17833600000000002,
+            0.183744
+          ],
+          "std_ms": 0.0023612155061888376
+        },
+        "dsv4_q_projection": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.064158,
+          "max_to_min_ratio": 1.0203568815802029,
+          "mean_ms": 0.06365733333333334,
+          "min_ms": 0.062878,
+          "samples_ms": [
+            0.064158,
+            0.062878,
+            0.063936
+          ],
+          "std_ms": 0.0005584749074239809
+        },
+        "dsv4_sparse_attention": {
+          "kernel_count_per_sample": 5,
+          "max_ms": 0.5779190000000001,
+          "max_to_min_ratio": 1.0191891901424597,
+          "mean_ms": 0.5709316666666667,
+          "min_ms": 0.567038,
+          "samples_ms": [
+            0.567038,
+            0.5678380000000001,
+            0.5779190000000001
+          ],
+          "std_ms": 0.004951573509726207
+        }
+      },
+      "table": "attention_kernel_only.csv",
+      "variant": "hca"
+    },
+    {
+      "global_layer_id": 0,
+      "method": "KERNEL_ONLY",
+      "plans_tile_schedule": true,
+      "statistics": {
+        "dsv4_fused_q_kv_prepare": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.169759,
+          "max_to_min_ratio": 1.0022612412620442,
+          "mean_ms": 0.16955699999999999,
+          "min_ms": 0.169376,
+          "samples_ms": [
+            0.169759,
+            0.169376,
+            0.169536
+          ],
+          "std_ms": 0.00015706262020820234
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.016864,
+          "max_to_min_ratio": 1.0154142581888246,
+          "mean_ms": 0.016757,
+          "min_ms": 0.016608,
+          "samples_ms": [
+            0.016799,
+            0.016864,
+            0.016608
+          ],
+          "std_ms": 0.00010864928286310324
+        },
+        "dsv4_o_proj": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 0.17439999999999997,
+          "max_to_min_ratio": 1.0173604629456785,
+          "mean_ms": 0.173216,
+          "min_ms": 0.171424,
+          "samples_ms": [
+            0.173824,
+            0.17439999999999997,
+            0.171424
+          ],
+          "std_ms": 0.0012887699561985406
+        },
+        "dsv4_parallel_input_projections": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.111072,
+          "max_to_min_ratio": 1.0023101357204736,
+          "mean_ms": 0.11092266666666667,
+          "min_ms": 0.11081600000000001,
+          "samples_ms": [
+            0.111072,
+            0.11087999999999999,
+            0.11081600000000001
+          ],
+          "std_ms": 0.00010877908295664509
+        },
+        "dsv4_q_projection": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.060191999999999996,
+          "max_to_min_ratio": 1.001614110990931,
+          "mean_ms": 0.06012766666666666,
+          "min_ms": 0.060095,
+          "samples_ms": [
+            0.060191999999999996,
+            0.060096,
+            0.060095
+          ],
+          "std_ms": 4.549236810230236e-05
+        },
+        "dsv4_sparse_attention": {
+          "kernel_count_per_sample": 3,
+          "max_ms": 0.44617500000000004,
+          "max_to_min_ratio": 1.0238655269347716,
+          "mean_ms": 0.44022266666666665,
+          "min_ms": 0.43577499999999997,
+          "samples_ms": [
+            0.44617500000000004,
+            0.43871800000000005,
+            0.43577499999999997
+          ],
+          "std_ms": 0.004377062662968828
+        }
+      },
+      "table": "attention_kernel_only.csv",
+      "variant": "uncompressed"
+    },
+    {
+      "global_layer_id": 1,
+      "method": "KERNEL_ONLY",
+      "plans_tile_schedule": false,
+      "statistics": {
+        "dsv4_fused_q_kv_prepare": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.17228800000000002,
+          "max_to_min_ratio": 1.0097524381095275,
+          "mean_ms": 0.17125300000000002,
+          "min_ms": 0.170624,
+          "samples_ms": [
+            0.170624,
+            0.170847,
+            0.17228800000000002
+          ],
+          "std_ms": 0.0007374962146795634
+        },
+        "dsv4_fused_qkv_rmsnorm": {
+          "kernel_count_per_sample": 1,
+          "max_ms": 0.016736,
+          "max_to_min_ratio": 1.017509727626459,
+          "mean_ms": 0.016597666666666667,
+          "min_ms": 0.016448,
+          "samples_ms": [
+            0.016448,
+            0.016609000000000002,
+            0.016736
+          ],
+          "std_ms": 0.0001178483017366913
+        },
+        "dsv4_o_proj": {
+          "kernel_count_per_sample": 4,
+          "max_ms": 0.17516800000000002,
+          "max_to_min_ratio": 1.0060592833389812,
+          "mean_ms": 0.17458166666666666,
+          "min_ms": 0.174113,
+          "samples_ms": [
+            0.174464,
+            0.17516800000000002,
+            0.174113
+          ],
+          "std_ms": 0.00043866489361344893
+        },
+        "dsv4_parallel_input_projections": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.110336,
+          "max_to_min_ratio": 1.0102641578537745,
+          "mean_ms": 0.10995133333333333,
+          "min_ms": 0.109215,
+          "samples_ms": [
+            0.109215,
+            0.110303,
+            0.110336
+          ],
+          "std_ms": 0.0005208405599498624
+        },
+        "dsv4_q_projection": {
+          "kernel_count_per_sample": 2,
+          "max_ms": 0.061056,
+          "max_to_min_ratio": 1.0241717688501217,
+          "mean_ms": 0.06025566666666667,
+          "min_ms": 0.059614999999999994,
+          "samples_ms": [
+            0.061056,
+            0.060096000000000004,
+            0.059614999999999994
+          ],
+          "std_ms": 0.0005990216097010946
+        },
+        "dsv4_sparse_attention": {
+          "kernel_count_per_sample": 3,
+          "max_ms": 0.450334,
+          "max_to_min_ratio": 1.0205198978424082,
+          "mean_ms": 0.44597200000000004,
+          "min_ms": 0.44127900000000003,
+          "samples_ms": [
+            0.450334,
+            0.446303,
+            0.44127900000000003
+          ],
+          "std_ms": 0.003704090261679189
+        }
+      },
+      "table": "attention_kernel_only.csv",
+      "variant": "uncompressed"
+    }
+  ],
+  "runtime_versions": {
+    "deep_gemm": null,
+    "flashinfer": "0.6.16.post3",
+    "torch": "2.13.0+cu130",
+    "torch_cuda": "13.0",
+    "triton": "3.7.1",
+    "vllm": "0.28.0"
+  },
+  "scope_statistics_groups_checked": 94,
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "task_id": "W128-V4-BALANCED-PREFILL-RESULTS",
+  "trace": {
+    "all_kernel_durations_positive": true,
+    "annotated_steps": [
+      3,
+      4,
+      5
+    ],
+    "bytes": 7702607,
+    "categories": {
+      "None": 68,
+      "Trace": 1,
+      "ac2g": 5333,
+      "cpu_op": 15388,
+      "cuda_driver": 710,
+      "cuda_runtime": 2703,
+      "gpu_memcpy": 90,
+      "gpu_memset": 15,
+      "gpu_user_annotation": 138,
+      "kernel": 1815,
+      "overhead": 1,
+      "user_annotation": 132
+    },
+    "completed_log_profiler_start_stop": true,
+    "device": {
+      "computeMajor": 9,
+      "computeMinor": 0,
+      "id": 0,
+      "maxThreadsPerBlock": 1024,
+      "maxThreadsPerMultiprocessor": 2048,
+      "name": "NVIDIA H800",
+      "numSms": 132,
+      "regsPerBlock": 65536,
+      "regsPerMultiprocessor": 65536,
+      "sharedMemPerBlock": 49152,
+      "sharedMemPerBlockOptin": 232448,
+      "sharedMemPerMultiprocessor": 233472,
+      "totalGlobalMem": 85029158912,
+      "warpSize": 32
+    },
+    "event_count": 26394,
+    "graph_ids_zero": true,
+    "host_name": "gpu-h800-0570.host.platform.shaipower.com",
+    "kernel_only_user_annotations": 132,
+    "kernels": 1815,
+    "limitation": "Complete kernel-only case includes unannotated warmup/other kernels;132 measured CPU annotations consumed. No CUDA_EVENT Chrome trace exists.",
+    "path": "/data/ycfeng/tmp/glm53_dsv4/v4_balanced_prefill_39b2bf8_results/PREFILL_WARM_6144_C0_BALANCED/profiler_traces/e0-prefill-p6144.json",
+    "reconstructed_raw_kernel_calls_exact": 132,
+    "scoped_kernel_count_total": 366,
+    "scoped_kernel_duration_ms_sum_not_layer_walltime": 33.915244,
+    "sha256": "990dd2a7a4a4dd9adcd427dd047cb5bb34b65b791563bca7d0d76a3f4f54cdff",
+    "trace_bytes_left_on_worker_reported": 0,
+    "world_size": 1
+  },
+  "validation_iterations": [
+    {
+      "issue": "Python3.10.6 CSV rebuild differed in14 std last bits only",
+      "resolution": "Existing Python3.12.13 plus pinned pandas2.3.3 wheel yields exact CSV bytes."
+    },
+    {
+      "issue": "Receipt summary assertion compared JSON lists with Python tuples",
+      "resolution": "JSON-roundtrip plan.summary for representation comparison; source/inputs unchanged. Trace reconstruction132 calls and all94 stats passed independently before corrected final validation."
+    }
+  ],
+  "verdict": "PASS_ISOLATED_BOUNDED_MEASUREMENT_ONLY_WITH_RETAINED_ANOMALIES"
+}
