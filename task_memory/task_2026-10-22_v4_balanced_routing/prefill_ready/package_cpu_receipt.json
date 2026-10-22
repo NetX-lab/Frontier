@@ -1,0 +1,132 @@
+{
+  "LLM_keyword_boundary": {
+    "async_scheduling": false,
+    "enable_chunked_prefill": true,
+    "enable_prefix_caching": false,
+    "enforce_eager": true,
+    "hf_overrides": {
+      "compress_ratios": [
+        0,
+        0,
+        4,
+        128,
+        4,
+        128
+      ],
+      "num_attention_heads": 8,
+      "num_hidden_layers": 6,
+      "o_groups": 1
+    },
+    "kv_cache_dtype": "fp8",
+    "max_model_len": 7168,
+    "max_num_batched_tokens": 8192,
+    "max_num_seqs": 128,
+    "tensor_parallel_size": 1
+  },
+  "actual_H800_measurement_rows": 0,
+  "actual_binary_bytes_verified": 0,
+  "actual_recorder_sequential_prefill_cpu_controls": {
+    "CUDA_EVENT": {
+      "all_repeats_drained": true,
+      "all_warmup_and_measured_callable_executions": 5,
+      "cached_tokens": 0,
+      "engine_spec_is_cpu_fixture_not_producer_plan": false,
+      "kernel_only_warmups_have_no_scope_annotations": true,
+      "measured_requests": 3,
+      "native_execution": false,
+      "prompt_tokens": 6144,
+      "timings_are_cpu_fixtures": true,
+      "warmup_requests": 2,
+      "warmups_excluded_from_recorded_steps": true
+    },
+    "KERNEL_ONLY": {
+      "all_repeats_drained": true,
+      "all_warmup_and_measured_callable_executions": 5,
+      "cached_tokens": 0,
+      "engine_spec_is_cpu_fixture_not_producer_plan": false,
+      "kernel_only_warmups_have_no_scope_annotations": true,
+      "measured_requests": 3,
+      "native_execution": false,
+      "prompt_tokens": 6144,
+      "timings_are_cpu_fixtures": true,
+      "warmup_requests": 2,
+      "warmups_excluded_from_recorded_steps": true
+    }
+  },
+  "adapter_sha256": "09b7323d6dd9f8084edd93c5d794468eb40f3998ef2daafab24e04d89fd9b4ed",
+  "builder_sha256": "eeb548d55f053553a4ca1698e4ca5cd3bf9c40d3a64aa25386b1ebdb04e79d85",
+  "cloud_output_planned_not_accessed": "/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_prefill/39b2bf8_balanced_warm2/PREFILL_WARM_6144_C0_BALANCED",
+  "config_sha256": "6628d5dce711cb5b572f17d9473633bc977b7f8b3f0b7b11117844b24a7efde1",
+  "copied_runtime_files_verified": 7,
+  "executable": "/data/ycfeng/envs/frontier-py310/bin/python",
+  "expected_tables_rows": [
+    6,
+    6
+  ],
+  "flat_adapter_policy_git_objects_verified": 2,
+  "gpu_platform_operations": 0,
+  "inherited_binary_pin_entries": 20,
+  "job": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/jobs/PREFILL_WARM_6144_C0_BALANCED.json",
+  "job_sha256": "03949241a9885a7741c6c64b5abac6f8df8644447d9b8cb836cbebdc6acd3181",
+  "job_tag": "v4-h800-prefill-balanced-6144-c0-20261023-39b2bf8",
+  "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+  "model_file_pins_verified": 2,
+  "native_C26_sha256": "d3556a47056bd52680b295f1585906149310397ec53ab90aa0008ff7d57e86ee",
+  "native_git": "2cf0a6915ce544dc493a0990f2ea38d81601128a",
+  "native_source_bytes_verified": 60,
+  "official_native_model_bytes_verified_separately": 1,
+  "official_native_model_sha256": "c01be6d313f494eb38982c8f56c314267bbf67310e7f13ca53b596b31aef4e44",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+  "package_file_pins_verified": 529,
+  "plan_sha256": "b8d730cda713cdcf85c3d77648d9f9fa2e0dd95fe8d44cb0b08c826007153a82",
+  "policy_sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+  "python": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]",
+  "readiness_limits": [
+    "CPU options and recorder controls are mocks, not native H800 execution.",
+    "No image, actual binary, quota, GPU routing/model/backend/timing or serving admission.",
+    "Expected rows6+6 are bound plan/job counts, not measured outputs.",
+    "No matrix inspection or launch; root owns strict77 and platform checks."
+  ],
+  "retained_package_verifiers_run_or_waived": false,
+  "retained_verifier_incompatibilities": [
+    {
+      "assumption": "Fixed h800_prefill_capacity128 and PREFILL_WARM_6144_C0_CAP128; cannot select fresh balanced package/job unchanged.",
+      "lines": [
+        19,
+        51
+      ],
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-h800-prefill/task_memory/task_2026-10-22_v4_h800_prefill/configured_capacity/verify_package.py"
+    },
+    {
+      "assumption": "Old adapter fixture stages native files only, does not stage flat balanced module on import path or register actual native strategy; incompatible with balanced adapter lines29-41.",
+      "lines": [
+        138,
+        145,
+        148,
+        160
+      ],
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-h800-prefill/task_memory/task_2026-10-22_v4_h800_prefill/configured_capacity/verify_package.py"
+    },
+    {
+      "assumption": "Older h800_prefill job and effective max_num_seqs1; new bound generation requires128.",
+      "lines": [
+        18,
+        49,
+        53,
+        83
+      ],
+      "path": "/data/ycfeng/Frontier/.worktrees/v4-h800-prefill/task_memory/task_2026-10-22_v4_h800_prefill/verify_h800_prefill.py"
+    }
+  ],
+  "routing_native_source_bytes_verified": 9,
+  "snapshot_imports_verified": [
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/source/39b2bf8088dff40dc8b695b6927d6e6322c337e9/frontier/profiling/attention/dsv4_attention_main.py",
+    "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/source/39b2bf8088dff40dc8b695b6927d6e6322c337e9/frontier/profiling/attention/dsa_vllm_runner.py"
+  ],
+  "source_clean": true,
+  "source_git_object_files_verified": 511,
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "status": "LOCAL_PACKAGE_BYTES_IMPORT_PLAN_PASS_UNSUBMITTED",
+  "task_id": "W128-V4-BALANCED-PREFILL-PACKAGE",
+  "tool_pins_verified": 519
+}

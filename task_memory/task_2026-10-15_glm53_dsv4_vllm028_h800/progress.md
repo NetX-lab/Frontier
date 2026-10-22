@@ -5,6 +5,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Balanced prefill Succeeded500s/exit0 and cloud hashes PASS; B c491e6a133PASS/APPROVE, builder0832200 completed under root23/952 correction. |
 | 2026-10-23 | Accepted shared routing218 root tests/77 fixed-clean identical cases and merged292c489; B/C23-file874-line delivery is under three targeted Spec corrections before package admission. |
 | 2026-10-22 | Recorded routing23/900 approval, primary218PASS on186dfef and real P/D balanced input binding; native/prefill completion remains active. |
 | 2026-10-22 | DispatchR1 accepted/merged9d44675 with116 primary PASS; strategy6ca6777 primary56PASS/review APPROVE, shared runtime selector approved and parallel bindings active. |
@@ -168,7 +169,15 @@
 | 2026-10-18 | Started approved controlled fixture checks/review beside dependency-aware ticket02 coverage and ticket03 cache preparation. |
 
 
-## Final execution checkpoint — current (2026-10-22)
+## Routing milestone — current (2026-10-23)
+
+- completed: A186dfef accepted after218root tests/independent review/strict77 identical, merged292c489. C8c2502c runner-values P2 accepted after real producer/consumer negatives,22affected tests and independent recheck; merged84c806f with26combined A/C testsPASS. Final prefill builder/source selection39b2bf8 gives C5files/202routing lines.
+- completed: YC approved routing23files/950lines and said `批准；类似问题不用再询问，自己决策即可`. Root decides and records similar small corrective-scope adjustments. Allocation A432/B316/C202; complete native schema/DP repair currently estimates937 total. See requirements D-V4-BALANCED-SCOPE-23-950.
+- completed C fixed-source verification:39b2bf8 has184root unitPASS and strict77=77/77identical with451artifact entries, no failures/provenance/cache findings. Receipt `../task_2026-10-22_v4_balanced_routing/prefill_primary_fidelity.json` binds all77 raw rows to the clean source/harness.
+- completed B source correction: c491e6a133rootPASS/independentAPPROVE closes both P2s. Builder0832200 supplies the immutable revision and payload3600/replay1800/readiness32GPUh. Root's delegated correction covers the separate replay-line pair: current A432/B318/C202=23files/952lines, superseding the earlier937 projection.
+- completed prefill terminal/integrity: exp-1023-023708-916112 Succeeded on H800, exit0/restarts0,500s=0.1388888889GPUh; all8 collected artifacts match cloud SHA256/bytes. In parallel, verify its isolated rows/trace and integrate B for combined-source/native06 freeze/package/image checks. Native06 is not generated/submitted; native05 remains historically UNVERIFIED. Existing GPU budgets, GLM pause and CPU-overhead-last order are preserved.
+
+## Historical execution checkpoint — before balanced A/C integration (2026-10-22)
 
 Root current execution state; the prior `W128-V4-CURRENT-RECORDS` synchronization was documentation-only. Current approvals include `D-V4-PREFILL-CONFIGURED-CAPACITY`, `D-V4-NATIVE-DISPATCH-EVIDENCE` and `D-V4-BALANCED-RUNTIME-SELECTOR` in requirements.md.
 

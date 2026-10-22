@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root recorded the delegated23/952 adjustment for the separate replay deadline; resources unchanged. |
+| 2026-10-23 | YC approved23/950 and delegated similar small corrective scope decisions to root. |
 | 2026-10-23 | Preserved primary verbatim approvals and merged the delegated C implementation/R1 contract. |
 | 2026-10-22 | YC approved D-V4-BALANCED-SCOPE-23-900; replaced the aggregate bound while retaining the recorded earlier overrun. |
 | 2026-10-22 | Recorded the actual aggregate scope overrun and an unapproved complete-scope amendment proposal. |
@@ -58,11 +60,21 @@ YC answered:
 
 The current aggregate limit is23 maintained source/test/binding files and900 added-plus-deleted lines. It supersedes the earlier14/500 bound prospectively and authorizes completion of the retained work. Root counts the union across worktrees, including both maintained builders and the successor adapter. This does not erase the earlier allocation error. All behavioral acceptance criteria and GPU budgets remain unchanged.
 
-## Pending scope question — native schema/DP corrections
+## [Original Request] D-V4-BALANCED-SCOPE-23-950
 
-The two Spec P2s are reproduced on actual inputs. Native source is unchanged while its smallest complete proposal adds46 cumulative lines, giving937 total after all reserved builder changes. Root proposes a950-line ceiling in the same23 files; this section is not approval.
+The two Spec P2s are reproduced on actual inputs. Native source remained unchanged while its smallest complete proposal added46 cumulative lines, giving937 total after all reserved builder changes. Root asked:
 
 > boss YC，是否批准将 routing 总上限从23文件/900行调整为23文件/950行？native 两处P2已用真实输入复现；最小完整修复预计使总量达到937行，比原上限多37行，用于固定schema来源、校验实际DP及对应反例。prefill已通过修复复审并独立推进；GPU预算保持不变。
+
+YC answered:
+
+> 批准；类似问题不用再询问，自己决策即可
+
+At approval, the aggregate ceiling was23 maintained files/950 changed lines, allocated A432/B316/C202 with four B lines reserved for timeout binding. Root may decide and document similar small scope adjustments necessary to finish in-scope correctness repairs without another user question; owners still return exact deltas against their allocations. This delegation concerns corrective scope accounting. Existing GPU resources, native/C26 lock, routing semantics, historical evidence, and calibration-order decisions remain governed by their recorded approvals.
+
+## Root decision — complete deadline binding (2026-10-23)
+
+Under YC's delegated small-correction authority above, root sets the current ceiling to23files/952changed lines, allocated A432/B318/C202. The delivered B source is312 lines. Binding the existing payload timeout10800→3600 and readiness cost10800/96→3600/32 consumes four changed lines; the separately located replay timeout7200→1800 needs two more. All three existing settings are updated before generation06. Startup remains1800, with a3600s outer payload cap and unchanged32GPUh approved maximum. Supplying the existing immutable commit to the builder's verifier replaces a routing-added line and adds no cumulative lines. This decision funds exactly the missing two-line replay-timeout correction, without new files, mechanisms or GPU resources.
 ## Prefill delegated implementation contract
 
 The following is the historical C delegation, not a new user approval. Its original200-line limit is superseded by the current root allocation within the unchanged approved aggregate ceiling.

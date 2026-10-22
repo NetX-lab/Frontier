@@ -1,0 +1,29 @@
+{
+  "status": "READY_FOR_APPROVED_PREFILL_RUN",
+  "source_revision": "39b2bf8088dff40dc8b695b6927d6e6322c337e9",
+  "manifest_sha256": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced",
+  "job": "/data/ycfeng/Frontier/.worktrees/v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced/jobs/PREFILL_WARM_6144_C0_BALANCED.json",
+  "package_files": 529,
+  "source_files": 511,
+  "native_source_pins": 60,
+  "tool_pins": 519,
+  "binary_pins": 20,
+  "root_unit_passes": 184,
+  "strict77_identical_cases": 77,
+  "actual_staged_adapter_and_native_registry_boundary": "PASS",
+  "native_model_construction": "NOT_EXECUTED_CPU_GATE",
+  "native_gpu_admission": false,
+  "authorization": "D-V4-PREFILL-CONFIGURED-CAPACITY plus D-V4-BALANCED-RUNTIME-SELECTOR;1H800 codesign nonpreemptible900s/0.25GPUh",
+  "evidence_sha256": {
+    "package_cpu_receipt.json": "3bc019b9c4dc20ea8e38fd2fa858d8aedfc4231becd9246949086cb05d303b49",
+    "package_final_integrity.json": "53757e678400a368c3dcbf9c0c6d4b7ffc34a7ea39f0758e9d1c22f148aec4a9",
+    "image_receipt.json": "a93ff422ecd87f28723e00413047aa516e5622e541c9e3c5662f1e5f037acf58",
+    "image_command.json": "12cdbe265fb38faf3dcb4c567e3981c062987b84202befdea04df4a9d2221e23",
+    "image_check.py": "b32c0f4f14357ff9d2d3bc14f0c4669d2ebb86e4fdf1844c097e86a5e44ad5d7",
+    "adapter_receipt.json": "9963febb0938ac55f8938aed40b5c37f9d557819d9257e2fd01e9e5e5b4b3b18",
+    "adapter_command.json": "1108c64da74d0765f99fbe64e99874e7dcfbd068095445403a1b78782fa333ea",
+    "adapter_check.py": "43675ab938b8bdcd37f70a971564948e80bc0a3b3310c708b97e1d23dbba8f3d",
+    "manifest.json": "c6a009f87220c96d19f9b89097762b2f92e3ccdf05199398eaab331510331c8c"
+  }
+}
