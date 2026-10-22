@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept F4 boundaries after parent463/89+cold10 and No findings; assign compute C1(P1)/C2(P2) to PRICING. |
 | 2026-10-23 | Finite re-review closes F3/F5/F6; send F4 size-branch grouping and lazy-state equality defects back to PRICING. |
 | 2026-10-23 | Parent verifies finite repair27b3499/sub3dac53c:456 PASS/89 SKIP,12 HTSIM,9 cold; independent re-review pending. |
 | 2026-10-23 | Accept/merge T2 limits892b6a1; receive full PRICING8e61c2d, start split reviews and parent checks, authorize CORE dependency integration. |
@@ -27,9 +28,9 @@
   files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
   configs, independent No findings and actual full-file rebinding6/6 PASS.
 - in-progress: CORE/SOURCE final consumers/fixture and F1 repair; PRICING full
-  delivery27b3499 (43 changed paths/2944 gross including333 submodule lines) has
-  passed parent affected/HTSIM/cold checks; F3/F5/F6 are closed while F4 boundary
-  repairs and the separate compute/accounting review remain pending. CORE may integrate
+  deliverybfe6f2ae (43 changed paths/3067 gross including333 submodule lines) has
+  passed parent affected/cold checks; all finite-side F3–F6 are closed. Separate
+  compute findings C1(P1)/C2(P2) are assigned for repair. CORE may integrate
   delivered interfaces for development; final acceptance is not implied.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
@@ -88,6 +89,23 @@ cementing the rejected grouping/equality while other consumer work continues.
 Authoritative review is in verify-step5-pricing-02's pricing_finite_parent/
 review_2026-10-23_finite_repair.md. Passing parent tests remain recorded; this stage
 is not accepted until these two source defects close.
+
+F4a/F4b subsequently close at506b43ac/archivebfe6f2ae: independent No findings,
+parent463 PASS/89 SKIP and cold10 PASS (subset). Exact43-path3067/3956 ledger
+matches; unchangedsub3dac53c/binary retains the previously validated12-pass
+receipt without a redundant rerun. Evidence and review are in
+verify-step5-pricing-03's pricing_f4_parent/ directory. The shared existing
+collective_model_context normalizer separates frozen fitting policy from complete
+observed call/count/cache identity; CORE needs no separate normalizer/migration.
+
+Compute reviewer ses_e9afdb7c4ffejb3hbkjZCeHFKS reports C1 P1: bound probe lacks
+actual router config/logits/IDs/weights comparison, and C2 P2: H04 can accept
+plan/compute native-context and dispatch-layout mismatch. Full review is retained
+in verify-step5-pricing-01's pricing_parent/review_2026-10-23_compute.md. Both are
+assigned to PRICING against latest bfe within remaining889 gross; CORE is notified
+of the forthcoming same-context/layout checks. These findings are distinct from
+CORE's F1 callable provenance. Full PRICING remains unmerged pending compute
+repairs/re-review and integrated acceptance; finite repair closure is preserved.
 
 ## Active implementation dispatch — 2026-10-23
 
