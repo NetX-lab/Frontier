@@ -30,7 +30,48 @@ def model_path(tmp_path):
 
 def arguments(model_path, tmp_path, *extra):
     return probe.parse_args(["--model-path", str(model_path),
-                             "--output-dir", str(tmp_path / "output"), *extra])
+                              "--output-dir", str(tmp_path / "output"), *extra])
+
+
+@pytest.mark.parametrize("limits", [None, {"max_model_len": 7168,
+    "max_num_batched_tokens": 8192, "max_num_seqs": 128, "unrelated": "excluded"}])
+def test_native_config_binds_only_supplied_limits_before_text_submodel(model_path, tmp_path, monkeypatch, limits):
+    calls=[];events=[];metadata=SimpleNamespace(max_position_embeddings=1048576)
+    names=("max_model_len", "max_num_batched_tokens", "max_num_seqs")
+    defaults=dict(zip(names,(1048576,2048,256)))
+    expected=defaults if limits is None else {name:limits[name] for name in names}
+    class EngineArgs:
+        def __init__(self, **kwargs): calls.append(kwargs)
+        def create_engine_config(self):
+            kwargs=calls[-1];events.append("create")
+            values={name:kwargs.get(name,defaults[name]) for name in names}
+            def with_hf_config(hf, *, architectures):
+                assert hf is metadata and architectures == ["Step5ForCausalLM"]
+                events.append("text_submodel")
+                return SimpleNamespace(model_config=SimpleNamespace(hf_config=hf,max_model_len=values[names[0]]),
+                    scheduler_config=SimpleNamespace(**{name:values[name] for name in names[1:]}),quant_config=object())
+            return SimpleNamespace(model_config=SimpleNamespace(hf_text_config=metadata),with_hf_config=with_hf_config)
+    model_class=object()
+    def quant(config, cls):
+        assert cls is model_class
+        events.append("quant")
+    modules={"vllm.engine.arg_utils":SimpleNamespace(EngineArgs=EngineArgs),
+        "vllm.model_executor.model_loader.utils":SimpleNamespace(configure_quant_config=quant),
+        "vllm.models.step5.nvidia.model":SimpleNamespace(Step5ForCausalLM=model_class)}
+    for name,module in modules.items(): monkeypatch.setitem(sys.modules,name,module)
+    args=arguments(model_path,tmp_path)
+    config=(probe.create_native_config(args) if limits is None else
+            probe.create_native_config(args,engine_limits=limits))
+    assert events == ["create","text_submodel","quant"] and len(calls) == 1
+    assert {name:calls[0][name] for name in names if name in calls[0]} == ({} if limits is None else expected)
+    assert "unrelated" not in calls[0] and calls[0]["enforce_eager"] is True
+    assert {k:v for k,v in calls[0].items() if k not in names} == dict(model=str(model_path.resolve()),
+        load_format="dummy",skip_tokenizer_init=True,language_model_only=True,tensor_parallel_size=4,
+        data_parallel_size=2,enable_expert_parallel=True,all2all_backend="allgather_reducescatter",
+        distributed_executor_backend="external_launcher",enforce_eager=True,disable_custom_all_reduce=False)
+    assert config.model_config.max_model_len == expected["max_model_len"]
+    assert vars(config.scheduler_config) == {name:expected[name] for name in names[1:]}
+    assert config.model_config.hf_config is metadata and metadata.max_position_embeddings == 1048576
 
 
 def test_plan_has_two_native_layers_and_no_cost_rows(model_path, tmp_path):
@@ -772,3 +813,47 @@ def test_official_layer_prepare_finalize_and_group_calls_on_cpu(
     assert observer.calls[0]["group_ranks"] == expected["group_ranks"]["dp"]
     assert observer.calls[0]["sizes"] == sizes
     assert all(call["completed"] for call in observer.calls)
+def test_bound_probe_plans_exact_input_layer_keys(model_path,tmp_path,monkeypatch):
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(tmp_path/"manifest.json"))
+    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY","position_cyclic")
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput
+    monkeypatch.setattr("frontier.profiling.moe.inputs.read_routing_profile_inputs",lambda path:[
+        MoERoutingProfileInput("tail16",(
+            MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
+            MoESourceFrame(1,(),(),1,"standalone_legacy")),17)])
+    args=arguments(model_path,tmp_path,"--routing-input-file",str(tmp_path/"inputs.json"),
+        "--moe-input-ids","tail16","--tensor-parallel-size","8")
+    plan=probe.probe_plan(args)
+    assert [(c["routing_input"]["moe_input_id"],c["layer_id"]) for c in plan["cases"]] == [("tail16",3),("tail16",88)]
+    assert plan["verification_scope"] == "eager_native_moe_module"
+    assert not plan["full_model_verified"] and "tokens_per_dp_rank" not in plan
+
+
+def test_bound_forward_materializes_core_positions_once_and_preserves_native_exception(monkeypatch):
+    torch=pytest.importorskip("torch")
+    from contextlib import contextmanager
+    from frontier.profiling.moe.inputs import MoESourceFrame,source_frame_tensors
+    materialized=[];events=[]
+    def materialize(frame,*,device):
+        materialized.append(frame)
+        return source_frame_tensors(frame,device=device)
+    @contextmanager
+    def forward(*args,**kwargs):
+        assert kwargs["is_padding"].tolist() == [False]*16+[True]
+        events.append("forward_enter")
+        try: yield
+        finally: events.append("forward_exit")
+    @contextmanager
+    def positions(value):
+        assert value.dtype == torch.int64 and value.tolist() == list(range(6128,6144))+[0]
+        events.append("positions_enter")
+        try: yield
+        finally: events.append("positions_exit")
+    monkeypatch.setattr("frontier.profiling.moe.inputs.source_frame_tensors",materialize)
+    monkeypatch.setitem(sys.modules,"vllm.forward_context",SimpleNamespace(set_forward_context=forward,set_routing_positions=positions))
+    frame=dict(source_lane_id=0,query_lens=[16],context_lens=[6128],physical_rows=17,gating_runtime_context="standalone_legacy")
+    error=RuntimeError("native_failed")
+    with pytest.raises(RuntimeError) as caught:
+        with probe.source_forward_context(object(),17,[17,1],"cpu",dict(source_frames=[frame]),0): raise error
+    assert caught.value is error and materialized == [MoESourceFrame(**frame)]
+    assert events == ["forward_enter","positions_enter","positions_exit","forward_exit"]

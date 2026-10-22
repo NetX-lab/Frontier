@@ -1097,3 +1097,29 @@ def test_moe_stage_preserves_attention_operator_times_for_fast_and_view_paths() 
         for layer in execution_time.layer_execution_times:
             assert layer.attention_operator_times.op_times == {"attn_prefill": pytest.approx(0.02)}
         assert "attn_prefill" in execution_time.op_times
+def test_step5_plan_registry_cost_pair_and_phase_accounting():
+    from dataclasses import replace
+    import json
+    from frontier.cc_backend.collective_plan import CollectivePlanCost
+    from tests.unit.test_step5_moe_pricing import plan
+    from tests.unit.test_stage_finalized_contract import _layer
+    dispatch=plan();combine=plan(phase="combine")
+    def cost(p):
+        return CollectivePlanCost(6.,1.,(2.,)*16,3.,(7,)*16,json.dumps(dict(
+            kernel_counts=[7]*16,per_rank_events=[["cpu_fixture"]]*16,
+            source_receipt="cpu_fixture",evidence_kind="cpu_fixture")),p.cache_key(),"cpu_fixture")
+    plans={"step5_moe_dispatch":dispatch,"step5_moe_combine":combine}
+    costs={name:cost(p) for name,p in plans.items()}
+    comm=CommunicationOperatorTimes({name:6. for name in plans},plans=plans,costs=costs)
+    with pytest.raises(ValueError,match="plan/cost"):
+        replace(comm,costs={**costs,"step5_moe_dispatch":cost(combine)})
+    layer=_layer(3,is_moe=True,communication_operator_times=comm,op_times={
+        "moe_gating_linear":1.,"moe_gating_routing_topk":2.,"moe_input_quantize":3.,
+        "moe_grouped_gemm":4.,"moe_tensor_parallel_allreduce":5.,"step5_ffn_merge":2.})
+    assert layer.get_single_layer_moe_dispatch_time() == layer.get_single_layer_moe_combine_time() == 6.
+    assert layer.moe_phase_operator_times("routed_compute") == (("COMPUTE","moe_grouped_gemm",4.),)
+    assert layer.moe_phase_operator_times("post_combine")[0] == ("COMM","moe_tensor_parallel_allreduce",5.)
+    assert layer.get_single_layer_block_time() == pytest.approx(29.)
+    layer.add_kernel_gap(.1,0,{"moe_gating_linear":1,"moe_gating_routing_topk":1,
+        "moe_input_quantize":1,"moe_grouped_gemm":1,"step5_ffn_merge":1})
+    assert layer.kernel_gap_time == pytest.approx(.6)

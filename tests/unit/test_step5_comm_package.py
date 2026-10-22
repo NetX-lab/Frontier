@@ -87,6 +87,26 @@ def test_preparation_rejects_uncommitted_source(tmp_path, monkeypatch):
     assert not (tmp_path / "stage").exists()
 
 
+def test_selected_prepare_propagates_frozen_config_and_separate_local_counts(tmp_path,monkeypatch):
+    prepare=load("prepare")
+    definition=json.loads((PACKAGE/"s2_run.json").read_text())
+    model=tmp_path/prepare.MODEL_CONFIG;model.parent.mkdir(parents=True)
+    model.write_bytes((ROOT/prepare.MODEL_CONFIG).read_bytes())
+    frozen=tmp_path/"network.json";frozen.write_text('{"evidence_kind":"cpu_fixture"}')
+    definition["frozen_model_config"]="network.json"
+    names=["moe_dispatch_all_gatherv_fp8","moe_combine_reduce_scatterv"]
+    definition["grid"]["native_call_names"]=names
+    definition["grid"]["local_work"]=[{"evidence_kind":"cpu_fixture"}]
+    monkeypatch.setattr(prepare.subprocess,"check_output",lambda command,**kwargs:
+        {"ls-files":prepare.MODEL_CONFIG+"\n","status":"","rev-parse":"cpu_fixture\n"}[command[1]])
+    job=prepare.prepare(definition,tmp_path/"stage","selected",repository=tmp_path)
+    benchmark=json.loads(Path(job["benchmark"]).read_text())
+    assert job["expected"]["cases"] == 2*job["expected"]["scenarios"]
+    assert job["expected"]["local_work_rows"] == definition["passes"]
+    assert benchmark["grid"]["native_call_names"] == names
+    assert benchmark["frozen_model_config_sha256"] == prepare.sha256(frozen)
+
+
 @pytest.mark.parametrize("stage,scenarios,cases,nodes,dp,minutes", [
     ("s1", 50, 500, 4, 4, 25), ("s2", 46, 460, 2, 2, 12)])
 def test_multinode_preparation_freezes_exact_rows_and_launchers(tmp_path, monkeypatch, stage, scenarios, cases, nodes, dp, minutes):
@@ -137,3 +157,67 @@ def test_generated_launcher_loads_credentials_before_the_blocking_submitter(tmp_
     job = prepare.prepare(definition, tmp_path / "stage", "offline", repository=tmp_path)
     result = subprocess.run(["bash", job["submission_script"]], capture_output=True, text=True, check=True)
     assert result.stdout.strip() == "CREDENTIALS_FIRST_PASS"
+
+
+def test_finite_definition_is_selected_and_rejects_missing_authentic_inputs(tmp_path):
+    from frontier.profiling.collectives.vllm_forward_collectives import ModelShape,ServingParallelism,scenarios_from_grid,forward_collectives
+    definition=json.loads((PACKAGE/"step5_position_model_run.json").read_text())
+    parallel=ServingParallelism.from_engine(definition["engine"])
+    model=ModelShape.from_hf_config(json.loads((ROOT/load("prepare").MODEL_CONFIG).read_text()))
+    scenarios=scenarios_from_grid(parallel,definition["grid"])
+    assert len(scenarios) == 12 and len(definition["grid"]["local_work"]) == 30
+    assert sum(len(forward_collectives(model,parallel,s,native_call_names=definition["grid"]["native_call_names"])) for s in scenarios) == 60
+    with pytest.raises(ValueError,match="authentic inputs"):
+        load("prepare").prepare(definition,tmp_path/"stage","unprepared",repository=tmp_path)
+    assert not (tmp_path/"stage").exists()
+
+
+def test_bound_preparation_worker_and_probe_use_one_sealed_source(tmp_path,monkeypatch):
+    from tests.unit.test_step5_fixed_probe import installed_profile_receipt
+    from frontier.profiling.common.runtime_identity import file_sha256
+    path,_,manifest=installed_profile_receipt.__wrapped__(tmp_path,monkeypatch)
+    prepare=load("prepare");model=tmp_path/prepare.MODEL_CONFIG;model.parent.mkdir(parents=True)
+    model.write_bytes((ROOT/prepare.MODEL_CONFIG).read_bytes())
+    staged=path.parent/prepare.MODEL_CONFIG;staged.write_bytes(model.read_bytes())
+    manifest["sha256"][prepare.MODEL_CONFIG]=file_sha256(staged)
+    manifest["native_binding"]["model_config_sha256"]=file_sha256(model)
+    path.write_text(json.dumps(manifest))
+    inputs=tmp_path/"inputs.json"
+    inputs.write_text(json.dumps(dict(schema_version="moe.position_cyclic.inputs.v1",routing_runtime_path="position_cyclic",
+        inputs=[dict(moe_input_id="tail16",gathered_physical_rows=17,source_frames=[
+            dict(source_lane_id=i,query_lens=q,context_lens=c,physical_rows=n,gating_runtime_context="standalone_legacy")
+            for i,q,c,n in ((0,[16],[6128],16),(1,[],[],1))])])))
+    frozen=tmp_path/"frozen.json";frozen.write_text('{"evidence_kind":"cpu_fixture"}')
+    definition=json.loads((PACKAGE/"s2_run.json").read_text())
+    definition.update(profile_manifest=str(path),image=manifest["image"],routing_input_file=str(inputs),
+        frozen_model_config=str(frozen),native_environment={"VLLM_MOE_SKIP_PADDING":"1"})
+    definition["grid"]["native_call_names"]=["moe_combine_reduce_scatterv"]
+    definition["native_probe"].update(moe_input_ids=["tail16"])
+    monkeypatch.setattr(prepare.subprocess,"check_output",lambda command,**kw:
+        {"status":"","ls-files":prepare.MODEL_CONFIG+"\n","rev-parse":"cpu_fixture"}[command[1]])
+    job=prepare.prepare(definition,tmp_path/"collection","bound",repository=tmp_path)
+    worker=load("worker");benchmark=json.loads(Path(job["benchmark"]).read_text())
+    worker.verify_sources(job)
+    command=worker.probe_command(job,{"node_count":2,"node_rank":0,"master_addr":"192.0.2.1"})
+    assert "--tokens-per-dp-rank" not in command
+    assert command[command.index("--moe-input-ids")+1] == "tail16"
+    assert benchmark["profile_manifest"] == job["profile_manifest"] == str(path)
+    assert benchmark["input_vectors"] == job["native_probe"]["input_vectors"] == {"tail16":[16,1]}
+    assert benchmark["grid"]["native_call_names"] == ["moe_combine_reduce_scatterv"]
+    assert worker.verify_native_binding(job,path)["status"] == "PASS"
+    from types import SimpleNamespace
+    job["output_dir"]=str(tmp_path/"worker_output");output=Path(job["output_dir"]);output.mkdir()
+    calls=[]
+    monkeypatch.setattr(worker,"verify_native_binding",lambda *a:(_ for _ in ()).throw(ValueError("bad_binding")))
+    monkeypatch.setattr(worker,"run_phase",lambda *a:calls.append(a[4]))
+    monkeypatch.setattr(worker,"runtime_manifest",lambda *a:{"status":"PASS"})
+    monkeypatch.setattr(worker,"local_module",lambda *a:SimpleNamespace(snapshot=lambda:{"status":"PASS"},
+        check_logs=lambda *a:{"status":"UNVERIFIED"},validate=lambda *a:{"status":"UNVERIFIED"}))
+    for name,value in job["native_environment"].items(): monkeypatch.setenv(name,value)
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",job["profile_manifest"])
+    worker.run_job(job,dict(node_rank=0,node_count=2,master_addr="192.0.2.1"),output,tmp_path/"coordination",1.)
+    assert calls == ["collective","native_probe"]
+    assert json.loads((output/"job.json").read_text()) == job
+    assert json.loads((output/"native_binding.json").read_text())["status"] == "UNVERIFIED"
+    Path(job["native_probe"]["routing_input_file"]).write_text("changed")
+    with pytest.raises(ValueError,match="Source changed"): worker.verify_sources(job)

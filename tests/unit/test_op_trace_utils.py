@@ -607,3 +607,28 @@ def test_moe_ep_allreduce_shape():
     assert meta["tensor_shape"]["data"] == [8, 8]
     assert meta["element_count"] == 64
     assert meta["base_size_bytes"] == 128
+def test_step5_physical_prepare_and_inclusive_expert_trace():
+    from types import SimpleNamespace
+    from dataclasses import replace
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.metrics.op_trace_utils import OpTraceContext, compute_op_trace_meta
+    from frontier.types import ClusterType
+    model=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    native=dict(activation_layout=dict(shape=[17,4096],dtype="float8_e4m3fn",element_size=1),
+                scale_layout=dict(shape=[17,32],dtype="float32",element_size=4))
+    frame=dict(routing_source=SimpleNamespace(gathered_physical_rows=17,source_lanes=[
+        SimpleNamespace(physical_rows=16,live_rows=16,lane_id=0),
+        SimpleNamespace(physical_rows=1,live_rows=0,lane_id=1)]),ep_id=8,native_context=native,
+        live_local_assignments=0,operator_costs={})
+    replica=SimpleNamespace(attn_tensor_parallel_size=8,moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=16,router_topk=8)
+    ctx=OpTraceContext(ClusterType.DECODE,model,replica,0,1,1,1,False,global_layer_id=3,step5_moe_frame=frame)
+    expert=compute_op_trace_meta("moe_grouped_gemm","COMPUTE",ctx)
+    assert expert["tensor_shape"]["input"] == [17,4096]
+    assert expert["tensor_size_bytes"]["output"] == 17*4096*2
+    assert expert["physical_scope"] == "native_experts_inclusive" and "internal_tensor_shape" not in expert
+    frame={**frame,"native_context":{**native,"source_activation_layout":dict(shape=[1,4096],dtype="float8_e4m3fn",element_size=1),
+        "source_scale_layout":dict(shape=[1,32],dtype="float32",element_size=4)}}
+    prepare=compute_op_trace_meta("moe_input_quantize","COMPUTE",replace(ctx,step5_moe_frame=frame))
+    assert prepare["tensor_shape"]["input"] == prepare["tensor_shape"]["output"] == [1,4096]
+    assert prepare["tensor_dtype"]["input"] != prepare["tensor_dtype"]["output"]

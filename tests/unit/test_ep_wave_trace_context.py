@@ -112,3 +112,49 @@ def test_ep_context_is_built_only_once_per_traced_positive_phase(
         assert event.layer_id == 7
     events[0].meta["parallel_context"]["PP"] = 99
     assert events[1].meta["parallel_context"]["PP"] == 1
+
+
+def test_step5_real_wave_metrics_trace_and_ledger_share_physical_proofs():
+    import json
+    from dataclasses import replace
+    from frontier.config.model_config import BaseModelConfig
+    from frontier.cc_backend.collective_plan import CollectivePlanCost
+    from frontier.entities.time_components import CommunicationOperatorTimes
+    from tests.unit.test_moe_position_routing import source,materialize
+    from tests.unit.test_step5_moe_pricing import plan as collective_plan
+    store,wave=_reporting_case()
+    replica=store._cluster_configs[ClusterType.MONOLITHIC].replica_config
+    replica.model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    replica.model_name="stepfun-ai/Step-5-Preview"
+    replica.attn_tensor_parallel_size=8;replica.moe_tensor_parallel_size=1;replica.moe_expert_parallel_size=16
+    src=source();lane=materialize(src).lane(0)
+    plans={"step5_moe_dispatch":collective_plan(),"step5_moe_combine":collective_plan(phase="combine")}
+    plans["moe_tensor_parallel_allreduce"]=replace(collective_plan(),phase="routed_tp",groups=(tuple(range(8)),tuple(range(8,16))))
+    costs={name:CollectivePlanCost(3.,1.,(1.,)*16,1.,(2,)*16,json.dumps(dict(kernel_counts=[2]*16,
+        per_rank_events=[["cpu_fixture"]]*16,source_receipt="cpu_fixture",evidence_kind="cpu_fixture")),p.cache_key(),"cpu_fixture")
+        for name,p in plans.items()}
+    times={"moe_gating_linear":1.,"moe_gating_routing_topk":1.,"moe_input_quantize":1.,"moe_grouped_gemm":2.}
+    layer=_layer(3,is_moe=True,op_times={**times,"moe_tensor_parallel_allreduce":3.},
+        communication_operator_times=CommunicationOperatorTimes({name:3. for name in plans},plans=plans,costs=costs))
+    assert layer.moe_input_quantize_time == 1.
+    assert _layer(3,is_moe=True).moe_input_quantize_time == 0.
+    layer.moe_operator_times=replace(layer.moe_operator_times,physical_frame=dict(routing_source=src,ep_id=0,
+        live_local_assignments=0,operator_costs={name:dict(kernel_count=3,evidence_kind="cpu_fixture") for name in times},
+        native_context=dict(activation_layout=dict(shape=[17,4096],dtype="float8_e4m3fn",element_size=1),
+            scale_layout=dict(shape=[17,32],dtype="float32",element_size=4),
+            source_activation_layout=dict(shape=[16,4096],dtype="float8_e4m3fn",element_size=1),
+            source_scale_layout=dict(shape=[16,32],dtype="float32",element_size=4))))
+    record=wave.phase_times.lane_records[0];record.batch._lane_workload=lane
+    wave.phase_times=wave.phase_times._replace(lane_records=(EPWaveLaneTiming(0,record.batch,StageExecutionTime((layer,))),))
+    store._get_step5_layer_metadata=lambda replica,layer_id:None
+    ep_wave_metrics.record_ep_wave(store,wave,time=1.,replica_id=0,stage_id=0,cluster_type=ClusterType.MONOLITHIC)
+    events={call.args[0].name:call.args[0] for call in store.trace_store.log_event.call_args_list}
+    assert "moe_shuffling" not in events and store._push_metric.call_count == len(events)
+    assert events["moe_grouped_gemm"].meta["tensor_shape"]["input"] == [17,4096]
+    assert events["moe_input_quantize"].meta["tensor_shape"]["output"] == [16,4096]
+    assert events["moe_grouped_gemm"].meta["live_local_assignments"] == 0
+    assert events["step5_moe_dispatch"].duration_ms == 3.
+    ledger=store._frontier_ep_wave_lane_ledger_rows[0]
+    assert ledger["routing_source"]["source_lanes"][0]["source_batch_id"] == 2
+    assert ledger["phases"]["dispatch"]["collective_proofs"]["step5_moe_dispatch"]["cost"]["kernel_counts"] == (2,)*16
+    assert ledger["phases"]["routed_compute"]["compute_proofs"]["moe_grouped_gemm"]["kernel_count"] == 3

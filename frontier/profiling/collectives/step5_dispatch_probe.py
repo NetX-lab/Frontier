@@ -46,9 +46,18 @@ def parse_args(argv=None):
     parser.add_argument("--data-parallel-size", type=int, default=2)
     parser.add_argument("--gpus-per-node", type=int, default=8)
     parser.add_argument("--tokens-per-dp-rank", type=int, nargs="+")
+    parser.add_argument("--routing-input-file",type=Path)
+    parser.add_argument("--moe-input-ids",nargs="+")
     parser.add_argument("--disable-custom-all-reduce", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
+    bound=os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+    selected=os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") == "position_cyclic"
+    if bound or selected or args.routing_input_file or args.moe_input_ids:
+        if not (bound and args.routing_input_file and args.moe_input_ids) or args.tokens_per_dp_rank is not None:
+            parser.error("Bound position probe requires explicit input file/IDs, not a legacy token vector")
+        if len(set(args.moe_input_ids)) != len(args.moe_input_ids):
+            parser.error("Probe input IDs must be distinct")
     try:
         expected_topology(args.tensor_parallel_size, args.data_parallel_size, args.gpus_per_node)
     except ValueError as error:
@@ -151,8 +160,8 @@ def probe_plan(args):
         cases.append({"layer_id": layer, "precision": precision,
                       "prefix": f"model.layers.{layer}.moe",
                       "expected_columns_dtypes": tensors,
-                      "design_row_bytes": design_bytes})
-    return {"schema_version": 1, "purpose": "native_dispatch_identity",
+                       "design_row_bytes": design_bytes})
+    result = {"schema_version": 1, "purpose": "native_dispatch_identity",
             "cost_data": False, "timing_rows": 0,
             "verification_scope": "native_moe_layer",
             "full_model_verified": False, "model_runner_verified": False,
@@ -163,7 +172,20 @@ def probe_plan(args):
                                           args.gpus_per_node),
             "tokens_per_dp_rank": list(args.tokens_per_dp_rank),
             "disable_custom_all_reduce": args.disable_custom_all_reduce,
-            "cases": cases}
+             "cases": cases}
+    if args.routing_input_file:
+        from dataclasses import asdict
+        from frontier.profiling.moe.inputs import read_routing_profile_inputs
+        inputs={item.moe_input_id:item for item in read_routing_profile_inputs(args.routing_input_file)}
+        if not set(args.moe_input_ids) <= inputs.keys():
+            raise ValueError("Selected probe input is missing from retained source file")
+        if any(len(inputs[key].source_frames) != args.data_parallel_size for key in args.moe_input_ids):
+            raise ValueError("Selected probe input DP world differs from allocation")
+        result.pop("tokens_per_dp_rank")
+        result.update(verification_scope="eager_native_moe_module",profile_manifest=os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"],
+            routing_input_file=str(args.routing_input_file),moe_input_ids=args.moe_input_ids,
+            cases=[{**case,"routing_input":asdict(inputs[key])} for key in args.moe_input_ids for case in cases])
+    return result
 
 
 def tensor_schema(tensor):
@@ -325,7 +347,7 @@ def compare_dispatch(case, calls, *, rows, sizes, dp_ranks, tp_ranks, hidden):
             "observed_row_bytes": observed_bytes, "differences": differences}
 
 
-def create_native_config(args):
+def create_native_config(args, *, engine_limits=None):
     """Use the same text-submodel and quantization mappings as native serving."""
     from vllm.engine.arg_utils import EngineArgs
     from vllm.model_executor.model_loader.utils import configure_quant_config
@@ -338,6 +360,9 @@ def create_native_config(args):
         enable_expert_parallel=True, all2all_backend="allgather_reducescatter",
         distributed_executor_backend="external_launcher", enforce_eager=True,
         disable_custom_all_reduce=args.disable_custom_all_reduce,
+        **({name: value for name, value in engine_limits.items()
+            if name in ("max_model_len", "max_num_batched_tokens", "max_num_seqs")}
+           if engine_limits is not None else {}),
     ).create_engine_config()
     config = config.with_hf_config(config.model_config.hf_text_config,
                                    architectures=["Step5ForCausalLM"])
@@ -366,14 +391,34 @@ def native_backend(layer):
     method = routed.quant_method
     backend = getattr(method, "fp8_backend", getattr(method, "unquantized_backend", None))
     kernel = method.moe_kernel
+    quant=kernel.fused_experts.quant_config.quant_dtype
     return {"runner_class": type(layer.experts).__name__,
             "quant_method": type(method).__name__,
             "oracle_backend": getattr(backend, "name", None),
             "experts_class": type(kernel.fused_experts).__name__,
+            "quant_dtype": None if quant is None else str(quant).removeprefix("torch."),
+            "defer_input_quant": bool(kernel.fused_experts.expects_unquantized_inputs),
             "prepare_finalize_class": type(kernel.prepare_finalize).__name__,
             "w13": tensor_schema(routed.w13_weight),
             "w2": tensor_schema(routed.w2_weight),
-            "sequence_parallel": layer.use_sequence_parallel}
+             "sequence_parallel": layer.use_sequence_parallel}
+
+
+@contextmanager
+def source_forward_context(config, rows, sizes, device, routing_input, dp_rank):
+    """Bind the one CORE materialization to the real native eager forward."""
+    from vllm.forward_context import set_forward_context
+    if routing_input is None:
+        with set_forward_context(None,config,num_tokens=rows,num_tokens_across_dp=sizes):
+            yield
+    else:
+        from frontier.profiling.moe.inputs import MoESourceFrame, source_frame_tensors
+        from vllm.forward_context import set_routing_positions
+        frame=MoESourceFrame(**routing_input["source_frames"][dp_rank])
+        positions,is_padding=source_frame_tensors(frame,device=device)
+        with set_forward_context(None,config,num_tokens=rows,num_tokens_across_dp=sizes,is_padding=is_padding):
+            with set_routing_positions(positions):
+                yield
 
 
 def run_probe(args, plan):
@@ -433,6 +478,10 @@ def run_probe(args, plan):
             sizes = torch.tensor(args.tokens_per_dp_rank, dtype=torch.int32, device="cpu")
             hidden = config.model_config.hf_text_config.hidden_size
             for case in plan["cases"]:
+                routing_input=case.get("routing_input")
+                vector=(args.tokens_per_dp_rank if routing_input is None else
+                    [frame["physical_rows"] for frame in routing_input["source_frames"]])
+                rows=vector[dp_rank];sizes=torch.tensor(vector,dtype=torch.int32,device="cpu")
                 error_start = len(errors)
                 emit({"event": "layer_start", "layer_id": case["layer_id"]})
                 layer = load_native_layer(config, case, device)
@@ -440,6 +489,15 @@ def run_probe(args, plan):
                 result = {"layer_id": case["layer_id"], "observer_errors": observer.errors,
                           "comparison": {"status": "unverified", "differences": []}}
                 report["layers"].append(result)
+                if routing_input is not None:
+                    result.update(moe_input_id=routing_input["moe_input_id"],source_frame=routing_input["source_frames"][dp_rank])
+                    with diagnostic_scope(observer.errors,"bound_native_source"):
+                        from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+                        from vllm.forward_context import set_routing_positions
+                        result["native_facts"]=verify_step5_profile_runtime(plan["profile_manifest"],
+                            callables=[type(layer),layer.forward,set_forward_context,set_routing_positions,
+                                layer.experts.router.select_experts,
+                                layer.experts.routed_experts.quant_method.moe_kernel.apply])
                 with diagnostic_scope(observer.errors, "native_backend"):
                     result.update(native_backend(layer))
                 emit({"event": "native_backend", **result})
@@ -451,8 +509,7 @@ def run_probe(args, plan):
                     observation.enter_context(observer.experts(
                         layer.experts.routed_experts.quant_method.moe_kernel.fused_experts))
                 try:
-                    with torch.inference_mode(), set_forward_context(
-                            None, config, num_tokens=rows, num_tokens_across_dp=sizes):
+                    with torch.inference_mode(), source_forward_context(config,rows,sizes,device,routing_input,dp_rank):
                         shared, routed = layer(inputs)
                         torch.cuda.synchronize(device)
                 finally:
@@ -464,8 +521,23 @@ def run_probe(args, plan):
                     result.update({"shared_output": tensor_schema(shared),
                                    "routed_output": tensor_schema(routed)})
                 with diagnostic_scope(observer.errors, "compare_dispatch"):
+                    expected_case=case
+                    if routing_input is not None:
+                        quant=result["quant_dtype"]
+                        if quant not in (None,"float8_e4m3fn"):
+                            raise ValueError("Bound probe reached an unsupported activation quantization")
+                        fp8=quant == "float8_e4m3fn" and not result["defer_input_quant"]
+                        topk=config.model_config.hf_text_config.moe_top_k
+                        columns=[(hidden,"float8_e4m3fn" if fp8 else "bfloat16"),(topk,"float32"),(topk,"int32")]
+                        if fp8:
+                            quant_config=layer.experts.routed_experts.quant_method.moe_kernel.fused_experts.quant_config
+                            shape=quant_config.scale_shape(rows,hidden)
+                            if shape != (1,1): columns.append((shape[1],"float32"))
+                        from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+                        expected_case={**case,"expected_columns_dtypes":columns,
+                            "design_row_bytes":sum(c*DTYPE_BYTES[d] for c,d in columns)}
                     result["comparison"] = compare_dispatch(
-                        case, observer.calls, rows=rows, sizes=args.tokens_per_dp_rank,
+                        expected_case, observer.calls, rows=rows, sizes=vector,
                         dp_ranks=expected_dp, tp_ranks=expected_tp, hidden=hidden)
                 if observer.errors or len(errors) > error_start:
                     result["comparison"]["status"] = "unverified"
