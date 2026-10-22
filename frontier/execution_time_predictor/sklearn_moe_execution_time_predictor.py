@@ -105,7 +105,7 @@ class SklearnMoEExecutionTimePredictor(
             self._step5_layer_metadata = previous
             self._step5_ffn_costs = previous_costs
 
-    def _predict_step5_ffn_operator(self, model_name, features, *, context=None):
+    def _step5_ffn_model(self, model_name, *, context=None):
         metadata = self._step5_layer_metadata
         if metadata is None:
             raise ValueError("Step measured FFN coverage requires an explicit physical layer context")
@@ -119,6 +119,13 @@ class SklearnMoEExecutionTimePredictor(
         )
         if model is None:
             raise ValueError(f"Step measured {model_name} {precision.name} layer {metadata.attention_spec.global_layer_id} coverage is unavailable")
+        return model, precision
+
+    def _predict_step5_ffn_operator(self, model_name, features, *, context=None):
+        model, precision = self._step5_ffn_model(model_name, context=context)
+        metadata = self._step5_layer_metadata
+        from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+        base_name = get_moe_gating_base_model_name(model_name)
         names = tuple(model._frontier_feature_names)
         exact = model._frontier_exact_lookup
         if not exact:

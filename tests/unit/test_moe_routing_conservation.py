@@ -32,6 +32,53 @@ def test_actual_scheduler_lane_batch_uses_its_admitted_source_width():
         source_lane_index_for_ep(8, attention_tp_size=8, source_lane_count=2, participant_ep_ids=tuple(range(8)))
 
 
+@pytest.mark.parametrize("mode", ["sequential", "multiprocessing", "ray"])
+def test_position_cells_reach_each_actual_executor_once(tmp_path, monkeypatch, mode):
+    import json, sys
+    from concurrent.futures import Future
+    from frontier.profiling.moe import main
+    from frontier.profiling.moe.inputs import routing_profile_cell
+    input_path = tmp_path / "inputs.json"
+    input_path.write_text(json.dumps({"schema_version": "moe.position_cyclic.inputs.v1", "routing_runtime_path": "position_cyclic", "inputs": [dict(moe_input_id="cpu_executor_only", gathered_physical_rows=17, source_frames=[dict(source_lane_id=i, query_lens=[16] if i == 0 else [], context_lens=[6128] if i == 0 else [], physical_rows=16 if i == 0 else 1, gating_runtime_context="standalone_legacy") for i in range(2)])]}))
+    monkeypatch.setattr(sys, "argv", ["moe", "--device", "h800", "--models", "stepfun-ai/Step-5-Preview", "--routing_runtime_path", "position_cyclic", "--routing_input_file", str(input_path), "--num_tensor_parallel_workers", "1", "--expert_parallel_sizes", "16"])
+    args, _ = main.parse_args(); args.disable_ray = mode != "ray"; args.num_gpus = 2 if mode == "multiprocessing" else 1
+    seen, updates = [], []
+    class Wrapper:
+        def __init__(self, *a, **kwargs):
+            self.group = kwargs["routed_layer_group"].layer_range
+        def profile(self, *, routing_cell):
+            cell = routing_profile_cell(routing_cell)
+            seen.append((self.group, cell))
+            return dict(time_stats={"moe_grouped_gemm": {"median": 1.}}, moe_input_id=cell.routing_input.moe_input_id, moe_layer_ids=self.group, moe_frame_scope=cell.moe_frame_scope, moe_source_lane_id=cell.source_lane_id, moe_ep_rank=cell.ep_id)
+    torch = SimpleNamespace(bfloat16="bfloat16", float16="float16", float32="float32", cuda=SimpleNamespace(set_device=lambda *a: None))
+    monkeypatch.setitem(sys.modules, "torch", torch)
+    monkeypatch.setitem(sys.modules, "frontier.profiling.moe.moe_impl", SimpleNamespace(get_routing_runtime_metadata=lambda path: {"routing_runtime_path": path}))
+    monkeypatch.setattr(main, "_ensure_torch_available", lambda: torch)
+    monkeypatch.setattr(main, "_get_moe_wrapper_class", lambda: Wrapper)
+    monkeypatch.setattr(main, "_get_available_gpus", lambda n: list(range(n)))
+    monkeypatch.setattr(main, "set_process_visible_device", lambda *a, **k: None)
+    monkeypatch.setattr(main, "_validate_canonical_moe_result_df", lambda df, **k: None)
+    class Executor:
+        def __init__(self, **kwargs): pass
+        def submit(self, fn, task):
+            monkeypatch.setattr(main, "_CUDA_INITIALIZED", False)
+            future = Future(); future.set_result(fn(task)); return future
+        def shutdown(self, **kwargs): pass
+    monkeypatch.setattr(main, "ProcessPoolExecutor", Executor)
+    def actor(*a, **k):
+        wrapper = Wrapper(*a, **k)
+        return SimpleNamespace(profile=SimpleNamespace(remote=wrapper.profile))
+    monkeypatch.setattr(main, "RAY_AVAILABLE", True)
+    monkeypatch.setattr(main, "ray", SimpleNamespace(remote=lambda **k: lambda cls: SimpleNamespace(options=lambda **k: SimpleNamespace(remote=actor)), get=lambda values: values))
+    frame = main.profile_model(args, args.models[0], [4096], SimpleNamespace(update=updates.append), True)
+    assert len(frame) == len(seen) == len(updates) == 36 and set(updates) == {1}
+    for group in ("3-87", "88-90"):
+        cells = [cell for layer, cell in seen if layer == group]
+        assert sorted((c.source_lane_id, c.ep_id) for c in cells if c.moe_frame_scope == "source_local") == [(0, None), (1, None)]
+        assert sorted((c.ep_id, c.source_lane_id) for c in cells if c.moe_frame_scope == "dp_gathered") == [(i, i // 8) for i in range(16)]
+    assert main._count_moe_configurations(num_tokens_count=1, tensor_parallel_count=1, expert_parallel_count=1, routed_layer_group_count=2, cases_per_parallel_point=99, routing_inputs=main._routing_inputs_for_model(args, main.ModelConfig.from_model_name(args.models[0])), expert_parallel_sizes=[16]) == 36
+
+
 def _predictor_package_source() -> str:
     return "".join(
         path.read_text(encoding="utf-8")

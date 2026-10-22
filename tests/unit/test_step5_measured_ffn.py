@@ -52,6 +52,48 @@ def test_position_runtime_requires_actual_empty_physical_exact_pair(model, monke
         predictor._get_on_demand_prediction("moe_shuffling", dict(num_tokens=8), context=native)
 
 
+def test_native_feature_schema_keeps_exact_order_backend_and_legacy_ranges():
+    from frontier.moe_load_imbalance import moe_grouped_gemm_schema, MOE_GROUPED_GEMM_PADDED_FEATURES
+    legacy = moe_grouped_gemm_schema(MOE_GROUPED_GEMM_PADDED_FEATURES)
+    assert legacy.uses_block_size_m_ranges and legacy.experts_class is None
+    from frontier.execution_time_predictor import step5_cost
+    if not hasattr(step5_cost, "STEP5_NATIVE_EXPERT_SCHEMAS"):
+        pytest.skip("PRICING06bae09 selected schema registry is not yet import-authorized")
+    for experts, features in (("TritonExperts", ("num_tokens", "total_routed_tokens", "num_tokens_post_padded")),
+            ("DeepGemmExperts", ("num_tokens", "total_routed_tokens", "native_capacity_rows", "native_alignment"))):
+        context = dict(experts_class=experts, physical_scope="native_experts_inclusive")
+        selected = moe_grouped_gemm_schema(features, native_context=context)
+        assert selected.features == features and not selected.uses_block_size_m_ranges
+        for invalid in (features[::-1], features + ("other",), MOE_GROUPED_GEMM_PADDED_FEATURES):
+            with pytest.raises(ValueError, match="actual selected native expert"):
+                moe_grouped_gemm_schema(invalid, native_context=context)
+        with pytest.raises(ValueError, match="actual selected native expert"):
+            moe_grouped_gemm_schema(features, native_context={**context, "experts_class": "unselected"})
+    assert moe_grouped_gemm_schema(("num_tokens",)) is None
+
+
+def test_step_selected_model_uses_real_precision_registry_not_generic_prediction(tmp_path, monkeypatch):
+    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
+    from frontier.execution_time_predictor import sklearn_moe_execution_time_predictor as runtime
+    from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
+    from tests.unit.test_step5_measured_training import _manager
+    config = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    manager = _manager(tmp_path / "cache", MeasurementType.CUDA_EVENT)
+    contract = config.get_model_architecture_profile().resolve_layer_contract(config,
+        layer_id=3, operator_name="moe_grouped_gemm", moe_tp_size=1, expert_parallel_size=16)
+    identity = _serialize_selected_layer_cache_identity(contract)
+    fitted = {precision: SimpleNamespace(_frontier_layer_cache_identity=identity) for precision in (PrecisionType.FP8, PrecisionType.BF16)}
+    for precision, model in fitted.items():
+        manager._store_model_precision("moe_grouped_gemm", precision.name, model, layer_contract=contract)
+    predictor = object.__new__(_ConcreteMoEPredictor)
+    predictor._model_manager, predictor._active_measurement_type = manager, MeasurementType.CUDA_EVENT
+    predictor._predictions = {"moe_grouped_gemm": pytest.fail}
+    predictor._step5_layer_metadata = SimpleNamespace(attention_spec=SimpleNamespace(global_layer_id=3))
+    monkeypatch.setattr(runtime, "step5_operator_binding", lambda *a, context, **k: (context["precision"], identity))
+    for precision in fitted:
+        assert predictor._step5_ffn_model("moe_grouped_gemm", context={"precision": precision}) == (fitted[precision], precision)
+
+
 @pytest.fixture(scope="module")
 def model():
     return BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")

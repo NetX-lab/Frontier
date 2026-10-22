@@ -27,6 +27,10 @@
 - completed source bytes/binding: actual publication/export/2907sources/53pins/4derived/12backend checks PASS02 and profile_native_binding PASS01. Exact published platform digest and receipt/config hashes bind; index/base/wrong generation/missing receipt rejected. First static probe's mistaken unquantized symbol/list-set assertion failed after hashes passed; actual exported symbol inspection corrected that probe once. Authentic receipt root/version/image unchanged; no runtime imports or GPU claimed.
 - completed P2 fix: actual construction seam omitted native_router._select_experts from callable tuple. Initial test setup hit stale synthetic derivation hash, not the defect. Hypothesis recorded before refreshing that test-only seal; decisive RED02 failed DID NOT RAISE. Existing tuple now includes actual bound implementation; GREEN03 20PASS plus37PASS baseline verifier/metadata. No verifier/native behavior change. Fault-injected source fixture is solely regression evidence, never published source evidence. Exact commands in test_report_2026-10-23_router_provenance.md. Current37paths,+2116/-133=2249/4404 gross,2155 remain; every path ceiling passes.
 - completed P2 commit795a583 delivered early for re-review. Source/CLI slice: one source_lane_index_for_ep validates the same contiguous DP/TP world and existing admitted lane builder selects source-local16/1 widths while retaining gathered17; explicit position CLI input parses before dry-run/execution and planning uses source widths, not legacy grid4096. Focused source/CLI48PASS/1SKIP/4 deselected. New tests placed in existing owned conservation file with unused allocation, not added to the full160-line position test. Temporary per-path excesses during WIP were eliminated before commit; no allowance borrowed. Current39/44 paths,+2201/-135=2336/4404 gross,2068 remain.
+- completed source/CLI commit e255ede. Authentic published-receipt fresh P/D package verification PASS:548 files each, attention2/18,linear24/28,MoE36 planned cells/method. Routing input is explicitly synthetic CPU plumbing; no native census/runtime admission. Actual published identity/receipt unchanged.
+- in-progress executor proof: first run failed before dispatch because torch CPU seam lacked bfloat16; predicted correction passes dtype stage. Second run sequential/Ray PASS; multiprocessing preserved all36 cells but test assumed cross-GPU invocation order. Existing tasks_by_gpu intentionally groups submissions, so contract is cell set/count, not inter-GPU order. Hypothesis: select source/gathered by frame_scope instead of list position and all three actual executors pass; production order unchanged.
+- completed: three actual executors preserve36 source/EP cells; shared schema/range classifier consumes only PRICING's sole native feature table.65PASS/1SKIP. Actual per-layer precision registry/model lookup refactored once for feature construction and prediction; FP8/BF16 real manager test72PASS/2SKIP. Native schema and production native feature branch still await authorized06bae09 import. Current40/44 paths,2514/4404 gross,1890 remain; all per-path/AST/whitespace checks PASS. Evidence: test_report_2026-10-23_schema_executors.md.
+- boundary observed: actual `_store_model_precision` replaces first same-name/typed-contract/precision native binding; `/data/ycfeng/tmp/d29-core-registry-collision03.log`. Registry/identity paths are outside44 owned files. Root coordination required; no aliases/parallel registry introduced. First diagnostic attempts used wrong hardcoded family and failed before observation; third uses actual family. Continue independent wrapper API wiring, not repeat registry exploration.
 
 ## 1. 规划完成情况
 
@@ -43,7 +47,7 @@
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进；前次D2纠正已应用，相关历史保留。
-**检测窗口：** b39fc51 checkpoint 至今｜**当前前沿：** source/CLI commit and fresh actual-receipt package; PRICING selected producer import
+**检测窗口：** e255ede checkpoint 至今｜**当前前沿：** verified executor/schema/model lookup commit; independent wrapper; PRICING import and root registry seam
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -51,24 +55,24 @@
 | D2 细节反复重试 | CLEAR | P2 hypothesis preceded refreshed test-only seal; one decisive RED then GREEN; quota excess corrected before commit |
 | D3 支线问题修补 | CLEAR | no unrelated fixes |
 | D4 可并行任务停滞 | CLEAR | runtime and independent source work both advanced; user prohibits extra agents |
-| D5 超范围镀金 | CLEAR | 39 owned paths,2336/4404 gross; each individual retained ceiling passes |
+| D5 超范围镀金 | CLEAR | 40 owned paths,2514/4404 gross; exact per-file ceilings pass |
 | D6 分析空转 | CLEAR | real source/timer/launcher changes and tests delivered; remaining dependency named precisely |
 | D7 路线违背 | CLEAR | only authorized peer history imports; no platform/source fallback |
 
-**文档检查：** S1-S6均无新缺陷；原依赖历史由最新source/import结果明确更新，未扩展scope。
+**文档检查：** S5 plan.md continuation曾把canonical CSV拼写列为外部设计依赖；已更新为CORE implementation。S2 model registry collision为现有验收真实阻塞但unowned；plan/interface receipt已纳入root coordination，未扩展ownership。其他S项CLEAR。
 **归因：** 无。
 
 ## 3. 纠正建议
 
-**分支：** A：spec/plan合理，无需改动。
+**分支：** B：先更新过时依赖和unowned registry boundary，已直接更新plan/interface receipt；任何新增文件ownership仍需root批准。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. Commit verified source-local lane/CLI slice and fresh authentic-receipt package → 完成标志：one sealed package accepts real platform digest/receipts/source revision, commands consume same explicit input; no runtime admission claimed.
-2. Resume selected trainers/preflight/wrapper/main → 完成标志：all selected source/gathered/empty physical exact pairs, both actual pre-loader paths and schema/cache checks pass.
+1. Commit verified executor/schema/model lookup slice → 完成标志：three actual executors preservecell set，real precision lookup passes；native-schemaSKIP明示。
+2. Resume independent wrapper API wiring; import PRICING only after authorization → 完成标志：source-local prepare/gating and gathered inclusive expert useactual widths/IDs，one CSV；no legacy shuffle/native fallback。
 3. Finish new fixture/main → 完成标志：retained6144/1024,D26/D27/D30,offline+online actual-main checks within original2400s limit; root separately qualifies native/image/E2E.
 
 ## 4. 最值得关注的 3 点
 
-1. Actual selected preflight/shared+independent fit/cache/exact pairs pass; canonical production schema enumeration remains incomplete.
-2. PRICING committed tip import/CSV/schema/ranges are the exact next dependency;2068 gross lines remain. Source association implemented once; metadata/position test allowances are full.
+1. Selected preflight/shared+independent fit/cache/exact pairs and three executors pass; production context enumeration remains incomplete.
+2. Root-authorized PRICING tip import and reproduced unowned registry seam are exact prerequisites;1890gross lines remain. No parallel registry/alias workaround。
 3. Root supplied actual published-source evidence; native GPU/runtime/E2E remains UNVERIFIED and root-owned.

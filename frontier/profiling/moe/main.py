@@ -607,7 +607,11 @@ def _count_moe_configurations(
     expert_parallel_count: int,
     routed_layer_group_count: int,
     cases_per_parallel_point: int,
+    routing_inputs=None,
+    expert_parallel_sizes=(),
 ) -> int:
+    if routing_inputs is not None:
+        return routed_layer_group_count * sum(len(_position_profile_cases(routing_inputs, size)) for size in expert_parallel_sizes)
     return (
         num_tokens_count
         * tensor_parallel_count
@@ -660,6 +664,8 @@ def _build_moe_confirmation_sections(
             expert_parallel_count=len(ep_sizes),
             routed_layer_group_count=len(layer_groups),
             cases_per_parallel_point=cases_per_parallel_point,
+            routing_inputs=_routing_inputs_for_model(args, model_config),
+            expert_parallel_sizes=ep_sizes,
         )
         layer_group_text = ""
         if layer_groups != (None,):
@@ -816,7 +822,9 @@ def profile_model(
                 )
 
             # Generate test cases based on load imbalance settings
-            if args.enable_load_imbalance:
+            if routing_inputs is not None:
+                test_cases = _position_profile_cases(routing_inputs, expert_parallel_size)
+            elif args.enable_load_imbalance:
                 test_cases = []
                 for num_tokens in num_tokens_to_profile:
                     for load_dist in args.load_distributions:
@@ -985,6 +993,19 @@ def profile_model(
 MOE_SCHEMA_VERSION = "moe.v1"
 
 
+def _position_profile_cases(inputs, ep_size):
+    from frontier.moe_routing_policy import source_lane_index_for_ep
+    from frontier.profiling.moe.inputs import MoERoutingProfileCell
+    cases = []
+    for item in inputs:
+        cells = [MoERoutingProfileCell(item, "source_local", frame.source_lane_id) for frame in item.source_frames]
+        cells += [MoERoutingProfileCell(item, "dp_gathered", source_lane_index_for_ep(ep_id,
+            attention_tp_size=ep_size // len(item.source_frames), source_lane_count=len(item.source_frames),
+            participant_ep_ids=tuple(range(ep_size))), ep_id) for ep_id in range(ep_size)]
+        cases.extend({"routing_cell": cell.to_json()} for cell in cells)
+    return cases
+
+
 def _routing_inputs_for_model(args, model_config):
     """Validate the same explicit input before either planning or native execution."""
     if getattr(args, "routing_runtime_path", "standard_fused_topk") != "position_cyclic":
@@ -1035,13 +1056,12 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
                 expert_parallel_count=len(expert_parallel_sizes),
                 routed_layer_group_count=len(routed_layer_groups),
                 cases_per_parallel_point=cases_per_parallel_point,
+                routing_inputs=routing_inputs, expert_parallel_sizes=expert_parallel_sizes,
             ),
         }
         if routing_inputs is not None:
             from dataclasses import asdict
             models[model]["routing_inputs"] = [asdict(item) for item in routing_inputs]
-            models[model]["profiled_steps"] = sum(len(item.source_frames) + expert_parallel_sizes[0]
-                                                 for item in routing_inputs) * len(routed_layer_groups)
     return {
         "profile_method": args.profile_method,
         "load_distributions": (
@@ -1208,6 +1228,8 @@ def main():
                     _routed_layer_groups_to_profile(model_configs[model])
                 ),
                 cases_per_parallel_point=cases_per_parallel_point,
+                routing_inputs=_routing_inputs_for_model(args, model_configs[model]),
+                expert_parallel_sizes=resolved_ep_sizes_by_model[model],
             )
             for model in args.models
         )

@@ -395,7 +395,9 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
-                    if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+                    from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+                    schema = moe_grouped_gemm_schema(op_feature_cols)
+                    if schema is not None and schema.uses_block_size_m_ranges:
                         models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
                             op_moe_df
                         )

@@ -25,6 +25,7 @@ from frontier.moe_load_imbalance import (
     MOE_LOAD_IMBALANCE_FEATURES,
     MoELoadImbalanceInput,
     block_size_m_for_tokens,
+    moe_grouped_gemm_schema,
     num_tokens_post_padded,
 )
 from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
@@ -599,6 +600,7 @@ class MoeRoutingWorkload:
         lane_workload: EPLaneWorkload,
         *,
         batch: Optional[Batch] = None,
+        native_context=None,
     ) -> Dict[str, float]:
         """Features of the on-demand grouped-GEMM model for one EP lane.
 
@@ -609,8 +611,21 @@ class MoeRoutingWorkload:
         pre-routing token count, from the ranges the profiler recorded. Other
         models take the load-imbalance features.
         """
+        if lane_workload.routing_source is not None:
+            if native_context is None:
+                raise ValueError("Position expert features require the actual selected native context")
+            from frontier.execution_time_predictor.step5_cost import step5_native_expert_features
+            model, _ = self._step5_ffn_model("moe_grouped_gemm", context=native_context)
+            schema = moe_grouped_gemm_schema(model._frontier_feature_names, native_context=native_context)
+            features = step5_native_expert_features(native_context,
+                physical_rows=lane_workload.routing_source.gathered_physical_rows,
+                live_assignments=lane_workload.routed_token_count)
+            if tuple(features) != schema.features:
+                raise ValueError("Native expert features differ from the selected per-layer model schema")
+            return features
         model_info = self._predictions["moe_grouped_gemm"]
-        if tuple(model_info["_feature_names"]) != MOE_GROUPED_GEMM_PADDED_FEATURES:
+        schema = moe_grouped_gemm_schema(model_info["_feature_names"])
+        if schema is None:
             return self._build_moe_load_imbalance_features(lane_workload, batch=batch)
         block_size_m = block_size_m_for_tokens(
             model_info["_model"]._frontier_block_size_m_ranges,

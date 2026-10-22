@@ -64,6 +64,9 @@ def select_moe_operator_features(
         if model_name != operator_facts["model_name"]:
             raise ValueError("MoE feature selection conflicts with bound model context")
         features = list(operator_facts["feature_columns"])
+        if not operator_facts["spec"].ep_agnostic:
+            from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+            moe_grouped_gemm_schema(features, native_context=operator_facts["native_context"])
         if not features or set(features) - set(op_df.columns) or op_df[features].isna().any().any():
             raise ValueError("MoE selected native feature schema lacks complete physical coverage")
         return op_df, features
@@ -78,7 +81,8 @@ def select_moe_operator_features(
                     "the grouped GEMM needs it on every row or on none"
                 )
             padded_df = op_df.assign(num_tokens_post_padded=op_df[NUM_TOKENS_POST_PADDED_COLUMN])
-            return padded_df, list(MOE_GROUPED_GEMM_PADDED_FEATURES)
+            from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+            return padded_df, list(moe_grouped_gemm_schema(MOE_GROUPED_GEMM_PADDED_FEATURES).features)
         if load_features and not has_load_features:
             missing = [name for name in MOE_LOAD_IMBALANCE_FEATURES if name not in op_df.columns]
             raise ValueError(
@@ -507,7 +511,9 @@ class MoeDatasetTraining:
                 feature_cols=feature_cols,
                 target_col=target_col,
             )
-            if feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
+            from frontier.moe_load_imbalance import moe_grouped_gemm_schema
+            schema = moe_grouped_gemm_schema(feature_cols)
+            if schema is not None and schema.uses_block_size_m_ranges:
                 models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(op_df)
             logger.info(f"Trained MoE model: {model_name}")
 

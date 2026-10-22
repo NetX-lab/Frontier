@@ -33,6 +33,33 @@ MOE_LOAD_IMBALANCE_FEATURES = (
 MOE_GROUPED_GEMM_PADDED_FEATURES = ("total_routed_tokens", "num_tokens_post_padded")
 
 
+@dataclass(frozen=True)
+class MoEGroupedGEMMSchema:
+    features: tuple[str, ...]
+    experts_class: str | None
+    uses_block_size_m_ranges: bool
+
+
+_GROUPED_GEMM_SCHEMAS = {schema.features: schema for schema in (
+    MoEGroupedGEMMSchema(MOE_GROUPED_GEMM_PADDED_FEATURES, None, True),
+)}
+
+
+def moe_grouped_gemm_schema(features, *, native_context=None):
+    """Recognize exact ordered schemas; native physical facts never use legacy ranges."""
+    schema = _GROUPED_GEMM_SCHEMAS.get(tuple(features))
+    if native_context is not None:
+        from frontier.execution_time_predictor.step5_cost import STEP5_NATIVE_EXPERT_SCHEMAS
+        schemas = {names: MoEGroupedGEMMSchema(names, experts, False)
+                   for experts, names in STEP5_NATIVE_EXPERT_SCHEMAS.items()}
+        schema = schemas.get(tuple(features))
+    if native_context is not None and (schema is None or schema.experts_class is None
+            or schema.experts_class != native_context["experts_class"]
+            or native_context["physical_scope"] != "native_experts_inclusive"):
+        raise ValueError("MoE feature schema conflicts with the actual selected native expert")
+    return schema
+
+
 def num_tokens_post_padded(expert_token_counts: Sequence[int], block_size_m: int) -> int:
     """Routed tokens after padding each expert's tokens to a multiple of BLOCK_SIZE_M."""
     return sum(-(-int(count) // block_size_m) * block_size_m for count in expert_token_counts)
