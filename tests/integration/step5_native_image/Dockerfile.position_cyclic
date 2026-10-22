@@ -1,0 +1,19 @@
+FROM a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20
+COPY vllm/forward_context.py /usr/local/lib/python3.12/dist-packages/vllm/forward_context.py
+COPY vllm/models/step5/nvidia/model.py /usr/local/lib/python3.12/dist-packages/vllm/models/step5/nvidia/model.py
+COPY vllm/model_executor/layers/fused_moe/router/router_factory.py /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/router_factory.py
+COPY vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py /usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py
+COPY derived_source_sha256.json /opt/step5-position/derived_source_sha256.json
+COPY derivation_manifest.json /opt/step5-position/derivation_manifest.json
+RUN python3 - <<'PY'
+import hashlib
+import json
+from pathlib import Path
+import py_compile
+root = Path('/usr/local/lib/python3.12/dist-packages')
+pins = json.loads(Path('/opt/step5-position/derived_source_sha256.json').read_text())
+for name, expected in pins.items():
+    path = root / name
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, name
+    py_compile.compile(str(path), doraise=True, invalidation_mode=py_compile.PycInvalidationMode.CHECKED_HASH)
+PY

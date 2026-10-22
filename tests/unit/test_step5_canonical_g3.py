@@ -12,14 +12,23 @@ from tests.integration.step5_pd import build_stage, canonical_replay, r2_canonic
 from tests.unit.test_step5_native_pd import stage_inputs
 
 
-def stage_capture(tmp_path, role_overrides=None):
+def stage_capture(tmp_path, role_overrides=None, runtime_label='step5'):
     inputs = stage_inputs(tmp_path)
     source = tmp_path / "native"
-    for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES:
+    for module in (r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES
+                   + (r2_stage.BACKEND_MODULES if runtime_label == 'step5_position_cyclic' else ())):
         path = source / (module.replace(".", "/") + ".py")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f'"""{module}"""\n')
-    run = r2_canonical.definition(source)
+    run = r2_canonical.definition(source, runtime_label)
+    if runtime_label == 'step5_position_cyclic':
+        import hashlib
+        listing = inputs['image_source_hashes']
+        listing.write_text(listing.read_text()+''.join(
+            hashlib.sha256((source/(module.replace('.', '/')+'.py')).read_bytes()).hexdigest()
+            +'  '+str(Path(inputs['definition']['image_paths']['installed_package']).parent/
+                       (module.replace('.', '/')+'.py'))+'\n'
+            for module in r2_stage.SOURCE_MODULES[-4:]))
     if role_overrides is not None:
         run["role_num_gpu_blocks_override"] = role_overrides
     run["probe_helpers"] = inputs["definition"]["probe_helpers"]
@@ -36,6 +45,120 @@ def stage_capture(tmp_path, role_overrides=None):
         probe_dir=inputs["probe_dir"], job_tag="g3cpu",
         source={"repository": str(r2_stage.REPO), "commit": "unit"})
     return run, config, stage
+
+
+@pytest.fixture
+def derived_image(monkeypatch):
+    # CPU-only supplied identity fixture, never an approved/published image.
+    image = 'hub.stepfun-inc.com/vllm-openai/cpu-fixture@sha256:'+'1'*64
+    monkeypatch.setenv('STEP5_POSITION_CYCLIC_IMAGE', image)
+    return image
+
+
+@pytest.mark.parametrize('identity', ['tag-only', 'same-digest'])
+def test_derived_adapter_requires_changed_immutable_identity(monkeypatch, identity):
+    from tests.comparison.dp_placement_pp import vllm_replay
+    image = ('hub.stepfun-inc.com/vllm-openai/test:mutable' if identity == 'tag-only' else
+             'hub.stepfun-inc.com/vllm-openai/test@'+vllm_replay.STEP5_IMAGE.rsplit('@', 1)[-1])
+    monkeypatch.setenv('STEP5_POSITION_CYCLIC_IMAGE', image)
+    with pytest.raises(ValueError): vllm_replay.adapter_record('step5_position_cyclic')
+
+
+def test_derived_stage_binds_source_root_policy_and_preserves_d30(tmp_path, derived_image):
+    from tests.comparison.dp_placement_pp import vllm_replay
+    run, config, stage = stage_capture(tmp_path, {'decode': 32000}, 'step5_position_cyclic')
+    observation = config['pd_state_observation']
+    assert verify_r2_stage.verify(stage)['status'] == 'PASS_OFFLINE_STAGE'
+    assert config['image'] == derived_image
+    assert observation['installed_native_root'] == config['installed_package']
+    assert len(observation['source_hashes']) == 13
+    assert 'vllm.v1.engine.core' in observation['source_hashes']
+    assert set(r2_stage.BACKEND_MODULES) <= observation['schema_source_hashes'].keys()
+    for plan in json.loads((stage/'preflight.json').read_text()):
+        assert plan['server_env_set']['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'] == 'position_cyclic'
+    for label in ('step5', 'step5_position_cyclic'):
+        assert vllm_replay.adapter_record(label)['http_capture']
+    for label in ('0.10.2', '0.28.0'):
+        assert not vllm_replay.adapter_record(label)['http_capture']
+    engine = config['engine'] | {'vllm_version': 'step5', 'native_reference': {'image': vllm_replay.STEP5_IMAGE}}
+    env, explicit = vllm_replay.server_env('clean', engine, tmp_path,
+        {'VLLM_MOE_ROUTING_SIMULATION_STRATEGY': 'position_cyclic'})
+    assert 'VLLM_MOE_ROUTING_SIMULATION_STRATEGY' not in env and not explicit
+
+
+@pytest.mark.parametrize('fault', ['root', 'model_pin', 'engine', 'policy', 'backend_pin'])
+def test_derived_stage_rejects_missing_or_conflicting_identity(tmp_path, derived_image, fault):
+    _, config, stage = stage_capture(tmp_path, runtime_label='step5_position_cyclic')
+    if fault == 'root':
+        config['pd_state_observation']['installed_native_root'] = '/foreign/vllm'
+    elif fault == 'model_pin':
+        config['pd_state_observation']['schema_source_hashes'].pop('vllm.models.step5.nvidia.model')
+    elif fault == 'engine':
+        (stage/'engine.json').write_text('{}')
+    elif fault == 'backend_pin':
+        config['pd_state_observation']['schema_source_hashes'].pop(r2_stage.BACKEND_MODULES[-1])
+    else:
+        config['pd_state_observation']['routing_strategy'] = 'uniform_random'
+    (stage/'config.json').write_text(json.dumps(config))
+    with pytest.raises((AssertionError, KeyError, ValueError)):
+        verify_r2_stage.verify(stage)
+
+
+@pytest.mark.parametrize('version', ['step5', 'step5_position_cyclic', '0.10.2', '0.28.0'])
+@pytest.mark.parametrize('eof_on_reuse', [False, True])
+def test_actual_http_capability_covers_derived_and_legacy(tmp_path, version, eof_on_reuse):
+    from tests.unit.test_step5_http_capture import exchange
+    results, records, connections = asyncio.run(exchange(tmp_path, repeat=2,
+        eof_on_reuse=eof_on_reuse, version=version))
+    assert results[-1][0] == (502 if eof_on_reuse else 200)
+    if version.startswith('step5'):
+        assert [row['http_capture']['attempts']['decode']['connection'] for row in records] == ['fresh', 'reused']
+        assert records[-1]['http_capture']['attempts']['decode']['events']
+    else:
+        assert 'http_capture' not in records[0]
+
+
+@pytest.mark.parametrize('version', ['step5', 'step5_position_cyclic'])
+@pytest.mark.parametrize('conflict', [False, True])
+def test_actual_r2_driver_propagates_selected_engine_to_all_clients(tmp_path, monkeypatch, derived_image, version, conflict):
+    from tests.integration.step5_pd import r2_replay
+    from aiohttp import web
+    from aiohttp.test_utils import TestServer
+    _, config, stage = stage_capture(tmp_path, runtime_label=version)
+    definition = json.loads((stage/'r2_run.json').read_text())
+    definition['waves'] = [next(wave for wave in definition['waves'] if wave['name'] == name)
+                           for name in ('reference6144', 'canonical6144')]
+    (stage/'r2_run.json').write_text(json.dumps(definition))
+    seen = []
+    monkeypatch.setattr(r2_replay.canonical_replay, 'local_model_config',
+        lambda path, label: seen.append(('model', label)) or {'vocab_size': 32000})
+    original = r2_replay.canonical_replay.build_app
+    def app(*args, **kwargs):
+        seen.append(('proxy', kwargs['vllm_version']))
+        return original(*args, **kwargs)
+    monkeypatch.setattr(r2_replay.canonical_replay, 'build_app', app)
+    async def replay(*args, **kwargs):
+        seen.append(('replay', kwargs['vllm_version'], bool(kwargs['completion_url'])))
+        return {}, []
+    async def idle(*args):
+        return {'verified': False}
+    monkeypatch.setattr(r2_replay.canonical_replay, 'replay', replay)
+    monkeypatch.setattr(r2_replay.canonical_replay, 'observe_idle', idle)
+    if conflict:
+        (stage/'engine.json').write_text(json.dumps(config['engine'] | {'max_num_seqs': 7}))
+    async def run():
+        async with TestServer(web.Application()) as reserve:
+            port = reserve.port
+        args = NS(trace_dir=stage/'trace', engine_config=stage/'engine.json', model_dir=tmp_path,
+                  output_dir=tmp_path/'out', prefill_url='http://127.0.0.1:1',
+                  decode_url='http://127.0.0.1:2', proxy_port=port, origin_lead_s=0)
+        if conflict:
+            with pytest.raises(ValueError, match='identity differs'): await r2_replay.run(args)
+        else:
+            assert await r2_replay.run(args) == 0
+    asyncio.run(run())
+    assert seen == ([] if conflict else [('model', version), ('proxy', version),
+                                        ('replay', version, True), ('replay', version, False)])
 
 
 def test_d28_decode_only_control_preserves_golden_prefill_and_base_engine(tmp_path):

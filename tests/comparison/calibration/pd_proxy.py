@@ -43,7 +43,7 @@ from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parent),
                 str(Path(__file__).resolve().parent.parent / "dp_placement_pp")]
-from vllm_replay import RUNTIME_ADAPTERS, uses_nixl_pull  # noqa: E402
+from vllm_replay import RUNTIME_ADAPTERS, adapter_record, uses_nixl_pull  # noqa: E402
 
 logger = logging.getLogger("pd_proxy")
 
@@ -200,7 +200,7 @@ def proxied_request_id(client_request_id: str, prefill_kv_address: str, decode_k
 def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
               decode_kv_address: str, log_path: Path, *, vllm_version: str = "0.10.2"):
     pull = uses_nixl_pull(vllm_version)
-    capture_http = RUNTIME_ADAPTERS[vllm_version] is RUNTIME_ADAPTERS["step5"]
+    capture_http = adapter_record(vllm_version)['http_capture']
     from aiohttp import ClientError, ClientSession, ClientTimeout, TCPConnector, web
 
     session = None

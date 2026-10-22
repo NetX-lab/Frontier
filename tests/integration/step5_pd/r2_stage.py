@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 
 from tests.integration.step5_pd.r2_observation import NATIVE_SOURCE_PATHS
-from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES
+from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES, BACKEND_MODULES
 
 REPO = Path(__file__).resolve().parents[3]
 RUNTIME_MODULES = tuple(path[:-3].replace("/", ".") for path in NATIVE_SOURCE_PATHS)
@@ -34,20 +34,26 @@ def sha256(path):
 
 def stage_observation(config: dict, definition: dict, stage: Path, model_dir: Path) -> None:
     """Add diagnostic-only inputs before the canonical builder freezes tool hashes."""
-    if definition["vllm_version"] != "step5":
+    from tests.comparison.dp_placement_pp.vllm_replay import adapter_record
+    adapter = adapter_record(definition['vllm_version'])
+    if adapter['model_metadata'] != adapter_record('step5')['model_metadata']:
         raise ValueError("R2 state observation requires the locked Step image")
     if "canonical_g3" in definition:
         from tests.integration.step5_pd.r2_canonical import prepare_traces
         prepare_traces(definition, stage)
         config["canonical_g3"] = dict(definition["canonical_g3"])
     observation = dict(definition["pd_state_observation"])
+    if adapter['native_reference'].get('routing_strategy') == 'position_cyclic':
+        observation.update(routing_strategy='position_cyclic',
+                           installed_native_root=config['installed_package'])
     source_root = Path(observation.pop("source_root"))
     observation["source_hashes"] = {
         module: sha256(source_root / (module.replace(".", "/") + ".py"))
         for module in RUNTIME_MODULES}
     observation["schema_source_hashes"] = {
         module: sha256(source_root / (module.replace(".", "/") + ".py"))
-        for module in SCHEMA_MODULES + (CANONICAL_SCHEMA_MODULES if 'canonical_g3' in definition else ())}
+        for module in SCHEMA_MODULES + (CANONICAL_SCHEMA_MODULES if 'canonical_g3' in definition else ())
+        + (BACKEND_MODULES if observation.get('routing_strategy') == 'position_cyclic' else ())}
     for source, destination in CAPTURE_FILES.items():
         path = stage / destination
         path.parent.mkdir(parents=True, exist_ok=True)

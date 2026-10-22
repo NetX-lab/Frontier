@@ -150,6 +150,7 @@ RUNTIME_ADAPTERS = {
         "installed_version": "0.10.2",
         "connector": "p2p_nccl",
         "native_serving": False,
+        "http_capture": False,
         "modes": (*MODES, "device_timeline"),
         "model_metadata": None,
         "native_reference": None,
@@ -160,6 +161,7 @@ RUNTIME_ADAPTERS = {
         "installed_version": "0.28.0",
         "connector": "nixl_pull",
         "native_serving": True,
+        "http_capture": False,
         "modes": ("clean", "light"),
         "model_metadata": {"files": ("config.json",),
                            "architecture": "GlmMoeDsaForCausalLM",
@@ -179,6 +181,7 @@ RUNTIME_ADAPTERS = {
         "installed_version": STEP5_INSTALLED,
         "connector": "nixl_pull",
         "native_serving": True,
+        "http_capture": True,
         "modes": ("clean",),
         "model_metadata": {"files": ("config.json", "tokenizer_config.json", "tokenizer.json"),
                            "architecture": "Step5ForConditionalGeneration",
@@ -189,13 +192,25 @@ RUNTIME_ADAPTERS = {
         "kv_connector_extra_config": {"backends": ["UCX"], "kv_lease_duration": 30},
     },
 }
+RUNTIME_ADAPTERS['step5_position_cyclic'] = RUNTIME_ADAPTERS['step5'] | {
+    'image_binding_env': 'STEP5_POSITION_CYCLIC_IMAGE',
+    'native_reference': {'image': re.compile(r'[^\s@]+@sha256:[0-9a-f]{64}'),
+                         'base_image': STEP5_IMAGE, 'routing_strategy': 'position_cyclic'}}
 
 
 def adapter_record(version: str) -> dict:
     """Return the declared adapter for a harness version label."""
     if version not in RUNTIME_ADAPTERS:
         raise ValueError(f"Unsupported vLLM harness version: {version!r}")
-    return RUNTIME_ADAPTERS[version]
+    adapter = RUNTIME_ADAPTERS[version]
+    binding = adapter.get('image_binding_env')
+    if binding and binding in os.environ:
+        reference = adapter['native_reference'] | {'image': os.environ[binding]}
+        check_native_reference(reference, adapter['native_reference'])
+        if reference['image'].rsplit('@', 1)[-1] == STEP5_IMAGE.rsplit('@', 1)[-1]:
+            raise ValueError('Derived position image must differ from its locked base')
+        return adapter | {'native_reference': reference}
+    return adapter
 
 
 def uses_nixl_pull(version: str) -> bool:
@@ -230,6 +245,9 @@ def runtime_version(engine: dict) -> str:
     if not adapter["native_serving"]:
         return version
     check_native_reference(engine.get("native_reference"), adapter["native_reference"])
+    if (engine['native_reference'].get('base_image', '').rsplit('@', 1)[-1]
+            == engine['native_reference']['image'].rsplit('@', 1)[-1]):
+        raise ValueError('Derived position image must differ from its locked base')
     expected_init = adapter["skip_tokenizer_init"]
     if (engine.get("load_format") != "dummy"
             or engine.get("skip_tokenizer_init") is not expected_init):
@@ -318,7 +336,7 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         if not key.startswith(("VLLM_FRONTIER_", "VLLM_TORCH_PROFILER_"))
         and key != "VLLM_CUSTOM_SCOPES_FOR_PROFILING"
         and key not in ("VLLM_ATTENTION_BACKEND", "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL",
-                        "VLLM_MOE_UNIFORM_ROUTING")
+                        "VLLM_MOE_UNIFORM_ROUTING", "VLLM_MOE_ROUTING_SIMULATION_STRATEGY")
     }
     if native_serving(runtime_version(engine)):
         adapter = adapter_record(runtime_version(engine))
@@ -329,6 +347,8 @@ def server_env(mode: str, engine: dict, output_dir: Path, inherited: dict,
         if observer is not None and "instrumentation_sha" not in adapter["native_reference"]:
             raise ValueError("Explicit observer JSON requires an instrumented native reference")
         mode_env = {}
+        if 'routing_strategy' in adapter['native_reference']:
+            mode_env['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'] = adapter['native_reference']['routing_strategy']
         if observer is not None:
             validate_observer(observer, engine, mode)
             mode_env["VLLM_FRONTIER_OBSERVER"] = json.dumps(observer, sort_keys=True)

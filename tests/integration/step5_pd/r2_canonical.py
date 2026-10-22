@@ -13,11 +13,18 @@ sys.path.insert(0, str(REPO))
 from tests.integration.step5_pd import canonical_replay, canonical_stage  # noqa: E402
 
 
-def definition(source_root: Path) -> dict:
+def definition(source_root: Path, runtime_label: str = 'step5') -> dict:
     """Reuse the frozen clean engine and R2 collector, not the obsolete short run."""
     settings = json.loads(Path(__file__).with_name("r2_canonical.json").read_text())
     run = canonical_stage.case_definition(json.loads(
         Path(__file__).with_name("canonical_run_h200.json").read_text()), settings["case_id"])
+    from tests.comparison.dp_placement_pp.vllm_replay import adapter_record
+    adapter = adapter_record(runtime_label)
+    if adapter['model_metadata'] != adapter_record('step5')['model_metadata']:
+        raise ValueError('Canonical G3 requires a registered Step runtime')
+    if not isinstance(adapter['native_reference']['image'], str):
+        raise ValueError('Supply the published immutable STEP5_POSITION_CYCLIC_IMAGE before staging')
+    run['vllm_version'] = runtime_label
     common = run.pop("canonical_replay")
     run["description"] = (
         "D21 P0 canonical R2 capture, not clean timing or G3 acceptance. "
@@ -130,8 +137,8 @@ def prepare_traces(run: dict, stage: Path) -> None:
         path.write_text(json.dumps({"rows": rows}, indent=1))
 
 
-def describe(source_root: Path) -> dict:
-    run = definition(source_root)
+def describe(source_root: Path, runtime_label: str = 'step5') -> dict:
+    run = definition(source_root, runtime_label)
     return {"task_id": "D21-CANONICAL-G3", "definition": run,
             "status": "IMPLEMENTED_NATIVE_DIAGNOSTICS_NOT_RUN", "sealed": False,
             "ready_for_formal": False, "submitted": False,
@@ -145,8 +152,9 @@ def describe(source_root: Path) -> dict:
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument('--runtime-label', default='step5')
     args = parser.parse_args(argv)
-    print(json.dumps(describe(args.source_root), indent=1))
+    print(json.dumps(describe(args.source_root, args.runtime_label), indent=1))
     return 0
 
 

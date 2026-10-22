@@ -440,7 +440,8 @@ def test_actual_reference_driver_uses_direct_d_and_continues_after_auxiliary_fai
         async with TestServer(p) as ps, TestServer(d) as ds:
             async with TestServer(web.Application()) as reserve:
                 port = reserve.port
-            args = NS(trace_dir=stage/'trace', model_dir=tmp_path, output_dir=tmp_path/'replay',
+            args = NS(trace_dir=stage/'trace', engine_config=stage/'engine.json',
+                model_dir=tmp_path, output_dir=tmp_path/'replay',
                 prefill_url=str(ps.make_url('/')).rstrip('/'), decode_url=str(ds.make_url('/')).rstrip('/'),
                 proxy_port=port, origin_lead_s=0)
             assert await r2_replay.run(args) == 0

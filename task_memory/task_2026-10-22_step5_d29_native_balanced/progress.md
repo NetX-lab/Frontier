@@ -1,3 +1,102 @@
+# Native implementation progress
+
+## Modification History
+| Date | Change |
+| --- | --- |
+| 2026-10-23 | Read approved allocation/design and begin interface milestone. |
+| 2026-10-23 | Complete native19 integration, CPU418 PASS, D3048 PASS and static T2; retain root-only prerequisites. |
+| 2026-10-23 | Close four reviewer findings;485 affected CPU PASS and1269/1582 gross. |
+
+- completed: clean branch feat/step5-position-native at1aee0af; all approved native
+  design sections and local instructions inspected; no peer writes/platform calls.
+- completed: exclusive copied candidate
+  /data/ycfeng/tmp/d29-native-derived-20261023-candidate01; immutable source unchanged.
+- completed: N1-N4 scope adds actual tensor reference, deterministic sigmoid
+  strategy and configured factory inputs without host readback/collectives.
+- completed: actual-source CPU9 PASS; neighboring baseline251 PASS; native99
+  gross lines with reviewable patch/hash/snapshot and interface_receipt.json.
+- completed: packaging/clients/provenance and T2 script; CPU418 PASS, D3048 PASS,
+  actual-source11 PASS, sparse build-context PASS, owned19/AST/whitespace PASS.
+- completed: early e48cdc0 andintegration d12941c; summary/handoff records ready.
+- completed: four-finding repair, source/AST/hash/ownership/quota checks and
+  final affected CPU485 PASS/36.16s; scoped code+evidence commit74d5c48.
+- pending (root): published image identity, actual installed-source export and GPU
+  acceptance; local context02 build was reported by root, not executed by this stream.
+
+## 1. 规划完成情况
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| native接口及CPU | PASS | actual-source9 PASS，receipt/patch已生成 |
+| packaging/clients/provenance | PASS | CPU418 PASS，sparse context PASS |
+| T2实际graph script | PASS | AST及source contract PASS，GPU归root |
+| 最终quota/handoff | PASS | committed19-path receipt1269 gross；summary及needed root inputs完整 |
+| Reviewer四项修复及交接 | PASS | commit74d5c48，CPU485 PASS，owned19/1269及hash检查完成 |
+
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：** continuation四项review findings至commit74d5c48｜**当前前沿：** root实际image/source/live验收（本流外）
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | user明确要求keyword/fault/sequence/backend negatives，485 PASS后停止扩展 |
+| D2 细节反复重试 | CLEAR | red14 FAIL后按4个来源修复；green迭代只补已要求证据，无行为参数试错 |
+| D3 支线问题修补 | CLEAR | 本轮7个existing owned paths均属于4项review修复 |
+| D4 可并行任务停滞 | CLEAR | user禁止subagent；独立检查并行，GPU由root持有 |
+| D5 超范围镀金 | CLEAR | user明确重开4项缺陷；native19内1269/1582，无新file/registry/native edits |
+| D6 分析空转 | CLEAR | 已产出keyword capture、dummy replay、bound forward和backend检查 |
+| D7 路线违背 | CLEAR | native4/patch不变，无GPU/Docker/platform/peer写入 |
+**文档检查：** S1–S6均未发现明显缺陷；本轮修复和实际commit状态一致，历史状态明确隔离。
+**归因：** 无。
+
+## 3. 纠正建议
+**分支：** A：当前spec/plan及记录合理，无需改动。
+**需停止的偏离行为：** 无。
+**接下去的路线：**
+1. root真实published image/source export -> 完成标志：immutable identity、installed pins及12个backend schema源；不由本流执行。
+2. root批准GPU验证 -> 完成标志：实际thin graph/eager modules、MRv2/backend graph及G3分项证据；不由本流执行。
+
+## 4. 最值得关注的 3 点
+1. GPU/graph/G3仍UNVERIFIED；thin graph不是实际MRv2或backend graph资格。
+2. strict schema需12个existing backend源；root local image不是published identity。
+3. native4/patch不变，完整stream1269/1582，剩313；修复commit74d5c48及handoff完整。
+
+## Verification iterations
+- Baseline251 PASS; interface9 PASS then addedinvalid K/logits controls11 PASS.
+- Native/HTTP/canonical/reference/provenance/capacity/source suites418 PASS/39.78s
+  (asyncopd-py312); D30finish sync/native census48 PASS/67.40s(frontier-py310).
+- Earlier asyncopdD30 collection lackedplotly; existingfrontier-py310 used with
+  no dependency install. Old D30 root convention expects candidate parent, while
+  T1 expects candidate/vllm; supplying correct independent roots closes failure.
+- T2 source-contract+AST/Dockerfile payload AST PASS, no GPU or Docker execution.
+- Sparse context contains only four edited native files plus pins/manifest/Dockerfile.
+  Base53 build pins are50 sealed pins plus3 byte-validated local base exports,
+  never claimed as installed derived pins. Capture02/03manifest checks PASS,
+  capture01not present at inspected root and no writes occurred.
+
+## Four-finding repair iterations
+- Reviewed source2c4cc9e; root independently verified418 PASS,19/1017 and source
+  hashes, and reported context02 local build only.
+- Red CPU regression14 FAIL/20 PASS/157 deselected/2.76s: keyword original called
+  once but capture empty, stale dummy assertion and forward/kernel/monolithic
+  provenance false positives reproduced. See d29-native-repair-red.log.
+- Fixed explicit router signature/named logits, dummy replay-before-baseline,
+  actual bound forward, and checkpoint/oracle class/source/modular relationships;
+  soft observer boundary and native outputs/exceptions unchanged.
+- Focused green01:275 PASS/11.45s; green02:307 PASS/8.35s; affected01:484 PASS/38.12s;
+  final affected02:485 PASS/36.16s after actual PW dispatch/replay CPU seam,
+  modular-property fixtures and missing-backend-schema negative.
+- native4/base/sparse snapshot/patch hashes unchanged; candidate2907 Python files
+  has exactly4 approved differences;12 existing backend sources unchanged.
+  Owned19/AST/whitespace PASS;1269/1582 gross. No native rebuild required.
+- Stage adds backend schema_source_hashes only; D30 source_hashes remains13 with
+  engine.core, native counters untouched. Graph status narrowed to
+  PASS_THIN_GRAPH_AND_EAGER_MODULES after future execution; MRv2/backend/G3 excluded.
+- completed:74d5c48 verified scoped code+evidence commit; code diff7 paths,
+  267 added+23 deleted (290 repair gross), baseline gross increase252. Commit's
+  retained report/review/receipt identify4 findings and native UNVERIFIED items.
+
+## Preserved pre-allocation record (historical)
+
 # D29 native routing progress
 
 ## Modification History

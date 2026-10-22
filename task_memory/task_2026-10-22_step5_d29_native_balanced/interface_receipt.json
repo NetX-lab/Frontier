@@ -1,0 +1,48 @@
+{
+  "task_id": "D29-NATIVE-IMPLEMENTATION",
+  "base_image": "a.z01.normandyfunc.com/docker-public/vllm/vllm-openai@sha256:69308454cff61240995e0a17b7baf62b84d1e5ac49afd224e718715adb6a7f20",
+  "base_root": "/data/ycfeng/tmp/step5_profiling_20261020/image_src",
+  "candidate_root": "/data/ycfeng/tmp/d29-native-derived-20261023-candidate01",
+  "native_changes": [
+    {
+      "path": "native-image/vllm/forward_context.py",
+      "base_sha256": "24a1b39218b88539e387b696dcced722d14a24d9f01932a44feb93dd4986b85d",
+      "derived_sha256": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+      "added": 15,
+      "deleted": 0
+    },
+    {
+      "path": "native-image/vllm/models/step5/nvidia/model.py",
+      "base_sha256": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+      "derived_sha256": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+      "added": 10,
+      "deleted": 1
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "base_sha256": "794abb7c210758911d349ca6fbd82690f0ef48ba4f8a7ec2ff0f87ca3ad50224",
+      "derived_sha256": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+      "added": 3,
+      "deleted": 0
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "base_sha256": "24662a8cbd10365ae349000184bcc0ad063eff72dead1b3cf5b6f40fe0cc3e47",
+      "derived_sha256": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+      "added": 70,
+      "deleted": 0
+    }
+  ],
+  "gross": 99,
+  "patch_sha256": "66608153204012927e8ef678378d95ca1ef93dab9e2f504a82a5318b9828bbab",
+  "tests": "9 PASS actual-source CPU; no CUDA qualification",
+  "setter": "set_routing_positions(positions: torch.Tensor), scoped existing context reference",
+  "factory": "create_fused_moe_router(top_k, global_num_experts, renormalize=..., scoring_func=\"sigmoid\", routed_scaling_factor=...)",
+  "strategy": "VLLM_MOE_ROUTING_SIMULATION_STRATEGY=position_cyclic",
+  "unverified": [
+    "CUDA NONE/PW/FULL",
+    "modular FP8/BF16",
+    "G3",
+    "published derived image identity"
+  ]
+}

@@ -36,6 +36,158 @@ def events(observer):
             for line in path.read_text().splitlines()]
 
 
+def backend_sources(root, monkeypatch, config, modules):
+    """Host-only imported-source fixtures with the native object relationships."""
+    from tests.integration.step5_pd import r2_runtime
+    sources = {
+        0: ('class Fp8Config: pass\nclass Fp8MoEMethod:\n    def apply(self): pass\n'
+            '    @property\n    def is_monolithic(self): return self.moe_kernel.is_monolithic\n'
+            'from vllm.model_executor.layers.quantization.utils.quant_utils import is_layer_skipped\n'),
+        1: 'def is_layer_skipped(prefix, ignored_layers, **kw): return prefix in ignored_layers\n',
+        2: ('class UnquantizedFusedMoEMethod:\n    def apply(self): pass\n'
+            '    @property\n    def is_monolithic(self): return self.moe_kernel.is_monolithic\n'),
+        3: ('class FusedMoEExpertsModular:\n    @staticmethod\n    def is_monolithic(): return False\n'
+            'class FusedMoEPrepareAndFinalizeModular: pass\n'
+            'class FusedMoEKernelModularImpl:\n    def apply(self): pass\n'
+            'class FusedMoEKernelMonolithicImpl: pass\n'
+            'class FusedMoEKernel:\n    def apply(self): pass\n'
+            '    @property\n    def is_monolithic(self): return isinstance(self.impl, FusedMoEKernelMonolithicImpl)\n'
+            '    @property\n    def fused_experts(self): return self.impl.fused_experts\n'
+            '    @property\n    def prepare_finalize(self): return self.impl.prepare_finalize\n'),
+        5: ('from enum import Enum\nclass Fp8MoeBackend(Enum): DEEPGEMM = 1\n'
+            'def backend_to_kernel_cls(backend):\n    from vllm.model_executor.layers.fused_moe.experts.triton_deep_gemm_moe import TritonOrDeepGemmExperts\n    return [TritonOrDeepGemmExperts]\n'),
+        6: ('from enum import Enum\nclass UnquantizedMoeBackend(Enum): TRITON = 1\n'
+            'def backend_to_kernel_cls(backend):\n    from vllm.model_executor.layers.fused_moe.experts.triton_moe import TritonExperts\n    return [TritonExperts]\n'),
+        7: ('from vllm.model_executor.layers.fused_moe.experts.fallback import FallbackExperts\n'
+            'class TritonOrDeepGemmExperts(FallbackExperts):\n'
+            '    @staticmethod\n    def get_clses():\n'
+            '        from vllm.model_executor.layers.fused_moe.experts.deep_gemm_moe import DeepGemmExperts\n'
+            '        from vllm.model_executor.layers.fused_moe.experts.triton_moe import TritonExperts\n'
+            '        return DeepGemmExperts, TritonExperts\n'),
+        8: 'class DeepGemmExperts(FusedMoEExpertsModular):\n    def apply(self): pass\n',
+        9: 'class TritonExperts(FusedMoEExpertsModular):\n    def apply(self): pass\n',
+        10: 'class FallbackExperts(FusedMoEExpertsModular):\n    def apply(self): pass\n',
+        11: 'class MoEPrepareAndFinalizeNaiveDPEPModular(FusedMoEPrepareAndFinalizeModular): pass\n',
+    }
+    for index in (1, 0, 2, 3, 4, 5, 6, 8, 9, 10, 7, 11):
+        name = r2_runtime.BACKEND_MODULES[index]
+        source = sources.get(index, '')
+        if index in (8, 9, 10, 11):
+            source = 'from vllm.model_executor.layers.fused_moe.modular_kernel import FusedMoEExpertsModular, FusedMoEPrepareAndFinalizeModular\n'+source
+        path = root/(name.removeprefix('vllm.').replace('.', '/')+'.py')
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_text(source)
+        module = ModuleType(name); module.__file__, module.__spec__ = str(path), NS(origin=str(path))
+        monkeypatch.setitem(sys.modules, name, module); modules[name] = module
+        exec(compile(source, str(path), 'exec'), module.__dict__)
+        config['schema_source_hashes'][name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return [modules[name] for name in r2_runtime.BACKEND_MODULES]
+
+
+@pytest.mark.parametrize('fault', ['none', 'file', 'spec', 'hash', 'missing', 'forward',
+                                  'instance_forward', 'quant', 'kernel', 'monolithic',
+                                  'same_name', 'backend', 'apply', 'backend_source'])
+@pytest.mark.parametrize('native_fails', [False, True])
+@pytest.mark.parametrize('module_index', [-4, -3, -2, -1])
+def test_derived_actual_import_model_provenance_remains_soft(tmp_path, monkeypatch, fault, native_fails, module_index):
+    from tests.integration.step5_pd import r2_runtime
+    root = tmp_path/'installed/vllm'
+    config = configuration(tmp_path, routing_strategy='position_cyclic',
+                           installed_native_root=str(root), expected_layer_count=1)
+    config['schema_source_hashes'] = {}
+    modules = {}
+    for name in r2_runtime.SOURCE_MODULES:
+        path = root/(name.removeprefix('vllm.').replace('.', '/')+'.py')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('class Step5ForCausalLM:\n    def forward(self):\n        return 1\n')
+        module = ModuleType(name)
+        module.__file__, module.__spec__ = str(path), NS(origin=str(path))
+        monkeypatch.setitem(sys.modules, name, module)
+        exec(compile(path.read_text(), str(path), 'exec'), module.__dict__)
+        modules[name] = module
+        config['schema_source_hashes'][name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    name = 'vllm.models.step5.nvidia.model'
+    model = modules[name]
+    model._get_step5_moe_layer_indices = lambda config: {3}
+    broken = r2_runtime.SOURCE_MODULES[module_index]
+    selected = modules[broken]
+    if fault in ('file', 'spec'):
+        foreign = tmp_path/'shadow.py'; foreign.write_bytes(Path(selected.__file__).read_bytes())
+        if fault == 'file': selected.__file__ = str(foreign)
+        else: selected.__spec__.origin = str(foreign)
+    elif fault == 'hash': config['schema_source_hashes'][broken] = '0'*64
+    elif fault == 'missing': monkeypatch.delitem(sys.modules, broken)
+    elif fault == 'forward': model.Step5ForCausalLM.forward = lambda self: 1
+    env = ModuleType('vllm.envs')
+    env.VLLM_MOE_ROUTING_SIMULATION_STRATEGY, env.VLLM_MOE_SKIP_PADDING = 'position_cyclic', True
+    parent = ModuleType('vllm'); parent.envs = env
+    monkeypatch.setitem(sys.modules, 'vllm', parent); monkeypatch.setitem(sys.modules, 'vllm.envs', env)
+    backend = backend_sources(root, monkeypatch, config, modules)
+    quant_config = backend[0].Fp8Config()
+    quant_config.ignored_layers, quant_config.packed_modules_mapping = ['layer.bf16'], {}
+    quant_config.ignored_layers_match_mode = 'exact'
+    router = type('RoutingSimulatorRouter', (), {})()
+    modules[r2_runtime.SOURCE_MODULES[-1]].RoutingSimulatorRouter = type(router)
+    router.top_k, router.global_num_experts, router.renormalize = 8, 352, True
+    router.routing_method_type, router.routed_scaling_factor = 'Simulated', 1.25
+    layers = []
+    for skip in (False, True):
+        quant = (backend[2].UnquantizedFusedMoEMethod if skip else backend[0].Fp8MoEMethod)()
+        cls = backend[9].TritonExperts if skip else backend[7].TritonOrDeepGemmExperts
+        quant.experts_cls = cls
+        if skip: quant.unquantized_backend = backend[6].UnquantizedMoeBackend.TRITON
+        else: quant.fp8_backend = backend[5].Fp8MoeBackend.DEEPGEMM
+        kernel = backend[3].FusedMoEKernel(); kernel.impl = backend[3].FusedMoEKernelModularImpl()
+        kernel.impl.fused_experts = cls()
+        kernel.impl.prepare_finalize = backend[11].MoEPrepareAndFinalizeNaiveDPEPModular()
+        if not skip:
+            kernel.fused_experts.experts, kernel.fused_experts.fallback_experts = backend[8].DeepGemmExperts(), backend[9].TritonExperts()
+        quant.moe_kernel = kernel
+        experts = NS(layer_name='layer.bf16' if skip else 'layer.fp8', router=router, routed_experts=NS(quant_method=quant))
+        layers.append(NS(experts=experts, use_sequence_parallel=False))
+    state = type('State', (), {'prepare_attn': lambda self: None})()
+    text = model.Step5ForCausalLM()
+    text.config, text.num_moe_layers = NS(moe_router_activation='sigmoid', moe_top_k=8,
+        moe_num_experts=352, norm_expert_weight=True, moe_router_scaling_factor=1.25), 2
+    model._get_step5_moe_layer_indices = lambda config: {3, 88}
+    if fault == 'instance_forward': text.forward = lambda: 1
+    elif fault == 'quant': experts.routed_experts.quant_method = object()
+    elif fault == 'kernel': experts.routed_experts.quant_method.moe_kernel.impl.fused_experts = object()
+    elif fault == 'monolithic': experts.routed_experts.quant_method.moe_kernel.impl = backend[3].FusedMoEKernelMonolithicImpl()
+    elif fault == 'same_name':
+        cls = type(experts.routed_experts.quant_method)
+        replacement = type(cls.__name__, (), {'__module__': cls.__module__})()
+        replacement.__dict__.update(experts.routed_experts.quant_method.__dict__)
+        experts.routed_experts.quant_method = replacement
+    elif fault == 'backend': experts.routed_experts.quant_method.unquantized_backend = 'TRITON'
+    elif fault == 'apply': experts.routed_experts.quant_method.moe_kernel.apply = lambda *a, **kw: None
+    elif fault == 'backend_source':
+        selected = backend[9]; foreign = tmp_path/'foreign_backend.py'
+        foreign.write_bytes(Path(selected.__file__).read_bytes()); selected.__file__ = str(foreign)
+    worker = NS(model_runner=NS(model_state=state, vllm_config=NS(kernel_config=NS(moe_backend='auto'),
+        quant_config=quant_config, parallel_config=NS(enable_eplb=False)), model=NS(modules=lambda: [text]+layers)))
+    observer = r2.Observation(config)
+    monkeypatch.setattr(observer, 'identity', lambda *args: dict(role='decode', dp_rank=0, tp_rank=0))
+    calls = []
+    class Native:
+        def load(self):
+            calls.append(1)
+            if native_fails: raise LookupError('native failure')
+            return 17
+    r2.wrap(Native, 'load', observer, after=lambda *args: r2_runtime.bind_model_state(worker, observer, r2.wrap))
+    if native_fails:
+        with pytest.raises(LookupError, match='native failure'): Native().load()
+        assert not events(observer)
+    else:
+        assert Native().load() == 17
+        assert observer.disabled == (fault != 'none')
+        assert events(observer)[-1]['event'] == ('observer_error' if fault != 'none' else 'provenance')
+        if fault == 'none':
+            census = events(observer)[-1]['layers']
+            assert [row['precision'] for row in census] == ['fp8', 'bf16']
+            assert all(row['sources'] and not row['monolithic'] for row in census)
+    assert calls == [1]
+
+
 class Owner:
     pass
 
