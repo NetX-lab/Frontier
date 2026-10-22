@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Merged accepted C source and preserved its implementation plan below; primary aggregate allocation remains authoritative. |
 | 2026-10-23 | Accepted shared432-line source; redistributed the unchanged900-line ceiling to A432/B267/C201, including final builder selections and compact integration regression. |
 | 2026-10-22 | Applied approved23/900 bound with disjoint12/450 shared,6/250 native-and-controls,5/200 prefill ownership. |
 | 2026-10-22 | Paused further implementation/package work after root verified aggregate15/522; complete23/900 proposal awaits user approval. |
@@ -37,3 +38,22 @@ The allocations sum to23/900. Stop before a local allocation is exceeded and let
 The2026-10-23 source-delivery total is874 lines (A432+B253+C189). The26-line remainder is fully assigned above, not a general review-fix allowance. If a useful regression or mandatory review correction cannot fit, return its exact smallest diff to root before editing. Reuse the already-executed direct prefill controls rather than expanding a test harness. Prefill package readiness remains independent of native checker freeze. Native builder's retained10800s payload/7200s replay settings must be bound to the approved3600s wall cap before any package is built.
 
 After Spec review, mandatory schema-origin, effective-DP and runner-value controls take precedence over optional additional persistence. The revised split is A432/B266/C202. A tracked prefill builder cannot embed its own commit SHA while requiring that same SHA as HEAD; root will reuse the native builder's existing current-clean-HEAD snapshot mechanism when making the reserved source selection.
+## Prefill implementation plan and R1 handoff
+
+The following records the completed C source slice. Its original200-line allocation is historical; the current root allocation table above governs final builder work.
+
+Dependency: baseline and shared merge -> adapter/model observation -> CSV and isolated consumer -> builder staging amendment -> focused CPU verification -> commit and root handoff.
+
+1. Preserve exact pre-edit builder bytes; merge approved shared dependencies without changing unrelated work.
+2. Reuse adapter startup and existing collective_rpc inventory. Observe actual strategy, router and native module origins; validate against existing tool/source hashes rather than inventing another fingerprint.
+3. Preserve the observed identity in raw inventory and CSV rows; enforce matching identity only when the isolated consumer explicitly selects balanced_topk.
+4. Stage maintained adapter and flat strategy, explicit selection, and unchanged native source pins through the existing builder. Do not generate any package.
+5. Run focused existing unit checks and CPU negatives; give native owner exact integration seams. Stop before exceeding five maintained files or200 cumulative lines.
+
+Acceptance: explicit startup precedes imports/construction; actual model identity is fail-closed; historical rows remain unlabeled; explicit-balanced consumer rejects missing/wrong/mixed identity; geometry/source locks and historical packages unchanged; scoped diff <=200; no prohibited operations.
+
+## R1 runner-value correction
+
+Dependency: same-key/wrong-value RED at both real entry points -> replace one key-only comparison with exact mapping -> same controls GREEN plus existing negatives/legacy positive -> exact baseline count and source/report commit.
+
+Acceptance: only `dsv4_attention_rows.py` source changes; class values must equal `vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner` under exactly the router names. All previous balanced controls and absent-selector legacy positive remain valid. Current189line net diff is expected to become190; root's reserved12builder lines project202. No builder or external/runtime changes.

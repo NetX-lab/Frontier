@@ -33,8 +33,10 @@ preserved unchanged. For the pristine vLLM 0.28 source without that hook,
 
 from __future__ import annotations
 
+import hashlib
 import inspect
 import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -52,6 +54,16 @@ from frontier.profiling.attention.dsv4_attention_plan import (
 )
 
 _ATTENTION_MODULE = "vllm.models.deepseek_v4.attention"
+ROUTING_NATIVE_MODULES = (
+    "vllm.envs", "vllm.forward_context", "vllm.distributed.parallel_state",
+    "vllm.model_executor.layers.fused_moe.router.router_factory",
+    "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
+    "vllm.model_executor.layers.fused_moe.router.base_router",
+    "vllm.model_executor.layers.fused_moe.router.fused_moe_router",
+    "vllm.model_executor.layers.fused_moe.runner.moe_runner",
+    "vllm.model_executor.layers.fused_moe.layer",
+)
+routing_config = None
 _METHOD_SCOPES = (
     ("_run_parallel_input_projections", "dsv4_parallel_input_projections"),
     ("_fused_qnorm_rope_kv_insert", "dsv4_fused_q_kv_prepare"),
@@ -177,8 +189,63 @@ def _single(values: set[Any], label: str) -> Any:
     return values.pop()
 
 
+def _routing_identity(model, config):
+    """Observe constructed routers and bind their imported native sources."""
+    import importlib
+    from vllm import envs
+    from vllm.model_executor.layers.fused_moe.router import routing_simulator_router as simulator
+    from vllm.model_executor.layers.fused_moe.runner.moe_runner import MoERunner
+    factory = importlib.import_module("vllm.model_executor.layers.fused_moe.layer").create_fused_moe_router
+    if factory.__globals__["envs"] is not envs or simulator.envs is not envs:
+        raise ValueError("Routing factory and simulator use different environment modules")
+
+    selected = config["moe_gating_routing_runtime_path"]
+    if (selected != "balanced_topk" or os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") != selected
+            or envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY != selected):
+        raise ValueError("Constructed model routing environment mismatch")
+    strategy = simulator.RoutingSimulator._routing_strategies[selected]
+    origin = Path(sys.modules[type(strategy).__module__].__file__)
+    digest = hashlib.sha256(origin.read_bytes()).hexdigest()
+    if (origin != Path(config["script"]).with_name("balanced_routing.py")
+            or str(origin) != strategy.route_tokens.__func__.__code__.co_filename
+            or digest != config["tool_hashes"][str(origin)]):
+        raise ValueError("Constructed model routing strategy origin or hash mismatch")
+    native_sources = {}
+    for name in ROUTING_NATIVE_MODULES:
+        module = importlib.import_module(name)
+        path = Path(module.__file__)
+        relative = name.replace(".", "/") + ".py"
+        checksum = hashlib.sha256(path.read_bytes()).hexdigest()
+        if (path != Path(config["native_package"]) / relative.removeprefix("vllm/")
+                or checksum != config["expected_source_hashes"][relative]):
+            raise ValueError(f"Constructed model routing native source mismatch: {name}")
+        native_sources[relative] = dict(origin=str(path), sha256=checksum)
+    routers = {name: module.router for name, module in model.named_modules() if isinstance(module, MoERunner)}
+    if not routers or any(type(router) is not simulator.RoutingSimulatorRouter for router in routers.values()):
+        raise ValueError("Constructed model does not use balanced simulation routers")
+    codes = (envs.__getattr__, envs.environment_variables["VLLM_MOE_ROUTING_SIMULATION_STRATEGY"], factory,
+        simulator.RoutingSimulator.simulate_routing, simulator.RoutingSimulatorRouter._compute_routing,
+        inspect.getclosurevars(strategy.route_tokens).nonlocals["get_forward_context"],
+        inspect.getclosurevars(strategy.route_tokens).nonlocals["get_ep_group"],
+        MoERunner.__init__, MoERunner._forward_impl, MoERunner._apply_quant_method,
+        *(router.select_experts.__func__ for router in routers.values()),
+        *(router._select_experts.__func__ for router in routers.values()))
+    codes = [inspect.unwrap(function) for function in codes]
+    for function in codes:
+        source = function.__module__.replace(".", "/") + ".py"
+        if function.__code__.co_filename != native_sources[source]["origin"]:
+            raise ValueError("Constructed model routing callable origin mismatch")
+    return dict(
+        environment=selected, runtime_path=envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY,
+        strategy=type(strategy).__module__ + "." + type(strategy).__name__,
+        origin=str(origin), sha256=digest,
+        routers={name: type(router).__module__ + "." + type(router).__name__ for name, router in routers.items()},
+        runners={name: type(module).__module__ + "." + type(module).__name__ for name, module in model.named_modules()
+                 if isinstance(module, MoERunner)}, native_sources=native_sources)
+
+
 def install_dsv4_hooks(
-    worker: Any, engine_index: int, layers: list[tuple[int, str, int]]
+    worker: Any, engine_index: int, layers: list[tuple[int, str, int]], config=None
 ) -> dict[str, Any]:
     """Wrap every attention layer; return the engine's attention inventory.
 
@@ -297,6 +364,7 @@ def install_dsv4_hooks(
         "use_v2_model_runner": bool(worker.vllm_config.use_v2_model_runner),
         "num_gpu_blocks": worker.vllm_config.cache_config.num_gpu_blocks,
         "layers": layer_inventory,
+        **({"moe_routing": _routing_identity(worker.get_model(), config)} if config is not None else {}),
     }
 
 
@@ -368,7 +436,7 @@ def run_engine(
         (layer.global_layer_id, layer.attention_variant, layer.compress_ratio)
         for layer in plan.shape.layers
     ]
-    inventory = llm.collective_rpc(install_dsv4_hooks, args=(engine_index, layers))[0]
+    inventory = llm.collective_rpc(install_dsv4_hooks, args=(engine_index, layers, routing_config))[0]
     case_runner.measure_engine(
         llm=llm,
         plan=plan,
