@@ -207,7 +207,8 @@ def test_parent_selection_preserves_frozen_parameters_and_signed_evidence(tmp_pa
     assert all(result[key] == fit[key] for key in ("a_ms","b_ms_per_byte","signed_residuals_ms","raw_cells","range_bytes"))
 
 
-def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,monkeypatch):
+@pytest.mark.parametrize("network_defect",[None,"partial","zero","nan","inf"])
+def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,monkeypatch,network_defect):
     submodule=Path(__file__).parents[2]/"frontier/cc_backend/backends/collective-sim"
     if not (submodule/"sim/datacenter/htsim_ndp").exists():
         pytest.skip("Real HTSIM binary unavailable")
@@ -243,6 +244,16 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
         kernels.append({**kernels[-1],"call":records[-1]["call"]})
     for name,values in (("measurements",records),("kernels",kernels),("local_work",local)):
         (root/f"{name}.jsonl").write_text("".join(json.dumps(r)+"\n" for r in values))
+    if network_defect:
+        from collective_sim_core import runner
+        payload=dict(expected_flows=8,finished_flows=8,makespan_us=1.)
+        if network_defect == "partial": payload["finished_flows"]=7
+        else: payload["makespan_us"]={"zero":0.,"nan":float("nan"),"inf":float("inf")}[network_defect]
+        monkeypatch.setattr(runner,"run_htsim_runner",lambda **kw:payload)
+        with pytest.raises(ValueError,match="completed"):
+            EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
+        assert not (tmp_path/"candidate/collective_local.json").exists()
+        return
     artifact=EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
     assert artifact["evidence_kind"] == "cpu_fixture" and artifact["candidate_only"]
     assert artifact["qualification"]["status"] == "UNVERIFIED"

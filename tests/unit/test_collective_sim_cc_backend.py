@@ -13,7 +13,6 @@ from frontier.types import ClusterType
 
 
 def setup_model(tmp_path, monkeypatch):
-    monkeypatch.setattr(CollectiveSimCCBackend, "_load_collective_sim_predictor", lambda self: None)
     config=CollectiveSimCCBackendConfig(cluster_servers=2,cluster_gpus_per_server=8,
         parallel_tp=8,parallel_dp=2,placement_order="TP,DP",profiling_data_dir=str(tmp_path),
         runner_out_dir=str(tmp_path/"runner"))
@@ -59,7 +58,6 @@ def test_importer_rejects_unqualified_mismatched_or_incomplete_input(tmp_path,mo
 
 def test_real_local_tp_formula_has_no_phantom_dp_memory_service(tmp_path,monkeypatch):
     backend,plan,artifact,path,params=setup_model(tmp_path,monkeypatch)
-    monkeypatch.syspath_prepend(str(backend._python_root))
     from collective_sim_core.schema import Scenario
     from collective_sim_core import predict_collective_time
     scenario=dict(artifact["frozen_scenario"])

@@ -386,3 +386,17 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Owned scope finished at2626/3956; no quota exhaustion。
 2. CORE newer exact-query/main interfaces not jointly verified here。
 3. Native/GPU/local parameters/T2/G3/E2E acceptance remains root work。
+
+## D29-PRICING-FINITE-REPAIR: F3/F6
+
+- RED F6 cold7-case command reproduced3 ModuleNotFoundError failures; constructor
+  bootstrap mock was the cause. Removed it and the separate syspath workaround;
+  real constructor now initializes imports normally, no production changes.
+- RED F3 exporter partial/zero accepted; nan/inf failed later at affine fitting,
+  not completed-network seam. Submodule5 truncated-result tests all failed.
+- GREEN F3/F6 parent53 PASS, submodule12 PASS (JUnit retained under
+  /data/ycfeng/tmp/d29_f36_green.xml and d29_f3_sub_green.xml). One shared
+  completed_plan_network_ms requires positive expected/all finished flows and
+  positive finite completed makespan only for new nonempty network plans.
+  TP-local branch and legacy semantics unchanged; real HTSIM remains in checks.
+- Next: F5 exact selectedscope/replay negatives, then F4 actual policy identity.

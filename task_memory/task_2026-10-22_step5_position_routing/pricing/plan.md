@@ -22,3 +22,12 @@ Dependencies: approval -> {1, peer source/native APIs} -> 2 -> {3,4} -> 5.
 Root integrates gitlink/peers and runs full-unit/strict77/GPU acceptance.
 CPU structural/numerical tests are not GPU calibration. Published source-method
 execution establishes only those methods' CPU behavior, not installed GPU runtime.
+
+## Finite review repair (D29-PRICING-FINITE-REPAIR)
+
+F6 cold-process RED→real constructor GREEN -> F3 joint completed-result validation
+and exporter negatives -> F5 exact scope/replay identity -> F4 actual policy
+receipts/context/probe equality -> affected14 suites + submodule/JUnit + budget
+and scoped commits/archive. F3 and F6 are independent; no extra delegation.
+Legacy scalar and TP-local no-network semantics remain unchanged. Only existing
+owned files,<=3956 gross total; actual GPU inputs/global acceptance remain root.

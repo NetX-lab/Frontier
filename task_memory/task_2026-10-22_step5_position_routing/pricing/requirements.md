@@ -6,6 +6,7 @@
 | 2026-10-23 | Record delegated scope and approved model. |
 | 2026-10-23 | Record published dependencies and immutable-sequence review correction. |
 | 2026-10-23 | Record root's existing-seam T2 serving-limit decision. |
+| 2026-10-23 | Resume only finite-review F3–F6 under the original ownership/quota. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -43,3 +44,13 @@ EngineArgs.create_engine_config. Omitting limits preserves legacy kwargs/default
 No resulting-config/HF metadata mutation, builder/CLI family, fallback, or backend
 override. Existing two owned paths only; this delta is at most60 gross within3956.
 Native owns cases.json and both T2 call sites; root owns actual-image validation.
+
+[Original Request] D29-PRICING-FINITE-REPAIR: fix F3 incomplete HTSIM results in
+new nonempty joint-plan prediction/export only; F4 actual communicator/default/
+PyNccl/buffer policy in context and collector/probe equality; F5 exact selected
+op/group/graph and profiled_calls=config.calls_per_repeat; F6 remove the test's
+bootstrap suppression and use the real constructor without ambient path hacks.
+Require RED→GREEN, accurate JUnit/exact commands, early scoped commits and full
+submodule patch. Existing43 paths/2626 gross leaves1330 of3956. No new paths,
+peer edits/imports, GPU/platform, extra agents or push. Root owns gitlink/global
+acceptance; F2 immutable nested sequences remains closed.
