@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Finite re-review closes F3/F5/F6; send F4 size-branch grouping and lazy-state equality defects back to PRICING. |
 | 2026-10-23 | Parent verifies finite repair27b3499/sub3dac53c:456 PASS/89 SKIP,12 HTSIM,9 cold; independent re-review pending. |
 | 2026-10-23 | Accept/merge T2 limits892b6a1; receive full PRICING8e61c2d, start split reviews and parent checks, authorize CORE dependency integration. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000; allocate native19/1582, core-source44/4404 and pricing44/3956. |
@@ -27,8 +28,8 @@
   configs, independent No findings and actual full-file rebinding6/6 PASS.
 - in-progress: CORE/SOURCE final consumers/fixture and F1 repair; PRICING full
   delivery27b3499 (43 changed paths/2944 gross including333 submodule lines) has
-  passed parent affected/HTSIM/cold checks; independent finite re-review and the
-  separate compute/accounting review remain pending. CORE may integrate
+  passed parent affected/HTSIM/cold checks; F3/F5/F6 are closed while F4 boundary
+  repairs and the separate compute/accounting review remain pending. CORE may integrate
   delivered interfaces for development; final acceptance is not implied.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
@@ -77,6 +78,16 @@ directory. Reviewer ses_e9abd8364ffee5sQKdpiQh3yH4 rechecks F3–F6. CORE is not
 to carry actual per-rank execution_policy through plan/context/cache identities;
 development import of27b3499 is authorized, with qualification boundaries intact.
 Full PRICING remains unmerged pending reviews and integrated acceptance.
+
+Finite re-review closes F3/F5/F6. F4 still has two P2: complete per-cell branch
+context fragments one frozen policy's affine anchors, and startup enabled-state
+equality rejects native lazy-disable/fallback. Root assigns F4a/F4b to the original
+PRICING owner within remaining1012 gross; preserve full observations/count/cache
+evidence and compare actual call-time probe behavior. CORE is notified to avoid
+cementing the rejected grouping/equality while other consumer work continues.
+Authoritative review is in verify-step5-pricing-02's pricing_finite_parent/
+review_2026-10-23_finite_repair.md. Passing parent tests remain recorded; this stage
+is not accepted until these two source defects close.
 
 ## Active implementation dispatch — 2026-10-23
 
