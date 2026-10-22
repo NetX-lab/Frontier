@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Add parent interface findings after revised core and profile-source delivery. |
 | 2026-10-22 | Record six findings and assign disjoint design corrections before scope approval. |
 
 Reviewer: `ses_e9e0793b2ffe5YWSjciM0uRzna`, task
@@ -59,3 +60,27 @@ and D30's seven-file proposal remain separate inputs to this union.
 No implementation, new-policy timing/kernel count, legacy comparison or G3
 acceptance follows from this review. The author's 200 math cases were not
 independently rerun by the reviewer.
+
+## Parent cross-design findings
+
+The revised core subtotal is 31 paths / 2068 gross lines; the delivered source
+binding table has 13 paths / 673 lines. These are still not a complete union.
+
+1. **P1 — Unowned Frontier native-router adapter.** Revised core
+   `design.md:522–529` and B2 defer the actual importable adapter to profile-source
+   ownership. `profile_source_design.md:65,225–245` and S1–S13 leave that same
+   `moe_impl.py` adapter to core; native19 supplies only the vLLM interface.
+   Core must own and budget factory/context/select_experts integration while
+   source binding owns its provenance checks.
+2. **P1 — Specify the actual row/width protocol.** Parent inspected
+   `moe_wrapper.py:810–869,872–929`: `_build_profile_result` stores one
+   `num_tokens`, and `profile` merges every operation timing into that row.
+   Merely adding source/gathered labels cannot bind different source-local and
+   gathered physical widths. Core must specify and budget actual row/cell
+   emission, current executor/CSV flattening and training admission, preserving
+   legacy output and each measured scope's real width.
+
+Assigned to `ses_e9e28d5b1ffeSkTePirmacKeiT` as a focused design follow-up; no
+code edits or new tests authorized. The source-binding review is independent.
+Its note about isolated Unspecified versus native Simulated routing remains a
+kernel-identity reconciliation requirement, not permission to force a backend.
