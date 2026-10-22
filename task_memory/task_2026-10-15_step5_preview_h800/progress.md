@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves D29-SCOPE-107-10000 and the fixed finite model; begin three sole-writer implementation streams. |
 | 2026-10-23 | D30 integrated4ec5b23 after all code-scope gates; D29 design reviews complete and full107-path scope awaits decision. |
 | 2026-10-22 | D30 repair600 lines/review clear; parent420 checks, strict77 and902 artifact hashes PASS; full-unit delta pending. |
 | 2026-10-22 | D30-SCOPE-7-750 approved; resume implementation and prepare parent unit/strict77 comparison. |
@@ -211,7 +212,7 @@ Authority includes D20–D30 in [requirements.md](requirements.md), owned by the
 | D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
 | D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
 | Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
-| D29 policy/order | complete design reviewed; model/scope decision pending |Native19, source16, core33 and pricing60 reviewed; producer seams closed. Parent union107 code/test/config paths,9942 gross lines after34-line deduction; plus named gitlink/docs updates. Full proposal in shared_scope.md/scope.json remains unapproved. |
+| D29 policy/order | approved; implementation in progress |D29-SCOPE-107-10000 approves native19/1582, core-source44/4404 and pricing44/3956;107 unique paths/9942 gross plus named gitlink/docs within10000. Sole writers and interface order are in the position-routing repairs/repair_plan.md; additional collection resources/run approval follow readiness. |
 | D30 finish sync | source/CPU scope integrated4ec5b23 |Eight files/603lines under amended approval. Review No findings, parent420 and65 canonical checks,77/77 strict cases/902 hashes PASS; latest unit failure/error IDs equal baseline. Merged source/test parity PASS; fresh native counter observation remains pending. |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 

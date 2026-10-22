@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves D29-SCOPE-107-10000; allocate native19/1582, core-source44/4404 and pricing44/3956. |
 | 2026-10-23 | All design reviews closed; parent scope107/9942 and sole-writer allocation complete; model/scope decision pending. |
 | 2026-10-22 | Receive pricing proposal, identify an unapproved communication-model choice and arithmetic error, and assign callable-provenance correction. |
 | 2026-10-22 | Receive profile-source and revised core subtotals; require explicit adapter ownership and output-frame protocol. |
@@ -15,10 +16,16 @@
   final producer seams and the shared source-frame materializer.
 - completed: parent parses all scope rows and removes only H11's34-line duplicate;
  107 unique code/test/config paths,9942 gross. Plus existing gitlink and at most12
-  size-note lines, proposed10000 total. `shared_scope.md`/`scope.json` bind details.
-- pending: YC decision on the fixed collective model and complete implementation
-  scope. Implementation has not started; actual collection resources/run approval
-  follow package readiness. D30 is independently integrated4ec5b23.
+  size-note lines, approved10000 total. `shared_scope.md`/`scope.json` bind details.
+- completed: YC selects `批准完整方案 (Recommended)` for D29-SCOPE-107-10000;
+  requirements and human review receipt retain the exact decision.
+- in-progress: three implementation streams from the common approval commit;
+  native19/1582, core-source44/4404, pricing44/3956, no shared-file writers.
+  Native19 includes four native-image files changed against locked base bytes.
+- pending: interface integration, focused checks, independent review, parent
+  unit failure/error-set equality, strict77, full offline/online request, image
+  receipts and fresh GPU/native qualification. Additional collection resources
+  and run approval follow readiness. D30 remains integrated4ec5b23.
 
 ## Earlier execution record
 

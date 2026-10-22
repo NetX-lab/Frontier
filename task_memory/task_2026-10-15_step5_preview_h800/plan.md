@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves D29-SCOPE-107-10000; execute three sole-writer streams, then integrated evidence and readiness decisions. |
 | 2026-10-23 | D30 code scope merged4ec5b23; D29 complete reviewed model and107-path union move to the independent user decision. |
 | 2026-10-22 | Record mergedfa5bae2 strict77 and approved D29 position policy/D30 finish-sync parallel paths. |
 | 2026-10-22 | Apply checkpoint correction: replace completed root-ledger repair with actual06 iteration work and resume independent D24 staging. |
@@ -137,7 +138,7 @@ Actual-main event-logging repair is complete at `b862e57`:36 affected checks and
 
 The D23 owner uses existing stage groups and events to bind P/D real and dummy descriptors before the first prediction, including FULL_AND_PIECEWISE and NONE local-width behavior. Verify first-call identity, request and release conservation, strict missing coverage, complete6144/1024 execution and unchanged legacy artifacts. The independent D24 owner retains only the last two logical pages at first local tail completion, using existing copies and caps. The parent integrates, checks the sealed package and submits within the approved90-minute/48GPU-hour ceiling. D24 leaves state disagreement UNVERIFIED and wire-content equality bit-exact. Native disconnect cause, pressure witnesses and all formal metric gates remain explicit prerequisites.
 
-Current owners: parent closes merged focused verification and coordinates the source-bound fixture; `step5-d24-stage` designs the approved native position policy and image inputs, the Frontier routing design owns actual position intervals/masked counts and profiler identity, and `step5-finish-sync` implements approved Step1/16 synchronization within its bounded scope. D28 capture03 remains sealed pressure preparation, not balanced or submittable. Capture02/03 remain immutable/unsubmitted. D29 semantic/image authority and D30 correction are recorded; any required expansion beyond the repair's numerical file/line scope is presented with the concrete design. D24 does not wait for CPU performance acceptance. Parent owns live checks/submission; numerical state tolerances remain separately pending.
+Current owners: parent integrates and verifies the approved D29 work; native19 implements routing/context/image/package interfaces, core-source44 implements position counts/profiling/provenance/fixture consumers, and pricing44 implements the fixed collective_sim model and native collection/qualification. Exact sole-writer paths and quotas are in `../task_2026-10-22_step5_position_routing/repairs/repair_plan.md`. D29-SCOPE-107-10000 authorizes107 code/test/config paths plus named size-note/gitlink updates within10000 gross lines. D30 is already integrated4ec5b23. D28 capture03 remains sealed, immutable/unsubmitted and not balanced. Root owns image publication, live checks and platform operations; additional collection resource/run decisions follow readiness. Numerical-state tolerances remain separately pending.
 
 **D29 execution order:** bind balanced routing on both simulator and native paths
 before current-generation comparisons; align workflow first, then GPU operators

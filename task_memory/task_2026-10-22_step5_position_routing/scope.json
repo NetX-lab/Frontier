@@ -1,5 +1,8 @@
 {
-  "status": "REVIEWED_DESIGN_PENDING_USER_MODEL_AND_SCOPE_DECISION",
+  "status": "APPROVED_D29_SCOPE_107_10000",
+  "decision_id": "D29-SCOPE-107-10000",
+  "approved_ledger_commit": "318ca264d5b2b42fc56eeaec9778182931a3af2a",
+  "approved_ledger_sha256": "12b6f02b1df18f03d8b7a4c004f8d9c62af5946bc28a322bc4f0d661e62a2652",
   "pricing_source_sha256": "d5f180e6ecf6d53fe4c390ab14a46f8cffdb58168d79bc03c16786833e701723",
   "pricing_sections": {
     "6.Common": [

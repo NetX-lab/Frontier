@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves D29-SCOPE-107-10000; freeze sole writers and three implementation allocations. |
 | 2026-10-23 | Parent accepts sole writers/H11 deduction, incorporates reviewed producer closure and reconciles107 paths/9942 gross lines. |
 | 2026-10-22 | Reconcile all17 cross-owner shared paths and3 same-owner Common/Model increments; assign one file writer, remove one wholly duplicate allowance, retain conservative bounds for inseparable overlap. Design only. |
 
@@ -11,11 +12,11 @@ TaskID: **D29-SHARED-HUNK-UNION**. This document is the only new write.
 It recommends hunk ownership and accounting; it does not edit, replace or approve
 the four owner designs, any implementation or the finite numerical model.
 
-## 1. Current parent scope and decision request
+## 1. Approved parent scope
 
 Parent has accepted the sole-writer allocation and the H11 whole-row deduction.
 The final producer review D29-FINITE-PRODUCER-DELTA has No findings. The numerical
-model and implementation scope still require YC's decision. Authoritative
+model and implementation scope are approved by D29-SCOPE-107-10000. Authoritative
 per-path allowances are retained in `scope.json`; this is a conservative ceiling,
 not a measured implementation diff or a claim that every mixed allowance is disjoint.
 
@@ -24,7 +25,7 @@ The union is **107 code/test/config paths,9942 gross lines**. Five paths are
 inside the existing collective-sim submodule; the four native source files are
 counted in the native19 scope. Additionally allow the existing gitlink update
 (two diff lines) and `docs/general/module-size-exceptions.md` (at most12 added
-lines, already specified by CORE). The requested total ceiling is **10000**
+lines, already specified by CORE). The approved total ceiling is **10000**
 added/deleted lines for these107 paths plus those two explicitly named updates.
 Task records and generated evidence/measurement/image artifacts are recorded
 separately and are not additional handwritten implementation paths.
@@ -65,7 +66,7 @@ No native architecture or D30 inspection was needed.
 | Other paths / gross allowance | 81 /5959 |
 | Candidate gross ceiling before behavioral reconciliation | 9976 |
 | Wholly duplicate allowance withdrawn below (H11, pricing) | +30/-4 =34 |
-| Accepted parent planning ceiling, awaiting YC | **107 paths /9942 gross lines** |
+| Approved parent planning ceiling | **107 paths /9942 gross lines** |
 
 **9942 is a defensible planning upper bound, not a nonoverlapping implementation
 diff or a proved minimum.** Each required behavior below has one implementation
@@ -172,6 +173,12 @@ shared group has **8 paths,+981/-26=1007 gross**. Pricing42+15+14, after repeate
 paths, gives60 unique paths; no same-owner increment is silently dropped.
 
 ## 4. Parent integration recommendation and remaining decisions
+
+Current authority: YC approved this complete scope and fixed model on2026-10-23.
+The recommendations/open approval items below are the historical reconciliation,
+now resolved by that decision. Exact measured inputs, additional run resources
+and runtime/E2E qualification remain open. Current execution assignments and
+markers are in `repairs/repair_plan.md`; the18-row writer matrix remains binding.
 
 1. **Accept or correct this ownership recommendation, not the model by proxy.**
    Apply H11's34-line withdrawal in the parent's aggregate ledger only; the

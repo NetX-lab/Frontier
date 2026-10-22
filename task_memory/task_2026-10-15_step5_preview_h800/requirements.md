@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; additional collection runs remain readiness decisions. |
 | 2026-10-23 | Approve D30's eighth test path for the observed13-source contract, retaining the750-line total ceiling. |
 | 2026-10-22 | Record explicit D30 independent seven-file/750-line expansion approval. |
 | 2026-10-22 | Record D29 position-cyclic/native-image approval and D30 Step finish-sync correction. |
@@ -215,6 +216,25 @@ implementation, internal derived-image publication and a fresh immutable
 generation are approved; old generations and reference criteria stay intact.
 Parent retains GPU submission/control under the existing D24/D28 limits.
 Detailed file/line scope follows the repair design; no unrelated core changes.
+
+## [Original Request / Decision] D29 complete scope and model — 2026-10-23
+
+Parent question:
+
+> 是否批准上述完整D29方案：按scope.json的107个代码/测试/配置文件，加现有尺寸说明和submodule引用，总新增＋删除≤10000行，分步实施原生路由、Frontier位置计数、profiling来源绑定、DP通信模型与验收链？通信采用固定的tensor/root顺序、通道分片、8条TP链路共同模拟、实测copy/reduce代理及拟合剩余项，按无重叠相加。模型参数须来自冻结配置和独立GPU数据，保持原G3标准与四项E2E≤10%；额外采集的资源和运行批准在封包就绪后确认。
+
+YC selected:
+
+> 批准完整方案 (Recommended)
+
+Decision **D29-SCOPE-107-10000** authorizes the ledger at318ca26 in
+`../task_2026-10-22_step5_position_routing/scope.json`, the fixed finite model
+and the sole-writer/phased implementation described in shared_scope.md. Full
+question/selected description and constraints are repeated in that task's
+requirements.md. Code/test/config107 paths plus the named size-note and gitlink
+updates must remain<=10000 gross lines. This preserves original G3/E2E criteria,
+D30, frozen old generations and workflow/GPU-before-CPU-gap order. Additional
+collection resource/run approval is settled at package readiness.
 
 ## [Original Request / Decision] D30 eighth test file — 2026-10-23
 
