@@ -4,6 +4,7 @@
 | --- | --- |
 | 2026-10-23 | Recorded source/CPU milestone self-check and bounded root handoff route. |
 | 2026-10-23 | Finalized all delegated steps at committed source2f87828; root acceptance remains independent. |
+| 2026-10-23 | Marked the original strict77 decision as superseded by the completed repository delivery gate. |
 
 ## 1. 规划完成情况
 
@@ -48,4 +49,4 @@
 
 1. 实测表总枚举94项，不能捏造6项 kernel-only enclosing-layer duration。
 2. 结果只证明 isolated reader 接受独立 pinned contract，不代表 TP8/PD/graph/serving 准入。
-3. scope 已完成，不开展 CPU-overhead/GPU/strict77 支线；最终 source acceptance 由 root 决定。
+3. 历史 owner 决定为“不开展 CPU-overhead/GPU/strict77 支线”。其中 strict77 已被 root 的仓库交付 gate 取代：clean576d278 为77/77一致、451产物hash复核通过，见 primary_acceptance.json；CPU-overhead/GPU仍不在此 isolated slice 范围内。
