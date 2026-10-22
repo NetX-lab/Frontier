@@ -386,4 +386,6 @@ HTSIM12 PASS; independent cold importer10 PASS without PYTHONPATH. Owned43 paths
 This repair touches10 existing parent source/test paths,+152/-29=181 versus27b3499;
 original-baseline gross increases123. Submodule remains clean at3dac53c with no
 new sub commit; full patch/sha256 unchanged. Exact commands and RED/GREEN in
-test_report_2026-10-23_f4_boundaries.md. Scoped commit ID is recorded next.
+test_report_2026-10-23_f4_boundaries.md. Verified scoped source/record commit506b43ac;
+root re-review/global qualification remains open. CORE should retain the complete
+plan policy contract above and derive no branch/defaults itself.

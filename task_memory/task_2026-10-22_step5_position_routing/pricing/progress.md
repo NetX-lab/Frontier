@@ -571,5 +571,41 @@ remain genuine dependencies, not permission to create alternate APIs.
   remaining889; submodule333 gross included. Current repair versus27b3499 is
   +152/-29=181 gross across10 existing owned paths; approved gross rises123.
   No peer/import/path expansion. Isolated sub3dac53c clean, complete patch unchanged.
-- pending: scoped verified source/record commit and receipt commit ID for root.
+- completed:506b43ac scoped verified source/record commit delivered for root.
   Real GPU params/runtime qualification and global acceptance remain unverified.
+
+- completed:506b43ac scoped verified F4a/F4b source/test/record delivery. Only
+  unstaged root-owned gitlink remains; isolated sub3dac53c clean. Requirements
+  reread; no future parameter/native/GPU/global qualification claim.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| F4a frozen fit/raw complete identity | PASS |506b43ac exporter three-anchor switch regression |
+| F4b startup versus actual fallback | PASS |506b43ac published native observer/validator regression |
+| Count/cache/cold regressions | PASS |Cold10 PASS; exact complete count required |
+| Scoped verification/records/commit | PASS |463 PASS/89 SKIP,12 HTSIM,3067/3956 and506b43ac |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**Final552 JUnit至今｜**当前前沿：**root复审
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |No extra tests after final; exact record/commit check only |
+| D2 细节反复重试 | CLEAR |No remaining in-scope failing case |
+| D3 支线问题修补 | CLEAR |No peer/environment/qualification edits |
+| D4 可并行任务停滞 | CLEAR |Explicit no agents; owned scope complete |
+| D5 超范围镀金 | CLEAR |43 paths/3067 gross; approved model unchanged |
+| D6 分析空转 | CLEAR |506b43ac delivered for immediate re-review |
+| D7 路线违背 | CLEAR |Full policy retained; no hidden per-implementation fit |
+**文档检查：**S5 pending commit facts updated to506b43ac; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新已完成提交事实。
+**文档更新（先执行）：**pricing plan/receipt/report/summary/progress记录506b43ac（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Root独立复审/gitlink整合；仅收到具体新finding后恢复owned工作。
+## 4. 最值得关注的 3 点
+1. Full execution_policy remains CORE plan/count/cache contract。
+2. Owned boundary fixes delivered at506b43ac，预算剩余889。
+3. Actual GPU/runtime qualification and global D29 acceptance remain open。

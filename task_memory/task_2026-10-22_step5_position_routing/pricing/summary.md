@@ -29,6 +29,7 @@ Independent re-review closed F3/F5/F6 and reopened F4a/F4b; boundary repair uses
 frozen runtime for fit grouping and full call-time policy for raw/count/cache/probe
 equality. Same frozen policy can choose different implementations by size. Native
 lazy-disable/fallback changes startup enabled-state without changing frozen policy.
+F4a/F4b scoped source/record commit506b43ac; root independent re-review remains open.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:

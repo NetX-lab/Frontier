@@ -53,4 +53,5 @@ native exceptions and soft auxiliary evidence handling remain unchanged.
 
 Current: actual exporter/observer/validator and cold importer GREEN; final552 cases
 463 PASS/89 SKIP, submodule12 PASS, cold10 PASS. Exact43-path3067/3956 budget and
-records verified; scoped commit/root re-review receipt is the remaining step.
+records verified; scoped source/record commit506b43ac delivered. Root re-review
+remains external acceptance, not owner work or GPU qualification.

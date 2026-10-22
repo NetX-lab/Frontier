@@ -117,3 +117,6 @@ No real GPU parameters, device-selected policy, calibration, source/backend/T2/G
 or global D29 qualification. CPU original-method execution and real HTSIM prove
 only recorded method/structural/numerical seams. Root owns independent re-review
 and final gitlink/integrated acceptance.
+
+Verified scoped parent source/record commit506b43ac. No new submodule commit;
+tip3dac53c and complete patch unchanged. Root independent re-review remains open.
