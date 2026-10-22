@@ -56,6 +56,13 @@ FP8/BF16 existing layer loader and collective/expert observers. Result PASS
 source-only; no runtime claim. Dockerfile's Python payload AST PASS,4 native
 COPY paths only, checked-hash bytecode compilation, no forced ENV/pip/backend rebuild.
 Receipt:t2_static_receipt.json. `git diff --check`:PASS.
+Final baseline-to-HEAD whitespace check must exclude the retained unified patch
+artifact: its blank context lines contain a required single-space diff prefix,
+which Git's generic added-text checker reports as trailing whitespace. Command:
+`git diff --check 1aee0af HEAD -- . ':(exclude)task_memory/task_2026-10-22_step5_d29_native_balanced/native_source.patch'`.
+Actual native source line-ending checks,
+all maintained repository files and the unchanged patch SHA256 PASS. The patch
+was not stripped or rewritten to hide/change its evidence.
 
 Manifest byte checks: capture02all56 entries PASS;
 capture03all57 entries PASS and original manifest

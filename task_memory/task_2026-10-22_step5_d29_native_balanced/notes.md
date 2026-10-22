@@ -6,7 +6,8 @@
 | 2026-10-23 | Record actual interface, sparse context and pending live inputs. |
 
 ## Native interface
-Early commit e48cdc0 retains native.patch, four source snapshots and interface_receipt.json.
+Early commit e48cdc0 retains native_source.patch, four source snapshots in
+native_source/ and interface_receipt.json.
 Actual source is /data/ycfeng/tmp/d29-native-derived-20261023-candidate01/vllm.
 Use native set_forward_context with is_padding, then
 `with set_routing_positions(actual_device_positions): router.select_experts(...)`.

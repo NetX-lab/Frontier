@@ -31,7 +31,7 @@ Local task root:
   Actual4 paths: forward_context.py, models/step5/nvidia/model.py,
   model_executor/layers/fused_moe/router/router_factory.py and
   model_executor/layers/fused_moe/router/routing_simulator_router.py.
-- Local `interface_receipt.json`, `native.patch`, `native_snapshot/` retain actual
+- Local `interface_receipt.json`, `native_source.patch`, `native_source/` retain actual
   setter/factory signatures, source hashes and reviewed4-file bytes. CORE can
   consume set_routing_positions(actual_device_positions) under existing native
   ForwardContext and factory sigmoid/renormalize/routed_scaling_factor arguments.
