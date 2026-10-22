@@ -337,12 +337,14 @@ def parse_args():
         "--routing_runtime_path",
         type=str,
         default="standard_fused_topk",
-        choices=["standard_fused_topk", "uniform_topk"],
+        choices=["standard_fused_topk", "uniform_topk", "position_cyclic"],
         help=(
             "Routing runtime path to profile for moe_gating_routing_topk. "
             "Use uniform_topk for runtime-equivalent uniform-routing profiling."
         ),
     )
+    parser.add_argument("--routing_input_file", type=Path,
+                        help="Explicit source/census routing inputs for position_cyclic profiling")
     parser.add_argument(
         "--gating_runtime_context",
         type=str,
@@ -371,6 +373,8 @@ def parse_args():
     args = parser.parse_args()
     if (args.source_revision is None) != (args.model_config_revision is None):
         parser.error("--source_revision and --model_config_revision must be given together")
+    if (args.routing_runtime_path == "position_cyclic") != (args.routing_input_file is not None):
+        parser.error("position_cyclic requires --routing_input_file; other routing paths cannot consume it")
     args.profile_method = normalize_profile_method(args.profile_method)
 
     return args, args.enable_load_imbalance
@@ -744,6 +748,7 @@ def profile_model(
         model_config.num_experts,
         args.expert_parallel_sizes,
     )
+    routing_inputs = _routing_inputs_for_model(args, model_config)
     routed_layer_groups = _routed_layer_groups_to_profile(model_config)
 
     all_results = []
@@ -980,6 +985,20 @@ def profile_model(
 MOE_SCHEMA_VERSION = "moe.v1"
 
 
+def _routing_inputs_for_model(args, model_config):
+    """Validate the same explicit input before either planning or native execution."""
+    if getattr(args, "routing_runtime_path", "standard_fused_topk") != "position_cyclic":
+        return None
+    from frontier.profiling.moe.inputs import read_routing_profile_inputs
+    if (model_config.get_model_architecture_profile().profile_id != "step5"
+            or args.num_tensor_parallel_workers != [1] or args.expert_parallel_sizes != [16]):
+        raise ValueError("position profiling requires Step/MoE-TP1/EP16 source geometry")
+    inputs = read_routing_profile_inputs(args.routing_input_file)
+    if any(len(item.source_frames) != 2 for item in inputs):
+        raise ValueError("position profiling requires both explicit DP2 source frames")
+    return inputs
+
+
 def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict[str, Any]:
     cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
     models = {}
@@ -994,6 +1013,7 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
             model_config.num_experts, args.expert_parallel_sizes
         )
         routed_layer_groups = _routed_layer_groups_to_profile(model_config)
+        routing_inputs = _routing_inputs_for_model(args, model_config)
         models[model] = {
             "num_experts": model_config.num_experts,
             "num_experts_per_tok": model_config.num_experts_per_tok,
@@ -1017,6 +1037,11 @@ def _dry_run(args: argparse.Namespace, num_tokens_to_profile: List[int]) -> Dict
                 cases_per_parallel_point=cases_per_parallel_point,
             ),
         }
+        if routing_inputs is not None:
+            from dataclasses import asdict
+            models[model]["routing_inputs"] = [asdict(item) for item in routing_inputs]
+            models[model]["profiled_steps"] = sum(len(item.source_frames) + expert_parallel_sizes[0]
+                                                 for item in routing_inputs) * len(routed_layer_groups)
     return {
         "profile_method": args.profile_method,
         "load_distributions": (

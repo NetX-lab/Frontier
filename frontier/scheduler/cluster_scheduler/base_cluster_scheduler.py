@@ -926,7 +926,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     ) -> EPBatchGroup:
         """Build an EP lane batch for predictor evaluation without request mutation."""
 
-        return build_ep_lane_batch(
+        lane_batch = build_ep_lane_batch(
             source_batch=source_batch,
             layer_id=layer_id,
             ep_id=ep_id,
@@ -934,6 +934,13 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             create_batch_group=self._create_batch_group,
             cluster_type=self._cluster_type,
         )
+        if layer_workload.routing_source is not None:
+            from frontier.moe_routing_policy import source_lane_index_for_ep
+            lanes = layer_workload.routing_source.source_lanes
+            source = lanes[source_lane_index_for_ep(ep_id, attention_tp_size=self._config.replica_config.attn_tensor_parallel_size,
+                source_lane_count=len(lanes), participant_ep_ids=layer_workload.participant_ep_ids)]
+            lane_batch.moe_pre_routing_effective_total_tokens = source.physical_rows
+        return lane_batch
 
     def _create_virtual_global_batch(
         self,

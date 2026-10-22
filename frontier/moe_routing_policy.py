@@ -85,6 +85,17 @@ class WaveRoutingSource:
         return sum(lane.live_rows for lane in self.source_lanes)
 
 
+def source_lane_index_for_ep(ep_id, *, attention_tp_size, source_lane_count, participant_ep_ids):
+    """Select an admitted contiguous no-SP DP/TP source owner, never expert ownership."""
+    _integer(attention_tp_size, "attention_tp_size", 1)
+    _integer(ep_id, "ep_id")
+    _integer(source_lane_count, "source_lane_count", 1)
+    world = source_lane_count * attention_tp_size
+    if tuple(participant_ep_ids) != tuple(range(world)) or ep_id >= world:
+        raise ValueError("source/EP association requires the same contiguous DP/TP world")
+    return ep_id // attention_tp_size
+
+
 def build_wave_routing_source(source_batches, *, policy_id, cluster_type, gathered_physical_rows, model_config=None):
     """Freeze only explicit, forward-bound request-owner batches, never EP copies."""
     from frontier.entities.batch import Batch, DummyForwardBatch

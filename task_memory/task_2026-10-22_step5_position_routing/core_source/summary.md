@@ -27,6 +27,7 @@ Interface contracts and root size-note proposal: [interface_receipt.md](interfac
 - Preserved unavailable baseline checks separately: four unmodified request-free tests fail because frontier-py310 lacks torch; asyncopd-py312 lacks fasteners for full simulator imports. No dependency install or behavior/test fallback.
 - Continuation:111 PASS/1 SKIP actual selected/legacy consumers;19 PASS source/timer;12 PASS/18 SKIP minimal legacy source. Peer union40 PASS/5 FAIL (unchanged inventory/fake-family assumptions after7b), recorded separately. See test_report_2026-10-23_selected_consumers.md for exact commands, evidence and corrected legacy invocation failure. Current37/44 paths,+2056/-133=2189/4404 gross,2215 remain; AST/whitespace/path/per-file ceilings PASS. Metadata test reaches85-line allowance.
 - Early selected consumer commitb39fc51, authorized source/native merge4d201c8. Foundation P2 corrected at real adapter constructor using existing full-receipt verifier and a meaningful RED→GREEN fault injection preserving class/public selector/module source identity. Actual bound _select_experts is now verified; source/timer20PASS. Current37/44 paths,+2116/-133=2249/4404 gross,2155 remain. No native semantics or peer files changed.
+- P2 commit795a583. Actual authentic-source checks:2907files/53pins/4derived/12backend PASS; existing plan binding accepts published platform digest and exact config/source, rejects index/base/missing receipt/wrong generation. Source-local lane and position CLI48PASS/1SKIP/4deselected. Current39/44 paths,+2201/-135=2336/4404 gross,2068 remain. These remain source/CPU plumbing evidence, not runtime/GPU qualification.
 
 ## Exact 44-owned-path accounting
 
@@ -45,7 +46,7 @@ Gross is the baseline1aee0af added+deleted code/test/config diff; task records e
 | `frontier/execution_time_predictor/step5.py` |26| selected row/source/typed context identity done; native numerical prerequisites pending |
 | `frontier/moe_ep_workload.py` |48| implemented |
 | `frontier/moe_load_imbalance.py` |0| native schema classifier pending |
-| `frontier/moe_routing_policy.py` |196| implemented |
+| `frontier/moe_routing_policy.py` |207| count/source plus sole contiguous DP/TP-to-EP source mapper |
 | `frontier/moe_routing_runtime.py` |101| registry runtime and selected frame/pair filter done |
 | `frontier/profiling/common/layers/layernorm.py` |12| callable verification done |
 | `frontier/profiling/common/runtime_identity.py` |133| verifier/identity implemented |
@@ -53,12 +54,12 @@ Gross is the baseline1aee0af added+deleted code/test/config diff; task records e
 | `frontier/profiling/linear_op/main.py` |29| identity/provenance implemented |
 | `frontier/profiling/moe/inputs.py` |123| implemented |
 | `frontier/profiling/moe/load_distribution.py` |1| sentinel fix done |
-| `frontier/profiling/moe/main.py` |49| executor/selected inventory/native facts done; census/row binding pending |
+| `frontier/profiling/moe/main.py` |76| explicit position CLI/source planning done; selected cell production pending |
 | `frontier/profiling/moe/moe_impl.py` |53| P2 actual bound selector provenance corrected; reached prepare connector pending |
 | `frontier/profiling/moe/moe_wrapper.py` |49| singleton timer/mask/source context done; selected cell/native integration pending |
 | `frontier/profiling/step5/job.py` |49| explicit plan/source interface done; selected package unverified |
 | `frontier/profiling/step5/vllm_wrapper.py` |15| source/declared-image evidence done; actual image unverified |
-| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` |2| source threading done |
+| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` |11| source threading and actual source-local physical lane width |
 | `frontier/scheduler/utils/ep_trace.py` |11| live/physical conservation done |
 | `frontier/scheduler/utils/ep_wave.py` |5| actual DP source map done |
 | `frontier/scheduler/utils/layer_workload.py` |22| strict actual source materialization done |
@@ -71,13 +72,13 @@ Gross is the baseline1aee0af added+deleted code/test/config diff; task records e
 | `tests/unit/test_moe_grouped_gemm_padded_features.py` |173| actual pre-loader/fit/cache/source tests done; native layout tests pending |
 | `tests/unit/test_moe_position_routing.py` |159| count/source/constructor/cache/scheduler tests done |
 | `tests/unit/test_moe_profiling_output_metadata.py` |85| actual linear/MoE attachment/source cell tests done; allowance full |
-| `tests/unit/test_moe_routing_conservation.py` |0| existing checks pass; planned additions pending |
+| `tests/unit/test_moe_routing_conservation.py` |15| old conservation plus actual lane width16/1 and world rejection |
 | `tests/unit/test_moe_routing_runtime.py` |19| constructor order test done |
 | `tests/unit/test_step5_attention_profiling.py` |0| existing source checks pass; actual selected evidence pending |
 | `tests/unit/test_step5_fixed_probe.py` |150| source/verifier/legacy checks done |
 | `tests/unit/test_step5_measured_ffn.py` |32| selected physical exact-pair runtime checks done |
 | `tests/unit/test_step5_moe_profiling.py` |276| P2 actual constructor RED→GREEN; prepare/root native integration pending |
-| `tests/unit/test_step5_request_free_profiling.py` |0| existing four torch-unavailable checks preserved |
+| `tests/unit/test_step5_request_free_profiling.py` |25| position CLI/source planning plus old defaults;4 old dependency failures preserved |
 
 ## Concrete unresolved prerequisite boundary
 

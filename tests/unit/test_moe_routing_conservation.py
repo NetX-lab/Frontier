@@ -17,6 +17,21 @@ from frontier.scheduler.utils.layer_workload import materialize_layer_workload
 from frontier.types import ClusterType
 
 
+def test_actual_scheduler_lane_batch_uses_its_admitted_source_width():
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
+    from tests.unit.test_moe_position_routing import materialize, source
+    scheduler = SimpleNamespace(_config=SimpleNamespace(replica_config=SimpleNamespace(attn_tensor_parallel_size=8)),
+                                _cluster_type=ClusterType.DECODE, _create_batch_group=lambda *args: SimpleNamespace(set_global_id=lambda value: None))
+    batch = Batch(0, [Request(0, 6144, 1024)], [17], is_moe=True, num_context_tokens=[6128])
+    workload = materialize(source())
+    for ep_id, width in ((0, 16), (7, 16), (8, 1), (15, 1)):
+        lane = BaseClusterScheduler._build_prefill_ep_lane_batch(scheduler, source_batch=batch, layer_id=3, ep_id=ep_id, layer_workload=workload)
+        assert lane.moe_pre_routing_effective_total_tokens == width
+    from frontier.moe_routing_policy import source_lane_index_for_ep
+    with pytest.raises(ValueError, match="contiguous DP/TP world"):
+        source_lane_index_for_ep(8, attention_tp_size=8, source_lane_count=2, participant_ep_ids=tuple(range(8)))
+
+
 def _predictor_package_source() -> str:
     return "".join(
         path.read_text(encoding="utf-8")

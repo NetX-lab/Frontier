@@ -24,12 +24,13 @@
 - exact unresolved seam: committed NativeRoutedExperts output and canonical CSV field encoding its per-group actual quant_dtype/defer_input_quant/native frame/schema context are absent.7b defines selector input mapping, not its row serialization. CORE will not infer this from weight precision, invent a column, or consume uncommitted peer API. Native numerical schema/capacity/ranges and finite-model fixture payload remain required. Native N1-N4 repaired tip remains root-coordinated qualification dependency.
 - latest delivery: PRICING409093c committed prepare/context/inclusive and finite importer, readable but not import-authorized; canonical CSV/schema/association contributor facts still required. Root now authorizes67d5b5e source/native import after owned commit and supplies actual published2907-source image receipts/export. Source/image blocker is removed; GPU qualification is not.
 - completed: selected consumer commitb39fc51; authorized67d5b5e merge4d201c8 preserves native repair6827507 and published source history. Worktree was clean before integration.
-- in-progress source: actual publication/export/53pins/4derived/12backend hash checks passed before static oracle name check failed (a script assertion used list-set in its failure message). Original output retained /data/ycfeng/tmp/d29-core-published-source-check01.json; no receipt root/version/image was changed. Next run will inspect actual exported symbol names and distinguish static bytes from runtime imports.
+- completed source bytes/binding: actual publication/export/2907sources/53pins/4derived/12backend checks PASS02 and profile_native_binding PASS01. Exact published platform digest and receipt/config hashes bind; index/base/wrong generation/missing receipt rejected. First static probe's mistaken unquantized symbol/list-set assertion failed after hashes passed; actual exported symbol inspection corrected that probe once. Authentic receipt root/version/image unchanged; no runtime imports or GPU claimed.
 - completed P2 fix: actual construction seam omitted native_router._select_experts from callable tuple. Initial test setup hit stale synthetic derivation hash, not the defect. Hypothesis recorded before refreshing that test-only seal; decisive RED02 failed DID NOT RAISE. Existing tuple now includes actual bound implementation; GREEN03 20PASS plus37PASS baseline verifier/metadata. No verifier/native behavior change. Fault-injected source fixture is solely regression evidence, never published source evidence. Exact commands in test_report_2026-10-23_router_provenance.md. Current37paths,+2116/-133=2249/4404 gross,2155 remain; every path ceiling passes.
+- completed P2 commit795a583 delivered early for re-review. Source/CLI slice: one source_lane_index_for_ep validates the same contiguous DP/TP world and existing admitted lane builder selects source-local16/1 widths while retaining gathered17; explicit position CLI input parses before dry-run/execution and planning uses source widths, not legacy grid4096. Focused source/CLI48PASS/1SKIP/4 deselected. New tests placed in existing owned conservation file with unused allocation, not added to the full160-line position test. Temporary per-path excesses during WIP were eliminated before commit; no allowance borrowed. Current39/44 paths,+2201/-135=2336/4404 gross,2068 remain.
 
 ## 1. 规划完成情况
 
-**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 2｜TODO 1
+**汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 1｜TODO 2
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
@@ -41,34 +42,33 @@
 
 ## 2. 偏离检测
 
-**结论：** 已偏离：命中D2；最终consumer证据通过，已应用先记录cause/hypothesis的纠正。
-**检测窗口：** root continuation after02f061d 至今｜**当前前沿：** commit bound consumer slice, actual published-source integration, PRICING schema import
+**结论：** 未偏移，正常推进；前次D2纠正已应用，相关历史保留。
+**检测窗口：** b39fc51 checkpoint 至今｜**当前前沿：** source/CLI commit and fresh actual-receipt package; PRICING selected producer import
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | real preflight/loader/shared+independent fit/cache tests settle consumer slice and stop at111PASS |
-| D2 细节反复重试 | HIT | identity test reruns05/06 changed fixtures before recording cause hypotheses; final real verifier activation fixed the missing-facts check |
+| D1 工具打磨 | CLEAR | P2 exact regression and actual published-source checks settle required acceptance, no extra campaign |
+| D2 细节反复重试 | CLEAR | P2 hypothesis preceded refreshed test-only seal; one decisive RED then GREEN; quota excess corrected before commit |
 | D3 支线问题修补 | CLEAR | no unrelated fixes |
 | D4 可并行任务停滞 | CLEAR | runtime and independent source work both advanced; user prohibits extra agents |
-| D5 超范围镀金 | CLEAR | 37 owned paths,2189/4404 gross; no new unallocated module |
+| D5 超范围镀金 | CLEAR | 39 owned paths,2336/4404 gross; each individual retained ceiling passes |
 | D6 分析空转 | CLEAR | real source/timer/launcher changes and tests delivered; remaining dependency named precisely |
 | D7 路线违背 | CLEAR | only authorized peer history imports; no platform/source fallback |
 
-**文档检查：** S5 original dependencies at progress19-20 and interface receipt1/4 lagged root's authorization/source delivery; latest requirements/plan/receipt entries now supersede historical blockers. Other S1-S4/S6 clear.
-**归因：** D2 执行偏离；不是设计缺陷。
+**文档检查：** S1-S6均无新缺陷；原依赖历史由最新source/import结果明确更新，未扩展scope。
+**归因：** 无。
 
 ## 3. 纠正建议
 
-**分支：** B：更新已过期依赖状态后继续。
-**文档更新（先执行）：** requirements/plan/progress/interface_receipt：记录真实 merge hashes、67d5b5e import与actual published-source delivery（可直接执行，已执行）。
-**需停止的偏离行为：** D2：不再根据想象修补测试输入；先记录真实 cause/hypothesis，再运行一个决定性检查。
+**分支：** A：spec/plan合理，无需改动。
+**需停止的偏离行为：** 无。
 **接下去的路线：**
-1. Commit verified consumer slice, import root-authorized67d5b5e, check actual published export/receipt → 完成标志：real2907 hashes/config/native source inputs validate without local relabeling.
+1. Commit verified source-local lane/CLI slice and fresh authentic-receipt package → 完成标志：one sealed package accepts real platform digest/receipts/source revision, commands consume same explicit input; no runtime admission claimed.
 2. Resume selected trainers/preflight/wrapper/main → 完成标志：all selected source/gathered/empty physical exact pairs, both actual pre-loader paths and schema/cache checks pass.
 3. Finish new fixture/main → 完成标志：retained6144/1024,D26/D27/D30,offline+online actual-main checks within original2400s limit; root separately qualifies native/image/E2E.
 
 ## 4. 最值得关注的 3 点
 
 1. Actual selected preflight/shared+independent fit/cache/exact pairs pass; canonical production schema enumeration remains incomplete.
-2. PRICING409093c import/CSV/schema/association facts remain the exact next dependency;2215 gross lines remain and metadata test85-line allowance is full.
+2. PRICING committed tip import/CSV/schema/ranges are the exact next dependency;2068 gross lines remain. Source association implemented once; metadata/position test allowances are full.
 3. Root supplied actual published-source evidence; native GPU/runtime/E2E remains UNVERIFIED and root-owned.
