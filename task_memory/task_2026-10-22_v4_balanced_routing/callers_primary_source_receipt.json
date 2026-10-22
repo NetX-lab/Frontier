@@ -1,0 +1,12 @@
+{
+  "status": "PASS_SOURCE_IDENTITY",
+  "source": "186dfef5503ecb5329bd0fa96f9e978cc813276a",
+  "files": 12,
+  "added_plus_deleted": 432,
+  "all_changed_working_files_match_commit": true,
+  "policy_sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+  "reviewed_diff_sha256": "f307d4957d048027f3c01fe3eb32edf1ce260428e5939e0f598dbc59e58ddc9f",
+  "review": "APPROVE_SOURCE_ONLY",
+  "final_fidelity": "pending",
+  "native_gpu_admission": "UNVERIFIED"
+}

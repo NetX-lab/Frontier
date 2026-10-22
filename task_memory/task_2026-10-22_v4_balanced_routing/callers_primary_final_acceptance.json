@@ -1,0 +1,20 @@
+{
+  "task_id": "W128-V4-BALANCED-CALLERS-PRIMARY",
+  "source_revision": "186dfef5503ecb5329bd0fa96f9e978cc813276a",
+  "comparison": "/data/ycfeng/tmp/glm53_dsv4/balanced_callers_186dfef_20261022/comparison.json",
+  "comparison_sha256": "adafca736b29735060bb29949acd51837de8f48990a298e35ec54e167a00bfd8",
+  "fixed_clean_cases": 77,
+  "identical_cases": 77,
+  "root_unit_xml": "/data/ycfeng/tmp/glm53_dsv4/root_balanced_callers_186dfef.xml",
+  "root_unit_counts": {
+    "tests": 218,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "source_files": 12,
+  "routing_changed_lines": 432,
+  "independent_review": "W128-V4-BALANCED-CALLERS-REVIEW APPROVE",
+  "acceptance": "ACCEPTED_SOURCE_AND_CPU",
+  "native_gpu_acceptance": false
+}

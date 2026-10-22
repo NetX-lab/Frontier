@@ -1,0 +1,29 @@
+{
+  "status": "PASS_REAL_CONFIG_ROLE_MATERIALIZATION",
+  "source": "186dfef5503ecb5329bd0fa96f9e978cc813276a",
+  "input_sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+  "roles": [
+    {
+      "role": "PREFILL",
+      "distribution": "balanced",
+      "runtime": "balanced_topk",
+      "attention_tp": 8,
+      "attention_dp": 2,
+      "moe_tp": 1,
+      "ep": 16,
+      "pp": 1
+    },
+    {
+      "role": "DECODE",
+      "distribution": "balanced",
+      "runtime": "balanced_topk",
+      "attention_tp": 8,
+      "attention_dp": 2,
+      "moe_tp": 1,
+      "ep": 16,
+      "pp": 1
+    }
+  ],
+  "simulator_or_gpu_executed": false,
+  "native_and_prediction_admission": "UNVERIFIED"
+}
