@@ -185,3 +185,28 @@ are closed. Exact coverage is restricted to applicable new-policy keys; actual
 census coverage is still required. Core33-file subtotal is not final union
 approval. Assign these three explicit corrections to the original core author;
 pricing's missing modeling inputs stay separate.
+
+## Communication-model prerequisite review
+
+Reviewer `ses_e9e15d18cffemTkCOdK4P941nU`, task
+`D29-CC-DESIGN-SCOPE-REVIEW`, closes the four prior pricing interface findings
+at design level: applicable target contract, MOE_FAMILY/ROUTED EP-agnostic
+prepare, reporting/frame ownership, and actual ordinary/preallocated combine.
+
+One P2 remains: `pricing_design.md:222–260,822–827` incorrectly makes a lossless
+NCCL channel/fusion/chunk schedule mandatory before completing a simulator
+design. Main requirements demand retained collective_sim and four independent
+E2E errors<=10%, not exact NCCL microarchitecture. Existing algorithm/channel
+configuration, FlowDef/triggers and sum/max combination are model abstractions.
+
+Correction: keep the exact workload plan (physical/live rows, tensor dtype/bytes,
+size-vector/root/group order, all groups, phase boundaries); define a finite
+scheduling/protocol/local-work/overlap model and label its assumptions. Parent
+and YC decide material alternatives. Native counts/scopes/transport/duration
+and E2E qualification follow implementation. Add channel/timed-local machinery
+only if error evidence establishes its need. Zero intra-group NVLink traffic
+does not establish zero GPU-local work, and primitive counts are not launches.
+
+The50-path/2782 known-interface subtotal is not a complete implementation budget;
+measured lookup remains unapproved. Assign a bounded model proposal and complete
+scope to the pricing author. This review is documentary, not runtime acceptance.

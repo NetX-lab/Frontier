@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Remove unsupported exact-NCCL reconstruction prerequisite; require finite explicit model assumptions and subsequent qualification. |
 | 2026-10-22 | Require an explicit communication-model decision if measured-plan lookup would replace the retained simulator approach. |
 | 2026-10-22 | Assign six review findings and three disjoint mandatory design streams; remove unrelated new-policy scope. |
 | 2026-10-22 | Record review and complete-scope dependencies after the first design delivery. |
@@ -28,6 +29,15 @@ retain the prior collective_sim decision unless the user explicitly changes it.
 The selected communication design must have a complete budget before the joint
 scope request. Do not equate the proposed backend class name with unchanged
 modeling behavior. See `pricing_design.md` sections 1 and 3.2 for parent evidence.
+
+The communication design must specify a finite model, not require lossless native
+per-channel reconstruction before implementation. Preserve all workload/group/
+phase facts; explicitly distinguish scheduling/protocol/local-work/overlap
+assumptions from observed facts and obtain decisions for material alternatives.
+Native per-rank counts, scope/transport and duration comparisons plus E2E gates
+qualify the implemented model. Add finer channel/timed-local machinery only
+when observed errors justify it. This corrects the design prerequisite; it
+does not authorize a numerical assumption or a larger code scope by itself.
 
 Acceptance: exact own-position counts and conservation, mask/physical scope,
 typed duration/count/source validation, complete new-policy input coverage,

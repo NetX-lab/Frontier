@@ -70,6 +70,11 @@
   algorithm estimate at missing native channel-schedule/GPU-local overlap inputs.
   Known interface subtotal50 paths/2782 is not a complete implementation scope;
   measured lookup46 paths/2595 remains unapproved.
+- completed: pricing scope review closes the four interface findings but rejects
+  exact NCCL microarchitecture reconstruction as an unsupported pre-code gate.
+  Parent applies the plan correction and requests finite model alternatives,
+  explicit assumptions and a complete bounded implementation budget. Existing
+  collective_sim and subsequent native/E2E qualification remain required.
 - pending: settle required companions, combine corrected native design and
   user scope approval, implement, verify and collect fresh evidence.
 
