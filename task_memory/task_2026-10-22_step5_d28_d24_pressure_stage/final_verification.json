@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FINAL_SEALS_ORIGINS",
+  "capture02_immutable": true,
+  "capture03_immutable": true,
+  "original_capture01_immutable": true,
+  "source_commit": "6e73330c2d04af382cf65a2c689c5401ca202485",
+  "no_attempt_or_job": true,
+  "code_changed_files": [
+    "tests/integration/step5_pd/r2_canonical.py",
+    "tests/integration/step5_pd/verify_r2_stage.py",
+    "tests/unit/test_step5_canonical_g3.py",
+    "tests/unit/test_step5_native_pressure_observation.py"
+  ],
+  "records_commit_pending": true
+}
