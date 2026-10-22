@@ -71,8 +71,8 @@ def main(generation='06'):
         output_dir='/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/t18/'
                    'dsv4_h800_p0_canonical_20261021/case/runs/groundtruth_clean/'
                    f'dsv4-h800-p0-canonical-20261021-{generation}',
-        gpu_type='H800', charged_group='codesign', replica=4, timeout_seconds=10800,
-        peer_wait_seconds=1200, startup_timeout_s=1800, replay_timeout_s=7200,
+        gpu_type='H800', charged_group='codesign', replica=4, timeout_seconds=3600,
+        peer_wait_seconds=1200, startup_timeout_s=1800, replay_timeout_s=1800,
         model_hashes=prior['model_hashes'], harness_files={}, retained_files={}, tool_hashes={},
         observer_bootstrap=str(PACKAGE / 'native_dummy_bootstrap.py'),
         overlay_manifest=str(PACKAGE / 'overlay.json'))
@@ -120,7 +120,7 @@ def main(generation='06'):
     stage('case/inputs/frontier.json', content)
     config['retained_files']['case/inputs/frontier.json'] = sha(content)
     config['tool_hashes'][str(PACKAGE / 'case/inputs/frontier.json')] = sha(content)
-    checker.verify_balanced_frontier(config, engine)
+    checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)
     lock['retained_files']['case/inputs/frontier.json'] = dict(source=str(FRONTIER), sha256=sha(content))
     for path in (CHECKER, checker.R2_PATH):
         config['tool_hashes'][str(path)] = sha(path.read_bytes())
@@ -219,7 +219,7 @@ def main(generation='06'):
             'all32rank forwards/replays with conditional NONE semantics', 'ordered shutdown',
             'complete 3x(16+128) client records', 'four calibration errors<=10percent'],
         primary_review=['Unsealed candidate', 'Existing checker V4/V2/schema/C26 binding'],
-        cost=dict(payload_guard_seconds=10800, max_payload_gpu_hours=96,
+        cost=dict(payload_guard_seconds=3600, max_payload_gpu_hours=32,
             scheduled_arrival_span_seconds=426, minimum_schedule_gpu_hours=32*426/3600,
             h800_measured_startup_or_timing=False),
         reused_h200_evidence='Source/bootstrap/native dtype and geometry functions only; no H800 memory/timing claim'))
