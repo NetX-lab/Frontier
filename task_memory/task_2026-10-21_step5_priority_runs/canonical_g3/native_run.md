@@ -5,10 +5,16 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Recorded sealed package, direct personal submission and platform identity verification. |
+| 2026-10-22 | Link completed native judgment and resume deferred pressure forensics after D25 workload completion. |
 
 ## Status
 
-**Platform Succeeded4/4 at2026-10-21T16:26:40Z. Native evidence and G3/G4 judgment are pending.**
+**Platform Succeeded4/4 at2026-10-21T16:26:40Z; G3 is not qualified.**
+The completed judgment is in `native_judgment/report.md`:160 completed requests,
+one expected abort and two HTTP502s; transferred rows are bit-exact, independent
+reference logical-state agreement remains unverified and no pressure witness
+was captured. The original MRv2 gate remains FAIL; later CPU observation fixes
+do not retroactively admit this generation.
 
 - Job: `exp-1021-235955-532667` (created2026-10-21 23:59:55 local time).
 - Stage: `/data/ycfeng/tmp/step5_canonical_g3_20261021/capture01/stage`.
@@ -50,3 +56,19 @@ Retained local evidence, all under `/data/ycfeng/tmp/step5_canonical_g3_20261021
 Inspect worker GPU identities, image/source verification, all request records and native logs, complete resident/component/reference matches, actual READ/GPU-readiness/retain/free and reset/reuse/abort witnesses, actual allocator pressure, all32 rank forward accounting and terminal status. The offered pressure load and10ms abort deadline alone never qualify those controls. Native numerical differences keep existing tolerances/dispositions. Auxiliary diagnostics remain soft: a missing or failed witness does not justify stopping healthy execution.
 
 The MRv2 descriptors will also supply real profile inputs for the corrected producer (`82f4452`). The immutable no-metadata profiling stage01 packages remain withdrawn; no profiling admission is inferred from this submission.
+
+## Resumed follow-up after D25 workload completion
+
+The prioritized H80032/64 full workloads have completed; see
+`../../task_2026-10-22_step5_full_workload/summary.md`. D24 bounded tail-page values,
+HTTP failure context and startup census corrections are integrated as CPU
+capabilities; fresh native evidence and a separately approved numerical state
+criterion are still required.
+
+Read-only local investigation `D24-G3-PRESSURE`, session
+`ses_e9eddd148ffeA2BeIqGwC5Hrt6`, is comparing actual pool headroom/admission,
+recorder coverage and request-ID association against the frozen capture. Zero
+recorded denials alone does not establish that the pool was never exhausted.
+The investigator may propose a minimal follow-up but has no authority to change
+native capacity, load or the sealed generation. Parent owns that decision and
+any later submission.

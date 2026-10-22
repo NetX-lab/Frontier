@@ -15,6 +15,7 @@
 | 2026-10-22 | Accept fixed-contract source with parent timings, exact costs/artifacts and 255 passing checks plus two baseline-identical failures. |
 | 2026-10-22 | Accept loader reuse and merged224 checks; launch actual06 on frozen7e8bea3 with unchanged inputs and execution bound. |
 | 2026-10-22 | Integrated CPU reuse strict77 passes; actual06 full request remains pending. |
+| 2026-10-22 | Actual06 both time out after substantial wall-time improvement; record census and exact common-prefix comparison. |
 
 ## Environment and scope
 
@@ -311,5 +312,52 @@ shared fixture/source paths. No fixture regeneration, timeout change or weakened
 terminal validation is used. The retained clean26db654 matrix is the baseline
 for the new77-case candidate run. That run and its strict comparison have now
 passed77/77, including predictor cache filenames and provenance. See
-`cpu_reuse_fidelity.json`. Both full CLI terminal results remain pending;
+`cpu_reuse_fidelity.json`. Both full CLI terminal results are now recorded below;
 no full-request or native/accuracy acceptance is claimed.
+
+## Actual06 result: TIMEOUT after measured improvement
+
+Both unchanged commands in `progress.md` finished with wrapper exit1. Each
+child execution receipt reports `timed_out=true`, `returncode=null`, at the
+original2400s boundary. The frozen7e8bea3 source guard did not fail. The eight
+shared fixture/source hashes still match actual05.
+
+| Observed boundary | Actual05 offline / online | Actual06 offline / online |
+| --- | --- | --- |
+| Command write to first scheduler row |998.504 /1004.875s|337.941 /339.505s|
+| Emitted-token counter at timeout |42 /41|357 /362|
+| Useful D batches started |43 /42|358 /363|
+| Median successive useful D start gap |32.486 /36.116s|5.165 /5.069s|
+| Minimum D start gap |18.613 /18.518s|4.250 /4.204s|
+| Maximum D start gap |209.662 /209.332s|62.396 /64.651s|
+| Full1024 output acceptance |FAIL_TIMEOUT|FAIL_TIMEOUT|
+
+These wall-clock observations establish improvement in the actual complete
+program, not just the earlier short probes. The setup measure includes invocation
+overhead and initialization; it is not an exclusive loader profile. Gaps use the
+existing wall-clock scheduler timestamps. They are not simulated TPOT or native
+performance measurements.
+
+Parent streamed each actual05/06 `scheduler.jsonl` with standard-library
+`python3` under `timeout 60s`, retaining only event, cluster, iteration, timestamp,
+simulation time, token fields and the grouped-state emitted counter. All lines
+parsed. The exact comparison key was `(event, cluster_type, iteration_id)` for
+`grouped_cache_batch` and `grouped_cache_batch_end`; it found87 offline and85
+online common events with no differences in event/role/iteration, simulation
+time, `num_tokens`, `request_num_tokens` or emitted count. Wall timestamps are
+deliberately excluded from numerical-preservation comparison.
+
+The raw source paths, complete phase/census values, execution receipts and their
+SHA256 hashes are retained in `actual06_timeout_receipt.json`. The post-run
+streaming hash audit in `actual06_input_receipt.json` confirms all9 input files
+per mode still match launch values and all8 shared inputs match actual05. Source directories:
+`/data/ycfeng/tmp/d23_main_actual06_{offline,online}/`. No terminal
+`system_metrics.json`, `request_metrics.csv`, `event_trace.json`, transfer ledger
+or stage ledger was published. Missing flushed artifacts do not establish that
+the underlying READ operations did not occur; full READ/readiness/release and
+terminal metric acceptance remain unverified.
+
+Next feedback loop: complete public decode iteration with the real retained
+models, all EP lanes, metrics/trace and backend paths. The diagnostic owner must
+first provide a fast red-capable command, then rank and profile remaining causes.
+No new production correction, full retry or timeout increase has been selected.

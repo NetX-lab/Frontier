@@ -15,6 +15,8 @@
 | 2026-10-22 | Contract reuse accepted: 255 PASS with two baseline-identical failures, exact short-query costs/proofs, independent No findings. |
 | 2026-10-22 | Accept input reuse and merged224 checks; launch actual06 and candidate77 from immutable7e8bea3. |
 | 2026-10-22 | Complete strict77 CPU reuse comparison with no output, cache-name or provenance differences. |
+| 2026-10-22 | Archive eventual legacy run09 completion separately; actual06 acceptance remains active. |
+| 2026-10-22 | Actual06 terminal timeout and partial-prefix equality verified; whole-iteration diagnostic delegated. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -368,7 +370,7 @@ Checkpoint after verified compute correction:
 
 ## Actual06: frozen-source complete acceptance
 
-- in-progress: offline and online actual main run from the clean detached
+- completed, not accepted: offline and online actual main ran from the clean detached
   `/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3` checkout.
   HEAD remains7e8bea3 throughout both subprocesses; parent task-record commits
   occur only in `step5-preview`, so the runner's source-identity guard is retained.
@@ -404,3 +406,46 @@ filenames and clean provenance pass. Original comparison saved byte-for-byte as
 
 No terminal/full CLI, native/profile or accuracy PASS is claimed. Preserve
 original failed attempts and inspect actual06 terminal artifacts next.
+
+The old request-free run09 parent94827 has now exited. Its offline/online
+validators both report PASS for the superseded metadata-free8192-capacity CPU
+fixture. Parent checked retained CSVs/system/transfer records and archived the
+online receipts under
+`../task_2026-10-21_step5_d20_integration/actual_main/cancellation_20261022/`.
+That historical result does not replace the active truthful-MRv2 actual06 run.
+
+## Actual06 terminal result and remaining runtime diagnosis
+
+- completed: both commands terminate by the original2400s timeout. Source7e8bea3
+  remains fixed and all8 input hashes match actual05. No terminal request/system
+  metrics, event trace, transfer ledger or stage ledger were published.
+- observed improvement: setup proxy (command-file write to first scheduler row)
+  drops from998.504/1004.875s to337.941/339.505s. Emitted-token counters increase
+  from42/41 to357/362. Median successive useful D start gaps decrease from
+  32.486/36.116s to5.165/5.069s. These are CPU wall times, not predicted token
+  latency or native performance metrics.
+- completed preservation check:87 offline and85 online common grouped-cache
+  batch start/end events exactly match actual05 in event/role/iteration,
+  simulated time, token fields and emitted count. This verifies only the common
+  completed prefix, not the absent1024-token terminal result.
+- evidence: `actual06_timeout_receipt.json` stores both execution receipts,
+  scheduler census, phase values, exact-prefix comparison and file hashes.
+- in-progress: `D23-ACTUAL06-WALL`, session `ses_e9f519775ffe3Cv0bhEzJSKNhH`,
+  builds a fast red-capable diagnostic for the complete public decode iteration.
+  Its scope is diagnostic scripts/records in the perf worktree. It must include
+  actual prediction, event/coordination, ledger/trace and backend paths before
+  proposing another source correction. It has no full retry, production-change,
+  timeout-change or native-operation authorization.
+
+Next: review that feedback loop -> rank and instrument remaining causes ->
+select a measured correction. Full CLI acceptance remains FAIL_TIMEOUT.
+
+Post-run streaming SHA256 audit also confirms all9 inputs per mode match their
+launch hashes, and all8 shared inputs match actual05; see
+`actual06_input_receipt.json`.
+
+The separate read-only `D23-P-CENSUS` investigation
+(`ses_e9edbc6edffeBKrJHf3eR1frbe`) addresses deferred note6 before native G4/profile
+admission: CPU P6144 versus native P6128 useful-token accounting, including
+physical padding and exported-prefix boundaries. It does not modify the current
+CPU fixture or replace full-CLI runtime acceptance.

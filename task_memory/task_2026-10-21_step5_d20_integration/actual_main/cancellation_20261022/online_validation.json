@@ -1,0 +1,348 @@
+{
+  "mode": "online",
+  "status": "PASS",
+  "evidence_kind": "cpu_fixture",
+  "native_admitted": false,
+  "run_dir": "/data/ycfeng/tmp/d20_actual_main_request_free_h80032_09/online/metrics/stepfun_ai_step_5_preview/online_serving/step5_measured_cpu_main_online",
+  "request": {
+    "Request Id": "0",
+    "request_e2e_time": "249336.05234471377",
+    "request_e2e_time_normalized": "243.49223861788454",
+    "request_execution_time": "249332.5523447138",
+    "request_execution_time_normalized": "243.48882064913457",
+    "request_model_execution_time": "175498.12308800028",
+    "request_model_execution_time_normalized": "171.38488582812528",
+    "request_preemption_time": "0.0",
+    "request_first_scheduling_delay": "0.0",
+    "request_execution_plus_preemption_time": "249332.5523447138",
+    "request_execution_plus_preemption_time_normalized": "243.48882064913457",
+    "request_waiting_time_total": "0.0",
+    "request_waiting_time_prefill": "0.0",
+    "request_waiting_time_decode": "0.0",
+    "request_waiting_time_decode_attn": "0.0",
+    "request_waiting_time_decode_ffn": "0.0",
+    "request_hidden_waiting_time": "0.0",
+    "request_final_waiting_time": "0.0",
+    "request_hidden_service_time": "0.0",
+    "request_final_service_time": "249332.55234471377",
+    "final_round_prefill_wait_ms": "0.0",
+    "final_round_decode_wait_ms": "0.0",
+    "final_round_prefill_service_ms": "67169.61383299995",
+    "late_hidden_prefill_wait_ms": "0.0",
+    "request_thinking_time": "0.0",
+    "request_tool_call_time": "0.0",
+    "prefill_e2e_time": "67169.61383299995",
+    "prefill_execution_plus_preemption": "67169.61383299995",
+    "prefill_execution_plus_preemption_per_token": "10.932554334798171",
+    "decode_e2e_time": "182166.43851171382",
+    "decode_e2e_time_per_token": "177.89691260909552",
+    "decode_first_token_latency": "172.24287039995545",
+    "ttft": "67169.61383299995",
+    "client_ttft": "73131.59592466656",
+    "ttft_prefill_only": "67169.61383299995",
+    "ttft_kv_transfer": "3.500000000002501",
+    "ttft_decode_first_token": "0.0",
+    "tpot": "172.24287040082817",
+    "tpot_computation": "172.24287040082817",
+    "tpot_transfer": "0.0",
+    "transfer_kv_cache": "3.500000000002501",
+    "transfer_kv_cache_request_start_ts": "67419.61383299995",
+    "transfer_kv_cache_request_end_ts": "67423.11383299997",
+    "transfer_m2n_total": "0.0",
+    "transfer_m2n_attn_to_ffn": "0.0",
+    "transfer_m2n_ffn_to_attn": "0.0",
+    "cluster_prefill_computation": "67169.61383299995",
+    "cluster_decode_attn_computation": "0.0",
+    "cluster_decode_ffn_computation": "0.0",
+    "cluster_decode_computation": "182162.93851171384",
+    "cluster_decode_attn_e2e_time": "0.0",
+    "cluster_decode_ffn_e2e_time": "0.0",
+    "request_num_tokens": "7168",
+    "request_num_prefill_tokens": "6144",
+    "request_num_decode_tokens": "1024",
+    "request_pd_ratio": "6.0",
+    "request_num_restarts": "0",
+    "request_thinking_round_count": "0",
+    "request_session_id": "",
+    "request_cohort": "",
+    "request_sj2q_pen_qshort_entries_total": "0",
+    "request_sj2q_pen_qshort_long_history_entries_total": "0",
+    "request_sj2q_pen_qlong_entries_total": "0",
+    "request_sj2q_pen_long_history_to_qshort_reentry_count": "0",
+    "request_sj2q_pen_first_long_history_round_number": "0",
+    "request_total_preemption_count": "0",
+    "request_prefill_preemption_count": "0",
+    "request_decode_preemption_count": "0",
+    "request_decode_attn_preemption_count": "0",
+    "request_hidden_preemption_count": "0",
+    "request_final_preemption_count": "0",
+    "request_decode_tokens_at_preemption_all": "",
+    "request_decode_attn_tokens_at_preemption_all": "",
+    "request_decode_tokens_at_preemption_mean": "0",
+    "request_decode_tokens_at_preemption_max": "0",
+    "request_decode_tokens_at_preemption_min": "0",
+    "request_spec_total_iterations": "0",
+    "request_spec_accepted_drafts": "0",
+    "request_spec_rejected_drafts": "0",
+    "request_spec_committed_tokens": "0",
+    "request_spec_acceptance_ratio": "0.0",
+    "request_spec_committed_per_iteration": "0.0"
+  },
+  "transfer": {
+    "afd_stage_idx": null,
+    "attention_owner_replica_id": null,
+    "attention_owner_replica_local_id": null,
+    "batch_global_id": -1,
+    "batch_id": 1411,
+    "bytes": 140734976,
+    "duration_ms": 3.500000000002501,
+    "end_ts_s": 67.42311383299996,
+    "iteration_ids": [
+      0
+    ],
+    "layer_id": null,
+    "pipeline_stage": null,
+    "request_ids": [
+      0
+    ],
+    "request_runtime_epochs": [
+      0
+    ],
+    "source_batch_stage_id": 1,
+    "source_cluster": "PREFILL",
+    "source_replica_id": 0,
+    "source_replica_local_id": 0,
+    "start_ts_s": 67.41961383299996,
+    "status": "completed",
+    "target_batch_stage_id": 65,
+    "target_bound": true,
+    "target_cluster": "DECODE",
+    "target_replica_id": 1,
+    "target_replica_local_id": 0,
+    "transfer_id": "kv_cache-0",
+    "transfer_kind": "kv_cache"
+  },
+  "system_metrics": {
+    "simulation_metadata": {
+      "total_requests": 1,
+      "completed_requests": 1,
+      "system_architecture": "pd-disaggregation",
+      "prefill_server_count": 2,
+      "decode_server_count": 2
+    },
+    "quantization_config": {
+      "config_path": "model_config",
+      "default_precision": "BF16",
+      "custom_operation_count": 5,
+      "config_hash": "3f6ef3d32d9e2c99450f505dc0246d07729a625fda4d17abd5d42d0d21893d06"
+    },
+    "ttft_statistics": {
+      "count": 1,
+      "mean": 67169.61383299995,
+      "median": 67169.61383299995,
+      "std": 0.0,
+      "min": 67169.61383299995,
+      "max": 67169.61383299995,
+      "p50": 67169.61383299995,
+      "p90": 67169.61383299995,
+      "p95": 67169.61383299995,
+      "p99": 67169.61383299995,
+      "unit": "ms"
+    },
+    "tpot_statistics": {
+      "count": 1,
+      "mean": 172.24287040082817,
+      "median": 172.24287040082817,
+      "std": 0.0,
+      "min": 172.24287040082817,
+      "max": 172.24287040082817,
+      "p50": 172.24287040082817,
+      "p90": 172.24287040082817,
+      "p95": 172.24287040082817,
+      "p99": 172.24287040082817,
+      "unit": "ms",
+      "note": "TPOT is only computed for requests with num_decode_tokens > 1. Computed from 1 out of 1 requests."
+    },
+    "request_e2e_time_statistics": {
+      "count": 1,
+      "mean": 249336.05234471377,
+      "median": 249336.05234471377,
+      "std": 0.0,
+      "min": 249336.05234471377,
+      "max": 249336.05234471377,
+      "p50": 249336.05234471377,
+      "p90": 249336.05234471377,
+      "p95": 249336.05234471377,
+      "p99": 249336.05234471377,
+      "unit": "ms"
+    },
+    "throughput_metrics": {
+      "total_duration_ms": 249336.05234471377,
+      "total_duration_seconds": 249.33605234471378,
+      "requests_per_second": 0.004010651450506938,
+      "total_tokens_processed": 7168,
+      "total_decode_tokens_generated": 1024,
+      "tokens_per_second": 28.748349597233727,
+      "decode_tokens_per_second": 4.106907085319104
+    },
+    "spec_decode_statistics": {
+      "total_iterations": 0,
+      "total_accepted_drafts": 0,
+      "total_rejected_drafts": 0,
+      "total_committed_tokens": 0,
+      "acceptance_ratio": 0.0,
+      "avg_committed_tokens_per_iteration": 0.0
+    },
+    "kv_cache_transfer_statistics": {
+      "total_transfers": 1,
+      "total_data_transferred_bytes": 140734976,
+      "total_transfer_time_ms": 3.500000000002501,
+      "transfer_time_stats": {
+        "count": 1,
+        "mean": 3.500000000002501,
+        "median": 3.500000000002501,
+        "std": 0.0,
+        "min": 3.500000000002501,
+        "max": 3.500000000002501,
+        "p50": 3.500000000002501,
+        "p90": 3.500000000002501,
+        "p95": 3.500000000002501,
+        "p99": 3.500000000002501,
+        "unit": "ms"
+      }
+    },
+    "kv_cache_transfer_total_bytes": 140734976,
+    "preemption_statistics": {
+      "total_preemption_events": 0,
+      "total_preempted_requests": 0,
+      "preemption_rate": 0.0,
+      "by_cluster_type": {}
+    },
+    "model_weight_memory": {
+      "PREFILL": {
+        "total_parameters": 38981827872,
+        "total_memory_bytes": 43585517952,
+        "total_memory_gb": 40.5921767950058,
+        "memory_utilization_percent": 50.74022099375725,
+        "breakdown": {
+          "attention_parameters": 1450480832,
+          "attention_memory_bytes": 2901036736,
+          "attention_memory_gb": 2.7018010020256042,
+          "ffn_parameters": 36960237824,
+          "ffn_memory_bytes": 38887965696,
+          "ffn_memory_gb": 36.21724033355713,
+          "other_parameters": 571109216,
+          "other_memory_bytes": 1796515520
+        },
+        "device_info": {
+          "device_type": "H800",
+          "total_device_memory_gb": 80.0,
+          "num_replicas": 1,
+          "expert_parallel_size": 16,
+          "moe_tensor_parallel_size": 1
+        },
+        "memory_accounting": "source-defined weight storage estimate; native allocation unverified"
+      },
+      "DECODE": {
+        "total_parameters": 38981827872,
+        "total_memory_bytes": 43585517952,
+        "total_memory_gb": 40.5921767950058,
+        "memory_utilization_percent": 50.74022099375725,
+        "breakdown": {
+          "attention_parameters": 1450480832,
+          "attention_memory_bytes": 2901036736,
+          "attention_memory_gb": 2.7018010020256042,
+          "ffn_parameters": 36960237824,
+          "ffn_memory_bytes": 38887965696,
+          "ffn_memory_gb": 36.21724033355713,
+          "other_parameters": 571109216,
+          "other_memory_bytes": 1796515520
+        },
+        "device_info": {
+          "device_type": "H800",
+          "total_device_memory_gb": 80.0,
+          "num_replicas": 1,
+          "expert_parallel_size": 16,
+          "moe_tensor_parallel_size": 1
+        },
+        "memory_accounting": "source-defined weight storage estimate; native allocation unverified"
+      }
+    },
+    "memory_utilization_percent": {
+      "PREFILL": 50.74022099375725,
+      "DECODE": 50.74022099375725
+    },
+    "system_architecture_info": {
+      "system_architecture": "pd-disaggregation",
+      "cluster_configurations": {
+        "PREFILL": {
+          "num_replicas": 1,
+          "parallel_parameters": {
+            "PP": 1,
+            "ATTN_TP": 8,
+            "MOE_TP": 1,
+            "MOE_EP": 16
+          },
+          "device_type": "H800",
+          "model_name": "stepfun-ai/Step-5-Preview"
+        },
+        "DECODE": {
+          "num_replicas": 1,
+          "parallel_parameters": {
+            "PP": 1,
+            "ATTN_TP": 8,
+            "MOE_TP": 1,
+            "MOE_EP": 16
+          },
+          "device_type": "H800",
+          "model_name": "stepfun-ai/Step-5-Preview"
+        }
+      }
+    }
+  },
+  "first_decode_batch": {
+    "Batch Id": "1445",
+    "batch_num_tokens": "16",
+    "batch_num_prefill_tokens": "16",
+    "batch_num_decode_tokens": "0",
+    "batch_size": "1",
+    "batch_execution_time": "5.958482091666596"
+  },
+  "cached_prefix_tokens": 6128,
+  "decode_batch_count": 1024,
+  "completed_read_event": {
+    "time": 67.42311383299996,
+    "event_type": "KV_CACHE_TRANSFER_END",
+    "batch_id": 1411,
+    "batch_global_id": -1,
+    "source_cluster_type": "PREFILL",
+    "target_cluster_type": "DECODE",
+    "source_replica_id": 0,
+    "kv_cache_size_bytes": 140734976,
+    "transfer_time_ms": 3.5,
+    "transfer_start_time": 67.41961383299996,
+    "transfer_end_time": 67.42311383299996,
+    "kv_connector": "nixl",
+    "target_replica_id": 1,
+    "target_replica_local_id": 0,
+    "payload_kind": "prefix_pages_per_worker_lane",
+    "source_prompt_common_blocks": 384,
+    "target_reserved_common_blocks": 1532,
+    "target_ready_time": 67.42311383299996,
+    "source_release_time": 67.42311383299996
+  },
+  "target_ready_time": 67.42311383299996,
+  "source_release_time": 67.42311383299996,
+  "final_metrics_ms": {
+    "request_e2e_time": 249336.05234471377,
+    "ttft": 67169.61383299995,
+    "tpot": 172.24287040082817,
+    "ttft_kv_transfer": 3.500000000002501
+  },
+  "limitations": [
+    "Synthetic CPU compute profiles and 3.5 ms READ cost; no native admission or accuracy claim.",
+    "Fixture max_model_len=8192, not canonical 7168; actual run matches fixture capacity.",
+    "One request per mode, not formal 128 requests, 16 warmups, or three repetitions.",
+    "CPU overhead is explicitly skipped; collective_sim uses the built-in H800 topology."
+  ]
+}

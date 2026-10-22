@@ -1,0 +1,154 @@
+{
+  "task_id": "D23-ACTUAL-MAIN",
+  "attempt": "actual06",
+  "verdict": "TIMEOUT_NOT_ACCEPTED",
+  "recorded_at": "2026-10-22T00:41:22.109604+00:00",
+  "modes": {
+    "offline": {
+      "execution": {
+        "returncode": null,
+        "timed_out": true,
+        "wall_s": 2400.308769654017,
+        "source": {
+          "commit": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+          "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+          "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+        }
+      },
+      "scheduler_rows": 3000,
+      "event_counts": {
+        "PREFILL/iteration_start": 66,
+        "PREFILL/grouped_cache_allocation": 1,
+        "PREFILL/decision": 1,
+        "PREFILL/iteration_end": 66,
+        "PREFILL/grouped_cache_batch": 1,
+        "PREFILL/grouped_cache_batch_end": 1,
+        "DECODE/grouped_cache_allocation": 359,
+        "DECODE/iteration_start": 716,
+        "DECODE/decision": 358,
+        "DECODE/iteration_end": 716,
+        "DECODE/grouped_cache_batch": 358,
+        "DECODE/grouped_cache_batch_end": 357
+      },
+      "decode_batches_started": 358,
+      "decode_batches_ended": 357,
+      "max_observed_emitted_decode_tokens": 357,
+      "decode_first": {
+        "event": "grouped_cache_batch",
+        "cluster_type": "DECODE",
+        "iteration_id": 0,
+        "timestamp": 1792627474.270387,
+        "simulation_time": 85.51607516799994,
+        "num_tokens": 16,
+        "request_num_tokens": [],
+        "emitted": 0
+      },
+      "decode_last": {
+        "event": "grouped_cache_batch",
+        "cluster_type": "DECODE",
+        "iteration_id": 357,
+        "timestamp": 1792629510.5447106,
+        "simulation_time": 101.22148539069804,
+        "num_tokens": 1,
+        "request_num_tokens": [],
+        "emitted": 0
+      },
+      "decode_iteration_wall_gaps_s": {
+        "min": 4.250481128692627,
+        "median": 5.1648476123809814,
+        "max": 62.396424531936646,
+        "count": 357
+      },
+      "command_written_to_first_scheduler_s": 337.9405176639557,
+      "common_actual05_batch_events": 87,
+      "common_actual05_mismatches": [],
+      "terminal_artifacts": {
+        "system_metrics.json": [],
+        "request_metrics.csv": [],
+        "event_trace.json": [],
+        "frontier_transfer_ledger.jsonl": [],
+        "frontier_stage_batch_ledger.jsonl": []
+      },
+      "sha256": {
+        "/data/ycfeng/tmp/d23_main_actual06_offline/summary.json": "c1e7d47afb49dae70b98b8b010b3a3a78768da439e57156930c87caf45db1c50",
+        "/data/ycfeng/tmp/d23_main_actual06_offline/offline/execution.json": "8ef007aadc12ff0b54a1efe0edc2143668eb4faa3133439abec826fa83dd4a3e",
+        "/data/ycfeng/tmp/d23_main_actual06_offline/offline/run.log": "c77db4461311d50bfd65e74504228ecee8a381037fc0ae72985d372d37203fc7",
+        "/data/ycfeng/tmp/d23_main_actual06_offline/offline/scheduler.jsonl": "810eaad79e7ec0dc8615a7c86ed6ce4ef8e09324c5e1c44024164c90d3638e60",
+        "/data/ycfeng/tmp/d23_main_actual06_offline/offline/command.json": "dcbb3b9c119ea3bf6839f66bbd91d168e16fd3aa75fd225f404fe5ed7193ff16"
+      }
+    },
+    "online": {
+      "execution": {
+        "returncode": null,
+        "timed_out": true,
+        "wall_s": 2400.318112747278,
+        "source": {
+          "commit": "7e8bea3cd2362f8e46c4b7cd0e712d2f2fe392fb",
+          "runner_sha256": "4559df06483fbb5a1135806d33fb04f23741870b736fc544b876f6847d330ff4",
+          "fixture_sha256": "ef830d689711ff8840f130623aca74251bc9fc103c7818188800cbb0fd68e1e6"
+        }
+      },
+      "scheduler_rows": 3040,
+      "event_counts": {
+        "PREFILL/iteration_start": 66,
+        "PREFILL/grouped_cache_allocation": 1,
+        "PREFILL/decision": 1,
+        "PREFILL/iteration_end": 66,
+        "PREFILL/grouped_cache_batch": 1,
+        "PREFILL/grouped_cache_batch_end": 1,
+        "DECODE/grouped_cache_allocation": 364,
+        "DECODE/iteration_start": 726,
+        "DECODE/decision": 363,
+        "DECODE/iteration_end": 726,
+        "DECODE/grouped_cache_batch": 363,
+        "DECODE/grouped_cache_batch_end": 362
+      },
+      "decode_batches_started": 363,
+      "decode_batches_ended": 362,
+      "max_observed_emitted_decode_tokens": 362,
+      "decode_first": {
+        "event": "grouped_cache_batch",
+        "cluster_type": "DECODE",
+        "iteration_id": 0,
+        "timestamp": 1792627476.8977401,
+        "simulation_time": 85.76607516799993,
+        "num_tokens": 16,
+        "request_num_tokens": [],
+        "emitted": 0
+      },
+      "decode_last": {
+        "event": "grouped_cache_batch",
+        "cluster_type": "DECODE",
+        "iteration_id": 362,
+        "timestamp": 1792629506.9668791,
+        "simulation_time": 101.68583574270221,
+        "num_tokens": 1,
+        "request_num_tokens": [],
+        "emitted": 0
+      },
+      "decode_iteration_wall_gaps_s": {
+        "min": 4.204003810882568,
+        "median": 5.06887686252594,
+        "max": 64.65144205093384,
+        "count": 362
+      },
+      "command_written_to_first_scheduler_s": 339.5054249763489,
+      "common_actual05_batch_events": 85,
+      "common_actual05_mismatches": [],
+      "terminal_artifacts": {
+        "system_metrics.json": [],
+        "request_metrics.csv": [],
+        "event_trace.json": [],
+        "frontier_transfer_ledger.jsonl": [],
+        "frontier_stage_batch_ledger.jsonl": []
+      },
+      "sha256": {
+        "/data/ycfeng/tmp/d23_main_actual06_online/summary.json": "9d147cf5310ca1cd5968a124e0ac83c0a3ae4d4ff9fa29f7d506395c01971f7d",
+        "/data/ycfeng/tmp/d23_main_actual06_online/online/execution.json": "d9af9e49a08ef6d693bb45245ac3d761ef690f81ea4fb9ae0ba72dbfe0a577db",
+        "/data/ycfeng/tmp/d23_main_actual06_online/online/run.log": "655809b6e26ff14cc5bea628a68930e6ea14059450096b2e272e2f0ad9694ac5",
+        "/data/ycfeng/tmp/d23_main_actual06_online/online/scheduler.jsonl": "5f66c33d8b6525626b43b2b1cd92e8b568e19f6157c066f6245be7aad043eee0",
+        "/data/ycfeng/tmp/d23_main_actual06_online/online/command.json": "ab673156450e473010b38459c885dc162247ae2789663c4b646d172873c8f8c8"
+      }
+    }
+  }
+}

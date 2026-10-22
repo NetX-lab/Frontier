@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Record input-reuse verification, exact frame/hash comparison, merged tests and frozen-checkout prerequisites. |
 | 2026-10-22 | Record complete77-case strict comparison of both integrated CPU reuse changes. |
+| 2026-10-22 | Link actual06 terminal timeout; source and legacy checks remain passed. |
 
 ## Scope and results
 
@@ -121,7 +122,9 @@ timeout 60s env PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tm
 The collective control executes actual backend misses/hits: TP8 allreduce
 predicts0.122465ms on both, EP16 all-to-all predicts0.0199104ms on both. Four
 requests yield two misses/two hits. These are CPU simulator predictions and
-prerequisite checks, not native GPU measurements. Full CLI results remain pending.
+prerequisite checks, not native GPU measurements. Actual06 subsequently reaches
+357/362 outputs before the unchanged2400s timeout; see the terminal section of
+`test_report_2026-10-22_actual_main.md`. Full CLI acceptance remains unfinished.
 
 ## Strict legacy comparison
 
