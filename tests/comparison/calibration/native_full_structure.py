@@ -2,6 +2,7 @@
 
 import argparse
 import dataclasses
+import hashlib
 import json
 import math
 import os
@@ -15,6 +16,41 @@ from pathlib import Path
 def identity(value):
     cls = value if isinstance(value, type) else type(value)
     return cls.__module__ + "." + cls.__name__
+
+
+def balanced_routing_inventory(model):
+    """Observe the loaded strategy and every router without device reads."""
+    selected = os.environ.get('VLLM_MOE_ROUTING_SIMULATION_STRATEGY')
+    if selected != 'balanced_topk':
+        return None
+    import vllm.envs as envs
+    from vllm.model_executor.layers.fused_moe.router.routing_simulator_router import RoutingSimulator
+    import inspect
+    factory = sys.modules['vllm.model_executor.layers.fused_moe.layer'].create_fused_moe_router
+    simulator = sys.modules[RoutingSimulator.__module__]
+    routers = {name: module for name, module in model.named_modules() if hasattr(module, 'router')}
+    if factory.__globals__['envs'] is not envs or simulator.envs is not envs:
+        raise ValueError('Native routing factory/simulator use different environment modules')
+    native_sources = {}
+    calls = [envs.__getattr__, envs.environment_variables['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'],
+        factory, RoutingSimulator.simulate_routing]
+    calls += [call for module in routers.values() for call in
+        (type(module.router)._compute_routing, type(module)._forward_impl)]
+    for call in calls:
+        call = inspect.unwrap(call)
+        path = Path(sys.modules[call.__module__].__file__)
+        if str(path) != call.__code__.co_filename:
+            raise ValueError('Actual native routing callable differs from its module origin')
+        relative = call.__module__.replace('.', '/') + '.py'
+        native_sources[relative] = dict(origin=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    strategy = RoutingSimulator._routing_strategies[selected]
+    origin = Path(sys.modules[type(strategy).__module__].__file__)
+    if str(origin) != strategy.route_tokens.__func__.__code__.co_filename:
+        raise ValueError('Loaded routing strategy code origin differs from its module')
+    return dict(environment=selected, runtime_path=envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY,
+        strategy=identity(strategy), origin=str(origin), sha256=hashlib.sha256(origin.read_bytes()).hexdigest(),
+        routers={name: identity(module.router) for name, module in routers.items()},
+        runners={name: identity(module) for name, module in routers.items()}, native_sources=native_sources)
 
 
 def cutlass_state(module):
@@ -240,6 +276,7 @@ class FullModelInventory:
         result["resolved"] = {name: str(getattr(config, name)) for name in
             ("parallel_config", "scheduler_config", "compilation_config", "kernel_config")}
         result["scheduler_class"] = identity(config.scheduler_config.get_scheduler_cls())
+        result["moe_routing"] = balanced_routing_inventory(self.get_model())
         result["moe_backends"] = {name: {"method": identity(method), "backend": method.fp8_backend.name,
             "experts": identity(method.moe_kernel.fused_experts),
             "prepare_finalize": identity(method.moe_kernel.prepare_finalize),
@@ -583,6 +620,8 @@ class NativeServingInventory:
     def emit(self, worker, stage):
         if stage == 'post_warmup':
             self.inventory = self.observe('inventory', self.collect_inventory, worker)
+        elif self.inventory is not None and self.inventory.get('moe_routing') is not None:
+            self.inventory['moe_routing'] = self.observe('routing_inventory', balanced_routing_inventory, worker.get_model())
         payload = dict(schema='native_serving_v1', run_generation=self.generation,
             role=self.role, host=socket.gethostname(), stage=stage,
             inventory=self.inventory, observation_errors=list(self.errors),
@@ -816,6 +855,10 @@ def _install_native_serving_inventory():
         observer.error('installation', error)
     return observer
 
+
+if os.environ.get('VLLM_MOE_ROUTING_SIMULATION_STRATEGY') == 'balanced_topk':
+    from balanced_routing import register_balanced_topk
+    register_balanced_topk()
 
 _NATIVE_SERVING_INVENTORY = _install_native_serving_inventory()
 

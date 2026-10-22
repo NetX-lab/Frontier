@@ -1,0 +1,63 @@
+{
+  "task_id": "W128-V4-BALANCED-NATIVE-R1",
+  "files": [
+    {
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "added": 6,
+      "deleted": 1,
+      "routing": 7
+    },
+    {
+      "path": "tests/comparison/calibration/native_full_structure.py",
+      "added": 43,
+      "deleted": 0,
+      "routing": 43
+    },
+    {
+      "path": "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+      "added": 116,
+      "deleted": 0,
+      "routing": 116
+    },
+    {
+      "path": "tests/unit/test_native_reader_binding.py",
+      "added": 112,
+      "deleted": 0,
+      "routing": 112
+    },
+    {
+      "path": "tests/unit/test_native_v2_serving_inventory.py",
+      "added": 4,
+      "deleted": 1,
+      "routing": 5
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "added": 28,
+      "deleted": 4,
+      "routing": 29,
+      "dispatch": 3
+    }
+  ],
+  "distinct_maintained_files": 6,
+  "routing_changed_lines": 312,
+  "root_reserved_timeout_lines": 4,
+  "projected_final_routing": 316,
+  "allocation_before_timeouts": 312,
+  "allocation_final": 316,
+  "source_incremental_diff": "52\t6\ttask_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py\n20\t7\ttests/unit/test_native_reader_binding.py\n",
+  "frozen_r2_sha256": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a",
+  "non_graph_predicates_identical": [
+    "provenance",
+    "inputs",
+    "replay",
+    "workers",
+    "lifecycle",
+    "terminal"
+  ],
+  "strategy_sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+  "builder_baseline_sha256": "21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560",
+  "builder_unchanged_this_step": true,
+  "cpu_tests_passed": 133,
+  "package_created": false
+}

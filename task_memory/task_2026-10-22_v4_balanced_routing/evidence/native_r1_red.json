@@ -1,0 +1,21 @@
+[
+  {
+    "ambient": "/data/ycfeng/Frontier/.worktrees/v4-balanced-binding",
+    "schema_origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-binding/frontier/config/config.py",
+    "input_sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+    "actual": "REJECT: Actual Frontier input is not the complete flat SimulationConfig format"
+  },
+  {
+    "ambient": "/data/ycfeng/Frontier/.worktrees/v4-balanced-callers",
+    "schema_origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-callers/frontier/config/config.py",
+    "input_sha256": "747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897",
+    "actual": "ACCEPT"
+  },
+  {
+    "ambient": "/data/ycfeng/Frontier/.worktrees/v4-balanced-callers",
+    "schema_origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-callers/frontier/config/config.py",
+    "input_sha256": "9efcff9b98c9e65b1da82e81d0e7efdd3ccfdf8237123aeeccc01c351577f3fe",
+    "actual": "ACCEPT",
+    "fault": "rehash_dp2_to1"
+  }
+]
