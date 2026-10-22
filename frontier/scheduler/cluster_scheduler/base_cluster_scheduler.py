@@ -903,6 +903,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         target_replica_id: int,
         global_layer_id: int,
         routing_token_count: int | None = None,
+        source_batches=None,
     ):
         """Materialize one canonical per-layer workload for a full-model MoE batch."""
 
@@ -912,6 +913,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             target_replica_id=target_replica_id,
             global_layer_id=global_layer_id,
             routing_token_count=routing_token_count,
+            source_batches=source_batches,
         )
 
     def _build_prefill_ep_lane_batch(

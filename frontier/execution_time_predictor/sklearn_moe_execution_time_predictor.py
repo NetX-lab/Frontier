@@ -28,6 +28,7 @@ from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_routing_runtime import (
     resolve_moe_gating_routing_runtime_path,
 )
+from frontier.moe_routing_policy import resolve_routing_count_policy, validate_position_routing_scope
 from frontier.moe_ep_workload import (
     EPLaneWorkload,
 )
@@ -516,24 +517,16 @@ class SklearnMoEExecutionTimePredictor(
         self._moe_routing_distribution_type = str(
             getattr(replica_config, "moe_routing_distribution_type", "balanced")
         ).strip().lower()
-        valid_distribution_types = {"balanced", "random", "skewed", "zipf"}
-        if self._moe_routing_distribution_type not in valid_distribution_types:
-            raise ValueError(
-                "moe_routing_distribution_type must be one of "
-                f"{sorted(valid_distribution_types)}, got "
-                f"{self._moe_routing_distribution_type!r}"
-            )
+        policy = resolve_routing_count_policy(self._moe_routing_distribution_type)
+        if policy.requires_source:
+            validate_position_routing_scope(replica_config, cluster_type)
         self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
         if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
             raise ValueError(
                 "moe_routing_seed must be an exact non-negative int, "
                 f"got {self._moe_routing_seed}."
             )
-        self._moe_gating_routing_runtime_path = (
-            resolve_moe_gating_routing_runtime_path(
-                self._moe_routing_distribution_type
-            )
-        )
+        self._moe_gating_routing_runtime_path = policy.runtime_path
 
         super().__init__(
             predictor_config,

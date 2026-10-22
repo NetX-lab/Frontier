@@ -17,6 +17,9 @@ from types import MappingProxyType
 from typing import TypeAlias
 
 import numpy as np
+from frontier.moe_routing_policy import (
+    RATIO_COUNT_POLICY, WaveRoutingSource, resolve_routing_count_policy,
+)
 
 
 ExpertTokenMap: TypeAlias = Mapping[int, int]
@@ -47,6 +50,8 @@ def generate_moe_routing_ratios(
         raise ValueError("layer_id must be a non-negative int")
 
     normalized_distribution = str(distribution_type).strip().lower()
+    if resolve_routing_count_policy(normalized_distribution).requires_source:
+        raise ValueError("source-based routing has no ratio table")
     rng = np.random.default_rng(seed + layer_id)
     if normalized_distribution == "balanced":
         weights = np.ones(total_expert_num, dtype=float)
@@ -144,6 +149,8 @@ class LayerEPWorkload:
     per_ep_routed_tokens: Mapping[int, int]
     participant_ep_ids: tuple[int, ...]
     expert_to_ep: ExpertOwnership
+    live_routing_token_count: int | None = None
+    routing_source: WaveRoutingSource | None = None
     _lane_descriptors: tuple["EPLaneWorkload", ...] = field(
         init=False,
         repr=False,
@@ -172,10 +179,19 @@ class LayerEPWorkload:
             "total_routed_assignments",
             minimum=0,
         )
-        expected_assignments = routing_token_count * router_topk
+        live_rows = routing_token_count if self.live_routing_token_count is None else self.live_routing_token_count
+        _require_int(live_rows, "live_routing_token_count", minimum=0)
+        if live_rows > routing_token_count:
+            raise ValueError("live_routing_token_count exceeds physical rows")
+        if self.routing_source is not None and (
+            self.routing_source.gathered_physical_rows != routing_token_count or self.routing_source.live_rows != live_rows
+        ):
+            raise ValueError("routing source differs from physical/live rows")
+        object.__setattr__(self, "live_routing_token_count", live_rows)
+        expected_assignments = live_rows * router_topk
         if total_routed_assignments != expected_assignments:
             raise ValueError(
-                "total_routed_assignments must equal routing_token_count * "
+                "total_routed_assignments must equal live_routing_token_count * "
                 f"router_topk: expected={expected_assignments}, "
                 f"got={total_routed_assignments}"
             )
@@ -353,6 +369,7 @@ class LayerEPWorkload:
                     per_expert_tokens=per_ep_tokens[ep_id],
                     global_token_counts=domain_token_counts,
                     router_topk=router_topk,
+                    routing_source=self.routing_source,
                 )
                 for ep_id in participant_ep_ids
             ),
@@ -368,6 +385,10 @@ class LayerEPWorkload:
                 f"ep_id={ep_id} is not present in the materialized EP workload"
             )
         return self._lane_descriptors[ep_id]
+
+    @property
+    def padding_row_count(self) -> int:
+        return self.routing_token_count - self.live_routing_token_count
 
 
 @dataclass(frozen=True)
@@ -385,6 +406,7 @@ class EPLaneWorkload:
     global_token_counts: tuple[int, ...]
     routed_token_count: int
     router_topk: int
+    routing_source: WaveRoutingSource | None = None
 
     def __post_init__(self) -> None:
         if type(self.ep_id) is not int or self.ep_id < 0:
@@ -485,6 +507,7 @@ def _build_lane_descriptor(
     per_expert_tokens: Mapping[int, int],
     global_token_counts: tuple[int, ...],
     router_topk: int,
+    routing_source: WaveRoutingSource | None = None,
 ) -> EPLaneWorkload:
     """Build one descriptor and densify its canonical local expert map."""
 
@@ -535,6 +558,7 @@ def _build_lane_descriptor(
         global_token_counts=global_token_counts,
         routed_token_count=sum(local_token_counts),
         router_topk=router_topk,
+        routing_source=routing_source,
     )
 
 
@@ -809,7 +833,7 @@ def materialize_expert_token_counts(
 
 def materialize_layer_ep_workload(
     *,
-    routing_ratios: Mapping[int, Real],
+    routing_ratios: Mapping[int, Real] | None = None,
     target_replica_id: int,
     global_layer_id: int,
     routing_token_count: int,
@@ -817,6 +841,8 @@ def materialize_layer_ep_workload(
     total_expert_num: int,
     moe_expert_parallel_size: int,
     expert_to_ep: ExpertOwnership,
+    policy_id: str | None = None,
+    routing_source: WaveRoutingSource | None = None,
 ) -> LayerEPWorkload:
     """Materialize one exact aggregate workload for a Replica-local EP wave."""
 
@@ -847,10 +873,18 @@ def materialize_layer_ep_workload(
         total_expert_num=total_expert_num,
         moe_expert_parallel_size=moe_expert_parallel_size,
     )
-    total_routed_assignments = routing_token_count * router_topk
-    global_per_expert_tokens = materialize_expert_token_counts(
+    policy = RATIO_COUNT_POLICY if policy_id is None else resolve_routing_count_policy(policy_id)
+    if policy.requires_source and (
+        routing_source is None or routing_source.policy_id != policy_id
+    ):
+        raise ValueError("routing policy requires an explicitly matching source")
+    live_rows = routing_source.live_rows if policy.requires_source else routing_token_count
+    total_routed_assignments = live_rows * router_topk
+    global_per_expert_tokens = policy.count_experts(
         routing_ratios=routing_ratios,
-        total_routed_assignments=total_routed_assignments,
+        routing_source=routing_source,
+        routing_token_count=routing_token_count,
+        router_topk=router_topk,
         total_expert_num=total_expert_num,
     )
 
@@ -879,6 +913,8 @@ def materialize_layer_ep_workload(
         per_ep_routed_tokens=per_ep_routed_tokens,
         participant_ep_ids=tuple(range(moe_expert_parallel_size)),
         expert_to_ep=ownership,
+        live_routing_token_count=live_rows,
+        routing_source=routing_source,
     )
 
 

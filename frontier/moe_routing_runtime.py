@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import pandas as pd
+from frontier.moe_routing_policy import ROUTING_COUNT_POLICIES, resolve_routing_count_policy
 
 
 STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH = "standard_fused_topk"
 UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH = "uniform_topk"
-SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
-    STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
-    UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
-}
+SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {policy.runtime_path for policy in ROUTING_COUNT_POLICIES.values()}
 
 
 def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str:
@@ -25,15 +23,7 @@ def resolve_moe_gating_routing_runtime_path(
     moe_routing_distribution_type: str,
 ) -> str:
     """Map the canonical routing distribution to profiling runtime metadata."""
-    normalized_distribution = str(moe_routing_distribution_type).strip().lower()
-    if normalized_distribution in {"balanced", "skewed", "zipf"}:
-        return STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH
-    if normalized_distribution == "random":
-        return UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH
-    raise ValueError(
-        f"Unsupported moe_routing_distribution_type={moe_routing_distribution_type!r}. "
-        "Expected 'balanced', 'random', 'skewed', or 'zipf'."
-    )
+    return resolve_routing_count_policy(moe_routing_distribution_type).runtime_path
 
 
 def filter_moe_gating_routing_topk_rows(

@@ -121,8 +121,17 @@ class VllmStep5AttentionWrapper:
                 vllm_config=self.native, device=torch.device("cuda"))
             self.layer.eval().requires_grad_(False)
             self._check_shapes()
+            manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+            image = IMAGE
+            self.native_facts = None
+            if manifest:
+                from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
+                self.native_facts = verify_step5_profile_runtime(manifest, callables=(type(self.layer), self.layer.forward))
+                if file_sha256(Path(model_path) / "config.json") != self.native_facts["shared"]["model_config_sha256"]:
+                    raise ValueError("native attention effective config differs from sealed local configuration")
+                image = self.native_facts["shared"]["native_reference"]["image"]
             self.scopes = NativeScopes(torch)
-            self.runtime_signature = ";".join((f"declared_image={IMAGE}", f"vllm={vllm.__version__}",
+            self.runtime_signature = ";".join((f"declared_image={image}", f"vllm={vllm.__version__}",
                 f"torch={torch.__version__}", f"cuda={torch.version.cuda}",
                 f"triton={importlib.metadata.version('triton')}",
                 f"flashinfer={importlib.metadata.version('flashinfer-python')}"))
@@ -582,6 +591,10 @@ class VllmStep5AttentionWrapper:
                     "prefix_continuation_validation": "PASS" if prefix else "not_applicable",
                     "active_operators": json.dumps(sorted(active)),
                     "min_timing_window_ms": min_timing_window_ms}
+            if self.native_facts is not None:
+                from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+                facts = verify_step5_profile_runtime(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"], callables=(type(self.layer), self.layer.forward))
+                common["native_facts"] = json.dumps(facts, sort_keys=True)
             row_args = dict(config=self.config, cell=cell, tp=self.tp, block_size=self.block_size,
                 max_model_len=self.max_model_len, runtime_signature=self.runtime_signature, device=self.device)
             event_row = build_row(**row_args, time_stats=stats, evidence={**common, **signature, **quality,

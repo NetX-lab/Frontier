@@ -26,6 +26,7 @@ from frontier.profiling.moe.routed_layer_groups import (
     RoutedLayerRouter,
     resolve_routed_layer_groups,
 )
+from tests.unit.test_step5_fixed_probe import installed_profile_receipt
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 STEP5 = "stepfun-ai/Step-5-Preview"
@@ -304,3 +305,205 @@ def test_profile_row_records_the_measured_layer_group():
     assert row["moe_activation"] == "swiglustep"
     assert row["routing_assignment_policy"] == "biased_score_topk"
     assert row["expert_hidden_dim"] == 1536
+
+
+def test_position_adapter_binds_one_source_tensor_pair_and_real_factory_contract(monkeypatch):
+    torch = pytest.importorskip("torch")
+    from contextlib import contextmanager, nullcontext
+    from types import ModuleType, SimpleNamespace
+    from frontier.profiling.moe import moe_impl
+    from frontier.profiling.moe.inputs import MoESourceFrame
+    calls, state = {}, SimpleNamespace(routing_positions=None, is_padding=None)
+    gate_module = ModuleType("vllm.model_executor.layers.fused_moe.router.gate_linear")
+    class GateLinear(torch.nn.Module):
+        def __init__(self, hidden, experts, **kwargs):
+            super().__init__()
+            calls["gate"] = kwargs
+            self.experts = experts
+        def forward(self, x):
+            return torch.zeros((len(x), self.experts), dtype=torch.float32), None
+    gate_module.GateLinear = GateLinear
+    bias_module = ModuleType("vllm.model_executor.layers.fused_moe.router.fused_topk_bias_router")
+    bias_module.fused_topk_bias = lambda **kwargs: pytest.fail("position path reached legacy top-k")
+    context = ModuleType("vllm.forward_context")
+    @contextmanager
+    def set_forward_context(metadata, native, **kwargs):
+        old = state.is_padding
+        state.is_padding = kwargs["is_padding"]
+        try:
+            yield
+        finally:
+            state.is_padding = old
+    @contextmanager
+    def set_routing_positions(positions):
+        old = state.routing_positions
+        state.routing_positions = positions
+        try:
+            yield
+        finally:
+            state.routing_positions = old
+    context.set_forward_context, context.set_routing_positions = set_forward_context, set_routing_positions
+    config = ModuleType("vllm.config")
+    config.get_current_vllm_config_or_none = lambda: object()
+    config.VllmConfig = lambda: pytest.fail("an active config must be retained")
+    factory = ModuleType("vllm.model_executor.layers.fused_moe.router.router_factory")
+    class Router:
+        routing_method_type = SimpleNamespace(name="Simulated")
+        def select_experts(self, x, logits):
+            calls["inputs"] = (state.routing_positions, state.is_padding, logits.dtype)
+            if calls.get("fail"):
+                raise RuntimeError("native routing failure")
+            return "native-weights", "native-ids"
+    def create_fused_moe_router(**kwargs):
+        calls["factory"] = kwargs
+        return Router()
+    factory.create_fused_moe_router = create_fused_moe_router
+    for module in (gate_module, bias_module, context, config, factory):
+        monkeypatch.setitem(sys.modules, module.__name__, module)
+    monkeypatch.setattr(moe_impl, "ensure_vllm_single_rank_parallel_state", lambda: None)
+    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY", "position_cyclic")
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", "CPU_FACTORY_CONTRACT_ONLY")
+    monkeypatch.setattr("frontier.profiling.common.runtime_identity.verify_step5_profile_runtime",
+                        lambda path, **kwargs: calls.setdefault("provenance", kwargs))
+    gate = moe_impl.SigmoidBiasGatingNetwork(hidden_dim=4, num_experts=352, router_topk=8,
+                                           router=STEP5_ROUTER, routing_runtime_path="position_cyclic")
+    gate.gating_linear_timer = gate.gating_routing_topk_timer = nullcontext()
+    gate.bind_source_frame(MoESourceFrame(0, (2,), (6128,), 3, "standalone_legacy"), device="cpu")
+    positions, mask = gate.routing_positions, gate.routing_is_padding
+    assert gate(torch.zeros((3, 4))) == ("native-weights", "native-ids")
+    assert calls["inputs"][0] is positions and calls["inputs"][1] is mask
+    assert positions.tolist() == [6128, 6129, 0] and mask.tolist() == [False, False, True]
+    assert calls["inputs"][2] is torch.float32
+    assert calls["factory"]["top_k"] == 8 and calls["factory"]["global_num_experts"] == 352
+    assert calls["factory"]["scoring_func"] == "sigmoid" and calls["factory"]["routed_scaling_factor"] == 3.
+    assert gate.gate.forward in calls["provenance"]["callables"]
+    calls["fail"] = True
+    with pytest.raises(RuntimeError, match="native routing failure"):
+        gate(torch.zeros((3, 4)))
+    assert state.routing_positions is None and state.is_padding is None
+
+
+@pytest.mark.parametrize("failure", [None, "call", "parser"])
+@pytest.mark.parametrize("record_function", [False, True])
+def test_real_device_timer_annotations_parser_replay_and_event_preservation(tmp_path, monkeypatch, failure, record_function):
+    torch = pytest.importorskip("torch")
+    from frontier.profiling.common.device_timer import DeviceTimer
+    from frontier.profiling.common.timer_stats_store import TimerStatsStore
+    from frontier.profiling.moe.moe_wrapper import MoEWrapper, ACTIVE_STEPS
+    from frontier.profiling.utils import ProfileMethod
+    from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
+    store = TimerStatsStore.get_existing() or TimerStatsStore("cuda_event")
+    previous_method = store.profile_method
+    previous_disabled = store.disabled
+    method = ProfileMethod.RECORD_FUNCTION if record_function else ProfileMethod.CUDA_EVENT
+    store.profile_method, store.disabled = method, False
+    class Event:
+        def __init__(self, **kwargs):
+            pass
+        def record(self):
+            pass
+        def elapsed_time(self, end):
+            return 2.5
+    monkeypatch.setattr(torch.cuda, "Event", Event)
+    monkeypatch.setattr(torch.cuda, "synchronize", lambda: None)
+    captured = []
+    tracing = []
+    def transport_enter(tracer):
+        tracing.append(True)
+        tracer.profiler = torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU])
+        tracer.profiler.__enter__()
+        return tracer
+    def transport_exit(tracer, *exc):
+        tracer.profiler.__exit__(*exc)
+        annotations = [event for event in tracer.profiler.events() if event.name.startswith("vidur_")]
+        captured.extend(event.name for event in annotations)
+        events = []
+        for index, annotation in enumerate(annotations):
+            name = annotation.name
+            events.append(dict(cat="user_annotation", name=name, ts=100*index, dur=80))
+            for kernel in range(3):
+                correlation = 10*index + kernel
+                events.append(dict(cat="cuda_runtime", name="cudaLaunchKernel", ts=100*index+2+kernel, dur=1,
+                                   args={"correlation": correlation}))
+                if failure != "parser":
+                    events.append(dict(cat="kernel", name="cpu_transport_only", dur=100,
+                                       args={"correlation": correlation}))
+        Path(tracer.trace_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(tracer.trace_path).write_text(json.dumps({"traceEvents": events}))
+    monkeypatch.setattr(RecordFunctionTracer, "__enter__", transport_enter)
+    monkeypatch.setattr(RecordFunctionTracer, "__exit__", transport_exit)
+    wrapper = object.__new__(MoEWrapper)
+    wrapper.timer_stats_store, wrapper.output_dir = store, str(tmp_path)
+    timer = DeviceTimer("moe_grouped_gemm")
+    methods = []
+    def run():
+        methods.append(store.profile_method)
+        with timer:
+            torch.ones(1).add_(1)
+            if failure == "call" and tracing:
+                raise RuntimeError("replay call failure")
+    try:
+        if failure:
+            with pytest.raises((ValueError, RuntimeError)):
+                wrapper._profile_cell_callable(run, ("moe_grouped_gemm",))
+        else:
+            row = wrapper._profile_cell_callable(run, ("moe_grouped_gemm",))["moe_grouped_gemm"]
+            assert row["median"] == (pytest.approx(.3) if record_function else 2.5)
+            assert row["count"] == (1 if record_function else ACTIVE_STEPS)
+            assert row["std"] == 0 and row["kernel_count"] == 3
+        assert captured == ["vidur_moe_grouped_gemm"]
+        assert methods[-1] is ProfileMethod.RECORD_FUNCTION
+        assert set(methods[:-1]) == {method}
+        assert store.profile_method is method and store.TIMING_STATS == {}
+        assert TimerStatsStore.get_existing() is store
+    finally:
+        store.profile_method = previous_method
+        store.disabled = previous_disabled
+        store.clear_stats()
+
+
+def test_masked_expert_sentinel_is_filtered_before_local_map_and_bincount():
+    torch = pytest.importorskip("torch")
+    from frontier.profiling.moe.load_distribution import compute_expert_token_counts
+    from frontier.profiling.moe.moe_wrapper import MoEWrapper
+    wrapper = object.__new__(MoEWrapper)
+    wrapper.num_experts, wrapper.num_experts_per_device, wrapper.expert_parallel_size = 4, 2, 2
+    wrapper._get_profiling_ep_rank = lambda: 1
+    ids = torch.tensor([[-1, -1], [2, 3]], dtype=torch.int32)
+    assert wrapper._compute_local_expert_token_counts(ids) == [1, 1]
+    assert compute_expert_token_counts(ids, 4) == [0, 0, 1, 1]
+
+
+@pytest.mark.parametrize("module_name", ["vllm.models.step5.nvidia.layernorm",
+    "vllm.model_executor.layers.fused_moe.oracle.fp8", "vllm.model_executor.layers.fused_moe.oracle.unquantized"])
+@pytest.mark.parametrize("change", [None, "spec", "hash"])
+def test_norm_and_both_oracle_callable_receipts_use_full_installed_sources(installed_profile_receipt, tmp_path, module_name, change):
+    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+    path, modules, manifest = installed_profile_receipt
+    module = modules[module_name]
+    if change == "spec":
+        module.__spec__.origin = str(tmp_path / "byte_identical_shadow.py")
+    elif change == "hash":
+        Path(module.__file__).write_text("# same version, different oracle bytes\n")
+    if change:
+        with pytest.raises((ValueError, FileNotFoundError)):
+            verify_step5_profile_runtime(path, callables=(module.make_step5_rms_norm, module.GateLinear().forward))
+    else:
+        facts = verify_step5_profile_runtime(path, callables=(module.make_step5_rms_norm, module.GateLinear().forward))
+        assert module_name + ".make_step5_rms_norm" in facts["callables"]
+
+
+def test_lazy_norm_verifies_factory_instance_and_bound_method_before_caching(installed_profile_receipt, monkeypatch):
+    torch = pytest.importorskip("torch")
+    from frontier.profiling.common.layers.layernorm import Step5RMSNorm
+    path, modules, _ = installed_profile_receipt
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", str(path))
+    norm = Step5RMSNorm(4, eps=1e-6, zero_centered=True, dtype=torch.float32, fp32_residual_connection=True)
+    impl = norm._native_impl()
+    assert impl is norm._native_impl() and impl.weight is norm.weight
+    assert len(norm.native_facts["callables"]) == 3
+    modules["vllm.models.step5.nvidia.layernorm"].__spec__.origin = str(path.parent / "foreign.py")
+    other = Step5RMSNorm(4, eps=1e-6, zero_centered=True, dtype=torch.float32, fp32_residual_connection=True)
+    with pytest.raises(FileNotFoundError):
+        other._native_impl()
+    assert other._impl is None

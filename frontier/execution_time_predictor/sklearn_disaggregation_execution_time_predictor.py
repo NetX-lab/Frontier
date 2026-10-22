@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
-from enum import Enum
+from frontier.moe_routing_policy import WorkloadDistributionType, resolve_routing_count_policy, validate_position_routing_scope
 from dataclasses import dataclass
 from frontier.logger import init_logger
 from frontier.attention.families import STEP5_ATTENTION_FAMILY
@@ -56,15 +56,6 @@ class CommunicationTime:
     pipeline_parallel_time: float = 0.0
 
 
-class WorkloadDistributionType(Enum):
-    """Enum for different workload distribution types."""
-
-    BALANCED = "balanced"
-    RANDOM = "random"
-    SKEWED = "skewed"
-    ZIPF = "zipf"
-
-
 class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredictor):
     # The disaggregated ClusterConfig owns role availability through these
     # attributes. Keep this tuple as the single source of truth for routed
@@ -80,14 +71,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         distribution_type: str,
     ) -> WorkloadDistributionType:
         normalized_type = str(distribution_type).strip().lower()
-        try:
-            return WorkloadDistributionType(normalized_type)
-        except ValueError as exc:
-            valid_values = [item.value for item in WorkloadDistributionType]
-            raise ValueError(
-                "moe_routing_distribution_type must be one of "
-                f"{valid_values}, got {distribution_type!r}"
-            ) from exc
+        resolve_routing_count_policy(normalized_type)
+        return WorkloadDistributionType(normalized_type)
 
     def __init__(
         self,
@@ -102,6 +87,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         actual_replica_ids: Optional[list] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
     ) -> None:
+        role_attribute = dict(self._ROUTED_ROLE_CONFIG_ATTRIBUTES).get(cluster_type, "replica_config")
+        role_config = getattr(cluster_config, role_attribute, replica_config)
+        if role_config is not None and resolve_routing_count_policy(role_config.moe_routing_distribution_type).requires_source:
+            validate_position_routing_scope(role_config, cluster_type)
+            replica_config = role_config
         # We still call super() with one of the configs to set up the basic models.
         # The prefill config is a good representative as it's a full model.
         super().__init__(
@@ -359,6 +349,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 start_id = 0
                 replica_ids = list(range(num_replicas))
 
+            if resolve_routing_count_policy(self._workload_distribution_type.value).requires_source:
+                validate_position_routing_scope(cluster_replica_config, cluster_type)
+                return {replica_id: {} for replica_id in replica_ids}
             num_layers = cluster_replica_config.model_config.num_layers
             total_expert_num = max(1, cluster_replica_config.total_expert_num)
             uniform_ratio = 1.0 / float(total_expert_num)
@@ -460,6 +453,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         else:
             actual_replica_ids = list(range(num_replicas))
 
+        if resolve_routing_count_policy(self._workload_distribution_type.value).requires_source:
+            validate_position_routing_scope(cluster_replica_config, cluster_type)
+            return {replica_id: {} for replica_id in actual_replica_ids}
         for replica_id in actual_replica_ids:
             routing_details[replica_id] = {}
 

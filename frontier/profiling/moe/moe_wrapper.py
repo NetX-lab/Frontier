@@ -6,6 +6,7 @@ This module wraps MoE operations for profiling, following the same pattern as th
 
 import operator
 import os
+import math
 from collections.abc import Mapping
 from typing import List, Optional
 
@@ -305,6 +306,43 @@ class MoEWrapper:
         """Use a fixed representative EP rank for deterministic profiling rows."""
         return 0
 
+    def _profile_cell_callable(self, run, operator_names):
+        """Replay the same physical callable for paired duration/kernel counts."""
+        store = self.timer_stats_store
+        original_method = store.profile_method
+        if original_method not in (ProfileMethod.CUDA_EVENT, ProfileMethod.RECORD_FUNCTION):
+            raise ValueError("position cells require CUDA_EVENT or RECORD_FUNCTION")
+        try:
+            for _ in range(WARMUP_STEPS):
+                run()
+            torch.cuda.synchronize()
+            store.clear_stats()
+            if original_method is ProfileMethod.CUDA_EVENT:
+                for _ in range(ACTIVE_STEPS):
+                    run()
+                torch.cuda.synchronize()
+                durations = store.get_stats()
+                store.clear_stats()
+                store.profile_method = ProfileMethod.RECORD_FUNCTION
+            tracer = RecordFunctionTracer(self.output_dir)
+            with tracer:
+                run()
+            counts = tracer.get_operation_time_stats()
+            if original_method is ProfileMethod.RECORD_FUNCTION:
+                durations = counts
+            result = {}
+            for name in operator_names:
+                if name not in durations or name not in counts:
+                    raise ValueError(f"missing applicable physical scope: {name}")
+                median, kernels = float(durations[name]["median"]), counts[name]["kernel_count"]
+                if not math.isfinite(median) or median <= 0 or type(kernels) is not int or kernels <= 0:
+                    raise ValueError(f"invalid duration/count pair for physical scope: {name}")
+                result[name] = {**durations[name], "kernel_count": kernels}
+            return result
+        finally:
+            store.profile_method = original_method
+            store.clear_stats()
+
     def _build_local_expert_map(self, device: torch.device) -> torch.Tensor:
         if self.expert_parallel_size <= 1:
             raise ValueError("Local expert map is only valid when expert_parallel_size > 1")
@@ -334,7 +372,8 @@ class MoEWrapper:
             raise ValueError("Local expert token counting is only valid when expert_parallel_size > 1")
 
         expert_map = self._build_local_expert_map(global_topk_ids.device)
-        local_ids = expert_map[global_topk_ids.long()]
+        valid_global_ids = global_topk_ids[global_topk_ids >= 0]
+        local_ids = expert_map[valid_global_ids.long()]
         valid_local_ids = local_ids[local_ids >= 0]
         if valid_local_ids.numel() == 0:
             return [0] * self.num_experts_per_device
