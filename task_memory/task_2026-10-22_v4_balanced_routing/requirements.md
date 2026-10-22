@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 terminal Succeeded/frozen R3 routing identity FAIL; D-Q10 accepted isolated prerequisite/matrix complete, root merge pending. |
+| 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS: synchronized frozen/sealed/submitted native06 Running and independently verified D-Q10 source with strict77 running; no runtime or full-ticket acceptance. |
+| 2026-10-23 | W128-V4-CHECKPOINT-CORRECTIONS-20261023: corrected S5 governance pointers to23/953 and recorded CPU-checked native06, image/bootstrap limits and independent D-Q10 consumer work without new approval. |
 | 2026-10-23 | Root recorded missing native model identity correction:23/953, A432/B319/C202, with unchanged GPU bounds. |
 | 2026-10-23 | Resolved primary/B documentation merge; retained exact approvals and historical delegations under current23/952 authority. |
 | 2026-10-23 | Root recorded the delegated23/952 adjustment for the separate replay deadline; resources unchanged. |
@@ -18,7 +21,9 @@
 | 2026-10-23 | Historical B reallocation permitted253; two native P2 repairs were paused pending the later950 decision. |
 | 2026-10-23 | B R1 delivered312 source/CPU lines under950; root subsequently completed invocation and all deadlines in0832200. |
 
-Current authority is23 maintained files/953 routing changed lines, A432/B319/C202, with unchanged32GPUh native budget. The actual native06 build exposed missing engine.model_name; its partial directory is preserved. The corrected builder passes a complete temporary CPU build. Final package/freeze/submission remain pending; native05 remains historical UNVERIFIED. Current execution evidence is in progress.md; earlier allocations and pauses below are historical.
+Current authority remains23 maintained files/953 routing changed lines, A432/B319/C202, dispatch491 separate. Native06 b62c155/exp-1023-043123-830898 completed Succeeded4/4, exit0/restarts0,12.002222GPUh. Frozen R3 computed all8 predicates:7PASS, rank_runtime_graph FAIL for actual balanced routing strategy/source/environment identity mismatch; reference remains UNVERIFIED, not admitted. Independent identity RCA and client business verification are in progress; downstream dispatch operands are not verified by the seven PASS. See [current root state](progress.md#current-root-state), `native06_platform_terminal.json` and `test_report_2026-10-23_native_ready.md`. Prelaunch/Running receipts retain their original timestamps. Approved32H800/codesign/non-preemptible3600payload/1800startup/1800replay/32GPUh remains unchanged; this completed run creates no new GPU submission/fix authority. Native05 remains historical UNVERIFIED.
+
+Existing D-Q10 source2f87828 is now ACCEPTED_ISOLATED_PREREQUISITE (3files197lines/core55, separate from routing953); clean576d278 strict77 COMPLETE77/77,451 actual artifact hashes rechecked/519cache filenames equal. Root affected/accepted/legacy checks and dual-axis review are complete; pointer P3 closed. Authoritative receipt/report: `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract/task_memory/task_2026-10-23_v4_prefill_contract/{primary_acceptance.json,test_report_2026-10-23_primary.md}`. Primary merge is underway/root-owned; no merge hash or completed primary integration is claimed here. Independent layouts/existing isolated reader/H200 defaults and3/200/150 bounds remain; no full family/PD/graph/serving, newGPUcollection, historical-q1 relabeling or CPU-overhead authority. Full05/09 coverage remains unfinished.
 
 ## [Original Request]
 
@@ -66,7 +71,7 @@ YC answered:
 
 > 批准 23 文件/900 行 (Recommended)
 
-At this approval, the aggregate limit became23 maintained source/test/binding files and900 added-plus-deleted lines. It superseded the earlier14/500 bound prospectively and authorized completion of the retained work. The later950 approval and root952 decision below now govern. Root counts the union across worktrees, including both maintained builders and the successor adapter. This does not erase the earlier allocation error. All behavioral acceptance criteria and GPU budgets remain unchanged.
+At this approval, the aggregate limit became23 maintained source/test/binding files and900 added-plus-deleted lines. It superseded the earlier14/500 bound prospectively and authorized completion of the retained work. The later950 approval and [root953 model-identity correction](#root-correction-decision-native-model-identity-2026-10-23) now govern. Root counts the union across worktrees, including both maintained builders and the successor adapter. This does not erase the earlier allocation error. All behavioral acceptance criteria and GPU budgets remain unchanged.
 
 ## [Original Request] D-V4-BALANCED-SCOPE-23-950
 
@@ -81,6 +86,8 @@ YC answered:
 At approval, the aggregate ceiling was23 maintained files/950 changed lines, allocated A432/B316/C202 with four B lines reserved for timeout binding. Root may decide and document similar small scope adjustments necessary to finish in-scope correctness repairs without another user question; owners still return exact deltas against their allocations. This delegation concerns corrective scope accounting. Existing GPU resources, native/C26 lock, routing semantics, historical evidence, and calibration-order decisions remain governed by their recorded approvals.
 
 ## Root decision — complete deadline binding (2026-10-23)
+
+Historical952 deadline-binding decision: the original paragraph and its resource semantics are retained; current governance is the subsequent953 model-identity correction.
 
 Under YC's delegated small-correction authority above, root sets the current ceiling to23files/952changed lines, allocated A432/B318/C202. The delivered B source is312 lines. Binding the existing payload timeout10800→3600 and readiness cost10800/96→3600/32 consumes four changed lines; the separately located replay timeout7200→1800 needs two more. All three existing settings are updated before generation06. Startup remains1800, with a3600s outer payload cap and unchanged32GPUh approved maximum. Supplying the existing immutable commit to the builder's verifier replaces a routing-added line and adds no cumulative lines. This decision funds exactly the missing two-line replay-timeout correction, without new files, mechanisms or GPU resources.
 
@@ -112,7 +119,7 @@ Deliver source/report commit, RED/GREEN evidence, exact net counts and line refe
 
 ## Historical B delegation archive
 
-These original B delegation records preserve their scope and sequencing intent. Their numerical allocations, pauses and pending-builder statements describe the time of delegation, not current authority. The exact YC questions/answers remain in the approval sections above; current root23/952 and accepted c491e6a/0832200 supersede the isolated B status. No additional approval is created by this archive.
+These original B delegation records preserve their scope and sequencing intent. Their numerical allocations, pauses and pending-builder statements describe the time of delegation, not current authority. Exact YC questions/answers remain above; current root23/953 follows the model-identity correction decision, with committed b62c155 and accepted c491e6a/0832200/e9e79d4 source milestones superseding isolated B status. No additional approval is created by this archive.
 
 ### [Original Request] W128 combined-budget steering
 

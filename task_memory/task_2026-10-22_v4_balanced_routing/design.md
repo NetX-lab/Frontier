@@ -4,6 +4,9 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 terminal successful but runtime identity FAIL; D-Q10 matrix/isolated acceptance complete, no design/source or full-admission change. |
+| 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS: updated execution boundary to frozen/sealed Running native06 and independent D-Q10 delivered source/pending matrix, without changing design or historical analysis. |
+| 2026-10-23 | W128-V4-CHECKPOINT-CORRECTIONS-20261023: corrected current953/source/package/fidelity boundaries and historical952 governance; independent D-Q10 consumer work does not imply serving or new GPU approval. |
 | 2026-10-23 | Resolved primary/B design archive; current accepted c491e6a/0832200 and23/952 supersede historical limits and pending wiring. |
 | 2026-10-22 | Completed source-level mismatch analysis; proposed explicit per-case runtime selection and existing native registration. |
 | 2026-10-22 | W128 documented native109-line slice and exact unresolved next-generation binding. |
@@ -14,7 +17,7 @@
 
 Analysis status: PASS (source question resolved). Correction state: approved under D-V4-BALANCED-RUNTIME-SELECTOR. Native/kernel/four-metric qualification: UNVERIFIED.
 
-Current source state: A186dfef and C39b2bf8 are accepted; B c491e6a is accepted after root133PASS and independent APPROVE, and root completed the native builder invocation/deadlines in0832200. Current authority is23 maintained files/952 routing changed lines (A432/B318/C202), not the historical estimates below. Approved prefill exp-1023-023708-916112 Succeeded in500s, exit0/restarts0 with8 matched cloud hashes; result verification is still running independently. Native06 is not built/submitted; native05 remains historical UNVERIFIED. No measured mode label alone proves native graph execution or full serving qualification.
+Current native06 b62c155 completed Succeeded4/4/exit0/restarts0/12.002222GPUh, but full frozen R3 all8 computed7PASS/rank_runtime_graph identity FAIL; reference and downstream dispatch operands remain UNVERIFIED. D-Q10 source2f87828 is ACCEPTED_ISOLATED_PREREQUISITE, fixed576d278 matrix complete and root primary merge underway. [Current root state](progress.md#current-root-state) points to authoritative terminal/checker/CPU acceptance evidence. Routing23/953/dispatch491/source/design/frozen hashes unchanged; original prelaunch/Running snapshots historical, native05 UNVERIFIED, no full ticket or new GPU/fix authority.
 
 ## Original source analysis — rationale retained
 
@@ -54,7 +57,7 @@ Expected maintained-code boundary: ReplicaConfig, central runtime registry/resol
 5. Align workflow and GPU/op gaps first. CPU-overhead measurement is deferred to the final calibration phase.
 ## Historical native design archive — superseded by accepted source
 
-All delivery counts, incomplete seams, proposed allocations and pending actions in this archive record the time of the original B handoff. They preserve the investigation and trade-offs; requirements.md and plan.md govern current23/952 scope. c491e6a resolves both R1 findings, C implements the prefill seams, and0832200 completes native source-level generation wiring. No archived pending source task should be reopened merely because its original wording is present.
+All delivery counts, incomplete seams, proposed allocations and pending actions in this archive record the original B handoff. They preserve investigation/trade-offs; requirements.md's root model-identity correction and plan.md govern current23/953 scope. c491e6a closes both R1 findings, C implements prefill seams,0832200 completes deadlines, e9e79d4 removes redundant worker hashes and b62c155 completes existing model input. Archived pending source tasks are not instructions to reopen completed work.
 
 ### W128 native binding delivery and remaining boundary
 
@@ -157,8 +160,10 @@ Fresh-generation builder must pass its existing verified clean `commit` through 
 
 ## Current builder and qualification boundary
 
-The maintained builder is `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py`; original pre-edit bytes are `evidence/build_candidate.baseline.py`, SHA256 `21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560`. It targets absent candidate_h800_p0_06, preserves all old packages, stages the same strategy and actual Frontier input, and binds R3 plus its frozen external R2 dependency through existing tool hashes. Dispatch adds dp_utils/states/pull_scheduler to67pins (70; utils already present), counted separately as488+3=491. Routing adds four unchanged env/factory/simulator/MoERunner pins (74).
+The maintained builder is `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py`; original bytes remain `evidence/build_candidate.baseline.py`, SHA256 `21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560`. It refuses an existing selected destination and preserves old packages. Complete candidate06 now exists only in the new native-model worktree; old e9e79d4 partial13-file06 remains intact. Host R3 manifest path/hash and fixed external R2 dependency remain bound; they are not redundant worker tool entries. Dispatch67->70 is separately488+3=491; four unchanged routing-source pins bring total74.
 
-Root0832200 supplies `checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)` using the existing clean immutable snapshot. This replaces a routing-added line with cumulative routing net0 and retains input hashes; passing bare lock would not retain those hashes. Root also completed the three existing payload/readiness/replay line replacements: payload3600, startup1800 unchanged, replay1800 and readiness32GPUh. B312 source plus6 deadline changed lines is318; A432+B318+C202=952 in23files.
+Root0832200 supplies `checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)` with the immutable snapshot, net0 cumulative routing while retaining input hashes. Payload3600/startup1800/replay1800/readiness32GPUh are unchanged. Historical B312+6deadline=318/aggregate952, then e9e79d4 removes2 redundant host-only worker hash entries, yielding B316/aggregate950. b62c155 independently uses the retained model case input (+2/-1), yielding current B319/aggregate953; no native/C26, server argv, R3/R2, interface or GPU-resource change.
 
-Native source/CPU acceptance and original reviewer APPROVE do not certify native06. Root still owns completion of the merge, combined-source/config checks, checker freeze, new package/image readiness and the already-approved32H800/60min run. Native FP8/backend/graph/all-rank execution and four-metric qualification remain unverified. Prefill terminal/integrity evidence is complete, but independent result/row verification is pending; physicalTP1/eager evidence cannot certify TP8/serving/graph parity. CPU-overhead analysis remains deferred.
+CPU fixture/SEALED_READY/Running receipts are historical stages, preserved unchanged. Current `native06_platform_terminal.json` proves Succeeded4/4/exit0/restarts0/12.002222GPUh; full frozen actual-case R3 yields7PASS/rank_runtime_graph identity FAIL. Independent RCA/client business verification remain open; downstream dispatch operands/full graph/reference are not verified. Authoritative result and exact failure: [current root state](progress.md#current-root-state), `test_report_2026-10-23_native_ready.md`. R3/R2/43sealed inputs/manifest8eb3f794 and approved3600/1800/1800/32GPUh unchanged; no new fix/submission authority.
+
+D-Q10 independent isolated-reader source2f87828 (3files197lines/core55, separate from routing953) is ACCEPTED_ISOLATED_PREREQUISITE. Fixed576d278 strict77 COMPLETE77/77,451actual hashes/519cache filenames verified; root144PASS/94exact/legacy102positive72negative and dual-axis review/P3closed remain. Contract-task `primary_acceptance.json`/`test_report_2026-10-23_primary.md` is authoritative; root primary merge underway, no merge hash claimed. H200 defaults/typed limits preserved; no full family/PD/graph/serving/newGPUcollection/CPU-overhead or historical-q1 relabeling follows.

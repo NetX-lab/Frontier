@@ -1,0 +1,23 @@
+{
+  "status": "SEALED_READY",
+  "package": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06",
+  "manifest_sha256": "8eb3f794fb80ec98f9b76f8fe284b475a67d9e7b18b3e0ce0a2a0ec2daf2399e",
+  "files": 43,
+  "freeze": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_dispatch/FINAL_FREEZE.json",
+  "freeze_sha256": "e7aff0c1e9f72be75e1e6e32b82eb21aa3db247684561028c1ffdaec86cfe2fe",
+  "source_commit": "b62c155abd981a71e12e62aa0c0fe3990741d2f8",
+  "checker_sha256": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+  "native_admission": "UNVERIFIED",
+  "submitted": false,
+  "quota_and_submission_pending": true,
+  "budget": {
+    "gpus": 32,
+    "gpu_type": "H800",
+    "charged_group": "codesign",
+    "preemptible": false,
+    "payload_seconds": 3600,
+    "startup_seconds": 1800,
+    "replay_seconds": 1800,
+    "max_GPU_hours": 32
+  }
+}

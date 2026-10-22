@@ -1,0 +1,283 @@
+{
+  "status": "PASS",
+  "observed_utc": "2026-10-22T21:13:54.844693+00:00",
+  "local_run": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06",
+  "remote_files_compared": 65,
+  "bytes": 32481016,
+  "files": {
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/drained.json": {
+      "sha256": "4cf4bcb68ab9be0acf9086bd6ebccd79a3ed60c9683a2199c2047487a24741c2",
+      "bytes": 37
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/native_stopped.json": {
+      "sha256": "daff4c08c18af6ebb617140f79502f154c6b083d667284b7986f3019294f876e",
+      "bytes": 409
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/ready.json": {
+      "sha256": "a972177b078ba2f2e37f59434612cde2f1dcbccd439afdf78a48f599230e94d8",
+      "bytes": 81
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/replay.log": {
+      "sha256": "843c187d87fc09cc51b1f6e98fba1fcb888699c3b161df25643b2db02db95a88",
+      "bytes": 76
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/result.json": {
+      "sha256": "ded6eca1bb8b9abbd84d5d962bdaf64e5f0ef49851f7f0c39bffa3a83261eda1",
+      "bytes": 17675
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/server.log": {
+      "sha256": "315a84ad050b8549226813a3e82498d4a6f9c92c28ad4e6ee205e838479baa83",
+      "bytes": 152472
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/server_ready.json": {
+      "sha256": "2b3836da75fabe46feb1ddf3fae74d59edc3349d2404acdda2c2bad3bf8371d4",
+      "bytes": 373
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank0.json": {
+      "sha256": "037e9e5c108bcd18af558b7465a397ed949800fbb5e4327c4c36ce69df666a32",
+      "bytes": 834103
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank1.json": {
+      "sha256": "118b00a4948a10155d6d9700b61549eef6d36037888eb15f45efd1609fdd03db",
+      "bytes": 834103
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank2.json": {
+      "sha256": "b1076ef4f4724e05e42800afe635441002faf00c53edbc8ca91e1887ff9f275d",
+      "bytes": 834104
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank3.json": {
+      "sha256": "eaeeddfa3367c37027bd1bd2cd6bd171bbdccc93b7cc97b1c60f4f3d67963b23",
+      "bytes": 834104
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank4.json": {
+      "sha256": "84b314a345ced55031a9323ff7d98b651f58aba1aa368cc1b883024c5992d1a2",
+      "bytes": 834104
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank5.json": {
+      "sha256": "78b15f8139be6b66b0b3d54de70381276e6cb075a1fd247b44ae983ea611b1ff",
+      "bytes": 834104
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank6.json": {
+      "sha256": "ad8272158b56273da4824fa3ec0e8d0a647238922af7be7841da67ffd0e50229",
+      "bytes": 834104
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank7.json": {
+      "sha256": "5280438b7ea8420f8a22769c841cf59dd87bb7a6f31b03432a6c548fa326464d",
+      "bytes": 834104
+    },
+    "nodes/gpu-h800-0214.host.platform.shaipower.com/worker.log": {
+      "sha256": "fe9742c0170ac7cb067282c23bc3014475cac0534792bebfb66bbd3fd796e1b2",
+      "bytes": 196
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/drained.json": {
+      "sha256": "b44dec70c25f8d73ae879053f9b22b0d6eb9de3e6d8ee63ff0746591d21906a4",
+      "bytes": 37
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/native_stopped.json": {
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "bytes": 248
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/ready.json": {
+      "sha256": "e77ef7cd831cf39b74c85d40f6d150dbdb7cff63e8dd6c48b4951fccfe9e8188",
+      "bytes": 81
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/result.json": {
+      "sha256": "c002c6644633ebe18ea13c82b6665f9e18b6d8a1f78c8dd0248105db6e3547d2",
+      "bytes": 16113
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/server.log": {
+      "sha256": "c55c961ede8f2a4fde48835ebb38422d4d5be04203017436481e9a9f7f2ca359",
+      "bytes": 357630
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank0.json": {
+      "sha256": "d46df9bd7739a3367f9a3683fbeb91bfe07cc70c0af1418c556df00ff199619c",
+      "bytes": 834108
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank1.json": {
+      "sha256": "327cf4a42905f91f6b7fd3bb4a89ba1d289b8c4e516ca5a4191438e35468f163",
+      "bytes": 834108
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank2.json": {
+      "sha256": "bcff33268c63873ffa8cf23e333de85877e183f02131a41103caf1a0bba90bd1",
+      "bytes": 834115
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank3.json": {
+      "sha256": "bc3170a9711c9ae82afdde5b8433de7565e48bf86cfd8972f1591878a778cccd",
+      "bytes": 834115
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank4.json": {
+      "sha256": "d569af07814004aed6809561502b482911c368b00391f80494e043e629851398",
+      "bytes": 834115
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank5.json": {
+      "sha256": "ac51848e4e591b42ec830d5d856ad0d34f141df7aa75a8f8e898ea566cdeeb64",
+      "bytes": 834115
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank6.json": {
+      "sha256": "ae6567c8de3a3755a93e761d2c23f4c9fc6f8f34e517f5e9ef0c5ede7fbcfb8a",
+      "bytes": 834115
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/serving/rank7.json": {
+      "sha256": "40ebd6e1ef8da6e3e731e9fc6d95d2e838ab69facb8a4e3490805455ddeeb5c1",
+      "bytes": 834115
+    },
+    "nodes/gpu-h800-0310.host.platform.shaipower.com/worker.log": {
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "bytes": 173
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/drained.json": {
+      "sha256": "3e8e345436b8d5cc6947c726aa0ab5210a5982fc33d9726f71e477c04c09a148",
+      "bytes": 36
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/native_stopped.json": {
+      "sha256": "daff4c08c18af6ebb617140f79502f154c6b083d667284b7986f3019294f876e",
+      "bytes": 409
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/ready.json": {
+      "sha256": "09998835ab945b0403afaf1422af7bd928a935cdf5cdc11315d79c3451a00669",
+      "bytes": 81
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/result.json": {
+      "sha256": "e21d7ad30ae597fb178d3297d21613167580d738453418dde7789ec7afbf68d3",
+      "bytes": 16174
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/server.log": {
+      "sha256": "e91949aec1cbc6c783edabdfddae3cb93e1936440650443614df78eeb09993a7",
+      "bytes": 158289
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/server_ready.json": {
+      "sha256": "1879427ed8d53630d06fae173a84efff301bfdd21cb6cb7db950492b4417bd7d",
+      "bytes": 372
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank0.json": {
+      "sha256": "ab561766fd47c65c728cd6b1b8bc18d14e3a7c95386acd98497adab8f76fd107",
+      "bytes": 1067402
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank1.json": {
+      "sha256": "7956204ec8afcea211a36c7a5f225b42eebfcae5a0216642e69b2e0ad78ddb57",
+      "bytes": 1067402
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank2.json": {
+      "sha256": "40dcc6f6495646c3cea56c9db9bcf96950be89028af6e52a310c6960bbcfe24e",
+      "bytes": 1067403
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank3.json": {
+      "sha256": "3b288f4564ecb89a3a0bfefd2cccde584e4f6608eafbe32b721155ec33ad1922",
+      "bytes": 1067403
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank4.json": {
+      "sha256": "eacd69082a853c66184b6f267583da93610816c851fbc0a9560ba1e487323b86",
+      "bytes": 1067403
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank5.json": {
+      "sha256": "7caa924b3c22d1279e9ad447ab08533d0eeea12652927fea84cbea8631fe53f2",
+      "bytes": 1067403
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank6.json": {
+      "sha256": "8e4cac767984f055f4a80d4eb532abe1c87d40fd6763caf8f49485c55e9d7109",
+      "bytes": 1067403
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/serving/rank7.json": {
+      "sha256": "ff7d82d52621ce44fcb42fa317e517de8c067b92873a658387f623f72bd647da",
+      "bytes": 1067403
+    },
+    "nodes/gpu-h800-0346.host.platform.shaipower.com/worker.log": {
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "bytes": 173
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/drained.json": {
+      "sha256": "c373beb62b2b66293594f09ee9257f8e24e9da8803a33e948c2dfbb1de95ae38",
+      "bytes": 36
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/native_stopped.json": {
+      "sha256": "232e2b3b6eadcb26bbe53c48776a4fe34587733757740065d8766fa44dea26cc",
+      "bytes": 248
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/ready.json": {
+      "sha256": "48114d761d8dfaba59a8ee02db37735760b598bc9e631f2e113bbabdd7dc970a",
+      "bytes": 81
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/result.json": {
+      "sha256": "eb9689006cd9741492236ba1dc867e57d79d3de243b42122462212363d193b1f",
+      "bytes": 16110
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/server.log": {
+      "sha256": "5dc7575f229340468d2d969fb79b78e3fd78496c3ac0d5ab1afbc2f78901c453",
+      "bytes": 362008
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank0.json": {
+      "sha256": "d6dbc76a22e6271e2138efbce6398abf5ad29850d2cc921ae4eb821022c91423",
+      "bytes": 1067310
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank1.json": {
+      "sha256": "392a473753f782a925edf1c10624cb24d6b2961155af0985848d3093147af0c3",
+      "bytes": 1067310
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank2.json": {
+      "sha256": "e9dbec111b31d44776b4e78511bc16c982c9d0016b5cfc679d0b2c4c2fa2401e",
+      "bytes": 1067317
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank3.json": {
+      "sha256": "365e7fc8b4f112a69c8fd362e197fa8ced131932c97ebcf564ce607d373876cf",
+      "bytes": 1067317
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank4.json": {
+      "sha256": "7f680a1aac186b043b6514026b1167b224df158fb70522391e15d8dd93fac5f3",
+      "bytes": 1067317
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank5.json": {
+      "sha256": "3707fd6d073de85c531c5982dfd1e267dd3f55994c950b565534b4bc23381c38",
+      "bytes": 1067317
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank6.json": {
+      "sha256": "1ed220de69dfa3de0970a336b808bb4e94fad757ef161e164dfdc93afc417011",
+      "bytes": 1067317
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/serving/rank7.json": {
+      "sha256": "f1724c122532369c4adb8311279a0244d13ed455beac7489e261efc46ab97dc1",
+      "bytes": 1067317
+    },
+    "nodes/gpu-h800-0399.host.platform.shaipower.com/worker.log": {
+      "sha256": "39a144681c0311edc78328f5ae14ab1e9e47d4f36afe73fda655ce944763fd19",
+      "bytes": 173
+    },
+    "replay_finished.json": {
+      "sha256": "1e3f6691f455051e8adb15d961e4bf3c7a17e83dd88b2afdd13315cc288250bb",
+      "bytes": 22
+    },
+    "run/canonical_repetitions.json": {
+      "sha256": "36435660e26d19b99b17d529a22562ff3d4e21efded19fc8e4e14966028e4ad4",
+      "bytes": 15853
+    },
+    "run/client_requests.jsonl": {
+      "sha256": "5cd4858ea2110cbf4c974aa318e343e47a3d913dee593c11111df60467f894a5",
+      "bytes": 368358
+    },
+    "run/proxy.log": {
+      "sha256": "b3aa8b076c425cf27f0853c83e999a8b3005a6cf5adb9a4d348f9cade8ea614d",
+      "bytes": 74
+    },
+    "run/proxy_requests.jsonl": {
+      "sha256": "11f19a51b92fdebf3ecfd7d3718d84fbc4f32021b5d87356f7921b1b0a4ac3e4",
+      "bytes": 552395
+    },
+    "run/replay_summary.json": {
+      "sha256": "89003358c6b3f4289131e8c24c99805421c9486fc4c3861afae32e3e0be99a92",
+      "bytes": 21043
+    }
+  },
+  "excluded_source_explanation": {
+    "run_manifest.json": "original host prelaunch bytes/mtime retained",
+    "launcher_receipt.json": "original host completed launcher receipt retained",
+    "platform_terminal_receipt.json": "root direct personal RJobClient query"
+  },
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "shai-ycfeng",
+    "python3 -c 'import hashlib,json,sys\nfrom pathlib import Path\nroot=Path('\"'\"'/mnt/ws-jfs/ycfeng/frontier/glm53_dsv4_vllm028/t18/dsv4_h800_p0_canonical_20261021/case/runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06'\"'\"')\nfiles=json.loads(sys.stdin.readline());results={}\nfor name in files:\n p=root/name\n assert p.resolve().is_relative_to(root.resolve())\n results[name]={'\"'\"'sha256'\"'\"':hashlib.sha256(p.read_bytes()).hexdigest(),'\"'\"'bytes'\"'\"':p.stat().st_size}\nprint(json.dumps(results))\n'"
+  ]
+}

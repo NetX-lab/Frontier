@@ -4,6 +4,10 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Recorded completed RCA/client evidence and the bounded successor-reader review gate. |
+| 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: frozen R3 runtime identity FAIL after Succeeded run; accepted D-Q10 source/matrix remains isolated-only, primary merge root-owned. |
+| 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS: distinguished completed native launch gates/Running from pending runtime admission and D-Q10 dual-axis source review from running strict77/final delivery. |
+| 2026-10-23 | W128-V4-CHECKPOINT-CORRECTIONS-20261023: updated S5 review boundaries for completed e9e79d4 source-only review/fidelity, root b62c155/953 correction and CPU-checked native06; preserved original reviews verbatim. |
 | 2026-10-23 | Original Spec reviewer closed both B P2s atc491e6a; root133PASS and bounded builder0832200 accepted,23/952. |
 | 2026-10-23 | W128-V4-BALANCED-STATUS-SYNC: closed C runner status, recorded fixed39b2bf8 source/CPU/fidelity acceptance and current23/950 allocation; B corrections and package/GPU admission remain open. |
 | 2026-10-23 | Archived B/C Standards review and three Spec P2 findings; assigned bounded corrections before package admission. |
@@ -11,11 +15,13 @@
 
 ## Current review status (2026-10-23)
 
-A186dfef is accepted after root218 checks, independent review and fixed-clean strict77, merged292c489. C8c2502c closes the runner-values P2, merged84c806f and finalized39b2bf8 with five files/202 lines. Root accepted C source/CPU/fidelity:184/184 tests with zero failures/errors/skips, merged A/C26PASS and strict77/77 identical with451 artifact entries. Evidence: `prefill_primary_fidelity.json` and `test_report_2026-10-23_prefill_acceptance.md`; this is not GPU or serving admission.
+A186dfef accepted/merged292c489; C8c2502c closes runner P2, merged84c806f/final39b2bf8 (five files/202lines,184/184tests,A/C26PASS,strict77/77/451artifacts). Root also accepts bounded prefill data as ACCEPTED_ISOLATED_DATA (`prefill_results/primary_acceptance.json`): its approved1H800 run is spent/Succeeded with retained anomalies and no steady-state, independent expert histogram, TP8-PD, graph, serving or E2E admission. Historical unbalanced q1 cannot qualify balanced decode.
 
-B c491e6a closes both schema-origin and effective-DP P2s: root133PASS, independent targeted APPROVE from the original Spec reviewer. Builder0832200 supplies the existing immutable commit and binds payload3600/replay1800/readiness32GPUh. Root's delegated two-line deadline correction gives the current23/952 ceiling, allocated A432/B318/C202. Combined-source verification, single-writer checker freeze and native06 package/image/runtime checks remain open. C passed package/image/installed-adapter checks and its approved H800 run Succeeded; local/cloud integrity passes while row acceptance proceeds independently.
+B c491e6a closes both schema-origin/effective-DP P2s, original Spec reviewer APPROVE; ce9ceba root133 merged PASS. Independent `review_2026-10-23_native_prelaunch.md` retains **APPROVE — source only; not launch admission** for e9e79d4, with no generated-package/runtime review. `native_final_fidelity.json` completes that revision's77/77/451hashes, no source/cache findings. Committed b62c155's root-verified existing model-name case-input fix (+2/-1) produces23/953=A432/B319/C202 (`evidence/final_union_b62c155.json`); it is outside the e9e79d4 independent review and is not a new capture. Frontier/tests, native/C26, R3/R2 and dispatch491 remain unchanged.
 
-GPU budgets remain prefill1H800/900s and native32H800/60min. GLM stays paused; workflow/GPU/operator-gap alignment precedes CPU-overhead calibration. Source review and fidelity acceptance do not change this phase order.
+Native06 terminal Succeeded4/4/exit0/restarts0/12.002222GPUh is complete; frozenR3 remains7PASS/rank_runtime_graphFAIL. RCA/client verification are complete: FP8-only enumeration omitted43actual MXFP4/MARLIN owners per rank; client432/432, three formal windows and seven boundaries pass. The root-authorized versioned owner-reader correction (<=3non-core files/300lines, no newGPU) still requires independent review/rerun/freeze and complete downstream evaluation. Reference remains UNVERIFIED. OriginalR3FAIL and all source/raw evidence remain unchanged; [current root state](progress.md#current-root-state) links the exact evidence.
+
+D-Q10 source2f87828 (3files197lines/core55, separate from routing953) is ACCEPTED_ISOLATED_PREREQUISITE after root144/94exact/legacy102positive72negative, dual-axis no code finding/P3closed and clean576d278 strict77 COMPLETE77/77/451actual hashes/519cache filenames equal. Contract-task `primary_acceptance.json`/`test_report_2026-10-23_primary.md` retains complete verification; primary merge underway/root-owned, no merge hash asserted. Native32 approved run is completed within32GPUh; full05/09/18/19/family/PD/graph/serving remains open, no newGPUcollection/fix authority. GLM pause/CPU-overhead-last and original reviews unchanged.
 
 ## A: historical source review, W128-V4-BALANCED-CALLERS-REVIEW
 

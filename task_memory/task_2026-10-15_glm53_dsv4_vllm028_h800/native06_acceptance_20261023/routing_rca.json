@@ -1,0 +1,140 @@
+{
+  "task_id": "W128-V4-NATIVE06-ROUTING-RCA",
+  "scope": "Read-only RCA; new report/evidence files only; no implementation, package, GPU, SSH, cloud, platform or Git operations",
+  "run_tag": "dsv4-h800-p0-canonical-20261021-06",
+  "local_case": "/data/ycfeng/tmp/glm53_dsv4/native06_case_20261023",
+  "original_check_result": "analysis/run_check_status.groundtruth_clean.json",
+  "original_verdict": "7 predicates PASS; rank_runtime_graph FAIL; runtime/reference UNVERIFIED",
+  "checker": {
+    "path": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+    "sha256": "ca8ddcea83c852c27295c8a73453746d755c51055e703bd94df48e8f1af7d917",
+    "dependency_path": "/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/task_2026-10-22_v4_native_binding/check_groundtruth_run_successor_r2.py",
+    "dependency_sha256": "29523700ac8492fa6e192ce272f8ab5a7a48d1528bd4064417e26e811533d10a",
+    "freeze_hashes_match": true
+  },
+  "first_failure": {
+    "file": "runs/groundtruth_clean/dsv4-h800-p0-canonical-20261021-06/nodes/gpu-h800-0214.host.platform.shaipower.com/serving/rank0.json",
+    "file_sha256": "037e9e5c108bcd18af558b7465a397ed949800fbb5e4327c4c36ce69df666a32",
+    "role": "prefill",
+    "dp_owner": 0,
+    "tp_rank": 0,
+    "global_rank": 0,
+    "json_path": "inventory.moe_backends",
+    "actual_value": {},
+    "actual_serialized_type": "dict",
+    "derived_operand": "routers = {name.removesuffix('.routed_experts') for name in inventory['moe_backends']}",
+    "derived_value": "set()",
+    "first_true_rejection_condition": "not routers",
+    "checker_lines": "112-113; exception at 122",
+    "expectation": "Nonempty complete router-owner enumeration; frozen consumer incorrectly obtains it from FP8-only backend entries",
+    "latent_object_inequality": {
+      "actual_map_counts": {"routers": 43, "runners": 43},
+      "frozen_expected_routers": {},
+      "frozen_expected_runners": {},
+      "only_unequal_fields": ["routers", "runners"],
+      "not_reached_in_real_short_circuit": true
+    }
+  },
+  "census": {
+    "affected_ranks": 32,
+    "affected_roles": {"prefill": 16, "decode": 16},
+    "nodes": [
+      {"host": "gpu-h800-0214.host.platform.shaipower.com", "role": "prefill", "dp_owner": 0, "tp_ranks": [0,1,2,3,4,5,6,7], "rejected_ranks": 8},
+      {"host": "gpu-h800-0310.host.platform.shaipower.com", "role": "prefill", "dp_owner": 1, "tp_ranks": [0,1,2,3,4,5,6,7], "rejected_ranks": 8},
+      {"host": "gpu-h800-0346.host.platform.shaipower.com", "role": "decode", "dp_owner": 0, "tp_ranks": [0,1,2,3,4,5,6,7], "rejected_ranks": 8},
+      {"host": "gpu-h800-0399.host.platform.shaipower.com", "role": "decode", "dp_owner": 1, "tp_ranks": [0,1,2,3,4,5,6,7], "rejected_ranks": 8}
+    ],
+    "condition_failure_counts": {
+      "selected_not_balanced": 0,
+      "environment_not_selected": 0,
+      "actual_missing": 0,
+      "routers_empty": 32,
+      "actual_not_expected": 32,
+      "manifest_strategy_sha_mismatch": 0,
+      "native_source_sha_mismatch": 0,
+      "staged_strategy_sha_mismatch": 0
+    },
+    "routing_owner_names_per_rank": 43,
+    "router_entries_all_ranks": 1376,
+    "runner_entries_all_ranks": 1376,
+    "independent_mxfp4_backend_names_per_rank": 43,
+    "independent_module_runner_names_per_rank": 43,
+    "independent_module_backend_routing_owner_sets_equal_ranks": 32,
+    "recorded_observation_error_ranks": 0,
+    "schema": "native_serving_v1",
+    "stage": "pre_shutdown"
+  },
+  "actual_routing_identity_all32": {
+    "environment": "balanced_topk",
+    "runtime_path": "balanced_topk",
+    "strategy": "balanced_routing.BalancedTopKRouting",
+    "origin": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06/tests/comparison/calibration/balanced_routing.py",
+    "sha256": "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea",
+    "scalar_values_are_serialized_strings": true,
+    "scalar_values_equal_frozen_expectation": true,
+    "router_type": "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter",
+    "runner_type": "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner",
+    "native_source_origin_and_sha_objects_equal_expected": true,
+    "sample_independent_runner_name": "model.layers.0.ffn.experts",
+    "sample_independent_child_type": "vllm.model_executor.layers.fused_moe.routed_experts.RoutedExperts",
+    "sample_independent_backend_name": "model.layers.0.ffn.experts.routed_experts",
+    "sample_independent_backend": {
+      "backend": "MARLIN",
+      "experts": "MarlinExperts",
+      "input_dtype": "None",
+      "prepare_finalize": "MoEPrepareAndFinalizeNaiveDPEPModular",
+      "quant_method": "Mxfp4MoEMethod"
+    },
+    "sample_backend_input_dtype_is_string_not_null": true
+  },
+  "strategy_class_identity_diagnostic": {
+    "scope": "Unchanged original registration AST executed on CPU with native import stubs; not a live worker observation",
+    "module": "balanced_routing",
+    "name": "BalancedTopKRouting",
+    "qualname": "register_balanced_topk.<locals>.BalancedTopKRouting",
+    "collector_identity": "balanced_routing.BalancedTopKRouting",
+    "collector_uses": "__module__ + '.' + __name__, not __qualname__",
+    "nested_class_is_failure_cause": false
+  },
+  "root_cause": {
+    "classification": "Evidence/identity contract enumeration defect; no observed wrong strategy activation",
+    "producer": "Pinned native_full_structure.py:280-285 restricts moe_backends to exact Fp8MoEMethod types",
+    "actual_objects": "All 43 per-rank expert children use Mxfp4MoEMethod/MARLIN, independently retained in initialization.backends and initialization.modules",
+    "consumer": "Frozen R3:112-117 uses the FP8-only subset as the complete router enumeration",
+    "missed_regression_seam": "test_native_reader_binding.py:463-475 calls only routing collector, then manually supplies a nonempty moe_backends map at line467"
+  },
+  "verification": {
+    "python_executable": "/usr/bin/python3",
+    "python_version": "3.10.6",
+    "conda_environment": "not activated",
+    "minimal_command": "/usr/bin/python3 -B /data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_reproduce_20261023.py",
+    "minimal_function_call": "checker['verify_balanced_runtime'](payload['inventory'], result['server_env_set'], engine, config, manifest)",
+    "reproduction_count": 2,
+    "exit_codes": [1,1],
+    "raw_exception": "ValueError: Actual balanced routing strategy/source/environment identity mismatch",
+    "raw_traceback": "Traceback (most recent call last):\n  File \"/data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_reproduce_20261023.py\", line 29, in <module>\n    checker['verify_balanced_runtime'](\n  File \"/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py\", line 122, in verify_balanced_runtime\n    raise ValueError('Actual balanced routing strategy/source/environment identity mismatch')\nValueError: Actual balanced routing strategy/source/environment identity mismatch\n",
+    "identical_log_sha256": "cb39fd4242e94ba44ca7d7a9f373305a156e0501fcd48da38d25c1b2b4ceccee",
+    "census_command": "/usr/bin/python3 -B /data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_census_20261023.py",
+    "package_pins_verified": 43,
+    "package_pin_failures": [],
+    "original_paths_hashed_before_and_after": 172,
+    "changed_original_paths": [],
+    "downstream_predicates": "NOT_RUN; routing identity precondition remains failed",
+    "failed_initial_command": "Bare python unavailable: zsh:1: command not found: python; exit127"
+  },
+  "proposal": {
+    "implemented": false,
+    "minimal_repair": "Versioned successor reader obtains complete owner enumeration from independent retained module/type/child/backend facts, requires exact agreement with routing maps and supported consumers, and preserves all existing strategy/environment/source/hash checks",
+    "do_not": "Allow empty maps, fill expected objects into evidence, derive completeness from the routing map under validation, or modify frozen R3/R2/history",
+    "fresh_collection_for_this_enumeration_failure": "Not needed: all independent owner/type/backend/source witnesses are retained on32/32 ranks",
+    "remaining_decision": "Root must authorize/review a versioned contract and decide whether this run can be reconsidered; full downstream graph/rank/phase checks still required",
+    "fresh_collection_needed_if": "Root requires new per-call persistence, device expert histogram/content, live-object evidence or changed collector/schema",
+    "run_admission": "UNVERIFIED; no retroactive PASS"
+  },
+  "evidence": {
+    "report": "routing_rca.md",
+    "full_census_with_all32_rank_hashes_and_original_before_after_hashes": "/data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_census_20261023.json",
+    "raw_logs": ["/data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_reproduction1_20261023.log", "/data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_reproduction2_20261023.log"],
+    "progress_self_check": "/data/ycfeng/tmp/glm53_dsv4/native06_routing_rca_checkpoint_20261023.md"
+  }
+}

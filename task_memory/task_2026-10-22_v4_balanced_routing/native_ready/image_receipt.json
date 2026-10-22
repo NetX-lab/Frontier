@@ -1,0 +1,19 @@
+{
+  "returncode": 0,
+  "started_utc": "2026-10-22T20:14:53.366214+00:00",
+  "ended_utc": "2026-10-22T20:14:58.255709+00:00",
+  "output_dir": "/data/ycfeng/tmp/glm53_dsv4/native06_image_b62c155_chh44x7b",
+  "package_43_files_unchanged": true,
+  "template_unchanged": true,
+  "verification": {
+    "status": "PASS",
+    "python": "3.12.3",
+    "source_pins": 74,
+    "tool_pins": 18,
+    "binary_pins": 20,
+    "torch_vllm_imported": false,
+    "cuda_initialized": false,
+    "launch_executable": "/usr/bin/python3",
+    "stage": "/data/ycfeng/Frontier/.worktrees/v4-balanced-native-model/task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/candidate_h800_p0_06"
+  }
+}
