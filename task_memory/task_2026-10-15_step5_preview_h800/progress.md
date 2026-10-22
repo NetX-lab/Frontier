@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Receive D30 candidate with five new adjacent failures; hold integration for review and scoped fixture correction. |
 | 2026-10-22 | Merge D26/D27/identity/D28 atfa5bae2; strict77 and reconciled258 focused cases pass; record approved D29/D30 next work. |
 | 2026-10-22 | D26/D27/identity delivered; D28 parent81PASS/review clear; checkpoint updates D29 routing prerequisite and CPU-gap ordering. |
 | 2026-10-22 | D23 clean9dcd876/32fb934 comparison:77/77 identical, zero cache/provenance/evidence findings; fresh CLI remains active. |
@@ -205,8 +206,8 @@ Authority includes D20–D30 in [requirements.md](requirements.md), owned by the
 | D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
 | D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
 | Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
-| D29 policy/order | semantics/image approval recorded; bounded design active |position_cyclic preserves logical-position routing; short waves may concentrate. Native and Frontier/profile designs run in parallel; count physical/masked rows separately |
-| D30 finish sync | approved; scoped implementation active |19.finish_sync binds Step1/16, preserving legacy32 elsewhere; native boundary observation pending |
+| D29 policy/order | design review and complete scope pending |Native review found missing adapter propagation/import-origin and graph-test checks. Frontier/profile draft delivered (32 files including fixture), with source-local router/physical communication pricing still unbounded. Correct/review these before the combined scope proposal |
+| D30 finish sync | candidate delivered; integration blocked |Source cf1a53f: author 27/128/3 checks pass. Review confirms fixture peer-driving gaps and finds counter events rejected by the R2 verdict loader. Complete correction scope is being revised; native observation remains unverified |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
@@ -220,6 +221,21 @@ The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% 
 **Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
 
 **Next actions:** (1) finish bounded D29 native/Frontier/profile design, confirm any required numerical scope expansion, implement and verify; (2) independently complete D30 source/counter observation; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. [Merged report](test_report_2026-10-22_merged_workflow.md) closes258 focused outcomes and77 strict cases. Frontier routing design's first subagent failed with an API reasoning_text error; a fresh general session resumes that scope, with no source edit lost.
+
+D30 candidate evidence: worktree `/data/ycfeng/Frontier/.worktrees/step5-finish-sync`,
+`task_memory/task_2026-10-22_step5_finish_sync/issues.md` and its test report.
+The extra suite reports 68 PASS / 6 FAIL versus 73 PASS / 1 FAIL with the
+baseline scheduler. Parent already fixed that baseline READ-byte assertion in
+`d581625`; the five new failures must be resolved before source integration.
+Independent review confirms missing peer driving and identifies one further
+decode-loop instance hidden by the former byte assertion. Additional test
+modules remain `tests/unit/test_step5_measured_pd.py` and
+`tests/unit/test_step5_pd_placement.py`. The review also finds that
+`r2_verdict.py` rejects both new host-counter events; they must be accepted as
+diagnostic metadata without granting native PASS. The initial six-file estimate
+is therefore incomplete. The author is revising the exact scope and consumer
+regression coverage before the next consolidated decision; no extra code edit
+has been authorized by the review itself.
 
 **Actual-main logger repair completed:** commit `b862e57`. Parent reproduced run08's `Batch has no requests` at the actual `BatchStageEndEvent`/`DummyForwardBatch` seam and restricted request-owned AF-state lookup to batches with requests. Reproduction2FAIL/2PASS -> affected logging/lifecycle36PASS. Clean detached5af7638/b862e57 runs at `/data/ycfeng/tmp/step5_event_logging_clean_fidelity_20261021` both exit0;strict comparator exits0 with77/77 identical,zero cache-name differences and no missing evidence. Earlier dirty-source receipts are preserved. Complete measured CLI acceptance remains with its owner. Details: [event-logging test report](test_report_2026-10-21_request_free_event_logging.md).
 
