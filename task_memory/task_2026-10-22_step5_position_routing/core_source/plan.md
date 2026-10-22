@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Start sole-writer implementation. |
 | 2026-10-23 | Complete selected consumer interface slice and accept root's real source/import delivery. |
+| 2026-10-23 | Record delivered pricing APIs, runtime point binding and exact unowned actual-main dependencies. |
 | 2026-10-23 | Verify full PRICING canonical consumers and record runtime seams. |
 
 Dependency: count/source/tensor/verifier interfaces -> {scheduler/runtime, source package/producers, selected trainer/profiling consumers} -> fixture/runner -> root integration qualification.
@@ -26,3 +27,5 @@ Committed owned work -> merges7b86614/2c4cc9e -> {selected bound-fact filter/pre
 Current next route: commit verified selected consumer slice -> authorized67d5b5e source/native import -> actual published-export receipt/plan checks (independent of PRICING import) -> root-authorized409093c + exact schema/row/association facts -> selected wrapper/trainers/fixture actual-main. Root alone owns integrated review/full-unit/strict77/native/GPU qualification.
 
 Completed continuation milestones: b39fc51 selected consumer slice;4d201c8 authorized source/native integration;795a583 P2 bound implementation correction; e255ede source/CLI slice and authentic-receipt package. Next: commit verified executor/schema/model-lookup consumers -> independently wire wrapper to committed H17 contract -> root-authorized PRICING tip import -> selected producer/consumer/fixture actual-main. Canonical CSV spelling is CORE implementation, not a design prerequisite. A reproduced existing model-registry collision needs root allocation/coordination: prediction_model_registry.py is not an owned path, and its name/typed-identity/precision key replaces alternate native bindings. Per-point layouts/padding must remain coverage rather than force one full context per width.
+
+Latest route: PRICING8e61c2d and F3-F6 27b3499 are imported with peer history preserved. 41bbf035 completes actual automatic selected preflight/shared+independent trainers/caches. Owned H04 callers recover retained source/layout/policy points, then use existing PRICING exact physical scopes. Full observation passthrough is separate from PRICING's still-repairing frozen-runtime affine grouping. Finish fresh position fixture/runner and affected regressions; root must coordinate unowned selected-binding registry retention and explicit CPU plan cost consumption in the existing collective backend/config. No parallel registry/backend or invented policies. Actual CLI retains 2400s and6144/1024/D26/D27/D30. Source/GPU/native qualification remains root-owned.

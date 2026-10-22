@@ -48,3 +48,38 @@ def test_position_policy_resolves_before_parent_initialization(monkeypatch):
             def _get_grid_search_params(self):
                 return {}
         SourcePredictor(**kwargs)
+
+
+def test_position_runtime_binds_retained_source_and_full_plan_policy(tmp_path):
+    import json
+    from types import SimpleNamespace
+    from dataclasses import asdict
+    from frontier.execution_time_predictor.moe_routing_workload import MoeRoutingWorkload
+    from frontier.cc_backend.collective_plan import CollectivePlan,CollectiveTensor
+    from tests.unit.test_moe_position_routing import source,materialize
+    from frontier.profiling.moe.inputs import MoESourceFrame
+    lane=materialize(source()).lane(0)
+    tensors=[vars(CollectiveTensor("output","bfloat16",2,4,4))]
+    context=dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",quant_dtype=None,defer_input_quant=False,
+        native_facts=dict(shared={"image":"cpu_fixture"}),collective_tensors=dict(dispatch=tensors,output=tensors))
+    frames=[asdict(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context)) for s in lane.routing_source.source_lanes]
+    receipt=dict(moe_ep_rank=0,total_routed_tokens=0,routing_input=json.dumps(dict(source_frames=frames)),native_context=json.dumps(context))
+    model=SimpleNamespace(_frontier_moe_physical_rows=(receipt,))
+    class Predictor(MoeRoutingWorkload):
+        _step5_ffn_model=lambda self,*a:(model,None)
+        _build_grouped_gemm_features=lambda self,*a,**k:dict(num_tokens=17,total_routed_tokens=0)
+    p=Predictor();p._replica_config=SimpleNamespace(device="h800",attn_tensor_parallel_size=8)
+    p._model_config=SimpleNamespace(supports_share_expert=lambda:True)
+    p._cc_backend=SimpleNamespace(_config=SimpleNamespace(profiling_data_dir=str(tmp_path)))
+    measured=dict(shared=context["native_facts"]["shared"],execution_policy={"0":{"branches":["cpu_fixture"]}})
+    counts={}
+    for phase in ("dispatch","combine","routed_tp","shared_tp"):
+        groups=tuple((i,8+i) for i in range(8)) if phase in ("dispatch","combine") else (tuple(range(8)),tuple(range(8,16)))
+        plan=CollectivePlan(phase,(16,1),tuple(CollectiveTensor(**t) for t in tensors),groups,"none",json.dumps(measured),'{"actual_buffer":"cpu_fixture"}')
+        counts[plan.cache_key()]=dict(context=measured)
+    path=tmp_path/"h800/collective_local.json";path.parent.mkdir();path.write_text(json.dumps(dict(counts=counts)))
+    native,features,plans=p._step5_position_queries(lane)
+    assert native==context and features["moe_gating_linear"]==dict(num_tokens=16,live_routing_token_count=16)
+    assert all(json.loads(plan.context_json)==measured for plan in plans.values())
+    model._frontier_moe_physical_rows=()
+    with pytest.raises(ValueError,match="actual source/native point"):p._step5_position_queries(lane)

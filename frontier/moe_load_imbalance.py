@@ -64,7 +64,7 @@ def moe_native_binding_context(context):
     """Keep selector/source identity in models; per-point layouts stay in coverage rows."""
     binding = {name: value for name, value in context.items() if name not in {
         "activation_layout", "scale_layout", "source_activation_layout", "source_scale_layout",
-        "native_padding", "workspace_shapes", "native_facts"}}
+        "native_padding", "workspace_shapes", "native_facts", "collective_tensors"}}
     layouts = {}
     for name in ("activation_layout", "scale_layout", "source_activation_layout", "source_scale_layout"):
         if name in context:

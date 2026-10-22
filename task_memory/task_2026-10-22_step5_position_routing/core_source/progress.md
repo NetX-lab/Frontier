@@ -6,6 +6,7 @@
 | 2026-10-23 | Read approved designs, sole-writer matrix and baseline source. |
 | 2026-10-23 | Record verified runtime/source consumers, timer replay and concrete peer boundary. |
 | 2026-10-23 | Resume with root-authorized peer history integration and selected bound-fact consumers. |
+| 2026-10-23 | Record actual runtime point binding, pricing F3-F6 import and fresh fixture boundary. |
 | 2026-10-23 | Verify canonical producer, automatic shared/independent fits and source census. |
 
 - completed: baseline clean, branch feat/step5-position-core at 1aee0af; scope.json grouped by exact path yields 44 paths/4404 gross lines.
@@ -36,6 +37,14 @@
 
 ## 1. 规划完成情况
 
+- completed: canonical consumer41bbf035; root-authorized27b3499 history mergef4dbfc22. F4 update1740 is retained: CORE passes full measured point policy/branch/buffer/count key without affine grouping or startup-enabled equality.
+- completed WIP: runtime `_step5_position_queries` recovers unique source/EP/native point from retained physical rows, validates selected expert feature receipt, and restores exact existing CollectivePlan/count context including measured execution_policy/shared receipt. Native layout/tensor widths come from actual adapter, not formulas/defaults. H04 reached through physical layer/public MoE entry; actual BF16 estimator→H04→ExecutionTime2PASS including live-local0 positive count/duration/no shuffle; collective leaf isexplicit CPU fixture, not native.
+- observed: runtime focused34PASS31.18s; expanded57PASS3SKIP/1FAIL83.47s. The sole failure is old command'sminimal fixture missingnew routing field; balanced default preserved, correction+producer3PASS45.65s. New wrapper rejection ofscalar/load/seed overrides remainsstrict.
+- in-progress: fresh position generatoropt-in/schema plussame runnerpolicy/ledger/plan proof checks. First full generator hitauxiliary120s timeout before CSVcompletion; originalCLI2400s unchanged. Repeated fixture contract resolutions hoisted once; full1124decodecontexts preserved. Second generationcommand600sbackground; noCPU-overheadcampaign.
+- completed local dependency use: verified empty COREsubmodule checkout, createdisolateddetachedworktree3dac53cfrom existingPRICINGrepository without changingit; parentgitlinkd28fe917remainsunstaged/root-owned. Noreset/deletion/push.
+- unresolved: rootmustcoordinateexistingregistry'sselected-bindingretention/lookupandexistingcollectivebackend/configexplicitCPUplan-costentry. ProductionfiniteimportcorrectlyrejectsCPUevidence; nofixture valuesrelabelnative, nosecondbackend/registry. PRICINGF4stable-runtimegroupingrepairpendingbutindependentCOREitemscontinue.
+- verified latest: runtime-final02 58PASS/3SKIP; attention actual constructor source2PASS; router/timer/oracle/norm20PASS; source+gathered wrapper with exact PRICING feature function AST-isolated3PASS. Test_report_2026-10-23_runtime_points.md retains all prior failures and hypotheses. 44/44 changed paths,3239/4404 gross,1165 remain; every per-file allowance/AST/whitespace passes. F4a/F4b bfe6f2ae is root-authorized for development, acceptance pending, no CORE payload migration.
+
 - completed: preserved wrapper f7c02c7 then authorized8e61c2d merge dc538ac. Canonical native_context retains actual point layout/padding/provenance; native_binding retains invariant selector/source/layout columns/dtype. Automatic position_moe_operator_facts enumerates actual groups/selected specs before old helpers. Both trainers retain source/input/native point receipts on paired models; missing source EP/count fields persist JSON null rather than NaN. Expert schema runs only for non-EP-agnostic scopes. Source descriptor/model keys are compared to the count registry/source association/typed width. Fresh two-method CSV -> actual shared+independent cold/warm fits PASS; damaged source/context rejected. Final83PASS/4SKIP; test_report_2026-10-23_canonical_consumers.md. Three old executor doubles lacked canonical fields; existing test forwarding seam updated only, production strict admission unchanged.
 - precise root interfaces pending: registry must retain/query multiple native measurement bindings for same name/precision/typed identity (FP32 gate under FP8/BF16 currently overwritten). H04 requires source-bound native point context and retained phase-specific collective context with actual execution_policy/buffers. Production predict_collective_plan intentionally rejects CPU evidence; existing-backend explicit CPU path needed for no-patch actual-main. No second registry/guessed policy/native relabeling.27b3499 import authorized after verified commit, not final acceptance.
 
@@ -45,39 +54,39 @@
 | --- | --- | --- |
 | count/source/tensor/verifier interfaces | PASS | test_report_2026-10-23_interfaces.md; interface_receipt.md |
 | scheduler/runtime/cache | PASS | actual bound DP sources and constructor/cache consumer tests |
-| selected trainer/profiling consumers | TODO | selected bound-fact slice111PASS; production serialization/schema enumeration still pending |
-| source package/producers | TODO | independent launcher/gate/norm/timer tested; position MoE main and full new package remain peer-dependent |
-| actual-main fixture/runner | BLOCKED | completed selected native/schema/finite-plan consumers required |
+| selected trainer/profiling consumers | TODO | automatic producer→both cold/warm trainers83PASS; actual layer H04 slice34PASS; registry retention unowned |
+| source package/producers | TODO | authentic published-source package passed; source/gathered wrapper and exact tensor plan facts integrated; affected regression pending |
+| actual-main fixture/runner | BLOCKED | full fresh generator in progress; unowned CPU plan backend/config entry missing |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进；前次D2纠正已应用，相关历史保留。
-**检测窗口：** e255ede checkpoint 至今｜**当前前沿：** verified executor/schema/model lookup commit; independent wrapper; PRICING import and root registry seam
+**检测窗口：** 41bbf035 checkpoint 至今｜**当前前沿：** runtime H04 point binder, fresh fixture/runner, root registry/backend coordination
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | P2 exact regression and actual published-source checks settle required acceptance, no extra campaign |
-| D2 细节反复重试 | CLEAR | P2 hypothesis preceded refreshed test-only seal; one decisive RED then GREEN; quota excess corrected before commit |
+| D2 细节反复重试 | CLEAR | estimator fixture failures narrowed declared routing then actual PW gathered32; each hypothesis preceded rerun and production remained strict |
 | D3 支线问题修补 | CLEAR | no unrelated fixes |
 | D4 可并行任务停滞 | CLEAR | runtime and independent source work both advanced; user prohibits extra agents |
-| D5 超范围镀金 | CLEAR | 40 owned paths,2514/4404 gross; exact per-file ceilings pass |
+| D5 超范围镀金 | CLEAR | latest3193/4404 before fixture follow-ups; exact per-file ceilings pass; no registry/backend outside ownership |
 | D6 分析空转 | CLEAR | real source/timer/launcher changes and tests delivered; remaining dependency named precisely |
 | D7 路线违背 | CLEAR | only authorized peer history imports; no platform/source fallback |
 
-**文档检查：** S5 plan.md continuation曾把canonical CSV拼写列为外部设计依赖；已更新为CORE implementation。S2 model registry collision为现有验收真实阻塞但unowned；plan/interface receipt已纳入root coordination，未扩展ownership。其他S项CLEAR。
+**文档检查：** S5 plan.md earlier route still awaited delivered PRICING APIs; latest route now records8e61c2d/27b3499 and corrected F4 boundary. S2 unowned registry/CPU backend blocker is explicitly assigned to root coordination, not bypassed. S1/S3/S4/S6 CLEAR within delegated resource limits; GPU qualification deliberately root-owned.
 **归因：** 无。
 
 ## 3. 纠正建议
 
-**分支：** B：先更新过时依赖和unowned registry boundary，已直接更新plan/interface receipt；任何新增文件ownership仍需root批准。
+**分支：** B：更新plan.md的latest route和interface receipt的delivered/pending seams（可直接执行，已执行）；ownership/acceptance不变。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. Commit verified executor/schema/model lookup slice → 完成标志：three actual executors preservecell set，real precision lookup passes；native-schemaSKIP明示。
-2. Resume independent wrapper API wiring; import PRICING only after authorization → 完成标志：source-local prepare/gating and gathered inclusive expert useactual widths/IDs，one CSV；no legacy shuffle/native fallback。
-3. Finish new fixture/main → 完成标志：retained6144/1024,D26/D27/D30,offline+online actual-main checks within original2400s limit; root separately qualifies native/image/E2E.
+1. Verify and commit runtime H04 source/point/policy passthrough → 完成标志：real estimator→ExecutionTime positive empty pairs, no shuffle; no affine grouping or guessed runtime policies。
+2. Finish fresh generator/runneropt-in → 完成标志：full position sources/cache, old fixtures unchanged,6144/1024/D26/D27/D30 and2400s retained; report actual CLI failure if dependency persists。
+3. Root resolves unowned registry/backend seams, then CORE continues affected fixture checks → 完成标志：both bindings survive registry, explicit CPU costs remain CPU; no alternate API or runtime admission claim。
 
 ## 4. 最值得关注的 3 点
 
-1. Selected preflight/shared+independent fit/cache/exact pairs and three executors pass; production context enumeration remains incomplete.
-2. Root-authorized PRICING tip import and reproduced unowned registry seam are exact prerequisites;1890gross lines remain. No parallel registry/alias workaround。
-3. Root supplied actual published-source evidence; native GPU/runtime/E2E remains UNVERIFIED and root-owned.
+1. Actual auto selected producers/preflight/shared+independent cold/warm now PASS; H04 real estimator composition is partial CPU evidence。
+2. Registry retains onlyname/typed/precision; CPU actual-main has no existing plan-cost CLIentry. Both paths areunowned root dependencies, not missing PRICING definitions。
+3. Full per-cell measured policy/branch/buffer/counts are passed through; corrected frozen-runtime affine fit identity remainsPRICING-owned and not finalized here。

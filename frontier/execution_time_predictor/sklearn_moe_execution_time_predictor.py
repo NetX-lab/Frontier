@@ -209,6 +209,35 @@ class SklearnMoEExecutionTimePredictor(
             return self._predict_step5_ffn_operator(model_name, features)
         return super()._get_on_demand_prediction(model_name, features)
 
+    def _predict_step5_position_execution(self, batch, lane, *, layer_id, include_attention, include_stage_owned, pipeline_stage):
+        """Price one source owner and one gathered expert cell with retained measured facts."""
+        context,features,plans = self._step5_position_queries(lane)
+        operators,communication = self._predict_step5_position_operator_times(lane,context=context,
+            operator_features=features,collective_plans=plans)
+        local = lane.routing_source.source_lanes[lane.ep_id//self._replica_config.attn_tensor_parallel_size]
+        names = ["post_attention_layernorm","step5_ffn_merge"]
+        if self._model_config.supports_share_expert(): names += ["share_expert_up_proj","share_expert_act","share_expert_down_proj"]
+        times = {name:self._get_prediction_for_features(name,{"num_tokens":local.physical_rows}) for name in names}
+        operators = MoEOperatorTimes({**operators.op_times,**times},physical_frame={**operators.physical_frame,
+            "operator_costs":{**operators.physical_frame["operator_costs"],**self._step5_ffn_costs}})
+        attention = self._predict_attention_layer_time(batch,layer_id,self._cluster_type) if include_attention else AttentionTime()
+        comm = dict(communication.op_times)
+        if include_attention:
+            comm["attn_tensor_parallel_allreduce"] = self._predict_comm_operator(get_comm_operator("attn_tensor_parallel_allreduce"),batch)
+        overhead = {name:getattr(self,"_get_"+name)(batch,pipeline_stage) for name in (
+            "schedule_time","sampler_e2e_time","prepare_inputs_e2e_time","process_model_outputs_time",
+            "ray_comm_time","forward_launch_time","forward_drain_time")} if include_stage_owned else {}
+        return ExecutionTime(num_layers_per_pipeline_stage=1,is_moe=True,
+            attention_rope_execution_time=0.,attention_kv_cache_save_execution_time=0.,attention_decode_execution_time=0.,
+            attention_prefill_execution_time=0.,attention_layer_pre_proj_execution_time=0.,attention_layer_post_proj_execution_time=0.,
+            attn_norm_time=0.,mlp_norm_time=times["post_attention_layernorm"],add_time=0.,
+            tensor_parallel_communication_time=0.,pipeline_parallel_communication_time=0.,expert_parallel_communication_time=0.,
+            moe_gating_time=0.,moe_shuffling_time=0.,**({name:0. for name in ("schedule_time","sampler_e2e_time",
+                "prepare_inputs_e2e_time","process_model_outputs_time","ray_comm_time")} if not include_stage_owned else {}),
+            attention_operator_times=attention.operator_times,moe_operator_times=operators,
+            communication_operator_times=CommunicationOperatorTimes(comm,plans=communication.plans,costs=communication.costs),
+            **overhead)
+
     def _predict_dsv4_dummy_source_execution(
         self, batch: Batch, layer_id: int, tp_rank: int, **source_context,
     ) -> dict:
@@ -715,6 +744,9 @@ class SklearnMoEExecutionTimePredictor(
             lane_workload=lane_workload,
             include_moe=include_moe,
         )
+        if include_ffn and include_moe and lane_workload is not None and lane_workload.routing_source is not None:
+            return self._predict_step5_position_execution(batch,lane_workload,layer_id=layer_id,
+                include_attention=include_attention,include_stage_owned=include_stage_owned,pipeline_stage=pipeline_stage)
 
         attention_time = (
             self._predict_attention_layer_time_with_query_cache(
@@ -1098,7 +1130,7 @@ class SklearnMoEExecutionTimePredictor(
             result = self._predict_moe_layer_time(
                 batch_or_group, layer_id, cluster_type, lane_workload, ep_size, router_topk,
             )
-            if metadata is not None:
+            if metadata is not None and not result.operator_times.physical_frame:
                 merge = self._get_prediction_for_features("step5_ffn_merge", {
                     "num_tokens": batch_or_group.get_effective_total_tokens_rounded(self._cluster_type),
                 })
@@ -1154,6 +1186,9 @@ class SklearnMoEExecutionTimePredictor(
             lane_workload=lane_workload,
             conservation_context="predict_moe_layer_time",
         ) or lane_workload
+        if lane_workload is not None and lane_workload.routing_source is not None:
+            return self._predict_step5_position_execution(batch_or_group,lane_workload,layer_id=layer_id,
+                include_attention=False,include_stage_owned=False,pipeline_stage=0).moe_or_mlp_time_component
 
         if self._enable_dummy_mode:
             base_time = self._dummy_execution_time

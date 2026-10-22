@@ -124,6 +124,51 @@ def _normalize_routing_details_for_trace(
 class MoeRoutingWorkload:
     """Expert-load distribution and per-lane routed workload."""
 
+    def _step5_position_queries(self, lane):
+        """Recover actual point facts and complete measured plans, never numerical defaults."""
+        from frontier.profiling.moe.inputs import MoESourceFrame
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectiveTensor
+        from pathlib import Path
+        source = lane.routing_source
+        model,_ = self._step5_ffn_model("moe_grouped_gemm")
+        frames = tuple(MoESourceFrame(s.lane_id,tuple(i.length for i in s.intervals),
+            tuple(i.start for i in s.intervals),s.physical_rows,s.gating_runtime_context) for s in source.source_lanes)
+        contexts = {}
+        for row in model._frontier_moe_physical_rows:
+            if row["moe_ep_rank"] != lane.ep_id or row["total_routed_tokens"] != lane.routed_token_count: continue
+            value = json.loads(row["routing_input"])
+            if tuple(MoESourceFrame(**frame) for frame in value["source_frames"]) == frames:
+                contexts[row["native_context"]] = json.loads(row["native_context"])
+        if len(contexts) != 1: raise ValueError("Position expert query lacks a unique actual source/native point receipt")
+        context = next(iter(contexts.values()))
+        features = self._build_grouped_gemm_features(lane,native_context=context)
+        local = source.source_lanes[lane.ep_id//self._replica_config.attn_tensor_parallel_size]
+        from frontier.operators.families import get_moe_profiling_operators
+        queries = {op.name:dict(num_tokens=local.physical_rows,live_routing_token_count=local.live_rows)
+                   if op.ep_agnostic else features for op in get_moe_profiling_operators(context)}
+        artifact = json.loads((Path(self._cc_backend._config.profiling_data_dir)/self._replica_config.device/"collective_local.json").read_text())
+        plans = {}
+        phases = {"step5_moe_dispatch":"dispatch","step5_moe_combine":"combine",
+            "moe_tensor_parallel_allreduce":"routed_tp"}
+        if self._model_config.supports_share_expert(): phases["share_expert_tensor_parallel_allreduce"] = "shared_tp"
+        mode = "full" if local.graph_mode == "FULL" else "none"
+        for name,phase in phases.items():
+            matches = {}
+            tensors = context["collective_tensors"]["dispatch" if phase == "dispatch" else "output"]
+            for key,receipt in artifact["counts"].items():
+                value = json.loads(key)
+                if (value["phase"] != phase or tuple(value["sizes"]) != tuple(s.physical_rows for s in source.source_lanes)
+                        or value["graph_mode"] != mode or value["tensors"] != tensors): continue
+                measured = receipt["context"]
+                if measured["shared"] != context["native_facts"]["shared"] or not measured.get("execution_policy"): continue
+                plan = CollectivePlan(phase,tuple(value["sizes"]),tuple(CollectiveTensor(**t) for t in tensors),
+                    tuple(tuple(g) for g in value["groups"]),mode,value["context_json"],value["buffer_json"])
+                if json.loads(plan.context_json) != measured or plan.cache_key() != key: raise ValueError("Measured collective context/count key mismatch")
+                matches[key] = plan
+            if len(matches) != 1: raise ValueError("Position collective lacks unique measured policy/layout/buffer coverage")
+            plans[name] = next(iter(matches.values()))
+        return context,queries,plans
+
     def _emit_routing_details_snapshot(
         self,
         cluster_type: ClusterType,

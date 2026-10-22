@@ -960,6 +960,13 @@ class MoEWrapper:
             expert_map=expert_map, source_tensors=(activations[selected], scales[selected]))
         context.update(model_architecture_profile=self.model_config.get_model_architecture_profile().profile_id,
                        routing_runtime_path=self.routing_runtime_path)
+        def tensor(name,value):
+            return dict(name=name,dtype=str(value.dtype).removeprefix("torch."),
+                element_size=value.element_size(),columns=value.shape[1],row_stride=value.stride(0))
+        context["collective_tensors"] = dict(dispatch=[tensor("activation",activations[selected]),
+            tensor("weights",weights[selected]),tensor("ids",ids[selected]),
+            *([] if scales[selected] is None else [tensor("scales",scales[selected])])],
+            output=[tensor("output",hidden[selected])])
         operators = [spec for spec in get_moe_profiling_operators(context)
                      if spec.ep_agnostic == (cell.moe_frame_scope == "source_local")]
         if cell.moe_frame_scope == "source_local":
@@ -1011,6 +1018,7 @@ class MoEWrapper:
         num_tokens: int | None = None,
         load_distribution: str = "uniform",
         seed: Optional[int] = None,
+        *,
         routing_cell=None,
     ):
         """
@@ -1028,8 +1036,8 @@ class MoEWrapper:
             dict with combined timing statistics and parameters
         """
         if self.routing_runtime_path == "position_cyclic":
-            if routing_cell is None:
-                raise ValueError("Position profiling requires one explicit physical routing cell")
+            if routing_cell is None or num_tokens is not None or load_distribution != "uniform" or seed is not None:
+                raise ValueError("Position profiling requires only one explicit physical routing cell")
             return self._profile_position_cell(routing_cell)
         if routing_cell is not None:
             raise ValueError("Legacy MoE profiling cannot consume a position cell")

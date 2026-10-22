@@ -6,6 +6,7 @@
 | 2026-10-23 | Publish first canonical count, source tensor and provenance interfaces. |
 | 2026-10-23 | Add scheduler/native adapter/timer interfaces and exact remaining peer prerequisites. |
 | 2026-10-23 | Publish selected-bound consumer plumbing and update authentic source/import prerequisites. |
+| 2026-10-23 | Add runtime source/point plan passthrough and exact actual-main unowned boundaries. |
 | 2026-10-23 | Publish canonical rows and real automatic two-trainer integration. |
 
 TaskID: D29-CORE-SOURCE-IMPLEMENTATION. These interfaces are CPU/source plumbing, not native/GPU qualification.
@@ -56,6 +57,10 @@ H04 contributor spec (PRICING-owned): source-local gate/router/reached prepare/s
 ## Root-owned size-note delta (do not edit concurrently)
 
 Latest superseding delivery: PRICING8e61c2d imported dc538ac; wrapper f7c02c7 consumes actual H17 prepare/context/inclusive API. `native_context` canonical JSON carries point layout/padding/provenance; `native_binding` is `moe_native_binding_context(context)`, retaining selector/source and tensor columns/dtype/size, excluding point rows/workspaces. `position_moe_operator_facts(frame,replica)` is the automatic enumerator for both trainers/main, verifying all actual groups/dimensions. `moe_physical_row_receipts(frame)` retains routing_input,context,source/EP IDs,scope,physical/live assignments on duration/count models. Count/source revalidation precedes fits. Two-method actual cold/warm shared+independent fits PASS. Earlier absent CSV/schema/import statements are historical and superseded.
+
+Latest runtime slice: `_step5_position_queries(lane)` returns `(context, operator_features, collective_plans)` using actual retained source/EP/native physical row and the existing `collective_local.json` counts. It requires a unique matching point and reconstructs `CollectivePlan` from exact stored key/tensor/group/context/buffer facts; plan key andreceipt context must agree, measured policyandshared native source must exist. Full per-cell execution_policy/branch/buffer observations are passedthrough, NOT grouped asaffinefit identity; PRICING's stable frozen-runtime repair remains separate. Actualadapter writes `collective_tensors` frompreparedsourceactivation/scales/weights/ids/outputdtype/stride. H04 receivesone sourceownerwidthniandgatheredM; localpositiveempty duration/count remainsrequired.
+
+Root coordination stillrequired: existing `prediction_model_registry.py`/`prediction_model_identity.py` mustretain andselect multiplemeasurednativebindingspername/typedidentity/precision; COREcannotedit them. Existingcollectivebackend/configmustexposeexplicitCPUfixtureplan-costconsumptionforfreshactual-mainwhileproductionfiniteimportremainsnative-only. There iscurrentlynoCLIfieldorbackendseamto consumetheauthorized`cpu_fixture CollectivePlanCost`; COREwillnotaddanunallocatedAPI/parallelbackendorlabelCPUasnative. Freshfixture/runneropt-in preservesolddefaultbalancedandoriginal2400s,6144/1024,D26/D27/D30; completionremainsblockeduntilthatseamisroot-integrated.
 
 Root seam unresolved: existing registry needs selected measurement-binding retention/query, not another registry. Runtime needs typed identity plus native binding/source group; FP32 gate remains separately queryable under FP8/BF16. Runtime context must match retained point inputs, never infer layout/padding from dtype. F4 requires plan context to carry measured per-rank execution_policy/shared source/buffer receipts. Production rejects CPU evidence intentionally; actual-main needs an explicit root-coordinated CPU-evidence path in existing backend. CORE continues only owned binder/fixture paths, no peer edits.
 
