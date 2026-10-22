@@ -6,6 +6,8 @@
 | --- | --- |
 | 2026-10-22 | Recorded the delegated diagnosis-only scope. |
 | 2026-10-22 | Added authorized D23-MRV2-CONTRACT-REUSE implementation follow-up. |
+| 2026-10-22 | Added diagnostics-only D23-ACTUAL06-WALL follow-up. |
+| 2026-10-22 | Added authorized D23-MODEL-IDENTITY-REUSE correction. |
 
 ## Original Request
 
@@ -36,3 +38,21 @@
 [Original Request] Parent baseline `/data/ycfeng/tmp/d23_parent_red01/receipt.json`: source74980bb,64 queries0.532956s,loading1.468s,RED/source PASS. Do not modify committed diagnostic scripts to make the gate green. Run unchanged fast command with source truth and enabled trace, relevant measured/FFN/public-stage/root/forward tests, source-sensitive call counts, and report wall/proof deltas without claiming1024 completion.
 
 [Original Request] Own the small existing Step cost/binding module, minimal sklearn_moe wiring, meaningful tests, existing module-size exception and these records. No parent files, further delegation, GPU/platform/native, fixture/cache mutation, full CLI retry/timeout increase, initializer optimizations, broader cache redesign, fake output, arbitrary factor/fallback/default or extra mode flag. Parent owns review/reverification/integration/fullCLI/strict77.
+
+## Diagnostics-only follow-up: D23-ACTUAL06-WALL
+
+[Original Request] Both actual06 runs at7e8bea3 timed out2400s: initialization337.94/339.51s,357/362 emitted, warm q1 median5.165/5.069s,min4.25/4.20s,first tail62/65s. Parent owns phase census/terminal receipt. Existing runtime and union reuse changes are accepted; do not repeat or modify them.
+
+[Original Request] Inspect clean worktree then merge7e8bea3. Own only diagnostic scripts under tests/performance and existing perf task records. No further delegation,GPU/platform,external/fullCLI retry,timeout increase,flag disabling,production source/cost/schema/coverage changes,fixture/cache mutation or edits to parent/immutable fidelity worktrees.
+
+[Original Request] FIRST build/run deterministic seconds-scale RED-capable COMPLETE public stage/forward/iteration command; retain actual P/D topology92 layers,EP16 lanes,metadata/dummy state,current family selections,enabled metrics/ledger/trace and exact source features/costs/proofs. Skip large unrelated initialization only through explicit diagnostic setup with trusted caches copied to scratch if APIs may write. Separate coldP/tail/collective from warmq1. Each command <=60s; keep memory inspections small/streamed.
+
+[Original Request] After initial RED report, rank3–5 falsifiable hypotheses and instrument whole path with cProfile one variable at a time. Separate predictor attention/FFN,scheduler/event,ledger/trace,backend and repeated parse/validation. Budget derives transparently from actual06 setup+2400 bound/1024; old0.968ms maximum-lookup heuristic is not iteration completion. Return exact commands,stage times/callcounts/pstats,artifact/model/source equality,coverage limits,hypotheses and smallest supported-lifetime source proposal. Diagnostics-only first; parent makes source decision and owns final6144/1024 acceptance.
+
+## Authorized correction: D23-MODEL-IDENTITY-REUSE
+
+[Original Request] Implement only narrow estimator-bound canonical identity/evidence-kind parsing reuse at the existing registry attach/load boundary. No selection/numeric/output cache, new flag, semantic/calibration repair or speculative optimization. Selected estimator marker remains authoritative: mutation reparses/rejects; registry replacement uses replacement identity. Keep paired markers, dynamic feature/bounds/coverage/count checks and full proof/event/lane population.
+
+[Original Request] Before production change add real attachment-to-public-query RED regression for repeated parse elimination and marker mutation/model replacement/malformed/conflicting behavior. Run unchanged original full public iteration with budget2.0122s, separate audit; compare frozen parent event bytes, stage JSON, lane digest and all sourcecost/proof. Parent baseline9.451313/9.549744s,1168events,5632lanes,12224CC hits/0miss; `d23_parent_actual06_wall01` and `d23_parent_actual06_audit01` immutable. Trusted snapshot/cache/fixture remain unchanged; document any restored-state cache initialization requirement. Commit source/tests separately from records, provide independent review diff. Parent owns merge/fullCLI/native/strict77; no delegation/GPU/external/fullCLI retry.
+
+[Original Request] Scope steering: calibration order workflow→GPU/opgap→CPU overhead last. This fixed-identity Python-wall correction is minimum request-execution enablement, not native CPU-gap modeling. Finish only already-measured correction and necessary affected verification; no broad hotspot projects, CPU-overhead fitting/sampling, extra op-trace campaign or large suites. Explicit balanced routing for simulator/native belongs to parent/P-target stream; do not alter routing in this branch.
