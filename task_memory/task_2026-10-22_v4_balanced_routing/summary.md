@@ -8,6 +8,7 @@
 | 2026-10-22 | Added root integration budget conflict and complete22/843 planning estimate. |
 | 2026-10-22 | Native-final continuation: approved23/900, B253 lines,130CPU PASS; local reallocation/integration/runtime remain pending. |
 | 2026-10-23 | Native R1: B253 permitted, two source/DP admission P2s RED, no code edits; smallest current complete proposal aggregate937. |
+| 2026-10-23 | Approved23/950 R1 source/CPU fixes complete,133PASS andB312; final builder/timeout/package proof root-owned. |
 
 Task ID: W128-V4-BALANCED-NATIVE-BINDING.
 Branch: feat/v4-balanced-binding; worktree: `/data/ycfeng/Frontier/.worktrees/v4-balanced-binding`.
@@ -53,3 +54,9 @@ No package was created, frozen, sealed or submitted. Actual native FP8/backend/g
 Task W128-V4-BALANCED-NATIVE-R1 steers W128-V4-BALANCED-INTEGRATION-NEGATIVES. Root permitsB253, but two targeted RED controls demonstrate that current R3's complete-input admission is not source/DP complete: preloaded B774/A775 schema changes the verdict for identical declared A harness, and rehashed replica_config_attn_dp2->1 accepts nativeDP2. Source still65743ea; neither P2 repaired, no new GREEN or package/runtime admission.
 
 An isolated actual A186dfef reconstruction yielded exactly P16+D16/TP8DP2EP16PP1/balanced_topk, with77 actual Frontier module byte/origin checks against that commit. This proves the existing substrate is usable, not that R3 is fixed. The smallest current complete production+existing-test proposal is net46 cumulative routing lines; reserved metadata/timeouts/runner17 plus actual874 gives937 (B303). Root scope decision is required before source edits. Optional C10-line regression was previewed but not applied. All old packages/native/C26/frozen R2 remain unchanged.
+
+## Approved R1 completed source step
+
+YC approved23 maintained files/950 routing lines. Two existing source files (R3 and reader test) now implement immutable declared harness/source schema binding in a fresh isolated interpreter and actual reconstructed P/D DP validation. The actual775-field root input passes from ambient A775/B774 with identical77-source/observed-role receipts; DP1/source-byte/actual-origin/missing-or-mutable-revision negatives reject. Archive SHA3808af195b09e32074922b2f068e4b670ba1a8ed80fe916a2527967ab3997223 unchanged. Persistent real-input regressions are red against65743ea and green on current source; final affected133CPU checks PASS in50.34s. FrozenR2 hash and provenance/inputs/replay/workers/lifecycle/terminal AST unchanged; old native05 remains UNVERIFIED.
+
+Actual B312 routing lines in the same six maintained files; this step R3+52/-6,test+20/-7=85 incremental changed lines, net59 cumulative versus253. Root timeout4 projectsB316, total432+202+316=950. Original builder baseline SHA21b5a723... unchanged. Root must replace its validation call with `checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)` before building, then do reserved timeout binding/common merge/review/freeze/package/runtime checks. Replacement of this routing-added line adds no cumulative scope. No builder edit/build, GPU, native/C26/strategy/R2/old-package change or further delegation occurred. Details/receipts in test_report_2026-10-23_native_r1_scope.md and evidence/native_r1_{red,green,scope}.json.

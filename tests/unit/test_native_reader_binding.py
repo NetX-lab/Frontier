@@ -493,17 +493,19 @@ def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypa
         checker.verify_balanced_runtime(inventory, env, engine, config, manifest)
 
 
-@pytest.mark.parametrize('fault', [None, 'missing_hash', 'mismatch', 'selector', 'model', 'role', 'format'])
-def test_balanced_real_frontier_input_binding(tmp_path, fault):
+@pytest.mark.parametrize('fault', [None, 'missing_hash', 'mismatch', 'selector', 'model', 'role', 'format', 'dp', 'ambient', 'source_bytes'])
+def test_balanced_real_frontier_input_binding(tmp_path, monkeypatch, fault):
     checker = load(REPO / 'task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py')
     path = tmp_path / 'case/inputs/frontier.json'
     path.parent.mkdir(parents=True)
     shutil.copyfile(R2.parent.parent / 'task_2026-10-22_v4_balanced_routing/balanced_frontier_input/frontier.json', path)
-    config = dict(script=str(tmp_path / 'worker.py'), gpu_type='H800', retained_files={'case/inputs/frontier.json': digest(path)},
+    config = dict(script=str(tmp_path / 'worker.py'), gpu_type='H800',
+        harness_worktree='/data/ycfeng/Frontier/.worktrees/v4-balanced-callers',
+        retained_files={'case/inputs/frontier.json': digest(path)},
         tool_hashes={str(path): digest(path)})
     engine = dict(model_name='deepseek-ai/DeepSeek-V4-Flash', tensor_parallel_size=8, data_parallel_size=2,
         pipeline_parallel_size=1, moe_gating_routing_runtime_path='balanced_topk')
-    manifest = dict(inputs_sha256={str(path): digest(path)})
+    manifest = dict(inputs_sha256={str(path): digest(path)}, harness_worktree=config['harness_worktree'], harness_commit='186dfef5503ecb5329bd0fa96f9e978cc813276a')
     if fault in ('selector', 'model', 'role', 'format'):
         flat = json.loads(path.read_text())
         key = {'selector': 'replica_config_moe_gating_routing_runtime_path', 'model': 'replica_config_model_name',
@@ -511,12 +513,23 @@ def test_balanced_real_frontier_input_binding(tmp_path, fault):
         flat.pop(key)
         write(path, flat)
         config['retained_files']['case/inputs/frontier.json'] = config['tool_hashes'][str(path)] = manifest['inputs_sha256'][str(path)] = digest(path)
+    elif fault == 'dp':
+        flat = json.loads(path.read_text())
+        flat['replica_config_attn_dp'] = 1
+        write(path, flat)
+        config['retained_files']['case/inputs/frontier.json'] = config['tool_hashes'][str(path)] = manifest['inputs_sha256'][str(path)] = digest(path)
+    elif fault == 'ambient':
+        monkeypatch.setitem(sys.modules, 'frontier.config', None)
+        monkeypatch.setitem(sys.modules, 'frontier.config.flat_dataclass', None)
+    elif fault == 'source_bytes':
+        manifest['harness_commit'] = '9d4467552d8a9bc701b2ef699d6c529cd5f46514'
     elif fault:
         manifest['inputs_sha256'][str(path)] = '0' * 64
         if fault == 'missing_hash':
             manifest['inputs_sha256'].clear()
-    if fault:
-        with pytest.raises((KeyError, ValueError)):
+    if fault not in (None, 'ambient'):
+        with pytest.raises((KeyError, ValueError), match='Actual imported Frontier source differs' if fault == 'source_bytes' else None):
             checker.verify_balanced_frontier(config, engine, manifest)
     else:
-        checker.verify_balanced_frontier(config, engine, manifest)
+        receipt = checker.verify_balanced_frontier(config, engine, manifest)
+        assert receipt['sources']['frontier/config/config.py']['origin'] == config['harness_worktree'] + '/frontier/config/config.py'

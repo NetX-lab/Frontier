@@ -7,6 +7,7 @@
 | 2026-10-22 | W128 established native ownership and deferred generation boundaries. |
 | 2026-10-22 | Applied approved23/900 with B6/250 allocation; native source/CPU completion is separate from package/GPU acceptance. |
 | 2026-10-23 | Applied B253 permission and two P2 repair investigation; paused full46-line net proposal pending root scope decision. |
+| 2026-10-23 | Applied approved23/950; completed R1 isolated pinned reconstruction and133CPU checks at B312, root timeout4 pending. |
 
 Task ID: `W128-V4-BALANCED-NATIVE-FINAL`, continuing `W128-V4-BALANCED-NATIVE-BINDING` at ca1ca86.
 
@@ -28,3 +29,9 @@ Root now permits B253; the earlier250 overrun remains historical. Actual aggrega
 Dependency graph: RED ambient-schema + rehashed-DP reproduction -> complete pinned-harness/reconstruction proposal and count -> root aggregate scope decision -> R3 implementation/existing targeted negatives -> source-origin/role/R2 GREEN -> root combined review/freeze/package/runtime gates. No source edit before the scope decision; do not compress/delete identity controls to fit9 lines.
 
 Current smallest readable complete proposal: existing R3 factory imports/complete schema check move to isolated Python at manifest.harness_worktree, actual imported Frontier sources bind to manifest.harness_commit bytes, real reconstruction materializes exactly P/D and compares effective replicas, top-level DP is explicit. Existing reader fixture gains DP/ambient negatives and recorded harness/commit. R3 net35 + tests net11 =46 cumulative routing lines; B253+46+4=303, aggregate874+46+17=937. Complete proposed diff and the source-count basis are evidence, not an authorized implementation.
+
+## Approved R1 completion and remaining root route
+
+The prior scope blocker is resolved by YC23/950, root A432/B316/C202. Actual B implementation owns the same six files and312 cumulative routing changed lines before four reserved root timeout lines, projecting316/950 exactly. Current step edits only R3 and tests; maintained builder unchanged. Full pinned immutable revision check, actual77-source receipt, warning-safe structured return and observed-role receipt increased actual repair net59 beyond the earlier46 estimate but remain within B312.
+
+Completed route: actual-input RED -> isolated declared revision/source-byte reconstruction -> persistent real-input DP/ambient/source-byte negatives ->133 affected reader/observer/R2 checks PASS. Root-owned next route: merge accepted A/C/B -> replace builder validation call with `checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)` using its already recorded clean immutable snapshot (replacement of a routing-added line does not increase cumulative routing) and bind timeout4 -> common fixed review/role/package proof -> freeze/build/seal -> authorized actual runtime evidence. No package creation here; default complete verifier now rejects calls lacking declared revision instead of deriving HEAD.

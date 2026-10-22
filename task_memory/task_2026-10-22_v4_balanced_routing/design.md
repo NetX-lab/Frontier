@@ -9,6 +9,7 @@
 | 2026-10-22 | Updated actual capacity128/row-identity findings and complete22-file/843-line planning estimate. |
 | 2026-10-22 | Superseded estimate with approved23/900, actual shared12/~428 basis and B final source/CPU binding. |
 | 2026-10-23 | Native R1 P2s invalidate complete input-source/DP admission; retained isolated-harness/reconstruction proposal requires net46 lines. |
+| 2026-10-23 | Approved R1 implemented with observed-role/77-source receipt and immutable revision at B312; builder invocation root-owned. |
 
 Analysis status: PASS (source question resolved). Correction state: approved under D-V4-BALANCED-RUNTIME-SELECTOR. Native/kernel/four-metric qualification: UNVERIFIED.
 
@@ -126,3 +127,11 @@ Reconstruction writes a config archive in its native post-init. The one-off subs
 The ordinary complete proposal adds41/deletes6 R3 lines relative65743ea, and adds21/deletes10 existing test lines. Aggregate source accounting remains from9d44675: R3 routing70->105, tests99->110, net46. Existing R2 provenance predicates supply clean source checks; this proposal adds actual imported source-byte binding, strict full-schema check, reconstructed effective roles and a real top-levelDP condition. Targeted tests reuse the existing full-input fixture and add rehashedDP/ambient-preload controls plus existing manifest.harness_worktree/commit context.
 
 Exact current planning basis: A432+B253+C189=874; reserved C12 generation+C1 runner+B4 timeout=17; repair46 yields937, still23 maintained files, B303 vs266. Root must choose at least37 aggregate extra lines or legitimate reductions elsewhere before implementation. The optional10-line C consumer persisted regression was never applied and is not in these counts. No new helper/schema/source files, package generation or native/C26 edits are proposed.
+
+## R1 accepted implementation boundary
+
+Historical estimate/blocked status above is superseded by YC23/950. Actual implementation uses six B maintained files/312 routing lines before root timeout4. Expected/source labels are not receipts: reconstruction validates actual role attributes and emits those observed attributes, plus actual imported module origins and recorded-revision byte hashes. Full commit object ID is required; manifest supplies harness root/revision in the formal checker, explicit config supplies them in standalone pre-build verification. No ambient schema import and no selected-current-HEAD substitute exists in the verifier.
+
+Existing stdout warnings precede final JSON; verifier consumes the child final structured line and converts failed child stderr to ValueError with original rejection text. Actual architecture guards run. Only archive-output observer is suppressed to preserve original bytes; constructors/role builder are not replaced. Returned77-source receipt is retained locally for CPU checks, not a new runtime receipt/schema requiring worker GPU work.
+
+Fresh-generation builder must pass its existing verified clean `commit` through a temporary validation config: `checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)`. This preserves the existing config/retained/tool hashes and uses the immutable snapshot already written to source_lock. It replaces an existing routing-added line with no net cumulative routing increase. Root owns this and the four reserved timeout replacement lines. Current builder intentionally cannot validate without a declared revision; no package was generated. Final effective role proof on the merged harness and actual native source/FP8/backend/runtime proof remain root gates.

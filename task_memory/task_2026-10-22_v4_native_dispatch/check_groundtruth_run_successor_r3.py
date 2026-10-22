@@ -34,14 +34,9 @@ def verify_balanced_frontier(config, engine, manifest=None):
             or (manifest is not None and manifest['inputs_sha256'][str(path)] != digest)):
         raise ValueError('Actual Frontier input is not hash-bound to the native execution')
     flat = json.loads(path.read_text())
-    from dataclasses import fields
-    from frontier.config import SimulationConfig
-    from frontier.config.flat_dataclass import create_flat_dataclass
-    if set(flat) != {field.name for field in fields(create_flat_dataclass(SimulationConfig))}:
-        raise ValueError('Actual Frontier input is not the complete flat SimulationConfig format')
     required = dict(sys_arch='pd-disaggregation', simulation_mode='online', enable_parallel_clusters=False,
         replica_config_model_name=engine['model_name'], replica_config_moe_routing_distribution_type='balanced',
-        replica_config_moe_gating_routing_runtime_path='balanced_topk')
+        replica_config_moe_gating_routing_runtime_path='balanced_topk', replica_config_attn_dp=engine['data_parallel_size'])
     for role in ('prefill', 'decode'):
         required['cluster_config_' + role + '_cluster_num_replicas'] = 1
         required.update({'cluster_config_' + role + '_replica_config_' + key: value for key, value in
@@ -50,6 +45,57 @@ def verify_balanced_frontier(config, engine, manifest=None):
                 num_pipeline_stages=engine['pipeline_parallel_size']).items()})
     if any(key not in flat or type(flat[key]) is not type(value) or flat[key] != value for key, value in required.items()):
         raise ValueError('Actual Frontier P/D/model/routing configuration differs from the native case')
+    harness = (manifest if manifest is not None else config)['harness_worktree']
+    revision = (manifest if manifest is not None else config)['harness_commit']
+    if revision != git(harness, 'rev-parse', '--verify', revision + '^{commit}'):
+        raise ValueError('Frontier schema requires the declared immutable full harness revision')
+    code = """import hashlib, json, pathlib, subprocess, sys
+from dataclasses import fields
+from unittest.mock import patch
+sys.path.insert(0, sys.argv[1])
+from frontier.config import SimulationConfig
+from frontier.config.flat_dataclass import create_flat_dataclass
+from frontier.types import ClusterType
+flat = json.loads(pathlib.Path(sys.argv[2]).read_text())
+factory = create_flat_dataclass(SimulationConfig)
+if set(flat) != {field.name for field in fields(factory)}:
+    raise ValueError('Actual Frontier input is not the complete flat SimulationConfig format')
+with patch.object(SimulationConfig, 'write_config_to_file', return_value=None):
+    resolved = factory(**flat).reconstruct_original_dataclass()
+roles = resolved.cluster_config.get_cluster_configs_for_disaggregation()
+if set(roles) != {ClusterType.PREFILL, ClusterType.DECODE}:
+    raise ValueError('Actual Frontier input does not materialize exactly the native P/D roles')
+required, observed = json.loads(sys.argv[4]), {}
+for role in ('prefill', 'decode'):
+    cluster = roles[ClusterType[role.upper()]]
+    prefix = 'cluster_config_' + role + '_replica_config_'
+    expected = {name[len(prefix):]: value for name, value in required.items() if name.startswith(prefix)}
+    expected.update({name.removeprefix('replica_config_'): value for name, value in required.items()
+                     if name.startswith('replica_config_')})
+    world = expected['attn_tensor_parallel_size'] * expected['attn_dp'] * expected['num_pipeline_stages']
+    if (cluster.num_replicas != required['cluster_config_' + role + '_cluster_num_replicas']
+            or cluster.replica_config.world_size != world
+            or any(type(getattr(cluster.replica_config, name)) is not type(value)
+                or getattr(cluster.replica_config, name) != value for name, value in expected.items())):
+        raise ValueError('Effective Frontier P/D replica differs from the native case')
+    observed[role] = {name: getattr(cluster.replica_config, name) for name in expected} | {'world_size': cluster.replica_config.world_size}
+sources = {}
+for name, module in tuple(sys.modules.items()):
+    if name.startswith('frontier.') and getattr(module, '__file__', None):
+        path = pathlib.Path(module.__file__).resolve()
+        relative = path.relative_to(pathlib.Path(sys.argv[1]).resolve())
+        pinned = subprocess.run(['git', '-C', sys.argv[1], 'show', f'{sys.argv[3]}:{relative}'],
+                                check=True, capture_output=True).stdout
+        if path.read_bytes() != pinned:
+            raise ValueError(f'Actual imported Frontier source differs from its recorded harness commit: {path}')
+        sources[str(relative)] = dict(origin=str(path), sha256=hashlib.sha256(pinned).hexdigest())
+print(json.dumps(dict(harness_commit=sys.argv[3], roles=observed, sources=sources)))
+"""
+    read = subprocess.run([sys.executable, '-I', '-B', '-c', code, harness, str(path), revision, json.dumps(required)],
+                          cwd=harness, capture_output=True, text=True)
+    if read.returncode:
+        raise ValueError('Pinned Frontier reconstruction rejected: ' + read.stderr.strip())
+    return json.loads(read.stdout.splitlines()[-1])
 
 
 def verify_balanced_runtime(inventory, env, engine, config, manifest):

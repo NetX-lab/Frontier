@@ -9,6 +9,7 @@
 | 2026-10-22 | W128 recorded root's combined-budget integration finding and required complete binding estimate. |
 | 2026-10-22 | Recorded approved23/900 aggregate scope and B6/250 allocation; native-final controls awaiting local reallocation. |
 | 2026-10-23 | Recorded root reallocation permitting B253 and steering to two native P2 repairs; production edits paused pending complete-scope decision. |
+| 2026-10-23 | Applied YC23/950 approval and A432/B316/C202 allocation; B312 source/CPU repair complete, root retains timeout4 and final package gates. |
 
 ## [Original Request]
 
@@ -59,3 +60,9 @@ Root permits the retained B253 within approved23/900: actual A432+B253+C189=874.
 Root steered to native Spec review's two P2 findings before that optional regression: (1) ambient frontier.config/flat_dataclass schema imports change acceptance depending on preloaded worktree and must use actual pinned harness origins/source; (2) replica_config_attn_dp is unchecked and a rehashed DP2->DP1 complete input passes. Verify actual DP and effective P/D materialization through existing reconstruction; preserve complete flat format, all existing hashes, frozen R2 predicates, native05 UNVERIFIED and source/package boundaries.
 
 Root reserves12 C generation metadata+4 B timeouts+1 C runner check, leaving9 total new cumulative routing lines for B repair/tests without legitimate compensating reduction. B's maximum is266 including the4 reserved timeout lines. Only existing B files are permitted, no new helpers/schema/native edits. Propose exact minimal complete net diff before exceeding that maximum; otherwise stop source edits and return evidence/scope for one root decision. CPU only, no builder execution/package/GPU/platform/Docker/delegation. Root owns merged checks/package/freeze.
+
+## [Original Request] D-V4-BALANCED-SCOPE-23-950 / R1 implementation
+
+Root question: “boss YC，是否批准将 routing 总上限从23文件/900行调整为23文件/950行？native 两处P2已用真实输入复现；最小完整修复预计使总量达到937行，比原上限多37行，用于固定schema来源、校验实际DP及对应反例。prefill已通过修复复审并独立推进；GPU预算保持不变。” YC answer: “批准；类似问题不用再询问，自己决策即可”. Root records in primary requirements/plan are authoritative.
+
+Current approved aggregate23 maintained files/950 routing changed lines; A432+C202+B316. B312 before root's four timeout selections. Root may decide similar small in-scope corrective accounting adjustments; B still reports exact allocation counts. Resume65743ea and retain b41bcd8 evidence; only existing R3 and tests change in this implementation. Direct verifier must select declared immutable harness revision, isolated from ambient A775/B774, bind loaded sources/origins to that revision, reconstruct actual complete775-field input, materialize P/D and validate real TP/DP/EP/PP/world/model/routing including attn_dp. Preserve archive bytes, original R2 predicates/hashes, native/C26/strategy/old packages. Accepted A186dfef may be declared without merging C; no build/freeze/seal/GPU/platform/SSH/cloud/Docker/CPU-overhead/delegation. Root owns final builder timeout4, common merge/review, package/run. Deliver RED/GREEN receipts and exact cumulative source count.

@@ -1,0 +1,102 @@
+diff --git a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+index 4037053..adc844e 100644
+--- a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
++++ b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+@@ -37,5 +36,0 @@ def verify_balanced_frontier(config, engine, manifest=None):
+-    from dataclasses import fields
+-    from frontier.config import SimulationConfig
+-    from frontier.config.flat_dataclass import create_flat_dataclass
+-    if set(flat) != {field.name for field in fields(create_flat_dataclass(SimulationConfig))}:
+-        raise ValueError('Actual Frontier input is not the complete flat SimulationConfig format')
+@@ -44 +39 @@ def verify_balanced_frontier(config, engine, manifest=None):
+-        replica_config_moe_gating_routing_runtime_path='balanced_topk')
++        replica_config_moe_gating_routing_runtime_path='balanced_topk', replica_config_attn_dp=engine['data_parallel_size'])
+@@ -52,0 +48,51 @@ def verify_balanced_frontier(config, engine, manifest=None):
++    harness = (manifest if manifest is not None else config)['harness_worktree']
++    revision = (manifest if manifest is not None else config)['harness_commit']
++    if revision != git(harness, 'rev-parse', '--verify', revision + '^{commit}'):
++        raise ValueError('Frontier schema requires the declared immutable full harness revision')
++    code = """import hashlib, json, pathlib, subprocess, sys
++from dataclasses import fields
++from unittest.mock import patch
++sys.path.insert(0, sys.argv[1])
++from frontier.config import SimulationConfig
++from frontier.config.flat_dataclass import create_flat_dataclass
++from frontier.types import ClusterType
++flat = json.loads(pathlib.Path(sys.argv[2]).read_text())
++factory = create_flat_dataclass(SimulationConfig)
++if set(flat) != {field.name for field in fields(factory)}:
++    raise ValueError('Actual Frontier input is not the complete flat SimulationConfig format')
++with patch.object(SimulationConfig, 'write_config_to_file', return_value=None):
++    resolved = factory(**flat).reconstruct_original_dataclass()
++roles = resolved.cluster_config.get_cluster_configs_for_disaggregation()
++if set(roles) != {ClusterType.PREFILL, ClusterType.DECODE}:
++    raise ValueError('Actual Frontier input does not materialize exactly the native P/D roles')
++required, observed = json.loads(sys.argv[4]), {}
++for role in ('prefill', 'decode'):
++    cluster = roles[ClusterType[role.upper()]]
++    prefix = 'cluster_config_' + role + '_replica_config_'
++    expected = {name[len(prefix):]: value for name, value in required.items() if name.startswith(prefix)}
++    expected.update({name.removeprefix('replica_config_'): value for name, value in required.items()
++                     if name.startswith('replica_config_')})
++    world = expected['attn_tensor_parallel_size'] * expected['attn_dp'] * expected['num_pipeline_stages']
++    if (cluster.num_replicas != required['cluster_config_' + role + '_cluster_num_replicas']
++            or cluster.replica_config.world_size != world
++            or any(type(getattr(cluster.replica_config, name)) is not type(value)
++                or getattr(cluster.replica_config, name) != value for name, value in expected.items())):
++        raise ValueError('Effective Frontier P/D replica differs from the native case')
++    observed[role] = {name: getattr(cluster.replica_config, name) for name in expected} | {'world_size': cluster.replica_config.world_size}
++sources = {}
++for name, module in tuple(sys.modules.items()):
++    if name.startswith('frontier.') and getattr(module, '__file__', None):
++        path = pathlib.Path(module.__file__).resolve()
++        relative = path.relative_to(pathlib.Path(sys.argv[1]).resolve())
++        pinned = subprocess.run(['git', '-C', sys.argv[1], 'show', f'{sys.argv[3]}:{relative}'],
++                                check=True, capture_output=True).stdout
++        if path.read_bytes() != pinned:
++            raise ValueError(f'Actual imported Frontier source differs from its recorded harness commit: {path}')
++        sources[str(relative)] = dict(origin=str(path), sha256=hashlib.sha256(pinned).hexdigest())
++print(json.dumps(dict(harness_commit=sys.argv[3], roles=observed, sources=sources)))
++"""
++    read = subprocess.run([sys.executable, '-I', '-B', '-c', code, harness, str(path), revision, json.dumps(required)],
++                          cwd=harness, capture_output=True, text=True)
++    if read.returncode:
++        raise ValueError('Pinned Frontier reconstruction rejected: ' + read.stderr.strip())
++    return json.loads(read.stdout.splitlines()[-1])
+diff --git a/tests/unit/test_native_reader_binding.py b/tests/unit/test_native_reader_binding.py
+index fc2f5d1..357ce42 100644
+--- a/tests/unit/test_native_reader_binding.py
++++ b/tests/unit/test_native_reader_binding.py
+@@ -496,2 +496,2 @@ def test_balanced_strategy_actual_import_and_missing_identity(tmp_path, monkeypa
+-@pytest.mark.parametrize('fault', [None, 'missing_hash', 'mismatch', 'selector', 'model', 'role', 'format'])
+-def test_balanced_real_frontier_input_binding(tmp_path, fault):
++@pytest.mark.parametrize('fault', [None, 'missing_hash', 'mismatch', 'selector', 'model', 'role', 'format', 'dp', 'ambient', 'source_bytes'])
++def test_balanced_real_frontier_input_binding(tmp_path, monkeypatch, fault):
+@@ -502 +502,3 @@ def test_balanced_real_frontier_input_binding(tmp_path, fault):
+-    config = dict(script=str(tmp_path / 'worker.py'), gpu_type='H800', retained_files={'case/inputs/frontier.json': digest(path)},
++    config = dict(script=str(tmp_path / 'worker.py'), gpu_type='H800',
++        harness_worktree='/data/ycfeng/Frontier/.worktrees/v4-balanced-callers',
++        retained_files={'case/inputs/frontier.json': digest(path)},
+@@ -506 +508 @@ def test_balanced_real_frontier_input_binding(tmp_path, fault):
+-    manifest = dict(inputs_sha256={str(path): digest(path)})
++    manifest = dict(inputs_sha256={str(path): digest(path)}, harness_worktree=config['harness_worktree'], harness_commit='186dfef5503ecb5329bd0fa96f9e978cc813276a')
+@@ -513,0 +516,10 @@ def test_balanced_real_frontier_input_binding(tmp_path, fault):
++    elif fault == 'dp':
++        flat = json.loads(path.read_text())
++        flat['replica_config_attn_dp'] = 1
++        write(path, flat)
++        config['retained_files']['case/inputs/frontier.json'] = config['tool_hashes'][str(path)] = manifest['inputs_sha256'][str(path)] = digest(path)
++    elif fault == 'ambient':
++        monkeypatch.setitem(sys.modules, 'frontier.config', None)
++        monkeypatch.setitem(sys.modules, 'frontier.config.flat_dataclass', None)
++    elif fault == 'source_bytes':
++        manifest['harness_commit'] = '9d4467552d8a9bc701b2ef699d6c529cd5f46514'
+@@ -518,2 +530,2 @@ def test_balanced_real_frontier_input_binding(tmp_path, fault):
+-    if fault:
+-        with pytest.raises((KeyError, ValueError)):
++    if fault not in (None, 'ambient'):
++        with pytest.raises((KeyError, ValueError), match='Actual imported Frontier source differs' if fault == 'source_bytes' else None):
+@@ -522 +534,2 @@ def test_balanced_real_frontier_input_binding(tmp_path, fault):
+-        checker.verify_balanced_frontier(config, engine, manifest)
++        receipt = checker.verify_balanced_frontier(config, engine, manifest)
++        assert receipt['sources']['frontier/config/config.py']['origin'] == config['harness_worktree'] + '/frontier/config/config.py'
