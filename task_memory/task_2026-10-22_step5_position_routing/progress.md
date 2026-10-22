@@ -80,6 +80,10 @@
   gross ceiling and existing/new path declarations; receipt
   `/data/ycfeng/tmp/d29_core_budget_2966_parent01.json`. Narrow three-seam review
   is running. These are design checks, not implementation/native acceptance.
+- completed (design only): narrow three-seam reviewer closes all three findings
+  with no new delta. Parent updates stale source overlap annotations against
+  final core33: three shared core paths, S16 pricing-owned; source879 unchanged.
+  Finite pricing model and complete union remain open.
 - pending: settle required companions, combine corrected native design and
   user scope approval, implement, verify and collect fresh evidence.
 

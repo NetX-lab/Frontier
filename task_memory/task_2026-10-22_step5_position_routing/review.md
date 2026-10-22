@@ -210,3 +210,19 @@ does not establish zero GPU-local work, and primitive counts are not launches.
 The50-path/2782 known-interface subtotal is not a complete implementation budget;
 measured lookup remains unapproved. Assign a bounded model proposal and complete
 scope to the pricing author. This review is documentary, not runtime acceptance.
+
+## Core three-seam closure
+
+Reviewer `ses_e9e0793b2ffe5YWSjciM0uRzna`, task
+`D29-CORE-THREE-SEAM-DELTA`, closes all three findings with no new actionable
+delta: constructor registry resolution before parent initialization; selected
+binding facts before trainer/preflight legacy helpers; actual singleton timer
+switch/restore/clear and real annotation/parser/count checks. No common timer,
+tracer or singleton module change is required. Parent independently verifies
+33 paths/+2625/-341=2966. These are design conclusions, not implementation tests.
+
+Parent also updates source-table overlap annotations to the final core budget:
+S8+core is140/31; S12+core225/0; S14+core113/18. S16's22/1 provenance allowance
+is additive to pricing, not the retired core expert adapter. Source subtotal
+remains16/+835/-44=879, with three shared core paths. Complete union still
+awaits the finite pricing model.

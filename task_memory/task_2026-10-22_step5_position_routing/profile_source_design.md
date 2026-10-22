@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Parent reconciles overlap annotations with final core33/2966; S16 belongs to pricing, with source allowance unchanged. |
 | 2026-10-22 | Parent specifies the missing post-build receipt command (51 Python lines including its container payload); syntax checked without executing Docker. No maintained exporter change. |
 | 2026-10-22 | Close source-review P2: verify actual gate/norm/oracle and constructed callables from the generated full installed-source receipt; separate shared facts from import evidence, preserve omitted legacy fields, bind the real local config revision, and replace obsolete overlap arithmetic. |
 | 2026-10-22 | Trace the entire existing P0 profile package path and specify the missing derived-runtime/source propagation, immutable artifacts, reuse checks and gross implementation ceilings. Design only. |
@@ -524,24 +525,24 @@ listed here.
 | S5 | `frontier/profiling/common/runtime_identity.py` | 170 | 6 | ADDITIONAL: full generated receipt, actual module/bound-callable root/spec/source/hash checks; shared/evidence split; exact omission of legacy native_facts payload/columns/to_json. |
 | S6 | `frontier/profiling/step5/vllm_wrapper.py` | 25 | 4 | ADDITIONAL: actual same-process model/callable binding, authentic config-copy SHA and truthful attention signature/evidence. |
 | S7 | `frontier/profiling/linear_op/main.py` | 28 | 1 | ADDITIONAL: pre-timing binding plus final imported/lazy norm evidence collection through existing runtime identity attachment. |
-| S8 | `frontier/profiling/moe/main.py` | 25 | 1 | OVERLAP: provenance only, additive to current core +110/-30; merged +135/-31. No duplicate adapter implementation. |
+| S8 | `frontier/profiling/moe/main.py` | 25 | 1 | OVERLAP: provenance only, additive to current core +115/-30; core+source +140/-31, before any pricing hunks. No duplicate adapter implementation. |
 | S9 | `tests/integration/step5_profiling/verify_fixed_probe.py` | 60 | 5 | ADDITIONAL: exact source/adapter/image/artifact/config-revision/full-receipt subset checks; dispatch input verification to core dry-run, preserve legacy scalar branch. |
 | S10 | `tests/unit/test_step5_fixed_probe.py` | 155 | 0 | ADDITIONAL: existing launcher/stage/worker fixtures plus full-receipt, shared-versus-import maps, exact legacy omission/hash and local-config revision/copy checks. |
 | S11 | `tests/unit/test_step5_attention_profiling.py` | 30 | 0 | ADDITIONAL: same-version different-source identity, actual bound callable/signature/config-copy evidence. |
-| S12 | `tests/unit/test_step5_moe_profiling.py` | 50 | 0 | OVERLAP: additive provenance tests for gate/norm/FP8/BF16 oracle/kernel callable wrong-root/spec/hash/missing-receipt and monkeypatched method; current core +135/-0 becomes merged +185/-0. |
+| S12 | `tests/unit/test_step5_moe_profiling.py` | 50 | 0 | OVERLAP: additive provenance tests for gate/norm/FP8/BF16 oracle/kernel callable wrong-root/spec/hash/missing-receipt and monkeypatched method; current core +175/-0 becomes core+source +225/-0, before any pricing hunks. |
 | S13 | `tests/unit/test_step5_request_free_profiling.py` | 30 | 0 | ADDITIONAL: old P0 plan/files/defaults unchanged; new explicit plan/generation passes the existing role packaging path. |
 | S14 | `frontier/profiling/moe/moe_impl.py` | 18 | 0 | OVERLAP: after actual core-created gate/router construction, pass used constructor/class/bound forward/router callables to S5 and retain provenance outside timers. Core +95/-18 becomes merged +113/-18; factory/context/select_experts remain entirely core-owned. |
 | S15 | `frontier/profiling/common/layers/layernorm.py` | 20 | 1 | ADDITIONAL: lazy native factory/actual returned norm bound forward receipt check and instance evidence before _norm_timer; no native implementation or replay-time check. |
-| S16 | `frontier/profiling/moe/fp8_block_experts.py` | 22 | 1 | OVERLAP: actual config/oracle selection/conversion/construction function plus returned kernel/expert bound source verification and existing identity evidence. Core +20/-2 becomes merged +42/-3; no scope/backend change. |
+| S16 | `frontier/profiling/moe/fp8_block_experts.py` | 22 | 1 | OVERLAP WITH PRICING: actual config/oracle selection/conversion/construction function plus returned kernel/expert bound source verification and existing identity evidence. Core relinquished its old adapter allowance; add this provenance hunk to pricing-owned invocation/layout work. No source-owned scope/backend change. |
 
 Subtotal: **16 unique files, +835/-44 = 879 gross lines**. The corrected
 canonical13 rows S1–S13 total **+775/-42 = 817**; S14–S16 add **+60/-2 = 62**.
-The canonical13 now overlaps core only at S8/S12. The newly required S14/S16
-producer hunks also share current core paths, giving **four shared paths /
-12 additional unique files** overall. Source-owned hunks are additive to
-core-owned behavior hunks; no job.py allowance is subtracted. Current source
-amount to add to the revised core line total is **879 gross lines**, while
-unique paths must be unioned (12 additional to the inspected core).
+The canonical13 overlaps core only at S8/S12. S14 also shares a current core
+path; S16 now overlaps pricing, not core. There are **three shared core paths /
+13 additional unique files** relative to final core33. Source-owned hunks are
+additive to behavior hunks; no job.py allowance is subtracted. The source amount
+is still **879 gross lines**. Union S16 with its pricing owner once pricing is
+final; do not restore or double-count the retired core adapter allowance.
 
 Correction versus the first source-binding table: **+202/-4 = 206 additional
 gross lines**, comprising expanded S5/S6/S7/S8/S9/S10/S11/S12 and the62-line
@@ -566,10 +567,10 @@ Native19 scope is reused without any new file counted there:
 The old core32/native19/source10 combined estimate and10/662 increment are
 obsolete. The parent now owns the revised core/fixture/pricing union; this child
 does not inspect pricing architecture or publish a new combined total. Its
-input is this canonical **16-path/+835/-44 source table**, the four explicit
-current core overlaps and the unchanged native19 contribution. Any pricing
-path overlap is handled by parent using assigned hunk ownership, not assumed
-here. This source design contains no new semantic compute/collective proposal.
+input is this canonical **16-path/+835/-44 source table**, three current core
+overlaps, S16's pricing overlap and the unchanged native19 contribution. Further
+pricing path overlap is handled by parent using assigned hunk ownership. This
+source design contains no new semantic compute/collective proposal.
 
 Unchanged maintained files include original P0 JSONs, routed_layer_groups.py,
 profile shell examples, linear_op/step5_job.py, boundary_probe_job.py,

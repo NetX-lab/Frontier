@@ -76,3 +76,11 @@ deleted ceilings to341, giving2966 gross, matching the declaration. The receipt
 with every parsed row is `/data/ycfeng/tmp/d29_core_budget_2966_parent01.json`.
 This verifies planned arithmetic only; actual diffs, cross-owner union and
 implementation/native behavior remain unverified.
+
+Parent also parses native N/T/P and source S tables and unions them with the
+reviewed core table. Result:65 unique paths and5427 gross ceiling, with core/source
+overlap only in `moe_impl.py`, MoE `main.py` and `test_step5_moe_profiling.py`.
+Native contributes19/1582 upper ceiling; source contributes16/879. Receipt:
+`/data/ycfeng/tmp/d29_reviewed_scope_union_without_pricing01.json`, explicitly
+`PARTIAL_NOT_APPROVED`. Pricing and required size-exception documentation are
+excluded, so this cannot be presented as a complete implementation scope.
