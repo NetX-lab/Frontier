@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Recorded delegated approval, exact scope and immutable accepted-input bounds. |
+| 2026-10-23 | Root replaced the drifting approval line reference with its stable decision heading and retained the repository matrix gate. |
 
 Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base: `b62c155abd981a71e12e62aa0c0fe3990741d2f8`; worktree: `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract`.
 
@@ -12,7 +13,7 @@ Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base: `b62c155abd981a71e12e62aa0c0fe39
 
 [Original Request] Implement the bounded CPU-only isolated prefill contract/accepted-input consumption step. Own only `frontier/execution_time_predictor/deepseek_v4.py`, `tests/integration/check_dsv4_measured_scopes.py`, and one existing affected unit-test file (prefer `test_dsv4_graph_measured.py`). Initial total <=3 maintained files/200 added+deleted lines, <=150 core lines. Stop before any material seam or scope expansion. No further delegation.
 
-[Original Request / Approval Q&A] Primary `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md:1063-1069`, D-Q10-V4-GRAPH-MEASURED-AND-NIXL:
+[Original Request / Approval Q&A] Primary `task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/requirements.md`, section `[Decision] D-Q10-V4-GRAPH-MEASURED-AND-NIXL — 2026-10-21`:
 > 是否批准 V4 后续两项 Q10 修改？A：依据 native V2 证据，接入 graph padding 与实测计时读取，缺表或缺 scope/phase 证据仍报 typed error。B：扩展现有 NIXL 到 V4 grouped cache，先核实原生 SWA/state/compressed 分组页规则，复用已有分配和字节计算，保持 GLM 行为及完整 prompt 传输。两项先做 CPU 验证，不重启 CUPTI 调查、不改变四指标标准；H5、V4 准入和 profiling 继续并行。
 > YC：批准两项（推荐）。
 
@@ -27,6 +28,7 @@ The delegated step is approved unfinished measured-consumer implementation, not 
 - Preserve absent-selector legacy prefill, H200/DP4/EP32 checker defaults and 102-positive/72-negative behavior, decode provenance and unrelated exception types. No forced rejection of valid non-balanced legacy cases.
 - No producer/instrumentation, new schema/registry/shared config, hardcoded H800 production defaults, wrapper hierarchy, full non-dummy constructor admission, PD/graph admission, invented prices, CPU-overhead/gap study, GPU/platform/SSH/cloud/Docker/network action, full strict77 rerun before source/affected checks pass, or primary-worktree edits.
 - Commit verified scoped code and task records; return exact diff, tests, real-table comparisons, source hash and open qualifications to root for review.
+- Before final delivery, satisfy the existing repository `AGENTS.md:796-801` comprehensive-matrix gate (at least50 scenarios). Isolated94 scope comparisons are not a substitute. Run once after source and affected checks are fixed.
 
 ## Immutable inputs
 
