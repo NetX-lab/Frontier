@@ -38,8 +38,29 @@ Common baseline1aee0af. Disjoint worktrees and background sessions:
 | pricing44/3956 | step5-position-pricing | ses_e9b3e99a6ffe3r2973GDLkFpEm |
 
 Root supplies integration/review/image operations; no peer file writes or extra
-agents. Early interface commits precede dependent consumers. All three streams
-are active, with source/native qualification still pending.
+agents. Early interface commits precede dependent consumers. CORE/SOURCE and
+PRICING remain active. Native19 is delivered at2c4cc9e; root review
+ses_e9afdb7c4ffejb3hbkjZCeHFKS returns four concrete findings, now assigned to the
+original native session within1582. See review.md N1–N4. Root image/source
+qualification proceeds in parallel; source acceptance/publication remains open.
+
+Parent independently reproduces418 PASS/35.45s at2c4cc9e and verifies all19 paths,
+1017 gross lines, four native before/after hashes and exact sparse context02.
+Receipts/logs: `/data/ycfeng/tmp/d29_native_parent01{.log,.xml}` and
+`/data/ycfeng/tmp/d29_native_parent_source01.json`. First image build exits125
+because Buildx is absent. Ubuntu provides0.30.1; default APT proxy127.0.0.1:51015
+is unavailable, so the package download is retried directly from the configured
+company mirror. `check_progress_2026-10-23_native_delivery.md` identifies an
+unnecessary image-after-full-CPU edge; repair_plan.md now separates that branch.
+
+Buildx dependency resolved using the extracted Ubuntu0.30.1 package after
+per-command direct access to the company APT mirror; package SHA256 matches APT.
+Local build02 succeeds. Candidate image index10cdd7af… has platform manifest
+f037d958…; all2907 installed Python files equal the base plus exactly the4 approved
+changes, all40 base layers retained,47 total layers, image Config unchanged and
+installed derivation-manifest hash verified. In that actual image (Python3.12.3,
+Torch2.13.0+cu130), the installed-source CPU suite passes11/11. This supplies no
+CUDA/full-import/T2/native serving acceptance and is not a published image.
 
 Parent prerequisite check: Docker29.1.3 works; locked base digest is pulled under
 the exact mirror reference and all2907 installed Python files equal the frozen
