@@ -15,9 +15,9 @@
     },
     {
       "file": "frontier/profiling/attention/dsv4_attention_rows.py",
-      "added": 28,
+      "added": 29,
       "deleted": 0,
-      "sha256": "dc5317170a30ab00c78e0f06f6c82b52fd79e857859f117e3da61261a1ab5272"
+      "sha256": "1a14422f292c6b98e021c68be814d924b8c44f41e3335940b2ebeacb18a131e0"
     },
     {
       "file": "frontier/execution_time_predictor/deepseek_v4.py",
@@ -33,5 +33,9 @@
     }
   ],
   "total_files": 5,
-  "cumulative_routing_changed_lines": 189
+  "cumulative_routing_changed_lines": 190,
+  "r1_patch_added": 2,
+  "r1_patch_deleted": 1,
+  "root_reserved_builder_changed_lines": 12,
+  "projected_total_with_root_reservation": 202
 }

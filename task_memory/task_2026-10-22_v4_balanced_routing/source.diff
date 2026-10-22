@@ -39,7 +39,7 @@ index 2c9def9..c093af5 100644
      }
  
 diff --git a/frontier/profiling/attention/dsv4_attention_rows.py b/frontier/profiling/attention/dsv4_attention_rows.py
-index fb77ea9..6adcd23 100644
+index fb77ea9..35fed18 100644
 --- a/frontier/profiling/attention/dsv4_attention_rows.py
 +++ b/frontier/profiling/attention/dsv4_attention_rows.py
 @@ -21,6 +21,7 @@ from __future__ import annotations
@@ -50,7 +50,7 @@ index fb77ea9..6adcd23 100644
  from typing import Any, Iterable, Mapping, Sequence
  
  from frontier.config.precision_type import PrecisionType
-@@ -50,6 +51,29 @@ from frontier.profiling.attention.dsv4_attention_plan import (
+@@ -50,6 +51,30 @@ from frontier.profiling.attention.dsv4_attention_plan import (
  from frontier.profiling.common.runtime_identity import canonical_json
  
  DSV4_ROW_SCHEMA_VERSION = "dsv4_attention.v1"
@@ -66,7 +66,8 @@ index fb77ea9..6adcd23 100644
 +            or not identity.get("origin", "").endswith("/balanced_routing.py")
 +            or not identity.get("routers") or set(identity["routers"].values()) != {
 +                "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter"}
-+            or set(identity.get("runners", {})) != set(identity["routers"])
++            or identity.get("runners") != {
++                name: "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner" for name in identity["routers"]}
 +            or set(identity.get("native_sources", {})) != {name.replace(".", "/") + ".py" for name in ROUTING_NATIVE_MODULES}):
 +        raise ValueError("Missing or mismatched constructed balanced routing identity")
 +    for name, source in identity["native_sources"].items():
@@ -80,7 +81,7 @@ index fb77ea9..6adcd23 100644
  
  _ENGINE_COLUMNS = (
      "attention_backend",
-@@ -153,6 +177,7 @@ def _model_columns(plan: Dsv4ProfilePlan, engine: Mapping[str, Any]) -> dict[str
+@@ -153,6 +178,7 @@ def _model_columns(plan: Dsv4ProfilePlan, engine: Mapping[str, Any]) -> dict[str
          "max_model_len": plan.limits.max_context_len,
          "max_num_batched_tokens": engine["chunk_budget"],
          "max_num_seqs": plan.limits.max_num_seqs,
@@ -88,7 +89,7 @@ index fb77ea9..6adcd23 100644
      }
  
  
-@@ -188,6 +213,9 @@ def build_dsv4_rows(
+@@ -188,6 +214,9 @@ def build_dsv4_rows(
      """Group raw records into rows, keyed by measurement type."""
  
      engines, steps, calls = index_records(records)

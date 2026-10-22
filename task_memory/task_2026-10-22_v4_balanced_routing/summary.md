@@ -5,8 +5,11 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Archived committed source, effective scope, CPU evidence and remaining root qualification. |
+| 2026-10-23 | Added R1 exact runner-value correction, RED/GREEN and190-line net allocation. |
 
 ## Outcome
+
+R1 corrects the runner-value P2 with an exact expected mapping in `dsv4_attention_rows.py:66-67`. Both actual entry points reproduced RED before the change and GREEN afterwards; balanced and absent-selector legacy positives remain valid.23direct controls and22affected existing tests pass. Effective C baseline diff is now183added+7deleted=190lines; adding root's12reserved builder lines projects202. No builder/native/B/shared/runtime changes were made in R1. See `test_report_2026-10-23_runner_values.md` for the exact command and evidence.
 
 Balanced prefill wiring delivered in commit `ac21f88` on `v4-h800-prefill`, following approved shared `410f062` and baseline audit `a71fcd3`. Exactly five maintained files,182added+7deleted=189routing changed lines, within the200line allocation. No fresh package was built or sealed; no GPU/Docker/platform/SSH/cloud operation occurred.
 
@@ -28,3 +31,5 @@ The pre-edit ignored builder was9086bytes, SHA256 `3e2f462748490b4e53c88f506a1db
 ## Open root/native work
 
 Native owner persists integration cases in the exclusively owned existing test file. Root combines scope/review, selects h800_prefill_balanced and finalized source/job paths, runs strict77 and fresh package/image/source checks, then executes approved GPU qualification. Actual GPU assignment counts, selected native backend/kernel behavior, measured latency, full-serving parity and H800 admission are unverified. CPU fixtures establish only source wiring/rejection behavior; CPU-overhead studies remain deferred.
+
+Updated R1 root decision: finalize the builder with the native builder's current-clean-HEAD snapshot mechanism rather than embedding its own HEAD SHA. Select h800_prefill_balanced / PREFILL_WARM_6144_C0_BALANCED and matching tag/output/task identity. Earlier literal-source instructions are historical; builder remains unchanged here.

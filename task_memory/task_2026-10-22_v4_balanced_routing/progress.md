@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Recorded initial clean status, root approval, and builder baseline. |
 | 2026-10-22 | Completed five-file189-line source commit and CPU handoff; packages unbuilt. |
+| 2026-10-23 | Recorded R1 RED at both real entry points and the scoped runner-value correction. |
 
 - completed: inspected clean `v4-h800-prefill` at `9b8494c`; read local and root requirements/plan and native design61-105.
 - completed: captured builder pre-edit bytes in `builder_before_routing.txt`:9086bytes, SHA256 `3e2f462748490b4e53c88f506a1db0faf697a9223a462d9152cc1ca1d1de3471`.
@@ -26,3 +27,13 @@ Rationale before edits: current adapter only checks installed bytes, current inv
 Use source commit `ac21f88` together with baseline audit `a71fcd3` (ordinary branch merge preserves both). Do not interpret the unchanged141-line builder baseline adoption as routing additions; raw pre-edit bytes/hash and effective five-file diff are provided. The builder retains historical generation/source constants intentionally; root must select `h800_prefill_balanced` and finalized source identity before execution. Never execute the builder at its old9b8494c source identity: the existing committed-source guard prevents this.
 
 Unfinished root/native tasks: persistent integration negatives in native-owned test file; combined23/900 review/count; fresh generation/source selection; strict77; image/origin/native runtime qualification; GPU balanced counts/backend/timings and retained evidence. No CPU-overhead work is authorized in this phase.
+
+## R1 W128-V4-BALANCED-PREFILL-R1
+
+- completed: existing clean `v4-h800-prefill` at59d370d verified; prior requirements, plan, progress and actual receipt reused.
+- completed: RED CPU execution of actual `routing_columns` and real `read_isolated_scope` using existing measured/source fixtures. Same runner names with `builtins.object` class values accepted by both; rejection assertions failed. Balanced receipt/consumer and absent-selector legacy consumer returned expected0.125ms fixture timing. Root cause is the runner key-only comparison; no alternate diagnosis is needed for this deterministic source defect.
+- completed: replaced the key-only check with exact names+MoERunner class mapping at `dsv4_attention_rows.py:66-67`. Same-command GREEN rejected the bad receipt through actual `routing_columns` and `read_isolated_scope`; balanced and legacy positives preserved.
+- completed:23 direct controls PASS, including missing/extra/wrong runner mappings, existing env/router/native/hash/mixed controls, six rows per method, and no historical relabeling. Existing affected pytest subset22PASS,162deselected,2.23s. No persistent harness or test file added.
+- completed: R1 source patch2added/1deleted; five-file net baseline diff183added/7deleted=190lines versusa71fcd3. Adding root's12reserved builder lines projects202. Builder hash remains `c9a993833abd8ceb167bc2763adbd6f43ec2f7a6a52ada87c0848e4f47f9d11e`; no builder edit or build/seal/runtime operation.
+- pending: source/report commit and compact root handoff. This remains source-only evidence, not image/runtime admission.
+- decision: root will finalize the builder through a current-clean-HEAD snapshot mechanism, not a self-referential embedded HEAD literal. Prior builder-finalization notes are historical and superseded by the R1 request.

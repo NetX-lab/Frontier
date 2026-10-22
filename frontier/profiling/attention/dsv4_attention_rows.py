@@ -63,7 +63,8 @@ def routing_columns(identity):
             or not identity.get("origin", "").endswith("/balanced_routing.py")
             or not identity.get("routers") or set(identity["routers"].values()) != {
                 "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter"}
-            or set(identity.get("runners", {})) != set(identity["routers"])
+            or identity.get("runners") != {
+                name: "vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner" for name in identity["routers"]}
             or set(identity.get("native_sources", {})) != {name.replace(".", "/") + ".py" for name in ROUTING_NATIVE_MODULES}):
         raise ValueError("Missing or mismatched constructed balanced routing identity")
     for name, source in identity["native_sources"].items():

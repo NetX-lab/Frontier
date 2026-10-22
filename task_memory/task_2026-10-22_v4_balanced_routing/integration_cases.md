@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Delivered exact interfaces and source-backed controls for native-owned integration tests. |
+| 2026-10-23 | Added R1 exact runner-value negative and current-clean-HEAD builder handoff. |
 
 Task: W128-V4-BALANCED-PREFILL-FINAL. Native owner alone edits `tests/unit/test_native_reader_binding.py`; no test-only module is imported into production.
 
@@ -29,3 +30,9 @@ Task: W128-V4-BALANCED-PREFILL-FINAL. Native owner alone edits `tests/unit/test_
 ## Root-owned package completion
 
 Builder is amended but not executed. Root must set distinct `PACKAGE`, finalized `REVISION`, `NAME`, job tag/output path/task identity to the selected `h800_prefill_balanced` generation before running. Historical h800_prefill and h800_prefill_capacity128 remain unchanged and are not balanced. Preserve unchanged C26/native bootstrap/launcher bytes. Fresh image/source/import/model inventory and measured GPU routing/operator behavior remain unverified.
+
+## R1 runner-value negative and updated root decision
+
+Keep a valid observed receipt's router names unchanged but replace each runner class value with `builtins.object`. Before R1 both actual `routing_columns` and explicit-balanced `read_isolated_scope` accepted it. After R1 the former raises `ValueError` and the latter raises `DeepSeekV4CoverageError`, even when both CSV and supplied layout contain the same altered receipt. Exact MoERunner mapping and absent-selector legacy row remain positive. No native/B/shared test file was changed here.
+
+R1 source check is `dsv4_attention_rows.py:66-67`; existing consumer translation is `execution_time_predictor/deepseek_v4.py:659-661`. Root's updated decision supersedes the prior embedded-REVISION guidance: use the native builder's current-clean-HEAD snapshot mechanism, select `PACKAGE=h800_prefill_balanced` and `NAME=PREFILL_WARM_6144_C0_BALANCED`, and set matching tag/output/task/source identity. This R1 agent leaves the builder unchanged. Net C routing diff is190lines, projecting202with root's12reserved final builder lines.
