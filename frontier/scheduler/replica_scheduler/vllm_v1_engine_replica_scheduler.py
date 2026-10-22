@@ -23,6 +23,8 @@ from typing import Callable, Deque, Dict, List, Optional, Sequence, Tuple
 
 from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
 from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
+from frontier.attention.families import STEP5_ATTENTION_FAMILY
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.config import global_vars
 from frontier.entities.batch import Batch, DummyForwardBatch, KVCacheBlockZeroing, Request
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
@@ -54,9 +56,10 @@ from frontier.scheduler.replica_scheduler.vllm_v1_role_schedules import (
 from frontier.spec_decode import is_spec_decode_enabled, method_uses_lookahead_slots
 from frontier.types import ClusterType
 
-# vLLM's DPEngineCoreProc runs its DP finish-sync all-reduce after every 32nd
-# busy-loop iteration of a wave (`_has_global_unfinished_reqs`).
+# Legacy native contract retained for families without a newer pinned policy.
 VLLM_DP_SYNC_INTERVAL = 32
+# Step image config/parallel.py:162 and v1/engine/core.py:2405-2415.
+VLLM_NATIVE_DP_FINISH_SYNC = {STEP5_ATTENTION_FAMILY.family_id: (16, True)}
 
 
 class VLLMv1EngineReplicaScheduler(
@@ -158,10 +161,14 @@ class VLLMv1EngineReplicaScheduler(
         )
         self._dummy_pass_due = False
         self._dummy_forwards_in_flight = 0
-        # Such an engine counts the busy-loop iterations of its DP wave, each
-        # running one forward, a batch or a dummy forward. After every
-        # VLLM_DP_SYNC_INTERVAL-th, its host waits in an all-reduce over the DP
-        # group, which ends the wave once no engine has unfinished requests.
+        self._dp_sync_interval, self._dp_sync_first_step = (
+            VLLM_NATIVE_DP_FINISH_SYNC.get(
+                resolve_runtime_attention_family(self._replica_config.model_config).family_id,
+                (VLLM_DP_SYNC_INTERVAL, False),
+            ) if self._runs_dp_dummy_passes else (VLLM_DP_SYNC_INTERVAL, False)
+        )
+        # Count one batch or dummy forward per DP-wave iteration. The native
+        # family policy determines when the host waits for finish consensus.
         # A batch that ends during the wait keeps its output, and its queue
         # slot, until a later iteration pops it and applies the output.
         self._dp_wave_running = False
@@ -581,7 +588,10 @@ class VLLMv1EngineReplicaScheduler(
     def _end_iteration(self) -> bool:
         """Count one ended busy-loop iteration; return whether the host then waits at the DP sync."""
         self._dp_wave_steps += 1
-        if self._dp_wave_steps % VLLM_DP_SYNC_INTERVAL:
+        if not (
+            self._dp_sync_first_step and self._dp_wave_steps == 1
+            or self._dp_wave_steps % self._dp_sync_interval == 0
+        ):
             return False
         self._waits_at_dp_sync = True
         self._unfinished_at_dp_sync = self.has_unfinished_requests

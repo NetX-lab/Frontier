@@ -42,6 +42,7 @@ NATIVE_SOURCE_PATHS = (
     'vllm/v1/core/single_type_kv_cache_manager.py',
     'vllm/v1/core/block_pool.py',
     'vllm/v1/engine/core_client.py',
+    'vllm/v1/engine/core.py',
 )
 MODULES = {path[:-3].replace('/', '.') for path in NATIVE_SOURCE_PATHS}
 _installed = None
@@ -1169,6 +1170,44 @@ def instrument(module, observer):
     elif name == 'vllm.v1.engine.core_client':
         wrap(module.DPLBAsyncMPClient, 'get_core_engine_for_request', observer,
              before=observer.frontend_before, after=observer.frontend)
+    elif name == 'vllm.v1.engine.core':
+        zero_waves = weakref.WeakKeyDictionary()
+
+        def counter_fields(engine, arguments):
+            fields = {key: getattr(engine, key) for key in (
+                'dp_rank', 'current_wave', 'step_counter', 'dp_sync_interval',
+                'engines_running', 'pending_pause', 'ignore_start_dp_wave')}
+            for key in ('dp_rank', 'current_wave', 'step_counter', 'dp_sync_interval'):
+                if type(fields[key]) is not int:
+                    raise ValueError(f'Native DP counter is not an integer: {key}')
+            for key in ('engines_running', 'pending_pause', 'ignore_start_dp_wave'):
+                if type(fields[key]) is not bool:
+                    raise ValueError(f'Native DP state is not a bool: {key}')
+            return fields
+
+        def checked(engine, result, arguments, before):
+            fields = counter_fields(engine, arguments)
+            if type(result) is not bool or type(arguments['local_unfinished']) is not bool:
+                raise ValueError('Native finish-check input/return must be bool scalars')
+            observer.emit('native_dp_finish_check', **fields,
+                step_before=before['step_counter'], local_unfinished=arguments['local_unfinished'],
+                native_has_unfinished=result,
+                source_sync_boundary=(fields['step_counter'] == 1
+                                      or fields['step_counter'] % fields['dp_sync_interval'] == 0),
+                boundary='native_has_global_unfinished_reqs_return_no_observer_collective')
+
+        def counter_zero(engine, arguments):
+            fields = counter_fields(engine, arguments)
+            wave = fields['current_wave']
+            if (not fields['engines_running'] and fields['step_counter'] == 0
+                    and zero_waves.get(engine) != wave):
+                observer.emit('native_dp_wave_counter_zero', **fields,
+                    boundary='native_process_input_queue_entry_after_wave_reset_or_startup')
+                zero_waves[engine] = wave
+
+        wrap(module.DPEngineCoreProc, '_has_global_unfinished_reqs', observer,
+             before=counter_fields, after=checked)
+        wrap(module.DPEngineCoreProc, '_process_input_queue', observer, before=counter_zero)
     observer.emit('hook_installed', module=name, source_path=name.replace('.', '/')+'.py')
 
 

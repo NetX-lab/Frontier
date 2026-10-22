@@ -932,7 +932,8 @@ def test_instrumented_source_inventory_includes_both_runners_and_common_zeroer()
     assert {'vllm.v1.worker.gpu_model_runner', 'vllm.v1.worker.gpu.model_runner',
             'vllm.v1.worker.utils', 'vllm.v1.core.kv_cache_manager'} <= r2.MODULES
     assert 'vllm.v1.core.block_pool' in r2.MODULES
-    assert len(r2.NATIVE_SOURCE_PATHS) == 12
+    assert 'vllm.v1.engine.core' in r2.MODULES
+    assert len(r2.NATIVE_SOURCE_PATHS) == 13
 
 
 @pytest.mark.parametrize('role', ['prefill', 'decode'])
