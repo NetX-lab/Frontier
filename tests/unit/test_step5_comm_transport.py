@@ -230,13 +230,16 @@ def test_local_proxy_evidence_requires_every_rank_and_repeat(tmp_path,monkeypatc
 
 
 @pytest.mark.parametrize("defect",[None,"source","generation","count","duplicate_probe","extra_probe",
-                                  "op","group","cuda_graph","replay","runtime_policy","branch","missing_policy"])
+                                  "op","group","cuda_graph","replay","runtime_policy","branch","missing_policy",
+                                  "lazy_fallback","stale_fallback","buffers","frozen_environment"])
 def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tmp_path,monkeypatch,defect):
     from dataclasses import asdict
     from tests.unit.test_step5_fixed_probe import installed_profile_receipt
     from frontier.profiling.moe.inputs import MoESourceFrame,MoERoutingProfileInput
     manifest_path,_,manifest=installed_profile_receipt.__wrapped__(tmp_path,monkeypatch)
-    job,records=fixture_result(tmp_path,monkeypatch,"s2",["moe_combine_reduce_scatterv"])
+    lazy=defect in ("lazy_fallback","stale_fallback")
+    job,records=fixture_result(tmp_path,monkeypatch,"s2",[
+        "shared_expert_down_proj_all_reduce" if lazy else "moe_combine_reduce_scatterv"])
     binding=manifest["native_binding"]
     keys=("native_runtime_adapter","native_reference","profile_generation","installed_package",
           "model_config_revision","model_config_sha256","installed_source_hashes")
@@ -251,9 +254,16 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
         enabled_communicators={"dp":{"pynccl_comm":True}},vllm_environment={"VLLM_USE_NCCL_SYMM_MEM":{"value":False}},
         nccl_environment={},disable_custom_all_reduce=False,disable_nccl_for_dp_synchronization=True)
     policy=dict(runtime=runtime,branches=["pynccl_comm.reduce_scatterv"],buffers={"supplied_output":True})
+    startup=deepcopy(runtime)
+    if lazy:
+        policy=lazy_fallback_policy(monkeypatch,runtime)
+        startup["enabled_communicators"]=deepcopy(policy["runtime"]["enabled_communicators"])
+        startup["enabled_communicators"]["tp"]["fi_ar_comm"]=True
     for r in records: r.update(evidence_kind="native_measurement",native_context=dict(shared=shared,
         execution_policy={str(rank):deepcopy(policy) for rank in r["participating_ranks"]}))
     if defect == "runtime_policy": records[0]["native_context"]["execution_policy"]["0"]["runtime"]["pynccl_versions"]["dp"]=22800
+    if defect == "buffers": records[0]["native_context"]["execution_policy"]["0"]["buffers"]["supplied_output"]=False
+    if defect == "frozen_environment": records[0]["native_context"]["execution_policy"]["0"]["runtime"]["vllm_environment"]["VLLM_USE_NCCL_SYMM_MEM"]["value"]=True
     if defect == "branch": records[0]["native_context"]["execution_policy"]["0"]["branches"]=["_reduce_scatter_symm_mem"]
     if defect == "missing_policy": records[0]["native_context"].pop("execution_policy")
     if defect == "generation": records[0]["native_context"]["shared"]={**shared,"profile_generation":"different"}
@@ -261,7 +271,7 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
         records[0][defect]={"op":"reduce_scatterv","group":"tp","cuda_graph":not records[0]["cuda_graph"]}[defect]
     (tmp_path/"collectives/measurements.jsonl").write_text("".join(json.dumps(r)+"\n" for r in records))
     (tmp_path/"collectives/plan.json").write_text(json.dumps(dict(evidence_kind="native_measurement",
-        runtime=dict(native_facts=dict(shared=shared),per_rank_runtime={str(rank):runtime for rank in range(16)}))))
+        runtime=dict(native_facts=dict(shared=shared),per_rank_startup_runtime={str(rank):startup for rank in range(16)}))))
     (tmp_path/"collectives/native_identity.json").write_text('{"status":"PASS"}')
     for i in range(job["resources"]["replica"]):
         (tmp_path/f"node_{i}/native_binding.json").write_text('{"status":"PASS"}')
@@ -278,11 +288,55 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
         for layer in r["layers"]:
             layer.update(moe_input_id="tail16",source_frame=asdict(inp.source_frames[r["rank"]//8]),
                 native_facts=dict(shared=shared,callables={"cpu_fixture":"explicit_schema_test"}),
-                collectives=[dict(completed=True,op="reduce_scatterv_into_output",group_ranks=r["group_ranks"]["dp"],
+                collectives=[dict(completed=True,op="all_reduce" if lazy else "reduce_scatterv_into_output",
+                    group_ranks=r["group_ranks"]["tp" if lazy else "dp"],
                     execution_policy=deepcopy(policy),inputs=[dict(dtype="bfloat16",shape=[17,4096])])])
+    if defect == "stale_fallback":
+        for layer in probe["ranks"][0]["layers"]:
+            layer["collectives"][0]["execution_policy"]["runtime"]["enabled_communicators"]["tp"]["fi_ar_comm"]=True
     if defect == "source": probe["ranks"][0]["layers"][0]["source_frame"]["context_lens"]=[0]
     if defect == "duplicate_probe": probe["ranks"][0]["layers"][-1]=deepcopy(probe["ranks"][0]["layers"][0])
     if defect == "extra_probe": probe["ranks"][0]["layers"][0]["moe_input_id"]="extra"
     probe_path.write_text(json.dumps(probe))
     report=load("validate_result").validate(job,tmp_path)
-    assert report["status"] == ("PASS" if defect is None else "UNVERIFIED"),report
+    assert report["status"] == ("PASS" if defect in (None,"lazy_fallback") else "UNVERIFIED"),report
+
+
+def lazy_fallback_policy(monkeypatch,runtime):
+    """Execute published workspace failure and successful native PyNccl fallback."""
+    import ast,types
+    from frontier.profiling.collectives.step5_dispatch_probe import DispatchObserver
+    source=Path("/data/ycfeng/tmp/d29_published_sources01/source/vllm/distributed/device_communicators")
+    if not source.exists(): pytest.skip("Published native sources unavailable")
+    tensor=SimpleNamespace(shape=(16,4096),dtype="bfloat16",nbytes=131072,is_cuda=True,device="cpu",
+        stride=lambda:(4096,1),element_size=lambda:2,numel=lambda:65536,is_contiguous=lambda:True,data_ptr=lambda:1)
+    torch=SimpleNamespace(dtype=object,Tensor=object,bfloat16="bfloat16",float16="fp16",float32="fp32",
+        tensor=lambda *a,**kw:SimpleNamespace(element_size=lambda:2),distributed=SimpleNamespace(),
+        ops=SimpleNamespace(vllm=SimpleNamespace()))
+    namespace=dict(torch=torch,get_fi_ar_workspace=lambda **kw:None,should_nccl_symm_mem_allreduce=lambda *a:False)
+    for filename,methods in (("flashinfer_all_reduce.py",("_ensure_workspace","should_use_fi_ar")),
+                             ("cuda_communicator.py",("all_reduce",))):
+        tree=ast.parse((source/filename).read_text())
+        nodes=[n for cls in tree.body if isinstance(cls,ast.ClassDef) for n in cls.body
+               if isinstance(n,ast.FunctionDef) and n.name in methods]
+        exec(compile(ast.Module(body=nodes,type_ignores=[]),filename,"exec"),namespace)
+    fi=SimpleNamespace(disabled=False,max_num_tokens=0,max_workspace_size=1<<20,world_size=8,rank=0,group=None)
+    for name in ("_ensure_workspace","should_use_fi_ar"): setattr(fi,name,types.MethodType(namespace[name],fi))
+    comm=SimpleNamespace(fi_ar_comm=fi,pynccl_comm=SimpleNamespace(world_size=8,disabled=False,all_reduce=lambda t:t),
+        qr_comm=None,fi_pcie_ipc_ar_comm=None,aiter_ar_comm=None,use_aiter_allreduce=False,ca_comm=None,symm_mem_comm=None)
+    allocator=types.ModuleType("vllm.distributed.device_communicators.pynccl_allocator")
+    allocator.is_symmetric_memory_tensor=lambda t:False
+    monkeypatch.setitem(sys.modules,allocator.__name__,allocator);monkeypatch.setitem(sys.modules,"torch",torch)
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    class Coordinator:
+        ranks=list(range(8));device_communicator=comm
+        def all_reduce(self,input_): return namespace["all_reduce"](comm,input_)
+        all_gatherv=reduce_scatterv=reduce_scatterv_into_output=all_reduce
+    observer=DispatchObserver(lambda event:None)
+    observer.runtime_policy=lambda:{**runtime,"enabled_communicators":{"tp":{"fi_ar_comm":not fi.disabled,"pynccl_comm":True}}}
+    assert observer.runtime_policy()["enabled_communicators"]["tp"]["fi_ar_comm"]
+    with observer.collectives(Coordinator): result=Coordinator().all_reduce(tensor)
+    policy=observer.calls[0]["execution_policy"]
+    assert result is tensor and fi.disabled and policy["branches"] == ["pynccl_comm.all_reduce"]
+    assert not policy["runtime"]["enabled_communicators"]["tp"]["fi_ar_comm"] and not observer.errors
+    return policy

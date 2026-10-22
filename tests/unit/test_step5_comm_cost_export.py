@@ -216,7 +216,7 @@ def test_parent_selection_preserves_frozen_parameters_and_signed_evidence(tmp_pa
         EXPORT.qualify_finite_parameters(candidate,path,tmp_path/"stale_policy.json")
 
 
-@pytest.mark.parametrize("network_defect",[None,"partial","zero","nan","inf"])
+@pytest.mark.parametrize("network_defect",[None,"partial","zero","nan","inf","branch_switch","different_policy"])
 def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,monkeypatch,network_defect):
     submodule=Path(__file__).parents[2]/"frontier/cc_backend/backends/collective-sim"
     if not (submodule/"sim/datacenter/htsim_ndp").exists():
@@ -229,12 +229,15 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
     frozen=tmp_path/"frozen.json"
     frozen.write_text(json.dumps(dict(device_type="h800",scenario=asdict(scenario),collective_sim_root=str(submodule))))
     root=tmp_path/"run/collectives";root.mkdir(parents=True)
+    switches=network_defect in ("branch_switch","different_policy")
+    anchors=((16,"calibration"),(256,"calibration"),(8192,"calibration"),(64,"qualification")) if switches else (
+        (1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))
     config=dict(frozen_model_config=str(frozen),frozen_model_config_sha256=EXPORT.sha256(frozen),
-                grid=dict(scenario_splits={f"s{r}":split for r,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))}))
+                grid=dict(scenario_splits={f"s{r}":split for r,split in anchors}))
     source=dict(config=config,evidence_kind="cpu_fixture",runtime=dict(native_facts=dict(shared="cpu_fixture")))
     (root/"plan.json").write_text(json.dumps(source))
     records,kernels,local=[],[],[]
-    for rows,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification")):
+    for rows,split in anchors:
         name=f"s{rows}"
         local.append(dict(tensor_name="activation",dtype="bfloat16",columns=4,cuda_graph=False,kind="copy",
             name=name,rows=rows,row_stride=4,scope="independent_preallocated_operand",split=split,**{"pass":0},
@@ -252,10 +255,22 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
         records.append({**records[-1],"call":"shared_expert_down_proj_all_reduce","op":"all_reduce",
             "group_ranks":[list(range(8)),list(range(8,16))],
             "per_rank_call_us":[[14.+1.75*rows*8/200e9*1e6]*3 for _ in range(16)]})
+        if switches:
+            records[-1].update(columns=[4096],per_rank_call_us=[[14.+1.75*rows*4096*2/200e9*1e6]*3 for _ in range(16)])
+            records[-1]["native_context"]=dict(shared="cpu_fixture",execution_policy={"0":dict(
+                branches=["ca_comm.custom_all_reduce" if rows<256 else "pynccl_comm.all_reduce"],
+                buffers=dict(input_registered=[rows>=256],supplied_output=False),
+                runtime=dict(pynccl_versions={"tp":22902},vllm_environment={"VLLM_ALLREDUCE_USE_FLASHINFER":False}))})
+            if network_defect == "different_policy" and rows>=256:
+                records[-1]["native_context"]["execution_policy"]["0"]["runtime"]["pynccl_versions"]["tp"]=22800
         kernels.append({**kernels[-1],"call":records[-1]["call"]})
     for name,values in (("measurements",records),("kernels",kernels),("local_work",local)):
         (root/f"{name}.jsonl").write_text("".join(json.dumps(r)+"\n" for r in values))
-    if network_defect:
+    if network_defect == "different_policy":
+        with pytest.raises(ValueError,match="three"):
+            EXPORT.export_finite_parameters(root.parent,tmp_path/"candidate")
+        return
+    if network_defect and not switches:
         from collective_sim_core import runner
         payload=dict(expected_flows=8,finished_flows=8,makespan_us=1.)
         if network_defect == "partial": payload["finished_flows"]=7
@@ -276,7 +291,13 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
     tp=next(m["parameters"]["tp_nvlink"] for m in artifact["models"] if m["phase"] == "shared_tp")
     assert tp["fit"]["design_matrix_rank"] == 2 and tp["nvlink_efficiency"] > 0
     assert all(c["evidence_kind"] == "cpu_fixture" for c in artifact["counts"].values())
-    assert all(m["context"]["execution_policy"] == records[0]["native_context"]["execution_policy"] for m in artifact["models"])
+    if switches:
+        assert tp["fit"]["distinct_sizes"] == 3
+        raw=[p["source"] for c in tp["fit"]["raw_cells"] for p in c["raw_passes"]]
+        assert {s["tokens_per_dp_rank"][0] for s in raw if s["scenario"] != "s64"} == {16,256,8192}
+        assert {s["native_context"]["execution_policy"]["0"]["branches"][0] for s in raw} == {
+            "ca_comm.custom_all_reduce","pynccl_comm.all_reduce"}
+        assert all(c["context"] for c in artifact["counts"].values())
     config["frozen_model_config_sha256"]="changed";(root/"plan.json").write_text(json.dumps(source))
     with pytest.raises(ValueError,match="receipt"):
         EXPORT.export_finite_parameters(root.parent,tmp_path/"rejected")

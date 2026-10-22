@@ -777,7 +777,7 @@ def main() -> None:
     if runner.rank == 0:
         output.mkdir(parents=True, exist_ok=True)
         if actual_runtime is None: runtime=runner.communicators()
-        if actual_runtime is not None: runtime["per_rank_runtime"]={str(r):p for r,p in enumerate(actual_runtime)}
+        if actual_runtime is not None: runtime["per_rank_startup_runtime"]={str(r):p for r,p in enumerate(actual_runtime)}
         if native_facts is not None: runtime["native_facts"]=native_facts
         (output / "plan.json").write_text(json.dumps(
             {"config": config, "cases": len(plan), "runtime": runtime,

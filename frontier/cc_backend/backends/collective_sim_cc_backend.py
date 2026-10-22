@@ -800,7 +800,7 @@ class CollectiveSimCCBackend(BaseCCBackend):
 
     def predict_collective_plan(self, plan):
         """Price one qualified joint workload, never native full-duration lookup."""
-        from frontier.cc_backend.collective_plan import CollectivePlan, CollectivePlanCost
+        from frontier.cc_backend.collective_plan import CollectivePlan, CollectivePlanCost, collective_model_context
         if not isinstance(plan, CollectivePlan):
             raise TypeError("predict_collective_plan requires an immutable CollectivePlan")
         dims = self._validate_selected_parallel_dim_sizes(
@@ -831,7 +831,8 @@ class CollectiveSimCCBackend(BaseCCBackend):
         context = json.loads(plan.context_json)
         if not context.get("execution_policy"):
             raise ValueError("Step plan requires actual collective execution policy receipts")
-        matching = [r for r in artifact["models"] if r["context"] == context and
+        model_context=collective_model_context(context)
+        matching = [r for r in artifact["models"] if r["context"] == model_context and
                     r["phase"] == plan.phase and r["graph_mode"] == plan.graph_mode and
                     r["uniform"] == (plan.sizes[0] == plan.sizes[1]) and
                     r["tensors"] == [vars(t) for t in plan.tensors]]
@@ -842,9 +843,11 @@ class CollectiveSimCCBackend(BaseCCBackend):
         if counts["plan_key"] != plan.cache_key() or counts["context"] != context:
             raise ValueError("Actual native count receipt differs from the complete workload")
         parameters = model["parameters"]
+        if parameters["context"] != model_context:
+            raise ValueError("Collective fit differs from the selected frozen runtime policy")
         if parameters["evidence_kind"] != "native_measurement" or counts["evidence_kind"] != "native_measurement":
             raise ValueError("CPU fixtures are not native parameter or kernel-count evidence")
-        collective.update(plan=plan.to_dict(), local_parameters=parameters)
+        collective.update(plan=plan.to_dict(), local_parameters={**parameters,"context":context})
         key = ("plan", plan.cache_key(), json.dumps(artifact, sort_keys=True))
         cached = self._get_cached_prediction(key)
         if cached is not None:

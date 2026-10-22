@@ -6,6 +6,7 @@
 | 2026-10-23 | Start scoped interface-first implementation. |
 | 2026-10-23 | Close owned delivery and distinguish peer/runtime acceptance boundaries. |
 | 2026-10-23 | Verify F3-F6 review repair and scoped final evidence. |
+| 2026-10-23 | Reopen only F4 frozen grouping and startup/call-time boundaries. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -37,3 +38,20 @@ F3/F6 **completed**37ead7f/sub3dac53c; F4/F5 **completed**181a534, with tested
 implementation and scoped records. Final545 JUnit cases:456 PASS/89 SKIP,
 submodule12 PASS, cold constructor9 PASS. Updated total2944/3956 in43 paths;
 no new code paths or peer/import changes. Re-review is root-owned.
+
+## F4 boundary repair (D29-PRICING-F4-BOUNDARIES)
+
+Re-review closes F3/F5/F6, not F4. RED F4a actual exporter three-anchor switch
+and F4b published lazy-workspace/observer/validator -> frozen grouping identity
+and post-native runtime receipt -> importer count/cache and stale-policy negatives
+-> affected suites/JUnit and exact quota -> scoped commit/receipt/root re-review.
+F4a and F4b share policy seams and are executed without additional delegation.
+Complete execution_policy remains the plan/count/cache identity; only model
+grouping excludes per-cell branch/buffer and mutable enabled snapshots. No fit
+per implementation or full-duration lookup. Startup diagnostics are retained;
+native exceptions and soft auxiliary evidence handling remain unchanged.
+
+Current: actual exporter/observer/validator and cold importer GREEN; final552 cases
+463 PASS/89 SKIP, submodule12 PASS, cold10 PASS. Exact43-path3067/3956 budget and
+records verified; scoped source/record commit506b43ac delivered. Root re-review
+remains external acceptance, not owner work or GPU qualification.

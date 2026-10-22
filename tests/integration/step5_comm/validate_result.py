@@ -125,11 +125,13 @@ def validate(job: dict, root: Path) -> dict:
             for call in layer["collectives"] if call.get("op") == "all_gatherv"}
         checks["native_reached_dispatch"] = all(tuple(zip(r["dtypes"],r["columns"])) in reached
             for r in records if r["op"] == "all_gatherv")
-        runtime=native["runtime"].get("per_rank_runtime",{})
+        runtime=native["runtime"].get("per_rank_startup_runtime",{})
+        from frontier.cc_backend.collective_plan import collective_runtime_identity
         rank_probes={r["rank"]:r for r in ranks}
         checks["native_execution_policy"]=(set(runtime) == {str(rank) for rank in range(parallel.world_size)} and all(
             set(record["native_context"].get("execution_policy",{})) == {str(rank) for rank in record["participating_ranks"]} and
-            all(policy.get("runtime") == runtime.get(rank) and policy.get("branches") and not policy.get("diagnostic_errors")
+            all(policy.get("runtime") and collective_runtime_identity(policy["runtime"]) ==
+                collective_runtime_identity(runtime[rank]) and policy.get("branches") and not policy.get("diagnostic_errors")
                 for rank,policy in record["native_context"].get("execution_policy",{}).items()) for record in records))
         checks["native_probe_policy"]=all(any(
             call.get("execution_policy") == policy and call["op"] == record["op"] and
