@@ -1,0 +1,393 @@
+{
+  "task_id": "D29-NATIVE-BALANCED",
+  "status": "PASS_CPU_CONTRACT_PROPOSAL_ONLY",
+  "interpreter": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "torch": "2.9.1+cu128",
+  "cases": [
+    {
+      "cpu_dp_counts": [
+        6128,
+        1
+      ],
+      "physical_wave_tokens": 6129,
+      "global_prefix_assignments": 49032,
+      "per_expert_min": 139,
+      "per_expert_max": 140,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": false,
+      "mismatched_experts": 16,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103
+        ]
+      ]
+    },
+    {
+      "cpu_dp_counts": [
+        6144,
+        1
+      ],
+      "physical_wave_tokens": 6145,
+      "global_prefix_assignments": 49160,
+      "per_expert_min": 139,
+      "per_expert_max": 140,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": false,
+      "mismatched_experts": 16,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          224,
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231
+        ]
+      ]
+    },
+    {
+      "cpu_dp_counts": [
+        8,
+        8
+      ],
+      "physical_wave_tokens": 16,
+      "global_prefix_assignments": 128,
+      "per_expert_min": 0,
+      "per_expert_max": 1,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": false,
+      "mismatched_experts": 128,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71
+        ]
+      ]
+    },
+    {
+      "cpu_dp_counts": [
+        1,
+        1
+      ],
+      "physical_wave_tokens": 2,
+      "global_prefix_assignments": 16,
+      "per_expert_min": 0,
+      "per_expert_max": 1,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": false,
+      "mismatched_experts": 16,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      ]
+    },
+    {
+      "cpu_dp_counts": [
+        4,
+        4
+      ],
+      "physical_wave_tokens": 8,
+      "global_prefix_assignments": 64,
+      "per_expert_min": 0,
+      "per_expert_max": 1,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": false,
+      "mismatched_experts": 64,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39
+        ]
+      ]
+    },
+    {
+      "cpu_dp_counts": [
+        256,
+        256
+      ],
+      "physical_wave_tokens": 512,
+      "global_prefix_assignments": 4096,
+      "per_expert_min": 11,
+      "per_expert_max": 12,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": false,
+      "mismatched_experts": 128,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          288,
+          289,
+          290,
+          291,
+          292,
+          293,
+          294,
+          295
+        ]
+      ]
+    },
+    {
+      "cpu_dp_counts": [
+        0,
+        1
+      ],
+      "physical_wave_tokens": 1,
+      "global_prefix_assignments": 8,
+      "per_expert_min": 0,
+      "per_expert_max": 1,
+      "frontier_exact_match": true,
+      "per_dp_reset_exact_match": true,
+      "mismatched_experts": 0,
+      "topk_distinct": true,
+      "hypothesis_weight_sum3": true,
+      "first_ids_per_dp": [
+        [],
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      ]
+    }
+  ],
+  "cpu_dp_padding": {
+    "unpadded": [
+      1,
+      0
+    ],
+    "local_padded": [
+      4,
+      1
+    ],
+    "synced_graph": [
+      4,
+      4
+    ]
+  },
+  "frozen_factory_marker_kwargs": {
+    "top_k": 8,
+    "global_num_experts": 352,
+    "eplb_state": null
+  },
+  "actual_runner_method_call_order": [
+    [
+      "fp8",
+      "select_experts"
+    ],
+    [
+      "fp8",
+      "forward_modular"
+    ],
+    [
+      "bf16",
+      "select_experts"
+    ],
+    [
+      "bf16",
+      "forward_modular"
+    ]
+  ],
+  "retained_native_module_witnesses": [
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_0.json",
+      "sha256": "8122710880daf5b0c6acfdcc04d87c7484e160fe8818c7c22737a6fe653fb824"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_1.json",
+      "sha256": "dc8568d8ef22508ec6b333eae6d182a39911be227202273e7ccb71d7f8be868d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_2.json",
+      "sha256": "b33489eb83d06ad97bc98e5bc9c4ec06ee40a6b41150680974fe10353a70feac"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_3.json",
+      "sha256": "669c27de4d76ba0ac783638ab2fe51f56689601e6bb50fbcd3b92d5a3a6470c0"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_4.json",
+      "sha256": "bfa364b2f1b58b3043b83574ba454e1c753fa7852e9829922dae9fe05b0909e4"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_5.json",
+      "sha256": "8f838dc3e97937342754b9c47bb9b11de43fee3f9553f99b0840f9dbff1808fb"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_6.json",
+      "sha256": "37c29b0b84ed34d2f90bca4fa7dda6c78b9c8ee812db3537b0796b4e5b74a283"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_7.json",
+      "sha256": "37b2464870a201a47ffa78c4195f728e5d485b4590268a4558fe5588cf1c70d1"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_8.json",
+      "sha256": "9156c86ac61d56c6791260972f09fb82ffed67dc0e4ee57da7ab28535308959d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_9.json",
+      "sha256": "31ba46a6bbacc1c9cc5d57b4cd8b6ce360e81783ae8f2f6e93c5bad6432343da"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_10.json",
+      "sha256": "8bcd7d1dfa86b7bd922852d6ebd663497f11a4b313ef20489d4279bb5f5140db"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_11.json",
+      "sha256": "1d506de4f4b502b95caec0a9d86b4021a0bf149d2388ea929f0763222f0e16ea"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_12.json",
+      "sha256": "bb2d6fbba5afa310e6e13b2f66bd240ff53803dc599f9da381dbc25d7cb0a7cb"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_13.json",
+      "sha256": "f0879401c3000896ec65c172c8fbe5991f465535a16ba92de50c53cd96681a2d"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_14.json",
+      "sha256": "9fb6fff4e83870b40df2006455c5c68474f76a6c956cc09be515ab98d87d0239"
+    },
+    {
+      "path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/step5_comm_20261020/s2_20261020_01/native_dispatch/rank_15.json",
+      "sha256": "f556fe581b48a586174018c5ee2750584c6c4cae3043b82166fb7b24c15b5571"
+    }
+  ],
+  "retained_manifest_sha256": "c10e3aaa59f30af0cf25b855af6c952d0be796fc559a0f47676102c3aba9f5d4",
+  "source_hashes": {
+    "forward_context.py": "24a1b39218b88539e387b696dcced722d14a24d9f01932a44feb93dd4986b85d",
+    "config/parallel.py": "4b5f3d5938cdb4644367a7c4c33cc657f8834d83a69f8a838ef4168627e12c21",
+    "config/kernel.py": "dedb58b73dd702834d16f9183845ab40098c1f43a13ec70e9063d745e54a12fe",
+    "envs.py": "6d05d31ea62e752e55b6f569ae48dbb3c4d1aa8fe76b61736abe31e561f45362",
+    "models/step5/nvidia/model.py": "6e8574c31c421b4ebeaff36a8faa3a219cd92744251c477d43df1912a8dfa6f0",
+    "model_executor/models/step3p7.py": "c6585739153a78bc2ac3aa1655770dd4b1f1317a73a341c8c21a966e8b035174",
+    "model_executor/layers/fused_moe/router/router_factory.py": "794abb7c210758911d349ca6fbd82690f0ef48ba4f8a7ec2ff0f87ca3ad50224",
+    "model_executor/layers/fused_moe/router/routing_simulator_router.py": "24662a8cbd10365ae349000184bcc0ad063eff72dead1b3cf5b6f40fe0cc3e47",
+    "model_executor/layers/fused_moe/router/fused_topk_bias_router.py": "8cf50cf262bd0c2411fbcbf1d1ac47cfcf9320eefcb1e125f04ac27bdd432ba8",
+    "model_executor/layers/fused_moe/runner/moe_runner.py": "20b69fe514bebd6723a1378f89a564c8fec4144c30244101f629c3f32c188183",
+    "model_executor/layers/fused_moe/prepare_finalize/naive_dp_ep.py": "3265cd408ccb00db79933bfdc851520954a5e4aa76c2d9bae08b783cd52bc11e",
+    "distributed/device_communicators/all2all.py": "0ba610c5011b801e2a01062f38d98fc85941d67243baa0233b2d9f3fd2126f20",
+    "model_executor/layers/fused_moe/modular_kernel.py": "82a5d100f42d3df3d20baea4a86e5147d4d5c17e3775ed7b5a1ce4bfb433fe0a",
+    "model_executor/layers/fused_moe/oracle/fp8.py": "31245dae9406d6beeab9376be89bcda6935c97153436021172015e425c2ac62d",
+    "model_executor/layers/fused_moe/oracle/unquantized.py": "eb37b993cfdebb70545e8772c7ec2311e53510385781c2e03303143dff4bba7a",
+    "model_executor/layers/fused_moe/experts/trtllm_fp8_moe.py": "e8b6d5f53b5d2651df4f7675d7bc8691eeb76a177e8e3c48d94aaecda6e9a367",
+    "model_executor/layers/fused_moe/experts/flashinfer_cutlass_moe.py": "82e1784f277df2d4e079b61c3af68fa11375e0f71f6cd9a7a95111c885e75963",
+    "model_executor/layers/fused_moe/experts/deep_gemm_moe.py": "016ade628799bde9a22d86ad882b6f49c49e938022fa0f787977dd7db0bb50fe",
+    "model_executor/layers/fused_moe/experts/triton_deep_gemm_moe.py": "c7209fa5e1ccb184a68b37a0706fc571a76696c2ae79802ddc7f889b1c29684d",
+    "model_executor/layers/fused_moe/experts/triton_moe.py": "ee6b83b108a0460e6308e35447434165d0778a053aa39f0c6c8ed7f36a3ddbab",
+    "v1/worker/dp_utils.py": "974e3b0b7aed92854e8dda5a86ed0d0a655f87a8e1e0139412e93ea982c4ade9",
+    "v1/worker/gpu_model_runner.py": "35fc06e949e9ee1f1108082cc37da4743ee62965541e35ff4d3a32d39c806aa5"
+  },
+  "limits": [
+    "Hypothetical cyclic IDs/weights validate math only; no new native strategy implementation/registration",
+    "Native factory/runner/metadata method bodies executed with CPU/mocked class seams, not full engine construction",
+    "Retained16-rank receipts are historical native module evidence, not current full-serving/graph kernel attestation",
+    "No source/native/image/package change, GPU/platform/network/auth/cloud/SSH or collective call"
+  ]
+}
