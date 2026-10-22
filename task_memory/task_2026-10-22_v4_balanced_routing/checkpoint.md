@@ -6,19 +6,19 @@
 | --- | --- |
 | 2026-10-23 | Updated the checkpoint for the scoped R1 runner-value correction. |
 
-**汇总：** PASS 3｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | R1 两个实际入口RED | PASS | 同名builtins.object runner值被接受，拒绝断言失败 |
 | R1 精确mapping修正 | PASS | rows66-67替换key-only比较，没有其他source改动 |
 | R1 GREEN与原有控制 | PASS | 相同命令GREEN；23直接控件与22现有测试通过 |
-| R1 count、report和commit | TODO | 净190+预留12=202已核实；报告/commit待交付 |
+| R1 count、report和commit | PASS | 8c2502c已提交source/report；净190+预留12=202 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** R1请求至两个入口GREEN｜**当前前沿：** 精确diff/report commit和root handoff
+**检测窗口：** R1请求至8c2502c提交｜**当前前沿：** root联合检查、builder finalization与image/runtime验收
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -40,8 +40,8 @@
 **需停止的偏离行为：** 无
 
 **接下去的路线：**
-1. 完成R1报告、净diff和commit → 完成标志：仅一个source文件修正、可复核190行。
-2. 交付root → 完成标志：root联合检查、分配与builder current-clean-HEAD方案明确。
+1. 交付root已完成的8c2502c与报告 → 完成标志：root获得两个入口RED/GREEN及净190count。
+2. Root联合检查及builder finalization → 完成标志：分配与current-clean-HEAD机制符合最新决定。
 3. Root完成image/runtime验收 → 完成标志：实际证据满足root门槛；本agent不执行。
 
 ## 4. 最值得关注的 3 点

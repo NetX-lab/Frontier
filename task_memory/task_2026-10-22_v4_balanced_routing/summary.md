@@ -9,7 +9,7 @@
 
 ## Outcome
 
-R1 corrects the runner-value P2 with an exact expected mapping in `dsv4_attention_rows.py:66-67`. Both actual entry points reproduced RED before the change and GREEN afterwards; balanced and absent-selector legacy positives remain valid.23direct controls and22affected existing tests pass. Effective C baseline diff is now183added+7deleted=190lines; adding root's12reserved builder lines projects202. No builder/native/B/shared/runtime changes were made in R1. See `test_report_2026-10-23_runner_values.md` for the exact command and evidence.
+R1 commit `8c2502c6aca2ba38e220480dd75eb5974d428513` corrects the runner-value P2 with an exact expected mapping in `dsv4_attention_rows.py:66-67`. Both actual entry points reproduced RED before the change and GREEN afterwards; balanced and absent-selector legacy positives remain valid.23direct controls and22affected existing tests pass. Effective C baseline diff is now183added+7deleted=190lines; adding root's12reserved builder lines projects202. No builder/native/B/shared/runtime changes were made in R1. See `test_report_2026-10-23_runner_values.md` for the exact command and evidence.
 
 Balanced prefill wiring delivered in commit `ac21f88` on `v4-h800-prefill`, following approved shared `410f062` and baseline audit `a71fcd3`. Exactly five maintained files,182added+7deleted=189routing changed lines, within the200line allocation. No fresh package was built or sealed; no GPU/Docker/platform/SSH/cloud operation occurred.
 
