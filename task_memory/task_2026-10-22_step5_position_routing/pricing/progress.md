@@ -10,6 +10,7 @@
 | 2026-10-23 | Correct native prepare tuple seam; validate published original methods. |
 | 2026-10-23 | Verify T2 optional serving-limit seam without default or metadata changes. |
 | 2026-10-23 | Close final producer/selection and legacy trace checks; archive scoped budget/dependencies. |
+| 2026-10-23 | Complete F3-F6 finite review repairs and exact JUnit/budget records. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -386,3 +387,123 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Owned scope finished at2626/3956; no quota exhaustion。
 2. CORE newer exact-query/main interfaces not jointly verified here。
 3. Native/GPU/local parameters/T2/G3/E2E acceptance remains root work。
+
+## D29-PRICING-FINITE-REPAIR: F3/F6
+
+- RED F6 cold7-case command reproduced3 ModuleNotFoundError failures; constructor
+  bootstrap mock was the cause. Removed it and the separate syspath workaround;
+  real constructor now initializes imports normally, no production changes.
+- RED F3 exporter partial/zero accepted; nan/inf failed later at affine fitting,
+  not completed-network seam. Submodule5 truncated-result tests all failed.
+- GREEN F3/F6 parent53 PASS, submodule12 PASS (JUnit retained under
+  /data/ycfeng/tmp/d29_f36_green.xml and d29_f3_sub_green.xml). One shared
+  completed_plan_network_ms requires positive expected/all finished flows and
+  positive finite completed makespan only for new nonempty network plans.
+  TP-local branch and legacy semantics unchanged; real HTSIM remains in checks.
+- Next: F5 exact selectedscope/replay negatives, then F4 actual policy identity.
+
+## D29-PRICING-FINITE-REPAIR: F4/F5 delivery
+
+- RED F5:4 stale scope/replay cases failed (6 existing cases PASS); actual op,
+  group,cuda_graph and profiled_calls relabeling was accepted. GREEN37 PASS after
+  exact selected call identity and configured calls_per_repeat comparison.
+- RED F4:policy version/branch mismatches passed and observation seam absent
+  (3 FAIL/10 PASS). Reused actual communicator defaults/version/runtime evidence,
+  added one shared untimed native branch/registration observer for collector/probe
+  and complete per-rank execution_policy to model/qualification identity.
+- F4 observation outside eager timing; captured observation during capture only.
+  Tests execute actual collector.prepare and DispatchObserver seams, assert no
+  observer in timed eager/replay, original exception identity and callable restore.
+  Diagnostic failures remain soft; mismatches mark UNVERIFIED, not native success.
+- First F4 GREEN attempt exposed test fixture assigning all16 policies to a
+  one-rail record; corrected fixture to actual participating rank keys. Next
+  mismatch case was captured and deliberately skipped by check; removed skip,
+  all recorded graph/eager branches must agree with supplied native module proof.
+  No actual graph or GPU policy claim is made.
+- F6 new cold-process command without PYTHONPATH:9 PASS. Exploratory no-path
+  full14/submodule commands exposed old subprocess/package startup requirements
+  (1 FAIL/453 PASS/89 SKIP; submodule12 setup errors). No unrelated CLI/package
+  changes; affected suites use existing explicit path environment, cold backend
+  check alone proves constructor bootstrap without ambient path assistance.
+- Final command d29_finite_final04:JUnit545 tests,0 failures/errors,89 skipped,
+ 456 PASS. Submodule d29_finite_sub_final02:12 PASS. Cold d29_f6_cold_final02:9 PASS.
+  Exact commands/limits in dated finite report. No post-PASS broadening planned.
+- Budget43 changed paths: +2849/-95=2944/3956, remaining1012; submodule333 included.
+  Full patch matches pinned d28fe917-to-3dac53c; root owns unstaged gitlink.
+- Pending: scoped F4/F5 code/archive commit, root re-review. Actual GPU parameters
+  and global acceptance remain unverified; no peer edits/imports/delegation.
+
+## 1. 规划完成情况
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| F3 completed HTSIM | PASS |37ead7f/sub3dac53c RED→GREEN |
+| F4 actual policy identity | PASS |Observed collector/probe seams, strict model import and sealed context |
+| F5 selected scope/replay | PASS |Four stale negatives and final affected run |
+| F6 cold constructor | PASS |No bootstrap mock; no-PYTHONPATH9 PASS |
+| Scoped commit/archive/re-review receipt | TODO |Validated2944 budget; commit next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**37ead7f至今｜**当前前沿：**F4/F5 scoped提交归档
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Exact negative tests required by F4/F5; stop after final456 PASS |
+| D2 细节反复重试 | CLEAR |Fixture rail error and captured skip were distinct identified causes |
+| D3 支线问题修补 | CLEAR |Old CLI no-path failure recorded, not patched |
+| D4 可并行任务停滞 | CLEAR |Explicit no agents/peer writes; owned finite seam serial scope |
+| D5 超范围镀金 | CLEAR |2944/3956,43 paths; no default/fallback pricing |
+| D6 分析空转 | CLEAR |Actual seam changes and JUnit results delivered |
+| D7 路线违背 | CLEAR |Legacy/TP-local gate excluded; real runtime evidence remains unqualified |
+**文档检查：**S5 previous completed archive describes older tip/budget; updated receipt/summary/report. S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：记录最新review repair事实。
+**文档更新（先执行）：**pricing plan/progress/receipt/summary/report更新F3-F6与2944预算（可直接执行）。
+**需停止的偏离行为：**无
+**接下去的路线：**提交F4/F5 → root复审；不继续探索CLI/环境或未授权GPU参数。
+## 4. 最值得关注的 3 点
+1. F3-F6已验证；原生GPU policy/parameters仍未验证。
+2. No-PYTHONPATH9 cold checks prove real ctor; full suite explicit路径要求另记。
+3. Root ownssub3dac53c gitlink/re-review/global acceptance。
+
+## D29-PRICING-FINITE-REPAIR completion
+
+- completed:181a534 scoped F4/F5 code/test/record commit, following37ead7f F3/F6.
+  Isolated submodule3dac53c clean; only parent worktree delta is root-owned gitlink.
+  Summary table exactly matches43-path +2849/-95=2944; full patch byte equality,
+  AST/JSON and whitespace PASS. No additional testing after final545 JUnit result.
+- completed:F3-F6 owned repairs/RED→GREEN/exact commands/records. Root re-review
+  and actual GPU parameters/source/backend/graph/global acceptance remain open.
+
+## 1. 规划完成情况
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| F3 completed joint HTSIM | PASS |37ead7f/sub3dac53c |
+| F4 actual runtime/buffer/branch identity | PASS |181a534 |
+| F5 exact selectedscope/replay | PASS |181a534 stale negatives |
+| F6 real cold constructor | PASS |No-PYTHONPATH9 PASS |
+| Verified scoped delivery/records | PASS |545 JUnit/43 paths/2944 budget and retained full patch |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**181a534至今｜**当前前沿：**root复审
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Only final commit/patch/summary evidence checked |
+| D2 细节反复重试 | CLEAR |No fixes after final456 PASS |
+| D3 支线问题修补 | CLEAR |No CLI/environment side edits |
+| D4 可并行任务停滞 | CLEAR |Explicit no agents/peer edits |
+| D5 超范围镀金 | CLEAR |43 paths/2944 within3956 |
+| D6 分析空转 | CLEAR |181a534 delivered early for root re-review |
+| D7 路线违背 | CLEAR |No GPU parameters/qualification claimed |
+**文档检查：**S5 earlier pending final commit updated to181a534; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新最终commit事实。
+**文档更新（先执行）：**plan/summary/receipt/report/progress记录181a534（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**交付root复审与gitlink整合；等待具体新finding，不启动未授权采集。
+## 4. 最值得关注的 3 点
+1. Owned F3-F6完成，预算剩余1012。
+2. Root负责gitlink3dac53c及独立复审。
+3. 实际GPU参数/source/backend/graph资格与D29全局验收仍未完成。

@@ -829,6 +829,8 @@ class CollectiveSimCCBackend(BaseCCBackend):
         if asdict(Scenario.from_dict(artifact["frozen_scenario"])) != asdict(Scenario.from_dict(frozen)):
             raise ValueError("Collective model differs from the frozen network/local configuration")
         context = json.loads(plan.context_json)
+        if not context.get("execution_policy"):
+            raise ValueError("Step plan requires actual collective execution policy receipts")
         matching = [r for r in artifact["models"] if r["context"] == context and
                     r["phase"] == plan.phase and r["graph_mode"] == plan.graph_mode and
                     r["uniform"] == (plan.sizes[0] == plan.sizes[1]) and

@@ -194,10 +194,17 @@ index aa1031c..28349d7 100644
      # g: GPUs per server in the domain group (1 = fully cross-server, no NVLink needed)
      # n: total ranks in the domain group
 diff --git a/python/collective_sim_core/predictor.py b/python/collective_sim_core/predictor.py
-index 78a262c..436ecf7 100644
+index 78a262c..bd1f7ad 100644
 --- a/python/collective_sim_core/predictor.py
 +++ b/python/collective_sim_core/predictor.py
-@@ -7,6 +7,7 @@ from .intra_server_model import (
+@@ -1,17 +1,29 @@
+ from __future__ import annotations
+ 
+ from pathlib import Path
++import math
+ from typing import Any, Dict, Union
+ 
+ from .intra_server_model import (
      _compute_g_in_group,
      _compute_n_group,
      estimate_intra_server_ms,
@@ -205,7 +212,22 @@ index 78a262c..436ecf7 100644
  )
  from .runner import run_htsim_runner
  from .schema import Scenario
-@@ -21,6 +22,28 @@ def predict_collective_time(
+ 
+ 
++def completed_plan_network_ms(payload):
++    """Require the nonempty joint workload to finish before using its makespan."""
++    expected,finished=payload.get("expected_flows"),payload.get("finished_flows")
++    makespan=float(payload.get("makespan_us",float("nan")))
++    if (type(expected) is not int or expected <= 0 or type(finished) is not int or
++            finished != expected or not math.isfinite(makespan) or makespan <= 0):
++        raise ValueError("Joint Step HTSIM requires all flows and a positive finite completed makespan")
++    return makespan/1000
++
++
+ def predict_collective_time(
+     scenario: Union[Scenario, Dict[str, Any]],
+     *,
+@@ -21,6 +33,24 @@ def predict_collective_time(
      sc.validate()
  
      root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[2]
@@ -214,11 +236,7 @@ index 78a262c..436ecf7 100644
 +        tp_only = sc.collective.plan["phase"] in ("shared_tp", "routed_tp")
 +        payload = {} if tp_only else run_htsim_runner(
 +            repo_root=root, spec=sc.to_runner_spec(), out_dir=sc.runner.out_dir)
-+        if not tp_only and "makespan_us" not in payload:
-+            raise ValueError("Joint Step HTSIM run did not produce a makespan")
-+        network_ms = 0.0 if tp_only else float(payload["makespan_us"]) / 1000
-+        if network_ms < 0:
-+            raise ValueError("Joint Step HTSIM makespan must be nonnegative")
++        network_ms = 0.0 if tp_only else completed_plan_network_ms(payload)
 +        total = network_ms + max(local_rank_ms) + remainder_ms
 +        return {
 +            "predicted_time_ms": total,
@@ -318,10 +336,10 @@ index 2417680..89d0ca5 100644
 +        raise ValueError("Step plan has missing/duplicate/out-of-order tensor/root stages")
 diff --git a/tests/test_grouped_plan_input.py b/tests/test_grouped_plan_input.py
 new file mode 100644
-index 0000000..f426723
+index 0000000..a0a7596
 --- /dev/null
 +++ b/tests/test_grouped_plan_input.py
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,119 @@
 +"""Real serialized lowering and independent numerical proxy checks (CPU only)."""
 +from dataclasses import replace
 +from pathlib import Path
@@ -427,3 +445,17 @@ index 0000000..f426723
 +    assert raw["finished_flows"] == raw["expected_flows"] > 0
 +    assert raw["tm_total_bytes"] == 8*17*4288 and breakdown["network_ms"] > 0
 +    assert result["predicted_time_ms"] == pytest.approx(breakdown["network_ms"]+109.056+3.)
++
++
++@pytest.mark.parametrize("payload", [
++    {"expected_flows":8,"finished_flows":7,"makespan_us":1.},
++    {"expected_flows":8,"finished_flows":0,"makespan_us":0.},
++    {"expected_flows":8,"finished_flows":8,"makespan_us":0.},
++    {"expected_flows":8,"finished_flows":8,"makespan_us":float("nan")},
++    {"expected_flows":8,"finished_flows":8,"makespan_us":float("inf")},
++])
++def test_joint_plan_rejects_incomplete_or_invalid_runner_results(monkeypatch,payload):
++    from collective_sim_core import predictor
++    monkeypatch.setattr(predictor,"run_htsim_runner",lambda **kw:payload)
++    with pytest.raises(ValueError,match="completed"):
++        predictor.predict_collective_time(scenario(workload()),repo_root=ROOT)

@@ -329,6 +329,7 @@ def export_finite_parameters(directory, output):
     sys.path.insert(0,str(Path(__file__).resolve().parents[3]/"frontier/cc_backend/backends/collective-sim/python"))
     from collective_sim_core.schema import Scenario
     from collective_sim_core.runner import run_htsim_runner
+    from collective_sim_core.predictor import completed_plan_network_ms
     from collective_sim_core.intra_server_model import plan_memory_service_ms
     directory,output = Path(directory),Path(output)
     source = json.loads((directory/"collectives/plan.json").read_text())
@@ -389,6 +390,8 @@ def export_finite_parameters(directory, output):
         context = record["native_context"]
         if context["shared"] != shared or record["evidence_kind"] != evidence_kind:
             raise ValueError("Measured native context differs from the bound producer source")
+        if evidence_kind == "native_measurement" and not context.get("execution_policy"):
+            raise ValueError("Measured model context requires actual execution policy receipts")
         from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
         tensors = tuple(CollectiveTensor(n,d,DTYPE_BYTES[d],c,c) for n,d,c in
                         zip(names,record["dtypes"],record["columns"]))
@@ -427,11 +430,12 @@ def export_finite_parameters(directory, output):
                 continue
             network=run_htsim_runner(repo_root=Path(frozen["collective_sim_root"]),spec=sc.to_runner_spec(),
                 out_dir=str(output/record["scenario"]/record["call"]))
+            network_ms=completed_plan_network_ms(network)
             local_ms = plan_memory_service_ms(plan.to_dict(),copy,reduce)
             cells.append(dict(operand_bytes=sum(plan.sizes)*sum(t.columns*t.element_size for t in tensors),
-                duration_ms=native-network["makespan_us"]/1000-max(local_ms),split=anchors[record["scenario"]],
+                duration_ms=native-network_ms-max(local_ms),split=anchors[record["scenario"]],
                 quality="PASS",cell_id=record["scenario"],source=dict(scenario=record["scenario"],pass_id=record["pass"],native_ms=native,
-                network_ms=network["makespan_us"]/1000,local_ms=local_ms)))
+                network_ms=network_ms,local_ms=local_ms)))
         cells=cell_medians(cells)
         fit=fit_affine(cells,positive_slope=phase in ("shared_tp","routed_tp"),supported_range=(min(c["operand_bytes"] for c in cells),
             max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory))

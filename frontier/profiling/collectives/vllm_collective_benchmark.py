@@ -36,7 +36,10 @@ import socket
 import statistics
 import time
 from dataclasses import replace
+from contextlib import ExitStack
+from functools import wraps
 from pathlib import Path
+from unittest.mock import patch
 
 from frontier.profiling.collectives.vllm_forward_collectives import (
     CollectiveCall,
@@ -96,6 +99,73 @@ def runtime_environment(vllm_envs) -> dict:
                              if name.startswith("NCCL_")},
         "nccl_log_destination": os.environ.get("NCCL_DEBUG_FILE", "stderr (stage wrapper log)"),
     }
+
+
+def collective_runtime_policy(runtime):
+    """Execution-affecting actual runtime receipts, excluding diagnostic paths."""
+    policy={k:runtime[k] for k in ("torch","vllm","enabled_communicators","pynccl_versions",
+        "disable_custom_all_reduce","disable_nccl_for_dp_synchronization",
+        "vllm_environment","nccl_environment")}
+    policy["nccl_environment"]={k:v for k,v in policy["nccl_environment"].items()
+        if k not in ("NCCL_DEBUG","NCCL_DEBUG_SUBSYS","NCCL_DEBUG_FILE")}
+    return policy
+
+
+def native_collective_runtime(torch, vllm_config, groups):
+    import vllm
+    from vllm import envs
+    enabled={};versions={}
+    for name,group in groups.items():
+        comm=group.device_communicator
+        enabled[name]={attr:getattr(comm,attr,None) is not None and
+            not getattr(getattr(comm,attr),"disabled",False)
+            for attr in ("pynccl_comm","ca_comm","symm_mem_comm","fi_ar_comm",
+                         "fi_pcie_ipc_ar_comm","qr_comm","all2all_manager")}
+        versions[name]=comm.pynccl_comm.nccl_version if enabled[name]["pynccl_comm"] else None
+    return dict(torch=torch.__version__,vllm=vllm.__version__,enabled_communicators=enabled,
+        pynccl_versions=versions,disable_custom_all_reduce=vllm_config.parallel_config.disable_custom_all_reduce,
+        disable_nccl_for_dp_synchronization=vllm_config.parallel_config.disable_nccl_for_dp_synchronization,
+        **runtime_environment(envs))
+
+
+def observe_collective_execution(group, inputs, operation, *, output=None):
+    """Observe one untimed native invocation without guessing its selected branch."""
+    policy=dict(branches=[],buffers={},diagnostic_errors=[])
+    with ExitStack() as stack:
+        try:
+            from vllm.distributed.device_communicators.pynccl_allocator import is_symmetric_memory_tensor
+            policy["buffers"]=dict(input_registered=[is_symmetric_memory_tensor(t) for t in inputs],
+                supplied_output=output is not None,output_registered=None if output is None else is_symmetric_memory_tensor(output))
+            comm=group.device_communicator
+            targets=[("",comm, ("_all_gather_symm_mem","_all_gather_batched_symm_mem","_reduce_scatter_symm_mem"))]
+            import torch
+            targets += [("torch.distributed.",torch.distributed,("all_reduce",))]
+            if hasattr(torch.ops.vllm,"all_reduce_symmetric_with_copy"):
+                targets.append(("torch.ops.vllm.",torch.ops.vllm,("all_reduce_symmetric_with_copy",)))
+            methods=("all_gatherv","all_gather","reduce_scatterv","reduce_scatter","all_reduce",
+                "quick_all_reduce","custom_all_reduce","custom_reduce_scatter","custom_all_gather")
+            for name in ("pynccl_comm","ca_comm","symm_mem_comm","fi_ar_comm","qr_comm","fi_pcie_ipc_ar_comm"):
+                target=getattr(comm,name,None)
+                if target is not None: targets.append((name+".",target,methods))
+            for prefix,target,names in targets:
+                for name in names:
+                    if not hasattr(target,name): continue
+                    original=getattr(target,name)
+                    @wraps(original)
+                    def observed(*a,_original=original,_label=prefix+name,**kw):
+                        policy["branches"].append(_label)
+                        return _original(*a,**kw)
+                    stack.enter_context(patch.object(target,name,observed))
+        except Exception as error:
+            policy["diagnostic_errors"].append(repr(error))
+        result=operation()
+        try:
+            if output is not None:
+                policy["buffers"].update(input_output_alias=any(t.data_ptr()==output.data_ptr() for t in inputs),
+                    return_output_alias=result.data_ptr()==output.data_ptr())
+        except Exception as error:
+            policy["diagnostic_errors"].append(repr(error))
+    return result,policy
 
 
 def active_dp_rails(parallel: ServingParallelism, call: CollectiveCall,
@@ -251,6 +321,7 @@ class CollectiveRunner:
             list(range(i * parallel.world_size, (i + 1) * parallel.world_size)),
             backend="gloo") for i in range(instances)]
         self.instance_cpu = instance_groups[self.instance]
+        self.identity_errors=[]
         self._check_layout()
         self.hosts = [None] * parallel.world_size
         torch.distributed.all_gather_object(self.hosts, socket.gethostname(),
@@ -293,28 +364,8 @@ class CollectiveRunner:
 
     def communicators(self) -> dict:
         """Which all-reduce communicators vLLM enabled on each group of this rank."""
-        import vllm
-        from vllm import envs
-
-        enabled = {}
-        pynccl_versions = {}
-        for name, group in self.groups.items():
-            comm = group.device_communicator
-            enabled[name] = {
-                attr: getattr(comm, attr, None) is not None
-                and not getattr(getattr(comm, attr), "disabled", False)
-                 for attr in ("pynccl_comm", "ca_comm", "symm_mem_comm", "fi_ar_comm",
-                              "qr_comm", "all2all_manager")}
-            pynccl_versions[name] = (comm.pynccl_comm.nccl_version
-                                     if enabled[name]["pynccl_comm"] else None)
-        return {"torch": self.torch.__version__, "vllm": vllm.__version__,
-                 "enabled_communicators": enabled,
-                 "pynccl_versions": pynccl_versions,
-                "disable_custom_all_reduce": self.vllm_config.parallel_config.disable_custom_all_reduce,
-                "disable_nccl_for_dp_synchronization": (
-                    self.vllm_config.parallel_config.disable_nccl_for_dp_synchronization),
+        return {**native_collective_runtime(self.torch,self.vllm_config,self.groups),
                 "dp_rail_isolation": self.dp_rail_isolation,
-                **runtime_environment(envs),
                 "group_ranks": {name: list(g.ranks) for name, g in self.groups.items()},
                 "hosts": self.hosts,
                 "sleep_cycles_per_us": self.sleep_cycles_per_us}
@@ -355,7 +406,9 @@ class CollectiveRunner:
             return lambda: torch.distributed.all_reduce(tensor, group=group.device_group)
         if call.op == "all_reduce":
             (tensor,) = self._tensors(call, rows, self.device)
-            return lambda: group.all_reduce(tensor)
+            def issue(): return group.all_reduce(tensor)
+            issue.inputs=[tensor]
+            return issue
         if call.op == "all_gather":
             (tensor,) = self._tensors(call, rows, self.device)
             return lambda: group.all_gather(tensor, dim=call.dim)
@@ -367,6 +420,7 @@ class CollectiveRunner:
             def issue():
                 return group.all_gatherv(tensors, dim=call.dim, sizes=sizes)
             outputs = issue()
+            issue.inputs=tensors
             issue.buffer_receipt = dict(entrypoint="all_gatherv",sizes=sizes,dim=call.dim,
                 inputs=[dict(shape=list(t.shape),stride=list(t.stride()),dtype=str(t.dtype),
                              element_size=t.element_size()) for t in tensors],
@@ -388,6 +442,7 @@ class CollectiveRunner:
             def issue():
                 return group.reduce_scatterv_into_output(tensor, output, dim=call.dim, sizes=sizes)
             returned = issue()
+            issue.inputs=[tensor];issue.output=output
             issue.buffer_receipt = dict(entrypoint="reduce_scatterv_into_output",sizes=sizes,dim=call.dim,
                 input=layout(tensor),output=layout(output),supplied_output=True,
                 input_output_alias=tensor.data_ptr() == output.data_ptr(),
@@ -417,6 +472,17 @@ class CollectiveRunner:
         """
         torch = self.torch
         issue = self._issue(call)
+        selected=bool(os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")) and call.op in (
+            "all_gatherv","reduce_scatterv_into_output","all_reduce")
+        def observed_issue():
+            _,policy=observe_collective_execution(self.groups[call.group],issue.inputs,issue,
+                output=getattr(issue,"output",None))
+            try: policy["runtime"]=collective_runtime_policy(self.communicators())
+            except Exception as error: policy["diagnostic_errors"].append(repr(error))
+            issue.execution_policy=policy
+            self.identity_errors.extend(policy["diagnostic_errors"])
+        if selected:
+            observed_issue()
         per_repeat = self.settings["calls_per_repeat"]
         for _ in range(self.settings["warmup_calls"]):
             issue()
@@ -433,7 +499,8 @@ class CollectiveRunner:
         with self.groups[call.group].graph_capture() as context:
             with torch.cuda.graph(graph, stream=context.stream):
                 for _ in range(per_repeat):
-                    issue()
+                    if selected: observed_issue()
+                    else: issue()
         torch.cuda.synchronize()
         return issue, graph.replay
 
@@ -555,6 +622,8 @@ class CollectiveRunner:
                       "bytes": call_bytes(call, self.parallel, self.instance_rank)}
             if hasattr(issue,"buffer_receipt"):
                 local["buffer_receipt"] = issue.buffer_receipt
+            if hasattr(issue,"execution_policy"):
+                local["execution_policy"]=issue.execution_policy
             del issue, run
         gathered = self.gather(local)
         if gathered is None:
@@ -570,6 +639,8 @@ class CollectiveRunner:
         }
         if any(g and "buffer_receipt" in g for g in gathered):
             record["buffer_receipt"] = {str(rank):g["buffer_receipt"] for rank,g in enumerate(gathered) if g}
+        if any(g and "execution_policy" in g for g in gathered):
+            record["execution_policy"]={str(rank):g["execution_policy"] for rank,g in enumerate(gathered) if g}
         return record
 
     def kernel_names(self, call: CollectiveCall, scenario=None, *, prepared=None) -> list[str] | None:
@@ -693,10 +764,20 @@ def main() -> None:
             identity_errors.append(repr(error))
             print("STEP5_COMM_ADVISORY native_identity",repr(error),flush=True)
     output = Path(config["output_dir"])
+    actual_runtime=None
+    if "profile_manifest" in config:
+        runtime={}
+        try:
+            runtime=runner.communicators()
+            policy=collective_runtime_policy(runtime)
+        except Exception as error:
+            policy={};identity_errors.append(repr(error))
+        actual_runtime=runner.gather(policy)
     log = None
     if runner.rank == 0:
         output.mkdir(parents=True, exist_ok=True)
-        runtime=runner.communicators()
+        if actual_runtime is None: runtime=runner.communicators()
+        if actual_runtime is not None: runtime["per_rank_runtime"]={str(r):p for r,p in enumerate(actual_runtime)}
         if native_facts is not None: runtime["native_facts"]=native_facts
         (output / "plan.json").write_text(json.dumps(
             {"config": config, "cases": len(plan), "runtime": runtime,
@@ -713,7 +794,8 @@ def main() -> None:
             record = {"pass": pass_index, **record}
             if native_facts is not None:
                 record.update(evidence_kind="native_measurement",native_context=dict(shared=native_facts["shared"],
-                    engine=config["engine"],native_environment=config["native_environment"]),
+                    engine=config["engine"],native_environment=config["native_environment"],
+                    execution_policy=record.pop("execution_policy",{})),
                     buffer_receipt=record.get("buffer_receipt",dict(scope="native_group_owned_prepared_buffers")))
             log.write(json.dumps(record) + "\n")
             log.flush()
@@ -736,6 +818,7 @@ def main() -> None:
             if record is not None:
                 local_records.append({"pass":p, **record})
     if "profile_manifest" in config:
+        identity_errors.extend(getattr(runner,"identity_errors",[]))
         gathered_identity = runner.gather(identity_errors)
         if gathered_identity is not None:
             identity_errors = [error for errors in gathered_identity for error in errors]

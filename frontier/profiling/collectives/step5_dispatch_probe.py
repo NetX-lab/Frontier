@@ -258,7 +258,21 @@ class DispatchObserver:
                                 "completed": False}
                         self.calls.append(call)
                         self.emit({"event": "collective_enter", **call})
-                    result = _original(group, input_, *args, **kwargs)
+                    operation=lambda:_original(group, input_, *args, **kwargs)
+                    if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") and call is not None:
+                        observe=None
+                        with diagnostic_scope(self.errors,"execution_policy.setup"):
+                            from frontier.profiling.collectives.vllm_collective_benchmark import observe_collective_execution
+                            observe=observe_collective_execution
+                        if observe is None: result=operation()
+                        else:
+                            result,policy=observe(group,tensors,operation,output=bound.arguments.get("output"))
+                            with diagnostic_scope(self.errors,"execution_policy.receipt"):
+                                call["execution_policy"]=policy
+                                policy["runtime"]=getattr(self,"runtime_policy",None)
+                                self.errors.extend(dict(operation="execution_policy",error=error) for error in policy["diagnostic_errors"])
+                    else:
+                        result=operation()
                     if call is not None:
                         with diagnostic_scope(self.errors, f"{_name}.exit"):
                             output = bound.arguments.get("output", result)
@@ -459,6 +473,10 @@ def run_probe(args, plan):
             init_workspace_manager(device)
             groups = {name: getattr(ps, f"get_{name}_group")() for name in ("tp", "dp", "ep")}
             report["group_ranks"] = {name: list(group.ranks) for name, group in groups.items()}
+            if args.routing_input_file:
+                with diagnostic_scope(errors,"actual_communicator_policy"):
+                    from frontier.profiling.collectives.vllm_collective_benchmark import native_collective_runtime,collective_runtime_policy
+                    report["runtime_policy"]=collective_runtime_policy(native_collective_runtime(torch,config,groups))
             expected_rank = topology["ranks"][rank]
             expected_groups = expected_rank["group_ranks"]
             expected_tp, expected_dp = expected_groups["tp"], expected_groups["dp"]
@@ -486,6 +504,7 @@ def run_probe(args, plan):
                 emit({"event": "layer_start", "layer_id": case["layer_id"]})
                 layer = load_native_layer(config, case, device)
                 observer = DispatchObserver(lambda event: emit({"layer_id": case["layer_id"], **event}))
+                observer.runtime_policy=report.get("runtime_policy")
                 result = {"layer_id": case["layer_id"], "observer_errors": observer.errors,
                           "comparison": {"status": "unverified", "differences": []}}
                 report["layers"].append(result)

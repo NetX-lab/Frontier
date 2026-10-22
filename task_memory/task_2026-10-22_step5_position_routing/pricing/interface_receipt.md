@@ -9,6 +9,7 @@
 | 2026-10-23 | Correct the native prepare triple-return seam using published source execution. |
 | 2026-10-23 | Deliver T2 optional constructor-limit binding and CPU invariants. |
 | 2026-10-23 | Close selected producer/parent selection; archive model payload and real dependencies. |
+| 2026-10-23 | Repair F3-F6 completed HTSIM, actual policy, exact replay and cold bootstrap evidence. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -294,3 +295,43 @@ limits and43-path/2626 gross budget are in test_report_2026-10-23_delivery.md.
 Final producer/qualified-import/legacy-trace code commit:940cc84. Complete code
 sequence:7b86614,409093c,511a3db,f03286f,06bae09,3f54bc6,940cc84.
 Isolated submodule commits:ae75af0,1a16426. Root integrates gitlink separately.
+
+## Finite review repair F3-F6
+
+F3/F6 early parent commit37ead7f; isolated submodule3dac53c supersedes1a16426.
+F4/F5 tested parent commit181a534. No uncommitted code remains; root-owned
+gitlink is intentionally unstaged. Summary/diff/AST/JSON/patch equality PASS.
+`collective_sim_core.predictor.completed_plan_network_ms(payload)` requires
+expected_flows>0, finished_flows==expected_flows and finite positive completed
+makespan_us for new nonempty joint plans. Both prediction and exporter reuse it;
+legacy scalar and valid TP-local no-network branches do not enter this gate.
+
+F4 context now includes `execution_policy`, keyed by actual participating rank.
+Each policy preserves actual runtime (image-resolved vllm defaults/overrides,
+enabled communicator objects, PyNccl version, parallel flags, execution-affecting
+NCCL environment), observed native branch sequence and input/output registration,
+supplied output and alias receipts. NCCL_DEBUG/DEBUG_SUBSYS/DEBUG_FILE are retained
+as diagnostics but excluded from model identity. Per-rank runtime is retained in
+plan.json. Actual GroupCoordinator calls use the same untimed observation seam in
+collector and eager module probe; no template routing flag infers a branch.
+Eager timing issues the original operation only; captured branch observation is
+inside capture, never graph replay. Auxiliary observation failures mark evidence
+UNVERIFIED and retain the original native exception. No additional GPU probes run.
+Validator requires collector/probe scope, tensor layout and execution policy
+equality for each recorded rank; no missing policy can qualify. Export/model/
+count keys retain this complete context, parent candidate_sha256 seals it and
+production importer rejects missing/different policy. CORE must propagate the
+retained measured policy into plan.context_json; no guessed defaults are supplied.
+
+F5 records must exactly match selected call op/group/cuda_graph; native counts
+require profiled_calls==configured calls_per_repeat, not just consistent division
+of a relabeled event list. Legacy no-profile native-count semantics unchanged.
+F6 tests use actual constructor bootstrap; no mock disables the loader, and cold
+backend9 PASS with PYTHONPATH unset establishes the normal initialization path.
+
+Final affected14 suites:456 PASS/89 SKIP (JUnit545/0 failure/0 error); isolated
+submodule12 PASS with actual HTSIM; cold bootstrap9 PASS. Owned43 paths,
++2849/-95=2944/3956 (remaining1012), including333 submodule gross. Full pinned-to-tip
+patch retained with sha256c96cace541b72f7627b5f429d55615a17be4cd6c86d1827ef53969d05d766a1d.
+Exact commands/RED→GREEN/limits in test_report_2026-10-23_finite_repair.md.
+Real GPU policy/parameters/source/backend/graph qualification remains unverified.
