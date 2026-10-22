@@ -65,8 +65,12 @@ def validate_definition(run: dict) -> None:
         Path(__file__).with_name("canonical_run_h200.json").read_text()), "h800_32")
     if run["engine"] != frozen["engine"] or run["resources"] != frozen["resources"]:
         raise ValueError("Canonical G3 capture must preserve the frozen P0 engine and resources")
-    if "role_num_gpu_blocks_override" in run or "canonical_replay" in run:
-        raise ValueError("R2 diagnostic waves must not reuse short-run block limits or clean replay")
+    if ("role_num_gpu_blocks_override" in run
+            and (run["role_num_gpu_blocks_override"] != {"decode": 32000}
+                 or type(run["role_num_gpu_blocks_override"]["decode"]) is not int)):
+        raise ValueError("Canonical diagnostics only accept the D28 decode-only32000 block control")
+    if "canonical_replay" in run:
+        raise ValueError("R2 diagnostic waves must not reuse clean replay")
     waves = {wave["name"]: wave for wave in run["waves"]}
     if len(waves) != len(run["waves"]):
         raise ValueError("Duplicate canonical R2 wave")

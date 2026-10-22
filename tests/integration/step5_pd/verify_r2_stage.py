@@ -20,7 +20,10 @@ def verify(stage: Path) -> dict:
     canonical = "canonical_g3" in definition
     if canonical:
         assert config.get("canonical_g3") == definition["canonical_g3"]
-        assert "role_num_gpu_blocks_override" not in config
+        assert config.get("role_num_gpu_blocks_override") == definition.get("role_num_gpu_blocks_override")
+        if "role_num_gpu_blocks_override" in config:
+            assert config["role_num_gpu_blocks_override"] == {"decode": 32000}
+            assert type(config["role_num_gpu_blocks_override"]["decode"]) is int
         assert (config["charged_group"], config["gpu_type"]) == ("codesign", "H800")
         workload = stage / "canonical_workload"
         for name, key in (("manifest.json", "manifest_sha256"), ("SHA256SUMS", "sums_sha256")):
@@ -98,15 +101,17 @@ def verify(stage: Path) -> dict:
     assert [(plan["role"], plan["lane"]) for plan in plans] == [("prefill", 0), ("prefill", 1), ("decode", 0), ("decode", 1)]
     for plan in plans:
         command = plan["server_command"]
-        if canonical:
+        expected = config.get("role_num_gpu_blocks_override", {}).get(plan["role"])
+        if expected is None:
             assert "--num-gpu-blocks-override" not in command
+        else:
+            assert command.count("--num-gpu-blocks-override") == 1
+            assert command[command.index("--num-gpu-blocks-override") + 1] == str(expected)
+        if canonical:
             if plan["lane"] == 0:
                 assert command[command.index("--api-server-count") + 1] == "1"
             else:
                 assert "--api-server-count" not in command
-        else:
-            expected = str(config["role_num_gpu_blocks_override"][plan["role"]])
-            assert command[command.index("--num-gpu-blocks-override") + 1] == expected
         env = json.loads(plan["server_env_set"]["STEP5_PD_STATE_OBSERVATION"])
         assert env["role"] == plan["role"] and env["output_dir"] == "/worker-local-scratch/pd_state"
         assert plan["server_env_set"]["PYTHONPATH"].startswith(str(stage / "r2_bootstrap"))

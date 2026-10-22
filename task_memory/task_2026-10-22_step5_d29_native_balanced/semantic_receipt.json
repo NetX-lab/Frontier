@@ -1,0 +1,112 @@
+{
+  "task_id": "D29-NATIVE-BALANCED",
+  "status": "PASS_SEMANTIC_COUNTEREXAMPLES",
+  "interpreter": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "torch": "2.9.1+cu128",
+  "full6144_vs_split": {
+    "tail_position": 6128,
+    "tail_offset": 96,
+    "full_first_tail_ids": [
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103
+    ],
+    "reset_first_tail_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "reset_mismatched_token_rows": 16,
+    "stable_position_exact_ids": true
+  },
+  "prefix_chunking": {
+    "sizes": [
+      2048,
+      2048,
+      2032,
+      16
+    ],
+    "reset_mismatched_token_rows": 4096,
+    "stable_position_exact_ids": true
+  },
+  "q1_continuation": {
+    "positions": [
+      6144,
+      6145,
+      6146,
+      6147
+    ],
+    "stable_first_experts": [
+      224,
+      232,
+      240,
+      248
+    ],
+    "reset_first_experts": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "padding": {
+    "real_ids_invariant": true,
+    "actual_native_dummy_positions_zero": true,
+    "real_q1_6144_plus_dummy0_experts": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231
+    ],
+    "hamilton_two_token_expected_experts": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "stable_position_aggregate_not_hamilton": true,
+    "two_same_position_requests_count_max": 2,
+    "two_same_position_requests_not_exact_balanced": true
+  },
+  "source_sha256": "2e4c2ebdb2c1ce04026d15288f5408624d880f335735636985efa3a3209a56f2",
+  "limits": [
+    "Math/CPU seam checks only; no installed routing strategy or native patch",
+    "Stable expert IDs are necessary but do not prove GPU cross-shape numerical/state agreement",
+    "No GPU readback, extra collective, platform operation or overhead measurement"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "backend_instantiated": false,
+  "canonical_manifest_sha256": "5c3acb69017a9088ce20179c4a1bbfa99eadb8fbc15f6ced510496edc78c55d3",
+  "canonical_sums_sha256": "594c3cb671f13dff4804dc269f957820c51fd6fe5af5f841194091c623e013b9",
+  "dryrun_interpreter": {
+    "executable": "/data/ycfeng/tmp/stepmind-env/bin/python",
+    "version": "3.10.6 (main, Nov 14 2022, 16:10:14) [GCC 11.3.0]"
+  },
+  "git_copied_files": 21,
+  "independent_state_agreement": "UNVERIFIED_NO_NUMERICAL_RULE_APPROVED",
+  "interpreter": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+  "job_created": false,
+  "manifest": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage_manifest.json",
+  "manifest_entries": 56,
+  "manifest_sha256": "822f715925d23c8dabd015baaea6d025cfd4f1868a194e03d5caf19525affba3",
+  "native_pin_listing_sha256": "724d5dfefab52fe9b82624306170d0583966cb94469a97cc9610eda1e7faa2ca",
+  "native_qualification": "UNVERIFIED_NOT_RUN",
+  "native_source_pins": 50,
+  "external_network_platform_api_auth_cloud_gpu_ssh_operations": 0,
+  "pressure": "UNVERIFIED_WITHOUT_OBSERVED_NATIVE_ALLOCATION_PRESSURE",
+  "pytest": "9.0.2",
+  "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+  "python_sources_compiled": 25,
+  "retained_receipts": {
+    "capability_tests.log": "1ed1a41a65580c496fc478eefac9edbf18f23c9349b891cdeff270eab2011803",
+    "capability_tests.xml": "d15a0259f1ac44903f86c21f1b1091872b5d2f66fb8783b1330296ce7d5e77e8",
+    "offline_verification.json": "f9269936ffb1bf0979eb148a213ec6a24b7bfd5be9a377752655566bb011b2e0",
+    "package_static.json": "da83001ca5fe9cd044e1d784ececeafac4444b9cb25f762b1cead4598c6ac1af",
+    "resourceconfig_offline.json": "de1cd724b7ad9f8b4c4a6950cf8a8a84411f22bd8fbe75a6bdeefea417f624f9",
+    "stage_manifest.json": "822f715925d23c8dabd015baaea6d025cfd4f1868a194e03d5caf19525affba3",
+    "staged_census.json": "4dd9124462bf5a6409ab289451c1d075b2aea42de5e5acad903a5941401577bb",
+    "staged_collector.json": "bfa3384aab304ea8c55306bac3539d6c7beac5cf88a41813067668e5937b5030",
+    "staged_http.json": "5da2324b24d7d2c7689e8fa71a96480c91f9a21c33206d7580d1d568ca4d74ab",
+    "stepmind_dryrun.json": "a02df5ce9b2ff0a40c2a9e6b43ba8d119de4a9993e4d9671782513f1afd0642c"
+  },
+  "runtime_budget": {
+    "gpu_hours": 48,
+    "gpus": 32,
+    "seconds": 5400
+  },
+  "scoped_tests": {
+    "failed": 0,
+    "passed": 590,
+    "seconds": 43.25,
+    "skipped": 0
+  },
+  "source": {
+    "commit": "ebd5baf61757d48ff4ca6287903a01e6828c25f4",
+    "repository": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage"
+  },
+  "source_module_origins": 16,
+  "source_origins_sha256": "07359f45fc8af4a627bddecb9ede2655696cd43d9e7af5f00fca24ce0fd6d39d",
+  "stage": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02/stage",
+  "stage_config_sha256": "6b5186548c791dccf9f2dd11203c48fbeb5d92f63dfa6aec44e89bb835b56680",
+  "staged_http_cases": 2,
+  "staged_reference_cases": 48,
+  "staged_startup_cases": 2,
+  "status": "SEALED_OFFLINE_READY",
+  "submission_attempt_exists": false,
+  "submissions": 0,
+  "submitted_marker_exists": false,
+  "task_id": "D24-NATIVE-STAGE",
+  "tool_files": 50,
+  "torch": "2.9.1",
+  "workspace": "/data/ycfeng/tmp/step5_d24_native_20261022/capture02"
+}
