@@ -217,3 +217,116 @@ def test_actual_fixed_probe_linear_cli_accepts_6144_prefill(method, tmp_path):
     assert sorted(planned["num_tokens"]) == [1, 2, 16, 6144]
     plans = planned["models"]["stepfun-ai/Step-5-Preview"]["plans"]
     assert [item["padded_n_expanded_embd"] for item in plans] == [1536, 13824]
+
+
+@pytest.fixture
+def installed_profile_receipt(tmp_path, monkeypatch):
+    """A generated installed-package receipt, not native runtime qualification."""
+    from frontier.profiling.common.runtime_identity import file_sha256
+    root = tmp_path / "installed/vllm"
+    names = ("vllm", "vllm.models.step5.nvidia.model", "vllm.forward_context",
+             "vllm.model_executor.layers.fused_moe.router.router_factory",
+             "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
+             "vllm.model_executor.layers.fused_moe.router.gate_linear")
+    modules = {}
+    for name in names:
+        relative = Path(*name.split(".")[1:])
+        path = root / ("__init__.py" if name == "vllm" else relative.with_suffix(".py"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("class GateLinear:\n    def forward(self, x):\n        return x\n")
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        monkeypatch.setitem(sys.modules, name, module)
+        modules[name] = module
+    sources = {"vllm/" + p.relative_to(root).as_posix(): file_sha256(p) for p in root.rglob("*.py")}
+    pins = {key: value for key, value in sources.items() if not key.endswith("gate_linear.py")}
+    for index in range(53 - len(pins)):
+        path = root / f"pin_{index}.py"
+        path.write_text("# CPU source inventory fixture\n")
+        sources["vllm/" + path.name] = file_sha256(path)
+        pins["vllm/" + path.name] = file_sha256(path)
+    reference = {"image": "cpu-fixture@sha256:" + "a" * 64,
+                 "base_image": "cpu-fixture@sha256:" + "b" * 64, "routing_strategy": "position_cyclic"}
+    stage = tmp_path / "stage"
+    registry = stage / "tests/comparison/dp_placement_pp/vllm_replay.py"
+    registry.parent.mkdir(parents=True)
+    registry.write_text(f"def adapter_record(version):\n    assert version == 'step5_position_cyclic'\n    return {{'native_reference': {reference!r}}}\n"
+                        "def check_native_reference(reference, expected):\n    if reference != expected:\n        raise ValueError('native reference mismatch')\n")
+    driver = stage / "tests/comparison/stage_admission_pp/vllm_burst_driver.py"
+    driver.parent.mkdir(parents=True)
+    driver.write_text("# CPU registry dependency fixture\n")
+    config = stage / "data/config/models/stepfun-ai__Step-5-Preview.json"
+    config.parent.mkdir(parents=True)
+    config.write_text('{"local_effective_config":true}')
+    derivation = stage / "derivation.json"
+    derivation.write_text(json.dumps({"base_image": reference["base_image"], "derived_source_sha256": {key: pins[key] for key in list(pins)[:4]}}))
+    receipt = stage / "native_installed_sources.json"
+    receipt.write_text(json.dumps({"schema_version": "native_installed_sources.v1", **{key: reference[key] for key in ("image", "base_image")},
+                                   "installed_package": str(root), "python_version": sys.version.split()[0],
+                                   "derivation_manifest_sha256": file_sha256(derivation), "sources": sources}))
+    binding = {"native_runtime_adapter": "step5_position_cyclic", "native_reference": reference,
+               "profile_generation": "cpu-source-fixture", "installed_package": str(root),
+               "installed_source_hashes": pins, "serving_pin_count": 53,
+               "model_config_revision": "actual-local-config-revision", "model_config_sha256": file_sha256(config),
+               "native_source_receipt": receipt.name, "native_derivation_manifest": derivation.name}
+    manifest = {"image": reference["image"], "native_binding": binding,
+                "sha256": {p.relative_to(stage).as_posix(): file_sha256(p) for p in stage.rglob("*") if p.is_file()}}
+    path = stage / "manifest.json"
+    path.write_text(json.dumps(manifest))
+    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY", "position_cyclic")
+    monkeypatch.setenv("VLLM_MOE_SKIP_PADDING", "1")
+    return path, modules, manifest
+
+
+def test_installed_source_verifier_checks_actual_bound_gate_outside_serving_subset(installed_profile_receipt):
+    from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+    path, modules, manifest = installed_profile_receipt
+    gate = modules["vllm.model_executor.layers.fused_moe.router.gate_linear"].GateLinear()
+    facts = verify_step5_profile_runtime(path, callables=(type(gate), gate.forward))
+    assert len(facts["shared"]["installed_source_hashes"]) == 53
+    assert len(facts["callables"]) == 2
+    assert facts["shared"]["profile_generation"] == "cpu-source-fixture"
+    assert "vllm.model_executor.layers.fused_moe.router.gate_linear" in facts["imports"]
+
+
+@pytest.mark.parametrize("change", ["root", "spec", "hash", "receipt", "callable"])
+def test_installed_source_verifier_rejects_wrong_origin_or_missing_full_receipt(installed_profile_receipt, tmp_path, change):
+    from frontier.profiling.common.runtime_identity import file_sha256, verify_step5_profile_runtime
+    path, modules, manifest = installed_profile_receipt
+    gate_module = modules["vllm.model_executor.layers.fused_moe.router.gate_linear"]
+    gate = gate_module.GateLinear()
+    foreign = tmp_path / "foreign.py"
+    foreign.write_text(Path(gate_module.__file__).read_text())
+    if change == "root":
+        gate_module.__file__ = str(foreign)
+    elif change == "spec":
+        gate_module.__spec__.origin = str(foreign)
+    elif change == "hash":
+        Path(gate_module.__file__).write_text("# changed bytes, unchanged versions\n")
+    elif change == "receipt":
+        receipt_path = path.parent / "native_installed_sources.json"
+        receipt = json.loads(receipt_path.read_text())
+        del receipt["sources"]["vllm/model_executor/layers/fused_moe/router/gate_linear.py"]
+        receipt_path.write_text(json.dumps(receipt))
+        manifest["sha256"][receipt_path.name] = file_sha256(receipt_path)
+        path.write_text(json.dumps(manifest))
+    else:
+        namespace = {"__name__": gate_module.__name__}
+        exec(compile(foreign.read_text(), str(foreign), "exec"), namespace)
+        gate_module.GateLinear.forward = namespace["GateLinear"].forward
+    with pytest.raises((ValueError, KeyError)):
+        verify_step5_profile_runtime(path, callables=(gate.forward,))
+
+
+def test_legacy_identity_omits_native_facts_and_bound_fingerprint_uses_shared_only():
+    from dataclasses import replace
+    from frontier.profiling.common.runtime_identity import RuntimeIdentity, canonical_json
+    identity = RuntimeIdentity({"vllm": "same-version"}, "source", "config", "hash", "CPU", "sm00", "schema", "quant", {"tp": 1}, "NONE")
+    old = {"runtime_versions": {"vllm": "same-version"}, "source_revision": "source", "device_name": "CPU", "device_capability": "sm00", "graph_mode": "NONE"}
+    assert identity.fingerprint == hashlib.sha256(canonical_json(old).encode()).hexdigest()[:16]
+    assert "native_facts" not in identity.columns() and "native_facts" not in identity.to_json()
+    first = replace(identity, native_facts={"shared": {"image": "derived"}, "imports": {"gate": 1}, "callables": {}})
+    second = replace(first, native_facts={"shared": {"image": "derived"}, "imports": {"norm": 2}, "callables": {}})
+    assert first.fingerprint == second.fingerprint != identity.fingerprint
+    assert first.columns()["native_facts"] != second.columns()["native_facts"]

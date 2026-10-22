@@ -22,7 +22,12 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import importlib.util
+import inspect
 import json
+import os
+import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -92,6 +97,123 @@ def canonical_json(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
+def verify_step5_profile_runtime(manifest_path, *, callables=()):
+    """Verify installed Python origins against the sealed full-image receipt.
+
+    The image digest is declared; only a separate platform receipt proves which
+    image was launched. Compiled libraries retain their separate native receipt.
+    """
+    manifest_path = Path(manifest_path).resolve(strict=True)
+    stage = manifest_path.parent
+    manifest = json.loads(manifest_path.read_text())
+    binding = manifest["native_binding"]
+
+    def sealed(relative):
+        path = (stage / relative).resolve(strict=True)
+        path.relative_to(stage)
+        if file_sha256(path) != manifest["sha256"][relative]:
+            raise ValueError(f"sealed profile artifact hash mismatch: {relative}")
+        return path
+
+    registry_path = stage / "tests/comparison/dp_placement_pp/vllm_replay.py"
+    sealed("tests/comparison/dp_placement_pp/vllm_replay.py")
+    sealed("tests/comparison/stage_admission_pp/vllm_burst_driver.py")
+    sys.path.insert(0, str(stage / "tests/comparison/stage_admission_pp"))
+    try:
+        spec = importlib.util.spec_from_file_location("step5_profile_runtime_registry", registry_path)
+        registry = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(registry)
+    finally:
+        sys.path.pop(0)
+    adapter = registry.adapter_record(binding["native_runtime_adapter"])
+    reference = binding["native_reference"]
+    registry.check_native_reference(reference, adapter["native_reference"])
+    if reference["routing_strategy"] != "position_cyclic" or manifest["image"] != reference["image"]:
+        raise ValueError("profile adapter/image/routing identity mismatch")
+    for image in (reference["image"], reference["base_image"]):
+        if re.fullmatch(r".+@sha256:[0-9a-f]{64}", image) is None:
+            raise ValueError("profile native reference requires immutable image digests")
+    if reference["image"] == reference["base_image"]:
+        raise ValueError("position runtime requires a derived image, not the base image")
+    if os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") != reference["routing_strategy"] or os.environ.get("VLLM_MOE_SKIP_PADDING", "1") != "1":
+        raise ValueError("effective native routing/mask environment differs from binding")
+
+    receipt_path = sealed(binding["native_source_receipt"])
+    derivation_path = sealed(binding["native_derivation_manifest"])
+    receipt = json.loads(receipt_path.read_text())
+    derivation = json.loads(derivation_path.read_text())
+    root = Path(binding["installed_package"]).resolve(strict=True)
+    if (receipt["schema_version"] != "native_installed_sources.v1"
+            or receipt["image"] != reference["image"] or receipt["base_image"] != reference["base_image"]
+            or receipt["installed_package"] != str(root)
+            or receipt["python_version"] != sys.version.split()[0]
+            or receipt["derivation_manifest_sha256"] != file_sha256(derivation_path)):
+        raise ValueError("full installed-source receipt differs from native binding")
+    pins = binding["installed_source_hashes"]
+    if len(pins) != 53 or binding["serving_pin_count"] != 53:
+        raise ValueError("serving pin inventory count differs from binding")
+    for key, digest in pins.items():
+        path = root.parent / key
+        path.resolve(strict=True).relative_to(root)
+        if receipt["sources"][key] != digest or file_sha256(path) != digest:
+            raise ValueError(f"installed serving pin mismatch: {key}")
+    if derivation["base_image"] != reference["base_image"]:
+        raise ValueError("derivation base image differs from native reference")
+    for key, digest in derivation["derived_source_sha256"].items():
+        if pins[key] != digest or receipt["sources"][key] != digest:
+            raise ValueError(f"derived native source mismatch: {key}")
+    config_path = sealed("data/config/models/stepfun-ai__Step-5-Preview.json")
+    if file_sha256(config_path) != binding["model_config_sha256"] or not binding["model_config_revision"]:
+        raise ValueError("staged effective model configuration identity mismatch")
+
+    imports = {}
+
+    def verify_module(module):
+        path = Path(module.__file__).resolve(strict=True)
+        origin = Path(module.__spec__.origin).resolve(strict=True)
+        relative = path.relative_to(root)
+        key = "vllm/" + relative.as_posix()
+        expected_relative = Path(*module.__name__.split(".")[1:])
+        expected = root / (expected_relative / "__init__.py" if path.name == "__init__.py" else expected_relative.with_suffix(".py"))
+        if path != expected or origin != path or file_sha256(path) != receipt["sources"][key]:
+            raise ValueError(f"native module origin/spec/hash mismatch: {module.__name__}")
+        fact = {"path": str(path), "spec_origin": str(origin), "sha256": receipt["sources"][key]}
+        imports[module.__name__] = fact
+        return fact
+
+    for name in (
+        "vllm", "vllm.models.step5.nvidia.model", "vllm.forward_context",
+        "vllm.model_executor.layers.fused_moe.router.router_factory",
+        "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
+    ):
+        verify_module(importlib.import_module(name))
+    for name, module in tuple(sys.modules.items()):
+        if (name == "vllm" or name.startswith("vllm.")) and str(getattr(module, "__file__", "")).endswith(".py"):
+            verify_module(module)
+    callable_facts = {}
+    for supplied in callables:
+        function = inspect.unwrap(getattr(supplied, "__func__", supplied))
+        if not inspect.isclass(function) and not inspect.isfunction(function):
+            function = inspect.unwrap(getattr(function, "fn", function))
+        if not inspect.isclass(function) and not inspect.isfunction(function):
+            raise ValueError("native callable has no inspectable Python source")
+        module = sys.modules[function.__module__]
+        fact = verify_module(module)
+        source = Path(inspect.getsourcefile(function)).resolve(strict=True)
+        code = getattr(function, "__code__", None)
+        if source != Path(fact["path"]) or code is not None and Path(code.co_filename).resolve(strict=True) != source:
+            raise ValueError("bound native callable code/source differs from its installed module")
+        name = function.__module__ + "." + function.__qualname__
+        callable_facts[name] = {**fact, "qualified_name": name, "code_filename": str(source)}
+    shared = {key: binding[key] for key in (
+        "native_runtime_adapter", "native_reference", "profile_generation", "installed_package",
+        "model_config_revision", "model_config_sha256",
+    )}
+    shared.update(installed_source_hashes=pins, native_source_receipt_sha256=file_sha256(receipt_path),
+                  native_derivation_manifest_sha256=file_sha256(derivation_path))
+    return {"shared": shared, "imports": imports, "callables": callable_facts}
+
+
 @dataclass(frozen=True)
 class RuntimeIdentity:
     """Table-wide runtime facts written as identical columns on every row."""
@@ -106,6 +228,7 @@ class RuntimeIdentity:
     quant_signature: str
     parallel_groups: Mapping[str, int]
     graph_mode: str
+    native_facts: Mapping[str, Any] | None = None
 
     def __post_init__(self) -> None:
         for name in (
@@ -138,10 +261,12 @@ class RuntimeIdentity:
             "device_capability": self.device_capability,
             "graph_mode": self.graph_mode,
         }
+        if self.native_facts is not None:
+            payload["native_facts"] = self.native_facts["shared"]
         return hashlib.sha256(canonical_json(payload).encode()).hexdigest()[:16]
 
     def columns(self) -> dict[str, str]:
-        return {
+        columns = {
             "runtime_fingerprint": self.fingerprint,
             "runtime_versions": canonical_json(dict(self.runtime_versions)),
             "source_revision": self.source_revision,
@@ -155,6 +280,9 @@ class RuntimeIdentity:
             "parallel_groups": canonical_json(dict(self.parallel_groups)),
             "graph_mode": self.graph_mode,
         }
+        if self.native_facts is not None:
+            columns["native_facts"] = canonical_json(self.native_facts)
+        return columns
 
     def to_json(self) -> dict[str, Any]:
         return {**self.columns(), "parallel_groups": dict(self.parallel_groups)}
@@ -180,6 +308,7 @@ def measure_runtime_identity(
     quant_signature: str,
     parallel_groups: Mapping[str, int],
     graph_mode: str,
+    native_facts: Mapping[str, Any] | None = None,
 ) -> RuntimeIdentity:
     """Collect the identity of a table measured on the current CUDA device."""
 
@@ -195,6 +324,7 @@ def measure_runtime_identity(
         quant_signature=quant_signature,
         parallel_groups=parallel_groups,
         graph_mode=graph_mode,
+        native_facts=native_facts,
     )
 
 
