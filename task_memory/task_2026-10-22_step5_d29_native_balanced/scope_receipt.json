@@ -1,0 +1,106 @@
+{
+  "task_id": "D29-NATIVE-IMPLEMENTATION",
+  "rows": [
+    {
+      "path": "native-image/vllm/forward_context.py",
+      "added": 15,
+      "deleted": 0
+    },
+    {
+      "path": "native-image/vllm/models/step5/nvidia/model.py",
+      "added": 10,
+      "deleted": 1
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "added": 3,
+      "deleted": 0
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "added": 70,
+      "deleted": 0
+    },
+    {
+      "path": "tests/comparison/calibration/pd_proxy.py",
+      "added": 2,
+      "deleted": 2
+    },
+    {
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "added": 22,
+      "deleted": 2
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_canonical.py",
+      "added": 12,
+      "deleted": 4
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_replay.py",
+      "added": 8,
+      "deleted": 4
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_runtime.py",
+      "added": 77,
+      "deleted": 0
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_stage.py",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "tests/integration/step5_pd/verify_r2_stage.py",
+      "added": 17,
+      "deleted": 1
+    },
+    {
+      "path": "tests/unit/test_step5_canonical_g3.py",
+      "added": 121,
+      "deleted": 2
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "added": 66,
+      "deleted": 0
+    },
+    {
+      "path": "tests/unit/test_step5_native_position_cyclic.py",
+      "added": 167,
+      "deleted": 0
+    },
+    {
+      "path": "tests/unit/test_step5_native_reference.py",
+      "added": 2,
+      "deleted": 1
+    },
+    {
+      "path": "tests/integration/step5_environment/test_position_cyclic_graph.py",
+      "added": 289,
+      "deleted": 0
+    },
+    {
+      "path": "tests/integration/step5_native_image/Dockerfile.position_cyclic",
+      "added": 19,
+      "deleted": 0
+    },
+    {
+      "path": "tests/integration/step5_native_image/build_image.py",
+      "added": 69,
+      "deleted": 0
+    },
+    {
+      "path": "tests/unit/test_step5_native_image.py",
+      "added": 24,
+      "deleted": 0
+    }
+  ],
+  "gross": 1017,
+  "ceiling": 1582,
+  "path_count": 19,
+  "immutable_base": "PASS byte inventory and hashes",
+  "ast": "PASS",
+  "native_gross": 99
+}

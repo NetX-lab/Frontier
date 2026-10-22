@@ -2,6 +2,8 @@
 
 from dataclasses import asdict
 from collections import Counter, defaultdict
+import inspect
+from pathlib import Path
 import sys
 
 
@@ -14,6 +16,10 @@ SOURCE_MODULES = (
     'vllm.v1.worker.gpu.model_states.default',
     'vllm.v1.worker.gpu.attn_utils',
     'vllm.models.step5.nvidia.model_state',
+    'vllm.models.step5.nvidia.model',
+    'vllm.forward_context',
+    'vllm.model_executor.layers.fused_moe.router.router_factory',
+    'vllm.model_executor.layers.fused_moe.router.routing_simulator_router',
 )
 
 
@@ -83,8 +89,79 @@ def install(module, observer, wrap):
 
 def bind_model_state(worker, observer, wrap):
     cls = type(worker.model_runner.model_state)
+    strict = observer.config.get('routing_strategy') == 'position_cyclic'
+    if strict:
+        root = Path(observer.config['installed_native_root']).resolve()
+        for name in SOURCE_MODULES[-4:]:
+            module = sys.modules.get(name)
+            expected = root / (name.removeprefix('vllm.').replace('.', '/') + '.py')
+            origin = getattr(getattr(module, '__spec__', None), 'origin', None)
+            valid = (module is not None and getattr(module, '__file__', None) is not None
+                     and Path(module.__file__).resolve() == expected
+                     and origin is not None and Path(origin).resolve() == expected)
+            observer.emit('provenance', kind='native_import_origin', module=name,
+                          module_file=getattr(module, '__file__', None), spec_origin=origin,
+                          installed_native_root=str(root), verified=valid)
+            if not valid:
+                raise ValueError('Derived native imported origin mismatch: '+name)
     for name in SOURCE_MODULES:
         observer.verify_module(sys.modules[name], observer.config['schema_source_hashes'][name], 'native_schema')
+    if strict:
+        witnessed = ('native_router_census', *observer.identity(worker.model_runner).values())
+        if witnessed in observer.provenance:
+            return
+        loaded = list(worker.model_runner.model.modules())
+        name = 'vllm.models.step5.nvidia.model'
+        module = sys.modules[name]
+        text = [value for value in loaded if type(value) is module.Step5ForCausalLM]
+        valid = (len(text) == 1 and inspect.getsourcefile(type(text[0])) == module.__file__
+                 and inspect.getsourcefile(type(text[0]).forward) == module.__file__)
+        observer.emit('provenance', kind='native_text_forward', module=name, verified=valid,
+                      **observer.identity(worker.model_runner))
+        if not valid:
+            raise ValueError('Actual Step text class/forward is not the checked native model')
+        import vllm.envs as envs
+        census = []
+        for value in loaded:
+            experts = getattr(value, 'experts', None)
+            router = getattr(experts, 'router', None)
+            if router is None:
+                continue
+            quant = experts.routed_experts.quant_method
+            kernel = quant.moe_kernel
+            census.append(dict(layer=experts.layer_name, router=type(router).__name__,
+                routing_method=str(router.routing_method_type), top_k=router.top_k,
+                num_experts=router.global_num_experts, renormalize=router.renormalize,
+                routed_scaling_factor=router.routed_scaling_factor,
+                quant_method=type(quant).__name__, experts_class=type(kernel.fused_experts).__name__))
+        expected_moe = len(module._get_step5_moe_layer_indices(text[0].config))
+        configured = text[0].config
+        router_type = sys.modules[SOURCE_MODULES[-1]].RoutingSimulatorRouter
+        native_config = worker.model_runner.vllm_config
+        valid = (envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY == 'position_cyclic'
+                 and len(census) == text[0].num_moe_layers == expected_moe > 0
+                 and len({row['layer'] for row in census}) == expected_moe
+                 and envs.VLLM_MOE_SKIP_PADDING
+                 and configured.moe_router_activation == 'sigmoid'
+                 and native_config.kernel_config.moe_backend == 'auto'
+                 and not native_config.parallel_config.enable_eplb
+                 and all(not value.use_sequence_parallel for value in loaded if getattr(value, 'experts', None) is not None)
+                 and all(row['top_k'] == configured.moe_top_k
+                         and row['num_experts'] == configured.moe_num_experts
+                         and row['renormalize'] == configured.norm_expert_weight
+                         and row['routed_scaling_factor'] == configured.moe_router_scaling_factor
+                         for row in census)
+                 and all(type(value.experts.router) is router_type for value in loaded
+                         if getattr(getattr(value, 'experts', None), 'router', None) is not None))
+        observer.emit('provenance', kind='native_router_census', module=name, verified=valid,
+                      routing_strategy=envs.VLLM_MOE_ROUTING_SIMULATION_STRATEGY,
+                      skip_padding=envs.VLLM_MOE_SKIP_PADDING, layers=census,
+                      scoring_func=configured.moe_router_activation,
+                      moe_backend=native_config.kernel_config.moe_backend,
+                      **observer.identity(worker.model_runner))
+        if not valid:
+            raise ValueError('Derived native position router/layer census mismatch')
+        observer.provenance.add(witnessed)
 
     def prepared(state, result, arguments, token):
         context = getattr(observer.local, 'runtime', None)

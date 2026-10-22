@@ -153,3 +153,15 @@ def test_actual_outer_forward_identity_nested_exception_and_counter(native):
     assert 'Step5ForCausalLM' in config and 'breakable' in config
     routing = ast.unparse(nodes(native.root, ROUTER+'routing_simulator_router.py', ['PositionCyclicRouting'])[0])
     assert not any(name in routing for name in ('.item(', '.cpu(', '.any(', 'all_reduce'))
+    oracle = (native.root/'model_executor/layers/fused_moe/experts/triton_deep_gemm_moe.py').read_text()
+    assert 'is_deep_gemm_e8m0_used() or _valid_deep_gemm(hidden_states, w1, w2)' in oracle
+
+
+@pytest.mark.parametrize('rows,experts,top_k', [(2, 352, 0), (2, 352, 353)])
+def test_invalid_top_k_and_logits_shape(native, rows, experts, top_k):
+    strategy = native.ns['PositionCyclicRouting']()
+    positions = torch.arange(rows)
+    with pytest.raises(ValueError, match='1 <= top_k'):
+        strategy.route_tokens(torch.zeros(rows, 1), torch.zeros(rows, experts), top_k, positions=positions)
+    with pytest.raises(ValueError, match='shape'):
+        strategy.route_tokens(torch.zeros(rows, 1), torch.zeros(rows), 1, positions=positions)

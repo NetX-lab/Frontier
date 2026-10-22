@@ -36,6 +36,72 @@ def events(observer):
             for line in path.read_text().splitlines()]
 
 
+@pytest.mark.parametrize('fault', ['none', 'file', 'spec', 'hash', 'missing', 'forward'])
+@pytest.mark.parametrize('native_fails', [False, True])
+@pytest.mark.parametrize('module_index', [-4, -3, -2, -1])
+def test_derived_actual_import_model_provenance_remains_soft(tmp_path, monkeypatch, fault, native_fails, module_index):
+    from tests.integration.step5_pd import r2_runtime
+    root = tmp_path/'installed/vllm'
+    config = configuration(tmp_path, routing_strategy='position_cyclic',
+                           installed_native_root=str(root), expected_layer_count=1)
+    config['schema_source_hashes'] = {}
+    modules = {}
+    for name in r2_runtime.SOURCE_MODULES:
+        path = root/(name.removeprefix('vllm.').replace('.', '/')+'.py')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('class Step5ForCausalLM:\n    def forward(self):\n        return 1\n')
+        module = ModuleType(name)
+        module.__file__, module.__spec__ = str(path), NS(origin=str(path))
+        monkeypatch.setitem(sys.modules, name, module)
+        exec(compile(path.read_text(), str(path), 'exec'), module.__dict__)
+        modules[name] = module
+        config['schema_source_hashes'][name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    name = 'vllm.models.step5.nvidia.model'
+    model = modules[name]
+    model._get_step5_moe_layer_indices = lambda config: {3}
+    broken = r2_runtime.SOURCE_MODULES[module_index]
+    selected = modules[broken]
+    if fault in ('file', 'spec'):
+        foreign = tmp_path/'shadow.py'; foreign.write_bytes(Path(selected.__file__).read_bytes())
+        if fault == 'file': selected.__file__ = str(foreign)
+        else: selected.__spec__.origin = str(foreign)
+    elif fault == 'hash': config['schema_source_hashes'][broken] = '0'*64
+    elif fault == 'missing': monkeypatch.delitem(sys.modules, broken)
+    elif fault == 'forward': model.Step5ForCausalLM.forward = lambda self: 1
+    env = ModuleType('vllm.envs')
+    env.VLLM_MOE_ROUTING_SIMULATION_STRATEGY, env.VLLM_MOE_SKIP_PADDING = 'position_cyclic', True
+    parent = ModuleType('vllm'); parent.envs = env
+    monkeypatch.setitem(sys.modules, 'vllm', parent); monkeypatch.setitem(sys.modules, 'vllm.envs', env)
+    router = type('RoutingSimulatorRouter', (), {})()
+    modules[r2_runtime.SOURCE_MODULES[-1]].RoutingSimulatorRouter = type(router)
+    router.top_k, router.global_num_experts, router.renormalize = 8, 352, True
+    router.routing_method_type, router.routed_scaling_factor = 'Simulated', 1.25
+    experts = NS(layer_name='layer', router=router, routed_experts=NS(quant_method=NS(moe_kernel=NS(fused_experts=object()))))
+    state = type('State', (), {'prepare_attn': lambda self: None})()
+    text = model.Step5ForCausalLM()
+    text.config, text.num_moe_layers = NS(moe_router_activation='sigmoid', moe_top_k=8,
+        moe_num_experts=352, norm_expert_weight=True, moe_router_scaling_factor=1.25), 1
+    worker = NS(model_runner=NS(model_state=state, vllm_config=NS(kernel_config=NS(moe_backend='auto'),
+        parallel_config=NS(enable_eplb=False)), model=NS(modules=lambda: [text, NS(experts=experts, use_sequence_parallel=False)])))
+    observer = r2.Observation(config)
+    monkeypatch.setattr(observer, 'identity', lambda *args: dict(role='decode', dp_rank=0, tp_rank=0))
+    calls = []
+    class Native:
+        def load(self):
+            calls.append(1)
+            if native_fails: raise LookupError('native failure')
+            return 17
+    r2.wrap(Native, 'load', observer, after=lambda *args: r2_runtime.bind_model_state(worker, observer, r2.wrap))
+    if native_fails:
+        with pytest.raises(LookupError, match='native failure'): Native().load()
+        assert not events(observer)
+    else:
+        assert Native().load() == 17
+        assert observer.disabled == (fault != 'none')
+        assert events(observer)[-1]['event'] == ('observer_error' if fault != 'none' else 'provenance')
+    assert calls == [1]
+
+
 class Owner:
     pass
 

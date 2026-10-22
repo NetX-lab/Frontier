@@ -1,0 +1,9 @@
+{
+  "script": "tests/integration/step5_environment/test_position_cyclic_graph.py",
+  "sha256": "a319761827a36fba02751c96296cb84ebf4a2cf994a0e38273810530bec81c7f",
+  "ast": "PASS",
+  "contract_tokens": "PASS",
+  "gpu_run": "NOT_RUN",
+  "docker_payload_ast": "PASS",
+  "docker_run": "NOT_RUN"
+}
