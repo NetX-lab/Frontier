@@ -132,6 +132,7 @@ churn. Code diff command: `git diff 2c4cc9e 74d5c48 -- tests`.
 
 Authorized clean fast-forward6827507 -> accepted9090407. No source/test edits or
 source/CPU acceptance rerun. Native19 remains1269/1582 gross; no native patch change.
+Input/artifact commit: **aa872fa**,14 local task-record/input paths only.
 
 Deliverables under the existing task's `t2_preparation/`:
 - `model_metadata/config.json`: unchanged complete retained78447-byte metadata,
@@ -163,6 +164,10 @@ Remaining: root independent accept/seal/readiness and finite-collection resource
 run authorization, actual paths/rendezvous/output retention, actual engine7168
 seam if required, all GPU/import/library/backend/runtime evidence. No numerical
 state tolerance was selected, and original G3 criteria are preserved.
+The exact unbound-engine seam is the existing EngineArgs call in
+`frontier/profiling/collectives/step5_dispatch_probe.py:create_native_config:334–341`
+and `tests/integration/step5_environment/test_position_cyclic_graph.py:276–279`;
+T2 argparse exposes no max_model_len. No code changes are authorized/performed.
 
 ## Preserved pre-allocation design archive (historical)
 

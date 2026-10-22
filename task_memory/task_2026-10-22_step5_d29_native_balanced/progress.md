@@ -26,24 +26,24 @@
 - completed: D29-T2-INPUT-PREPARATION P1 retained metadata/publication/source identity;
   P2 controlled config/cases; P3 exact existing commands and resource proposal.
 - completed: P4 schema/types/bounds/static topology/hash review and bash-n-only
-  commands; all6 artifacts in hashes.sha256 verify. Input-only commit handoff
-  is being finalized; no production/test delta against9090407.
+  commands; all6 artifacts in hashes.sha256 verify. Input-only commit aa872fa;
+  no production/test delta against9090407.
 - pending (root): independent sealing/readiness, resource/run approval, actual
   mounts/rendezvous/output and GPU evidence. Exact engine7168 remains unsupported
   by existing T2 interface if root requires more than the prepared input bound.
 
 ## 1. 规划完成情况
-**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1（当前input-only任务）
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（当前input-only任务；不是GPU验收）
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | P1接受源码/metadata定位 | PASS | clean fast-forward9090407；actual retained config及revision/hash已绑定 |
 | P2controlled inputs | PASS | graph2×17；module3个DP frames；原metadata字节未改 |
 | P3commands/resources | PASS | existing torchrun/script，最低16H800，提案30min/8GPUh，非授权 |
-| P4static/records/commit | TODO | schema/hash/topology/bash-n/sha256sum PASS；owned交接commit待完成 |
+| P4static/records/commit | PASS | schema/hash/topology/bash-n/sha256sum PASS；input commit aa872fa |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** D29-T2-INPUT-PREPARATION dispatch至static输入检查｜**当前前沿：** P4记录及commit
+**检测窗口：** D29-T2-INPUT-PREPARATION dispatch至commit aa872fa｜**当前前沿：** root acceptance/sealing/资源决策（本流外）
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | 只做用户要求static input/hash/command检查，未重跑source/CPU验收 |
@@ -53,18 +53,15 @@
 | D5 超范围镀金 | CLEAR | 零production/test edits，无新mode/harness/tolerance，3frames来自已批准design |
 | D6 分析空转 | CLEAR | 本任务交付即input/resource提案，已生成config/cases/provenance及commands |
 | D7 路线违背 | CLEAR | no launch/platform，保持metadata1048576，不伪造engine7168或observed traces |
-**文档检查：** S5 notes/progress旧publication pending与9090407矛盾已纠正；S3如7168意味着actual engine bound，现T2/helper无参数，已作为root依赖明确记录。S1/S2/S4/S6无明显缺陷。
+**文档检查：** S1–S6均未发现未记录缺陷；旧publication状态已纠正，input7168与engine7168区别及root-dependent seam已记录。
 **归因：** 无。
 
 ## 3. 纠正建议
-**分支：** B：先纠正过时publication状态并显式记录input7168与engine7168的区别。
-**文档更新（先执行）：**
-1. notes/progress/summary：published image/export已完成；本轮inputs未运行（可直接执行）。
-2. plan/requirements及execution_proposal：所有positions<7168，实际engine context未绑定；若root要求强绑定，需root决定supported seam（需用户确认；本任务不改代码）。
+**分支：** A：当前spec/plan及边界记录合理，无需扩展本任务。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. P4static输入交接：hash/source/paths/commands与现有schema一致并commit → 完成标志：只有owned records/input artifacts，无code changes。
-2. root独立accept/seal/资源决策及7168依赖 → 完成标志：finite-unit source/input身份、真实资源/路径、明确actual run approval。
+1. root独立accept/seal/资源决策及7168依赖 → 完成标志：finite-unit source/input身份、真实资源/路径及required engine bound是否可由现有input-only范围满足。
+2. root readiness后请求actual run approval → 完成标志：批准finite unit/topology/budget/launcher及outputs；本流不运行。
 
 ## 4. 最值得关注的 3 点
 1. T2 inputs为controlled/unobserved，GPU/graph/backend/G3均UNVERIFIED。
@@ -130,6 +127,14 @@
   `git diff --check` PASS; selected script Git bytes at9090407 equal recorded
   hashes; current image reference equals accepted publication receipt. No CPU/
   source suite rerun, native import or actual runtime receipt.
+- completed: input/records commit aa872fa. All14 changed paths are within the
+  exclusive existing native task; no code/test or central/peer changes. Root
+  must independently accept/seal before later resource/run authorization.
+- Exact-engine7168 seam if required: existing EngineArgs constructors in
+  frontier/profiling/collectives/step5_dispatch_probe.py:create_native_config:334–341
+  and tests/integration/step5_environment/test_position_cyclic_graph.py:276–279.
+  Neither receives max_model_len; T2 argparse:244–248 has no such input. These
+  facts identify the dependency, not authorization for edits or a workaround.
 
 ## Preserved pre-allocation record (historical)
 
