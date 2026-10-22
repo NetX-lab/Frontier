@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Accept/merge T2 limits892b6a1; receive full PRICING8e61c2d, start split reviews and parent checks, authorize CORE dependency integration. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000; allocate native19/1582, core-source44/4404 and pricing44/3956. |
 | 2026-10-23 | All design reviews closed; parent scope107/9942 and sole-writer allocation complete; model/scope decision pending. |
 | 2026-10-22 | Receive pricing proposal, identify an unapproved communication-model choice and arithmetic error, and assign callable-provenance correction. |
@@ -19,13 +20,50 @@
   size-note lines, approved10000 total. `shared_scope.md`/`scope.json` bind details.
 - completed: YC selects `批准完整方案 (Recommended)` for D29-SCOPE-107-10000;
   requirements and human review receipt retain the exact decision.
-- in-progress: three implementation streams from the common approval commit;
-  native19/1582, core-source44/4404, pricing44/3956, no shared-file writers.
-  Native19 includes four native-image files changed against locked base bytes.
-- pending: interface integration, focused checks, independent review, parent
+- completed: native19 source/CPU acceptance, published image/actual source receipts,
+  and T2 limits/controlled-input binding merged892b6a1. Native1350/1582; four image
+  files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
+  configs, independent No findings and actual full-file rebinding6/6 PASS.
+- in-progress: CORE/SOURCE final consumers/fixture and F1 repair; PRICING full
+  delivery8e61c2d (43 changed paths/2626 gross including312 submodule lines) has
+  entered parent verification and two disjoint phase reviews. CORE may integrate
+  delivered interfaces for development; final acceptance is not implied.
+- pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
-  receipts and fresh GPU/native qualification. Additional collection resources
+  qualification and fresh GPU/native evidence. Additional collection resources
   and run approval follow readiness. D30 remains integrated4ec5b23.
+
+### T2 closure and PRICING parent checkpoint
+
+T2 verified source662849e/records94244bc is merged892b6a1; main frontier/tests
+bytes equal the tested frozen tree. Actual script/helper identities replace the
+prepared mixed3f54bc6 file hash. The dedicated verify-step5-t2-limits-01 worktree
+remains the controlled frozen source. Tests, exact commands, independent review
+and source/input acceptance are in repairs/test_report_2026-10-23_t2_config.md
+and repairs/review_2026-10-23_t2_config.md. No image/source patch change or GPU run.
+
+PRICING frozen review: verify-step5-pricing-01 at8e61c2d, submodule1a16426.
+Exact38 parent+5 submodule diffs/receipts: /data/ycfeng/tmp/d29_pricing_review01/.
+Finite-model/producer reviewer ses_e9abd8364ffee5sQKdpiQh3yH4; native compute/
+accounting reviewer ses_e9afdb7c4ffejb3hbkjZCeHFKS. CORE integration authorized to
+ses_e9b3efeebffem2dcbXlVGNr8O2. Parent14-suite command:434 PASS/90 SKIP/3 FAIL;
+all three importer negatives fail with ModuleNotFoundError:collective_sim_core.
+setup_model mocks out the normal constructor loader before those negatives,
+while the later TP formula test explicitly supplies the import path. This cold
+fixture problem is supplied to the finite reviewer for the owner's repair; no
+production fallback or environment path masking applied. Real HTSIM7 PASS/1.76s;
+published original native-method CPU execution PASS. Raw parent evidence:
+/data/ycfeng/tmp/d29_pricing_parent01.{log,xml}, d29_pricing_sub_parent01.{log,xml},
+and d29_pricing_native_parent01.log. CPU results do not establish model accuracy,
+native/GPU/backend/graph/G3 or E2E acceptance; full PRICING is not merged yet.
+
+Finite reviewer returns four P2: reject truncated HTSIM output before prediction
+or fitting; bind actual communicator/buffer policy into model identity; verify
+native op/group/graph/replay multiplicity; preserve real importer initialization.
+F2 nested tuple immutability is closed. Root resumes the PRICING owner with these
+four repairs within remaining1330 gross. Full evidence/review/commands are retained
+under verify-step5-pricing-01/task_memory/task_2026-10-22_step5_position_routing/
+pricing_parent/. Compute/native pricing review and CORE integration continue.
 
 ## Active implementation dispatch — 2026-10-23
 

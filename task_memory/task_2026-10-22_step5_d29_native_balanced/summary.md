@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent accepts T2 constructor/source binding and merges892b6a1 after177 PASS/15 SKIP, actual-image config values and independent No findings. |
 | 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
 | 2026-10-23 | Prepare controlled T2 metadata/cases and bounded execution/resource proposal; static-only, no code change or launch. |
 | 2026-10-23 | Close two-file T2 engine-limit interface gap with175 affected CPU PASS/15 SKIP; native19 now1350/1582, root integration pending. |
@@ -14,6 +15,15 @@
 |2026-10-22|Archived actual native route and reference-invariance policy decision; no implementation or launch.|
 
 ## Current implementation outcome
+
+Parent T2 acceptance: verified662849e/records94244bc merged892b6a1. Both real
+installed-image CPU configs retain7168/8192/128 after with_hf_config; independent
+constructor review reports No findings. Complete integrated files and the6-entry
+controlled-input index are rebound in t2_preparation/. The frozen source is
+verify-step5-t2-limits-01. This closes earlier root integration/image-value/seal
+handoff items below; it does not authorize the16H800/1800s proposal or qualify
+GPU graphs/backend/G3/full serving. Parent evidence is under the position-routing
+task's repairs/test_report_2026-10-23_t2_config.md and review_2026-10-23_t2_config.md.
 
 TaskID: **D29-NATIVE-IMPLEMENTATION**. Approved native19 implementation is complete
 on feat/step5-position-native. Commits: e48cdc0 (early native interface/source
