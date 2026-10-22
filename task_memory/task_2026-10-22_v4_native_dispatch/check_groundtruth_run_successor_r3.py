@@ -18,6 +18,38 @@ DISPATCH_HOOKS = {'vllm.v1.worker.gpu.model_runner.' + name for name in
 DISPATCH_HOOKS.add('vllm.v1.worker.gpu.dp_utils.dist.all_reduce')
 BALANCED_MODULE = 'frontier/profiling/moe/balanced_routing.py'
 BALANCED_SHA256 = '6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea'
+ROUTING_PINS = ('vllm/envs.py', 'vllm/model_executor/layers/fused_moe/router/router_factory.py',
+    'vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py',
+    'vllm/model_executor/layers/fused_moe/runner/moe_runner.py')
+
+
+def verify_balanced_frontier(config, engine, manifest=None):
+    if engine.get('moe_gating_routing_runtime_path') is None:
+        return
+    import json
+    path = Path(config['script']).parent / 'case/inputs/frontier.json'
+    digest = sha(path)
+    if (config['retained_files']['case/inputs/frontier.json'] != digest
+            or config['tool_hashes'][str(path)] != digest
+            or (manifest is not None and manifest['inputs_sha256'][str(path)] != digest)):
+        raise ValueError('Actual Frontier input is not hash-bound to the native execution')
+    flat = json.loads(path.read_text())
+    from dataclasses import fields
+    from frontier.config import SimulationConfig
+    from frontier.config.flat_dataclass import create_flat_dataclass
+    if set(flat) != {field.name for field in fields(create_flat_dataclass(SimulationConfig))}:
+        raise ValueError('Actual Frontier input is not the complete flat SimulationConfig format')
+    required = dict(sys_arch='pd-disaggregation', simulation_mode='online', enable_parallel_clusters=False,
+        replica_config_model_name=engine['model_name'], replica_config_moe_routing_distribution_type='balanced',
+        replica_config_moe_gating_routing_runtime_path='balanced_topk')
+    for role in ('prefill', 'decode'):
+        required['cluster_config_' + role + '_cluster_num_replicas'] = 1
+        required.update({'cluster_config_' + role + '_replica_config_' + key: value for key, value in
+            dict(attn_tensor_parallel_size=engine['tensor_parallel_size'], device=config['gpu_type'].lower(),
+                moe_tensor_parallel_size=1, moe_expert_parallel_size=engine['tensor_parallel_size'] * engine['data_parallel_size'],
+                num_pipeline_stages=engine['pipeline_parallel_size']).items()})
+    if any(key not in flat or type(flat[key]) is not type(value) or flat[key] != value for key, value in required.items()):
+        raise ValueError('Actual Frontier P/D/model/routing configuration differs from the native case')
 
 
 def verify_balanced_runtime(inventory, env, engine, config, manifest):
@@ -29,11 +61,17 @@ def verify_balanced_runtime(inventory, env, engine, config, manifest):
     origin = Path(config['script']).parent / config['harness_files'][BALANCED_MODULE]
     expected = dict(environment='balanced_topk', runtime_path='balanced_topk',
         strategy='balanced_routing.BalancedTopKRouting', origin=str(origin), sha256=BALANCED_SHA256)
+    sources = {name: dict(origin=str(Path(config['installed_package']).parent / name),
+        sha256=config['expected_source_hashes'][name]) for name in ROUTING_PINS}
     routers = {name.removesuffix('.routed_experts') for name in inventory['moe_backends']}
     if (selected != 'balanced_topk' or env.get(variable) != selected or not actual or not routers
             or actual != expected | {'routers': {name: 'vllm.model_executor.layers.fused_moe.router.'
-                'routing_simulator_router.RoutingSimulatorRouter' for name in routers}}
+                'routing_simulator_router.RoutingSimulatorRouter' for name in routers},
+                'runners': {name: 'vllm.model_executor.layers.fused_moe.runner.moe_runner.MoERunner'
+                    for name in routers}, 'native_sources': sources}
             or manifest['harness_sha256'][BALANCED_MODULE] != BALANCED_SHA256
+            or any(row['sha256'] != sha(Path(manifest['groundtruth_checkout_path']) / name)
+                for name, row in sources.items())
             or sha(origin) != BALANCED_SHA256):
         raise ValueError('Actual balanced routing strategy/source/environment identity mismatch')
 
@@ -146,7 +184,9 @@ def successor_source(path=R2_PATH):
          '            for search, path in imports:\n'),
         ('                inventory, counters = payload["inventory"], payload["counters"]\n',
          '                inventory, counters = payload["inventory"], payload["counters"]\n'
-         '                verify_balanced_runtime(inventory, env, engine, config, manifest)\n'),
+          '                verify_balanced_runtime(inventory, env, engine, config, manifest)\n'),
+        ('        harness = manifest["harness_worktree"]\n',
+         '        verify_balanced_frontier(config, engine, manifest)\n        harness = manifest["harness_worktree"]\n'),
         ('            native_v4_source_binding(manifest, engine, config)\n',
          '            source_files += SOURCE_PINS\n            native_v4_source_binding(manifest, engine, config)\n'),
         ('            dispatch, captured = native_v2_graph_dispatch(manifest, engine)\n',

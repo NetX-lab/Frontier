@@ -7,6 +7,7 @@
 | 2026-10-22 | Completed source-level mismatch analysis; proposed explicit per-case runtime selection and existing native registration. |
 | 2026-10-22 | W128 documented native109-line slice and exact unresolved next-generation binding. |
 | 2026-10-22 | Updated actual capacity128/row-identity findings and complete22-file/843-line planning estimate. |
+| 2026-10-22 | Superseded estimate with approved23/900, actual shared12/~428 basis and B final source/CPU binding. |
 
 Analysis status: PASS (source question resolved). Correction state: approved under D-V4-BALANCED-RUNTIME-SELECTOR. Native/kernel/four-metric qualification: UNVERIFIED.
 
@@ -72,6 +73,8 @@ At least one additional maintained adapter file is necessary: the retained33-lin
 
 ## Complete binding estimate after root's integration finding
 
+Historical estimate below is superseded by YC's explicit23-file/900-line approval. Actual aggregate planning basis is shared12/about428 plus nonshared11/about426, about23/854. Exclusive allocations are A12/450, B6/250, C5/200. No owner may silently use the aggregate ceiling; B currently253 and awaits root reallocation before expansion.
+
 No source edits followed this finding. Shared final11 files/about417 lines plus the already implemented native five files/109 lines would be16 files/526 lines even before completing prefill. The following estimate is for the smallest ordinary readable complete wiring using current APIs, with no new strategy implementation or shared identity schema.
 
 | Maintained files | Final routing lines estimated | Required gain / uncovered seam |
@@ -103,3 +106,10 @@ These are planning estimates, not a fabricated diff. Existing five owned files' 
 1. Confirm actual shared file/line count after mandatory forwarding and demonstrated registry reuse correction. If its final count differs from11/417, adjust the843-line estimate by that exact difference.
 2. Approve/reallocate the complete22/900 routing scope before further implementation. Coordinate the two profiler-owned source files and existing deepseek_v4 consumer with frontend ownership. A review-only strategy freeze need not change; same strategy bytes remain6562ec1c... on both paths.
 3. Root selects actual Frontier comparison input and fresh generation destinations; builders use those existing inputs, not fabricated miniature substitutes. Source implementation/review -> complete CPU identity/negative controls -> fresh-generation choice/pins -> root sealing/runtime validation. No live GPU proof can replace missing source wiring.
+
+## Actual native-final wiring and remaining generation evidence
+
+- Actual native source receipt reuses moe_routing.native_sources, keyed by the four existing native source paths. Env cached getter is unwrapped; strategy/factory/simulator/router/MoERunner callables must have co_filename equal to actual module origin. R3 compares every origin to installed_package.parent/path and every hash to the unchanged pinned native checkout. No extra device read/fence/collective is added.
+- Actual input is root's complete flat SimulationConfig,775 fields/SHA747a08e5da6759f8189d29b2c8419ab48eb215ac2db4a2596af4f1d15ef34897. The native builder copies those bytes to case/inputs/frontier.json; retained_files automatically adds its actual absolute path to existing prelaunch inputs_sha256. R3's harness predicate verifies all three existing hash records, complete current flat schema and canonical P/D/model/parallel/device/balanced keys. Frozen R2 inputs predicate remains unchanged.
+- Maintained builder path in this worktree: task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py. Original bytes/hash21b5a723... are in evidence/build_candidate.baseline.py, not a parallel implementation. New strategy target and R3/R2 tool hashes are explicit. Dispatch adds three lines separately; routing adds four pins to74. Existing source guards require a clean committed checkout and absent selected06 destination; all old packages remain unchanged.
+- Source wiring and130 focused CPU controls are implemented; local253/250 scope correction and forthcoming root-supplied prefill negatives remain open. Root owns effective role check, common review/freeze, committed generation choice/creation/seal and runtime evidence. Existing builder timing defaults10800/7200 remain unqualified historical values; root must align the selected formal launch envelope to its approved60min budget before submission, without inferring increased GPU authorization.

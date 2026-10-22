@@ -1,0 +1,52 @@
+{
+  "task_id": "W128-V4-BALANCED-NATIVE-FINAL",
+  "files": [
+    {
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "added": 6,
+      "deleted": 1,
+      "routing": 7
+    },
+    {
+      "path": "tests/comparison/calibration/native_full_structure.py",
+      "added": 43,
+      "deleted": 0,
+      "routing": 43
+    },
+    {
+      "path": "task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py",
+      "added": 70,
+      "deleted": 0,
+      "routing": 70
+    },
+    {
+      "path": "tests/unit/test_native_reader_binding.py",
+      "added": 99,
+      "deleted": 0,
+      "routing": 99
+    },
+    {
+      "path": "tests/unit/test_native_v2_serving_inventory.py",
+      "added": 4,
+      "deleted": 1,
+      "routing": 5
+    },
+    {
+      "path": "task_memory/task_2026-10-15_glm53_dsv4_vllm028_h800/v4_p0_native_20261021/build_candidate.py",
+      "added": 28,
+      "deleted": 4,
+      "routing": 29,
+      "dispatch": 3,
+      "baseline_sha256": "21b5a7232e31df74052856d933c003b5af9caca7ce2fc6362fc1dbca36593560"
+    }
+  ],
+  "distinct_maintained_files": 6,
+  "routing_changed_lines": 253,
+  "routing_allocation": 250,
+  "dispatch_builder_delta": 3,
+  "dispatch_total": 491,
+  "scope_status": "LOCAL_ROUTING_REALLOCATION_REQUIRED",
+  "cpu_tests_passed": 130,
+  "package_created": false,
+  "native_runtime_verified": false
+}
