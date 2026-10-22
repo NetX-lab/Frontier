@@ -35,8 +35,11 @@ deleted-hunk/baseline/change-attribution completeness. Parent supplies
 exact1aee0af11cd58691e64603b99eca0ac459a5b350 to
 bd97ac520fd0ba796ecd9d1905fdff352e859680,37 paths,158722 bytes,
 SHA25625299e3a077042e2d17a38ac6409524472be93f826b4ea2d1c4b1d1ca27eb069.
-The same reviewer continues only that missing portion while both authors repair
-their owned findings and continue the remaining implementation.
+The same reviewer completes that exact-diff portion, including deleted hunks,
+baseline-sensitive defaults/legacy behavior and attribution, with no additional
+actionable finding. The prior missing-diff limitation is closed; F1/F2 remain
+open pending author delivery and re-verification. Both authors continue their
+remaining implementation in parallel.
 
 ### Native19
 

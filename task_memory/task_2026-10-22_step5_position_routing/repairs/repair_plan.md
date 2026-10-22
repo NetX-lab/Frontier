@@ -50,6 +50,10 @@ binding. A local image candidate may be built while source review runs; publish
 after that review and affected checks pass. The image does not depend on complete
 Frontier fixture/regression work; package admission still requires all applicable
 integration and evidence checks. This corrects S1 in the native-delivery checkpoint.
+After native source/image acceptance, controlled T2 inputs and their existing
+execution/resource proposal can be prepared in parallel with remaining Frontier
+implementation. This preparation neither qualifies runtime nor authorizes a run;
+package readiness and the separate resource/run decision still apply.
 
 Native publishes set_routing_positions and the actual factory contract first.
 CORE/SOURCE publishes immutable lane/source descriptors, source_frame_tensors,

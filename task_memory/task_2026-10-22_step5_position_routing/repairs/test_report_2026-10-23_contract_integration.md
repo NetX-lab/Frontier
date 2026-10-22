@@ -101,7 +101,8 @@ are retained in evidence/ alongside dependency versions/hashes.
 Foundation review identifies F1 missing actual _select_experts provenance and
 F2 mutable sequence inputs to frozen collective dataclasses. Owners are repairing
 these within existing allocations;306 PASS is test evidence, not source acceptance
-with open findings. Exact37-path diff review is being completed separately.
+with open findings. Exact37-path diff review is complete without additional
+findings; only F1/F2 remain pending delivery and re-verification.
 
 Receive complete peer implementations, close foundation findings and source review,
 then full-unit failure/error comparison, strict77, actual-main and new GPU/native
