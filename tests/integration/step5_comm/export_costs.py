@@ -390,6 +390,8 @@ def export_finite_parameters(directory, output):
         context = record["native_context"]
         if context["shared"] != shared or record["evidence_kind"] != evidence_kind:
             raise ValueError("Measured native context differs from the bound producer source")
+        if evidence_kind == "native_measurement" and not context.get("execution_policy"):
+            raise ValueError("Measured model context requires actual execution policy receipts")
         from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
         tensors = tuple(CollectiveTensor(n,d,DTYPE_BYTES[d],c,c) for n,d,c in
                         zip(names,record["dtypes"],record["columns"]))

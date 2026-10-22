@@ -59,6 +59,7 @@ def validate(job: dict, root: Path) -> dict:
                  and any(call_bytes(call, parallel, r))]
         groups = sorted({tuple(group_members(parallel, call.group, r)) for r in ranks})
         expected = {"participating_ranks": ranks, "group_ranks": [list(g) for g in groups],
+                    "op":call.op,"group":call.group,"cuda_graph":call.captured,
                     "tokens_per_dp_rank": list(scenario.tokens_per_dp_rank),
                     "useful_tokens_per_dp_rank": list(scenario.useful_tokens_per_dp_rank or scenario.tokens_per_dp_rank),
                     "padded_tokens_per_dp_rank": list(scenario.tokens_per_dp_rank),
@@ -115,7 +116,8 @@ def validate(job: dict, root: Path) -> dict:
         checks["native_source_frames"] = all(layer["moe_input_id"] in inputs and layer["source_frame"] ==
             json.loads(json.dumps(asdict(inputs[layer["moe_input_id"]].source_frames[r["rank"]//parallel.tensor_parallel_size])))
             for r in ranks for layer in r["layers"])
-        checks["native_actual_counts"] = all(type(k["profiled_calls"]) is int and k["profiled_calls"] > 0 and
+        checks["native_actual_counts"] = all(type(k["profiled_calls"]) is int and
+            k["profiled_calls"] == config["calls_per_repeat"] and
             len(k["per_rank_kernel_counts"]) == parallel.world_size and all(type(n) is int and n > 0 and
             len(e) == n*k["profiled_calls"] for n,e in zip(k["per_rank_kernel_counts"],k["per_rank_events"])) and
             len(k["per_rank_events"]) == parallel.world_size for k in kernels)
@@ -123,6 +125,19 @@ def validate(job: dict, root: Path) -> dict:
             for call in layer["collectives"] if call.get("op") == "all_gatherv"}
         checks["native_reached_dispatch"] = all(tuple(zip(r["dtypes"],r["columns"])) in reached
             for r in records if r["op"] == "all_gatherv")
+        runtime=native["runtime"].get("per_rank_runtime",{})
+        rank_probes={r["rank"]:r for r in ranks}
+        checks["native_execution_policy"]=(set(runtime) == {str(rank) for rank in range(parallel.world_size)} and all(
+            set(record["native_context"].get("execution_policy",{})) == {str(rank) for rank in record["participating_ranks"]} and
+            all(policy.get("runtime") == runtime.get(rank) and policy.get("branches") and not policy.get("diagnostic_errors")
+                for rank,policy in record["native_context"].get("execution_policy",{}).items()) for record in records))
+        checks["native_probe_policy"]=all(any(
+            call.get("execution_policy") == policy and call["op"] == record["op"] and
+            call["group_ranks"] == group_members(parallel,record["group"],int(rank)) and
+            tuple((t["dtype"],t["shape"][1]) for t in call["inputs"]) == tuple(zip(record["dtypes"],record["columns"]))
+            for layer in rank_probes[int(rank)]["layers"] for call in layer["collectives"])
+            for record in records
+            for rank,policy in record["native_context"].get("execution_policy",{}).items())
     if "local_work" in config["grid"]:
         local=read_jsonl(root/"collectives/local_work.jsonl")
         local_keys={(p,row["name"]) for p in range(config["passes"]) for row in config["grid"]["local_work"]}

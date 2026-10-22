@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Start scoped interface-first implementation. |
 | 2026-10-23 | Close owned delivery and distinguish peer/runtime acceptance boundaries. |
+| 2026-10-23 | Verify F3-F6 review repair and scoped final evidence. |
 
 1. **completed:** Publish selected targets, ROUTED prepare binding, immutable plan/result.
 2. **completed:** Extend isolated collective-sim with strict plan serialization, joint ordered
@@ -31,3 +32,8 @@ receipts/context/probe equality -> affected14 suites + submodule/JUnit + budget
 and scoped commits/archive. F3 and F6 are independent; no extra delegation.
 Legacy scalar and TP-local no-network semantics remain unchanged. Only existing
 owned files,<=3956 gross total; actual GPU inputs/global acceptance remain root.
+
+F3/F6 **completed**37ead7f/sub3dac53c; F4/F5 **completed implementation and
+verification**, scoped commit/archive next. Final545 JUnit cases:456 PASS/89 SKIP,
+submodule12 PASS, cold constructor9 PASS. Updated total2944/3956 in43 paths;
+no new code paths or peer/import changes. Re-review is root-owned.

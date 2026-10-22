@@ -175,7 +175,9 @@ def test_parent_selection_never_qualifies_fixtures_or_missing_model_evidence(tmp
     fit=EXPORT.fit_affine([dict(operand_bytes=x,duration_ms=x,split=split,quality="PASS")
         for x,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))],
         positive_slope=True,supported_range=(1,256),calibration_receipt="cpu_schema_negative_test")
-    artifact=dict(evidence_kind="native_measurement",candidate_only=True,models=[dict(parameters=dict(protocol=fit))])
+    context=dict(execution_policy={"0":dict(runtime=dict(pynccl_versions={"dp":"cpu_schema_only"}),
+        branches=["pynccl_comm.reduce_scatterv"],buffers=dict(supplied_output=True))})
+    artifact=dict(evidence_kind="native_measurement",candidate_only=True,models=[dict(context=context,parameters=dict(protocol=fit))])
     if defect == "fixture": artifact["evidence_kind"]="cpu_fixture"
     if defect == "heldout": fit["qualification"]["observations"]=[]
     candidate=tmp_path/"candidate.json";candidate.write_text(json.dumps(artifact))
@@ -194,7 +196,9 @@ def test_parent_selection_preserves_frozen_parameters_and_signed_evidence(tmp_pa
     fit=EXPORT.fit_affine([dict(operand_bytes=x,duration_ms=x,split=split,quality="PASS")
         for x,split in ((1,"calibration"),(16,"calibration"),(256,"calibration"),(64,"qualification"))],
         positive_slope=True,supported_range=(1,256),calibration_receipt="cpu_schema_only")
-    artifact=dict(evidence_kind="native_measurement",candidate_only=True,models=[dict(parameters=dict(protocol=fit))])
+    context=dict(execution_policy={"0":dict(runtime=dict(pynccl_versions={"dp":"cpu_schema_only"}),
+        branches=["pynccl_comm.reduce_scatterv"],buffers=dict(supplied_output=True))})
+    artifact=dict(evidence_kind="native_measurement",candidate_only=True,models=[dict(context=context,parameters=dict(protocol=fit))])
     candidate=tmp_path/"candidate.json";candidate.write_text(json.dumps(artifact));before=candidate.read_bytes()
     receipt=dict(schema_version="step5.collective_qualification.v1",candidate_sha256=EXPORT.sha256(candidate),
         status="PASS",independent=True,observations=["cpu_schema_only"],
@@ -205,6 +209,11 @@ def test_parent_selection_preserves_frozen_parameters_and_signed_evidence(tmp_pa
     assert candidate.read_bytes() == before and selected["candidate_only"] is False
     assert result["qualification"]["parent_receipt"] == str(path)
     assert all(result[key] == fit[key] for key in ("a_ms","b_ms_per_byte","signed_residuals_ms","raw_cells","range_bytes"))
+    assert selected["models"][0]["context"] == artifact["models"][0]["context"]
+    artifact["models"][0]["context"]["execution_policy"]["0"]["branches"]=["changed"]
+    candidate.write_text(json.dumps(artifact))
+    with pytest.raises(ValueError,match="parent qualification"):
+        EXPORT.qualify_finite_parameters(candidate,path,tmp_path/"stale_policy.json")
 
 
 @pytest.mark.parametrize("network_defect",[None,"partial","zero","nan","inf"])
@@ -231,7 +240,9 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
             name=name,rows=rows,row_stride=4,scope="independent_preallocated_operand",split=split,**{"pass":0},
             per_rank_queue_held=[[True]*3 for _ in range(16)],per_rank_call_us=[[1+rows*.001]*3 for _ in range(16)]))
         records.append(dict(scenario=name,call="moe_dispatch_all_gatherv_bf16",op="all_gatherv",
-            native_context=dict(shared="cpu_fixture"),evidence_kind="cpu_fixture",dtypes=["bfloat16"],columns=[4],
+            native_context=dict(shared="cpu_fixture",execution_policy={"0":dict(branches=["cpu_fixture"],
+                buffers=dict(supplied_output=False),runtime=dict(pynccl_versions={"dp":"cpu_fixture"}))}),
+            evidence_kind="cpu_fixture",dtypes=["bfloat16"],columns=[4],
             tokens_per_dp_rank=[rows,rows],group_ranks=[[r,r+8] for r in range(8)],cuda_graph=False,
             buffer_receipt=dict(ordinary=True),participating_ranks=list(range(16)),**{"pass":0},
             per_rank_call_us=[[1000+rows]*3 for _ in range(16)],per_rank_launch_call_us=[[1000+rows]*3 for _ in range(16)],
@@ -265,6 +276,7 @@ def test_finite_exporter_executes_joint_htsim_without_blessing_fixture(tmp_path,
     tp=next(m["parameters"]["tp_nvlink"] for m in artifact["models"] if m["phase"] == "shared_tp")
     assert tp["fit"]["design_matrix_rank"] == 2 and tp["nvlink_efficiency"] > 0
     assert all(c["evidence_kind"] == "cpu_fixture" for c in artifact["counts"].values())
+    assert all(m["context"]["execution_policy"] == records[0]["native_context"]["execution_policy"] for m in artifact["models"])
     config["frozen_model_config_sha256"]="changed";(root/"plan.json").write_text(json.dumps(source))
     with pytest.raises(ValueError,match="receipt"):
         EXPORT.export_finite_parameters(root.parent,tmp_path/"rejected")

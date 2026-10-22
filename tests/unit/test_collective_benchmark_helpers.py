@@ -478,6 +478,64 @@ def test_native_launch_flag_and_manifest_preserve_platform_nccl(monkeypatch, eng
     assert runtime["enabled_communicators"]["tp"]["fi_ar_comm"] is True
     assert runtime["pynccl_versions"] == {"tp": 23007, "ep": 23007, "dp": 23007}
     assert runtime["nccl_log_destination"] == os.environ.get("NCCL_DEBUG_FILE", "stderr (stage wrapper log)")
+    from frontier.profiling.collectives.vllm_collective_benchmark import collective_runtime_policy
+    policy=collective_runtime_policy(runtime)
+    assert policy["nccl_environment"] == {"NCCL_IB_HCA":"platform_hca"}
+    assert policy["vllm_environment"]["VLLM_USE_NCCL_SYMM_MEM"]["source"] == "image_default"
+    assert policy["pynccl_versions"] == runtime["pynccl_versions"]
+
+
+@pytest.mark.parametrize("captured",[False,True])
+def test_selected_policy_observation_is_outside_timed_eager_and_inside_capture(monkeypatch,captured):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    runner=_runner(_parallel());runner.identity_errors=[];events=[]
+    issue=lambda:events.append("native")
+    issue.inputs=[]
+    runner._issue=lambda call:issue
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
+    def observe(group,inputs,operation,**kwargs):
+        events.append("policy");return operation(),dict(diagnostic_errors=[],branches=["cpu_fixture"])
+    monkeypatch.setattr(benchmark,"observe_collective_execution",observe)
+    runner.communicators=lambda:dict.fromkeys(("torch","vllm","enabled_communicators","pynccl_versions",
+        "disable_custom_all_reduce","disable_nccl_for_dp_synchronization","vllm_environment"),"cpu_fixture") | {"nccl_environment":{}}
+    runner.torch=types.SimpleNamespace(cuda=types.SimpleNamespace(synchronize=lambda:None,
+        CUDAGraph=lambda:types.SimpleNamespace(replay=lambda:events.append("replay")),
+        graph=lambda *a,**kw:nullcontext()))
+    runner.groups["dp"].graph_capture=lambda:nullcontext(types.SimpleNamespace(stream="cpu_fixture"))
+    prepared,run=runner.prepare(_call(runner.parallel,captured=captured))
+    assert events.count("policy") == (3 if captured else 1)
+    events.clear();run()
+    assert events == (["replay"] if captured else ["native","native"])
+    assert prepared.execution_policy["runtime"]["torch"] == "cpu_fixture"
+
+
+@pytest.mark.parametrize("diagnostic_error",[False,True])
+def test_observed_policy_uses_actual_native_branch_and_preserves_errors(monkeypatch,diagnostic_error):
+    from frontier.profiling.collectives import vllm_collective_benchmark as benchmark
+    tensor=types.SimpleNamespace(data_ptr=lambda:1)
+    calls=[]
+    pynccl=types.SimpleNamespace(reduce_scatterv=lambda *a,**kw:calls.append("native") or tensor)
+    original=pynccl.reduce_scatterv
+    group=types.SimpleNamespace(device_communicator=types.SimpleNamespace(pynccl_comm=pynccl))
+    allocator=types.ModuleType("vllm.distributed.device_communicators.pynccl_allocator")
+    def registered(value):
+        if diagnostic_error: raise ValueError("policy_diagnostic_failed")
+        return False
+    allocator.is_symmetric_memory_tensor=registered
+    monkeypatch.setitem(sys.modules,allocator.__name__,allocator)
+    monkeypatch.setitem(sys.modules,"torch",types.SimpleNamespace(distributed=types.SimpleNamespace(),
+        ops=types.SimpleNamespace(vllm=types.SimpleNamespace())))
+    result,policy=benchmark.observe_collective_execution(group,[tensor],lambda:pynccl.reduce_scatterv(tensor),output=tensor)
+    assert result is tensor and calls == ["native"]
+    if diagnostic_error: assert "policy_diagnostic_failed" in policy["diagnostic_errors"][0]
+    else:
+        assert policy["branches"] == ["pynccl_comm.reduce_scatterv"]
+        assert policy["buffers"]["supplied_output"] and policy["buffers"]["return_output_alias"]
+    error=RuntimeError("native_error")
+    with pytest.raises(RuntimeError) as caught:
+        benchmark.observe_collective_execution(group,[tensor],lambda:(_ for _ in ()).throw(error))
+    assert caught.value is error
+    assert pynccl.reduce_scatterv is original
 
 
 @pytest.mark.parametrize("isolated", [False, True])

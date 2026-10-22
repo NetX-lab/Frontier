@@ -229,7 +229,8 @@ def test_local_proxy_evidence_requires_every_rank_and_repeat(tmp_path,monkeypatc
     assert report["status"] == ("PASS" if defect is None else "UNVERIFIED")
 
 
-@pytest.mark.parametrize("defect",[None,"source","generation","count","duplicate_probe","extra_probe"])
+@pytest.mark.parametrize("defect",[None,"source","generation","count","duplicate_probe","extra_probe",
+                                  "op","group","cuda_graph","replay","runtime_policy","branch","missing_policy"])
 def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tmp_path,monkeypatch,defect):
     from dataclasses import asdict
     from tests.unit.test_step5_fixed_probe import installed_profile_receipt
@@ -246,10 +247,21 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
     path=tmp_path/"routing.json";path.write_text(json.dumps(dict(schema_version="moe.position_cyclic.inputs.v1",
         routing_runtime_path="position_cyclic",inputs=[asdict(inp)])))
     job["native_probe"].update(moe_input_ids=["tail16"],routing_input_file=str(path))
-    for r in records: r.update(evidence_kind="native_measurement",native_context=dict(shared=shared))
-    if defect == "generation": records[0]["native_context"]=dict(shared={**shared,"profile_generation":"different"})
+    runtime=dict(torch="cpu_fixture",vllm="cpu_fixture",pynccl_versions={"dp":22902},
+        enabled_communicators={"dp":{"pynccl_comm":True}},vllm_environment={"VLLM_USE_NCCL_SYMM_MEM":{"value":False}},
+        nccl_environment={},disable_custom_all_reduce=False,disable_nccl_for_dp_synchronization=True)
+    policy=dict(runtime=runtime,branches=["pynccl_comm.reduce_scatterv"],buffers={"supplied_output":True})
+    for r in records: r.update(evidence_kind="native_measurement",native_context=dict(shared=shared,
+        execution_policy={str(rank):deepcopy(policy) for rank in r["participating_ranks"]}))
+    if defect == "runtime_policy": records[0]["native_context"]["execution_policy"]["0"]["runtime"]["pynccl_versions"]["dp"]=22800
+    if defect == "branch": records[0]["native_context"]["execution_policy"]["0"]["branches"]=["_reduce_scatter_symm_mem"]
+    if defect == "missing_policy": records[0]["native_context"].pop("execution_policy")
+    if defect == "generation": records[0]["native_context"]["shared"]={**shared,"profile_generation":"different"}
+    if defect in ("op","group","cuda_graph"):
+        records[0][defect]={"op":"reduce_scatterv","group":"tp","cuda_graph":not records[0]["cuda_graph"]}[defect]
     (tmp_path/"collectives/measurements.jsonl").write_text("".join(json.dumps(r)+"\n" for r in records))
-    (tmp_path/"collectives/plan.json").write_text(json.dumps(dict(evidence_kind="native_measurement",runtime=dict(native_facts=dict(shared=shared)))))
+    (tmp_path/"collectives/plan.json").write_text(json.dumps(dict(evidence_kind="native_measurement",
+        runtime=dict(native_facts=dict(shared=shared),per_rank_runtime={str(rank):runtime for rank in range(16)}))))
     (tmp_path/"collectives/native_identity.json").write_text('{"status":"PASS"}')
     for i in range(job["resources"]["replica"]):
         (tmp_path/f"node_{i}/native_binding.json").write_text('{"status":"PASS"}')
@@ -257,13 +269,17 @@ def test_bound_selected_evidence_keeps_generation_source_and_exact_probe_keys(tm
     kernels=[json.loads(line) for line in kernel_path.read_text().splitlines()]
     for k in kernels: k.update(profiled_calls=5,per_rank_kernel_counts=[2]*16,per_rank_events=[["cpu_fixture"]*10 for _ in range(16)])
     if defect == "count": kernels[0]["per_rank_kernel_counts"][0]=3
+    if defect == "replay": kernels[0].update(profiled_calls=1,per_rank_kernel_counts=[35]*16,
+        per_rank_events=[["cpu_fixture"]*35 for _ in range(16)])
     kernel_path.write_text("".join(json.dumps(k)+"\n" for k in kernels))
     probe_path=tmp_path/"native_dispatch/dispatch_probe.json";probe=json.loads(probe_path.read_text())
     probe.update(verification_scope="eager_native_moe_module",full_model_verified=False,model_runner_verified=False)
     for r in probe["ranks"]:
         for layer in r["layers"]:
             layer.update(moe_input_id="tail16",source_frame=asdict(inp.source_frames[r["rank"]//8]),
-                native_facts=dict(shared=shared,callables={"cpu_fixture":"explicit_schema_test"}))
+                native_facts=dict(shared=shared,callables={"cpu_fixture":"explicit_schema_test"}),
+                collectives=[dict(completed=True,op="reduce_scatterv_into_output",group_ranks=r["group_ranks"]["dp"],
+                    execution_policy=deepcopy(policy),inputs=[dict(dtype="bfloat16",shape=[17,4096])])])
     if defect == "source": probe["ranks"][0]["layers"][0]["source_frame"]["context_lens"]=[0]
     if defect == "duplicate_probe": probe["ranks"][0]["layers"][-1]=deepcopy(probe["ranks"][0]["layers"][0])
     if defect == "extra_probe": probe["ranks"][0]["layers"][0]["moe_input_id"]="extra"

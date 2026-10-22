@@ -17,7 +17,7 @@ def setup_model(tmp_path, monkeypatch):
         parallel_tp=8,parallel_dp=2,placement_order="TP,DP",profiling_data_dir=str(tmp_path),
         runner_out_dir=str(tmp_path/"runner"))
     backend=CollectiveSimCCBackend(config,ClusterType.MONOLITHIC,"h800","cpu_fixture",16)
-    context={"evidence_kind":"cpu_fixture"}
+    context={"evidence_kind":"cpu_fixture","execution_policy":{"0":{"branches":["cpu_fixture"]}}}
     plan=CollectivePlan("shared_tp",(16,1),(CollectiveTensor("output","bfloat16",2,4096,4096),),
         (tuple(range(8)),tuple(range(8,16))),"none",json.dumps(context),'{"ordinary":true}')
     scenario=backend._build_scenario(kind="plan",tensor_bytes=0,mapped_domain="DP",
@@ -41,7 +41,7 @@ def setup_model(tmp_path, monkeypatch):
     return backend,plan,artifact,path,params
 
 
-@pytest.mark.parametrize("defect", ["fixture","candidate","qualification","network","context","count"])
+@pytest.mark.parametrize("defect", ["fixture","candidate","qualification","network","context","count","policy","missingpolicy"])
 def test_importer_rejects_unqualified_mismatched_or_incomplete_input(tmp_path,monkeypatch,defect):
     backend,plan,artifact,path,_=setup_model(tmp_path,monkeypatch)
     artifact["evidence_kind"]="native_measurement"
@@ -51,6 +51,10 @@ def test_importer_rejects_unqualified_mismatched_or_incomplete_input(tmp_path,mo
     elif defect == "network": artifact["frozen_scenario"]["network"]["cwnd"]+=1
     elif defect == "context": artifact["models"][0]["context"]={"changed":True}
     elif defect == "count": artifact["counts"]={}
+    elif defect == "policy":
+        changed={"evidence_kind":"cpu_fixture","execution_policy":{"0":{"runtime":{"pynccl_versions":{"dp":22800}}}}}
+        plan=replace(plan,context_json=json.dumps(changed))
+    elif defect == "missingpolicy": plan=replace(plan,context_json='{"evidence_kind":"cpu_fixture"}')
     path.write_text(json.dumps(artifact))
     with pytest.raises((ValueError,KeyError)):
         backend.predict_collective_plan(plan)
