@@ -8,6 +8,7 @@
 | 2026-10-23 | Completed independent builder/checker implementation, affected tests and real/legacy comparisons; retained isolated qualification limits. |
 | 2026-10-23 | Committed source and selected evidence2f87828; finalized root-review handoff. |
 | 2026-10-23 | Root completed affected reruns and dual-axis review, closed the approval-pointer P3, and required the repository default matrix before delivery. |
+| 2026-10-23 | Root accepted the isolated prerequisite after77/77 fixed-source matrix equality and451 independently rehashed artifacts. |
 
 - completed a: Clean fresh worktree at b62c155; read applicable AGENTS and primary requirements section D-Q10-V4-GRAPH-MEASURED-AND-NIXL, ticket09 and override section7.
 - observed: Accepted raw has1engine/6steps/282calls, variants uncompressed/csa/hca with native layer order0/1/2/3/4/5. `_model_columns` derives engine/planner columns; `_variant_metadata` reads raw variant metadata. Frozen plan and model config hashes are bound by accepted package manifest. Accepted aggregate summary independently supplies source/runtime/model identity and is itself hash-pinned by primary acceptance.
@@ -23,4 +24,4 @@
 - archive check: Whole staged diff check flags blank context-marker lines inside the exact `source.diff` artifact as trailing whitespace. Preserved exact diff bytes/hash; scoped check over all actual source/tests/Markdown/JSON passes. This is diff-as-file context syntax, not whitespace in changed source.
 - completed root affected verification:144 unit PASS/0fail/error/skip; accepted94 exact scopes (50event/44kernel), legacy102positive/72negative, serving_admissionfalse. Evidence `/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_2f87828{.xml,_accepted.json,_legacy.json}` and adjacent logs.
 - completed independent review: Standards no actionable findings; Spec no code/scope findings, one P3 approval line-pointer corrected to the stable decision heading. See `review.md`.
-- pending: clean fixed-source default matrix and strict comparison, then root acceptance/merge. Native06 runs independently from its frozen b62c155 source.
+- completed root matrix/acceptance: Clean576d278 capture and strict comparison to retained bfa82de baseline produced77/77 identical, zero failures/missing evidence/definition differences/provenance findings, identical519cache filenames; root rehashed451actual artifacts and checked every case's fixed source/harness identity. `primary_acceptance.json` records ACCEPTED_ISOLATED_PREREQUISITE. Root integration is next; full predictor/serving admission remains false. Native06 uses its independent frozen b62c155 source.

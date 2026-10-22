@@ -1,0 +1,31 @@
+{
+  "status": "ACCEPTED_ISOLATED_PREREQUISITE",
+  "source_commit": "2f87828",
+  "verified_matrix_commit": "576d278156ea21b209da33791337bd195047ae3e",
+  "unit_tests": 144,
+  "unit_failures_errors_skips": 0,
+  "accepted_scope_comparisons": 94,
+  "legacy_positive_comparisons": 102,
+  "legacy_typed_negatives": 72,
+  "strict_matrix_cases": 77,
+  "identical_cases": 77,
+  "verified_artifact_files": 451,
+  "cache_filenames": 519,
+  "serving_admission": false,
+  "full_predictor_admission": false,
+  "standards_review": "NO_FINDINGS",
+  "spec_review": "NO_CODE_FINDINGS_P3_POINTER_CLOSED",
+  "evidence": {
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/comparison.json": "3d4d92454c6a492775d0ac847b36618382483e024fe310aa70bdb050ed62c57c",
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate/manifest.json": "5d145735432517070ccca40193e3ad199fc7da1fa68f45e1ea94118a174c85ce",
+    "/data/ycfeng/tmp/glm53_dsv4/prefill_contract_576d278_20261023/candidate/results.jsonl": "c0438c158defadaa893c9d8e77a7f8b7c746f16daca12be429f00b937cda768d",
+    "/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_2f87828.xml": "82dbad4dde56063e6f60a792b6fd99543576c88a8974ea46b3866356efc5eedb",
+    "/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_2f87828_accepted.json": "48a99fb87b11c7894761bfcbcbf935d5590c571ed130b1b544d60f543d67dbf4",
+    "/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_2f87828_legacy.json": "7cfcc6cf315062825543dd9c8f0887233e0e447aeb68f5582a80293036ce2ae4"
+  },
+  "source_files": {
+    "frontier/execution_time_predictor/deepseek_v4.py": "45d30210ffc34a1538e86eb3305a8cd5ef9960122c4b3c5d4c6b26df12f4429c",
+    "tests/integration/check_dsv4_measured_scopes.py": "8921d66ab53d3758fc9f3f3ea7f9f2de6e31bdf8ede27834b2e727cb63158855",
+    "tests/unit/test_dsv4_graph_measured.py": "561ed21d7731a697cdfa90683a59e042e1e1f2c46a2b937cc5a0a2dee9b13ad6"
+  }
+}
