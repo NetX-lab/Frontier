@@ -11,11 +11,11 @@ import tarfile
 
 HERE = Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[1]
-PACKAGE = HERE / "h800_prefill_capacity128"
+PACKAGE = HERE / "h800_prefill_balanced"
 BASE = Path("/data/ycfeng/Frontier/.worktrees/v4-q1-warm-remeasure/task_memory/task_2026-10-21_v4_q1_warm_remeasure/h800_decode")
-REVISION = "9b8494c770f0b61fd728558f07ce34cdcb515295"
+REVISION = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 NATIVE = "2cf0a6915ce544dc493a0990f2ea38d81601128a"
-NAME = "PREFILL_WARM_6144_C0_CAP128"
+NAME = "PREFILL_WARM_6144_C0_BALANCED"
 LOCAL = "/tmp/glm_producers/out/" + NAME
 CASE = "e0-prefill-p6144"
 PRIOR_MANIFEST_SHA256 = "7929afaef9deced67543262ad9a3eec398048b68914fd0322b00c97416cbe360"
@@ -113,8 +113,8 @@ def main():
     job.update(name=NAME, gpu_type="H800", charged_group="codesign", gpu=1, preemptible=False,
                aggregate_H800_ceiling=128, source_revision=REVISION, source_snapshot=str(snapshot),
                worker=str(launch / "glm_producer_worker.py"), wheelhouse=str(launch / "wheelhouse"),
-               job_tag="v4-h800-prefill-warm-6144-c0-cap128-20261022-9b8494c",
-               output_dir="/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_prefill/9b8494c_capacity128_warm2/" + NAME,
+               job_tag="v4-h800-prefill-balanced-6144-c0-20261023-" + REVISION[:7],
+               output_dir="/mnt/codesign-exp/ycfeng/frontier/glm53_dsv4_vllm028/h800_v4_prefill/" + REVISION[:7] + "_balanced_warm2/" + NAME,
                status="PREPARED_CHECK_ONLY_ROOT_SOURCE_IMAGE_QUOTA_SUBMIT_REQUIRED", timeout_seconds=900,
                prior_container_seconds=664.0, reference_container_seconds_is_not_prefill_prediction=True,
                timeout_cap_requires_primary_acceptance=False, planning_gpu_hours_cap=0.25,
@@ -130,7 +130,7 @@ def main():
     files = {str(path.relative_to(PACKAGE)): sha(path) for path in PACKAGE.rglob("*")
              if path.is_file() and path.name != "manifest.json" and not path.name.endswith(".pyc")}
     write(PACKAGE / "manifest.json", {
-        "task_id": "W128-V4-PREFILL-CONFIGURED-CAPACITY", "source_revision": REVISION, "native_git": NATIVE,
+        "task_id": "W128-V4-BALANCED-PREFILL", "source_revision": REVISION, "native_git": NATIVE,
         "provenance_field": "source_revision", "prior_manifest_sha256": PRIOR_MANIFEST_SHA256,
         "native_C26_sha256": sha(PACKAGE / "overlay_model.py"), "files": files, "copied_runtime_files": copied,
         "expected_rows": {"cuda_event": 6, "kernel_only": 6}, "formal_coverage": False,

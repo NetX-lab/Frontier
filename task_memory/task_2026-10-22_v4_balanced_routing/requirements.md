@@ -57,6 +57,12 @@ YC answered:
 > 批准 23 文件/900 行 (Recommended)
 
 The current aggregate limit is23 maintained source/test/binding files and900 added-plus-deleted lines. It supersedes the earlier14/500 bound prospectively and authorizes completion of the retained work. Root counts the union across worktrees, including both maintained builders and the successor adapter. This does not erase the earlier allocation error. All behavioral acceptance criteria and GPU budgets remain unchanged.
+
+## Pending scope question — native schema/DP corrections
+
+The two Spec P2s are reproduced on actual inputs. Native source is unchanged while its smallest complete proposal adds46 cumulative lines, giving937 total after all reserved builder changes. Root proposes a950-line ceiling in the same23 files; this section is not approval.
+
+> boss YC，是否批准将 routing 总上限从23文件/900行调整为23文件/950行？native 两处P2已用真实输入复现；最小完整修复预计使总量达到937行，比原上限多37行，用于固定schema来源、校验实际DP及对应反例。prefill已通过修复复审并独立推进；GPU预算保持不变。
 ## Prefill delegated implementation contract
 
 The following is the historical C delegation, not a new user approval. Its original200-line limit is superseded by the current root allocation within the unchanged approved aggregate ceiling.
