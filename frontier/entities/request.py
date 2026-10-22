@@ -89,6 +89,7 @@ class Request(BaseEntity):
         self._user_facing_num_prefill_tokens = resolved_round_plans[-1].num_prefill_tokens
         self._user_facing_num_decode_tokens = resolved_round_plans[-1].num_decode_tokens
         self._num_prefill_tokens = resolved_round_plans[0].num_prefill_tokens
+        self._prefill_compute_target = self._num_prefill_tokens
         self._num_decode_tokens = resolved_round_plans[0].num_decode_tokens
         self._num_processed_tokens = num_processed_tokens
         self._priority = priority  # Lower value = higher priority (matches vLLM v1)
@@ -369,6 +370,18 @@ class Request(BaseEntity):
     @property
     def num_prefill_tokens(self) -> int:
         return self._num_prefill_tokens
+
+    @property
+    def prefill_compute_target(self) -> int:
+        """Prompt positions P computes; the semantic prompt remains unchanged."""
+        return self._prefill_compute_target
+
+    def set_prefill_compute_target(self, num_tokens: int) -> None:
+        if type(num_tokens) is not int or not 0 < num_tokens <= self._num_prefill_tokens:
+            raise ValueError("P compute target must be in (0, num_prefill_tokens]")
+        if self._num_processed_tokens or self._is_prefill_complete:
+            raise ValueError("P compute target must be selected before prompt computation")
+        self._prefill_compute_target = num_tokens
 
     @property
     def num_decode_tokens(self) -> int:
@@ -1004,6 +1017,11 @@ class Request(BaseEntity):
                 the remaining prompt tail recomputed before the first output.
         """
         if num_computed_tokens is not None:
+            if (
+                self._prefill_compute_target < self._num_prefill_tokens
+                and num_computed_tokens != self._prefill_compute_target
+            ):
+                raise ValueError("KV transfer prefix differs from the P compute target")
             if type(num_computed_tokens) is not int or not (
                 0 <= num_computed_tokens < self._num_prefill_tokens
             ):
@@ -1033,6 +1051,8 @@ class Request(BaseEntity):
             )
         self._kv_cache_transfer_time += transfer_time
         if num_computed_tokens is not None:
+            # Keep the semantic prompt frontier while D recomputes its local tail.
+            self._num_processed_tokens = self._num_prefill_tokens
             self._num_recomputed_tokens = num_computed_tokens
 
     def on_m2n_transfer_complete(self, transfer_time: float, is_attn_to_ffn: bool) -> None:
@@ -1378,7 +1398,12 @@ class Request(BaseEntity):
         # granted here. It will be granted by DECODE/DECODE_ATTN cluster via
         # GlobalBatchEndEvent. In monolithic mode, this block is not reached since
         # cluster_type would be MONOLITHIC.
-        if self._num_processed_tokens == self._num_prefill_tokens and not self._is_prefill_complete:
+        prefill_target = (
+            self._prefill_compute_target
+            if cluster_type == ClusterType.PREFILL
+            else self._num_prefill_tokens
+        )
+        if self._num_processed_tokens == prefill_target and not self._is_prefill_complete:
             self._is_prefill_complete = True
             prefill_completed_this_call = True
 
@@ -1829,6 +1854,7 @@ class Request(BaseEntity):
         )
         total_tokens = self._num_prefill_tokens + self._num_decode_tokens
         self._num_prefill_tokens = self._num_processed_tokens
+        self._prefill_compute_target = self._num_prefill_tokens
         self._num_decode_tokens = total_tokens - self._num_prefill_tokens
 
         self._num_processed_tokens = 0
@@ -2015,6 +2041,7 @@ class Request(BaseEntity):
         self._current_thinking_round_index += 1
         next_round_plan = self._thinking_round_plans[self._current_thinking_round_index]
         self._num_prefill_tokens = next_round_plan.num_prefill_tokens
+        self._prefill_compute_target = self._num_prefill_tokens
         self._num_decode_tokens = next_round_plan.num_decode_tokens
         self._num_processed_tokens = 0
         self._num_prefill_tokens_cached = 0

@@ -599,7 +599,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 single_request_batch = SingleBatch(
                     replica_id=self._replica_id,
                     requests=[request],
-                    num_tokens=[request.num_prefill_tokens],
+                    num_tokens=[request.prefill_compute_target],
                     is_moe=replica_config.model_config.is_moe,
                 )
                 transfer_events.append(

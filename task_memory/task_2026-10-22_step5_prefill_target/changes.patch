@@ -1,0 +1,832 @@
+diff --git a/docs/general/module-size-exceptions.md b/docs/general/module-size-exceptions.md
+index 65b760c..418d554 100644
+--- a/docs/general/module-size-exceptions.md
++++ b/docs/general/module-size-exceptions.md
+@@ -10,6 +10,22 @@ also the only Python files under `frontier/` above 2,000 lines on `main` at
+ 
+ ## Inventory
+ 
++D26-PREFILL-TARGET (2026-10-22) changes `frontier/entities/request.py` from
++2,020 lines at `ebd5baf` to 2,049. Cleanup inspection found no duplicate or dead
++target/completion implementation in the touched lifecycle methods. The added
++scalar remains beside semantic prompt length and the existing D recompute cursor:
++moving it alone would split shared P/D request mutation across two owners. Only
++the registered measured Step NIXL/PP1 path selects a shorter P target; client
++lengths, legacy structural timing and other attention contracts remain unchanged.
++
++A later movement-only split can move thinking-round affinity, hidden/final round
++timing and requeue methods together into a request thinking-round module, retaining
++public delegates and the shared state. Derived request timing accessors can move
++separately after the lifecycle boundary is stable. Neither split is required for
++this approved correction; it would expand unrelated regression scope. The parent
++owns independent review and the unchanged strict 77-case fidelity gate before
++integration acceptance. This exception authorizes no further Request growth.
++
+ D5 T1 (2026-10-20) extends the existing request metric exporter in
+ `frontier/metrics/metrics_store.py` with PD-only `client_ttft`. The CSV is in
+ milliseconds, from request arrival to `first_decode_token_completed_at` (the
+diff --git a/frontier/attention/families.py b/frontier/attention/families.py
+index c48f53c..b87195f 100644
+--- a/frontier/attention/families.py
++++ b/frontier/attention/families.py
+@@ -569,12 +569,21 @@ def _step5_kv_transfer_components(config, capacity, prompt_tokens: int, tensor_p
+     )
+ 
+ 
++def _step5_kv_transfer_prefill_target(prompt_tokens: int, block_size: int) -> int:
++    # Native Step replays one block on D and resumes at a full-block boundary.
++    count = max(prompt_tokens - block_size, 0)
++    count -= count % block_size
++    # The native P truncation guard requires a positive remote prefix.
++    return count if count > 0 else prompt_tokens
++
++
+ STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
+     family_id="step5_attention",
+     display_name="Step text SWA and sparse GQA",
+     structural_execution_enabled=True,
+     kv_cache_capacity_resolver=_step5_kv_cache_capacity,
+     kv_transfer_payload_resolver=_step5_kv_transfer_components,
++    kv_transfer_prefill_target_resolver=_step5_kv_transfer_prefill_target,
+     supported_variants=("swa", "sparse_gqa"),
+     operators=(
+         AttentionOperatorSpec(
+diff --git a/frontier/attention/ops.py b/frontier/attention/ops.py
+index 7a0b78a..317e8f1 100644
+--- a/frontier/attention/ops.py
++++ b/frontier/attention/ops.py
+@@ -118,6 +118,9 @@ class AttentionFamilySpec(OperatorFamilySpec):
+             tuple[AttentionKVTransferComponent, ...],
+         ] | None
+     ) = None
++    # (client prompt tokens, cache block size) -> P's computed prompt target
++    # for the measured prefix-transfer contract, without changing client length.
++    kv_transfer_prefill_target_resolver: Callable[[int, int], int] | None = None
+ 
+     _family_label: ClassVar[str] = "Attention family"
+ 
+diff --git a/frontier/entities/request.py b/frontier/entities/request.py
+index ea84f79..fa96acf 100644
+--- a/frontier/entities/request.py
++++ b/frontier/entities/request.py
+@@ -89,6 +89,7 @@ class Request(BaseEntity):
+         self._user_facing_num_prefill_tokens = resolved_round_plans[-1].num_prefill_tokens
+         self._user_facing_num_decode_tokens = resolved_round_plans[-1].num_decode_tokens
+         self._num_prefill_tokens = resolved_round_plans[0].num_prefill_tokens
++        self._prefill_compute_target = self._num_prefill_tokens
+         self._num_decode_tokens = resolved_round_plans[0].num_decode_tokens
+         self._num_processed_tokens = num_processed_tokens
+         self._priority = priority  # Lower value = higher priority (matches vLLM v1)
+@@ -370,6 +371,18 @@ class Request(BaseEntity):
+     def num_prefill_tokens(self) -> int:
+         return self._num_prefill_tokens
+ 
++    @property
++    def prefill_compute_target(self) -> int:
++        """Prompt positions P computes; the semantic prompt remains unchanged."""
++        return self._prefill_compute_target
++
++    def set_prefill_compute_target(self, num_tokens: int) -> None:
++        if type(num_tokens) is not int or not 0 < num_tokens <= self._num_prefill_tokens:
++            raise ValueError("P compute target must be in (0, num_prefill_tokens]")
++        if self._num_processed_tokens or self._is_prefill_complete:
++            raise ValueError("P compute target must be selected before prompt computation")
++        self._prefill_compute_target = num_tokens
++
+     @property
+     def num_decode_tokens(self) -> int:
+         return self._num_decode_tokens
+@@ -1004,6 +1017,11 @@ class Request(BaseEntity):
+                 the remaining prompt tail recomputed before the first output.
+         """
+         if num_computed_tokens is not None:
++            if (
++                self._prefill_compute_target < self._num_prefill_tokens
++                and num_computed_tokens != self._prefill_compute_target
++            ):
++                raise ValueError("KV transfer prefix differs from the P compute target")
+             if type(num_computed_tokens) is not int or not (
+                 0 <= num_computed_tokens < self._num_prefill_tokens
+             ):
+@@ -1033,6 +1051,8 @@ class Request(BaseEntity):
+             )
+         self._kv_cache_transfer_time += transfer_time
+         if num_computed_tokens is not None:
++            # Keep the semantic prompt frontier while D recomputes its local tail.
++            self._num_processed_tokens = self._num_prefill_tokens
+             self._num_recomputed_tokens = num_computed_tokens
+ 
+     def on_m2n_transfer_complete(self, transfer_time: float, is_attn_to_ffn: bool) -> None:
+@@ -1378,7 +1398,12 @@ class Request(BaseEntity):
+         # granted here. It will be granted by DECODE/DECODE_ATTN cluster via
+         # GlobalBatchEndEvent. In monolithic mode, this block is not reached since
+         # cluster_type would be MONOLITHIC.
+-        if self._num_processed_tokens == self._num_prefill_tokens and not self._is_prefill_complete:
++        prefill_target = (
++            self._prefill_compute_target
++            if cluster_type == ClusterType.PREFILL
++            else self._num_prefill_tokens
++        )
++        if self._num_processed_tokens == prefill_target and not self._is_prefill_complete:
+             self._is_prefill_complete = True
+             prefill_completed_this_call = True
+ 
+@@ -1829,6 +1854,7 @@ class Request(BaseEntity):
+         )
+         total_tokens = self._num_prefill_tokens + self._num_decode_tokens
+         self._num_prefill_tokens = self._num_processed_tokens
++        self._prefill_compute_target = self._num_prefill_tokens
+         self._num_decode_tokens = total_tokens - self._num_prefill_tokens
+ 
+         self._num_processed_tokens = 0
+@@ -2015,6 +2041,7 @@ class Request(BaseEntity):
+         self._current_thinking_round_index += 1
+         next_round_plan = self._thinking_round_plans[self._current_thinking_round_index]
+         self._num_prefill_tokens = next_round_plan.num_prefill_tokens
++        self._prefill_compute_target = self._num_prefill_tokens
+         self._num_decode_tokens = next_round_plan.num_decode_tokens
+         self._num_processed_tokens = 0
+         self._num_prefill_tokens_cached = 0
+diff --git a/frontier/events/cluster_batch_end_event.py b/frontier/events/cluster_batch_end_event.py
+index c1990d3..0eecb7a 100644
+--- a/frontier/events/cluster_batch_end_event.py
++++ b/frontier/events/cluster_batch_end_event.py
+@@ -599,7 +599,7 @@ class ClusterBatchEndEvent(BaseEvent):
+                 single_request_batch = SingleBatch(
+                     replica_id=self._replica_id,
+                     requests=[request],
+-                    num_tokens=[request.num_prefill_tokens],
++                    num_tokens=[request.prefill_compute_target],
+                     is_moe=replica_config.model_config.is_moe,
+                 )
+                 transfer_events.append(
+diff --git a/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py b/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+index 82a134e..aa738a8 100644
+--- a/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
++++ b/frontier/kv_cache_transfer/analytical_kv_cache_transfer_predictor.py
+@@ -127,6 +127,11 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
+         )
+         if observed != expected:
+             raise ValueError("Measured NIXL coverage does not match request geometry")
++        if (
++            request.prefill_compute_target < request.num_prefill_tokens
++            and coverage.num_computed_tokens != request.prefill_compute_target
++        ):
++            raise ValueError("Measured NIXL prefix does not match the P compute target")
+         return coverage
+ 
+     def get_measured_nixl_transfer_info_for_request(
+diff --git a/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py b/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py
+index fc79656..5435460 100644
+--- a/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py
++++ b/frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py
+@@ -1759,6 +1759,7 @@ class VLLMv1EngineReplicaScheduler(
+         )
+ 
+         self._check_request_fits_max_model_len(request)
++        self._set_prefill_compute_target(request)
+         self._check_request_fits_kv_pool(request)
+         self._initialize_request_spec_decode_state(request)
+         self._maybe_promote_final_round_priority(request)
+diff --git a/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py b/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py
+index 7d75549..efcf8c7 100644
+--- a/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py
++++ b/frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py
+@@ -29,6 +29,32 @@ from frontier.types import ClusterType
+ class KvBlockAllocation:
+     """Token accounting, KV block allocation and preemption."""
+ 
++    def _set_prefill_compute_target(self, request: Request) -> None:
++        """Select the registered P target only for the existing measured PD path."""
++        from frontier.config import global_vars
++
++        if self._cluster_type != ClusterType.PREFILL:
++            return
++        capacity = self._kv_cache_capacity
++        cluster_config = getattr(self._cluster_scheduler, "_config", None)
++        predictor_config = getattr(cluster_config, "execution_time_predictor_config", None)
++        if (
++            global_vars.get_sys_arch() != "pd-disaggregation"
++            or global_vars.get_kv_connector() != "nixl"
++            or capacity is None or not capacity.is_grouped
++            or predictor_config is None or predictor_config.enable_dummy_mode
++            or int(self._replica_config.num_pipeline_stages) != 1
++            or self._is_prefix_caching_enabled()
++            or self._spec_decode_enabled
++        ):
++            return
++        family = get_attention_family(capacity.family_id)
++        resolver = family.kv_transfer_prefill_target_resolver
++        if resolver is not None:
++            request.set_prefill_compute_target(
++                resolver(request.num_prefill_tokens, int(self._config.block_size))
++            )
++
+     def _get_available_kv_blocks(self) -> int:
+         if self._is_grouped_kv_allocation():
+             return int(self._kv_cache_manager.block_pool.get_num_free_blocks())
+@@ -92,7 +118,10 @@ class KvBlockAllocation:
+         return processed_tokens
+ 
+     def _get_grouped_admission_blocks(self, request: Request) -> int:
+-        peak_context_tokens = int(request.num_prefill_tokens)
++        peak_context_tokens = int(
++            request.prefill_compute_target if self._cluster_type == ClusterType.PREFILL
++            else request.num_prefill_tokens
++        )
+         if self._cluster_type != ClusterType.PREFILL:
+             peak_context_tokens += int(request.num_decode_tokens) - 1
+         return int(
+@@ -110,7 +139,10 @@ class KvBlockAllocation:
+         tokens. Such a request would otherwise be preempted and admitted again
+         without end.
+         """
+-        peak_context_tokens = request.num_prefill_tokens
++        peak_context_tokens = (
++            request.prefill_compute_target if self._cluster_type == ClusterType.PREFILL
++            else request.num_prefill_tokens
++        )
+         if self._cluster_type != ClusterType.PREFILL:
+             # The last output token is sampled but never written to the cache.
+             peak_context_tokens += request.num_decode_tokens - 1
+@@ -148,7 +180,7 @@ class KvBlockAllocation:
+             raise RuntimeError(
+                 f"Request {request.id} is not pending PREFILL KV transfer"
+             )
+-        prompt_blocks = ceil(request.num_prefill_tokens / self._config.block_size)
++        prompt_blocks = ceil(request.prefill_compute_target / self._config.block_size)
+         allocated_blocks = int(self._allocation_map.get(request.id, 0))
+         if allocated_blocks < prompt_blocks:
+             raise RuntimeError(
+@@ -480,7 +512,11 @@ class KvBlockAllocation:
+                 return max(int(request.num_processed_tokens) - computed_tokens, 0)
+             return 1
+ 
+-        remaining_prefill_tokens = int(request.num_prefill_tokens) - computed_tokens
++        prefill_target = (
++            request.prefill_compute_target if cluster_type == ClusterType.PREFILL
++            else request.num_prefill_tokens
++        )
++        remaining_prefill_tokens = int(prefill_target) - computed_tokens
+         return max(remaining_prefill_tokens, 0)
+ 
+     def _get_num_tokens_for_kv_reservation(
+diff --git a/tests/integration/run_step5_measured_main.py b/tests/integration/run_step5_measured_main.py
+index 332937b..71c773b 100644
+--- a/tests/integration/run_step5_measured_main.py
++++ b/tests/integration/run_step5_measured_main.py
+@@ -61,16 +61,23 @@ def source_identity():
+ 
+ def read_profile(path):
+     fixture = json.loads(path.read_text())
++    require(fixture["schema"] == "step5_measured_compute_cpu_fixture.v2",
++            "Historical full-prompt fixture cannot cover the corrected P target; generate a new fixture")
+     for key, value in (("evidence_kind", "cpu_fixture"), ("native_admitted", False),
+                        ("device", "h800"), ("attention_tp", 8), ("attention_dp", 2),
+                         ("moe_tp", 1), ("moe_ep", 16), ("max_model_len", 7168),
+                        ("block_size", 16), ("batch_width", 1)):
+         require(fixture[key] == value, f"Unsupported fixture {key}: {fixture[key]}")
+     require(fixture["decode_cuda_graph_mode"] == "full_and_piecewise", "Fixture graph policy must be native")
++    require(fixture["cases"][0] == [6128, 0, "prefill", "none"], "Fixture must cover actual P6128")
++    require(fixture["routing_distribution_type"] == "balanced" and fixture["routing_seed"] == 42,
++            "Fixture must retain explicit balanced routing")
+     return fixture
+ 
+ 
+ def write_read_cost(path):
++    from tests.integration.step5_measured_compute_fixture import PREFILL_CASES
++
+     replica = ReplicaConfig(
+         model_name="stepfun-ai/Step-5-Preview", device="h800", network_device="h800_dgx",
+         attn_tensor_parallel_size=8, attn_dp=2, moe_tensor_parallel_size=1,
+@@ -80,19 +87,20 @@ def write_read_cost(path):
+     capacity = resolve_step5_kv_cache_capacity(
+         replica.model_config, 16, AttentionKVCacheSelection.from_replica(replica, block_size=16),
+     )
+-    payload = get_attention_kv_transfer_payload(
+-        replica.model_config, capacity, prompt_tokens=6128, tensor_parallel_size=8,
+-        target_reserved_blocks=4 * (6144 // 16),
+-    )
++    measurements = []
++    for prompt, prefix, _, _ in sorted(PREFILL_CASES, key=lambda case: case[0] != 6144):
++        payload = get_attention_kv_transfer_payload(
++            replica.model_config, capacity, prompt_tokens=prefix, tensor_parallel_size=8,
++            target_reserved_blocks=len(capacity.groups) * (prefix // 16),
++        )
++        measurements.append(dict(num_prefill_tokens=prompt, num_computed_tokens=prefix,
++                                 transfer_bytes_per_rank=payload.transfer_bytes_per_rank, time_ms=3.5))
+     document = dict(
+         schema="nixl_read_cost.v1", model_architecture_profile="step5",
+         profile_identity="CPU_CONTRACT_FIXTURE_NOT_NATIVE",
+         source_device="h800", target_device="h800",
+         source_attention_tp=8, target_attention_tp=8, duration_scope="read_to_gpu_ready",
+-        cache_capacity=asdict(capacity), measurements=[dict(
+-            num_prefill_tokens=6144, num_computed_tokens=6128,
+-            transfer_bytes_per_rank=payload.transfer_bytes_per_rank, time_ms=3.5,
+-        )],
++        cache_capacity=asdict(capacity), measurements=measurements,
+     )
+     write_json(path, document)
+     return document
+@@ -198,13 +206,13 @@ def validate(root, mode, document):
+     require(read_end["payload_kind"] == "prefix_pages_per_worker_lane", "Wrong READ prefix semantics")
+     require(read_end["target_ready_time"] == read_end["source_release_time"] == read_end["time"],
+             "READ must make the reserved D lane ready and release the source")
+-    require(read_end["target_reserved_common_blocks"] == 4 * (6144 // 16), "Wrong D reservation")
+-    require(read_end["source_prompt_common_blocks"] == 4 * (6144 // 16), "Wrong P ownership")
++    require(read_end["target_reserved_common_blocks"] == 4 * (6128 // 16), "Wrong D prefix reservation")
++    require(read_end["source_prompt_common_blocks"] == 6128 // 16, "Wrong computed P prefix ownership")
+     rows = [json.loads(line) for line in (run / "frontier_stage_batch_ledger.jsonl").read_text().splitlines()]
+     useful = [row for row in rows if row["request_ids"]]
+     prefill = [row for row in useful if row["cluster_type"] == "PREFILL"]
+     decode = [row for row in useful if row["cluster_type"] == "DECODE"]
+-    require(len(prefill) == 1 and prefill[0]["request_num_tokens"] == [6144], "Wrong useful P forward census")
++    require(len(prefill) == 1 and prefill[0]["request_num_tokens"] == [6128], "Wrong useful P forward census")
+     require(len(decode) == 1024 and Counter(tuple(row["request_num_tokens"]) for row in decode)
+             == Counter({(16,): 1, (1,): 1023}), "Wrong D tail/forward census")
+     first_decode = min(decode, key=lambda row: row["stage_start_ts"])
+diff --git a/tests/integration/step5_measured_compute_fixture.py b/tests/integration/step5_measured_compute_fixture.py
+index b0a85cc..3d47ad9 100644
+--- a/tests/integration/step5_measured_compute_fixture.py
++++ b/tests/integration/step5_measured_compute_fixture.py
+@@ -34,8 +34,9 @@ from tests.unit.test_step5_measured_training import _scheduler
+ 
+ CAPTURE_SIZES = (1, 2, 4, *range(8, 256, 8), 256)
+ MAX_MODEL_LEN = 7168
+-LOCAL_COMPUTE_WIDTHS = (1, 16, 6144)
+-AGGREGATE_COMPUTE_WIDTHS = (2, 32, 6145)
++PREFILL_CASES = ((6143, 6112, 31, 32), (6144, 6128, 16, 16), (6145, 6128, 17, 24))
++LOCAL_COMPUTE_WIDTHS = (1, 16, 24, 32, 6112, 6128)
++AGGREGATE_COMPUTE_WIDTHS = (2, 32, 48, 64, 6113, 6129)
+ 
+ 
+ def attention_row(model, cell, *, physical_query_rows=None, device="h800"):
+@@ -74,20 +75,25 @@ def attention_row(model, cell, *, physical_query_rows=None, device="h800"):
+ def reached_rows(model, *, device):
+     """Exact1023 context rows reuse one layer/shape contract, never serving credit."""
+     for layer in range(model.num_layers):
+-        for query, context, phase, graph in ((6144, 0, "prefill", "none"),
+-                                              (16, 6128, "prefill", "piecewise")):
+-            yield attention_row(model, Step5ProfileInput(layer, (query,), (context,), phase, graph,
++        for prefix in sorted({prefix for _, prefix, _, _ in PREFILL_CASES}):
++            yield attention_row(model, Step5ProfileInput(layer, (prefix,), (0,), "prefill", "none",
+                                                        block_table_columns=448), device=device)
++        for _, prefix, tail, physical in PREFILL_CASES:
++            yield attention_row(model, Step5ProfileInput(layer, (tail,), (prefix,), "prefill", "piecewise",
++                                                       block_table_columns=448), physical_query_rows=physical,
++                                device=device)
+         # The final output does not execute a subsequent forward at context7167.
+         template = attention_row(model, Step5ProfileInput(layer, (1,), (6144,), "decode", "full",
+                                                         block_table_columns=448), device=device)
+         # Uniform FULL scopes/score allocation depend on physical capture/capacity,
+         # not the live context. Every row still retains its own actual context.
+-        for context in range(6144, 7167):
++        for context in range(6143, 7167):
+             yield {**template, "context_lens": json.dumps((context,))}
+         for descriptor in (
+             MRv2DummyDescriptor(1, 1, "none", None, "CPU fixture of MRv2 InputBatch"),
+             MRv2DummyDescriptor(16, None, "piecewise", None, "CPU fixture of MRv2 InputBatch"),
++            MRv2DummyDescriptor(24, None, "piecewise", None, "CPU fixture of MRv2 InputBatch"),
++            MRv2DummyDescriptor(32, None, "piecewise", None, "CPU fixture of MRv2 InputBatch"),
+             MRv2DummyDescriptor(1, 1, "full", None, "CPU fixture of MRv2 InputBatch", 1),
+         ):
+             yield attention_row(model, Step5ProfileInput.from_mrv2_dummy(layer, descriptor, block_table_columns=448),
+@@ -139,6 +145,8 @@ def refresh_compute(output: Path):
+     manifest = json.loads(path.read_text())
+     if manifest["evidence_kind"] != "cpu_fixture" or manifest["native_admitted"]:
+         raise ValueError("Only unadmitted CPU fixture compute inputs may be refreshed")
++    if manifest["schema"] != "step5_measured_compute_cpu_fixture.v2":
++        raise ValueError("Historical full-prompt fixtures are immutable; generate a new P-target fixture")
+     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+     for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT):
+         directory = output / f"fixture_compute_{measurement.value.lower()}"
+@@ -163,11 +171,17 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+     if gpus_per_role <= 0 or gpus_per_role % 8:
+         raise ValueError("Fixture GPUs per role must be divisible by attention TP8")
+     output.mkdir(parents=True, exist_ok=False)
++    if nixl_read_profile is None:
++        from tests.integration.run_step5_measured_main import write_read_cost
++
++        read_cost = output / "synthetic_read_cost.json"
++        write_read_cost(read_cost)
++        nixl_read_profile = str(read_cost)
+     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+     inputs = {}
+     # Explicit fixture topology and reached single-request cases, not native evidence.
+     ep, capacity, block = gpus_per_role, MAX_MODEL_LEN, 16
+-    cases = [(6144, 0, "prefill", "none"), (16, 6128, "prefill", "piecewise"),
++    cases = [(6128, 0, "prefill", "none"), (16, 6128, "prefill", "piecewise"),
+              (1, "6144..7166 inclusive", "decode", "full")]
+     rows_by_measurement = {measurement: [] for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT)}
+     for row in reached_rows(model, device=device):
+@@ -201,6 +215,7 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+     config.nixl_read_profile = nixl_read_profile
+     replica = ffn._replica(model)
+     replica.device, replica.moe_expert_parallel_size = device, ep
++    replica.moe_routing_distribution_type, replica.moe_routing_seed = "balanced", 42
+     replica.attn_dp, replica.num_pipeline_stages = gpus_per_role // 8, 1
+     replica.kv_cache_dtype = "auto"
+     replica.network_device = "cpu_fixture_network"
+@@ -222,12 +237,19 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
+             SimpleNamespace(cache_dir=str(output / "cache")),
+         )
+     manifest = {
+-        "schema": "step5_measured_compute_cpu_fixture.v1", "evidence_kind": "cpu_fixture",
++        "schema": "step5_measured_compute_cpu_fixture.v2", "evidence_kind": "cpu_fixture",
+         "native_admitted": False, "device": device, "attention_tp": 8, "attention_dp": gpus_per_role // 8,
+         "moe_tp": 1, "moe_ep": ep, "global_layer_ids": list(range(model.num_layers)),
+         "max_model_len": capacity, "block_size": block, "batch_width": 1,
+         "decode_cuda_graph_mode": "full_and_piecewise", "cudagraph_capture_sizes": CAPTURE_SIZES,
+         "cases": cases, "predictor_config": {**options, "nixl_read_profile": nixl_read_profile},
++        "prefill_cases": [dict(num_prefill_tokens=prompt, prefill_compute_target=prefix,
++                               decode_tail_tokens=tail, decode_physical_width=physical)
++                          for prompt, prefix, tail, physical in PREFILL_CASES],
++        "compute_coverage": {"local_widths": LOCAL_COMPUTE_WIDTHS,
++                             "aggregate_widths": AGGREGATE_COMPUTE_WIDTHS,
++                             "routing": "existing balanced Hamilton materializer, exact nonempty EP lanes"},
++        "routing_distribution_type": "balanced", "routing_seed": 42,
+         "cache_dir": str(output / "cache"),
+         "bundles": {str(role.value): receipts for role, receipts in manager._step5_model_bundles.items()},
+         "limitations": ["Synthetic timings/counts; no native admission or accuracy claim",
+diff --git a/tests/integration/test_step5_measured_main.py b/tests/integration/test_step5_measured_main.py
+index 8171f01..02587ea 100644
+--- a/tests/integration/test_step5_measured_main.py
++++ b/tests/integration/test_step5_measured_main.py
+@@ -7,7 +7,9 @@ from frontier.attention.step5_inputs import MRv2DummyDescriptor
+ from frontier.config.model_config import BaseModelConfig
+ from frontier.execution_time_predictor.step5 import step5_row_features
+ from frontier.profiling.step5.inputs import Step5ProfileInput
+-from tests.integration.step5_measured_compute_fixture import attention_row, CAPTURE_SIZES
++from tests.integration.step5_measured_compute_fixture import (
++    attention_row, CAPTURE_SIZES, LOCAL_COMPUTE_WIDTHS, AGGREGATE_COMPUTE_WIDTHS,
++)
+ from tests.integration.run_step5_measured_main import command, write_read_cost
+ 
+ 
+@@ -52,11 +54,15 @@ def test_actual_main_command_retains_capacity_graph_topology_and_measured_read(t
+     assert argv[argv.index("--vllm_v1_scheduler_config_max_tokens_in_batch") + 1] == "8192"
+     assert argv[argv.index("--decode_cuda_graph_mode") + 1] == "full_and_piecewise"
+     assert "--no-use_cuda_graph" in argv and "--use_cuda_graph" not in argv
++    assert argv[argv.index("--replica_config_moe_routing_distribution_type") + 1] == "balanced"
++    assert argv[argv.index("--replica_config_moe_routing_seed") + 1] == "42"
+     for role in ("prefill", "decode"):
+         for key, value in (("num_pipeline_stages", "1"), ("attn_tensor_parallel_size", "8"),
+                            ("moe_expert_parallel_size", "16")):
+             assert argv[argv.index(f"--cluster_config_{role}_replica_config_{key}") + 1] == value
+     assert document["measurements"][0]["num_computed_tokens"] == 6128
++    assert {(row["num_prefill_tokens"], row["num_computed_tokens"]) for row in document["measurements"]} == {
++        (6143, 6112), (6144, 6128), (6145, 6128)}
+     assert document["measurements"][0]["transfer_bytes_per_rank"] > 0
+ 
+ 
+@@ -86,12 +92,12 @@ def test_compute_fixture_covers_exact_native_bound_aggregate_and_ep_loads(tmp_pa
+                                          measurement=MeasurementType.CUDA_EVENT)
+     linear = pd.read_csv(linear_path, float_precision="round_trip")
+     moe = pd.read_csv(moe_path, float_precision="round_trip")
+-    assert set(linear.num_tokens) == {1, 2, 16, 32, 6144, 6145}
+-    assert set(moe.num_tokens) == {2, 32, 6145}
++    assert set(linear.num_tokens) == set(LOCAL_COMPUTE_WIDTHS + AGGREGATE_COMPUTE_WIDTHS)
++    assert set(moe.num_tokens) == set(AGGREGATE_COMPUTE_WIDTHS)
+     assert set(moe.measurement_type) == {"CUDA_EVENT"}
+     assert set(moe.evidence_kind) == {"cpu_fixture"}
+     for layer, group in ((3, "3-87"), (88, "88-90")):
+-        for tokens in (2, 32, 6145):
++        for tokens in AGGREGATE_COMPUTE_WIDTHS:
+             rows = moe[(moe.moe_layer_ids == group) & (moe.num_tokens == tokens)]
+             workload = materialize_layer_ep_workload(
+                 routing_ratios=generate_moe_routing_ratios(
+@@ -142,7 +148,7 @@ def test_exact_ep_fixture_replays_shared_cache_duration_count_and_missing_covera
+     predictor = _predictor(model, manager)
+     predictor._replica_config.moe_expert_parallel_size = predictor._moe_ep_size = 16
+     for layer, precision in ((3, "FP8"), (88, "BF16")):
+-        for tokens in (2, 32, 6145):
++        for tokens in AGGREGATE_COMPUTE_WIDTHS:
+             workload = materialize_layer_ep_workload(
+                 routing_ratios=generate_moe_routing_ratios(
+                     total_expert_num=352, distribution_type="balanced", seed=42, layer_id=layer),
+@@ -168,3 +174,101 @@ def test_exact_ep_fixture_replays_shared_cache_duration_count_and_missing_covera
+     with predictor._step5_measured_layer(3), pytest.raises(ValueError, match="above declared maximum"):
+         predictor._get_share_expert_up_proj_execution_time(
+             SimpleNamespace(get_effective_total_tokens_rounded=lambda _: 7168))
++
++
++def test_corrected_attention_fixture_has_exact_canonical_boundary_shapes_and_no_old_prefill():
++    from tests.integration.step5_measured_compute_fixture import reached_rows
++
++    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
++    rows = []
++    for row in reached_rows(model, device="h800"):
++        if row["global_layer_id"] != 0:
++            break
++        step5_row_features(row)
++        rows.append(row)
++    real = [row for row in rows if row["native_workload"] == "attention_workload"]
++    prefill = {(tuple(json.loads(row["query_lens"])), tuple(json.loads(row["context_lens"])),
++                row["graph_mode"], row["valid_tokens"] + row["padded_tokens"])
++               for row in real if row["phase"] == "prefill"}
++    assert prefill == {((6112,), (0,), "none", 6112), ((6128,), (0,), "none", 6128),
++                       ((31,), (6112,), "piecewise", 32), ((16,), (6128,), "piecewise", 16),
++                       ((17,), (6128,), "piecewise", 24)}
++    assert all(row["evidence_kind"] == "cpu_fixture" for row in rows)
++    dummy = [row for row in rows if row["native_workload"] == "mrv2_dp_dummy"]
++    assert {(row["graph_mode"], row["valid_tokens"] + row["padded_tokens"]) for row in dummy} == {
++        ("none", 1), ("piecewise", 16), ("piecewise", 24), ("piecewise", 32), ("full", 1)}
++    assert all(row["dummy_owned_requests"] == 0 for row in dummy)
++
++
++def test_historical_fixture_cannot_be_read_or_refreshed(tmp_path):
++    from tests.integration.run_step5_measured_main import read_profile
++    from tests.integration.step5_measured_compute_fixture import refresh_compute
++
++    path = tmp_path / "fixture_manifest.json"
++    original = json.dumps(dict(schema="step5_measured_compute_cpu_fixture.v1",
++                               evidence_kind="cpu_fixture", native_admitted=False))
++    path.write_text(original)
++    with pytest.raises(AssertionError, match="Historical full-prompt"):
++        read_profile(path)
++    with pytest.raises(ValueError, match="immutable"):
++        refresh_compute(tmp_path)
++    assert path.read_text() == original
++
++
++@pytest.mark.parametrize("method_name", ["KERNEL_ONLY", "CUDA_EVENT"])
++def test_corrected_shapes_fit_and_match_actual_agreed_batch_keys(tmp_path, monkeypatch, method_name):
++    from frontier.config import global_vars, RandomForrestExecutionTimePredictorConfig
++    from frontier.entities import Batch, Request
++    from frontier.entities.batch import DummyForwardBatch
++    from frontier.execution_time_predictor.step5 import STEP5_FEATURE_COLUMNS
++    from frontier.execution_time_predictor.step5_cost import step5_batch_features, predict_step5_attention_time
++    from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
++    from frontier.types import ClusterType, MeasurementType
++    from tests.unit.test_step5_measured_replay import _predictor
++    from tests.unit.test_step5_measured_training import _manager, _replica, _scheduler, _write
++
++    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
++    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", list(CAPTURE_SIZES))
++    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
++    method = MeasurementType[method_name]
++    shapes = ([(6112, 0), (6128, 0)] if method is MeasurementType.KERNEL_ONLY
++              else [(31, 6112), (16, 6128), (17, 6128), (1, 6144), (1, 7166)])
++    batches, rows = [], []
++    for query, context in shapes:
++        request = Request(0, query + context, 1)
++        request._num_processed_tokens = context
++        batch = Batch(0, [request], [query], is_moe=True)
++        dummy = DummyForwardBatch(0, 0, 0)
++        bind_forward_start([batch, dummy], group_id=0, request_capacity=128)
++        descriptor = dummy.mrv2_dummy_descriptor
++        for layer in (0, 3):
++            real = Step5ProfileInput(layer, (query,), (context,),
++                "decode" if query == 1 else "prefill", descriptor.graph_mode, block_table_columns=448)
++            rows.append(attention_row(model, real, physical_query_rows=batch.forward_start_descriptor.num_tokens))
++            rows.append(attention_row(model, Step5ProfileInput.from_mrv2_dummy(
++                layer, descriptor, block_table_columns=448)))
++        batches.append((batch, dummy))
++    path = _write(tmp_path, rows, method)
++    manager = _manager(tmp_path / "cache", method)
++    replica, scheduler = _replica(model), _scheduler()
++    scheduler.max_model_len = 7168
++    config = RandomForrestExecutionTimePredictorConfig(num_estimators=[2], max_depth=[3],
++                min_samples_split=[2], k_fold_cv_splits=2, num_training_job_threads=1)
++    models = manager._train_attn_models_for_cluster(ClusterType.PREFILL, replica, config, scheduler,
++                str(tmp_path / "absent_linear.csv"), str(path), set())
++    predictor = _predictor(model, models, method)
++    predictor._step5_max_model_len = 7168
++    predictor.requires_forward_start_agreement = True
++    source = {tuple(step5_row_features(row)[name] for name in STEP5_FEATURE_COLUMNS): row for row in rows}
++    for pair in batches:
++        for batch in pair:
++            for layer in (0, 3):
++                features, _ = step5_batch_features(predictor, batch, layer)
++                row = source[tuple(features[name] for name in STEP5_FEATURE_COLUMNS)]
++                cost = predict_step5_attention_time(predictor, batch, layer)
++                statistic = "median" if method is MeasurementType.KERNEL_ONLY else "mean"
++                assert cost.total_time() == pytest.approx(row["time_stats"]["step5_layer_e2e"][statistic])
++                assert cost.kernel_count == (17 if isinstance(batch, DummyForwardBatch) else 23)
++                proof = cost.operator_costs["step5_layer_e2e"]
++                assert proof.exact_lookup and proof.evidence_kind == "cpu_fixture"
++                assert set(cost.operator_times.op_times) == {"step5_layer_e2e"}
+diff --git a/tests/unit/test_step5_measured_pd.py b/tests/unit/test_step5_measured_pd.py
+index 0b45bd2..b2cf9e9 100644
+--- a/tests/unit/test_step5_measured_pd.py
++++ b/tests/unit/test_step5_measured_pd.py
+@@ -102,10 +102,13 @@ class _FixtureCosts:
+         return self.duration
+ 
+ 
+-def _measured_cluster(role, costs, *, max_tokens=8192):
++def _measured_cluster(role, costs, *, max_tokens=8192, attn_dp=4):
+     generator = SyntheticRequestGeneratorConfig()
++    replica_config = _replica_config()
++    replica_config.attn_dp = attn_dp
++    replica_config.moe_expert_parallel_size = replica_config.attn_tensor_parallel_size * attn_dp
+     config = ClusterConfig(
+-        cluster_type=role, replica_config=_replica_config(),
++        cluster_type=role, replica_config=replica_config,
+         cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
+             policy_version="v0.28.0",
+         ),
+@@ -141,7 +144,7 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
+     request = Request(0, 4105, 9)
+     source.add_request(request)
+     [prefill] = source.on_schedule(0.1)
+-    assert prefill.num_tokens == [4105]
++    assert prefill.num_tokens == [4080]
+     prefill.on_batch_end(0.2, ClusterType.PREFILL)
+     source.on_batch_end(prefill)
+     assert request.num_emitted_decode_tokens == 0
+diff --git a/tests/unit/test_step5_prefill_target.py b/tests/unit/test_step5_prefill_target.py
+new file mode 100644
+index 0000000..cdb2b52
+--- /dev/null
++++ b/tests/unit/test_step5_prefill_target.py
+@@ -0,0 +1,189 @@
++"""Real scheduler/event PD lifetimes with explicit CPU costs, not native profiles."""
++
++from collections import Counter
++
++import pytest
++
++from frontier.entities import Request
++from frontier.entities.batch import DummyForwardBatch
++from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
++from frontier.events.kv_cache_transfer_start_event import KVCacheTransferStartEvent
++from frontier.types import ClusterType
++from tests.unit.test_step5_measured_pd import _FixtureCosts, _measured_cluster
++from tests.unit.test_step5_structural_pd import _GlobalScheduler, _Metrics, simulation_globals
++
++
++class _BatchMetrics(_Metrics):
++    def on_batch_end(self, *args):
++        pass
++
++
++@pytest.mark.parametrize("mode", ["offline", "online"])
++@pytest.mark.parametrize("prompt,prefix,outputs", [(6143, 6112, 1024), (6144, 6128, 1024), (6145, 6128, 1023)])
++def test_scheduler_prefill_transfer_tail_and_outputs_preserve_client_lengths(monkeypatch, mode, prompt, prefix, outputs):
++    from frontier.config import global_vars
++
++    monkeypatch.setattr(global_vars, "SIMULATION_MODE", mode)
++    costs = _FixtureCosts(changes={"num_prefill_tokens": prompt, "num_computed_tokens": prefix})
++    source_cluster = _measured_cluster(ClusterType.PREFILL, costs, attn_dp=2)
++    target_cluster = _measured_cluster(ClusterType.DECODE, costs, attn_dp=2)
++    scheduler = _GlobalScheduler(source_cluster, target_cluster)
++    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
++    # Keep the native semantic bound, independently of the P compute target.
++    for cluster in (source_cluster, target_cluster):
++        for lane in cluster._replica_schedulers.values():
++            lane._max_model_len = 7168
++    request = Request(0, prompt, outputs)
++    request.on_arrival(0, ClusterType.PREFILL)
++    source.add_request(request)
++    [batch] = source.on_schedule(0.1)
++    assert batch.num_tokens == [prefix]
++    assert batch.num_context_tokens == [0]
++    assert source._allocation_map[request.id] == 4 * (prefix // 16)
++    assert source._get_grouped_admission_blocks(request) == source._kv_cache_manager.get_num_admission_blocks(
++        prefix, max_model_len=7168, max_in_flight_tokens=8192,
++    )
++    assert request.num_prefill_tokens == request.user_facing_num_prefill_tokens == prompt
++    metrics = _BatchMetrics()
++    event = ClusterBatchEndEvent(0.2, source._replica_id, batch, ClusterType.PREFILL, 0, source_batch_stage_id=0)
++    events = event.handle_event(scheduler, metrics)
++    [start] = [event for event in events if isinstance(event, KVCacheTransferStartEvent)]
++    assert start._batch.num_tokens == [prefix]
++    assert request.num_processed_tokens == prefix
++    assert request.is_prefill_complete and request.is_finished_for_cluster(ClusterType.PREFILL)
++    assert request.num_emitted_decode_tokens == 0
++    assert source.get_kv_transfer_source_prompt_common_blocks(request) == prefix // 16
++    assert request.id in source._allocation_map
++    [end] = start.handle_event(scheduler, metrics)
++    info = end._transfer_info
++    target = target_cluster.get_replica_scheduler(info.target_replica_id, info.target_replica_local_id)
++    assert target.on_schedule(end.time - 0.001) == []
++    assert request.num_emitted_decode_tokens == 0
++    end.handle_event(scheduler, metrics)
++    assert info.target_ready_time == info.source_release_time == end.time
++    assert source._allocation_map == {}
++    assert request.num_processed_tokens == prompt and request.num_context_tokens == prefix
++    with pytest.raises(RuntimeError):
++        start.handle_event(scheduler, metrics)
++    with pytest.raises(RuntimeError):
++        end.handle_event(scheduler, metrics)
++    widths = []
++    contexts = []
++    for output_index in range(outputs):
++        now = end.time + .01 * (output_index + 1)
++        for lane in target._dp_group():
++            if lane is target:
++                continue
++            for idle in lane.on_schedule(now):
++                assert isinstance(idle, DummyForwardBatch)
++                assert idle.requests == []
++                lane.on_dummy_forward_end(now + .005)
++        batches = target.on_schedule(now)
++        if not batches:
++            assert target._waits_at_dp_sync
++            for lane in target._dp_group():
++                if lane is not target:
++                    for idle in lane.on_schedule(now):
++                        assert idle.requests == []
++                        lane.on_dummy_forward_end(now + .005)
++            batches = target.on_schedule(now)
++        [decode] = batches
++        widths.extend(decode.num_tokens)
++        contexts.extend(decode.num_context_tokens)
++        decode.on_batch_end(now + .005, ClusterType.DECODE)
++        target.on_batch_end(decode)
++        target_cluster.on_replica_batch_end(now + .005, info.target_replica_id, info.target_replica_local_id, decode)
++        assert request.num_emitted_decode_tokens == output_index + 1
++    assert Counter(widths) == Counter({prompt - prefix: 1, 1: outputs - 1})
++    assert contexts == [prefix, *range(prompt, prompt + outputs - 1)]
++    assert request.completed and request.num_processed_tokens == prompt + outputs
++    assert request.num_emitted_decode_tokens == outputs
++    assert request.first_decode_token_completed_at > end.time > request.prefill_completed_at
++    assert target._allocation_map == {}
++    assert source._pending_kv_transfer_requests == set()
++    assert target_cluster._load_balancer.request_owners == {}
++    assert len(metrics.starts) == len(metrics.ends) == 1
++
++
++@pytest.mark.parametrize("qualifier", ["dummy_timing", "no_connector", "co_location", "prefix_cache"])
++def test_nonqualifying_prefill_keeps_the_full_semantic_prompt(monkeypatch, qualifier):
++    from frontier.config import global_vars
++
++    source_cluster = _measured_cluster(ClusterType.PREFILL, _FixtureCosts())
++    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
++    if qualifier == "dummy_timing":
++        source_cluster._config.execution_time_predictor_config.enable_dummy_mode = True
++    elif qualifier == "no_connector":
++        monkeypatch.setattr(global_vars, "KV_CONNECTOR", "none")
++    elif qualifier == "co_location":
++        monkeypatch.setattr(global_vars, "SYS_ARCH", "co-location")
++    else:
++        monkeypatch.setattr(source, "_is_prefix_caching_enabled", lambda: True)
++    request = Request(0, 6144, 1024)
++    source.add_request(request)
++    assert request.prefill_compute_target == request.num_prefill_tokens == 6144
++
++
++def test_only_step_registers_this_native_prefix_contract():
++    from frontier.attention.families import get_attention_family, STEP5_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY
++
++    assert STEP5_ATTENTION_FAMILY.kv_transfer_prefill_target_resolver is not None
++    # Sliding retention alone must not select the Step replay rule.
++    assert DSA_ATTENTION_FAMILY.kv_transfer_prefill_target_resolver is None
++    assert get_attention_family("dense_attention").kv_transfer_prefill_target_resolver is None
++
++
++def test_mismatched_exact_transfer_coverage_fails_before_read_or_placement():
++    costs = _FixtureCosts(changes={"num_prefill_tokens": 6144, "num_computed_tokens": 6112})
++    source_cluster = _measured_cluster(ClusterType.PREFILL, costs)
++    target_cluster = _measured_cluster(ClusterType.DECODE, costs)
++    scheduler = _GlobalScheduler(source_cluster, target_cluster)
++    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
++    request = Request(0, 6144, 1024)
++    source.add_request(request)
++    [batch] = source.on_schedule(.1)
++    metrics = _BatchMetrics()
++    events = ClusterBatchEndEvent(.2, source._replica_id, batch, ClusterType.PREFILL, 0,
++                                 source_batch_stage_id=0).handle_event(scheduler, metrics)
++    [start] = [event for event in events if isinstance(event, KVCacheTransferStartEvent)]
++    with pytest.raises(ValueError, match="prefix does not match the P compute target"):
++        start.handle_event(scheduler, metrics)
++    assert request.id in source._allocation_map
++    assert not source._kv_transfer_start_claimed_request_ids
++    assert not target_cluster._load_balancer.request_owners
++    assert all(not lane._allocation_map for lane in target_cluster._replica_schedulers.values())
++    assert metrics.starts == metrics.ends == []
++
++
++def test_partial_prefill_completes_at_target_and_preemption_retains_target():
++    source_cluster = _measured_cluster(ClusterType.PREFILL, _FixtureCosts())
++    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
++    request = Request(0, 6144, 1024)
++    source.add_request(request)
++    source._allocate_request(request, 2048)
++    source._running_requests.append(request)
++    source._request_queue.remove(request)
++    request.on_batch_end(.1, 2048, ClusterType.PREFILL)
++    assert not request.is_prefill_complete
++    assert source._get_request_next_num_tokens(request) == 4080
++    source._preempt_request(request, [])
++    assert request.prefill_compute_target == 6128 and request.num_processed_tokens == 0
++    assert source._get_request_next_num_tokens(request) == 6128
++    [batch] = source.on_schedule(.2)
++    assert batch.num_tokens == [6128]
++    batch.on_batch_end(.3, ClusterType.PREFILL)
++    source.on_batch_end(batch)
++    assert request.is_prefill_complete and request.num_processed_tokens == 6128
++    assert request.num_emitted_decode_tokens == 0
++
++
++def test_prefill_target_does_not_relax_the_client_model_length_bound():
++    source_cluster = _measured_cluster(ClusterType.PREFILL, _FixtureCosts())
++    source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
++    source._max_model_len = 7168
++    request = Request(0, 6145, 1024)
++    with pytest.raises(ValueError, match="do not fit max_model_len=7168"):
++        source.add_request(request)
++    assert request.num_prefill_tokens == request.user_facing_num_prefill_tokens == 6145
++    assert request.prefill_compute_target == 6145
++    assert not source._request_queue and not source._allocation_map

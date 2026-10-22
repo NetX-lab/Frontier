@@ -7,7 +7,9 @@ from frontier.attention.step5_inputs import MRv2DummyDescriptor
 from frontier.config.model_config import BaseModelConfig
 from frontier.execution_time_predictor.step5 import step5_row_features
 from frontier.profiling.step5.inputs import Step5ProfileInput
-from tests.integration.step5_measured_compute_fixture import attention_row, CAPTURE_SIZES
+from tests.integration.step5_measured_compute_fixture import (
+    attention_row, CAPTURE_SIZES, LOCAL_COMPUTE_WIDTHS, AGGREGATE_COMPUTE_WIDTHS,
+)
 from tests.integration.run_step5_measured_main import command, write_read_cost
 
 
@@ -52,11 +54,15 @@ def test_actual_main_command_retains_capacity_graph_topology_and_measured_read(t
     assert argv[argv.index("--vllm_v1_scheduler_config_max_tokens_in_batch") + 1] == "8192"
     assert argv[argv.index("--decode_cuda_graph_mode") + 1] == "full_and_piecewise"
     assert "--no-use_cuda_graph" in argv and "--use_cuda_graph" not in argv
+    assert argv[argv.index("--replica_config_moe_routing_distribution_type") + 1] == "balanced"
+    assert argv[argv.index("--replica_config_moe_routing_seed") + 1] == "42"
     for role in ("prefill", "decode"):
         for key, value in (("num_pipeline_stages", "1"), ("attn_tensor_parallel_size", "8"),
                            ("moe_expert_parallel_size", "16")):
             assert argv[argv.index(f"--cluster_config_{role}_replica_config_{key}") + 1] == value
     assert document["measurements"][0]["num_computed_tokens"] == 6128
+    assert {(row["num_prefill_tokens"], row["num_computed_tokens"]) for row in document["measurements"]} == {
+        (6143, 6112), (6144, 6128), (6145, 6128)}
     assert document["measurements"][0]["transfer_bytes_per_rank"] > 0
 
 
@@ -86,12 +92,12 @@ def test_compute_fixture_covers_exact_native_bound_aggregate_and_ep_loads(tmp_pa
                                          measurement=MeasurementType.CUDA_EVENT)
     linear = pd.read_csv(linear_path, float_precision="round_trip")
     moe = pd.read_csv(moe_path, float_precision="round_trip")
-    assert set(linear.num_tokens) == {1, 2, 16, 32, 6144, 6145}
-    assert set(moe.num_tokens) == {2, 32, 6145}
+    assert set(linear.num_tokens) == set(LOCAL_COMPUTE_WIDTHS + AGGREGATE_COMPUTE_WIDTHS)
+    assert set(moe.num_tokens) == set(AGGREGATE_COMPUTE_WIDTHS)
     assert set(moe.measurement_type) == {"CUDA_EVENT"}
     assert set(moe.evidence_kind) == {"cpu_fixture"}
     for layer, group in ((3, "3-87"), (88, "88-90")):
-        for tokens in (2, 32, 6145):
+        for tokens in AGGREGATE_COMPUTE_WIDTHS:
             rows = moe[(moe.moe_layer_ids == group) & (moe.num_tokens == tokens)]
             workload = materialize_layer_ep_workload(
                 routing_ratios=generate_moe_routing_ratios(
@@ -142,7 +148,7 @@ def test_exact_ep_fixture_replays_shared_cache_duration_count_and_missing_covera
     predictor = _predictor(model, manager)
     predictor._replica_config.moe_expert_parallel_size = predictor._moe_ep_size = 16
     for layer, precision in ((3, "FP8"), (88, "BF16")):
-        for tokens in (2, 32, 6145):
+        for tokens in AGGREGATE_COMPUTE_WIDTHS:
             workload = materialize_layer_ep_workload(
                 routing_ratios=generate_moe_routing_ratios(
                     total_expert_num=352, distribution_type="balanced", seed=42, layer_id=layer),
@@ -168,3 +174,101 @@ def test_exact_ep_fixture_replays_shared_cache_duration_count_and_missing_covera
     with predictor._step5_measured_layer(3), pytest.raises(ValueError, match="above declared maximum"):
         predictor._get_share_expert_up_proj_execution_time(
             SimpleNamespace(get_effective_total_tokens_rounded=lambda _: 7168))
+
+
+def test_corrected_attention_fixture_has_exact_canonical_boundary_shapes_and_no_old_prefill():
+    from tests.integration.step5_measured_compute_fixture import reached_rows
+
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    rows = []
+    for row in reached_rows(model, device="h800"):
+        if row["global_layer_id"] != 0:
+            break
+        step5_row_features(row)
+        rows.append(row)
+    real = [row for row in rows if row["native_workload"] == "attention_workload"]
+    prefill = {(tuple(json.loads(row["query_lens"])), tuple(json.loads(row["context_lens"])),
+                row["graph_mode"], row["valid_tokens"] + row["padded_tokens"])
+               for row in real if row["phase"] == "prefill"}
+    assert prefill == {((6112,), (0,), "none", 6112), ((6128,), (0,), "none", 6128),
+                       ((31,), (6112,), "piecewise", 32), ((16,), (6128,), "piecewise", 16),
+                       ((17,), (6128,), "piecewise", 24)}
+    assert all(row["evidence_kind"] == "cpu_fixture" for row in rows)
+    dummy = [row for row in rows if row["native_workload"] == "mrv2_dp_dummy"]
+    assert {(row["graph_mode"], row["valid_tokens"] + row["padded_tokens"]) for row in dummy} == {
+        ("none", 1), ("piecewise", 16), ("piecewise", 24), ("piecewise", 32), ("full", 1)}
+    assert all(row["dummy_owned_requests"] == 0 for row in dummy)
+
+
+def test_historical_fixture_cannot_be_read_or_refreshed(tmp_path):
+    from tests.integration.run_step5_measured_main import read_profile
+    from tests.integration.step5_measured_compute_fixture import refresh_compute
+
+    path = tmp_path / "fixture_manifest.json"
+    original = json.dumps(dict(schema="step5_measured_compute_cpu_fixture.v1",
+                               evidence_kind="cpu_fixture", native_admitted=False))
+    path.write_text(original)
+    with pytest.raises(AssertionError, match="Historical full-prompt"):
+        read_profile(path)
+    with pytest.raises(ValueError, match="immutable"):
+        refresh_compute(tmp_path)
+    assert path.read_text() == original
+
+
+@pytest.mark.parametrize("method_name", ["KERNEL_ONLY", "CUDA_EVENT"])
+def test_corrected_shapes_fit_and_match_actual_agreed_batch_keys(tmp_path, monkeypatch, method_name):
+    from frontier.config import global_vars, RandomForrestExecutionTimePredictorConfig
+    from frontier.entities import Batch, Request
+    from frontier.entities.batch import DummyForwardBatch
+    from frontier.execution_time_predictor.step5 import STEP5_FEATURE_COLUMNS
+    from frontier.execution_time_predictor.step5_cost import step5_batch_features, predict_step5_attention_time
+    from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
+    from frontier.types import ClusterType, MeasurementType
+    from tests.unit.test_step5_measured_replay import _predictor
+    from tests.unit.test_step5_measured_training import _manager, _replica, _scheduler, _write
+
+    monkeypatch.setattr(global_vars, "DECODE_CUDA_GRAPH_MODE", "full_and_piecewise")
+    monkeypatch.setattr(global_vars, "CUDAGRAPH_CAPTURE_SIZES", list(CAPTURE_SIZES))
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    method = MeasurementType[method_name]
+    shapes = ([(6112, 0), (6128, 0)] if method is MeasurementType.KERNEL_ONLY
+              else [(31, 6112), (16, 6128), (17, 6128), (1, 6144), (1, 7166)])
+    batches, rows = [], []
+    for query, context in shapes:
+        request = Request(0, query + context, 1)
+        request._num_processed_tokens = context
+        batch = Batch(0, [request], [query], is_moe=True)
+        dummy = DummyForwardBatch(0, 0, 0)
+        bind_forward_start([batch, dummy], group_id=0, request_capacity=128)
+        descriptor = dummy.mrv2_dummy_descriptor
+        for layer in (0, 3):
+            real = Step5ProfileInput(layer, (query,), (context,),
+                "decode" if query == 1 else "prefill", descriptor.graph_mode, block_table_columns=448)
+            rows.append(attention_row(model, real, physical_query_rows=batch.forward_start_descriptor.num_tokens))
+            rows.append(attention_row(model, Step5ProfileInput.from_mrv2_dummy(
+                layer, descriptor, block_table_columns=448)))
+        batches.append((batch, dummy))
+    path = _write(tmp_path, rows, method)
+    manager = _manager(tmp_path / "cache", method)
+    replica, scheduler = _replica(model), _scheduler()
+    scheduler.max_model_len = 7168
+    config = RandomForrestExecutionTimePredictorConfig(num_estimators=[2], max_depth=[3],
+                min_samples_split=[2], k_fold_cv_splits=2, num_training_job_threads=1)
+    models = manager._train_attn_models_for_cluster(ClusterType.PREFILL, replica, config, scheduler,
+                str(tmp_path / "absent_linear.csv"), str(path), set())
+    predictor = _predictor(model, models, method)
+    predictor._step5_max_model_len = 7168
+    predictor.requires_forward_start_agreement = True
+    source = {tuple(step5_row_features(row)[name] for name in STEP5_FEATURE_COLUMNS): row for row in rows}
+    for pair in batches:
+        for batch in pair:
+            for layer in (0, 3):
+                features, _ = step5_batch_features(predictor, batch, layer)
+                row = source[tuple(features[name] for name in STEP5_FEATURE_COLUMNS)]
+                cost = predict_step5_attention_time(predictor, batch, layer)
+                statistic = "median" if method is MeasurementType.KERNEL_ONLY else "mean"
+                assert cost.total_time() == pytest.approx(row["time_stats"]["step5_layer_e2e"][statistic])
+                assert cost.kernel_count == (17 if isinstance(batch, DummyForwardBatch) else 23)
+                proof = cost.operator_costs["step5_layer_e2e"]
+                assert proof.exact_lookup and proof.evidence_kind == "cpu_fixture"
+                assert set(cost.operator_times.op_times) == {"step5_layer_e2e"}

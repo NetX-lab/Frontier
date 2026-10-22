@@ -118,6 +118,9 @@ class AttentionFamilySpec(OperatorFamilySpec):
             tuple[AttentionKVTransferComponent, ...],
         ] | None
     ) = None
+    # (client prompt tokens, cache block size) -> P's computed prompt target
+    # for the measured prefix-transfer contract, without changing client length.
+    kv_transfer_prefill_target_resolver: Callable[[int, int], int] | None = None
 
     _family_label: ClassVar[str] = "Attention family"
 

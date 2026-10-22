@@ -10,6 +10,22 @@ also the only Python files under `frontier/` above 2,000 lines on `main` at
 
 ## Inventory
 
+D26-PREFILL-TARGET (2026-10-22) changes `frontier/entities/request.py` from
+2,020 lines at `ebd5baf` to 2,049. Cleanup inspection found no duplicate or dead
+target/completion implementation in the touched lifecycle methods. The added
+scalar remains beside semantic prompt length and the existing D recompute cursor:
+moving it alone would split shared P/D request mutation across two owners. Only
+the registered measured Step NIXL/PP1 path selects a shorter P target; client
+lengths, legacy structural timing and other attention contracts remain unchanged.
+
+A later movement-only split can move thinking-round affinity, hidden/final round
+timing and requeue methods together into a request thinking-round module, retaining
+public delegates and the shared state. Derived request timing accessors can move
+separately after the lifecycle boundary is stable. Neither split is required for
+this approved correction; it would expand unrelated regression scope. The parent
+owns independent review and the unchanged strict 77-case fidelity gate before
+integration acceptance. This exception authorizes no further Request growth.
+
 D5 T1 (2026-10-20) extends the existing request metric exporter in
 `frontier/metrics/metrics_store.py` with PD-only `client_ttft`. The CSV is in
 milliseconds, from request arrival to `first_decode_token_completed_at` (the

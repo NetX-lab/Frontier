@@ -29,6 +29,32 @@ from frontier.types import ClusterType
 class KvBlockAllocation:
     """Token accounting, KV block allocation and preemption."""
 
+    def _set_prefill_compute_target(self, request: Request) -> None:
+        """Select the registered P target only for the existing measured PD path."""
+        from frontier.config import global_vars
+
+        if self._cluster_type != ClusterType.PREFILL:
+            return
+        capacity = self._kv_cache_capacity
+        cluster_config = getattr(self._cluster_scheduler, "_config", None)
+        predictor_config = getattr(cluster_config, "execution_time_predictor_config", None)
+        if (
+            global_vars.get_sys_arch() != "pd-disaggregation"
+            or global_vars.get_kv_connector() != "nixl"
+            or capacity is None or not capacity.is_grouped
+            or predictor_config is None or predictor_config.enable_dummy_mode
+            or int(self._replica_config.num_pipeline_stages) != 1
+            or self._is_prefix_caching_enabled()
+            or self._spec_decode_enabled
+        ):
+            return
+        family = get_attention_family(capacity.family_id)
+        resolver = family.kv_transfer_prefill_target_resolver
+        if resolver is not None:
+            request.set_prefill_compute_target(
+                resolver(request.num_prefill_tokens, int(self._config.block_size))
+            )
+
     def _get_available_kv_blocks(self) -> int:
         if self._is_grouped_kv_allocation():
             return int(self._kv_cache_manager.block_pool.get_num_free_blocks())
@@ -92,7 +118,10 @@ class KvBlockAllocation:
         return processed_tokens
 
     def _get_grouped_admission_blocks(self, request: Request) -> int:
-        peak_context_tokens = int(request.num_prefill_tokens)
+        peak_context_tokens = int(
+            request.prefill_compute_target if self._cluster_type == ClusterType.PREFILL
+            else request.num_prefill_tokens
+        )
         if self._cluster_type != ClusterType.PREFILL:
             peak_context_tokens += int(request.num_decode_tokens) - 1
         return int(
@@ -110,7 +139,10 @@ class KvBlockAllocation:
         tokens. Such a request would otherwise be preempted and admitted again
         without end.
         """
-        peak_context_tokens = request.num_prefill_tokens
+        peak_context_tokens = (
+            request.prefill_compute_target if self._cluster_type == ClusterType.PREFILL
+            else request.num_prefill_tokens
+        )
         if self._cluster_type != ClusterType.PREFILL:
             # The last output token is sampled but never written to the cache.
             peak_context_tokens += request.num_decode_tokens - 1
@@ -148,7 +180,7 @@ class KvBlockAllocation:
             raise RuntimeError(
                 f"Request {request.id} is not pending PREFILL KV transfer"
             )
-        prompt_blocks = ceil(request.num_prefill_tokens / self._config.block_size)
+        prompt_blocks = ceil(request.prefill_compute_target / self._config.block_size)
         allocated_blocks = int(self._allocation_map.get(request.id, 0))
         if allocated_blocks < prompt_blocks:
             raise RuntimeError(
@@ -480,7 +512,11 @@ class KvBlockAllocation:
                 return max(int(request.num_processed_tokens) - computed_tokens, 0)
             return 1
 
-        remaining_prefill_tokens = int(request.num_prefill_tokens) - computed_tokens
+        prefill_target = (
+            request.prefill_compute_target if cluster_type == ClusterType.PREFILL
+            else request.num_prefill_tokens
+        )
+        remaining_prefill_tokens = int(prefill_target) - computed_tokens
         return max(remaining_prefill_tokens, 0)
 
     def _get_num_tokens_for_kv_reservation(

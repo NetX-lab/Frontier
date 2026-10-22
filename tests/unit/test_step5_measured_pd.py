@@ -102,10 +102,13 @@ class _FixtureCosts:
         return self.duration
 
 
-def _measured_cluster(role, costs, *, max_tokens=8192):
+def _measured_cluster(role, costs, *, max_tokens=8192, attn_dp=4):
     generator = SyntheticRequestGeneratorConfig()
+    replica_config = _replica_config()
+    replica_config.attn_dp = attn_dp
+    replica_config.moe_expert_parallel_size = replica_config.attn_tensor_parallel_size * attn_dp
     config = ClusterConfig(
-        cluster_type=role, replica_config=_replica_config(),
+        cluster_type=role, replica_config=replica_config,
         cluster_scheduler_config=VllmLoadBalancingClusterSchedulerConfig(
             policy_version="v0.28.0",
         ),
@@ -141,7 +144,7 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     request = Request(0, 4105, 9)
     source.add_request(request)
     [prefill] = source.on_schedule(0.1)
-    assert prefill.num_tokens == [4105]
+    assert prefill.num_tokens == [4080]
     prefill.on_batch_end(0.2, ClusterType.PREFILL)
     source.on_batch_end(prefill)
     assert request.num_emitted_decode_tokens == 0

@@ -569,12 +569,21 @@ def _step5_kv_transfer_components(config, capacity, prompt_tokens: int, tensor_p
     )
 
 
+def _step5_kv_transfer_prefill_target(prompt_tokens: int, block_size: int) -> int:
+    # Native Step replays one block on D and resumes at a full-block boundary.
+    count = max(prompt_tokens - block_size, 0)
+    count -= count % block_size
+    # The native P truncation guard requires a positive remote prefix.
+    return count if count > 0 else prompt_tokens
+
+
 STEP5_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="step5_attention",
     display_name="Step text SWA and sparse GQA",
     structural_execution_enabled=True,
     kv_cache_capacity_resolver=_step5_kv_cache_capacity,
     kv_transfer_payload_resolver=_step5_kv_transfer_components,
+    kv_transfer_prefill_target_resolver=_step5_kv_transfer_prefill_target,
     supported_variants=("swa", "sparse_gqa"),
     operators=(
         AttentionOperatorSpec(
