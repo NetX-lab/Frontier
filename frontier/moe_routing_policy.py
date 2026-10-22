@@ -178,3 +178,19 @@ def resolve_routing_count_policy(distribution_type):
     if name not in ROUTING_COUNT_POLICIES:
         raise ValueError(f"Unsupported moe_routing_distribution_type={distribution_type!r}; expected {sorted(ROUTING_COUNT_POLICIES)}")
     return ROUTING_COUNT_POLICIES[name]
+
+
+def validate_position_routing_scope(replica_config, cluster_type):
+    """Admit the approved Step P/D geometry without expanding count mathematics."""
+    from frontier.config import global_vars
+    from frontier.types import ClusterType
+    if global_vars.SYS_ARCH != "pd-disaggregation" or cluster_type not in (ClusterType.PREFILL, ClusterType.DECODE):
+        raise ValueError("source-based routing supports only Step P/D")
+    if replica_config.model_config.get_model_architecture_profile().profile_id != "step5":
+        raise ValueError("source-based serving routing requires the Step architecture")
+    geometry = tuple(getattr(replica_config, name) for name in (
+        "num_pipeline_stages", "attn_tensor_parallel_size", "attn_dp",
+        "moe_tensor_parallel_size", "moe_expert_parallel_size",
+    ))
+    if geometry != (1, 8, 2, 1, 16) or replica_config.speculative_decoding_config.enabled:
+        raise ValueError("source-based routing requires PP1/TP8/DP2/MoE-TP1/EP16 without MTP")

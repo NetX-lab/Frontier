@@ -99,3 +99,61 @@ def test_one_source_tensor_interface_preserves_masks_and_request_intervals():
     positions, mask = source_frame_tensors(MoESourceFrame(1, (), (), 2, "standalone_legacy"), device="cpu")
     assert mask.tolist() == [True, True]
     assert str(positions.dtype) == "torch.int64" and str(mask.dtype) == "torch.bool"
+
+
+def test_actual_predictor_constructor_and_whole_source_cache(monkeypatch):
+    from frontier.config import BaseModelConfig, global_vars
+    from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import SklearnDisaggregationExecutionTimePredictor
+    from tests.unit.predictor_cache_fixtures import predictor_fixture_config
+    monkeypatch.setattr(global_vars, "SYS_ARCH", "pd-disaggregation")
+    kwargs = predictor_fixture_config(model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"), total_experts=352, ep_size=16, router_topk=8)
+    config = kwargs["replica_config"]
+    from frontier.config import BaseDeviceSKUConfig
+    config.device, config.device_config = "h800", BaseDeviceSKUConfig.create_from_type_string("h800")
+    config.attention_backend, config.kv_cache_dtype = "STEP5_DSA", "auto"
+    config.attn_tensor_parallel_size, config.attn_dp = 8, 2
+    config.moe_routing_distribution_type = "position_cyclic"
+    kwargs["cluster_type"] = ClusterType.DECODE
+    from frontier.config import ClusterConfig
+    kwargs["cluster_config"] = ClusterConfig(replica_config=config)
+    kwargs["cluster_config"].decode_replica_config = config
+    kwargs["cluster_config"].decode_cluster_num_replicas = 1
+    class SourcePredictor(SklearnDisaggregationExecutionTimePredictor):
+        def _get_estimator(self):
+            pytest.fail("Dummy constructor must not train")
+        def _get_grid_search_params(self):
+            return {}
+    predictor = SourcePredictor(**kwargs)
+    assert predictor._global_routing_allocations == {}
+    assert predictor._decode_routing_details == {0: {}}
+    batch = Batch(0, [Request(0, 6144, 1024)], [17], is_moe=True, num_context_tokens=[6128])
+    first = predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3, source())
+    assert predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3, source()) is first
+    moved = replace(source(), source_lanes=tuple(replace(lane, lane_id=index) for index, lane in enumerate(reversed(source().source_lanes))))
+    assert predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3, moved) is not first
+    assert len(predictor._layer_workload_cache) == 2
+    with pytest.raises(ValueError, match="explicitly matching"):
+        predictor._materialize_layer_ep_workload(batch, ClusterType.DECODE, 3)
+
+
+def test_scheduler_materializes_actual_bound_dp_sources_and_live_trace(monkeypatch):
+    from frontier.config import BaseModelConfig, global_vars
+    from tests.unit.predictor_cache_fixtures import predictor_fixture_config
+    from frontier.scheduler.utils.layer_workload import materialize_layer_workload
+    from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
+    from frontier.scheduler.utils.batch_builders import build_virtual_global_batch
+    from frontier.scheduler.utils.forward_start_agreement import ForwardStartDescriptor
+    from frontier.scheduler.utils.ep_trace import log_conservation_trace
+    monkeypatch.setattr(global_vars, "SYS_ARCH", "pd-disaggregation")
+    config = predictor_fixture_config(model_config=BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview"), total_experts=352, ep_size=16, router_topk=8)["replica_config"]
+    config.attn_tensor_parallel_size, config.attn_dp, config.moe_routing_distribution_type = 8, 2, "position_cyclic"
+    batches = {0: Batch(0, [Request(0, 6144, 1024)], [16], is_moe=True, num_context_tokens=[6128]), 1: DummyForwardBatch(0, 0, 0)}
+    for lane, batch in batches.items():
+        batch.forward_start_descriptor = ForwardStartDescriptor(8, "NONE", 16 if lane == 0 else 1, 1, None, None)
+    wave = prepare_ep_wave_inputs(source_batches=batches, batch=batches[0], step_id_getter=lambda b: b.forward_start_descriptor.group_id, aggregate_batch_builder=build_virtual_global_batch, cluster_type=ClusterType.DECODE)
+    scheduler = SimpleNamespace(_config=SimpleNamespace(replica_config=config), _cluster_type=ClusterType.DECODE, _predictor=SimpleNamespace(_decode_routing_details={0: {}}))
+    workload = materialize_layer_workload(scheduler=scheduler, batch=wave.aggregate_batch, target_replica_id=0, global_layer_id=3, source_batches=batches)
+    assert workload.routing_token_count == 17 and workload.total_routed_assignments == 128
+    log_conservation_trace(cluster_type=ClusterType.DECODE, batch_id=0, layer_id=3, routing_token_count=17, live_routing_token_count=16, router_topk=8, total_routed_assignments=128, per_ep_routed_tokens=dict(workload.per_ep_routed_tokens), trace_identity={}, format_identity=str)
+    with pytest.raises(ValueError, match="source_batches"):
+        materialize_layer_workload(scheduler=scheduler, batch=wave.aggregate_batch, target_replica_id=0, global_layer_id=3)

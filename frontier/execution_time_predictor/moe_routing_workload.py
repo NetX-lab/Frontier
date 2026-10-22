@@ -28,6 +28,7 @@ from frontier.moe_load_imbalance import (
     num_tokens_post_padded,
 )
 from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
+from frontier.moe_routing_policy import WaveRoutingSource, resolve_routing_count_policy
 from frontier.types import ClusterType
 from typing import Dict, List, Mapping, Optional
 
@@ -93,14 +94,21 @@ def _normalize_routing_details_for_trace(
 class MoeRoutingWorkload:
     """Expert-load distribution and per-lane routed workload."""
 
-    @staticmethod
-
     def _emit_routing_details_snapshot(
+        self,
         cluster_type: ClusterType,
         routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
     ) -> None:
         """Emit the exact predictor-owned routing map for external validation."""
 
+        policy = resolve_routing_count_policy(getattr(self, "_moe_routing_distribution_type", "balanced"))
+        if policy.requires_source:
+            logger.info("[ROUTING-POLICY-SNAPSHOT] %s", json.dumps({
+                "policy_id": self._moe_routing_distribution_type, "router_topk": self._replica_config.router_topk,
+                "total_expert_num": self._replica_config.total_expert_num,
+                "interval_contract": "(logical_position * top_k + slot) % num_experts",
+            }, sort_keys=True))
+            return
         normalized = _normalize_routing_details_for_trace(routing_details)
         payload = {
             "schema_version": 1,
@@ -271,6 +279,8 @@ class MoeRoutingWorkload:
         Monolithic decode with EP enabled needs a global view across all experts to
         derive per-lane post-MoE arrival skew before the shared-domain all-reduce.
         """
+        if resolve_routing_count_policy(self._moe_routing_distribution_type).requires_source:
+            return {}
         total_experts = self._replica_config.total_expert_num
         if self._cluster_type == ClusterType.DECODE_ATTN or not self._model_config.is_moe:
             return {}
@@ -390,19 +400,25 @@ class MoeRoutingWorkload:
         return self._replica_config
 
     def _materialize_layer_ep_workload(
-        self, batch: Batch, cluster_type: ClusterType, layer_id: int
+        self, batch: Batch, cluster_type: ClusterType, layer_id: int, routing_source: WaveRoutingSource | None = None,
     ) -> LayerEPWorkload:
         """Materialize one exact Replica-local EP workload for a MoE layer."""
         # Routing tables are built once by the constructor and have no runtime
         # mutation API. Topology and exact replica/layer/token identity are in
         # the key; the frozen workload can be shared across repeated EP waves.
+        policy_id = getattr(self, "_moe_routing_distribution_type", "balanced")
+        policy = resolve_routing_count_policy(policy_id)
+        if policy.requires_source and (
+            not isinstance(routing_source, WaveRoutingSource) or routing_source.policy_id != policy_id
+        ):
+            raise ValueError("source-based prediction requires an explicitly matching routing_source")
         workload_cache = self._layer_workload_cache
         cache_capacity = self._layer_workload_cache_capacity
         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
-        routing_details = self._get_routing_details_for_cluster(cluster_type)
+        routing_details = None if policy.requires_source else self._get_routing_details_for_cluster(cluster_type)
         target_replica_id = int(batch.replica_id)
         global_layer_id = int(layer_id)
-        # A decode CUDA-graph step routes its padding tokens too.
+        # Physical rows include padding even when source assignments are masked.
         routing_token_count = int(batch.get_effective_total_tokens_for_compute(cluster_type))
         router_topk = int(cluster_replica_config.router_topk)
         total_expert_num = int(cluster_replica_config.total_expert_num)
@@ -416,12 +432,14 @@ class MoeRoutingWorkload:
             total_expert_num,
             moe_ep_size,
         )
+        if policy.requires_source:
+            cache_key += (policy_id, routing_source)
         cached_workload = workload_cache.get(cache_key)
         if cached_workload is not None:
             workload_cache.move_to_end(cache_key)
             return cached_workload
         workload = materialize_layer_ep_workload(
-            routing_ratios=resolve_routing_details(
+            routing_ratios=None if policy.requires_source else resolve_routing_details(
                 routing_details,
                 target_replica_id=target_replica_id,
                 global_layer_id=global_layer_id,
@@ -436,6 +454,8 @@ class MoeRoutingWorkload:
                 total_expert_num,
                 moe_ep_size,
             ),
+            policy_id=policy_id,
+            routing_source=routing_source,
         )
         workload_cache[cache_key] = workload
         workload_cache.move_to_end(cache_key)

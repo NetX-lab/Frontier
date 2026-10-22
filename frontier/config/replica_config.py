@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Optional
+from frontier.moe_routing_policy import resolve_routing_count_policy
 
 from frontier.config.device_sku_config import BaseDeviceSKUConfig
 from frontier.config.model_config import BaseModelConfig
@@ -92,7 +93,7 @@ class ReplicaConfig:
         default="balanced",
         metadata={
             "help": "MoE expert-load distribution for disaggregated routing simulation. "
-            "Valid values: 'balanced', 'random', 'skewed', or 'zipf'. This controls "
+            "Valid values: 'balanced', 'random', 'skewed', 'zipf', or 'position_cyclic'. This controls "
             "token-to-expert load skew without changing router_topk/model semantics."
         },
     )
@@ -175,21 +176,10 @@ class ReplicaConfig:
             if self.router_topk is None or int(self.router_topk) <= 0:
                 self.router_topk = 1
 
-        valid_moe_routing_distribution_types = {
-            "balanced",
-            "random",
-            "skewed",
-            "zipf",
-        }
         self.moe_routing_distribution_type = str(
             self.moe_routing_distribution_type
         ).strip().lower()
-        if self.moe_routing_distribution_type not in valid_moe_routing_distribution_types:
-            raise ValueError(
-                "moe_routing_distribution_type must be one of "
-                f"{sorted(valid_moe_routing_distribution_types)}, "
-                f"got {self.moe_routing_distribution_type!r}"
-            )
+        resolve_routing_count_policy(self.moe_routing_distribution_type)
 
         # Validate pipeline parallelism configuration early
         if self.model_config.num_layers % self.num_pipeline_stages != 0:

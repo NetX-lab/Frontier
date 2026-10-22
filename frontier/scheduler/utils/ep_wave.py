@@ -110,6 +110,7 @@ def prepare_moe_wave_from_inputs(
         batch=aggregate_batch,
         target_replica_id=replica_id,
         global_layer_id=layer_id,
+        source_batches=wave_inputs.source_batches,
         **physical_rows,
     )
     trace_identity = trace_identity_builder(
@@ -119,6 +120,9 @@ def prepare_moe_wave_from_inputs(
         operation_id=int(cohort_id),
         operation_kind="ep_ffn",
     )
+    source_counts = {}
+    if layer_workload.routing_source is not None:
+        source_counts = {"live_routing_token_count": layer_workload.live_routing_token_count}
     conservation_logger(
         cluster_type=cluster_type,
         batch_id=int(cohort_id),
@@ -128,6 +132,7 @@ def prepare_moe_wave_from_inputs(
         total_routed_assignments=int(layer_workload.total_routed_assignments),
         per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
         trace_identity=trace_identity,
+        **source_counts,
     )
     phase_times = predict_ep_wave_phase_times(
         layer_workload=layer_workload,
