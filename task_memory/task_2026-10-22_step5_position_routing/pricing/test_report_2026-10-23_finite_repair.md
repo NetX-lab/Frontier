@@ -104,3 +104,6 @@ five isolated submodule files333 included. F3/F6 parent37ead7f/sub3dac53c; full
 pinned d28fe917-to-tip patch retained at pricing/collective_sim.patch,
 sha256c96cace541b72f7627b5f429d55615a17be4cd6c86d1827ef53969d05d766a1d.
 Root owns unstaged gitlink; no peer/import work. AST/JSON/whitespace checks PASS.
+F4/F5 source/test/record commit181a534; F3/F6 early commit37ead7f, sub3dac53c.
+Summary43 path totals checked against actual owned/submodule diff after commit;
+isolated submodule is clean, parent status contains only root-owned gitlink.

@@ -465,3 +465,45 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. F3-F6已验证；原生GPU policy/parameters仍未验证。
 2. No-PYTHONPATH9 cold checks prove real ctor; full suite explicit路径要求另记。
 3. Root ownssub3dac53c gitlink/re-review/global acceptance。
+
+## D29-PRICING-FINITE-REPAIR completion
+
+- completed:181a534 scoped F4/F5 code/test/record commit, following37ead7f F3/F6.
+  Isolated submodule3dac53c clean; only parent worktree delta is root-owned gitlink.
+  Summary table exactly matches43-path +2849/-95=2944; full patch byte equality,
+  AST/JSON and whitespace PASS. No additional testing after final545 JUnit result.
+- completed:F3-F6 owned repairs/RED→GREEN/exact commands/records. Root re-review
+  and actual GPU parameters/source/backend/graph/global acceptance remain open.
+
+## 1. 规划完成情况
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| F3 completed joint HTSIM | PASS |37ead7f/sub3dac53c |
+| F4 actual runtime/buffer/branch identity | PASS |181a534 |
+| F5 exact selectedscope/replay | PASS |181a534 stale negatives |
+| F6 real cold constructor | PASS |No-PYTHONPATH9 PASS |
+| Verified scoped delivery/records | PASS |545 JUnit/43 paths/2944 budget and retained full patch |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**181a534至今｜**当前前沿：**root复审
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Only final commit/patch/summary evidence checked |
+| D2 细节反复重试 | CLEAR |No fixes after final456 PASS |
+| D3 支线问题修补 | CLEAR |No CLI/environment side edits |
+| D4 可并行任务停滞 | CLEAR |Explicit no agents/peer edits |
+| D5 超范围镀金 | CLEAR |43 paths/2944 within3956 |
+| D6 分析空转 | CLEAR |181a534 delivered early for root re-review |
+| D7 路线违背 | CLEAR |No GPU parameters/qualification claimed |
+**文档检查：**S5 earlier pending final commit updated to181a534; S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：更新最终commit事实。
+**文档更新（先执行）：**plan/summary/receipt/report/progress记录181a534（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**交付root复审与gitlink整合；等待具体新finding，不启动未授权采集。
+## 4. 最值得关注的 3 点
+1. Owned F3-F6完成，预算剩余1012。
+2. Root负责gitlink3dac53c及独立复审。
+3. 实际GPU参数/source/backend/graph资格与D29全局验收仍未完成。

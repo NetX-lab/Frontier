@@ -33,7 +33,7 @@ and scoped commits/archive. F3 and F6 are independent; no extra delegation.
 Legacy scalar and TP-local no-network semantics remain unchanged. Only existing
 owned files,<=3956 gross total; actual GPU inputs/global acceptance remain root.
 
-F3/F6 **completed**37ead7f/sub3dac53c; F4/F5 **completed implementation and
-verification**, scoped commit/archive next. Final545 JUnit cases:456 PASS/89 SKIP,
+F3/F6 **completed**37ead7f/sub3dac53c; F4/F5 **completed**181a534, with tested
+implementation and scoped records. Final545 JUnit cases:456 PASS/89 SKIP,
 submodule12 PASS, cold constructor9 PASS. Updated total2944/3956 in43 paths;
 no new code paths or peer/import changes. Re-review is root-owned.

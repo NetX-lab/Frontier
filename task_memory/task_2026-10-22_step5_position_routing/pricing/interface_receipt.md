@@ -299,6 +299,8 @@ Isolated submodule commits:ae75af0,1a16426. Root integrates gitlink separately.
 ## Finite review repair F3-F6
 
 F3/F6 early parent commit37ead7f; isolated submodule3dac53c supersedes1a16426.
+F4/F5 tested parent commit181a534. No uncommitted code remains; root-owned
+gitlink is intentionally unstaged. Summary/diff/AST/JSON/patch equality PASS.
 `collective_sim_core.predictor.completed_plan_network_ms(payload)` requires
 expected_flows>0, finished_flows==expected_flows and finite positive completed
 makespan_us for new nonempty joint plans. Both prediction and exporter reuse it;

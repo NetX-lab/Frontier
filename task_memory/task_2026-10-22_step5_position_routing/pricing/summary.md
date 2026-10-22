@@ -23,7 +23,7 @@ Actual production parameters and GPU qualification were not manufactured.
 Early interface commits:7b86614,409093c,511a3db. Review/seam repairs:f03286f,
 06bae09. T2 existing constructor seam:3f54bc6 (48/60 additional gross).
 Final selected producer/qualified import/legacy trace repair:940cc84.
-Finite repair F3/F6:37ead7f; F4/F5 completed and verified, scoped commit next.
+Finite repair F3/F6:37ead7f; F4/F5:181a534, verified scoped code/records.
 Authorized CORE02f061d/Native2c4cc9e and published67d5b5e dependencies imported;
 437b312 records published dependency integration. No peer file edited.
 Isolated collective-sim branch d29-position-pricing commits:
