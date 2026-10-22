@@ -1,0 +1,182 @@
+diff --git a/tests/comparison/calibration/pd_proxy.py b/tests/comparison/calibration/pd_proxy.py
+index 238008f..15ef357 100755
+--- a/tests/comparison/calibration/pd_proxy.py
++++ b/tests/comparison/calibration/pd_proxy.py
+@@ -70 +70 @@ def build_app(prefill_url: str, decode_url: str, prefill_kv_address: str,
+-        session = ClientSession(timeout=ClientTimeout(total=None), connector=TCPConnector(limit=0))
++        session = ClientSession(timeout=ClientTimeout(total=None), connector=TCPConnector(limit=0, force_close=True))
+diff --git a/tests/unit/test_calibration_pd_harness.py b/tests/unit/test_calibration_pd_harness.py
+index 1796a17..2f54bf3 100644
+--- a/tests/unit/test_calibration_pd_harness.py
++++ b/tests/unit/test_calibration_pd_harness.py
+@@ -12,0 +13 @@ import asyncio
++from collections import Counter
+@@ -268,0 +270,168 @@ def test_legacy_proxy_preserves_address_id_and_unchanged_decode_body(tmp_path):
++@pytest.mark.parametrize(("vllm_version", "stream"), [
++    ("0.10.2", False), ("0.28.0", False), ("0.28.0", True),
++])
++def test_proxy_uses_independent_upstream_connections_for_consecutive_posts(tmp_path, vllm_version, stream):
++    from aiohttp import web
++    from aiohttp.test_utils import TestClient, TestServer
++
++    params = {
++        "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
++        "remote_engine_id": "p-engine", "remote_request_id": "p-request",
++        "remote_host": "127.0.0.1", "remote_port": 5557, "remote_block_ids": [[7]],
++    }
++    token = b'data: {"choices":[{"token_ids":[42],"text":""}]}\n\n'
++    done = b"data: [DONE]\n\n"
++    observed, transports = [], []
++
++    async def exercise():
++        received = {f"client-{index}": asyncio.Event() for index in range(2)}
++
++        def endpoint(role):
++            async def complete(request):
++                body = await request.json()
++                identity = request.headers["X-Request-Id"]
++                # Retain transports so object identities cannot be recycled after close.
++                transports.append(request.transport)
++                observed.append({"role": role, "request_id": identity, "body": body,
++                                 "connection_id": id(request.transport),
++                                 "peer": request.transport.get_extra_info("peername")})
++                if role == "P":
++                    return web.json_response({"kv_transfer_params": params})
++                if stream:
++                    response = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
++                    await response.prepare(request)
++                    await response.write(token)
++                    await asyncio.wait_for(received[identity].wait(), timeout=5)
++                    await response.write(done)
++                    await response.write_eof()
++                    return response
++                return web.json_response({"choices": [{"token_ids": [42], "text": ""}]})
++            return complete
++
++        p, d = web.Application(), web.Application()
++        p.router.add_post("/v1/completions", endpoint("P"))
++        d.router.add_post("/v1/completions", endpoint("D"))
++        async with TestServer(p) as ps, TestServer(d) as ds:
++            proxy = build_app(str(ps.make_url("")).rstrip("/"), str(ds.make_url("")).rstrip("/"),
++                              "127.0.0.1:21001", "127.0.0.1:22001", tmp_path / "proxy.jsonl",
++                              vllm_version=vllm_version)
++            async with TestClient(TestServer(proxy)) as client:
++                for index in range(2):
++                    identity = f"client-{index}"
++                    body = {"prompt": [1, 2, 3], "stream": stream, "max_tokens": 2,
++                            "min_tokens": 2, "return_token_ids": True}
++                    if stream:
++                        body["stream_options"] = {"include_usage": True}
++                    response = await client.post("/v1/completions", json=body,
++                                                 headers={"X-Request-Id": identity})
++                    assert response.status == 200
++                    if stream:
++                        first = await asyncio.wait_for(response.content.readexactly(len(token)), timeout=2)
++                        assert first == token
++                        received[identity].set()
++                        assert first + await response.read() == token + done
++                    else:
++                        assert (await response.json())["choices"][0]["token_ids"] == [42]
++                    assert observed[-1]["body"] == (body | {"kv_transfer_params": params}
++                                                   if vllm_version == "0.28.0" else body)
++
++    asyncio.run(exercise())
++    (tmp_path / "connections.json").write_text(json.dumps(observed, indent=2) + "\n")
++    identities = [f"client-{index}" if vllm_version == "0.28.0" else
++                  proxied_request_id(f"client-{index}", "127.0.0.1:21001", "127.0.0.1:22001")
++                  for index in range(2)]
++    assert [(row["role"], row["request_id"]) for row in observed] == [
++        (role, identity) for identity in identities for role in ("P", "D")]
++    assert len({id(transport) for transport in transports}) == 4
++    records = [json.loads(line) for line in (tmp_path / "proxy.jsonl").read_text().splitlines()]
++    assert [record["request_id"] for record in records] == ["client-0", "client-1"]
++    for record in records:
++        assert record["prefill_status"] == record["decode_status"] == 200
++        assert record["proxy_arrival_monotonic"] <= record["prefill_response_monotonic"]
++        assert record["prefill_response_monotonic"] <= record["decode_response_monotonic"]
++        if stream:
++            assert record["prefill_response_monotonic"] <= record["decode_first_byte_monotonic"]
++            assert record["decode_first_byte_monotonic"] <= record["decode_response_monotonic"]
++        assert "client_ttft" not in record and "device_completion" not in record
++
++
++@pytest.mark.parametrize("disconnect_at", ["prefill", "decode_headers", "decode_stream"])
++def test_proxy_does_not_retry_disconnected_posts_and_next_request_is_independent(tmp_path, disconnect_at):
++    from aiohttp import ClientPayloadError, web
++    from aiohttp.test_utils import TestClient, TestServer
++
++    params = {
++        "do_remote_prefill": True, "do_remote_decode": False, "transfer_mode": "pull",
++        "remote_engine_id": "p-engine", "remote_request_id": "p-request",
++        "remote_host": "127.0.0.1", "remote_port": 5557, "remote_block_ids": [[7]],
++    }
++    token = b'data: {"choices":[{"token_ids":[42],"text":""}]}\n\n'
++    observed, transports = [], []
++
++    async def exercise():
++        received = asyncio.Event()
++
++        def endpoint(role):
++            async def complete(request):
++                await request.read()
++                identity = request.headers["X-Request-Id"]
++                transports.append(request.transport)
++                observed.append({"role": role, "request_id": identity,
++                                 "connection_id": id(request.transport)})
++                if identity == "bad" and ((role == "P" and disconnect_at == "prefill") or
++                                          (role == "D" and disconnect_at == "decode_headers")):
++                    request.transport.close()
++                    return web.Response()
++                if role == "P":
++                    return web.json_response({"kv_transfer_params": params})
++                response = web.StreamResponse(headers={"Content-Type": "text/event-stream"})
++                await response.prepare(request)
++                await response.write(token)
++                if identity == "bad" and disconnect_at == "decode_stream":
++                    await asyncio.wait_for(received.wait(), timeout=5)
++                    request.transport.close()
++                    return response
++                await response.write(b"data: [DONE]\n\n")
++                await response.write_eof()
++                return response
++            return complete
++
++        p, d = web.Application(), web.Application()
++        p.router.add_post("/v1/completions", endpoint("P"))
++        d.router.add_post("/v1/completions", endpoint("D"))
++        async with TestServer(p) as ps, TestServer(d) as ds:
++            proxy = build_app(str(ps.make_url("")).rstrip("/"), str(ds.make_url("")).rstrip("/"),
++                              "", "", tmp_path / "proxy.jsonl", vllm_version="0.28.0")
++            async with TestClient(TestServer(proxy)) as client:
++                for identity in ("bad", "good"):
++                    response = await client.post("/v1/completions",
++                        json={"prompt": [1, 2, 3], "stream": True, "max_tokens": 2, "min_tokens": 2,
++                              "return_token_ids": True, "stream_options": {"include_usage": True}},
++                        headers={"X-Request-Id": identity})
++                    if identity == "bad" and disconnect_at != "decode_stream":
++                        assert response.status == 502
++                        assert "ServerDisconnectedError" in (await response.json())["error"]
++                    elif identity == "bad":
++                        assert response.status == 200
++                        assert await response.content.readexactly(len(token)) == token
++                        received.set()
++                        with pytest.raises(ClientPayloadError):
++                            await response.read()
++                    else:
++                        assert response.status == 200
++                        assert await response.read() == token + b"data: [DONE]\n\n"
++
++    asyncio.run(exercise())
++    (tmp_path / "connections.json").write_text(json.dumps(observed, indent=2) + "\n")
++    expected = [("P", "bad")] + ([] if disconnect_at == "prefill" else [("D", "bad")])
++    expected += [("P", "good"), ("D", "good")]
++    assert Counter((row["role"], row["request_id"]) for row in observed) == Counter(expected)
++    assert len({id(transport) for transport in transports}) == len(expected)
++    bad, good = [json.loads(line) for line in (tmp_path / "proxy.jsonl").read_text().splitlines()]
++    assert [bad["request_id"], good["request_id"]] == ["bad", "good"]
++    assert ("ClientPayloadError" if disconnect_at == "decode_stream" else
++            "ServerDisconnectedError") in bad["error"]
++    assert "decode_response_monotonic" not in bad
++    assert good["prefill_status"] == good["decode_status"] == 200 and "error" not in good
++
++

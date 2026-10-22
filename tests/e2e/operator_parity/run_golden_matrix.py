@@ -180,10 +180,10 @@ def parameter_memory_per_device_bytes(
         moe_expert_parallel_size=parallelism.moe_expert_parallel_size,
         num_pipeline_stages=parallelism.num_pipeline_stages,
     )
-    return 2 * ParamCounter(
+    return ParamCounter(
         replica_config=replica_config,
         cluster_type=cluster_type,
-    ).get_num_parameters_per_device()
+    ).get_parameter_memory_per_device_bytes()
 
 
 def _assert_pinned_parallelism_memory_feasible(model_name: str, parallelism: GoldenParallelism) -> None:

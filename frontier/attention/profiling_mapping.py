@@ -65,6 +65,8 @@ def get_attention_profiling_feature_schema(
     predictor_feature_columns = (
         get_imported_mla_predictor_feature_columns()
         if family.memory_layout is AttentionMemoryLayout.LATENT_MLA
+        else get_enabled_predictor_required_feature_columns(family)
+        if family.memory_layout is AttentionMemoryLayout.DSA
         else None
     )
     return AttentionProfilingFeatureSchema(
@@ -283,6 +285,10 @@ def get_enabled_predictor_feature_columns(
             operator.name: imported_predictor_feature_columns
             for operator in family.predictor_ops()
         }
+    elif family.memory_layout is AttentionMemoryLayout.DSA:
+        from frontier.attention.dsa_features import dsa_predictor_feature_columns
+
+        feature_columns = dsa_predictor_feature_columns()
     elif family.memory_layout is AttentionMemoryLayout.FIXED_STATE:
         # GDN recurrent work is driven by the physical batch and query shape;
         # history length is deliberately absent because state size is fixed.
@@ -333,6 +339,10 @@ def get_enabled_shared_predictor_feature_columns(
             operator.name: imported_predictor_feature_columns
             for operator in family.predictor_ops()
         }
+    elif family.memory_layout is AttentionMemoryLayout.DSA:
+        from frontier.attention.dsa_features import dsa_predictor_feature_columns
+
+        feature_columns = dsa_predictor_feature_columns()
     elif family.memory_layout is AttentionMemoryLayout.FIXED_STATE:
         feature_columns = {
             operator.name: GDN_FEATURE_COLUMNS

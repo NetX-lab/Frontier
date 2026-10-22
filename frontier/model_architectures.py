@@ -313,12 +313,14 @@ def _shared_layer_contract_active(profile: "ModelArchitectureProfile", config: A
     return bool(supports()) if callable(supports) else profile.supports_share_expert(config)
 
 
-def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
+def _default_layer_contracts(
+    tensor_parallel_mode: TensorParallelMode = TensorParallelMode.FFN_TP,
+) -> tuple[LayerContractSpec, ...]:
     return (
         LayerContractSpec(
             LayerKind.DENSE,
             LayerDimensionSource.DENSE,
-            TensorParallelMode.FFN_TP,
+            tensor_parallel_mode,
             operator_family_ids=("ffn",),
             activation_predicate=_dense_layer_contract_active,
         ),
@@ -333,7 +335,7 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
         LayerContractSpec(
             LayerKind.SHARED,
             LayerDimensionSource.SHARED,
-            TensorParallelMode.FFN_TP,
+            tensor_parallel_mode,
             operator_family_ids=("share_expert",),
             base_layer_kinds=(LayerKind.ROUTED,),
             activation_predicate=_shared_layer_contract_active,
@@ -422,6 +424,10 @@ class ModelArchitectureProfile:
     share_expert_tensor_parallel_allreduce_op: str | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
+    replicate_shared_expert_in_sequence_parallel: bool = False
+    embedding_logits_collectives: bool = False
+    dense_layers_use_shared_expert_rows: bool = True
+    moe_gating_routing_runtime_path: str | None = None
     experimental: bool = False
     runtime_limitations: tuple[str, ...] = ()
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -645,6 +651,64 @@ class ModelArchitectureProfile:
             match=match or _matches_qwen3_5_moe,
         )
 
+    @classmethod
+    def glm_moe_dsa(cls) -> "ModelArchitectureProfile":
+        """GLM sparse-MLA backbone identity with measured DSA coverage."""
+
+        return cls(
+            profile_id="glm_moe_dsa",
+            embedding_logits_collectives=True,
+            dense_layers_use_shared_expert_rows=False,
+            moe_gating_routing_runtime_path="grouped_topk_sigmoid",
+            display_name="GLM MoE DSA",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            # vLLM v0.28 builds DeepseekV2MoE shared experts with disable_tp
+            # under sequence-parallel MoE (EP, TP>1, DP>1).
+            replicate_shared_expert_in_sequence_parallel=True,
+            experimental=True,
+            runtime_limitations=(
+                "DSA timing requires measured workload coverage; native "
+                "parameter-storage qualification and full-model calibration remain incomplete",
+                "shared-expert overlap and native end-to-end timing remain unqualified",
+            ),
+            match=lambda config: (
+                _normalized_attr(config, "model_type") == "glm_moe_dsa"
+            ),
+            layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
+        )
+
+    @classmethod
+    def deepseek_v4(cls) -> "ModelArchitectureProfile":
+        """Original V4 backbone identity with unsupported execution explicit."""
+
+        return cls(
+            profile_id="deepseek_v4",
+            display_name="DeepSeek-V4",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            counts_share_expert_param_memory=True,
+            replicate_shared_expert_in_sequence_parallel=True,
+            experimental=True,
+            runtime_limitations=(
+                "compressed attention, mHC and mixed precision are unsupported",
+                "shared FFN sequence-parallel token/collective execution is unsupported",
+            ),
+            match=lambda config: (
+                _normalized_attr(config, "model_type") == "deepseek_v4"
+            ),
+            # The non-sequence-parallel projection contract is metadata only.
+            # Native SP replicates shared weights; execution remains disabled.
+            layer_contracts=_default_layer_contracts(TensorParallelMode.ATTENTION_TP),
+        )
+
     def validate_structural_requirements(self, config: Any) -> None:
         """Validate profile-owned structural requirements against a config."""
 
@@ -700,6 +764,23 @@ class ModelArchitectureProfile:
             )
         return matches[0]
 
+    def uses_sequence_parallel_moe(
+        self,
+        attention_tp_size: int | None,
+        attention_dp_size: int | None,
+        num_pipeline_stages: int | None,
+        expert_parallel_size: int | None,
+    ) -> bool:
+        """Select vLLM's sequence-parallel MoE with allgather/reduce-scatter."""
+
+        return (
+            self.replicate_shared_expert_in_sequence_parallel
+            and num_pipeline_stages == 1
+            and attention_tp_size is not None and attention_tp_size > 1
+            and attention_dp_size is not None and attention_dp_size > 1
+            and expert_parallel_size is not None and expert_parallel_size > 1
+        )
+
     def resolve_layer_contract(
         self,
         config: Any,
@@ -709,6 +790,8 @@ class ModelArchitectureProfile:
         operator_name: str | None = None,
         attention_tp_size: int | None = None,
         attn_tp_size: int | None = None,
+        attention_dp_size: int | None = None,
+        num_pipeline_stages: int | None = None,
         moe_tp_size: int | None = None,
         ffn_tp_size: int | None = None,
         tensor_parallel_size: int | None = None,
@@ -722,6 +805,8 @@ class ModelArchitectureProfile:
         for name, value in (
             ("attention_tp_size", attention_tp_size),
             ("attn_tp_size", attn_tp_size),
+            ("attention_dp_size", attention_dp_size),
+            ("num_pipeline_stages", num_pipeline_stages),
             ("moe_tp_size", moe_tp_size),
             ("ffn_tp_size", ffn_tp_size),
             ("tensor_parallel_size", tensor_parallel_size),
@@ -813,20 +898,29 @@ class ModelArchitectureProfile:
                 f"{spec.layer_kind.value} layer contract is inactive for profile {self.profile_id!r}"
             )
         width = spec.resolve_width(config, mixed_model=mixed_model)
-        if spec.tensor_parallel_mode is TensorParallelMode.REPLICATED:
+        tp_mode = spec.tensor_parallel_mode
+        if (
+            selected_kind is LayerKind.SHARED
+            and self.uses_sequence_parallel_moe(
+                attention_tp_size, attention_dp_size,
+                num_pipeline_stages, expert_parallel_size,
+            )
+        ):
+            tp_mode = TensorParallelMode.REPLICATED
+        if tp_mode is TensorParallelMode.REPLICATED:
             selected_tp = 1
-        elif spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+        elif tp_mode is TensorParallelMode.ATTENTION_TP:
             selected_tp = attention_tp_size
-        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+        elif tp_mode is TensorParallelMode.MOE_TP:
             selected_tp = moe_tp_size
-        elif spec.tensor_parallel_mode is TensorParallelMode.FFN_TP:
+        elif tp_mode is TensorParallelMode.FFN_TP:
             selected_tp = ffn_tp_size if ffn_tp_size is not None else attention_tp_size
         else:
-            raise ValueError(f"Unsupported tensor parallel mode: {spec.tensor_parallel_mode!r}")
+            raise ValueError(f"Unsupported tensor parallel mode: {tp_mode!r}")
         if tensor_parallel_size is not None and selected_tp is not None and tensor_parallel_size != selected_tp:
             raise ValueError("tensor_parallel_size conflicts with the selected domain TP")
         selected_tp = tensor_parallel_size if tensor_parallel_size is not None else selected_tp
-        if selected_tp is not None and spec.tensor_parallel_mode is not TensorParallelMode.REPLICATED:
+        if selected_tp is not None and tp_mode is not TensorParallelMode.REPLICATED:
             if width % selected_tp != 0:
                 raise ValueError(
                     f"{selected_kind.value} width {width} must be divisible by TP={selected_tp}"
@@ -857,7 +951,7 @@ class ModelArchitectureProfile:
             layer_kind=selected_kind,
             dimension_source=spec.dimension_source,
             effective_ffn_width=width,
-            tensor_parallel_mode=spec.tensor_parallel_mode,
+            tensor_parallel_mode=tp_mode,
             expert_parallel_mode=spec.expert_parallel_mode,
             tensor_parallel_size=selected_tp,
             expert_parallel_size=expert_parallel_size,
@@ -1216,6 +1310,8 @@ for _profile in (
     ModelArchitectureProfile.step3_text(),
     ModelArchitectureProfile.step2_mini(),
     ModelArchitectureProfile.qwen3_5_moe(),
+    ModelArchitectureProfile.glm_moe_dsa(),
+    ModelArchitectureProfile.deepseek_v4(),
     ModelArchitectureProfile.generic(),
 ):
     MODEL_ARCHITECTURE_REGISTRY.register(_profile)

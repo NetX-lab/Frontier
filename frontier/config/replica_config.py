@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 from frontier.config.device_sku_config import BaseDeviceSKUConfig
 from frontier.config.model_config import BaseModelConfig
@@ -98,6 +99,25 @@ class ReplicaConfig:
     device: str = field(
         default="a100",
         metadata={"help": "Device."},
+    )
+    attention_backend: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Explicit native attention backend for cache layout selection.",
+            "omit_if_none": True,
+        },
+    )
+    kv_cache_dtype: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Explicit native main KV cache dtype.", "omit_if_none": True,
+        },
+    )
+    indexer_kv_cache_dtype: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Explicit native indexer KV cache dtype.", "omit_if_none": True,
+        },
     )
     network_device: str = field(
         default="a100_pairwise_nvlink",

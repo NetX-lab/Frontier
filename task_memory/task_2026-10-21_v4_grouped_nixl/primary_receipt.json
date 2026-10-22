@@ -1,0 +1,29 @@
+{
+  "task_id": "W128-V4-GROUPED-NIXL",
+  "merge_commit": "2a84c58ac7643bed9f2522d48ebce0eef67847bd",
+  "scope": "CPU structural grouped NIXL and real transfer tracing",
+  "focused_pass": 470,
+  "merged_pass": 28,
+  "strict_cases": 77,
+  "strict_identical": 77,
+  "candidate_checkout_clean": true,
+  "baseline": {
+    "git_head": "bfa82de80413b5f4b38e4990a80b5108f9521f50",
+    "label": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/baseline",
+    "repo_root": "/data/ycfeng/Frontier/.worktrees/baseline-bfa82de"
+  },
+  "candidate": {
+    "git_head": "2a84c58ac7643bed9f2522d48ebce0eef67847bd",
+    "label": "candidate_2a84c58",
+    "repo_root": "/data/ycfeng/Frontier/.worktrees/fidelity-candidate-2a84c58"
+  },
+  "comparison": "/data/ycfeng/tmp/glm53_dsv4/t00/refactor_fidelity/root_v4_grouped_2a84c58/comparison.json",
+  "raw_log": "/data/ycfeng/tmp/glm53_dsv4/root_v4_grouped_merged_strict77.log",
+  "artifact_sha256": {
+    "primary_fidelity_comparison.json": "b8a1ff4726f7f8a50feda8b2e4cb5ce554d786f53cfd018cb7afaee0dba3f676",
+    "primary_focused.xml": "716e7f6a49924977d4a58c5084353286702e6ffdb25e119b4295ba1010aae204",
+    "primary_merged.xml": "445a63f4ad173f508fb6ad6c39192578e58319cecd2765f5ee4637de85e61521"
+  },
+  "review": "P2 CLOSED; no actionable findings",
+  "native_wire_timing_or_formal_acceptance": false
+}

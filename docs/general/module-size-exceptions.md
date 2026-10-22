@@ -88,3 +88,87 @@ Steps 1 and 2 were scheduled after PR 44's merge, so the split would not mix
 with the calibration review. PR 44 is merged (`9a650fb`), but no step has
 started: the target modules named above do not exist yet. Steps 3 and 4 can
 run at any time.
+
+## Scoped V4 cache-zero metric admission, 2026-10-19
+
+At `b5120e6`, `frontier/metrics/metrics_store.py` has 5,703 lines. The
+cache-zero change adds two lines to the existing operation-metric admission
+filter, bringing it to 5,705 lines. The corresponding enum entry is required
+by actual structural execution; excluding that entry for models without the
+V4 structural attention family preserves their existing output files instead
+of creating an empty cache-zero table.
+
+The cleanup inspection found this filter already owns the exclusion of absent
+structural operations. Extending it avoids a second metrics owner or an
+additional model classifier. Cache allocation metadata and timing remain in
+their existing scheduler, Batch and V4 predictor modules; no cache algorithm
+or new ledger responsibility is added to the metrics store. Moving unrelated
+ledger code during this correction would expand the regression surface
+without improving cache-zero representation.
+
+The functional split remains step 3 above, as a separate movement-only change.
+This exception covers only the two-line filter extension, with focused metric
+checks and the unchanged 77-case artifact and predictor-cache filename
+comparison required before acceptance. It does not authorize further growth
+of the metrics store or claim that the planned split has been performed.
+
+## GLM sequence-parallel MoE wiring, 2026-10-20
+
+At `98416de`, the main predictor has 8,583 lines; the SP-MoE changes bring it
+to 8,596. The additions pass DP/PP to the existing typed contract, delegate
+input-norm row selection to `sequence_parallel_moe.py`, select dense FFN rows
+through the architecture profile, and register operation-level measured
+precision through `profiling_metadata.py`. No new width or precision classifier
+lives in the main predictor. The metadata registration replaces its previous
+file-wide precision registration rather than adding a second path.
+
+Cleanup inspection found the affected methods own predictor binding and the
+existing subclass-facing getters. Moving their state here would overlap the
+pending measurement-family split above and the independently implemented DSA
+consumer. Those splits remain separate movement-only work; this exception is
+limited to the local contract wiring, with the unchanged 77-case matrix gate.
+
+## V4 grouped-transfer tracing wiring, 2026-10-21
+
+The grouped NIXL tracing fix changes `frontier/metrics/metrics_store.py` from
+5,742 to 5,744 lines. The two added arguments forward the existing transfer
+record and scheduler block size to `build_kv_cache_transfer_meta`. Without
+them, the actual tracing callback attempts to bind V4's mixed compression
+variants as one scalar attention layout and raises before returning the
+transfer-end event.
+
+Cleanup inspection found that the caller already owns transfer accounting and
+trace emission. Grouped layout interpretation, snapshot validation and component
+byte descriptions remain in `op_trace_utils.py`, which grows from 1,003 to
+1,089 lines and reuses the existing grouped payload calculation. No new ledger,
+allocation state or model classifier is added to the metrics store. Moving
+unrelated ledger code would enlarge this correction without fixing another
+part of the actual failing call chain.
+
+This exception covers only those two forwarding arguments. The functional
+split remains the existing stage-batch ledger extraction in step 3 above.
+Acceptance requires the real MetricsStore/TraceStore lifecycle regression,
+unchanged GLM metadata, and the unchanged 77-case artifact/cache comparison.
+It does not authorize additional metrics-store growth or claim that the
+planned split is complete.
+
+## V4 graph and measured-scope dispatch, 2026-10-21
+
+The main predictor keeps only V4-specific delegates at its existing attention
+loader and execution dispatch boundaries. Workload geometry, source validation,
+isolated exact measured selection and typed coverage errors live in the existing
+model-specific `attention/deepseek_v4.py` and
+`execution_time_predictor/deepseek_v4.py` modules. Removing the previous dummy-only
+check replaces blanket rejection with a specific missing phase/TP/critical-path
+error; it does not admit a native V4 forward or add prediction state.
+
+Cleanup inspection found no redundant owned implementation to remove at these
+delegation points. Moving unrelated predictor state would overlap the pending
+measurement-family split above and expand this approved slice. That split and
+its ordering remain unchanged. The exception covers only these delegates and
+requires focused V4/GLM/reader checks and one clean 77-case comparison.
+
+The runtime import allowlist explicitly permits V4 to reuse only the existing
+CPU-only row schema, composite scope plan and identity format. It still forbids
+profiling runners and native main modules. This avoids a second runtime copy of
+the producer's scope ownership or fingerprint algorithm.

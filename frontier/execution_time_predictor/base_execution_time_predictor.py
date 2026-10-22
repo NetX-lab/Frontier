@@ -10,6 +10,11 @@ from frontier.config import (
 from frontier.entities import Batch, ExecutionTime, StageExecutionTime
 from frontier.types import ClusterType
 from frontier.logger import init_logger
+from frontier.attention.families import get_attention_family
+from frontier.attention.memory import (
+    AttentionKVCacheSelection,
+    get_attention_kv_cache_capacity,
+)
 
 if TYPE_CHECKING:
     from frontier.entities.time_components import AttentionTime, MLPTime, MoETime
@@ -30,6 +35,23 @@ class BaseExecutionTimePredictor(ABC):
         self._config = predictor_config
         self._replica_config = replica_config
         self._model_config = replica_config.model_config
+
+        family_ids = {
+            spec.family_id for spec in self._model_config.get_layer_attention_specs()
+        }
+        for family_id in sorted(family_ids):
+            family = get_attention_family(family_id)
+            family.require_enabled_for_execution(
+                structural=predictor_config.enable_dummy_mode,
+            )
+            if family.kv_cache_capacity_resolver is not None:
+                get_attention_kv_cache_capacity(
+                    family, self._model_config,
+                    block_size=replica_scheduler_config.block_size,
+                    selection=AttentionKVCacheSelection.from_replica(
+                        replica_config, block_size=replica_scheduler_config.block_size,
+                    ),
+                )
 
         # get configs
         self._replica_scheduler_provider = str(replica_scheduler_config.get_type())

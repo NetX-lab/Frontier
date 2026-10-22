@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
+
+if TYPE_CHECKING:
+    from frontier.attention.memory import (
+        AttentionKVCacheCapacity,
+        AttentionKVCacheSelection,
+    )
 
 from frontier.operators.spec import (
     OperatorFamilySpec,
@@ -24,8 +30,9 @@ class AttentionMemoryLayout(Enum):
 
     DENSE_KV = "dense_kv"
     LATENT_MLA = "latent_mla"
-    FROZEN_DSA = "frozen_dsa"
+    DSA = "dsa"
     FIXED_STATE = "fixed_state"
+    COMPRESSED_KV = "compressed_kv"
 
 
 @dataclass(frozen=True)
@@ -80,21 +87,33 @@ class AttentionFamilySpec(OperatorFamilySpec):
     requires_runtime_kv_helpers: bool
     disjoint_model_projection_attrs: tuple[str, ...] = ()
     dsa_frozen: bool = False
+    structural_execution_enabled: bool = False
     kv_factor: int | None = None
     required_profiling_feature_columns: tuple[str, ...] = ()
     imported_predictor_excluded_feature_columns: tuple[str, ...] = ()
     runtime_num_kv_heads_resolver: Callable[[Any], int] | None = None
     runtime_head_size_resolver: Callable[[Any], int] | None = None
     runtime_meta_contract: AttentionRuntimeMetaContract | None = None
+    kv_cache_capacity_resolver: (
+        Callable[
+            [Any, int, AttentionKVCacheSelection | None], AttentionKVCacheCapacity
+        ] | None
+    ) = None
 
     _family_label: ClassVar[str] = "Attention family"
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if self.dsa_frozen and self.operators:
+        if self.dsa_frozen and self.operators and not self.structural_execution_enabled:
             raise ValueError("Frozen DSA family must not enable operator targets")
         if self.dsa_frozen and self.execution_enabled:
             raise ValueError("Frozen DSA family must not be execution enabled")
+        if self.structural_execution_enabled and (
+            not self.operators or self.kv_cache_capacity_resolver is None
+        ):
+            raise ValueError(
+                "Structural attention execution requires operators and a cache capacity resolver"
+            )
         projection_attrs = list(self.disjoint_model_projection_attrs)
         duplicate_projection_attrs = sorted(
             {
@@ -130,6 +149,7 @@ class AttentionFamilySpec(OperatorFamilySpec):
             )
 
     def resolve_runtime_num_kv_heads(self, config: Any) -> int:
+        self.require_enabled_for_execution()
         if self.runtime_num_kv_heads_resolver is None:
             raise ValueError(
                 f"Attention family {self.family_id} does not declare a "
@@ -144,6 +164,7 @@ class AttentionFamilySpec(OperatorFamilySpec):
         return value
 
     def resolve_runtime_head_size(self, config: Any) -> int:
+        self.require_enabled_for_execution()
         if self.runtime_head_size_resolver is None:
             raise ValueError(
                 f"Attention family {self.family_id} does not declare a "
@@ -157,7 +178,9 @@ class AttentionFamilySpec(OperatorFamilySpec):
             )
         return value
 
-    def require_enabled_for_execution(self) -> None:
+    def require_enabled_for_execution(self, *, structural: bool = False) -> None:
+        if structural and self.structural_execution_enabled:
+            return
         if self.dsa_frozen:
             raise NotImplementedError(
                 "DSA attention is frozen until a real vLLM/FlashInfer truth "

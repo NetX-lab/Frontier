@@ -11,6 +11,30 @@ logger = init_logger(__name__)
 
 
 @dataclass(frozen=True)
+class KVCacheBlockZeroing:
+    """One scheduler step's assignments, shared by its physical TP workers.
+
+    IDs retain allocation order and repeated assignments. The unique physical
+    reservation extent is not native store traffic or a zeroed segment span.
+    """
+
+    block_ids: tuple[int, ...]
+    physical_block_size_bytes: int
+
+    def __post_init__(self) -> None:
+        block_ids = tuple(self.block_ids)
+        if not block_ids or any(type(block) is not int or block <= 0 for block in block_ids):
+            raise ValueError("cache zeroing requires non-null positive physical block IDs")
+        if type(self.physical_block_size_bytes) is not int or self.physical_block_size_bytes <= 0:
+            raise ValueError("cache zeroing requires a positive physical block stride")
+        object.__setattr__(self, "block_ids", block_ids)
+
+    @property
+    def physical_reservation_extent_bytes(self) -> int:
+        return len(set(self.block_ids)) * self.physical_block_size_bytes
+
+
+@dataclass(frozen=True)
 class AFDStageMetadata:
     """Minimal AFD metadata for simulation.
 
@@ -538,6 +562,7 @@ class Batch(BaseEntity):
         self._is_idle = is_idle
         self._is_moe = is_moe
         self.decode_cuda_graph_metadata: Optional[DecodeCudaGraphMetadata] = None
+        self.cache_block_zeroing: Optional[KVCacheBlockZeroing] = None
         self._request_runtime_epochs = [
             int(getattr(request, "runtime_epoch", 0)) for request in self._requests
         ]
@@ -1307,10 +1332,11 @@ class DummyForwardBatch(Batch):
     """One pipeline stage's part of vLLM's attention-DP dummy pass.
 
     A DP engine core whose step executed no batch runs ``execute_dummy_batch``,
-    ``_dummy_run(1)`` on every pipeline stage: one request slot with one token
-    and no attention metadata. Attention kernels and KV-cache writes are
-    skipped, while projections, norms and every MoE layer with its EP
-    collectives run. The forward carries no request.
+    ``_dummy_run(1, uniform_decode=True)`` on every pipeline stage. Eager and
+    piecewise execution have no attention metadata; FULL replay builds metadata
+    for one actual request slot with seq_len=1. Graph forwards pad projections
+    and MoE input to the DP-wide capture width. Dummy slot mappings are -1, so
+    no real KV page is written. The forward carries no serving request.
     """
 
     def __init__(
@@ -1383,6 +1409,8 @@ class EPBatchGroup(Batch):
         # expert tokens; predictor lookups must not collapse to a zero-token
         # stage in that case.
         self._moe_pre_routing_effective_total_tokens: Optional[int] = None
+        # C2's immutable result identifies all source lanes, independent of routing.
+        self.moe_sequence_parallel_token_widths = None
         self._decode_ffn_execution_time_recorded_stage_ids: set[int] = set()
         self.activation_bytes: int = 0
     

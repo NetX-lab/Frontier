@@ -281,12 +281,7 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
 
     predictor = object.__new__(_ConcreteSklearnMoEExecutionTimePredictor)
     predictor._moe_input_file = str(csv_path)
-    predictor._model_config = SimpleNamespace(
-        num_experts=8,
-        num_experts_per_tok=2,
-        embedding_dim=4096,
-        mlp_hidden_dim=11008,
-    )
+    predictor._model_config = _moe_model_config()
     predictor._replica_config = SimpleNamespace(
         moe_tensor_parallel_size=4,
         moe_expert_parallel_size=1,

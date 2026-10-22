@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import cache
 
 from frontier.attention.families import (
+    DEEPSEEK_V4_ATTENTION_FAMILY,
     DENSE_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
@@ -11,6 +12,7 @@ from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_mode,
     resolve_shared_expert_tensor_parallel_size,
 )
+from frontier.config.precision_type import PrecisionType
 from frontier.operators.registry import OperatorRegistry
 from frontier.operators.spec import (
     CommOperatorSpec,
@@ -310,6 +312,52 @@ MEMORY_FAMILY = OperatorFamilySpec(
 )
 
 
+DEEPSEEK_V4_MHC_FAMILY = OperatorFamilySpec(
+    family_id="deepseek_v4_mhc",
+    display_name="DeepSeek-V4 mHC and Model Endpoints",
+    supported_variants=("first", "middle", "last", "first_last"),
+    execution_enabled=False,
+    disabled_reason="DeepSeek-V4 mHC and endpoint scopes are source inventory only",
+    # Fused pre/post scopes own the layer norms and residual mixing. Generic
+    # MEMORY_FAMILY norm/add scopes would count that work a second time.
+    operators=tuple(
+        OperatorSpec(
+            name=name,
+            role=role,
+            phases=_ALL_PHASES,
+            predictor_target=False,
+            profiling_target=False,
+            e2e_trace_target=False,
+            resource_class=resource,
+            tp_mode=tp_mode,
+            projection_ownership=(
+                ProjectionOwnership.OUTSIDE_ATTENTION
+                if role is OperatorRole.PROJECTION
+                else ProjectionOwnership.NOT_PROJECTION
+            ),
+        )
+        for name, role, resource, tp_mode in (
+            ("dsv4_embedding", OperatorRole.EMBEDDING, ResourceClass.MEMORY,
+             TensorParallelMode.ATTENTION_TP),
+            ("dsv4_mhc_first_pre", OperatorRole.NORMALIZATION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_ffn_post_attn_pre", OperatorRole.NORMALIZATION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_attn_post_ffn_pre", OperatorRole.NORMALIZATION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_final_post", OperatorRole.RESIDUAL, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_mhc_head", OperatorRole.PROJECTION, ResourceClass.COMP,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_final_norm", OperatorRole.NORMALIZATION, ResourceClass.MEMORY,
+             TensorParallelMode.REPLICATED),
+            ("dsv4_lm_head", OperatorRole.PROJECTION, ResourceClass.COMP,
+             TensorParallelMode.ATTENTION_TP),
+        )
+    ),
+)
+
+
 def _effective_tokens(ctx: CommPayloadContext) -> int:
     return int(ctx.batch.get_effective_total_tokens_rounded(ctx.cluster_type))
 
@@ -373,6 +421,88 @@ def _moe_tp_allgather_payload_bytes(ctx: CommPayloadContext) -> int:
     )
 
 
+def _dsv4_sp_local_hidden_bytes(ctx: CommPayloadContext) -> int:
+    """Source BF16 shard width from sequence_parallel.sp_shard padding."""
+
+    from frontier.entities.batch import EPBatchGroup
+
+    if (
+        ctx.model_config.get_model_architecture_profile().profile_id != "deepseek_v4"
+        or ctx.model_config.get_default_precision() is not PrecisionType.BF16
+    ):
+        raise ValueError("DeepSeek-V4 SP source payload requires the V4 BF16 contract")
+    if ctx.cluster_type is not ClusterType.MONOLITHIC:
+        raise ValueError("DeepSeek-V4 SP source payload requires co-location")
+    replica = ctx.replica_config
+    for name in (
+        "num_pipeline_stages", "attn_tensor_parallel_size", "attn_dp",
+        "moe_tensor_parallel_size", "moe_expert_parallel_size",
+    ):
+        value = getattr(replica, name)
+        if type(value) is not int or value <= 0:
+            raise ValueError(
+                f"DeepSeek-V4 SP source payload requires positive integer {name}"
+            )
+    tp_size = replica.attn_tensor_parallel_size
+    if (
+        replica.num_pipeline_stages != 1 or tp_size <= 1 or replica.attn_dp <= 1
+        or replica.moe_tensor_parallel_size != 1
+        or replica.moe_expert_parallel_size != tp_size * replica.attn_dp
+    ):
+        raise ValueError(
+            "DeepSeek-V4 SP source payload requires PP1, attention TP>1/DP>1, "
+            "MoE TP1 and EP=attention TP*DP"
+        )
+    if (
+        isinstance(ctx.batch, EPBatchGroup)
+        or ctx.lane_workload is not None
+        or resolve_ep_lane_workload(ctx.batch, required=False) is not None
+    ):
+        raise ValueError(
+            "DeepSeek-V4 SP payload requires a source DP attention batch, "
+            "not a materialized EP destination or aggregate group"
+        )
+    tokens = ctx.batch.get_effective_total_tokens_rounded(ctx.cluster_type)
+    hidden = ctx.model_config.embedding_dim
+    if type(tokens) is not int or tokens < 0:
+        raise ValueError("DeepSeek-V4 SP source rows must be a non-negative integer")
+    if type(hidden) is not int or hidden <= 0:
+        raise ValueError("DeepSeek-V4 SP hidden width must be a positive integer")
+    local_rows = (tokens + tp_size - 1) // tp_size
+    # These collectives carry BF16 activations irrespective of weight dtype.
+    return local_rows * hidden * int(PrecisionType.BF16.bytes_per_element)
+
+
+def _dsv4_sp_attention_reduce_scatter_bytes(ctx: CommPayloadContext) -> int:
+    # CC reduce_scatter consumes the full padded input on each TP rank.
+    return _dsv4_sp_local_hidden_bytes(ctx) * ctx.replica_config.attn_tensor_parallel_size
+
+
+def _dsv4_sp_final_mhc_allgather_bytes(ctx: CommPayloadContext) -> int:
+    local_hidden_bytes = _dsv4_sp_local_hidden_bytes(ctx)
+    streams = ctx.model_config.hc_mult
+    if type(streams) is not int or streams <= 0:
+        raise ValueError("DeepSeek-V4 SP mHC stream count must be a positive integer")
+    # model.forward gathers [local_rows, hc_mult, hidden] before head collapse.
+    return local_hidden_bytes * streams
+
+
+def _dsv4_ep_weights_bytes(ctx: CommPayloadContext) -> int:
+    local_hidden_bytes = _dsv4_sp_local_hidden_bytes(ctx)
+    local_rows = local_hidden_bytes // (ctx.model_config.embedding_dim * 2)
+    return local_rows * ctx.replica_config.router_topk * 4
+
+
+def _dsv4_ep_output_bytes(ctx: CommPayloadContext) -> int:
+    lane = _resolve_lane_workload(ctx)
+    if lane is None:
+        raise ValueError("V4 EP reduce-scatter requires a destination lane workload")
+    # Every rank reduces a complete [sum(source SP rows), hidden] tensor;
+    # destination expert assignments do not define its row dimension.
+    rows = sum(lane.global_token_counts) // lane.router_topk
+    return rows * ctx.model_config.embedding_dim * 2
+
+
 def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
     lane_workload = _resolve_lane_workload(ctx)
     if lane_workload is None:
@@ -387,6 +517,38 @@ def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
             "expert_parallel_communication",
             data_size_bytes,
             ctx.cluster_type,
+        )
+    )
+
+
+def _ep_phase_alias(ctx: CommPayloadContext, sp_alias: str) -> str:
+    from frontier.operators.sequence_parallel_moe import uses_sequence_parallel_moe
+
+    if uses_sequence_parallel_moe(ctx.model_config, ctx.replica_config):
+        return sp_alias
+    return "alltoall"
+
+
+def _ep_phase_payload(ctx: CommPayloadContext, name: str) -> int:
+    if _ep_phase_alias(ctx, "allgather") == "alltoall":
+        return _expert_parallel_payload_bytes(ctx)
+    from frontier.operators.sequence_parallel_moe import ep_widths, ep_workload
+
+    return ep_workload(name, ctx.model_config, ctx.replica_config.router_topk,
+                       ep_widths(ctx))["data_size_bytes"]
+
+
+def _source_tp_collective_specs():
+    from frontier.operators.sequence_parallel_moe import tp_payload
+
+    return tuple(
+        (name, alias, lambda ctx, name=name: tp_payload(name, ctx))
+        for name, alias in (
+            ("sp_moe_attention_reduce_scatter", "reduce_scatter"),
+            ("sp_moe_layer_input_allgather", "allgather"),
+            ("sp_moe_final_allgather", "allgather"),
+            ("embedding_allreduce", "allreduce"),
+            ("logits_allgather", "allgather"),
         )
     )
 
@@ -556,9 +718,10 @@ COMM_FAMILY = OperatorFamilySpec(
             execution_time_attr="expert_parallel_alltoall_time",
             precision_op="expert_parallel_communication",
             collective_alias="alltoall",
+            collective_alias_builder=lambda ctx: _ep_phase_alias(ctx, "allgather"),
             comm_group="moe_ep",
             comm_domain="EP",
-            payload_builder=_expert_parallel_payload_bytes,
+            payload_builder=lambda ctx: _ep_phase_payload(ctx, "expert_parallel_alltoall_dispatch"),
             num_devices_builder=_moe_ep_devices,
         ),
         CommOperatorSpec(
@@ -570,9 +733,10 @@ COMM_FAMILY = OperatorFamilySpec(
             execution_time_attr="expert_parallel_alltoall_time",
             precision_op="expert_parallel_communication",
             collective_alias="alltoall",
+            collective_alias_builder=lambda ctx: _ep_phase_alias(ctx, "reduce_scatter"),
             comm_group="moe_ep",
             comm_domain="EP",
-            payload_builder=_expert_parallel_payload_bytes,
+            payload_builder=lambda ctx: _ep_phase_payload(ctx, "expert_parallel_alltoall_combine"),
             num_devices_builder=_moe_ep_devices,
         ),
         CommOperatorSpec(
@@ -588,6 +752,97 @@ COMM_FAMILY = OperatorFamilySpec(
             comm_domain="PP",
             payload_builder=_pp_send_recv_payload_bytes,
             num_devices_builder=_pp_devices,
+        ),
+        *(
+            CommOperatorSpec(
+                name=name,
+                role=OperatorRole.COMMUNICATION,
+                phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM,
+                resource_class=ResourceClass.COMM,
+                predictor_target=False,
+                profiling_target=False,
+                e2e_trace_target=False,
+                precision_op=alias,
+                tp_mode=TensorParallelMode.ATTENTION_TP,
+                collective_alias=alias,
+                comm_group="attn_tp",
+                comm_domain="ATTN_TP",
+                payload_builder=payload_builder,
+                num_devices_builder=_attn_tp_devices,
+            )
+            for name, alias, payload_builder in (
+                ("dsv4_sp_attention_allgather", "allgather", _dsv4_sp_local_hidden_bytes),
+                (
+                    "dsv4_sp_attention_reduce_scatter", "reduce_scatter",
+                    _dsv4_sp_attention_reduce_scatter_bytes,
+                ),
+                (
+                    "dsv4_sp_final_mhc_allgather", "allgather",
+                    _dsv4_sp_final_mhc_allgather_bytes,
+                ),
+            )
+        ),
+        *(
+            CommOperatorSpec(
+                name=name, role=OperatorRole.COMMUNICATION, phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM, resource_class=ResourceClass.COMM,
+                # Physical op_times and explicit source traces need no legacy scalar.
+                profiling_target=False, e2e_trace_target=False, precision_op=alias,
+                tp_mode=TensorParallelMode.ATTENTION_TP,
+                collective_alias=alias, comm_group="attn_tp", comm_domain="ATTN_TP",
+                payload_builder=payload, num_devices_builder=_attn_tp_devices,
+                zero_payload_policy=ZeroPayloadPolicy.EXACT_NOOP,
+            )
+            for name, alias, payload in _source_tp_collective_specs()
+        ),
+        *(
+            CommOperatorSpec(
+                name=name, role=OperatorRole.COMMUNICATION, phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM, resource_class=ResourceClass.COMM,
+                predictor_target=False, profiling_target=False, e2e_trace_target=False,
+                precision_op=alias, tp_mode=TensorParallelMode.MOE_TP,
+                collective_alias=alias, comm_group="moe_ep", comm_domain="MOE_EP",
+                payload_builder=builder, num_devices_builder=_moe_ep_devices,
+            )
+            for name, alias, builder in (
+                ("dsv4_ep_activation_allgather", "allgather", _dsv4_sp_local_hidden_bytes),
+                ("dsv4_ep_weights_allgather", "allgather", _dsv4_ep_weights_bytes),
+                ("dsv4_ep_ids_allgather", "allgather", _dsv4_ep_weights_bytes),
+                ("dsv4_ep_output_reduce_scatter", "reduce_scatter", _dsv4_ep_output_bytes),
+            )
+        ),
+        *(
+            OperatorSpec(
+                name=name, role=OperatorRole.COMMUNICATION, phases=_ALL_PHASES,
+                trace_kind=TraceKind.COMM, resource_class=ResourceClass.COMM,
+                predictor_target=False, profiling_target=False, e2e_trace_target=False,
+                tp_mode=TensorParallelMode.ATTENTION_TP,
+            )
+            for name in ("dsv4_embedding_allreduce", "dsv4_logits_gather")
+        ),
+    ),
+)
+
+
+KV_CACHE_FAMILY = OperatorFamilySpec(
+    family_id="kv_cache",
+    display_name="KV Cache Initialization",
+    supported_variants=("block_zero",),
+    resource_class=ResourceClass.MEMORY,
+    execution_enabled=False,
+    disabled_reason="KV cache initialization has structural dummy timing only",
+    operators=(
+        OperatorSpec(
+            name="kv_cache_block_zero",
+            role=OperatorRole.CACHE_WRITE,
+            phases=_ALL_PHASES,
+            trace_kind=TraceKind.COMPUTE,
+            predictor_target=False,
+            profiling_target=False,
+            e2e_trace_target=False,
+            resource_class=ResourceClass.MEMORY,
+            tp_mode=TensorParallelMode.REPLICATED,
         ),
     ),
 )
@@ -635,11 +890,14 @@ for _family in (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    DEEPSEEK_V4_ATTENTION_FAMILY,
+    DEEPSEEK_V4_MHC_FAMILY,
     MEMORY_FAMILY,
     FFN_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
     COMM_FAMILY,
+    KV_CACHE_FAMILY,
     KV_TRANSFER_FAMILY,
 ):
     OPERATOR_REGISTRY.register(_family)

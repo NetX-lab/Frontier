@@ -1,0 +1,37 @@
+--- frozen_R2
++++ effective_R3
+@@ -483,6 +483,7 @@
+         if v2:
+             source_files += ("vllm/v1/worker/gpu/model_runner.py", "vllm/v1/worker/gpu/cudagraph_utils.py",
+                              "vllm/compilation/breakable_cudagraph.py")
++            source_files += SOURCE_PINS
+             native_v4_source_binding(manifest, engine, config)
+         for name in source_files:
+             if source_hashes[name] != sha(Path(manifest["groundtruth_checkout_path"]) / name):
+@@ -515,7 +516,9 @@
+             hooks.add(runner + ".execute_model")
+             hooks |= {"vllm.v1.worker.gpu.cudagraph_utils.ModelCudaGraphManager." + name
+                       for name in ("capture", "run_fullgraph", "run_pw_graph")}
++            hooks |= DISPATCH_HOOKS
+             dispatch, captured = native_v2_graph_dispatch(manifest, engine)
++            native_operands = native_dispatch_oracle(manifest, dispatch)
+             configured = dispatch.cudagraph_mode.name
+             sizes = dispatch.compilation_config.cudagraph_capture_sizes
+         else:
+@@ -659,15 +662,7 @@
+                         raise ValueError(f"Native concrete shape/descriptor mismatch: {host}/{rank}")
+                     mode = row["graph_mode"]
+                     if v2:
+-                        native_desc = dispatch.dispatch(num_requests, scheduled,
+-                            1 if scheduled == num_requests else None, 0,
+-                            max_query_len=1 if scheduled == num_requests else None)
+-                        expected_descriptor = dict(num_tokens=native_desc.num_tokens,
+-                            num_reqs=native_desc.num_reqs if mode == "FULL" else None,
+-                            uniform=None if mode == "FULL" else False, has_lora=False, num_active_loras=0)
+-                        if (mode != native_desc.cg_mode.name or descriptor != expected_descriptor
+-                                or (mode == "NONE" and replays) or (mode != "NONE" and not replays)):
+-                            raise ValueError(f"V2 actual serving replay/descriptor differs from pinned native dispatch: {host}/{rank}")
++                        verify_dispatch_row(row, engine, dispatch, native_operands, owner)
+                     elif mode == "NONE":
+                         unsupported = tokens > max(sizes) or (configured == "FULL_DECODE_ONLY" and scheduled != num_requests)
+                         if (not unsupported or replays or descriptor["num_reqs"] is not None

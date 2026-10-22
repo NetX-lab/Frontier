@@ -28,6 +28,7 @@ import pandas as pd
 from tests.comparison.calibration.e2e_metrics_gap import VLLM_ROWS, formal_sample, frontier_rows
 from tests.comparison.calibration.pd_metrics import by_request_id, engine_request_id, read_jsonl
 from tests.comparison.e2e_gate import dp_pp_modes
+from tests.comparison.calibration.client_metrics import frontier_client_rows, native_client_rows
 
 
 def endpoint_offsets_ms(run_dir: Path) -> dict[str, float]:
@@ -60,7 +61,8 @@ def label_modes(sample: pd.DataFrame, arrival: dict[str, float], lanes: dp_pp_mo
 
 
 def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[str, Path],
-                   frontier_runs: dict[str, Path], output_dir: Path) -> dict:
+                   frontier_runs: dict[str, Path], output_dir: Path, workload: tuple | None = None,
+                   run_check: Path | None = None) -> dict:
     """Write <output_dir>/sample.json, vllm/<run>.csv and frontier/<label>.csv; return the sample."""
     formal_ids = request_ids["formal_request_ids"]
     classified = set(formal_ids) | set(request_ids["warmup_request_ids"]) | set(request_ids["sizing_request_ids"])
@@ -69,7 +71,29 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
     window_s = cell.get("dp_pp_gate", {}).get("mode_window_s")
     output_dir.mkdir(parents=True, exist_ok=False)
     sides, written = {}, {}
+    references = {}
+    receipt = json.loads(run_check.read_text()) if run_check is not None else None
     for run, run_dir in vllm_runs.items():
+        if cell["gate"] == "client":
+            repeats = native_client_rows(run_dir, workload, request_ids)
+            references[run] = "UNVERIFIED"
+            if receipt is not None:
+                check = receipt["runs"][run]
+                if (receipt["entry"] != "groundtruth-run-check" or receipt["mode"] != "groundtruth_clean"
+                        or receipt["case_id"] != cell["case_id"]
+                        or check["run_manifest"] != f"runs/groundtruth_clean/{run}/run_manifest.json"):
+                    raise ValueError("Native run-check provenance mismatch")
+                origin = run_check.resolve().parent.parent
+                bound = (run_check.resolve() == origin / "analysis/run_check_status.groundtruth_clean.json"
+                         and (origin / check["run_manifest"]).resolve() == (run_dir / "run_manifest.json").resolve())
+                if bound and check["status"] == "PASS" and check["checks"] and all(
+                        value.startswith("PASS") for value in check["checks"].values()):
+                    references[run] = "PASS"
+            for repeat, rows in repeats.items():
+                side = f"vllm/{run}-{repeat}"
+                sides[side] = formal_sample(rows, formal_ids, classified)
+                written[side] = sides[side]["sample"]
+            continue
         rows, _ = VLLM_ROWS[case["architecture"]](run_dir)
         sides[f"vllm/{run}"] = formal_sample(rows, formal_ids, classified)
         frame = sides[f"vllm/{run}"]["sample"]
@@ -81,8 +105,11 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
                 frame, dp_pp_modes.vllm_formal_dispatch(run_dir), dp_pp_modes.vllm_lanes(run_dir), window_s)
         written[f"vllm/{run}"] = frame
     for label, run_dir in frontier_runs.items():
-        [metrics_csv] = (run_dir / "metrics").rglob("request_metrics.csv")
-        rows, _ = frontier_rows(metrics_csv.parent, trace_rows)
+        if cell["gate"] == "client":
+            rows = frontier_client_rows(run_dir, trace_rows)
+        else:
+            [metrics_csv] = (run_dir / "metrics").rglob("request_metrics.csv")
+            rows, _ = frontier_rows(metrics_csv.parent, trace_rows)
         sides[f"frontier/{label}"] = formal_sample(rows, formal_ids, classified)
         frame = sides[f"frontier/{label}"]["sample"]
         if window_s:
@@ -102,6 +129,7 @@ def normalize_cell(cell: dict, case: dict, request_ids: dict, vllm_runs: dict[st
         "sides": {side: {key: value[key] for key in ("missing", "duplicates", "unclassified", "windows")
                          if key in value} for side, value in sides.items()},
     }
+    if cell["gate"] == "client":
+        sample.update(client_workload=workload[0], reference_admission=references)
     (output_dir / "sample.json").write_text(json.dumps(sample, indent=1) + "\n")
     return sample
-

@@ -51,6 +51,8 @@ _PER_LAYER_PUBLIC_NAMES = frozenset(
         "attn_mla_decode_q_latent_proj_time",
         "attn_mla_decode_time",
         "attn_mla_v_up_proj_time",
+        "attn_dsa_indexer_time",
+        "attn_dsa_mla_time",
         "attn_norm_time",
         "dp_input_allreduce_time",
         "dp_output_allreduce_time",
@@ -274,17 +276,13 @@ class StageExecutionTime:
 
     @property
     def op_times(self) -> Mapping[str, float]:
-        values: dict[str, float] = {}
-        for operator_times in (
-            self._aggregate_attention_operator_times(),
-            self._aggregate_mlp_operator_times(),
-            self._aggregate_moe_operator_times(),
-            self._aggregate_communication_operator_times(),
-        ):
-            if operator_times is None:
-                continue
-            for name, value in operator_times.op_times.items():
-                values[name] = float(value)
+        values = self._sum_operator_maps(
+            self._layer_execution_times,
+            exclude=frozenset({"pipeline_parallel_send_recv"}),
+        )
+        owner = self._stage_execution_time.op_times
+        if "pipeline_parallel_send_recv" in owner:
+            values["pipeline_parallel_send_recv"] = float(owner["pipeline_parallel_send_recv"])
         return MappingProxyType(values)
 
     def _layer_value(self, name: str) -> float:

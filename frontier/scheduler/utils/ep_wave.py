@@ -99,10 +99,34 @@ def prepare_moe_wave_from_inputs(
     aggregate_batch = wave_inputs.aggregate_batch
     sample_batch = wave_inputs.sample_batch
     cohort_id = wave_inputs.step_id
+    model = getattr(predictor, "_model_config", None)
+    v4 = model is not None and model.get_model_architecture_profile().profile_id == "deepseek_v4"
+    physical_rows = {}
+    sp_token_widths = None
+    if v4:
+        from frontier.execution_time_predictor.deepseek_v4 import source_physical_rows
+
+        physical_rows["routing_token_count"] = source_physical_rows(predictor, wave_inputs.source_batches)
+    elif model is not None:
+        replica = predictor._get_cluster_replica_config(cluster_type)
+        if model.get_model_architecture_profile().uses_sequence_parallel_moe(
+            replica.attn_tensor_parallel_size, replica.attn_dp,
+            replica.num_pipeline_stages, replica.moe_expert_parallel_size,
+        ):
+            from frontier.config.parallel_semantics import sequence_parallel_moe_token_widths
+
+            padded = wave_inputs.padded_lane_token_counts(cluster_type)
+            widths = sequence_parallel_moe_token_widths(
+                [padded[d] for d in range(replica.attn_dp)],
+                replica.attn_tensor_parallel_size,
+            )
+            sp_token_widths = widths
+            physical_rows["routing_token_count"] = widths.gathered_tokens
     layer_workload = materialize_workload(
         batch=aggregate_batch,
         target_replica_id=replica_id,
         global_layer_id=layer_id,
+        **physical_rows,
     )
     trace_identity = trace_identity_builder(
         batch=sample_batch,
@@ -134,6 +158,8 @@ def prepare_moe_wave_from_inputs(
         trace_identity=trace_identity,
         batch_id=int(cohort_id),
         capture_lane_timings=capture_lane_timings,
+        source_batches=wave_inputs.source_batches if v4 else None,
+        sp_token_widths=sp_token_widths,
     )
     timing = calculate_ep_wave_timing(
         start_time_s=float(time),

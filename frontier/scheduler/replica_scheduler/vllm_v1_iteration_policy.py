@@ -14,6 +14,7 @@ from frontier.config import global_vars
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
+    DummyForwardBatch,
     Request,
     SpecDecodeBatchMetadata,
 )
@@ -67,6 +68,9 @@ class IterationSchedulingPolicy:
             for request, num_tokens in zip(batch.requests, batch.num_tokens)
             if request.is_decoding
         ]
+        if isinstance(batch, DummyForwardBatch):
+            # gpu_worker.execute_dummy_batch calls _dummy_run(1, uniform_decode=True).
+            decode_query_lens = list(batch.num_tokens)
         original_decode_batch_size = len(decode_query_lens)
 
         # Align with vLLM's uniform_decode_query_len semantics.
@@ -83,7 +87,7 @@ class IterationSchedulingPolicy:
 
         is_uniform_decode_batch = (
             bool(decode_query_lens)
-            and len(decode_query_lens) == len(batch.requests)
+            and len(decode_query_lens) == batch.size
             and all(
                 query_len == uniform_decode_query_len
                 for query_len in decode_query_lens
@@ -559,12 +563,19 @@ class IterationSchedulingPolicy:
         Running counts every admitted request, including one that is admitted
         but not scheduled in the current iteration. Waiting reuses the
         decision-log accessor above so a load balancer and the decision log can
-        never disagree about what is waiting.
+        never disagree about what is waiting. The ordinary capacity is already
+        allocatable blocks; grouped managers exclude their reserved null block
+        when calculating usage. Neither path subtracts a second null block.
         """
 
         return RequestLoad(
             self._get_num_waiting_reqs_for_decision_log(),
             len(self._running_requests),
+            (
+                self._kv_cache_manager.usage
+                if self._kv_cache_manager is not None
+                else self._num_allocated_blocks / self._config.num_blocks
+            ),
         )
 
     def _apply_long_prefill_token_threshold(
@@ -588,12 +599,13 @@ class IterationSchedulingPolicy:
         request_num_tokens: Optional[List[int]] = None,
         batch_size: int = 0,
         batch_num_tokens: int = 0,
+        extra_fields: Optional[Dict[str, Any]] = None,
     ) -> None:
         if not schedule_decision_logging_enabled():
             return
 
         if available_blocks is None:
-            available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
+            available_blocks = self._get_available_kv_blocks()
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
         request_load = self.get_request_load()
@@ -621,7 +633,7 @@ class IterationSchedulingPolicy:
             "simulation_time": float(self._current_schedule_time),
             "simulation_time_semantics": "frontier_event_time_seconds",
         }
-        if self._kv_cache_manager is not None:
+        if self._is_prefix_caching_enabled():
             prefix_cache_stats = self._kv_cache_manager.prefix_cache_stats
             payload.update(
                 {
@@ -633,4 +645,12 @@ class IterationSchedulingPolicy:
                     "prefix_cache_hits": int(prefix_cache_stats.hits),
                 }
             )
+        if extra_fields:
+            duplicate_fields = set(payload).intersection(extra_fields)
+            if duplicate_fields:
+                raise ValueError(
+                    "Schedule decision extra_fields cannot replace canonical fields: "
+                    f"{sorted(duplicate_fields)}"
+                )
+            payload.update(extra_fields)
         _log_frontier_vllm_v1_schedule_decision(payload)

@@ -454,6 +454,7 @@ def test_mixed_share_expert_dense_layer_uses_shared_expert_profile_rows() -> Non
         attn_tensor_parallel_size=1,
         moe_tensor_parallel_size=1,
         attn_dp=1,
+        moe_expert_parallel_size=1,
     )
     predictor.predict_attention_layer_time = lambda **_kwargs: AttentionTime()
     predictor._get_model_architecture_profile = lambda: ModelArchitectureProfile.step3_text()
@@ -512,6 +513,7 @@ def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
         attn_tensor_parallel_size=1,
         moe_tensor_parallel_size=1,
         attn_dp=1,
+        moe_expert_parallel_size=1,
     )
     predictor._predictions_eager = {"loaded": True}
     predictor._predictions_kernel_only = {"loaded": True}
@@ -573,6 +575,7 @@ def test_common_moe_post_attention_probe_skips_attention_lookup() -> None:
         attn_tensor_parallel_size=2,
         moe_tensor_parallel_size=1,
         attn_dp=1,
+        moe_expert_parallel_size=2,
     )
     predictor._get_model_architecture_profile = lambda: ModelArchitectureProfile.generic()
     predictor.predict_attention_layer_time = lambda **_kwargs: (
@@ -831,6 +834,8 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
         num_pipeline_stages = 1
         attn_tensor_parallel_size = 1
         moe_tensor_parallel_size = 8
+        moe_expert_parallel_size = 1
+        attn_dp = 1
 
     class _IdentityQuantManager:
         @staticmethod

@@ -107,6 +107,9 @@ def enter_layer_sync(
         )
     if len(sync_room["batches"]) < expected_lanes:
         return _wake_idle_engines(scheduler, time, replica_id, sync_room)
+    from frontier.scheduler.utils.dp_dummy_forward import resolve_dummy_forward_inputs
+
+    resolve_dummy_forward_inputs(scheduler, stage_id, layer_id, sync_room)
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
     # vLLM all-reduces the token count over the DP group as each stage forward

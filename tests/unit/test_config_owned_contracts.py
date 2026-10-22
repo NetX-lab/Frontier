@@ -1,5 +1,7 @@
 """Constructor-owned configuration fields and registry metadata contracts."""
 
+from copy import deepcopy
+import sys
 from unittest.mock import Mock, call
 
 import pytest
@@ -16,6 +18,8 @@ from frontier.config.config import (
     VllmV1SchedulerConfig,
 )
 from frontier.config.model_config import BaseModelConfig
+from frontier.config.flat_dataclass import create_flat_dataclass
+from frontier.config.utils import dataclass_to_dict
 from frontier.operators.typed_contracts import validate_typed_operator_metadata
 
 
@@ -135,3 +139,29 @@ def test_typed_metadata_retains_external_profile_validation():
             expected_metadata=metadata,
             architecture_profile=object(),
         )
+
+
+@pytest.mark.parametrize("capacity", [None, 2])
+def test_queue_capacity_round_trips_without_changing_legacy_serialization(
+    capacity, monkeypatch
+):
+    flat = create_flat_dataclass(SimulationConfig)
+    argv = ["frontier.main", "--replica_scheduler_config_type", "vllm_v1"]
+    if capacity is not None:
+        argv.extend(["--vllm_v1_scheduler_config_max_concurrent_batches", str(capacity)])
+    monkeypatch.setattr(sys, "argv", argv)
+    simulation = flat.create_from_cli_args().reconstruct_original_dataclass()
+    config = simulation.cluster_config.replica_scheduler_config
+    assert config.max_concurrent_batches == capacity
+    assert deepcopy(config) == config
+    serialized = dataclass_to_dict(config)
+    if capacity is None:
+        assert "max_concurrent_batches" not in serialized
+    else:
+        assert serialized["max_concurrent_batches"] == 2
+
+
+@pytest.mark.parametrize("capacity", [0, 1, 3, -1, True, 2.0, "2"])
+def test_queue_capacity_rejects_unsupported_values(capacity):
+    with pytest.raises(ValueError, match="max_concurrent_batches must be None or 2"):
+        VllmV1SchedulerConfig(max_concurrent_batches=capacity)

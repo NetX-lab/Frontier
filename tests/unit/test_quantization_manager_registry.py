@@ -170,6 +170,34 @@ def test_optional_quantized_operations_none_preserves_config_hash_identity() -> 
         QuantizationManager.reset()
 
 
+@pytest.mark.parametrize(
+    ("model_name", "shared_expert_precision"),
+    [
+        # vLLM passes the model quant_config to these models' shared experts
+        # and their checkpoints do not exclude them.
+        ("zai-org/GLM-5.3", "FP8"),
+        ("deepseek-v3", "FP8"),
+        ("step-moe", "FP8"),
+        # An explicit operation list keeps shared experts at the model dtype.
+        ("Qwen3.8-2.4T-A95B-Quark-MXFP4", "BF16"),
+    ],
+)
+def test_shared_expert_projections_follow_model_quantization(
+    model_name: str, shared_expert_precision: str
+) -> None:
+    from frontier.config import BaseModelConfig
+
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        manager.configure_from_model_config(BaseModelConfig.create_from_name(model_name))
+        for operation in ("share_expert_up_proj", "share_expert_down_proj"):
+            assert manager.get_precision(operation).name == shared_expert_precision
+        assert manager.get_precision("share_expert_act").name == "BF16"
+    finally:
+        QuantizationManager.reset()
+
+
 def test_attention_package_keeps_trace_mapper_lazy_export_after_config_import() -> None:
     from frontier.attention import get_attention_trace_op_times
 
@@ -177,3 +205,23 @@ def test_attention_package_keeps_trace_mapper_lazy_export_after_config_import() 
         "get_attention_trace_op_times"
     )
     assert get_attention_trace_op_times.__name__ == "get_attention_trace_op_times"
+
+
+@pytest.mark.parametrize("model_name", ["meta-llama/Llama-2-7b-hf", "deepseek-v3", "zai-org/GLM-5.3"])
+def test_dsa_precision_metadata_follows_the_configured_attention_family(model_name):
+    from frontier.attention.families import DSA_ATTENTION_FAMILY
+    from frontier.config import BaseModelConfig
+
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        model = BaseModelConfig.create_from_name(model_name)
+        manager.configure_from_model_config(model)
+        dsa_ops = {op.name for op in DSA_ATTENTION_FAMILY.profiling_ops()}
+        names = {row["operation"] for row in manager.get_operation_precision_metadata()}
+        assert dsa_ops & names == (dsa_ops if model.get_attention_family() == DSA_ATTENTION_FAMILY else set())
+        # Reconfiguring the singleton must not leak active DSA operations.
+        manager.configure_from_model_config(BaseModelConfig.create_from_name("meta-llama/Llama-2-7b-hf"))
+        assert not dsa_ops & {row["operation"] for row in manager.get_operation_precision_metadata()}
+    finally:
+        QuantizationManager.reset()

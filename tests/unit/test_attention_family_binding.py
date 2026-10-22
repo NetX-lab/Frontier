@@ -223,7 +223,7 @@ def test_profiling_model_config_uses_same_binding_rules_as_runtime_config() -> N
     assert runtime_binding.variant_id == profiling_binding.variant_id == "mqa"
 
 
-def test_frozen_dsa_marker_fails_fast_instead_of_falling_back_to_dense_gqa() -> None:
+def test_dsa_marker_selects_measured_family_instead_of_dense_gqa() -> None:
     model_config = _base_model_config(
         num_q_heads=128,
         num_kv_heads=128,
@@ -235,9 +235,8 @@ def test_frozen_dsa_marker_fails_fast_instead_of_falling_back_to_dense_gqa() -> 
 
     assert binding.family_id == "dsa_attention"
     assert binding.variant_id == "dsa"
-    assert binding.frozen is True
-    with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
-        binding.require_enabled_for_execution()
+    assert binding.frozen is False
+    binding.require_enabled_for_execution()
 
 
 def test_unknown_exotic_attention_fields_fail_fast_without_dense_fallback() -> None:

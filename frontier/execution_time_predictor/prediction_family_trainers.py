@@ -17,7 +17,7 @@ from frontier.attention.families import (
     LATENT_MLA_ATTENTION_FAMILY,
 )
 from frontier.attention.model_binding import resolve_runtime_attention_family
-from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.ops import AttentionMemoryLayout, AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_columns,
     get_enabled_predictor_metric_name_by_role,
@@ -181,7 +181,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 **_layer_contract_kwargs(primary_contract),
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-                getattr(replica_config, "moe_routing_distribution_type", "balanced")
+                getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+                _resolve_model_architecture_profile(model_config),
             )
 
             moe_df_cache: Dict[
@@ -308,6 +309,11 @@ class PredictionFamilyTrainers(KernelCountTraining):
                         "ANY" if moe_ep_key is None else moe_ep_key
                     )
 
+                    from frontier.moe_routing_runtime import moe_permutation_is_fused
+
+                    permutation_fused = moe_permutation_is_fused(op_moe_df)
+                    if model_name == "moe_shuffling" and permutation_fused:
+                        continue
                     op_moe_df, op_feature_cols = select_moe_operator_features(
                         model_name, op_moe_df
                     )
@@ -331,6 +337,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     models[model_name] = self._train_single_model(
                         **train_kwargs,
                     )
+                    if model_name == "moe_grouped_gemm" and permutation_fused:
+                        models[model_name]._frontier_moe_permutation_fused = True
                     if op_feature_cols == list(MOE_GROUPED_GEMM_PADDED_FEATURES):
                         models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
                             op_moe_df
@@ -567,9 +575,11 @@ class PredictionFamilyTrainers(KernelCountTraining):
         ]
         if missing_standard_columns:
             model_config = getattr(replica_config, "model_config", None)
+            profile = _resolve_model_architecture_profile(model_config)
             supports_share_expert = bool(
                 model_config is not None
                 and model_config.supports_share_expert()
+                and (profile is None or profile.dense_layers_use_shared_expert_rows)
             )
             if supports_share_expert:
                 logger.info(
@@ -617,6 +627,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
         tp_size = replica_config.attn_tensor_parallel_size
 
         model_config = replica_config.model_config
+        if model_config is not None:
+            resolve_runtime_attention_family(model_config).require_enabled_for_execution()
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
         architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
         attention_signature = (
@@ -784,6 +796,18 @@ class PredictionFamilyTrainers(KernelCountTraining):
                     logger.info("Trained architecture-profile %s for %s", model_name, cluster_type)
 
         # ========== Part 2: Attention core operations from attention.csv ==========
+        if resolve_runtime_attention_family(model_config).memory_layout is AttentionMemoryLayout.DSA:
+            from frontier.execution_time_predictor.dsa_predictor import train_dsa_models
+
+            attention_df = self._load_attention_df(attn_file, replica_config, replica_scheduler_config)
+            fit = functools.partial(
+                self._train_single_model,
+                execution_time_predictor_config=execution_time_predictor_config,
+                training_context=training_context,
+            )
+            models.update(train_dsa_models(attention_df, fit))
+            trained_model_signatures.add(attention_signature)
+            return models
         if not os.path.exists(attn_file):
             raise FileNotFoundError(f"Attention input file {attn_file} not found")
 

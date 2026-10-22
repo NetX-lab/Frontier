@@ -1,0 +1,196 @@
+diff --git a/frontier/metrics/metrics_store.py b/frontier/metrics/metrics_store.py
+index 283b2c7..405f70b 100644
+--- a/frontier/metrics/metrics_store.py
++++ b/frontier/metrics/metrics_store.py
+@@ -5458,0 +5459,2 @@ class MetricsStore:
++                transfer_info=transfer_info,
++                block_size=cluster_config.replica_scheduler_config.block_size,
+diff --git a/frontier/metrics/op_trace_utils.py b/frontier/metrics/op_trace_utils.py
+index b198558..76829c5 100644
+--- a/frontier/metrics/op_trace_utils.py
++++ b/frontier/metrics/op_trace_utils.py
+@@ -10,0 +11 @@ from frontier.attention.families import (
++    get_attention_family,
+@@ -12,0 +14 @@ from frontier.attention.memory import (
++    AttentionKVCacheSelection,
+@@ -818,0 +821,77 @@ def compute_op_trace_meta(
++def _build_grouped_kv_cache_transfer_meta(
++    batch, replica_config, transfer_size_bytes, transfer_info, block_size,
++) -> Dict[str, Any]:
++    """Describe the reserved component pages, not a scalar attention tensor."""
++    from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
++        get_grouped_nixl_payload,
++    )
++
++    if transfer_info.kv_connector != "nixl" or len(batch.requests) != 1:
++        raise ValueError("Grouped transfer tracing requires one NIXL request")
++    model_config = replica_config.model_config
++    families = {spec.family_id for spec in model_config.get_layer_attention_specs()}
++    if len(families) != 1:
++        raise ValueError("Grouped transfer tracing requires a single cache family")
++    capacity = get_attention_kv_cache_capacity(
++        get_attention_family(next(iter(families))), model_config,
++        block_size=block_size,
++        selection=AttentionKVCacheSelection.from_replica(replica_config, block_size=block_size),
++    )
++    request = batch.requests[0]
++    transferred, payload_bytes = get_grouped_nixl_payload(
++        capacity, request.num_prefill_tokens,
++        transfer_info.source_group_block_ids, transfer_info.target_group_block_ids,
++    )
++    if (
++        transferred != transfer_info.transferred_group_block_ids
++        or payload_bytes != transfer_size_bytes
++        or payload_bytes != transfer_info.kv_cache_size_bytes
++    ):
++        raise ValueError("Grouped NIXL trace snapshots or bytes do not match the payload")
++
++    component_pages = {component.component_id: 0 for component in capacity.components}
++    groups = []
++    for group in capacity.groups:
++        page_count = len(transferred[group.group_id])
++        for component_id, _ in group.component_owners:
++            component_pages[component_id] += page_count
++        groups.append({
++            "group_id": group.group_id,
++            "logical_block_size": group.logical_block_size,
++            "source_held_pages": sum(block is not None for block in transfer_info.source_group_block_ids[group.group_id]),
++            "target_reserved_pages": sum(block is not None for block in transfer_info.target_group_block_ids[group.group_id]),
++            "transferred_pages": page_count,
++            "page_size_bytes": capacity.get_group_size_bytes(group),
++            "payload_bytes": page_count * capacity.get_group_size_bytes(group),
++        })
++    components = [{
++        "component_id": component.component_id,
++        "owner_layer_ids": list(component.owner_layer_ids),
++        "precision": component.precision,
++        "stored_rows": component.stored_rows,
++        "compression_ratio": component.compression_ratio,
++        "page_size_bytes": component.page_size_bytes,
++        "content_size_bytes": component.content_size_bytes,
++        "page_count": component_pages[component.component_id],
++        "resident_bytes": component_pages[component.component_id] * component.page_size_bytes,
++    } for component in capacity.components]
++    tensor_size_bytes = {component["component_id"]: component["resident_bytes"] for component in components}
++    if sum(tensor_size_bytes.values()) != payload_bytes:
++        raise ValueError("Grouped NIXL trace component bytes do not conserve payload")
++    return {
++        "precision_op": "kv_cache_transfer", "dtype": "MIXED", "dtype_bytes": None,
++        # Packed pages include mixed row formats and alignment, not dense tensors.
++        "tensor_shape": {}, "tensor_size_bytes": tensor_size_bytes,
++        "transfer_size_bytes": payload_bytes, "total_tokens": request.num_prefill_tokens,
++        "num_layers": model_config.num_layers, "num_q_heads": model_config.num_q_heads,
++        "num_heads": None, "num_kv_heads": None, "head_dim": None,
++        "payload_kind": transfer_info.payload_kind,
++        "byte_scope": "per_worker_lane_resident_pages", "block_size": capacity.block_size,
++        "cache_groups": groups, "cache_components": components,
++        "source_group_block_ids": {key: list(value) for key, value in transfer_info.source_group_block_ids.items()},
++        "target_group_block_ids": {key: list(value) for key, value in transfer_info.target_group_block_ids.items()},
++        "transferred_group_block_ids": {key: list(value) for key, value in transferred.items()},
++        "native_wire_bytes_known": False,
++    }
++
++
+@@ -823,0 +903,3 @@ def build_kv_cache_transfer_meta(
++    *,
++    transfer_info: Any = None,
++    block_size: int | None = None,
+@@ -824,0 +907,4 @@ def build_kv_cache_transfer_meta(
++    if transfer_info is not None and transfer_info.payload_kind == "structural_grouped_prompt_pages_per_worker_lane":
++        return _build_grouped_kv_cache_transfer_meta(
++            batch, replica_config, transfer_size_bytes, transfer_info, block_size,
++        )
+diff --git a/tests/unit/test_dsv4_structural_pd.py b/tests/unit/test_dsv4_structural_pd.py
+index be8781a..599d002 100644
+--- a/tests/unit/test_dsv4_structural_pd.py
++++ b/tests/unit/test_dsv4_structural_pd.py
+@@ -93,2 +93,2 @@ def _conserves(lane):
+-@pytest.mark.parametrize("prompt", [191, 6144, 6145])
+-def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
++@pytest.mark.parametrize(("prompt", "real_metrics"), [(191, False), (6144, False), (6145, False), (6144, True)])
++def test_real_grouped_handoff_and_all_outputs_conserve(prompt, real_metrics, record_property, tmp_path):
+@@ -99,0 +100,21 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
++    if real_metrics:
++        from frontier.config import ClusterConfig, MetricsConfig
++        from frontier.metrics.metrics_store import MetricsStore
++        from frontier.metrics.trace_store import TraceStore
++
++        cluster_configs = {
++            role: ClusterConfig(
++                cluster_type=role, replica_config=source._replica_config,
++                replica_scheduler_config=source._config,
++            )
++            for role in (ClusterType.PREFILL, ClusterType.DECODE)
++        }
++        traces = TraceStore(str(tmp_path), enabled=True)
++        traces.initialize({"case": "grouped_nixl_real_metrics"})
++        metrics = MetricsStore(
++            SimpleNamespace(metrics_config=MetricsConfig(
++                output_dir=str(tmp_path), write_metrics=True, store_plots=False,
++                enable_op_level_tracing=True,
++            )),
++            cluster_configs, traces,
++        )
+@@ -144 +165,25 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
+-    assert len(metrics.starts) == len(metrics.ends) == 1
++    if real_metrics:
++        assert metrics._kv_cache_transfer_metrics["transfer_count"] == 1
++        assert metrics._kv_cache_transfer_metrics["total_data_transferred"] == info.kv_cache_size_bytes
++        [trace] = traces._buffer
++        assert trace.name == "kv_cache_transfer" and trace.type == "TRANSFER"
++        assert trace.meta["transfer_size_bytes"] == info.kv_cache_size_bytes
++        assert trace.meta["payload_kind"] == info.payload_kind
++        assert trace.meta["block_size"] == 256
++        assert trace.meta["tensor_shape"] == {}
++        assert sum(trace.meta["tensor_size_bytes"].values()) == info.kv_cache_size_bytes
++        assert [group["source_held_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
++        assert [group["target_reserved_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
++        assert [group["transferred_pages"] for group in trace.meta["cache_groups"]] == [24, 2, 2, 2, 16]
++        assert sum(group["payload_bytes"] for group in trace.meta["cache_groups"]) == info.kv_cache_size_bytes
++        assert sum(component["resident_bytes"] for component in trace.meta["cache_components"]) == info.kv_cache_size_bytes
++        assert trace.meta["source_group_block_ids"] == {key: list(value) for key, value in info.source_group_block_ids.items()}
++        assert trace.meta["target_group_block_ids"] == {key: list(value) for key, value in info.target_group_block_ids.items()}
++        assert trace.meta["transferred_group_block_ids"] == {key: list(value) for key, value in info.transferred_group_block_ids.items()}
++        assert trace.meta["native_wire_bytes_known"] is False
++        traces.close()
++        written = [json.loads(line) for line in (tmp_path / "op_traces.jsonl").read_text().splitlines()]
++        assert len(written) == 2 and written[1]["meta"] == trace.meta
++        record_property("grouped_nixl_real_metrics_trace", json.dumps(written[1]))
++    else:
++        assert len(metrics.starts) == len(metrics.ends) == 1
+@@ -157,0 +203 @@ def test_real_grouped_handoff_and_all_outputs_conserve(prompt, record_property):
++        "real_metrics_callback": real_metrics,
+diff --git a/tests/unit/test_glm53_structural_pd.py b/tests/unit/test_glm53_structural_pd.py
+index a68cde8..5fbe5e0 100644
+--- a/tests/unit/test_glm53_structural_pd.py
++++ b/tests/unit/test_glm53_structural_pd.py
+@@ -410 +410 @@ def test_failed_payload_rolls_back_the_reserved_decode_frontier(monkeypatch) ->
+-def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> None:
++def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch, tmp_path, record_property) -> None:
+@@ -451,0 +452,26 @@ def test_structural_transfer_trace_uses_dsa_cache_components(monkeypatch) -> Non
++    from frontier.metrics.metrics_store import MetricsStore
++    from frontier.metrics.trace_store import TraceStore
++
++    source, target, scheduler, _ = _harness()
++    request = _request_owned_by_prefill(source, 65)
++    traces = TraceStore(str(tmp_path), enabled=True)
++    metrics = MetricsStore(
++        SimpleNamespace(metrics_config=MetricsConfig(
++            output_dir=str(tmp_path), write_metrics=True, store_plots=False,
++            enable_op_level_tracing=True,
++        )),
++        {ClusterType.PREFILL: ClusterConfig(
++            cluster_type=ClusterType.PREFILL, replica_config=replica_config,
++            replica_scheduler_config=source._config,
++        )},
++        traces,
++    )
++    [end] = _start_event(request, source).handle_event(scheduler, metrics)
++    [trace] = traces._buffer
++    assert all(trace.meta[key] == value for key, value in meta.items())
++    end.handle_event(scheduler, metrics)
++    assert metrics._kv_cache_transfer_metrics["transfer_count"] == 1
++    assert metrics._kv_cache_transfer_metrics["total_data_transferred"] == 2 * 5_928_192
++    assert source._allocation_map == {} and target._allocation_map[request.id] == 2
++    record_property("glm_nixl_real_metrics_trace", str(trace.to_dict()))
++
