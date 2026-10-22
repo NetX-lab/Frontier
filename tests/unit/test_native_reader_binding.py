@@ -15,8 +15,9 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 TASK = REPO / 'task_memory/task_2026-10-22_v4_native_binding'
 FROZEN = REPO / 'task_memory/task_2026-10-21_native_cold_start/check_groundtruth_run_successor.py'
-PREVIOUS = TASK / 'check_groundtruth_run_successor.py'
-R2 = TASK / 'check_groundtruth_run_successor_r2.py'
+PREVIOUS = Path('/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028/task_memory/'
+    'task_2026-10-22_v4_native_binding/check_groundtruth_run_successor.py')
+R2 = PREVIOUS.with_name('check_groundtruth_run_successor_r2.py')
 CHECKER = Path(os.environ.get('NATIVE_READER_BINDING_CHECKER', R2))
 PACKAGE = Path('/data/ycfeng/tmp/glm53_dsv4/v4_successor04_actual_binding')
 CHECKS = {'checkout', 'inputs_unchanged', 'harness_pinned_and_client_rows', 'requests_and_idle_lanes',
@@ -255,7 +256,7 @@ def test_v4_real_import_shadow_is_rejected_with_unchanged_nested_pins(v4_package
     assert digest(nested) == pinned == manifest['harness_sha256'][f'tests/comparison/calibration/{module}.py']
     previous = check_package(load(PREVIOUS), v4_package, f'r2_previous_{module}_{kind}')
     assert previous['checks']['harness_pinned_and_client_rows'].startswith('PASS')
-    current = check_package(load(R2), v4_package, f'r2_{module}_{kind}')
+    current = check_package(load(CHECKER), v4_package, f'r2_{module}_{kind}')
     assert current['checks']['harness_pinned_and_client_rows'].startswith('FAIL'), current['checks']
     assert 'Staged import resolves outside its verified owner:' in current['checks']['harness_pinned_and_client_rows']
 
@@ -274,7 +275,7 @@ def test_v4_package_before_verified_file_is_rejected(v4_package, location, modul
     shadow = stage / location / module / '__init__.py'
     shadow.parent.mkdir()
     shadow.write_text('# Import package takes precedence over the verified .py file.\n')
-    result = check_package(load(R2), v4_package, f'r2_package_{module}')
+    result = check_package(load(CHECKER), v4_package, f'r2_package_{module}')
     assert 'Staged import resolves outside its verified owner:' in result['checks']['harness_pinned_and_client_rows']
 
 
@@ -344,7 +345,7 @@ if __name__ == "__main__":
     assert serving['server']['path'][:3] == serving['spawn']['path'][:3] == [
         str(stage), config['harness_dir'], str(stage)]
     write(stage.parent / 'r2_actual_resolution.json', {'worker': worker, **serving})
-    result = check_package(load(R2), v4_package, 'r2_actual_resolution_control')
+    result = check_package(load(CHECKER), v4_package, 'r2_actual_resolution_control')
     if collector_shadow:
         assert 'Staged import resolves outside its verified owner:' in result['checks']['harness_pinned_and_client_rows']
     else:
@@ -358,7 +359,7 @@ def test_v4_nonwinning_and_unrelated_root_files_remain_allowed(v4_package):
         (stage / (name + '.py')).write_text('# Does not win any reachable import.\n')
     (stage / 'native_full_structure').mkdir()  # A namespace portion loses to the verified module.
     (stage / 'vllm').mkdir()  # A namespace portion also loses to installed vLLM's regular package.
-    result = check_package(load(R2), v4_package, 'r2_nonwinning_control')
+    result = check_package(load(CHECKER), v4_package, 'r2_nonwinning_control')
     assert {name for name, value in result['checks'].items() if value.startswith('FAIL')} == {
         'rank_runtime_graph', 'terminal_status'}
 
@@ -368,11 +369,13 @@ def test_v4_current_generation05_layout_keeps_only_missing_native_evidence_failu
     fixture = copy_cpu_package(source, tmp_path)
     stage, case, run, config, manifest = fixture
     assert len(config['expected_source_hashes']) == 67
-    result = check_package(load(R2), fixture, 'r2_generation05_control')
+    result = check_package(load(CHECKER), fixture, 'r2_generation05_control')
     assert {name for name, value in result['checks'].items() if value.startswith('FAIL')} == {
         'rank_runtime_graph', 'terminal_status'}, result['checks']
-    assert result['checks']['rank_runtime_graph'] == (
+    expected = ("FAIL: UNVERIFIED: KeyError: 'vllm/v1/worker/gpu/dp_utils.py'"
+        if CHECKER.name.endswith('_r3.py') else
         'FAIL: UNVERIFIED: ValueError: Missing or unexpected physical-rank serving files: cpu-v4-0')
+    assert result['checks']['rank_runtime_graph'] == expected
 
 
 @pytest.mark.parametrize('fault', ['replaced', 'overridden'])
@@ -389,7 +392,7 @@ def test_v4_bootstrap_cwd_must_match_observed_server_search_order(v4_package, fa
     stamp = (run / 'run_manifest.json').stat()
     write(run / 'run_manifest.json', manifest)
     os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
-    result = check_package(load(R2), v4_package, 'r2_bootstrap_cwd')
+    result = check_package(load(CHECKER), v4_package, 'r2_bootstrap_cwd')
     assert 'Bootstrap no longer declares the reviewed server working directory' in (
         result['checks']['harness_pinned_and_client_rows'])
 
@@ -404,7 +407,7 @@ def test_v4_server_entrypoint_cannot_resolve_stage_code_as_installed_vllm(v4_pac
     assert import_origins(stage, 'server', ['vllm'])['vllm'] == str(shadow)
     previous = check_package(load(PREVIOUS), v4_package, f'r2_previous_vllm_{kind}')
     assert previous['checks']['harness_pinned_and_client_rows'].startswith('PASS')
-    result = check_package(load(R2), v4_package, f'r2_vllm_{kind}')
+    result = check_package(load(CHECKER), v4_package, f'r2_vllm_{kind}')
     assert 'Staged server import shadows the installed vLLM package:' in (
         result['checks']['harness_pinned_and_client_rows'])
 
@@ -416,5 +419,5 @@ def test_v4_collector_dependency_cannot_be_omitted_from_checkout_binding(v4_pack
     stamp = (run / 'run_manifest.json').stat()
     write(run / 'run_manifest.json', manifest)
     os.utime(run / 'run_manifest.json', ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
-    result = check_package(load(R2), v4_package, 'r2_missing_checkout_owner')
+    result = check_package(load(CHECKER), v4_package, 'r2_missing_checkout_owner')
     assert 'Staged import has no verified checkout owner:' in result['checks']['harness_pinned_and_client_rows']

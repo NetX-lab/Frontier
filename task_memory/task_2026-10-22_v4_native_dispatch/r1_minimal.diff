@@ -1,0 +1,20 @@
+diff --git a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+index 53bdbccd76d48eaffe5b97a5940780b401f231c4..13107f2449c58a4cc21d728d5b944ec459ba3616 100644
+--- a/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
++++ b/task_memory/task_2026-10-22_v4_native_dispatch/check_groundtruth_run_successor_r3.py
+@@ -60,0 +61 @@ def verify_dispatch_row(row, engine, manager, native, owner):
++            or ci['num_tokens'] > ci['num_reqs'] * ci['max_query_len']
+diff --git a/tests/unit/test_native_v2_serving_inventory.py b/tests/unit/test_native_v2_serving_inventory.py
+index 73eb2f7be1b0be24e849a4cbe25a0502b57e9161..900143856060310f6ff8bf77b4d04bf5f8cf3bd1 100644
+--- a/tests/unit/test_native_v2_serving_inventory.py
++++ b/tests/unit/test_native_v2_serving_inventory.py
+@@ -469 +469 @@ def test_actual_native_classification_and_dp_dispatch(dispatch_oracle, prefill,
+-    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token'])
++    'dp_shape', 'ambiguous', 'descriptor', 'mode', 'padding', 'failed_forward', 'boolean_token', 'query_bound'])
+@@ -472 +472 @@ def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle
+-    row = dispatch_row(dispatch_oracle, False)
++    row = dispatch_row(dispatch_oracle, fault == 'query_bound', peer_tokens=2 if fault == 'query_bound' else 1)
+@@ -485,0 +486,3 @@ def test_dispatch_successor_rejects_incomplete_or_wrong_operands(dispatch_oracle
++    if fault == 'query_bound':
++        row['scheduled_num_tokens'] = ev['classifier']['inputs']['num_tokens'] = ev['dispatch']['inputs']['num_tokens'] = 2
++        ev['dp_post_all_reduce'][0][0] = 2

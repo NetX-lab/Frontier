@@ -407,6 +407,16 @@ class NativeServingInventory:
             self.replays += 1
         if metadata is None:
             return
+        dispatch = getattr(self.local, 'dispatch_evidence', None)
+        if dispatch is not None:
+            if event == 'forward':
+                dispatch['forwards'] += 1
+                if dispatch['forwards'] != 1:
+                    raise ValueError('Ambiguous V2 dispatch-to-forward association')
+            else:
+                dispatch['replays'] += 1
+            metadata = metadata | {'dispatch_evidence': {
+                k: v for k, v in dispatch.items() if k not in ('forwards', 'replays')}}
         key = json.dumps(metadata, sort_keys=True, separators=(',', ':'))
         if key not in self.rows:
             if len(self.rows) >= self.MAX_ROWS:
@@ -465,6 +475,83 @@ class NativeServingInventory:
 
         call._frontier_native_v2_call = True
         cls.__call__ = call
+
+    def install_v2_dispatch(self, namespace, dp_module):
+        """Observe actual host operands within the existing execution scope."""
+        import functools
+        import inspect
+        observer = self
+
+        def record(key, value):
+            state = getattr(observer.local, 'dispatch_evidence', None)
+            if state is None:
+                return
+            if key in state:
+                raise ValueError('Ambiguous V2 ' + key + ' observation')
+            state[key] = value
+
+        def descriptor(desc):
+            return dataclasses.asdict(desc) | {'cg_mode': desc.cg_mode.name}
+
+        def wrap(name, after):
+            original = getattr(namespace, name)
+            signature = inspect.signature(original)
+
+            def arguments(args, kwargs):
+                bound = signature.bind(*args, **kwargs)
+                bound.apply_defaults()
+                return bound.arguments
+
+            @functools.wraps(original)
+            def call(*args, **kwargs):
+                inputs = observer.observe(name + '_inputs', arguments, args, kwargs)
+                result = original(*args, **kwargs)
+                observer.observe(name + '_return', after, inputs, result)
+                return result
+
+            setattr(namespace, name, call)
+            observer.hooks.append(namespace.__name__ + '.' + name)
+
+        def classified(inputs, result):
+            record('classifier', dict(inputs=inputs, uniform_token_count=result))
+
+        def dispatched(inputs, result):
+            values = {k: v for k, v in inputs.items() if k != 'cudagraph_manager'}
+            desc, sizes = result
+            if sizes is not None and sizes.device.type != 'cpu':
+                raise ValueError('V2 dispatch sizes are not CPU operands')
+            record('dispatch', dict(inputs=values, descriptor=descriptor(desc),
+                num_tokens_across_dp=None if sizes is None else sizes.tolist()))
+
+        native_dist = dp_module.dist
+
+        class Dist:
+            def __getattr__(self, name):
+                return getattr(native_dist, name)
+
+            def all_reduce(self, tensor, *args, **kwargs):
+                result = native_dist.all_reduce(tensor, *args, **kwargs)
+
+                def snapshot():
+                    state = getattr(observer.local, 'dispatch_evidence', None)
+                    if state is None:
+                        return
+                    if tensor.device.type != 'cpu' or len(tensor.shape) != 2 or tensor.shape[0] != 4:
+                        raise ValueError('V2 DP synchronization is not a CPU 4-by-DP tensor')
+                    record('dp_post_all_reduce', tensor.tolist())
+
+                observer.observe('dp_post_all_reduce', snapshot)
+                return result
+
+        wrap('get_uniform_decode_token_count', classified)
+        wrap('dispatch_cg_and_sync_dp', dispatched)
+        dp_module.dist = Dist()
+        observer.hooks.append(dp_module.__name__ + '.dist.all_reduce')
+
+    def finish_v2_dispatch(self):
+        evidence = self.local.dispatch_evidence
+        if evidence['replays'] and evidence['forwards'] != 1:
+            raise ValueError('Successful replay lacks one successful outer forward')
 
     def collect_inventory(self, worker):
         import torch
@@ -629,16 +716,20 @@ def _install_native_serving_inventory():
                 def call(model_runner, *args, **kwargs):
                     previous = getattr(observer.local, 'context', None)
                     previous_runner = getattr(observer.local, 'runner', None)
+                    previous_dispatch = getattr(observer.local, 'dispatch_evidence', None)
                     bound = observer.observe('v2_execution_arguments', arguments, model_runner, args, kwargs)
                     if bound is not None and bound['dummy_run']:
                         observer.local.context = dict(kind='profile' if bound['is_profile'] else 'dummy',
                             repeat=None, phase=None, scheduled_num_requests=None, scheduled_num_tokens=None)
                     observer.local.runner = model_runner
+                    observer.local.dispatch_evidence = {'forwards': 0, 'replays': 0}
                     try:
                         return original(model_runner, *args, **kwargs)
                     finally:
+                        observer.observe('v2_forward_association', observer.finish_v2_dispatch)
                         observer.local.context = previous
                         observer.local.runner = previous_runner
+                        observer.local.dispatch_evidence = previous_dispatch
                 return call
 
             def capture(original):
@@ -703,6 +794,8 @@ def _install_native_serving_inventory():
             install(ModelCudaGraphManager, 'run_fullgraph', full)
             install(ModelCudaGraphManager, 'run_pw_graph', piecewise)
             observer.install_v2_model_call(runner)
+            observer.install_v2_dispatch(sys.modules[cls.__module__],
+                sys.modules['vllm.v1.worker.gpu.dp_utils'])
 
         def load(original):
             def call(worker, *args, **kwargs):
