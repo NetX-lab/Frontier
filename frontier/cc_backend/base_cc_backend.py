@@ -105,6 +105,12 @@ class BaseCCBackend(ABC):
         """Get the number of devices."""
         return self._num_devices
 
+    def predict_collective_plan(self, plan):
+        """Price a lossless joint plan or reject this backend's capability."""
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support collective plans"
+        )
+
     def predict_comm_cost(self, comm_op: str, **kwargs) -> float:
         """
         Unified interface for predicting communication cost.

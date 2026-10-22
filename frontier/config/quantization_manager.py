@@ -46,7 +46,7 @@ def _family_precision_and_profiling_operations(
 ) -> List[str]:
     operation_names: List[str] = []
     seen: Set[str] = set()
-    for operator in family.profiling_ops():
+    for operator in family.operators:
         for operation_name in (
             operator.precision_name(),
             operator.profiling_name(),
