@@ -34,8 +34,9 @@ from tests.unit.test_step5_measured_training import _scheduler
 
 CAPTURE_SIZES = (1, 2, 4, *range(8, 256, 8), 256)
 MAX_MODEL_LEN = 7168
-LOCAL_COMPUTE_WIDTHS = (1, 16, 6144)
-AGGREGATE_COMPUTE_WIDTHS = (2, 32, 6145)
+PREFILL_CASES = ((6143, 6112, 31, 32), (6144, 6128, 16, 16), (6145, 6128, 17, 24))
+LOCAL_COMPUTE_WIDTHS = (1, 16, 24, 32, 6112, 6128)
+AGGREGATE_COMPUTE_WIDTHS = (2, 32, 48, 64, 6113, 6129)
 
 
 def attention_row(model, cell, *, physical_query_rows=None, device="h800"):
@@ -74,20 +75,25 @@ def attention_row(model, cell, *, physical_query_rows=None, device="h800"):
 def reached_rows(model, *, device):
     """Exact1023 context rows reuse one layer/shape contract, never serving credit."""
     for layer in range(model.num_layers):
-        for query, context, phase, graph in ((6144, 0, "prefill", "none"),
-                                              (16, 6128, "prefill", "piecewise")):
-            yield attention_row(model, Step5ProfileInput(layer, (query,), (context,), phase, graph,
+        for prefix in sorted({prefix for _, prefix, _, _ in PREFILL_CASES}):
+            yield attention_row(model, Step5ProfileInput(layer, (prefix,), (0,), "prefill", "none",
                                                        block_table_columns=448), device=device)
+        for _, prefix, tail, physical in PREFILL_CASES:
+            yield attention_row(model, Step5ProfileInput(layer, (tail,), (prefix,), "prefill", "piecewise",
+                                                       block_table_columns=448), physical_query_rows=physical,
+                                device=device)
         # The final output does not execute a subsequent forward at context7167.
         template = attention_row(model, Step5ProfileInput(layer, (1,), (6144,), "decode", "full",
                                                         block_table_columns=448), device=device)
         # Uniform FULL scopes/score allocation depend on physical capture/capacity,
         # not the live context. Every row still retains its own actual context.
-        for context in range(6144, 7167):
+        for context in range(6143, 7167):
             yield {**template, "context_lens": json.dumps((context,))}
         for descriptor in (
             MRv2DummyDescriptor(1, 1, "none", None, "CPU fixture of MRv2 InputBatch"),
             MRv2DummyDescriptor(16, None, "piecewise", None, "CPU fixture of MRv2 InputBatch"),
+            MRv2DummyDescriptor(24, None, "piecewise", None, "CPU fixture of MRv2 InputBatch"),
+            MRv2DummyDescriptor(32, None, "piecewise", None, "CPU fixture of MRv2 InputBatch"),
             MRv2DummyDescriptor(1, 1, "full", None, "CPU fixture of MRv2 InputBatch", 1),
         ):
             yield attention_row(model, Step5ProfileInput.from_mrv2_dummy(layer, descriptor, block_table_columns=448),
@@ -139,6 +145,8 @@ def refresh_compute(output: Path):
     manifest = json.loads(path.read_text())
     if manifest["evidence_kind"] != "cpu_fixture" or manifest["native_admitted"]:
         raise ValueError("Only unadmitted CPU fixture compute inputs may be refreshed")
+    if manifest["schema"] != "step5_measured_compute_cpu_fixture.v2":
+        raise ValueError("Historical full-prompt fixtures are immutable; generate a new P-target fixture")
     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT):
         directory = output / f"fixture_compute_{measurement.value.lower()}"
@@ -163,11 +171,17 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
     if gpus_per_role <= 0 or gpus_per_role % 8:
         raise ValueError("Fixture GPUs per role must be divisible by attention TP8")
     output.mkdir(parents=True, exist_ok=False)
+    if nixl_read_profile is None:
+        from tests.integration.run_step5_measured_main import write_read_cost
+
+        read_cost = output / "synthetic_read_cost.json"
+        write_read_cost(read_cost)
+        nixl_read_profile = str(read_cost)
     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     inputs = {}
     # Explicit fixture topology and reached single-request cases, not native evidence.
     ep, capacity, block = gpus_per_role, MAX_MODEL_LEN, 16
-    cases = [(6144, 0, "prefill", "none"), (16, 6128, "prefill", "piecewise"),
+    cases = [(6128, 0, "prefill", "none"), (16, 6128, "prefill", "piecewise"),
              (1, "6144..7166 inclusive", "decode", "full")]
     rows_by_measurement = {measurement: [] for measurement in (MeasurementType.KERNEL_ONLY, MeasurementType.CUDA_EVENT)}
     for row in reached_rows(model, device=device):
@@ -201,6 +215,7 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
     config.nixl_read_profile = nixl_read_profile
     replica = ffn._replica(model)
     replica.device, replica.moe_expert_parallel_size = device, ep
+    replica.moe_routing_distribution_type, replica.moe_routing_seed = "balanced", 42
     replica.attn_dp, replica.num_pipeline_stages = gpus_per_role // 8, 1
     replica.kv_cache_dtype = "auto"
     replica.network_device = "cpu_fixture_network"
@@ -222,12 +237,19 @@ def generate(output: Path, *, device: str, gpus_per_role: int, nixl_read_profile
             SimpleNamespace(cache_dir=str(output / "cache")),
         )
     manifest = {
-        "schema": "step5_measured_compute_cpu_fixture.v1", "evidence_kind": "cpu_fixture",
+        "schema": "step5_measured_compute_cpu_fixture.v2", "evidence_kind": "cpu_fixture",
         "native_admitted": False, "device": device, "attention_tp": 8, "attention_dp": gpus_per_role // 8,
         "moe_tp": 1, "moe_ep": ep, "global_layer_ids": list(range(model.num_layers)),
         "max_model_len": capacity, "block_size": block, "batch_width": 1,
         "decode_cuda_graph_mode": "full_and_piecewise", "cudagraph_capture_sizes": CAPTURE_SIZES,
         "cases": cases, "predictor_config": {**options, "nixl_read_profile": nixl_read_profile},
+        "prefill_cases": [dict(num_prefill_tokens=prompt, prefill_compute_target=prefix,
+                               decode_tail_tokens=tail, decode_physical_width=physical)
+                          for prompt, prefix, tail, physical in PREFILL_CASES],
+        "compute_coverage": {"local_widths": LOCAL_COMPUTE_WIDTHS,
+                             "aggregate_widths": AGGREGATE_COMPUTE_WIDTHS,
+                             "routing": "existing balanced Hamilton materializer, exact nonempty EP lanes"},
+        "routing_distribution_type": "balanced", "routing_seed": 42,
         "cache_dir": str(output / "cache"),
         "bundles": {str(role.value): receipts for role, receipts in manager._step5_model_bundles.items()},
         "limitations": ["Synthetic timings/counts; no native admission or accuracy claim",

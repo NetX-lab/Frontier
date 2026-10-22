@@ -61,16 +61,23 @@ def source_identity():
 
 def read_profile(path):
     fixture = json.loads(path.read_text())
+    require(fixture["schema"] == "step5_measured_compute_cpu_fixture.v2",
+            "Historical full-prompt fixture cannot cover the corrected P target; generate a new fixture")
     for key, value in (("evidence_kind", "cpu_fixture"), ("native_admitted", False),
                        ("device", "h800"), ("attention_tp", 8), ("attention_dp", 2),
                         ("moe_tp", 1), ("moe_ep", 16), ("max_model_len", 7168),
                        ("block_size", 16), ("batch_width", 1)):
         require(fixture[key] == value, f"Unsupported fixture {key}: {fixture[key]}")
     require(fixture["decode_cuda_graph_mode"] == "full_and_piecewise", "Fixture graph policy must be native")
+    require(fixture["cases"][0] == [6128, 0, "prefill", "none"], "Fixture must cover actual P6128")
+    require(fixture["routing_distribution_type"] == "balanced" and fixture["routing_seed"] == 42,
+            "Fixture must retain explicit balanced routing")
     return fixture
 
 
 def write_read_cost(path):
+    from tests.integration.step5_measured_compute_fixture import PREFILL_CASES
+
     replica = ReplicaConfig(
         model_name="stepfun-ai/Step-5-Preview", device="h800", network_device="h800_dgx",
         attn_tensor_parallel_size=8, attn_dp=2, moe_tensor_parallel_size=1,
@@ -80,19 +87,20 @@ def write_read_cost(path):
     capacity = resolve_step5_kv_cache_capacity(
         replica.model_config, 16, AttentionKVCacheSelection.from_replica(replica, block_size=16),
     )
-    payload = get_attention_kv_transfer_payload(
-        replica.model_config, capacity, prompt_tokens=6128, tensor_parallel_size=8,
-        target_reserved_blocks=4 * (6144 // 16),
-    )
+    measurements = []
+    for prompt, prefix, _, _ in sorted(PREFILL_CASES, key=lambda case: case[0] != 6144):
+        payload = get_attention_kv_transfer_payload(
+            replica.model_config, capacity, prompt_tokens=prefix, tensor_parallel_size=8,
+            target_reserved_blocks=len(capacity.groups) * (prefix // 16),
+        )
+        measurements.append(dict(num_prefill_tokens=prompt, num_computed_tokens=prefix,
+                                 transfer_bytes_per_rank=payload.transfer_bytes_per_rank, time_ms=3.5))
     document = dict(
         schema="nixl_read_cost.v1", model_architecture_profile="step5",
         profile_identity="CPU_CONTRACT_FIXTURE_NOT_NATIVE",
         source_device="h800", target_device="h800",
         source_attention_tp=8, target_attention_tp=8, duration_scope="read_to_gpu_ready",
-        cache_capacity=asdict(capacity), measurements=[dict(
-            num_prefill_tokens=6144, num_computed_tokens=6128,
-            transfer_bytes_per_rank=payload.transfer_bytes_per_rank, time_ms=3.5,
-        )],
+        cache_capacity=asdict(capacity), measurements=measurements,
     )
     write_json(path, document)
     return document
@@ -198,13 +206,13 @@ def validate(root, mode, document):
     require(read_end["payload_kind"] == "prefix_pages_per_worker_lane", "Wrong READ prefix semantics")
     require(read_end["target_ready_time"] == read_end["source_release_time"] == read_end["time"],
             "READ must make the reserved D lane ready and release the source")
-    require(read_end["target_reserved_common_blocks"] == 4 * (6144 // 16), "Wrong D reservation")
-    require(read_end["source_prompt_common_blocks"] == 4 * (6144 // 16), "Wrong P ownership")
+    require(read_end["target_reserved_common_blocks"] == 4 * (6128 // 16), "Wrong D prefix reservation")
+    require(read_end["source_prompt_common_blocks"] == 6128 // 16, "Wrong computed P prefix ownership")
     rows = [json.loads(line) for line in (run / "frontier_stage_batch_ledger.jsonl").read_text().splitlines()]
     useful = [row for row in rows if row["request_ids"]]
     prefill = [row for row in useful if row["cluster_type"] == "PREFILL"]
     decode = [row for row in useful if row["cluster_type"] == "DECODE"]
-    require(len(prefill) == 1 and prefill[0]["request_num_tokens"] == [6144], "Wrong useful P forward census")
+    require(len(prefill) == 1 and prefill[0]["request_num_tokens"] == [6128], "Wrong useful P forward census")
     require(len(decode) == 1024 and Counter(tuple(row["request_num_tokens"]) for row in decode)
             == Counter({(16,): 1, (1,): 1023}), "Wrong D tail/forward census")
     first_decode = min(decode, key=lambda row: row["stage_start_ts"])
