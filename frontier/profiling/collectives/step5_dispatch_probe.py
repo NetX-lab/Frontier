@@ -347,7 +347,7 @@ def compare_dispatch(case, calls, *, rows, sizes, dp_ranks, tp_ranks, hidden):
             "observed_row_bytes": observed_bytes, "differences": differences}
 
 
-def create_native_config(args):
+def create_native_config(args, *, engine_limits=None):
     """Use the same text-submodel and quantization mappings as native serving."""
     from vllm.engine.arg_utils import EngineArgs
     from vllm.model_executor.model_loader.utils import configure_quant_config
@@ -360,6 +360,9 @@ def create_native_config(args):
         enable_expert_parallel=True, all2all_backend="allgather_reducescatter",
         distributed_executor_backend="external_launcher", enforce_eager=True,
         disable_custom_all_reduce=args.disable_custom_all_reduce,
+        **({name: value for name, value in engine_limits.items()
+            if name in ("max_model_len", "max_num_batched_tokens", "max_num_seqs")}
+           if engine_limits is not None else {}),
     ).create_engine_config()
     config = config.with_hf_config(config.model_config.hf_text_config,
                                    architectures=["Step5ForCausalLM"])
@@ -388,10 +391,13 @@ def native_backend(layer):
     method = routed.quant_method
     backend = getattr(method, "fp8_backend", getattr(method, "unquantized_backend", None))
     kernel = method.moe_kernel
+    quant=kernel.fused_experts.quant_config.quant_dtype
     return {"runner_class": type(layer.experts).__name__,
             "quant_method": type(method).__name__,
             "oracle_backend": getattr(backend, "name", None),
             "experts_class": type(kernel.fused_experts).__name__,
+            "quant_dtype": None if quant is None else str(quant).removeprefix("torch."),
+            "defer_input_quant": bool(kernel.fused_experts.expects_unquantized_inputs),
             "prepare_finalize_class": type(kernel.prepare_finalize).__name__,
             "w13": tensor_schema(routed.w13_weight),
             "w2": tensor_schema(routed.w2_weight),
@@ -515,8 +521,23 @@ def run_probe(args, plan):
                     result.update({"shared_output": tensor_schema(shared),
                                    "routed_output": tensor_schema(routed)})
                 with diagnostic_scope(observer.errors, "compare_dispatch"):
+                    expected_case=case
+                    if routing_input is not None:
+                        quant=result["quant_dtype"]
+                        if quant not in (None,"float8_e4m3fn"):
+                            raise ValueError("Bound probe reached an unsupported activation quantization")
+                        fp8=quant == "float8_e4m3fn" and not result["defer_input_quant"]
+                        topk=config.model_config.hf_text_config.moe_top_k
+                        columns=[(hidden,"float8_e4m3fn" if fp8 else "bfloat16"),(topk,"float32"),(topk,"int32")]
+                        if fp8:
+                            quant_config=layer.experts.routed_experts.quant_method.moe_kernel.fused_experts.quant_config
+                            shape=quant_config.scale_shape(rows,hidden)
+                            if shape != (1,1): columns.append((shape[1],"float32"))
+                        from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
+                        expected_case={**case,"expected_columns_dtypes":columns,
+                            "design_row_bytes":sum(c*DTYPE_BYTES[d] for c,d in columns)}
                     result["comparison"] = compare_dispatch(
-                        case, observer.calls, rows=rows, sizes=vector,
+                        expected_case, observer.calls, rows=rows, sizes=vector,
                         dp_ranks=expected_dp, tp_ranks=expected_tp, hidden=hidden)
                 if observer.errors or len(errors) > error_start:
                     result["comparison"]["status"] = "unverified"

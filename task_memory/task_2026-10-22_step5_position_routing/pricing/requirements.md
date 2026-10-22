@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Record delegated scope and approved model. |
 | 2026-10-23 | Record published dependencies and immutable-sequence review correction. |
+| 2026-10-23 | Record root's existing-seam T2 serving-limit decision. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -34,3 +35,11 @@ unprovided. Use the supplied image/source identities without fabricating paramet
 [Original Request, foundation P2] Freeze all supplied plan/result sequences by
 normalizing them to tuples before existing validation. Add caller-mutation
 regression, demonstrate RED→GREEN, commit the scoped repair for root re-review.
+
+[Root implementation decision] D29-T2-ENGINE-LIMITS: add only the keyword
+`create_native_config(args, *, engine_limits=None)` seam; forward supplied
+max_model_len=7168, max_num_batched_tokens=8192, max_num_seqs=128 before native
+EngineArgs.create_engine_config. Omitting limits preserves legacy kwargs/defaults.
+No resulting-config/HF metadata mutation, builder/CLI family, fallback, or backend
+override. Existing two owned paths only; this delta is at most60 gross within3956.
+Native owns cases.json and both T2 call sites; root owns actual-image validation.

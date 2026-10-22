@@ -8,6 +8,7 @@
 | 2026-10-23 | Verify H04/native schema/reporting, selected finite grid; receive published image authority. |
 | 2026-10-23 | Repair foundation P2 after RED→GREEN; import authentic dependencies. |
 | 2026-10-23 | Correct native prepare tuple seam; validate published original methods. |
+| 2026-10-23 | Verify T2 optional serving-limit seam without default or metadata changes. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -233,3 +234,49 @@ remain genuine dependencies, not permission to create alternate APIs.
   `/data/ycfeng/tmp/d29_all_owned_final.log`,
   `/data/ycfeng/tmp/d29_published_native_methods.log`.
 - in-progress: final producer qualification/soft-evidence checks and archive.
+
+## Root decision D29-T2-ENGINE-LIMITS
+
+- completed: optional constructor mapping forwards exactly supplied native limits
+  before create_engine_config, then retains with_hf_config/quant configuration.
+- reason: input position bounds do not bind native scheduler MoE max_num_tokens.
+- verification: focused helper and affected probe/collector/package suites187
+  PASS/71 SKIP in2.36s. Helper48 additional gross, below root's60 within3956.
+- native caller/cases and actual-image config are peer/root verification; no
+  post-construction mutation, HF metadata edit, CLI family, fallback or override.
+- producer negative observation: worker soft-gate test initially used a two-node
+  job without master_addr; corrected the fixture to its actual topology. Native
+  identity-fault tests pass and retain the original native exception object.
+
+## 1. 规划完成情况
+**汇总：** PASS2｜BLOCKED1｜TODO2
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Selected registry/immutable interfaces | PASS |7b86614/f03286f |
+| Joint finite model/candidate | PASS |409093c, actual HTSIM |
+| Integrated physical layer pricing | BLOCKED |H04 delivered; CORE exact estimator/main integration outstanding |
+| Selected producer/parent selection | TODO |Final owned changes verified; commit/archive next |
+| Scoped final verification/archive | TODO |T2 early receipt first, then final report |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**06bae09至今｜**当前前沿：**4/5及root指定T2 seam
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Soft gates/selected-key/export checks are required producer criteria |
+| D2 细节反复重试 | CLEAR |One topology fixture failure; corrected missing master_addr |
+| D3 支线问题修补 | CLEAR |T2 constructor delta explicitly requested by root |
+| D4 可并行任务停滞 | CLEAR |No extra delegation permitted; same owned files |
+| D5 超范围镀金 | CLEAR |Two existing paths,48<=60 root delta; total below3956 |
+| D6 分析空转 | CLEAR |Verified187 affected cases and early interface delivery |
+| D7 路线违背 | CLEAR |Finite model/native auto unchanged; no fabricated parameters |
+**文档检查：** S5 requirements/receipt lacked new T2 decision; now recorded. S1-S4/S6 no defect identified.
+**归因：** 无
+## 3. 纠正建议
+**分支：** B：先记录新增root决定，继续既有生产闭环。
+**文档更新（先执行）：** requirements/receipt/progress新增T2事实（可直接执行，已完成）。
+**需停止的偏离行为：** 无
+**接下去的路线：** T2 scoped commit→owned final verification/commit→预算归档与真实依赖交付。
+## 4. 最值得关注的 3 点
+1. Native now needs7168/8192/128 at both actual constructor call sites.
+2. CORE exact estimator/main remains peer-owned; no duplicate lookup.
+3. CPU tests cannot qualify source/GPU/backend/graph/G3 or native coefficients.

@@ -7,6 +7,7 @@
 | 2026-10-23 | Publish H04, selected native schema and reporting seams; record authorized imports. |
 | 2026-10-23 | Publish immutable-list P2 repair and completed authentic dependency import. |
 | 2026-10-23 | Correct the native prepare triple-return seam using published source execution. |
+| 2026-10-23 | Deliver T2 optional constructor-limit binding and CPU invariants. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -190,3 +191,19 @@ executed under py312 CPU tensors: original prepare triple-return/deferred branch
 modular inclusive invocation/finalization, E8M0 OR shape and coordinator ordering
 all PASS. AST isolation avoids the unrelated missing py312 fasteners dependency;
 this is method behavior evidence, not complete installed runtime qualification.
+
+## T2 existing constructor seam
+
+`frontier.profiling.collectives.step5_dispatch_probe.create_native_config(args,
+*, engine_limits=None)` forwards only supplied `max_model_len`,
+`max_num_batched_tokens`, `max_num_seqs` into native EngineArgs before
+create_engine_config. Native should pass the mandatory cases.json mapping with
+7168/8192/128 to this helper and its direct graph EngineArgs. No defaults are
+injected when limits are omitted. Text-submodel with_hf_config and quant config
+remain unchanged; HF max_position_embeddings remains1048576. There is no backend
+override. Root decision D29-T2-ENGINE-LIMITS; delta48 gross in the existing two paths.
+
+Focused CPU checks assert final post-with_hf_config model/scheduler limits,
+unmodified HF metadata, excluded unrelated key, and exact legacy kwargs.
+Three affected suites187 PASS/71 SKIP; parent must validate actual image config.
+This helper delivery does not qualify T2 graphs or their case evidence.
