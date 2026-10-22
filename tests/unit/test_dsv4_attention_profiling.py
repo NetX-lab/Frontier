@@ -476,9 +476,57 @@ def test_exact_prefill_cli_preserves_planner_and_effective_geometry(tmp_path, ca
     monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(LLM=lambda **kwargs: kwargs))
     options = case_runner.build_engine(plan, 0, "CPU_FAKE_MODEL", 1234, 0.85)
     assert (options["max_model_len"], options["max_num_batched_tokens"],
-            options["max_num_seqs"], options["tensor_parallel_size"]) == (7168, 8192, 1, 1)
+            options["max_num_seqs"], options["tensor_parallel_size"]) == (7168, 8192, 128, 1)
     assert options["enforce_eager"] and options["enable_chunked_prefill"]
     assert case_runner._case_window(case, plan.engines[0]) == (2, 3)
+
+
+@pytest.mark.parametrize("capacity", [2, 127, 128, 8192])
+def test_exact_prefill_engine_uses_configured_capacity(hf_config, monkeypatch, capacity):
+    plan = build_dsv4_profile_plan(
+        model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+        num_layers=None, kv_cache_dtype="fp8", prefill_prompt_len=6144,
+        limits=_limits(max_context_len=7168, chunk_budgets=(8192,),
+                       max_num_seqs=capacity, prefill_warmup_repeats=2,
+                       prefill_measured_repeats=3))
+    assert plan.to_json()["engines"][0]["max_num_seqs"] == capacity
+    monkeypatch.setitem(sys.modules, "vllm", SimpleNamespace(LLM=lambda **kwargs: kwargs))
+    assert case_runner.build_engine(plan, 0, "CPU_FAKE_MODEL", 1234, 0.85)["max_num_seqs"] == capacity
+    case, = plan.cases
+    assert (case.batch_size, case.prompt_len, case.max_tokens,
+            case.warmup, case.measured, case.estimated_steps) == (1, 6144, 1, 2, 3, 5)
+    assert case_runner._case_window(case, plan.engines[0]) == (2, 3)
+
+
+@pytest.mark.parametrize("budget,capacity,maximum_query", [(8192, 1, 8192), (14337, 2, 7169)])
+def test_exact_prefill_rejects_unsafe_startup_capacity(hf_config, budget, capacity, maximum_query):
+    with pytest.raises(ValueError, match=(
+        f"V4 exact prefill startup query length {maximum_query} exceeds "
+        f"max_model_len=7168: chunk_budget={budget}, max_num_seqs={capacity}")):
+        build_dsv4_profile_plan(
+            model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+            num_layers=None, kv_cache_dtype="fp8", prefill_prompt_len=6144,
+            limits=_limits(max_context_len=7168, chunk_budgets=(budget,), max_num_seqs=capacity))
+
+
+def test_exact_prefill_accepts_startup_capacity_boundary(hf_config):
+    plan = build_dsv4_profile_plan(
+        model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+        num_layers=None, kv_cache_dtype="fp8", prefill_prompt_len=6144,
+        limits=_limits(max_context_len=7168, chunk_budgets=(7168,), max_num_seqs=1))
+    assert (plan.engines[0].chunk_budget, plan.engines[0].max_num_seqs,
+            plan.engines[0].max_model_len) == (7168, 1, 7168)
+
+
+def test_q1_with_prefill_preserves_single_request_engine(hf_config):
+    plan = build_dsv4_profile_plan(
+        model_name=MODEL_NAME, hf_config=hf_config, target_tensor_parallel_size=8,
+        num_layers=None, kv_cache_dtype="fp8", prefill_prompt_len=6144,
+        query_one_context_min=6143, query_one_context_max=7166,
+        limits=_limits(max_context_len=7168, max_kv_tokens_per_lane=7168,
+                       chunk_budgets=(6144,), max_num_seqs=128))
+    assert plan.engines[0].max_num_seqs == 1
+    assert [(case.phase, case.batch_size) for case in plan.cases] == [(PHASE_PREFILL, 1), (PHASE_DECODE, 1)]
 
 
 @pytest.mark.parametrize("budget", [7168, 8192])

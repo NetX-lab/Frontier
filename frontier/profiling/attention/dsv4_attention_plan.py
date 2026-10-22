@@ -29,7 +29,7 @@ The plan imports no GPU package, so it runs in the dry-run check on a CPU host.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Mapping
 
 from frontier.attention.families import (
@@ -434,6 +434,18 @@ def build_dsv4_profile_plan(
         engines, cases = _build_serving_cases(
             limits, query_one_context_max, query_one_context_min, prefill_prompt_len
         )
+        if prefill_prompt_len is not None and query_one_context_max is None:
+            engine, = engines
+            startup_query_len = (
+                engine.chunk_budget + limits.max_num_seqs - 1
+            ) // limits.max_num_seqs
+            if startup_query_len > engine.max_model_len:
+                raise ValueError(
+                    f"V4 exact prefill startup query length {startup_query_len} exceeds "
+                    f"max_model_len={engine.max_model_len}: "
+                    f"chunk_budget={engine.chunk_budget}, max_num_seqs={limits.max_num_seqs}"
+                )
+            engines = (replace(engine, max_num_seqs=limits.max_num_seqs),)
     else:
         chunk_budgets = tuple(sorted(limits.chunk_budgets))
         context_grid = build_context_grid(
