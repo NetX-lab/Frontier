@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent accepts and integrates native19, publishes the image and supplies verified installed-source artifacts. |
 | 2026-10-23 | Complete approved native19 implementation and CPU verification; retain historical design archive below. |
 | 2026-10-23 | Repair four implementation findings,485 CPU PASS and1269/1582; narrow thin graph qualification. |
 | 2026-10-22 | Close native design findings; update its 19-file estimate and validation limits. |
@@ -42,7 +43,7 @@ Local task root:
 - `tests/integration/step5_native_image/{build_image.py,Dockerfile.position_cyclic}`
    produce only the authorized4-file overlay. Context:
    `/data/ycfeng/tmp/d29-native-build-context02`; no image build/push by this stream.
-   Root subsequently reported a local build, not publication/final identity binding.
+   Root completes publication and actual source export; see the parent handoff below.
 - `tests/comparison/dp_placement_pp/vllm_replay.py` and
   `tests/comparison/calibration/pd_proxy.py`: derived registry adapter, validated
   supplied immutable identity, effective selector and HTTP capability propagation.
@@ -75,23 +76,29 @@ Capture02all56 andcapture03all57 manifest entries remain unchanged. Capture01
 was not present at the inspected historical root; no writes occurred there.
 Baseline251 PASS remains documented before implementation.
 
-### Root prerequisites and unresolved live evidence
-1. Root builds/publishes and inspects the actual changed linux/amd64 image digest,
-   then supplies STEP5_POSITION_CYCLIC_IMAGE=repository@sha256:digest for staging.
-   No invented final image identity is frozen. Staged native_reference carries the
-   exact image/base_image/routing_strategy and clients compare all identity sources.
-2. Export actual installed derived bytes/pins53 plus profiling's full installed
-   source receipt. The53-entry local base-build listing is50 sealed base pins plus
-    3 locally byte-validated base exports, NOT installed derived evidence.
-    Strict derived R2 schema_source_hashes also requires12 existing backend
-    source modules, staged from this same actual export. No new native pin/registry;
-    D30 canonical source_hashes remains13 including vllm.v1.engine.core.
-3. Root supplies approved model metadata, explicit per-DP positions/masks and
+### Parent integration and source handoff
+Parent independently reproduces485 PASS/36.09s and verifies19 paths/1269 gross.
+The original reviewer closes N1–N4 without additional actionable findings.
+Accepted native source is integrated at9495cfb; publication records are at67d5b5e.
+The actual published Linux/amd64 image is
+`hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee`.
+
+The parent task `../task_2026-10-22_step5_position_routing/image_publication/`
+contains the verified remote identity, derivation manifest, all2907 installed
+Python hashes and53 actual serving pins. The source export is
+`/data/ycfeng/tmp/d29_published_sources01/source`, including all12 backend schema
+modules. Every exported file matches the actual published-image receipt.
+These artifacts supersede the base-build listing for new staging. D30 canonical
+source_hashes remains13 including engine.core. Full commands and evidence limits
+are in the parent's `repairs/test_report_2026-10-23_image_publication.md`.
+
+### Unresolved live evidence
+Root still supplies approved model metadata, explicit per-DP positions/masks and
    allocation for T2 and full serving/G3. See notes.md for case schema/inputs.
 
 Still **UNVERIFIED**: CUDA selected-score arithmetic, NONE/PW/FULL replay,
 actual auto FP8/BF16 dispatch/E8M0/collectives, all-rank imported provenance,
-image/dependency/library identity, G3 numerical state/bit-exact transfer/full
+actual launched GPU image identity, G3 numerical state/bit-exact transfer/full
 serving and new profiling/operator-gap/E2E. Workflow then GPU/op-gap, CPU overhead
 last. Old capture03 is not reclassified as balanced or submitted.
 
