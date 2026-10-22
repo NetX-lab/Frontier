@@ -10,6 +10,8 @@
 | 2026-10-22 | Completed narrow fixed-binding implementation and bounded regression/latency verification; recorded unrelated test limitations. |
 | 2026-10-22 | Began diagnostics-only D23-ACTUAL06-WALL on accepted7e8bea3 source. |
 | 2026-10-22 | Completed exact public q1 RED loop, whole-path profile, source/ledger equivalence and diagnostics-only proposal. |
+| 2026-10-22 | Started authorized D23-MODEL-IDENTITY-REUSE from clean a5e0879. |
+| 2026-10-22 | Completed fixed identity reuse,299 affected checks and committed-path frozen-parent equality; iteration stillRED. |
 
 ## Status
 
@@ -184,3 +186,112 @@ Scope implementation and verification are complete; source commit `ee28bf7` is r
 1. Complete D q1 workload costs4.4–4.9s even without concurrent P work; original budget2.012s is still missed.
 2. Proof parsing is measured but cannot alone close the gap; dynamic validation and lane/entity work remain.
 3. No production optimization/fullCLI/native acceptance was performed in this phase.
+
+## D23-MODEL-IDENTITY-REUSE status
+
+- completed: Clean a5e0879 verified; AGENTS/GLOSSARY/ADR and diagnosing-bugs re-read. Prior parent RED and independent audit are immutable controls. Registry selected models can be replaced, and canonical marker can be mutated in memory; fixed parse reuse must track the exact selected marker, not hash or predictor model selection.
+- completed: Real fitted-estimator attachment→public stage/attention regression RED:14 repeated fixed parses for two public stages and2 for two loaded public attention calls. Mutation/replacement repeated twice instead of once; old FFN also failed to reject paired marker mismatch and empty identity. Fixture setup for public attention initially lacked fields; corrected to reuse actual fittedFFN public predictor before source change.
+- completed:15-line estimator-owned registry access keyed by complete current marker, warmed at attach/validatedload; two measured consumers use it. Fixed proof parsing only; per-query model selection/dynamic checks remain. FFN explicitly checks paired markers as requested.96 focused registry/bundle/new+existingreuse tests PASS37.51s;92 measured tests PASS25.55s;86 FFN/root/dynamicquery tests PASS45.42s;25 union tests PASS14.21s,299 total. Additional malformedchangedmarker cases use existing canonical validation rather than a second validator.
+- completed: Unchanged complete iteration and independent audit equal frozen-parent eventbytes/stageJSON/lanehash/sourceproof. Savedstate estimator objects resolve by persistent reference to current verified bundles; no runtime parsed-cache snapshot survives, no diagnostic source adjustment required. Committed receipts source7e98e5c:8.061941/7.931088s,loop15.999181s,RED,all1168events/5632lanes/12224CChits/0miss. Parent9.451313/9.549744s; normal42248fixedidentityparses→0.
+- completed: Source/testcommit `7e98e5c7039695b1eefb56b245e108c1f6a54c8b`; reviewdiff `/data/ycfeng/tmp/d23_identity_review.diff`; frozencomparison `/data/ycfeng/tmp/d23_identity_parent_comparison.json`; Englishreport `test_report_2026-10-22_model_identity_reuse.md`. Requirements re-read includinglateststeering. Separate recordscommit prepared. No otheroptimization/fullCLI/strict77/routingchange.
+- limitations: Shortresidualprofile only records existingdynamic/lane/attentioncosts; earliercombinedrelatedtests60s timeout corrected by splittingexistingfiles; no timeoutincrease. Fewerthantwointervalprofile remainsINCOMPLETE_PREFIX though oneq1 completed. No newCPU-gapmodeling/optrace/suite/project after usersteering; parentowns workflow→GPU/opgap→CPUoverheadlast andbalancedrouting. Completeiteration remains~4×optimisticbudget; do not launchfullCLI or claimtimeoutsolved.
+
+### Identity reuse checkpoint
+
+## 1. 规划完成情况
+
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO2
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Registry lifetime and scope | PASS | Marker mutation/replacement supported; full marker remains authority. |
+| Attachment/public query RED | PASS | Public stage14/public attention2 repeated reads before sourcechange. |
+| Narrow implementation/focused GREEN | PASS |92+92 focused/related tests passed; productiondiff3 smallmodules only. |
+| Whole iteration/frozen parent equality | TODO | Current frontier; command and audit in parallel. |
+| Code/records commits | TODO | Depends on originalpath equality. |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** D23-MODEL-IDENTITY-REUSE start 至今｜**当前前沿：** wholeiteration/audit
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | Test fixture repair stopped when real public seam RED; old diagnostics untouched. |
+| D2 细节反复重试 | CLEAR | Publicattention fields fixed by reusing inspected actualfixture; no surviving repeatedfailure. |
+| D3 支线问题修补 | CLEAR | Pair/malformed rejection explicitly requested; no unrelatedfix. |
+| D4 可并行任务停滞 | CLEAR | Related tests parallel with current seam/stateinspection. |
+| D5 超范围镀金 | CLEAR | Single parsed-marker reuse; no selection/results cache. |
+| D6 分析空转 | CLEAR | Focusedimplementation and184 passing checks advance acceptance. |
+| D7 路线违背 | CLEAR | Only measuredspot; native/CLI/budget/metrics untouched. |
+
+**文档检查：** S5 earlierstatus stale; correctedabove. S1–S4/S6 clear.
+**归因：** 无
+
+## 3. 纠正建议
+
+**分支：** B：stale progress corrected; agreedscope unchanged.
+**文档更新（先执行）：**
+1. `progress.md` currentstatus：record RED/GREEN/source-restoration constraint（可直接执行）.
+
+**需停止的偏离行为：** 无
+
+**接下去的路线：**
+1. 并行：unchangedcompleteRED ‖ independentsourceaudit -> identicalfrozenevent/stage/lane/sourceproof.
+2. Source/testcommit -> completionreport/recordscommit -> parentreview.
+
+## 4. 最值得关注的 3 点
+
+1. Source initializer warms estimator marker; savedstate resolves currentestimators, requiring no newrestorecode.
+2. All dynamicmodel/feature/count/proof checks remain; pair conflict is now explicit in FFN.
+3. Wholeiteration timing not measured yet; prior budget remainsRED and unchanged.
+
+### Identity reuse final checkpoint
+
+## 1. 规划完成情况
+
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Supported lifetime/scope | PASS | Full-marker authority; replacements use selectedestimator. |
+| Real regressionRED | PASS | Attachment/publicstage14 andbundle/publicattention2 fixedreads. |
+| Narrow source/focusedGREEN | PASS |7e98e5c,299 affectedtests; nogiantmodulechanges. |
+| Wholeiteration/frozenparent | PASS |Committed event/stage/lane/source equal; exactbudgetstillRED. |
+| Source/testcommit/records/handoff | PASS | Reviewdiff/report/commandsready; separaterecordscommitprepared. |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** focusedGREENcheckpoint 至今｜**当前前沿：** recordscommit/return
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | Existingiteration/audit unchanged; noextraoptracecampaign. |
+| D2 细节反复重试 | CLEAR | Combined60stest splitpassed; no timeoutincrease/retryloop. |
+| D3 支线问题修补 | CLEAR | Pair/malformedmarkerchecks directlyrequired; nootherfix. |
+| D4 可并行任务停滞 | CLEAR | Baseline/audit/focusedchecks ranindependentlyinparallel. |
+| D5 超范围镀金 | CLEAR |15lineregistryreuse,2smallconsumers; nootherhotspotimplementation. |
+| D6 分析空转 | CLEAR | Sourcecommit andfrozencomparison delivered; stoptimingextensionnow. |
+| D7 路线违背 | CLEAR | Latestworkflow→GPU/opgap→CPUlaststeering recorded; nooverheadmodeling. |
+
+**文档检查：** S5 priorstatus stale,correctedabove; S1–S4/S6 clear. Noagreedcriteriachanged.
+**归因：** 无
+
+## 3. 纠正建议
+
+**分支：** B：staleprogress corrected; scopeunchanged.
+**文档更新（先执行）：**
+1. `requirements.md` and`progress.md`：recordlateststeering/completedsource-and-auditfacts（可直接执行）.
+
+**需停止的偏离行为：** 无
+
+**接下去的路线：**
+1. Commitcurrenttaskrecordsseparately -> returnsourcecommit/diff/RED-andtruthmeasurements.
+2. Stoplocalextensions; parentownsreview/merge/balancedrouting/fullCLI/native/strict77.
+
+## 4. 最值得关注的 3 点
+
+1. Completeiteration8.06/7.93s stillover2.012sbudget; no1024acceptance.
+2. Allfrozenparentcost/proof/event/ledgertruth retained; fixedparses eliminated.
+3. Residualruntimework reportedonly; nobroadCPUcampaignornextfixstarted.

@@ -7,6 +7,7 @@
 | 2026-10-22 | Archived measured diagnosis-only deliverables and parent follow-up. |
 | 2026-10-22 | Archived authorized fixed-binding implementation and bounded verification; retained parent acceptance limits. |
 | 2026-10-22 | Archived diagnostics-only complete actual06 public iteration RED and profile proposal. |
+| 2026-10-22 | Archived authorized canonical identity reuse and frozen-parent public iteration equivalence. |
 
 ## Outcome
 
@@ -69,3 +70,13 @@ Whole-path profile:34.1s/42.9million calls, public stages24.054s, FFN9.896s, dyn
 Proposal only: reuse already validated estimator-bound canonical identity/evidence-kind while retaining current model registry selection, identity pairing/runtime checks and every dynamic query/count/proof. Expected upper saving~0.8s/D-only round, insufficient alone for budget. Parent owns source decision, later-context/online/cold/init/finalexport/fullCLI/native/strict77 acceptance.
 
 Report: `task_memory/task_2026-10-22_step5_mrv2_perf/test_report_2026-10-22_actual06_wall.md`. Exact reusable command and snapshot paths are there. Final baseline/audit receipts: `/data/ycfeng/tmp/d23_actual06_verified_{red,audit}01/`; whole profile `/data/ycfeng/tmp/d23_actual06_complete_profile01/`; enabledtrace `/data/ycfeng/tmp/d23_actual06_final_trace01/`.
+
+## Authorized correction: D23-MODEL-IDENTITY-REUSE
+
+Source/tests commit `7e98e5c7039695b1eefb56b245e108c1f6a54c8b` adds estimator-bound parsed canonical identity reuse at the existing registry attach/validatedload boundary, with exact currentmarker authority. Two Step cost/proof consumers reuse it; every per-queryfamily/model choice, dynamic feature/bounds/count query, proofvalue and EP lane/event remains. Marker mutation reparses and validates; malformedmetadata/pairconflict rejects. No output/modelselection cache, timingfactor, flag or routing/metrics change.
+
+Files: `frontier/execution_time_predictor/prediction_model_registry.py` (1068→1083), `frontier/execution_time_predictor/step5_cost.py` (263→264), `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py` (1791→1793), `tests/unit/test_step5_model_identity_reuse.py` (13 realfittedregressioncases). Allmodulesbelow2000; no oversizedsourceexception change. Registryload warms currentestimators, and trusted diagnosticsnapshot resolves those references rather than oldfixedcacheobjects; no diagnosticrestore edit.
+
+RegressionRED:14 repeatedpublicstage parses and2 publicattention parses before change. GREEN299 affectedchecks:96 focusedregistry/bundle/reuse,92 measuredreplays,86 FFN/root/dynamicquery,25 union. Committedoriginalpubliciteration8.061941/7.931088s vsfrozenparent9.451313/9.549744s; normals42248fixedidentityparses→0. Completeiteration stillRED versus2.012202s; nofullCLI/native/strict77 completion. Independentcommittedaudit exactlyequal to frozenparent sourcecost/proofdictionary,artifactdescriptors,JSONeventbytes,stageJSON and5632laneloghash;1168events/12224CCrequests allhits/0miss unchanged.
+
+Report `task_memory/task_2026-10-22_step5_mrv2_perf/test_report_2026-10-22_model_identity_reuse.md`; reviewdiff `/data/ycfeng/tmp/d23_identity_review.diff`; comparison `/data/ycfeng/tmp/d23_identity_parent_comparison.json`; source-sensitive receipts `/data/ycfeng/tmp/d23_identity_committed_{wall,audit}01/`. Lateststeering limits this work to minimum Pythonexecutionenablement; workflow→GPU/opgap→CPUoverheadlast andbalancedrouting remainparent-owned. Residualdynamicquery/lane/entity/attentioncosts are recorded, notimplementedasnewhotspotproject.
