@@ -3,9 +3,12 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Mark approved source/CPU correction complete; retain unmeasured native boundary limits. |
 | 2026-10-22 | Preserve inspected source/args evidence and its limits. |
 
-Analysis is complete for the configured algorithm, correction pending.
+Analysis is complete for the configured algorithm. Approved source/CPU correction
+and metadata consumer are implemented and verified; live-native qualification is
+pending. Exact implementation and test evidence are in `summary.md` and the test report.
 Investigator: `ses_e9e623c4cffe1X4qP7jVRUOnKv`; parent independently read both
 conditions. No retained trace directly measures the synchronization boundary.
 

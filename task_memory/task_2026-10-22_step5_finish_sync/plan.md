@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record completed implementation and affected checks; retain parent-only acceptance steps. |
 | 2026-10-22 | Merge independent D30-SCOPE-7-750 approval and start implementation; no D29 dependency. |
 | 2026-10-22 | Add missing verdict consumer and six fixture instances; record seven-file numerical proposal pending approval. |
 | 2026-10-22 | Record dependency chain and focused acceptance. |
@@ -10,8 +11,8 @@
 Completed candidate chain:
 `approval/source inspection/design` → `focused RED` → `scheduler + observer`
 → `focused GREEN + legacy checks` → code `cf1a53f` + records `defe596`.
-This candidate is unmerged and not merge-ready: adjacent fixtures failed and
-the missing verdict consumer was outside the128-pass adjacent test selection.
+Historical candidate was unmerged and not merge-ready: adjacent fixtures failed
+and the missing verdict consumer was outside the128-pass adjacent selection.
 
 Current chain:
 `reviewer findings + read-only inspection` → `complete scope records`
@@ -22,6 +23,14 @@ Current chain:
 → parent fresh native scalar observation.
 The two implementation arms are now authorized independently of D29;
 they touch separate existing files. No new subagents are authorized here.
+
+Current status: approval/baseline merge, consumer/regression, six fixture repairs
+and required verification are completed. PD74PASS, boundary/emitter/legacy
+matrix32PASS, R2388PASS and final exact-peer-ID lifecycle7PASS. Gross scope is
+7files/528insertions+72deletions=600lines against b8be287; all modules<=2000.
+Verified follow-up source/tests are committed as dc166cb. Separate records
+handoff is closing; parent review/integration/strict77/native qualification
+remain pending.
 
 1. Read approval/source and existing owners; record design and human receipt.
 2. Add focused tests: step1, 16, reset, active peer, dummy, legacy32 and DP1.

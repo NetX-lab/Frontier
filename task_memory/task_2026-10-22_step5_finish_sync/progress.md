@@ -3,6 +3,8 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Complete affected PD74, boundaries32 and R2388 checks; refresh scope evidence and handoff status. |
+| 2026-10-22 | Complete diagnostic consumer and placement lifecycle checks; run final affected checks within approved scope. |
 | 2026-10-22 | Merge b8be287 independent approval and parent READ correction; retain prior test/reviewer evidence. |
 | 2026-10-22 | Complete records-only reviewer follow-up; propose seven files/750 changed lines pending parent approval. |
 | 2026-10-22 | Complete focused source/CPU checks; record adjacent fixture blocker and parent handoff. |
@@ -16,8 +18,9 @@
   `cf1a53f63eef0492c369517f38505d7d7283c4df` (4files319insertions/8deletions).
 - completed: separate original records commit
   `defe5967052308d3f7b26d4aac97f41fe4a279af` and initial parent handoff.
-- pending: parent disposition of six direct-lane fixture instances plus missing
-  metadata consumer, phase review and integration; no whole-task completion.
+- completed: parent approved D30-SCOPE-7-750; six direct-lane fixture instances
+  and metadata consumer are corrected in the approved continuation below.
+- pending: parent independent review and integration; no whole-task completion.
 - pending: parent strict77 and live native counter/reset validation.
 - environment observation: login shell has no `python`; inspected parent records
   identify existing `/data/ycfeng/envs/frontier-py310/bin/python` (3.10.6). No host
@@ -170,7 +173,130 @@ Historical next actions before b8be287 (superseded):
 - completed: read exact YC answer `批准，继续` and D30-SCOPE-7-750 receipt. The
   seven-path/750-line delta includes cf1a53f and is measured against b8be287.
   D30 is independent of D29; shared-file coordination is not a blocking edge.
-- in-progress: merge verification, metadata emitter-consumer RED→GREEN and six
+- completed: merge verification, metadata emitter-consumer RED→GREEN and six
   real-event fixture corrections, followed by affected tests and budget checks.
 - pending: verified code and records commits, parent independent review/strict77
   and fresh native counter observation. No live timing or native PASS claim.
+
+- completed: lifecycle RED at integrated b8be287+cf1a53f:6FAIL/1PASS (the unchanged
+  changed=True branch passes); metadata emitter→load RED2FAIL→GREEN2PASS.
+  Commands/logs use `/data/ycfeng/tmp/d30_scope_lifecycle_red01` and
+  `d30_scope_metadata_{red,green}01`. Metadata-only remains UNVERIFIED and raw
+  location retention passes for both P/D without request/engine/TP identities.
+- observed: first placement event-driver attempt exposed missing attention
+  identity in the explicit test StageExecutionTime and a discarded queued retry.
+  Resolved with registered `bind_layer_attention` and actual retry output events;
+  the next attempt exposed an incorrect import path before execution. Corrected
+  to existing `frontier.attention.model_binding`; no production behavior changed.
+- completed: explicit fixture StageExecutionTime now carries complete registered
+  layer identity and structured dispatch/combine timing (required by the existing
+  typed accessors); P/D placement GREEN2PASS at `d30_scope_placement_green05`.
+  Every returned event remains queued, including capacity retry output and
+  original wake. No direct finish-barrier mutation or native change was needed.
+- completed: existing R2 observer/stage/census/verdict affected suite388PASS10.06s
+  on asyncopd-py312, `d30_scope_r2_final01.log/xml`. After centralizing counter
+  classification, verdict-only rerun completed successfully (final count below).
+- completed: affected PD3modules74PASS297.53s at `d30_scope_pd_final01.log/xml`,
+  focused boundaries/emitter+legacy32/DP1 matrix32PASS83.14s at
+  `d30_scope_boundaries_final01.log/xml`, verdict-only rerun260PASS8.40s at
+  `d30_scope_verdict_final02.log/xml`. Together with R2388 there are494 distinct
+  final passing cases; the260 verdict rerun overlaps and is not added again.
+- completed: original native parallel/core SHA256 equal parent pins. No source,
+  scheduling, call/return/error or image/package behavior was changed.
+- completed: `git diff --check`, exact approved file set and module-size budget
+  checks. Initial final measurement7files/525insertions+72deletions=597lines;
+  one fixture assertion refinement below changes only its gross count.
+- completed: replace magic peer count3 with the exact replica DP peer set from
+  existing config, so release evidence identifies the actual peers rather than
+  merely counting schedule events. Final seven selected lifecycle instances
+  (six repairs plus unchanged fault branch)7PASS203.78s as
+  `d30_scope_lifecycle_final02.log/xml`; rerun overlaps PD74, no additional
+  distinct coverage claim. Final gross budget528+72=600lines/7approved paths
+  against b8be287, including cf1a53f; AST,<=2000-module and whitespace checks PASS.
+- completed: verified follow-up code step committed as
+  `dc166cb74d5b506814a5560d07235be781e17803`, exactly4follow-up source/test paths,
+  209insertions+64deletions=273lines; combined cf1a53f+follow-up delta600lines.
+  Native/production candidate behavior remains unchanged in this follow-up.
+- in-progress: finalize separate records commit and clean-branch handoff; no
+  strict77/fullCLI/performance suite or external operation.
+
+## Previous in-progress checkpoint
+
+### 1. 规划完成情况
+
+**汇总：** PASS2｜FAILED1｜TODO3
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| 独立批准/b8be287 merge | PASS |739f15c保留批准、READ修正和子会话证据 |
+| metadata consumer/regression | PASS |RED2→GREEN2，真实emitter/load/judge |
+| 六个事件fixture实例 | FAILED |初次Stage identity/retry问题已定位，复跑被错误import阻止 |
+| 全部focused/affected验证 | TODO |等待fixture完成 |
+| budget/commits交付 | TODO |当前7files/594lines，仍需最终核算 |
+| parent review/strict77/native | TODO |parent-owned |
+
+### 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** b8be287批准至今｜**当前前沿：** 六实例fixture修正
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1工具打磨 | CLEAR |event fixture是已批准的最小完整修复，没有扩展其他suite |
+| D2细节反复重试 | CLEAR |失败分别定位identity、retry、import；未调整任意成本/覆盖状态 |
+| D3支线问题修补 | CLEAR |未检查/修改D29 native设计或其他问题 |
+| D4可并行任务停滞 | CLEAR |consumer已完成，当前单fixture前沿；不允许agents |
+| D5超范围镀金 | CLEAR |7files预算内，均为批准路径 |
+| D6分析空转 | CLEAR |已有consumer交付和可执行fixture |
+| D7路线违背 | CLEAR |b8be287授权后实施，未改native/parent或跑perf |
+
+**文档检查：** S5旧issues的批准状态和依赖已纠正。S1/S2/S3/S4/S6未发现新缺陷。
+**归因：** 无。
+
+### 3. 纠正建议
+
+**分支：** B：先更新过时状态再继续。
+**文档更新（先执行）：**
+1. issues/plan/requirements：b8be287批准和D30独立依赖已明确（可直接执行）。
+
+**需停止的偏离行为：** 无。
+**接下去的路线：**
+1. fixture真实event queue→完成标志：六实例保留原断言、dummy/release/reset证据。
+2. focused/affected验证→完成标志：现有R2含verdict、legacy32/DP1、PD tests通过。
+3. budget/module/diff检查和分离commits→完成标志：7paths/≤750lines和完整records。
+
+### 4. 最值得关注的 3 点
+
+1. counter metadata现已被真实consumer接受但不能授予native PASS。
+2. event fixture必须保留所有返回事件和READ/ownership断言。
+3. 不等待D29；strict77/独立review/live-native仍由parent完成。
+
+## Final D30-SCOPE-7-750 implementation handoff
+
+- completed: all authorized implementation and focused/affected verification;
+  six lifecycle repairs and both scalar diagnostic metadata events accepted by
+  their consumer without request pollution or metadata-only qualification.
+- completed: verified source/tests commit `dc166cb74d5b506814a5560d07235be781e17803`.
+  Original code `cf1a53f63eef0492c369517f38505d7d7283c4df`; integrated baseline
+  b8be287 preserved by merge739f15c. The complete approval-path delta is exactly
+  7files/528insertions+72deletions=600lines, below750 by150; all modules<=2000.
+- completed: durable commands/results/scope/remediation/self-check records in
+  this task directory, with exact source/test diff and JSON budget/test evidence.
+  Final archive is committed separately from source/tests; hash is supplied in
+  parent handoff. No parent/root edit or unauthorized external operation.
+- observed and resolved: task_memory is ignored for new evidence paths, so only
+  the three requested new artifacts are force-added. Standard contextual diff
+  blank lines were reported as artifact trailing whitespace; retain exact
+  `git diff --unified=0 b8be287 -- frontier tests` instead. No code whitespace
+  issue or check suppression; staged records whitespace is rechecked.
+- pending (parent-owned): independent review, integration and strict77, then
+  fresh native source/package/pins and live all-DP step1/16/reset/active-peer/
+  first-idle counter observations. No native qualification or overhead claim.
+
+Next actions:
+1. Parent reviews `d30_source_test.diff` and integrates branch or the two source
+   commits cf1a53f/dc166cb onto its common branch, retaining current parent READ.
+2. Parent performs its strict77 and independent acceptance; coordinate measured
+   test shared hunks with D29 without reintroducing the retired approval edge.
+3. Parent stages pinned original native source and observer, validates complete
+   host counter capture; native error handling and scheduling remain unchanged.

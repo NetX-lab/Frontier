@@ -1,0 +1,232 @@
+{
+  "task_id": "D30-STEP-FINISH-SYNC",
+  "runs": [
+    {
+      "run": "d30_scope_lifecycle_red01",
+      "log": "/data/ycfeng/tmp/d30_scope_lifecycle_red01.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_lifecycle_red01.xml",
+      "tests": 7,
+      "failures": 6,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 45.782,
+      "cases": [
+        {
+          "name": "test_p_client_finishes_at_response_while_source_kv_is_retained",
+          "module": "tests.unit.test_step5_pd_placement",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_selected_d_lane_survives_capacity_retry_read_ready_and_decode",
+          "module": "tests.unit.test_step5_pd_placement",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs[offline]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs[online]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners[False]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners[True]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        }
+      ]
+    },
+    {
+      "run": "d30_scope_metadata_red01",
+      "log": "/data/ycfeng/tmp/d30_scope_metadata_red01.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_metadata_red01.xml",
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.566,
+      "cases": [
+        {
+          "name": "test_emitted_native_counters_are_retained_metadata_not_request_evidence[prefill]",
+          "module": "tests.unit.test_step5_finish_sync",
+          "result": "FAIL"
+        },
+        {
+          "name": "test_emitted_native_counters_are_retained_metadata_not_request_evidence[decode]",
+          "module": "tests.unit.test_step5_finish_sync",
+          "result": "FAIL"
+        }
+      ]
+    },
+    {
+      "run": "d30_scope_metadata_green01",
+      "log": "/data/ycfeng/tmp/d30_scope_metadata_green01.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_metadata_green01.xml",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.74,
+      "cases": [
+        {
+          "name": "test_emitted_native_counters_are_retained_metadata_not_request_evidence[prefill]",
+          "module": "tests.unit.test_step5_finish_sync",
+          "result": "PASS"
+        },
+        {
+          "name": "test_emitted_native_counters_are_retained_metadata_not_request_evidence[decode]",
+          "module": "tests.unit.test_step5_finish_sync",
+          "result": "PASS"
+        }
+      ]
+    },
+    {
+      "run": "d30_scope_placement_green05",
+      "log": "/data/ycfeng/tmp/d30_scope_placement_green05.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_placement_green05.xml",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 80.091
+    },
+    {
+      "run": "d30_scope_pd_final01",
+      "log": "/data/ycfeng/tmp/d30_scope_pd_final01.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_pd_final01.xml",
+      "tests": 74,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 297.528,
+      "lifecycle_cases": [
+        {
+          "name": "test_p_client_finishes_at_response_while_source_kv_is_retained",
+          "module": "tests.unit.test_step5_pd_placement",
+          "result": "PASS"
+        },
+        {
+          "name": "test_selected_d_lane_survives_capacity_retry_read_ready_and_decode",
+          "module": "tests.unit.test_step5_pd_placement",
+          "result": "PASS"
+        },
+        {
+          "name": "test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs[offline]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs[online]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners[False]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners[True]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        }
+      ]
+    },
+    {
+      "run": "d30_scope_boundaries_final01",
+      "log": "/data/ycfeng/tmp/d30_scope_boundaries_final01.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_boundaries_final01.xml",
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 83.139
+    },
+    {
+      "run": "d30_scope_r2_final01",
+      "log": "/data/ycfeng/tmp/d30_scope_r2_final01.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_r2_final01.xml",
+      "tests": 388,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 10.051
+    },
+    {
+      "run": "d30_scope_verdict_final02",
+      "log": "/data/ycfeng/tmp/d30_scope_verdict_final02.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_verdict_final02.xml",
+      "tests": 260,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 8.4
+    },
+    {
+      "run": "d30_scope_lifecycle_final02",
+      "log": "/data/ycfeng/tmp/d30_scope_lifecycle_final02.log",
+      "xml": "/data/ycfeng/tmp/d30_scope_lifecycle_final02.xml",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 203.779,
+      "cases": [
+        {
+          "name": "test_p_client_finishes_at_response_while_source_kv_is_retained",
+          "module": "tests.unit.test_step5_pd_placement",
+          "result": "PASS"
+        },
+        {
+          "name": "test_selected_d_lane_survives_capacity_retry_read_ready_and_decode",
+          "module": "tests.unit.test_step5_pd_placement",
+          "result": "PASS"
+        },
+        {
+          "name": "test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs[offline]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs[online]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners[False]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        },
+        {
+          "name": "test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners[True]",
+          "module": "tests.unit.test_step5_measured_pd",
+          "result": "PASS"
+        }
+      ]
+    }
+  ],
+  "final_distinct_passes": 494,
+  "native_validation": "UNVERIFIED"
+}

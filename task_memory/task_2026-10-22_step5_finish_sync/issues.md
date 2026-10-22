@@ -3,10 +3,12 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Resolve both reviewer P2 findings in approved scope; record passing affected matrices and parent-only limits. |
+| 2026-10-22 | YC approved D30-SCOPE-7-750 at b8be287; implementation proceeds independently of D29. |
 | 2026-10-22 | Record reviewer consumer/fixture findings and complete seven-file proposal; no source/test edits authorized. |
 | 2026-10-22 | Separate five new fixture failures from the baseline READ-byte mismatch. |
 
-## Observed failures and cause
+## Historical failures and cause
 
 Candidate extra suite: `tests/unit/test_step5_measured_pd.py`,
 `test_step5_structural_pd.py`, `test_step5_pd_placement.py`:68PASS/6FAIL.
@@ -59,10 +61,11 @@ inspection confirms the existing production wake/release chain:
   and emits `ReplicaScheduleEvent` for each lane released by final consensus.
 
 These source paths explain why bypassing the DES queue in a fixture is not
-evidence that the real driver deadlocks. This follow-up ran no simulation, so
-live correctness and native behavior remain unverified.
+evidence that the real driver deadlocks. The records-only follow-up ran no
+simulation; the approved continuation now drives the CPU DES lifecycle below.
+Live native correctness remains unverified.
 
-## Missing observer consumer boundary
+## Historical missing observer consumer boundary
 
 Emitter: `tests/integration/step5_pd/r2_observation.py:1188-1210` produces
 `native_dp_finish_check` and `native_dp_wave_counter_zero` as host scalar rows
@@ -93,7 +96,7 @@ unknown-event and observer-error rejection. This reuse adds no eighth file.
 The existing metadata parametrization in verdict tests at174-178 would also
 exercise the two new metadata names when that unchanged suite is run later.
 
-## Concrete expansion proposal
+## Approved numerical expansion proposal
 
 The previous six-file/<450-line proposal was incomplete and is superseded.
 Complete D30 source/test file list and explicit budget:
@@ -133,12 +136,54 @@ driver module, verdict-test file, production scheduler, CLI flag or new ticket
 is proposed. If the complete event fixture cannot fit the stated budgets,
 stop and return measured accounting rather than hiding files or bypassing events.
 
-Numerical expansion is **pending approval**. No production/test edit, broader
+Historical status at0a0b9fe: numerical expansion was pending approval. No production/test edit, broader
 test run, profiling, child agent or platform operation occurred in this
 follow-up. Candidate `cf1a53f` remains unmerged and not merge-ready; the parent
 alone combines this proposal with D29 for one approval request. Main D30
 authority/spec is parent `9ed57630f2f564498f9706c7a5af0243928d1370`; no root or
 parent files were overwritten and no D29 native design was investigated.
 
+Current authority: b8be287 and `repairs/human_review_receipt_D30-SCOPE-7-750_2026-10-22.json`
+record YC's direct `批准，继续`. Seven files/750 added+deleted lines against
+b8be287, including cf1a53f, are approved. The D29 approval dependency is retired.
+This task now implements the recorded proposal; native acceptance stays open.
+
 Evidence: `/data/ycfeng/tmp/d30_finish_pd_adjacent01.{log,xml}` and
 `/data/ycfeng/tmp/d30_finish_pd_baseline01.{log,xml}`.
+
+## Approved implementation resolution
+
+Both reviewer P2 issues are resolved at the source/CPU acceptance level:
+
+- `r2_verdict.py:130-132,268-271` classifies both counters as diagnostic metadata
+  before normalization and identity validation. It retains each untouched raw
+  row and JSONL file/line in `instrumentation.details['diagnostic_metadata']`,
+  never request/transfer records. Real emitter-to-load/judge P/D regression
+  RED2FAIL to GREEN2PASS; valid request verdicts stay unchanged, metadata alone
+  stays UNVERIFIED, unknown/observer errors retain rejection.
+- The five functions/six instances use `_PDExecution` in existing placement
+  tests, dispatched by the production event priority. Real stage arrivals,
+  schedules, dummy ends and final-consensus peer events are queued and processed.
+  Retry wake/output events are retained, not recreated; existing assertions for
+  request/source/target ownership, READ102203904 bytes/1020 blocks, readiness,
+  context/token output and retry faults remain. No direct `_end_iteration`,
+  barrier write or fabricated peer return exists in either repaired module.
+- `_StageCosts` supplies existing typed per-layer execution with registered
+  attention identity and structured dispatch/combine times. These fixed CPU
+  fixture inputs are not profiling or fitted latency evidence. Existing actual
+  EP workloads are materialized by their unchanged owners; no workload,
+  distribution, routing source or measured READ price is changed.
+
+Final affected CPU PD matrix74PASS297.53s includes all six formerly failing
+instances and unchanged capacity `changed=True`. Boundary/observer/legacy matrix
+32PASS83.14s; R2 observer/stage/census/verdict388PASS10.06s; verdict rerun260PASS8.40s.
+The final exact-peer-ID assertion rerun7PASS203.78s confirms all six repaired
+instances plus unchanged fault branch. Complete source/test scope is
+7files/528insertions+72deletions=600lines against b8be287, leaving150 lines
+under the approved cap. Numerical expansion is no longer a blocker; D30 does
+not wait for D29. Both documented source/CPU P2 findings are resolved.
+
+Remaining acceptance is parent-owned: independent review, common integration,
+strict77, fresh stage/package/pins and live all-DP counter completeness, first
+idle boundary, active-peer continuation and wave reset. Metadata records do not
+qualify any of these. No GPU/platform/CLI/performance action was performed.
