@@ -15,7 +15,8 @@ from tests.unit.test_step5_native_pd import stage_inputs
 def stage_capture(tmp_path, role_overrides=None, runtime_label='step5'):
     inputs = stage_inputs(tmp_path)
     source = tmp_path / "native"
-    for module in r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES:
+    for module in (r2_stage.RUNTIME_MODULES + r2_stage.SCHEMA_MODULES + r2_stage.CANONICAL_SCHEMA_MODULES
+                   + (r2_stage.BACKEND_MODULES if runtime_label == 'step5_position_cyclic' else ())):
         path = source / (module.replace(".", "/") + ".py")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f'"""{module}"""\n')
@@ -72,6 +73,7 @@ def test_derived_stage_binds_source_root_policy_and_preserves_d30(tmp_path, deri
     assert observation['installed_native_root'] == config['installed_package']
     assert len(observation['source_hashes']) == 13
     assert 'vllm.v1.engine.core' in observation['source_hashes']
+    assert set(r2_stage.BACKEND_MODULES) <= observation['schema_source_hashes'].keys()
     for plan in json.loads((stage/'preflight.json').read_text()):
         assert plan['server_env_set']['VLLM_MOE_ROUTING_SIMULATION_STRATEGY'] == 'position_cyclic'
     for label in ('step5', 'step5_position_cyclic'):
@@ -84,7 +86,7 @@ def test_derived_stage_binds_source_root_policy_and_preserves_d30(tmp_path, deri
     assert 'VLLM_MOE_ROUTING_SIMULATION_STRATEGY' not in env and not explicit
 
 
-@pytest.mark.parametrize('fault', ['root', 'model_pin', 'engine', 'policy'])
+@pytest.mark.parametrize('fault', ['root', 'model_pin', 'engine', 'policy', 'backend_pin'])
 def test_derived_stage_rejects_missing_or_conflicting_identity(tmp_path, derived_image, fault):
     _, config, stage = stage_capture(tmp_path, runtime_label='step5_position_cyclic')
     if fault == 'root':
@@ -93,6 +95,8 @@ def test_derived_stage_rejects_missing_or_conflicting_identity(tmp_path, derived
         config['pd_state_observation']['schema_source_hashes'].pop('vllm.models.step5.nvidia.model')
     elif fault == 'engine':
         (stage/'engine.json').write_text('{}')
+    elif fault == 'backend_pin':
+        config['pd_state_observation']['schema_source_hashes'].pop(r2_stage.BACKEND_MODULES[-1])
     else:
         config['pd_state_observation']['routing_strategy'] = 'uniform_random'
     (stage/'config.json').write_text(json.dumps(config))

@@ -22,6 +22,77 @@ SOURCE_MODULES = (
     'vllm.model_executor.layers.fused_moe.router.routing_simulator_router',
 )
 
+BACKEND_MODULES = (
+    'vllm.model_executor.layers.quantization.fp8',
+    'vllm.model_executor.layers.quantization.utils.quant_utils',
+    'vllm.model_executor.layers.fused_moe.unquantized_fused_moe_method',
+    'vllm.model_executor.layers.fused_moe.modular_kernel',
+    'vllm.model_executor.layers.fused_moe.fused_moe_method_base',
+    'vllm.model_executor.layers.fused_moe.oracle.fp8',
+    'vllm.model_executor.layers.fused_moe.oracle.unquantized',
+    'vllm.model_executor.layers.fused_moe.experts.triton_deep_gemm_moe',
+    'vllm.model_executor.layers.fused_moe.experts.deep_gemm_moe',
+    'vllm.model_executor.layers.fused_moe.experts.triton_moe',
+    'vllm.model_executor.layers.fused_moe.experts.fallback',
+    'vllm.model_executor.layers.fused_moe.prepare_finalize.naive_dp_ep',
+)
+
+
+def checked_callable(value, expected, owner=None):
+    return (getattr(value, '__func__', value) is expected
+            and (owner is None or getattr(value, '__self__', None) is owner)
+            and inspect.getsourcefile(expected) == sys.modules[expected.__module__].__file__)
+
+
+def backend_census(experts, config):
+    """Validate existing native quantization/oracle relationships, without loading weights."""
+    fp8 = sys.modules[BACKEND_MODULES[0]]
+    unquantized = sys.modules[BACKEND_MODULES[2]]
+    mk = sys.modules[BACKEND_MODULES[3]]
+    quant_config = config.quant_config
+    if type(quant_config) is not fp8.Fp8Config:
+        raise ValueError('Derived native census requires actual FP8 checkpoint configuration')
+    skip = fp8.is_layer_skipped(prefix=experts.layer_name, ignored_layers=quant_config.ignored_layers,
+        fused_mapping=quant_config.packed_modules_mapping, match_mode=quant_config.ignored_layers_match_mode)
+    method_type = unquantized.UnquantizedFusedMoEMethod if skip else fp8.Fp8MoEMethod
+    quant = experts.routed_experts.quant_method
+    if type(quant) is not method_type:
+        raise ValueError('Native quant method disagrees with checkpoint layer exclusions')
+    oracle = sys.modules[BACKEND_MODULES[6 if skip else 5]]
+    backend = quant.unquantized_backend if skip else quant.fp8_backend
+    enum = oracle.UnquantizedMoeBackend if skip else oracle.Fp8MoeBackend
+    kernel = quant.moe_kernel
+    valid = (type(backend) is enum and quant.experts_cls in oracle.backend_to_kernel_cls(backend)
+             and type(kernel) is mk.FusedMoEKernel and type(kernel.impl) is mk.FusedMoEKernelModularImpl
+             and type(kernel.fused_experts) is quant.experts_cls
+             and isinstance(kernel.fused_experts, mk.FusedMoEExpertsModular)
+             and isinstance(kernel.prepare_finalize, mk.FusedMoEPrepareAndFinalizeModular)
+             and not quant.is_monolithic and not kernel.is_monolithic
+             and not kernel.fused_experts.is_monolithic())
+    if not valid:
+        raise ValueError('Native modular backend/oracle object census mismatch')
+    objects = [quant, kernel, kernel.impl, kernel.fused_experts, kernel.prepare_finalize]
+    fallback = sys.modules[BACKEND_MODULES[10]].FallbackExperts
+    if isinstance(kernel.fused_experts, fallback):
+        primary, secondary = kernel.fused_experts.get_clses()
+        if (type(kernel.fused_experts.experts) is not primary
+                or type(kernel.fused_experts.fallback_experts) is not secondary):
+            raise ValueError('Native fallback expert objects disagree with their registered classes')
+        objects += [kernel.fused_experts.experts, kernel.fused_experts.fallback_experts]
+    sources = []
+    for value in objects:
+        cls = type(value)
+        module = sys.modules.get(cls.__module__)
+        if (module is None or cls.__module__ not in BACKEND_MODULES
+                or getattr(module, cls.__name__, None) is not cls
+                or inspect.getsourcefile(cls) != module.__file__):
+            raise ValueError('Native backend class is not the checked imported source object')
+        if hasattr(value, 'apply') and not checked_callable(value.apply, cls.apply, value):
+            raise ValueError('Native backend apply callable replaced outside checked source')
+        sources.append(dict(module=cls.__module__, class_name=cls.__name__, module_file=module.__file__))
+    return dict(precision='bf16' if skip else 'fp8', oracle_backend=backend.name, sources=sources,
+                quant_method=method_type.__name__, experts_class=quant.experts_cls.__name__, monolithic=False)
+
 
 def install(module, observer, wrap):
     """Wrap existing host seams; native calls, results and exceptions are unchanged."""
@@ -92,7 +163,7 @@ def bind_model_state(worker, observer, wrap):
     strict = observer.config.get('routing_strategy') == 'position_cyclic'
     if strict:
         root = Path(observer.config['installed_native_root']).resolve()
-        for name in SOURCE_MODULES[-4:]:
+        for name in SOURCE_MODULES[-4:] + BACKEND_MODULES:
             module = sys.modules.get(name)
             expected = root / (name.removeprefix('vllm.').replace('.', '/') + '.py')
             origin = getattr(getattr(module, '__spec__', None), 'origin', None)
@@ -104,7 +175,7 @@ def bind_model_state(worker, observer, wrap):
                           installed_native_root=str(root), verified=valid)
             if not valid:
                 raise ValueError('Derived native imported origin mismatch: '+name)
-    for name in SOURCE_MODULES:
+    for name in SOURCE_MODULES + (BACKEND_MODULES if strict else ()):
         observer.verify_module(sys.modules[name], observer.config['schema_source_hashes'][name], 'native_schema')
     if strict:
         witnessed = ('native_router_census', *observer.identity(worker.model_runner).values())
@@ -115,7 +186,8 @@ def bind_model_state(worker, observer, wrap):
         module = sys.modules[name]
         text = [value for value in loaded if type(value) is module.Step5ForCausalLM]
         valid = (len(text) == 1 and inspect.getsourcefile(type(text[0])) == module.__file__
-                 and inspect.getsourcefile(type(text[0]).forward) == module.__file__)
+                 and inspect.getsourcefile(module.Step5ForCausalLM.forward) == module.__file__
+                 and checked_callable(text[0].forward, module.Step5ForCausalLM.forward, text[0]))
         observer.emit('provenance', kind='native_text_forward', module=name, verified=valid,
                       **observer.identity(worker.model_runner))
         if not valid:
@@ -127,13 +199,11 @@ def bind_model_state(worker, observer, wrap):
             router = getattr(experts, 'router', None)
             if router is None:
                 continue
-            quant = experts.routed_experts.quant_method
-            kernel = quant.moe_kernel
             census.append(dict(layer=experts.layer_name, router=type(router).__name__,
                 routing_method=str(router.routing_method_type), top_k=router.top_k,
                 num_experts=router.global_num_experts, renormalize=router.renormalize,
                 routed_scaling_factor=router.routed_scaling_factor,
-                quant_method=type(quant).__name__, experts_class=type(kernel.fused_experts).__name__))
+                **backend_census(experts, worker.model_runner.vllm_config)))
         expected_moe = len(module._get_step5_moe_layer_indices(text[0].config))
         configured = text[0].config
         router_type = sys.modules[SOURCE_MODULES[-1]].RoutingSimulatorRouter

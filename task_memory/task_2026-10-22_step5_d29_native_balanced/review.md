@@ -5,6 +5,36 @@
 | --- | --- |
 | 2026-10-22 | Close all four design findings after c9e9274; correct the proxy path and record parent budget verification. |
 | 2026-10-22 | Record four independent design findings and assign corrections before scope approval. |
+| 2026-10-23 | Record four implementation-review repairs, CPU evidence and unverified live boundaries. |
+
+## Implementation review continuation (current)
+
+TaskID: D29-NATIVE-IMPLEMENTATION. Reviewer: ses_e9afdb7c4ffejb3hbkjZCeHFKS.
+Inspected phase: native19 implementation at2c4cc9e; root independently verified
+418 CPU PASS,19 paths/1017 gross and native source hashes. Review identified
+four concrete defects; user explicitly authorized their repair in the same allocation.
+
+| Finding | Remediation and decisive source/test evidence | Disposition |
+| --- | --- | --- |
+| P1 router capture positional indexing | T2 native_modules.route uses explicit BaseRouter signature and named router_logits. Actual MoERunner._apply_quant_method source calls it entirely by keyword; CPU check captures logits after exactly one native invocation. Native tuple identity and raised exception identity preserved; capture fault remains soft. | RESOLVED_CPU_SOURCE |
+| P1 capture output asserted before dummy replay | Pinned BreakableCUDAGraphWrapper.__call__:347–349 separates _capture and _replay; _capture:405–415 stores graphs/output without replay; _replay:433–435 invokes capture.replay. T2 now replays dummy before assertions/replay_baseline_counts. CPU executes pinned PW dispatch/replay and actual T2 post-capture statements starting with stale real buffers. FULL capture remains GPU-only. | RESOLVED_CPU_SEQUENCE; GPU UNVERIFIED |
+| P2 instance forward replacement accepted | Checked actual text.forward.__func__ is imported Step5ForCausalLM.forward, __self__ is the actual text object, and source origin matches checked native module. Instance-forward negative disables observer without changing native output/exception. | RESOLVED_CPU_SOURCE |
+| P2 backend names not validated | r2_runtime.backend_census reuses Fp8Config.is_layer_skipped inputs and native oracle.backend_to_kernel_cls for exact quant/expert classes. Checks imported kernel/impl/prepare-finalize source objects, modular flags, FP8 fallback component classes and actual apply callables. r2_stage/verify_r2_stage bind12 existing modules through schema_source_hashes; no new native registry/pin/file. Host fixtures now model both FP8 fallback and BF16 modular object relationships. Wrong quant/kernel/monolithic/same-name class/backend/apply/source controls remain soft. | RESOLVED_CPU_SOURCE; actual imported live objects UNVERIFIED |
+
+Before-fix regression:14 FAIL/20 PASS/157 deselected (2.76s),
+`/data/ycfeng/tmp/d29-native-repair-red.log`. Final affected check:
+485 PASS/36.16s, `/data/ycfeng/tmp/d29-native-repair-affected02.log`.
+Commands/environment/limits are in test_report_2026-10-23_native_integration.md.
+Four native source files and native_source.patch unchanged. Actual budget1269/1582,
+19 paths; repair changes7 existing owned paths. No additional subagent review or
+GPU/Docker/platform work was run by this stream.
+
+Evidence labels corrected: graph script explicitly sets mrv2_serving_qualified
+and real_backend_graphs_qualified false. Future healthy script execution means
+PASS_THIN_GRAPH_AND_EAGER_MODULES, not MRv2/attention/connector/full-backend graph
+or G3 acceptance. No formula/mask/scaling duplication was found by reviewer.
+
+The design review sections below are historical, not current scope blockers.
 
 ## Reviewed phase and evidence
 
