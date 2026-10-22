@@ -772,3 +772,17 @@ def test_official_layer_prepare_finalize_and_group_calls_on_cpu(
     assert observer.calls[0]["group_ranks"] == expected["group_ranks"]["dp"]
     assert observer.calls[0]["sizes"] == sizes
     assert all(call["completed"] for call in observer.calls)
+def test_bound_probe_plans_exact_input_layer_keys(model_path,tmp_path,monkeypatch):
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST",str(tmp_path/"manifest.json"))
+    monkeypatch.setenv("VLLM_MOE_ROUTING_SIMULATION_STRATEGY","position_cyclic")
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput
+    monkeypatch.setattr("frontier.profiling.moe.inputs.read_routing_profile_inputs",lambda path:[
+        MoERoutingProfileInput("tail16",(
+            MoESourceFrame(0,(16,),(6128,),16,"standalone_legacy"),
+            MoESourceFrame(1,(),(),1,"standalone_legacy")),17)])
+    args=arguments(model_path,tmp_path,"--routing-input-file",str(tmp_path/"inputs.json"),
+        "--moe-input-ids","tail16","--tensor-parallel-size","8")
+    plan=probe.probe_plan(args)
+    assert [(c["routing_input"]["moe_input_id"],c["layer_id"]) for c in plan["cases"]] == [("tail16",3),("tail16",88)]
+    assert plan["verification_scope"] == "eager_native_moe_module"
+    assert not plan["full_model_verified"] and "tokens_per_dp_rank" not in plan

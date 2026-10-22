@@ -157,3 +157,16 @@ def test_generated_launcher_loads_credentials_before_the_blocking_submitter(tmp_
     job = prepare.prepare(definition, tmp_path / "stage", "offline", repository=tmp_path)
     result = subprocess.run(["bash", job["submission_script"]], capture_output=True, text=True, check=True)
     assert result.stdout.strip() == "CREDENTIALS_FIRST_PASS"
+
+
+def test_finite_definition_is_selected_and_rejects_missing_authentic_inputs(tmp_path):
+    from frontier.profiling.collectives.vllm_forward_collectives import ModelShape,ServingParallelism,scenarios_from_grid,forward_collectives
+    definition=json.loads((PACKAGE/"step5_position_model_run.json").read_text())
+    parallel=ServingParallelism.from_engine(definition["engine"])
+    model=ModelShape.from_hf_config(json.loads((ROOT/load("prepare").MODEL_CONFIG).read_text()))
+    scenarios=scenarios_from_grid(parallel,definition["grid"])
+    assert len(scenarios) == 12 and len(definition["grid"]["local_work"]) == 30
+    assert sum(len(forward_collectives(model,parallel,s,native_call_names=definition["grid"]["native_call_names"])) for s in scenarios) == 60
+    with pytest.raises(ValueError,match="authentic inputs"):
+        load("prepare").prepare(definition,tmp_path/"stage","unprepared",repository=tmp_path)
+    assert not (tmp_path/"stage").exists()

@@ -640,6 +640,11 @@ COMM_FAMILY = OperatorFamilySpec(
     supported_variants=("collective",),
     resource_class=ResourceClass.COMM,
     operators=(
+        *(CommOperatorSpec(name="step5_moe_"+phase,role=OperatorRole.COMMUNICATION,
+            phases=_ALL_PHASES,trace_kind=TraceKind.COMM,resource_class=ResourceClass.COMM,
+            execution_time_attr="step5_moe_"+phase+"_time",
+            comm_group="attn_dp",comm_domain="ATTN_DP",plan_builder=lambda ctx:ctx.collective_plan)
+          for phase in ("dispatch","combine")),
         CommOperatorSpec(
             name="attn_tensor_parallel_allreduce",
             role=OperatorRole.COMMUNICATION,

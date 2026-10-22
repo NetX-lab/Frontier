@@ -71,6 +71,7 @@ def _moe_operator_execution_time_attrs() -> Mapping[str, str]:
             "mlp_norm_time",
             "moe_gating_linear_time",
             "moe_gating_routing_topk_time",
+            "moe_input_quantize_time",
             "moe_shuffling_time",
             "moe_grouped_gemm_time",
             "share_expert_up_proj_time",
@@ -216,6 +217,8 @@ class CommunicationOperatorTimes:
     """Single-layer timings keyed by physical communication operator name."""
 
     op_times: Mapping[str, float] = field(default_factory=dict)
+    plans: Mapping[str, object] = field(default_factory=dict)
+    costs: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         allowed_op_names = _communication_operator_execution_time_attrs()
@@ -236,6 +239,12 @@ class CommunicationOperatorTimes:
                 )
             normalized_op_times[normalized_op_name] = normalized_time_ms
         self.op_times = normalized_op_times
+        if set(self.plans) != set(self.costs) or not set(self.plans) <= self.op_times.keys():
+            raise ValueError("Collective plans require paired costs and included operator timings")
+        for name,plan in self.plans.items():
+            cost=self.costs[name]
+            if cost.plan_key != plan.cache_key() or cost.duration_ms != self.op_times[name]:
+                raise ValueError("Collective plan/cost differs from the included physical operator")
 
     def get_required_time(self, op_name: str) -> float:
         try:
@@ -382,6 +391,7 @@ class MoEOperatorTimes:
     """Single-layer timings keyed by physical MoE operator name."""
 
     op_times: Mapping[str, float] = field(default_factory=dict)
+    physical_frame: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         allowed_op_names = _moe_operator_execution_time_attrs()
@@ -576,6 +586,7 @@ class MoETime:
     moe_gating_linear_time: float = 0.0                   # Gating linear layer (hidden_dim -> num_experts)
     moe_gating_routing_topk_time: float = 0.0             # TopK selection + Softmax normalization
     moe_shuffling_time: float = 0.0                       # Token shuffling/dispatch overhead
+    moe_input_quantize_time: float = 0.0
     mlp_norm_time: float = 0.0                            # Layer norm before MoE (post_attention_layernorm)
 
     # Step2Mini/Step3 share_expert operations (forward_3: shared expert alongside routed experts)
@@ -603,6 +614,7 @@ class MoETime:
             + self.moe_gating_linear_time
             + self.moe_gating_routing_topk_time
             + self.moe_shuffling_time
+            + self.moe_input_quantize_time
             + self.mlp_norm_time
             # Step2Mini-specific operations (0.0 for non-Step2Mini models)
             + self.share_expert_up_proj_time
@@ -652,6 +664,8 @@ class CommunicationTime:
     expert_parallel_allgather_time: float = 0.0  # EP all-gather for result aggregation
     expert_parallel_alltoall_time: float = 0.0   # EP all-to-all for token dispatch/return
     operator_times: CommunicationOperatorTimes | None = None
+    step5_moe_dispatch_time: float = 0.0
+    step5_moe_combine_time: float = 0.0
     
     def total_time(self) -> float:
         """Calculate total communication time."""

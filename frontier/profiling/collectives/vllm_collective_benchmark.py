@@ -386,7 +386,7 @@ class CollectiveRunner:
                 return dict(shape=list(value.shape),stride=list(value.stride()),dtype=str(value.dtype),
                             element_size=value.element_size(),registered=is_symmetric_memory_tensor(value))
             def issue():
-                return group.reduce_scatterv_into_output(output, tensor, dim=call.dim, sizes=sizes)
+                return group.reduce_scatterv_into_output(tensor, output, dim=call.dim, sizes=sizes)
             returned = issue()
             issue.buffer_receipt = dict(entrypoint="reduce_scatterv_into_output",sizes=sizes,dim=call.dim,
                 input=layout(tensor),output=layout(output),supplied_output=True,
@@ -396,6 +396,14 @@ class CollectiveRunner:
                 lifetime="captured" if call.captured else "eager_preallocated",
                 timed_allocation=False,pynccl_version=group.device_communicator.pynccl_comm.nccl_version,
                 nccl_symm_enabled=envs.VLLM_USE_NCCL_SYMM_MEM,batch_invariant=envs.VLLM_BATCH_INVARIANT)
+            from vllm.distributed.device_communicators.all_reduce_utils import should_nccl_symm_mem_ag_rs
+            from vllm.distributed.device_communicators.cuda_communicator import NCCL_DIRECT_SYMM_RS_OUTPUT_MIN_VERSION
+            receipt=issue.buffer_receipt
+            receipt["native_symmetric_branch"]=(len(set(sizes)) == 1 and
+                (receipt["output"]["registered"] or receipt["pynccl_version"] >= NCCL_DIRECT_SYMM_RS_OUTPUT_MIN_VERSION)
+                and receipt["input"]["registered"] and should_nccl_symm_mem_ag_rs())
+            receipt.update(staging_copy_count=0,staging_copy_bytes=0,timed_fill=False,
+                branch="registered_no_staging" if receipt["native_symmetric_branch"] else "ordinary_into_output")
             if not issue.buffer_receipt["return_output_alias"]:
                 raise ValueError("Native into-output combine did not retain the supplied output storage")
             return issue
@@ -664,13 +672,30 @@ def main() -> None:
               "measurements", len(plan) * settings["passes"])
         return
     runner = CollectiveRunner(parallel, settings, engine=config["engine"],
-                              dp_rail_isolation=args.dp_rail_isolation)
+                               dp_rail_isolation=args.dp_rail_isolation)
+    native_facts = None
+    if "profile_manifest" in config:
+        from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+        if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") != config["profile_manifest"] or any(
+                os.environ.get(name) != value for name,value in config["native_environment"].items()):
+            raise ValueError("Actual collector binding/environment differs from prepared input")
+        native_callables = [getattr(group,name) for group in runner.groups.values()
+            for name in ("all_gatherv","reduce_scatterv_into_output","all_reduce")]
+        for group in runner.groups.values():
+            communicator=getattr(group,"device_communicator",None)
+            pynccl=getattr(communicator,"pynccl_comm",None)
+            if pynccl is not None:
+                native_callables += [pynccl.all_gatherv,pynccl.reduce_scatterv]
+        native_facts=verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
     output = Path(config["output_dir"])
     log = None
     if runner.rank == 0:
         output.mkdir(parents=True, exist_ok=True)
+        runtime=runner.communicators()
+        if native_facts is not None: runtime["native_facts"]=native_facts
         (output / "plan.json").write_text(json.dumps(
-            {"config": config, "cases": len(plan), "runtime": runner.communicators()},
+            {"config": config, "cases": len(plan), "runtime": runtime,
+             **({"evidence_kind":"native_measurement"} if native_facts is not None else {})},
             indent=2))
         log = (output / "measurements.jsonl").open("a")
     records = []
@@ -680,6 +705,10 @@ def main() -> None:
             if record is None:
                 continue
             record = {"pass": pass_index, **record}
+            if native_facts is not None:
+                record.update(evidence_kind="native_measurement",native_context=dict(shared=native_facts["shared"],
+                    engine=config["engine"],native_environment=config["native_environment"]),
+                    buffer_receipt=record.get("buffer_receipt",dict(scope="native_group_owned_prepared_buffers")))
             log.write(json.dumps(record) + "\n")
             log.flush()
             records.append(record)
@@ -688,6 +717,8 @@ def main() -> None:
         kernels[s.name,c.name] = runner.kernel_names(c,s)
         if runner.rank == 0:
             evidence[s.name,c.name] = runner._last_kernel_evidence
+    if native_facts is not None:
+        verify_step5_profile_runtime(config["profile_manifest"],callables=native_callables)
     local_records = []
     for definition in config["grid"].get("local_work", []):
         for p in range(settings["passes"]):

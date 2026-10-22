@@ -166,6 +166,7 @@ class CommPayloadContext:
     # Physical EP-lane workload, when the collective is evaluated for one
     # materialized lane rather than the source batch.
     lane_workload: Any | None = None
+    collective_plan: Any | None = None
 
 
 CommPayloadBuilder = Callable[[CommPayloadContext], int]

@@ -85,12 +85,25 @@ def validate(job: dict, root: Path) -> dict:
     probe = json.loads((root / "native_dispatch/dispatch_probe.json").read_text())
     ranks = probe["ranks"]
     checks["native_rank_count"] = len(ranks) == parallel.world_size and {r["rank"] for r in ranks} == set(range(parallel.world_size))
+    selected = "profile_manifest" in job
+    keys = ({(key,layer) for key in job["native_probe"]["moe_input_ids"] for layer in job["native_probe"]["layers"]}
+            if selected else {(None,layer) for layer in job["native_probe"]["layers"]})
     checks["native_match"] = probe["status"] == "match" and all(
-        r["status"] == "match" and len(r["layers"]) == 2 and
-        {layer["layer_id"] for layer in r["layers"]} == set(job["native_probe"]["layers"]) and
+        r["status"] == "match" and len(r["layers"]) == len(keys) and
+        {(layer.get("moe_input_id"),layer["layer_id"]) for layer in r["layers"]} == keys and
         all(layer["comparison"]["status"] == "match" and
             all(c["completed"] for c in layer["collectives"]) for layer in r["layers"])
         for r in ranks)
+    if selected:
+        checks["native_selected_source"] = (probe["verification_scope"] == "eager_native_moe_module" and
+            not probe["full_model_verified"] and not probe["model_runner_verified"] and all(
+            layer["source_frame"]["source_lane_id"] == r["rank"] // parallel.tensor_parallel_size and
+            layer["native_facts"]["shared"]["native_reference"]["image"] == job["image"] for r in ranks for layer in r["layers"]))
+    if "local_work" in config["grid"]:
+        local=read_jsonl(root/"collectives/local_work.jsonl")
+        local_keys={(p,row["name"]) for p in range(config["passes"]) for row in config["grid"]["local_work"]}
+        checks["local_evidence_keys"] = len(local) == job["expected"]["local_work_rows"] == len(local_keys) and {
+            (row["pass"],row["name"]) for row in local} == local_keys
     checks["native_groups"] = all(r["group_ranks"] == {
         group: group_members(parallel, group, r["rank"]) for group in ("tp", "dp", "ep")}
         for r in ranks)

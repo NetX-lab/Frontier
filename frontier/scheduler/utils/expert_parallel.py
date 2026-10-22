@@ -565,6 +565,12 @@ def materialize_batch_group(
     result.router_topk = lane.router_topk
     result.total_routed_assignments = routing_token_count * lane.router_topk
     result.moe_pre_routing_effective_total_tokens = plan.pre_routing_effective_total_tokens
+    if lane.routing_source is not None:
+        source=lane.routing_source.source_lanes[plan.ep_id // (lane.moe_expert_parallel_size //
+            len(lane.routing_source.source_lanes))]
+        result.moe_pre_routing_effective_total_tokens = source.physical_rows
+        result.routing_token_count = lane.routing_source.gathered_physical_rows
+        result.total_routed_assignments = lane.routing_source.live_rows * lane.router_topk
     result.source_batches = list(plan.source_batches)
     return result
 

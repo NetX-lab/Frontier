@@ -47,6 +47,9 @@ class OpTraceContext:
     attention_operator_names: tuple[str, ...] = ()
     layer_metadata: Any = None
     pre_routing_tokens: int | None = None
+    step5_moe_frame: Any = None
+    collective_plans: Any = None
+    collective_costs: Any = None
 
     @property
     def hidden_size(self) -> int:
@@ -291,6 +294,46 @@ def compute_op_trace_meta(
         )
         if metadata.attention_spec.global_layer_id != ctx.global_layer_id:
             raise ValueError("Step trace metadata differs from the actual layer identity")
+        if ctx.collective_plans is not None and op_name in ctx.collective_plans:
+            from dataclasses import asdict
+            plan=ctx.collective_plans[op_name];cost=ctx.collective_costs[op_name]
+            if cost.plan_key != plan.cache_key():
+                raise ValueError("Trace collective plan and cost identities disagree")
+            return dict(collective_plan=plan.to_dict(),collective_cost=asdict(cost),
+                numerical_source="joint_htsim+measured_local+effective_remainder_no_overlap",
+                kernel_count=cost.kernel_counts[ctx.step5_moe_frame["ep_id"]],
+                algorithmic_stage_count=len(plan.stages),evidence_kind=__import__("json").loads(cost.count_receipt_json)["evidence_kind"])
+        if ctx.step5_moe_frame is not None:
+            frame=ctx.step5_moe_frame;source=frame["routing_source"]
+            lane=source.source_lanes[frame["ep_id"]//ctx.attn_tp]
+            native=frame["native_context"]
+            tokens=source.gathered_physical_rows if op_name == "moe_grouped_gemm" else lane.physical_rows
+            result=describe_step5_operator_tensors(metadata,op_name,tokens=tokens,
+                routed_tokens=frame["live_local_assignments"],router_topk=ctx.router_topk)
+            result.update(source_physical_rows=lane.physical_rows,gathered_physical_rows=source.gathered_physical_rows,
+                live_source_rows=lane.live_rows,live_local_assignments=frame["live_local_assignments"],
+                native_context=native,source_lane_id=lane.lane_id)
+            if op_name in frame["operator_costs"]:
+                result["operator_cost"]=frame["operator_costs"][op_name]
+            if op_name == "moe_grouped_gemm":
+                result.update(covered_scopes=["native_permutation","gate_up_gemm","activation_intermediate_quantization",
+                    "down_gemm","native_unpermute_weight_finalization"],physical_scope="native_experts_inclusive",
+                    excluded_scopes=["source_prepare","dp_collectives","tp_reduction"])
+                result.pop("internal_tensor_shape",None);result.pop("internal_tensor_dtype",None)
+            if op_name in ("moe_grouped_gemm","moe_input_quantize"):
+                prefix="source_" if op_name == "moe_input_quantize" else ""
+                for name,key in ((("input" if op_name == "moe_grouped_gemm" else "output"),prefix+"activation_layout"),("scale",prefix+"scale_layout")):
+                    layout=native[key]
+                    if layout is not None:
+                        if layout["shape"][0] != tokens:
+                            raise ValueError("Native tensor layout differs from its physical operator scope")
+                        result["tensor_shape"][name]=layout["shape"]
+                        result["tensor_dtype"][name]=layout["dtype"]
+                        result["tensor_size_bytes"][name]=math.prod(layout["shape"])*layout["element_size"]
+                if op_name == "moe_grouped_gemm":
+                    result["tensor_dtype"]["output"] = "bfloat16"
+                    result["tensor_size_bytes"]["output"] = tokens * ctx.hidden_size * 2
+            return result
         if op_type == "COMM":
             if op_name in ("expert_parallel_alltoall_dispatch", "expert_parallel_alltoall_combine"):
                 if metadata.ffn_merge is None:
@@ -315,6 +358,7 @@ def compute_op_trace_meta(
             if op_name not in (
                 "attn_tensor_parallel_allreduce", "mlp_tensor_parallel_allreduce",
                 "moe_tensor_parallel_allreduce",
+                "share_expert_tensor_parallel_allreduce",
             ):
                 raise NotImplementedError(f"Step initial structural trace has no communication scope {op_name}")
             precision = metadata.model_precision

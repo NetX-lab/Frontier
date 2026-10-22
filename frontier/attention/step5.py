@@ -949,6 +949,9 @@ def describe_step5_operator_tensors(
         tensor("input", [tokens, router.rank_weight_shape[0]], metadata.router_precision)
         tensor("expert_ids", [tokens, router_topk], "INT32")
         tensor("expert_weights", [tokens, router_topk], metadata.router_precision)
+    elif operator_name == "moe_input_quantize":
+        tensor("input",[tokens,hidden])
+        tensor("output",[tokens,hidden],PrecisionType.FP8)
     elif operator_name == "moe_shuffling":
         tensor("expert_ids", [tokens, router_topk], "INT32")
     else:

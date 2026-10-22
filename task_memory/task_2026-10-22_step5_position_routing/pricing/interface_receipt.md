@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Publish first selected-operator and immutable plan interfaces. |
+| 2026-10-23 | Publish H04, selected native schema and reporting seams; record authorized imports. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -69,11 +70,11 @@ must be retained rather than forcing TRITON.
 
 ## Dependencies not duplicated
 
-CORE/SOURCE must publish immutable WaveRoutingSource/SourceLaneRouting,
-MoERoutingProfileInput parser, `source_frame_tensors(frame, *, device)` and
-`verify_step5_profile_runtime(manifest_path, *, callables=())`. Native owns the
-real `set_routing_positions` setter/factory and derived adapter. Pricing does not
-provide replacement source/mask/provenance APIs.
+CORE/SOURCE02f061d and Native2c4cc9e are now imported under root authority.
+Pricing uses their immutable source, source_frame_tensors and actual callable
+verifier; no replacement API. Root additionally authorizes67d5b5e (accepted
+native repair and authentic published image/source receipts) after this verified
+commit. That import is the next step, not evidence of GPU qualification.
 
 ## Validation
 
@@ -85,7 +86,7 @@ CPU contracts, not measured GPU parameters/native-runtime qualification.
 
 `NativeRoutedExperts.prepare_source(hidden_states)` calls the original
 `naive_dp_ep._quantize_and_setup_dispatch` and returns `(activation, scales)`.
-`prepared_context(activation, scales)` returns actual per-shape selected class,
+`prepared_context(activation, scales, *, topk_ids=None, expert_map=None, source_tensors=None)` returns actual per-shape selected class,
 quant_dtype, defer_input_quant, oracle backend and tensor shape/stride/dtype/size.
 It executes the native hybrid selector, whose condition is E8M0 **OR** valid
 DeepGEMM shape; backend labels alone must not infer the selected implementation.
@@ -104,7 +105,11 @@ output, not all-expert padding. DeepGemmExperts calls
 this adapter supplies expert_tokens_meta=None. Capacity is native physical
 `round_up(M*K + min(M*K,local_experts)*(alignment_used-1), alignment_used)`.
 CPU-count rounded local-live M is a different diagnostic and not that capacity.
-Returned alignment_used, actual workspace_shapes, prepared input/scale layouts
+Pass actual gathered IDs/map to obtain native_padding and workspace_shapes.
+Pass `(source_activation, source_scales)` as source_tensors to retain source
+activation/scale layout separately from the gathered activation/scale layout.
+Hybrid workspace_shapes comes from the outer hybrid object; selected class and
+padding come from the actual child. Returned alignment_used, actual workspace_shapes, prepared input/scale layouts
 and inclusive physical_scope must bind the feature schema/ranges. No fixed128
 or universal Triton range applies to a native hybrid-selected DeepGEMM row.
 
@@ -121,13 +126,54 @@ fixture may construct an explicit cpu_fixture CollectivePlanCost, never relabel
 it native_measurement. `tests/unit/test_collective_sim_cc_backend.py:setup_model`
 is the precise fixture payload and negative-import example.
 
-Exporter `export_finite_parameters(run_dir, output_dir, qualification=None)`
+Exporter `export_finite_parameters(run_dir, output_dir)`
 uses the frozen scenario and real HTSIM, fits independent per-rank copy/add then
 nonnegative affine remainder from signed residuals, preserving rank/ranges,
 held-out qualification and exact counts. It writes a candidate; no omitted
-qualification argument becomes production evidence. Selected prepare/benchmark/
+qualification becomes production evidence. Selected prepare/benchmark/
 validator/fixture use the same forward_collectives native_call_names planner.
 
 Validation: eight focused suites200 passed/1 skipped (torch unavailable in py310);
 original native modular/finalize/E8M0 selector source methods also executed with
 CPU tensors under asyncopd-py312. Real HTSIM completion was checked, not mocked.
+
+## Third interface: physical queries, schemas and reporting
+
+`MoeOperatorTimes._predict_step5_position_operator_times(lane_workload, *,
+context, operator_features, collective_plans)` returns `(MoEOperatorTimes,
+CommunicationOperatorTimes)`. Features cover exactly the selected registry.
+Source scopes query actual ni, expert queries use gathered M and independent
+total_routed_tokens; no live0 early return. It calls CORE's
+`_predict_step5_ffn_operator(name, features, *, context)` and requires paired
+positive integer kernel counts and exact_lookup. That keyword/context-aware
+CORE implementation is NOT yet imported; do not treat H04 CPU fixtures as
+verification of the real shared estimator. CORE must wire this H04 method into
+the existing measured layer path and pass its return objects through the existing
+ExecutionTime constructor/setters (component accessors return copies).
+
+`step5_native_expert_features(context, *, physical_rows, live_assignments)`:
+TritonExperts schema `(num_tokens,total_routed_tokens,num_tokens_post_padded)`;
+DeepGemmExperts schema `(num_tokens,total_routed_tokens,native_capacity_rows,
+native_alignment)`. Native capacity/alignment/assignment come from H17, not CPU
+rounded live counts. Each row's actual native context/layout/padding and ranges
+must be preserved by CORE-owned loaders/trainers. No universal backend bounds.
+
+Frame keys: routing_source, ep_id, native_context, live_local_assignments,
+operator_costs. The latter maps selected physical names to the paired CORE
+proofs, including evidence_kind/kernel_count/exact_lookup. Comm objects carry
+the complete plans/costs; finite duration is a full-device cost and does NOT add
+another generic collective launch gap. Actual events/kernel counts and modeled
+stage count remain separate trace/ledger fields. record_ep_wave was executed
+with operation metrics, tracing and ledger enabled together; gathered17/source16,
+live assignment0, 3ms joint dispatch and paired counts are preserved.
+
+Finite template: tests/integration/step5_comm/step5_position_model_run.json.
+Six eager calibration vectors, six independent qualification vectors, thirty
+local cells, five selected labels. Graph is not selected without actual bucket
+eligibility. Authentic manifest/input IDs/frozen configuration/auth inputs remain
+required; prepare fails before staging when they are absent.
+
+Validation: eleven affected suites335 PASS/71 SKIP (torch/native-runtime unavailable
+in py310); isolated collective-sim7 PASS and actual HTSIM completion; native
+original modular/finalizer/hybrid selector/GroupCoordinator methods executed with
+CPU tensors under py312 AST isolation. No GPU leaf durations or qualification.

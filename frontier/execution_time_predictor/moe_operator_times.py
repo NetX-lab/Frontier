@@ -69,6 +69,56 @@ def _build_moe_operator_times(
 class MoeOperatorTimes:
     """Per-operator MoE time prediction and its inputs."""
 
+    def _predict_step5_position_operator_times(
+        self, lane_workload, *, context, operator_features, collective_plans,
+    ):
+        """Price selected physical scopes using CORE's paired exact-query owner."""
+        from frontier.entities.time_components import CommunicationOperatorTimes
+        from frontier.operators.families import get_moe_profiling_operators, is_step5_position_context
+        from frontier.moe_gating_runtime import get_moe_gating_prediction_model_name
+        import math
+        lane = resolve_ep_lane_workload(lane_workload, required=True)
+        source = lane.routing_source
+        if not is_step5_position_context(context) or source is None:
+            raise ValueError("Step position pricing requires the bound native context and immutable source")
+        ni = source.source_lanes[lane.ep_id // self._replica_config.attn_tensor_parallel_size]
+        selected = get_moe_profiling_operators(context)
+        if set(operator_features) != {op.name for op in selected}:
+            raise ValueError("Physical features must cover exactly the applicable selected MoE scopes")
+        times,proofs = {},{}
+        for op in selected:
+            features = operator_features[op.name]
+            rows = source.gathered_physical_rows if op.name == "moe_grouped_gemm" else ni.physical_rows
+            if features["num_tokens"] != rows:
+                raise ValueError("Selected MoE query differs from its source/gathered physical width")
+            if op.name == "moe_grouped_gemm" and features["total_routed_tokens"] != lane.routed_token_count:
+                raise ValueError("Expert query live assignments differ from the canonical lane")
+            name = (get_moe_gating_prediction_model_name(op.name, requested_context=ni.gating_runtime_context)
+                    if op.precision_name() == "moe_gating" else op.name)
+            times[op.name] = self._predict_step5_ffn_operator(name, features, context=context)
+            proof = self._step5_ffn_costs[name]
+            count=proof["kernel_count"]
+            if (not proof["exact_lookup"] or count is None or not math.isfinite(count) or
+                    count < 1 or count != int(count) or not math.isfinite(times[op.name]) or times[op.name] <= 0):
+                raise ValueError("Applicable physical scope lacks paired positive exact evidence")
+            proofs[op.name]=dict(proof)
+        expected = {"step5_moe_dispatch": "dispatch", "step5_moe_combine": "combine",
+            "moe_tensor_parallel_allreduce": "routed_tp"}
+        if self._model_config.supports_share_expert():
+            expected["share_expert_tensor_parallel_allreduce"] = "shared_tp"
+        if set(collective_plans) != set(expected):
+            raise ValueError("Physical collective phases must exactly match the reached branches")
+        costs = {}
+        for name, phase in expected.items():
+            plan = collective_plans[name]
+            if plan.phase != phase or plan.sizes != tuple(s.physical_rows for s in source.source_lanes):
+                raise ValueError("Collective phase/physical vector differs from the immutable source")
+            costs[name] = self._cc_backend.predict_collective_plan(plan)
+        frame = dict(routing_source=source, ep_id=lane.ep_id, native_context=context,
+                      live_local_assignments=lane.routed_token_count,operator_costs=proofs)
+        return (MoEOperatorTimes(times, physical_frame=frame), CommunicationOperatorTimes(
+            {name:cost.duration_ms for name,cost in costs.items()}, plans=collective_plans, costs=costs))
+
     @staticmethod
 
     def _get_dummy_shared_domain_moe_scope_time(

@@ -4,6 +4,8 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Establish clean baseline and isolated submodule. |
+| 2026-10-23 | Import authorized CORE/native dependencies and close physical consumer interfaces. |
+| 2026-10-23 | Verify H04/native schema/reporting, selected finite grid; receive published image authority. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -67,3 +69,105 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Real native measurement/qualification parameters remain unprovided.
 2. Paired physical scope pricing must include live0.
 3. Peer merges are development integration, not final acceptance.
+
+## Third milestone in progress
+
+- completed: authorized CORE02f061d and Native2c4cc9e development merges;
+  no peer edits. Root owns final corrected native tip/image.
+- completed: worker passes sealed manifest/source/effective environment and
+  input IDs; probe uses CORE source_frame_tensors once outside the native call.
+- verification: producer-focused180 passed/70 skipped; eleven focused consumer
+  suites328 passed/71 skipped in22.50s. No skipped test is GPU qualification.
+- in-progress: H04 selected physical queries and complete phase/cost reporting.
+- dependency: CORE context-aware paired exact query and typed native schema
+  classifier/main producer integration are still not committed into this branch.
+  H04 consumes that owner API; no alternate lookup/source algorithm is built.
+- observed native correction: router is layer.experts.router, not routed_experts;
+  hybrid workspace allocation uses outer experts.workspace_shapes, which may
+  allocate DeepGEMM workspaces even when execution selects Triton.
+
+## 1. 规划完成情况
+**汇总：** PASS2｜BLOCKED0｜TODO3
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Selected registry and immutable interfaces | PASS |7b86614 |
+| Joint finite model and candidate importer/export | PASS |409093c/submodule1a16426, real HTSIM |
+| Physical source/gathered consumers | TODO |H04 API/reporting in scope; CORE lookup dependency remains |
+| Complete selected producer closure | TODO |Worker/input wiring verified; selected fixture/grid pending |
+| Scoped final verification/archive | TODO |Final owned diff/tests not yet complete |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：** 第二接口提交至今｜**当前前沿：**3/4
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Selected producer/metrics tests settle required criteria |
+| D2 细节反复重试 | CLEAR |Registry import failure traced to required execution attr, fixed once |
+| D3 支线问题修补 | CLEAR |No unrelated fixes |
+| D4 可并行任务停滞 | CLEAR |User explicitly forbids additional delegation |
+| D5 超范围镀金 | CLEAR |Approved path union, no GPU/extra APIs |
+| D6 分析空转 | CLEAR |Authorized merge then concrete consumer changes |
+| D7 路线违背 | CLEAR |Finite simulation retained; no native coefficients invented |
+**文档检查：** S5 previous receipt still listed authorized imports as pending.
+**归因：** 无
+## 3. 纠正建议
+**分支：** B：更新已合入依赖状态。
+**文档更新（先执行）：** progress/receipt记录授权合入及剩余lookup依赖（可直接执行）。
+**需停止的偏离行为：** 无
+**接下去的路线：** 验证H04/reporting → selected producer/grid → scoped提交及明确依赖边界。
+## 4. 最值得关注的 3 点
+1. Native full-source image and fitted parameters remain unavailable.
+2. H04 must include live0 and prevalidate both exact maps through CORE.
+3. Root owns shared-main integration and corrected native acceptance.
+
+## Third interface milestone
+
+- completed: H04 physical selected queries and proof objects; native per-child
+  padding/capacity and hybrid workspace/source-vs-gathered layout distinction;
+  real record_ep_wave operation metrics+trace+ledger and complete phase sum.
+- completed: native GroupCoordinator actual source establishes into-output
+  input/output argument order; corrected collector and CPU test. Preallocated
+  receipt preserves ordinary/registered branch/no staging and buffer lifetime.
+- verification:335 passed/71 skipped in24.21s (eleven suites); isolated submodule
+ 7 passed. Native unchanged modular/finalizer/E8M0-OR-shape/coordinator functions
+  executed with CPU tensors under AST isolation because py312 lacks fasteners.
+- observed fixture corrections: EPWavePhaseTimes is a named tuple; ExecutionTime
+  component accessors return copies, so fixtures must use the real setter. These
+  are fixture issues, not production fallbacks. Full affected rerun passes.
+- pending: qualified candidate-selection import, bound producer negatives and
+  final source image use. Root now authorizes67d5b5e import after this commit;
+  image platform digest f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee.
+- dependency: CORE paired context-aware estimator and layer/actual-main wiring
+  are still peer-owned and not imported. No replacement lookup or source API.
+
+## 1. 规划完成情况
+**汇总：** PASS2｜BLOCKED1｜TODO2
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Selected registry/plan | PASS |7b86614 |
+| Finite network/local candidate | PASS |409093c, real HTSIM |
+| Integrated physical layer pricing | BLOCKED |H04 seam verified; CORE estimator/main remains |
+| Complete producer/qualification | TODO |Published source now available; bound final checks next |
+| Final scoped archive | TODO |Pending remaining producer step |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：** 第三milestone开始至今｜**当前前沿：**3/4
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Real reporting and producer checks required by scope |
+| D2 细节反复重试 | CLEAR |Namedtuple/copy setter failures narrowed distinct fixture causes |
+| D3 支线问题修补 | CLEAR |Only selected-path blockers repaired |
+| D4 可并行任务停滞 | CLEAR |Explicit no-extra-agent scope |
+| D5 超范围镀金 | CLEAR |44 authorized paths; gross below3956 |
+| D6 分析空转 | CLEAR |Concrete interfaces and335 affected passes |
+| D7 路线违背 | CLEAR |Finite model and native auto retained |
+**文档检查：** S5 earlier receipt listed exporter qualification argument and obsolete import blockers; fixed in place.
+**归因：** 无
+## 3. 纠正建议
+**分支：** B：先更新过期接口状态。
+**文档更新（先执行）：** interface_receipt已修正API、imports及真实依赖（可直接执行）。
+**需停止的偏离行为：** 无
+**接下去的路线：** Commit seams→authorized67d5b5e→producer/qualified import→final quota/archive。
+## 4. 最值得关注的 3 点
+1. CORE estimator/layer wiring remains an exact dependency.
+2. Published source is not backend/graph/G3 qualification.
+3. Counts never derive from modeled stages or replace native measurements.

@@ -6277,6 +6277,12 @@ class SklearnExecutionTimePredictor(KernelCountTraining, KernelGapPricing, BaseE
     ) -> float:
         """Predict one communication operator using the supplied runtime context."""
 
+        if operator.plan_builder is not None:
+            from frontier.cc_backend.collective_plan import CollectivePlan
+            plan=operator.plan_builder(ctx)
+            if not isinstance(plan,CollectivePlan) or operator.name != "step5_moe_"+plan.phase:
+                raise ValueError("Selected communication requires its complete matching physical plan")
+            return self._cc_backend.predict_collective_plan(plan).duration_ms
         data_size_bytes = operator.build_payload_bytes(ctx)
         if (
             data_size_bytes == 0

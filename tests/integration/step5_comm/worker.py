@@ -30,8 +30,9 @@ def validate_topology(job: dict) -> None:
         raise ValueError("The native Step probe requires PP1 and expert parallelism")
     if local != gpu or tp * dp != gpu * nodes:
         raise ValueError("TP x DP must equal allocated world size; gpus_per_node must equal gpu")
-    tokens = job["native_probe"]["tokens_per_dp_rank"]
-    if len(tokens) != dp or any(type(n) is not int or n <= 0 for n in tokens):
+    vectors = (job["native_probe"]["input_vectors"].values() if "profile_manifest" in job else
+               [job["native_probe"]["tokens_per_dp_rank"]])
+    if any(len(tokens) != dp or any(type(n) is not int or n <= 0 for n in tokens) for tokens in vectors):
         raise ValueError("The native probe needs one positive token count per DP rank")
     ports = [job["rendezvous"][key] for key in ("master_port", "probe_port")]
     if any(type(p) is not int or not 1 <= p <= 65535 for p in ports) or ports[0] == ports[1]:
@@ -93,8 +94,11 @@ def probe_command(job: dict, node: dict | None = None) -> list[str]:
                str(Path(job["output_dir"]) / "native_dispatch"),
                "--tensor-parallel-size", str(engine["tensor_parallel_size"]),
                "--data-parallel-size", str(engine["data_parallel_size"]),
-               "--gpus-per-node", str(job["gpus_per_node"]),
-               "--tokens-per-dp-rank", *map(str, probe["tokens_per_dp_rank"])]
+                "--gpus-per-node", str(job["gpus_per_node"])]
+    if "profile_manifest" in job:
+        command += ["--routing-input-file",probe["routing_input_file"],"--moe-input-ids",*probe["moe_input_ids"]]
+    else:
+        command += ["--tokens-per-dp-rank",*map(str,probe["tokens_per_dp_rank"])]
     if engine["disable_custom_all_reduce"]:
         command.append("--disable-custom-all-reduce")
     return command
@@ -233,6 +237,25 @@ def run_phase(job: dict, node: dict, output: Path, coordination: Path,
 
 def run_job(job: dict, node: dict, output: Path, coordination: Path, deadline: float) -> dict | None:
     root = Path(job["output_dir"])
+    if "profile_manifest" in job:
+        manifest_path=Path(job["profile_manifest"])
+        manifest=json.loads(manifest_path.read_text());binding=manifest["native_binding"]
+        sys.path.insert(0,str(manifest_path.parent/"tests/comparison/stage_admission_pp"))
+        try:
+            spec=importlib.util.spec_from_file_location("pricing_worker_registry",manifest_path.parent/"tests/comparison/dp_placement_pp/vllm_replay.py")
+            registry=importlib.util.module_from_spec(spec);spec.loader.exec_module(registry)
+        finally:
+            sys.path.pop(0)
+        reference=binding["native_reference"]
+        registry.check_native_reference(reference,registry.adapter_record(binding["native_runtime_adapter"])["native_reference"])
+        if job["image"] != reference["image"] or reference["routing_strategy"] != "position_cyclic":
+            raise ValueError("Worker image/reference differs from prepared position collection")
+        os.environ.update(job["native_environment"])
+        os.environ["VLLM_MOE_ROUTING_SIMULATION_STRATEGY"]=reference["routing_strategy"]
+        os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"]=str(manifest_path)
+        benchmark=json.loads(Path(job["benchmark"]).read_text())
+        if benchmark["profile_manifest"] != str(manifest_path) or benchmark["native_environment"] != job["native_environment"]:
+            raise ValueError("Worker and collector must retain one frozen binding/environment")
     def source_integrity():
         verify_sources(job)
         return {"status": "PASS"}

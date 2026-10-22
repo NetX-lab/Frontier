@@ -146,3 +146,46 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
     assert native.prepared_context(activation,scales)["experts_class"] == "Triton"
     selector_scope["_valid_deep_gemm"]=lambda *a:True
     assert native.prepared_context(activation,scales)["experts_class"] == "DeepGemm"
+    coordinator=ast.parse((source.parents[2]/"distributed/parallel_state.py").read_text())
+    cls=next(n for n in coordinator.body if isinstance(n,ast.ClassDef) and n.name == "GroupCoordinator")
+    method=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name == "reduce_scatterv_into_output")
+    method.returns=None
+    for arg in (*method.args.args,*method.args.kwonlyargs): arg.annotation=None
+    namespace={"torch":torch};exec(compile(ast.Module(body=[method],type_ignores=[]),"native_group","exec"),namespace)
+    target=torch.empty_like(activation)
+    def into_output(input_,output,dim,sizes):
+        assert input_ is activation and output is target and sizes == [16,1]
+        return output
+    group=SimpleNamespace(device_communicator=SimpleNamespace(reduce_scatterv_into_output=into_output))
+    assert namespace["reduce_scatterv_into_output"](group,activation,target,0,[16,1]) is target
+
+
+@pytest.mark.parametrize("ep_id",[0,8,15])
+def test_h04_calls_all_physical_scopes_including_empty_lanes(ep_id):
+    from tests.unit.test_moe_position_routing import source,materialize
+    from frontier.execution_time_predictor.moe_operator_times import MoeOperatorTimes
+    lane=materialize(source()).lane(ep_id);ctx=context("float8_e4m3fn")
+    class Predictor(MoeOperatorTimes):
+        _replica_config=SimpleNamespace(attn_tensor_parallel_size=8)
+        _model_config=SimpleNamespace(supports_share_expert=lambda:True)
+        _step5_ffn_costs={}
+        def _predict_step5_ffn_operator(self,name,features,*,context):
+            self._step5_ffn_costs[name]=dict(kernel_count=3,exact_lookup=True,evidence_kind="cpu_fixture")
+            return 1.
+    predictor=Predictor()
+    def price(p):
+        return CollectivePlanCost(3.,1.,(1.,)*16,1.,(2,)*16,json.dumps(dict(kernel_counts=[2]*16,
+            per_rank_events=[["cpu_fixture"]]*16,source_receipt="cpu_fixture",evidence_kind="cpu_fixture")),p.cache_key(),"cpu_fixture")
+    predictor._cc_backend=SimpleNamespace(predict_collective_plan=price)
+    ni=lane.routing_source.source_lanes[ep_id//8].physical_rows
+    features={op.name:dict(num_tokens=17 if op.name == "moe_grouped_gemm" else ni,
+        total_routed_tokens=lane.routed_token_count) for op in get_moe_profiling_operators(ctx)}
+    plans={"step5_moe_dispatch":plan(),"step5_moe_combine":plan(phase="combine")}
+    plans.update({name:replace(plan(),phase=phase,groups=(tuple(range(8)),tuple(range(8,16)))) for name,phase in (
+        ("moe_tensor_parallel_allreduce","routed_tp"),("share_expert_tensor_parallel_allreduce","shared_tp"))})
+    times,comm=predictor._predict_step5_position_operator_times(lane,context=ctx,operator_features=features,collective_plans=plans)
+    assert set(times.op_times) == set(features) and "moe_shuffling" not in times.op_times
+    assert len(times.physical_frame["operator_costs"]) == 4 and len(comm.costs) == 4
+    predictor._predict_step5_ffn_operator=lambda *a,**kw:0.
+    with pytest.raises(ValueError,match="positive exact"):
+        predictor._predict_step5_position_operator_times(lane,context=ctx,operator_features=features,collective_plans=plans)

@@ -351,13 +351,13 @@ def export_finite_parameters(directory, output):
     anchors = config["grid"]["scenario_splits"]
     models,counts,excluded = [],{},[]
     local_models = {}
-    layouts = {(r["tensor_name"],r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) for r in local}
-    for name,dtype,columns,captured,kind in layouts:
+    layouts = {(r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) for r in local}
+    for dtype,columns,captured,kind in layouts:
         rank_fits = {}
         for rank in range(16):
             cells = []
             for r in local:
-                if (r["tensor_name"],r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) != (name,dtype,columns,captured,kind):
+                if (r["dtype"],r["columns"],r["cuda_graph"],r["kind"]) != (dtype,columns,captured,kind):
                     continue
                 if r["row_stride"] != columns or r["scope"] != "independent_preallocated_operand":
                     raise ValueError("Local probe layout/scope does not match the model")
@@ -372,7 +372,7 @@ def export_finite_parameters(directory, output):
             fit = fit_affine(cells,positive_slope=True,supported_range=(min(c["operand_bytes"] for c in cells),
                 max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory/"collectives/local_work.jsonl"))
             rank_fits[str(rank)] = fit
-        local_models[name,dtype,columns,captured,kind] = rank_fits
+        local_models[dtype,columns,captured,kind] = rank_fits
     grouped = defaultdict(list)
     for record in measurements:
         tp_phase = {"shared_expert_down_proj_all_reduce":"shared_tp","routed_expert_all_reduce":"routed_tp"}.get(record["call"])
@@ -401,17 +401,22 @@ def export_finite_parameters(directory, output):
         copy,reduce = {},{}
         if phase in ("dispatch","combine"):
             for rank in range(16):
-                copy[str(rank)] = {t.name:local_models[t.name,t.dtype,t.columns,mode=="full","copy"][str(rank)] for t in tensors}
+                copy[str(rank)] = {t.name:local_models[t.dtype,t.columns,mode=="full","copy"][str(rank)] for t in tensors}
                 if phase == "combine":
-                    t=tensors[0];reduce[str(rank)]=local_models[t.name,t.dtype,t.columns,mode=="full","add"][str(rank)]
+                    t=tensors[0];reduce[str(rank)]=local_models[t.dtype,t.columns,mode=="full","add"][str(rank)]
         cells = []
         for record,plan in rows:
             parameters=dict(context=context,model_identity=str(frozen_path),evidence_kind=evidence_kind,copy=copy,reduce=reduce)
             sc=replace(scenario,collective=replace(scenario.collective,plan=plan.to_dict(),local_parameters=parameters))
             native=float(__import__("statistics").median(queue_held_analysis(record,"device",.01)["critical_path_repeats_us"]))/1000
             if phase in ("shared_tp","routed_tp"):
-                cells.append(dict(operand_bytes=max(plan.sizes)*tensors[0].columns*tensors[0].element_size,
-                    duration_ms=native,split=anchors[record["scenario"]],quality="PASS",source=record))
+                import statistics
+                for node,rows in enumerate(plan.sizes):
+                    samples = record["per_rank_call_us"][node*8:(node+1)*8]
+                    node_ms=statistics.median(max(values) for values in zip(*samples))/1000
+                    cells.append(dict(operand_bytes=rows*tensors[0].columns*tensors[0].element_size,
+                        duration_ms=node_ms,split=anchors[record["scenario"]],quality="PASS",
+                        source=dict(record,node=node)))
                 continue
             network=run_htsim_runner(repo_root=Path(frozen["collective_sim_root"]),spec=sc.to_runner_spec(),
                 out_dir=str(output/record["scenario"]/record["call"]))
