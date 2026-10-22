@@ -219,6 +219,7 @@ class ResolvedLayerContract:
     operator_family_ids: tuple[str, ...] = ()
     tensor_parallel_sizes: tuple[int, ...] = ()
     selected_padded_ffn_width: int | None = None
+    routing_runtime_path: str | None = None
 
     @property
     def width(self) -> int:
@@ -252,7 +253,7 @@ class ResolvedLayerContract:
             tuple(self.operator_family_ids),
             tuple(self.tensor_parallel_sizes),
             self.selected_padded_ffn_width,
-        )
+        ) + ((self.routing_runtime_path,) if self.routing_runtime_path is not None else ())
 
     def is_semantically_equivalent(self, other: object) -> bool:
         return isinstance(other, ResolvedLayerContract) and self.semantic_identity() == other.semantic_identity()

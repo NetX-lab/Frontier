@@ -151,8 +151,11 @@ def _serialize_selected_layer_cache_identity(
         "selected_tensor_parallel_size",
         "selected_padded_ffn_width",
     )
+    selected = {field_name: metadata[field_name] for field_name in selected_fields}
+    if layer_contract.routing_runtime_path is not None:
+        selected["routing_runtime_path"] = layer_contract.routing_runtime_path
     return json.dumps(
-        {field_name: metadata[field_name] for field_name in selected_fields},
+        selected,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
