@@ -62,6 +62,13 @@ in parallel. Freed native session ses_e9b3f65b5ffeMAo4OpbcxD9LIV prepares the
 already-planned T2 model metadata/controlled cases and execution/resource proposal
 in native task records only; no code changes, platform operations or launch authority.
 
+T2 input preparation completes aa872fa/6ebb038: real unchanged metadata revision
+364b3b03, two17-row graph replays and three controlled DP frames; static checks pass.
+Proposed16H800/two nodes/1800s/8GPUh is not approved or submitted. Parent confirms
+the disclosed missing engine-limit binding and assigns D29-T2-ENGINE-LIMITS to
+native/PRICING owners within existing paths/quotas. Input acceptance/sealing waits
+for that constructor correction and verification; no GPU operation has occurred.
+
 Parent independently reproduces418 PASS/35.45s at2c4cc9e and verifies all19 paths,
 1017 gross lines, four native before/after hashes and exact sparse context02.
 Receipts/logs: `/data/ycfeng/tmp/d29_native_parent01{.log,.xml}` and

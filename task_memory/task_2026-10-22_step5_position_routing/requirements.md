@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root selects the existing constructor seam for explicit T2 engine limits within the approved scope. |
 | 2026-10-23 | YC approves complete D29-SCOPE-107-10000 and the fixed collective model; begin phased implementation. |
 | 2026-10-22 | Bind the design artifact to the approved parent decision and complete workflow scope. |
 
@@ -54,3 +55,27 @@ no overlap. The remainder is a modeled fit, not isolated protocol measurement;
 retain signed residuals and independent qualification. Full-plan lookup is not
 selected. Existing internal derived-image publication authority continues;
 additional collection resources and run authorization are settled at readiness.
+
+## [Implementation Decision] D29-T2-ENGINE-LIMITS
+
+Root-directed in-scope correction, not a new user decision or resource approval.
+T2 inputs6ebb038 correctly disclose that positions below7168 do not bind either
+existing EngineArgs construction. Preserve full official model metadata bytes.
+Read the established serving limits7168/8192/128 from
+`/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/engine.json`:
+max_model_len, max_num_batched_tokens, max_num_seqs respectively. The published
+native fused_moe/layer.py:274,361 derives MoE max_num_tokens from the scheduler's
+max_num_batched_tokens, so this is a real configuration/capacity binding.
+
+Use a mandatory engine_limits object in existing controlled cases.json. Pass it
+before construction to both existing T2 config paths; retain their distinct eager
+module/graph behavior. The PRICING-owned create_native_config accepts an optional
+engine_limits keyword for these three supported fields; omission preserves old
+kwargs/defaults. No second builder, post-construction mutation or metadata edit.
+Observe final model/scheduler values after with_hf_config; CPU checks must establish
+both paths receive the intended limits. Runtime qualification remains separate.
+
+Root reserves up to100 additional gross lines in the two existing native T2/script
+test paths and60 in PRICING's existing dispatch probe/test paths, within unchanged
+native19/1582 and PRICING44/3956 totals. Sole-writer rules and stop/report on quota
+exhaustion apply. No new source paths, image change or allocation is authorized.

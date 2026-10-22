@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Reserve bounded native/PRICING constructor-binding deltas for T2 engine limits. |
 | 2026-10-23 | Separate native image/source publication from full Frontier integration; retain qualification gates. |
 | 2026-10-23 | Allocate the approved complete scope to three disjoint streams. |
 
@@ -30,6 +31,13 @@ writers. No writer borrows another quota or expands paths without root allocatio
 Stop extending when its allocated quota is exhausted; report actual diff and
 remaining work. Parent owns the<=12-line existing size-note and2-line gitlink
 integration within the global10000 ceiling; planned total9956 leaves44 unallocated.
+
+D29-T2-ENGINE-LIMITS uses remaining existing quotas: native T2 script/owned test
+up to100 additional gross; PRICING dispatch probe/owned test up to60. These are
+not increases to the stream totals. PRICING delivers the existing constructor's
+optional engine_limits seam; native consumes it and binds the same supplied
+limits to its graph constructor, then root validates both final configs. Source
+review and actual image/native four-file patch remain unchanged by this binding.
 
 Native-image paths denote edits against the locked native source, not new full
 files charged as zero. Use a fresh derived-source candidate, preserve the old
