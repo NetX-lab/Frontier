@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record actual interface, sparse context and pending live inputs. |
+| 2026-10-23 | Narrow thin-graph qualification and document checked backend-source staging. |
 
 ## Native interface
 Early commit e48cdc0 retains native_source.patch, four source snapshots in
@@ -17,7 +18,7 @@ Environment selector is VLLM_MOE_ROUTING_SIMULATION_STRATEGY=position_cyclic.
 No new expert backend or upstream runner API exists.
 
 ## Root image binding
-Prepared final sparse context: /data/ycfeng/tmp/d29-native-build-context02.
+Prepared sparse context: /data/ycfeng/tmp/d29-native-build-context02.
 The context manifest has the exact locked base and four reviewed derived hashes,
 without a final image digest. Root must build/publish and inspect an actual changed
 linux/amd64 digest, then set STEP5_POSITION_CYCLIC_IMAGE to repository@sha256:digest
@@ -30,6 +31,13 @@ Root must export actual installed derived sources and53 installed source pins.
 The base-build53 listing is50 existing sealed pins plus3 local base-source byte hashes;
 it is NOT evidence of installed derived bytes/imports. Profiling's full installed
 source receipt is separately root-emitted according to profile_source_design.md.
+Strict derived R2 staging now additionally hashes the12 existing backend source
+modules named by r2_runtime.BACKEND_MODULES in schema_source_hashes. Root's source
+export must contain them; these are actual-source provenance inputs, not native
+edits/new image pins/new family classification. D30 source_hashes remains13.
+Root reported a successful local context02 image build; it remains unpublished
+and is not bound as the final identity by this stream. Native4 source hashes and
+the retained interface patch are unchanged after the reviewer repairs.
 
 ## T2 input and execution (NOT RUN)
 Root supplies exact approved Step model metadata, neutral cwd, installed derived
@@ -53,6 +61,11 @@ requires >0 eager breaks and >=2 graph segments, then checks post-break routing
 and dependent output on2 replays. FULL captures outer Step under context mode NONE.
 Thin opaque-op fixture is only graph binding evidence; separate actual FP8 layer3
 and BF16 layer88 calls reuse dispatch probe components with positions/mask bound.
+It does not test real MRv2 serving inputs, attention or connector eager breaks,
+or real FP8/BF16 backend graphs. The output explicitly marks both qualifications
+false. Successful future execution reports PASS_THIN_GRAPH_AND_EAGER_MODULES,
+not full T2/G3 acceptance. PW/FULL dummy replay precedes output checks and the
+replay_baseline_counts receipt; the first PW call only captures graph segments.
 Diagnostic errors are soft and report UNVERIFIED; native execution/IO errors are
 not converted into success. Actual expert classes/E8M0 are reported, not forced.
 

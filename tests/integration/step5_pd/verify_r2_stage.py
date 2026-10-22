@@ -58,13 +58,14 @@ def verify(stage: Path) -> dict:
         assert sha256(Path(config["model_dir"]) / name) == digest, name
     observation = config["pd_state_observation"]
     if adapter['native_reference'].get('routing_strategy') == 'position_cyclic':
-        from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES
+        from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES, BACKEND_MODULES
         assert observation['routing_strategy'] == 'position_cyclic'
         assert observation['installed_native_root'] == config['installed_package']
         assert Path(config['installed_package']).is_absolute()
         for module in SOURCE_MODULES[-4:]:
             path = module.replace('.', '/')+'.py'
             assert observation['schema_source_hashes'][module] == config['expected_source_hashes'][path]
+        assert set(BACKEND_MODULES) <= observation['schema_source_hashes'].keys()
     source_root = Path(definition["pd_state_observation"]["source_root"])
     for module, digest in (observation["source_hashes"] | observation["schema_source_hashes"]).items():
         assert sha256(source_root / (module.replace(".", "/") + ".py")) == digest, module

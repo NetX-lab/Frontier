@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 
 from tests.integration.step5_pd.r2_observation import NATIVE_SOURCE_PATHS
-from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES
+from tests.integration.step5_pd.r2_runtime import SOURCE_MODULES, BACKEND_MODULES
 
 REPO = Path(__file__).resolve().parents[3]
 RUNTIME_MODULES = tuple(path[:-3].replace("/", ".") for path in NATIVE_SOURCE_PATHS)
@@ -52,7 +52,8 @@ def stage_observation(config: dict, definition: dict, stage: Path, model_dir: Pa
         for module in RUNTIME_MODULES}
     observation["schema_source_hashes"] = {
         module: sha256(source_root / (module.replace(".", "/") + ".py"))
-        for module in SCHEMA_MODULES + (CANONICAL_SCHEMA_MODULES if 'canonical_g3' in definition else ())}
+        for module in SCHEMA_MODULES + (CANONICAL_SCHEMA_MODULES if 'canonical_g3' in definition else ())
+        + (BACKEND_MODULES if observation.get('routing_strategy') == 'position_cyclic' else ())}
     for source, destination in CAPTURE_FILES.items():
         path = stage / destination
         path.parent.mkdir(parents=True, exist_ok=True)

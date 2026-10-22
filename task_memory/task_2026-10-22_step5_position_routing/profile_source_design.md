@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent executes locked base image: use python3 for receipt export; all2907 installed Python sources match frozen export. |
 | 2026-10-22 | Parent reconciles overlap annotations with final core33/2966; S16 belongs to pricing, with source allowance unchanged. |
 | 2026-10-22 | Parent specifies the missing post-build receipt command (51 Python lines including its container payload); syntax checked without executing Docker. No maintained exporter change. |
 | 2026-10-22 | Close source-review P2: verify actual gate/norm/oracle and constructed callables from the generated full installed-source receipt; separate shared facts from import evidence, preserve omitted legacy fields, bind the real local config revision, and replace obsolete overlap arithmetic. |
@@ -231,7 +232,7 @@ print(json.dumps(receipt, sort_keys=True))
 '''
 result = subprocess.run(
     ["docker", "run", "--rm", "--pull=never", "--network=none",
-     "--workdir", "/", "--entrypoint", "python", "-i", image,
+     "--workdir", "/", "--entrypoint", "python3", "-i", image,
      "-B", "-", image, base, root, manifest_hash],
     input=container_code, text=True, capture_output=True, check=True, timeout=60,
 )

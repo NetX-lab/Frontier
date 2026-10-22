@@ -27,6 +27,102 @@
   receipts and fresh GPU/native qualification. Additional collection resources
   and run approval follow readiness. D30 remains integrated4ec5b23.
 
+## Active implementation dispatch — 2026-10-23
+
+Common baseline1aee0af. Disjoint worktrees and background sessions:
+
+| Stream | Worktree under /data/ycfeng/Frontier/.worktrees | Session |
+| --- | --- | --- |
+| native19/1582 | step5-position-native | ses_e9b3f65b5ffeMAo4OpbcxD9LIV |
+| core-source44/4404 | step5-position-core | ses_e9b3efeebffem2dcbXlVGNr8O2 |
+| pricing44/3956 | step5-position-pricing | ses_e9b3e99a6ffe3r2973GDLkFpEm |
+
+Root supplies integration/review/image operations; no peer file writes or extra
+agents. Early interface commits precede dependent consumers. CORE/SOURCE and
+PRICING remain active. Native19 is delivered at2c4cc9e; root review
+ses_e9afdb7c4ffejb3hbkjZCeHFKS returns four concrete findings, now assigned to the
+original native session within1582. Repair74d5c48/records6827507 now delivers
+19 paths/1269 gross, unchanged native4 patch. Root independently passes485 checks
+and verifies all12 backend schema sources against the actual local-image export.
+Reviewer closes N1–N4 without new findings. Root integrates accepted native19
+source/CPU scope at9495cfb; image publication/source receipts and runtime qualification follow.
+The internal target tag is absent by direct registry inspection; proxy111 on the
+first inspection is resolved per-command without changing host proxy settings.
+Publication completes: remote index10cdd7af… and linux/amd64 manifestf037d958…
+hashes are verified. New bindings use the platform reference. Actual neutral-cwd
+source receipt and Python-tree export agree on2907 files, with53 installed serving
+pins and all12 backend schema modules. See image_publication/ and the publication
+test report. Native runtime/GPU/G3/E2E qualification remains open.
+The completed CORE/SOURCE+PRICING foundation receives independent review in
+ses_e9abd8364ffee5sQKdpiQh3yH4 from frozen sourcebd97ac5; live implementation continues.
+
+Parent independently reproduces418 PASS/35.45s at2c4cc9e and verifies all19 paths,
+1017 gross lines, four native before/after hashes and exact sparse context02.
+Receipts/logs: `/data/ycfeng/tmp/d29_native_parent01{.log,.xml}` and
+`/data/ycfeng/tmp/d29_native_parent_source01.json`. First image build exits125
+because Buildx is absent. Ubuntu provides0.30.1; default APT proxy127.0.0.1:51015
+is unavailable, so the package download is retried directly from the configured
+company mirror. `check_progress_2026-10-23_native_delivery.md` identifies an
+unnecessary image-after-full-CPU edge; repair_plan.md now separates that branch.
+
+Buildx dependency resolved using the extracted Ubuntu0.30.1 package after
+per-command direct access to the company APT mirror; package SHA256 matches APT.
+Local build02 succeeds. Candidate image index10cdd7af… has platform manifest
+f037d958…; all2907 installed Python files equal the base plus exactly the4 approved
+changes, all40 base layers retained,47 total layers, image Config unchanged and
+installed derivation-manifest hash verified. In that actual image (Python3.12.3,
+Torch2.13.0+cu130), the installed-source CPU suite passes11/11. This supplies no
+CUDA/full-import/T2/native serving acceptance and is not a published image.
+
+### CORE/SOURCE partial delivery and development integration
+
+CORE/SOURCE delivers c995fdc/ac48363/04294dc/02f061d,29 of44 paths and1565/4404
+gross. Its source/count/registry/launcher/provenance/timer consumers remain
+distinct from unfinished selected trainers/main/fresh fixture. Exact remaining
+dependencies are PRICING's committed native adapter/schema/ranges and finite-plan
+config/fixture payload, plus root permission to import peer APIs.
+
+Root grants development-branch imports PRICING7b86614/NATIVE2c4cc9e to CORE and
+CORE02f061d/NATIVE2c4cc9e to PRICING. These are interface-integration permissions,
+not final acceptance: N1–N4 stay open and corrected native commits must follow.
+Both original sessions receive the shared APIs and keep sole-writer ownership
+and quotas. CORE resumes independent consumers; PRICING receives exact required
+next interface deliveries, not a request for status.
+
+Root freezes the combined API state atbd97ac520fd0ba796ecd9d1905fdff352e859680 in
+`/data/ycfeng/Frontier/.worktrees/verify-step5-position-contracts-01`. Python3.10
+combined checks:283 PASS/19 SKIP/4 deselected. Python3.12 actual CPU timer/router/
+provenance subset:18 PASS. Their testcase-ID union is292 PASS. A targeted run of
+the10 unresolved torch skips and4 torch deselections in Python3.12 yields11 PASS
+and3 FAIL: that host vLLM lacks fused_moe.activation and router.gate_linear. The
+three actual-native-dependency cases pass in the built image after the existing
+isolated profiler-dependency recipe and explicit pytest importlib mode resolve
+pandas and the image's tests namespace collision. Source is unchanged. Full
+testcase-ID union is306 PASS. Details/receipts are recorded in the verification
+worktree's repairs/test_report_2026-10-23_contract_integration.md for integration.
+Full-unit/strict77 and independent source review remain pending final delivery.
+
+Earlier parent prerequisite check: Docker29.1.3 works; locked base digest is pulled under
+the exact mirror reference and all2907 installed Python files equal the frozen
+image_src export. Actual interpreter is python3/3.12.3; the design command's
+python entrypoint failed127 and is corrected to python3. A broader binary/package
+inventory timed out after50s and supplies no such evidence; the narrowed Python
+source check passes. No new derived image or GPU job exists from these checks.
+Receipt `/data/ycfeng/tmp/d29_base_python_sources01.json`; detailed prerequisite
+report is retained under repairs. Approval arithmetic/chronology/hashes PASS;
+normal git-add rejected ignored task records, then exact-path force-add committed
+only the authorized records at1aee0af. Scope arithmetic uses python3 because this
+host has no unversioned python command.
+
+Parent regression preparation PASS: reparse retained full+affected unit outcomes
+(7647 pass/267 baseline failures/31 baseline errors/179 skipped), preserve exact
+failure/error IDs, and re-audit the clean D30 strict77 candidate with451 artifact
+hash checks and matching dependencies/definitions/cache inventory. Runtime,
+matrix/examples/data inputs are unchanged from that certified source to1aee0af.
+Full commands, failed image attempts and current evidence limits are recorded in
+`repairs/test_report_2026-10-23_parent_prerequisites.md`; selected raw receipts are
+retained in `repairs/evidence/`. D29 candidate verification remains pending.
+
 ## Earlier execution record
 
 - completed: `design.md` traces actual Batch context/query snapshots, source

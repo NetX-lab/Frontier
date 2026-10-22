@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record native19 implementation allocation. |
+| 2026-10-23 | Authorize four reviewer repairs within the unchanged native19/1582 allocation. |
 
 ## [Original Request]
 TaskID D29-NATIVE-IMPLEMENTATION. Implement D29-SCOPE-107-10000 native19,
@@ -20,6 +21,32 @@ Approved behavior is the complete native_design.md at c9e9274 in step5-d24-stage
 Main scope/requirements/shared_scope/repair_plan were read from baseline1aee0af.
 Source prefix native-image/vllm names actual candidate edits, not free patch files.
 Tests run on actual-source CPU seams; graph/module/G3 execution stays UNVERIFIED.
+
+## [Original Request] D29 four-finding repair continuation
+Continue D29-NATIVE-IMPLEMENTATION in the same worktree, native19 and <=1582
+gross lines (1017 previously used). Reviewer ses_e9afdb7c4ffejb3hbkjZCeHFKS found:
+1. T2 router capture indexes positional a[1] despite native keyword invocation.
+   Use an explicit native signature and existing-owned actual keyword/fault test.
+2. PW/FULL capture does not execute device writes. Replay dummy inputs before
+   output assertions and counter baseline; trace pinned capture/replay behavior.
+3. Check actual instance-bound Step forward identity/origin, not only class.forward;
+   add instance replacement rejection under the unchanged diagnostic soft boundary.
+4. Validate actual quant/kernel objects, source and modular execution attributes
+   against native checkpoint/oracle contracts; repair positive fixtures and reject
+   wrong quant/kernel/monolithic objects. No new registry, family scheme or paths.
+Preserve the four-file native patch unless real evidence requires a change; root
+has locally built it but not published. No peer/new-file/platform operations.
+Thin graph evidence is only outer setter -> opaque MoE -> router, not actual MRv2
+serving inputs, attention/connector breaks or full backend graph qualification.
+Run focused/affected checks, commit scoped repairs, and update existing local
+test_report/progress/review/summary plus exact gross receipt. No subagents.
+
+Root-reported local build: step5-position-cyclic@sha256:
+10cdd7af56c77b244f70f280133464cce59573b0bcaa58adba6f39342ed1e94d,
+context02; installed Python inventory2907 differs from base only in approved4
+files,40base/47derived layers and equal config. Image Python3.12.3,
+Torch2.13.0+cu130,pytest9.1.1. These are root-provided observations, not this
+stream's Docker evidence or a supplied published identity.
 
 ## Preserved pre-allocation record (historical)
 

@@ -1,4 +1,4 @@
-"""Parent-worker T2: genuine PW eager breaks, FULL replay and bound native modules.
+"""Thin outer-setter/opaque-MoE/router PW/FULL proof, plus native eager modules.
 
 Run from a neutral cwd in the derived image under the approved TP8/DP2 torchrun
 allocation. --cases supplies two graph replays and explicit per-DP module positions
@@ -137,7 +137,9 @@ def graph_binding(config, supplied, device):
             else:
                 replay = lambda: outer(hidden, positions)
                 report[mode] = {}
-                replay()
+            # Capture records writes but does not execute them. Materialize dummy
+            # results before inspecting buffers or taking replay counter baselines.
+            replay()
             torch.cuda.synchronize(device)
             assert torch.equal(ids, torch.full_like(ids, -1)) and torch.equal(weights, torch.zeros_like(weights))
             assert context.routing_positions is None
@@ -162,7 +164,7 @@ def graph_binding(config, supplied, device):
                 if mode != 'FULL':
                     assert result.data_ptr() == output.data_ptr()
                 replay_counts.append(counts.copy())
-            report[mode].update(addresses=addresses, capture_counts=baseline, replay_counts=replay_counts)
+            report[mode].update(addresses=addresses, replay_baseline_counts=baseline, replay_counts=replay_counts)
         context.cudagraph_runtime_mode = CUDAGraphMode.NONE
         from vllm.forward_context import set_routing_positions
         with set_routing_positions(positions):
@@ -205,10 +207,11 @@ def native_modules(args, config, plan, cases, device):
             router = layer.experts.router
             original = router.select_experts
             captured = []
-            def route(*a, **kw):
-                value = original(*a, **kw)
+            def route(hidden_states, router_logits, topk_indices_dtype=None, *, input_ids=None):
+                value = original(hidden_states=hidden_states, router_logits=router_logits,
+                                 topk_indices_dtype=topk_indices_dtype, input_ids=input_ids)
                 with diagnostic_scope(observer.errors, 'route_capture'):
-                    captured.append((value[0].detach().clone(), value[1].detach().clone(), a[1].detach().clone()))
+                    captured.append((value[0].detach().clone(), value[1].detach().clone(), router_logits.detach().clone()))
                 return value
             router.select_experts = route
             with ExitStack() as observation:
@@ -260,7 +263,8 @@ def main():
     rank, local = int(os.environ['RANK']), int(os.environ['LOCAL_RANK'])
     device = torch.device('cuda', local)
     torch.cuda.set_device(device)
-    report = dict(rank=rank, g3_qualified=False, diagnostic_errors=[],
+    report = dict(rank=rank, g3_qualified=False, mrv2_serving_qualified=False,
+                   real_backend_graphs_qualified=False, diagnostic_errors=[],
                   torch=torch.__version__, python=__import__('sys').version)
     with diagnostic_scope(report['diagnostic_errors'], 'source_origins'):
         report['origins'] = origins(args.installed_root)
@@ -280,7 +284,7 @@ def main():
             report['graph_binding'] = graph_binding(graph_config, supplied['graph'], device)
     with diagnostic_scope(report['diagnostic_errors'], 'output'):
         report['status'] = ('UNVERIFIED' if report['diagnostic_errors'] or any(
-            row['observer_errors'] for row in report['native_modules']) else 'PASS_T2_NOT_G3')
+            row['observer_errors'] for row in report['native_modules']) else 'PASS_THIN_GRAPH_AND_EAGER_MODULES')
         args.output.mkdir(parents=True, exist_ok=True)
         (args.output/f'rank_{rank}.json').write_text(json.dumps(report, indent=2))
 

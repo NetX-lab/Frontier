@@ -1,9 +1,14 @@
 {
   "script": "tests/integration/step5_environment/test_position_cyclic_graph.py",
-  "sha256": "a319761827a36fba02751c96296cb84ebf4a2cf994a0e38273810530bec81c7f",
+  "sha256": "e11bb6aef9e3c5e3a4ba0088ab67711a3e5c4d4f7e2d2a1a2ad9092709057cfd",
   "ast": "PASS",
   "contract_tokens": "PASS",
   "gpu_run": "NOT_RUN",
   "docker_payload_ast": "PASS",
-  "docker_run": "NOT_RUN"
+  "docker_run": "NOT_RUN",
+  "keyword_capture": "PASS actual MoERunner CPU invocation, single return/exception and diagnostic fault checks",
+  "dummy_replay_sequence": "PASS actual PW dispatch/replay body plus T2 post-capture statements on CPU; FULL capture not executed",
+  "qualified_scope": "thin outer setter -> opaque MoE -> router graph mechanism plus separate eager native modules",
+  "mrv2_serving_qualified": false,
+  "real_backend_graphs_qualified": false
 }

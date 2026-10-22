@@ -1,14 +1,42 @@
-# Frontier position-routing design review
+# D29 position-routing reviews
 
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Record four native implementation findings and repair assignment; model/scope is approved. |
 | 2026-10-23 | Final producer delta has No findings; all design findings closed, parent107-path union awaits model/scope decision. |
 | 2026-10-22 | Record source-proof delta review and parent communication-model/minimality findings. |
 | 2026-10-22 | Add parent interface findings after revised core and profile-source delivery. |
 | 2026-10-22 | Record six findings and assign disjoint design corrections before scope approval. |
 
-## Current closure
+## Current implementation review
+
+Component: native19 at2c4cc9e, compared with1aee0af. Reviewer:
+`ses_e9afdb7c4ffejb3hbkjZCeHFKS`, D29-NATIVE-IMPLEMENTATION-REVIEW. Artifacts:
+`/data/ycfeng/tmp/d29_native_parent_review01.diff`, native task's native_source.patch,
+candidate/snapshots, requirements/design/scope/test reports and pinned native
+router/runner/graph/model call paths. Review is read-only; root separately
+reproduces418 checks and verifies1017/1582 gross lines.
+
+| ID | Finding and evidence | Required correction | Status |
+| --- | --- | --- | --- |
+| N1 P1 | T2:208–211 indexes a[1], but native MoERunner calls select_experts by keyword. | Explicit native-compatible signature and keyword-call capture test. | Closed74d5c48 |
+| N2 P1 | T2:126–142 tests dummy writes immediately after capture, which has not replayed. | Replay dummy after PW/FULL capture, then assert outputs/counters. | Closed74d5c48 |
+| N3 P2 | r2_runtime:116–118 checks class.forward, allowing an instance forward replacement. | Check actual bound function identity/origin and negative instance override. | Closed74d5c48 |
+| N4 P2 | r2_runtime:130–155 does not validate quant/kernel classes; object() passes a positive fixture. | Validate actual supported objects/source/nonmonolithic path per layer group. | Closed74d5c48 |
+
+Native owner session `ses_e9b3f65b5ffeMAo4OpbcxD9LIV` repairs all four findings in
+74d5c48/6827507, within19-path1582 allocation (actual1269). Parent485 checks pass;
+same reviewer closes N1–N4 with no additional actionable finding. Root verifies
+exact Git diff/budget and12 backend sources against installed-image hashes.
+Native19 source/CPU phase is accepted for integration; runtime qualification
+remains open. Reviewer found no
+Step formula/mask/scaling-duplication defect in the four-file native patch and
+accepted sparse overlay/source descriptions. Thin graph evidence remains only
+outer setter→opaque MoE→router, not MRv2 serving inputs/attention/connector or
+full backend graph qualification. D30 and original gates are retained.
+
+## Design closure
 
 Reviewer `ses_e9e15d18cffemTkCOdK4P941nU`, D29-FINITE-PRODUCER-DELTA,
 reports No findings after checking pricing5.4/5.5/6.Closure and actual callers.
@@ -18,8 +46,9 @@ per-input/layer keys. CORE/probe share one source_frame_tensors implementation.
 This closes the two final producer findings in design only. Native graphs,
 actual source/count evidence, qualified model parameters and E2E remain unverified.
 Parent accepts the sole-writer map and H11 deduction; `scope.json` records the
-107-path/9942-line union. The numerical model and full implementation scope are
-pending YC, with actual collection resource/run approval settled at readiness.
+107-path/9942-line union. YC approved the numerical model and implementation
+scope through D29-SCOPE-107-10000; additional collection resource/run approval
+remains a readiness decision.
 
 ## Historical initial review
 
