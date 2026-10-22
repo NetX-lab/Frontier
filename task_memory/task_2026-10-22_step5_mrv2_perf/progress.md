@@ -8,6 +8,8 @@
 | 2026-10-22 | Completed deterministic FFN RED loop, CPU/collective/trace discrimination, and diagnosis-only proposal. |
 | 2026-10-22 | Started parent-authorized D23-MRV2-CONTRACT-REUSE. |
 | 2026-10-22 | Completed narrow fixed-binding implementation and bounded regression/latency verification; recorded unrelated test limitations. |
+| 2026-10-22 | Began diagnostics-only D23-ACTUAL06-WALL on accepted7e8bea3 source. |
+| 2026-10-22 | Completed exact public q1 RED loop, whole-path profile, source/ledger equivalence and diagnostics-only proposal. |
 
 ## Status
 
@@ -106,3 +108,79 @@
 ## Return state
 
 Scope implementation and verification are complete; source commit `ee28bf7` is ready for parent integration. The records-only commit follows it and preserves all baseline and follow-up evidence. No further source change or test retry is planned. Parent-owned open work: review/reverification, unrelated stale structural stub, optionalPD incomplete tests, initialization attribution and original1024 offline/online/strict77 acceptance. The unchanged latency verdict remains RED and is not represented as full performance acceptance.
+
+## D23-ACTUAL06-WALL status
+
+- completed: Worktree clean; `git merge --no-edit 7e8bea3` fast-forwarded to accepted source. Read diagnosing-bugs,GLOSSARY,ADR0001 and relevant instructions. Parent original receipt inspected only for delegated cadence/budget, no duplicate census.
+- completed: Constructed complete original Simulator event-prefix diagnosis using trusted role bundles, real collective backend and original metrics/ledger/JSON trace. Writable cache APIs confined to copies/scratch; no initializer or runtime source modifications. Original op-level trace disabled in actual06 CLI; additional enabled trace measurement is a separate diagnostic configuration, not a silent original-setting claim.
+- completed: Exact completion-boundary two-q1 RED, ranked hypotheses, whole-path profile, repeated source/ledger equivalence, real cold collective and warm q1 discrimination. Final records/syntax/diff verification complete; diagnostic/record commit prepared. FullCLI6144/1024 and source approval remain parent-owned.
+
+### Feedback-loop checkpoint
+
+- PASS: accepted source/read-only bundle setup and actual P6144 public events; original P completion simulation85.512575168 matches. TODO: complete tail/q1 RED and profiling.
+- D2 HIT (execution): snapshot serialization survived three unrecorded workaround retries. Stop parameter changes; scoped component serialization identified only KV manager as the blocker. Its actual103675-block free queue is a doubly linked list, so generic pickle follows103k nested links. Store exact block identities/scalars and link IDs, reconstruct unchanged links; do not reduce pool size or alter runtime methods.
+- D1,D3–D7 CLEAR; S1–S6 no scope/edge defect found. BranchA: keep spec/criteria, change only diagnostic serialization. Next: verified event-boundary snapshot -> completed original q1 loop RED -> ranked hypotheses/whole-path profile. No production theory or fix before RED.
+
+### Measured feedback and discrimination
+
+- First complete RED (`d23_actual06_red01`): two q1 intervals9.74065/9.40578s, original grouped-cache start/end event/role/iteration/simulation-time/token tuples equal. Hypotheses were disclosed before cProfile: (1) public attention/FFN or complete-stage rebuilding, (2) P dummy/EP coordination, (3) metrics/ledger/trace, (4) cold backend subprocess, (5) host load or state restoration mismatch. Initial mismatch with parent median was investigated against only the first36 scheduler starts, not a duplicate census: actual06 early q1 also9.1–9.9s; iteration24 onward about5.1s.
+- State-fidelity correction: initial diagnostic snapshots omitted class ID counters and used old object IDs for ledger maps. Early measurements were source-cost/simulation-equivalent but not full entity/ledger-ID acceptance. Final setup was rebuilt from unmodified original event handlers, recording exact counters and pending object references, at the first complete D GlobalBatchEnd boundary. All earlier heuristic ID recovery was removed from the shipped script. The snapshot retains original request6144/1024, full103675-block pool per lane, real P/D state, and real backend cache; new output/cache paths alone are rebound to scratch.
+- Final feedback (`d23_actual06_verified_red01`): setup13.26084s; two complete q1 intervals9.54025/9.67630s; full event loop19.22282s,1168 events. D293 events/iteration4.41871/4.87679s, P291 events/iteration5.12154/4.79950s. RED versus optimistic `(2400-339.5054249763489)/1024=2.012201733s`. This covers the complete early q1 path, not just FFN. The D component closely explains the original later5.1s cadence; exact later iteration24 state was not replayed and this remains an inference.
+- Source audit (`d23_actual06_verified_audit01`): all41288 FFN and960 attention queries independently equal source artifact duration/count/model/evidence/exact-feature values; all92 layers, BF16/FP32/FP8,34 model hashes retained. Current q1 selects CUDA_EVENT for every audited operator. Audit JSON dictionary equals both earlier exact-state audits, SHA256 `c2dfc11132106d5ac0cdb3eef8b29f08dd54b490f311b47d009751b86aed648a`. Audit overhead is separate:24.45003s loop, not baseline latency.
+- Dynamic population/metrics:352 waves×EP16=5632 lane ledger rows; baseline/audit ledger hash `bdd74d1e1ec310fa94f8ad60af888d61bbc0e4279ba92349cdaed3fd33cb2526` identical. Original JSON event trace bytes and two complete stage-ledger rows equal between baseline/audit. write_metrics, request/batch/utilization metrics, stage ledger, metrics-ground-truth and JSON event trace retained; actual06 store_operation_metrics=false and op-level trace=false unchanged.
+- Warm backend:6016 PREFILL+6208 DECODE requests, all hits,0 misses. Cold real ATTN_TP8 allreduce1.88352s/hit0.11110ms; EP16 all-to-all2.48633s/hit0.16237ms; repeated costs exactly equal (`d23_actual06_collective_check`). Separate warm-backend full prefix: public P-to-transfer7.89735s, P+tail60.78812s across three <=60s process segments; all simulation boundaries exact. It is not cold-P/tail time or original init verification.
+- Whole-path cProfile (`d23_actual06_complete_profile01`):42885839 function calls in34.100s, same1168 events/two complete q1 outputs. EP-wave preparation352 calls27.820s; public stage6410 calls24.054s; FFN41288 calls9.896s; on-demand duration/count84496 calls5.933s; identity JSON42248 calls3.313s; lane builders5632 calls3.754s with123904 full Request constructions2.635s; original EP metrics0.653s and stage metrics1.007s. Inclusive times overlap and must not be added. Static previous metadata/precision construction does not recur. Attention workloads still trigger998 full Step validations1.735s; not changed here.
+- One-variable wall identity parser observation (`d23_actual06_final_red01`):42248 canonical marker parses3.13526s in19.14586s loop; per-role public stage D6.85726/P6.98384s, FFN D2.90862/P2.85948s, attention D1.01070/P0.69774s. No return value substituted; full source audit repeat still identical. Fixed proof parsing matters but is only~16% total loop.
+- Separate enabled op trace (`d23_actual06_final_trace01`):31.61076s loop versus19.14586s baseline, same1168 events/5632 lanes and0 backend misses.51988 persisted events/76067468 bytes, all92 layers/P+D roles, finite nonnegative durations. It is deliberately an additional setting, not actual06 original configuration or a main acceptance artifact.
+- Smallest supported proposal (not implemented): reuse the parsed canonical estimator measurement identity/evidence_kind at its existing attach/load boundary; retain current per-query model registry selection, canonical duration/count identity comparison, physical target/kind/runtime checks and every dynamic query/count/proof. Registry canonical identity is attached once and rejects conflicts; a changed marker must cause reparse/error, and registry replacement must use the replacement estimator's identity. Prefer a private attached immutable view, not a second model/result cache. Measured upper saving is~3.135s/two early P+D rounds (~0.8s/D-only round by query population), insufficient alone for2.012s budget. Dynamic schema/bounds parsing, lane Request construction, public layer assembly and attention config validation remain measured costs requiring separate parent decisions.
+- Final syntax AST PASS and `git diff --check` PASS. No production source file, old diagnostic script, immutable fixture/cache or other worktree edited. Initialization337/339s, exact later-context q1 state, online full replay, final export/fullCLI/native accuracy/strict77 remain uncovered here.
+
+### Whole-path final checkpoint
+
+## 1. 规划完成情况
+
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0
+
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Accepted-source and scratch bundle setup | PASS | Clean fast-forward7e8bea3;68 artifacts/4 bundles SHA-validated. |
+| Complete public iteration RED | PASS | Exact completion state; two full q1 rounds9.54/9.68s. |
+| Profile and source/metrics/cold discrimination | PASS | Source/proof/event/ledger equality; full-path profile and trace receipts. |
+| Diagnostic records and handoff | PASS | Exact command/report/evidence prepared and requirements re-read; commit follows. |
+
+## 2. 偏离检测
+
+**结论：** 未偏移，正常推进。
+**检测窗口：** Initial complete RED to final verified receipts｜**当前前沿：** diagnostic records and return
+
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR | Snapshot corrections settle required identity/ledger fidelity; stop extension now. |
+| D2 细节反复重试 | CLEAR | Earlier serialization drift was corrected; current exact-state measurements advance equivalence/profile. |
+| D3 支线问题修补 | CLEAR | No unrelated production defect edited. |
+| D4 可并行任务停滞 | CLEAR | Audit/baseline and profile/trace ran independently in parallel. |
+| D5 超范围镀金 | CLEAR | Only delegated diagnostic options/setup; no production cache or behavior. |
+| D6 分析空转 | CLEAR | Whole-path analysis is the requested deliverable; measured proposal ready. |
+| D7 路线违背 | CLEAR | Original bound, topology, population and source costs preserved. |
+
+**文档检查：** S5 progress was stale pending; updated above from actual receipts. S1–S4/S6 no defect.
+**归因：** 无
+
+## 3. 纠正建议
+
+**分支：** B：stale execution status corrected directly; no agreed-scope change.
+
+**文档更新（先执行）：**
+1. `progress.md` D23-ACTUAL06-WALL status: record complete RED/profile/equivalence and explicit limitations（可直接执行）.
+
+**需停止的偏离行为：** 无
+
+**接下去的路线：**
+1. Finish exact report and scoped diagnostic commit -> parent receives reusable command and supported proposal.
+2. Stop diagnostic extension/fullCLI; parent owns next production decision and final acceptance.
+
+## 4. 最值得关注的3点
+
+1. Complete D q1 workload costs4.4–4.9s even without concurrent P work; original budget2.012s is still missed.
+2. Proof parsing is measured but cannot alone close the gap; dynamic validation and lane/entity work remain.
+3. No production optimization/fullCLI/native acceptance was performed in this phase.

@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Archived measured diagnosis-only deliverables and parent follow-up. |
 | 2026-10-22 | Archived authorized fixed-binding implementation and bounded verification; retained parent acceptance limits. |
+| 2026-10-22 | Archived diagnostics-only complete actual06 public iteration RED and profile proposal. |
 
 ## Outcome
 
@@ -56,3 +57,15 @@ Regression RED occurred before implementation: twelve layer descriptions/seventy
 Existing validation:91 measured/FFN/on-demand tests PASS,44 public/root/metrics tests PASS,75 MRv2 forward tests PASS,7 new regressions PASS. Structural tests:38 PASS/2 FAIL on an unchanged stale scheduler stub missing `take_forward_start_batch`, before cost queries. Optional broader PD tests did not finish within60s; no timeout increase or unrelated edits. Enabled trace preserves456 events/344788 bytes and persisted truth PASS. Remaining recurring profile cost is dynamic duration/count feature validation and source-proof JSON parsing; full initialization, scheduler/stage E2E and fullCLI remain unmeasured here.
 
 Code/tests/module-boundary commit: `ee28bf7ea43d3c7c73b7176eeb10b6f07d51492a`. Final source-sensitive unchanged command `/data/ycfeng/tmp/d23_contract_committed01/receipt.json` identifies that commit:0.074077174s64 lanes/456 operator queries,7.194605x speedup,sourceTruthPASS,exact proof/artifact equality,RED max-query gate. Enabled trace456 events/344787bytes0.068545761s,persisted truthPASS. Final focused regressions7 PASS9.15s (`d23_contract_green_final01.log`). Parent receives this source commit separately from the completion-record commit.
+
+## Diagnostics-only follow-up: D23-ACTUAL06-WALL
+
+Fast-forwarded clean branch to accepted `7e8bea3`; no further production optimization. `tests/performance/step5_actual06_iteration.py` uses original Simulator public event/predictor/scheduler/metrics path, SHA-validated original bundles copied to scratch, and exact first-output state with all92 layers/EP16 lanes/P+D metadata/KV pool and identity counters. Original6144/1024 request and2400s bound remain unchanged; no fullCLI/native acceptance.
+
+Complete earlyq1 intervals9.540253/9.676296s are RED versus optimistic2.012202s budget.1168 events,352 waves/5632 lanes. D contribution4.418710/4.876795s explains most original later5.1s cadence by inference; concurrent earlyP adds5.121543/4.799501s. Exact later-context state was not replayed. All41288 FFN+960 attention queries match source duration/count/features/proofs; repeated audit dictionary, JSON event trace, two stage-ledger rows and5632 lane ledger digest equal.12224 real collective queries all hits,zero misses.
+
+Whole-path profile:34.1s/42.9million calls, public stages24.054s, FFN9.896s, dynamic duration/count lookup5.933s, fixed identity JSON3.313s, lane builds3.754s/fullRequest construction2.635s, config scans1.735s. Nested cumulative times cannot be added. One-variable unprofiled fixed identity parsing3.135s/19.146s loop confirms its real cost but does not make it the sole timeout cause. Original metrics are small; additional enabled op trace31.611s and51988 persisted events is separately measured, not originalsetting attribution.
+
+Proposal only: reuse already validated estimator-bound canonical identity/evidence-kind while retaining current model registry selection, identity pairing/runtime checks and every dynamic query/count/proof. Expected upper saving~0.8s/D-only round, insufficient alone for budget. Parent owns source decision, later-context/online/cold/init/finalexport/fullCLI/native/strict77 acceptance.
+
+Report: `task_memory/task_2026-10-22_step5_mrv2_perf/test_report_2026-10-22_actual06_wall.md`. Exact reusable command and snapshot paths are there. Final baseline/audit receipts: `/data/ycfeng/tmp/d23_actual06_verified_{red,audit}01/`; whole profile `/data/ycfeng/tmp/d23_actual06_complete_profile01/`; enabledtrace `/data/ycfeng/tmp/d23_actual06_final_trace01/`.

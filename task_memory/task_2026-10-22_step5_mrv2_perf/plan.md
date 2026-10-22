@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-10-22 | Established bounded CPU diagnosis sequence. |
 | 2026-10-22 | Planned narrow fixed-contract reuse after parent authorization. |
+| 2026-10-22 | Planned whole-iteration actual06 diagnostics without another production fix. |
 
 ## Scope and dependency
 
@@ -34,3 +35,12 @@
 5. Update the existing module-size record for the inspected small delegate boundary (neither touched source module is over the limit), re-read requirements, commit completed source/tests/records and return parent receipts.
 
 Done requires persistent tests passing, real-cache output truth unchanged, source-sensitive repeated-work counts eliminated, clean scoped diff and exact commands/results. Latency threshold does not authorize skipping dynamic validation or changing the unchanged probe.
+
+## D23-ACTUAL06-WALL
+
+`clean accepted source -> trusted bundle/scratch setup -> complete public event/iteration RED -> {repeat equivalence,whole-path profile} -> ranked cause/proposal -> diagnostic records commit -> parent decision`
+
+1. Retain actual06 CLI configuration/request6144/1024; restore verified bundles instead of fitting/large CSV initialization. Keep all runtime predictor/scheduler/event/metrics methods unchanged. Copy required writable caches and relocate outputs only. Existing collective-sim binary is read-only reused, no build.
+2. Drive original Simulator sequential handlers for a bounded prefix. Setup-only cold collective prediction cache snapshots may be collected over bounded prefixes, restoring exact real keys/values for subsequent seconds-scale warm iteration diagnosis. Never substitute invented costs. Assert source equivalence using original grouped-cache records and model identity/feature costs.
+3. Report measured RED with transparent per-iteration budget `(2400-max(actual06_setup))/1024` (optimistic all remaining time; P/tail/finalization further reduce budget). Rank3–5 falsifiable hypotheses before profiling; measure full runtime and distinct boundaries, not inner FFN only.
+4. Run one bounded cProfile and repeat non-profiled feedback, record enabled op-trace delta separately from original metrics/JSON trace setup. Report uncovered initialization/cold/finalization/fullCLI behavior. Commit only diagnostics/task records, return parent source proposal without implementing it.
