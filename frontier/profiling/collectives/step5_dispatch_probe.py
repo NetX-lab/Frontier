@@ -325,7 +325,7 @@ def compare_dispatch(case, calls, *, rows, sizes, dp_ranks, tp_ranks, hidden):
             "observed_row_bytes": observed_bytes, "differences": differences}
 
 
-def create_native_config(args):
+def create_native_config(args, *, engine_limits=None):
     """Use the same text-submodel and quantization mappings as native serving."""
     from vllm.engine.arg_utils import EngineArgs
     from vllm.model_executor.model_loader.utils import configure_quant_config
@@ -338,6 +338,9 @@ def create_native_config(args):
         enable_expert_parallel=True, all2all_backend="allgather_reducescatter",
         distributed_executor_backend="external_launcher", enforce_eager=True,
         disable_custom_all_reduce=args.disable_custom_all_reduce,
+        **({name: value for name, value in engine_limits.items()
+            if name in ("max_model_len", "max_num_batched_tokens", "max_num_seqs")}
+           if engine_limits is not None else {}),
     ).create_engine_config()
     config = config.with_hf_config(config.model_config.hf_text_config,
                                    architectures=["Step5ForCausalLM"])

@@ -5,6 +5,8 @@
 | --- | --- |
 | 2026-10-23 | Record native19 implementation allocation. |
 | 2026-10-23 | Authorize four reviewer repairs within the unchanged native19/1582 allocation. |
+| 2026-10-23 | Authorize T2 controlled-input preparation only, with no code changes or launch approval. |
+| 2026-10-23 | Root authorizes D29-T2-ENGINE-LIMITS in exactly two existing owned files, <=100 additional gross. |
 
 ## [Original Request]
 TaskID D29-NATIVE-IMPLEMENTATION. Implement D29-SCOPE-107-10000 native19,
@@ -47,6 +49,73 @@ context02; installed Python inventory2907 differs from base only in approved4
 files,40base/47derived layers and equal config. Image Python3.12.3,
 Torch2.13.0+cu130,pytest9.1.1. These are root-provided observations, not this
 stream's Docker evidence or a supplied published identity.
+
+## [Original Request] D29-T2-INPUT-PREPARATION
+Prepare already-planned T2 metadata/cases and exact execution/resource proposal
+for root's later sealing/resource decision. Import accepted main9090407 after
+preserving owned edits; native6827507 was accepted9495cfb, publication67d5b5e,
+summary9090407. Only existing native task records and generated t2_preparation/
+input artifacts may change; no production/test code, peers/central records,
+new semantics/tolerances/harness or additional agents. No GPU/platform/auth/
+cloud/SSH/Docker/push. Completed source/CPU acceptance is not reopened or rerun.
+
+Accepted platform image:
+hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee.
+Actual source root:/data/ycfeng/tmp/d29_published_sources01/source; publication
+receipt/native53/derivation artifacts belong to root step5-preview's existing
+task_memory/task_2026-10-22_step5_position_routing/image_publication.
+
+Read accepted graph script, notes and approved native_design. Locate actual
+retained model metadata for --model-path and bind source/revision/hash, bounds7168,
+TP8/DP2/EP16/noSP/noMTP/auto/skip-padding. Prepare exactly two same-shape graph
+position/mask replays and minimal per-DP physical/live module frames covering
+source/tail/q1/empty-padding/boundaries using existing script schema. Label them
+controlled probe inputs, not observed native/Frontier traces. Do not fabricate
+missing data, backend evidence, runtime receipts or numerical fits.
+
+Deliver hashes/provenance, existing script/torchrun commands, mounts/env including
+neutral cwd/import setup and existing CUDA compatibility recipe, inspected minimum
+topology/resource estimate and remaining prerequisites. This is a proposal, NOT
+run authorization or a new allocation. Preserve original G3/state criteria; no
+numerical state tolerance is decided. Static input conformance only, no CPU/gap
+suites. Commit compact results/artifact paths and exact unfinished blockers.
+
+## [Original Request] D29-T2-ENGINE-LIMITS
+Root accepts the discovered engine-bound gap and supersedes preparation-only
+restrictions for exactly tests/integration/step5_environment/test_position_cyclic_graph.py
+and tests/unit/test_step5_native_position_cyclic.py. Additional native gross <=100
+within unchanged native19/1582 (1269 used,313 available); no new source/test path.
+Freeze actual capture03/stage/engine.json limits max_model_len7168,
+max_num_batched_tokens8192,max_num_seqs128 with source/hash provenance. Retain
+complete metadata bytes. Published fused_moe/layer.py:274,361 derives native
+MoE max_num_tokens from scheduler max_num_batched_tokens; input range alone is
+not engine parity.
+
+Use required cases.json.engine_limits with exactly those3 fields, no new CLI,
+metadata edit or fallback. Pass supplied limits BEFORE construction into both
+create_native_config(args, engine_limits=limits) and graph EngineArgs(..., **limits),
+never assign config after creation. Preserve eager/module versus graph/default,
+backend/topology/native semantics and diagnostic soft handling. Record final
+model/scheduler values for both configs after with_hf_config and check matching
+under existing diagnostics. No full-serving parity claim.
+
+PRICING owns optional keyword implementation/tests <=60 gross; native may read/
+import its scoped verified commit after delivery, but must not edit/copy the builder
+or add overlapping interface. Add existing-owned focused real entry-point/
+constructor-flow regression for both paths/final values; keep old controls.
+After verification update inputs/hashes/provenance/proposal and exact native quota.
+Commit source/test step then records. Root independently performs actual-image
+CPU review/seal. No Docker/GPU/platform/auth/cloud/SSH/push/agents/unrelated edits.
+Additional16H800/30min remains an unapproved resource proposal.
+
+### Recorded implementation/dependency outcome
+Native source commit a5e5189 satisfies the two-file constructor-flow correction.
+PRICING delivers verified optional helper in3f54bc6; that mixed commit also contains
+producer changes and central records outside this slice. Its actual helper body
+is consumed read-only for host checks, not copied/edited or imported into native.
+Root integrates/seals that dependency before actual-image validation/launch.
+Current/peer controlled probe_plan branches were checked equal with actual retained
+metadata and routing_input_file=None. No observed-input semantics are substituted.
 
 ## Preserved pre-allocation record (historical)
 

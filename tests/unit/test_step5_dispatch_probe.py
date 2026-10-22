@@ -33,6 +33,47 @@ def arguments(model_path, tmp_path, *extra):
                              "--output-dir", str(tmp_path / "output"), *extra])
 
 
+@pytest.mark.parametrize("limits", [None, {"max_model_len": 7168,
+    "max_num_batched_tokens": 8192, "max_num_seqs": 128, "unrelated": "excluded"}])
+def test_native_config_binds_only_supplied_limits_before_text_submodel(model_path, tmp_path, monkeypatch, limits):
+    calls=[];events=[];metadata=SimpleNamespace(max_position_embeddings=1048576)
+    names=("max_model_len", "max_num_batched_tokens", "max_num_seqs")
+    defaults=dict(zip(names,(1048576,2048,256)))
+    expected=defaults if limits is None else {name:limits[name] for name in names}
+    class EngineArgs:
+        def __init__(self, **kwargs): calls.append(kwargs)
+        def create_engine_config(self):
+            kwargs=calls[-1];events.append("create")
+            values={name:kwargs.get(name,defaults[name]) for name in names}
+            def with_hf_config(hf, *, architectures):
+                assert hf is metadata and architectures == ["Step5ForCausalLM"]
+                events.append("text_submodel")
+                return SimpleNamespace(model_config=SimpleNamespace(hf_config=hf,max_model_len=values[names[0]]),
+                    scheduler_config=SimpleNamespace(**{name:values[name] for name in names[1:]}),quant_config=object())
+            return SimpleNamespace(model_config=SimpleNamespace(hf_text_config=metadata),with_hf_config=with_hf_config)
+    model_class=object()
+    def quant(config, cls):
+        assert cls is model_class
+        events.append("quant")
+    modules={"vllm.engine.arg_utils":SimpleNamespace(EngineArgs=EngineArgs),
+        "vllm.model_executor.model_loader.utils":SimpleNamespace(configure_quant_config=quant),
+        "vllm.models.step5.nvidia.model":SimpleNamespace(Step5ForCausalLM=model_class)}
+    for name,module in modules.items(): monkeypatch.setitem(sys.modules,name,module)
+    args=arguments(model_path,tmp_path)
+    config=(probe.create_native_config(args) if limits is None else
+            probe.create_native_config(args,engine_limits=limits))
+    assert events == ["create","text_submodel","quant"] and len(calls) == 1
+    assert {name:calls[0][name] for name in names if name in calls[0]} == ({} if limits is None else expected)
+    assert "unrelated" not in calls[0] and calls[0]["enforce_eager"] is True
+    assert {k:v for k,v in calls[0].items() if k not in names} == dict(model=str(model_path.resolve()),
+        load_format="dummy",skip_tokenizer_init=True,language_model_only=True,tensor_parallel_size=4,
+        data_parallel_size=2,enable_expert_parallel=True,all2all_backend="allgather_reducescatter",
+        distributed_executor_backend="external_launcher",enforce_eager=True,disable_custom_all_reduce=False)
+    assert config.model_config.max_model_len == expected["max_model_len"]
+    assert vars(config.scheduler_config) == {name:expected[name] for name in names[1:]}
+    assert config.model_config.hf_config is metadata and metadata.max_position_embeddings == 1048576
+
+
 def test_plan_has_two_native_layers_and_no_cost_rows(model_path, tmp_path):
     plan = probe.probe_plan(arguments(model_path, tmp_path))
     assert plan["parallelism"] == {"tp": 4, "dp": 2, "ep": 8}

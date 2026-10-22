@@ -1,0 +1,60 @@
+"""One-off CPU value check of actual installed EngineArgs; no GPU qualification."""
+import ast
+import hashlib
+import inspect
+import json
+from pathlib import Path
+import sys
+from types import SimpleNamespace
+
+import vllm.platforms as platforms
+from vllm.platforms.cpu import CpuPlatform
+
+# Reuse the existing tests/unit/conftest.py CPU platform selection mechanism.
+platforms._current_platform = CpuPlatform()
+from vllm.engine.arg_utils import EngineArgs
+from frontier.profiling.collectives.step5_dispatch_probe import create_native_config
+
+repo = Path('/workspace')
+inputs = repo/'task_memory/task_2026-10-22_step5_d29_native_balanced/t2_preparation'
+model_file = inputs/'model_metadata/config.json'
+model_hash = hashlib.sha256(model_file.read_bytes()).hexdigest()
+limits = json.loads((inputs/'cases.json').read_text())['engine_limits']
+args = SimpleNamespace(model_path=model_file.parent, tensor_parallel_size=8,
+                       data_parallel_size=2, disable_custom_all_reduce=False)
+module_config = create_native_config(args, engine_limits=limits)
+script = repo/'tests/integration/step5_environment/test_position_cyclic_graph.py'
+main = next(node for node in ast.parse(script.read_text()).body
+            if isinstance(node, ast.FunctionDef) and node.name == 'main')
+nodes = [node for node in main.body if isinstance(node, ast.Assign)
+         and any(isinstance(target, ast.Name) and target.id == 'graph_config'
+                 for target in node.targets)]
+assert len(nodes) == 2
+namespace = dict(EngineArgs=EngineArgs, args=args, limits=limits)
+exec(compile(ast.Module(body=nodes, type_ignores=[]), str(script), 'exec'), namespace)
+configs = dict(modules=module_config, graph=namespace['graph_config'])
+actual = {}
+for role, config in configs.items():
+    actual[role] = dict(max_model_len=config.model_config.max_model_len,
+                       max_num_batched_tokens=config.scheduler_config.max_num_batched_tokens,
+                       max_num_seqs=config.scheduler_config.max_num_seqs)
+    assert actual[role] == limits, (role, actual[role], limits)
+    assert config.model_config.hf_config.max_position_embeddings == 1048576
+    assert config.parallel_config.tensor_parallel_size == 8
+    assert config.parallel_config.data_parallel_size == 2
+    assert config.parallel_config.enable_expert_parallel
+source = Path(inspect.getsourcefile(EngineArgs)).resolve()
+inventory = json.loads((repo/'task_memory/task_2026-10-22_step5_position_routing/image_publication/native_installed_sources.json').read_text())
+assert source.is_relative_to(inventory['installed_package'])
+key = 'vllm/'+source.relative_to(inventory['installed_package']).as_posix()
+assert hashlib.sha256(source.read_bytes()).hexdigest() == inventory['sources'][key]
+assert hashlib.sha256(model_file.read_bytes()).hexdigest() == model_hash
+receipt = dict(status='PASS_CPU_CONFIG_VALUES_ONLY', actual=actual,
+               image=inventory['image'], python=sys.version,
+               engine_args_class=f'{EngineArgs.__module__}.{EngineArgs.__qualname__}',
+               engine_args_source=str(source), engine_args_sha256=inventory['sources'][key],
+               metadata_sha256=model_hash, model_metadata_unchanged=True,
+               method='Imported real helper; executed exact two graph assignment AST nodes with real EngineArgs; existing CpuPlatform fixture mechanism',
+               gpu_initialized=False, gpu_graph_backend_g3_qualified=False)
+Path('/scratch/result.json').write_text(json.dumps(receipt, indent=2)+'\n')
+print(json.dumps(receipt, indent=2))

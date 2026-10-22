@@ -250,7 +250,11 @@ def main():
     args.tensor_parallel_size, args.data_parallel_size, args.gpus_per_node = 8, 2, 8
     args.disable_custom_all_reduce = False
     supplied = json.loads(args.cases.read_text())
+    limits = supplied['engine_limits']
+    assert set(limits) == {'max_model_len', 'max_num_batched_tokens', 'max_num_seqs'}
+    assert all(type(value) is int and value > 0 for value in limits.values())
     args.tokens_per_dp_rank = tuple(len(row['positions']) for row in supplied['modules'][0]['dp'])
+    args.routing_input_file = None  # Controlled T2 cases are not bound profiling inputs.
     from frontier.profiling.collectives.step5_dispatch_probe import (
         create_native_config, probe_plan, validate_launcher, diagnostic_scope)
     import torch
@@ -266,9 +270,17 @@ def main():
     report = dict(rank=rank, g3_qualified=False, mrv2_serving_qualified=False,
                    real_backend_graphs_qualified=False, diagnostic_errors=[],
                   torch=torch.__version__, python=__import__('sys').version)
+    def observe_limits(config, role):
+        with diagnostic_scope(report['diagnostic_errors'], 'engine_limits:'+role):
+            actual = dict(max_model_len=config.model_config.max_model_len,
+                          max_num_batched_tokens=config.scheduler_config.max_num_batched_tokens,
+                          max_num_seqs=config.scheduler_config.max_num_seqs)
+            report.setdefault('engine_limits', {})[role] = actual
+            assert actual == limits, (role, actual, limits)
     with diagnostic_scope(report['diagnostic_errors'], 'source_origins'):
         report['origins'] = origins(args.installed_root)
-    config = create_native_config(args)
+    config = create_native_config(args, engine_limits=limits)
+    observe_limits(config, 'modules')
     with set_current_vllm_config(config):
         init_worker_distributed_environment(config, rank, 'env://', local)
         init_workspace_manager(device)
@@ -276,9 +288,10 @@ def main():
     graph_config = EngineArgs(model=str(args.model_path), load_format='dummy',
         language_model_only=True, skip_tokenizer_init=True, tensor_parallel_size=8,
         data_parallel_size=2, enable_expert_parallel=True,
-        distributed_executor_backend='external_launcher').create_engine_config()
+        distributed_executor_backend='external_launcher', **limits).create_engine_config()
     graph_config = graph_config.with_hf_config(graph_config.model_config.hf_text_config,
                                              architectures=['Step5ForCausalLM'])
+    observe_limits(graph_config, 'graph')
     with set_current_vllm_config(graph_config):
         with diagnostic_scope(report['diagnostic_errors'], 'graph_binding'):
             report['graph_binding'] = graph_binding(graph_config, supplied['graph'], device)

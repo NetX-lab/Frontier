@@ -1,0 +1,231 @@
+{
+  "task_id": "D29-T2-ENGINE-LIMITS",
+  "preparation_task_id": "D29-T2-INPUT-PREPARATION",
+  "status": "CONTROLLED_INPUTS_NOT_OBSERVED_NOT_RUN_NOT_LAUNCH_AUTHORIZATION",
+  "accepted_repo_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+  "accepted_native_commit": "6827507",
+  "native_acceptance_commit": "9495cfb",
+  "publication_commit": "67d5b5e",
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "installed_native_root": "/usr/local/lib/python3.12/dist-packages/vllm",
+  "actual_source_root": "/data/ycfeng/tmp/d29_published_sources01/source",
+  "model_metadata": {
+    "repository": "stepfun-ai/Step-5-Preview",
+    "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
+    "requested_url": "https://huggingface.co/stepfun-ai/Step-5-Preview/resolve/364b3b03fed2477aa0953fe855a2c4c8c48ee3cc/config.json",
+    "retained_original_path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/reference_inputs/config.json",
+    "retained_lock_path": "/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-15_step5_preview_h800/reference_lock.json",
+    "retained_lock_sha256": "befc2f0ac4ce58d9577a9839e648cb4268300a96a81940e421c7e190d4be1d3a",
+    "acquisition_workspace_commit": "01fb2ce5984f1d26135ea9bceef96f8e39be0401",
+    "repository_tracked": false,
+    "generated_path": "model_metadata/config.json",
+    "sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "size_bytes": 78447,
+    "copy": "Original complete outer/text/vision/quantization metadata bytes unchanged; config-only input, no tokenizer or checkpoint required by T2"
+  },
+  "script_sources": {
+    "tests/integration/step5_environment/test_position_cyclic_graph.py": {
+      "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+    },
+    "frontier/profiling/collectives/step5_dispatch_probe.py": {
+      "sha256": "8284363ed6c4090fbd57f5f9c00bac32f0b3183790f56e2c85e452e24bc9afc4",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+    },
+    "tests/integration/step5_profiling/run_on_worker.sh": {
+      "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+    }
+  },
+  "native_mechanism_sources": {
+    "vllm/models/step5/nvidia/model.py": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269",
+    "vllm/transformers_utils/configs/step5.py": "8577c87ff10a1aac2f14cad49105692121ca86da3e545427211124d42c4aa579",
+    "vllm/config/vllm.py": "02ddc04019a0cc3dd60cdf564aa069638667950905019d734d8672521d412511",
+    "vllm/model_executor/layers/fused_moe/config.py": "575248839aa351e8a1ab47a0965882b32c35932eb3e6e780271606e5b3451d9d",
+    "vllm/model_executor/layers/quantization/fp8.py": "37db0145189cd8870d8ac53a6eeb59ac070af51fe78e933597f51e8948250403",
+    "vllm/model_executor/layers/fused_moe/unquantized_fused_moe_method.py": "1ab96e74cce2d1a8540af0eb5518cf8ff77d02c7b770d55c2556cdb34c74bc1c",
+    "vllm/model_executor/layers/fused_moe/layer.py": "ddc92bf76eabaf0465e2dc515b844293c16691bb6e66f92a45e47c4956b6e328"
+  },
+  "publication_artifacts": {
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/derivation_manifest.json": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/installed_export_receipt.json": "ddcf8119dbccb5028c81df4e148d1caa90399e8ebef2515b5b89eef61276abee",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/installed_source_sha256.txt": "22631c8a194b5f4e91442f82234b8d0ae7a5615eebf6013e9879a012576682a4",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/native_installed_sources.json": "b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09",
+    "task_memory/task_2026-10-22_step5_position_routing/image_publication/publication_receipt.json": "efda9dbaaeacb2899cc99b3ac9e9fea03a5c28d2b084efc2cd232b0bbd38430f"
+  },
+  "approved_design": {
+    "path": "/data/ycfeng/Frontier/.worktrees/step5-d24-stage/task_memory/task_2026-10-22_step5_d29_native_balanced/native_design.md",
+    "commit": "c9e9274",
+    "sha256": "99ed3cba95b78a95a9347c6d3edd3378259fb5596d29c20c898147e213aa5e04"
+  },
+  "inputs": {
+    "path": "cases.json",
+    "sha256": "ea35310017b9057a305266a90988db72ab81aaeed0fcf5457ada401e8ec60002",
+    "origin": "Deterministic controlled construction from approved intervals; NOT native/Frontier traces",
+    "graph": [
+      {
+        "index": 0,
+        "physical": 17,
+        "live": 16,
+        "positions_interval": [
+          6128,
+          6144
+        ],
+        "masked_stale_positions": [
+          0
+        ]
+      },
+      {
+        "index": 1,
+        "physical": 17,
+        "live": 4,
+        "positions_interval": [
+          6144,
+          6148
+        ],
+        "masked_stale_interval": [
+          6128,
+          6141
+        ]
+      }
+    ],
+    "modules": [
+      {
+        "name": "controlled_source6128_plus_dummy",
+        "physical": [
+          6129,
+          1
+        ],
+        "live": [
+          6128,
+          0
+        ]
+      },
+      {
+        "name": "controlled_tail16_plus_dummy",
+        "physical": [
+          1,
+          17
+        ],
+        "live": [
+          0,
+          16
+        ]
+      },
+      {
+        "name": "controlled_q1_padded4_plus_empty_dp",
+        "physical": [
+          4,
+          4
+        ],
+        "live": [
+          1,
+          0
+        ]
+      }
+    ],
+    "construction": "source DP0=range(6128)+[7167], mask=False*6128+True; DP1=[43]/True. tail DP0=[6144]/True; DP1=range(6128,6144)+[0], mask=False*16+True. q1 DP0=[6144,43,44,7167]/[False,True,True,True]; DP1=[6147,0,43,44]/True*4.",
+    "mask_semantics": "True means padding; masked rows yield IDs=-1 and weights=0; physical collective rows remain positive",
+    "position_cycle": "expert_id=(position*top_k+slot)%num_experts; no DP/request/wave reset",
+    "position_limit_exclusive": 7168,
+    "original_model_max_position_embeddings": 1048576,
+    "engine_limits": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    },
+    "engine_binding": "Passed before both constructors; root host177PASS15SKIP and published-image CPU final configs both7168/8192/128; GPU configuration/execution remains unverified",
+    "runtime_receipts": null,
+    "backend_evidence": null,
+    "numerical_state_tolerance": null
+  },
+  "frozen_serving_limits": {
+    "path": "/data/ycfeng/tmp/step5_d24_native_20261022/capture03/stage/engine.json",
+    "sha256": "7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e",
+    "source": "Retained sealed capture03; only the three approved fields copied, no source edit or serving-parity claim",
+    "moe_capacity_source": "Published fused_moe/layer.py:274,361 sets max_num_tokens from scheduler_config.max_num_batched_tokens",
+    "configuration_paths": [
+      "create_native_config(args, engine_limits=limits), enforce_eager=True",
+      "EngineArgs(..., **limits).create_engine_config().with_hf_config(...), default graph/eager mode"
+    ],
+    "report": "rank_N.json.engine_limits.modules and .graph; differences append engine_limits:<role> diagnostic and mark UNVERIFIED",
+    "runtime_config_receipts": null
+  },
+  "settings": {
+    "tp": 8,
+    "dp": 2,
+    "ep": 16,
+    "pp": 1,
+    "sp": false,
+    "mtp": false,
+    "moe_backend": "auto",
+    "skip_padding": true,
+    "scoring_func": "sigmoid",
+    "renormalize": true,
+    "routed_scaling_factor": 3.0,
+    "setting_origin": "Existing create_native_config/EngineArgs/default Step5 config, not new input options",
+    "module_layers": [
+      3,
+      88
+    ],
+    "module_enforce_eager": true,
+    "graph_modes": [
+      "NONE",
+      "PIECEWISE",
+      "FULL"
+    ],
+    "graph_enforce_eager": false
+  },
+  "generation_environment": {
+    "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
+    "torch_imported": false,
+    "gpu_or_platform_access": false
+  },
+  "prepared_source_history": {
+    "repo_commit": "90904073935c39fb8203ed71cbaf389ba9115443",
+    "script_sources": {
+      "tests/integration/step5_environment/test_position_cyclic_graph.py": {
+        "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+        "source_commit": "a5e5189",
+        "root_acceptance": "PENDING"
+      },
+      "frontier/profiling/collectives/step5_dispatch_probe.py": {
+        "sha256": "2a6da8cb8184e267aab32e8c1cdc45744c2acf7cefc1439acc6a692d500b7323",
+        "source_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
+        "verification": "Actual create_native_config body from verified PRICING commit executed with host constructor dependencies; not copied to production",
+        "local_worktree_sha256": "4d5460c14c54ec8bacf42b0395303c39b5a719217a0f721e3ec1b89c7da14805",
+        "integration": "ROOT_REQUIRED: mixed commit includes unrelated producer changes and central records; not imported by native owner"
+      },
+      "tests/integration/step5_profiling/run_on_worker.sh": {
+        "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
+        "accepted_commit": "9090407"
+      }
+    }
+  },
+  "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01",
+  "parent_acceptance": {
+    "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+    "review": "D29-T2-ENGINE-LIMITS-REVIEW: No findings",
+    "host_passed": 177,
+    "host_skipped": 15,
+    "image_cpu_config": {
+      "modules": {
+        "max_model_len": 7168,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 128
+      },
+      "graph": {
+        "max_model_len": 7168,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 128
+      }
+    },
+    "image_receipt_path": "task_memory/task_2026-10-22_step5_position_routing/repairs/t2_config/image_config.json",
+    "image_receipt_sha256": "62bbbbaa9c4fd4f81c0b8882a891670d7f2d92d847c755b6e66f3ba5403782ab",
+    "gpu_runtime_qualified": false,
+    "launch_authorized": false
+  }
+}

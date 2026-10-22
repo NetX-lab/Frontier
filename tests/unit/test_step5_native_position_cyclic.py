@@ -243,3 +243,71 @@ def test_t2_replays_dummy_before_assertion_and_baseline(native):
             ids=ids, weights=weights, context=NS(routing_positions=None), counts=counts, mode=mode)
         execute(body, execution)
         assert calls == [mode] and execution['baseline'] == counts
+
+
+@pytest.mark.parametrize('drift', [None, 'modules', 'graph'])
+def test_t2_entrypoint_supplies_and_observes_final_engine_limits(tmp_path, monkeypatch, drift):
+    import json
+    import sys
+    from tests.integration.step5_environment import test_position_cyclic_graph as t2
+    limits = dict(max_model_len=7168, max_num_batched_tokens=8192, max_num_seqs=128)
+    cases = tmp_path/'cases.json'
+    cases.write_text(json.dumps(dict(engine_limits=limits, modules=[dict(dp=[dict(positions=[0])]*2)], graph=[])))
+    calls, failures = [], []
+    class Config:
+        def __init__(self, kwargs, final=False):
+            self.kwargs, self.final = kwargs, final
+            self.model_config = NS(hf_text_config=NS(), max_model_len=kwargs['max_model_len'])
+            self.scheduler_config = NS(**{key: kwargs[key] for key in limits if key != 'max_model_len'})
+        def with_hf_config(self, *args, **kwargs):
+            value = Config(self.kwargs, final=True)
+            if ('modules' if self.kwargs.get('enforce_eager') else 'graph') == drift:
+                value.scheduler_config.max_num_seqs += 1
+            return value
+    class EngineArgs:
+        def __init__(self, **kwargs):
+            calls.append(kwargs); self.kwargs = kwargs
+        def create_engine_config(self):
+            if failures: raise failures[0]
+            return Config(self.kwargs)
+    @contextmanager
+    def current(config):
+        assert config.final
+        yield
+    from frontier.profiling.collectives import step5_dispatch_probe as probe
+    monkeypatch.setitem(sys.modules, 'vllm.config', NS(set_current_vllm_config=current))
+    monkeypatch.setitem(sys.modules, 'vllm.engine.arg_utils', NS(EngineArgs=EngineArgs))
+    monkeypatch.setitem(sys.modules, 'vllm.models.step5.nvidia.model', NS(Step5ForCausalLM=object))
+    monkeypatch.setitem(sys.modules, 'vllm.model_executor.model_loader.utils', NS(configure_quant_config=lambda *a: None))
+    monkeypatch.setitem(sys.modules, 'vllm.v1.worker.gpu_worker', NS(init_worker_distributed_environment=lambda *a: None))
+    monkeypatch.setitem(sys.modules, 'vllm.v1.worker.workspace', NS(init_workspace_manager=lambda *a: None))
+    monkeypatch.setitem(sys.modules, 'torch', NS(__version__='host-fixture', device=lambda *a: None,
+                                              cuda=NS(set_device=lambda *a: None)))
+    monkeypatch.setattr(Config, 'quant_config', None, raising=False)
+    def plan(args):
+        assert args.routing_input_file is None
+        return dict(topology={})
+    monkeypatch.setattr(probe, 'probe_plan', plan)
+    monkeypatch.setattr(probe, 'validate_launcher', lambda *a: None)
+    monkeypatch.setattr(t2, 'origins', lambda *a: {})
+    monkeypatch.setattr(t2, 'native_modules', lambda *a: [])
+    monkeypatch.setattr(t2, 'graph_binding', lambda *a: {})
+    monkeypatch.setenv('VLLM_MOE_ROUTING_SIMULATION_STRATEGY', 'position_cyclic')
+    monkeypatch.setenv('RANK', '0'); monkeypatch.setenv('LOCAL_RANK', '0')
+    monkeypatch.setattr(sys, 'argv', ['t2', '--model-path', str(tmp_path), '--cases', str(cases),
+                                   '--output', str(tmp_path/'output'), '--installed-root', str(tmp_path)])
+    t2.main()
+    report = json.loads((tmp_path/'output/rank_0.json').read_text())
+    assert len(calls) == 2 and all({key: row[key] for key in limits} == limits for row in calls)
+    assert calls[0]['enforce_eager'] is True and 'enforce_eager' not in calls[1]
+    for role in ('modules', 'graph'):
+        assert report['engine_limits'][role] == limits | {'max_num_seqs': 129 if role == drift else 128}
+    assert bool(report['diagnostic_errors']) == bool(drift)
+    assert report['status'] == ('UNVERIFIED' if drift else 'PASS_THIN_GRAPH_AND_EAGER_MODULES')
+    cases.write_text(json.dumps(dict(modules=[], graph=[])))
+    with pytest.raises(KeyError, match='engine_limits'): t2.main()
+    assert len(calls) == 2
+    cases.write_text(json.dumps(dict(engine_limits=limits, modules=[dict(dp=[dict(positions=[0])]*2)], graph=[])))
+    failures.append(LookupError('native constructor failure'))
+    with pytest.raises(LookupError) as caught: t2.main()
+    assert caught.value is failures[0] and len(calls) == 3

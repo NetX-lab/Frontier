@@ -6,6 +6,8 @@
 | 2026-10-23 | Read approved allocation/design and begin interface milestone. |
 | 2026-10-23 | Complete native19 integration, CPU418 PASS, D3048 PASS and static T2; retain root-only prerequisites. |
 | 2026-10-23 | Close four reviewer findings;485 affected CPU PASS and1269/1582 gross. |
+| 2026-10-23 | Import accepted9090407 and prepare controlled T2 metadata/inputs/resource proposal; static checks only. |
+| 2026-10-23 | Complete root-directed two-file engine-limit correction, verified helper-body flow and85 gross delta; root integration pending. |
 
 - completed: clean branch feat/step5-position-native at1aee0af; all approved native
   design sections and local instructions inspected; no peer writes/platform calls.
@@ -20,45 +22,74 @@
 - completed: early e48cdc0 andintegration d12941c; summary/handoff records ready.
 - completed: four-finding repair, source/AST/hash/ownership/quota checks and
   final affected CPU485 PASS/36.16s; scoped code+evidence commit74d5c48.
-- pending (root): published image identity, actual installed-source export and GPU
-  acceptance; local context02 build was reported by root, not executed by this stream.
+- completed: root accepts native6827507 at9495cfb, publishes67d5b5e and archives
+ 9090407; this worktree fast-forwards cleanly to9090407 with root authorization.
+- completed: D29-T2-INPUT-PREPARATION P1 retained metadata/publication/source identity;
+  P2 controlled config/cases; P3 exact existing commands and resource proposal.
+- completed: P4 schema/types/bounds/static topology/hash review and bash-n-only
+  commands; all6 artifacts in hashes.sha256 verify. Input-only commit aa872fa;
+  no production/test delta against9090407.
+- pending (root): helper integration, independent sealing/readiness and actual-image
+  config check; resource/run approval, mounts/rendezvous/output and GPU evidence.
+  The unsupported engine-limit interface gap is closed below, not runtime accepted.
+- completed: D29-T2-ENGINE-LIMITS L1 actual engine7168/8192/128 triple/hash and L2
+  required cases mapping before both constructors; final limits observed/checks
+  are diagnostic-only, no configuration assignment afterward.
+- completed: L3 PRICING delivers verified3f54bc6 optional keyword. Read-only actual
+  helper body used with host dependencies; mixed commit/central records not imported
+  and no peer file/builder copied. Root owns the remaining dependency integration.
+- completed: source/test commit a5e5189, only2 authorized paths,85 incremental gross
+  versus100. Final native19 baseline1350/1582 (+81 from1269),232 remaining.
+- completed: L4 focused16 PASS/1.96s,affected175 PASS/15 SKIP/5.12s;AST2/whitespace
+  ownership/budget PASS. Current/peer controlled probe_plan equal with real metadata;
+  routing_input_file=None preserves this path without invented observed traces.
+- completed: input/hash/provenance/proposal and English summary refresh after
+  verified flow. cases.json adds only retained limits; graph/modules unchanged,
+  full config bytes/native4 unchanged; root actual-image/GPU claims remain pending.
+- completed: final static engine/source/hash/case-value/AST/native4 checks,
+  bash-n2/checksums6/6 PASS in d29-t2-limits-static-final02.log. First ad-hoc
+  snapshot check stripped vllm/ twice and failed FileNotFoundError; corrected
+  inspected snapshot path only, no production/evidence bytes changed.
+- completed: preserved13 old actual-source CPU controls PASS/1.97s with new
+  entrypoint cases excluded, against published native vllm source. AST2 and
+  whitespace PASS. Draft two-file incremental87 gross (17add/5del script,
+  65add test), within100; final85 gross/green evidence supersedes that draft.
 
 ## 1. 规划完成情况
-**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
+**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO0（D29-T2-ENGINE-LIMITS；不是GPU验收）
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| native接口及CPU | PASS | actual-source9 PASS，receipt/patch已生成 |
-| packaging/clients/provenance | PASS | CPU418 PASS，sparse context PASS |
-| T2实际graph script | PASS | AST及source contract PASS，GPU归root |
-| 最终quota/handoff | PASS | committed19-path receipt1269 gross；summary及needed root inputs完整 |
-| Reviewer四项修复及交接 | PASS | commit74d5c48，CPU485 PASS，owned19/1269及hash检查完成 |
+| L1 actual serving triple | PASS | retained engine SHA7947f58b…；7168/8192/128，metadata字节未变 |
+| L2两路径constructor flow | PASS | a5e5189；同mapping在creation前传入，final值diagnostic-only |
+| L3 verified helper | PASS | PRICING3f54bc6真实body host flow PASS；mixed import留root |
+| L4checks/inputs/records | PASS | affected175 PASS/15 SKIP，85gross；static/hash/records已更新，交接commit封存 |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** continuation四项review findings至commit74d5c48｜**当前前沿：** root实际image/source/live验收（本流外）
+**检测窗口：** D29-T2-ENGINE-LIMITS dispatch至a5e5189和records封存｜**当前前沿：** root dependency整合/seal（本流外）
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | user明确要求keyword/fault/sequence/backend negatives，485 PASS后停止扩展 |
-| D2 细节反复重试 | CLEAR | red14 FAIL后按4个来源修复；green迭代只补已要求证据，无行为参数试错 |
-| D3 支线问题修补 | CLEAR | 本轮7个existing owned paths均属于4项review修复 |
-| D4 可并行任务停滞 | CLEAR | user禁止subagent；独立检查并行，GPU由root持有 |
-| D5 超范围镀金 | CLEAR | user明确重开4项缺陷；native19内1269/1582，无新file/registry/native edits |
-| D6 分析空转 | CLEAR | 已产出keyword capture、dummy replay、bound forward和backend检查 |
-| D7 路线违背 | CLEAR | native4/patch不变，无GPU/Docker/platform/peer写入 |
-**文档检查：** S1–S6均未发现明显缺陷；本轮修复和实际commit状态一致，历史状态明确隔离。
+| D1 工具打磨 | CLEAR | focused/affected现有2suites验证明确flow，未重跑418/485或host gap |
+| D2 细节反复重试 | CLEAR | red定位旧helper遗漏；verified signature后green，不做参数/运行workaround |
+| D3 支线问题修补 | CLEAR | limits、peer plan接口及hash均服务L1–L4，无其它producer修复 |
+| D4 可并行任务停滞 | CLEAR | L1/L2在真实helper dependency前完成；no subagents，root持有整合与GPU |
+| D5 超范围镀金 | CLEAR | 限定2files/85gross；无new CLI/builder/native source/tolerance |
+| D6 分析空转 | CLEAR | a5e5189已交付；只剩用户要求input/records hash收尾 |
+| D7 路线违背 | CLEAR | no platform/GPU/peer写入；不导入mixed central记录；保持controlled和soft handling |
+**文档检查：** S1–S6均未发现未记录缺陷；历史input-only gap已明确被root授权L1–L4替代，真实helper整合仍由root持有。
 **归因：** 无。
 
 ## 3. 纠正建议
-**分支：** A：当前spec/plan及记录合理，无需改动。
+**分支：** A：当前spec/plan合理，无需扩展scope或新增seam。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. root真实published image/source export -> 完成标志：immutable identity、installed pins及12个backend schema源；不由本流执行。
-2. root批准GPU验证 -> 完成标志：实际thin graph/eager modules、MRv2/backend graph及G3分项证据；不由本流执行。
+1. root独立helper整合/actual-image/seal → 完成标志：新helper和native source身份、两配置真实值及input hash。
+2. root readiness后请求run approval → 完成标志：实际资源/路径/finite unit授权；本流不运行。
 
 ## 4. 最值得关注的 3 点
-1. GPU/graph/G3仍UNVERIFIED；thin graph不是实际MRv2或backend graph资格。
-2. strict schema需12个existing backend源；root local image不是published identity。
-3. native4/patch不变，完整stream1269/1582，剩313；修复commit74d5c48及handoff完整。
+1. 两个final config值已在host flow观测；不等于实际image/GPU配置验收。
+2. PRICING mixed commit未导入，root必须整合optional keyword；native19为1350/1582。
+3. controlled inputs及16H800/30min8GPUh提案均非observed/launch，G3/tolerance未变。
 
 ## Verification iterations
 - Baseline251 PASS; interface9 PASS then addedinvalid K/logits controls11 PASS.
@@ -94,6 +125,39 @@
 - completed:74d5c48 verified scoped code+evidence commit; code diff7 paths,
   267 added+23 deleted (290 repair gross), baseline gross increase252. Commit's
   retained report/review/receipt identify4 findings and native UNVERIFIED items.
+
+## T2 input-only preparation iterations
+- Root explicit authorized import: `git status --short` clean at6827507;
+  `git merge --ff-only 9090407` succeeds. No owned edits lost; central/peer files
+  only arrive through the authorized merge, not this stream's edits.
+- Read accepted graph/helper, designc9e9274, retained root reference_lock and
+  metadata, published source receipts and existing compatibility recipe.
+- Config78447 bytes matches e535c5c9...; original source revision364b3b03...;
+  unchanged config-only copy, no tokenizer/checkpoint download or metadata rewrite.
+- Controlled cases SHA7383a897...: graph2×17 rows/live16,4; modules3 frames
+  physical[6129,1]/[1,17]/[4,4], live[6128,0]/[0,16]/[1,0]. No observed trace claim.
+- Static stdlib review PASS schema/position bounds/hash/cycle-conservation,
+  existing probe_plan/expected_topology/validate_launcher bodies:16ranks/2nodes,
+  layers3/88, timing_rows0. No torch/vllm imports or source/CPU suite rerun.
+- proposal16H800/codesign/nonpreemptible,32CPU/128GiB per node,1800s/8GPUh,
+  single finite unit/no automatic retry. Raw weight/payload calculations are
+  lower bounds, not memory fit/actual kernel/collective evidence.
+- Actual engine7168 is not supplied by existing T2 CLI or EngineArgs calls;
+  input bound7168 recorded independently, original metadata1048576 remains.
+  Root exact-engine requirement, sealing/readiness/resources/runtime remain open.
+- `sha256sum --check hashes.sha256` PASS6/6; hash indexSHA256
+  67f1a13307dc5e19353fea4b0f8a50fddc73f04ecb53a2fa533e5cc78a939a29.
+  `git diff --check` PASS; selected script Git bytes at9090407 equal recorded
+  hashes; current image reference equals accepted publication receipt. No CPU/
+  source suite rerun, native import or actual runtime receipt.
+- completed: input/records commit aa872fa. All14 changed paths are within the
+  exclusive existing native task; no code/test or central/peer changes. Root
+  must independently accept/seal before later resource/run authorization.
+- Exact-engine7168 seam if required: existing EngineArgs constructors in
+  frontier/profiling/collectives/step5_dispatch_probe.py:create_native_config:334–341
+  and tests/integration/step5_environment/test_position_cyclic_graph.py:276–279.
+  Neither receives max_model_len; T2 argparse:244–248 has no such input. These
+  facts identify the dependency, not authorization for edits or a workaround.
 
 ## Preserved pre-allocation record (historical)
 

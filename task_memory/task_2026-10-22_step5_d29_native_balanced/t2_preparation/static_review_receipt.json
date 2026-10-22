@@ -1,0 +1,154 @@
+{
+  "task_id": "D29-T2-ENGINE-LIMITS",
+  "status": "PASS_STATIC_INPUT_ONLY_NOT_RUN_NOT_LAUNCH_APPROVAL",
+  "reviewer": "native owner self-check, no extra subagent",
+  "environment": {
+    "python_executable": "/data/ycfeng/envs/asyncopd-py312/bin/python",
+    "python_version": "3.12.13",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "torch_vllm_imported": false
+  },
+  "model_metadata": {
+    "unchanged_complete_copy": "PASS",
+    "bytes": 78447,
+    "sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+    "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
+    "original_max_position_embeddings": 1048576,
+    "engine_limit_constructor_flow": "PASS host actual entrypoint/verified helper body; not actual vllm config or GPU receipt",
+    "config_or_metadata_changes": false
+  },
+  "input_schema": {
+    "graph_case_count": 2,
+    "graph_physical_rows": [
+      17,
+      17
+    ],
+    "graph_live_rows": [
+      16,
+      4
+    ],
+    "module_frame_count": 3,
+    "module_physical_rows_dp": [
+      [
+        6129,
+        1
+      ],
+      [
+        1,
+        17
+      ],
+      [
+        4,
+        4
+      ]
+    ],
+    "module_live_rows_dp": [
+      [
+        6128,
+        0
+      ],
+      [
+        0,
+        16
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "integer_positions_and_boolean_masks": "PASS",
+    "positive_physical_rows_even_empty_dp": "PASS",
+    "positions_in_0_to_7168_exclusive": "PASS",
+    "control_origin": "Deterministic controlled construction, not observed native/Frontier traces",
+    "cases_sha256": "ea35310017b9057a305266a90988db72ab81aaeed0fcf5457ada401e8ec60002",
+    "required_engine_limits": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    },
+    "engine_source_hash": "7947f58bf37ab0256756faf1ec0613f4dc92101e94ad4a7f596c50ae4a11655e",
+    "graph_and_module_inputs_unchanged": "PASS against aa872fa"
+  },
+  "existing_static_probe_plan": {
+    "status": "PASS executed only existing stdlib source bodies",
+    "tp": 8,
+    "dp": 2,
+    "ep": 16,
+    "nodes": 2,
+    "world_size": 16,
+    "local_world_size": 8,
+    "native_layer_ids": [
+      3,
+      88
+    ],
+    "precision_labels": [
+      "fp8",
+      "bf16"
+    ],
+    "timing_rows": 0,
+    "runtime_config_created": false
+  },
+  "provenance_review": {
+    "retained_model_bytes": "PASS",
+    "prepared_cases_hash": "PASS",
+    "script_and_helper_hashes": "PASS full actual integrated files at662849e; original prepared binding retained as history",
+    "accepted_publication_artifact_hashes": "PASS",
+    "selected_mechanism_source_hashes": "PASS, not a rerun of accepted full source/CPU suites",
+    "resource_dimension_formulas": "PASS raw dimensions only, not measured allocator/backend/collective data"
+  },
+  "scope": {
+    "production_test_code_edits": 2,
+    "native19_previous_accepted_gross": 1269,
+    "native19_current_gross": 1350,
+    "two_file_incremental_gross": 85,
+    "incremental_ceiling": 100,
+    "native19_ceiling": 1582,
+    "platform_gpu_cloud_auth_ssh_docker_push": "NOT_PERFORMED",
+    "new_harness_semantics_tolerances": "NONE; required limits use existing constructors and diagnostics",
+    "original_g3_state_criteria": "UNCHANGED"
+  },
+  "constructor_flow_review": {
+    "native_commit": "a5e5189",
+    "pricing_helper_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
+    "method": "Actual main and actual verified helper source body with host dependency fixtures; no production copy or mixed-commit import",
+    "focused": "16 PASS/1.96s",
+    "affected": "175 PASS/15 SKIP/5.12s",
+    "limits_passed_before_both_constructors": "PASS",
+    "final_with_hf_config_values_observed": "PASS",
+    "modules_graph_drift_soft": "PASS",
+    "missing_input_and_native_exception_identity": "PASS",
+    "torch_imported_cpu_only": true,
+    "actual_vllm_config_or_cuda_created": false,
+    "ast_whitespace_owned_paths_budget": "PASS"
+  },
+  "remaining": [
+    "Remaining implementation readiness and actual allocation source binding",
+    "Root actual resource/run authorization and finite-collection coordination",
+    "Actual worker/mount/rendezvous/output/retention identities",
+    "Actual GPU/import/library/backend/runtime/G3 evidence"
+  ],
+  "parent_acceptance": {
+    "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+    "review": "D29-T2-ENGINE-LIMITS-REVIEW: No findings",
+    "host_passed": 177,
+    "host_skipped": 15,
+    "image_cpu_config": {
+      "modules": {
+        "max_model_len": 7168,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 128
+      },
+      "graph": {
+        "max_model_len": 7168,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 128
+      }
+    },
+    "image_receipt_path": "task_memory/task_2026-10-22_step5_position_routing/repairs/t2_config/image_config.json",
+    "image_receipt_sha256": "62bbbbaa9c4fd4f81c0b8882a891670d7f2d92d847c755b6e66f3ba5403782ab",
+    "gpu_runtime_qualified": false,
+    "launch_authorized": false
+  }
+}

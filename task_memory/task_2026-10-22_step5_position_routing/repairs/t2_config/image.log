@@ -1,0 +1,55 @@
+W1022 21:54:06.524000 1 torch/utils/cpp_extension.py:178] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+Failed to import from vllm._C_AVX512: ModuleNotFoundError("No module named 'vllm._C_AVX512'")
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+(MainProcess pid=1) INFO 10-22 21:54:19 [model.py:737] Resolved architecture: Step5ForConditionalGeneration
+(MainProcess pid=1) INFO 10-22 21:54:19 [model.py:2148] Using max model len 7168
+(MainProcess pid=1) WARNING 10-22 21:54:19 [model.py:1107] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+(MainProcess pid=1) INFO 10-22 21:54:19 [model.py:955] All limits of multimodal modalities supported by the model are set to 0, running in text-only mode.
+(MainProcess pid=1) INFO 10-22 21:54:19 [model.py:1012] Disabled mm_prefix attention mode because multimodal inputs are configuration-disabled. Attention backends without mm_prefix support may now be selected.
+(MainProcess pid=1) INFO 10-22 21:54:23 [parallel.py:947] Using external launcher for distributed inference.
+(MainProcess pid=1) INFO 10-22 21:54:23 [parallel.py:982] Set data_parallel_rank to 0 automatically.
+(MainProcess pid=1) INFO 10-22 21:54:23 [parallel.py:1028] Disabling V1 multiprocessing for external launcher.
+(MainProcess pid=1) INFO 10-22 21:54:23 [scheduler.py:307] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(MainProcess pid=1) INFO 10-22 21:54:23 [vllm.py:1653] Disabling NCCL for DP synchronization when using async scheduling.
+(MainProcess pid=1) WARNING 10-22 21:54:23 [vllm.py:1717] Enforce eager set, disabling torch.compile, CUDAGraphs, and JIT kernel warmup. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none and --kernel_config.enable_jit_warmup=False
+(MainProcess pid=1) INFO 10-22 21:54:23 [vllm.py:820] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.
+(MainProcess pid=1) INFO 10-22 21:54:23 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['native'])
+(MainProcess pid=1) INFO 10-22 21:54:23 [compilation.py:317] Enabled custom fusions: norm_quant, act_quant
+(MainProcess pid=1) WARNING 10-22 21:54:23 [arg_utils.py:1934] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+[transformers] `rope_parameters`'s original_max_position_embeddings field must be less than max_position_embeddings, got 1048576 and max_position_embeddings=1048576
+(MainProcess pid=1) INFO 10-22 21:54:23 [model.py:737] Resolved architecture: Step5ForConditionalGeneration
+(MainProcess pid=1) INFO 10-22 21:54:23 [model.py:2148] Using max model len 7168
+(MainProcess pid=1) WARNING 10-22 21:54:23 [model.py:1107] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+(MainProcess pid=1) INFO 10-22 21:54:23 [parallel.py:947] Using external launcher for distributed inference.
+(MainProcess pid=1) INFO 10-22 21:54:23 [parallel.py:982] Set data_parallel_rank to 0 automatically.
+(MainProcess pid=1) INFO 10-22 21:54:23 [parallel.py:1028] Disabling V1 multiprocessing for external launcher.
+(MainProcess pid=1) INFO 10-22 21:54:23 [kernel.py:467] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'], gelu_and_mul_sparse=['native'])
+{
+  "status": "PASS_CPU_CONFIG_VALUES_ONLY",
+  "actual": {
+    "modules": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    },
+    "graph": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "engine_args_class": "vllm.engine.arg_utils.EngineArgs",
+  "engine_args_source": "/usr/local/lib/python3.12/dist-packages/vllm/engine/arg_utils.py",
+  "engine_args_sha256": "a7c3cfd379ba6a3f340071badb0029acf9c6e1dbfa59825c816c75bbff0bedfb",
+  "metadata_sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+  "model_metadata_unchanged": true,
+  "method": "Imported real helper; executed exact two graph assignment AST nodes with real EngineArgs; existing CpuPlatform fixture mechanism",
+  "gpu_initialized": false,
+  "gpu_graph_backend_g3_qualified": false
+}
