@@ -9,7 +9,7 @@ import shlex
 from pathlib import Path
 
 from frontier.profiling.common.step5_job import (
-    CLOUD_MOUNT, CLOUD_ROOT, IMAGE, STEPMIND_ENV, describe_job, stage_package,
+    CLOUD_MOUNT, CLOUD_ROOT, IMAGE, STEPMIND_ENV, describe_job, stage_package, profile_native_binding,
 )
 
 
@@ -157,7 +157,7 @@ def stage_probe(stage, run_id=PROBE_RUN_ID, *, dependency_site, gpus=1, preempti
                          additional_paths=(WORKLOAD,))
 
 
-def describe_p0_profiles(stage, run_id, *, role, gpus=1):
+def describe_p0_profiles(stage, run_id, *, role, gpus=1, profile_plan=None):
     """Prepare independent role measurements, not a serving calibration job."""
     from frontier.profiling.common.model_config import ModelConfig
     from frontier.profiling.linear_op.step5_job import METHODS, planned_profile, profile_arguments
@@ -165,7 +165,8 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
 
     if gpus != 1:
         raise ValueError("P0 compute profiling measures one isolated TP-local rank per role package")
-    plan = json.loads((REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json").read_text())
+    plan = json.loads((REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json" if profile_plan is None else Path(profile_plan)).read_text())
+    binding = None if profile_plan is None else profile_native_binding(plan, run_id, REPO_ROOT)
     if role not in plan["roles"]:
         raise ValueError("P0 measurement role must be PREFILL or DECODE")
     selected = plan["roles"][role]
@@ -202,6 +203,15 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
             "--max_tokens", str(max(selected["moe_tokens"])), "--precision", "BF16",
             "--profile_method", method, "--device", "h800", "--load_distributions", "uniform",
             "--routing_runtime_path", "standard_fused_topk", "--output_dir", str(output / "moe"), "--yes"]})
+    if binding is not None:
+        for command in commands:
+            if command["family"] in ("linear", "moe"):
+                command["arguments"] += ["--source_revision", plan["source"]["commit"],
+                                         "--model_config_revision", plan["model_config_revision"]]
+            if command["family"] == "moe":
+                args = command["arguments"]
+                args[args.index("--routing_runtime_path") + 1] = binding["native_reference"]["routing_strategy"]
+                args += ["--routing_input_file", "profile_artifacts/moe_inputs.json"]
     q = shlex.quote
     worker = [
         "set -euo pipefail", f"export TMPDIR={q(str(temporary))}",
@@ -212,19 +222,28 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
         "export VLLM_USE_BREAKABLE_CUDAGRAPH=1", "nvidia-smi -L",
         f"(cd {q(str(WORKLOAD))} && sha256sum -c SHA256SUMS)",
     ]
+    if binding is not None:
+        worker[1:1] = [
+            f"export FRONTIER_STEP5_PROFILE_MANIFEST={q(str(Path(stage).resolve() / 'manifest.json'))}",
+            "unset VLLM_MOE_ROUTING_SIMULATION_STRATEGY",
+            f"export VLLM_MOE_ROUTING_SIMULATION_STRATEGY={q(binding['native_reference']['routing_strategy'])}",
+            "export VLLM_MOE_SKIP_PADDING=1",
+        ]
     for command in commands:
         worker.append(shlex.join(["bash", "tests/integration/step5_profiling/run_on_worker.sh",
                                   *command["arguments"]]) + " 2>&1 | tee " +
                       q(str(output / f"{command['family']}_{command['method']}_worker.log")))
     manifest = describe_job(stage, run_id, worker_command="\n".join(worker), gpus=gpus,
                             gpu_tag=plan["gpu_tag"], charged_group=plan["charged_group"],
-                            preemptible=plan["preemptible"], timeout_seconds=plan["timeout_seconds"])
+                             preemptible=plan["preemptible"], timeout_seconds=plan["timeout_seconds"],
+                             image=IMAGE if binding is None else binding["native_reference"]["image"])
     workload_hashes = {name: hashlib.sha256((REPO_ROOT / WORKLOAD / name).read_bytes()).hexdigest()
                        for name in ("manifest.json", "SHA256SUMS")}
     if (workload_hashes["manifest.json"] != WORKLOAD_MANIFEST_SHA256
             or workload_hashes["SHA256SUMS"] != WORKLOAD_SUMS_SHA256):
         raise ValueError("P0 profiles require the unchanged common workload identity")
-    return {**manifest, "purpose": "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION",
+    return {**manifest, **({"native_binding": binding, "source": plan["source"]} if binding is not None else {}),
+             "purpose": "P0_ROLE_COMPUTE_PROFILES_NOT_COMPLETE_ADMISSION",
             "verification_scripts": ["verify_fixed_probe.py", "judge_attention_smoke.py"],
             "measurement_role": role, "measurement_plan": plan, "producer_commands": commands,
             "attention_arguments": attention_args, "workload": {"path": str(WORKLOAD), "sha256": workload_hashes},
@@ -235,10 +254,18 @@ def describe_p0_profiles(stage, run_id, *, role, gpus=1):
             "admitted": False, "blocks": plan["coverage_limits"]}
 
 
-def stage_p0_profiles(stage, run_id, *, role, dependency_site, gpus=1):
-    manifest = describe_p0_profiles(stage, run_id, role=role, gpus=gpus)
+def stage_p0_profiles(stage, run_id, *, role, dependency_site, gpus=1, profile_plan=None):
+    manifest = describe_p0_profiles(stage, run_id, role=role, gpus=gpus, profile_plan=profile_plan)
+    paths, files = (WORKLOAD,), ()
+    if profile_plan is not None:
+        plan = manifest["measurement_plan"]
+        paths += ("tests/comparison/dp_placement_pp/vllm_replay.py", "tests/comparison/stage_admission_pp/vllm_burst_driver.py")
+        files = tuple((plan[key], "profile_artifacts/" + name) for key, name in (
+            ("image_source_hashes", "installed_source_pins.txt"), ("native_source_receipt", "native_installed_sources.json"),
+            ("native_derivation_manifest", "derivation_manifest.json")))
+        files += ((profile_plan, "profile_artifacts/profile_plan.json"), (plan["roles"][role]["moe_input_file"], "profile_artifacts/moe_inputs.json"))
     return stage_package(stage, manifest, repo_root=REPO_ROOT, dependency_site=dependency_site,
-                         additional_paths=(WORKLOAD,))
+                         additional_paths=paths, additional_files=files)
 
 
 def main():
@@ -248,12 +275,15 @@ def main():
     parser.add_argument("--dependency-site", type=Path)
     parser.add_argument("--fixed-workload-probe", action="store_true")
     parser.add_argument("--p0-role", choices=("PREFILL", "DECODE"),
-                        help="Prepare an independent bounded H800 P0 role profile package")
+                         help="Prepare an independent bounded H800 P0 role profile package")
+    parser.add_argument("--profile-plan", type=Path)
     parser.add_argument("--preemptible", action="store_true",
                         help="Use a preemptible H200 fixed-workload probe under the D21 reservation policy")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--gpus", type=int, default=1)
     args = parser.parse_args()
+    if args.profile_plan is not None and not args.p0_role:
+        parser.error("--profile-plan requires --p0-role")
     if args.p0_role and (args.fixed_workload_probe or args.preemptible):
         parser.error("P0 role profiles are H800 non-preemptible and distinct from the fixed H200 probe")
     if args.preemptible and not args.fixed_workload_probe:
@@ -263,6 +293,7 @@ def main():
         resources["preemptible"] = args.preemptible
     if args.p0_role:
         resources["role"] = args.p0_role
+        resources["profile_plan"] = args.profile_plan
     describe = describe_p0_profiles if args.p0_role else describe_probe if args.fixed_workload_probe else describe_smoke
     stage = stage_p0_profiles if args.p0_role else stage_probe if args.fixed_workload_probe else stage_smoke
     if args.dry_run:

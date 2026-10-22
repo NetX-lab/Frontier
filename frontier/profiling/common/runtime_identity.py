@@ -358,4 +358,5 @@ __all__ = [
     "file_sha256",
     "measure_runtime_identity",
     "model_config_json_path",
+    "verify_step5_profile_runtime",
 ]

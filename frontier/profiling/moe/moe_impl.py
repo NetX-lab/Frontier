@@ -12,6 +12,7 @@ not a compute parameter. We profile operations per-device, using num_experts_per
 Implementation: Uses Frontier profiling operators for consistency with MLP profiling.
 """
 
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -253,7 +254,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
     linear_backend = "vllm_gate_linear"
     routing_assignment_policy = "biased_score_topk"
 
-    def __init__(self, *, hidden_dim: int, num_experts: int, router_topk: int, router):
+    def __init__(self, *, hidden_dim: int, num_experts: int, router_topk: int, router,
+                 routing_runtime_path="standard_fused_topk"):
         super().__init__()
         if (
             router.scoring_func != "sigmoid"
@@ -272,6 +274,8 @@ class SigmoidBiasGatingNetwork(nn.Module):
         self._fused_topk_bias = fused_topk_bias
         self.router = router
         self.router_topk = router_topk
+        self.routing_runtime_path = routing_runtime_path
+        get_routing_runtime_metadata(routing_runtime_path)
         ensure_vllm_single_rank_parallel_state()
         self.gate = GateLinear(
             hidden_dim,
@@ -284,6 +288,30 @@ class SigmoidBiasGatingNetwork(nn.Module):
         self.selection_bias = nn.Parameter(
             torch.zeros(num_experts, dtype=torch.float32), requires_grad=False
         )
+        native_callables = (GateLinear, type(self.gate), self.gate.forward)
+        self.native_router = None
+        self.routing_positions = self.routing_is_padding = None
+        if routing_runtime_path == "position_cyclic":
+            if os.environ.get("VLLM_MOE_ROUTING_SIMULATION_STRATEGY") != "position_cyclic":
+                raise ValueError("position profiler requires the selected native routing environment")
+            from vllm.forward_context import set_forward_context, set_routing_positions
+            from vllm.model_executor.layers.fused_moe.router.router_factory import create_fused_moe_router
+            self.native_router = create_fused_moe_router(
+                top_k=router_topk, global_num_experts=num_experts, scoring_func=router.scoring_func,
+                renormalize=router.renormalize, routed_scaling_factor=router.routed_scaling_factor,
+                e_score_correction_bias=self.selection_bias,
+            )
+            if self.native_router.routing_method_type.name != "Simulated":
+                raise ValueError("position profiling must execute the native Simulated router")
+            native_callables += (create_fused_moe_router, type(self.native_router),
+                                 self.native_router.select_experts, set_forward_context, set_routing_positions)
+            self.routing_assignment_policy = "position_modulo_experts"
+        manifest = os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST")
+        if routing_runtime_path == "position_cyclic" and not manifest:
+            raise ValueError("position profiling requires the full installed-source manifest")
+        if manifest:
+            from frontier.profiling.common.runtime_identity import verify_step5_profile_runtime
+            self.native_facts = verify_step5_profile_runtime(manifest, callables=native_callables)
         self.gating_linear_timer = CudaTimer("moe_gating_linear")
         self.gating_routing_topk_timer = CudaTimer("moe_gating_routing_topk")
 
@@ -298,10 +326,25 @@ class SigmoidBiasGatingNetwork(nn.Module):
             "routing_weight_policy": self.routing_weight_policy,
         }
 
+    def bind_source_frame(self, frame, *, device):
+        from frontier.profiling.moe.inputs import source_frame_tensors
+        self.routing_positions, self.routing_is_padding = source_frame_tensors(frame, device=device)
+
     def forward(self, hidden_states: torch.Tensor):
+        if self.native_router is not None:
+            positions, mask = self.routing_positions, self.routing_is_padding
+            if positions is None or positions.shape[0] != hidden_states.shape[0]:
+                raise ValueError("source frame and native router physical rows disagree")
+            from vllm.config import VllmConfig, get_current_vllm_config_or_none
+            from vllm.forward_context import set_forward_context, set_routing_positions
+            native = get_current_vllm_config_or_none() or VllmConfig()
         with self.gating_linear_timer:
             logits, _ = self.gate(hidden_states)
         with self.gating_routing_topk_timer:
+            if self.native_router is not None:
+                with set_forward_context(None, native, num_tokens=hidden_states.shape[0], is_padding=mask):
+                    with set_routing_positions(positions):
+                        return self.native_router.select_experts(hidden_states, logits)
             routing_weights, selected_experts = self._fused_topk_bias(
                 hidden_states=hidden_states,
                 gating_output=logits,
@@ -330,6 +373,13 @@ def get_routing_runtime_metadata(
             "routing_assignment_policy": "round_robin_uniform",
             "routing_weight_policy": "uniform_1_over_topk",
             "routing_uses_router_logits": False,
+        }
+    if routing_runtime_path == "position_cyclic":
+        return {
+            "routing_runtime_path": "position_cyclic", "routing_assignment_policy": "position_modulo_experts",
+            "routing_weight_policy": "sigmoid_renorm_scaled", "routing_uses_router_logits": True,
+            "routing_assignment_uses_positions": True, "routing_assignment_uses_scores": False,
+            "routing_weight_uses_scores": True, "moe_router_routing_method": "Simulated",
         }
     raise ValueError(
         f"Unsupported routing_runtime_path for MoE profiling: {routing_runtime_path}"

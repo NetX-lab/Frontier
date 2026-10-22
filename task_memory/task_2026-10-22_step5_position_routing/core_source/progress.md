@@ -13,7 +13,8 @@
 - completed: independent descriptor/launcher/provenance interfaces: explicit image reaches existing ResourceConfig launcher; generated artifacts use the existing copier/seal; actual GateLinear/router/norm callables use the full receipt; legacy native_facts remains absent; producer-specific imports remain distinct under shared identity.
 - completed: singleton timer `_profile_cell_callable` switches to RECORD_FUNCTION through tracer parser, restores/clears on call/parser failure, retains original event durations and carries paired kernel_count. Real CPU DeviceTimer/record_function annotations and parser executed; transport alone is synthetic. Mask sentinel is excluded before map/bincount.
 - observed: selected consumer check 215 PASS/19 SKIP/4 deselected; Py3.12 timer/router/norm/oracle check 18 PASS; actual linear attachment/legacy source test 34 PASS. Actual old fixed-probe stage/verifier PASS, 540 sealed files/18 attention rows/16 linear rows. Exact commands in dated reports.
-- in-progress: commit runtime then source/timer step and archive partial handoff. Current 29/44 changed paths, gross1537/4404; no file allowance exceeded.
+- completed: runtime commit `ac48363`,11 code/test paths,+176/-54=230 gross beyond first interface commit.
+- in-progress: commit source/timer step and archive partial handoff. Current29/44 changed paths,+1470/-95=1565/4404; no file allowance exceeded. Canonical input parser/executor serialization test added to the existing output-metadata file and verified; latest source identity suite35 PASS.
 - blocked: selected trainers/preflight/schema/physical price consumers and new fixture/main. PRICING `7b86614` provides the selected registry context contract, but import/merge is root-only and not authorized. Its uncommitted `NativeRoutedExperts.prepare_source/prepared_context/apply_prepared` does not yet provide the complete schema/range/numerical plan fixture receipt. No replacement registry/schema/plan is created.
 - pending root-owned: import/coordinate peers, selected integration qualification, full-unit/strict77/review, actual image/source receipt and runtime/E2E runs. Native actual setter/factory candidate is readable; published derived image/full receipt remain unavailable.
 
@@ -40,7 +41,7 @@
 | D2 细节反复重试 | CLEAR | fixture mixed-root and JSON canonicalization failures each corrected once; final tests pass |
 | D3 支线问题修补 | CLEAR | no unrelated fixes |
 | D4 可并行任务停滞 | CLEAR | runtime and independent source work both advanced; user prohibits extra agents |
-| D5 超范围镀金 | CLEAR | 29 owned paths,1537/4404 gross; no new unallocated module |
+| D5 超范围镀金 | CLEAR | 29 owned paths,1565/4404 gross; no new unallocated module |
 | D6 分析空转 | CLEAR | real source/timer/launcher changes and tests delivered; remaining dependency named precisely |
 | D7 路线违背 | CLEAR | no peer import/platform/source fallback |
 
@@ -59,5 +60,5 @@
 ## 4. 最值得关注的 3 点
 
 1. First count/source/tensor/verifier interfaces are ready; runtime/source consumers preserve the same owners.
-2. Shared trainer/schema/fixture work is blocked by real peer API/import prerequisites, not quota exhaustion;2867 gross lines remain.
+2. Shared trainer/schema/fixture work is blocked by real peer API/import prerequisites, not quota exhaustion;2839 gross lines remain.
 3. CPU plumbing is verified; published-image/full receipt, native/GPU/runtime/E2E qualification remain UNVERIFIED and root-owned.

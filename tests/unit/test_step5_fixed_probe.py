@@ -223,17 +223,23 @@ def test_actual_fixed_probe_linear_cli_accepts_6144_prefill(method, tmp_path):
 def installed_profile_receipt(tmp_path, monkeypatch):
     """A generated installed-package receipt, not native runtime qualification."""
     from frontier.profiling.common.runtime_identity import file_sha256
+    for name in tuple(sys.modules):
+        if name == "vllm" or name.startswith("vllm."):
+            monkeypatch.delitem(sys.modules, name)
     root = tmp_path / "installed/vllm"
     names = ("vllm", "vllm.models.step5.nvidia.model", "vllm.forward_context",
-             "vllm.model_executor.layers.fused_moe.router.router_factory",
-             "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
-             "vllm.model_executor.layers.fused_moe.router.gate_linear")
+              "vllm.model_executor.layers.fused_moe.router.router_factory",
+              "vllm.model_executor.layers.fused_moe.router.routing_simulator_router",
+              "vllm.model_executor.layers.fused_moe.router.gate_linear",
+              "vllm.models.step5.nvidia.layernorm", "vllm.model_executor.layers.fused_moe.oracle.fp8",
+              "vllm.model_executor.layers.fused_moe.oracle.unquantized")
     modules = {}
     for name in names:
         relative = Path(*name.split(".")[1:])
         path = root / ("__init__.py" if name == "vllm" else relative.with_suffix(".py"))
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("class GateLinear:\n    def forward(self, x):\n        return x\n")
+        path.write_text("class GateLinear:\n    def forward(self, x):\n        return x\n"
+                        "def make_step5_rms_norm(*args, **kwargs):\n    return GateLinear()\n")
         spec = importlib.util.spec_from_file_location(name, path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -330,3 +336,34 @@ def test_legacy_identity_omits_native_facts_and_bound_fingerprint_uses_shared_on
     second = replace(first, native_facts={"shared": {"image": "derived"}, "imports": {"norm": 2}, "callables": {}})
     assert first.fingerprint == second.fingerprint != identity.fingerprint
     assert first.columns()["native_facts"] != second.columns()["native_facts"]
+
+
+def test_source_job_seals_file_artifacts_and_propagates_actual_image(tmp_path):
+    from frontier.profiling.common.step5_job import describe_job, stage_package
+    repo, dependency = tmp_path / "repo", tmp_path / "dependencies"
+    for name in ("frontier", "data/config", "tests/integration/step5_profiling"):
+        (repo / name).mkdir(parents=True)
+    dependency.mkdir()
+    for name in ("submit_profiling_job.py", "run_on_worker.sh"):
+        (repo / "tests/integration/step5_profiling" / name).write_text("# source fixture\n")
+    artifact = tmp_path / "full_receipt.json"
+    artifact.write_text('{"schema_version":"native_installed_sources.v1"}')
+    stage = tmp_path / "stage"
+    image = "explicit-cpu-test@sha256:" + "d" * 64
+    manifest = describe_job(stage, "source-fixture", worker_command="true", image=image)
+    args = shlex.split(manifest["submission_command"])
+    assert args[args.index("--image") + 1] == manifest["image"] == image
+    result = stage_package(stage, manifest, repo_root=repo, dependency_site=dependency,
+                           additional_files=((artifact, "profile_artifacts/full_receipt.json"),))
+    assert result["sha256"]["profile_artifacts/full_receipt.json"] == hashlib.sha256(artifact.read_bytes()).hexdigest()
+    assert "--image " + image in (stage / "submit.sh").read_text()
+
+
+def test_missing_native_adapter_cannot_describe_a_new_generation(tmp_path):
+    plan = json.loads((job.REPO_ROOT / "frontier/profiling/step5/p0_profile_plan.json").read_text())
+    plan.update(generation="new-source", vllm_version="missing-derived-adapter", native_reference={})
+    path = tmp_path / "profile_plan.json"
+    path.write_text(json.dumps(plan))
+    with pytest.raises(ValueError, match="Unsupported|Unknown|adapter|version"):
+        job.describe_p0_profiles(tmp_path / "stage", "new-source", role="PREFILL", profile_plan=path)
+    assert not (tmp_path / "stage").exists()
