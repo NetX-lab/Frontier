@@ -1,6 +1,7 @@
 # D29 position_cyclic — Frontier and profiling design
 
-TaskID: D29-CORE-PRICING-INTERFACE (continuation of D29-FRONTIER-DESIGN-CORRECTION and
+TaskID: D29-CORE-SEAM-CORRECTION (continuation of D29-CORE-PRICING-INTERFACE,
+D29-FRONTIER-DESIGN-CORRECTION and
 D29-FRONTIER-POSITION-DESIGN; parent owns tree, commit and GPU work).
 
 This correction rechecks the decisive live interfaces after the parent tracked
@@ -12,6 +13,7 @@ document is edited; no child code step, test run or commit exists.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Close b8be287 core delta: constructor resolves count registry before parent init; both fit paths use selected binding facts before loader/helper calls; locally switch/restore singleton RECORD_FUNCTION replay and require actual DeviceTimer annotation/parser tests. Accept pricing's sole get_moe_profiling_operators(context) selector and conditional MOE_FAMILY prepare; keep33 files, budget the missing hunks. |
 | 2026-10-22 | Reconcile native applicable scopes: registry-derived gate/router plus reached source FP8 prepare and one gathered inclusive expert root; no separate shuffle target. Consume pricing-owned ROUTED quant/layout/context contracts; remove duplicate native invocation/identity hunks from CORE. Preserve collective_sim; measured CC variant unselected. |
 | 2026-10-22 | Reconcile delivered profile-source design: CORE owns the actual native timer adapter; define bounded per-frame cells/CSV rows and shared admission; count kernel-input/identity seams and tests. Source S2 wholly other-owned; pricing union still pending. |
 | 2026-10-22 | Address P1/P2: mandatory actual-main/pricing/launcher; strict source input; executable registry; immutable lane-aware cache; shared schema; paired exact Step coverage; separate source/gathered frames. Defer new-policy PD-AF/MTP/legacy expansion. |
@@ -51,11 +53,15 @@ Mandatory other-owned scopes, required before the combined scope decision:
 
 Profile-source delivery has been read: its sections 2/4 and S1–S13 assign the
 `moe_impl.py` factory/context/call seam to CORE and supply the binding interface
-described in 6.4. Pricing was delivered and is being corrected by its owner.
-This follow-up consumes its confirmed compute partition, not its unselected
-measured-CC proposal. Prior requirements retain simulation-based collective_sim;
-its faithful plan/lowering architecture and complete companion budget remain
-owner/parent dependencies. The measured lookup variant is not approved.
+described in 6.4. Pricing's D29-PRICING-CORRECTION is now delivered; its section5.1
+selection/conditional MOE_FAMILY prepare contract is accepted at the interface
+in6.2.1. Its known collective_sim interfaces still lack a selected full-duration
+model/complete ceiling; those remain pricing/parent work, not a CORE modeling task.
+The subsequent parent plan:33-40 removes exact per-channel reconstruction as a
+pre-code prerequisite and asks that owner for finite explicit model assumptions.
+CORE neither reinstates that rejected gate nor solves those model alternatives.
+Prior requirements retain simulation-based collective_sim. The measured lookup
+variant is not approved; D30's separate7/750 approval does not authorize D29.
 Sections 4.6 and 8 specify the remaining frame/kernel reconciliation without
 duplicating the other owners' investigations. No implementation or GPU run exists.
 
@@ -449,11 +455,12 @@ Section 6 consumes these facts without repeating their native investigation.
 
 ## 5. Registry consolidation (no model-name switches)
 
-One registry replaces four duplicated value lists and one enum:
+One count registry replaces the duplicated value lists and one enum:
 
 | Site | Current | Change |
 | --- | --- | --- |
 | `frontier/config/replica_config.py:91-97,178-192` | hardcoded `{balanced, random, skewed, zipf}` | validate against `ROUTING_COUNT_POLICIES`; help text updated |
+| `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:514-536` | separate four-value set at519-525 before parent init | call `resolve_routing_count_policy` on the existing normalized selector before parent init; remove the set/error branch and use the resolved runtime_path; A7 owns this constructor hunk |
 | `frontier/moe_ep_workload.py:32-86,774-855` | ratio generator and Hamilton materializer | keep old ratio math; one materializer invokes registry callable; ratio generation rejects source-required policy |
 | `frontier/moe_routing_runtime.py:6-43` | path constants + distribution→path map | map through the registry; add `position_cyclic` |
 | `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py:59-89` | `WorkloadDistributionType` enum | move enum declarations to the policy module and import them here; resolver delegates to the registry; `.value` and existing test imports remain unchanged |
@@ -469,6 +476,16 @@ is the materializer's only count dispatch. Its source requirement also owns the
 legacy-vs-explicit-source distinction. Runtime-path validation derives supported
 paths from its entries. Supported Step P/D geometry is an admission constraint,
 not a second registry or model-name switch for count mathematics.
+
+Constructor ordering is observable: `__init__:516-518` normalizes the selector,
+`:519-525` currently rejects position_cyclic, `:532-536` chooses runtime metadata,
+then `super().__init__:538-547` can begin profile/model setup. Resolve the count
+registry immediately after normalization and before that parent call; retain
+the seed check at526-531 and all legacy defaults/normalization. Unknown names
+fail in the existing registry resolver, not a second set. Store/use the returned
+policy runtime_path for this early initialization; source-required policy skips
+ratio initialization through the already planned seams. C6 tests the actual
+constructor with its expensive parent/model setup stubbed, not only the resolver.
 
 ## 6. Profiling: what the new policy requires
 
@@ -636,17 +653,33 @@ concatenation. Legacy token/TP/EP/load loops and combined return dict stay exact
 `MOE_FAMILY.profiling_order:85-90` has the legacy four targets.
 `OperatorFamilySpec.profiling_ops:349-357`/`predictor_ops:359-360`,
 `iter_operator_families` and `bind_operator_query` already own operator identity.
-Pricing adds native scope/applicability to these existing registered bindings
-and resolves the actual ROUTED prepare family/typed layer contract. CORE adds
-one `applicable_moe_profile_operators` resolver in existing `moe_routing_runtime.py`
-returning the applicable **bindings**, with profiling names, frame, physical scope,
-typed contract and selected feature schema. Inputs are routing policy, selected
-routed layer/native quant-layout contract and source/frame context. It delegates
-to registry applicability; no count-policy string map, second operator registry,
-row-supplied arbitrary target list or name-based caller dispatch.
+Accept **exactly** pricing section5.1's
+`get_moe_profiling_operators(context)` in existing `frontier/operators/families.py`,
+returning ordered applicable **OperatorSpec objects**, not enriched bindings.
+Pricing owns that selector, optional applicability predicate/context-aware
+profiling enumeration and the conditional `moe_input_quantize` entry in
+**MOE_FAMILY**. ROUTED already owns that family; `model_architectures.py` needs
+no prepare hunk. The entry is selected only for Step+position_cyclic+reached
+nondeferred FP8 prepare. Legacy no-context enumeration stays the four targets.
+The previous CORE `applicable_moe_profile_operators` name/second selection function
+is withdrawn, not retained as a wrapper or an alternative interface.
+
+CORE callers bind those selected specs through existing `bind_operator_query(spec.name,
+family_id=MOE_FAMILY.family_id)`/ROUTED `resolve_layer_contract` and pricing's
+Step precision/native frame contract, then pass their facts to the shared
+`moe_routing_runtime.py` filter without rebinding there. `OperatorQueryBinding:32-40` already
+returns operator/profiling name/family/TP mode, but **not** precision, context or
+schema. Keep those derived facts as a local bound record/tuple for existing
+filter/trainer calls, not new attributes silently assumed on OperatorSpec or a
+new exported binding/controller/registry. Use spec.tp_mode/spec.ep_agnostic,
+resolved contract TP/EP/identity, spec.precision_name() with the selected Step
+precision binding, frozen source context, registered profiling target/frame and
+selected native schema. Pricing owns quant/applicability/frame facts; CORE owns
+binding/consumer integration (A3/A9/A10/A17). No name-based prepare exception or
+new generic TP/family helper is needed.
 
 All producer/validator/CSV admission/loader/fit/exact-query users consume that
-same returned set. For legacy inputs it returns the unchanged four MOE_FAMILY
+same returned spec set and existing resolved facts. For legacy inputs it returns the unchanged four MOE_FAMILY
 targets. For the accepted new contract its result is:
 
 | Native applicable binding | Frame | Inclusion condition / physical scope |
@@ -661,8 +694,9 @@ query its zero shortcut in this policy. Structural absence is a registry/quant
 contract fact, never inferred from missing timing, empty load or source hashes.
 An applicable target lacking a row/key still fails coverage, including in-bound
 empty width. `STEP5_FFN_FAMILY` is currently SHARED (`model_architectures.py:711-712`);
-CORE does not invent a replacement family ID or ROUTED membership. Without
-pricing's valid resolved prepare binding, new FP8 admission fails clearly.
+Prepare uses the now-delivered conditional MOE_FAMILY entry and existing ROUTED
+membership, not a new family/SHARED registration. Without its selected native
+quantization/typed precision binding, new FP8 admission fails clearly.
 
 `MoEWrapper.profile(..., routing_cell=cell)` returns **one dict** for either mode:
 
@@ -745,6 +779,62 @@ not coverage or automatic cost0. Source S2's existing two method commands remain
 the generation's CUDA_EVENT/RECORD_FUNCTION output owners; CORE supplies the
 paired keys in both. This is operator evidence, not wall or CPU-gap profiling.
 
+**B3 owns the actual singleton switch.** `DeviceTimer:33-38` captures the existing
+TimerStatsStore object; `:69-80` and `:91-105` read its current enum and emit
+`vidur_*` record_function annotations only for RECORD_FUNCTION. Constructing
+`RecordFunctionTracer` alone leaves CUDA_EVENT timers producing events with no
+annotations. `Singleton.__call__:10-13` ignores later constructor arguments,
+so `TimerStatsStore(profile_method="record_function")` does not switch it.
+No common-timer/tracer/singleton file change is required.
+
+For the CUDA_EVENT new-mode branch, materialize/copy the completed event stats
+first (after sync), then clear the cell's event store. Preserve
+`self.profile_method` and output measurement identity as CUDA_EVENT. Locally wrap
+the existing direct native cell callable/annotations, **not** recursive
+`profile()`/legacy methods that dispatch on self.profile_method:
+
+```python
+store = self.timer_stats_store
+previous_method = store.profile_method
+store.clear_stats()
+try:
+    store.profile_method = ProfileMethod.RECORD_FUNCTION
+    tracer = RecordFunctionTracer(self.output_dir)
+    with tracer:
+        replay_cell()  # same tensors/scopes; no rebuild/prepare inside gathered root
+    replay_stats = tracer.get_operation_time_stats()
+finally:
+    store.profile_method = previous_method
+    store.clear_stats()
+# Validate exact applicable scope/counts, then attach ONLY kernel_count to event_stats.
+```
+
+The method remains RECORD_FUNCTION throughout all timer enter/exit and tracer
+exit/parser work; restore/clear also on callable, tracer-entry/export, parser or
+validation failure. No partial row is returned on those failures. A count pass
+must not mutate event min/max/mean/median/std/count or replace them with tracer
+durations; those durations independently belong only to the RECORD_FUNCTION
+campaign row. Warmup/preparation are outside the root's count replay. Existing
+record-function mode already has paired counts; it uses the same selected cell
+callable with a matching active store method, without another replay. Each
+existing worker executes cells serially in its own process (main:149-175;
+sequential/Ray actor methods also return one cell), so this local try/finally
+does not authorize a second store, locking layer or cross-process controller.
+
+Pricing owns replayable original prepare/inclusive-root callables and their
+timer scopes; CORE's wrapper invokes that same callable under this method switch.
+C4 must run real DeviceTimer.__enter__/__exit__ and torch.profiler.record_function
+on CPU-safe operations with only CUDA-event endpoints/tracer transport stubbed.
+Trace transport supplies correlated launch/kernel fixtures **from the captured
+real annotation names**; call actual RecordFunctionTracer.get_operation_time_stats
+and its scope correlation/consistency code, never stub its count dict. Verify
+annotations are absent while the unchanged store is CUDA_EVENT, present in replay,
+original event stats plus parsed actual count reach the same row, sample count
+is not kernel_count, and store method/stats are restored after callable/parser
+errors and before the next cell. CPU transport fixtures prove switch/annotation/
+pair plumbing only, not GPU count fidelity, timing or native parity. Native T2
+and actual paired scope traces remain the required runtime evidence.
+
 CORE makes the canonical validator policy/contract-aware: old rows still require
 all four targets; position rows require every applicable binding for their frame,
 its positive finite median/integral kernel_count and resolved typed membership.
@@ -760,9 +850,13 @@ median/count pairs before returning the DataFrame. Do not turn missing expected
 cells into zeros after flattening; the loader reuses the same row checks but does
 not try to infer an entire input inventory from partial timing rows.
 
-Use one shared `filter_moe_operator_rows(..., operator_binding, native_contract,
-requested_runtime_path, source_name)` in `moe_routing_runtime.py`; it consumes
-`applicable_moe_profile_operators`, not its own target/frame list. It checks row
+Use one shared `filter_moe_operator_rows(df, *, operator_facts,
+requested_runtime_path, source_name)` in `moe_routing_runtime.py`. Here
+operator_facts is the local per-op resolved spec/query/typed contract/precision/
+frame/context tuple or mapping described above, not a newly exported type.
+The caller's pass-wide map keys these records by registered operator/model context.
+It consumes
+`get_moe_profiling_operators(context)`, not its own target/frame list. It checks row
 policy/native contract/frame, applicable targets/fields and typed membership,
 selects only the applicable operator's real frame, and fails if expected coverage
 is absent. An intentionally inapplicable operator is not enumerated for training
@@ -775,13 +869,82 @@ datasets must not reuse one cached frame just because scalar filters coincide.
 Replace the independent new-mode column-level union/model-name enumeration with
 that resolver; leave its legacy four-column rule. Both training enumerators
 resolve bindings per routed precision/native contract before loader selection,
-including prepare from its actual registered family in the same moe_input_file.
-No global append to MOE_FAMILY or separate prepare-file selector. Select rows
+including conditional MOE_FAMILY prepare in the same moe_input_file.
+No unconditional target append or separate prepare-file selector. Select rows
 before features/metadata/pairs; gate-context suffixes come from the bound actual
 source context, and no FP8 prepare pair is trained from BF16 structural absences.
 Both duration and count maps
 come from those selected rows. Never rely on sklearn dropping opposite-frame
 NaNs or on a copied target to satisfy the legacy validator.
+
+**Trainer closure must happen before any old pre-loader helper, not after load.**
+For new mode enumerate pricing's selected specs and bind the local facts above
+for each routed precision/group and actually required source gating context.
+Reuse existing model/context suffix and typed contract serialization only where
+`spec.precision_name() == "moe_gating"` (the existing registry classification,
+not `_is_moe_gating_family_model_name`'s repeated family lookup); prepare stays its registered
+name/FP8 precision, never `moe_input_quantize__prefill_hot`. For each selected
+spec use the resolved ROUTED contract's tensor_parallel_size and optional EP
+field (validated against spec.tp_mode/ep_agnostic), actual precision/native schema,
+frame and source context directly. At accepted TP1/EP16, prepare's estimator is
+TP1/EP=ANY although the row/native receipt still records physical EP16 placement;
+inclusive expert is TP1/EP16. Gate/router retain their actual FP32 contract.
+Missing selected typed/precision/context facts fail before loader/fit.
+
+Reachable callsites and CORE hunks:
+
+- Independent `moe_dataset_training.py`: `_validate_moe_dataset_contract`
+  `:219-254` calls TP/EP/gating helpers even before `_get_moe_df_for_op`; new-mode
+  validation instead receives the selected bound facts and calls the shared
+  frame/target/typed/precision/context filter. Enumeration/metadata at320-345 and
+  `_register_additional_profiling_metadata_from_files:444-466` use those same
+  specs/contexts. `_get_moe_df_for_op:357-396` branches on source-required policy
+  **before** `_get_moe_op_tp_key`, `_is_moe_op_ep_agnostic` or
+  `_is_moe_gating_family_model_name`, selects by the bound TP/EP/frame/context/
+  precision facts and returns them with the rows. `_train_moe_models:420-437`
+  uses the bound profiling target/schema and registered precision metadata for
+  both duration/count fits; no generic model-dtype prepare identity.
+- Shared `prediction_family_trainers.py`: enumeration/validation at197-225
+  passes those bound facts into the existing validator. `_get_moe_df_for_op`
+  `:249-302` new-mode branch happens before unbound `_resolve_typed_layer_contract`
+  or the old TP/EP/gating helpers at256-280. Pass its resolved operator-specific
+  ROUTED contract, actual tp_key/ep_key and profiling name through existing
+  `_load_moe_df(..., tensor_parallel_size=..., expert_parallel_size=...,
+  operator_facts=op_facts,
+  **_layer_contract_kwargs(contract, operator_name=...))`. Existing loader
+  `_load_moe_df:695-727` gains that optional keyword (legacy None) and forwards
+  it into the planned shared filter after all-row typed validation; it does not
+  rebind through old helpers. The A18 +25/-2 allowance includes this argument/
+  filter forwarding, so no ninth delta path or second binding work is counted.
+  Apply shared filter
+  before returning; attach precision/frame/context/typed identity to existing
+  `op_training_context:345-376`, and use the same fields for both fitted maps.
+  Cache/model signatures include selected operator/group precision, source
+  context, runtime and frame, not the first generic ffn_signature alone.
+- Shared preflight `layer_contract_resolution.py:451-484` must branch before
+  helpers457/462, using passed per-op bound facts and the shared filter. It must
+  not validate every selected operator under the first primary_contract or call
+  no-context MOE_FAMILY.profiling_ops() to rediscover conditional prepare.
+  Both existing `_validate_moe_dataset_contract` implementations take one optional
+  keyword-only `operator_facts` mapping produced for that training pass from
+  selected specs and existing binding/contract/precision/context results. It is
+  a local immutable fact bundle, not a new registry/class/public selection
+  function. New mode requires it; legacy defaults to None and takes the old
+  path. Each validator selects that operator's record for the shared filter;
+  `_get_moe_df_for_op` closes over the same mapping rather than recalculating
+  family applicability. This is A17/A9/A10; old helper352-381 stays unchanged.
+
+Legacy branches keep existing TP/EP/gating helpers and optional hot-row warnings.
+New-mode required source context/count coverage cannot be silently skipped by
+the legacy PrefillHotRowsUnavailableError catch. No broad family registry or
+helper generalization is added. C5 exercises both real trainer entrypoints plus
+the shared preflight/loader on a minimal scoped FP8+BF16/context CSV; stub only
+the expensive fit, and make old helper calls raise if reached in new mode.
+Assert source prepare TP1/EP=ANY and FP8 identity survive until fit, BF16 does not
+enumerate it, expert uses gathered M/EP16, actual gate contexts remain distinct,
+and legacy calls still take their original helpers. C6 covers constructor/order
+and paired lookup after that admission. These are additions to existing tests,
+not a new grid, runtime campaign or extra file.
 
 Required metadata:
 
@@ -1080,7 +1243,7 @@ Reconciled pricing boundary for this focused correction:
 
 | Dependency supplied by pricing owner | CORE consumer / exact seam | Scope accounting |
 | --- | --- | --- |
-| Registered applicable native operator bindings, real ROUTED prepare contract and selected quant/defer condition | one resolver/filter in moe_routing_runtime.py; wrapper/main/loader/both trainers/Step exact-query use its returned set | Pricing owns registry/spec/model-architecture additions and native applicability; CORE counts only resolver/consumer integration, no guessed family ID. |
+| get_moe_profiling_operators(context) → ordered OperatorSpec; conditional MOE_FAMILY prepare and real ROUTED precision/quant contract | CORE callers bind selected specs using existing query/layer/Step precision interfaces before loader/helper calls; shared runtime filter consumes those facts without rebinding | Pricing owns families.py/spec.py selector/conditional entry and Step precision binding; no model_architectures.py prepare hunk. CORE owns binding/consumer integration; no second target selector/family. |
 | Source gating context and validated source-to-EP association | SourceLaneRouting frozen identity in4.1; inputs/source rows/context-specific models and gathered rank receipts | Pricing owns predicate/mapping/freeze implementation; CORE preserves fields in existing cache/input/selection/row protocol, no second mapper. |
 | Native source prepare and inclusive gathered expert invocation/returned scope stats and identity | existing wrapper per-frame dict, native sample/target validation, paired rows | Pricing owns moe_impl prepare, fp8_block_experts/moe_vllm_kernel invocation/layout/identity/count timer hunks. CORE owns only gate/router timer adapter and consuming wrapper/main/fit hunks. |
 | Selected native padded feature schema/layout/capacity and reached ranges | existing moe_load_imbalance shared classifier → runtime feature construction and both fit paths | Pricing owns added backend-specific schemas/features; CORE common classifier and actual typed-model/schema selection, no global-Triton fallback. |
@@ -1088,10 +1251,14 @@ Reconciled pricing boundary for this focused correction:
 
 Native prepare/inclusive-root/registry/layout/reporting hunks are mandatory
 pricing allowances on the shared paths, not zero-cost work and not duplicated in
-CORE. Pricing's received measured-cost budget is an **unselected variant**, not
-the selected CC scope or a number to mechanically union. Parent awaits its
-corrected simulation architecture/table and source-owner corrections before
-combined numerical approval. This document's current table is complete for CORE
+CORE. Pricing's corrected section6 common/Variant-A known-interface tables are
+delivered, but a finite selected full-duration simulation model/complete ceiling
+remains unresolved. Parent plan:33-40 supersedes its exact NCCL per-channel
+reconstruction prerequisite: required model inputs/assumptions and their scope
+belong to pricing/parent. Variant-B measured lookup is explicitly unapproved.
+Parent must combine the common/selected work only after remaining model/scope
+are settled; it cannot mechanically union the lookup variant or call known
+interface ceilings the full numerical repair. This document's table is complete for CORE
 consumer/count/adapter/fixture ownership, not the full integrated repair.
 
 ## 7. Fixture and runner consequences
@@ -1155,8 +1322,9 @@ There is no remaining label or per-wave-balance choice.
    paths without dropping their added/deleted work, then obtain parent/user
    scope approval. Own-side subtotal is not a complete implementation estimate.
 2. **Mandatory pricing interface:** consume its confirmed source/applicable-FP8-
-   prepare/inclusive-expert partition and await corrected registry/ROUTED quant
-   binding, selected native layout and source-to-EP/TP ownership.
+   prepare/inclusive-expert partition and exact section5.1 selector/conditional
+   MOE_FAMILY prepare. Actual selected native quant/layout/source-to-EP evidence
+   and full-duration communication inputs still need the existing owners.
    Existing all-to-all numbers do not prove the accepted Step DP identity.
    collective_sim remains the approved numerical approach; measured exact-plan
    lookup is unselected. Pricing/parent must settle a faithful simulation design
@@ -1197,24 +1365,24 @@ All paths relative to repository root:
 | --- | ---: | ---: | --- |
 | `frontier/moe_routing_policy.py` (new) |0|200 /0| callable registry, frozen source lanes, strict source validation, interval math |
 | `frontier/moe_ep_workload.py` |898|75 /12|134-181,374-388,810-855: live ledger, single registry-callable materializer, shared EP split |
-| `frontier/moe_routing_runtime.py` |67|105 /18|6-43: registry paths, one existing-registry-derived applicable-binding resolver and shared frame/target/typed filter for producer/load/fit/query; no second target list |
+| `frontier/moe_routing_runtime.py` |67|105 /18|6-43: count-registry paths and shared frame/target/typed filter; consume pricing's sole selected-spec interface and locally bind existing TP/EP/precision/context facts, no second selector |
 | `frontier/config/replica_config.py` |269|6 /10|91-97,178-192: registry validation/help |
 | `frontier/execution_time_predictor/moe_routing_workload.py` |671|90 /22|268-444,593-604: strict source, whole-source descriptor cache, shared padded schema/runtime features |
 | `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py` |3019|18 /20|59-89,430-514: import enum, skip ratio initialization |
-| `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py` |1793|80 /12|106-176: applicable bindings/selected schemas and dispatch, paired exact keys/in-bound miss rejection for every included scope; no absent scope lookup |
+| `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py` |1793|86 /19|106-176: applicable dispatch/paired exact keys;514-536: resolve count registry before parent init instead of four-name set, preserve seed validation |
 | `frontier/execution_time_predictor/moe_operator_times.py` |744|35 /10|479-508,653-668: applicable inclusive-root no-zero/exact-query integration; no new shuffle query. Source/prepare/native scope/collective pricing hunks other-owned |
-| `frontier/execution_time_predictor/moe_dataset_training.py` |493|85 /20|50-81,137-158,214-243,350-439: same applicable model/column set and scoped rows/pairs/cache/schema; four-column rule legacy-only |
-| `frontier/execution_time_predictor/prediction_family_trainers.py` |1849|75 /20|197-225,273-380,1591-1643: same applicable bindings/model enumeration/frame cache/schema and paired counts per native contract/source context |
+| `frontier/execution_time_predictor/moe_dataset_training.py` |493|109 /26|50-81,137-158,219-254,320-437,444-466: selected specs/metadata; preflight and row-cache binding facts before TP/EP/gating helpers; typed precision/frame/context into both fits. Legacy branches unchanged |
+| `frontier/execution_time_predictor/prediction_family_trainers.py` |1849|101 /28|197-225,249-325,345-380,1591-1643: bind selected specs before loader/helper paths; actual TP/EP/precision/context/contract and frame caches/signatures/pairs |
 | `frontier/scheduler/utils/ep_wave.py` |164|20 /2|109-131: actual source lanes and live conservation trace |
 | `frontier/scheduler/utils/layer_workload.py` |67|35 /8|13-67: role policy/source into core |
 | `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` |1993|8 /3|899-915: shared P/D source threading only, no new PD-AF path |
 | `frontier/scheduler/utils/ep_trace.py` |542|20 /8|496-542: live ledger and physical/padding trace |
 | `frontier/moe_load_imbalance.py` |195|25 /1|33: one common exact schema classifier used by runtime/selection/trainers; pricing-owned native capacity/layout entries are additive |
 | `frontier/execution_time_predictor/step5.py` |627|50 /8|495-625: scoped operator rows and routing/frame/source/backend/callable identity propagation, paired-row prerequisites |
-| `frontier/execution_time_predictor/layer_contract_resolution.py` |495|25 /5|451-484: shared applicable-binding/frame/target filter before coverage admission; consume resolved ROUTED prepare contract |
+| `frontier/execution_time_predictor/layer_contract_resolution.py` |495|37 /8|451-484: pass per-op bound facts and branch before TP/EP helpers457/462; shared filter/actual ROUTED contract, legacy352-381 helpers untouched |
 | `frontier/execution_time_predictor/profiling_dataframe_loaders.py` |979|25 /2|695-727,794-811: after all-row typed validation, same applicable/scoped row filter; preserve per-frame num_tokens and legacy typed/scalar filters |
 
-A: **18 files, +977/-181 =1158 gross lines**.
+A: **18 files, +1045/-205 =1250 gross lines**.
 
 ### B. Existing MoE profiling interface and producer
 
@@ -1222,11 +1390,11 @@ A: **18 files, +977/-181 =1158 gross lines**.
 | --- | ---: | ---: | --- |
 | `frontier/profiling/moe/inputs.py` (new) |0|130 /0| exact input schema, DP frames/source gating context and supplied association, bounded cells, canonical JSON and mask/position validation |
 | `frontier/profiling/moe/moe_impl.py` |658|95 /18| CORE-owned factory construction, native forward/position context/select_experts, existing timer/metadata/callable integration; no source-owner substitute |
-| `frontier/profiling/moe/moe_wrapper.py` |929|160 /35| local router adapter and consume pricing native sample/scopes/identity; one dict per cell, resolver-derived targets/local-gathered widths/fields, paired stats and sentinel counts; no duplicated native prepare/expert adapter |
+| `frontier/profiling/moe/moe_wrapper.py` |929|184 /37|118-119/443-495/872-929: preserve event dict, locally switch existing singleton to RECORD_FUNCTION around direct cell replay and restore/clear in finally; selected targets/widths/counts/native adapter consuming hunks |
 | `frontier/profiling/moe/main.py` |1218|115 /30| input/cell count, three executor keyword paths; same applicable target/column set for scoped validation and CSV admission; one dict, existing flattening and legacy rule |
 | `frontier/profiling/moe/load_distribution.py` |275|3 /2| skip IDs-1 before existing bincount |
 
-B: **5 files, +503/-85 =588 gross lines**. Native expert sample/invocation/layout/
+B: **5 files, +527/-87 =614 gross lines**. Native expert sample/invocation/layout/
 kernel-identity hunks in fp8_block_experts.py and moe_vllm_kernel.py are wholly
 pricing-owned, mandatory and excluded from this subtotal; no duplicate CORE hunk.
 New census-derived JSON is a mandatory
@@ -1241,12 +1409,12 @@ omissions from the complete task. No dependency/package edit in this subtotal.
 | `tests/unit/test_moe_position_routing.py` (new) |160 /0| math/registry/input proof, strict missing-source rejection, source-lane-aware descriptor cache/invariance |
 | `tests/unit/test_moe_routing_conservation.py` |70 /1| actual public wave producer + physical/live trace |
 | `tests/unit/test_moe_routing_runtime.py` |60 /0| registry-derived applicability and one shared frame/typed/target set; FP8 reached/deferred/BF16 and legacy unchanged; no guessed ROUTED family |
-| `tests/unit/test_step5_moe_profiling.py` |110 /0| CORE factory/context/select_experts/mask proof and consuming pricing scopes/identity; no duplicated expert invocation/layout test. Source S12/pricing native tests additive |
-| `tests/unit/test_moe_grouped_gemm_padded_features.py` |110 /0| scoped CSV loader/both trainers use same applicable bindings and selected shared schema/ranges; physical empty widths/cache/context separation; pricing supplies layout entries |
-| `tests/unit/test_step5_measured_ffn.py` |90 /0| applicable scopes require paired exact keys including in-bound empty width; structural absence not zero; source/target/identity proof |
+| `tests/unit/test_step5_moe_profiling.py` |175 /0| C4: CORE adapter/mask plus real DeviceTimer/record_function annotations and actual tracer correlation parser/paired count; immutable event durations, callable/parser failure restore/clear. CPU trace transport only; source/pricing tests additive |
+| `tests/unit/test_moe_grouped_gemm_padded_features.py` |140 /0| C5: both real pre-loader trainer/preflight paths consume selected prepare TP1/EP=ANY/FP8 and context/frame facts without old helpers; existing scoped CSV/schema/cache tests, legacy helpers unchanged |
+| `tests/unit/test_step5_measured_ffn.py` |108 /0| C6: actual constructor admits registered policy before parent init and rejects unknowns; typed paired exact empty keys and source/target proof; no structural zero |
 | `tests/unit/test_moe_profiling_output_metadata.py` |85 /0| mixed FP8/BF16 source/gathered cells, optional prepare and no new shuffle; missing applicable/opposite/fabricated target rejection; legacy four targets; real executors/CSV flattening |
 
-C: **7 files, +685/-1 =686 gross lines**.
+C: **7 files, +798/-1 =799 gross lines**.
 
 ### D. Mandatory actual-main fixture/runner acceptance
 
@@ -1263,7 +1431,7 @@ proofs and the same registry-applicable scoped CSV protocol (reached FP8 prepare
 no BF16/deferred prepare or separate shuffle zero); preserves legacy fixture
 expectations. CPU proof is not native timing.
 
-**Own mandatory A+B+C+D:33 distinct code/test files, +2420/-315 =2735 gross
+**Own mandatory A+B+C+D:33 distinct code/test files, +2625/-341 =2966 gross
 changed-line ceiling.** This is not the final complete task budget: additional
 mandatory native, pricing and profile-source/launcher paths/line ceilings must
 be imported from their owning designs. `job.py` is expressly mandatory there.
@@ -1272,15 +1440,29 @@ overlap other-owner work; union paths but add all disjoint changed hunks. Do not
 count a file twice or omit its additional work to keep this subtotal unchanged.
 This already exceeds 5 files/500 lines; implementation awaits combined scope
 approval. The old 29/1556 and 32/1699 estimates are superseded, not accepted
-complete alternatives;31/+1817/-251/2068 and35/+2365/-311/2676 are also superseded.
+complete alternatives;31/+1817/-251/2068,35/+2365/-311/2676 and
+33/+2420/-315/2735 are also superseded.
 Source S2 is wholly outside this table. Source S8/S12 remain additive on shared
 files, with no prior S2 allowance to deduct. Pricing's registry/native scope/
 layout/phase/reporting hunks are mandatory additional allowances; its delivered
-measured-CC variant is still unselected and the corrected collective_sim design
-is pending. Neither this complete CORE subtotal nor old companion arithmetic is
+measured-CC variant is still unselected; delivered collective_sim known-interface
+tables do not yet budget a selected finite full-duration model. The parent owns
+that correction and has removed exact per-channel reconstruction as a pre-code gate.
+Neither this complete CORE subtotal nor old companion arithmetic is
 a final union claim. Parent must reconcile their corrected tables and count
 shared paths once with each owner's disjoint hunks, not import a second CORE
 expert adapter or pretend the unselected CC allowance is the complete repair.
+
+**This focused delta stays inside the same33 paths.** Only eight existing
+ceilings increase: A7 +6/-7 constructor; A9 +24/-6 independent pre-loader/
+metadata branches; A10 +26/-8 shared pre-loader/context facts; A17 +12/-3 shared
+preflight; B3 +24/-2 singleton replay; C4 +65 actual annotations/parser/pair and
+cleanup; C5 +30 actual trainer pre-loader admission; C6 +18 constructor/order.
+Total delta **+205/-26 =231 gross lines** over2735, justified by real caller
+branches/record_function activation omitted from the preceding table. A3 uses
+its existing binding/filter allowance rather than counting pricing's selector
+twice. No common timer/tracer/singleton file, new registry generalization,
+campaign/grid or CC algorithm hunk is added.
 
 Unchanged: `ep_wave_inputs.py` already retains actual lane batches/padding;
 `round_robin_cluster_scheduler.py` already calls the base producer;
@@ -1330,8 +1512,13 @@ That does not exempt mandatory pricing-owner changes to accepted shared waves.
     json_normalize/CSV roundtrip. Source rows carry gate/router plus prepare only
     for reached nondeferred FP8; BF16/deferred rows lack that target and all new
     gathered rows have one inclusive root, no separate shuffle. Spy on the
-    existing registry resolver: producer, validator, loader, both enumerators
-    and exact-query users consume the same binding set. Wrong context/source-rank
+     pricing-owned get_moe_profiling_operators(context): producer, validator,
+     loader, both enumerators and exact-query users consume the same spec set.
+     C4 additionally exercises actual DeviceTimer record_function annotations and
+     actual correlated-trace parser/count pairing, event-dict preservation and
+     exception-safe singleton restoration as specified in6.2.1, not a count stub.
+     C5 tests real trainer preflight/cache/loader paths with legacy helper traps
+     and actual bound TP/EP/precision/source-context facts. Wrong context/source-rank
     association, missing applicable target/count, fabricated BF16 prepare/shuffle,
     copied opposite timing or omitted EP owner fails. Legacy dict still contains
     all four timings. Exercise sequential, multiprocessing worker and reachable
@@ -1340,6 +1527,9 @@ That does not exempt mandatory pricing-owner changes to accepted shared waves.
     router/prepare never see24 from this wave, expert never sees8/16; cache cannot alias
     these frames. Duration/count exact maps retain their selected source rows.
 6. Typed coverage: a positive physical frame/empty local lane reaches lookup,
+    C6 first exercises actual constructor519-525 replacement before stubbed
+    parent init: registered position policy passes; unknown names fail without
+    invoking parent; all old selectors still normalize/validate as before.
    missing empty/new-policy rows raise, two physical widths do not alias at
    `(total_routed=0,padded=0)`. Put empty rows at widths8/24 and query missing
    width16 inside their bounds; require coverage error and no predict/cache
@@ -1394,9 +1584,9 @@ moe_ep_workload898. Base scheduler proposed+8/-3 gives1998; new math
 and extraction must stay in `utils`/policy module. Disaggregation removes its
 local enum and keeps role initialization/source-policy admission; net growth is
 nonpositive within +18/-20. Its existing size exception remains justified, with
-enum cleanup recorded. Current CORE ceilings: MoE predictor1793+80/-12 gives1861;
-trainer1849+75/-20 gives1904; loader979+25/-2 gives1002;
-moe_impl658+95/-18 gives735; wrapper929+160/-35 gives1054;
+enum cleanup recorded. Current CORE ceilings: MoE predictor1793+86/-19 gives1860;
+trainer1849+101/-28 gives1922; loader979+25/-2 gives1002;
+moe_impl658+95/-18 gives735; wrapper929+184/-37 gives1076;
 MoE main1218+115/-30 gives1303. Kernel adapter/native identity files are pricing-
 owned, not zero-cost or included in these CORE net sizes. These are upper net sizes from this owner's hunks,
 not the final sizes after other-owner additions. The small same-dict frame
@@ -1416,14 +1606,18 @@ This is mathematics only; no producer code, native graph, timing or G3 run.
 Example physical/live numbers in that probe were test inputs, not observed
 worker widths.
 
-Current arithmetic: A18/+977/-181/1158; B5/+503/-85/588;
-C7/+685/-1/686; D3/+255/-48/303; total33/+2420/-315/2735. Compared with
-the preceding35/+2365/-311/2676 subtotal, CORE removes two wholly pricing-owned
-native expert paths and their +50/-7 allowance, then adjusts required registry/
-consumer/fixture hunks: net +55 added/+4 deleted, +59 gross. This is a complete
+Current arithmetic: A18/+1045/-205/1250; B5/+527/-87/614;
+C7/+798/-1/799; D3/+255/-48/303; total33/+2625/-341/2966. Relative to
+33/+2420/-315/2735, this focused delta adds +205/-26=231 gross across eight
+existing paths, itemized in9; no new file. Closure evidence is inspected actual
+constructor514-536, both trainer pre-loader branches and shared preflight,
+DeviceTimer's singleton enum dispatch/annotations, and RecordFunctionTracer's
+correlation parser. These are design closures, not executed implementation tests. This is a complete
 CORE subtotal, not a complete task estimate. Source S2 has no overlap deduction;
 S8/S12 and pricing native/registry/layout/reporting work remain mandatory additive
-allowances, and selected faithful collective_sim architecture/table is unresolved.
+allowances; pricing/parent still must select finite collective_sim assumptions
+and a complete numerical ceiling, following the latest plan33-40, not impose
+exact native schedule reconstruction. D30's separate approval grants no D29 work.
 Read-only document validation checks this arithmetic, scoped exact paths/code
 fences and git diff --check; no new math campaign, tests, profiling, platform
 operation, code edit or commit. The document is now
@@ -1435,48 +1629,48 @@ tracked by the parent; obsolete first-design force-add instructions do not apply
 
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
-| CORE adapter/source及registry-derived row接口 | PASS | design6.2–6.4：CORE router，一cell一dict，实际applicable targets/source context/rank契约 |
-| schema/loader/两trainer/exact paired coverage | PASS | 同一个适用binding set；native selected schemas/local-gathered widths及in-bound缺行拒绝，无结构性zero |
-| 本侧mandatory文件/行数/fixture设计 | PASS | design7/9–11；fixture必需，33文件+2420/-315=2735gross CORE subtotal |
+| constructor/两trainer/计数replay seam设计 | PASS | design5/6.2.1：实际constructor、pre-loader helper路径、singleton切换和实际annotation/parser测试已明确 |
+| pricing selected-spec/typed schema/exact pair接口 | PASS | 接受唯一get_moe_profiling_operators；条件MOE_FAMILY prepare，local/gathered与typed precision/context不重查旧helper |
+| 本侧mandatory文件/行数/fixture设计 | PASS | design9/11；fixture必需，33文件+2625/-341=2966gross CORE subtotal；8路径补齐231gross |
 | implementation/tests/native/platform/commit | SKIPPED | 本child只修改design；未获实施范围批准 |
-| pricing具体contract/CC架构/联合scope/native parity | TODO | 已交付pricing在修订：ROUTED quant/family/layout/source association及collective_sim allowance/native T2未决 |
+| pricing有限CC模型/联合scope/native证据 | TODO | pricing已交付compute接口；parent要求有限模型和完整ceilings，native/image/count/runtime均未验证 |
 
 ## 2. 偏离检测
 
-**结论：** 已偏离：命中 D2；文档patch重复错误上下文已停止，设计主线恢复。
-**检测窗口：** D29-CORE-PRICING-INTERFACE｜**当前前沿：** pricing修订具体binding/layout/CC架构及完整scope整合
+**结论：** 未偏移，正常推进。
+**检测窗口：** D29-CORE-SEAM-CORRECTION请求至今｜**当前前沿：** parent验收本侧3个seams、pricing有限CC模型及完整scope整合
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | 只有decisive接口核实和design算术/格式检查，无test campaign |
-| D2 细节反复重试 | HIT | 两次patch同一不存在上下文，未先核实；后改为读取实际范围/精确patch，已落地，无behavior或测试循环 |
+| D2 细节反复重试 | CLEAR | 无重复behavior fixes/test reruns；一次patch错误尾部上下文去除后落地，未形成连续失败循环 |
 | D3 支线问题修补 | CLEAR | 所有改动对应review correction；未重查其他owner native scope |
 | D4 可并行任务停滞 | CLEAR | companions由父端另行委派，child禁止新agents |
-| D5 超范围镀金 | CLEAR | 已撤回新政策PD-AF/MTP/fallback/marker，不实施无验收路径的扩展 |
+| D5 超范围镀金 | CLEAR | 仅3个已请求seams/既有测试8路径补齐ceilings，不增加文件、selector或CC算法 |
 | D6 分析空转 | CLEAR | design为所请求交付；已写明确seams/ceilings/dependencies |
-| D7 路线违背 | CLEAR | fixture必需，保留position/mask/权重/G3，无counts-only替代 |
+| D7 路线违背 | CLEAR | 无D29实施；D30独立批准不外推；collective_sim保留且接受parent有限模型/非exact重建的plan纠正 |
 
-**文档检查：** S2/S6：四-target new CSV/训练/exact规则与native prepare/inclusive-root冲突，已改成同一existing-registry-derived set，旧四-target保留。STEP5_FFN_FAMILY真实SHARED，不猜ROUTED family；pricing承担具体binding/native layout/执行scope。S5：旧CORE35/2676与companions overlap算术过时；parent按当前逐路径表和pricing修订表合并。本child不改其他owner文档。
-**归因：** D2 执行偏离：文档patch上下文猜测，已纠正；其余检查无偏离证据。
+**文档检查：** S2/S5：前版design5/6/9遗漏constructor/pre-loader/store切换，与review166-187及实际源码矛盾；已补明确所有权与8路径ceilings。S6：旧本侧第二selector及prepare family表述与pricing5.1不一致，已接受唯一selected-spec接口/条件MOE_FAMILY。旧CC exact重建前置门与最新plan33-40冲突，已移除本侧重述；其模型仍由pricing/parent纠正。S1/S3/S4未见新增缺陷。
+**归因：** 无执行偏离。
 
 ## 3. 纠正建议
 
-**分支：** B：跨owner scope/target契约已纠正，具体pricing bindings/layout和选定CC架构未决；先完成其修订再联合审批，不实现measured-lookup替代。
+**分支：** B：补齐3个真实seams及pricing接口后再联合审批；CC有限模型/假设由已有owner处理，不实施measured-lookup替代。
 
 **文档更新（先执行）：**
-1. 本design：完成registry-applicable rows/consumer/coverage接口；33/+2420/-315/2735 CORE subtotal，fixture必需（已完成）。
-2. 本task `progress.md`和parent联合scope：更新source S2 wholly-owned、S8/S12 additive，丢弃旧overlap算术（可直接执行，child无写权限）。
+1. 本design：完成constructor、实际pre-loader binding facts和singleton replay/实际annotation测试设计；33/+2625/-341/2966，fixture必需（已完成）。
+2. 本task `progress.md`/review和parent联合scope：记录3个设计closure和231gross增量，按当前companion表计数；parent更新，本child无写权限。
 3. 联合scope：父端整合各owner文件/行数、共享接口及明确所有权，获得完整扩展批准（需用户确认具体数值，不重开已决定的fixture或position政策）。
 
-**需停止的偏离行为：** D2：停止猜测patch上下文；先读目标实际内容，再只修改确认的hunk（已执行）。
+**需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. pricing既有owner完成实际ROUTED prepare、inclusive callable/layout/source association/报告及faithful collective_sim设计 → 完成标志：返回registered bindings/typed schemas与完整ceilings，不引用未经批准的measured-CC替代。
+1. parent核对本侧3个seams的设计closure；并行由pricing既有owner补有限collective_sim模型/显式假设及完整ceilings，D30继续其独立获批scope → 完成标志：本侧无caller gap、模型scope可有限批准；不猜native parity或measured-CC替代。
 2. 联合scope审批 → 完成标志：合并真实distinct文件和所有必需改动ceilings，fixture保留，用户批准。
 3. 获批后实施/验证 → 完成标志：聚焦producer/schema/exact-coverage与paired actual-main通过，再由父端取native/G3新证据；无缺测量fallback。
 
 ## 4. 最值得关注的 3 点
 
-1. 新政策严格使用supplied frozen source；descriptor cache包括lane身份与local physical/live字段，无virtual fallback。
-2. Bounds不能证明空width测量；typed Step要求匹配source/schema的duration/count exact keys，并共用schema/ranges识别。
-3. 本侧33文件2735gross含CORE router adapter、registry-applicable CSV/训练/exact及mandatory fixture；pricing原生expert paths/companion allowance额外必需，CC架构未选定，不报最终union。
+1. Constructor在parent init前解析count registry；两trainer在任何旧family helper/loader前消费同一selected spec的TP/EP/typed precision/context事实。
+2. Count replay真实切换已有singleton至RECORD_FUNCTION并在finally还原/clear；测试实际annotation和trace parser配对，不以stub counts冒充验证。
+3. 本侧33文件+2625/-341=2966gross含mandatory fixture；完整联合scope和finite collective_sim假设仍需parent审批，native/runtime未验证；D30批准不外推D29。

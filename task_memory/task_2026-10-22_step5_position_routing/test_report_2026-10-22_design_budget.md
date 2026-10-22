@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Independently check the final three-seam core revision:33 paths/+2625/-341=2966. |
 | 2026-10-22 | Compile the proposed post-build receipt command and nested payload without executing either. |
 | 2026-10-22 | Preserve the failed authored-total check, corrected arithmetic, and source-inspection limits. |
 
@@ -65,3 +66,13 @@ Expected: both code bodies compile; no execution of either body. Actual:
 `executed_emitter=False`, exit0. The51 host lines already include the29 payload
 lines, so they are not additive. Docker/image/runtime provenance is not tested
 by this syntax check.
+
+## Core three-seam budget revision — PASS
+
+Parent parses only the path tables in `design.md` section9, not the prose
+subtotals, using Python3.10.6. Each existing path must exist; `(new)` paths are
+explicitly declared. All33 paths are unique. Added ceilings sum to2625 and
+deleted ceilings to341, giving2966 gross, matching the declaration. The receipt
+with every parsed row is `/data/ycfeng/tmp/d29_core_budget_2966_parent01.json`.
+This verifies planned arithmetic only; actual diffs, cross-owner union and
+implementation/native behavior remain unverified.

@@ -75,6 +75,11 @@
   Parent applies the plan correction and requests finite model alternatives,
   explicit assumptions and a complete bounded implementation budget. Existing
   collective_sim and subsequent native/E2E qualification remain required.
+- received: core author closes the constructor, trainer pre-loader and timer
+  singleton seams. Parent independently checks33 unique paths, +2625/-341=2966
+  gross ceiling and existing/new path declarations; receipt
+  `/data/ycfeng/tmp/d29_core_budget_2966_parent01.json`. Narrow three-seam review
+  is running. These are design checks, not implementation/native acceptance.
 - pending: settle required companions, combine corrected native design and
   user scope approval, implement, verify and collect fresh evidence.
 
