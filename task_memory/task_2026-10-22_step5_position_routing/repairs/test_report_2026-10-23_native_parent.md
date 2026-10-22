@@ -87,7 +87,18 @@ XML is retained as `evidence/d29_native_image_cpu01.xml`.
 
 ## Open acceptance
 
-Close review N1–N4 and re-review affected changes; integrate accepted source,
+Repair continuation74d5c48/6827507: parent repeats the exact affected command
+above from the native worktree with basetemp/JUnit/log prefix
+`/data/ycfeng/tmp/d29_native_parent_repair01`. **485 PASS/36.09s**. Independent
+source accounting yields19 paths/1269 gross (313 available); all native4 file
+hashes and patch remain unchanged, and the12 backend schema source files equal
+their actual installed local-image hashes. Audit receipt:
+`evidence/d29_native_parent_repair_source01.json`; JUnit is
+`evidence/d29_native_parent_repair01.xml`. The independent N1–N4 delta review
+closes all four findings without additional actionable issues. Parent accepts
+native19 source/CPU integration; no runtime qualification is implied.
+
+Integrate accepted source,
 publish/verify immutable image identity and emit final53 pins/full-source receipts.
 Actual graph/auto backend/all-rank origins, G3 state/transfer, complete CLI and
 clean E2E remain open. Additional collection resource/run decisions are made at

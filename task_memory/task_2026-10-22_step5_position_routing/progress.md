@@ -41,8 +41,11 @@ Root supplies integration/review/image operations; no peer file writes or extra
 agents. Early interface commits precede dependent consumers. CORE/SOURCE and
 PRICING remain active. Native19 is delivered at2c4cc9e; root review
 ses_e9afdb7c4ffejb3hbkjZCeHFKS returns four concrete findings, now assigned to the
-original native session within1582. See review.md N1–N4. Root image/source
-qualification proceeds in parallel; source acceptance/publication remains open.
+original native session within1582. Repair74d5c48/records6827507 now delivers
+19 paths/1269 gross, unchanged native4 patch. Root independently passes485 checks
+and verifies all12 backend schema sources against the actual local-image export.
+Reviewer closes N1–N4 without new findings. Root accepts native19 source/CPU scope
+for integration; image publication/source receipts and runtime qualification follow.
 
 Parent independently reproduces418 PASS/35.45s at2c4cc9e and verifies all19 paths,
 1017 gross lines, four native before/after hashes and exact sparse context02.
@@ -62,7 +65,35 @@ installed derivation-manifest hash verified. In that actual image (Python3.12.3,
 Torch2.13.0+cu130), the installed-source CPU suite passes11/11. This supplies no
 CUDA/full-import/T2/native serving acceptance and is not a published image.
 
-Parent prerequisite check: Docker29.1.3 works; locked base digest is pulled under
+### CORE/SOURCE partial delivery and development integration
+
+CORE/SOURCE delivers c995fdc/ac48363/04294dc/02f061d,29 of44 paths and1565/4404
+gross. Its source/count/registry/launcher/provenance/timer consumers remain
+distinct from unfinished selected trainers/main/fresh fixture. Exact remaining
+dependencies are PRICING's committed native adapter/schema/ranges and finite-plan
+config/fixture payload, plus root permission to import peer APIs.
+
+Root grants development-branch imports PRICING7b86614/NATIVE2c4cc9e to CORE and
+CORE02f061d/NATIVE2c4cc9e to PRICING. These are interface-integration permissions,
+not final acceptance: N1–N4 stay open and corrected native commits must follow.
+Both original sessions receive the shared APIs and keep sole-writer ownership
+and quotas. CORE resumes independent consumers; PRICING receives exact required
+next interface deliveries, not a request for status.
+
+Root freezes the combined API state atbd97ac520fd0ba796ecd9d1905fdff352e859680 in
+`/data/ycfeng/Frontier/.worktrees/verify-step5-position-contracts-01`. Python3.10
+combined checks:283 PASS/19 SKIP/4 deselected. Python3.12 actual CPU timer/router/
+provenance subset:18 PASS. Their testcase-ID union is292 PASS. A targeted run of
+the10 unresolved torch skips and4 torch deselections in Python3.12 yields11 PASS
+and3 FAIL: that host vLLM lacks fused_moe.activation and router.gate_linear. The
+three actual-native-dependency cases pass in the built image after the existing
+isolated profiler-dependency recipe and explicit pytest importlib mode resolve
+pandas and the image's tests namespace collision. Source is unchanged. Full
+testcase-ID union is306 PASS. Details/receipts are recorded in the verification
+worktree's repairs/test_report_2026-10-23_contract_integration.md for integration.
+Full-unit/strict77 and independent source review remain pending final delivery.
+
+Earlier parent prerequisite check: Docker29.1.3 works; locked base digest is pulled under
 the exact mirror reference and all2907 installed Python files equal the frozen
 image_src export. Actual interpreter is python3/3.12.3; the design command's
 python entrypoint failed127 and is corrected to python3. A broader binary/package
