@@ -1,6 +1,7 @@
 """Native-source DP policy and Step structural endpoint/handoff contracts."""
 
 from types import SimpleNamespace
+import heapq
 
 import pytest
 
@@ -9,7 +10,11 @@ from frontier.config import (
     RandomForrestExecutionTimePredictorConfig, SyntheticRequestGeneratorConfig,
     VllmLoadBalancingClusterSchedulerConfig, VllmV1SchedulerConfig, global_vars,
 )
-from frontier.entities import Batch, Cluster, Request
+from frontier.attention.model_binding import bind_layer_attention
+from frontier.entities import Batch, Cluster, DummyForwardBatch, ExecutionTime, Request, StageExecutionTime
+from frontier.entities.time_components import CommunicationOperatorTimes
+from frontier.events.batch_stage_end_event import BatchStageEndEvent
+from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 from frontier.kv_cache_transfer.analytical_kv_cache_transfer_predictor import (
     AnalyticalKVCacheTransferPredictor,
 )
@@ -23,6 +28,102 @@ from tests.unit.test_step5_structural_pd import (
     _GlobalScheduler, _Metrics, _harness, _replica_config,
     _request_owned_by_prefill, _start_event, simulation_globals,
 )
+from tests.unit.test_stage_execution_time import _execution_kwargs
+
+
+class _StageCosts:
+    """Fixed CPU layer timings for event lifecycle tests, not calibration inputs."""
+
+    def __init__(self, replica, replica_ids):
+        self._model_config = replica.model_config
+        self._num_layers_per_pipeline_stage = self._model_config.num_layers
+        routing = {expert: 1 / replica.total_expert_num for expert in range(replica.total_expert_num)}
+        self._prefill_routing_details = self._decode_routing_details = {
+            replica_id: {layer: routing for layer in range(self._num_layers_per_pipeline_stage)}
+            for replica_id in replica_ids}
+        self._stages = {}
+
+    def predict_stage_execution_time(self, batch, stage_id, cluster_type=None, *, num_layers,
+                                     layer_id, include_attention=True, include_ffn=True):
+        key = (layer_id, num_layers, include_attention, include_ffn)
+        if key not in self._stages:
+            values = {name: 0.0 if type(value) in (int, float) else value
+                      for name, value in _execution_kwargs().items()}
+            moe = include_ffn and self._model_config.is_moe_layer(layer_id)
+            attention = bind_layer_attention(self._model_config, layer_id)
+            values.update(num_layers_per_pipeline_stage=1, is_moe=moe, global_layer_id=layer_id,
+                          attention_family_id=attention.family_id,
+                          attention_variant_id=attention.variant_id,
+                          attention_layer_pre_proj_execution_time=float(include_attention),
+                          mlp_layer_up_proj_execution_time=float(include_ffn and not moe),
+                          moe_grouped_gemm_time=float(moe),
+                          communication_operator_times=CommunicationOperatorTimes({
+                              'expert_parallel_alltoall_dispatch': 1.0,
+                              'expert_parallel_alltoall_combine': 1.0}) if moe else None)
+            self._stages[key] = StageExecutionTime.from_execution_time(
+                ExecutionTime(**values), num_layers=num_layers, first_layer_id=layer_id)
+        return self._stages[key]
+
+
+class _ExecutionMetrics(_Metrics):
+    ep_wave_reporting_enabled = stage_execution_reporting_enabled = False
+
+    def __init__(self):
+        super().__init__()
+        self.outputs = []
+
+    def on_replica_stage_schedule(self, *args, **kwargs):
+        pass
+
+    def on_batch_stage_end(self, *args):
+        pass
+
+    def on_batch_end(self, time, batch, replica_id, memory, role, lane_id):
+        self.outputs.append((time, batch, role, lane_id))
+
+    def _on_request_end(self, *args):
+        pass
+
+
+class _PDExecution:
+    """Dispatch every returned DES event; retain the queue at observation boundaries."""
+
+    def __init__(self, scheduler, metrics=None):
+        self.scheduler = scheduler
+        self.metrics = metrics or _ExecutionMetrics()
+        self.queue, self.batches, self.dummy_ends, self.releases = [], [], set(), set()
+        self.time = 0.0
+
+    def add(self, events):
+        for event in events:
+            heapq.heappush(self.queue, (event._priority_number, event))
+
+    def until(self, condition):
+        while not condition():
+            assert self.queue, 'Event queue drained before the expected lifecycle boundary'
+            _, event = heapq.heappop(self.queue)
+            self.time = event.time
+            children = event.handle_event(self.scheduler, self.metrics)
+            self.add(children)
+            if isinstance(event, ReplicaScheduleEvent):
+                self.batches.extend((batch, list(batch.num_tokens), list(batch.num_context_tokens))
+                                    for batch in event._batches if not isinstance(batch, DummyForwardBatch))
+                peer_ids = {child._replica_local_id for child in children
+                            if isinstance(child, ReplicaScheduleEvent)}
+                dp_size = self.scheduler.get_cluster_scheduler(event._cluster_type)._replica_dp_size
+                if peer_ids == set(range(dp_size)) - {event._replica_local_id}:
+                    self.releases.add(event._cluster_type)
+            if isinstance(event, BatchStageEndEvent) and isinstance(event._batch, DummyForwardBatch):
+                self.dummy_ends.add((event._cluster_type, event._replica_local_id))
+
+    def drain(self, role):
+        self.until(lambda: not self.queue)
+        cluster = self.scheduler.get_cluster_scheduler(role)
+        lanes = list(cluster._replica_schedulers.values())
+        assert all(not lane._dp_wave_running and lane._dp_wave_steps == 0
+                   and not lane._waits_at_dp_sync and not lane._dummy_forwards_in_flight for lane in lanes)
+        assert {(role, lane._replica_local_id) for lane in lanes} <= self.dummy_ends
+        assert role in self.releases
 
 
 def _scheduler(role=ClusterType.DECODE, **changes):
@@ -45,9 +146,10 @@ def _scheduler(role=ClusterType.DECODE, **changes):
         AnalyticalKVCacheTransferConfig(kv_connector=changes.pop("connector", "nixl")))
     available = changes.pop("available", {ClusterType.PREFILL, ClusterType.DECODE})
     assert not changes
+    cluster = Cluster(config, MetricsConfig(write_metrics=False), generator)
     return VllmLoadBalancingClusterScheduler(
-        config=config, cluster=Cluster(config, MetricsConfig(write_metrics=False), generator),
-        request_generator_config=generator, predictor=object(),
+        config=config, cluster=cluster,
+        request_generator_config=generator, predictor=_StageCosts(replica, cluster.replicas),
         kv_cache_transfer_predictor=predictor, available_clusters=available,
     )
 
@@ -153,15 +255,15 @@ def test_p_client_finishes_at_response_while_source_kv_is_retained():
     [(replica_id, lane_id, _)] = scheduler.schedule_at(0)
     lane = scheduler.get_replica_scheduler(replica_id, lane_id)
     lane.add_request(request)
+    execution = _PDExecution(_GlobalScheduler(scheduler, _scheduler()))
+    execution.add([ReplicaScheduleEvent(0, replica_id, ClusterType.PREFILL, lane_id)])
     for step in range(2):
-        [batch] = lane.on_schedule(step * 0.1)
-        batch.on_batch_end(step * 0.1 + 0.01, ClusterType.PREFILL)
-        lane.on_batch_end(batch)
-        scheduler.on_replica_batch_end(step * 0.1 + 0.01, replica_id, lane_id, batch)
+        execution.until(lambda: len(execution.metrics.outputs) == step + 1)
         assert sum(scheduler._load_balancer.engine_inflight) == (1 if step == 0 else 0)
     assert not request.completed
     assert request.id in lane._pending_kv_transfer_requests
     assert request.id in lane._allocation_map
+    execution.drain(ClusterType.PREFILL)
 
 
 def test_selected_d_lane_survives_capacity_retry_read_ready_and_decode(monkeypatch):
@@ -170,12 +272,13 @@ def test_selected_d_lane_survives_capacity_retry_read_ready_and_decode(monkeypat
     scheduler = _GlobalScheduler(old_global._clusters[ClusterType.PREFILL], target)
     request = _request_owned_by_prefill(source, 17)
     event = _start_event(request, source)
-    metrics = _Metrics()
+    execution = _PDExecution(scheduler)
+    metrics = execution.metrics
     replica_id = target._serving_replica_id
     selected_lane = target.get_replica_scheduler(replica_id, 0)
     reserve = selected_lane.reserve_kv_transfer_target
     monkeypatch.setattr(selected_lane, "reserve_kv_transfer_target", lambda request: None)
-    event.handle_event(scheduler, metrics)
+    execution.add(event.handle_event(scheduler, metrics))
     assert selected_lane.has_pending_kv_transfer_starts()
     assert target._load_balancer.engine_inflight == [1, 0, 0, 0]
     assert selected_lane.get_request_load().waiting == 1
@@ -185,20 +288,18 @@ def test_selected_d_lane_survives_capacity_retry_read_ready_and_decode(monkeypat
     monkeypatch.setattr(selected_lane, "reserve_kv_transfer_target", reserve)
     selected_lane._retry_pending_kv_transfer_starts(1.1)
     assert len(selected_lane._popped_output_events) == 1
-    [end] = event.handle_event(scheduler, metrics)
+    execution.add(selected_lane.consume_popped_output_events())
+    execution.until(lambda: len(metrics.starts) == 1)
+    [end] = [queued for _, queued in execution.queue if hasattr(queued, '_transfer_info')]
     assert selected_lane.get_request_load().waiting == 1  # Receiving remote KV.
     info = end._transfer_info
     assert (info.target_replica_id, info.target_replica_local_id) == (replica_id, 0)
-    end.handle_event(scheduler, metrics)
+    execution.until(lambda: len(metrics.ends) == 1)
     assert selected_lane.get_request_load().waiting == 1  # Ready, admitted once.
     assert selected_lane._waiting_requests == [request]
     assert all(request not in target.get_replica_scheduler(replica_id, i)._waiting_requests
                for i in range(1, 4))
-    for step in range(9):
-        [batch] = selected_lane.on_schedule(2 + step)
-        batch.on_batch_end(2.1 + step, ClusterType.DECODE)
-        selected_lane.on_batch_end(batch)
-        target.on_replica_batch_end(2.1 + step, replica_id, 0, batch)
+    execution.drain(ClusterType.DECODE)
     assert request.completed
     assert target._load_balancer.request_owners == {}
     assert target._load_balancer.engine_inflight == [0] * 4

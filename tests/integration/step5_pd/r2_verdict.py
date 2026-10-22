@@ -127,8 +127,9 @@ WORKER_EVENTS = {
 SCHEDULER_EVENTS = {"source_hold", "source_free", "target_reserve", "target_free", "block_allocate", "block_remove_skipped"}
 EVENTS = WORKER_EVENTS | SCHEDULER_EVENTS | {"frontend_select"}
 AUXILIARY_EVENTS = {"source_compute", "pressure", "reuse", "reset", "abort", "free_deferred"}
+DP_COUNTER_EVENTS = {"native_dp_finish_check", "native_dp_wave_counter_zero"}
 METADATA_EVENTS = {"observer_started", "hook_installed", "provenance", "runner_created",
-                    "runner_abi", "capture_elapsed"}
+                    "runner_abi", "capture_elapsed"} | DP_COUNTER_EVENTS
 CANONICAL_EVENTS = {'resident_identity', 'reference_start', 'state_checkpoint', 'reset_content', 'pool_snapshot', 'component_inventory'}
 FORWARD_EVENTS = {'native_forward_start', 'native_forward_end'}
 CANONICAL_EVENTS |= FORWARD_EVENTS
@@ -264,6 +265,10 @@ def load(stage, instrumentation, config, expected, content_check):
                     continue
                 if row.get("event") in ("observation_error", "observer_error", "observer_budget_exceeded", "release_unverified"):
                     raise ValueError(f"Observer error: {row.get('message', row.get('error', row.get('reason')))}")
+                if row.get("event") in DP_COUNTER_EVENTS:
+                    instrumentation.details.setdefault("diagnostic_metadata", []).append(
+                        {"location": where, "raw": row})
+                    continue
                 if row.get("event") in AUXILIARY_EVENTS | METADATA_EVENTS:
                     # These events do not close the unsupported criteria listed
                     # in UNVERIFIED_CRITERIA. Keep allocation snapshots separately.

@@ -2,6 +2,7 @@
 
 import hashlib
 import ast
+import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -15,6 +16,8 @@ from tests.integration.test_vllm_dp_placement_runtime import _model
 from tests.unit.test_step5_pd_placement import _scheduler
 from tests.unit.test_step5_structural_pd import simulation_globals
 from tests.unit.test_step5_native_pd_r2_observation import configuration, events, r2
+from tests.integration.step5_pd import r2_verdict
+from tests.unit.test_step5_native_pd_r2_verdict import observations, write_stage
 
 
 def _step_lanes(role):
@@ -183,6 +186,47 @@ def test_native_counter_observer_records_actual_steps_native_returns_and_wave_re
     engine.engines_running = True
     assert engine._has_global_unfinished_reqs(False) is False
     assert [row for row in events(observer) if row['event'] == 'native_dp_finish_check'][-1]['step_before'] == 0
+
+
+@pytest.mark.parametrize('role', ['prefill', 'decode'])
+def test_emitted_native_counters_are_retained_metadata_not_request_evidence(tmp_path, role):
+    observer = r2.Observation(configuration(tmp_path / 'capture', role=role))
+    engine = _native_counter(observer)
+    assert engine._has_global_unfinished_reqs(False) is False
+    engine.engines_running = False
+    engine.step_counter = 0
+    assert engine._process_input_queue() == 1
+    emitted = [row for row in events(observer) if row['event'].startswith('native_dp_')]
+    assert {row['event'] for row in emitted} == {'native_dp_finish_check', 'native_dp_wave_counter_zero'}
+    assert all(not row.get(key) for row in emitted for key in ('request_id', 'engine_id', 'tp_rank'))
+    rows, trace = observations()
+    stage = write_stage(tmp_path, rows, trace)
+    baseline = r2_verdict.judge(stage, 'Succeeded')
+    path = stage / 'evidence/nodes' / emitted[0]['host'] / 'pd_state/counters.jsonl'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(''.join(json.dumps(row) + '\n' for row in emitted))
+    instrumentation, content = r2_verdict.Check(), r2_verdict.Check()
+    records, errors = r2_verdict.load(stage, instrumentation, {}, {}, content)
+    assert not instrumentation.missing and not errors
+    assert len(records) == len(rows) and not any(row['event'].startswith('native_dp_') for row in records)
+    retained = instrumentation.details['diagnostic_metadata']
+    assert retained == [{'location': f'{path}:{i}', 'raw': row} for i, row in enumerate(emitted, 1)]
+    verdict = r2_verdict.judge(stage, 'Succeeded')
+    assert verdict['status'] == baseline['status'] == 'PASS'
+    assert verdict['transfers'] == baseline['transfers']
+    assert verdict['ticket08_accepted'] is False and verdict['clean_timing_eligible'] is False
+    (tmp_path / 'metadata_only').mkdir()
+    metadata_stage = write_stage(tmp_path / 'metadata_only', emitted, trace)
+    verdict = r2_verdict.judge(metadata_stage, 'Succeeded')
+    assert verdict['status'] == 'UNVERIFIED' and not verdict['scope_pass']
+    assert verdict['transfers'] == [] and verdict['ticket08_accepted'] is False
+    assert verdict['checks']['instrumentation']['diagnostic_metadata']
+    for rejected in ('unknown_counter', 'observer_error'):
+        path.write_text(json.dumps({'event': rejected, 'message': 'capture failed'}) + '\n')
+        verdict = r2_verdict.judge(stage, 'Succeeded')
+        assert verdict['checks']['instrumentation']['status'] == 'UNVERIFIED'
+        assert any(('Unknown event' if rejected == 'unknown_counter' else 'Observer error') in message
+                   for message in verdict['checks']['instrumentation']['missing'])
 
 
 @pytest.mark.parametrize('failure', ['before', 'after', 'native', 'reset', 'budget'])

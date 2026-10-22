@@ -16,7 +16,7 @@ from frontier.scheduler.cluster_scheduler.vllm_load_balancing_cluster_scheduler 
     VllmLoadBalancingClusterScheduler,
 )
 from frontier.types import ClusterType
-from tests.unit.test_step5_pd_placement import _scheduler
+from tests.unit.test_step5_pd_placement import _PDExecution, _StageCosts, _scheduler
 from tests.unit.test_step5_structural_pd import (
     _GlobalScheduler,
     _Metrics,
@@ -43,25 +43,23 @@ def test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs(
         old_scheduler.get_cluster_scheduler(ClusterType.PREFILL), target_cluster,
     )
     request = _request_owned_by_prefill(source, 4105)
-    [end] = _start_event(request, source).handle_event(scheduler, _Metrics())
+    execution = _PDExecution(scheduler)
+    execution.add(_start_event(request, source).handle_event(scheduler, execution.metrics))
+    [end] = [event for _, event in execution.queue]
     info = end._transfer_info
     target = target_cluster.get_replica_scheduler(
         info.target_replica_id, info.target_replica_local_id,
     )
-    end.handle_event(scheduler, _Metrics())
+    execution.until(lambda: len(execution.metrics.ends) == 1)
 
     contexts = []
     for step in range(9):
-        now = end.time + (step + 1) * 0.01
-        [batch] = target.on_schedule(now)
-        contexts.extend(batch.num_context_tokens)
-        assert batch.num_tokens == [1]
-        batch.on_batch_end(now + 0.005, ClusterType.DECODE)
-        target.on_batch_end(batch)
-        target_cluster.on_replica_batch_end(
-            now + 0.005, info.target_replica_id, info.target_replica_local_id, batch,
-        )
+        execution.until(lambda: request.num_emitted_decode_tokens == step + 1)
+        _, tokens, context = execution.batches[step]
+        contexts.extend(context)
+        assert tokens == [1]
         assert request.num_emitted_decode_tokens == step + 1
+    execution.drain(ClusterType.DECODE)
 
     assert contexts == list(range(4104, 4113))
     assert request.completed
@@ -71,10 +69,11 @@ def test_step_nixl_cost_shape_uses_computed_frontier_without_changing_outputs(
     assert target._scheduled_num_computed_tokens_by_request == {}
 
 
-class _FixtureCosts:
+class _FixtureCosts(_StageCosts):
     """Explicit CPU contract input, not fitted H200 or native evidence."""
 
     def __init__(self, *, duration=3.5, changes=None, covered=True):
+        super().__init__(_replica_config(), ())
         self.reads = []
         self.duration = duration
         self.changes = changes or {}
@@ -121,8 +120,11 @@ def _measured_cluster(role, costs, *, max_tokens=8192, attn_dp=4):
             enable_dummy_mode=False,
         ),
     )
+    cluster = Cluster(config, MetricsConfig(write_metrics=False), generator)
+    if isinstance(costs, _FixtureCosts):
+        costs._prefill_routing_details.update(_StageCosts(replica_config, cluster.replicas)._prefill_routing_details)
     return VllmLoadBalancingClusterScheduler(
-        config=config, cluster=Cluster(config, MetricsConfig(write_metrics=False), generator),
+        config=config, cluster=cluster,
         request_generator_config=generator, predictor=costs,
         kv_cache_transfer_predictor=AnalyticalKVCacheTransferPredictor(
             AnalyticalKVCacheTransferConfig(kv_connector="nixl"),
@@ -143,13 +145,17 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
     request = Request(0, 4105, 9)
     source.add_request(request)
-    [prefill] = source.on_schedule(0.1)
+    from frontier.events.replica_schedule_event import ReplicaScheduleEvent
+    execution = _PDExecution(scheduler)
+    execution.add([ReplicaScheduleEvent(0.1, source._replica_id, ClusterType.PREFILL, 0)])
+    execution.until(lambda: len(execution.batches) == 1)
+    prefill = execution.batches[0][0]
     assert prefill.num_tokens == [4080]
-    prefill.on_batch_end(0.2, ClusterType.PREFILL)
-    source.on_batch_end(prefill)
+    execution.until(lambda: len(execution.metrics.outputs) == 1)
     assert request.num_emitted_decode_tokens == 0
-    metrics = _Metrics()
-    [end] = _start_event(request, source).handle_event(scheduler, metrics)
+    metrics = execution.metrics
+    execution.until(lambda: len(metrics.starts) == 1)
+    [end] = [event for _, event in execution.queue if hasattr(event, '_transfer_info')]
     info = end._transfer_info
     target = target_cluster.get_replica_scheduler(
         info.target_replica_id, info.target_replica_local_id,
@@ -162,7 +168,7 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     assert target.on_schedule(end.time - 0.001) == []
     assert request.id in source._allocation_map
     assert request.num_emitted_decode_tokens == 0
-    end.handle_event(scheduler, metrics)
+    execution.until(lambda: len(metrics.ends) == 1)
     assert info.target_ready_time == info.source_release_time == end.time
     assert source._allocation_map == {}
     _, deferred, widths = target._schedule_decode_waiting_requests(16)
@@ -170,30 +176,23 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     assert request.id in target._kv_transfer_ready_request_ids
     assert request.num_emitted_decode_tokens == 0
 
-    [first] = target.on_schedule(end.time + 0.001)
+    execution.until(lambda: len(execution.batches) == 2)
+    first = execution.batches[1][0]
     assert first.num_tokens == [25]
     assert first.num_context_tokens == [4080]
     assert first.request_is_decoding == [False]
     assert first.get_decode_cuda_graph_runtime_mode() == "NONE"
     assert first.cache_block_zeroing is None
-    first.on_batch_end(end.time + 0.002, ClusterType.DECODE)
-    target.on_batch_end(first)
-    target_cluster.on_replica_batch_end(
-        end.time + 0.002, info.target_replica_id, info.target_replica_local_id, first,
-    )
+    execution.until(lambda: request.num_emitted_decode_tokens == 1)
     assert request.num_emitted_decode_tokens == 1
-    assert request.first_decode_token_completed_at == end.time + 0.002
+    assert request.first_decode_token_completed_at == execution.metrics.outputs[-1][0]
     assert info.to_dict()["num_computed_tokens"] == 4080
     for step in range(8):
-        now = end.time + 0.01 + step * 0.01
-        [batch] = target.on_schedule(now)
-        assert batch.num_tokens == [1]
-        assert batch.num_context_tokens == [4105 + step]
-        batch.on_batch_end(now + 0.005, ClusterType.DECODE)
-        target.on_batch_end(batch)
-        target_cluster.on_replica_batch_end(
-            now + 0.005, info.target_replica_id, info.target_replica_local_id, batch,
-        )
+        execution.until(lambda: request.num_emitted_decode_tokens == step + 2)
+        _, tokens, context = execution.batches[step + 2]
+        assert tokens == [1]
+        assert context == [4105 + step]
+    execution.drain(ClusterType.DECODE)
     assert request.completed and request.num_emitted_decode_tokens == 9
     assert target._allocation_map == {}
     assert target_cluster._load_balancer.request_owners == {}
@@ -348,7 +347,8 @@ def test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners(mo
     source = source_cluster.get_replica_scheduler(source_cluster._serving_replica_id, 0)
     target = target_cluster.get_replica_scheduler(target_cluster._serving_replica_id, 0)
     request = _request_owned_by_prefill(source, 4105)
-    metrics = _Metrics()
+    execution = _PDExecution(scheduler)
+    metrics = execution.metrics
     start = _start_event(request, source)
     allocate = target._can_allocate_request
     monkeypatch.setattr(target, "_can_allocate_request", lambda *args, **kwargs: False)
@@ -356,23 +356,18 @@ def test_capacity_retry_rejects_changed_coverage_and_releases_reserved_owners(mo
     from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
     assert isinstance(wake, ReplicaScheduleEvent)
+    execution.add([wake])
     monkeypatch.setattr(target, "_can_allocate_request", allocate)
     target._retry_pending_kv_transfer_starts(2)
     [retry] = target.consume_popped_output_events()
     assert target._allocation_map[request.id] == 1020
     assert target._scheduled_num_computed_tokens_by_request[request.id] == 4080
     if not changed:
-        [end] = retry.handle_event(scheduler, metrics)
-        end.handle_event(scheduler, metrics)
+        execution.add([retry])
         for step in range(9):
-            now = end.time + (step + 1) * 0.01
-            [batch] = target.on_schedule(now)
-            assert batch.num_tokens == [25 if step == 0 else 1]
-            batch.on_batch_end(now + 0.005, ClusterType.DECODE)
-            target.on_batch_end(batch)
-            target_cluster.on_replica_batch_end(
-                now + 0.005, target._replica_id, target._replica_local_id, batch,
-            )
+            execution.until(lambda: request.num_emitted_decode_tokens == step + 1)
+            assert execution.batches[step][1] == [25 if step == 0 else 1]
+        execution.drain(ClusterType.DECODE)
         assert request.completed and request.num_emitted_decode_tokens == 9
         assert source._allocation_map == target._allocation_map == {}
         assert target_cluster._load_balancer.request_owners == {}
