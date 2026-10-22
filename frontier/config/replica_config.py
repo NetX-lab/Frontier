@@ -96,6 +96,11 @@ class ReplicaConfig:
             "token-to-expert load skew without changing router_topk/model semantics."
         },
     )
+    moe_gating_routing_runtime_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Explicit MoE routing operation; unset preserves model/distribution selection.",
+                  "omit_if_none": True},
+    )
     device: str = field(
         default="a100",
         metadata={"help": "Device."},
@@ -189,6 +194,13 @@ class ReplicaConfig:
                 "moe_routing_distribution_type must be one of "
                 f"{sorted(valid_moe_routing_distribution_types)}, "
                 f"got {self.moe_routing_distribution_type!r}"
+            )
+        if self.moe_gating_routing_runtime_path is not None:
+            from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
+
+            self.moe_gating_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
+                self.moe_routing_distribution_type,
+                requested_runtime_path=self.moe_gating_routing_runtime_path,
             )
 
         # Validate pipeline parallelism configuration early

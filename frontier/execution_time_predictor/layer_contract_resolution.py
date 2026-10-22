@@ -8,6 +8,7 @@ keys and the contract signature that identifies a trained model.
 
 import hashlib
 import json
+from dataclasses import replace
 import pandas as pd
 
 from frontier.execution_time_predictor.attention_tp_policy import (
@@ -126,7 +127,7 @@ class LayerContractResolution:
         ffn_tp_size = self._get_ffn_tp_key(
             cluster_type, replica_config, is_moe_model
         )
-        return architecture_profile.resolve_layer_contract(
+        contract = architecture_profile.resolve_layer_contract(
             model_config,
             layer_id=layer_id,
             operator_name=op_name,
@@ -137,6 +138,10 @@ class LayerContractResolution:
                 replica_config, "moe_expert_parallel_size", None
             ),
         )
+        selected_path = getattr(replica_config, "moe_gating_routing_runtime_path", None)
+        if op_name == "moe_gating_routing_topk" and selected_path is not None:
+            contract = replace(contract, routing_runtime_path=selected_path)
+        return contract
 
     def _resolve_ffn_layer_contracts(
         self,
@@ -451,6 +456,7 @@ class LayerContractResolution:
         requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
             getattr(replica_config, "moe_routing_distribution_type", "balanced"),
             _resolve_model_architecture_profile(model_config),
+            getattr(replica_config, "moe_gating_routing_runtime_path", None),
         )
 
         missing_requirements: List[str] = []

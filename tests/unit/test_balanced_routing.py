@@ -137,3 +137,164 @@ assert not any(n == 'torch' or n.startswith(('torch.', 'vllm')) for n in sys.mod
 """
     subprocess.run([sys.executable, "-I", "-c", script], check=True)
     assert not torch.cuda.is_initialized()
+
+
+@pytest.mark.parametrize("distribution", ["random", "skewed", "zipf"])
+def test_balanced_selector_rejects_incompatible_distribution(distribution):
+    from frontier.config import ReplicaConfig
+
+    with pytest.raises(ValueError, match="balanced_topk requires"):
+        ReplicaConfig(moe_routing_distribution_type=distribution,
+                      moe_gating_routing_runtime_path="balanced_topk")
+
+
+def test_selector_validation_and_default_serialization():
+    from frontier.config import ReplicaConfig
+    from frontier.config.utils import dataclass_to_dict
+    from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path as resolve
+
+    assert "moe_gating_routing_runtime_path" not in dataclass_to_dict(ReplicaConfig())
+    selected = ReplicaConfig(moe_gating_routing_runtime_path=" balanced_topk ")
+    assert dataclass_to_dict(selected)["moe_gating_routing_runtime_path"] == "balanced_topk"
+    assert resolve("balanced", SimpleNamespace(moe_gating_routing_runtime_path="standard_fused_topk"),
+                   selected.moe_gating_routing_runtime_path) == "balanced_topk"
+    with pytest.raises(ValueError, match="Unsupported routing_runtime_path"):
+        ReplicaConfig(moe_gating_routing_runtime_path="uniform_random")
+
+
+def test_producer_executes_shared_tensor_inside_routing_timer(monkeypatch):
+    from frontier.profiling.moe import moe_impl
+
+    scopes, calls = [], []
+    @contextmanager
+    def timer(name):
+        scopes.append(name)
+        yield
+        scopes.pop()
+    def route(*args):
+        calls.append(scopes[-1])
+        return balanced_topk(*args)
+    monkeypatch.setattr(moe_impl, "CudaTimer", timer)
+    monkeypatch.setattr(moe_impl, "balanced_topk", route)
+    gate = moe_impl.MoEGatingNetwork(4, 8, 3, use_vllm_fused_topk=False,
+                                   routing_runtime_path="balanced_topk")
+    weights, ids = gate(torch.ones(5, 4))
+    assert calls == ["moe_gating_routing_topk"]
+    assert torch.bincount(ids.flatten(), minlength=8).tolist() == [2] * 7 + [1]
+    assert weights.dtype == torch.float32 and ids.dtype == torch.long
+    assert moe_impl.get_routing_runtime_metadata("balanced_topk") == {
+        "routing_runtime_path": "balanced_topk", "routing_assignment_policy": "global_round_robin_balanced",
+        "routing_weight_policy": "uniform_1_over_topk", "routing_uses_router_logits": False,
+    }
+
+
+def test_predictor_initialization_retains_selected_runtime(monkeypatch):
+    from frontier.config import ReplicaConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import SklearnExecutionTimePredictor
+    from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import SklearnMoEExecutionTimePredictor
+
+    class ParentBoundary(Exception):
+        pass
+    def stop(*args, **kwargs):
+        raise ParentBoundary
+    monkeypatch.setattr(SklearnExecutionTimePredictor, "__init__", stop)
+    class Predictor(SklearnMoEExecutionTimePredictor):
+        _get_estimator = lambda self: None
+        _get_grid_search_params = lambda self: {}
+    predictor = object.__new__(Predictor)
+    replica = ReplicaConfig(moe_gating_routing_runtime_path="balanced_topk")
+    with pytest.raises(ParentBoundary):
+        predictor.__init__(None, replica, None, None)
+    predictor._get_model_architecture_profile = replica.model_config.get_model_architecture_profile
+    assert predictor._moe_gating_routing_runtime_path == "balanced_topk"
+    assert predictor._get_requested_moe_gating_routing_runtime_path() == "balanced_topk"
+
+
+@pytest.mark.parametrize("order", [("standard_fused_topk", "balanced_topk"), ("balanced_topk", "standard_fused_topk")])
+def test_selected_producer_rows_train_and_reuse_distinct_cache(tmp_path, order):
+    import pandas as pd
+    from frontier.config import ClusterConfig, ReplicaConfig
+    from frontier.config.execution_time_predictor_config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
+    from frontier.execution_time_predictor.prediction_model_identity import _serialize_selected_layer_cache_identity
+    from frontier.moe_load_imbalance import MoELoadImbalanceInput
+    from frontier.operators.families import MOE_FAMILY, SHARE_EXPERT_FAMILY, get_family_profiling_names
+    from frontier.operators.typed_contracts import serialize_typed_operator_contracts
+    from frontier.profiling.moe.moe_impl import get_routing_runtime_metadata
+    from frontier.types import ClusterType, MeasurementType
+
+    op = "moe_gating_routing_topk"
+    configs = {role: ClusterConfig(cluster_type=role, replica_config=ReplicaConfig(
+        model_name="deepseek-ai/DeepSeek-V4-Flash", device="h800", attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=1, moe_expert_parallel_size=1, moe_gating_routing_runtime_path=path))
+        for role, path in zip((ClusterType.PREFILL, ClusterType.DECODE), order)}
+    model = configs[ClusterType.PREFILL].replica_config.model_config
+    profile = model.get_model_architecture_profile()
+    metadata = {name: profile.resolve_layer_contract(model, operator_name=name,
+        moe_tp_size=1, expert_parallel_size=1).typed_metadata_identity()
+        for name in get_family_profiling_names(MOE_FAMILY)}
+    dimensions = dict(num_experts=MODEL["n_routed_experts"], router_topk=MODEL["num_experts_per_tok"],
+                      hidden_dim=MODEL["hidden_size"], expert_hidden_dim=MODEL["moe_intermediate_size"],
+                      num_tensor_parallel_workers=1, expert_parallel_size=1)
+    features = MoELoadImbalanceInput(8, model.num_experts, model.embedding_dim,
+                                    model.routed_mlp_hidden_dim, model.num_experts_per_tok).to_features_dict()
+    rows = pd.DataFrame([dict(dimensions, num_tokens=8, profiling_precision="FP16", measurement_type="CUDA_EVENT",
+                             gating_runtime_context="standalone_legacy", gating_runtime_context_impl="none",
+                             model_architecture_profile=profile.profile_id,
+                             typed_operator_contracts=serialize_typed_operator_contracts(metadata),
+                             **get_routing_runtime_metadata(path), **{key: value for key, value in features.items() if key not in dimensions},
+                             **{f"time_stats.{name}.median": value if name == op else 1.0 for name in metadata})
+                         for path, value in [("standard_fused_topk", 2.0), ("balanced_topk", 7.0)]])
+    source, linear = tmp_path / "moe.csv", tmp_path / "linear.csv"
+    rows.to_csv(source, index=False)
+    shared_width = profile.resolve_layer_contract(model, operator_name="share_expert_up_proj", ffn_tp_size=1).width
+    pd.DataFrame([dict(num_tokens=8, num_tensor_parallel_workers=1, n_expanded_embd=shared_width,
+        profiling_precision="FP16", measurement_type="CUDA_EVENT",
+        **{f"time_stats.{name}.median": 1.0 for name in ["post_attention_layernorm",
+            *get_family_profiling_names(SHARE_EXPERT_FAMILY)]})]).to_csv(linear, index=False)
+    manager = ExecutionTimePredictionModelManager({}, SimpleNamespace(cache_dir=str(tmp_path)))
+    manager._cluster_configs, manager._all_dummy_mode = configs, False
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    config, signatures = RandomForrestExecutionTimePredictorConfig(num_estimators=[1], max_depth=[1], min_samples_split=[2]), set()
+    def train(role):
+        return manager._train_ffn_models_for_cluster(role, configs[role].replica_config, config,
+            str(linear), str(source), True, signatures)[op]
+    cold = {role: train(role) for role in configs}
+    contracts = {role: manager._resolve_cluster_model_contract(role, op) for role in configs}
+    assert all(contract.profile_id == "deepseek_v4" for contract in contracts.values())
+    assert {json.loads(_serialize_selected_layer_cache_identity(contract))["routing_runtime_path"]
+            for contract in contracts.values()} == set(order)
+    assert len({model._frontier_model_hash for model in cold.values()}) == 2
+    for role, path in zip(configs, order):
+        selected = manager.get_model(op, layer_contract=contracts[role])
+        assert selected.predict(pd.DataFrame({"num_tokens": [8]}))[0] == {"standard_fused_topk": 2.0, "balanced_topk": 7.0}[path]
+        assert manager.get_model(op, layer_contract=contracts[role]) is cold[role]
+        assert manager.get_models_for_cluster(role)["eager"][op] is cold[role]
+        assert cold[role].predict(pd.DataFrame({"num_tokens": [8]}))[0] == {"standard_fused_topk": 2.0, "balanced_topk": 7.0}[path]
+    manager._create_estimator_and_params = lambda *_: pytest.fail("Warm lookup must not fit")
+    signatures.clear()
+    warm = {role: train(role) for role in configs}
+    for role in configs:
+        assert warm[role]._frontier_model_hash == cold[role]._frontier_model_hash
+        assert manager.get_model(op, layer_contract=contracts[role]) is warm[role]
+        assert manager.get_models_for_cluster(role)["eager"][op] is warm[role]
+        assert warm[role].predict(pd.DataFrame({"num_tokens": [8]}))[0] == cold[role].predict(pd.DataFrame({"num_tokens": [8]}))[0]
+    for wrong in [rows.iloc[:1], rows.drop(columns="routing_runtime_path")]:
+        wrong.to_csv(source, index=False)
+        signatures.clear()
+        with pytest.raises(ValueError, match="routing.*path"):
+            train(next(role for role in configs if configs[role].replica_config.moe_gating_routing_runtime_path == "balanced_topk"))
+
+
+@pytest.mark.parametrize("decode_roles", [dict(decode_cluster_num_replicas=1),
+                                         dict(decode_attn_cluster_num_replicas=1, decode_ffn_cluster_num_replicas=1,
+                                              decode_attn_af_pipeline_num_micro_batch=1, decode_ffn_af_pipeline_num_micro_batch=1)])
+def test_v4_disaggregated_roles_and_copy_preserve_selector(decode_roles):
+    from frontier.config import ClusterConfig, ReplicaConfig
+
+    replica = ReplicaConfig(model_name="deepseek-ai/DeepSeek-V4-Flash", device="h800",
+                            moe_gating_routing_runtime_path="balanced_topk")
+    cluster = ClusterConfig(replica_config=replica, prefill_cluster_num_replicas=1, **decode_roles)
+    for role in cluster.get_cluster_configs_for_disaggregation().values():
+        assert role.replica_config.moe_gating_routing_runtime_path == "balanced_topk"
+    assert ClusterConfig(replica_config=replica)._create_replica_config_copy().moe_gating_routing_runtime_path == "balanced_topk"

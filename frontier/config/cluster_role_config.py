@@ -118,6 +118,7 @@ class ClusterRoleConfigBuilder:
                 "decode_attn_steady_state_measurement_report_path"
             ),
             moe_routing_distribution_type=moe_routing_distribution_type,
+            moe_gating_routing_runtime_path=get_field_value("moe_gating_routing_runtime_path"),
             device=get_field_value("device"),
             network_device=get_field_value("network_device"),
             cluster_prefix=cluster_prefix,
@@ -599,6 +600,7 @@ class ClusterRoleConfigBuilder:
             router_topk=original_config.router_topk,
             moe_routing_seed=original_config.moe_routing_seed,
             moe_routing_distribution_type=original_config.moe_routing_distribution_type,
+            moe_gating_routing_runtime_path=original_config.moe_gating_routing_runtime_path,
             moe_routing_trace_path=original_config.moe_routing_trace_path,
             decode_attn_initial_lane_trace_path=(
                 original_config.decode_attn_initial_lane_trace_path

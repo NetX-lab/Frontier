@@ -440,6 +440,7 @@ class SklearnMoEExecutionTimePredictor(
             resolve_moe_gating_routing_runtime_path(
                 self._moe_routing_distribution_type,
                 replica_config.model_config.get_model_architecture_profile(),
+                getattr(replica_config, "moe_gating_routing_runtime_path", None),
             )
         )
 
