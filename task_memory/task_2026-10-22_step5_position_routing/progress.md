@@ -84,6 +84,12 @@
   with no new delta. Parent updates stale source overlap annotations against
   final core33: three shared core paths, S16 pricing-owned; source879 unchanged.
   Finite pricing model and complete union remain open.
+- received: finite pricing proposal54 paths/+3518/-294=3812, independently
+  parsed by parent. Model review and shared-hunk ownership reconciliation are
+  running independently. The preliminary102-path/9239 summed ceiling excludes
+  gitlink/documentation and is not an accepted complete scope; receipt:
+  `/data/ycfeng/tmp/d29_complete_scope_union_candidate01.json`. Model assumptions,
+  numeric inputs, collection authorization and final scope remain undecided.
 - pending: settle required companions, combine corrected native design and
   user scope approval, implement, verify and collect fresh evidence.
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | D30 repair600 lines/review clear; parent420 checks, strict77 and902 artifact hashes PASS; full-unit delta pending. |
 | 2026-10-22 | D30-SCOPE-7-750 approved; resume implementation and prepare parent unit/strict77 comparison. |
 | 2026-10-22 | Apply checkpoint D4/S1 correction: seek D30's complete independent scope decision while D29 design continues. |
 | 2026-10-22 | Receive D29 pricing/source reviews; preserve the prior collective_sim decision while resolving full workflow interfaces. |
@@ -209,8 +210,8 @@ Authority includes D20–D30 in [requirements.md](requirements.md), owned by the
 | D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
 | D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
 | Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
-| D29 policy/order | native/core/profile-source designs reviewed; finite pricing model open |Native19 and source16 designs reviewed; core33/2966 closes all three final seams with no new findings. Pricing's four interface findings are closed; its remaining task is finite scheduling/protocol/local-work/overlap assumptions and complete budget, not mandatory exact NCCL reconstruction. Preserve collective_sim; complete union and user scope decision still required. Details in task_2026-10-22_step5_position_routing/review.md |
-| D30 finish sync | scope approved; repair in progress |YC approves D30-SCOPE-7-750 with "批准，继续". Original owner resumes at step5-finish-sync against b8be287; repair six fixture instances and R2 metadata consumer within7 files/750 total changed lines. Parent unit baseline running; strict77 baseline77 cases/451 artifacts and environment revalidated. Candidate integration and native observation remain unverified |
+| D29 policy/order | model decision-ready; producer/union scope closing |Native19, source16 and core33/2966 designs reviewed. Finite collective_sim model reviewed; selected-call validator and native probe's routing/position binding still need explicit producer scope. Shared-hunk matrix is in progress. Numerical assumptions, final scope and collection remain unapproved. Details in task_2026-10-22_step5_position_routing/review.md |
+| D30 finish sync | repair/review/affected/strict77/unit-delta PASS; merge pending |YC approves eighth test path,750-line cap. Amendment3d6744f fixes sole new assertion;65/65 complete-env checks PASS, latest unit failure/error sets equal baseline. Total8files/603lines; production matches reviewed713e6a8, parent420 and77/77/902hash checks retained. Fresh native observation remains pending |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
@@ -223,23 +224,19 @@ The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% 
 
 **Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
 
-**Next actions:** (1) finish approved D30 peer-fixture/verdict repairs, independent review, parent checks and strict77, then integrate; (2) in parallel, finish the complete D29 native/Frontier/profile design and scope decision before implementation; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. [Merged report](test_report_2026-10-22_merged_workflow.md) closes258 focused outcomes and77 strict cases. The design-dependency checkpoint removes the unnecessary D29-to-D30 approval edge; no source scope or acceptance criterion is relaxed.
+**Next actions:** (1) merge D30 and verify the exact accepted source tree; (2) in parallel, close D29 producer seams and shared-hunk scope, then obtain the complete model/scope decision; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. [Merged report](test_report_2026-10-22_merged_workflow.md) closes258 earlier focused outcomes and77 strict cases. D30 independently repeats strict77 at713e6a8; no source scope or acceptance criterion is relaxed.
 
 D30 candidate evidence: worktree `/data/ycfeng/Frontier/.worktrees/step5-finish-sync`,
 `task_memory/task_2026-10-22_step5_finish_sync/issues.md` and its test report.
-The extra suite reports 68 PASS / 6 FAIL versus 73 PASS / 1 FAIL with the
-baseline scheduler. Parent already fixed that baseline READ-byte assertion in
-`d581625`; the five new failures must be resolved before source integration.
-Independent review confirms missing peer driving and identifies one further
-decode-loop instance hidden by the former byte assertion. Additional test
-modules remain `tests/unit/test_step5_measured_pd.py` and
-`tests/unit/test_step5_pd_placement.py`. The review also finds that
-`r2_verdict.py` rejects both new host-counter events; they must be accepted as
-diagnostic metadata without granting native PASS. The initial six-file estimate
-is superseded by records-only `0a0b9fe`: seven files / at most750 changed lines,
-including actual event-driven fixtures and emitter-to-verdict checks. Detailed
-scope is in the finish-sync worktree's `issues.md`; user approval is pending.
-No extra code edit has been authorized by the review itself.
+The historical68PASS/6FAIL exposed peer-driving fixtures after parent fixed
+the baseline READ assertion in d581625. YC approved the complete seven-file/750
+scope, including six lifecycle instances and the diagnostic metadata consumer.
+Candidate dc166cb/713e6a8 now passes494 distinct author checks; parent separately
+passes420 boundary/R2 checks and77 strict scenarios. Review No findings and
+parent budget528+72=600 PASS. Evidence and exact commands:
+`../task_2026-10-22_step5_finish_sync/test_report_2026-10-22_parent_integration.md`.
+Only the full-unit delta and final integration remain before code-scope closure;
+live native counter qualification remains a later new-generation check.
 
 **Actual-main logger repair completed:** commit `b862e57`. Parent reproduced run08's `Batch has no requests` at the actual `BatchStageEndEvent`/`DummyForwardBatch` seam and restricted request-owned AF-state lookup to batches with requests. Reproduction2FAIL/2PASS -> affected logging/lifecycle36PASS. Clean detached5af7638/b862e57 runs at `/data/ycfeng/tmp/step5_event_logging_clean_fidelity_20261021` both exit0;strict comparator exits0 with77/77 identical,zero cache-name differences and no missing evidence. Earlier dirty-source receipts are preserved. Complete measured CLI acceptance remains with its owner. Details: [event-logging test report](test_report_2026-10-21_request_free_event_logging.md).
 

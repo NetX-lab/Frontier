@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Candidate713e6a8: parent420 affected checks, strict77 and902 artifact rehashes PASS; unit delta pending. |
 | 2026-10-22 | Baseline completes:7617 passed,267 failed,178 skipped,31 errors; retain IDs for candidate comparison. |
 | 2026-10-22 | Start source-pinned unit baseline and validate retained strict77 baseline. |
 
@@ -84,3 +85,63 @@ fasteners0.20, ddsketch3.0.1. Receipt:
 
 This proves baseline reuse only. Candidate strict77, candidate unit comparison,
 parent affected checks and integration are still pending.
+
+## Candidate and parent affected checks — PASS
+
+Code `dc166cb74d5b506814a5560d07235be781e17803`; complete candidate
+`713e6a81708e87b86cf91fd89f3b1f954bdcbead`. Parent independently compares all
+seven source/test paths to the approval receipt, checks528 insertions+72
+deletions=600, parses each AST, checks modules<=2000 and whitespace. Receipt:
+`/data/ycfeng/tmp/d30_parent_budget01.json`. The current parent changes since
+b8be287 contain no frontier/tests/data/examples/pyproject/.gitmodules changes.
+
+Commands run in `/data/ycfeng/Frontier/.worktrees/step5-finish-sync`, with
+`PYTHONPATH="$PWD:$PWD/tests/unit" PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+STEP5_NATIVE_SOURCE_ROOT=/data/ycfeng/tmp/step5_profiling_20261020/image_src`:
+
+```bash
+timeout 600s /data/ycfeng/envs/asyncopd-py312/bin/python -B -m pytest tests/unit/test_step5_native_pd_r2_observation.py tests/unit/test_step5_native_pd_r2_stage.py tests/unit/test_step5_native_forward_census.py tests/unit/test_step5_native_pd_r2_verdict.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d30_parent_r2_01 --junitxml=/data/ycfeng/tmp/d30_parent_r2_01.xml > /data/ycfeng/tmp/d30_parent_r2_01.log 2>&1
+timeout 300s /data/ycfeng/envs/frontier-py310/bin/python -B -m pytest tests/unit/test_step5_finish_sync.py tests/integration/test_vllm_dp_dummy_pass_runtime.py -k 'not test_vllm_dp_dummy_pass_runtime or after_32_iterations or attention_dp_one' -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/d30_parent_boundaries01 --junitxml=/data/ycfeng/tmp/d30_parent_boundaries01.xml > /data/ycfeng/tmp/d30_parent_boundaries01.log 2>&1
+```
+
+Observed:388 PASS/10.09s and32 PASS/11 deselected/86.79s,420 distinct checks.
+Python versions3.12.13 and3.10.6 respectively; existing environments unchanged.
+Independent reviewer `ses_e9cb9d9a8ffeOycbC32aMulBAz`, task
+`D30-FINAL-REVIEW`, reports No findings for all seven files and their production
+call paths. This review did not execute tests or qualify live native behavior.
+
+## Candidate strict77 — PASS
+
+Created clean source-isolated verification checkout:
+
+```bash
+git worktree add -b verify/d30-fidelity-713e6a8 /data/ycfeng/Frontier/.worktrees/d30-fidelity-713e6a8 713e6a81708e87b86cf91fd89f3b1f954bdcbead
+```
+
+From that checkout, with `PYTHONPATH="$PWD" PYTHONDONTWRITEBYTECODE=1
+TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1`:
+
+```bash
+/data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root "$PWD" --python-bin /data/ycfeng/envs/frontier-py310/bin/python --label candidate --output-root /data/ycfeng/tmp/d30_workflow_fidelity_20261022 --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d30_workflow_fidelity_20261022/candidate_run.log 2>&1
+/data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/d30_workflow_fidelity_20261022 --baseline-label /data/ycfeng/tmp/step5_d23_perf_fidelity_20261022/candidate --candidate-label candidate > /data/ycfeng/tmp/d30_workflow_fidelity_20261022/comparison.log 2>&1
+```
+
+Capture and strict comparator exit0. Parent repeats `load_side` above on the
+candidate and baseline, verifies77 unique clean cases per side, source revision,
+definitions/cache inventories, complete strict comparison and all13 mismatch
+lists empty; rehashes451+451=902 artifacts. Observed77/77 identical, zero
+metric/artifact/failure/missing/provenance/cache differences. Both source checkout
+HEAD and clean status match713e6a8 after capture. No thresholds or expectations
+were modified. Audit: `parent_audit01.json` in the output root. Comparison SHA256:
+`715e523e837a9696a6bc74c709b618787745d22d2187ba0ce255b44d1a56ca36`.
+
+## Candidate unit delta — running
+
+Created separate `verify/d30-unit-713e6a8` checkout at the same revision under
+`/data/ycfeng/Frontier/.worktrees/d30-unit-713e6a8`, so its cache cannot affect
+strict77. Run the baseline command unchanged there except basetemp/XML/log names
+become `/data/ycfeng/tmp/d30_unit_candidate01{,.xml,.log}`. Its results and
+failure/error-ID delta are pending; baseline267 failures/31 errors are not
+waived or reported as green. Main-branch integration and live native observation
+remain pending.

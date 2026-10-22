@@ -1,0 +1,38 @@
+[
+  {
+    "path": "task_memory/task_2026-10-22_step5_finish_sync/evidence/parent_integration/budget.json",
+    "source": "/data/ycfeng/tmp/d30_parent_budget01.json",
+    "sha256": "b471bebaf66ec5b63f1f0381c69d978a87bee3c4be2d953773b723dfe6939a4d",
+    "bytes": 1190
+  },
+  {
+    "path": "task_memory/task_2026-10-22_step5_finish_sync/evidence/parent_integration/fidelity_preflight.json",
+    "source": "/data/ycfeng/tmp/d30_fidelity_preflight01.json",
+    "sha256": "9357705f0257048539a6a58b42959f383bb16c1f28c5664622c6ece0a41b9ce7",
+    "bytes": 1071
+  },
+  {
+    "path": "task_memory/task_2026-10-22_step5_finish_sync/evidence/parent_integration/fidelity_comparison.json",
+    "source": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/comparison.json",
+    "sha256": "715e523e837a9696a6bc74c709b618787745d22d2187ba0ce255b44d1a56ca36",
+    "bytes": 3735
+  },
+  {
+    "path": "task_memory/task_2026-10-22_step5_finish_sync/evidence/parent_integration/fidelity_audit.json",
+    "source": "/data/ycfeng/tmp/d30_workflow_fidelity_20261022/parent_audit01.json",
+    "sha256": "165ce2150db8b7f96df964721448511e785242b588e2f2cc42751d64523b3a29",
+    "bytes": 2514
+  },
+  {
+    "path": "task_memory/task_2026-10-22_step5_finish_sync/evidence/parent_integration/boundaries.xml",
+    "source": "/data/ycfeng/tmp/d30_parent_boundaries01.xml",
+    "sha256": "537e3c23ba4417237e1ea933ff1d5cd9ed726ced5c0be92fea871659fca40604",
+    "bytes": 5160
+  },
+  {
+    "path": "task_memory/task_2026-10-22_step5_finish_sync/evidence/parent_integration/r2.xml",
+    "source": "/data/ycfeng/tmp/d30_parent_r2_01.xml",
+    "sha256": "1f713441f56bcfbfc49510be27434ccfca1c0e3dfdb72270d10a859f08d8406b",
+    "bytes": 65710
+  }
+]

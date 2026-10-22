@@ -226,3 +226,23 @@ S8+core is140/31; S12+core225/0; S14+core113/18. S16's22/1 provenance allowance
 is additive to pricing, not the retired core expert adapter. Source subtotal
 remains16/+835/-44=879, with three shared core paths. Complete union still
 awaits the finite pricing model.
+
+## Finite model review and producer closure
+
+Reviewer `ses_e9e15d18cffemTkCOdK4P941nU`, task
+`D29-FINITE-MODEL-REVIEW`, accepts the finite lowering/accounting/fit as
+decision-ready assumptions, including preservation of negative residuals and
+independent qualification. This is not numerical approval. One P2 remains:
+`validate_result.py:25–38` rebuilds unfiltered expected native calls although
+prepare/benchmark select a subset; worker262–269 consumes that verdict. Extend
+the same planner and reuse `test_step5_comm_transport.fixture_result` for subset
+and missing-selected-call controls.
+
+Parent finds a second concrete producer seam: worker87–100/248 still calls
+`step5_dispatch_probe`, whose446–456 directly invokes Step5MoE under a plain
+ForwardContext without logical positions or padding mask. Native T2's earlier
+review already excluded using this unchanged probe as position-cyclic evidence.
+The new finite collection needs explicit routing/source/position-mask binding
+for this actual worker path, or it cannot claim the same derived runtime. The
+pricing owner is completing the necessary bounded interface scope; no model
+variant, extra launcher or copied graph suite was requested.

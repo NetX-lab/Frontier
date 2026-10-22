@@ -84,3 +84,21 @@ Native contributes19/1582 upper ceiling; source contributes16/879. Receipt:
 `/data/ycfeng/tmp/d29_reviewed_scope_union_without_pricing01.json`, explicitly
 `PARTIAL_NOT_APPROVED`. Pricing and required size-exception documentation are
 excluded, so this cannot be presented as a complete implementation scope.
+
+## Finite pricing table arithmetic — PASS; scope reconciliation pending
+
+The parent parses the57 individual rows of pricing section6: Common42 rows
+sum to+2102/-237; Model15 rows sum to+1416/-57, with three repeated Common
+paths carrying additional model hunks. Pricing therefore has54 unique paths,
++3518/-294=3812. Every path not explicitly declared new exists locally.
+The table's source SHA-256 is
+`f9fe136bac2733275d7f306178ab3fc447fffeae22fb41768bb40fcb50618bc5`.
+
+Union with the earlier reviewed source/native/core tables yields102 distinct
+source/test/config paths and9239 summed gross ceilings **before shared-behavior
+reconciliation**. This is not an approved scope. Source rows, shared paths,
+per-owner ceilings and exclusions are retained in
+`/data/ycfeng/tmp/d29_complete_scope_union_candidate01.json`. A focused reviewer
+owns model validity/decision-readiness; the core owner owns a separate shared
+hunk matrix. Gitlink, required module-size documentation and task records are
+not included in those preliminary numbers.

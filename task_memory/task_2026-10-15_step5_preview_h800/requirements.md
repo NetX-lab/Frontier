@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Approve D30's eighth test path for the observed13-source contract, retaining the750-line total ceiling. |
 | 2026-10-22 | Record explicit D30 independent seven-file/750-line expansion approval. |
 | 2026-10-22 | Record D29 position-cyclic/native-image approval and D30 Step finish-sync correction. |
 | 2026-10-22 | Record D26/D27/D28 approvals and D29 balanced-routing/workflow-first execution rules. |
@@ -214,6 +215,24 @@ implementation, internal derived-image publication and a fresh immutable
 generation are approved; old generations and reference criteria stay intact.
 Parent retains GPU submission/control under the existing D24/D28 limits.
 Detailed file/line scope follows the repair design; no unrelated core changes.
+
+## [Original Request / Decision] D30 eighth test file — 2026-10-23
+
+Parent question:
+
+> 是否批准 D30 从七个文件扩至八个文件，总改动上限仍为750行？仅在 tests/unit/test_step5_canonical_g3.py 将来源数量断言12改为13，并确认新增的 vllm.v1.engine.core 在校验集合内。生产代码不增加改动；补验消除唯一新增失败后合并。
+
+The question tool was interrupted; YC subsequently answered directly:
+
+> 批准，继续
+
+Decision **D30-SCOPE-8-750** adds only that unit-test path to D30-SCOPE-7-750.
+Total source/test scope is eight files and at most750 inserted/deleted lines.
+Parent full-unit comparison and isolated RED identify the sole new failure as
+the obsolete twelve-source expectation. Amend that assertion and check the
+engine-core member, verify affected tests, then integrate. Production code,
+accepted independent review and77-case evidence remain as previously tested.
+This decision does not approve D29's model or implementation scope.
 
 ## [Original Request / Decision] D30 scope expansion — 2026-10-22
 
