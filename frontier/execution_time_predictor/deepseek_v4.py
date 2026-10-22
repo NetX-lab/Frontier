@@ -576,6 +576,44 @@ def _read_isolated_component(reader, scope, *args, **kwargs):
     return rows
 
 
+def build_isolated_prefill_layouts(plan, records, *, expected_identity, input_file_sha256):
+    """Declare flat per-layer contracts from accepted non-timing engine/step facts."""
+    import pandas as pd
+    from frontier.profiling.attention.dsa_rows import index_records
+    from frontier.profiling.attention.dsv4_attention_rows import (
+        _ENGINE_COLUMNS, _model_columns, _variant_metadata,
+    )
+
+    engines, steps, _ = index_records(r for r in records if r["kind"] != "call")
+    layouts = {}
+    for step in steps.values():
+        if step["phase"] != "prefill":
+            raise DeepSeekV4CoverageError("V4 isolated prefill contract requires prefill raw metadata")
+        engine = engines[step["engine_index"]]
+        columns = _model_columns(plan, engine)
+        for layer in plan.shape.layers:
+            try:
+                metadata = pd.json_normalize(_variant_metadata(step, layer.attention_variant),
+                                             sep="_metadata.").iloc[0].to_dict()
+            except ValueError as exc:
+                raise DeepSeekV4CoverageError("V4 isolated prefill contract lacks native metadata") from exc
+            layout = {
+                **{name: columns[name] for name in (*_ENGINE_COLUMNS, "block_size",
+                    "kv_cache_dtype", "max_model_len", "max_num_batched_tokens", "max_num_seqs")},
+                **{name: columns[name] for name in ("routing_runtime_path",
+                    "routing_strategy_sha256", "moe_routing") if name in columns},
+                **metadata, "compress_ratio": max(1, layer.compress_ratio),
+                "attention_variant": layer.attention_variant,
+                "plans_tile_schedule": layer.plans_tile_schedule,
+                **expected_identity, "input_file_sha256": input_file_sha256,
+            }
+            if layer.global_layer_id in layouts and layouts[layer.global_layer_id] != layout:
+                raise DeepSeekV4CoverageError("V4 isolated prefill raw layouts disagree between steps")
+            layouts[layer.global_layer_id] = layout
+    metadata_columns = {name for layout in layouts.values() for name in layout if "_metadata." in name}
+    return {layer: {**dict.fromkeys(metadata_columns), **layout} for layer, layout in layouts.items()}
+
+
 def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None,
                         attention_layout=None):
     """Consume one isolated eager measurement, never publish a serving duration.
@@ -585,7 +623,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     retained as such; this receipt does not assert TP8 or phase equivalence.
     Linear/MoE selection uses the existing typed readers and feature classifier.
     Attention requires an independently qualified complete flattened layout;
-    decode additionally binds accepted input bytes and runtime identity in that
+    accepted prefill and decode bind input bytes and runtime identity in that
     same explicit contract, never inferred from candidate rows. Reduced metadata
     in that contract never asserts serving capacity.
     """
@@ -594,9 +632,11 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
     import pandas as pd
     from frontier.execution_time_predictor.profiling_dataframe_loaders import ProfilingDataFrameLoaders
     from frontier.profiling.attention.dsv4_attention_plan import DSV4_SCOPE_NAMES, scope_operators
-    from frontier.types import MeasurementType
+    from frontier.types import ClusterType, MeasurementType
 
     _validate_source_batch(batch)
+    if predictor._cluster_type is not ClusterType.MONOLITHIC:
+        raise DeepSeekV4CoverageError("V4 isolated measured scopes do not qualify PD batches")
     if batch.get_decode_cuda_graph_runtime_mode() != "NONE":
         raise DeepSeekV4CoverageError("V4 native graph/compiled scope requires qualified replay measurements")
     phase = "prefill"
@@ -624,21 +664,26 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         from frontier.profiling.attention.dsv4_attention_rows import _ENGINE_COLUMNS
 
         path = predictor._attention_input_file
+        accepted_prefill = phase == "prefill" and (getattr(replica,
+            "moe_gating_routing_runtime_path", None) == "balanced_topk" or attention_layout is not None
+            and "input_file_sha256" in attention_layout)
         rows = (load_attention_dataframe(path, model, tp, predictor._block_size, measurement,
                                         float_precision="round_trip")
-                if phase == "decode" else predictor._load_attention_df(path))
+                if phase == "decode" or accepted_prefill else predictor._load_attention_df(path))
         layout_columns = set(_ENGINE_COLUMNS) | {
             "block_size", "kv_cache_dtype", "compress_ratio", "max_model_len",
             "max_num_batched_tokens", "max_num_seqs",
         } | {name for name in rows if "_metadata." in name}
         provenance_columns = {"source_revision", "runtime_fingerprint", "model_config_sha256",
-                              "input_file_sha256"} if phase == "decode" else set()
+                               "input_file_sha256"} if phase == "decode" or accepted_prefill else set()
         layout_columns |= provenance_columns
+        if accepted_prefill:
+            layout_columns |= {"attention_variant", "plans_tile_schedule"}
         if getattr(replica, "moe_gating_routing_runtime_path", None) == "balanced_topk":
             layout_columns |= {"routing_runtime_path", "routing_strategy_sha256", "moe_routing"}
         if attention_layout is None or set(attention_layout) != layout_columns:
             raise DeepSeekV4CoverageError("V4 attention requires a complete isolated layout contract")
-        if phase == "decode":
+        if provenance_columns:
             from frontier.profiling.common.runtime_identity import file_sha256
 
             if (any(not isinstance(attention_layout[name], str) or not attention_layout[name]

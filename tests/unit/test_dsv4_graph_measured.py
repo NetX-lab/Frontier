@@ -592,3 +592,69 @@ def test_decode_acceptance_identity_is_independent_of_candidate(decode_measured,
             layout["input_file_sha256"] = file_sha256(p._attention_input_file)
     with pytest.raises(DeepSeekV4CoverageError):
         read_isolated_scope(p, ongoing_batch(6143), 2, "dsv4_sparse_attention", attention_layout=layout)
+
+
+@pytest.fixture(scope="module")
+def accepted_prefill():
+    from tests.integration.check_dsv4_measured_scopes import ScopePredictor, check_accepted_prefill
+    from frontier.config.model_config import BaseModelConfig
+
+    root = Path("/data/ycfeng/Frontier/.worktrees/glm53-dsv4-vllm028")
+    acceptance = root / "task_memory/task_2026-10-22_v4_balanced_routing/prefill_results/primary_acceptance.json"
+    package = root.parent / "v4-balanced-prefill-run/task_memory/task_2026-10-22_v4_h800_prefill/h800_prefill_balanced"
+    if not acceptance.is_file() or not package.is_dir():
+        pytest.skip("Accepted prefill receipts/package are unavailable")
+    p = ScopePredictor.__new__(ScopePredictor)
+    p._model_config = BaseModelConfig.create_from_name("deepseek-ai/DeepSeek-V4-Flash")
+    p._replica_config = SimpleNamespace(model_config=p._model_config, num_pipeline_stages=1,
+        moe_tensor_parallel_size=1, attention_backend="FLASHMLA_SPARSE_DSV4",
+        kv_cache_dtype="fp8_ds_mla", speculative_decoding_config=SimpleNamespace(enabled=False))
+    p._cluster_type = ClusterType.MONOLITHIC
+    return p, check_accepted_prefill(p, acceptance, package)
+
+
+def test_independent_prefill_contract_exact_all_accepted_scopes(accepted_prefill):
+    _, receipts = accepted_prefill
+    assert {m: sum(r["measurement_type"] == m for r in receipts) for m in
+            ("CUDA_EVENT", "KERNEL_ONLY")} == {"CUDA_EVENT": 50, "KERNEL_ONLY": 44}
+    assert {(r["row_metadata"]["attention_variant"], r["row_metadata"]["plans_tile_schedule"])
+            for r in receipts} == {(v, role) for v in ("csa", "hca", "uncompressed") for role in (False, True)}
+
+
+@pytest.mark.parametrize("method", [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY])
+@pytest.mark.parametrize("change", ["source_revision", "runtime_fingerprint", "model_config_sha256",
+    "input_file_sha256", "missing_provenance", "missing_metadata", "wrong_metadata", "variant", "planning_role", "graph", "pd", "unbalanced_q1"])
+def test_accepted_prefill_contract_typed_rejections(accepted_prefill, method, change, monkeypatch):
+    p, receipts = accepted_prefill
+    receipt = next(r for r in receipts if r["measurement_type"] == method.value
+        and r["row_metadata"]["global_layer_ids"] == "[2]")
+    monkeypatch.setattr(p, "_attention_input_file", receipt["input_file"], raising=False)
+    monkeypatch.setattr(p, "_active_measurement_type", method)
+    layout, batch = dict(receipt["attention_layout"]), source_batch([6144], [0])
+    if change in ("source_revision", "runtime_fingerprint", "model_config_sha256", "input_file_sha256"):
+        layout[change] = "unaccepted"
+    elif change == "missing_provenance":
+        del layout["input_file_sha256"]
+    elif change == "missing_metadata":
+        del layout["swa_metadata.block_size"]
+    elif change == "wrong_metadata":
+        layout["swa_metadata.block_size"] = 1
+    elif change == "variant":
+        layout["attention_variant"] = "hca"
+    elif change == "planning_role":
+        layout["plans_tile_schedule"] = False
+    elif change == "graph":
+        batch = graph_batch([6144], [0], padded=6144)
+    elif change == "pd":
+        monkeypatch.setattr(p, "_cluster_type", ClusterType.PREFILL)
+    else:
+        path = Path("/data/ycfeng/tmp/glm53_dsv4/v4_q1_warm_results/Q1_WARM_6143_7166/compute/h800/deepseek-ai/DeepSeek-V4-Flash")
+        monkeypatch.setattr(p, "_attention_input_file", str(path / ("attention.csv" if method is MeasurementType.CUDA_EVENT else "attention_kernel_only.csv")))
+        batch = ongoing_batch(6143)
+        rows = pd.read_csv(p._attention_input_file, float_precision="round_trip")
+        row = rows[(rows.decode_kv_cache_sizes == "[6143]") & (rows.global_layer_ids == "[2]")].iloc[0]
+        layout = {**decode_layout(row), **{key: layout[key] for key in
+            ("routing_runtime_path", "routing_strategy_sha256", "moe_routing")}}
+        assert "routing_runtime_path" not in rows
+    with pytest.raises(DeepSeekV4CoverageError):
+        read_isolated_scope(p, batch, 2, "dsv4_sparse_attention", attention_layout=layout)
