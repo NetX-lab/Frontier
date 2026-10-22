@@ -1,0 +1,25 @@
+{
+  "status": "PASS_CPU_CONFIG_VALUES_ONLY",
+  "actual": {
+    "modules": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    },
+    "graph": {
+      "max_model_len": 7168,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128
+    }
+  },
+  "image": "hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "engine_args_class": "vllm.engine.arg_utils.EngineArgs",
+  "engine_args_source": "/usr/local/lib/python3.12/dist-packages/vllm/engine/arg_utils.py",
+  "engine_args_sha256": "a7c3cfd379ba6a3f340071badb0029acf9c6e1dbfa59825c816c75bbff0bedfb",
+  "metadata_sha256": "e535c5c9e6385e5c39d55daf346fc0b42dd93496bf5e540ea442168b2524bb63",
+  "model_metadata_unchanged": true,
+  "method": "Imported real helper; executed exact two graph assignment AST nodes with real EngineArgs; existing CpuPlatform fixture mechanism",
+  "gpu_initialized": false,
+  "gpu_graph_backend_g3_qualified": false
+}

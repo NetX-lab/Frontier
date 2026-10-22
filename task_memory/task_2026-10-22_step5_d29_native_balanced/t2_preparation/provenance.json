@@ -2,7 +2,7 @@
   "task_id": "D29-T2-ENGINE-LIMITS",
   "preparation_task_id": "D29-T2-INPUT-PREPARATION",
   "status": "CONTROLLED_INPUTS_NOT_OBSERVED_NOT_RUN_NOT_LAUNCH_AUTHORIZATION",
-  "accepted_repo_commit": "90904073935c39fb8203ed71cbaf389ba9115443",
+  "accepted_repo_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
   "accepted_native_commit": "6827507",
   "native_acceptance_commit": "9495cfb",
   "publication_commit": "67d5b5e",
@@ -26,19 +26,18 @@
   "script_sources": {
     "tests/integration/step5_environment/test_position_cyclic_graph.py": {
       "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
-      "source_commit": "a5e5189",
-      "root_acceptance": "PENDING"
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
     },
     "frontier/profiling/collectives/step5_dispatch_probe.py": {
-      "sha256": "2a6da8cb8184e267aab32e8c1cdc45744c2acf7cefc1439acc6a692d500b7323",
-      "source_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
-      "verification": "Actual create_native_config body from verified PRICING commit executed with host constructor dependencies; not copied to production",
-      "local_worktree_sha256": "4d5460c14c54ec8bacf42b0395303c39b5a719217a0f721e3ec1b89c7da14805",
-      "integration": "ROOT_REQUIRED: mixed commit includes unrelated producer changes and central records; not imported by native owner"
+      "sha256": "8284363ed6c4090fbd57f5f9c00bac32f0b3183790f56e2c85e452e24bc9afc4",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
     },
     "tests/integration/step5_profiling/run_on_worker.sh": {
       "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
-      "accepted_commit": "9090407"
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
     }
   },
   "native_mechanism_sources": {
@@ -138,7 +137,7 @@
       "max_num_batched_tokens": 8192,
       "max_num_seqs": 128
     },
-    "engine_binding": "Supplied BEFORE both constructors; final with_hf_config model/scheduler values observed under soft diagnostics. PASS host entrypoint/constructor flow; actual image/GPU config UNVERIFIED",
+    "engine_binding": "Passed before both constructors; root host177PASS15SKIP and published-image CPU final configs both7168/8192/128; GPU configuration/execution remains unverified",
     "runtime_receipts": null,
     "backend_evidence": null,
     "numerical_state_tolerance": null
@@ -184,5 +183,49 @@
     "python": "3.12.13 (main, May 10 2026, 19:30:01) [Clang 22.1.3 ]",
     "torch_imported": false,
     "gpu_or_platform_access": false
+  },
+  "prepared_source_history": {
+    "repo_commit": "90904073935c39fb8203ed71cbaf389ba9115443",
+    "script_sources": {
+      "tests/integration/step5_environment/test_position_cyclic_graph.py": {
+        "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+        "source_commit": "a5e5189",
+        "root_acceptance": "PENDING"
+      },
+      "frontier/profiling/collectives/step5_dispatch_probe.py": {
+        "sha256": "2a6da8cb8184e267aab32e8c1cdc45744c2acf7cefc1439acc6a692d500b7323",
+        "source_commit": "3f54bc640392d2a029e371e85ab212f0e2ac20ee",
+        "verification": "Actual create_native_config body from verified PRICING commit executed with host constructor dependencies; not copied to production",
+        "local_worktree_sha256": "4d5460c14c54ec8bacf42b0395303c39b5a719217a0f721e3ec1b89c7da14805",
+        "integration": "ROOT_REQUIRED: mixed commit includes unrelated producer changes and central records; not imported by native owner"
+      },
+      "tests/integration/step5_profiling/run_on_worker.sh": {
+        "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
+        "accepted_commit": "9090407"
+      }
+    }
+  },
+  "frozen_source_worktree": "/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01",
+  "parent_acceptance": {
+    "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+    "review": "D29-T2-ENGINE-LIMITS-REVIEW: No findings",
+    "host_passed": 177,
+    "host_skipped": 15,
+    "image_cpu_config": {
+      "modules": {
+        "max_model_len": 7168,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 128
+      },
+      "graph": {
+        "max_model_len": 7168,
+        "max_num_batched_tokens": 8192,
+        "max_num_seqs": 128
+      }
+    },
+    "image_receipt_path": "task_memory/task_2026-10-22_step5_position_routing/repairs/t2_config/image_config.json",
+    "image_receipt_sha256": "62bbbbaa9c4fd4f81c0b8882a891670d7f2d92d847c755b6e66f3ba5403782ab",
+    "gpu_runtime_qualified": false,
+    "launch_authorized": false
   }
 }

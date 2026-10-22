@@ -1,0 +1,39 @@
+{
+  "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+  "baseline": "6ebb038",
+  "test_passed": 177,
+  "test_skipped": 15,
+  "test_failed": 0,
+  "test_errors": 0,
+  "native_increment_gross": 85,
+  "native_increment_limit": 100,
+  "native_cumulative": 1350,
+  "native_ceiling": 1582,
+  "pricing_increment_gross": 46,
+  "pricing_increment_limit": 60,
+  "actual_image_config": "PASS_CPU_CONFIG_VALUES_ONLY",
+  "independent_review": "NO_FINDINGS_CONSTRUCTOR_SOURCE_ONLY",
+  "launch_authorized": false,
+  "image_config_sha256": "62bbbbaa9c4fd4f81c0b8882a891670d7f2d92d847c755b6e66f3ba5403782ab",
+  "image_payload_sha256": "e4a152576ccd5d1c988cb632d0e9e7f828be148222cbccb66760a508e060cb5b",
+  "full_source_rebinding": "PASS",
+  "prepared_index_sha256": "b0748012a4c9721f12c0d884a5ee669e309b97089ef28c35a423f89b20b5eabe",
+  "source_file_hashes": {
+    "tests/integration/step5_environment/test_position_cyclic_graph.py": {
+      "sha256": "7d8422d4c085b2435899ee105ac47252759a423f04b5adb5433771b7c8d3ab25",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+    },
+    "frontier/profiling/collectives/step5_dispatch_probe.py": {
+      "sha256": "8284363ed6c4090fbd57f5f9c00bac32f0b3183790f56e2c85e452e24bc9afc4",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+    },
+    "tests/integration/step5_profiling/run_on_worker.sh": {
+      "sha256": "f1521a92554baba00f41b68bbd1375f3c27dd8b5038d383763d63bc04c557ad0",
+      "source_commit": "662849e99223c98b9ea0d47d34783c3977cb3282",
+      "root_acceptance": "PASS_SOURCE_AND_CPU_CONSTRUCTOR_ONLY"
+    }
+  },
+  "controlled_inputs_and_metadata_unchanged": true
+}

@@ -3,22 +3,25 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Root accepts constructor/CPU values and rebinds full integrated files at662849e; run approval remains pending. |
 | 2026-10-23 | Prepare existing-schema inputs and exact commands; no run/resource approval or execution. |
 | 2026-10-23 | Bind retained serving triple through both pre-construction paths; host flow PASS, root integration/image check pending. |
 
 TaskID: D29-T2-ENGINE-LIMITS, following D29-T2-INPUT-PREPARATION.
 Status: **PROPOSAL ONLY / NOT RUN**.
-Root must independently accept/seal this package and obtain actual run/resource
+Root accepts this controlled-input/code bundle and still requires actual run/resource
 authorization after remaining implementation readiness. Only root-directed
 two-file limit binding is added; no new numerical state tolerance, mode or harness.
 
 ## Identity and controlled inputs
 
-- Repository baseline: accepted9090407; native6827507 accepted9495cfb.
-  Native engine-limit source commit a5e5189. Verified helper source3f54bc6 is a
-  root integration prerequisite: its mixed producer/central-record commit was
-  read, not imported into this native worktree. Do not launch from the legacy
-  local helper or infer root acceptance from these owner commits.
+- Integrated code snapshot:662849e99223c98b9ea0d47d34783c3977cb3282, including
+  native a5e5189/4a7adb7 and the selected helper/test from PRICING3f54bc6.
+  Root verified selected-function AST equality,177 PASS/15 SKIP, actual installed
+  image config values and independent No findings. The full integrated script/helper
+  hashes in provenance.json replace the prepared mixed-file identity. The frozen
+  source worktree is `/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01`.
+  Do not change its code without producing a new binding and acceptance record.
 - Accepted linux/amd64 image:
   `hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee`.
 - Actual source export: `/data/ycfeng/tmp/d29_published_sources01/source`.
@@ -64,9 +67,10 @@ max_position_embeddings1048576 remains unchanged. T2 passes the same required
 mapping before helper/module and direct graph constructors, then records the final
 post-with_hf_config values in rank_N.json.engine_limits.modules/graph. A mismatch
 stays diagnostic-only UNVERIFIED; original construction/native errors propagate.
-Host actual-entrypoint/verified-helper flow PASS, including final-value drift.
-This closes the supported interface gap, not actual-image/GPU config acceptance
-or full-serving parity. Original G3/state criteria remain unchanged.
+Host entrypoint/helper flow PASS, including final-value drift. Root actual-image
+CPU config construction also yields7168/8192/128 for both final objects. This is
+constructor-value acceptance, not GPU defaults, graph/backend execution or full
+serving parity. Original G3/state criteria remain unchanged.
 
 ## Minimum topology and proposed ceiling
 
@@ -105,8 +109,8 @@ actual memory fit remains UNVERIFIED. See `resource_proposal.json` for formulas.
 
 Use the published image above, not a mutable tag/local index digest. Mount this
 accepted source worktree at its absolute local path, read-only, on both workers.
-Root must integrate/seal native a5e5189, inputs and the PRICING helper before
-selecting the actual launched source. T2 sets existing routing_input_file=None to
+Root has bound native a5e5189, inputs and the integrated helper at662849e; actual
+allocation mounts must preserve that binding. T2 sets existing routing_input_file=None to
 preserve its controlled plan, not substitute observed profiling inputs.
 The repository mount includes existing script/helper and controlled inputs. It
 does not contain a top-level vllm package. Do not put source exports,
@@ -130,7 +134,7 @@ dependencies plus the repository namespace, not profiler pandas/sklearn extras.
 
 ```bash
 set -euo pipefail
-REPO=/data/ycfeng/Frontier/.worktrees/step5-position-native
+REPO=/data/ycfeng/Frontier/.worktrees/verify-step5-t2-limits-01
 INPUTS="$REPO/task_memory/task_2026-10-22_step5_d29_native_balanced/t2_preparation"
 export PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -192,9 +196,9 @@ native errors. Even a future PASS_THIN_GRAPH_AND_EAGER_MODULES is **not** MRv2
 serving inputs, attention/connector breaks, real backend graphs, G3/state/transfer,
 original-router semantics, numerical fitting or op-gap/CPU overhead qualification.
 
-Unfinished: root input acceptance/sealing; implementation readiness; explicit
+Unfinished: remaining implementation readiness; explicit
 resource/run approval and finite-collection coordination; real node/mount/output/
-rendezvous/retention identities; scoped helper integration/actual-image config check; actual
+rendezvous/retention identities; actual
 worker source/import/library/config/backend/memory/runtime receipts. No runtime
 receipt is generated, no numerical state tolerance is selected, and no GPU action
 is authorized or performed by this document.
