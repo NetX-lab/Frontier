@@ -1,6 +1,6 @@
 ## 1. 规划完成情况
 
-**汇总：** PASS 4｜BLOCKED/FAILED/SKIPPED 0｜TODO 1
+**汇总：** PASS 5｜BLOCKED/FAILED/SKIPPED 0｜TODO 0
 
 ### Modification History
 
@@ -14,12 +14,12 @@
 | 2 新包与源码绑定 | PASS | build_receipt.json：16 imported origins、21 Git 文件。 |
 | 3 stage 与命令预检 | PASS | offline verifier、25 Python 文件与 bash syntax 通过。 |
 | 4 scoped 验证 | PASS | 590 tests；staged reference/HTTP/census fixtures 通过。 |
-| 5 封存与提交记录 | TODO | manifest、summary 和 task-only commit 尚待结束。 |
+| 5 封存与提交记录 | PASS | 56-entry manifest sealed；task-only commit cdcef5f。 |
 
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 本任务开始至今｜**当前前沿：** manifest 封存与主会话 handoff。
+**检测窗口：** 本任务开始至今｜**当前前沿：** 子任务已完成；主会话独占 live 验证与提交。
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
@@ -41,8 +41,8 @@
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 封存 manifest 与 retained receipts → 完成标志：package/source identities 可核验。
-2. 提交 task records 并检查 clean branch → 完成标志：主会话取得 offline-ready package；本子任务停止。
+1. 主会话接收 offline-ready package → 完成标志：确认 exact stage/source identities。
+2. 本子任务停止；主会话继续 live 检查与单次提交 → 完成标志：不将 offline PASS 当作 native qualification。
 
 ## 4. 最值得关注的 3 点
 

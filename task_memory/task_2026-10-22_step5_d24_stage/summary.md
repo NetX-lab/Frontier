@@ -56,4 +56,4 @@ The frozen output destination is a string only: `/mnt/codesign-exp/ycfeng/fronti
    The wrapper invokes a fresh exclusive presubmit check, the existing personal local StepMind environment and the staged submitter. Keep the launcher alive. Do not retry when an attempt marker exists or job identity is unknown.
 3. Parent inspects actual loaded source and GPU/rank census, startup/runtime rows, bounded raw/mean contents, independent reference and native pressure/READ-abort/overlap conservation, business outputs and all replica/container terminal states using the returned exact job name. Missing witnesses stay UNVERIFIED; numerical-rule selection remains a separate user decision.
 
-Implementation source remains ebd5baf. The task-record commit is recorded in `progress.md`; no source-code integration is required from this branch.
+Implementation source remains ebd5baf. Task artifacts were committed as `cdcef5f`; the subsequent documentation-only receipt records completion. No source-code integration is required from this branch.
