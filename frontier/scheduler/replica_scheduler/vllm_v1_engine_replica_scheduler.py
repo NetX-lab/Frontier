@@ -1759,6 +1759,7 @@ class VLLMv1EngineReplicaScheduler(
         )
 
         self._check_request_fits_max_model_len(request)
+        self._set_prefill_compute_target(request)
         self._check_request_fits_kv_pool(request)
         self._initialize_request_spec_decode_state(request)
         self._maybe_promote_final_round_priority(request)

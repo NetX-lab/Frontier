@@ -127,6 +127,11 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
         )
         if observed != expected:
             raise ValueError("Measured NIXL coverage does not match request geometry")
+        if (
+            request.prefill_compute_target < request.num_prefill_tokens
+            and coverage.num_computed_tokens != request.prefill_compute_target
+        ):
+            raise ValueError("Measured NIXL prefix does not match the P compute target")
         return coverage
 
     def get_measured_nixl_transfer_info_for_request(
