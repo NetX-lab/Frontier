@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent integrated4ec5b23; source/tests parity with3d6744f PASS, code-scope verification closed. |
 | 2026-10-23 | D30-SCOPE-8-750 approved;13-source assertion repaired, full-environment65 PASS and baseline failure/error equality restored. |
 | 2026-10-22 | Complete affected PD74, boundaries32 and R2388 checks; refresh scope evidence and handoff status. |
 | 2026-10-22 | Complete diagnostic consumer and placement lifecycle checks; run final affected checks within approved scope. |
@@ -10,6 +11,7 @@
 | 2026-10-22 | Complete records-only reviewer follow-up; propose seven files/750 changed lines pending parent approval. |
 | 2026-10-22 | Complete focused source/CPU checks; record adjacent fixture blocker and parent handoff. |
 
+- completed (parent2026-10-23): merge4ec5b23 accepts reviewed and verified3d6744f. Eight source/test files,603 gross lines;420 parent checks,65 canonical checks and77 strict cases pass. Full-unit capture plus affected rerun preserves baseline267 failure/31 error IDs. Exact merged source/test parity PASS; fresh native counter observation remains pending. See parent integration report and evidence/parent_integration/merged_source.json.
 - completed: read authoritative approval and D30 docs before any changes.
 - completed: clean worktree/branch at requested fa5bae2; parent edits preserved.
 - completed: registered Step family, engine-wave owner and R2 install/hash/error

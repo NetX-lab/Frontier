@@ -136,12 +136,32 @@ HEAD and clean status match713e6a8 after capture. No thresholds or expectations
 were modified. Audit: `parent_audit01.json` in the output root. Comparison SHA256:
 `715e523e837a9696a6bc74c709b618787745d22d2187ba0ce255b44d1a56ca36`.
 
-## Candidate unit delta — running
+## Candidate unit delta — complete with approved assertion amendment
 
 Created separate `verify/d30-unit-713e6a8` checkout at the same revision under
 `/data/ycfeng/Frontier/.worktrees/d30-unit-713e6a8`, so its cache cannot affect
 strict77. Run the baseline command unchanged there except basetemp/XML/log names
-become `/data/ycfeng/tmp/d30_unit_candidate01{,.xml,.log}`. Its results and
-failure/error-ID delta are pending; baseline267 failures/31 errors are not
-waived or reported as green. Main-branch integration and live native observation
-remain pending.
+become `/data/ycfeng/tmp/d30_unit_candidate01{,.xml,.log}`. Actual full result:
+7646 PASS/268 FAIL/31 ERROR/179 SKIP across8124 cases,1043.142s. The sole added
+failure is canonical source-count12 versus13. All267 baseline failures and31
+errors are retained. D30-SCOPE-8-750 authorizes the eighth test file; amendment
+3d6744f changes only that unit assertion outside task records.
+
+Affected rerun in the same environment:63 PASS and two baseline aiohttp import
+failures. Existing complete Python3.12 environment:65/65 PASS. Parent replaces
+only these65 outcomes in the full capture; latest evidenced7647 PASS,267 FAIL,
+31 ERROR,179 SKIP, with failure/error sets exactly equal to baseline. This is
+an affected rerun, not a second full-unit capture or an entirely green suite.
+Exact commands and receipts: `test_report_2026-10-23_canonical_source_assertion.md`
+and `evidence/canonical_source_amendment/`. Final D30 scope is eight files,
+530 additions+73 deletions=603<=750. Production/fidelity inputs and the completed
+independent source review are unchanged.
+
+## Final integration — PASS (2026-10-23)
+
+Merge `4ec5b23bb71a92e505083296912f3556cad5ba6a` integrates accepted3d6744f into
+feat/step5-preview. `git diff --exit-code 3d6744f HEAD -- frontier tests examples
+data pyproject.toml .gitmodules` and merge whitespace checks pass. Receipt:
+`evidence/parent_integration/merged_source.json`. Existing unrelated `.cortexkit/`
+and `.pi/` remain untouched. No repeated runtime tests are needed for identical
+accepted bytes. Fresh native counter observation and full CLI remain open.

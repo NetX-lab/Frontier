@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Complete all design reviews and parent107-path/9942-line reconciliation; request model/scope decision before implementation. |
 | 2026-10-22 | Remove unsupported exact-NCCL reconstruction prerequisite; require finite explicit model assumptions and subsequent qualification. |
 | 2026-10-22 | Require an explicit communication-model decision if measured-plan lookup would replace the retained simulator approach. |
 | 2026-10-22 | Assign six review findings and three disjoint mandatory design streams; remove unrelated new-policy scope. |
@@ -13,6 +14,15 @@ Dependency: producer/source trace -> design -> independent design review ->
 derived profiling source entry} -> reconciled native/Frontier/profile/fixture
 scope -> user scope decision ->
 implementation and affected regression -> new inputs/native evidence.
+
+Current frontier: YC's numerical model and full implementation-scope decision.
+All native/core/source/finite-pricing/producer design findings are closed.
+`shared_scope.md` and `scope.json` bind107 code/test/config paths,9942 gross lines,
+plus the named size-note and gitlink updates within the proposed10000 total.
+D30 is independently integrated4ec5b23. Approval leads to native/source interfaces
+and parallel nonshared core/pricing work, then single-writer shared integration,
+fixture/main/regression checks and fresh source-bound native/profile evidence.
+The finite collection's actual resource/run authorization is settled at readiness.
 
 Native design corrections and D30 run independently. Confirm which shared
 interfaces are necessary for the active Step path; avoid unrelated mode work.

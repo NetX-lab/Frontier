@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | D30 integrated4ec5b23 after all code-scope gates; D29 design reviews complete and full107-path scope awaits decision. |
 | 2026-10-22 | D30 repair600 lines/review clear; parent420 checks, strict77 and902 artifact hashes PASS; full-unit delta pending. |
 | 2026-10-22 | D30-SCOPE-7-750 approved; resume implementation and prepare parent unit/strict77 comparison. |
 | 2026-10-22 | Apply checkpoint D4/S1 correction: seek D30's complete independent scope decision while D29 design continues. |
@@ -210,8 +211,8 @@ Authority includes D20–D30 in [requirements.md](requirements.md), owned by the
 | D27 live SWA payload | integrated; source/review/legacy PASS |32 live pages/19826 descriptors/139887104B per rank. Combined4080-prefix expectation corrected to102203904; allocation unchanged |
 | D23 fixed identity reuse | integrated; source/legacy PASS |96 parent checks, event/stage/lane/source truth equal. Pre-D26 complete iterations7.983/8.116s remain RED; not native CPU-overhead evidence |
 | Merged focused verification | completed |First239PASS/3FAIL/5SKIP retained; D27 expectation corrected, existing HTTP env/native-root binding restored. Reruns95/81PASS; latest per-case union258PASS/0FAIL/0SKIP; strict77 identical |
-| D29 policy/order | model decision-ready; producer/union scope closing |Native19, source16 and core33/2966 designs reviewed. Finite collective_sim model reviewed; selected-call validator and native probe's routing/position binding still need explicit producer scope. Shared-hunk matrix is in progress. Numerical assumptions, final scope and collection remain unapproved. Details in task_2026-10-22_step5_position_routing/review.md |
-| D30 finish sync | repair/review/affected/strict77/unit-delta PASS; merge pending |YC approves eighth test path,750-line cap. Amendment3d6744f fixes sole new assertion;65/65 complete-env checks PASS, latest unit failure/error sets equal baseline. Total8files/603lines; production matches reviewed713e6a8, parent420 and77/77/902hash checks retained. Fresh native observation remains pending |
+| D29 policy/order | complete design reviewed; model/scope decision pending |Native19, source16, core33 and pricing60 reviewed; producer seams closed. Parent union107 code/test/config paths,9942 gross lines after34-line deduction; plus named gitlink/docs updates. Full proposal in shared_scope.md/scope.json remains unapproved. |
+| D30 finish sync | source/CPU scope integrated4ec5b23 |Eight files/603lines under amended approval. Review No findings, parent420 and65 canonical checks,77/77 strict cases/902 hashes PASS; latest unit failure/error IDs equal baseline. Merged source/test parity PASS; fresh native counter observation remains pending. |
 | Docs validation and commit | completed with this slice | [D21 test report](test_report_2026-10-21_d21_docs.md); final commit reported to parent; parent owns acceptance/push |
 
 The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% on every track**.32 release30 requires all four errors<=30% in each of three clean full-population repetitions; equality passes, no average across metrics/hardware/repeats hides a failure. It unlocks only matching64 formal work, not basic runtime, final support or H800-to-H200 execution. Keep128 requests,6144/1024,QPS1,16 warmups,three clean repeats, existing runtime/backend/metrics and frozen68f891b/958d81a bytes. Profiles/native evidence and manifests are hardware/scale-specific, not scaled or substituted.
@@ -224,7 +225,7 @@ The two P2 rows are equal priority. Final acceptance is **all four metrics<=10% 
 
 **Parent verification:** D21 source has204 passing parent checks. Staged `tests` namespace shadowing caused H20032 generation01 to fail before allocation;42dda4c adds package markers, with38 passing checks and actual StepMind-Python dry-run. All old packages remain unchanged; generation02 is separate. D22 has264 focused parent checks and a successful frozen18/4/0.05 native judgment. Detailed records: `../task_2026-10-21_step5_priority_runs/` and `../task_2026-10-21_step5_d22_timing/`. Independent compute/native source reviews hit model limits; no independent PASS is claimed. Parent continues direct checks and real execution.
 
-**Next actions:** (1) merge D30 and verify the exact accepted source tree; (2) in parallel, close D29 producer seams and shared-hunk scope, then obtain the complete model/scope decision; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. [Merged report](test_report_2026-10-22_merged_workflow.md) closes258 earlier focused outcomes and77 strict cases. D30 independently repeats strict77 at713e6a8; no source scope or acceptance criterion is relaxed.
+**Next actions:** (1) obtain D29's complete model/scope decision; (2) implement approved native/source interfaces and independent core/pricing slices with the shared sole-writer map; (3) freeze new inputs and D28-enabled native generation, perform approved live checks/diagnostic, then workflow and GPU/operator-gap judgment; (4) complete source-bound1024-output CLI within2400s with READ/readiness/release/final metrics. CPU overhead/gap remains last. D30 is integrated4ec5b23 with independent strict77 verification; no source scope or acceptance criterion is relaxed.
 
 D30 candidate evidence: worktree `/data/ycfeng/Frontier/.worktrees/step5-finish-sync`,
 `task_memory/task_2026-10-22_step5_finish_sync/issues.md` and its test report.
@@ -235,8 +236,9 @@ Candidate dc166cb/713e6a8 now passes494 distinct author checks; parent separatel
 passes420 boundary/R2 checks and77 strict scenarios. Review No findings and
 parent budget528+72=600 PASS. Evidence and exact commands:
 `../task_2026-10-22_step5_finish_sync/test_report_2026-10-22_parent_integration.md`.
-Only the full-unit delta and final integration remain before code-scope closure;
-live native counter qualification remains a later new-generation check.
+The approved eighth assertion file closes the sole added unit failure. Final
+source/CPU integration4ec5b23 is verified; live native counter qualification
+remains a later new-generation check.
 
 **Actual-main logger repair completed:** commit `b862e57`. Parent reproduced run08's `Batch has no requests` at the actual `BatchStageEndEvent`/`DummyForwardBatch` seam and restricted request-owned AF-state lookup to batches with requests. Reproduction2FAIL/2PASS -> affected logging/lifecycle36PASS. Clean detached5af7638/b862e57 runs at `/data/ycfeng/tmp/step5_event_logging_clean_fidelity_20261021` both exit0;strict comparator exits0 with77/77 identical,zero cache-name differences and no missing evidence. Earlier dirty-source receipts are preserved. Complete measured CLI acceptance remains with its owner. Details: [event-logging test report](test_report_2026-10-21_request_free_event_logging.md).
 

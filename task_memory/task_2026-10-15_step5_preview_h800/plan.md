@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | D30 code scope merged4ec5b23; D29 complete reviewed model and107-path union move to the independent user decision. |
 | 2026-10-22 | Record mergedfa5bae2 strict77 and approved D29 position policy/D30 finish-sync parallel paths. |
 | 2026-10-22 | Apply checkpoint correction: replace completed root-ledger repair with actual06 iteration work and resume independent D24 staging. |
 | 2026-10-22 | D25 completed on both scales; resume D23 core integration, fresh actual-main and clean legacy verification. |

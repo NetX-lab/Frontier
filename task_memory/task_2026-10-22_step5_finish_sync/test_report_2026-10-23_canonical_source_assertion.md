@@ -54,6 +54,7 @@ report records the original full commands and strict77 evidence.
 
 ## Limits
 
-Source/CPU acceptance is satisfied. Main-branch merge/parity is the next step.
+Source/CPU acceptance is satisfied. Merge4ec5b23 and exact parity with accepted
+3d6744f are verified in `evidence/parent_integration/merged_source.json`.
 Fresh native counter observation and full Step CLI qualification remain open;
 this assertion-only amendment does not provide either.

@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Eight-file603-line repair integrated at4ec5b23 after review, affected/unit-delta and strict77 checks. |
 | 2026-10-22 | Record completed implementation and affected checks; retain parent-only acceptance steps. |
 | 2026-10-22 | Merge independent D30-SCOPE-7-750 approval and start implementation; no D29 dependency. |
 | 2026-10-22 | Add missing verdict consumer and six fixture instances; record seven-file numerical proposal pending approval. |
@@ -24,13 +25,13 @@ Current chain:
 The two implementation arms are now authorized independently of D29;
 they touch separate existing files. No new subagents are authorized here.
 
-Current status: approval/baseline merge, consumer/regression, six fixture repairs
-and required verification are completed. PD74PASS, boundary/emitter/legacy
-matrix32PASS, R2388PASS and final exact-peer-ID lifecycle7PASS. Gross scope is
-7files/528insertions+72deletions=600lines against b8be287; all modules<=2000.
-Verified follow-up source/tests are committed as dc166cb. Separate records
-handoff is closing; parent review/integration/strict77/native qualification
-remain pending.
+Current status: source/CPU implementation and integration complete at4ec5b23.
+Final D30-SCOPE-8-750 amendment3d6744f extends only the obsolete canonical
+source-count assertion: eight files/530insertions+73deletions=603 against b8be287.
+Independent review No findings; parent420 checks,65 canonical checks, baseline
+unit failure/error-set equality after the affected rerun, strict77 and902
+artifact hashes pass. Merged source/tests exactly match the accepted tree.
+Fresh native counter qualification remains open under the new-generation work.
 
 1. Read approval/source and existing owners; record design and human receipt.
 2. Add focused tests: step1, 16, reset, active peer, dummy, legacy32 and DP1.

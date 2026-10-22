@@ -1,0 +1,1258 @@
+{
+  "status": "REVIEWED_DESIGN_PENDING_USER_MODEL_AND_SCOPE_DECISION",
+  "pricing_source_sha256": "d5f180e6ecf6d53fe4c390ab14a46f8cffdb58168d79bc03c16786833e701723",
+  "pricing_sections": {
+    "6.Common": [
+      42,
+      2102,
+      237
+    ],
+    "6.Model": [
+      15,
+      1416,
+      57
+    ],
+    "6.Closure": [
+      14,
+      708,
+      29
+    ]
+  },
+  "pricing_unique_paths": 60,
+  "pricing_gross": 4549,
+  "withdrawn_duplicate": [
+    {
+      "path": "frontier/profiling/moe/main.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 30,
+      "deleted": 4,
+      "ceiling": 34
+    }
+  ],
+  "union_unique_source_test_config_paths": 107,
+  "conservative_gross_ceiling": 9942,
+  "cross_owner_shared_paths": 18,
+  "additional_global_paths": [
+    "frontier/profiling/collectives/step5_dispatch_probe.py",
+    "tests/integration/step5_comm/validate_result.py",
+    "tests/integration/step5_comm/worker.py",
+    "tests/unit/test_step5_comm_transport.py",
+    "tests/unit/test_step5_dispatch_probe.py"
+  ],
+  "submodule_paths": [
+    "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py",
+    "frontier/cc_backend/backends/collective-sim/htsim_runner.py",
+    "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py",
+    "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py",
+    "frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py"
+  ],
+  "extra_tracked_updates": [
+    "frontier/cc_backend/backends/collective-sim (gitlink)",
+    "docs/general/module-size-exceptions.md"
+  ],
+  "rows": [
+    {
+      "path": "frontier/moe_routing_policy.py",
+      "owner": "core",
+      "ceiling": 200
+    },
+    {
+      "path": "frontier/moe_ep_workload.py",
+      "owner": "core",
+      "ceiling": 87
+    },
+    {
+      "path": "frontier/moe_routing_runtime.py",
+      "owner": "core",
+      "ceiling": 123
+    },
+    {
+      "path": "frontier/config/replica_config.py",
+      "owner": "core",
+      "ceiling": 16
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "owner": "core",
+      "ceiling": 112
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py",
+      "owner": "core",
+      "ceiling": 38
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "owner": "core",
+      "ceiling": 105
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_operator_times.py",
+      "owner": "core",
+      "ceiling": 45
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+      "owner": "core",
+      "ceiling": 135
+    },
+    {
+      "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+      "owner": "core",
+      "ceiling": 129
+    },
+    {
+      "path": "frontier/scheduler/utils/ep_wave.py",
+      "owner": "core",
+      "ceiling": 22
+    },
+    {
+      "path": "frontier/scheduler/utils/layer_workload.py",
+      "owner": "core",
+      "ceiling": 43
+    },
+    {
+      "path": "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+      "owner": "core",
+      "ceiling": 11
+    },
+    {
+      "path": "frontier/scheduler/utils/ep_trace.py",
+      "owner": "core",
+      "ceiling": 28
+    },
+    {
+      "path": "frontier/moe_load_imbalance.py",
+      "owner": "core",
+      "ceiling": 26
+    },
+    {
+      "path": "frontier/execution_time_predictor/step5.py",
+      "owner": "core",
+      "ceiling": 58
+    },
+    {
+      "path": "frontier/execution_time_predictor/layer_contract_resolution.py",
+      "owner": "core",
+      "ceiling": 45
+    },
+    {
+      "path": "frontier/execution_time_predictor/profiling_dataframe_loaders.py",
+      "owner": "core",
+      "ceiling": 27
+    },
+    {
+      "path": "frontier/profiling/moe/inputs.py",
+      "owner": "core",
+      "ceiling": 130
+    },
+    {
+      "path": "frontier/profiling/moe/moe_impl.py",
+      "owner": "core",
+      "ceiling": 113
+    },
+    {
+      "path": "frontier/profiling/moe/moe_wrapper.py",
+      "owner": "core",
+      "ceiling": 221
+    },
+    {
+      "path": "frontier/profiling/moe/main.py",
+      "owner": "core",
+      "ceiling": 145
+    },
+    {
+      "path": "frontier/profiling/moe/load_distribution.py",
+      "owner": "core",
+      "ceiling": 5
+    },
+    {
+      "path": "tests/unit/test_moe_position_routing.py",
+      "owner": "core",
+      "ceiling": 160
+    },
+    {
+      "path": "tests/unit/test_moe_routing_conservation.py",
+      "owner": "core",
+      "ceiling": 71
+    },
+    {
+      "path": "tests/unit/test_moe_routing_runtime.py",
+      "owner": "core",
+      "ceiling": 60
+    },
+    {
+      "path": "tests/unit/test_step5_moe_profiling.py",
+      "owner": "core",
+      "ceiling": 175
+    },
+    {
+      "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+      "owner": "core",
+      "ceiling": 140
+    },
+    {
+      "path": "tests/unit/test_step5_measured_ffn.py",
+      "owner": "core",
+      "ceiling": 108
+    },
+    {
+      "path": "tests/unit/test_moe_profiling_output_metadata.py",
+      "owner": "core",
+      "ceiling": 85
+    },
+    {
+      "path": "tests/integration/step5_measured_compute_fixture.py",
+      "owner": "core",
+      "ceiling": 170
+    },
+    {
+      "path": "tests/integration/run_step5_measured_main.py",
+      "owner": "core",
+      "ceiling": 35
+    },
+    {
+      "path": "tests/integration/test_step5_measured_main.py",
+      "owner": "core",
+      "ceiling": 98
+    },
+    {
+      "path": "frontier/profiling/common/step5_job.py",
+      "owner": "source",
+      "ceiling": 110
+    },
+    {
+      "path": "frontier/profiling/step5/job.py",
+      "owner": "source",
+      "ceiling": 82
+    },
+    {
+      "path": "tests/integration/step5_profiling/submit_profiling_job.py",
+      "owner": "source",
+      "ceiling": 9
+    },
+    {
+      "path": "tests/integration/step5_profiling/run_on_worker.sh",
+      "owner": "source",
+      "ceiling": 26
+    },
+    {
+      "path": "frontier/profiling/common/runtime_identity.py",
+      "owner": "source",
+      "ceiling": 176
+    },
+    {
+      "path": "frontier/profiling/step5/vllm_wrapper.py",
+      "owner": "source",
+      "ceiling": 29
+    },
+    {
+      "path": "frontier/profiling/linear_op/main.py",
+      "owner": "source",
+      "ceiling": 29
+    },
+    {
+      "path": "frontier/profiling/moe/main.py",
+      "owner": "source",
+      "ceiling": 26
+    },
+    {
+      "path": "tests/integration/step5_profiling/verify_fixed_probe.py",
+      "owner": "source",
+      "ceiling": 65
+    },
+    {
+      "path": "tests/unit/test_step5_fixed_probe.py",
+      "owner": "source",
+      "ceiling": 155
+    },
+    {
+      "path": "tests/unit/test_step5_attention_profiling.py",
+      "owner": "source",
+      "ceiling": 30
+    },
+    {
+      "path": "tests/unit/test_step5_moe_profiling.py",
+      "owner": "source",
+      "ceiling": 50
+    },
+    {
+      "path": "tests/unit/test_step5_request_free_profiling.py",
+      "owner": "source",
+      "ceiling": 30
+    },
+    {
+      "path": "frontier/profiling/moe/moe_impl.py",
+      "owner": "source",
+      "ceiling": 18
+    },
+    {
+      "path": "frontier/profiling/common/layers/layernorm.py",
+      "owner": "source",
+      "ceiling": 21
+    },
+    {
+      "path": "frontier/profiling/moe/fp8_block_experts.py",
+      "owner": "source",
+      "ceiling": 23
+    },
+    {
+      "path": "native-image/vllm/forward_context.py",
+      "owner": "native",
+      "ceiling": 35
+    },
+    {
+      "path": "native-image/vllm/models/step5/nvidia/model.py",
+      "owner": "native",
+      "ceiling": 30
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py",
+      "owner": "native",
+      "ceiling": 15
+    },
+    {
+      "path": "native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py",
+      "owner": "native",
+      "ceiling": 185
+    },
+    {
+      "path": "tests/unit/test_step5_native_position_cyclic.py",
+      "owner": "native",
+      "ceiling": 210
+    },
+    {
+      "path": "tests/integration/step5_environment/test_position_cyclic_graph.py",
+      "owner": "native",
+      "ceiling": 390
+    },
+    {
+      "path": "tests/integration/step5_native_image/build_image.py",
+      "owner": "native",
+      "ceiling": 120
+    },
+    {
+      "path": "tests/integration/step5_native_image/Dockerfile.position_cyclic",
+      "owner": "native",
+      "ceiling": 28
+    },
+    {
+      "path": "tests/comparison/dp_placement_pp/vllm_replay.py",
+      "owner": "native",
+      "ceiling": 70
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_canonical.py",
+      "owner": "native",
+      "ceiling": 20
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_stage.py",
+      "owner": "native",
+      "ceiling": 30
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_runtime.py",
+      "owner": "native",
+      "ceiling": 115
+    },
+    {
+      "path": "tests/integration/step5_pd/verify_r2_stage.py",
+      "owner": "native",
+      "ceiling": 50
+    },
+    {
+      "path": "tests/unit/test_step5_canonical_g3.py",
+      "owner": "native",
+      "ceiling": 155
+    },
+    {
+      "path": "tests/unit/test_step5_native_pd_r2_observation.py",
+      "owner": "native",
+      "ceiling": 60
+    },
+    {
+      "path": "tests/unit/test_step5_native_image.py",
+      "owner": "native",
+      "ceiling": 20
+    },
+    {
+      "path": "tests/integration/step5_pd/r2_replay.py",
+      "owner": "native",
+      "ceiling": 35
+    },
+    {
+      "path": "tests/comparison/calibration/pd_proxy.py",
+      "owner": "native",
+      "ceiling": 8
+    },
+    {
+      "path": "tests/unit/test_step5_native_reference.py",
+      "owner": "native",
+      "ceiling": 6
+    },
+    {
+      "path": "frontier/moe_routing_policy.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 12,
+      "deleted": 0,
+      "ceiling": 12
+    },
+    {
+      "path": "frontier/scheduler/utils/batch_builders.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 20,
+      "deleted": 4,
+      "ceiling": 24
+    },
+    {
+      "path": "frontier/scheduler/utils/expert_parallel.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 18,
+      "deleted": 4,
+      "ceiling": 22
+    },
+    {
+      "path": "frontier/execution_time_predictor/step5_cost.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 180,
+      "deleted": 0,
+      "ceiling": 180
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_operator_times.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 65,
+      "deleted": 25,
+      "ceiling": 90
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 65,
+      "deleted": 18,
+      "ceiling": 83
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 8,
+      "ceiling": 33
+    },
+    {
+      "path": "frontier/moe_load_imbalance.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 5,
+      "ceiling": 30
+    },
+    {
+      "path": "frontier/operators/spec.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 70,
+      "deleted": 8,
+      "ceiling": 78
+    },
+    {
+      "path": "frontier/operators/families.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 95,
+      "deleted": 12,
+      "ceiling": 107
+    },
+    {
+      "path": "frontier/entities/execution_time.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 45,
+      "deleted": 6,
+      "ceiling": 51
+    },
+    {
+      "path": "frontier/entities/time_components.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 5,
+      "ceiling": 30
+    },
+    {
+      "path": "frontier/execution_time_predictor/sklearn_execution_time_predictor.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 18,
+      "deleted": 2,
+      "ceiling": 20
+    },
+    {
+      "path": "frontier/cc_backend/collective_plan.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 110,
+      "deleted": 0,
+      "ceiling": 110
+    },
+    {
+      "path": "frontier/cc_backend/base_cc_backend.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 8,
+      "deleted": 0,
+      "ceiling": 8
+    },
+    {
+      "path": "frontier/execution_time_predictor/step5.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 20,
+      "deleted": 3,
+      "ceiling": 23
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 60,
+      "deleted": 14,
+      "ceiling": 74
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_forward_collectives.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 8,
+      "deleted": 2,
+      "ceiling": 10
+    },
+    {
+      "path": "frontier/config/quantization_manager.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 4,
+      "ceiling": 29
+    },
+    {
+      "path": "frontier/profiling/moe/fp8_block_experts.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 90,
+      "deleted": 15,
+      "ceiling": 105
+    },
+    {
+      "path": "frontier/profiling/moe/moe_vllm_kernel.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 70,
+      "deleted": 18,
+      "ceiling": 88
+    },
+    {
+      "path": "frontier/profiling/moe/moe_impl.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 8,
+      "ceiling": 33
+    },
+    {
+      "path": "frontier/profiling/moe/moe_wrapper.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 55,
+      "deleted": 8,
+      "ceiling": 63
+    },
+    {
+      "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 4,
+      "ceiling": 29
+    },
+    {
+      "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 25,
+      "deleted": 4,
+      "ceiling": 29
+    },
+    {
+      "path": "frontier/metrics/constants.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 8,
+      "deleted": 0,
+      "ceiling": 8
+    },
+    {
+      "path": "frontier/metrics/ep_wave_metrics.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 50,
+      "deleted": 10,
+      "ceiling": 60
+    },
+    {
+      "path": "frontier/metrics/op_trace_utils.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 65,
+      "deleted": 20,
+      "ceiling": 85
+    },
+    {
+      "path": "frontier/attention/step5.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 55,
+      "deleted": 10,
+      "ceiling": 65
+    },
+    {
+      "path": "tests/unit/test_step5_moe_pricing.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 150,
+      "deleted": 0,
+      "ceiling": 150
+    },
+    {
+      "path": "tests/unit/test_comm_operator_families.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 50,
+      "deleted": 0,
+      "ceiling": 50
+    },
+    {
+      "path": "tests/unit/test_step5_moe_profiling.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 65,
+      "deleted": 0,
+      "ceiling": 65
+    },
+    {
+      "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 40,
+      "deleted": 0,
+      "ceiling": 40
+    },
+    {
+      "path": "tests/unit/test_step5_comm_cost_export.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 40,
+      "deleted": 0,
+      "ceiling": 40
+    },
+    {
+      "path": "tests/unit/test_collective_benchmark_helpers.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 60,
+      "deleted": 0,
+      "ceiling": 60
+    },
+    {
+      "path": "tests/integration/step5_measured_compute_fixture.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 50,
+      "deleted": 10,
+      "ceiling": 60
+    },
+    {
+      "path": "tests/integration/run_step5_measured_main.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 50,
+      "deleted": 6,
+      "ceiling": 56
+    },
+    {
+      "path": "tests/integration/test_step5_measured_main.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 55,
+      "deleted": 0,
+      "ceiling": 55
+    },
+    {
+      "path": "tests/unit/test_ep_wave_trace_context.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 65,
+      "deleted": 0,
+      "ceiling": 65
+    },
+    {
+      "path": "tests/unit/test_op_trace_utils.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 45,
+      "deleted": 0,
+      "ceiling": 45
+    },
+    {
+      "path": "tests/unit/test_step5_contract_reuse.py",
+      "owner": "pricing",
+      "part": "6.Common",
+      "added": 40,
+      "deleted": 0,
+      "ceiling": 40
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 120,
+      "deleted": 12,
+      "ceiling": 132
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/schema.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 100,
+      "deleted": 8,
+      "ceiling": 108
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/htsim_runner.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 185,
+      "deleted": 8,
+      "ceiling": 193
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/predictor.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 65,
+      "deleted": 8,
+      "ceiling": 73
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/python/collective_sim_core/intra_server_model.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 120,
+      "deleted": 8,
+      "ceiling": 128
+    },
+    {
+      "path": "frontier/cc_backend/backends/collective-sim/tests/test_grouped_plan_input.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 110,
+      "deleted": 0,
+      "ceiling": 110
+    },
+    {
+      "path": "tests/unit/test_collective_sim_cc_backend.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 100,
+      "deleted": 0,
+      "ceiling": 100
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 140,
+      "deleted": 0,
+      "ceiling": 140
+    },
+    {
+      "path": "tests/integration/step5_comm/export_costs.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 230,
+      "deleted": 5,
+      "ceiling": 235
+    },
+    {
+      "path": "tests/integration/step5_comm/prepare.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 18,
+      "deleted": 0,
+      "ceiling": 18
+    },
+    {
+      "path": "tests/integration/step5_comm/step5_position_model_run.json",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 70,
+      "deleted": 0,
+      "ceiling": 70
+    },
+    {
+      "path": "tests/unit/test_step5_comm_cost_export.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 65,
+      "deleted": 0,
+      "ceiling": 65
+    },
+    {
+      "path": "tests/unit/test_collective_benchmark_helpers.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 55,
+      "deleted": 0,
+      "ceiling": 55
+    },
+    {
+      "path": "tests/unit/test_step5_comm_package.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 30,
+      "deleted": 0,
+      "ceiling": 30
+    },
+    {
+      "path": "tests/integration/step5_comm/analyze_result.py",
+      "owner": "pricing",
+      "part": "6.Model",
+      "added": 8,
+      "deleted": 8,
+      "ceiling": 16
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_forward_collectives.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 24,
+      "deleted": 0,
+      "ceiling": 24
+    },
+    {
+      "path": "frontier/profiling/collectives/vllm_collective_benchmark.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 16,
+      "deleted": 2,
+      "ceiling": 18
+    },
+    {
+      "path": "tests/integration/step5_comm/prepare.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 60,
+      "deleted": 3,
+      "ceiling": 63
+    },
+    {
+      "path": "tests/integration/step5_comm/validate_result.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 65,
+      "deleted": 6,
+      "ceiling": 71
+    },
+    {
+      "path": "tests/unit/test_step5_comm_transport.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 105,
+      "deleted": 0,
+      "ceiling": 105
+    },
+    {
+      "path": "tests/integration/step5_comm/worker.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 65,
+      "deleted": 3,
+      "ceiling": 68
+    },
+    {
+      "path": "frontier/profiling/collectives/step5_dispatch_probe.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 160,
+      "deleted": 10,
+      "ceiling": 170
+    },
+    {
+      "path": "frontier/profiling/moe/inputs.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 8,
+      "deleted": 0,
+      "ceiling": 8
+    },
+    {
+      "path": "frontier/profiling/moe/moe_impl.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 4,
+      "deleted": 4,
+      "ceiling": 8
+    },
+    {
+      "path": "tests/integration/step5_comm/step5_position_model_run.json",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 8,
+      "deleted": 0,
+      "ceiling": 8
+    },
+    {
+      "path": "tests/integration/step5_comm/export_costs.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 12,
+      "deleted": 0,
+      "ceiling": 12
+    },
+    {
+      "path": "tests/unit/test_step5_comm_package.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 70,
+      "deleted": 0,
+      "ceiling": 70
+    },
+    {
+      "path": "tests/unit/test_collective_benchmark_helpers.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 15,
+      "deleted": 0,
+      "ceiling": 15
+    },
+    {
+      "path": "tests/unit/test_step5_dispatch_probe.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 96,
+      "deleted": 1,
+      "ceiling": 97
+    }
+  ],
+  "shared_paths": {
+    "frontier/moe_routing_policy.py": [
+      {
+        "path": "frontier/moe_routing_policy.py",
+        "owner": "core",
+        "ceiling": 200
+      },
+      {
+        "path": "frontier/moe_routing_policy.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 12,
+        "deleted": 0,
+        "ceiling": 12
+      }
+    ],
+    "frontier/execution_time_predictor/moe_routing_workload.py": [
+      {
+        "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+        "owner": "core",
+        "ceiling": 112
+      },
+      {
+        "path": "frontier/execution_time_predictor/moe_routing_workload.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 25,
+        "deleted": 8,
+        "ceiling": 33
+      }
+    ],
+    "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py": [
+      {
+        "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+        "owner": "core",
+        "ceiling": 105
+      },
+      {
+        "path": "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 65,
+        "deleted": 18,
+        "ceiling": 83
+      }
+    ],
+    "frontier/execution_time_predictor/moe_operator_times.py": [
+      {
+        "path": "frontier/execution_time_predictor/moe_operator_times.py",
+        "owner": "core",
+        "ceiling": 45
+      },
+      {
+        "path": "frontier/execution_time_predictor/moe_operator_times.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 65,
+        "deleted": 25,
+        "ceiling": 90
+      }
+    ],
+    "frontier/execution_time_predictor/moe_dataset_training.py": [
+      {
+        "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+        "owner": "core",
+        "ceiling": 135
+      },
+      {
+        "path": "frontier/execution_time_predictor/moe_dataset_training.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 25,
+        "deleted": 4,
+        "ceiling": 29
+      }
+    ],
+    "frontier/execution_time_predictor/prediction_family_trainers.py": [
+      {
+        "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+        "owner": "core",
+        "ceiling": 129
+      },
+      {
+        "path": "frontier/execution_time_predictor/prediction_family_trainers.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 25,
+        "deleted": 4,
+        "ceiling": 29
+      }
+    ],
+    "frontier/moe_load_imbalance.py": [
+      {
+        "path": "frontier/moe_load_imbalance.py",
+        "owner": "core",
+        "ceiling": 26
+      },
+      {
+        "path": "frontier/moe_load_imbalance.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 25,
+        "deleted": 5,
+        "ceiling": 30
+      }
+    ],
+    "frontier/execution_time_predictor/step5.py": [
+      {
+        "path": "frontier/execution_time_predictor/step5.py",
+        "owner": "core",
+        "ceiling": 58
+      },
+      {
+        "path": "frontier/execution_time_predictor/step5.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 20,
+        "deleted": 3,
+        "ceiling": 23
+      }
+    ],
+    "frontier/profiling/moe/inputs.py": [
+      {
+        "path": "frontier/profiling/moe/inputs.py",
+        "owner": "core",
+        "ceiling": 130
+      },
+      {
+        "path": "frontier/profiling/moe/inputs.py",
+        "owner": "pricing",
+        "part": "6.Closure",
+        "added": 8,
+        "deleted": 0,
+        "ceiling": 8
+      }
+    ],
+    "frontier/profiling/moe/moe_impl.py": [
+      {
+        "path": "frontier/profiling/moe/moe_impl.py",
+        "owner": "core",
+        "ceiling": 113
+      },
+      {
+        "path": "frontier/profiling/moe/moe_impl.py",
+        "owner": "source",
+        "ceiling": 18
+      },
+      {
+        "path": "frontier/profiling/moe/moe_impl.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 25,
+        "deleted": 8,
+        "ceiling": 33
+      },
+      {
+        "path": "frontier/profiling/moe/moe_impl.py",
+        "owner": "pricing",
+        "part": "6.Closure",
+        "added": 4,
+        "deleted": 4,
+        "ceiling": 8
+      }
+    ],
+    "frontier/profiling/moe/moe_wrapper.py": [
+      {
+        "path": "frontier/profiling/moe/moe_wrapper.py",
+        "owner": "core",
+        "ceiling": 221
+      },
+      {
+        "path": "frontier/profiling/moe/moe_wrapper.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 55,
+        "deleted": 8,
+        "ceiling": 63
+      }
+    ],
+    "frontier/profiling/moe/main.py": [
+      {
+        "path": "frontier/profiling/moe/main.py",
+        "owner": "core",
+        "ceiling": 145
+      },
+      {
+        "path": "frontier/profiling/moe/main.py",
+        "owner": "source",
+        "ceiling": 26
+      }
+    ],
+    "tests/unit/test_step5_moe_profiling.py": [
+      {
+        "path": "tests/unit/test_step5_moe_profiling.py",
+        "owner": "core",
+        "ceiling": 175
+      },
+      {
+        "path": "tests/unit/test_step5_moe_profiling.py",
+        "owner": "source",
+        "ceiling": 50
+      },
+      {
+        "path": "tests/unit/test_step5_moe_profiling.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 65,
+        "deleted": 0,
+        "ceiling": 65
+      }
+    ],
+    "tests/unit/test_moe_grouped_gemm_padded_features.py": [
+      {
+        "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+        "owner": "core",
+        "ceiling": 140
+      },
+      {
+        "path": "tests/unit/test_moe_grouped_gemm_padded_features.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 40,
+        "deleted": 0,
+        "ceiling": 40
+      }
+    ],
+    "tests/integration/step5_measured_compute_fixture.py": [
+      {
+        "path": "tests/integration/step5_measured_compute_fixture.py",
+        "owner": "core",
+        "ceiling": 170
+      },
+      {
+        "path": "tests/integration/step5_measured_compute_fixture.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 50,
+        "deleted": 10,
+        "ceiling": 60
+      }
+    ],
+    "tests/integration/run_step5_measured_main.py": [
+      {
+        "path": "tests/integration/run_step5_measured_main.py",
+        "owner": "core",
+        "ceiling": 35
+      },
+      {
+        "path": "tests/integration/run_step5_measured_main.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 50,
+        "deleted": 6,
+        "ceiling": 56
+      }
+    ],
+    "tests/integration/test_step5_measured_main.py": [
+      {
+        "path": "tests/integration/test_step5_measured_main.py",
+        "owner": "core",
+        "ceiling": 98
+      },
+      {
+        "path": "tests/integration/test_step5_measured_main.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 55,
+        "deleted": 0,
+        "ceiling": 55
+      }
+    ],
+    "frontier/profiling/moe/fp8_block_experts.py": [
+      {
+        "path": "frontier/profiling/moe/fp8_block_experts.py",
+        "owner": "source",
+        "ceiling": 23
+      },
+      {
+        "path": "frontier/profiling/moe/fp8_block_experts.py",
+        "owner": "pricing",
+        "part": "6.Common",
+        "added": 90,
+        "deleted": 15,
+        "ceiling": 105
+      }
+    ]
+  },
+  "inputs_materializer_allowance": [
+    {
+      "path": "frontier/profiling/moe/inputs.py",
+      "owner": "core",
+      "ceiling": 130
+    },
+    {
+      "path": "frontier/profiling/moe/inputs.py",
+      "owner": "pricing",
+      "part": "6.Closure",
+      "added": 8,
+      "deleted": 0,
+      "ceiling": 8
+    }
+  ]
+}

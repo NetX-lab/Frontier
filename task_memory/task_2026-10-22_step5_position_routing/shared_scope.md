@@ -4,13 +4,50 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent accepts sole writers/H11 deduction, incorporates reviewed producer closure and reconciles107 paths/9942 gross lines. |
 | 2026-10-22 | Reconcile all17 cross-owner shared paths and3 same-owner Common/Model increments; assign one file writer, remove one wholly duplicate allowance, retain conservative bounds for inseparable overlap. Design only. |
 
 TaskID: **D29-SHARED-HUNK-UNION**. This document is the only new write.
 It recommends hunk ownership and accounting; it does not edit, replace or approve
 the four owner designs, any implementation or the finite numerical model.
 
-## 1. Snapshot and accounting decision
+## 1. Current parent scope and decision request
+
+Parent has accepted the sole-writer allocation and the H11 whole-row deduction.
+The final producer review D29-FINITE-PRODUCER-DELTA has No findings. The numerical
+model and implementation scope still require YC's decision. Authoritative
+per-path allowances are retained in `scope.json`; this is a conservative ceiling,
+not a measured implementation diff or a claim that every mixed allowance is disjoint.
+
+Complete pricing is60 paths/4549, including14 closure increments/737 lines.
+The union is **107 code/test/config paths,9942 gross lines**. Five paths are
+inside the existing collective-sim submodule; the four native source files are
+counted in the native19 scope. Additionally allow the existing gitlink update
+(two diff lines) and `docs/general/module-size-exceptions.md` (at most12 added
+lines, already specified by CORE). The requested total ceiling is **10000**
+added/deleted lines for these107 paths plus those two explicitly named updates.
+Task records and generated evidence/measurement/image artifacts are recorded
+separately and are not additional handwritten implementation paths.
+
+The model decision is the fixed proposal in pricing3.2: ordered DP2 tensor/root
+stages, configured element striping, all eight TP rails in one HTSIM network
+run, measured copy/add proxies, and an affine effective remainder fitted after
+fixing network/local inputs. Compose network+slowest-rank-local+remainder with
+no overlap. This is a modeling assumption, not isolated protocol measurement;
+retain signed residuals, independent qualification and each E2E error<=10%.
+Existing numerical inputs must be frozen/qualified; no invented coefficients.
+The finite collection shape is specified, but its platform resources/run approval
+are decided at package readiness. Existing D24/D28 resource limits are unchanged.
+
+Parent computation reads all Common/Model/Closure rows, retains the other three
+reviewed owner ledgers, removes only H11's34, and checks exact path identities.
+The five globally new paths are the actual dispatch probe, worker, validator,
+and their existing transport/probe unit-test modules. CORE inputs.py was already
+in the union. CORE writes that shared materializer once; its8-line allowance is
+retained conservatively with the existing130-line mixed input scope. H09 gains
+the8-line adapter connector. Neither creates a second tensor/count algorithm.
+
+### Quantitative ledger
 
 Evidence: `/data/ycfeng/tmp/d29_complete_scope_union_candidate01.json`, compared
 with `design.md` sections5/6.2/6.3/9, `profile_source_design.md` sections4/5 and
@@ -21,16 +58,16 @@ No native architecture or D30 inspection was needed.
 
 | Quantity | Recorded / checked value |
 | --- | ---: |
-| Owner submissions | CORE33/2966; SOURCE16/879; NATIVE19/1582; PRICING54/3812 |
-| Candidate allowance rows / distinct source-test-config paths | 125 /102 |
-| Cross-owner shared paths / their summed gross allowance | 17 /2864 |
-| Same-owner Common/Model shared paths / summed gross allowance | 3 /434 |
-| Other82 paths / gross allowance | 82 /5941 |
-| Candidate gross ceiling before behavioral reconciliation | 9239 |
+| Owner submissions | CORE33/2966; SOURCE16/879; NATIVE19/1582; PRICING60/4549 |
+| Candidate allowance rows / distinct source-test-config paths | 139 /107 |
+| Cross-owner shared paths / gross allowance after deduction | 18 /2976 |
+| Same-owner pricing shared paths / gross allowance | 8 /1007 |
+| Other paths / gross allowance | 81 /5959 |
+| Candidate gross ceiling before behavioral reconciliation | 9976 |
 | Wholly duplicate allowance withdrawn below (H11, pricing) | +30/-4 =34 |
-| Recommended conservative union ceiling | **102 paths /9205 gross lines** |
+| Accepted parent planning ceiling, awaiting YC | **107 paths /9942 gross lines** |
 
-**9205 is a defensible planning upper bound, not a nonoverlapping implementation
+**9942 is a defensible planning upper bound, not a nonoverlapping implementation
 diff or a proved minimum.** Each required behavior below has one implementation
 owner; remaining mixed allowances may cover the same changed lines. The table
 retains their sums where the source tables do not separate those portions. Do
@@ -47,7 +84,7 @@ adapter or job.py allowance is restored or subtracted again.
 This snapshot excludes the submodule gitlink pointer, module-size documentation,
 task records and generated evidence. Parent must list those separately in its
 scope request; this reconciliation does not invent their ceilings or hide them
-in9205. The new `shared_scope.md` is a task record, not a103rd implementation path.
+in9942. This `shared_scope.md` is a task record, not an implementation path.
 
 ## 2. Cross-owner ownership matrix
 
@@ -72,7 +109,7 @@ Combined +/- columns are allowance bounds, not predicted actual hunks.
 | H06 `frontier/execution_time_predictor/prediction_family_trainers.py` | C | C: bound TP/EP/typed precision/context before loader/helpers, actual contract/model/cache identities, selected schemas/ranges and paired fit. P: native numerical schema/target facts consumed by that existing fit. C performs the fit integration once; P does not repeat selected-spec discovery or pair creation. | C129 + P29; **+126/-32 =158** | I |
 | H07 `frontier/moe_load_imbalance.py` | C | C: one exact shared schema classifier recognizing preserved legacy and new schemas. P: selected native backend capacity/alignment/schema entries and their meaning. Native entries extend C's classifier; no second classifier or universal Triton padding branch. | C26 + P30; **+50/-6 =56** | I |
 | H08 `frontier/execution_time_predictor/step5.py` | C | C: scoped rows, typed duration/count/source/native identity propagation and applicable-target admission. P: native branch/plan capability prerequisites and selected physical-scope acceptance. C installs the common target/scope checks once; P supplies the additional plan/native prerequisite conditions. | C58 + P23; **+70/-11 =81** | I |
-| H09 `frontier/profiling/moe/moe_impl.py` | C | C: actual native router factory/context/select_experts and semantic result/weight/mask validation. S14: source receipt checks for actual GateLinear and C-created router/context callables, retained outside timers. P: original reached source prepare callable/timer. C supplies constructed objects once; S5/S14 alone own root/spec/hash verification, not a second C source verifier. | C113 + S18 + P33; **+138/-26 =164** | I |
+| H09 `frontier/profiling/moe/moe_impl.py` | C | C: native router/context and semantic validation; adapter calls the single inputs.py materializer. S14: actual callable provenance outside timers. P: reached source prepare timer and the materializer connector; no duplicate tensor/count algorithm. | C113 + S18 + P41; **+142/-30 =172** | I |
 | H10 `frontier/profiling/moe/moe_wrapper.py` | C | C: one cell/one dict, local/gathered widths/context, selected-spec row targets, sentinel counting, singleton RECORD_FUNCTION replay/restore/clear and immutable CUDA_EVENT stats. P: actual prepare/gathered-sample/native inclusive-root contract consumed through its adapter and returned scope/layout identity. C owns cell dispatch/target enumeration once; P owns native scope semantics, not a second wrapper/row protocol. | C221 + P63; **+239/-45 =284** | I |
 | H11 `frontier/profiling/moe/main.py` | C | C B4: census/cell work, three executor kwargs, one-dict flattening and registry-selected precision/reached-prepare targets, exact required columns/typed metadata/no structural zeros. S8: manifest/source verification and actual per-result evidence attachment. P's whole30/4 row restates C's selected-target/metadata admission; P reviews its spec facts but adds no second consumer hunk. | C145 + S26; P34 withdrawn; **+140/-31 =171** | W |
 | H12 `tests/unit/test_step5_moe_profiling.py` | C | C C4: native router/context/mask integration and real DeviceTimer annotations/tracer parser/count replay/event preservation/error cleanup. S12: actual gate/norm/oracle/kernel callable wrong-root/spec/hash/missing-receipt negatives. P: original prepare/inclusive invocation/timer partition and selected padding/scales. Share fixtures, not another routing/count/provenance suite. | C175 + S50 + P65; **+290/-0 =290** | D |
@@ -81,8 +118,9 @@ Combined +/- columns are allowance bounds, not predicted actual hunks.
 | H15 `tests/integration/run_step5_measured_main.py` | C | C: manifest policy/input/schema forwarding and original offline/online run/timeout/capacity/READ acceptance. P: finite-variant config/input binding, real operation metrics/trace/ledger enabled and numerical plan/scope proofs. One invocation/manifest validator, with P's additional flags/checks; no second runner. | C35 + P56; **+75/-16 =91** | I |
 | H16 `tests/integration/test_step5_measured_main.py` | C | C: paired actual-main source/position/empty exact coverage and retained workflow invariants. P: native-sized numerical plan/phase/metrics/trace assertions for that same run. Shared run fixture/assertions executed once; keep P's independently required reporting assertions. | C98 + P55; **+145/-8 =153** | I |
 | H17 `frontier/profiling/moe/fp8_block_experts.py` | P | P: original inclusive expert invocation on prepared gathered tensors and selected backend/layout/config/callable identity. S16 specification: actual config/oracle/construction/returned kernel bound-callable receipt checks using S5. P writes that provenance hunk here once; S owns verifier/interface acceptance, not native invocation or backend choice. | S23 + P105; **+112/-16 =128** | D |
+| H18 `frontier/profiling/moe/inputs.py` | C | C: input schema, source association, frame parsing and tensor materialization. P: expose that one materializer for the existing probe; no second interval/count implementation. | C130 + P8; **+138/-0 =138** | I |
 
-Matrix sum: **17 paths, +2467/-363 =2830 gross**. There are4 D,12 I and1 W
+Matrix sum: **18 paths, +2609/-367 =2976 gross**. There are4 D,13 I and1 W
 rows. “D” separates acceptance responsibilities, not a promise that imports/test
 setup lines never overlap. No deduction is taken for shared imports or fixtures.
 I-row sums remain conservative because their allowance rows do not isolate the
@@ -126,20 +164,23 @@ combined explanatory note a second time.
 | `tests/unit/test_step5_comm_cost_export.py` | +40/-0: candidate/native scope cannot be admitted by old labels | +65/-0: bounded affine/TP fits, constraints/residuals/held-out errors/range rejection | **+105/-0 =105** |
 | `tests/unit/test_collective_benchmark_helpers.py` | +60/-0: real into-output/alias/no-staging and per-rank count normalization | +55/-0: local-work construction/config/rows/preallocation and local-vs-native evidence | **+115/-0 =115** |
 
-Same-owner sum **3 paths, +420/-14 =434 gross**; the Model increment is260.
-Common42 + Model15 -3 =54 pricing paths stays correct. No numerical reduction
-or new fourth model increment is proposed.
+The original three rows above retain the260-line Model increment once. Closure
+adds18 to benchmark and15 to benchmark helpers. Five more pricing-only paths
+have explicit additive closure increments: forward_collectives34 combined,
+prepare81, definition78, exporter247 and package tests100. The final same-owner
+shared group has **8 paths,+981/-26=1007 gross**. Pricing42+15+14, after repeated
+paths, gives60 unique paths; no same-owner increment is silently dropped.
 
 ## 4. Parent integration recommendation and remaining decisions
 
 1. **Accept or correct this ownership recommendation, not the model by proxy.**
    Apply H11's34-line withdrawal in the parent's aggregate ledger only; the
    four owner documents remain untouched by this task. Current adjustment is
-   C2966 + S879 + N1582 + (P3812 -34) =**9205**. Cross/shared2830 + same/shared434
-   + other5941 =9205. Keep102 paths. The16-source origin ledger still includes
+    C2966 + S879 + N1582 + (P4549 -34) =**9942**. Cross/shared2976 + same/shared1007
+    + other5959 =9942. Keep107 paths. The16-source origin ledger still includes
    S16; its assigned implementation writer is P, not an extra pricing allowance.
 2. **Freeze sole writer for each shared file before an implementation step.**
-   C writes15 matrix paths, P writes H04/H17 and the3 Common/Model paths.
+    C writes16 matrix paths, P writes H04/H17 and the8 pricing-only shared paths.
    Source supplies S8/S12/S14/S16 hunks/interfaces to the named writer and accepts
    provenance behavior. P supplies numeric/native schema/plan facts to C-writer
    paths. Neither contributors nor reviewer simultaneously edit those paths.
@@ -164,7 +205,7 @@ or new fourth model increment is proposed.
 
 Required inputs/decisions still open:
 
-- Finite pricing54/3812 independent review is ongoing. Its model assumptions,
+- Finite pricing60/4549 and both producer seams have completed independent design review. Its model assumptions,
   exact numerical inputs and collection approval remain parent/YC decisions;
   this ledger does not approve simulated stage ordering/overlap/calibration or
   measured lookup. If that review changes shared responsibilities/ceilings, parent

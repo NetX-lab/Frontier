@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Integrated4ec5b23; exact source/test parity with accepted3d6744f PASS. Source/CPU scope complete; native remains open. |
 | 2026-10-23 | Parent review/420 checks/strict77 pass; approved eighth assertion file closes the sole new full-unit failure; merge pending. |
 | 2026-10-22 | Archive independently approved seven-file consumer/lifecycle completion and remaining parent acceptance. |
 | 2026-10-22 | Archive bounded source/CPU candidate and explicit integration blockers. |
@@ -18,7 +19,9 @@ acceptance is completed including the final fixture-only rerun. Parent review,
 420 affected checks and strict77/902 artifact checks pass. The approved eighth
 test-file amendment leaves the unit failure/error sets equal to the baseline;
 the complete affected module passes65/65 in the existing full environment.
-Main-branch integration and live-native acceptance remain pending.
+Main-branch integration is complete at `4ec5b23bb71a92e505083296912f3556cad5ba6a`.
+Parent verifies exact frontier/tests/examples/data/pyproject/.gitmodules parity
+with accepted3d6744f. Live-native acceptance remains pending.
 
 Original candidate code: `cf1a53f63eef0492c369517f38505d7d7283c4df`.
 Parent baseline/approval: `b8be2871f5f8e2ea762b7471599240dcfff5fa97`, merged as
@@ -66,10 +69,11 @@ scope and latest test outcomes.
   `test_report_2026-10-22_finish_sync.md`, `test_results.json`,
   `source_test_budget.json` and complete `d30_source_test.diff`.
 
-Source/test diff: exactly the seven approved files,528insertions+72deletions=
-600changed lines against b8be287, including cf1a53f (327) and follow-up (273).
-The750-line cap has150 lines of headroom. Exact per-file counts are in
-`source_test_budget.json` and the test report. Changed modules remain
+Original source/test diff: seven files,528insertions+72deletions=600lines.
+The approved assertion amendment adds2/deletes1: final eight files,530+73=603
+against b8be287,147 lines below cap. `source_test_budget.json` is the original
+snapshot; final counts are in
+`evidence/canonical_source_amendment/outcomes_and_budget.json`. Changed modules remain
 below2000 lines; whitespace checks pass. No arbitrary model
 string classifier, new CLI flag/scheduler, GPU fence/collective/readback,
 native scheduling/routing edit or workload/profile/distribution edit.
@@ -108,7 +112,7 @@ matrix) are resolved in approved source/CPU scope. No observed source defect is
 left open by these matrices; this does not imply live-driver/native correctness.
 There is no D29 approval dependency. No regression is suppressed or waived.
 
-Common-branch integration, fresh native staging, loaded core/config pins, all-DP scalar counter completeness,
+Fresh native staging, loaded core/config pins, all-DP scalar counter completeness,
 active-peer continuation, first idle boundary and wave reset remain pending.
 Raw counters are not request/transfer evidence and grant no D30/native PASS.
 No native scheduling/routing, package/image change, GPU fence/collective/readback,

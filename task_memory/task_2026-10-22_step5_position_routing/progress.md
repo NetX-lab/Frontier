@@ -3,10 +3,24 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | All design reviews closed; parent scope107/9942 and sole-writer allocation complete; model/scope decision pending. |
 | 2026-10-22 | Receive pricing proposal, identify an unapproved communication-model choice and arithmetic error, and assign callable-provenance correction. |
 | 2026-10-22 | Receive profile-source and revised core subtotals; require explicit adapter ownership and output-frame protocol. |
 | 2026-10-22 | Receive six design findings and start disjoint core, pricing and profile-source corrections. |
 | 2026-10-22 | Receive the first design and request independent scope/correctness review. |
+
+## Current frontier
+
+- completed: native19/source16/core33/pricing60 design reviews, including both
+  final producer seams and the shared source-frame materializer.
+- completed: parent parses all scope rows and removes only H11's34-line duplicate;
+ 107 unique code/test/config paths,9942 gross. Plus existing gitlink and at most12
+  size-note lines, proposed10000 total. `shared_scope.md`/`scope.json` bind details.
+- pending: YC decision on the fixed collective model and complete implementation
+  scope. Implementation has not started; actual collection resources/run approval
+  follow package readiness. D30 is independently integrated4ec5b23.
+
+## Earlier execution record
 
 - completed: `design.md` traces actual Batch context/query snapshots, source
   lanes, shared materializers and profile consumers. Author reports 200
