@@ -12,6 +12,7 @@
 | 2026-10-22 | Both CPU reuse corrections accepted; merged224 PASS and frozen-checkout actual06/candidate77 launched. |
 | 2026-10-22 | CPU reuse strict comparison passes77/77; actual06 terminal acceptance remains pending. |
 | 2026-10-22 | Actual06 times out after357/362 tokens; record measured speedup and resume whole-iteration profiling. |
+| 2026-10-22 | Confirm P-side repeated prompt work and separate SWA payload arithmetic; semantic corrections await decision. |
 
 ## Status
 
@@ -23,6 +24,14 @@ Terminal metrics and full6144/1024 acceptance are still absent. Whole-iteration
 CPU profiling is active. Both reuse corrections remain source-accepted, with224
 combined checks and77/77 exact legacy comparison passing. See
 `actual06_timeout_receipt.json` and the latest test-report section.
+
+Native-aligned acceptance also has a confirmed semantic blocker: current P6144
+plus D16 repeats16 prompt-token computations, whereas native is P6128 plus D16.
+Parent verified frozen source pins, native forward arrays and both current
+partial-run P records. A separate847,872-byte/rank payload difference closes
+numerically to one extra SWA page per69 layers. P lifecycle/new fixture and
+native page-selection correction await their decision/proof; see
+`prefill_census/report.md`. Neither issue is explained away by runtime speedup.
 
 Historical attempts: shared fit generation02 is complete and retained. Actual01 rejected
 mutually exclusive runner graph flags (fixed); actual02 rejected an uninitialized

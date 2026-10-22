@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record actual06 failure, verified identity reuse and D26 new-fixture integration dependency. |
 | 2026-10-21 | Measured integrationbc8ae27 passes323 combined/197 profiling parent checks; complete CLI acceptance remains active. |
 | 2026-10-21 | Four public-manager bundles generated; actual-main mapping correction and final integration remain open after274 parent checks. |
 | 2026-10-21 | D21: P0-first measured CPU integration and separate per-track bundle admission; retain external acceptance gates without reinstating the implementation wait. |
@@ -22,6 +23,14 @@ Demonstrate coverage, host/communication ownership, and cross-model cold/warm id
 Record reuse sufficiency and evidence-backed changes through the existing C01/C04 owners and D-* records. Routine incremental changes use standing execution authority. Explicit approval is required only for a demonstrated material core refactor or materially unresolved semantics/acceptance; no duplicate decision authority is created.
 
 **Status:** in-progress (D20 CPU implementation); formal bundle and whole-ticket acceptance blocked
+
+**Current acceptance:** actual06 still timed out after357/362 outputs. Fixed
+identity source7e98e5c passes parent96 checks and complete source/ledger audit;
+parent iteration7.983/8.116s remains RED, so no fullCLI claim. D26 fresh v2
+fixture binds P6128/D16 and balanced source settings; oldfixture02 is immutable
+and rejected by the new runner. Integrate D26/D27/identity, create a fresh
+combined input generation and complete required regression before full request
+acceptance. D29 orders workflow/GPU-opgap before native CPU-overhead work.
 
 **Execution receipt:** bc8ae27 integrates compute83af0a7, PD9625984, transfer8215196, graph-policy7e41b80 and request-freeacc3a88 into the primary branch. Parent323 combined and197 profiling/timing checks pass. The public-manager fixture emits four bundles with34 artifacts each. The actual-main owner is completing offline/online6144/1024 requests, first-tail16/cached6128, READ completion/source release and final metrics. Synthetic costs do not constitute an admitted production bundle. Final-source77-case fidelity is running; the earlier comparison retains explained config/metadata differences.
 

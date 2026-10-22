@@ -6,6 +6,7 @@
 | 2026-10-22 | Record assigned actual-main acceptance. |
 | 2026-10-22 | Parent supplied FULL request-capacity correction for final CLI. |
 | 2026-10-23 | Record resumed actual-main bounds and ownership. |
+| 2026-10-22 | Record a confirmed P compute mismatch and pending lifecycle/payload decisions. |
 
 ## [Original Request]
 Complete actual subprocess `python -B -m frontier.main` offline and online,
@@ -32,3 +33,18 @@ extending the bound. Parent owns `_config.batch_size_cap` follow-up; ordinary
 capacity128 is unchanged on testedc9e9388f. A pending fit or partial initialization
 does not satisfy6144/1024 completion. CPU synthetic costs are not native/profile
 or accuracy qualification.
+
+## Parent investigation — pending decision
+
+Native P computes6128 for the canonical6144-token prompt. Both partial actual06
+runs instead schedule P6144 before D recomputes16; see `prefill_census/report.md`
+and its parent source/row receipts. The canonical client count is6144, not6160;
+6160 is the duplicated scheduled-computation count.
+
+Faithful P computation requires a separate P compute target/completion/ownership
+contract and a new fixture generation. A separate SWA payload discrepancy is
+847,872 bytes/rank; its effective native selection mechanism must be established
+before changing the shared transfer rule. These are proposed semantic changes,
+not an extension of the existing padding approval. Preserve fixture02 and its
+historical acceptance until the user decides. Independent CPU runtime diagnosis
+continues with the2400s bound.

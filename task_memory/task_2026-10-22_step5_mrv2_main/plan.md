@@ -15,6 +15,7 @@
 | 2026-10-22 | Both reuse corrections accepted; frozen-source actual06 and candidate77 in progress. |
 | 2026-10-22 | CPU reuse strict77 comparison complete; only full actual06 acceptance remains in this phase. |
 | 2026-10-22 | Actual06 still times out; next feedback loop must cover the complete public iteration, not just FFN queries. |
+| 2026-10-22 | Add native P lifecycle and SWA selection decision dependencies after source/row reconciliation. |
 
 1. Generate exact supported synthetic CPU attention/compute/count coverage through
    producer-shaped rows and shared manager caches, retaining truthful kinds and padding.
@@ -38,10 +39,16 @@ and independent No findings. Initialization profiling confirms repeated input
 loads; validated-input reuse now preserves same-manager source/policy invalidation
 and passes parent187 checks plus19 CPU helpers. The combined224 checks pass.
 The new strict77 comparison is complete: all77 cases, cache names and provenance
-match. Actual06 reaches357/362 outputs before timeout. Next: construct and run a
-short red-capable complete public iteration -> rank/test causes with a profiler
--> select a source correction -> affected/whole-scenario verification. Preserve
+match. Actual06 reaches357/362 outputs before timeout. Complete-iteration causes
+were measured; fixed identity reuse is delivered but parent intervals remain
+7.983/8.116s. Integrate approved P/lifetime and payload corrections, preserving
 the original2400s bound, workload, dynamic validation and source proofs. Do not
 treat the faster isolated query or loader as complete runtime acceptance.
-Reuse fixture02 and initialized `step5-mrv2-main`; keep2400s bounds and immutable
-old outputs. All validation remains CPU/synthetic, without native admission.
+Use a fresh D26/D27 combined fixture after integration; fixture02 stays
+immutable/historical. All validation remains CPU/synthetic, without native admission.
+
+Independent native-alignment dependency: D26/D27 are approved and delivered;
+parent review/integration, truthful combined inputs and request/ownership/first-
+prediction acceptance remain. See `prefill_census/report.md` and mainrequirements
+D26/D27. D29 requires matching balanced routing and workflow/GPU alignment
+before CPU-gap measurement. No new broad CPU campaign or blind2400s retry now.

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Apply D29 temporary balanced routing and workflow/GPU-before-CPU order. |
 | 2026-10-21 | D22: attention agreement uses independently executed clean-window references; thresholds and historical verdicts remain unchanged. |
 | 2026-10-21 | D21: four prioritized hardware/scale tracks, independent 32-to-64 formal release gates, basic/formal separation and global H200 non-preemptible cap32. |
 | 2026-10-21 | D20 releases measured-path CPU implementation while retaining native/profile/predictive acceptance conditions. |
@@ -168,7 +169,7 @@ The stacked branch does not change the GLM branch owner or imply that implementa
 
 ## 2. Objective and scope
 
-PRIMARY is **P0 H80032** of §0. All four tracks require full text-backbone predictive online E2E, P/D disaggregation, PP1, chunked prefill **disabled**, actual decode CUDA Graph replay, unchanged dummy-weight routing and the official FP8 configuration's resolved mixed precision. D21 restores H800 formal calibration without reviving the retired W1–W6 campaign.
+PRIMARY is **P0 H80032** of §0. All four tracks require full text-backbone predictive online E2E, P/D disaggregation, PP1, chunked prefill **disabled**, actual decode CUDA Graph replay, D29-matched balanced token-to-expert routing and the official FP8 configuration's resolved mixed precision. Historical dummy-weight runs retain their original routing identity. D21 restores H800 formal calibration without reviving the retired W1–W6 campaign.
 Frontier remains CPU-only. GPU profiling and native serving run in their respective qualified image processes; simulator imports must not acquire a vLLM or torch dependency.
 The full text model, expert count, quantization exclusions, and required state must not be reduced to obtain a passing run. Dummy weights replace checkpoint acquisition, never execution time, kernels, communication, or allocation.
 
@@ -293,9 +294,21 @@ Keep duration, kernel count, device gaps, and host preparation separate. Indepen
 Every profile must identify image/runtime, model/metadata, hardware, precision/exclusions, role, TP/DP/EP/PP, phase, graph policy, shape/layout, backend, and physical-scope/fusion coverage as applicable. Declare family-specific required features through existing contracts; reject mismatches and coverage gaps.
 Publish through the existing producer/trainer/cache identity boundary. Preserve legacy table meanings and cold/warm behavior; check GLM → Step → GLM and sequences including DS against isolated loads.
 
-Keep native expert routing unchanged. Independently measure occupancy/padding and selector locality across seeds, content families, layers, and phases; an independent statistical model may inform predictions, but observed holdout routing may not.
+For current calibration D29 requires balanced token-to-expert routing in both
+Frontier and native execution, with effective assignment, DP/EP, padding and
+integer-remainder semantics verified. Preserve historical routing identities;
+random-uniform sampling and expert-placement balancing alone do not establish
+the required policy. Ticket11.routing_policy owns the prerequisite check and
+proposal. A needed native implementation/reference change requires its explicit
+decision and a fresh generation. Independently measure remaining occupancy,
+padding and selector locality across relevant seeds/content/layers/phases;
+held-out routing must never become predictive input.
 Measure TP collectives, EP dispatch/combine/reductions, and NIXL with bytes, participants, topology, precision, useful/padded tokens, backend, and concurrency. Separate EP-only, NIXL-only, and shared-network cases. Do not replace measurements with peak bandwidth or a fixed 64-GPU latency.
-Reuse C04/T06 workload and communication interfaces. New locality or contention state is recorded in the existing D-ROUTING/D-PD disposition; a material core or unresolved semantic change requires approval; a forced-balanced router is not an acceptable substitute.
+Reuse C04/T06 workload and communication interfaces. New locality or contention
+state stays in D-ROUTING/D-PD. D29's controlled balanced regime does not establish
+production-routing representativeness. Align workflow first, GPU operators and
+op gaps next, and CPU overhead/gap last; defer large CPU-gap analysis, sampling
+and suites until then. Minimal simulator Python execution enablement is separate.
 Do not inherit old `p2p_nccl` extract/slowdown, forced-uniform routing, `pd_s33` endpoint subtraction, DP×PP mode selection, or same-host pairing without reference-specific evidence and approval. Preserve those legacy references' behavior within their original scope.
 
 Fixture replay, trace-conditioned cost replay, controlled workflow replay, and predictive online E2E remain separate evidence tiers. Final prediction receives only preregistered workload/configuration and independently measured predictors/statistics.

@@ -8,6 +8,7 @@
 | 2026-10-21 | Implemented canonical capture and pending-READ abort caller/consumer; recorded612 CPU passes and explicit reference/remaining-control blockers. |
 | 2026-10-21 | Primary took over interrupted reference implementation, implemented native forward accounting and verified685 CPU tests. |
 | 2026-10-22 | Sealed and submitted P0 capture01; platform Starting and identity/local mounts verified. |
+| 2026-10-22 | Parent pressure census confirms large headroom; reject unproven reachability claims and preserve actual-denial criterion. |
 
 - completed: moved session to clean requested worktree; initialb6755f7. Read primary contract and native replay judgment. No platform or other-owner overlap.
 - completed: restored c0a0e63 R2 region aliases, truncated-P attribution and strict native skipped-page-retention checks plus matching tests. The restored collector was byte-identical before the scoped abort extension; six critical verdict functions remain AST-identical to c0a0e63. Do not merge that branch's older unrelated canonical/simulator files.
@@ -34,3 +35,17 @@
 - completed: source commit `1171ab6`; final metadata-source-pin/stage/seam verification69 PASS in1.51s. New stage preparation now uses committed code; retained historical receipts are not rewritten.
 - completed: source025d9a9 stage capture01 sealed with49 files/50 installed source pins; offline verifier and actual StepMind Python dry-run passed. Fresh paginated personal reservation listing was empty.
 - in-progress: native job `exp-1021-235955-532667`,32×H800/codesign/non-preemptible, platform Starting at first identity read. Creator,4×8GPU, RDMA, pinned image and current-host NFS mount verified; launcher PID503604 alive. See `native_run.md` for commands, evidence and pending acceptance.
+
+## Parent pressure diagnosis after terminal capture
+
+- completed: independently streamed both authoritative decode scheduler logs.
+  Each contains64 pressure requests and4,224 selected allocation records;
+  minimum free blocks49,263/49,262 out of82,613. Reserve demand479/483 and later
+  growth demand0/4 are separate observations. See `pressure_diagnosis/report.md`,
+  parent census, source hashes and test report.
+- completed: rejected the proposed160–192 single-rank concurrency control under
+  max_num_seqs128 and the unsupported claim of globally impossible pressure.
+  The existing actual-denial criterion remains unverified and unchanged.
+- in-progress: CPU-only locked-native allocator replay in a separate diagnostic
+  worktree will inform a viable control proposal. Any native pool/load change
+  still requires approval; this work does not qualify or rerun capture01.

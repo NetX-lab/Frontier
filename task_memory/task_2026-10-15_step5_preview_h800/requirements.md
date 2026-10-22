@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record D26/D27/D28 approvals and D29 balanced-routing/workflow-first execution rules. |
 | 2026-10-22 | D25: prioritize full native H80032/64 workload collection and p90/throughput reporting, including TTFT >5s analysis. |
 | 2026-10-22 | D24: YC approved bounded first-tail state-value capture before proposing a separately approved numerical agreement rule. |
 | 2026-10-22 | D23: YC approved full pre-prediction DP agreement for measured Step P/D useful and dummy lanes, including FULL_AND_PIECEWISE. |
@@ -125,6 +126,66 @@ Acceptance includes first-call descriptor assertions, completion/release and emp
 > 【并行】检查已有记录，当前是否以及完成了 step5-preview在workload上的vllm的测试运行（32卡，64卡）并完成p90 ttft,tpot,e2e以及吞吐的统计？如果完成，请简洁回报，并确认其数值是否正常（如果ttft的数值>5s，你需要进行分析，是否明显偏大）。如果没有完成，优先完成完整的workload运行（32卡,64卡，h800）
 
 Prioritize complete native performance collection for both non-preemptible H800 sizes, using the frozen three-repeat128-request6144/1024 QPS1 workload and existing clean client. This authorizes the requested native collection before calibration readiness; it does not assert G3/profile readiness or change the formal calibration30% dependency/final10% gates. Record collection purpose explicitly, preserve all failed/UNVERIFIED evidence, and analyze TTFT above5s. Execution and acceptance: `../task_2026-10-22_step5_full_workload/requirements.md` and `plan.md`.
+
+## [Original Request / Decision] D26 — native P compute target — 2026-10-22
+
+Parent question:
+
+> 是否批准将Step的P侧计算改为原生语义：6144-token请求由P计算6128、D补16？实现独立的P计算目标及完成/transfer判定，保留客户端6144/1024和旧fixture，创建新fixture验证。此项是CPU生命周期修正。
+
+YC selected:
+
+> 批准完整对齐 (Recommended)
+
+Authorize P-scoped scheduling, completion, ownership and transfer alignment plus
+a new fixture. Preserve semantic/client6144/1024 and immutable fixture02. Verify
+native6143/6144/6145 boundaries and legacy scenarios. Tickets17/22 own this
+simulator correction; it does not change native execution or acceptance policy.
+
+## [Original Request / Decision] D27 — effective SWA transfer pages — 2026-10-22
+
+Parent question:
+
+> 是否批准Step范围内的SWA有效页数修正？已核实33个导出槽位含1个null，实际READ为32页；当前模型每rank多计847,872字节。按真实保留区间计payload，保留容量上界及其他模型行为。
+
+YC selected:
+
+> 批准有效页修正 (Recommended)
+
+Authorize Step-scoped live-window payload counting, preserving conservative
+capacity bounds and other families. Canonical acceptance at6128 source tokens:
+32 SWA pages,19826 descriptors and139887104 bytes per rank. This changes bytes
+independently of D26 token work; ticket17 owns its handoff integration.
+Change marker: D27_STEP_SWA_LIVE_PAGES.
+
+## [Original Request / Decision] D28 — native D pressure control — 2026-10-22
+
+Parent question:
+
+> 是否将D-only --num-gpu-blocks-override 32000合并到本次D24诊断？父端已复现native CPU allocator的真实拒绝；需要接入D-only启动参数并生成新包。保持原workload、max_num_seqs128、P容量、原生拒绝判据，以及H80032/90分钟/48 GPU-hour上限。
+
+YC selected:
+
+> 合并压力控制 (Recommended)
+
+Authorize the existing native D-only capacity override, necessary launcher wiring
+and a fresh immutable generation. Keep original P capacity, workload,
+max_num_seqs128, actual-native-denial criterion and D24 H80032/codesign
+non-preemptible90-minute/48GPUh ceiling. Parent owns submission after merged
+source/package/image/live checks. CPU denial cannot qualify native queues,
+READ or ownership. Auxiliary gates stay soft and numerical tolerance remains
+separately pending. Ticket08 owns this diagnostic control.
+
+## [Original Request / Decision] D29 — balanced routing and calibration order — 2026-10-22
+
+> 补充任务执行的2个规范的要求：1.routing暂时统一采用balanced distribution方案对齐（frontier和vllm的routing都采用均衡分布的设定） 2.校准过程中，先进行workflow和gpu侧的对齐（包括op gap计算），最后再进行cpu overhead（gap）的计算测量，不要在当前阶段就引入cpu overhead的大批分析、测量和suits，推迟到矫正最后。
+
+Use balanced routing in both Frontier and vLLM, verifying effective assignment
+semantics/settings. Preserve historical routing identities; changed native
+settings require a new generation. Order: workflow alignment -> GPU/operator
+gap alignment -> CPU overhead/gap measurement and correction. Defer large CPU
+gap analysis, sampling and suites. The existing minimal Python wall-time fix
+only enables full-request execution and is not native CPU-overhead evidence.
 
 ## [Original Request / Decision] D24 — independent-reference state values — 2026-10-22
 

@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record D28 pressure candidate and D29 routing prerequisite; no native qualification. |
 | 2026-10-22 | G3/reference/state/MRv2 implementation integrated;685 primary checks pass; case-aligned P0 capture Succeeded, native judgment pending. |
 | 2026-10-21 | Verify the canonical capture/abort partial slice and select existing-D independent full-local execution within the locked native reference. |
 | 2026-10-21 | Assign case-aligned capture/reference implementation in step5-canonical-g3, reusing corrected R2 mechanisms. |
@@ -29,6 +30,17 @@
 **External prerequisites:** Accepted `06.simulation_scope` evidence and the locked native reference are required. Native PD evidence may precede D-PD/D-ASYNC/D-DP-PD dispositions and has no GLM simulator barrier. A different native functional reference requires the applicable conditional decision. Authorized platform operations use the original personal local StepMind Python RJobBackend, following the current host/storage rules. No platform operation is performed in this review. Use existing shared contracts and record their sufficiency. Only a demonstrated material Frontier core refactor or materially unresolved semantic/acceptance choice requires an explicit decision; ordinary extensions do not require renewed approval.
 
 **Status:** in progress (R1/D5 evidence complete; R2 collector P1 correction/review closed; canonical content/readiness/lifetime and independent reference qualification remain open).
+
+**Current D24/D28/D29:** capture01 judgment is NOT QUALIFIED. Capture02 retains
+approved bounded values/HTTP/startup observers. D28 capture03 is sealed with
+D-only32000 blocks, unchanged P capacity/workload/maxseq128/reference D pool;
+author711 checks, parent81 and independent No findings support source scope.
+It remains unsubmitted and not balanced. New native execution waits for
+11.routing_policy and any required native-source/reference decision, then a
+fresh generation and parent live checks under32H800/codesign/non-preemptible,
+90min/48GPUh. Actual pressure/state/READ/ownership/HTTP results remain open;
+numerical state tolerance still needs separate approval. CPU allocator denial
+proof is not GPU qualification, and auxiliary errors remain soft gates.
 
 **Latest implementation:** source1171ab6 supplies existing-D independent full-local6144/1024 reference, complete resident/cache comparison, reset/reuse/pressure/abort controls and all-rank MRv2 post-DP census. It is integrated at145a2f5; primary merged-tree685 tests pass. Fresh capture01 source025d9a9 has49 sealed files/50 installed native pins and actual StepMind-Python dry-run PASS. Native `exp-1021-235955-532667` finishedSucceeded4/4 on32×H800/codesign/non-preemptible at2026-10-21T16:26:40Z; creator/image/RDMA/local mount verified. Actual witnesses and qualification remain pending; offered pressure and a cancellation deadline are insufficient. Reference retains the same image/model/D engine, without transfer metadata, so conditionalD-S5-REF is not activated. Exact commands and evidence: `../../task_2026-10-21_step5_priority_runs/canonical_g3/native_run.md`.
 
