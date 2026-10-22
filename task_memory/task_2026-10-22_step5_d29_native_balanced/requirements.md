@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 |2026-10-22|Recorded focused read-only native-route/proposal scope after D28 delivery.|
+|2026-10-22|Recorded YC's position-cyclic implementation/image approval; the read-only phase above is historical.|
 
 ## [Original Request] D29-NATIVE-BALANCED
 
@@ -25,3 +26,23 @@ Deliver a compact evidence-backed report/proposal with actual reachable FP8/BF16
 ## [Original Request] D29 additional semantic check
 
 Per-forward reset can break the independent G3 reference: position6128 gives6128*8%352=96, so full6144's last16 begin at expert96 whereas split D16 reset begins0. Check P6128+D16 vs fullD6144, prefix chunking, real/dummy padding and q1 continuation. Do not weaken/copy actual top-k lists/relabel the reference. Investigate stable logical token offset availability without new GPU readback/collective and what Frontier would need to represent that policy. Materially different outcomes must remain pending parent/user decision; no implementation or new campaign.
+
+## [Original Request / Decision] Approved position policy
+
+Verbatim question, answer and option text are recorded under D29 position policy
+approval in `../task_2026-10-15_step5_preview_h800/requirements.md`.
+YC selected **位置循环 (Recommended)** and approved necessary native/Frontier/
+profiling changes, internal derived-image publication and fresh packaging.
+
+Canonical policy identifier: `position_cyclic`. For each unmasked logical token,
+`expert_id = (position * top_k + slot) % num_experts`. No wave reset,
+per-request phase or per-layer rotation. Preserve configured unbiased selected
+scores, renormalization/scaling, padding mask and actual modular expert backends.
+Both sides count real logical position intervals; physical/dummy rows are
+reported separately from valid expert routes. Contiguous44-token cycles cover
+all352 experts at top_k8; arbitrary multi-request waves need not be balanced.
+Existing device positions must drive graph replay, without added readback or
+collective in routing. G3 criteria, bit-exact transfer checks, workload/resources
+and immutable old sources/packages remain. Full native graph, operator and
+state evidence remains pending. Native agents may perform bounded design and
+implementation; primary owns image publication, GPU operations and acceptance.

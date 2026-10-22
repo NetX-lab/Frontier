@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Merge independent D30-SCOPE-7-750 approval and start implementation; no D29 dependency. |
 | 2026-10-22 | Add missing verdict consumer and six fixture instances; record seven-file numerical proposal pending approval. |
 | 2026-10-22 | Record dependency chain and focused acceptance. |
 
@@ -14,12 +15,12 @@ the missing verdict consumer was outside the128-pass adjacent test selection.
 
 Current chain:
 `reviewer findings + read-only inspection` → `complete scope records`
-→ **parent combined D29/D30 numerical approval**
+→ **YC independent D30-SCOPE-7-750 approval (b8be287, completed)**
 → {`diagnostic metadata consumer + emitter-to-loader regression`,
    `six fixture instances through real all-lane event driver`}
 → `focused affected verification + phase review` → parent integration/strict77
 → parent fresh native scalar observation.
-The two implementation arms can proceed independently only after approval;
+The two implementation arms are now authorized independently of D29;
 they touch separate existing files. No new subagents are authorized here.
 
 1. Read approval/source and existing owners; record design and human receipt.
@@ -31,26 +32,25 @@ they touch separate existing files. No new subagents are authorized here.
 
 ## Current follow-up scope and acceptance
 
-Design/records-only authorization: inspect the reviewer findings and minimal
-consumer/fixture paths; update only this plan, `issues.md` and `progress.md`;
-commit only those three records. No production/test edit, broader test run,
-profiling, GPU/platform action, D29-native design inspection or root overwrite.
-Read main D30 authority at parent `9ed5763`; it does not authorize numerical
-expansion. Original Step1/16 semantics, legacy32/DP1 behavior, native original
+Implementation authorization is recorded at b8be287 and the approved receipt
+in `repairs/human_review_receipt_D30-SCOPE-7-750_2026-10-22.json`. Merge the
+non-D30 parent baseline, preserve d581625, implement only the seven listed paths,
+run affected checks, then commit code and records separately. No profiling,
+GPU/platform action, D29-native design inspection or root overwrite.
+Original Step1/16 semantics, legacy32/DP1 behavior, native original
 call/return/errors,2400s CLI cap and CPU-overhead-last remain unchanged.
 
 The COMPLETE seven-file source/test proposal and per-file budgets are recorded
 in `issues.md` (the earlier six-file/<450-line estimate is superseded):
 `4 existing + 3 additional = 7 files`; `327 existing + 400 additional = 727`
-budgeted changed lines; proposed cap **7 files / <=750 changed lines**.
-All insertions and deletions count; parent must count the combined D29/D30
-union of files and actual merged hunks once. No new verdict-test file or shared
+budgeted changed lines; approved cap **7 files / <=750 changed lines** versus
+b8be287, including cf1a53f. All insertions and deletions count. No new verdict-test file or shared
 driver module is omitted from the count: regression reuses already changed
 `test_step5_finish_sync.py`, and event fixture support lives in the already
 proposed two PD test modules. If these budgets cannot fit complete semantics,
 stop and present measured expansion before further edits.
 
-After numerical approval, acceptance of the two remaining arms is:
+Acceptance of the two remaining arms is:
 
 1. Metadata consumer: emit real observer JSONL for both P/D and both counter
    events; load/judge without Unknown event or request/engine/TP validation;
@@ -65,11 +65,12 @@ After numerical approval, acceptance of the two remaining arms is:
    d581625's byte correction, and keep its byte/block expectation unchanged.
 3. Required focused verification includes the unchanged existing verdict test
    module (omitted previously), emitter/consumer regression and all six fixture
-   instances in their actual supported configurations. This is a future step,
-   not authorization to run broader tests in this follow-up.
+    instances in their actual supported configurations. Use frontier-py310 for
+    simulator tests and asyncopd-py312 for aiohttp R2 checks.
 4. Parent phase review and strict77 remain dependent on these fixes. Native
    source/package/image/GPU work stays parent-owned; raw counters alone do not
    establish native scheduling or end-to-end acceptance.
 
 Acceptance is the complete focused matrix, not merely a successful test exit.
 No full CLI or CPU-overhead suite. Parent owns strict77 and native package/pins.
+Coordinate shared-file merge order with D29 later, not as an approval dependency.

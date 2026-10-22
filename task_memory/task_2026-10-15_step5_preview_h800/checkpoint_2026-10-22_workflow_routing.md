@@ -4,6 +4,7 @@ Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | 合并版本77场景和258项检查收口后检查路线，应用D29/D30批准。 |
 | 2026-10-22 | 关键源码步骤完成、第三项固定工作修正仍超时后，检查主线及D29顺序。 |
 
 **汇总：** PASS 6｜BLOCKED/FAILED/SKIPPED 19｜TODO 6
@@ -13,28 +14,28 @@ PASS仅表示对应范围记录完成；完整票据状态没有被局部源码�
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | 01 基线复用 | PASS | 票据done |
-| 02 原生锁定 | PASS | 票据done；新routing变体仍须独立决定 |
+| 02 原生锁定 | PASS | 原始image已锁；已批准的派生镜像仍需新绑定 |
 | 03 模型清单 | PASS | 票据done |
 | 04 kernel/state范围 | PASS | 票据done |
 | 05 本地物理测量 | TODO | 采集/完整验收未闭合 |
 | 06 单角色simulation_scope | PASS | 批准范围done |
 | 07 observer验证 | TODO | native关联/扰动仍待完成 |
-| 08 PD state/G3 | FAILED | capture01不合格；capture03离线就绪但routing阻塞 |
+| 08 PD state/G3 | FAILED | capture01不合格；capture03封存，新routing实现/镜像未完成 |
 | 09 四轨运行/校准资格 | BLOCKED | 各轨G4/ready/正式资格未闭合 |
 | 10 全路径profiles | TODO | D22小探针完成，完整输入仍待采集/准入 |
-| 11 routing统计 | BLOCKED | observer/原生条件未齐；D29策略核对在进行 |
+| 11 routing统计 | BLOCKED | 统计条件未齐；D29 position_cyclic已批准，设计进行中 |
 | 12 TP/EP通信测量 | TODO | 队列/稳定性/准入未闭合 |
 | 13 NIXL竞争测量 | BLOCKED | 前置原生及输入条件未齐 |
 | 14 指标归一化 | BLOCKED | 代码完成，native映射资格未齐 |
 | 15 混合模型路径 | TODO | representation/structural已完成，native reconciliation未完成 |
 | 16 混合精度预测 | BLOCKED | 合格实测输入未齐 |
-| 17 完整PD handoff | FAILED | actual06超时；D26/D27源码交付待整合 |
+| 17 完整PD handoff | FAILED | D26/D27已合并验证；新配置完整CLI仍未完成 |
 | 18 压力/取消 | BLOCKED | 原生拒绝/ownership证据未齐 |
-| 19 graph/host | BLOCKED | workflow/GPU未闭合；D29后置CPU gap |
+| 19 graph/host | BLOCKED | 完整workflow待验；D30停止同步子项已批准并推进 |
 | 20 placement | BLOCKED | 结构部分完成，native-backed验收未齐 |
 | 21 routing/communication预测 | BLOCKED | 独立合格输入未齐 |
-| 22 完整bundle/replay | FAILED | actual06未完成1024；identity修正后短迭代仍RED |
-| 23 case冻结 | TODO | workload已冻结，当前routing/source尚未绑定 |
+| 22 完整bundle/replay | FAILED | actual06未完成1024；已合并修正不等于完整验收 |
+| 23 case冻结 | TODO | D29新image/source/position策略尚未冻结 |
 | 24 旧代表场景 | SKIPPED | D12退役 |
 | 25 旧重验/fit冻结 | SKIPPED | D12退役 |
 | 26 旧H800矩阵 | SKIPPED | D12退役 |
@@ -47,23 +48,22 @@ PASS仅表示对应范围记录完成；完整票据状态没有被局部源码�
 ## 2. 偏离检测
 
 **结论：** 未偏移，正常推进。
-**检测窗口：** 上次D24恢复并行检查至今；循环项追溯actual05/06及三项固定工作修正。**当前前沿：** 11策略语义、08新包、17 P/传输、22最小执行能力。
+**检测窗口：** 上次workflow/routing检查至合并验证收口；循环项追溯actual05/06。**当前前沿：** 11已批准策略实现、19停止同步、08新包、17/22组合输入和完整执行。
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | D27真实payload回归及D28既有分配器故障接缝直接验证当前修正；未扩展CPU gap项目 |
-| D2 细节反复重试 | CLEAR | 每项修正前均有原因假设；identity42248次解析降为0，父端成本/ledger全等，仍明确RED；没有再盲跑2400s |
-| D3 支线问题修补 | CLEAR | P/SWA/压力均获D26–D28批准；engine-cap和native尾部解释由用户明确请求 |
-| D4 可并行任务停滞 | CLEAR | D24 capture02/03封包与D26、D27、identity源码并行推进，旧D4已纠正 |
-| D5 超范围镀金 | CLEAR | 仅已批准P语义、live页和D-only参数；native balanced停在方案调查 |
-| D6 分析空转 | CLEAR | 调查形成用户决定及源码交付；当前新增routing调查在解除真实提交阻塞 |
-| D7 路线违背 | CLEAR | D29后未启动CPU gap采样/拟合；未以随机路由冒充balanced或提交capture03 |
+| D1 工具打磨 | CLEAR | 77矩阵及聚焦检查完成当前合并验收；断言/环境修正后停止扩大测试 |
+| D2 细节反复重试 | CLEAR | 初次3失败/5跳过已按明确字节算术和环境原因修正；95/81复跑通过，没有盲跑2400s |
+| D3 支线问题修补 | CLEAR | 新position策略及停止同步都有D29/D30明确批准 |
+| D4 可并行任务停滞 | CLEAR | Native设计、Frontier/profile设计、D30分支并行；设计代理API错误后已恢复，三个名额均用于前沿工作 |
+| D5 超范围镀金 | CLEAR | 旧行为保持；新策略先形成最小文件范围，未改验收标准或扩展CPU gap |
+| D6 分析空转 | CLEAR | 两项语义调查得到YC决定，源码整合及77/258验收完成；当前设计交付直接确定实现范围 |
+| D7 路线违背 | CLEAR | workflow→GPU/op gap→CPU gap顺序保持；capture03未被当作position策略包提交 |
 
 **文档检查：**
-- S1：plan.md:127–131未把routing绑定列入新native执行边；应显式加入。
-- S2：11目前只有后置统计范围，没有当前11.routing_policy核对/方案的归属。
-- S5：11:15/31/38仍要求原router不变并拒绝forced-balanced，与D29冲突；plan.md:118仍指向fixture02；08/17/22的最新状态停留在早期实施。
-- S3/S4/S6：未发现独立的不可达、无界或不可验证切分问题。
+- S1：19的全票据07/17前置边不能继续阻止已批准的19.finish_sync源码子项；增加独立来源/验证条件。
+- S5：plan/progress仍有“D26/D27待整合、策略未决定”；11仍写调查、19未记录D30，须同步本次批准和实际合并结果。
+- S2/S3/S4/S6：未发现独立的无归属、不可达、无界或不可验证切分问题。
 **归因：** 无执行HIT；上述文档缺陷需同步。
 
 ## 3. 纠正建议
@@ -71,23 +71,23 @@ PASS仅表示对应范围记录完成；完整票据状态没有被局部源码�
 **分支：** B：spec/tickets存在缺陷，先更新文档再继续。
 
 **文档更新（先执行）：**
-1. plan.md当前路线：加入11.routing_policy→新generation→08；改为D26新fixture并保留fixture02只读（可直接执行）。
-2. 11及spec中的原router约束：记录D29临时balanced覆盖、保留旧数据身份；策略核对可立即进行，统计准入仍保留其条件（可直接执行）。
-3. 08/17/22/progress：记录capture03、D26/D27、父端identity仍RED；19记录CPU gap后置（可直接执行）。
-4. 如果锁定native必须修改routing实现：先提交实际FP8/BF16/DP与reference语义方案（需用户确认）；不能把此调查当作修改授权。
+1. plan/progress：记录fa5bae2合并、77严格一致及258个最终通过用例；新输入依赖D29/D30（可直接执行，已应用）。
+2. 11：记录已批准position_cyclic及原生权重/mask；19：增加可立即推进的finish_sync子项，保留完整验收条件（可直接执行，已应用）。
+3. D29若实际设计超过repair默认5文件/500行：汇总native/Frontier/profile的具体范围后一次确认（需用户确认；语义/内部镜像发布已批准）。
 
 **需停止的偏离行为：** 无。
 
 **接下去的路线：**
-1. 11策略核对：明确实际native路径、DP整数分配及P/D与独立reference一致性；完成标志为可执行且获批准的同义routing方案。
-2. 并行17/22：审查整合D26/D27及已验证identity修正，生成新输入、完成必要回归；保持2400s及1024输出/READ/readiness/release验收条件。
-3. 并行08：完成D28父端复验；routing完成后新包/live检查及H80032诊断，记录真实pressure/state/HTTP结果。
-4. workflow完成后推进GPU/operator及op-gap；CPU overhead/gap最后开展。
+1. 11：完成最小native/Frontier/profile设计与必要范围确认，实施同一position策略 → 完成标志为真实position/mask计数、图重放和source identity验证。
+2. 并行19.finish_sync：实现Step1/16停止同步及计数观察 → 完成标志为边界/重置/忙peer、旧32行为和观察隔离验证。
+3. 并行08准备：复用已通过D28能力；routing完成后新image/package/live检查及H80032诊断，按原标准判断pressure/state/HTTP。
+4. 17/22：新配置/fixture完成1024输出及READ/readiness/release/最终指标；单次CLI仍限2400s。
+5. workflow完成后推进GPU/operator及op-gap；CPU overhead/gap最后开展。
 
 **暂缓事项：** 新的大型CPU gap分析、采样和套件，按D29记录在requirements.md；当前不增加第四项Python优化或盲目完整CLI重试。
 
 ## 4. 最值得关注的 3 点
 
-1. D24独立封包已恢复，D-only32000候选准备完成；现在真实阻塞是native balanced机制。
-2. P6128/D16与SWA32页的源码交付已推进；它们仍需组合输入、回归和完整请求验收。
-3. 第三项固定工作修正后，父端迭代7.983/8.116s仍超过2.012s预算；不会把它报成超时已解决或native CPU gap证据。
+1. 合并版本77/77严格一致；258个聚焦用例的最终结果全通过，完整CLI仍未通过。
+2. YC已批准position循环及Step1/16停止同步；前者需正确区分physical rows与有效路由，不能凭mask推造零kernel成本。
+3. capture03仍不是新策略包。原生实现、图验证、内部镜像和新generation完成后才能进行已批准的诊断；CPU gap继续后置。

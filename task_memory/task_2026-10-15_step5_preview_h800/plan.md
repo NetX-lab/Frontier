@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record mergedfa5bae2 strict77 and approved D29 position policy/D30 finish-sync parallel paths. |
 | 2026-10-22 | Apply checkpoint correction: replace completed root-ledger repair with actual06 iteration work and resume independent D24 staging. |
 | 2026-10-22 | D25 completed on both scales; resume D23 core integration, fresh actual-main and clean legacy verification. |
 | 2026-10-22 | Record parallel D23 CPU agreement and D24 native-evidence completion paths after typed-input integration. |
@@ -115,7 +116,7 @@
 
 ## Current D21/D23/D24/D25 execution contract — 2026-10-22
 
-**D25 completed:** both full native H80032/64 workloads and metrics are archived in `../task_2026-10-22_step5_full_workload/summary.md`. D23 agreement/root and two reuse fixes are integrated, with latest clean77/77 at7e8bea3. Actual06 still exceeds2400s after357/362 outputs. Fixed identity reuse is delivered and parent-verified, but the complete iteration remains about8s. Remaining execution work uses approvedD26 P semantics and a fresh combined fixture; fixture02 stays historical/read-only and the2400s bound remains. D24 proceeds independently. Native performance data alone do not release calibration prerequisites.
+**D25 completed:** both full native H80032/64 workloads and metrics are archived in `../task_2026-10-22_step5_full_workload/summary.md`. D26/D27, fixed identity reuse and D28 are integrated atfa5bae2, with clean77/77 strictly identical to7e8bea3. Actual06 remains a2400s timeout after357/362 outputs; the pre-D26 fixed-identity iteration still takes about8s. New execution inputs must bind D26 P semantics, approved D29 position-cyclic routing and D30 finish sync. Fixture02 and earlier generations stay read-only. D24 native preparation proceeds independently; native performance data do not release calibration prerequisites.
 
 Authority: D21/D23/D24 in [requirements.md](requirements.md); exact workload/runtime/metric contract: [spec §0](spec.md). The dated sections between this section and §1 are historical snapshots. Their old queued status, resource allowances, GLM implementation waiting and retired24–27 edges are not current instructions. Implementation continues P0-first; native/profile/predictive acceptance is unchanged.
 
@@ -124,17 +125,18 @@ Actual-main event-logging repair is complete at `b862e57`:36 affected checks and
 ### Immediate parallel work and verification
 
 ```text
-{D26 P lifecycle, D27 live payload, verified fixed-identity reuse}
- -> integration/new fixture/required regression -> complete CPU actual-main (2400s)
+{integrated D26/D27/identity, D29 interval/mask-aware routing, D30 finish sync}
+ -> new fixture/required regression -> complete CPU actual-main (2400s)
 {startup census, HTTP diagnostics, D24 bounded state values, D28 pressure wiring}
- + 11.routing_policy (D29, currently unresolved)
+ + 11.routing_policy (D29 position_cyclic implementation/image)
+ + 19.finish_sync observation (D30)
  -> fresh native generation and preflight -> one H80032 diagnostic -> native evidence judgment
  -> proposed numerical state rule, if needed -> separate YC approval
 ```
 
 The D23 owner uses existing stage groups and events to bind P/D real and dummy descriptors before the first prediction, including FULL_AND_PIECEWISE and NONE local-width behavior. Verify first-call identity, request and release conservation, strict missing coverage, complete6144/1024 execution and unchanged legacy artifacts. The independent D24 owner retains only the last two logical pages at first local tail completion, using existing copies and caps. The parent integrates, checks the sealed package and submits within the approved90-minute/48GPU-hour ceiling. D24 leaves state disagreement UNVERIFIED and wire-content equality bit-exact. Native disconnect cause, pressure witnesses and all formal metric gates remain explicit prerequisites.
 
-Current owners: parent integrates deliveredD26/D27/fixed-identity code and required regression; `step5-prefill-target` checks existing P-dummy workflow evidence; `step5-d24-stage` resolves11.routing_policy's actual native path and proposal. D28 capture03 is sealed pressure-control preparation, not balanced or submittable. Capture02/03 remain immutable/unsubmitted. Native implementation outside existing settings requires the evidence-backed user decision before a fresh generation. D24 does not wait for CPU performance acceptance. Parent owns live checks/submission; numerical state tolerances remain separately pending.
+Current owners: parent closes merged focused verification and coordinates the source-bound fixture; `step5-d24-stage` designs the approved native position policy and image inputs, the Frontier routing design owns actual position intervals/masked counts and profiler identity, and `step5-finish-sync` implements approved Step1/16 synchronization within its bounded scope. D28 capture03 remains sealed pressure preparation, not balanced or submittable. Capture02/03 remain immutable/unsubmitted. D29 semantic/image authority and D30 correction are recorded; any required expansion beyond the repair's numerical file/line scope is presented with the concrete design. D24 does not wait for CPU performance acceptance. Parent owns live checks/submission; numerical state tolerances remain separately pending.
 
 **D29 execution order:** bind balanced routing on both simulator and native paths
 before current-generation comparisons; align workflow first, then GPU operators

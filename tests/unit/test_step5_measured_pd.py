@@ -156,7 +156,8 @@ def test_measured_nixl_uses_covered_read_cost_and_prompt_tail_in_existing_owners
     )
 
     assert info.transfer_time_ms == 3.5
-    assert info.kv_cache_size_bytes == 103_051_776
+    # 4080 prefix tokens: 32 live SWA pages and 255 sparse/summary pages.
+    assert info.kv_cache_size_bytes == 102_203_904
     assert info.target_reserved_common_blocks == 1020
     assert target.on_schedule(end.time - 0.001) == []
     assert request.id in source._allocation_map

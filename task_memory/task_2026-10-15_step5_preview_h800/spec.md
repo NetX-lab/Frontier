@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Specify approved position-cyclic routing, Step finish synchronization, P compute target and live transfer payload. |
 | 2026-10-22 | Apply D29 temporary balanced routing and workflow/GPU-before-CPU order. |
 | 2026-10-21 | D22: attention agreement uses independently executed clean-window references; thresholds and historical verdicts remain unchanged. |
 | 2026-10-21 | D21: four prioritized hardware/scale tracks, independent 32-to-64 formal release gates, basic/formal separation and global H200 non-preemptible cap32. |
@@ -38,6 +39,10 @@
 | 2026-10-16 | Linked current execution authority and accepted G0 identity while retaining the specification's unmeasured model/runtime boundaries. |
 
 **Current contract:** [requirements.md](requirements.md) D21 and §0 below replace the single-H20064 restriction and every earlier GPU cap/order. D20 measured compute/bundle, PD and client-metric CPU implementation continues **P0-first**, before the external GLM implementation milestone; native/profile/predictive acceptance is not waived. The dated milestone sections before §0 are historical evidence, not current scheduling or resource instructions.
+
+D26–D30 additionally govern the P compute target, effective SWA payload,
+D-only diagnostic pressure control, position routing and Step finish synchronization.
+Their recorded approvals supersede earlier incompatible requirements.
 
 ## Historical corrected native generation and publication scope — 2026-10-20
 
@@ -104,7 +109,7 @@ All personal nonterminal H200 reservations across **all sessions**, including qu
 | Dimension | Frozen requirement |
 | --- | --- |
 | Model | Step-5-Preview, text backbone only |
-| Ground truth | Image tag `vllm/vllm-openai:step-5-preview`, resolved to an immutable digest before formal collection; the currently locked linux/amd64 manifest `sha256:69308454…6a7f20` is re-verified against the tag, not assumed to match |
+| Ground truth | Official base `vllm/vllm-openai:step-5-preview`, locked linux/amd64 digest `sha256:69308454…6a7f20`. D29 position routing requires its separately published derived image, immutable digest and actual installed-source pins before a new generation is admitted |
 | Backend | `collective_sim` for communication; **measured** operator times through the existing profiling-CSV admission and trained-predictor path |
 | Workload | **128 formal requests**, each **6144 prompt / 1024 output tokens**; **QPS 1.0**, open-loop evenly spaced arrivals `arrived_at_i = i` seconds for `i = 0..127`, no arrival seed. Files: `data/processed_traces/canonical_fixed_6144_1024_req128_qps1/`, frozen by `68f891b`, adopted as `958d81a` (D18). SharedGPT is deferred (D17) |
 | Hardware | Per the four-track priority table above |
@@ -116,10 +121,20 @@ All personal nonterminal H200 reservations across **all sessions**, including qu
 | Chunked prefill | Disabled |
 | CUDA Graph | Enabled, actual decode replay |
 | Quantization | Enabled, native FP8/E4M3 with the recorded exclusion list |
+| Routing (D29) | `position_cyclic`: `expert_id = (logical_token_position * top_k + slot) % num_experts`; same policy on both systems, preserving selected-weight and padding semantics |
+| Prompt computation (D26) | Semantic prompt 6144; P computes prefix 6128 and D computes tail 16. Client output target remains 1024 |
+| Effective transfer (D27) | Prefix 6128: 32 live SWA pages, 19826 descriptors and 139887104 bytes per rank. Conservative capacity remains separate from wire payload |
+| Step finish synchronization (D30) | Synchronize unfinished work on wave step 1 and each 16 steps; reset at wave completion. Legal dummy forwards remain governed by unfinished peer work |
 | MTP | **Off in both native and Frontier** (D11) |
 | Metrics | Client TTFT, TPOT, THPT (prompt + output tokens per second), per-request E2E — each independently `abs(frontier - vllm) / abs(vllm) <= 0.10` (TTFT, TPOT, E2E on their means over the formal requests; THPT over the frozen window) |
 
 **Four tracks, one workload, no sweep.** Retired W1–W6 campaigns, QPS sweeps, additional topology families and independent E2E holdout matrices stay retired. Repeated measurements and targeted diagnostics inside the four tracks remain allowed. Freeze aggregation and the full request set before comparison; never discard a difficult request or adjust aggregation to reach either threshold.
+
+D28's next D24 diagnostic uses the existing D-only
+`--num-gpu-blocks-override 32000`, including its independent D reference, with
+automatic P capacity and the original actual-allocation-denial criterion.
+Its bound is H80032/codesign, non-preemptible, 90 minutes / 48 GPU-hours. This
+diagnostic setting is not a general capacity override for all formal tracks.
 
 **Metric contract.** Client TTFT is client submission to the first client-visible token on one client clock; it is not the internal prefill-completion latency (`ttft_ms` remains that internal meaning, per D5 and ticket 14). TPOT is mean output-token interval after the first token. **THPT is total token throughput: prompt plus output tokens per second over the frozen measurement window** (decision D15) — the existing `token_throughput_tps` of `tests/comparison/e2e_gate/README.md`, with the window running from the first actual formal client submission to the last formal completion on each system's corresponding clock. All elapsed time inside that window remains included. Output-only tokens per second and requests per second (`request_throughput_rps`) are recorded and reported on the same window as **non-gating diagnostics**. E2E is per-request submission-to-completion latency, not makespan. `SPOT` in the earlier material is read as TPOT; no separate fifth metric exists. Clock normalization and evidence admission reuse `tests/comparison/e2e_gate` rather than a second gate.
 
@@ -294,15 +309,25 @@ Keep duration, kernel count, device gaps, and host preparation separate. Indepen
 Every profile must identify image/runtime, model/metadata, hardware, precision/exclusions, role, TP/DP/EP/PP, phase, graph policy, shape/layout, backend, and physical-scope/fusion coverage as applicable. Declare family-specific required features through existing contracts; reject mismatches and coverage gaps.
 Publish through the existing producer/trainer/cache identity boundary. Preserve legacy table meanings and cold/warm behavior; check GLM → Step → GLM and sequences including DS against isolated loads.
 
-For current calibration D29 requires balanced token-to-expert routing in both
-Frontier and native execution, with effective assignment, DP/EP, padding and
-integer-remainder semantics verified. Preserve historical routing identities;
-random-uniform sampling and expert-placement balancing alone do not establish
-the required policy. Ticket11.routing_policy owns the prerequisite check and
-proposal. A needed native implementation/reference change requires its explicit
-decision and a fresh generation. Independently measure remaining occupancy,
-padding and selector locality across relevant seeds/content/layers/phases;
-held-out routing must never become predictive input.
+For current calibration YC selected `position_cyclic` as the balanced policy:
+`expert_id = (logical_token_position * top_k + slot) % num_experts`.
+Use each request's actual logical positions without a wave reset, request phase
+or layer rotation. Short waves and requests at the same position may concentrate
+on a few experts; this is accepted to preserve P/D, chunk and independent G3
+routing invariance. Frontier derives counts from its own scheduled position
+intervals, preserving physical collective rows separately from valid assignments
+and applying EP ownership without multiplying TP copies. Native selected-score
+weights, normalization, scale, padding mask and backend selection retain their
+configured semantics. A zero assignment count alone does not establish zero
+kernel cost; duration/count queries require measured scope and source proof.
+
+Ticket11.routing_policy owns implementation and effective-setting verification.
+Native/Frontier/profiling changes and internal derived-image publication are
+approved; the combined file/line scope still requires confirmation. Bind a fresh
+image/source/profile/package generation. Historical `standard_fused_topk`,
+`uniform_topk` and random-routing rows retain their original identities.
+Independently validate occupancy, padding and route assignments; held-out native
+routing must never become predictive input.
 Measure TP collectives, EP dispatch/combine/reductions, and NIXL with bytes, participants, topology, precision, useful/padded tokens, backend, and concurrency. Separate EP-only, NIXL-only, and shared-network cases. Do not replace measurements with peak bandwidth or a fixed 64-GPU latency.
 Reuse C04/T06 workload and communication interfaces. New locality or contention
 state stays in D-ROUTING/D-PD. D29's controlled balanced regime does not establish

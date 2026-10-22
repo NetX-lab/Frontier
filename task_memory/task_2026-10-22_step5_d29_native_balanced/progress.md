@@ -4,7 +4,28 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Integrate c9e9274 and independent follow-up resolving all four native design findings. |
+| 2026-10-22 | Record YC policy approval and integrate native design; numerical implementation scope remains pending. |
 |2026-10-22|Recorded read-only native path findings and proposal investigation.|
+
+## Current status
+
+- completed: YC approved `position_cyclic`, necessary native/Frontier/profiling
+  changes and internal derived-image publication; exact authority is recorded
+  in `requirements.md` and the parent D29 decision.
+- completed: `native_design.md`, commit `c9e9274`, is integrated on the parent
+  branch. Estimated native-facing scope: 19 files, 1003–1582 added/deleted lines;
+  the planned binding uses existing device positions at the uncompiled Step outer forward.
+- completed: independent delta review resolves the four initial design findings
+  with no new actionable issue. Parent recomputed 19 unique paths and the exact
+  1003–1582 line range; the corrected proxy and reference-test paths exist.
+- in-progress: Frontier/profile design review and complete pricing scope,
+  followed by one combined numerical scope proposal. D30 proceeds in parallel.
+- pending: approved bounded implementation, source/CPU/GPU graph verification,
+  derived image, new source pins/package, and actual native/G3/profile evidence.
+  Capture03 is a historical sealed pressure candidate, not a position-policy run.
+
+## Completed investigation (historical)
 
 - completed: frozen capture03 config gives default auto backend, no mega/SP override, default allgather_reducescatter, no EPLB. FP8 dynamic128 layers3–87; BF16 routed88–90; swiglustep7, E352/K8, expert-localTP1/EP16,22 full experts per rank.
 - completed: retained actual H800 S2 TP8/DP2/EP16 module run uses auto backend and observes Fp8MoEMethod/TritonOrDeepGemmExperts→DeepGemmExperts and BF16/UnquantizedFusedMoEMethod→TritonExperts, both NaiveDPEPModular and no SP. E8M0 OR shape predicate determines DeepGEMM; small M does not alone imply Triton (the retained M9 case used DeepGEMM). This is native module evidence, not full serving/graph qualification.
@@ -15,7 +36,8 @@
 - completed: `proposal.md` records actual reachability, native settings absence, MRv2 exact device positions vs optimistic CPU mirror, FULL graph capture implications, weight/mask contract and two materially different pending decisions. No native strategy/image/package change or backend flip performed. Capture03 remains not balanced.
 - completed: preservation check verified all57 capture03 manifest entries and50 native exported-source pins unchanged;3 probe sources compile. Exact manifest digest unchanged and no attempt/submitted marker. `test_report_2026-10-22_native_routing_contract.md` and `check_progress_2026-10-22.md` complete; no route drift.
 - completed: task-only records/probes/receipts prepared for commit after `git diff --cached --check` PASS; no files outside this task are staged. Clean branch/commit identity is returned in the final handoff.
-- pending outside child scope: YC/parent semantic/native-extension decision; new native implementation/image/package and primary GPU/operator/graph/G3 evidence. Not started/authorized here.
+- completed: the original proposal-only handoff preceded YC's policy approval;
+  remaining implementation work now follows the current status above.
 
 Commands (owned repo, Python3.12.13/Torch2.9.1+cu128, CPU-only):
 

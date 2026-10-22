@@ -4,6 +4,8 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record explicit D30 independent seven-file/750-line expansion approval. |
+| 2026-10-22 | Record D29 position-cyclic/native-image approval and D30 Step finish-sync correction. |
 | 2026-10-22 | Record D26/D27/D28 approvals and D29 balanced-routing/workflow-first execution rules. |
 | 2026-10-22 | D25: prioritize full native H80032/64 workload collection and p90/throughput reporting, including TTFT >5s analysis. |
 | 2026-10-22 | D24: YC approved bounded first-tail state-value capture before proposing a separately approved numerical agreement rule. |
@@ -186,6 +188,70 @@ settings require a new generation. Order: workflow alignment -> GPU/operator
 gap alignment -> CPU overhead/gap measurement and correction. Defer large CPU
 gap analysis, sampling and suites. The existing minimal Python wall-time fix
 only enables full-request execution and is not native CPU-overhead evidence.
+
+## [Original Request / Decision] D29 position policy approval — 2026-10-22
+
+Parent question:
+
+> Step 的 balanced 采用哪种定义？逐 wave 从专家0精确均分会使 P6128+D16 与 full6144 的尾部专家选择不同；按逻辑 token position 循环能保持 P/D、chunk、reference 一致，但同位置的多个请求会集中到相同专家。两种方案均需修改 native/Frontier/profiling、发布内部派生镜像并冻结新包；保留原权重计算和 padding mask，沿用已批准资源上限。
+
+YC selected:
+
+> 位置循环 (Recommended)
+
+Selected option description:
+
+> 接受短批次可能不均衡；按真实 position 区间计算两端专家负载，保留独立 G3 标准。批准上述必要实现与内部镜像发布。
+
+Adopt `position_cyclic`: logical expert ID is `(position * top_k + slot) % num_experts`.
+No per-wave reset or per-request phase is added. Same-position requests may
+concentrate on the same experts. Preserve configured selected-weight scoring,
+renormalization/scaling and native padding mask; physical rows do not imply
+live expert assignments. Both native precisions keep their existing modular
+expert backends. Bind existing device positions for eager/PIECEWISE/FULL; the
+routing computation adds no readback or collective. Native/Frontier/profile
+implementation, internal derived-image publication and a fresh immutable
+generation are approved; old generations and reference criteria stay intact.
+Parent retains GPU submission/control under the existing D24/D28 limits.
+Detailed file/line scope follows the repair design; no unrelated core changes.
+
+## [Original Request / Decision] D30 scope expansion — 2026-10-22
+
+Parent question:
+
+> 是否批准按 0a0b9fe 中的完整清单，将 D30 扩至 7 个源码/测试文件、最多 750 行新增＋删除（含现有候选）？补齐两项：两个 PD 测试模块通过真实 all-lane/dummy/release events 推进六个用例；R2 verdict 接收 counter diagnostic metadata，保留原验收判据。随后完成父端复验、独立审查和 77 场景回归。D29 设计继续并行。
+
+The question tool was interrupted; YC subsequently answered directly:
+
+> 批准，继续
+
+Decision ID: **D30-SCOPE-7-750**. Authorize the complete existing candidate plus
+follow-up within the seven source/test paths and750 total added/deleted lines
+listed in `../task_2026-10-22_step5_finish_sync/requirements.md`. Complete real
+event-driven fixtures, diagnostic metadata consumption, affected verification,
+independent review and parent integration/strict77. Preserve original D30
+semantics and acceptance. This decision is independent of D29; it does not
+approve D29's unresolved implementation scope or a measured communication model.
+
+## [Original Request / Decision] D30 Step finish sync — 2026-10-22
+
+Parent question:
+
+> 是否批准将 Step 的 wave 停止同步对齐为“第1步及每16步”，替代当前仅每32步？数值由锁定源码和实跑启动参数确定；修正限于 Step 当前契约，其他模型维持原行为，补充聚焦边界验证和原生计数观察。
+
+YC selected:
+
+> 批准同步对齐 (Recommended)
+
+Selected option description:
+
+> 实施 Step 范围的配置/调度修正和必要验证；继续保持2400秒 CLI上限，CPU overhead/gap测量后置。
+
+Match the current Step native wave counter and finish-sync policy: step1 and
+each16 steps, reset at wave completion. Preserve existing other-model policy,
+request/transfer ownership and legitimate dummy forwards. Add focused boundary
+checks and native counter observation without a native scheduling change or
+new GPU synchronization. This is workflow alignment, not CPU overhead pricing.
 
 ## [Original Request / Decision] D24 — independent-reference state values — 2026-10-22
 
