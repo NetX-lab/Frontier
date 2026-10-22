@@ -7,6 +7,7 @@ This module wraps MoE operations for profiling, following the same pattern as th
 import operator
 import os
 import math
+import json
 from collections.abc import Mapping
 from typing import List, Optional
 
@@ -194,6 +195,10 @@ class MoEWrapper:
                 f"expert_parallel_size ({expert_parallel_size})"
             )
         self.num_experts_per_device = self.num_experts // expert_parallel_size
+        if routing_runtime_path == "position_cyclic" and (routed_layer_group is None
+                or model_config.get_model_architecture_profile().profile_id != "step5"
+                or num_tensor_parallel_workers != 1 or expert_parallel_size != 16):
+            raise ValueError("Position profiling requires a resolved Step routed group at MoE-TP1/EP16")
 
         os.makedirs(f"{self.output_dir}/profiler_traces/", exist_ok=True)
 
@@ -220,6 +225,12 @@ class MoEWrapper:
                 **self.routing_runtime_metadata,
                 **self.gating.routing_policy_metadata(),
             }
+
+        if routing_runtime_path == "position_cyclic":
+            for param in self.gating.parameters():
+                torch.nn.init.xavier_uniform_(param) if param.dim() >= 2 else torch.nn.init.zeros_(param)
+            self._init_gating_runtime_context_state()
+            return
 
         self.shuffler = MoETokenShuffler(
             num_experts=self.num_experts,
@@ -308,7 +319,7 @@ class MoEWrapper:
 
     def _get_profiling_ep_rank(self) -> int:
         """Use a fixed representative EP rank for deterministic profiling rows."""
-        return 0
+        return self._position_ep_rank if getattr(self, "routing_runtime_path", None) == "position_cyclic" else 0
 
     def _profile_cell_callable(self, run, operator_names):
         """Replay the same physical callable for paired duration/kernel counts."""
@@ -845,6 +856,7 @@ class MoEWrapper:
         return profile.resolve_layer_contract(
             self.model_config,
             layer_kind=LayerKind.ROUTED,
+            layer_id=None if self.routed_layer_group is None else self.routed_layer_group.layer_ids[0],
             operator_name=operator_name,
             moe_tp_size=self.num_tensor_parallel_workers,
             expert_parallel_size=self.expert_parallel_size,
@@ -855,6 +867,7 @@ class MoEWrapper:
         time_stats: Mapping[str, object],
         *,
         num_tokens: int,
+        native_context=None,
     ) -> dict:
         """Build one MoE row and attach metadata for measured routed operators."""
 
@@ -881,9 +894,9 @@ class MoEWrapper:
             stats.update(self.routed_layer_group.row_metadata())
 
         measured_names = set(time_stats)
-        moe_operator_names = tuple(
-            operator.profiling_name() for operator in MOE_FAMILY.profiling_ops()
-        )
+        from frontier.operators.families import get_moe_profiling_operators
+        moe_operator_names = tuple(operator.profiling_name()
+                                   for operator in get_moe_profiling_operators(native_context))
         measured_moe_names = [
             operator_name
             for operator_name in moe_operator_names
@@ -911,12 +924,92 @@ class MoEWrapper:
 
         return stats
 
+    def _profile_position_cell(self, cell):
+        """Run actual source preparation or gathered inclusive experts, never legacy shuffle."""
+        from frontier.profiling.moe.inputs import routing_profile_cell
+        from frontier.profiling.moe.fp8_block_experts import get_native_routed_experts
+        from frontier.operators.families import get_moe_profiling_operators
+        cell = routing_profile_cell(cell)
+        frames = cell.routing_input.source_frames
+        ep_rank = 0 if cell.ep_id is None else cell.ep_id
+        self._position_ep_rank = ep_rank
+        experts = get_native_routed_experts(quantization_mode=self.quantization_mode,
+            activation=self.activation, num_local_experts=self.num_experts_per_device,
+            global_num_experts=self.num_experts, hidden_dim=self.hidden_dim,
+            intermediate_dim=self.expert_hidden_dim, top_k=self.router_topk,
+            block_shape=self.block_shape, expert_parallel_size=self.expert_parallel_size,
+            expert_parallel_rank=ep_rank, dtype=self._dtype, model_type=self.model_config.model_type)
+        hidden, activations, scales, ids, weights = [], [], [], [], []
+        for frame in frames:
+            value = self._materialize_gating_hidden_states(frame.physical_rows)
+            self.gating.bind_source_frame(frame, device=value.device)
+            weight, selected = self._run_gating_with_runtime_context(value,
+                gating_runtime_context=frame.gating_runtime_context)
+            activation, scale = experts.prepare_source(value)
+            hidden.append(value)
+            activations.append(activation)
+            scales.append(scale)
+            weights.append(weight)
+            ids.append(selected)
+        selected = cell.source_lane_id
+        gathered = torch.cat(activations)
+        gathered_scales = None if scales[0] is None else torch.cat(scales)
+        gathered_ids, gathered_weights = torch.cat(ids), torch.cat(weights)
+        expert_map = self._build_local_expert_map(gathered.device)
+        context = experts.prepared_context(gathered, gathered_scales, topk_ids=gathered_ids,
+            expert_map=expert_map, source_tensors=(activations[selected], scales[selected]))
+        context.update(model_architecture_profile=self.model_config.get_model_architecture_profile().profile_id,
+                       routing_runtime_path=self.routing_runtime_path)
+        operators = [spec for spec in get_moe_profiling_operators(context)
+                     if spec.ep_agnostic == (cell.moe_frame_scope == "source_local")]
+        if cell.moe_frame_scope == "source_local":
+            frame = frames[selected]
+            self.gating.bind_source_frame(frame, device=hidden[selected].device)
+            timer = CudaTimer("moe_input_quantize") if any(spec.name == "moe_input_quantize" for spec in operators) else None
+            def run():
+                self._run_gating_with_runtime_context(hidden[selected], gating_runtime_context=frame.gating_runtime_context)
+                if timer is not None:
+                    with timer:
+                        experts.prepare_source(hidden[selected])
+            physical, live = frame.physical_rows, frame.live_rows
+            features = dict(num_tokens=physical, live_routing_token_count=live)
+        else:
+            from frontier.execution_time_predictor.step5_cost import step5_native_expert_features
+            timer = CudaTimer("moe_grouped_gemm")
+            def run():
+                with timer:
+                    experts.apply_prepared(gathered, gathered_scales, gathered_weights,
+                        gathered_ids, expert_map, in_dtype=self._dtype)
+            physical, live = cell.routing_input.gathered_physical_rows, sum(frame.live_rows for frame in frames)
+            counts = self._compute_local_expert_token_counts(gathered_ids)
+            features = step5_native_expert_features(context, physical_rows=physical, live_assignments=sum(counts))
+            features["expert_token_counts"] = json.dumps(counts)
+        stats = self._profile_cell_callable(run, [spec.profiling_name() for spec in operators])
+        row = self._build_profile_result(stats, num_tokens=physical, native_context=context)
+        from frontier.profiling.common.runtime_identity import canonical_json
+        provenance = [self.gating.native_facts, experts.provenance, context["native_facts"]]
+        facts = dict(shared=provenance[0]["shared"], imports={}, callables={})
+        for item in provenance:
+            if item["shared"] != facts["shared"]:
+                raise ValueError("Position source/expert runtime receipts differ")
+            for key in ("imports", "callables"):
+                facts[key].update(item[key])
+        row.update(features, moe_input_id=cell.routing_input.moe_input_id,
+            moe_source_lane_id=selected, moe_ep_rank=cell.ep_id, moe_frame_scope=cell.moe_frame_scope,
+            live_routing_token_count=live, masked_routing_token_count=physical-live,
+            gating_runtime_context=frames[selected].gating_runtime_context,
+            native_context=canonical_json(context), native_facts=canonical_json(facts),
+            moe_quantization_mode=self.quantization_mode, moe_gating_linear_backend=self.gating.linear_backend,
+            routing_input=canonical_json(cell.to_json()["routing_input"]))
+        return row
+
     @torch.inference_mode()
     def profile(
         self,
-        num_tokens: int,
+        num_tokens: int | None = None,
         load_distribution: str = "uniform",
         seed: Optional[int] = None,
+        routing_cell=None,
     ):
         """
         Main profiling entry point that profiles all MoE operations.
@@ -932,6 +1025,12 @@ class MoEWrapper:
         Returns:
             dict with combined timing statistics and parameters
         """
+        if self.routing_runtime_path == "position_cyclic":
+            if routing_cell is None:
+                raise ValueError("Position profiling requires one explicit physical routing cell")
+            return self._profile_position_cell(routing_cell)
+        if routing_cell is not None:
+            raise ValueError("Legacy MoE profiling cannot consume a position cell")
         # Profile all three operations
         routing_inputs = self._prepare_routing_inputs(
             num_tokens=num_tokens,

@@ -13,6 +13,73 @@ from tests.integration.step5_measured_compute_fixture import (
 from tests.integration.run_step5_measured_main import command, write_read_cost
 
 
+@pytest.mark.parametrize("quant,deferred", [(None, False), ("float8_e4m3fn", False), ("float8_e4m3fn", True)])
+def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(tmp_path, monkeypatch, quant, deferred):
+    torch = pytest.importorskip("torch")
+    from types import SimpleNamespace
+    from frontier.profiling.moe import fp8_block_experts, moe_wrapper
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell, source_frame_tensors
+    from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+    from frontier.profiling.common.runtime_identity import canonical_json
+    wrapper = object.__new__(moe_wrapper.MoEWrapper)
+    wrapper.model_config = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    wrapper.routed_layer_group = resolve_routed_layer_groups(wrapper.model_config)[0]
+    wrapper.routing_runtime_path = "position_cyclic"
+    wrapper.routing_runtime_metadata = dict(routing_runtime_path="position_cyclic")
+    wrapper.gating_runtime_context_metadata = dict(gating_runtime_context="standalone_legacy")
+    wrapper.num_tensor_parallel_workers, wrapper.expert_parallel_size = 1, 16
+    wrapper.num_experts, wrapper.num_experts_per_device, wrapper.router_topk = 352, 22, 8
+    wrapper.hidden_dim, wrapper.expert_hidden_dim, wrapper.use_gated = 4, 4, True
+    wrapper.quantization_mode, wrapper.activation, wrapper.block_shape = "fp8", "swiglustep", (128,128)
+    wrapper._dtype = torch.bfloat16
+    facts = dict(shared=dict(evidence_kind="cpu_fixture"), imports={}, callables={})
+    observed, prepared = [], []
+    def bind(frame, *, device):
+        wrapper.positions, wrapper.mask = source_frame_tensors(frame, device=device)
+    wrapper.gating = SimpleNamespace(native_facts=facts, linear_backend="cpu_fixture", bind_source_frame=bind)
+    wrapper._materialize_gating_hidden_states = lambda rows: torch.zeros((rows,4), dtype=torch.bfloat16)
+    def gate(hidden, *, gating_runtime_context):
+        observed.append((hidden.shape[0],gating_runtime_context))
+        ids = (wrapper.positions[:,None]+torch.arange(8)) % 352
+        ids[wrapper.mask] = -1
+        return torch.ones_like(ids,dtype=torch.float32), ids.to(torch.int32)
+    wrapper._run_gating_with_runtime_context = gate
+    def prepare(value):
+        prepared.append(value.shape[0])
+        return value, None
+    def context(value, scale, *, topk_ids, expert_map, source_tensors):
+        assert value.shape == (17,4) and topk_ids.shape == (17,8)
+        assert source_tensors[0].shape == (16,4)
+        return dict(quant_dtype=quant,defer_input_quant=deferred,backend="cpu_fixture",
+            experts_class="TritonExperts",physical_scope="native_experts_inclusive",native_facts=facts)
+    native = SimpleNamespace(prepare_source=prepare,prepared_context=context,provenance=facts,
+                             apply_prepared=lambda *a,**k: pytest.fail("source cell cannot time gathered experts"))
+    monkeypatch.setattr(fp8_block_experts,"get_native_routed_experts",lambda **k:native)
+    class Timer:
+        def __init__(self,name): self.name=name
+        def __enter__(self): return self
+        def __exit__(self,*exc): pass
+    monkeypatch.setattr(moe_wrapper,"CudaTimer",Timer)
+    def profile(run,names):
+        before=len(prepared)
+        run()
+        assert prepared[before:] == ([16] if quant is not None and not deferred else [])
+        return {name:dict(median=1.,kernel_count=2) for name in names}
+    wrapper._profile_cell_callable = profile
+    frames = (MoESourceFrame(0,(),(),16,"prefill_hot"), MoESourceFrame(1,(1,),(6128,),1,"standalone_legacy"))
+    cell = MoERoutingProfileCell(MoERoutingProfileInput("cpu_empty_local",frames,17),"source_local",0)
+    row = wrapper.profile(routing_cell=cell.to_json())
+    expected={"moe_gating_linear","moe_gating_routing_topk"}
+    if quant is not None and not deferred: expected.add("moe_input_quantize")
+    assert set(row["time_stats"]) == set(row["typed_operator_contracts"]) == expected
+    assert row["num_tokens"] == 16 and row["live_routing_token_count"] == 0 and row["masked_routing_token_count"] == 16
+    assert row["moe_source_lane_id"] == 0 and row["moe_ep_rank"] is None
+    assert observed == [(16,"prefill_hot"),(1,"standalone_legacy"),(16,"prefill_hot")]
+    assert row["native_facts"] == canonical_json(facts)
+    assert json.loads(row["native_context"])["defer_input_quant"] is deferred
+    assert json.loads(row["routing_input"])["gathered_physical_rows"] == 17
+
+
 def test_real_graph_padding_does_not_duplicate_requests_or_context():
     model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
     cell = Step5ProfileInput(3, (17,), (6128,), "prefill", "piecewise", block_table_columns=448)
