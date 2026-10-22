@@ -353,13 +353,13 @@ def test_bound_observer_uses_actual_branch_policy_without_blocking_native_errors
     monkeypatch.setitem(sys.modules,allocator.__name__,allocator)
     monkeypatch.setitem(sys.modules,"torch",SimpleNamespace(distributed=SimpleNamespace(),ops=SimpleNamespace(vllm=SimpleNamespace())))
     monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST","cpu_fixture")
-    observer=probe.DispatchObserver(lambda event:None);observer.runtime_policy={"cpu_fixture":True}
+    observer=probe.DispatchObserver(lambda event:None);observer.runtime_policy=lambda:{"cpu_fixture":True}
     with observer.collectives(CpuCoordinator):
         assert group.reduce_scatterv_into_output(tensor,tensor,0,[1,1]) is tensor
         with pytest.raises(RuntimeError) as caught: group.reduce_scatterv_into_output(tensor,tensor,0,[1,1])
     assert caught.value is error and calls == ["native","native"]
     policy=observer.calls[0]["execution_policy"]
-    assert policy["branches"] == ["pynccl_comm.reduce_scatterv"] and policy["runtime"] == observer.runtime_policy
+    assert policy["branches"] == ["pynccl_comm.reduce_scatterv"] and policy["runtime"] == observer.runtime_policy()
 
 
 def test_observation_precedes_original_and_preserves_arguments_and_result():

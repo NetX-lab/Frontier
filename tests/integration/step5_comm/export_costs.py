@@ -399,7 +399,9 @@ def export_finite_parameters(directory, output):
         plan = CollectivePlan(phase,tuple(record["tokens_per_dp_rank"]),tensors,
             tuple(tuple(g) for g in record["group_ranks"]),"full" if record["cuda_graph"] else "none",
             json.dumps(context,sort_keys=True),json.dumps(record["buffer_receipt"],sort_keys=True))
-        grouped[phase,plan.graph_mode,plan.sizes[0]==plan.sizes[1],tuple(tensors),plan.context_json].append((record,plan))
+        from frontier.cc_backend.collective_plan import collective_model_context
+        model_context=collective_model_context(context)
+        grouped[phase,plan.graph_mode,plan.sizes[0]==plan.sizes[1],tuple(tensors),json.dumps(model_context,sort_keys=True)].append((record,plan))
         evidence = kernels[record["scenario"],record["call"]]
         if plan.cache_key() in counts and counts[plan.cache_key()]["kernel_counts"] != evidence["per_rank_kernel_counts"]:
             raise ValueError("Identical native plan has inconsistent paired kernel counts")
@@ -416,7 +418,7 @@ def export_finite_parameters(directory, output):
                     t=tensors[0];reduce[str(rank)]=local_models[t.dtype,t.columns,mode=="full","add"][str(rank)]
         cells = []
         for record,plan in rows:
-            parameters=dict(context=context,model_identity=str(frozen_path),evidence_kind=evidence_kind,copy=copy,reduce=reduce)
+            parameters=dict(context=record["native_context"],model_identity=str(frozen_path),evidence_kind=evidence_kind,copy=copy,reduce=reduce)
             sc=replace(scenario,collective=replace(scenario.collective,plan=plan.to_dict(),local_parameters=parameters))
             native=float(__import__("statistics").median(queue_held_analysis(record,"device",.01)["critical_path_repeats_us"]))/1000
             if phase in ("shared_tp","routed_tp"):
@@ -435,7 +437,7 @@ def export_finite_parameters(directory, output):
             cells.append(dict(operand_bytes=sum(plan.sizes)*sum(t.columns*t.element_size for t in tensors),
                 duration_ms=native-network_ms-max(local_ms),split=anchors[record["scenario"]],
                 quality="PASS",cell_id=record["scenario"],source=dict(scenario=record["scenario"],pass_id=record["pass"],native_ms=native,
-                network_ms=network_ms,local_ms=local_ms)))
+                network_ms=network_ms,local_ms=local_ms,native_record=record)))
         cells=cell_medians(cells)
         fit=fit_affine(cells,positive_slope=phase in ("shared_tp","routed_tp"),supported_range=(min(c["operand_bytes"] for c in cells),
             max(c["operand_bytes"] for c in cells)),calibration_receipt=str(directory))

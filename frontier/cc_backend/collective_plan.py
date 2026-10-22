@@ -7,6 +7,20 @@ import math
 from frontier.profiling.collectives.vllm_forward_collectives import DTYPE_BYTES
 
 
+def collective_runtime_identity(runtime):
+    """Frozen policy excludes enabled state changed by native lazy initialization."""
+    return {k:v for k,v in runtime.items() if k != "enabled_communicators"}
+
+
+def collective_model_context(context):
+    """Fit one frozen policy across its size-dependent native implementations."""
+    policies=context["execution_policy"]
+    if not policies:
+        raise ValueError("Collective model requires actual execution policy receipts")
+    return {**{k:v for k,v in context.items() if k != "execution_policy"},
+        "runtime_policy":{rank:collective_runtime_identity(policy["runtime"]) for rank,policy in policies.items()}}
+
+
 @dataclass(frozen=True)
 class CollectiveTensor:
     name: str

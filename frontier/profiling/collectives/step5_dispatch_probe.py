@@ -269,7 +269,7 @@ class DispatchObserver:
                             result,policy=observe(group,tensors,operation,output=bound.arguments.get("output"))
                             with diagnostic_scope(self.errors,"execution_policy.receipt"):
                                 call["execution_policy"]=policy
-                                policy["runtime"]=getattr(self,"runtime_policy",None)
+                                policy["runtime"]=self.runtime_policy()
                                 self.errors.extend(dict(operation="execution_policy",error=error) for error in policy["diagnostic_errors"])
                     else:
                         result=operation()
@@ -476,7 +476,7 @@ def run_probe(args, plan):
             if args.routing_input_file:
                 with diagnostic_scope(errors,"actual_communicator_policy"):
                     from frontier.profiling.collectives.vllm_collective_benchmark import native_collective_runtime,collective_runtime_policy
-                    report["runtime_policy"]=collective_runtime_policy(native_collective_runtime(torch,config,groups))
+                    report["startup_runtime_policy"]=collective_runtime_policy(native_collective_runtime(torch,config,groups))
             expected_rank = topology["ranks"][rank]
             expected_groups = expected_rank["group_ranks"]
             expected_tp, expected_dp = expected_groups["tp"], expected_groups["dp"]
@@ -504,7 +504,8 @@ def run_probe(args, plan):
                 emit({"event": "layer_start", "layer_id": case["layer_id"]})
                 layer = load_native_layer(config, case, device)
                 observer = DispatchObserver(lambda event: emit({"layer_id": case["layer_id"], **event}))
-                observer.runtime_policy=report.get("runtime_policy")
+                if args.routing_input_file:
+                    observer.runtime_policy=lambda:collective_runtime_policy(native_collective_runtime(torch,config,groups))
                 result = {"layer_id": case["layer_id"], "observer_errors": observer.errors,
                           "comparison": {"status": "unverified", "differences": []}}
                 report["layers"].append(result)

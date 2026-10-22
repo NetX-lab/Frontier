@@ -11,6 +11,7 @@
 | 2026-10-23 | Verify T2 optional serving-limit seam without default or metadata changes. |
 | 2026-10-23 | Close final producer/selection and legacy trace checks; archive scoped budget/dependencies. |
 | 2026-10-23 | Complete F3-F6 finite review repairs and exact JUnit/budget records. |
+| 2026-10-23 | Verify F4a/F4b frozen grouping/call-time boundaries and3067 budget. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -507,3 +508,68 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. Owned F3-F6完成，预算剩余1012。
 2. Root负责gitlink3dac53c及独立复审。
 3. 实际GPU参数/source/backend/graph资格与D29全局验收仍未完成。
+
+## D29-PRICING-F4-BOUNDARIES
+
+- Re-review closes F3/F5/F6; F4 reopened only for frozen fit grouping and startup
+  versus actual call-time runtime. Existing source2944 gross/43 paths, sub3dac53c.
+- RED d29_f4ab_red:2 FAIL/1 PASS (JUnit3). Actual exporter separates size branches,
+  leaving fewer than3 anchors; successful published FlashInfer lazy-disable/native
+  PyNccl fallback fails validator startup equality. Different-policy negative passes.
+- Cause: complete execution_policy was used as fit identity; probe reused startup
+  runtime rather than sampling actual post-native runtime. Frozen image/version/
+  flags/settings stay identity, while branch/buffer/current enabled state are
+  preserved in full per-cell context/count/cache/raw observations, not fit key.
+- GREEN d29_f4_green02:278 PASS/71 SKIP; cold d29_f4_cold:10 PASS, no PYTHONPATH.
+  Targeted bound scope d29_f4_scopes:17 PASS, including actual lazy-fallback and
+  stale fallback/branch/buffer/frozen-env/version/missing policy negatives.
+- Failed iteration d29_f4_green:2 FAIL/276 PASS/71 SKIP because fixture omitted
+  selected manifest environment and therefore correctly used the unbound observer.
+  Fixture now binds it explicitly; no production fallback/environment workaround.
+  Earlier mistaken test path aborted collection with exit4 and0 cases; corrected
+  invocation only. Final affected rerun/budget/scoped commit remain in progress.
+
+## 1. 规划完成情况
+**汇总：** PASS3｜BLOCKED/FAILED/SKIPPED0｜TODO1
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| F4a frozen grouping/raw evidence | PASS |Actual exporter size switch and different-policy negative |
+| F4b actual call-time fallback | PASS |Published native methods through observer/validator |
+| Exact importer count/cache and cold constructor | PASS |Cold10 PASS; branch change retains separate count key |
+| Final rerun/quota/commit/receipt | TODO |Targeted tests pass; final scoped evidence next |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**27b3499至今｜**当前前沿：**F4 boundary final交付
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Actual seams/negatives specifically required by F4a/F4b |
+| D2 细节反复重试 | CLEAR |One missing selected-env fixture cause, then targeted GREEN |
+| D3 支线问题修补 | CLEAR |No CLI/peer/platform edits |
+| D4 可并行任务停滞 | CLEAR |Shared identity files; explicit no agents |
+| D5 超范围镀金 | CLEAR |Existing owned paths and fixed model only |
+| D6 分析空转 | CLEAR |Exporter/validator/importer GREEN and concrete receipt |
+| D7 路线违背 | CLEAR |No per-implementation fit or fabricated GPU evidence |
+**文档检查：**S5 earlier F4 completion/identity statements superseded by re-review; requirements/plan/receipt now corrected. S1-S4/S6 no defect identified.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：先记录F4边界更正。
+**文档更新（先执行）：**pricing requirements/plan/progress/interface_receipt记录新finding与frozen/full身份（可直接执行，已完成）。
+**需停止的偏离行为：**无
+**接下去的路线：**Final affected tests/quota → scoped commit → root复审；不扩大环境/GPU/qualification任务。
+## 4. 最值得关注的 3 点
+1. CORE继续传完整execution_policy，不能只传frozen fit identity。
+2. Native lazy-disable允许变化，但完整call-time probe证据仍须一致。
+3. Root负责复审/global acceptance；GPU参数和资格未验证。
+
+## F4 boundary final verification
+
+- completed: final14 affected suites552 JUnit=463 PASS/89 SKIP/0 FAIL/ERROR;
+  real HTSIM submodule12 PASS; independent no-PYTHONPATH cold importer10 PASS.
+  Detailed commands, failed iterations and limits in
+  test_report_2026-10-23_f4_boundaries.md. No further broadening after these checks.
+- completed: exact original-baseline owned diff43 paths,+2972/-95=3067/3956,
+  remaining889; submodule333 gross included. Current repair versus27b3499 is
+  +152/-29=181 gross across10 existing owned paths; approved gross rises123.
+  No peer/import/path expansion. Isolated sub3dac53c clean, complete patch unchanged.
+- pending: scoped verified source/record commit and receipt commit ID for root.
+  Real GPU params/runtime qualification and global acceptance remain unverified.

@@ -7,6 +7,7 @@
 | 2026-10-23 | Record published dependencies and immutable-sequence review correction. |
 | 2026-10-23 | Record root's existing-seam T2 serving-limit decision. |
 | 2026-10-23 | Resume only finite-review F3–F6 under the original ownership/quota. |
+| 2026-10-23 | Resume F4a/F4b frozen-policy and lazy-state boundary repairs. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -54,3 +55,15 @@ Require RED→GREEN, accurate JUnit/exact commands, early scoped commits and ful
 submodule patch. Existing43 paths/2626 gross leaves1330 of3956. No new paths,
 peer edits/imports, GPU/platform, extra agents or push. Root owns gitlink/global
 acceptance; F2 immutable nested sequences remains closed.
+
+[Original Request] D29-PRICING-F4-BOUNDARIES: independent re-review closes
+F3/F5/F6, but F4 has two new P2 findings. Fit one frozen runtime policy across
+size-dependent actual branches without dropping raw/count/cache evidence; do not
+demand three anchors per implementation. Startup enabled-state is diagnostic,
+not invariant call-time policy: successful native lazy-disable/fallback must
+retain actual branch/state and agree with corresponding native probe evidence.
+Keep different frozen policies and stale/incomplete evidence rejected. Only
+existing owned paths; source2944/3956 leaves1012 gross. No peer edits/imports,
+new paths/agents/platform/GPU or qualification design changes. Preserve the
+completed-flow gate, real cold constructor, selected scope/replay and isolated
+submodule3dac53c. Root owns re-review, gitlink and global acceptance.

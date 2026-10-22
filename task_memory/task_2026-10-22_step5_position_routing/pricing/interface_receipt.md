@@ -10,6 +10,7 @@
 | 2026-10-23 | Deliver T2 optional constructor-limit binding and CPU invariants. |
 | 2026-10-23 | Close selected producer/parent selection; archive model payload and real dependencies. |
 | 2026-10-23 | Repair F3-F6 completed HTSIM, actual policy, exact replay and cold bootstrap evidence. |
+| 2026-10-23 | Separate frozen fit context from complete per-cell policy and startup diagnostics. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -311,7 +312,7 @@ Each policy preserves actual runtime (image-resolved vllm defaults/overrides,
 enabled communicator objects, PyNccl version, parallel flags, execution-affecting
 NCCL environment), observed native branch sequence and input/output registration,
 supplied output and alias receipts. NCCL_DEBUG/DEBUG_SUBSYS/DEBUG_FILE are retained
-as diagnostics but excluded from model identity. Per-rank runtime is retained in
+as diagnostics but excluded from model identity. Per-rank startup runtime is retained in
 plan.json. Actual GroupCoordinator calls use the same untimed observation seam in
 collector and eager module probe; no template routing flag infers a branch.
 Eager timing issues the original operation only; captured branch observation is
@@ -335,3 +336,54 @@ submodule12 PASS with actual HTSIM; cold bootstrap9 PASS. Owned43 paths,
 patch retained with sha256c96cace541b72f7627b5f429d55615a17be4cd6c86d1827ef53969d05d766a1d.
 Exact commands/RED→GREEN/limits in test_report_2026-10-23_finite_repair.md.
 Real GPU policy/parameters/source/backend/graph qualification remains unverified.
+
+## F4a/F4b corrected identity boundary
+
+Independent re-review closes F3/F5/F6; this section supersedes earlier F4 model
+grouping and startup equality statements. No CORE plan payload migration:
+`plan.context_json.execution_policy` keeps each participating rank's full actual
+`runtime`, ordered `branches`, `buffers` and diagnostic errors. Full context and
+buffer_receipt still determine plan.cache_key(), paired count receipt and cached
+prediction; native timings are observations, never runtime duration lookup.
+
+`frontier.cc_backend.collective_plan.collective_runtime_identity(runtime)` removes
+only `enabled_communicators`, whose current enabled/disabled state native lazy
+initialization can legally change. Actual image defaults/overrides, PyNccl versions,
+parallel flags and execution-affecting NCCL settings remain the frozen policy.
+`collective_model_context(context)` preserves other context fields and replaces
+execution_policy with `runtime_policy={rank:collective_runtime_identity(runtime)}`.
+Exporter model/context/parameters use that frozen identity across size-dependent
+implementations. Every raw observation/pass and count retains full branch/buffer
+evidence. Independent parent qualification still seals the whole candidate and
+covers every model; its criteria/algorithm are unchanged.
+
+Importer derives the same frozen model context from the supplied complete plan,
+then separately requires the exact complete count key/context. It binds those
+qualified parameters to the full context for the existing simulator invocation;
+it does not modify the stored model, synthesize counts or ignore a branch switch.
+
+Collector plan.json uses `runtime.per_rank_startup_runtime` explicitly as startup
+diagnostics. Measurement policy samples runtime after the actual observed native
+invocation. Selected eager module probe retains startup_runtime_policy diagnostics
+and supplies DispatchObserver.runtime_policy as a callable, sampled after each
+native operation. Validator compares only frozen startup/call fields, then exact
+complete collector/native-probe call policy. Successful FlashInfer lazy-disable
+and PyNccl fallback pass; stale fallback state/branch/buffer, changed image setting
+or PyNccl version and missing policy remain UNVERIFIED. No retry, forced backend,
+native exception suppression or timing observation overhead is added.
+
+Targeted evidence: actual exporter single frozen TP8 BF16 policy, row anchors
+16/256/8192 with custom/PyNccl switch and held-out64; one fit retains three anchors,
+all raw/count branches. Published FlashInfer _ensure_workspace/should_use_fi_ar
+and CUDA communicator all_reduce executed through actual DispatchObserver,
+successful fallback state compared by real validator. CPU leaves/labels are not
+GPU runtime qualification. Cold importer10 PASS also verifies separate count/cache
+keys across a branch/buffer change.
+
+Final14 affected suites552 JUnit:463 PASS/89 SKIP/0 FAIL/ERROR. Isolated actual
+HTSIM12 PASS; independent cold importer10 PASS without PYTHONPATH. Owned43 paths,
++2972/-95=3067/3956 gross (remaining889), including333 unchanged submodule gross.
+This repair touches10 existing parent source/test paths,+152/-29=181 versus27b3499;
+original-baseline gross increases123. Submodule remains clean at3dac53c with no
+new sub commit; full patch/sha256 unchanged. Exact commands and RED/GREEN in
+test_report_2026-10-23_f4_boundaries.md. Scoped commit ID is recorded next.
