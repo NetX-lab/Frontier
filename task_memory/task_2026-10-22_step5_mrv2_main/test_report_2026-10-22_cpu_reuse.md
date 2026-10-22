@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-22 | Record input-reuse verification, exact frame/hash comparison, merged tests and frozen-checkout prerequisites. |
+| 2026-10-22 | Record complete77-case strict comparison of both integrated CPU reuse changes. |
 
 ## Scope and results
 
@@ -120,5 +121,18 @@ timeout 60s env PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tm
 The collective control executes actual backend misses/hits: TP8 allreduce
 predicts0.122465ms on both, EP16 all-to-all predicts0.0199104ms on both. Four
 requests yield two misses/two hits. These are CPU simulator predictions and
-prerequisite checks, not native GPU measurements. Full CLI and candidate77
-results remain pending.
+prerequisite checks, not native GPU measurements. Full CLI results remain pending.
+
+## Strict legacy comparison
+
+The candidate77 run and comparison commands in `progress.md` completed with exit0.
+The baseline is the retained clean26db654 matrix; candidate is clean7e8bea3.
+Observed:77 of77 compared and identical; zero failures, missing evidence/cases,
+definition differences or un-compared cases. Both cache-file inventories match,
+with no provenance findings. The original report is retained byte-for-byte at
+`cpu_reuse_fidelity.json`, SHA256
+`5753dc5399065bed197e879047caae448f55c51de7a9b180c7cb53e020d29488`.
+Raw comparison: `/data/ycfeng/tmp/step5_d23_perf_fidelity_20261022/comparison.json`;
+log: `/data/ycfeng/tmp/d23_perf_fidelity_compare01.log`. This passes the legacy
+preservation criterion; actual06 measured-input full-request acceptance remains
+independent and unfinished.

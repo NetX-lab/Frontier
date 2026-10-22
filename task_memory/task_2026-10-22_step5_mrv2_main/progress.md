@@ -14,6 +14,7 @@
 | 2026-10-22 | Parent verifies contract reuse speedup and baseline structural failures; repeated input loading correction starts independently. |
 | 2026-10-22 | Contract reuse accepted: 255 PASS with two baseline-identical failures, exact short-query costs/proofs, independent No findings. |
 | 2026-10-22 | Accept input reuse and merged224 checks; launch actual06 and candidate77 from immutable7e8bea3. |
+| 2026-10-22 | Complete strict77 CPU reuse comparison with no output, cache-name or provenance differences. |
 
 - completed: created new worktree from d8e3e941; immutable forward branch unchanged.
 - completed: inspected actual native capture plan7168/8192/128,FULL_AND_PIECEWISE,
@@ -377,7 +378,7 @@ Checkpoint after verified compute correction:
   all8 shared fixture/source paths. Reuse the original fixture02/cache. The
   unchanged runner caps each subprocess at2400s and validates1024 outputs,
   cached6128/local16, READ/readiness/release and positive finite final metrics.
-- in-progress independently: candidate77 runs on the same frozen source. Its
+- completed independently: candidate77 ran on the same frozen source. Its
   generated cache is checkout-local, separate from actual06's fixture cache.
   Reuse the retained clean26db654 result as baseline rather than rerun it.
 
@@ -389,11 +390,17 @@ env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD:$PWD/tests/unit TMPDIR=/data/ycfen
 env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD TMPDIR=/data/ycfeng/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py run --repo-root /data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3 --label candidate --output-root /data/ycfeng/tmp/step5_d23_perf_fidelity_20261022 --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 4 --clean-cache --continue-on-failure > /data/ycfeng/tmp/d23_perf_fidelity_candidate01.log 2>&1
 ```
 
-Pending comparison after candidate completion:
+Completed comparison after candidate completion:
 
 ```bash
 env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD /data/ycfeng/envs/frontier-py310/bin/python -B tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp/step5_d23_perf_fidelity_20261022 --baseline-label /data/ycfeng/tmp/step5_d23_root_fidelity_20261022/candidate --candidate-label candidate > /data/ycfeng/tmp/d23_perf_fidelity_compare01.log 2>&1
 ```
 
-No terminal/full CLI, new strict77, native/profile or accuracy PASS is claimed
-at launch. Preserve original failed attempts and inspect terminal artifacts next.
+Comparison result:77/77 identical, no baseline/candidate failures, missing cases,
+missing evidence, definition differences or un-compared cases. Predictor cache
+filenames and clean provenance pass. Original comparison saved byte-for-byte as
+`cpu_reuse_fidelity.json`, SHA256
+`5753dc5399065bed197e879047caae448f55c51de7a9b180c7cb53e020d29488`.
+
+No terminal/full CLI, native/profile or accuracy PASS is claimed. Preserve
+original failed attempts and inspect actual06 terminal artifacts next.

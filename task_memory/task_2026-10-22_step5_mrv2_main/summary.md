@@ -10,6 +10,7 @@
 | 2026-10-22 | Final root/owner clean legacy comparison77/77 identical. |
 | 2026-10-22 | Actual05 both exceed2400s after partial decode; CPU bottleneck diagnosis is active. |
 | 2026-10-22 | Both CPU reuse corrections accepted; merged224 PASS and frozen-checkout actual06/candidate77 launched. |
+| 2026-10-22 | CPU reuse strict comparison passes77/77; actual06 terminal acceptance remains pending. |
 
 ## Status
 
@@ -17,7 +18,8 @@ IN PROGRESS: actual06 offline/online run from immutable source7e8bea3 with the
 original fixture/cache and2400s bound. Fixed-contract reuse and validated-input
 reuse are merged after parent verification and independent No findings. The
 combined224 checks pass; input checks187, CPU torch helpers19 and frozen fixture8
-also pass as separate, overlapping suites. The new candidate77 run is pending.
+also pass as separate, overlapping suites. The new candidate77 comparison passes
+77/77 exactly, including cache filenames and clean provenance.
 Actual05 remains a historical timeout at42/41 emitted tokens. Full6144/1024
 acceptance has not yet passed.
 
@@ -94,8 +96,8 @@ source and factor-injection controls in `quantization_warning.md`; it does not
 rescale this typed Step path.
 
 Inspect actual06 terminal outputs, READ/readiness/source release,1024 outputs
-and final metrics, and compare the new candidate77 with the retained clean
-26db654 baseline. The execution bound remains2400s. Parent source/proof checks
+and final metrics. The new candidate77 matches the retained clean26db654 baseline
+exactly; see `cpu_reuse_fidelity.json`. The execution bound remains2400s. Parent source/proof checks
 are in `test_report_2026-10-22_cpu_reuse.md`; full acceptance is outstanding.
 Actual05 phase evidence and hashes are in `actual05_timeout_receipt.json`.
 The clean77 comparison is complete:

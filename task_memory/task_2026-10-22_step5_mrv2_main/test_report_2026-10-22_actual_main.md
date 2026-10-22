@@ -14,6 +14,7 @@
 | 2026-10-22 | Parent repeats real-cache CPU RED and collective/trace controls; source correction remains in progress. |
 | 2026-10-22 | Accept fixed-contract source with parent timings, exact costs/artifacts and 255 passing checks plus two baseline-identical failures. |
 | 2026-10-22 | Accept loader reuse and merged224 checks; launch actual06 on frozen7e8bea3 with unchanged inputs and execution bound. |
+| 2026-10-22 | Integrated CPU reuse strict77 passes; actual06 full request remains pending. |
 
 ## Environment and scope
 
@@ -308,5 +309,7 @@ Both run in `/data/ycfeng/Frontier/.worktrees/fidelity-candidate-7e8bea3`, whose
 HEAD remains fixed. Each generated input-hash receipt matches actual05 at all8
 shared fixture/source paths. No fixture regeneration, timeout change or weakened
 terminal validation is used. The retained clean26db654 matrix is the baseline
-for the new77-case candidate run. All three runs are in progress at this entry;
-no full-workload or new fidelity PASS is claimed.
+for the new77-case candidate run. That run and its strict comparison have now
+passed77/77, including predictor cache filenames and provenance. See
+`cpu_reuse_fidelity.json`. Both full CLI terminal results remain pending;
+no full-request or native/accuracy acceptance is claimed.
