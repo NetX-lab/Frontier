@@ -123,6 +123,12 @@ class PredictionFamilyTrainers(KernelCountTraining):
             f"_layer_contracts{typed_contract_hash}"
             f"_family{self._measurement_family_name(active_measurement_type)}"
         )
+        selected_path = getattr(replica_config, "moe_gating_routing_runtime_path", None)
+        if is_moe_model and selected_path is not None:
+            ffn_signature += "_routing" + resolve_moe_gating_routing_runtime_path(
+                getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+                _resolve_model_architecture_profile(model_config), selected_path,
+            )
 
         if ffn_signature in trained_model_signatures:
             logger.info(f"Skipping FFN models training for {cluster_type} - already trained with signature {ffn_signature}")
@@ -183,6 +189,7 @@ class PredictionFamilyTrainers(KernelCountTraining):
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
                 getattr(replica_config, "moe_routing_distribution_type", "balanced"),
                 _resolve_model_architecture_profile(model_config),
+                selected_path,
             )
 
             moe_df_cache: Dict[
