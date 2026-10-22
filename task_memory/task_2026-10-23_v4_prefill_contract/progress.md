@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Integrated at e89b45d; merged144unit/94accepted/legacy102-72 checks passed with exact accepted source bytes. |
 | 2026-10-23 | Recorded initial source investigation, independent inputs and actual scope enumeration. |
 | 2026-10-23 | Completed independent builder/checker implementation, affected tests and real/legacy comparisons; retained isolated qualification limits. |
 | 2026-10-23 | Committed source and selected evidence2f87828; finalized root-review handoff. |
@@ -24,4 +25,4 @@
 - archive check: Whole staged diff check flags blank context-marker lines inside the exact `source.diff` artifact as trailing whitespace. Preserved exact diff bytes/hash; scoped check over all actual source/tests/Markdown/JSON passes. This is diff-as-file context syntax, not whitespace in changed source.
 - completed root affected verification:144 unit PASS/0fail/error/skip; accepted94 exact scopes (50event/44kernel), legacy102positive/72negative, serving_admissionfalse. Evidence `/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_2f87828{.xml,_accepted.json,_legacy.json}` and adjacent logs.
 - completed independent review: Standards no actionable findings; Spec no code/scope findings, one P3 approval line-pointer corrected to the stable decision heading. See `review.md`.
-- completed root matrix/acceptance: Clean576d278 capture and strict comparison to retained bfa82de baseline produced77/77 identical, zero failures/missing evidence/definition differences/provenance findings, identical519cache filenames; root rehashed451actual artifacts and checked every case's fixed source/harness identity. `primary_acceptance.json` records ACCEPTED_ISOLATED_PREREQUISITE. Root integration is next; full predictor/serving admission remains false. Native06 uses its independent frozen b62c155 source.
+- completed root matrix/acceptance/integration: Clean576d278 capture and comparison produced77/77 identical;451actual artifact hashes and519cache filenames verified. Integrated to primary at e89b45da0346d2d3de7c735d47a00c4a580193ad, then merged144unit/94accepted/legacy102-72 checks passed. `integration_receipt.json` pins the three unchanged source files and complete production/test/data/gitlink equality to the verified matrix source. The accepted checker finished before an outer log-print attempted a legacy-only JSON key; its94PASS output was retained and only unfinished legacy validation was run afterwards. Full predictor/serving admission remains false.

@@ -4,11 +4,12 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Recorded primary integration e89b45d and passing merged checks. |
 | 2026-10-23 | Archived scoped implementation, final CPU validation and remaining qualification boundaries. |
 | 2026-10-23 | Recorded completed source/evidence commit2f87828 and pending root acceptance. |
 | 2026-10-23 | Root accepted the isolated prerequisite after independent review, affected reruns and the complete default matrix. |
 
-Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base `b62c155abd981a71e12e62aa0c0fe3990741d2f8`; source/evidence commit `2f87828`; fixed clean matrix source `576d278`; worktree `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract`. Root acceptance: `ACCEPTED_ISOLATED_PREREQUISITE`; primary integration is next.
+Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base `b62c155abd981a71e12e62aa0c0fe3990741d2f8`; source commit `2f87828`; fixed clean matrix source `576d278`; primary integration `e89b45da0346d2d3de7c735d47a00c4a580193ad`. Status: `INTEGRATED_ISOLATED_PREREQUISITE`; exact source and merged144unit/94accepted/legacy102-72 evidence are in `integration_receipt.json`.
 
 ## Deliverables
 
@@ -29,4 +30,4 @@ Task ID: `W128-V4-PREFILL-CONTRACT-DQ10`. Base `b62c155abd981a71e12e62aa0c0fe399
 
 ## Open/deferred work
 
-Primary integration is next. Full predictor construction, serving/PD/graph/physicalTP8/first-tail/balanced-decode/histogram/CPU-overhead/E2E qualification remains open. No GPU or external operation occurred in this CPU prerequisite. The owner's initial decision not to run strict77 was superseded by root's application of the existing repository >=50-scenario delivery gate; that gate now passes.
+This isolated prerequisite is integrated and verified. Full predictor construction, serving/PD/graph/physicalTP8/first-tail/balanced-decode/histogram/CPU-overhead/E2E qualification remains open. No GPU or external operation occurred in this CPU prerequisite. The owner's initial decision not to run strict77 was superseded by root's application of the existing repository >=50-scenario delivery gate; that gate passes.

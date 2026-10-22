@@ -7,6 +7,8 @@
 | 2026-10-22 | Created: read-only audit of the V4 prediction/serving guard chain, P0 cost-class coverage of existing H800 tables, and one named next step. No source, plan, ticket or GLM change. |
 | 2026-10-22 | Correction after primary review: earliest non-dummy production guard is the predictor constructor family gate, not `serving_context`; `(i)` relabelled to isolated eager data availability (not serving qualification); warm-q1 planner values and native TP/`max_num_seqs` caveat added; authority distinguished (D-Q10 approved-but-unfinished implementation vs required native qualification vs unapproved GPU diagnostic method). Same file only, no new investigation. |
 | 2026-10-23 | W128-V4-COVERAGE-AFTER-BALANCED-PREFILL: §3 class 4 superseded for the accepted balanced 6144/C0 case (isolated eager rows now exist); §5 recommendation replaced by §7; corrected the D-Q10 citation to `requirements.md:1063-1069`; §§1-6 kept as the 2026-10-22 historical record. Same day, same section: corrected stale status (prefill supplement already accepted, native06 in CPU package checks), separated approved-unfinished consumer wiring from new-collection authority, stated the probe's satisfiability-only limit, and removed any suggestion to change the legacy checker default. |
+| 2026-10-23 | W128-V4-NEXT-CPU-CALLSITE: appended §8. Traced the real public predictor to the measured reader on merged `e89b45d` and concluded no honest CPU caller slice can proceed now; records the exact three-part dependency instead of a guard removal or a new contract API. §§1-7 unchanged. |
+| 2026-10-23 | W128-V4-NEXT-CPU-CALLSITE correction, same §8: the V4 bundle is carried by the existing V4-private `dsa_full_dummy` sidecar/`.admission.json` receipt mechanism, so it is approved-but-unfinished wiring, not an unapproved shared interface; a single composite entry in the V4-local phase registry is a table edit, distinct from the summation-semantics decision; narrowed the conclusion to the unowned total-authority decision plus missing component rows. |
 
 Task ID: `W128-V4-P0-PREDICTION-NEXT`. Branch `feat/glm53-dsv4-vllm028`, HEAD `2c150a7` (code `7c1b888`).
 Everything below is CPU/static evidence. No serving run, no GPU, no guard bypass, no shimmed timing.
@@ -222,3 +224,109 @@ Any such collection needs separate authority; native06 also does not supply oper
 **Still open.** Coverage classes 6, 8 (independent balanced expert histogram), 9 (V4 payload
 admission), 10, 11 and 12; all TP8/PD/graph/serving/E2E qualification of the accepted rows;
 historical q1 decode tables stay unbalanced and cannot be relabelled.
+
+## 8. 2026-10-23 caller trace: no honest CPU slice, exact dependency
+
+Task ID `W128-V4-NEXT-CPU-CALLSITE`. HEAD `e89b45d` (`feat/glm53-dsv4-vllm028`). Read-only
+CPU/static work plus this subsection; no source, test, matrix, flag, schema or collection
+change. Authority: D-Q10 (`requirements.md:1063-1069`) already covers measured-timing reads
+and typed rejection; it does not cover a new interface or missing evidence.
+
+**The real path, with every gate on it.** Three production entries exist, and each stops
+before `read_isolated_scope`:
+* stage: `predict_stage_execution_time` (`sklearn_moe_execution_time_predictor.py:1292-1317`)
+  -> `_predict_moe_layer_execution_time` (`:1319`; V4 branch `:1374-1389`) ->
+  `_predict_dsv4_dummy_structural_execution` (`:95-110`) -> `predict_structural_execution`
+  (`deepseek_v4.py:245`) -> `predict_source_execution` (`:71`) -> the first `local_scope`
+  refusal (`:154-164`), with the attention block (`:177-195`) behind those refusals;
+* EP lane: `expert_parallel.py:130-139` -> the same structural entry with
+  `include_attention=False`;
+* attention-only public call: `predict_attention_layer_time`
+  (`sklearn_execution_time_predictor.py:7544-7554`) -> `_predict_attention_layer_time`
+  (`:7619`; V4 branch `:7644-7656`) -> `_predict_dsv4_dummy_attention_time` (`:7578`) ->
+  refusal at `:7607-7611` when `not _enable_dummy_mode` (that branch returns before
+  `require_enabled_for_execution`, `:7657`). `_get_execution_time_internal` (`:585-594`) is
+  the non-V4 path; `_predict_moe_layer_execution_time` returns before it for V4.
+The measured reader `read_isolated_scope` (`deepseek_v4.py:617`) and its contract builder
+`build_isolated_prefill_layouts` (`:579`, merged in `e89b45d`) are still called only from
+`tests/integration/check_dsv4_measured_scopes.py` and unit tests.
+
+**Why the attention component cannot absorb the accepted scopes.** For
+`attention_family_id == "deepseek_v4_attention"` the serving layer attention time *is* the
+phase projection sum (`entities/execution_time.py:1116-1125`,
+`sum(... timing_operator_times(self, "attention"))`). The accepted medians are not
+summable: `dsv4_attention_rows.py:16-18` states the layer time is not the sum of its scopes
+because aux-stream scopes overlap the default stream, and `deepseek_v4.py:621` states
+composites cannot be split into their constituent operators. Measured from the accepted
+CSV (`prefill_results/accepted/PREFILL_WARM_6144_C0_BALANCED/.../attention.csv`, 6 rows):
+csa layer 3.3277 ms vs 7.2148 ms summed, hca 1.3247 vs 2.9603, uncompressed 1.5241 vs
+3.0089 — the sum would roughly double the measured attention layer.
+
+**Phase registry: V4-local data, not a shared schema.** `timing_operator_times`
+(`deepseek_v4.py:25-59`) is a dict local to the V4 module, consulted only when
+`attention_family_id == "deepseek_v4_attention"` (`entities/execution_time.py:1122`,
+`metrics_store.py:137-140`), and it `continue`s before every generic projection. So adding
+the single composite entry `dsv4_attention_layer` (which the CSV already carries as
+`time_stats.dsv4_attention_layer.median`) is a V4-local table edit, not a new shared schema.
+What is *not* a table edit is the summation semantics: `_get_attention_layer_execution_time`
+(`entities/execution_time.py:1116-1125`) returns the whole attention phase sum, so carrying
+both the composite and its component scopes double counts. Choosing composite-XOR-components
+is a modelling/accuracy decision, materially different from adding one registry entry.
+
+**Corrected: the V4 bundle is V4-private and carried by an existing mechanism.** §7 and the
+earlier paragraph of this section overstated the input surface. `dsa_full_dummy_input.py`
+is the working precedent for exactly this shape: a *private* `SCHEMA` constant
+(`dsa_full_dummy.v1`, `:17`), a sidecar found by convention next to the attention table —
+`Path(path).with_name("dsa_full_dummy.json")` at `dsa_predictor.py:115`, gated on
+measurement type, graph mode and existence — and an external reviewed receipt at
+`path.with_suffix(".admission.json")` whose `sidecar_sha256` binds the sidecar (`:50-54`),
+with every referenced evidence file digest-checked (`:29-32`). No config field, no shared
+schema, and typed errors throughout. The same shape carries a V4 isolated bundle: the sidecar
+beside `_attention_input_file`, the receipt beside the sidecar, contents being what the
+accepted package already retains (`plan.json` is a complete serialization —
+`check_dsv4_measured_scopes.py:50` compares it to `plan.to_json()` — plus
+`raw/dsv4_raw_e0.jsonl`, aggregate identity and both CSV digests). Selecting the target needs
+no new field either: `atten_input_file` and the `training_file_paths` override map
+(`measurement_input_paths.py:72`, `:101-110`) already resolve any path, including the
+accepted package's `compute/<device>/<model>/attention.csv`. This dependency is therefore
+**approved-but-unfinished V4-private wiring**, not an unapproved shared interface; no
+mandatory shared field or interface exists to name.
+
+**Remaining dependencies** (numbered as before; the former item 1 is corrected above):
+2. *Family execution admission.* `attention/families.py:646-647` keeps
+   `execution_enabled=False`, so `BaseExecutionTimePredictor.__init__`
+   (`base_execution_time_predictor.py:39-46`) rejects every non-dummy V4 predictor before any
+   prediction. Its own reason lists compressed cache, compressor, indexer, mHC and
+   mixed-precision operator coverage; the accepted package contains none of the mHC, embedding,
+   shared-expert or hash/score-routing rows, so this stays closed on absent measurements
+   (ticket05 milestones open), not on permission.
+3. *Critical-path semantics.* Even read as one number, the enclosing `dsv4_attention_layer`
+   CUDA-event scope is a physical-TP1 eager reduced-model observation with no TP8/graph/PD
+   phase equivalence, so it cannot be published as a serving total.
+
+**Exact remaining material decision (not a CPU-code question).** Which authority the V4
+serving attention total uses: the composite `dsv4_attention_layer` receipt with aux-stream
+overlap declared as unmodelled, or an explicitly selected subset of non-overlapping component
+scopes. That decision needs aux-stream/native-timeline or declared-contract evidence the
+accepted package does not provide, and it belongs to the ticket05/09 owner. Until it is made,
+any consumer would have to invent the overlap, which is why no caller slice proceeds now.
+
+**Phase semantics are not the blocker.** Pinned `vllm/v1/worker/gpu/model_runner.py:1092-1099`
+computes `is_prefilling = num_computed_prefill_tokens < prefill_len` and
+`has_prefill = any(is_prefilling)`, which agrees with the reader's accepted
+prefill-vs-ongoing-q1 split for 6144/0. Native06 per-dispatch classifier rows confirm the
+shape of the distinction (formal prefill rows `has_prefill=True` at 6144 tokens; decode rows
+`has_prefill=False` at 1 token), and its 8192-token/64-query row is a `kind="profile"`
+warmup forward (`graph_mode=NONE`), not a formal serving step. No native/reference admission
+is claimed or used here.
+
+**Conclusion.** No caller slice proceeds now. The blocking factors are one unowned modelling
+decision (which attention total is authoritative, above) and components no accepted package
+measures — not an approval gap and not a missing shared interface. Carrying the bundle is
+approved-shaped V4-private work on the `dsa_full_dummy` precedent (`sidecar` + `.admission.json`
+receipt, private schema, convention-based discovery, typed errors); no new flag, config field,
+schema or wide proposal is needed for it. This section therefore proposes no guard removal and
+no artificial contract API, and it does not allocate an implementation. What it records is that
+the next real unit is consumer-side and waits on the total-authority decision plus the mHC/
+embedding/shared-expert/routing rows; until then the honest outcome stays a typed
+`DeepSeekV4CoverageError`.

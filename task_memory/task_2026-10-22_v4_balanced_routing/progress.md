@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | D-Q10 isolated prerequisite integrated at e89b45d and merged checks passed; R4 independent review/root verification continue. |
 | 2026-10-23 | Closed postrun S5 pointers: client/RCA complete; root authorized the bounded versioned owner-reader correction, independent of CPU integration. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 Succeeded12.002222GPUh but frozen identity predicate FAIL; D-Q10 isolated prerequisite accepted with complete matrix, root merge underway. |
 | 2026-10-23 | W128-V4-NATIVE06-RUNNING-RECORDS: recorded frozen/sealed/submitted Running native06 and supplied20:45:34 observation; D-Q10 source/affected verification complete, fixed576d278 strict77 running. |
@@ -21,6 +22,8 @@
 | 2026-10-22 | Recorded initial source findings and assigned focused native/Frontier scope comparison. |
 
 ## Current root state
+
+Latest integration update: D-Q10 is INTEGRATED_ISOLATED_PREREQUISITE at e89b45da0346d2d3de7c735d47a00c4a580193ad. Merged144unit/94accepted/legacy102-72 checks pass; all three accepted source hashes and complete production/test/data/gitlink bytes match verified576d278. See `../task_2026-10-23_v4_prefill_contract/integration_receipt.json`. Earlier primary-merge-pending statements below are dated snapshots. Native R4 source29790c9 (2non-core files/223changed lines) has owner/root8-predicate diagnostic PASS but remains in independent review; no new native admission is claimed here.
 
 Latest continuation — W128-V4-NATIVE06-RUNNING-RECORDS final delta: native06 b62c155/exp-1023-043123-830898 completed Succeeded4/4/exit0/restarts0/12.002222GPUh, but frozen R3 computed7PASS/rank_runtime_graph identity FAIL, reference UNVERIFIED. D-Q10 source2f87828 is ACCEPTED_ISOLATED_PREREQUISITE; clean576d278 strict77 COMPLETE77/77,451 actual artifacts/519cache filenames verified, primary merge underway/root-owned with no merge hash claimed. Routing23/953=A432+B319+C202/dispatch491, frozen R3/R2 and original source/fidelity evidence are unchanged; full05/09/18/19 acceptance stays open.
 

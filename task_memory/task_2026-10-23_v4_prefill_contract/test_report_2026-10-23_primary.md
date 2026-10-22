@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Added merged-source verification and retained the outer-reporting error. |
 | 2026-10-23 | Recorded root reruns, independent review and complete fixed-source matrix acceptance. |
 
 Root source:2f87828; matrix source/harness576d278156ea21b209da33791337bd195047ae3e, clean for every case. Python3.10.6 at `/data/ycfeng/envs/frontier-py310/bin/python`. Workdir `/data/ycfeng/Frontier/.worktrees/v4-prefill-contract`; `PYTHONDONTWRITEBYTECODE=1`, `PYTHONPATH` set to this worktree, `TMPDIR=/data/ycfeng/tmp` (affected tests used its opencode-v2-tmp/opencode subdirectory).
@@ -36,3 +37,11 @@ tests/e2e/refactor_fidelity/run_matrix.py compare --output-root /data/ycfeng/tmp
 All commands exit0 and their outputs were inspected. Exact selected output/source SHA256 values are in `primary_acceptance.json`; logs are adjacent to the listed output roots. An initial root receipt inspection used results.json instead of the actual results.jsonl; directory inspection corrected this read path, without rerunning the capture or changing any data.
 
 Result: ACCEPTED_ISOLATED_PREREQUISITE. No full predictor/physicalTP8/PD/graph/serving/E2E admission. Native06 and its frozen source are independent.
+
+## Primary integration verification
+
+Merge e89b45da0346d2d3de7c735d47a00c4a580193ad carries the exact three accepted source-file hashes. `git diff --name-only 576d278156ea21b209da33791337bd195047ae3e e89b45da0346d2d3de7c735d47a00c4a580193ad -- frontier tests data .real-engine` is empty, retaining the complete fixed-source default-matrix evidence.
+
+Repeated the affected pytest and both checker invocations from the primary worktree with the same Python/environment/input arguments above and output prefix `/data/ycfeng/tmp/glm53_dsv4/root_prefill_contract_merged_e89b45d`. Outcomes:144unit tests, zero failures/errors/skips;94accepted scopes;102legacy positives/72typed negatives. Source and output hashes are in `integration_receipt.json`.
+
+The outer two-check orchestration printed `r['typed_negative_count']` after the accepted checker had passed94, but that field exists only in the legacy report. It raised `KeyError: 'typed_negative_count'` and did not run the second command. Inspection confirmed accepted keys/status/94outputs and missing legacy output; the source and accepted report were preserved, and only the unfinished legacy command was subsequently executed successfully. This reporting error is not a consumer failure.
