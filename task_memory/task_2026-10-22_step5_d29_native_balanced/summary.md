@@ -1,30 +1,37 @@
-# D29 native balanced-routing investigation completion archive
+# D29 native position-routing investigation and design archive
 
 ## Modification History
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record approved semantics and native design; retain implementation and live-validation boundaries. |
 |2026-10-22|Archived actual native route and reference-invariance policy decision; no implementation or launch.|
 
-TaskID: **D29-NATIVE-BALANCED**. Deliverable complete, proposal-only. No production/native/image/package changes and no delegation/platform/GPU/auth/cloud/SSH/submission operation.
+TaskID: **D29-NATIVE-BALANCED**. Investigation and native design are complete.
+YC approved position-cyclic semantics and the necessary native/Frontier/profile
+and internal-image work. Implementation awaits a combined numerical scope
+decision; no production/native/image/package change has been made by this task.
 
 ## Decisive findings
 
 1. Frozen H800 TP8/DP2/EP16 Step routes are modular for both FP8 (`TritonOrDeepGemmExperts`, Fp8MoEMethod) and BF16 (`TritonExperts`, UnquantizedFusedMoEMethod); both execute router.select_experts and accept precomputed top-k. All16 historical native module witnesses agree. FP8 DeepGEMM condition is E8M0 OR valid shape; smallM alone does not mean Triton.
 2. Native has only uniform_random/normal_routing simulation settings, no exact balanced strategy. EPLB/round_robin placement is not balanced token choice. Global DP counts/prefix are available without new collective/readback but routing occurs before DP gather.
 3. Current Frontier ascending-Hamilton wave counts conflict with independent G3/chunk/q1 invariance. Reset policy changes all16 tail rows in splitP6128+D16/full6144; absolute positions preserve IDs but cannot guarantee every arbitrary wave balanced.
-4. MRv2 already produces exact device positions; CPU mirror is optimistic, router has no position input, FULL graph replay bypasses Python. Position policy needs explicit graph-safe context binding and native strategy/weight/mask wiring, plus Frontier per-request interval counts. This is new implementation/locked-reference behavior and requires parent/user approval.
+4. MRv2 already produces exact device positions; CPU mirror is optimistic, router has no position input, FULL graph replay bypasses Python. The approved policy needs graph-safe context binding, native strategy/weight/mask wiring and Frontier per-request interval counts. The native design uses the uncompiled Step outer forward to bind stable device positions during capture; actual GPU replay remains to verify.
 
 ## Deliverables
 
-Root: `/data/ycfeng/Frontier/.worktrees/step5-d24-stage/task_memory/task_2026-10-22_step5_d29_native_balanced/`.
+Root: `/data/ycfeng/Frontier/.worktrees/step5-preview/task_memory/task_2026-10-22_step5_d29_native_balanced/`.
 
 - `proposal.md`: exact files/lines, actual route/evidence tier, aggregate and independent-reference contracts, options/costs/minimum complete extension and ready-to-ask semantic decision.
+- `native_design.md` (`651415a`): four native source files, two tests and ten
+  image/package files; 716–1143 changed lines, graph/weight/mask verification,
+  derived-image recipe and a minimum 53-pin installed-source binding.
 - `cpu_receipt.json`, `semantic_receipt.json`: actual frozen CPU method-seam and hypothetical assignment math evidence; seven count cases, independent/chunk/q1/padding counterexamples,16-rank native witness/source hashes.
 - `contract_probe.py`, `semantic_probe.py`, `preservation_check.py`: bounded task-scoped read-only CPU/evidence checks, no installed strategy.
 - `preservation_receipt.json`: all57 capture03 manifest entries and50 native pins unchanged,3 probe sources compile, no launch markers.
 - `test_report_2026-10-22_native_routing_contract.md`: exact interpreter/commands, expectations/values/PASS/UNVERIFIED and original probe-seam/path errors.
-- `check_progress_2026-10-22.md`: phase checkpoint, no drift; decision outside child scope remains pending.
+- `check_progress_2026-10-22.md`: historical investigation checkpoint, before policy approval.
 - `requirements.md`, `plan.md`, `progress.md`: requests and current completion/limitations.
 
 ## Validation and boundaries
@@ -33,6 +40,11 @@ CPU interpreter `/data/ycfeng/envs/asyncopd-py312/bin/python`, CPython3.12.13/To
 
 No actual new routing implementation or current GPU/operator/graph/G3 validation. Historical module receipts and CPU/source evidence are not formal timing qualification. Capture03 remains **sealed, unsubmitted and not balanced**; no attempt/submitted marker/job exists from this task. No CPU-overhead model, suite or measurements.
 
-## Pending parent decision / next action
+## Pending scope decision / next action
 
-Parent asks YC to choose request-position cyclic semantics (retains reference routing invariance; requires changed Frontier interval policy) versus exact instantaneous ascending-Hamilton wave semantics (not reference-safe; a separate timing-only campaign would need explicit authorization). Do not implement, copy/reference actual routing, relax criteria/tolerance or relabel existing profiles before that decision. An approved native extension requires explicitly changed source/image/pins and a new unused generation, never modification of capture03. Primary handles all GPU/platform operations and independent SWA/identity integration. Workflow -> GPU/operator-gap alignment -> CPU overhead last.
+Combine the native design review with the Frontier/profile design, deduplicate
+shared integration files and confirm the complete file/line scope once with YC.
+Then implement and verify the approved policy, publish its derived image, bind
+new source pins and freeze a fresh generation. Preserve independent G3 criteria
+and historical routing identities. Primary owns GPU/platform operations.
+Workflow -> GPU/operator-gap alignment -> CPU overhead remains the order.
