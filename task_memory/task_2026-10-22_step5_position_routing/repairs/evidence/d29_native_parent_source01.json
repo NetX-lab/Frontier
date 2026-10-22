@@ -1,0 +1,94 @@
+{
+  "ceiling": 1582,
+  "commit": "2c4cc9e050290a33430c2f931e9e2a58d9b5594c",
+  "context": "/data/ycfeng/tmp/d29-native-build-context02",
+  "derivation_manifest_sha256": "561c5a87518cd22b02e8ee47ec396860ad0af84548921874c8f3557e170c32ec",
+  "derived_python_sha256": {
+    "vllm/forward_context.py": "7d9f19ad2797fc8c9fdfdef3f3d739156702d2f6a6d584f4391f7875f7011930",
+    "vllm/model_executor/layers/fused_moe/router/router_factory.py": "c1b24be354a16ad7914725a1e220c4e4113407aa72502e344c5f47295daf8fef",
+    "vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": "9ee0db5084b41c9fdbc56f432c255c136315fb03e1ffb77cda47637e55abc725",
+    "vllm/models/step5/nvidia/model.py": "693e24e3cd9e86708a1363d42101eebcbb47c7ea84185bcc88aaf0ad6c189269"
+  },
+  "dockerfile_sha256": "9478ba83d7a5d1d067bf68cad96a042cb851583e7507a85c22d0a81350ecfb07",
+  "files": {
+    "native-image/vllm/forward_context.py": [
+      15,
+      0
+    ],
+    "native-image/vllm/model_executor/layers/fused_moe/router/router_factory.py": [
+      3,
+      0
+    ],
+    "native-image/vllm/model_executor/layers/fused_moe/router/routing_simulator_router.py": [
+      70,
+      0
+    ],
+    "native-image/vllm/models/step5/nvidia/model.py": [
+      10,
+      1
+    ],
+    "tests/comparison/calibration/pd_proxy.py": [
+      2,
+      2
+    ],
+    "tests/comparison/dp_placement_pp/vllm_replay.py": [
+      22,
+      2
+    ],
+    "tests/integration/step5_environment/test_position_cyclic_graph.py": [
+      289,
+      0
+    ],
+    "tests/integration/step5_native_image/Dockerfile.position_cyclic": [
+      19,
+      0
+    ],
+    "tests/integration/step5_native_image/build_image.py": [
+      69,
+      0
+    ],
+    "tests/integration/step5_pd/r2_canonical.py": [
+      12,
+      4
+    ],
+    "tests/integration/step5_pd/r2_replay.py": [
+      8,
+      4
+    ],
+    "tests/integration/step5_pd/r2_runtime.py": [
+      77,
+      0
+    ],
+    "tests/integration/step5_pd/r2_stage.py": [
+      6,
+      1
+    ],
+    "tests/integration/step5_pd/verify_r2_stage.py": [
+      17,
+      1
+    ],
+    "tests/unit/test_step5_canonical_g3.py": [
+      121,
+      2
+    ],
+    "tests/unit/test_step5_native_image.py": [
+      24,
+      0
+    ],
+    "tests/unit/test_step5_native_pd_r2_observation.py": [
+      66,
+      0
+    ],
+    "tests/unit/test_step5_native_position_cyclic.py": [
+      167,
+      0
+    ],
+    "tests/unit/test_step5_native_reference.py": [
+      2,
+      1
+    ]
+  },
+  "gross": 1017,
+  "paths": 19,
+  "verdict": "PASS"
+}

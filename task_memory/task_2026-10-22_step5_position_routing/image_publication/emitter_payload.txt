@@ -1,0 +1,29 @@
+
+import hashlib
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+image, base, expected_root, manifest_hash = sys.argv[1:]
+root = Path(expected_root).resolve(strict=True)
+spec = importlib.util.find_spec("vllm")
+if spec is None or spec.origin is None:
+    raise RuntimeError("Installed vllm package was not found")
+if Path(spec.origin).resolve(strict=True).parent != root:
+    raise RuntimeError("Installed vllm root differs from the inspected root")
+sources = {}
+for path in sorted(root.rglob("*.py")):
+    path.resolve(strict=True).relative_to(root)
+    key = "vllm/" + path.relative_to(root).as_posix()
+    sources[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+receipt = {
+    "schema_version": "native_installed_sources.v1",
+    "image": image,
+    "base_image": base,
+    "installed_package": str(root),
+    "python_version": sys.version.split()[0],
+    "derivation_manifest_sha256": manifest_hash,
+    "sources": sources,
+}
+print(json.dumps(receipt, sort_keys=True))

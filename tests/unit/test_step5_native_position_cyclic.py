@@ -165,3 +165,81 @@ def test_invalid_top_k_and_logits_shape(native, rows, experts, top_k):
         strategy.route_tokens(torch.zeros(rows, 1), torch.zeros(rows, experts), top_k, positions=positions)
     with pytest.raises(ValueError, match='shape'):
         strategy.route_tokens(torch.zeros(rows, 1), torch.zeros(rows), 1, positions=positions)
+
+
+def test_t2_capture_accepts_actual_moe_keyword_invocation(native):
+    from tests.integration.step5_environment.test_position_cyclic_graph import native_modules
+    tree = ast.parse(Path(__import__('inspect').getsourcefile(native_modules)).read_text())
+    wrapper = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == 'route')
+    captured, errors, calls = [], [], []
+    result = torch.ones(2, 8), torch.zeros(2, 8, dtype=torch.int32)
+    failure = []
+    @contextmanager
+    def diagnostic_scope(errors, label):
+        try: yield
+        except Exception as error: errors.append(error)
+    def original(hidden_states, router_logits, topk_indices_dtype=None, *, input_ids=None):
+        calls.append((hidden_states, router_logits, input_ids))
+        if failure: raise failure[0]
+        return result
+    namespace = dict(original=original, captured=captured, observer=NS(errors=errors), diagnostic_scope=diagnostic_scope)
+    execute([wrapper], namespace)
+    runner = nodes(native.root, 'model_executor/layers/fused_moe/runner/moe_runner.py', ['MoERunner'])[0]
+    method = next(node for node in runner.body if getattr(node, 'name', None) == '_apply_quant_method')
+    namespace.update(torch=torch, SharedExpertsOrder=NS(NO_OVERLAP=None), UnfinalizedMoEOutput=Any)
+    execute([method], namespace)
+    inputs, logits = torch.zeros(2, 1), torch.zeros(2, 352)
+    value = namespace['_apply_quant_method'](NS(_maybe_apply_shared_experts=lambda *a: None,
+        routed_experts=NS(quant_method=NS(is_monolithic=False), forward_modular=lambda **kw: kw['x']),
+        _quant_method=NS(topk_indices_dtype=torch.int32), _shared_experts=None,
+        router=NS(select_experts=namespace['route'])), inputs, logits, None)
+    assert value[1] is inputs and len(calls) == len(captured) == 1 and not errors
+    assert torch.equal(captured[0][2], logits)
+    assert namespace['route'](inputs, logits) is result and len(calls) == 2
+    failure.append(LookupError('native routing failure'))
+    with pytest.raises(LookupError) as caught: namespace['route'](hidden_states=inputs, router_logits=logits)
+    assert caught.value is failure[0] and len(calls) == 3 and len(captured) == 2
+    failure.clear(); namespace['captured'] = NS(append=lambda value: (_ for _ in ()).throw(OSError('capture failure')))
+    assert namespace['route'](hidden_states=inputs, router_logits=logits) is result
+    assert len(calls) == 4 and len(errors) == 1
+
+
+def test_t2_replays_dummy_before_assertion_and_baseline(native):
+    path = Path(__file__).parents[1]/'integration/step5_environment/test_position_cyclic_graph.py'
+    tree = ast.parse(path.read_text())
+    loop = next(node for node in ast.walk(tree) if isinstance(node, ast.For)
+                and isinstance(node.target, ast.Name) and node.target.id == 'mode')
+    dispatch = next(index for index, node in enumerate(loop.body) if isinstance(node, ast.If))
+    remainder = loop.body[dispatch+1:]
+    counts = dict(outer=1, model=1, router=1, callback=1)
+    wrapper = nodes(native.root, 'compilation/breakable_cudagraph.py', ['BreakableCUDAGraphWrapper'])[0]
+    methods = [node for node in wrapper.body if getattr(node, 'name', None) in ('__call__', '_replay')]
+    context = NS(batch_descriptor=2, cudagraph_runtime_mode='PIECEWISE')
+    namespace = execute(methods, dict(Any=Any, Hashable=Any, CUDAGraphMode=NS(NONE='NONE'),
+        is_forward_context_available=lambda: True, get_forward_context=lambda: context,
+        _BreakableEntry=lambda **kw: NS(capture=None, **kw),
+        get_offloader=lambda: NS(sync_prev_onload=lambda: None)))
+    for mode in ('PIECEWISE', 'FULL'):
+        ids, weights = torch.ones(2, 8, dtype=torch.int32), torch.ones(2, 8)
+        calls = []
+        def writes():
+            calls.append(mode); ids.fill_(-1); weights.zero_()
+            if mode == 'PIECEWISE': counts['callback'] += 1
+        if mode == 'PIECEWISE':
+            def capture(entry, args, kwargs):
+                entry.capture, entry.output = NS(replay=writes), weights
+                return weights
+            state = NS(runtime_mode='PIECEWISE', key_fn=None, entries={}, is_debugging_mode=False,
+                       _capture=capture, _replay=lambda *args: namespace['_replay'](state, *args))
+            replay = lambda: namespace['__call__'](state)
+            replay()  # Actual pinned dispatch enters capture, not _replay.
+        else:
+            replay = writes  # FULL graph capture requires CUDA; only post-capture sequencing is tested.
+        assert not calls and (ids == 1).all() and (weights == 1).all()
+        # Actual post-capture statements, stopping before the real-case loop.
+        body = remainder[:next(i for i, node in enumerate(remainder) if isinstance(node, ast.For))]
+        execution = dict(torch=NS(cuda=NS(synchronize=lambda *a: None), equal=torch.equal,
+            full_like=torch.full_like, zeros_like=torch.zeros_like), device=None, replay=replay,
+            ids=ids, weights=weights, context=NS(routing_positions=None), counts=counts, mode=mode)
+        execute(body, execution)
+        assert calls == [mode] and execution['baseline'] == counts

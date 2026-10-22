@@ -1,0 +1,8 @@
+import importlib.util,sys,tarfile
+from pathlib import Path
+root=Path(importlib.util.find_spec("vllm").origin).resolve().parent
+assert str(root)==sys.argv[1]
+with tarfile.open(fileobj=sys.stdout.buffer,mode="w|gz",dereference=True) as archive:
+ for path in sorted(root.rglob("*.py")):
+  path.resolve(strict=True).relative_to(root)
+  archive.add(path,arcname="vllm/"+path.relative_to(root).as_posix(),recursive=False)

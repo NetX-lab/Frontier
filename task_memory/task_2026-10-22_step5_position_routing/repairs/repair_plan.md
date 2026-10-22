@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Separate native image/source publication from full Frontier integration; retain qualification gates. |
 | 2026-10-23 | Allocate the approved complete scope to three disjoint streams. |
 
 Decision: **D29-SCOPE-107-10000**. Existing D29 correction records/requirements
@@ -40,8 +41,15 @@ patch. Root owns image build/publication and all GPU/platform operations.
 Common approval/source baseline -> {native context/router; CORE count descriptor,
 source_frame_tensors and source receipt verifier; PRICING selected operator
 bindings and finite-plan schema} -> respective nonshared consumers -> sole-writer
-shared integrations -> combined fixture/main/reporting -> parent regressions,
-independent review and image/package -> resource/run decision -> fresh evidence.
+shared integrations -> combined fixture/main/reporting -> parent regressions and
+independent review -> package readiness -> resource/run decision -> fresh evidence.
+
+Parallel source branch: native four-file source/image-context checks and review
+-> derived image publication/installed-source receipts -> profiling/serving source
+binding. A local image candidate may be built while source review runs; publish
+after that review and affected checks pass. The image does not depend on complete
+Frontier fixture/regression work; package admission still requires all applicable
+integration and evidence checks. This corrects S1 in the native-delivery checkpoint.
 
 Native publishes set_routing_positions and the actual factory contract first.
 CORE/SOURCE publishes immutable lane/source descriptors, source_frame_tensors,
