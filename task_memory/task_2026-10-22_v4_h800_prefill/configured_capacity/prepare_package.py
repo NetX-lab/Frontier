@@ -43,13 +43,15 @@ def main():
     launch.mkdir()
     copied = {}
     names = ("launch/glm_producer_jobs.py", "launch/glm_producer_worker.py",
-             "launch/launch_glm_producers.sh", "native_dummy_bootstrap.py", "overlay_model.py",
-             "official_model.py", "verify_bootstrap.py", "profile_decode.py")
+              "launch/launch_glm_producers.sh", "native_dummy_bootstrap.py", "overlay_model.py",
+              "official_model.py", "verify_bootstrap.py")
     for name in names:
         shutil.copyfile(BASE / name, PACKAGE / name)
         copied[name] = {"base_sha256": sha(BASE / name), "copied_sha256": sha(PACKAGE / name)}
     shutil.copytree(BASE / "launch/wheelhouse", launch / "wheelhouse")
-    assert 'os.chdir(config["source_snapshot"])' in (PACKAGE / "profile_decode.py").read_text()
+    for source, target in (("tests/comparison/calibration/profile_dsv4_prefill.py", "profile_dsv4_prefill.py"),
+                           ("frontier/profiling/moe/balanced_routing.py", "balanced_routing.py")):
+        (PACKAGE / target).write_bytes(subprocess.check_output(["git", "show", REVISION + ":" + source], cwd=ROOT))
     snapshot = PACKAGE / "source" / REVISION
     snapshot.mkdir(parents=True)
     archive = subprocess.check_output(["git", "archive", REVISION, "frontier", "data/config"], cwd=ROOT)
@@ -84,11 +86,22 @@ def main():
     overlay["files"]["models/deepseek_v4/nvidia/model.py"]["source"] = str(PACKAGE / "overlay_model.py")
     write(PACKAGE / "overlay.json", overlay)
     old = json.loads((BASE / "config.json").read_text())
-    config = {"script": str(PACKAGE / "profile_decode.py"), "overlay_manifest": str(PACKAGE / "overlay.json"),
+    config = {"script": str(PACKAGE / "profile_dsv4_prefill.py"), "overlay_manifest": str(PACKAGE / "overlay.json"),
               "native_package": overlay["installed_package"], "source_snapshot": str(snapshot), "profile_args": run,
               "worker_wheel_site": "/tmp/glm_producers/site", "expected_source_hashes": old["expected_source_hashes"],
+              "moe_gating_routing_runtime_path": "balanced_topk",
               "tool_hashes": {str(PACKAGE / name): sha(PACKAGE / name) for name in
-                             ("profile_decode.py", "overlay.json", "overlay_model.py", "native_dummy_bootstrap.py", "plan.json")}}
+                              ("profile_dsv4_prefill.py", "balanced_routing.py", "overlay.json", "overlay_model.py",
+                               "native_dummy_bootstrap.py", "plan.json")}}
+    from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256
+    from frontier.profiling.attention.dsv4_attention_runner import ROUTING_NATIVE_MODULES
+
+    assert sha(PACKAGE / "balanced_routing.py") == BALANCED_ROUTING_SHA256
+    native_root = Path("/data/ycfeng/tmp/opencode/vllm-v0.28.0")
+    for module in ROUTING_NATIVE_MODULES:
+        name = module.replace(".", "/") + ".py"
+        content = subprocess.check_output(["git", "show", NATIVE + ":" + name], cwd=native_root)
+        config["expected_source_hashes"][name] = hashlib.sha256(content).hexdigest()
     for directory in (snapshot, model):
         config["tool_hashes"].update({str(path): sha(path) for path in directory.rglob("*") if path.is_file()})
     write(PACKAGE / "config.json", config)

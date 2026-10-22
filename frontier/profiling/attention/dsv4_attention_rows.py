@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
+from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from frontier.config.precision_type import PrecisionType
@@ -50,6 +51,29 @@ from frontier.profiling.attention.dsv4_attention_plan import (
 from frontier.profiling.common.runtime_identity import canonical_json
 
 DSV4_ROW_SCHEMA_VERSION = "dsv4_attention.v1"
+BALANCED_ROUTING_SHA256 = "6562ec1c7e1ee7a8021d71a1a698c36f126307f00681320b07397b53c4c3f4ea"
+
+
+def routing_columns(identity):
+    from frontier.profiling.attention.dsv4_attention_runner import ROUTING_NATIVE_MODULES
+
+    if (identity.get("environment") != "balanced_topk" or identity.get("runtime_path") != "balanced_topk"
+            or identity.get("strategy") != "balanced_routing.BalancedTopKRouting"
+            or identity.get("sha256") != BALANCED_ROUTING_SHA256
+            or not identity.get("origin", "").endswith("/balanced_routing.py")
+            or not identity.get("routers") or set(identity["routers"].values()) != {
+                "vllm.model_executor.layers.fused_moe.router.routing_simulator_router.RoutingSimulatorRouter"}
+            or set(identity.get("runners", {})) != set(identity["routers"])
+            or set(identity.get("native_sources", {})) != {name.replace(".", "/") + ".py" for name in ROUTING_NATIVE_MODULES}):
+        raise ValueError("Missing or mismatched constructed balanced routing identity")
+    for name, source in identity["native_sources"].items():
+        origin, digest = source.get("origin", ""), source.get("sha256", "")
+        if (not Path(origin).is_absolute() or not origin.endswith("/" + name)
+                or len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest)):
+            raise ValueError(f"Missing or mismatched balanced native source identity: {name}")
+    return dict(routing_runtime_path=identity["runtime_path"], routing_strategy_sha256=identity["sha256"],
+        moe_routing=canonical_json(identity))
+
 
 _ENGINE_COLUMNS = (
     "attention_backend",
@@ -153,6 +177,7 @@ def _model_columns(plan: Dsv4ProfilePlan, engine: Mapping[str, Any]) -> dict[str
         "max_model_len": plan.limits.max_context_len,
         "max_num_batched_tokens": engine["chunk_budget"],
         "max_num_seqs": plan.limits.max_num_seqs,
+        **(routing_columns(engine["moe_routing"]) if engine.get("moe_routing") is not None else {}),
     }
 
 
@@ -188,6 +213,9 @@ def build_dsv4_rows(
     """Group raw records into rows, keyed by measurement type."""
 
     engines, steps, calls = index_records(records)
+    identities = {canonical_json(engine.get("moe_routing")) for engine in engines.values()}
+    if len(identities) > 1:
+        raise ValueError("Raw engines disagree on constructed routing identity")
     groups: dict[tuple, _RowAccumulator] = {}
     for key, step in sorted(steps.items()):
         measurement, engine_index, step_index = key

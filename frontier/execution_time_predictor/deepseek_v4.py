@@ -634,6 +634,8 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
         provenance_columns = {"source_revision", "runtime_fingerprint", "model_config_sha256",
                               "input_file_sha256"} if phase == "decode" else set()
         layout_columns |= provenance_columns
+        if getattr(replica, "moe_gating_routing_runtime_path", None) == "balanced_topk":
+            layout_columns |= {"routing_runtime_path", "routing_strategy_sha256", "moe_routing"}
         if attention_layout is None or set(attention_layout) != layout_columns:
             raise DeepSeekV4CoverageError("V4 attention requires a complete isolated layout contract")
         if phase == "decode":
@@ -645,6 +647,18 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
                 raise DeepSeekV4CoverageError("V4 accepted input provenance does not match the measured table")
             rows = _select_rows(rows, {name: attention_layout[name] for name in provenance_columns
                                       if name != "input_file_sha256"}, "accepted input provenance")
+        if getattr(replica, "moe_gating_routing_runtime_path", None) == "balanced_topk":
+            from frontier.profiling.attention.dsv4_attention_rows import BALANCED_ROUTING_SHA256, routing_columns
+
+            for name in ("routing_runtime_path", "routing_strategy_sha256", "moe_routing"):
+                if name not in rows or rows[name].isna().any() or len(rows[name].unique()) != 1:
+                    raise DeepSeekV4CoverageError(f"V4 balanced isolated attention missing/ambiguous {name}")
+            rows = _select_rows(rows, {"routing_runtime_path": "balanced_topk",
+                "routing_strategy_sha256": BALANCED_ROUTING_SHA256}, "balanced isolated attention")
+            try:
+                routing_columns(json.loads(rows.moe_routing.iloc[0]))
+            except (ValueError, TypeError, AttributeError, KeyError) as exc:
+                raise DeepSeekV4CoverageError("V4 balanced isolated attention routing identity mismatch") from exc
         rows = _select_rows(rows, {name: value for name, value in attention_layout.items()
                                   if name not in provenance_columns}, "isolated attention layout")
         source = build_deepseek_v4_attention_workload(model, replica, batch, layer_id,
@@ -809,6 +823,7 @@ def read_isolated_scope(predictor, batch, layer_id, scope, *, lane_workload=None
                               "global_layer_ids", "num_layers_sampled", "num_steps_sampled",
                               "prefill_seq_lens", "prefill_kv_cache_sizes", "decode_kv_cache_sizes",
                               "weight_source",
+                              "routing_runtime_path", "routing_strategy_sha256", "moe_routing",
                          )) and not pd.isna(value)},
     }
 
