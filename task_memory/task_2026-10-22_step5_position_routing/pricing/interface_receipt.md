@@ -6,6 +6,7 @@
 | 2026-10-23 | Publish first selected-operator and immutable plan interfaces. |
 | 2026-10-23 | Publish H04, selected native schema and reporting seams; record authorized imports. |
 | 2026-10-23 | Publish immutable-list P2 repair and completed authentic dependency import. |
+| 2026-10-23 | Correct the native prepare triple-return seam using published source execution. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -89,6 +90,8 @@ CPU contracts, not measured GPU parameters/native-runtime qualification.
 
 `NativeRoutedExperts.prepare_source(hidden_states)` calls the original
 `naive_dp_ep._quantize_and_setup_dispatch` and returns `(activation, scales)`.
+The native function actually returns `(activation, dispatch_scale_list, scale)`;
+this seam returns only activation and scale, not the intermediate dispatch list.
 `prepared_context(activation, scales, *, topk_ids=None, expert_map=None, source_tensors=None)` returns actual per-shape selected class,
 quant_dtype, defer_input_quant, oracle backend and tensor shape/stride/dtype/size.
 It executes the native hybrid selector, whose condition is E8M0 **OR** valid
@@ -180,3 +183,10 @@ Validation: eleven affected suites335 PASS/71 SKIP (torch/native-runtime unavail
 in py310); isolated collective-sim7 PASS and actual HTSIM completion; native
 original modular/finalizer/hybrid selector/GroupCoordinator methods executed with
 CPU tensors under py312 AST isolation. No GPU leaf durations or qualification.
+
+Latest validation:350 PASS/72 SKIP across eleven owned affected suites in24.39s.
+Published source at `/data/ycfeng/tmp/d29_published_sources01/source/vllm` was
+executed under py312 CPU tensors: original prepare triple-return/deferred branch,
+modular inclusive invocation/finalization, E8M0 OR shape and coordinator ordering
+all PASS. AST isolation avoids the unrelated missing py312 fasteners dependency;
+this is method behavior evidence, not complete installed runtime qualification.

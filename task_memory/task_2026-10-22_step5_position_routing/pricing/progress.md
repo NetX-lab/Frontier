@@ -7,6 +7,7 @@
 | 2026-10-23 | Import authorized CORE/native dependencies and close physical consumer interfaces. |
 | 2026-10-23 | Verify H04/native schema/reporting, selected finite grid; receive published image authority. |
 | 2026-10-23 | Repair foundation P2 after RED→GREEN; import authentic dependencies. |
+| 2026-10-23 | Correct native prepare tuple seam; validate published original methods. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -219,3 +220,16 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. CORE exact estimator/main仍是真实依赖。
 2. Published image/source不等于GPU qualification。
 3. Native coefficients/counts不得由CPU fixture或算法stage产生。
+
+## Native prepare seam correction
+
+- observed: published naive prepare returns activation, dispatch scale list,
+  actual scale. Public NativeRoutedExperts.prepare_source promises two values.
+- completed: explicitly unpack native triple and return activation/scale; no
+  copied quantization or duplicate prepare algorithm. Original deferred branch
+  returns the same activation and no scale, directly verified with CPU tensors.
+- verification:350 PASS/72 SKIP in24.39s across eleven owned suites; direct
+  published native methods execution under asyncopd-py312 PASS. Logs:
+  `/data/ycfeng/tmp/d29_all_owned_final.log`,
+  `/data/ycfeng/tmp/d29_published_native_methods.log`.
+- in-progress: final producer qualification/soft-evidence checks and archive.

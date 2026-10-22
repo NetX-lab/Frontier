@@ -99,8 +99,9 @@ class NativeRoutedExperts:
     def prepare_source(self, hidden_states):
         """Actual naive source quantization seam; caller times only a reached scope."""
         from vllm.model_executor.layers.fused_moe.prepare_finalize.naive_dp_ep import _quantize_and_setup_dispatch
-        return _quantize_and_setup_dispatch(hidden_states,self.kernel.fused_experts.quant_config,
+        activation, _, scale = _quantize_and_setup_dispatch(hidden_states,self.kernel.fused_experts.quant_config,
             self.kernel.fused_experts.expects_unquantized_inputs)
+        return activation, scale
 
     def prepared_context(self, hidden_states, scales, *, topk_ids=None, expert_map=None, source_tensors=None):
         """Inspect the native per-shape selector outside the measured expert scope."""

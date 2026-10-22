@@ -100,6 +100,16 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
     source = Path(os.environ["FRONTIER_STEP5_NATIVE_SOURCE_ROOT"])/"model_executor/layers/fused_moe" if os.environ.get("FRONTIER_STEP5_NATIVE_SOURCE_ROOT") else Path("unavailable_native_source")
     if not source.is_dir():
         pytest.skip("Retained native Python source is unavailable")
+    import sys
+    from types import ModuleType
+    prepare=next(n for n in ast.parse((source/"prepare_finalize/naive_dp_ep.py").read_text()).body
+        if isinstance(n,ast.FunctionDef) and n.name == "_quantize_and_setup_dispatch")
+    prepare.returns=None
+    for arg in (*prepare.args.args,*prepare.args.kwonlyargs): arg.annotation=None
+    namespace={"moe_kernel_quantize_input":lambda *a,**kw:(a[0],torch.ones(a[0].shape[0],1))}
+    exec(compile(ast.Module(body=[prepare],type_ignores=[]),str(source/"prepare_finalize/naive_dp_ep.py"),"exec"),namespace)
+    module=ModuleType("vllm.model_executor.layers.fused_moe.prepare_finalize.naive_dp_ep")
+    module._quantize_and_setup_dispatch=namespace["_quantize_and_setup_dispatch"]
     def native_method(path, cls, method, namespace):
         module = ast.parse((source/path).read_text())
         definition = next(n for n in module.body if isinstance(n,ast.ClassDef) and n.name == cls)
@@ -148,6 +158,15 @@ def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded(
     native=NativeRoutedExperts("DEEPGEMM","cpu_fixture",None,kernel,
         torch.empty(22,8,4),torch.empty(22,4,4),"swiglustep",352)
     activation=torch.zeros(17,4);scales=torch.ones(17,1);ids=torch.full((17,8),-1,dtype=torch.int32)
+    from unittest.mock import patch
+    impl.fused_experts.quant_config=SimpleNamespace(quant_dtype=None,use_nvfp4_w4a4=False,a1_scale=None,
+        per_act_token_quant=False,block_shape=None,mx_alignment=1)
+    with patch.dict(sys.modules,{module.__name__:module}):
+        prepared,scale=native.prepare_source(activation)
+        assert prepared is activation and scale.shape == (17,1)
+        impl.fused_experts.expects_unquantized_inputs=True
+        assert native.prepare_source(activation) == (activation,None)
+        impl.fused_experts.expects_unquantized_inputs=False
     output=native.apply_prepared(activation,scales,torch.zeros(17,8),ids,None,in_dtype=torch.bfloat16)
     assert output.shape == (17,4) and torch.all(output == 2.)
     assert calls == [("inclusive",17),("finalize","weight_and_reduce")]
