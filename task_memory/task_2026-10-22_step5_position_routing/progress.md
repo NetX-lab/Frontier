@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-23 | Parent verifies finite repair27b3499/sub3dac53c:456 PASS/89 SKIP,12 HTSIM,9 cold; independent re-review pending. |
 | 2026-10-23 | Accept/merge T2 limits892b6a1; receive full PRICING8e61c2d, start split reviews and parent checks, authorize CORE dependency integration. |
 | 2026-10-23 | YC approves D29-SCOPE-107-10000; allocate native19/1582, core-source44/4404 and pricing44/3956. |
 | 2026-10-23 | All design reviews closed; parent scope107/9942 and sole-writer allocation complete; model/scope decision pending. |
@@ -25,8 +26,9 @@
   files unchanged. T2 parent177 PASS/15 SKIP, real image CPU7168/8192/128 for both
   configs, independent No findings and actual full-file rebinding6/6 PASS.
 - in-progress: CORE/SOURCE final consumers/fixture and F1 repair; PRICING full
-  delivery8e61c2d (43 changed paths/2626 gross including312 submodule lines) has
-  entered parent verification and two disjoint phase reviews. CORE may integrate
+  delivery27b3499 (43 changed paths/2944 gross including333 submodule lines) has
+  passed parent affected/HTSIM/cold checks; independent finite re-review and the
+  separate compute/accounting review remain pending. CORE may integrate
   delivered interfaces for development; final acceptance is not implied.
 - pending: full interface integration, remaining focused checks/reviews, parent
   unit failure/error-set equality, strict77, full offline/online request, image
@@ -64,6 +66,17 @@ F2 nested tuple immutability is closed. Root resumes the PRICING owner with thes
 four repairs within remaining1330 gross. Full evidence/review/commands are retained
 under verify-step5-pricing-01/task_memory/task_2026-10-22_step5_position_routing/
 pricing_parent/. Compute/native pricing review and CORE integration continue.
+
+Latest finite repair: owner37ead7f/181a534, archive27b3499, submodule3dac53c.
+Root frozen verify-step5-pricing-02 independently passes456/89 affected,12
+submodule and9 cold (cold is a repeated subset). Exact parent/submodule diffs
+and43-path2944/3956 budget independently match. Tests execute the formerly
+skipped HTSIM exporter; the three bootstrap failures are gone. Evidence and exact
+commands are retained in that worktree's position-routing/pricing_finite_parent/
+directory. Reviewer ses_e9abd8364ffee5sQKdpiQh3yH4 rechecks F3–F6. CORE is notified
+to carry actual per-rank execution_policy through plan/context/cache identities;
+development import of27b3499 is authorized, with qualification boundaries intact.
+Full PRICING remains unmerged pending reviews and integrated acceptance.
 
 ## Active implementation dispatch — 2026-10-23
 
