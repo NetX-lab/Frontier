@@ -630,6 +630,7 @@ class ProfilingDataFrameLoaders:
         expert_parallel_size: Optional[int] = None,
         layer_contract: Optional[ResolvedLayerContract] = None,
         operator_name: Optional[str] = None,
+        *, operator_facts=None,
     ) -> pd.DataFrame:
         """
         Load MoE dataframe with cluster-specific configuration filtering.
@@ -726,6 +727,14 @@ class ProfilingDataFrameLoaders:
                 ),
             )
 
+        if operator_facts is not None:
+            from frontier.moe_routing_runtime import filter_moe_operator_rows
+            if layer_contract != operator_facts["layer_contract"] or operator_name != operator_facts["spec"].name:
+                raise ValueError("MoE loader arguments conflict with selected operator_facts")
+            return filter_moe_operator_rows(df, operator_facts=operator_facts,
+                requested_runtime_path=operator_facts["native_context"]["routing_runtime_path"], source_name=file_path)
+        if getattr(replica_config, "moe_routing_distribution_type", "balanced") == "position_cyclic":
+            raise ValueError("Position MoE loader requires selected operator_facts before legacy filtering")
         model_config = replica_config.model_config
         training_mode = "load_imbalance (load_imbalance=True)" if load_imbalance else "standard (load_imbalance=False)"
         if tensor_parallel_size is None:

@@ -4,9 +4,14 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record delegated implementation scope and approval. |
+| 2026-10-23 | Carry root-authorized peer imports and published source inputs into the continuation. |
 
 TaskID: D29-CORE-SOURCE-IMPLEMENTATION.
 
 [Original Request] Implement the complete owned CORE/SOURCE chain, starting with count/source descriptors, source_frame_tensors and provenance verification. Authority: [central requirements](../requirements.md), decision D29-SCOPE-107-10000. Own exactly the 44 retained core/source paths in ../scope.json, excluding H04 and H17, with gross code/test/config diff <=4404. All contributors' responsibilities on owned shared paths remain required. Preserve legacy fixtures/defaults, D26/D27/D30 and the original actual-main 2400s limit. No platform/GPU/Docker/SSH/cloud operations, peer edits/imports, extra agents or scope expansion.
 
 Root owns integration, strict77/full-unit/review/image/native runs and the <=12-line module-size exception update. PRICING supplies the sole selected operator registry, native numerical layout/prepare/inclusive invocation/plan APIs; NATIVE supplies the actual factory and set_routing_positions. Missing peer prerequisites fail explicitly, never trigger duplicate implementations or fabricated source/timing evidence.
+
+[Original Request] 2026-10-23 continuation: root authorizes development integration of PRICING7b86614 and NATIVE2c4cc9e, preserving each peer history. This is interface integration, not acceptance. Continue selected bindings/trainers/preflight/exact pair and wrapper/main plumbing inside the same44 paths/4404 gross quota. Native N1-N4 repairs belong to the native owner; require its corrected tip before final qualification. The root's local unpublished image is not a final installed-source receipt and must not be baked into production evidence. Peer writes, extra agents and platform operations remain prohibited.
+
+[Original Request] 2026-10-23 source delivery: commit owned WIP, then root authorizes import of native6827507 or main67d5b5e. Native N1-N4 independently reviewed with no new findings; parent485PASS. Published Linux/amd64 image is hub.stepfun-inc.com/vllm-openai/vllm-openai@sha256:f037d9589cf30fe0fa30dfde9c64c9f21060adffc6c63726469f4db67e2451ee, not the index10cdd7af identity. Authentic installed receipt SHA b99bc33b7e17f1256e970a93be5698544a2b52c11ab0683029b2c75e18f87a09 and2907-file source export are supplied by root. Source artifacts are committed under ../image_publication/ at67d5b5e; source export is /data/ycfeng/tmp/d29_published_sources01/source. Use these actual inputs for source checks/plans. This removes root's image/receipt prerequisite only; GPU/runtime/NONE/PW/FULL/G3 remain unverified and operations remain unauthorized.

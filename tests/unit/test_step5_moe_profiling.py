@@ -462,6 +462,20 @@ def test_real_device_timer_annotations_parser_replay_and_event_preservation(tmp_
         store.clear_stats()
 
 
+def test_actual_source_context_is_explicit_and_does_not_mutate_wrapper_context():
+    pytest.importorskip("torch")
+    from frontier.profiling.moe.moe_wrapper import MoEWrapper
+    calls = []
+    wrapper = object.__new__(MoEWrapper)
+    wrapper.gating_runtime_context = "prefill_hot"
+    wrapper.gating = lambda hidden: calls.append("gate")
+    wrapper._run_prefill_hot_gating_prefix = lambda hidden: calls.append("prefix")
+    wrapper._run_gating_with_runtime_context(None, gating_runtime_context="standalone_legacy")
+    wrapper._run_gating_with_runtime_context(None, gating_runtime_context="prefill_hot")
+    assert calls == ["gate", "prefix", "gate"]
+    assert wrapper.gating_runtime_context == "prefill_hot"
+
+
 def test_masked_expert_sentinel_is_filtered_before_local_map_and_bincount():
     torch = pytest.importorskip("torch")
     from frontier.profiling.moe.load_distribution import compute_expert_token_counts

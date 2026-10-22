@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Read approved designs, sole-writer matrix and baseline source. |
 | 2026-10-23 | Record verified runtime/source consumers, timer replay and concrete peer boundary. |
+| 2026-10-23 | Resume with root-authorized peer history integration and selected bound-fact consumers. |
 
 - completed: baseline clean, branch feat/step5-position-core at 1aee0af; scope.json grouped by exact path yields 44 paths/4404 gross lines.
 - completed: first count/source/tensor/provenance interfaces, 53 PASS/1 SKIP in frontier-py310; actual source tensors/counts in asyncopd-py312 4 PASS/1 deselected. AST and whitespace PASS. Current 7 code/test paths, 713 gross/4404.
@@ -18,6 +19,11 @@
 - blocked: selected trainers/preflight/schema/physical price consumers and new fixture/main. PRICING `7b86614` provides the selected registry context contract, but import/merge is root-only and not authorized. Its uncommitted `NativeRoutedExperts.prepare_source/prepared_context/apply_prepared` does not yet provide the complete schema/range/numerical plan fixture receipt. No replacement registry/schema/plan is created.
 - pending root-owned: import/coordinate peers, selected integration qualification, full-unit/strict77/review, actual image/source receipt and runtime/E2E runs. Native actual setter/factory candidate is readable; published derived image/full receipt remain unavailable.
 
+- completed continuation: clean owned history then `git merge --no-ff --no-edit 7b86614` ->3f04414 and `git merge --no-ff --no-edit 2c4cc9e` ->6011b26 (actual git log re-read; prior transient transcript hashes are not authoritative). Peer commits/history retained; no peer source acceptance claimed.
+- completed interface slice: shared `filter_moe_operator_rows` consumes pass-local selected records, validates physical pairs and typed frames before legacy helpers. Both preflights/loader/trainers accept operator_facts; actual shared and independent fit/cache reload validate selected context identity. Context-sensitive runtime registry dispatch rejects all missing physical exact keys, including live0, before parent prediction. Three executors forward cell kwargs; per-row native facts match shared receipt without overwriting producer imports.111 PASS/1 SKIP +19 PASS source/timer; test_report_2026-10-23_selected_consumers.md.37/44 changed paths,+2056/-133=2189/4404,2215 remain.
+- exact unresolved seam: committed NativeRoutedExperts output and canonical CSV field encoding its per-group actual quant_dtype/defer_input_quant/native frame/schema context are absent.7b defines selector input mapping, not its row serialization. CORE will not infer this from weight precision, invent a column, or consume uncommitted peer API. Native numerical schema/capacity/ranges and finite-model fixture payload remain required. Native N1-N4 repaired tip remains root-coordinated qualification dependency.
+- latest delivery: PRICING409093c committed prepare/context/inclusive and finite importer, readable but not import-authorized; canonical CSV/schema/association contributor facts still required. Root now authorizes67d5b5e source/native import after owned commit and supplies actual published2907-source image receipts/export. Source/image blocker is removed; GPU qualification is not.
+
 ## 1. 规划完成情况
 
 **汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 2｜TODO 1
@@ -26,39 +32,40 @@
 | --- | --- | --- |
 | count/source/tensor/verifier interfaces | PASS | test_report_2026-10-23_interfaces.md; interface_receipt.md |
 | scheduler/runtime/cache | PASS | actual bound DP sources and constructor/cache consumer tests |
-| selected trainer/profiling consumers | BLOCKED | selected registry import authorization and completed native/schema facts required |
+| selected trainer/profiling consumers | TODO | selected bound-fact slice111PASS; production serialization/schema enumeration still pending |
 | source package/producers | TODO | independent launcher/gate/norm/timer tested; position MoE main and full new package remain peer-dependent |
 | actual-main fixture/runner | BLOCKED | completed selected native/schema/finite-plan consumers required |
 
 ## 2. 偏离检测
 
-**结论：** 未偏移，正常推进。
-**检测窗口：** c995fdc 至今｜**当前前沿：** scoped commits/peer integration coordination
+**结论：** 已偏离：命中D2；最终consumer证据通过，已应用先记录cause/hypothesis的纠正。
+**检测窗口：** root continuation after02f061d 至今｜**当前前沿：** commit bound consumer slice, actual published-source integration, PRICING schema import
 
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
-| D1 工具打磨 | CLEAR | actual scheduler/source/timer consumers settle required scoped interfaces |
-| D2 细节反复重试 | CLEAR | fixture mixed-root and JSON canonicalization failures each corrected once; final tests pass |
+| D1 工具打磨 | CLEAR | real preflight/loader/shared+independent fit/cache tests settle consumer slice and stop at111PASS |
+| D2 细节反复重试 | HIT | identity test reruns05/06 changed fixtures before recording cause hypotheses; final real verifier activation fixed the missing-facts check |
 | D3 支线问题修补 | CLEAR | no unrelated fixes |
 | D4 可并行任务停滞 | CLEAR | runtime and independent source work both advanced; user prohibits extra agents |
-| D5 超范围镀金 | CLEAR | 29 owned paths,1565/4404 gross; no new unallocated module |
+| D5 超范围镀金 | CLEAR | 37 owned paths,2189/4404 gross; no new unallocated module |
 | D6 分析空转 | CLEAR | real source/timer/launcher changes and tests delivered; remaining dependency named precisely |
-| D7 路线违背 | CLEAR | no peer import/platform/source fallback |
+| D7 路线违背 | CLEAR | only authorized peer history imports; no platform/source fallback |
 
-**文档检查：** S1–S6 均未发现明显缺陷；implementation progress is updated, not treated as a scope change.
-**归因：** 无。
+**文档检查：** S5 original dependencies at progress19-20 and interface receipt1/4 lagged root's authorization/source delivery; latest requirements/plan/receipt entries now supersede historical blockers. Other S1-S4/S6 clear.
+**归因：** D2 执行偏离；不是设计缺陷。
 
 ## 3. 纠正建议
 
-**分支：** A：spec/plan合理，无需改动。
-**需停止的偏离行为：** 无。
+**分支：** B：更新已过期依赖状态后继续。
+**文档更新（先执行）：** requirements/plan/progress/interface_receipt：记录真实 merge hashes、67d5b5e import与actual published-source delivery（可直接执行，已执行）。
+**需停止的偏离行为：** D2：不再根据想象修补测试输入；先记录真实 cause/hypothesis，再运行一个决定性检查。
 **接下去的路线：**
-1. Root supplies registry import authorization and completed PRICING numerical/schema/finite-plan payload → 完成标志：one actual selected contract available, without alternate registry/fallback.
+1. Commit verified consumer slice, import root-authorized67d5b5e, check actual published export/receipt → 完成标志：real2907 hashes/config/native source inputs validate without local relabeling.
 2. Resume selected trainers/preflight/wrapper/main → 完成标志：all selected source/gathered/empty physical exact pairs, both actual pre-loader paths and schema/cache checks pass.
 3. Finish new fixture/main → 完成标志：retained6144/1024,D26/D27/D30,offline+online actual-main checks within original2400s limit; root separately qualifies native/image/E2E.
 
 ## 4. 最值得关注的 3 点
 
-1. First count/source/tensor/verifier interfaces are ready; runtime/source consumers preserve the same owners.
-2. Shared trainer/schema/fixture work is blocked by real peer API/import prerequisites, not quota exhaustion;2839 gross lines remain.
-3. CPU plumbing is verified; published-image/full receipt, native/GPU/runtime/E2E qualification remain UNVERIFIED and root-owned.
+1. Actual selected preflight/shared+independent fit/cache/exact pairs pass; canonical production schema enumeration remains incomplete.
+2. PRICING409093c import/CSV/schema/association facts remain the exact next dependency;2215 gross lines remain and metadata test85-line allowance is full.
+3. Root supplied actual published-source evidence; native GPU/runtime/E2E remains UNVERIFIED and root-owned.

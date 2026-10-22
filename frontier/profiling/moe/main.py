@@ -25,6 +25,7 @@ Multi-GPU modes:
 
 from __future__ import annotations
 
+from dataclasses import replace
 import itertools
 import json
 import os
@@ -166,11 +167,7 @@ def _worker_profile_task(
         routed_layer_group=wrapper_args["routed_layer_group"],
     )
 
-    result = wrapper.profile(
-        num_tokens=profile_args["num_tokens"],
-        load_distribution=profile_args["load_distribution"],
-        seed=profile_args["seed"],
-    )
+    result = wrapper.profile(**profile_args)
 
     return result
 
@@ -518,7 +515,21 @@ def _moe_required_target_columns() -> tuple[str, ...]:
 MOE_REQUIRED_TARGET_COLUMNS = _moe_required_target_columns()
 
 
-def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str) -> None:
+def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str, operator_facts=None, expected_cells=None) -> None:
+    if operator_facts is not None:
+        from frontier.moe_routing_runtime import filter_moe_operator_rows
+        if not operator_facts or not expected_cells:
+            raise ValueError("Position MoE output requires selected bindings and the expected cell inventory")
+        for facts in operator_facts.values():
+            filter_moe_operator_rows(df, operator_facts=facts, requested_runtime_path="position_cyclic", source_name=model)
+        keys = ["moe_input_id", "moe_layer_ids", "moe_frame_scope", "moe_source_lane_id", "moe_ep_rank"]
+        actual = [tuple(None if pd.isna(value) else value for value in row)
+                  for row in df[keys].itertuples(index=False, name=None)]
+        if len(actual) != len(set(actual)) or set(actual) != set(expected_cells):
+            raise ValueError("MoE output has missing, duplicate or unexpected physical cells")
+        return
+    if "routing_runtime_path" in df and df["routing_runtime_path"].eq("position_cyclic").any():
+        raise ValueError("Position MoE output requires selected bindings before legacy target validation")
     required_target_columns = _moe_required_target_columns()
     missing_columns = [col for col in required_target_columns if col not in df.columns]
     if missing_columns:
@@ -867,9 +878,7 @@ def profile_model(
                 for test_case in test_cases:
                     worker_id = len(ray_promises) % args.num_gpus
                     promise = model_wrappers[worker_id].profile.remote(
-                        num_tokens=test_case["num_tokens"],
-                        load_distribution=test_case["load_distribution"],
-                        seed=test_case["seed"],
+                        **test_case,
                     )
                     ray_promises.append(promise)
 
@@ -938,11 +947,7 @@ def profile_model(
                 wrapper = moe_wrapper_class(**wrapper_kwargs)
 
                 for test_case in test_cases:
-                    result = wrapper.profile(
-                        num_tokens=test_case["num_tokens"],
-                        load_distribution=test_case["load_distribution"],
-                        seed=test_case["seed"],
-                    )
+                    result = wrapper.profile(**test_case)
                     _collect_result(result)
                     pbar.update(1)
 
@@ -1028,7 +1033,9 @@ def _attach_runtime_identity(
 ) -> pd.DataFrame:
     from frontier.profiling.common.runtime_identity import (
         attach_identity_columns,
+        canonical_json,
         measure_runtime_identity,
+        verify_step5_profile_runtime,
     )
 
     identity = measure_runtime_identity(
@@ -1039,7 +1046,21 @@ def _attach_runtime_identity(
         quant_signature=quant_signature,
         parallel_groups={"engine_tensor_parallel": 1},
         graph_mode="eager",
+        native_facts=verify_step5_profile_runtime(os.environ["FRONTIER_STEP5_PROFILE_MANIFEST"]) if os.environ.get("FRONTIER_STEP5_PROFILE_MANIFEST") else None,
     )
+    if identity.native_facts is not None:
+        if "native_facts" not in df or df["native_facts"].isna().any():
+            raise ValueError("Bound MoE rows must carry actual per-result native_facts")
+        for value in df["native_facts"]:
+            facts = json.loads(value) if isinstance(value, str) else value
+            if facts["shared"] != identity.native_facts["shared"]:
+                raise ValueError("MoE producer native facts differ from shared source identity")
+        records = []
+        for row in df.to_dict("records"):
+            facts = json.loads(row["native_facts"]) if isinstance(row["native_facts"], str) else row["native_facts"]
+            row["native_facts"] = canonical_json(facts)
+            records.extend(attach_identity_columns([row], replace(identity, native_facts=facts)))
+        return pd.DataFrame(records)
     return pd.DataFrame(attach_identity_columns(df.to_dict("records"), identity))
 
 

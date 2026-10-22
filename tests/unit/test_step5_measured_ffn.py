@@ -20,6 +20,38 @@ from frontier.types import ClusterType, MeasurementType
 from tests.unit.test_step5_measured_training import _manager
 
 
+def test_position_runtime_requires_actual_empty_physical_exact_pair(model, monkeypatch):
+    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
+    from frontier.execution_time_predictor import sklearn_moe_execution_time_predictor as runtime
+    predictor = object.__new__(_ConcreteMoEPredictor)
+    predictor._step5_layer_metadata = SimpleNamespace(attention_spec=SimpleNamespace(global_layer_id=3))
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._predictions, predictor._step5_ffn_costs = {}, {}
+    native = dict(model_architecture_profile="step5", routing_runtime_path="position_cyclic",
+                  quant_dtype=None, defer_input_quant=False)
+    count = SimpleNamespace(_frontier_feature_names=["num_tokens", "live_routing_token_count"],
+        _frontier_exact_lookup={(8., 0.): 3., (8., 4.): 3.}, _frontier_measurement_identity=json.dumps(dict(evidence_kind="cpu_fixture", native_context=json.dumps(native))),
+        _frontier_model_hash="count", _frontier_target_col="time_stats.moe_gating_linear.kernel_count")
+    fitted = SimpleNamespace(_frontier_feature_names=count._frontier_feature_names,
+        _frontier_exact_lookup={(8., 0.): 1., (8., 4.): 2.}, _frontier_kernel_count_model=count,
+        _frontier_measurement_identity=count._frontier_measurement_identity, _frontier_model_hash="duration",
+        _frontier_target_col="time_stats.moe_gating_linear.median")
+    predictor._model_manager = SimpleNamespace(_get_family_model=lambda *args, **kwargs: fitted)
+    monkeypatch.setattr(runtime, "step5_operator_binding", lambda *args, **kwargs: (PrecisionType.FP32, None))
+    assert predictor._get_on_demand_prediction("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=0), context=native) == 1.
+    assert predictor._step5_ffn_costs["moe_gating_linear"]["kernel_count"] == 3.
+    count._frontier_exact_lookup.pop((8., 0.))
+    with pytest.raises(ValueError, match="exact feature keys differ"):
+        predictor._predict_step5_ffn_operator("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=0), context=native)
+    fitted._frontier_exact_lookup.pop((8., 0.))
+    with pytest.raises(ValueError, match="requires an exact measured"):
+        predictor._predict_step5_ffn_operator("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=0), context=native)
+    with pytest.raises(ValueError, match="requires an exact measured"):
+        predictor._get_prediction_for_features("moe_gating_linear", dict(num_tokens=8, live_routing_token_count=2), context=native)
+    with pytest.raises(ValueError, match="not an applicable"):
+        predictor._get_on_demand_prediction("moe_shuffling", dict(num_tokens=8), context=native)
+
+
 @pytest.fixture(scope="module")
 def model():
     return BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")

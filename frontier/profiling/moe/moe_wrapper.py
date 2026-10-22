@@ -110,7 +110,7 @@ class MoEWrapper:
                     "Routed layer groups require vLLM fused kernel profiling "
                     "(use_vllm_kernel=True); the per-expert loop runs SiLU experts only."
                 )
-            if routing_runtime_path != "standard_fused_topk":
+            if routing_runtime_path not in ("standard_fused_topk", "position_cyclic"):
                 raise ValueError(
                     "Routed layer groups time their own router; "
                     f"routing_runtime_path={routing_runtime_path!r} replaces it."
@@ -214,6 +214,7 @@ class MoEWrapper:
                 num_experts=self.num_experts,
                 router_topk=self.router_topk,
                 router=routed_layer_group.router,
+                routing_runtime_path=self.routing_runtime_path,
             ).cuda().eval()
             self.routing_runtime_metadata = {
                 **self.routing_runtime_metadata,
@@ -279,8 +280,11 @@ class MoEWrapper:
     def _run_gating_with_runtime_context(
         self,
         hidden_states: torch.Tensor,
+        *, gating_runtime_context=None,
     ):
-        if self.gating_runtime_context == PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT:
+        context = self.gating_runtime_context if gating_runtime_context is None else gating_runtime_context
+        get_moe_gating_runtime_context_metadata(context)
+        if context == PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT:
             self._run_prefill_hot_gating_prefix(hidden_states)
         return self.gating(hidden_states)
 

@@ -1,4 +1,5 @@
 import math
+import json
 from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import replace
@@ -104,11 +105,13 @@ class SklearnMoEExecutionTimePredictor(
             self._step5_layer_metadata = previous
             self._step5_ffn_costs = previous_costs
 
-    def _predict_step5_ffn_operator(self, model_name, features):
+    def _predict_step5_ffn_operator(self, model_name, features, *, context=None):
         metadata = self._step5_layer_metadata
         if metadata is None:
             raise ValueError("Step measured FFN coverage requires an explicit physical layer context")
-        precision, identity = step5_operator_binding(self, metadata, model_name)
+        from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+        base_name = get_moe_gating_base_model_name(model_name)
+        precision, identity = step5_operator_binding(self, metadata, base_name, context=context)
         family = self._measurement_family_name(self._active_measurement_type)
         model = self._model_manager._get_family_model(
             family, model_name, precision_key=precision.name,
@@ -126,6 +129,18 @@ class SklearnMoEExecutionTimePredictor(
                       for i, name in enumerate(names)}
             model._frontier_feature_bounds = bounds
         count_model = getattr(model, "_frontier_kernel_count_model", None)
+        if context is not None:
+            from frontier.operators.families import is_step5_position_context
+            if is_step5_position_context(context):
+                if json.loads(PredictionModelRegistry._measurement_identity(model)["native_context"]) != context:
+                    raise ValueError("Step selected model native context differs from the actual bound context")
+                key = tuple(float(features[name]) for name in names)
+                if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
+                    raise ValueError("Step physical duration/count exact feature keys differ")
+                if key not in exact:
+                    raise ValueError("Step physical scope requires an exact measured duration/count key, including empty scopes")
+                if model._frontier_target_col != f"time_stats.{base_name}.median" or count_model._frontier_target_col != f"time_stats.{base_name}.kernel_count":
+                    raise ValueError("Step physical duration/count targets differ from the selected scope")
         if count_model is not None and model._frontier_measurement_identity != count_model._frontier_measurement_identity:
             raise ValueError("Step duration and kernel-count measurement identities differ")
         if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
@@ -166,12 +181,20 @@ class SklearnMoEExecutionTimePredictor(
         )
         return value
 
-    def _get_prediction_for_features(self, model_name, features, *, feature_names=None):
+    def _get_prediction_for_features(self, model_name, features, *, feature_names=None, context=None):
+        if context is not None:
+            from frontier.operators.families import get_moe_profiling_operators
+            from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+            if get_moe_gating_base_model_name(model_name) not in {op.profiling_name() for op in get_moe_profiling_operators(context)}:
+                raise ValueError("MoE query is not an applicable selected physical scope")
+            return self._predict_step5_ffn_operator(model_name, features, context=context)
         if getattr(self, "_step5_layer_metadata", None) is not None and model_name in _STEP5_FFN_OPERATORS:
             return self._predict_step5_ffn_operator(model_name, features)
         return super()._get_prediction_for_features(model_name, features, feature_names=feature_names)
 
-    def _get_on_demand_prediction(self, model_name, features):
+    def _get_on_demand_prediction(self, model_name, features, *, context=None):
+        if context is not None:
+            return self._get_prediction_for_features(model_name, features, context=context)
         if getattr(self, "_step5_layer_metadata", None) is not None and model_name in _STEP5_FFN_OPERATORS:
             return self._predict_step5_ffn_operator(model_name, features)
         return super()._get_on_demand_prediction(model_name, features)

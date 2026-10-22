@@ -10,6 +10,24 @@ import pytest
 from frontier.profiling.moe import main as moe_main
 
 
+def test_worker_forwards_the_same_serialized_cell_without_legacy_scalar_unpacking(monkeypatch):
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell
+    cell = MoERoutingProfileCell(MoERoutingProfileInput("actual_forward", (MoESourceFrame(0, (4,), (6128,), 8, "standalone_legacy"),), 8), "source_local", 0)
+    calls = []
+    def profile(**kwargs):
+        calls.append(kwargs)
+        return {"one_cell": True}
+    monkeypatch.setattr(moe_main, "_ensure_torch_available", lambda: SimpleNamespace(cuda=SimpleNamespace(set_device=lambda *args: None)))
+    monkeypatch.setattr(moe_main, "_get_moe_wrapper_class", lambda: lambda **kwargs: SimpleNamespace(profile=profile))
+    monkeypatch.setattr(moe_main, "ModelConfig", lambda **kwargs: kwargs)
+    monkeypatch.setattr(moe_main, "_CUDA_INITIALIZED", False)
+    monkeypatch.setattr(moe_main, "_CUDA_GPU_ID", None)
+    wrapper = dict(num_tensor_parallel_workers=1, expert_parallel_size=16, profile_method="cuda_event",
+                   output_dir="unused", use_vllm_kernel=True, routed_layer_group=None)
+    assert moe_main._worker_profile_task((0, 0, {}, wrapper, {"routing_cell": cell.to_json()})) == {"one_cell": True}
+    assert calls[0]["routing_cell"] == cell.to_json()
+
+
 def test_attach_moe_output_metadata_writes_model_architecture_profile() -> None:
     df = pd.DataFrame(
         [
@@ -107,6 +125,23 @@ def test_linear_actual_identity_attachment_keeps_per_row_imports_and_rejects_sha
     frame.loc[1, "native_facts"] = json.dumps({**second, "shared": {"image": "OTHER_CPU_IDENTITY"}})
     with pytest.raises(ValueError, match="shared native identity"):
         _attach_runtime_identity(frame, args, "stepfun-ai/Step-5-Preview", config)
+
+
+def test_moe_actual_identity_attachment_requires_per_result_receipts_and_preserves_imports(monkeypatch):
+    from frontier.profiling.common import runtime_identity
+    monkeypatch.setattr(runtime_identity, "collect_device_identity", lambda: ("CPU_FIXTURE_ONLY", "sm00"))
+    monkeypatch.setattr(runtime_identity, "collect_runtime_versions", lambda: {"vllm": "CPU_FIXTURE_ONLY"})
+    args = SimpleNamespace(source_revision="source", model_config_revision="local-config")
+    facts = {"shared": {"image": "CPU_IDENTITY_ONLY"}, "imports": {}, "callables": {}}
+    second = {**facts, "imports": {"gate": "CPU_IMPORT_ONLY"}}
+    frame = pd.DataFrame([{"native_facts": json.dumps(item)} for item in (facts, second)])
+    monkeypatch.setattr(runtime_identity, "verify_step5_profile_runtime", lambda *args: facts)
+    monkeypatch.setenv("FRONTIER_STEP5_PROFILE_MANIFEST", "CPU_RECEIPT_ONLY")
+    output = moe_main._attach_runtime_identity(frame, args, "stepfun-ai/Step-5-Preview", "CPU_FIXTURE_ONLY")
+    assert [json.loads(value) for value in output["native_facts"]] == [facts, second]
+    assert output["runtime_fingerprint"].nunique() == 1
+    with pytest.raises(ValueError, match="per-result"):
+        moe_main._attach_runtime_identity(pd.DataFrame([{"num_tokens": 1}]), args, "stepfun-ai/Step-5-Preview", "CPU_FIXTURE_ONLY")
 
 
 def test_explicit_source_input_parser_preserves_one_cell_protocol_and_rejects_missing_geometry(tmp_path):
