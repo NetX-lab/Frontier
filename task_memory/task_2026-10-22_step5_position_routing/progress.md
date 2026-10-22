@@ -44,8 +44,17 @@ ses_e9afdb7c4ffejb3hbkjZCeHFKS returns four concrete findings, now assigned to t
 original native session within1582. Repair74d5c48/records6827507 now delivers
 19 paths/1269 gross, unchanged native4 patch. Root independently passes485 checks
 and verifies all12 backend schema sources against the actual local-image export.
-Reviewer closes N1–N4 without new findings. Root accepts native19 source/CPU scope
-for integration; image publication/source receipts and runtime qualification follow.
+Reviewer closes N1–N4 without new findings. Root integrates accepted native19
+source/CPU scope at9495cfb; image publication/source receipts and runtime qualification follow.
+The internal target tag is absent by direct registry inspection; proxy111 on the
+first inspection is resolved per-command without changing host proxy settings.
+Publication completes: remote index10cdd7af… and linux/amd64 manifestf037d958…
+hashes are verified. New bindings use the platform reference. Actual neutral-cwd
+source receipt and Python-tree export agree on2907 files, with53 installed serving
+pins and all12 backend schema modules. See image_publication/ and the publication
+test report. Native runtime/GPU/G3/E2E qualification remains open.
+The completed CORE/SOURCE+PRICING foundation receives independent review in
+ses_e9abd8364ffee5sQKdpiQh3yH4 from frozen sourcebd97ac5; live implementation continues.
 
 Parent independently reproduces418 PASS/35.45s at2c4cc9e and verifies all19 paths,
 1017 gross lines, four native before/after hashes and exact sparse context02.
