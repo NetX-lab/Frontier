@@ -36,6 +36,9 @@ class CollectivePlan:
     buffer_json: str
 
     def __post_init__(self):
+        object.__setattr__(self,"sizes",tuple(self.sizes))
+        object.__setattr__(self,"tensors",tuple(self.tensors))
+        object.__setattr__(self,"groups",tuple(tuple(group) for group in self.groups))
         if self.phase not in ("dispatch", "combine", "shared_tp", "routed_tp"):
             raise ValueError("Unsupported Step collective phase")
         if len(self.sizes) != 2 or any(type(n) is not int or n <= 0 for n in self.sizes):
@@ -95,6 +98,8 @@ class CollectivePlanCost:
     model_identity: str
 
     def __post_init__(self):
+        object.__setattr__(self,"local_rank_ms",tuple(self.local_rank_ms))
+        object.__setattr__(self,"kernel_counts",tuple(self.kernel_counts))
         values = (self.duration_ms, self.network_ms, self.remainder_ms, *self.local_rank_ms)
         if len(self.local_rank_ms) != 16 or any(not math.isfinite(v) or v < 0 for v in values):
             raise ValueError("Collective model requires finite nonnegative per-rank service")

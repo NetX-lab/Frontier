@@ -74,6 +74,23 @@ def test_lossless_plan_order_identity_and_count_separation():
         replace(cost, duration_ms=5.)
 
 
+def test_workload_and_result_freeze_caller_owned_sequences():
+    sizes=[16,1];tensors=list(plan().tensors);groups=[list(g) for g in plan().groups]
+    p=replace(plan(),sizes=sizes,tensors=tensors,groups=tuple(tuple(g) for g in groups))
+    key,stages,endpoints=p.cache_key(),p.stages,p.endpoint_bytes(8)
+    local=[2.]*16;counts=[7]*16
+    cost=CollectivePlanCost(6.,1.,local,3.,counts,json.dumps(dict(kernel_counts=counts,
+        per_rank_events=[["cpu_fixture"]]*16,source_receipt="cpu_fixture",evidence_kind="cpu_fixture")),key,"cpu_fixture")
+    sizes[0]=8192;tensors.clear();local[0]=9.;counts[0]=99
+    assert p.cache_key() == key and p.stages == stages and p.endpoint_bytes(8) == endpoints
+    assert p.sizes == (16,1) and len(p.tensors) == 1
+    assert cost.local_rank_ms == (2.,)*16 and cost.kernel_counts == (7,)*16
+    nested=[list(g) for g in plan().groups]
+    p=replace(plan(),groups=nested)
+    nested[0][0]=15;nested.clear()
+    assert p.groups == plan().groups and cost.duration_ms == 1.+max(cost.local_rank_ms)+3.
+
+
 def test_native_inclusive_scope_calls_real_source_methods_with_prepare_excluded():
     torch = pytest.importorskip("torch")
     import ast

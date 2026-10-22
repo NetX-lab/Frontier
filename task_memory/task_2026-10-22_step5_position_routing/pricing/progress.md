@@ -6,6 +6,7 @@
 | 2026-10-23 | Establish clean baseline and isolated submodule. |
 | 2026-10-23 | Import authorized CORE/native dependencies and close physical consumer interfaces. |
 | 2026-10-23 | Verify H04/native schema/reporting, selected finite grid; receive published image authority. |
+| 2026-10-23 | Repair foundation P2 after RED→GREEN; import authentic dependencies. |
 
 - completed: clean feat/step5-position-pricing baseline 1aee0af.
 - completed: retained-row union 44 paths / 3956 gross, H04=135, H17=128;
@@ -171,3 +172,50 @@ remain genuine dependencies, not permission to create alternate APIs.
 1. CORE estimator/layer wiring remains an exact dependency.
 2. Published source is not backend/graph/G3 qualification.
 3. Counts never derive from modeled stages or replace native measurements.
+
+## Foundation P2 repair
+
+- completed: verified511a3db followed by authorized67d5b5e import (437b312).
+- completed: caller-owned sizes/tensors/nested groups/local_rank_ms/kernel_counts
+  normalize to tuples before existing plan/result validation; no framework added.
+- RED: original lists changed cache key/stages from16 to8192 and erased tensors.
+- GREEN:49 passed/1 skipped in11.13s for pricing/backend/export suites, including
+  actual joint HTSIM in the finite exporter test. Skip is unavailable py310 torch.
+- budget:43 changed owned paths;2198 gross of3956 including312 submodule lines.
+  Per-row numbers are contributor estimates; no additional path/total quota used.
+- in-progress: separate parent qualification selection and bound producer negatives.
+- BLOCKED: CORE context-aware exact estimator/layer-main implementation is not yet
+  imported; genuine calibration and GPU qualification remain parent prerequisites.
+
+## 1. 规划完成情况
+**汇总：** PASS2｜BLOCKED1｜TODO2
+| 子任务 | 状态 | 简要依据 |
+| --- | --- | --- |
+| Selected immutable interfaces | PASS |7b86614 and P2 RED→GREEN |
+| Joint finite model candidate | PASS |409093c/1a16426; real HTSIM |
+| Physical integrated layer pricing | BLOCKED |511a3db seam; CORE exact estimator/main needed |
+| Producer/parent qualification selection | TODO |Native/source import available; final negatives next |
+| Scoped verification/archive | TODO |Final producer scope incomplete |
+## 2. 偏离检测
+**结论：** 未偏移，正常推进。
+**检测窗口：**511a3db至今｜**当前前沿：**4及用户指定P2
+| 模式 | 判定 | 依据 |
+| --- | --- | --- |
+| D1 工具打磨 | CLEAR |Producer qualification evidence checks serve step4 |
+| D2 细节反复重试 | CLEAR |P2 hypothesis reproduced once, tuple normalization passes |
+| D3 支线问题修补 | CLEAR |P2 explicitly requested by root |
+| D4 可并行任务停滞 | CLEAR |Single worker; extra delegation forbidden |
+| D5 超范围镀金 | CLEAR |43 changed paths/2198 gross below44/3956 |
+| D6 分析空转 | CLEAR |Concrete repair and49 affected passes |
+| D7 路线违背 | CLEAR |Finite model retained; no GPU operations |
+**文档检查：**S5 receipt described authorized67d5b5e as pending despite437b312.
+**归因：**无
+## 3. 纠正建议
+**分支：**B：先更新已导入依赖事实。
+**文档更新（先执行）：**requirements/progress/receipt记录437b312和P2（可直接执行）。
+**需停止的偏离行为：**无
+**接下去的路线：**提交P2→parent receipt选择negatives→bound producer闭合→最终额度/归档。
+## 4. 最值得关注的 3 点
+1. CORE exact estimator/main仍是真实依赖。
+2. Published image/source不等于GPU qualification。
+3. Native coefficients/counts不得由CPU fixture或算法stage产生。

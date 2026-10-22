@@ -4,6 +4,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-10-23 | Record delegated scope and approved model. |
+| 2026-10-23 | Record published dependencies and immutable-sequence review correction. |
 
 TaskID: D29-PRICING-IMPLEMENTATION.
 
@@ -24,3 +25,12 @@ CORE/SOURCE02f061d and Native2c4cc9e after verified owned edits are committed.
 Use source_frame_tensors and verify_step5_profile_runtime without duplicates.
 These imports are not final native/source qualification. CORE owns all other
 shared paths and needs the prepared native and finite model interfaces now.
+
+[Original Request, dependency delivery] Root authorizes importing67d5b5e with
+accepted native repairs and published linux/amd64 image/source receipts. Imported
+as437b312 after owned511a3db; numerical/GPU/backend/graph/G3 qualification remains
+unprovided. Use the supplied image/source identities without fabricating parameters.
+
+[Original Request, foundation P2] Freeze all supplied plan/result sequences by
+normalizing them to tuples before existing validation. Add caller-mutation
+regression, demonstrate RED→GREEN, commit the scoped repair for root re-review.

@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Publish first selected-operator and immutable plan interfaces. |
 | 2026-10-23 | Publish H04, selected native schema and reporting seams; record authorized imports. |
+| 2026-10-23 | Publish immutable-list P2 repair and completed authentic dependency import. |
 
 TaskID: D29-PRICING-IMPLEMENTATION. Baseline: 1aee0af.
 
@@ -41,6 +42,8 @@ actual graph mode, native/context and buffer receipts. `stages`, `to_dict()`,
 Cost requires sixteen actual paired native kernel counts and a count receipt,
 separate from algorithmic stages; duration must equal N+max(local)+remainder.
 CPU fixtures remain explicitly CPU evidence.
+Caller-owned list inputs (including nested groups and result arrays) are copied
+to tuples before validation; subsequent caller mutation cannot alter identity.
 
 CommOperatorSpec supports optional `plan_builder`; scalar payload/alias plus plan
 is rejected. BaseCCBackend.predict_collective_plan raises explicit unsupported
@@ -72,9 +75,9 @@ must be retained rather than forcing TRITON.
 
 CORE/SOURCE02f061d and Native2c4cc9e are now imported under root authority.
 Pricing uses their immutable source, source_frame_tensors and actual callable
-verifier; no replacement API. Root additionally authorizes67d5b5e (accepted
-native repair and authentic published image/source receipts) after this verified
-commit. That import is the next step, not evidence of GPU qualification.
+verifier; no replacement API. Authorized67d5b5e (accepted native repair and
+authentic published image/source receipts) is imported as437b312 after511a3db.
+This provides dependencies, not evidence of GPU qualification.
 
 ## Validation
 
