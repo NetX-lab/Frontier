@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Record explicit D30 independent seven-file/750-line expansion approval. |
 | 2026-10-22 | Record D29 position-cyclic/native-image approval and D30 Step finish-sync correction. |
 | 2026-10-22 | Record D26/D27/D28 approvals and D29 balanced-routing/workflow-first execution rules. |
 | 2026-10-22 | D25: prioritize full native H80032/64 workload collection and p90/throughput reporting, including TTFT >5s analysis. |
@@ -213,6 +214,24 @@ implementation, internal derived-image publication and a fresh immutable
 generation are approved; old generations and reference criteria stay intact.
 Parent retains GPU submission/control under the existing D24/D28 limits.
 Detailed file/line scope follows the repair design; no unrelated core changes.
+
+## [Original Request / Decision] D30 scope expansion — 2026-10-22
+
+Parent question:
+
+> 是否批准按 0a0b9fe 中的完整清单，将 D30 扩至 7 个源码/测试文件、最多 750 行新增＋删除（含现有候选）？补齐两项：两个 PD 测试模块通过真实 all-lane/dummy/release events 推进六个用例；R2 verdict 接收 counter diagnostic metadata，保留原验收判据。随后完成父端复验、独立审查和 77 场景回归。D29 设计继续并行。
+
+The question tool was interrupted; YC subsequently answered directly:
+
+> 批准，继续
+
+Decision ID: **D30-SCOPE-7-750**. Authorize the complete existing candidate plus
+follow-up within the seven source/test paths and750 total added/deleted lines
+listed in `../task_2026-10-22_step5_finish_sync/requirements.md`. Complete real
+event-driven fixtures, diagnostic metadata consumption, affected verification,
+independent review and parent integration/strict77. Preserve original D30
+semantics and acceptance. This decision is independent of D29; it does not
+approve D29's unresolved implementation scope or a measured communication model.
 
 ## [Original Request / Decision] D30 Step finish sync — 2026-10-22
 

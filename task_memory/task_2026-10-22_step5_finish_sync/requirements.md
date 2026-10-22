@@ -3,6 +3,7 @@
 ## Modification History
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | YC approves D30-SCOPE-7-750 independently of D29. |
 | 2026-10-22 | Record approved Step workflow correction and observation scope. |
 
 ## [Original Request / Decision] D30
@@ -24,5 +25,30 @@ source-bound input identity, full CLI2400s limit and D24 resource bounds.
 No native CPU overhead/gap analysis or measurement suite. Observation errors
 are isolated and must not affect native calls, returns or exceptions.
 
-Bound source/test changes to five files/500 lines unless a concrete larger
-design is presented to YC. Native image/package/submission remain parent-owned.
+## [Original Request / Decision] D30-SCOPE-7-750
+
+The exact parent question and direct answer are recorded in the main task's
+`requirements.md`, D30 scope expansion. YC answered:
+
+> 批准，继续
+
+The approved scope is seven source/test files and at most750 total insertions
+plus deletions, including candidate `cf1a53f` and its follow-up, against the
+integrated non-D30 parent source. Parent `d581625`'s existing READ correction is
+preserved and excluded from D30 ownership.
+
+1. `frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py`
+2. `tests/integration/step5_pd/r2_observation.py`
+3. `tests/unit/test_step5_finish_sync.py`
+4. `tests/unit/test_step5_native_pd_r2_observation.py`
+5. `tests/integration/step5_pd/r2_verdict.py`
+6. `tests/unit/test_step5_pd_placement.py`
+7. `tests/unit/test_step5_measured_pd.py`
+
+Repair the six documented fixture instances using actual all-lane/dummy/release
+events, without bypassing finish consensus. Preserve all ownership, READ,
+readiness, output and retry assertions. Keep diagnostic metadata out of
+request/transfer evidence; metadata-only evidence remains UNVERIFIED. Complete
+affected checks, parent verification, independent review and strict77 before
+accepting integration. Native image/package/submission remain parent-owned.
+D29 proceeds in parallel under its own unresolved numerical scope.

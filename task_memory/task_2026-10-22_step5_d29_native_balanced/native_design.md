@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-10-22 | Link the explicit case-local post-build full-source receipt command required by profiling; no native/builder code allowance change. |
 | 2026-10-22 | Scoped the approved position policy to four native files, two focused tests and explicit derived-image/package integration; design only. |
 | 2026-10-22 | Addressed independent review's four P2 gaps: actual client adapter/HTTP capability, imported model provenance, genuine eager-break replay and correctly bound native-module evidence; revised unique-file/line budget. |
 
@@ -90,6 +91,17 @@ Native production subtotal N1–N4: **4 files /178–265**. Tests: **2 files /38
 ### B. Derived-image/package/client integration: 12 unique code/test files, 427–689 changed lines; 1 Dockerfile, 18–28
 
 These are required by inspected hard locks, not optional tooling polish. Generated artifacts are additional deliverables, not counted as code edits. Parent owns their implementation/publication, but must include this scope in its consolidated numerical approval.
+
+Profiling additionally consumes `native_installed_sources.json`. Its precise
+post-build emitter is the case-local command under "Generated native-source
+receipt and emitter" in
+`../task_2026-10-22_step5_position_routing/profile_source_design.md`: externally
+verified final/base digest, inspected installed root and sealed derivation
+manifest are inputs; one new local JSON receipt is the output. The retained
+command contains51 Python lines including the container payload and runs after
+publication; it is not baked into the image. It adds no maintained exporter or
+P1 behavior. This command is proposed/documented, syntax-checked only; actual
+image execution and source/serving-subset verification remain prerequisites.
 
 | # | Exact F file | Edit seam / purpose | Bound |
 | --- | --- | --- | --- |
