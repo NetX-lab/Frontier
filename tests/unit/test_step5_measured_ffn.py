@@ -64,10 +64,9 @@ def test_position_real_estimator_reaches_execution_time_without_shuffle(model,tm
     monkeypatch.setattr(fixture,"range",lambda *a:(6144,) if a==(6143,7167) else range(*a),raising=False)
     paths,_=fixture.position_compute_tables(tmp_path,model,device="h800",measurement=MeasurementType.KERNEL_ONLY)
     replica=_replica(model);replica.moe_expert_parallel_size=16;replica.moe_routing_distribution_type="position_cyclic"
-    manager=_manager(tmp_path/"cache")
-    facts=position_moe_operator_facts(pd.read_csv(paths[1]),replica)[1]
+    manager=_manager(tmp_path/"cache");facts=position_moe_operator_facts(pd.read_csv(paths[1]),replica)[1]
     manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC,replica,_config(),str(paths[0]),str(paths[1]),True,set(),operator_facts=facts)
-    p=_predictor(model,manager);p._replica_config.moe_expert_parallel_size=p._moe_ep_size=16
+    p=_predictor(model,manager);p._replica_config.moe_expert_parallel_size=p._moe_ep_size=16;p._moe_gating_routing_runtime_path="position_cyclic"
     lane=materialize(source(padding=16)).lane(0)
     native=json.loads(next(r["native_context"] for r in manager.get_model("moe_grouped_gemm",precision="BF16")._frontier_moe_physical_rows if r["num_tokens"]==32 and r["moe_ep_rank"]==0))
     queries={n:dict(num_tokens=16,live_routing_token_count=16) if f["spec"].ep_agnostic else dict(num_tokens=32,total_routed_tokens=0,num_tokens_post_padded=0) for n,f in facts.items()}
@@ -81,8 +80,10 @@ def test_position_real_estimator_reaches_execution_time_without_shuffle(model,tm
     with p._step5_measured_layer(88):
         result=p._predict_step5_position_execution(SimpleNamespace(),lane,layer_id=88,include_attention=False,include_stage_owned=False,pipeline_stage=0)
         assert result.moe_or_mlp_time_component.operator_times.physical_frame["live_local_assignments"]==0
-        assert result.op_times["moe_grouped_gemm"]>0 and "moe_shuffling" not in result.op_times
-        assert result.get_single_layer_post_attention_time()>4.
+        assert result.op_times["moe_grouped_gemm"]>0 and "moe_shuffling" not in result.op_times and result.get_single_layer_post_attention_time()>4.
+        p._step5_ffn_model("post_attention_layernorm")[0]._frontier_kernel_count_model._frontier_exact_lookup.pop((16.,))
+        with pytest.raises(ValueError,match="exact feature keys differ"):
+            p._predict_step5_position_execution(SimpleNamespace(),lane,layer_id=88,include_attention=False,include_stage_owned=False,pipeline_stage=0)
 
 
 def test_native_feature_schema_keeps_exact_order_backend_and_legacy_ranges():

@@ -136,21 +136,22 @@ class SklearnMoEExecutionTimePredictor(
                       for i, name in enumerate(names)}
             model._frontier_feature_bounds = bounds
         count_model = getattr(model, "_frontier_kernel_count_model", None)
-        if context is not None:
-            from frontier.operators.families import is_step5_position_context
-            if is_step5_position_context(context):
+        from frontier.operators.families import is_step5_position_context
+        position_scope = is_step5_position_context(context) or getattr(self,"_moe_gating_routing_runtime_path",None) == "position_cyclic"
+        if position_scope:
+            if context is not None:
                 from frontier.moe_load_imbalance import moe_native_binding_context
                 if json.loads(PredictionModelRegistry._measurement_identity(model)["native_context"]) != moe_native_binding_context(context):
                     raise ValueError("Step selected model native context differs from the actual bound context")
                 if "native_facts" in context and PredictionModelRegistry._measurement_identity(model).get("native_source") != context["native_facts"]["shared"]:
                     raise ValueError("Step selected model installed source differs from the actual bound context")
-                key = tuple(float(features[name]) for name in names)
-                if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
-                    raise ValueError("Step physical duration/count exact feature keys differ")
-                if key not in exact:
-                    raise ValueError("Step physical scope requires an exact measured duration/count key, including empty scopes")
-                if model._frontier_target_col != f"time_stats.{base_name}.median" or count_model._frontier_target_col != f"time_stats.{base_name}.kernel_count":
-                    raise ValueError("Step physical duration/count targets differ from the selected scope")
+            key = tuple(float(features[name]) for name in names)
+            if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
+                raise ValueError("Step physical duration/count exact feature keys differ")
+            if key not in exact:
+                raise ValueError("Step physical scope requires an exact measured duration/count key, including empty scopes")
+            if model._frontier_target_col != f"time_stats.{base_name}.median" or count_model._frontier_target_col != f"time_stats.{base_name}.kernel_count":
+                raise ValueError("Step physical duration/count targets differ from the selected scope")
         if count_model is not None and model._frontier_measurement_identity != count_model._frontier_measurement_identity:
             raise ValueError("Step duration and kernel-count measurement identities differ")
         if self._active_measurement_type is MeasurementType.KERNEL_ONLY:
@@ -180,6 +181,8 @@ class SklearnMoEExecutionTimePredictor(
                     raise ValueError(f"Step {model_name} has invalid measured kernel-count coverage")
         finally:
             self._predictions = predictions
+        if position_scope and (not math.isfinite(value) or value <= 0 or count is None or count != int(count)):
+            raise ValueError("Step physical scope requires a positive duration and integral actual kernel count")
         self._step5_ffn_costs[model_name] = dict(
             duration_ms=value, kernel_count=count, precision=precision.name,
             measurement_type=self._active_measurement_type.value,
