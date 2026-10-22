@@ -138,6 +138,14 @@ class PredictionFamilyTrainers(KernelCountTraining):
         """
         models = {}
 
+        if operator_facts is None and is_moe_model and getattr(replica_config, "moe_routing_distribution_type", None) == "position_cyclic":
+            from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+            for facts in position_moe_operator_facts(pd.read_csv(moe_file), replica_config):
+                models.update(self._train_ffn_models_for_cluster(cluster_type, replica_config,
+                    execution_time_predictor_config, linear_ops_file, moe_file, is_moe_model,
+                    trained_model_signatures, operator_facts=facts))
+            return models
+
         ffn_tp_key = self._get_ffn_tp_key(cluster_type, replica_config, is_moe_model)
         tp_size = ffn_tp_key
 
@@ -396,7 +404,8 @@ class PredictionFamilyTrainers(KernelCountTraining):
                         **train_kwargs,
                     )
                     from frontier.moe_load_imbalance import moe_grouped_gemm_schema
-                    schema = moe_grouped_gemm_schema(op_feature_cols)
+                    schema = moe_grouped_gemm_schema(op_feature_cols, native_context=operator_facts[model_name]["native_context"]
+                        if position and not operator_facts[model_name]["spec"].ep_agnostic else None)
                     if schema is not None and schema.uses_block_size_m_ranges:
                         models[model_name]._frontier_block_size_m_ranges = block_size_m_ranges(
                             op_moe_df
@@ -1669,6 +1678,10 @@ class PredictionFamilyTrainers(KernelCountTraining):
                 if operator_facts is not None:
                     if set(model._frontier_exact_lookup) != set(count_model._frontier_exact_lookup):
                         raise ValueError("MoE physical duration/count exact feature keys differ")
+                    if "native_binding" in frame:
+                        from frontier.moe_load_imbalance import moe_physical_row_receipts
+                        for fitted in (model, count_model):
+                            fitted._frontier_moe_physical_rows = moe_physical_row_receipts(frame)
                     self._store_model_in_cache(model_name, model._frontier_model_hash, model)
             else:
                 model = self._paired_with_kernel_count_model(

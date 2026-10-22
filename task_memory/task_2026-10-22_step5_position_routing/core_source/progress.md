@@ -6,6 +6,7 @@
 | 2026-10-23 | Read approved designs, sole-writer matrix and baseline source. |
 | 2026-10-23 | Record verified runtime/source consumers, timer replay and concrete peer boundary. |
 | 2026-10-23 | Resume with root-authorized peer history integration and selected bound-fact consumers. |
+| 2026-10-23 | Verify canonical producer, automatic shared/independent fits and source census. |
 
 - completed: baseline clean, branch feat/step5-position-core at 1aee0af; scope.json grouped by exact path yields 44 paths/4404 gross lines.
 - completed: first count/source/tensor/provenance interfaces, 53 PASS/1 SKIP in frontier-py310; actual source tensors/counts in asyncopd-py312 4 PASS/1 deselected. AST and whitespace PASS. Current 7 code/test paths, 713 gross/4404.
@@ -34,6 +35,9 @@
 - completed: executor/schema/model lookup commitbf458db. Position wrapper now does not initialize/time legacy shuffle/loop; source-local16/live0 and gathered17 actual tensor setup calls H17 prepare/context/inclusive APIs, retaining typed targets and merged actual provenance. Source branch03 CPU seam3PASS;35PASS/20SKIP legacy. py312 full collection lacks fasteners/sklearn, isolated test-only zero interval corrected to empty arrays after actual descriptor rejection. Report:test_report_2026-10-23_position_wrapper.md. Current41/44 paths,2690/4404 gross,1714 remain; path ceilings/AST/whitespace PASS. Next: commit -> authorized8e61c2d merge -> gathered schemas/production binding consumers/main. No claim of runtime/H17/fixture completion.
 
 ## 1. 规划完成情况
+
+- completed: preserved wrapper f7c02c7 then authorized8e61c2d merge dc538ac. Canonical native_context retains actual point layout/padding/provenance; native_binding retains invariant selector/source/layout columns/dtype. Automatic position_moe_operator_facts enumerates actual groups/selected specs before old helpers. Both trainers retain source/input/native point receipts on paired models; missing source EP/count fields persist JSON null rather than NaN. Expert schema runs only for non-EP-agnostic scopes. Source descriptor/model keys are compared to the count registry/source association/typed width. Fresh two-method CSV -> actual shared+independent cold/warm fits PASS; damaged source/context rejected. Final83PASS/4SKIP; test_report_2026-10-23_canonical_consumers.md. Three old executor doubles lacked canonical fields; existing test forwarding seam updated only, production strict admission unchanged.
+- precise root interfaces pending: registry must retain/query multiple native measurement bindings for same name/precision/typed identity (FP32 gate under FP8/BF16 currently overwritten). H04 requires source-bound native point context and retained phase-specific collective context with actual execution_policy/buffers. Production predict_collective_plan intentionally rejects CPU evidence; existing-backend explicit CPU path needed for no-patch actual-main. No second registry/guessed policy/native relabeling.27b3499 import authorized after verified commit, not final acceptance.
 
 **汇总：** PASS 2｜BLOCKED/FAILED/SKIPPED 1｜TODO 2
 

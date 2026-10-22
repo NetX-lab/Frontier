@@ -139,6 +139,79 @@ def compute_tables(directory, model, *, device, expert_parallel_size, measuremen
     return paths
 
 
+def position_compute_tables(directory, model, *, device, measurement):
+    """Fresh CPU-only source/count rows; synthetic Triton receipts are never admission."""
+    from frontier.entities import Batch, Request
+    from frontier.entities.batch import DummyForwardBatch
+    from frontier.scheduler.utils.forward_start_agreement import bind_forward_start
+    from frontier.moe_routing_policy import build_wave_routing_source
+    from frontier.profiling.moe.inputs import MoESourceFrame, MoERoutingProfileInput, MoERoutingProfileCell
+    from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+    from frontier.operators.families import get_moe_profiling_operators
+    from frontier.moe_load_imbalance import moe_native_binding_context
+    from frontier.execution_time_predictor.step5_cost import step5_native_expert_features
+    with MonkeyPatch.context() as patch:
+        metadata = ffn._metadata
+        patch.setattr(ffn, "_metadata", lambda config: {**metadata(config),
+            "device":device,"measurement_type":measurement.value})
+        paths = ffn._tables(directory,model,token_counts=LOCAL_COMPUTE_WIDTHS,
+            expert_parallel_size=16,include_stage_boundaries=True)
+    rows, inputs = [], []
+    groups = resolve_routed_layer_groups(model)
+    for query, context in [(prefix,0) for prefix in (6112,6128)] + [(tail,prefix) for _,prefix,tail,_ in PREFILL_CASES] + [(1,c) for c in range(6143,7167)]:
+        request = Request(0,query+context,1024)
+        request._num_processed_tokens = context
+        batch, dummy = Batch(0,[request],[query],is_moe=True), DummyForwardBatch(0,0,0)
+        bind_forward_start([batch,dummy],group_id=len(inputs),request_capacity=128)
+        source = build_wave_routing_source({0:batch,1:dummy},policy_id="position_cyclic",
+            cluster_type=ClusterType.DECODE,gathered_physical_rows=sum(b.forward_start_descriptor.num_tokens for b in (batch,dummy)),model_config=model)
+        frames = tuple(MoESourceFrame(lane.lane_id,tuple(i.length for i in lane.intervals),
+            tuple(i.start for i in lane.intervals),lane.physical_rows,lane.gating_runtime_context) for lane in source.source_lanes)
+        routing = MoERoutingProfileInput(f"cpu_fixture_q{query}_c{context}",frames,source.gathered_physical_rows)
+        inputs.append(routing)
+        for group in groups:
+            workload = materialize_layer_ep_workload(target_replica_id=0,global_layer_id=group.layer_ids[0],
+                routing_token_count=source.gathered_physical_rows,router_topk=model.num_experts_per_tok,
+                total_expert_num=model.num_experts,moe_expert_parallel_size=16,
+                expert_to_ep=build_contiguous_expert_ownership(model.num_experts,16),policy_id="position_cyclic",routing_source=source)
+            for scope,source_id,ep_id in [("source_local",i,None) for i in range(2)] + [("dp_gathered",i//8,i) for i in range(16)]:
+                frame = frames[source_id]
+                physical = frame.physical_rows if ep_id is None else source.gathered_physical_rows
+                counts = None if ep_id is None else workload.lane(ep_id).local_token_counts
+                native = dict(model_architecture_profile="step5",routing_runtime_path="position_cyclic",
+                    quant_dtype="float8_e4m3fn" if group.precision.name == "FP8" else None,
+                    defer_input_quant=False,backend="cpu_fixture_TRITON",experts_class="TritonExperts",
+                    physical_scope="native_experts_inclusive",activation_layout=dict(shape=[source.gathered_physical_rows,model.embedding_dim],
+                        stride=[model.embedding_dim,1],dtype="bfloat16",element_size=2),
+                    native_padding=dict(scheme="triton_expert_assignment",alignment=16,
+                        num_tokens_post_padded=0 if counts is None else sum((n+15)//16*16 for n in counts)))
+                specs = [op for op in get_moe_profiling_operators(native) if op.ep_agnostic == (ep_id is None)]
+                value = .01+physical/10000
+                contracts = {op.name:model.get_model_architecture_profile().resolve_layer_contract(model,
+                    layer_id=group.layer_ids[0],operator_name=op.name,moe_tp_size=1,expert_parallel_size=16).typed_metadata_identity() for op in specs}
+                row = dict(num_tokens=physical,num_tensor_parallel_workers=1,expert_parallel_size=16,
+                    num_experts=model.num_experts,router_topk=model.num_experts_per_tok,hidden_dim=model.embedding_dim,
+                    expert_hidden_dim=contracts[specs[0].name]["effective_ffn_width"],
+                    gating_runtime_context=frame.gating_runtime_context,model_architecture_profile="step5",
+                    routing_runtime_path="position_cyclic",typed_operator_contracts=contracts,
+                    time_stats={op.name:dict(median=value,kernel_count=3) for op in specs},**group.row_metadata())
+                cell = MoERoutingProfileCell(routing,scope,source_id,ep_id)
+                live = frame.live_rows if ep_id is None else source.live_rows
+                row.update(ffn._metadata(model),device=device,measurement_type=measurement.value,moe_frame_scope=scope,
+                    moe_input_id=routing.moe_input_id,moe_source_lane_id=source_id,moe_ep_rank=ep_id,
+                    live_routing_token_count=live,masked_routing_token_count=physical-live,
+                    routing_input=json.dumps(cell.to_json()["routing_input"]),native_context=json.dumps(native),
+                    native_binding=json.dumps(moe_native_binding_context(native),sort_keys=True,separators=(",",":")),moe_quantization_mode=group.precision.value)
+                if ep_id is not None:
+                    row.update(step5_native_expert_features(native,physical_rows=physical,live_assignments=sum(counts)),expert_token_counts=json.dumps(counts))
+                rows.append(row)
+    frame = pd.json_normalize(rows)
+    frame["typed_operator_contracts"] = [json.dumps(row["typed_operator_contracts"]) for row in rows]
+    frame = frame.drop(columns=[name for name in frame if name.startswith("typed_operator_contracts.")])
+    frame.to_csv(paths[1],index=False)
+    return paths, inputs
+
+
 def refresh_compute(output: Path):
     """Repair only synthetic compute inputs; retain attention output and the shared cache."""
     path = output / "fixture_manifest.json"

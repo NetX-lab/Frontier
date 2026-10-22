@@ -5,6 +5,7 @@
 | --- | --- |
 | 2026-10-23 | Start sole-writer implementation. |
 | 2026-10-23 | Complete selected consumer interface slice and accept root's real source/import delivery. |
+| 2026-10-23 | Verify full PRICING canonical consumers and record runtime seams. |
 
 Dependency: count/source/tensor/verifier interfaces -> {scheduler/runtime, source package/producers, selected trainer/profiling consumers} -> fixture/runner -> root integration qualification.
 
@@ -17,6 +18,8 @@ Dependency: count/source/tensor/verifier interfaces -> {scheduler/runtime, sourc
 Acceptance: exact P/D/chunk/mask conservation, source identity/cache binding, actual module/callable receipt negatives, selected frame/schema paired exact keys including empty physical scopes, real timer replay/restore/event preservation, meaningful source/consumer checks, owned-path/quota/AST/whitespace accounting. Native/runtime/E2E qualification remains root-owned.
 
 ## Authorized continuation
+
+Current route: f7c02c7 wrapper -> authorized8e61c2d merge dc538ac -> canonical native_context/native_binding and automatic shared+independent training (verified) -> authorized27b3499 merge -> runtime/source receipt binding and fresh position fixture/runner. Actual-main cannot complete until the existing unowned registry retains alternate selected measurement bindings and the existing backend exposes a CPU-evidence plan path (production intentionally rejects CPU fixtures). Root coordination is required, not another classifier/registry or native relabeling. Plans must retain actual execution_policy and buffer receipts. Earlier absent CSV/schema/import statements below are superseded.
 
 Committed owned work -> merges7b86614/2c4cc9e -> {selected bound-fact filter/preflight/loader/pairs, cell executor kwargs/source context} -> committed native schema/layout/prepare + finite-model payload -> complete wrapper/fixture/main. No alternate registry or guessed native row metadata. Independent plumbing tests pass explicit resolved fact bundles; actual production enumeration still requires the committed per-row native-context serialization seam.
 

@@ -58,6 +58,7 @@ def test_position_cells_reach_each_actual_executor_once(tmp_path, monkeypatch, m
     monkeypatch.setattr(main, "_get_available_gpus", lambda n: list(range(n)))
     monkeypatch.setattr(main, "set_process_visible_device", lambda *a, **k: None)
     monkeypatch.setattr(main, "_validate_canonical_moe_result_df", lambda df, **k: None)
+    monkeypatch.setattr("frontier.execution_time_predictor.moe_dataset_training.position_moe_operator_facts", lambda *a: [{}])
     class Executor:
         def __init__(self, **kwargs): pass
         def submit(self, fn, task):

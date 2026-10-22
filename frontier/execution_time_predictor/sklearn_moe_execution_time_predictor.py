@@ -139,8 +139,11 @@ class SklearnMoEExecutionTimePredictor(
         if context is not None:
             from frontier.operators.families import is_step5_position_context
             if is_step5_position_context(context):
-                if json.loads(PredictionModelRegistry._measurement_identity(model)["native_context"]) != context:
+                from frontier.moe_load_imbalance import moe_native_binding_context
+                if json.loads(PredictionModelRegistry._measurement_identity(model)["native_context"]) != moe_native_binding_context(context):
                     raise ValueError("Step selected model native context differs from the actual bound context")
+                if "native_facts" in context and PredictionModelRegistry._measurement_identity(model).get("native_source") != context["native_facts"]["shared"]:
+                    raise ValueError("Step selected model installed source differs from the actual bound context")
                 key = tuple(float(features[name]) for name in names)
                 if count_model is None or tuple(count_model._frontier_feature_names) != names or set(count_model._frontier_exact_lookup) != set(exact):
                     raise ValueError("Step physical duration/count exact feature keys differ")

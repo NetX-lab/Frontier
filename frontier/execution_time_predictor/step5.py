@@ -513,17 +513,25 @@ def step5_operator_training_rows(operator_name, frame, training_context, measure
         if config is not None and selected["quant_signature"].ne(config.get_quant_signature()).any():
             raise ValueError("Step selected source quantization signature conflicts with the actual model")
         identity = dict(training_context.get("measurement_identity", {}))
+        from frontier.moe_load_imbalance import moe_native_binding_context
         identity.update(operator_name=facts["spec"].profiling_name(), physical_scope=facts["frame_scope"],
-                        operator_precision=facts["precision"].name, native_context=json.dumps(dict(facts["native_context"]), sort_keys=True, separators=(",", ":")),
+                        operator_precision=facts["precision"].name, native_context=json.dumps(moe_native_binding_context(facts["native_context"]), sort_keys=True, separators=(",", ":")),
                         selected_native_metadata=json.dumps(dict(facts["row_metadata"]), sort_keys=True, separators=(",", ":")))
         for name in ("measurement_type", "model_architecture_profile", "quant_signature",
-                     "source_profiling_precision", "runtime_stack_signature", "evidence_kind"):
+                      "source_profiling_precision", "runtime_stack_signature", "evidence_kind", *[key for key in
+                      ("source_revision", "model_config_revision", "model_config_sha256", "runtime_versions") if key in selected]):
             values = selected[name].drop_duplicates().tolist()
             if len(values) != 1 or selected[name].isna().any():
                 raise ValueError(f"Step selected scope mixes source identity {name}")
             identity[name] = values[0]
         if facts["spec"].precision_name() == "moe_gating":
             identity["gating_runtime_context"] = facts["gating_runtime_context"]
+        if "native_facts" in selected:
+            shared = selected["native_facts"].map(lambda value: json.loads(value)["shared"])
+            identities = shared.map(lambda value: json.dumps(value, sort_keys=True)).unique()
+            if len(identities) != 1:
+                raise ValueError("Step selected scope mixes installed source receipts")
+            identity["native_source"] = json.loads(identities[0])
         return [(selected, {**training_context, "measurement_identity": identity})]
     config = training_context["step5_generic_compute"]
     stage_boundary = operator_name in STEP5_STAGE_BOUNDARY_NAMES

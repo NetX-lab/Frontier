@@ -986,7 +986,21 @@ def profile_model(
         else:
             df[key] = df[key].fillna(value)
 
-    _validate_canonical_moe_result_df(df, model=model)
+    if routing_inputs is not None:
+        from types import SimpleNamespace
+        from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+        df = _attach_moe_output_metadata(df, precision_str=ModelConfig._dtype_to_str(model_config.dtype),
+            model_arch=_resolve_model_arch_for_metadata(model_config), model_architecture_profile=model_config.get_model_architecture_profile().profile_id,
+            quant_signature=_resolve_quant_signature_for_metadata(model_config), measurement_type=measurement_type)
+        replica = SimpleNamespace(model_config=model_config, moe_tensor_parallel_size=1, moe_expert_parallel_size=16)
+        bindings = position_moe_operator_facts(df, replica)
+        expected = {(case["routing_cell"]["routing_input"]["moe_input_id"], group.layer_range,
+                     case["routing_cell"]["moe_frame_scope"], case["routing_cell"]["source_lane_id"], case["routing_cell"]["ep_id"])
+                    for group in routed_layer_groups for case in _position_profile_cases(routing_inputs,16)}
+        for facts in bindings:
+            _validate_canonical_moe_result_df(df, model=model, operator_facts=facts, expected_cells=expected)
+    else:
+        _validate_canonical_moe_result_df(df, model=model)
     return df
 
 

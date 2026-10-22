@@ -60,6 +60,30 @@ def moe_grouped_gemm_schema(features, *, native_context=None):
     return schema
 
 
+def moe_native_binding_context(context):
+    """Keep selector/source identity in models; per-point layouts stay in coverage rows."""
+    binding = {name: value for name, value in context.items() if name not in {
+        "activation_layout", "scale_layout", "source_activation_layout", "source_scale_layout",
+        "native_padding", "workspace_shapes", "native_facts"}}
+    layouts = {}
+    for name in ("activation_layout", "scale_layout", "source_activation_layout", "source_scale_layout"):
+        if name in context:
+            layout = context[name]
+            layouts[name] = None if layout is None else dict(columns=layout["shape"][1:],
+                dtype=layout["dtype"], element_size=layout["element_size"])
+    if layouts:
+        binding["tensor_layouts"] = layouts
+    return binding
+
+
+def moe_physical_row_receipts(frame):
+    """Retain producer inputs/layouts separately from invariant estimator identity."""
+    columns = [name for name in ("routing_input", "native_context", "moe_source_lane_id",
+        "moe_ep_rank", "moe_frame_scope", "num_tokens", "total_routed_tokens") if name in frame]
+    rows = frame[columns].drop_duplicates().astype(object)
+    return tuple(rows.where(rows.notna(), None).to_dict("records"))
+
+
 def num_tokens_post_padded(expert_token_counts: Sequence[int], block_size_m: int) -> int:
     """Routed tokens after padding each expert's tokens to a multiple of BLOCK_SIZE_M."""
     return sum(-(-int(count) // block_size_m) * block_size_m for count in expert_token_counts)

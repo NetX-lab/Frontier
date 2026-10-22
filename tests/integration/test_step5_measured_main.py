@@ -40,7 +40,7 @@ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(t
     wrapper._materialize_gating_hidden_states = lambda rows: torch.zeros((rows,4), dtype=torch.bfloat16)
     def gate(hidden, *, gating_runtime_context):
         observed.append((hidden.shape[0],gating_runtime_context))
-        ids = (wrapper.positions[:,None]+torch.arange(8)) % 352
+        ids = (wrapper.positions[:,None]*8+torch.arange(8)) % 352
         ids[wrapper.mask] = -1
         return torch.ones_like(ids,dtype=torch.float32), ids.to(torch.int32)
     wrapper._run_gating_with_runtime_context = gate
@@ -51,7 +51,10 @@ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(t
         assert value.shape == (17,4) and topk_ids.shape == (17,8)
         assert source_tensors[0].shape == (16,4)
         return dict(quant_dtype=quant,defer_input_quant=deferred,backend="cpu_fixture",
-            experts_class="TritonExperts",physical_scope="native_experts_inclusive",native_facts=facts)
+            experts_class="TritonExperts",physical_scope="native_experts_inclusive",native_facts=facts,
+            activation_layout=dict(shape=[17,4],stride=[4,1],dtype="bfloat16",element_size=2),
+            source_activation_layout=dict(shape=[16,4],stride=[4,1],dtype="bfloat16",element_size=2),
+            native_padding=dict(scheme="triton_expert_assignment",alignment=16,num_tokens_post_padded=0))
     native = SimpleNamespace(prepare_source=prepare,prepared_context=context,provenance=facts,
                              apply_prepared=lambda *a,**k: pytest.fail("source cell cannot time gathered experts"))
     monkeypatch.setattr(fp8_block_experts,"get_native_routed_experts",lambda **k:native)
@@ -78,6 +81,16 @@ def test_position_source_wrapper_uses_actual_local_widths_and_selected_prepare(t
     assert row["native_facts"] == canonical_json(facts)
     assert json.loads(row["native_context"])["defer_input_quant"] is deferred
     assert json.loads(row["routing_input"])["gathered_physical_rows"] == 17
+    inclusive = []
+    native.apply_prepared = lambda activation, scales, weights, ids, expert_map, **kw: inclusive.append(
+        (activation.shape[0], ids.shape, kw["in_dtype"]))
+    wrapper._profile_cell_callable = lambda run, names: (run() or {
+        name: dict(median=1.,kernel_count=3) for name in names})
+    gathered = wrapper.profile(routing_cell=MoERoutingProfileCell(cell.routing_input,"dp_gathered",0,0).to_json())
+    assert inclusive == [(17,(17,8),torch.bfloat16)]
+    assert set(gathered["time_stats"]) == set(gathered["typed_operator_contracts"]) == {"moe_grouped_gemm"}
+    assert gathered["num_tokens"] == 17 and gathered["total_routed_tokens"] == 0
+    assert gathered["num_tokens_post_padded"] == 0 and gathered["moe_ep_rank"] == 0
 
 
 def test_real_graph_padding_does_not_duplicate_requests_or_context():
@@ -91,6 +104,71 @@ def test_real_graph_padding_does_not_duplicate_requests_or_context():
     assert row["native_workload"] == "attention_workload"
     assert row["evidence_kind"] == "cpu_fixture"
     assert 24 in CAPTURE_SIZES and max(CAPTURE_SIZES) == 256
+
+
+@pytest.mark.parametrize("method", ["KERNEL_ONLY", "CUDA_EVENT"])
+def test_position_producer_rows_reach_real_automatic_shared_fit_and_cache(tmp_path, monkeypatch, method):
+    import pandas as pd
+    from types import SimpleNamespace
+    from frontier.config import global_vars
+    from frontier.types import ClusterType, MeasurementType
+    from frontier.execution_time_predictor.moe_dataset_training import position_moe_operator_facts
+    from frontier.moe_routing_runtime import filter_moe_operator_rows
+    from tests.integration import step5_measured_compute_fixture as fixture
+    from tests.unit.test_step5_measured_ffn import _config, _replica
+    from tests.unit.test_step5_measured_training import _manager
+    monkeypatch.setattr(global_vars,"DECODE_CUDA_GRAPH_MODE","full_and_piecewise")
+    monkeypatch.setattr(global_vars,"CUDAGRAPH_CAPTURE_SIZES",list(CAPTURE_SIZES))
+    monkeypatch.setattr(fixture,"range",lambda *a:(6144,6145) if a == (6143,7167) else range(*a),raising=False)
+    model = BaseModelConfig.create_from_name("stepfun-ai/Step-5-Preview")
+    paths, inputs = fixture.position_compute_tables(tmp_path,model,device="h800",measurement=MeasurementType[method])
+    frame = pd.read_csv(paths[1])
+    assert len(inputs) == 7 and len(frame) == 252 and "native_facts" not in frame
+    replica = _replica(model)
+    replica.moe_expert_parallel_size,replica.moe_routing_distribution_type = 16,"position_cyclic"
+    bindings = position_moe_operator_facts(frame,replica)
+    assert [len(group) for group in bindings] == [4,3]
+    for binding in bindings:
+        expert = binding["moe_grouped_gemm"]
+        rows = filter_moe_operator_rows(frame,operator_facts=expert,requested_runtime_path="position_cyclic",source_name=str(paths[1]))
+        assert rows.total_routed_tokens.eq(0).any() and rows["time_stats.moe_grouped_gemm.median"].gt(0).all()
+    def forbidden(*a,**k): pytest.fail("unbound legacy helper/estimator reached")
+    for iteration in range(2):
+        manager = _manager(tmp_path/"cache",MeasurementType[method])
+        manager._cluster_configs = {ClusterType.MONOLITHIC:SimpleNamespace(replica_config=replica)}
+        monkeypatch.setattr(manager,"_get_moe_op_tp_key",forbidden)
+        monkeypatch.setattr(manager,"_is_moe_op_ep_agnostic",forbidden)
+        if iteration: monkeypatch.setattr(manager,"_create_estimator_and_params",forbidden)
+        fitted = manager._train_ffn_models_for_cluster(ClusterType.MONOLITHIC,replica,_config(),str(paths[0]),str(paths[1]),True,set())
+        for name, estimator in fitted.items():
+            if not name.startswith("moe_"): continue
+            count = estimator._frontier_kernel_count_model
+            assert estimator._frontier_moe_physical_rows == count._frontier_moe_physical_rows
+            assert set(estimator._frontier_exact_lookup) == set(count._frontier_exact_lookup)
+            assert json.loads(estimator._frontier_measurement_identity)["evidence_kind"] == "cpu_fixture"
+    damaged = frame.copy()
+    damaged.loc[0,"native_context"] = json.dumps({**json.loads(damaged.loc[0,"native_context"]),"defer_input_quant":True})
+    with pytest.raises(ValueError,match="native binding"): position_moe_operator_facts(damaged,replica)
+    damaged = frame.copy()
+    damaged.loc[0,"moe_input_id"] = "foreign_source"
+    with pytest.raises(ValueError,match="supplied source descriptor"):
+        filter_moe_operator_rows(damaged,operator_facts=bindings[0]["moe_gating_linear"],
+            requested_runtime_path="position_cyclic",source_name=str(paths[1]))
+    from tests.unit.test_moe_grouped_gemm_padded_features import _ConcreteMoEPredictor
+    from sklearn.ensemble import RandomForestRegressor
+    predictor = object.__new__(_ConcreteMoEPredictor)
+    predictor._model_config,predictor._replica_config,predictor._moe_input_file = model,replica,str(paths[1])
+    predictor._moe_routing_distribution_type,predictor._active_measurement_type = "position_cyclic",MeasurementType[method]
+    predictor._config,predictor._cache_dir,predictor._kernel_gap_ms = _config(),str(tmp_path/"independent"),None
+    (tmp_path/"independent").mkdir()
+    monkeypatch.setattr(predictor,"to_dict",lambda:{})
+    monkeypatch.setattr(predictor,"_get_estimator",lambda:RandomForestRegressor(n_estimators=2,random_state=0))
+    monkeypatch.setattr(predictor,"_get_grid_search_params",lambda:{})
+    for iteration in range(2):
+        if iteration: monkeypatch.setattr(predictor,"_get_estimator",forbidden)
+        fitted = predictor._train_moe_models()
+        for estimator in fitted.values():
+            assert estimator._frontier_moe_physical_rows == estimator._frontier_kernel_count_model._frontier_moe_physical_rows
 
 
 @pytest.mark.parametrize("tokens,requests,mode,uniform", [

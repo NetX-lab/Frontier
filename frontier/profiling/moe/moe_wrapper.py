@@ -987,6 +987,7 @@ class MoEWrapper:
         stats = self._profile_cell_callable(run, [spec.profiling_name() for spec in operators])
         row = self._build_profile_result(stats, num_tokens=physical, native_context=context)
         from frontier.profiling.common.runtime_identity import canonical_json
+        from frontier.moe_load_imbalance import moe_native_binding_context
         provenance = [self.gating.native_facts, experts.provenance, context["native_facts"]]
         facts = dict(shared=provenance[0]["shared"], imports={}, callables={})
         for item in provenance:
@@ -999,6 +1000,7 @@ class MoEWrapper:
             live_routing_token_count=live, masked_routing_token_count=physical-live,
             gating_runtime_context=frames[selected].gating_runtime_context,
             native_context=canonical_json(context), native_facts=canonical_json(facts),
+            native_binding=canonical_json(moe_native_binding_context(context)),
             moe_quantization_mode=self.quantization_mode, moe_gating_linear_backend=self.gating.linear_backend,
             routing_input=canonical_json(cell.to_json()["routing_input"]))
         return row

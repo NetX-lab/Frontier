@@ -37,6 +37,35 @@ from typing import Dict, List, Mapping, Optional
 logger = init_logger(__name__)
 
 
+def validate_position_moe_source_row(row):
+    """Compare retained producer census with the one position-count owner."""
+    import pandas as pd
+    from frontier.profiling.moe.inputs import routing_profile_cell
+    from frontier.moe_routing_policy import position_cyclic_expert_counts, TokenInterval, source_lane_index_for_ep
+    scope = row.moe_frame_scope
+    cell = routing_profile_cell(dict(routing_input=json.loads(row.routing_input),
+        moe_frame_scope=scope,source_lane_id=int(row.moe_source_lane_id),
+        ep_id=None if pd.isna(row.moe_ep_rank) else int(row.moe_ep_rank)))
+    frames, local = cell.routing_input.source_frames, cell.routing_input.source_frames[cell.source_lane_id]
+    live = local.live_rows if scope == "source_local" else sum(frame.live_rows for frame in frames)
+    physical = local.physical_rows if scope == "source_local" else cell.routing_input.gathered_physical_rows
+    if (row.num_tokens != physical or row.live_routing_token_count != live
+            or row.gating_runtime_context != local.gating_runtime_context
+            or row.moe_input_id != cell.routing_input.moe_input_id):
+        raise ValueError("MoE measured physical row differs from its supplied source descriptor")
+    if scope == "dp_gathered":
+        ep = int(row.expert_parallel_size)
+        if cell.source_lane_id != source_lane_index_for_ep(cell.ep_id,attention_tp_size=ep//len(frames),
+                source_lane_count=len(frames),participant_ep_ids=range(ep)):
+            raise ValueError("MoE measured source/EP association differs from its descriptor")
+        counts = position_cyclic_expert_counts((TokenInterval(c,q) for frame in frames
+            for c,q in zip(frame.context_lens,frame.query_lens)),int(row.router_topk),int(row.num_experts))
+        width = int(row.num_experts)//ep
+        expected = [counts[i] for i in range(cell.ep_id*width,(cell.ep_id+1)*width)]
+        if json.loads(row.expert_token_counts) != expected or row.total_routed_tokens != sum(expected):
+            raise ValueError("MoE measured expert counts differ from the supplied position source")
+
+
 def _normalize_routing_details_for_trace(
     routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
 ) -> dict[str, dict[str, dict[str, float]]]:

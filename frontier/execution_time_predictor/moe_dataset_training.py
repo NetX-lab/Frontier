@@ -49,6 +49,54 @@ BLOCK_SIZE_M_COLUMN = "time_stats.moe_grouped_gemm.block_size_m"
 BLOCK_SIZE_M_RANGES_COLUMN = "time_stats.moe_grouped_gemm.block_size_m_ranges"
 
 
+def position_moe_operator_facts(frame, replica_config):
+    """Bind producer contexts and source groups before any legacy family helpers."""
+    from frontier.operators.families import get_moe_profiling_operators
+    from frontier.operators.binding import bind_operator_query
+    from frontier.profiling.moe.routed_layer_groups import resolve_routed_layer_groups
+    from frontier.moe_load_imbalance import moe_native_binding_context
+    from frontier.config import PrecisionType
+    from frontier.moe_gating_runtime import get_moe_gating_prediction_model_name
+    from frontier.execution_time_predictor.step5_cost import STEP5_NATIVE_EXPERT_SCHEMAS
+    model = replica_config.model_config
+    groups = {group.layer_range: group for group in resolve_routed_layer_groups(model)}
+    if frame[["moe_layer_ids", "native_binding", "native_context"]].isna().any().any() or set(frame.moe_layer_ids) != set(groups):
+        raise ValueError("Position MoE rows require every actual routed group/native binding")
+    bound = []
+    for (group_name, native_binding), rows in frame.groupby(["moe_layer_ids", "native_binding"], sort=False):
+        group = groups[group_name]
+        expected = dict(num_experts=model.num_experts,router_topk=model.num_experts_per_tok,
+            hidden_dim=model.embedding_dim,expert_hidden_dim=model.get_model_architecture_profile().resolve_layer_contract(
+                model,layer_id=group.layer_ids[0],operator_name="moe_grouped_gemm",moe_tp_size=replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=replica_config.moe_expert_parallel_size).effective_ffn_width,
+            **group.row_metadata())
+        if any(name not in rows or rows[name].ne(value).any() for name,value in expected.items()):
+            raise ValueError("Position MoE rows differ from actual model/routed-group dimensions")
+        context = json.loads(native_binding)
+        if any(moe_native_binding_context(json.loads(value)) != context for value in rows["native_context"]):
+            raise ValueError("MoE row context differs from its native binding")
+        facts = {}
+        for spec in get_moe_profiling_operators(context):
+            contract = model.get_model_architecture_profile().resolve_layer_contract(model,
+                layer_id=group.layer_ids[0], operator_name=spec.name,
+                moe_tp_size=replica_config.moe_tensor_parallel_size,
+                expert_parallel_size=replica_config.moe_expert_parallel_size)
+            contexts = rows.loc[rows.moe_frame_scope.eq("source_local"), "gating_runtime_context"].unique() if spec.precision_name() == "moe_gating" else [None]
+            for gating_context in contexts:
+                name = get_moe_gating_prediction_model_name(spec.name, requested_context=gating_context) if gating_context else spec.name
+                precision = PrecisionType.FP32 if spec.precision_name() == "moe_gating" else PrecisionType.FP8 if spec.name == "moe_input_quantize" else group.precision
+                features = ("num_tokens", "live_routing_token_count") if spec.ep_agnostic else STEP5_NATIVE_EXPERT_SCHEMAS[context["experts_class"]]
+                facts[name] = dict(model_name=name,spec=spec,binding=bind_operator_query(spec.name),
+                    layer_contract=contract,precision=precision,native_context=context,
+                    frame_scope="source_local" if spec.ep_agnostic else "dp_gathered",
+                    row_metadata=dict(moe_layer_ids=group_name,native_binding=native_binding),
+                    gating_runtime_context=gating_context,feature_columns=features)
+        bound.append(facts)
+    if not bound:
+        raise ValueError("Position MoE data contains no selected native bindings")
+    return bound
+
+
 def select_moe_operator_features(
     model_name: str, op_df: pd.DataFrame, *, operator_facts=None,
 ) -> tuple[pd.DataFrame, List[str]]:
@@ -67,6 +115,13 @@ def select_moe_operator_features(
         if not operator_facts["spec"].ep_agnostic:
             from frontier.moe_load_imbalance import moe_grouped_gemm_schema
             moe_grouped_gemm_schema(features, native_context=operator_facts["native_context"])
+            if "native_binding" in op_df:
+                from frontier.execution_time_predictor.step5_cost import step5_native_expert_features
+                for _, row in op_df.iterrows():
+                    expected = step5_native_expert_features(json.loads(row.native_context),
+                        physical_rows=int(row.num_tokens), live_assignments=int(row.total_routed_tokens))
+                    if any(row[name] != value for name, value in expected.items()):
+                        raise ValueError("MoE features differ from actual native padding/capacity receipt")
         if not features or set(features) - set(op_df.columns) or op_df[features].isna().any().any():
             raise ValueError("MoE selected native feature schema lacks complete physical coverage")
         return op_df, features
@@ -318,6 +373,10 @@ class MoeDatasetTraining:
             return models
 
         moe_df = pd.read_csv(moe_input_file)
+        if operator_facts is None and self._get_requested_moe_gating_routing_runtime_path() == "position_cyclic":
+            for facts in position_moe_operator_facts(moe_df, self._replica_config):
+                models.update(self._train_moe_models(operator_facts=facts))
+            return models
         if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
             # Validate every row before scalar or TP/EP filtering can hide a
             # malformed typed contract.
@@ -364,6 +423,9 @@ class MoeDatasetTraining:
                         raise ValueError("MoE cached selected measurement identity conflicts with the actual binding")
                     fitted._frontier_measurement_identity = json.dumps(identity, sort_keys=True)
                     fitted._frontier_feature_bounds = {col: (float(rows[col].min()), float(rows[col].max())) for col in features}
+                    if "native_binding" in rows:
+                        from frontier.moe_load_imbalance import moe_physical_row_receipts
+                        fitted._frontier_moe_physical_rows = moe_physical_row_receipts(rows)
                 count._frontier_operator_name = target
                 duration._frontier_kernel_count_model = count
                 for fitted_name, fitted in ((name, duration), (f"{name}_kernel_count", count)):
