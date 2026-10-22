@@ -19,22 +19,23 @@
   actual-source11 PASS, sparse build-context PASS, owned19/AST/whitespace PASS.
 - completed: early e48cdc0 andintegration d12941c; summary/handoff records ready.
 - completed: four-finding repair, source/AST/hash/ownership/quota checks and
-  final affected CPU485 PASS/36.16s. Repair commit/handoff is being finalized.
-- pending (root): image build/publication/actual digest and all GPU acceptance.
+  final affected CPU485 PASS/36.16s; scoped code+evidence commit74d5c48.
+- pending (root): published image identity, actual installed-source export and GPU
+  acceptance; local context02 build was reported by root, not executed by this stream.
 
 ## 1. 规划完成情况
-**汇总：** PASS4｜BLOCKED/FAILED/SKIPPED0｜TODO1
+**汇总：** PASS5｜BLOCKED/FAILED/SKIPPED0｜TODO0
 | 子任务 | 状态 | 简要依据 |
 | --- | --- | --- |
 | native接口及CPU | PASS | actual-source9 PASS，receipt/patch已生成 |
 | packaging/clients/provenance | PASS | CPU418 PASS，sparse context PASS |
 | T2实际graph script | PASS | AST及source contract PASS，GPU归root |
-| 最终quota/handoff | PASS | committed19-path receipt matches1017 gross；summary及needed root inputs完整 |
-| Reviewer四项修复及交接 | TODO | CPU485 PASS，owned19/1269及hash检查完成；待commit |
+| 最终quota/handoff | PASS | committed19-path receipt1269 gross；summary及needed root inputs完整 |
+| Reviewer四项修复及交接 | PASS | commit74d5c48，CPU485 PASS，owned19/1269及hash检查完成 |
 
 ## 2. 偏离检测
 **结论：** 未偏移，正常推进。
-**检测窗口：** continuation四项review findings至CPU485 PASS｜**当前前沿：** 修复commit及交接
+**检测窗口：** continuation四项review findings至commit74d5c48｜**当前前沿：** root实际image/source/live验收（本流外）
 | 模式 | 判定 | 依据 |
 | --- | --- | --- |
 | D1 工具打磨 | CLEAR | user明确要求keyword/fault/sequence/backend negatives，485 PASS后停止扩展 |
@@ -44,22 +45,20 @@
 | D5 超范围镀金 | CLEAR | user明确重开4项缺陷；native19内1269/1582，无新file/registry/native edits |
 | D6 分析空转 | CLEAR | 已产出keyword capture、dummy replay、bound forward和backend检查 |
 | D7 路线违背 | CLEAR | native4/patch不变，无GPU/Docker/platform/peer写入 |
-**文档检查：** S5：summary/progress及T2旧计数/资格标签已按本轮修复更新。其余S1–S6未发现明显缺陷。
+**文档检查：** S1–S6均未发现明显缺陷；本轮修复和实际commit状态一致，历史状态明确隔离。
 **归因：** 无。
 
 ## 3. 纠正建议
-**分支：** B：archive状态已过时，先更新本流记录。
-**文档更新（先执行）：**
-1. summary.md/progress.md/test report/review/scope receipt：记录四项修复、1269/1582及thin graph资格边界（可直接执行）。
+**分支：** A：当前spec/plan及记录合理，无需改动。
 **需停止的偏离行为：** 无。
 **接下去的路线：**
-1. scoped repair commit及English summary -> 完成标志：requirements重读，4-finding disposition、19-path1269 receipt及commit完整。
-2. root实际image build/source export/GPU -> 完成标志：真实immutable identity及各项live证据，不由本流执行。
+1. root真实published image/source export -> 完成标志：immutable identity、installed pins及12个backend schema源；不由本流执行。
+2. root批准GPU验证 -> 完成标志：实际thin graph/eager modules、MRv2/backend graph及G3分项证据；不由本流执行。
 
 ## 4. 最值得关注的 3 点
 1. GPU/graph/G3仍UNVERIFIED；thin graph不是实际MRv2或backend graph资格。
 2. strict schema需12个existing backend源；root local image不是published identity。
-3. native4/patch不变，完整stream1269/1582，剩313；只待修复commit和handoff。
+3. native4/patch不变，完整stream1269/1582，剩313；修复commit74d5c48及handoff完整。
 
 ## Verification iterations
 - Baseline251 PASS; interface9 PASS then addedinvalid K/logits controls11 PASS.
@@ -92,6 +91,9 @@
 - Stage adds backend schema_source_hashes only; D30 source_hashes remains13 with
   engine.core, native counters untouched. Graph status narrowed to
   PASS_THIN_GRAPH_AND_EAGER_MODULES after future execution; MRv2/backend/G3 excluded.
+- completed:74d5c48 verified scoped code+evidence commit; code diff7 paths,
+  267 added+23 deleted (290 repair gross), baseline gross increase252. Commit's
+  retained report/review/receipt identify4 findings and native UNVERIFIED items.
 
 ## Preserved pre-allocation record (historical)
 

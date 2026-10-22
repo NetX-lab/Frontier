@@ -141,6 +141,10 @@ changes since early interface and no image rebuild needed for these repairs.
 Actual total:19 paths,1269 gross/1582, native99 unchanged;313 lines remain.
 Repair diff changes7 owned existing paths; total gross increases252 from1017.
 Per-path estimates remain guidance; no stream quota or file ownership borrowed.
+Verified repair commit74d5c48. Exact code diff:
+`git diff --stat 2c4cc9e 74d5c48 -- tests`:7 files,267 additions/23 deletions.
+Final baseline budget is1269, not1017+290, because budget counts the actual
+baseline-to-final diff, while repair290 counts changed lines against2c4cc9e.
 
 The12 backend modules are added only to existing staged schema_source_hashes.
 D30's canonical source_hashes count remains13 including vllm.v1.engine.core,

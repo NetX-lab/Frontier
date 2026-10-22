@@ -28,6 +28,8 @@ Commands/environment/limits are in test_report_2026-10-23_native_integration.md.
 Four native source files and native_source.patch unchanged. Actual budget1269/1582,
 19 paths; repair changes7 existing owned paths. No additional subagent review or
 GPU/Docker/platform work was run by this stream.
+Repair commit74d5c48; `git diff 2c4cc9e 74d5c48 -- tests` is the scoped code diff,
+267 additions/23 deletions. Native19 baseline gross increase252; receipt1269.
 
 Evidence labels corrected: graph script explicitly sets mrv2_serving_qualified
 and real_backend_graphs_qualified false. Future healthy script execution means

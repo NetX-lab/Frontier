@@ -15,6 +15,7 @@
 TaskID: **D29-NATIVE-IMPLEMENTATION**. Approved native19 implementation is complete
 on feat/step5-position-native. Commits: e48cdc0 (early native interface/source
 receipt and CPU tests), d12941c (owned image/client/provenance/T2 integration).
+Reviewer repair commit:74d5c48 (7 existing owned code paths plus local evidence).
 The final documentation commit records this handoff. No peer files, historical
 captures, original native source, GPU/platform/auth/cloud/SSH/Docker or publication
 operations were modified/executed by this stream.
@@ -111,6 +112,9 @@ Repair changes7 existing owned paths. Before-fix14 FAIL/20 PASS, focused307 PASS
 final affected485 PASS. Exact commands, errors and limits are in the existing
 test report; source/diff accounting is in scope_receipt.json. No native4 changes,
 peer edits/new files/delegation or image/GPU/platform action by this stream.
+Repair code diff:267 additions+23 deletions (290); baseline native19 gross
+increases252 from1017 to1269 because final baseline diff differs from commit
+churn. Code diff command: `git diff 2c4cc9e 74d5c48 -- tests`.
 
 ## Preserved pre-allocation design archive (historical)
 
