@@ -122,8 +122,6 @@ def main(generation='06'):
     config['tool_hashes'][str(PACKAGE / 'case/inputs/frontier.json')] = sha(content)
     checker.verify_balanced_frontier(config | {'harness_commit': commit}, engine)
     lock['retained_files']['case/inputs/frontier.json'] = dict(source=str(FRONTIER), sha256=sha(content))
-    for path in (CHECKER, checker.R2_PATH):
-        config['tool_hashes'][str(path)] = sha(path.read_bytes())
     for name in ('probe_runtime_inventory.py', 'probe_nixl_read.py',
                  'native_dummy_bootstrap.py', 'overlay_model.py', 'submit_native_diagnostic.py'):
         content = original = (V4 / name).read_bytes()
